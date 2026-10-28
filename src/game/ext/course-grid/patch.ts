@@ -3,7 +3,7 @@
 // collars, the fairway's mowing lines and the growth mask; plus the chunk walk and the grow key the month tick compares.
 // Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m; cells of 1 m (0.5 tile); months are game month indices.
 import { CELL_T, SURF, type Grid } from './index';
-import { BLOB_STYLE, CHUNK_MARGIN, chunkOutlines, collarLaid, collarReach, type BlobStyle } from '../course-blobs';
+import { BLOB_STYLE, CHUNK_MARGIN, DrawnSurfaces, ROUND_REACH_T, chunkOutlines, collarLaid, collarReach, roundRadius, type BlobStyle, type RoundOf } from '../course-blobs';
 import type { CourseLayer, CourseTex, LotPatch } from '../../ground-protocol';
 import type { EdgeProfile } from '../../paint-edges';
 import { MONTH_BASE } from './areas';
@@ -49,12 +49,14 @@ export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar:
    *  default; absent: its own look */
   lipGrass?: CourseTex;
   /** T256: the looks by owner (absent: every cell wears the looks above) */
-  own?: CourseOwners }
+  own?: CourseOwners;
+  /** T253 (#735): Round off: each rounded surface's Smoothness (0..1) by surface id (course-look CourseLookSet.round); absent: none rounded */
+  round?: readonly (number | undefined)[] }
 /** T256 (#743): the looks each hole, the property and each practice facility wear (golf/looks.ts): looks[k], owner k's fills, collars, bands
  *  and lip grass (course-look.ts CourseLookSet); hole[h], the owner the cells of hole h wear (-1 or missing: the base looks of CourseLooks);
  *  zones, the facilities' boxes as five numbers each (k, x0, y0, x1, y1, tiles): a cell of no hole inside one wears owner k */
 export interface CourseOwners {
-  looks: readonly { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>; band: readonly (CourseTex | undefined)[]; lipGrass?: CourseTex }[];
+  looks: readonly { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>; band: readonly (CourseTex | undefined)[]; lipGrass?: CourseTex; round?: readonly (number | undefined)[] }[];
   hole: readonly number[]; zones?: readonly number[] }
 /** a course texture's fields alone (a look may carry more) */
 const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(t.x !== undefined && t.x !== 1 ? { x: t.x } : {}), ...(t.m ? { m: { ...t.m } } : {}) });
@@ -72,6 +74,43 @@ export function courseStyles(border?: readonly (number | undefined)[]): readonly
 }
 /** the widest collar of a style table, cells (the edit reach) */
 export const widestCollar = (styles: readonly BlobStyle[]) => styles.reduce((m, st) => Math.max(m, st.collar ? collarReach(st.collar.width) : 0), 0);
+
+/** T253 (#735): a course's Round off for the outlines (course-blobs RoundOf): per surface id, each cell's kernel radius from the Smoothness its
+ *  owner's look gives that surface (looks.own: a cell of hole h wears owner own.hole[h], a cell of no hole in a facility's zone that facility's,
+ *  as the textures do; else the base looks), 0 where its look is not rounded; null when no look rounds anything (the outlines as before) */
+export function roundOfLooks(g: Grid, looks: Pick<CourseLooks, 'round' | 'own'>): RoundOf | null {
+  const own = looks.own, base = looks.round;
+  if (!base?.some(v => v !== undefined) && !own?.looks.some(l => l.round?.some(v => v !== undefined))) return null;
+  const zones = own?.zones ?? [];
+  const ownerOf = (c: number): number => {
+    const h = g.hole[c]!;
+    if (h === 0 && zones.length) {
+      const ci = c % g.w, x = g.x0 + (ci + 0.5) * CELL_T, y = g.y0 + ((c - ci) / g.w + 0.5) * CELL_T;
+      for (let z = 0; z + 4 < zones.length; z += 5) if (x >= zones[z + 1]! && x < zones[z + 3]! && y >= zones[z + 2]! && y < zones[z + 4]!) return zones[z]!;
+    }
+    return own?.hole[h] ?? -1;
+  };
+  const cache = new Map<number, RoundCellsOf>();
+  return (s: number) => {
+    let f = cache.get(s);
+    if (f === undefined) {
+      const rad = (v: number | undefined) => (v === undefined ? 0 : roundRadius(v)), r0 = rad(base?.[s]), rk = own ? own.looks.map(l => rad(l.round?.[s])) : [];
+      f = r0 > 0 || rk.some(r => r > 0) ? (own ? (c: number) => { const k = ownerOf(c); return k >= 0 ? rk[k] ?? 0 : r0; } : () => r0) : null;
+      cache.set(s, f);
+    }
+    return f;
+  };
+}
+type RoundCellsOf = ((cell: number) => number) | null;
+/** T253: how much further (tiles) an edit reaches with Round off on somewhere (its wider kernels), else 0 */
+export const roundReach = (looks: Pick<CourseLooks, 'round' | 'own'>): number =>
+  looks.round?.some(v => v !== undefined) || looks.own?.looks.some(l => l.round?.some(v => v !== undefined)) ? ROUND_REACH_T : 0;
+/** T253: the lie test's reader of the drawn course (course-blobs DrawnSurfaces) for these looks, or null when nothing is rounded (the lie
+ *  then reads the cells, as before) */
+export function drawnSurfaces(g: Grid, looks: CourseLooks): DrawnSurfaces | null {
+  const round = roundOfLooks(g, looks);
+  return round ? new DrawnSurfaces(g, courseStyles(looks.border), round) : null;
+}
 
 /** the chunks (cx, cy) of the grid's extent that a tile box grown by pad touches, row by row */
 export function courseChunksIn(g: Grid, box: readonly number[], pad = 0): [number, number][] {
@@ -154,7 +193,7 @@ const f32 = (a: readonly number[][]): Float32Array[] => a.map(q => Float32Array.
  *  when something grows (now: the effective game month); the stairs of the tees within reach (T127) face the nearest of `paths` (the cart
  *  paths and drives, flat segments ax, ay, bx, by in tiles) */
 export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>, paths?: ArrayLike<number> | null): LotPatch | null {
-  const S = COURSE_CHUNK, styles = courseStyles(looks.border), heights = surfHeights(looks.height), outs = chunkOutlines(g, cx, cy, S, styles, true).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
+  const S = COURSE_CHUNK, styles = courseStyles(looks.border), heights = surfHeights(looks.height), outs = chunkOutlines(g, cx, cy, S, styles, true, roundOfLooks(g, looks)).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
   // the edges exactly as they will be drawn (capped), for the walls (T099): each layer's edges sorted into soft, joint and wall runs
   const capped = outs.map(o => ({ o, se: capPoints(o.fill, o.edges), ce: o.collar ? capPoints(o.collar.fill, o.collar.edges) : null }));
   const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles, heights);

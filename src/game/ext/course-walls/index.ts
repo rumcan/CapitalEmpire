@@ -200,9 +200,10 @@ function inCover(cv: CellCover | null, u: number, v: number): boolean {
   if (!cv) return false;
   const i = Math.floor(u) - cv.ci0, j = Math.floor(v) - cv.cj0;
   if (i < 1 || j < 1 || i >= cv.cw - 1 || j >= cv.ch - 1) return false;
-  // no set cell among the 3 x 3 round it: outside (the kernel reaches 1.25 cells), without summing the field
+  // no set cell among the 3 x 3 round it: outside (the kernel reaches 1.25 cells), without summing the field (T253: a rounded cover's wider
+  // kernels reach further, so its field is always summed)
   const w = cv.cw, o = cv.occ, k = j * w + i;
-  if (!(o[k - w - 1]! | o[k - w]! | o[k - w + 1]! | o[k - 1]! | o[k]! | o[k + 1]! | o[k + w - 1]! | o[k + w]! | o[k + w + 1]!)) return false;
+  if (!cv.rq && !(o[k - w - 1]! | o[k - w]! | o[k - w + 1]! | o[k - 1]! | o[k]! | o[k + 1]! | o[k + w - 1]! | o[k + w]! | o[k + w + 1]!)) return false;
   return coverField(cv, u, v) >= ISO_T;
 }
 

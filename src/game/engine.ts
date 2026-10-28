@@ -58,7 +58,7 @@ import { FOREST_CLEAR, LABEL_FADE_ALPHA, LABEL_FADE_PX, TOWN_CLEAR, plantedTreeC
 import { holeAreas, holeCard, markerMove, swapHoleNumbers, teeLengths, type HoleCardView, type HoleFix } from './golf/holecard';
 import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, type MyHole } from './golf/myholes';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
-import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, growStatic, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
+import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
 import { surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
@@ -1236,8 +1236,9 @@ export class Game {
     // T227: with the course finish a bunker sits in the fairway's first cut (its lip band's grass), unless the player gave it a Border texture.
     // T252: course-look.ts surfaceBands works the bands out (the Holes swatches and the brush cursor's chip show the same borders).
     // T256: the course default's looks are the base; each hole, the property and each facility wear their own (courseOwners)
-    const { surf, collar, band, lipGrass } = courseLookSet(this.paint.brush, pre), own = this.courseOwners(pre);
-    return { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}) };
+    // T253: each surface's Round off rides along (the course default's; an owner's in its own looks)
+    const { surf, collar, band, lipGrass, round } = courseLookSet(this.paint.brush, pre), own = this.courseOwners(pre);
+    return { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
   }
   /** T256 (#743): the looks each owner wears on the course grid (golf/looks.ts): the property's (the cells of no hole), each hole's and each
    *  practice facility's (the cells of no hole in its footprint, zones); owners that look alike share one entry; undefined when every owner
@@ -1384,7 +1385,8 @@ export class Game {
    *  The work is the contour worker's: the patches land a few ms later, all of one job in the same frame */
   sendCourseChunks(box: readonly number[], stale = false, at = performance.now()) {
     const g = this.contourGrid(); if (!g) return;
-    const reach = courseEditReach(widestCollar(courseStyles(this.courseBorders()))), R = reach + COURSE_PATCH_REACH; // a wide Border reaches further
+    // a wide Border reaches further, and so does Round off's wider kernel (T253)
+    const reach = courseEditReach(widestCollar(courseStyles(this.courseBorders()))) + roundReach(this.courseLooks()), R = reach + COURSE_PATCH_REACH;
     this.queueChunks(courseChunksIn(g, box, reach), stale ? [box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R] : null, at);
   }
   /** chunks for the contour worker: a job now, or (one in flight) merged into the next */
@@ -6660,9 +6662,14 @@ export class Game {
    *  areas (the tournament's round and everyday golf, T208) */
   private playCourse(g: GolfSave): CourseView {
     const areas = this.courseAreaList(), grid = this.courseGrid;
+    // T253 (#735): where Round off reshaped a surface the lie follows the drawn shape (course-blobs DrawnSurfaces: the same droplet field as
+    // the chunks); elsewhere, and on a course with nothing rounded, the cell's surface as before
+    // the drawn shape cut a corner off: the areas are read without that surface's own (their outlines are the cells'), its collars kept
+    const drawn = grid ? drawnSurfaces(grid, this.courseLooks()) : null, but = new Map<number, CourseAreaRec[]>();
+    const areasBut = (c: number) => { let v = but.get(c); if (!v) { v = areas.filter(a => { const q = a as Partial<GridArea>; return q.s !== c || !!q.collar; }); but.set(c, v); } return v; };
     const surfAt = (x: number, y: number): GolfSurface | null => {
-      const i = grid ? cellAt(grid, x, y) : -1, s = i >= 0 ? SURF_SURFACE[grid!.surf[i]!] : null;
-      return s ?? surfaceAt(areas, x, y);
+      const i = grid ? cellAt(grid, x, y) : -1, c = i >= 0 ? grid!.surf[i]! : 0, d = drawn && i >= 0 ? drawn.at(x, y) : c, s = i >= 0 ? SURF_SURFACE[d] : null;
+      return s ?? surfaceAt(d !== c && c ? areasBut(c) : areas, x, y);
     };
     return makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt);
   }

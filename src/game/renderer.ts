@@ -25,6 +25,7 @@ import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WA
 import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
+import { BUNKER_IN, BUNKER_OUT, GREEN_ROLL_REACH, bunkerImages, greenRollImages } from './bunker-look';
 import { type GrassCellView } from './ext/grass-management';
 import { grassOverlay } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
@@ -243,6 +244,9 @@ const DIRT_TEX = 'dirt';
 interface WallLook {
   bands: readonly (readonly [readonly number[], readonly number[]])[]; cuts: readonly number[];
   tuft: { col: readonly number[]; a: number; frac: number; len: number; gap: number; skip: number; w: number };
+  /** T253: the wall art's shade per band in full shade (WALL_ART_SHADE when absent) and the streaks down the face's sand (WALL_SOIL): from band
+   *  `from` on, one wherever the edge crosses x - y = (k + jitter) gap, dark or light (alphas), lw wide (tiles) */
+  artShade?: readonly number[]; streak?: { from: number; gap: number; dark: number; light: number; lw: number };
 }
 const WALL_LOOKS: readonly WallLook[] = [
   // turf: a raised green's or tee's bank like a kerb of sod: a bright cut grass lip, the grass face, dark earth at the foot
@@ -261,6 +265,13 @@ const WALL_LOOKS: readonly WallLook[] = [
 ];
 /** WALL_LOOKS' entry for a green's bank over turf (course-walls faceScale: drawn GREEN_FACE tall) */
 const GREEN_BANK = 3;
+/** T253 (#735): a bunker's cut face with the bowl on (course finish bowl > 0), as the owner's reference: under the turf's dark roots, a band
+ *  of red-brown soil, then the sand sliding down to the floor (the old look, WALL_LOOKS' sand, with the bowl off) */
+const WALL_SOIL: WallLook = {
+  // the turf's dark roots, a thin band of red-brown soil, then the bowl's far face in sand: shaded under the lip, lighter toward the floor
+  bands: [[[46, 30, 18], [112, 70, 40]], [[104, 48, 28], [198, 102, 58]], [[118, 100, 82], [196, 172, 138]], [[150, 128, 100], [236, 212, 174]]], cuts: [0.06, 0.4, 0.7, 1],
+  tuft: { col: [54, 84, 30], a: 0.95, frac: 0.12, len: 0.03, gap: 0.028, skip: 0.22, w: 0.03 },
+  artShade: [1, 1, 0.6, 0.86], streak: { from: 2, gap: 0.085, dark: 0.3, light: 0.4, lw: 0.018 } };
 /** how many light steps a wall face is drawn in (each step one path per band) and the longest stretch of an edge given one light, tiles
  *  (the light is mixed between an edge's points, so a curved wall turns smoothly from sun to shade) */
 const WALL_STEPS = 24, WALL_LIGHT_SPAN = 0.1;
@@ -2181,7 +2192,7 @@ export class GroundPainter {
   private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean, under: CanvasPattern | null = null) {
     const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
     // T227: the course finish (course-finish.ts): the greens' fine stripes, the collar's tone, the bunkers' lips (the bands: step 8)
-    const fin = this.finish(), green = greenStripeLook(fin, FAIRWAY_STRIPES), collarTone = collarToneOf(fin), lip = fin.on ? fin.lip : 0;
+    const fin = this.finish(), green = greenStripeLook(fin, FAIRWAY_STRIPES), collarTone = collarToneOf(fin), bowl = fin.on ? fin.bowl : 0, lip = fin.on && !(bowl > 0) ? fin.lip : 0, roll = fin.on ? fin.roll : 0;
     /** a course texture as a fill style on g: painted (its look, composed over the part `need` of the chunk), the photo or preset in tile space
      *  (turned and scaled about the origin), else the screen texture */
     const style = (g: C2D, t: CourseTex, need?: BBox) => {
@@ -2248,6 +2259,85 @@ export class GroundPainter {
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
     const flatF = featherTiles(EDGE_LOOKS.flat!, L), wallF = 0.5 * jointFeather(L);
+    /** T253: edge polylines grouped by reach: each polyline's box grown by pad, boxes that overlap merged (a group's px lie within pad of its
+     *  own edges only), so each bunker or green is lit over its own box, not one box round all of them (the field and the shine cost by area) */
+    const clustersOf = (all: readonly ArrayLike<number>[], pad: number) => {
+      const out: { x0: number; y0: number; x1: number; y1: number; edges: ArrayLike<number>[] }[] = [];
+      for (const e of all) {
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (let k = 0; k + 1 < e.length; k += 2) { const x = e[k]!, y = e[k + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        if (!(x1 >= x0)) continue;
+        let g = { x0: x0 - pad, y0: y0 - pad, x1: x1 + pad, y1: y1 + pad, edges: [e] as ArrayLike<number>[] };
+        for (let i = out.length - 1; i >= 0; i--) {
+          const o = out[i]!; if (o.x1 < g.x0 || o.x0 > g.x1 || o.y1 < g.y0 || o.y0 > g.y1) continue;
+          g = { x0: Math.min(o.x0, g.x0), y0: Math.min(o.y0, g.y0), x1: Math.max(o.x1, g.x1), y1: Math.max(o.y1, g.y1), edges: o.edges.concat(g.edges) };
+          out.splice(i, 1); i = out.length; // merged: look again (the grown box may meet more)
+        }
+        out.push(g);
+      }
+      return out;
+    };
+    /** T253 part 3: the greens' soft roll where they meet the fringe (bunker-look.ts greenRollImages), from the greens' edges (every chunk's),
+     *  per course chunk here its field over the greens' reach, a little past its box and laid clipped to it: the shade multiplied (and on the
+     *  shade mask), the light as a lift of the grass in proportion */
+    const greenRoll = (all: readonly ArrayLike<number>[]) => {
+      if (!all.length) return;
+      const R = GREEN_ROLL_REACH, gres = Math.max(2, Math.min(12, Math.round(Math.hypot(HW, HH) * L * 0.2))), G = 0.6;
+      for (const cl of clustersOf(all, R)) for (const c of cs) {
+        const bx0 = Math.max(r[0]!, c.cx * c.size), by0 = Math.max(r[1]!, c.cy * c.size), bx1 = Math.min(r[2]!, (c.cx + 1) * c.size), by1 = Math.min(r[3]!, (c.cy + 1) * c.size);
+        const x0 = Math.max(bx0 - G, cl.x0), y0 = Math.max(by0 - G, cl.y0), x1 = Math.min(bx1 + G, cl.x1), y1 = Math.min(by1 + G, cl.y1);
+        if (x1 <= x0 || y1 <= y0 || bx1 <= bx0 || by1 <= by0) continue;
+        const F = lineField(c.layers.find(q => q.s === SURF.green)?.fill ?? [], cl.edges, x0, y0, x1 - x0, y1 - y0, gres, R);
+        if (!F.any) continue;
+        const im = greenRollImages(F, roll), clip = new Path2D(); clip.rect(bx0, by0, bx1 - bx0, by1 - by0);
+        const lay = (g: C2D, img: EdgeImage) => {
+          const sm = this.buffer('small', img.W, img.H); ctx2d(sm).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
+          g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sm, x0, y0, img.W / gres, img.H / gres);
+        };
+        const dk = im.dark, lt = im.light;
+        if (dk) { const mul = (g: C2D) => { g.save(); g.setTransform(M); g.clip(clip); g.globalCompositeOperation = 'multiply'; lay(g, dk); g.restore(); }; mul(ctx); this.onShadeMask(mul); }
+        if (lt) { ctx.save(); ctx.setTransform(M); ctx.clip(clip); this.shine(ctx, this.cacheBox(M, x0, y0, x0 + lt.W / gres, y0 + lt.H / gres, ctx), RIM_TINT, 1, a => lay(a, lt), false); ctx.restore(); }
+      }
+    };
+    /** T253 (#735): the bunkers as the owner's reference (bunker-look.ts), from the sand's edges (all: every chunk's, so a seam is lit as one):
+     *  per course chunk here, its edge field over the bunkers' reach (its own fill rings tell the sand), then the shade multiplied (and on the
+     *  shade mask), the sand's light as a shine textured by the sand (squared) and the grass's as a lift in proportion; the light and shade
+     *  laid on the ground round the sand are kept off the ponds (offFills) */
+    const bunkerBowl = (all: readonly ArrayLike<number>[]) => {
+      if (!all.length) return;
+      const pxT = Math.hypot(HW, HH) * L, bres = Math.max(3, Math.min(24, Math.round(pxT * 0.4))), reach = Math.max(BUNKER_IN, BUNKER_OUT);
+      // each chunk's field reaches a little past its box (the rims' facing is blurred: both sides of a seam blur the same px) and is laid
+      // clipped to its box
+      const ims: { im: ReturnType<typeof bunkerImages>; x0: number; y0: number; clip: Path2D }[] = [], G = 0.6;
+      for (const cl of clustersOf(all, reach)) for (const c of cs) {
+        const bx0 = Math.max(r[0]!, c.cx * c.size), by0 = Math.max(r[1]!, c.cy * c.size), bx1 = Math.min(r[2]!, (c.cx + 1) * c.size), by1 = Math.min(r[3]!, (c.cy + 1) * c.size);
+        const x0 = Math.max(bx0 - G, cl.x0), y0 = Math.max(by0 - G, cl.y0), x1 = Math.min(bx1 + G, cl.x1), y1 = Math.min(by1 + G, cl.y1);
+        if (x1 <= x0 || y1 <= y0 || bx1 <= bx0 || by1 <= by0) continue;
+        const F = lineField(c.layers.find(q => q.s === SURF.bunker)?.fill ?? [], cl.edges, x0, y0, x1 - x0, y1 - y0, bres, reach, true);
+        if (!F.any) continue;
+        const clip = new Path2D(); clip.rect(bx0, by0, bx1 - bx0, by1 - by0);
+        ims.push({ im: bunkerImages(F, bowl, pxT), x0, y0, clip });
+      }
+      if (!ims.length) return;
+      const lay = (g: C2D, img: EdgeImage, x0: number, y0: number) => {
+        const sm = this.buffer('small', img.W, img.H); ctx2d(sm).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
+        g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sm, x0, y0, img.W / bres, img.H / bres);
+      };
+      offFills([SURF.water], () => {
+        for (const q of ims) {
+          ctx.save(); ctx.setTransform(M); ctx.clip(q.clip);
+          const dk = q.im.dark;
+          if (dk) { const mul = (g: C2D) => { g.save(); g.setTransform(M); g.clip(q.clip); g.globalCompositeOperation = 'multiply'; lay(g, dk, q.x0, q.y0); g.restore(); }; mul(ctx); this.onShadeMask(mul); }
+          // the sand's light warm and squared (its dark grains stay dark), the grass's a neutral lift in proportion (no lime glow)
+          for (const [img, sq] of [[q.im.light, true], [q.im.lift, false]] as const) {
+            if (!img) continue;
+            const cb = this.cacheBox(M, q.x0, q.y0, q.x0 + img.W / bres, q.y0 + img.H / bres, ctx);
+            this.shine(ctx, cb, sq ? SHINE_TINT : RIM_TINT, 1, a => lay(a, img, q.x0, q.y0), sq);
+          }
+          ctx.restore();
+        }
+      });
+    };
     /** T256 (#743): what `draw` laid in the layer's own look, again in each of its alternate looks (another hole's, the property's, a
      *  facility's), clipped to that look's share of the chunk */
     type Alt = NonNullable<CourseLayer['alts']>[number];
@@ -2398,7 +2488,8 @@ export class GroundPainter {
         rims(code);
       } else if (ls.length) {
         // the profile's feather width; the light and shade fields only for a sunken surface's floor (raised edges are walls now)
-        const prof = EDGE_LOOKS[ls[0]!.l.e] ?? null, f = prof ? featherTiles(prof, L) : flatF, look = prof?.sunken ? prof : null;
+        // T253: a bunker with the bowl (bunker-look.ts) takes its floor shade from the bowl instead (never both)
+        const prof = EDGE_LOOKS[ls[0]!.l.e] ?? null, f = prof ? featherTiles(prof, L) : flatF, look = prof?.sunken && !(bowl > 0 && s === SURF.bunker) ? prof : null;
         const ims: { im: ReturnType<typeof courseImages>; x0: number; y0: number }[] = [], edgePath = new Path2D();
         if (!lite && look) {
           // every chunk here takes the field over its own box from all the surface's edges within reach (so a seam is lit as one curve)
@@ -2430,8 +2521,12 @@ export class GroundPainter {
         }
         // 5a, T230: the pond's depth, light edge and reflections (water-look.ts), clipped to the course's water; with the glint on, its gloss
         if (s === SURF.water) this.waterOver(ctx, SITE.course, () => ringsOfCode(code), ls[0]!.l.tex, lite);
-        // 5b, T227: the bunker's lip on the sand: the dark crescent inside its far rim, the light near lip (under the walls drawn after it)
+        // 5b, T227: the bunker's lip on the sand: the dark crescent inside its far rim, the light near lip (under the walls drawn after it);
+        // T253: with the bowl on, the bowl, its rake lines and streaks, the rolled grass lip and the mounds round it instead
         if (lip > 0 && !lite && s === SURF.bunker) this.bunkerSandLip(ctx, ls.map(q => q.l), L, M, lip);
+        if (bowl > 0 && !lite && s === SURF.bunker) bunkerBowl(ls.flatMap(q => q.l.edges));
+        // 5c, T253 part 3: the green's soft roll into its fringe (lit on its far, sun-facing edge, shaded on its near one)
+        if (roll > 0 && !lite && s === SURF.green) greenRoll(ls.flatMap(q => q.l.edges));
         if (!lite) {                                                                               // 6
           const joints = ls.flatMap(q => q.l.joint ?? []);
           // T196: a soft shade on the collar side (the lower surface), reaching a little back over the surface, stronger turned from the sun:
@@ -2459,6 +2554,7 @@ export class GroundPainter {
    *  the tufts hanging from the top edge. Lite: the face's middle band in its light steps only */
   private courseWalls(ctx: C2D, ws: readonly CourseWall[], L: number, M: DOMMatrix, Minv: DOMMatrix, X0: number, Y0: number, lite: boolean, clip: Path2D | null, shadeOf: (s: number) => WallShade = s => wallShade(defaultShadow(s))) {
     const px = 1 / (TILE_PX * L), NB = WALL_STEPS, sx = -SUN_DIR.x, sy = -SUN_DIR.y; // a cache px in tiles; the shadows' direction (tiles)
+    const fin = this.finish(), soilFace = fin.on && fin.bowl > 0; // T253: a bunker's face in red-brown soil with the bowl on
     // the runs by look (their material's, or a green's bank) and by whose Shadow they take
     const groups = new Map<number, CourseWall[]>();
     for (const w of ws) {
@@ -2466,10 +2562,10 @@ export class GroundPainter {
       const gr = groups.get(key); if (gr) gr.push(w); else groups.set(key, [w]);
     }
     for (const [key, runs] of groups) {
-      const li = key >> 4, m = li === GREEN_BANK ? WallMat.Turf : li, look = WALL_LOOKS[li]!, sh = shadeOf(key & 15), face = li === GREEN_BANK ? GREEN_FACE : 1;
+      const li = key >> 4, m = li === GREEN_BANK ? WallMat.Turf : li, look = li === WallMat.Sand && soilFace ? WALL_SOIL : WALL_LOOKS[li]!, sh = shadeOf(key & 15), face = li === GREEN_BANK ? GREEN_FACE : 1;
       const nb = lite ? 1 : look.bands.length, bases = Array.from({ length: nb }, () => new Path2D()), bands = Array.from({ length: nb * NB }, () => new Path2D());
       const shadow = [new Path2D(), new Path2D(), new Path2D()], foot = new Path2D(), tufts = [new Path2D(), new Path2D()];
-      const T = look.tuft;
+      const T = look.tuft, SK = lite ? undefined : look.streak, streaks = [new Path2D(), new Path2D()];
       let shade = false;
       for (const w of runs) {
         const p = w.p, n = p.length / 3; if (n < 2) continue;
@@ -2508,6 +2604,14 @@ export class GroundPainter {
             const X = x0 + f * (x1 - x0), Y = y0 + f * (y1 - y0), d = t0 + f * (t1 - t0), h = hash01(q, m + 7), len = (T.frac * d + T.len) * (0.35 + 1.1 * h * h), lean = (hash01(q, m + 13) - 0.5) * 0.6 * len;
             const tf = tufts[hash01(q, m + 17) < 0.5 ? 0 : 1]!; tf.moveTo(X - 0.004, Y - 0.004); tf.lineTo(X + len + lean, Y + len - lean);
           }
+          // T253: the streaks down the face's sand (the bowl's fall line, straight down the screen), placed as the tufts are, each its own
+          // length from the top of the sand, dark or light by a hash of its place
+          if (SK && lines && Math.abs(u1 - u0) > 1e-9) for (let q = Math.ceil(Math.min(u0, u1) / SK.gap - 0.5), q1 = Math.floor(Math.max(u0, u1) / SK.gap + 0.5); q <= q1; q++) {
+            const u = (q + 0.9 * (hash01(q, m + 21) - 0.5)) * SK.gap, f = (u - u0) / (u1 - u0); if (f < 0 || f >= 1) continue;
+            const X = x0 + f * (x1 - x0), Y = y0 + f * (y1 - y0), d = t0 + f * (t1 - t0), h = hash01(q, m + 23), top = look.cuts[SK.from - 1]!;
+            const a0 = top + 0.03 + 0.12 * hash01(q, m + 27), a1 = Math.min(1, a0 + 0.25 + 0.6 * hash01(q, m + 29));
+            const sp = streaks[h < 0.55 ? 0 : 1]!; sp.moveTo(X + a0 * d, Y + a0 * d); sp.lineTo(X + a1 * d, Y + a1 * d);
+          }
         }
         if (lite) continue;
         // the cast shadow: from the foot along the shadows' direction, as long as the drop times how much the face turns from the sun, in three
@@ -2535,21 +2639,37 @@ export class GroundPainter {
       // the face: each band's strip in a mid tone first (no hairlines between the steps), then each band in each light step
       for (let q = 0; q < nb; q++) { const band = look.bands[lite ? 1 : q]!; ctx.fillStyle = rgb(mixRGB(band[0], band[1], 0.25)); ctx.fill(bases[q]!); }
       const art = lite || li === GREEN_BANK ? null : this.wallArt(ctx, WALL_TEX[m]!, L, Minv, X0, Y0); // a green's bank is mown grass, not a cut face
+      // T253: with the bowl on, a bunker face's middle band is the reference's red-brown soil (painted, the soil photo laid softly over it),
+      // the sand art below it
+      const soilBand = soilFace && li === WallMat.Sand && !lite ? 1 : -1;
       for (let q = 0; q < nb; q++) {
-        if (art && q > 0) {
+        if (art && q > 0 && q !== soilBand) {
           // the art's own colours for the body, shaded by the light steps (multiplied: its texture stays), darker toward the foot
           ctx.fillStyle = art; ctx.fill(bases[q]!);
           ctx.globalCompositeOperation = 'multiply';
-          for (let b = 0; b < NB; b++) { const v = Math.round(255 * (WALL_ART_SHADE[q]! + (1 - WALL_ART_SHADE[q]!) * (b / (NB - 1)))); ctx.fillStyle = `rgb(${v},${v},${Math.min(255, v + 12)})`; ctx.fill(bands[q * NB + b]!); }
+          const as = (look.artShade ?? WALL_ART_SHADE)[q] ?? 1;
+          for (let b = 0; b < NB; b++) { const v = Math.round(255 * (as + (1 - as) * (b / (NB - 1)))); ctx.fillStyle = `rgb(${v},${v},${Math.min(255, v + 12)})`; ctx.fill(bands[q * NB + b]!); }
           ctx.globalCompositeOperation = 'source-over';
           continue;
         }
         for (let b = 0; b < NB; b++) { const band = look.bands[lite ? 1 : q]!; ctx.fillStyle = rgb(mixRGB(band[0], band[1], b / (NB - 1))); ctx.fill(bands[q * NB + b]!); }
       }
+      if (art && soilBand > 0) {
+        const dirt = this.paintPhoto(ctx, 'dirt', L);
+        if (typeof dirt !== 'string') { ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.7; ctx.fillStyle = dirt; ctx.fill(bases[soilBand]!); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+      }
       if (!lite && !art) {
         // the placeholder's texture until the wall art lands: the soil photo laid softly over the painted body (never a flat face)
         const soil = this.paintPhoto(ctx, 'dirt', L);
         if (typeof soil !== 'string') { ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = li === GREEN_BANK ? 0.25 : 0.6; ctx.fillStyle = soil; for (let q = 1; q < nb; q++) ctx.fill(bases[q]!); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+      }
+      if (SK) {
+        // the streaks over the face's sand only: dark multiplied (cool, the sand's grain stays), light as a soft-light lift
+        ctx.save(); const cl = new Path2D(); for (let q = SK.from; q < nb; q++) cl.addPath(bases[q]!); ctx.clip(cl);
+        ctx.lineWidth = Math.max(px, SK.lw); ctx.lineCap = 'butt';
+        ctx.globalCompositeOperation = 'multiply'; ctx.strokeStyle = `rgba(${SHADE_RGB.join(',')},${SK.dark})`; ctx.stroke(streaks[0]!);
+        ctx.globalCompositeOperation = 'soft-light'; ctx.strokeStyle = `rgba(255,248,226,${SK.light})`; ctx.stroke(streaks[1]!);
+        ctx.restore();
       }
       if (!lite) {
         ctx.lineWidth = Math.max(px, T.w);

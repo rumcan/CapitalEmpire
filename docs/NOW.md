@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 15:55 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-28 19:35 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -64,8 +64,8 @@ never commit there.)
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
-| T237 | #694 | `arena/T237-car-parks`, in `.claude/worktrees/agent-a632f8aae171a94ae` (Opus 5.5, high effort; port 5186) | **Started ~15:20.** Lands in parts, each its own PR (`[T237] part <n>`, Part of #694): (1) the walking rule (`WALK_SERVE_M` = 150 m), the placement preview and cards; (2) the range set back + a 30-40 m frontage strip; (3) the paved look; (4) how cars and golfers use it + the bench. Lead decision: a car park beyond the walk adds no bays to that venue; drivers with no serving bay turn away as at a full car park, no separate appeal penalty. Merge each part on review + typecheck. |
-| T253 | #735 | `arena/T253-round-off` (a fresh worktree; port 5187) | **Started ~15:55.** Lands in parts (`[T253] part <n>`, Part of #735): (1) Round off + Smoothness in Edges, Edit hole and the style editor (per area and as the brush default; saves; the lie test follows the drawn shape); (2) bunkers like the reference, reworking T227's crescent and lip; (3) the green's edge roll + bake and bench numbers. Merge each part on review + typecheck. |
+| T262 | #769 | `arena/T262-grass-shine` (a fresh worktree; port 5186) | **Started ~17:30.** Phase 1 only: the grass bump map on the fairway, the green and one town lawn, the four options (a-d) benched, a verdict with stills and a pan strip. Phase 2 (every grass, the Studio knobs) only after the lead's yes. |
+| T263 | #771 | `arena/T263-hole-ground` (a fresh worktree; port 5187) | **Started ~19:30.** New hole's Build shapes the hole's ground (fairway rolls, mounds and swales, a tilted green; the tee level), priced in the pill, in the same undo step, behind a "Shape the ground" tick box (default on); saved holes carry it; Edit Hole Layout never reshapes. |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
@@ -80,18 +80,16 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 **T258 #749 continuous-art follow-up** (`lead/continuous-art-plans-20261029`): generic live-source AI plans and one exact subjob per batch, explicit versioned corrections, held review metadata and lossless native/live-only reuse. Current live priority181 is respected; 180a-v3 remains explicitly queued, v1/v2 held and b/c/d pending. Reviewed source art/proofs are in this branch; runtime registration remains separate. Quota retry2026-10-28T15:32:44.457Z is unchanged. Typecheck/focused fixtures pass; final fresh-main checks and PR/deployment next.
 
 ### 4. Queue (in order; start the next when an agent lands)
-1. **T262 #769** grass catches the camera's shine: a bump map for every grass type, lit as the camera moves (a prototype with a verdict
-   first; builds on T215's camera specular; the GPU budget is tight).
-2. **T263 #771** New hole shapes its ground: gentle fairway rolls, mounds and swales, a tilted green (auto, priced, undoable, a tick box).
-3. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
+1. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
    ChatGPT; stand-ins until then).
-4. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
-5. **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you).
-6. **T249 #719** a grey stone water border with planting, switchable: waits for the owner's ChatGPT art (item 180).
-7. **P28** (you, the town and its people; `docs/plans/P28.md`): T242 #702 set-the-scene cards → T243 #703 portraits → T240 #704 your
+2. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
+3. **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you).
+4. **T249 #719** a grey stone water border with planting, switchable: waits for the owner's ChatGPT art (item 180).
+5. **P28** (you, the town and its people; `docs/plans/P28.md`): T242 #702 set-the-scene cards → T243 #703 portraits → T240 #704 your
    character → T241 #705 your skills → T244 #706 money matches → T245 #707 a healthier town → T246 #708 your tournament and the Mayor's Cup.
-8. **T214 phase 1** memberships (plan P26, #695) → **T212 #557** putt, chip, tee-up and coaching clips.
-9. Older lists: see "History: START HERE as it stood on 2026-10-28 morning" below and `gh issue list --label arena --state open`.
+6. **T214 phase 1** memberships (plan P26, #695) → **T212 #557** putt, chip, tee-up and coaching clips.
+7. **T264 #787** park-and-ride: far car parks served by a shuttle bus (the owner's "later" idea from T237; not queued before the rest).
+8. Older lists: see "History: START HERE as it stood on 2026-10-28 morning" below and `gh issue list --label arena --state open`.
 
 ### 5. Waiting on the owner's ChatGPT art (`docs/art/CHATGPT-IMAGE-QUEUE.md`, in this order) and what the lead does when it lands
 1. **Art 181, the missing menu tiles** (one sheet of 12, `art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png`): cut it
@@ -102,7 +100,16 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
-#779 [nightly] #776 fixed: building sites have their cable spool again (T232 dropped it); the kit, construction and lettering tests
+#785 #789 #790 T253 Round off + Smoothness for every course surface (More options › Edges, Edit hole's new Edges block, the style editor;
+saved in the look; the lie follows the rounded shape, nothing rounded plays as before), bunkers with a bowl, a rolled grass lip, a red-brown
+soil edge and soft mounds (`bunker-look.ts`; course finish `bowl: 0` brings T227's look back), the green's edge roll (`roll`); bake about
++1 ms median at 30%/8% (borderline: watch the nightly bench). Left: the bowls are still flatter than the owner's reference (faint rake lines at
+30%, paler sand), and the Studio's Course finish panel lacks the `bowl`/`roll` knobs (the art agent's file); shots `E:/ClaudeTemp/T253/` ·
+#780 #782 #784 #786 T237 car parks: new ranges stand 36 m back from the road with a frontage strip where car parks grow along it; the
+club car park beside the clubhouse; paved lots with kerbs, tree islands, lamps lit at night and a footpath to the door; every bay nose-in
+off an aisle (old golf saves' lots re-laid: a 20 x 16 lot 56 -> 44 bays, its far row was unusable); `WALK_SERVE_M` = 150 m (straight
+line from the nearest bay), shown while placing ("Serves: Range (93 m walk)" / "Too far to walk to anything"); the lead fixed the preview's
+bay count (af0209c); shots `E:/ClaudeTemp/T237/` · #779 [nightly] #776 fixed: building sites have their cable spool again (T232 dropped it); the kit, construction and lettering tests
 follow the code (#582's extra views sit after the kit; nothing is drawn mirrored) · #774 T260 Border can be none: no band round tees, bunkers and ponds by default (the fairway's first cut and the green's fringe keep
 theirs), the bunker's grass lip and the pond's wet soil kept, Border and More options › Edges never open empty (shots `E:/ClaudeTemp/T260/`) ·
 #775 no bush, tree, plant or rock is ever mirrored (the sun stays at the upper right) and the town's bushes and ferns in the course's
