@@ -30,7 +30,9 @@ async function artInventory(roots){
     const blocked=prov.integrationStatus==='blocked'||/hold|blocked|reject/i.test(prov.visualReviewStatus??'');
     const record={...image,provenance:file,provenanceSha256:sha(await fs.readFile(file)),review:blocked?'held':'pending',registration:'not-verified',main:'not-verified',directions:prov.viewsOrder??[prov.view??prov.facing].filter(Boolean),viewSet:prov.viewSet??null};
     const decision=prov.appearanceDecision??prov.visualDecision;
-    if(!blocked&&decision?.file&&decision?.sha256){const decisionPath=path.isAbsolute(decision.file)?decision.file:path.resolve(root,decision.file);try{const bytes=await fs.readFile(decisionPath);const parsed=JSON.parse(bytes),bindings=parsed.files??parsed.artifacts??[];const imageBound=bindings.some(binding=>binding.sha256===image.sha256&&(binding.file===image.file||path.basename(binding.file??'')===path.basename(image.file)));if(sha(bytes)===decision.sha256&&parsed.decision==='accepted-for-art-appearance'&&imageBound)record.review='accepted-hash-bound';}catch{}}
+    // Supplemental primary decisions preserve exact generator provenance unchanged.
+    const decisionPaths=decision?.file?[{file:path.isAbsolute(decision.file)?decision.file:path.resolve(root,decision.file),sha256:decision.sha256}]:[{file:image.file.replace(/\.png$/i,'.appearance.json'),sha256:null}];
+    if(!blocked)for(const candidate of decisionPaths){try{const bytes=await fs.readFile(candidate.file);const parsed=JSON.parse(bytes),bindings=parsed.files??parsed.artifacts??[];const imageBound=bindings.some(binding=>binding.sha256===image.sha256&&(binding.file===image.file||path.basename(binding.file??'')===path.basename(image.file)));if((!candidate.sha256||sha(bytes)===candidate.sha256)&&(!parsed.id||parsed.id===prov.id)&&parsed.decision==='accepted-for-art-appearance'&&imageBound){record.review='accepted-hash-bound';record.appearanceDecision={file:candidate.file,sha256:sha(bytes)};}}catch{}}
     if(!byId.has(prov.id))byId.set(prov.id,[]);byId.get(prov.id).push(record);
     const number=prov.brief?.item??prov.catalogueItem;if(number){if(!byNumber.has(Number(number)))byNumber.set(Number(number),[]);byNumber.get(Number(number)).push(record);}
   }
@@ -51,7 +53,7 @@ export async function snapshotQueue(config,reviewedTokens={}){
   });
   const candidates=items.filter(item=>item.eligible).sort((a,b)=>a.priority.localeCompare(b.priority)||a.itemNumber-b.itemNumber);
   const preferred=candidates.find(item=>item.id===config.firstItemId),reviews=items.filter(item=>item.reviewEligible).sort((a,b)=>a.priority.localeCompare(b.priority)||a.itemNumber-b.itemNumber);
-  const selected=preferred??reviews[0]??candidates[0]??null;
+  const selected=preferred??reviews.find(item=>item.id===config.firstItemId)??reviews[0]??candidates[0]??null;
   const next=selected?{...selected,action:selected.reviewEligible?'review-existing':'generate'}:null;
   const byOwnerAngle={};for(const item of items){const key=item.owner+':'+(item.angle??'unspecified');byOwnerAngle[key]=(byOwnerAngle[key]??0)+1;}
   return {schema:1,refreshedAt:new Date().toISOString(),authorityFile:config.authorityFile,authoritySha256,markdown,items,next,
