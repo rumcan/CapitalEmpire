@@ -56,7 +56,7 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water (T230 #679); ✅ 158-160 the pond kit, 162-164 the shrubs, flowers and hedge, and 36, 43, 45 in the game (T231 #671); 169-171 the building-site kit (T232 #673; 168 the excavator blocked in RUN); ✅ 174 the build-tool tiles in the game (T233 #674). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
 
 ### Set the scene, portraits and you (section 13, P28)
-The owner's 2026-10-28 asks: items 200-235, still to make. The art agent starts with the range's run-down and upgraded pairs (200-204) and the video store (211).
+The owner's 2026-10-28 asks: items 200-235 and 240-327 (about 115 places, most with a run-down and an upgraded picture), still to make. The art agent starts with the range's run-down and upgraded pairs (200-204) and the video store (211).
 
 ### List items done
 Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
@@ -829,6 +829,112 @@ well dressed, confident). Same person, same pose, same framing.
 **222. Town hall and the mayor's office**: for the Mayor's Cup. P1.
 **223. The hotel, the casino, the stadium**: one each, late-game, upgraded only. P3.
 **224. The junk yard**: run-down only. P3.
+
+### More places (S): the owner, 2026-10-28: "these were just examples. you better add a shit ton more"
+Everything a player can look at gets a picture. Each has a run-down and an upgraded version unless marked *(one)*. Inside views are marked *(in)*.
+Pairs of outside and inside are two items' worth of work.
+
+**The range and the practice areas**
+**240. The tee line at dawn**: the first golfer of the day hitting the first bucket, mist on the outfield. P1.
+**241. The ball picker** driving the outfield, balls rattling into the cage. P1.
+**242. The bucket counter** *(in)*: the window, the price board, a kid paying in coins. P1.
+**243. The range at night**: under floodlights, moths in the beams. P2.
+**244. The target greens close**: flags, balls lying round the pin. P2.
+**245. The chipping green and its bunker**: a golfer splashing out of the sand. P1.
+**246. A lesson**: the teaching pro and a student at the teaching hut. P1.
+**247. The pro's office** *(in)*: a desk, a calendar, a club on the wall (P26). P1.
+**248. The membership desk** *(in)*: the secretary, the forms, a framed course map. P2.
+
+**The course and the club**
+**249. The cart barn** *(in)*: rows of carts charging. P2.
+**250. The maintenance barn at dawn**: greenkeepers heading out on mowers. P1.
+**251. The 1st tee**: the starter, a foursome waiting, the course stretching away. P1.
+**252. The 18th green**: the last putt, a few watchers (then a big crowd). P1.
+**253. The locker room** *(in)*. P2.
+**254. The clubhouse grill** *(in)*: lunch after the round. P2.
+**255. The clubhouse patio**: red umbrellas, drinks, the 18th beyond (the concept). P1.
+**256. The trophy cabinet and members' honours board** *(in)*. P2.
+**257. The halfway house window**: hot dogs and a cold drink. P2.
+**258. The clubhouse fountain pond and plaza** (the concept). P1.
+**259. A course pond**: boulders, lily pads, autumn reflections (the concept). P1.
+**260. The cart path** through the autumn woods. P1.
+**261. A footbridge** over the creek. P2.
+**262. The swamp** on a misty morning. P2.
+**263. The fescue and the waste area** in late light. P2.
+**264. The leaderboard** on tournament day: chalk to a big board. P1.
+**265. The TV tower and the broadcast truck** *(one, upgraded)*. P3.
+**266. The hospitality chalet and the beer garden** *(one, upgraded)*. P3.
+**267. The grandstands, full** *(one, upgraded)*. P2.
+**268. The trophy presentation** on the 18th green: the mayor, the winner, the cheque. P1.
+**269. The car park on tournament day**: overflowing onto the grass. P2.
+**270. The ticket gates and the shuttle stop**. P3.
+
+**Main Street and the town's businesses** (outside and *(in)*)
+**271. Main Street at night**: neon, a cruising car. P1.
+**272. The barber shop** *(in)*: the pole, the chair, the radio. P1.
+**273. The hardware store** *(in)*. P1.
+**274. The grocery store** *(in)*: checkout, a paper bag, a cereal aisle. P1.
+**275. The pharmacy and soda fountain** *(in)*. P2.
+**276. The bank** *(in)*: the loan officer's desk, where you ask for a loan. P1.
+**277. The post office**. P3.
+**278. The arcade** *(in)*: 1985 cabinets, kids, tokens. P1.
+**279. The bowling alley** *(in)*. P2.
+**280. The record store** *(in)*: vinyl and cassettes. P2.
+**281. The movie theatre**: a single screen, the marquee. P1.
+**282. The pizza place** *(in)*. P2.
+**283. The burger drive-in**: carhops, a tray on the window. P2.
+**284. The laundromat** *(in)*. P3.
+**285. The car dealership**: bunting, a new model on the lot. P2.
+**286. The auto repair garage** *(in)*: a car on the lift. P2.
+**287. The church**: Sunday morning. P2.
+**288. The fire station**: the engine out front. P2.
+**289. The sheriff's office** *(in)*. P2.
+**290. The library** *(in)*. P3.
+**291. The elementary school**: recess. P3.
+**292. The high school hallway** *(in)*: lockers, letter jackets. P2.
+**293. The doctor's clinic** *(in)*. P3.
+
+**Homes and neighbourhoods**
+**294. The town park**: a gazebo, a duck pond, a band on Sunday. P1.
+**295. The playground**. P3.
+**296. Little League**: the baseball diamond, parents in the stands. P2.
+**297. The community pool** in late summer. P3.
+**298. The trailer park**. P2.
+**299. A suburban street at dusk**: kids on bikes, sprinklers. P1.
+**300. A family kitchen** *(in)*: wall phone, avocado appliances. P1.
+**301. A living room** *(in)*: the TV, a VCR, a game on. P1.
+**302. A teenager's bedroom** *(in)*: posters, a cassette deck. P2.
+**303. A backyard barbecue**: neighbours, a grill, lawn chairs. P1.
+**304. A garage workbench** *(in)*: tools, a golf bag in the corner. P3.
+
+**Work and the countryside**
+**305. The barn** *(in)*: hay, a tractor. P2.
+**306. The grain elevator and co-op**. P2.
+**307. The factory**: shift change at the gate. P2.
+**308. The railway crossing and depot**. P2.
+**309. The bus depot**. P3.
+**310. The taxi office** *(in)*. P3.
+**311. The water tower** with the town's name. P2.
+**312. The river and the old bridge**. P1.
+**313. The fishing pier** at the lake. P2.
+**314. The boat launch**. P3.
+**315. The campground**. P3.
+**316. The valley overlook**: the whole town and your course below (gets greener as you grow). P1.
+**317. The county fair** *(one)*: rides, prize pigs, a golf putting booth. P2.
+
+**Seasons, weather and events** *(one each)*
+**318. Halloween on Main Street**. P2.
+**319. Christmas on Main Street**: snow, lights. P2.
+**320. The Fourth of July parade**. P2.
+**321. Spring planting** on the course. P3.
+**322. A rainy day** at the range: one stubborn golfer under an umbrella. P2.
+**323. Snow on the course**: the winter shutdown. P2.
+
+**Later in the game (upgraded only)**
+**324. The motel room** *(in)*. P3.
+**325. The hotel lobby** *(in)*. P3.
+**326. The casino floor** *(in)*. P3.
+**327. The stadium** on game night. P3.
 
 ### People (Q, hard times and good times)
 **230. Townspeople portraits, 48 archetypes**: three ages (20-30, 30-50, 50-70) x two sexes x eight jobs: farmer, mechanic, teacher, shop clerk, diner waitress or cook, office worker, nurse, retiree; plus 8 more: a high school kid, a video store clerk, a gas attendant, a construction worker, a banker, the sheriff, the mayor, a club golfer. Each in hard times and good times. P1.
