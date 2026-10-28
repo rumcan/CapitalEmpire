@@ -558,8 +558,8 @@ export class GroundPainter {
     return rw > 0 && rh > 0 ? [rx, ry, rw, rh] : null;
   }
   /** T247: a band image (soft-edges.ts: a byte a px over a tile box) stretched onto g through the chunk transform M (bilinear) with the op */
-  private putSoft(g: C2D, img: SoftImage, M: DOMMatrix, op: GlobalCompositeOperation) {
-    const s = this.bufferKeep('softSmall', img.W, img.H);
+  private putSoft(g: C2D, img: SoftImage, M: DOMMatrix, op: GlobalCompositeOperation, name = 'softSmall') {
+    const s = this.bufferKeep(name, img.W, img.H);
     ctx2d(s).putImageData(new ImageData(softRGBA(img) as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
     g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.drawImage(s, img.x0, img.y0, img.W / img.r, img.H / img.r); g.restore();
   }
@@ -671,16 +671,18 @@ export class GroundPainter {
   private softArea(ctx: C2D, img: { a: SoftImage; p: SoftImage } | null, M: DOMMatrix, draw: () => void, fill: (g: C2D, r: number[]) => void) {
     const W = ctx.canvas.width, H = ctx.canvas.height, a = img?.a, rect = a ? GroundPainter.pxRect(M, a.x0, a.y0, a.x0 + a.W / a.r, a.y0 + a.H / a.r, W, H) : null;
     if (!img || !a || !rect) { draw(); return; }
+    // the ground before the area (what the band blends into)
     const [rx, ry, rw, rh] = rect, ar = this.bufferAtLeast('softAround', W, H), ag = ctx2d(ar);
     ag.clearRect(rx, ry, rw, rh); ag.drawImage(ctx.canvas, rx, ry, rw, rh, rx, ry, rw, rh);
     draw();
+    // the area's fill through its share, laid over that ground (the mix), kept where the band is, then laid over the area as drawn
     const s = this.bufferAtLeast('softLay', W, H), sg = ctx2d(s);
     sg.clearRect(rx, ry, rw, rh);
     sg.save(); sg.setTransform(M); sg.beginPath(); sg.rect(a.x0, a.y0, a.W / a.r, a.H / a.r); sg.clip(); fill(sg, [a.x0, a.y0, a.x0 + a.W / a.r, a.y0 + a.H / a.r]); sg.restore();
-    this.putSoft(sg, a, M, 'destination-in');
-    sg.save(); sg.setTransform(1, 0, 0, 1, 0, 0); sg.globalCompositeOperation = 'destination-over'; sg.drawImage(ar, rx, ry, rw, rh, rx, ry, rw, rh); sg.restore();
-    this.putSoft(sg, img.p, M, 'destination-in');
-    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.drawImage(s, rx, ry, rw, rh, rx, ry, rw, rh); ctx.restore();
+    this.putSoft(sg, a, M, 'destination-in', 'softA');
+    ag.save(); ag.setTransform(1, 0, 0, 1, 0, 0); ag.globalCompositeOperation = 'source-over'; ag.globalAlpha = 1; ag.drawImage(s, rx, ry, rw, rh, rx, ry, rw, rh); ag.restore();
+    this.putSoft(ag, img.p, M, 'destination-in', 'softP');
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.drawImage(ar, rx, ry, rw, rh, rx, ry, rw, rh); ctx.restore();
   }
   /** T204 (rugged-edges.ts): each painted area's and lot lawn's drawn form, by its patch (a patch keeps its object until it changes) */
   private ruggedForms = new WeakMap<LotPatch, RuggedForm>();
