@@ -155,7 +155,7 @@ const CHAIN: Pair = { x: 'expansion:chainlink-x', y: 'expansion:chainlink-y' };
 interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; fence: boolean; veh: boolean; street: boolean; plant: boolean }
 interface Spec { id: string; s: number; flip: boolean; h: Box4 }
 interface Opt { flip?: boolean; mul?: number; fixed?: boolean; street?: boolean; plant?: boolean; veh?: boolean }
-interface Patch { block: boolean; tex: LotPatch['tex']; quad: number[]; lines?: number[]; crop?: LotPatch['crop'] }
+interface Patch { block: boolean; tex: LotPatch['tex']; quad: number[]; lines?: number[]; crop?: LotPatch['crop']; hard?: true }
 
 /** does an axis-aligned footprint overlap a convex quad (8 numbers, corners in order); touching is not overlap */
 function hit(fp: Box4, q: number[]): boolean {
@@ -228,10 +228,10 @@ class FB {
   /** the world quad (8 numbers) of a parcel-frame rectangle */
   quad(a0: number, b0: number, a1: number, b1: number): number[] { return [this.P(a0, b0), this.P(a1, b0), this.P(a1, b1), this.P(a0, b1)].flatMap(q => [q.x, q.y]); }
   /** a ground patch over a parcel-frame rectangle (clamped to the parcel); blocking patches (the drive, the track) keep uprights off */
-  pave(block: boolean, a0: number, b0: number, a1: number, b1: number, tex: LotPatch['tex'], lines?: number[], crop?: LotPatch['crop']) {
+  pave(block: boolean, a0: number, b0: number, a1: number, b1: number, tex: LotPatch['tex'], lines?: number[], crop?: LotPatch['crop'], hard = false) {
     const A0 = clamp(a0, 0, this.W), A1 = clamp(a1, 0, this.W), B0 = clamp(b0, 0, this.D), B1 = clamp(b1, 0, this.D);
     if (A1 - A0 < 0.05 || B1 - B0 < 0.05) return;
-    this.patches.push(crop ? { block, tex, quad: this.quad(A0, B0, A1, B1), crop } : { block, tex, quad: this.quad(A0, B0, A1, B1), lines });
+    this.patches.push(crop ? { block, tex, quad: this.quad(A0, B0, A1, B1), crop } : hard ? { block, tex, quad: this.quad(A0, B0, A1, B1), lines, hard: true } : { block, tex, quad: this.quad(A0, B0, A1, B1), lines });
   }
   /** crop or furrow rows for a field rectangle: lines every ROW tiles running along u or along n, in world tiles.
    *  NOTE for the lead: the renderer paints every lot patch's lines in worn off-white today (parking bays); rows want a
@@ -284,7 +284,7 @@ class FB {
       }
       acc.push(it); props.push({ id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s });
     }
-    return { props, ground: this.patches.map(q => (q.crop ? { pts: q.quad, tex: q.tex, crop: q.crop } : q.lines?.length ? { pts: q.quad, tex: q.tex, lines: q.lines } : { pts: q.quad, tex: q.tex })) };
+    return { props, ground: this.patches.map(q => (q.crop ? { pts: q.quad, tex: q.tex, crop: q.crop } : q.hard ? { pts: q.quad, tex: q.tex, ...(q.lines?.length ? { lines: q.lines } : {}), hard: true as const } : q.lines?.length ? { pts: q.quad, tex: q.tex, lines: q.lines } : { pts: q.quad, tex: q.tex })) };
   }
 }
 
@@ -474,7 +474,9 @@ export const FARM_MONTH = 9;
 export const FARM_SETBACK = [30, 60] as const, FARM_SETBACK_SHORT = 10;
 /** the windbreak (stand-ins for GOLF-ART-LIST 188, the poplars): its rows' offset either side of the lane's centre, the trees' spacing
  *  along it (tiles: 5.2 m and 6.4 m) */
-export const WIND_OFF = 2.6, WIND_STEP = 3.2;
+export const WIND_OFF = 2.8, WIND_STEP = 3.2;
+/** the farm lane's half width (tiles: a 4.8 m dirt lane, the stand-in for GOLF-ART-LIST 189) */
+export const LANE_HALF = 1.2;
 /** the orchard (stand-ins for 187): the grid's pitch between rows and between the trees of a row (tiles: 6 m), the most trees across and
  *  down, the trees' size (of their owner size: 4-5 m fruit trees) */
 export const ORCHARD_PITCH = 3, ORCHARD_MAX = 8, ORCHARD_MUL = 0.62;
@@ -526,13 +528,14 @@ function layoutOf2(p: FarmParcel, seed: number): Layout2 {
   const front = Math.max(FARM_SETBACK_SHORT, Math.min(want, D - 2 - YD));
   const hb = front + hd / 2, bb = hb + bbOff, yardB1 = Math.min(Math.max(hb + hd / 2, bb + bd / 2) + back, D - 1), yardB0 = Math.max(0, front - 2.5);
   const yA0 = Math.min(ha - hw / 2, ba - bw / 2, laneA - 1) - 1.5, yA1 = Math.max(ha + hw / 2, ba + bw / 2, laneA + 1) + 1.5;
-  // the windbreak: a straight row of tall narrow trees down one side of the lane or both, from the road to the yard
-  const both = r() < 0.55, one = (r() < 0.5 ? -1 : 1) as 1 | -1, poplar = r() < 0.7 || !WIND_SPRUCE.length;
+  // the windbreak: a straight row of tall narrow trees down one side of the lane or both, from the road to the yard; one row stands on the lane's
+  // far side on screen (its crowns never hide the lane: a step along +u goes down the screen when u.x + u.y > 0)
+  const both = r() < 0.55, one: 1 | -1 = p.u.x + p.u.y > 1e-9 ? -1 : 1, poplar = r() < 0.7 || !WIND_SPRUCE.length;
   const wid = poplar ? WIND_POPLAR[0] : WIND_SPRUCE[Math.floor(r() * WIND_SPRUCE.length)], wmul = poplar ? 1.05 + 0.15 * r() : 0.8 + 0.15 * r();
   const wind = wid && yardB0 - 3.5 >= 2 * WIND_STEP ? { sides: both ? [-1, 1] as (1 | -1)[] : [one], id: wid, mul: wmul, b0: 2.5, b1: yardB0 - 1 } : null;
   const has = (s: 1 | -1) => !!wind && wind.sides.includes(s);
   // the fields keep off the lane's strip (its windbreak and a headland) and the yard (a headland round it)
-  const G = 1.6, eL = laneA - (has(-1) ? WIND_OFF + 1.8 : 2.2), eR = laneA + (has(1) ? WIND_OFF + 1.8 : 2.2);
+  const G = 1.6, eL = laneA - (has(-1) ? WIND_OFF + 1.8 : LANE_HALF + 1.4), eR = laneA + (has(1) ? WIND_OFF + 1.8 : LANE_HALF + 1.4);
   const room = D - 3 - yardB1, endB = room > 8 ? yardB1 + (0.55 + 0.4 * r()) * room : yardB1;
   const rects: [number, number, number, number][] = [];
   const add = (a0: number, b0: number, a1: number, b1: number) => { if (a1 - a0 >= 8 && b1 - b0 >= 8) rects.push([a0, b0, a1, b1]); };
@@ -618,10 +621,13 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
     if (st) { const d = q.alongU ? p.u : p.n; B.pave(false, q.a0, q.b0, q.a1, q.b1, 'field', undefined, { st, d: [Math.round(d.x * 1e4) / 1e4, Math.round(d.y * 1e4) / 1e4], ph: q.ph }); }
     else if (q.kind === 'fallow') B.pave(false, q.a0, q.b0, q.a1, q.b1, FALLOW_TEX);
   }
-  B.pave(false, L.yA0, L.yardB0, L.yA1, L.yardB1, 'gravel');
-  B.pave(true, L.laneA - 1, 0, L.laneA + 1, L.yardB0 + 0.5, 'dirt');
-  B.pave(true, L.laneA - 1, L.yardB0 + 0.5, L.laneA + 1, L.yardB1, 'gravel');
-  if (L.endB > L.yardB1) B.pave(true, L.laneA - 0.8, L.yardB1, L.laneA + 0.8, L.endB, 'dirt');
+  // (the yard: packed earth, its edge soft into the grass)
+  B.pave(false, L.yA0, L.yardB0, L.yA1, L.yardB1, 'dirt');
+  // (the lane and the track: dirt with a hard outline, never T247's soft band, which is wider than they are, and two wheel ruts as furrows)
+  const ruts = (b0: number, b1: number, h: number) => [-h, h].flatMap(s => { const x = B.P(L.laneA + s, b0 + 0.3), y = B.P(L.laneA + s, b1 - 0.3); return [x.x, x.y, y.x, y.y]; });
+  B.pave(true, L.laneA - LANE_HALF, 0, L.laneA + LANE_HALF, L.yardB0 + 0.5, 'dirt', ruts(0, L.yardB0 + 0.5, 0.5), undefined, true);
+  B.pave(true, L.laneA - 1, L.yardB0 + 0.5, L.laneA + 1, L.yardB1, 'gravel', undefined, undefined, true);
+  if (L.endB > L.yardB1) B.pave(true, L.laneA - 0.8, L.yardB1, L.laneA + 0.8, L.endB, 'dirt', ruts(L.yardB1, L.endB, 0.4), undefined, true);
   // the buildings, at their laid-out centres and scales (farmsteadOf stays exact)
   B.put(L.houseId, L.ha, L.hb, { flip, mul: L.houseMul, fixed: true });
   B.put(BARN[0], L.ba, L.bb, { flip, mul: L.barnMul, fixed: true });

@@ -775,15 +775,17 @@ export class GroundPainter {
         }
       }
       if (!n) continue;
-      // the shadow on the soil
+      // the shadow on the soil (and the furrows' turned ridge toward the sun, in soft light so the soil's texture shows through it)
       ctx.save(); ctx.setTransform(M.translate(sx * lk.shadow.off * k, sy * lk.shadow.off * k)); ctx.globalCompositeOperation = 'multiply';
-      ctx.lineCap = 'butt'; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash); ctx.strokeStyle = `rgba(${r},${gc},${b},${lk.shadow.depth})`; ctx.stroke(rows); ctx.restore();
-      // the rows
+      ctx.lineCap = 'butt'; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash); ctx.strokeStyle = `rgba(${r},${gc},${b},${lk.shadow.depth})`; ctx.stroke(rows);
+      if (lk.ridge > 0) { ctx.setTransform(M.translate(-sx * w * 0.9, -sy * w * 0.9)); ctx.globalCompositeOperation = 'soft-light'; ctx.lineWidth = w * 0.7; ctx.strokeStyle = `rgba(255,236,200,${lk.ridge})`; ctx.stroke(rows); }
+      ctx.restore();
+      // the rows: the crop's colour, the painting's detail laid over it, the lit edge, cut to the rows
       const buf = this.buffer('lotLines', W, H), g = ctx2d(buf); // (the lot lines' scratch: no new chunk-sized buffer)
       g.setTransform(M); g.lineCap = 'butt'; g.lineWidth = w; if (dash) g.setLineDash(dash);
       g.strokeStyle = lk.colour; g.stroke(rows);
-      g.globalCompositeOperation = 'multiply'; g.fillStyle = base(g); g.fillRect(box[0], box[1], box[2] - box[0], box[3] - box[1]);
-      if (lk.shine > 0 && !lite) { g.globalCompositeOperation = 'soft-light'; g.setTransform(M.translate(-sx * w * 0.22, -sy * w * 0.22)); g.lineWidth = w * 0.35; g.strokeStyle = `rgba(255,244,214,${lk.shine})`; g.stroke(rows); g.setTransform(M); g.lineWidth = w; }
+      g.globalCompositeOperation = 'overlay'; g.globalAlpha = lk.detail; g.fillStyle = base(g); g.fillRect(box[0], box[1], box[2] - box[0], box[3] - box[1]); g.globalAlpha = 1;
+      if (lk.shine > 0 && !lite) { g.globalCompositeOperation = 'soft-light'; g.setTransform(M.translate(-sx * w * 0.22, -sy * w * 0.22)); g.lineWidth = w * 0.4; g.strokeStyle = `rgba(255,246,220,${lk.shine})`; g.stroke(rows); g.setTransform(M); g.lineWidth = w; }
       g.globalCompositeOperation = 'destination-in'; g.strokeStyle = '#000'; g.stroke(rows);
       if (lk.wear > 0) { g.setLineDash([]); g.globalCompositeOperation = 'destination-out'; g.globalAlpha = lk.wear; g.fillStyle = wear(g); g.fillRect(box[0], box[1], box[2] - box[0], box[3] - box[1]); g.globalAlpha = 1; }
       g.globalCompositeOperation = 'source-over'; g.setLineDash([]);
@@ -1641,8 +1643,8 @@ export class GroundPainter {
         const path = polyPath(p.pts);
         // T259: a crop field wears its state's art once it lands (cropArt), else its soil (tex 'field') under the stand-in rows (drawCrops)
         const art = p.crop ? this.cropArt(p) : null;
-        // T247: a lot's dirt (a dirt car park, a vegetable bed, a building site, a field) with its soft band where it meets grass
-        if (sc && this.softTex(p.tex)) {
+        // T247: a lot's dirt (a dirt car park, a vegetable bed, a building site, a field) with its soft band where it meets grass (T259: not a farm lane)
+        if (sc && !p.hard && this.softTex(p.tex)) {
           const fill = pat((art ?? p.tex) as TexName);
           this.softArea(ctx, softBand(p, p.pts, 0), M, () => { ctx.fillStyle = fill; ctx.fill(path); }, (g, r) => { g.fillStyle = fill; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); }, path);
           continue;

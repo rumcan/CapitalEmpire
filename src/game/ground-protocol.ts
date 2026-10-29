@@ -119,6 +119,8 @@ export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) *
   /** T259: a farm's crop field (ext/farms/crops.ts; tex 'field', its soil): its state this month, its rows' unit direction (world tiles) and
    *  the rows' phase (0..1 of their pitch, so neighbouring fields' rows do not line up); renderer.ts drawCrops lays its rows, or its state's art */
   crop?: { st: CropState; d: [number, number]; ph: number };
+  /** T259: drawn with its hard outline, never T247's soft band (a farm lane narrower than the band would dissolve in it) */
+  hard?: true;
   /** T237: drawn with the car parks (over their asphalt and the painted areas): a paved car park's kerbs and planting islands (event/parklook.ts) */
   park?: true;
   /** T232: a survey line round a plot (lots/survey.ts: a building site, the player's empty land): always with tex 'marks' (nothing filled), its

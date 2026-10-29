@@ -57,16 +57,19 @@ export const cropSurface = (st: CropState, dx: number, dy: number): string => (M
 /** the stand-in rows of each state (tiles; renderer.ts drawCrops):
  *  - pitch: the rows' spacing (corn at 0.76 m, the furrows at 0.9 m);
  *  - width: a row's stroke; dash: its plants (on, off; null: a solid furrow), the dashes start anywhere along each row;
- *  - colour: what multiplies the base texture inside the rows (the map grass's painted texture: its detail kept, coloured as the crop);
+ *  - colour: the crop's colour; detail: how strongly the map grass's painted texture is laid over it (overlay: the rows keep their colour and
+ *    take the painting's detail, never a flat stroke);
  *  - wear: how much of the row the wear noise eats (0 none .. 1 a broken row);
- *  - shadow: the row's shadow toward the lower left (the sun at the upper right, shadows at 145 degrees), its offset and depth;
- *  - shine: a thin lit edge toward the upper right (0: none), inset into the row and masked by the wear */
-export interface RowLook { pitch: number; width: number; dash: readonly [number, number] | null; colour: string; wear: number; shadow: { off: number; depth: number }; shine: number }
+ *  - shadow: the row's shadow toward the lower left (the sun at the upper right, shadows at 145 degrees), its offset and depth (the cool shade
+ *    multiplied onto the soil, its texture kept); a tall crop's falls further;
+ *  - shine: a thin lit edge toward the upper right (0: none), inset into the row and laid in soft light (the texture masks it);
+ *  - ridge: the furrows' turned soil, a light edge beside each furrow toward the sun (0: none) */
+export interface RowLook { pitch: number; width: number; dash: readonly [number, number] | null; colour: string; detail: number; wear: number; shadow: { off: number; depth: number }; shine: number; ridge: number }
 export const ROW_LOOK: Readonly<Record<CropState, RowLook>> = {
-  plough: { pitch: 0.45, width: 0.17, dash: null, colour: '#5a4632', wear: 0.25, shadow: { off: 0.06, depth: 0.45 }, shine: 0.22 },
-  young: { pitch: 0.38, width: 0.16, dash: [0.13, 0.07], colour: '#6f9a3a', wear: 0.3, shadow: { off: 0.07, depth: 0.35 }, shine: 0.18 },
-  ripe: { pitch: 0.38, width: 0.3, dash: [0.42, 0.05], colour: '#d8b46a', wear: 0.18, shadow: { off: 0.12, depth: 0.5 }, shine: 0.25 },
-  stubble: { pitch: 0.38, width: 0.07, dash: [0.05, 0.1], colour: '#e6cf98', wear: 0.35, shadow: { off: 0.04, depth: 0.3 }, shine: 0 },
+  plough: { pitch: 0.45, width: 0.15, dash: null, colour: '#3f2c1d', detail: 0.55, wear: 0.2, shadow: { off: 0.05, depth: 0.5 }, shine: 0, ridge: 0.4 },
+  young: { pitch: 0.38, width: 0.2, dash: [0.14, 0.07], colour: '#5a9a26', detail: 0.3, wear: 0.1, shadow: { off: 0.08, depth: 0.6 }, shine: 0.35, ridge: 0 },
+  ripe: { pitch: 0.38, width: 0.3, dash: null, colour: '#b39257', detail: 0.65, wear: 0.14, shadow: { off: 0.15, depth: 0.75 }, shine: 0.4, ridge: 0 },
+  stubble: { pitch: 0.38, width: 0.09, dash: [0.06, 0.07], colour: '#efe0b0', detail: 0.3, wear: 0.15, shadow: { off: 0.06, depth: 0.6 }, shine: 0, ridge: 0 },
 };
 /** the least spacing (device px) the stand-in rows are drawn at: further out the rows are drawn every second, fourth ... one, wider (no moire) */
 export const ROW_MIN_PX = 4;
