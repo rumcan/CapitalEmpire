@@ -1,0 +1,514 @@
+{
+  "subjects": [
+    {
+      "id": "kit:granite-small-grey",
+      "name": "Small grey granite boulder",
+      "cat": "Painted landscaping",
+      "kind": "rock",
+      "w": 61.3829,
+      "h": 73.5167,
+      "quad": [
+        0,
+        0,
+        61.3829,
+        73.5167
+      ],
+      "ax": 31.3066,
+      "ay": 54.7396,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:granite-small-grey",
+      "drawn": {
+        "id": "kit:granite-small-grey",
+        "name": "Small grey granite boulder",
+        "quad": [
+          0,
+          0,
+          61.3829,
+          73.5167
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0174558977756074
+      },
+      "sharp": 1.017,
+      "native": null
+    },
+    {
+      "id": "kit:granite-broad-rosegrey",
+      "name": "Broad rose-grey granite boulder",
+      "cat": "Painted landscaping",
+      "kind": "rock",
+      "w": 87.7428,
+      "h": 80.3942,
+      "quad": [
+        0,
+        0,
+        87.7428,
+        80.3942
+      ],
+      "ax": 43.8486,
+      "ay": 58.949,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:granite-broad-rosegrey",
+      "drawn": {
+        "id": "kit:granite-broad-rosegrey",
+        "name": "Broad rose-grey granite boulder",
+        "quad": [
+          0,
+          0,
+          87.7428,
+          80.3942
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0149985944259663
+      },
+      "sharp": 1.015,
+      "native": null
+    },
+    {
+      "id": "kit:granite-tall-fern",
+      "name": "Tall granite boulder with fern",
+      "cat": "Painted landscaping",
+      "kind": "rock",
+      "w": 142.5047,
+      "h": 128.9824,
+      "quad": [
+        0,
+        0,
+        142.5047,
+        128.9824
+      ],
+      "ax": 111.9452,
+      "ay": 102.5195,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:granite-tall-fern",
+      "drawn": {
+        "id": "kit:granite-tall-fern",
+        "name": "Tall granite boulder with fern",
+        "quad": [
+          0,
+          0,
+          142.5047,
+          128.9824
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0148671446646984
+      },
+      "sharp": 1.015,
+      "native": null
+    },
+    {
+      "id": "kit:granite-moss-split",
+      "name": "Mossy split granite boulder",
+      "cat": "Painted landscaping",
+      "kind": "rock",
+      "w": 67.8698,
+      "h": 74.5674,
+      "quad": [
+        0,
+        0,
+        67.8698,
+        74.5674
+      ],
+      "ax": 31.7042,
+      "ay": 53.8642,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:granite-moss-split",
+      "drawn": {
+        "id": "kit:granite-moss-split",
+        "name": "Mossy split granite boulder",
+        "quad": [
+          0,
+          0,
+          67.8698,
+          74.5674
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0259174920944005
+      },
+      "sharp": 1.026,
+      "native": null
+    },
+    {
+      "id": "kit:granite-golden-grass",
+      "name": "Granite boulder with golden grass",
+      "cat": "Painted landscaping",
+      "kind": "rock",
+      "w": 107.7116,
+      "h": 87.1275,
+      "quad": [
+        0,
+        0,
+        107.7116,
+        87.1275
+      ],
+      "ax": 49.45,
+      "ay": 62.7571,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:granite-golden-grass",
+      "drawn": {
+        "id": "kit:granite-golden-grass",
+        "name": "Granite boulder with golden grass",
+        "quad": [
+          0,
+          0,
+          107.7116,
+          87.1275
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0146050328541505
+      },
+      "sharp": 1.015,
+      "native": null
+    },
+    {
+      "id": "kit:granite-pale-fern",
+      "name": "Pale granite boulder with fern",
+      "cat": "Painted landscaping",
+      "kind": "rock",
+      "w": 148.3573,
+      "h": 150.3094,
+      "quad": [
+        0,
+        0,
+        148.3573,
+        150.3094
+      ],
+      "ax": 107.4397,
+      "ay": 112.0593,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:granite-pale-fern",
+      "drawn": {
+        "id": "kit:granite-pale-fern",
+        "name": "Pale granite boulder with fern",
+        "quad": [
+          0,
+          0,
+          148.3573,
+          150.3094
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0179004107527538
+      },
+      "sharp": 1.018,
+      "native": null
+    },
+    {
+      "id": "kit:water-edge-fern",
+      "name": "Water-edge fern",
+      "cat": "Painted landscaping",
+      "kind": "shrub",
+      "w": 74.496,
+      "h": 76.416,
+      "quad": [
+        0,
+        0,
+        74.496,
+        76.416
+      ],
+      "ax": 45.4464,
+      "ay": 59.68,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:water-edge-fern",
+      "drawn": {
+        "id": "kit:water-edge-fern",
+        "name": "Water-edge fern",
+        "quad": [
+          0,
+          0,
+          74.496,
+          76.416
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0233458961474038
+      },
+      "sharp": 1.023,
+      "native": null
+    },
+    {
+      "id": "kit:water-edge-sedge",
+      "name": "Water-edge sedge",
+      "cat": "Painted landscaping",
+      "kind": "shrub",
+      "w": 57.8494,
+      "h": 51.58,
+      "quad": [
+        0,
+        0,
+        57.8494,
+        51.58
+      ],
+      "ax": 26.0953,
+      "ay": 41.3055,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:water-edge-sedge",
+      "drawn": {
+        "id": "kit:water-edge-sedge",
+        "name": "Water-edge sedge",
+        "quad": [
+          0,
+          0,
+          57.8494,
+          51.58
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0217138425746415
+      },
+      "sharp": 1.022,
+      "native": null
+    },
+    {
+      "id": "kit:water-edge-cattails",
+      "name": "Water-edge cattails",
+      "cat": "Painted landscaping",
+      "kind": "shrub",
+      "w": 90.2857,
+      "h": 103.4286,
+      "quad": [
+        0,
+        0,
+        90.2857,
+        103.4286
+      ],
+      "ax": 55.3792,
+      "ay": 93.3562,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:water-edge-cattails",
+      "drawn": {
+        "id": "kit:water-edge-cattails",
+        "name": "Water-edge cattails",
+        "quad": [
+          0,
+          0,
+          90.2857,
+          103.4286
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0167723127804293
+      },
+      "sharp": 1.017,
+      "native": null
+    },
+    {
+      "id": "kit:water-edge-juniper",
+      "name": "Water-edge juniper",
+      "cat": "Painted landscaping",
+      "kind": "shrub",
+      "w": 68.0563,
+      "h": 49.4648,
+      "quad": [
+        0,
+        0,
+        68.0563,
+        49.4648
+      ],
+      "ax": 40.9703,
+      "ay": 41.3859,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:water-edge-juniper",
+      "drawn": {
+        "id": "kit:water-edge-juniper",
+        "name": "Water-edge juniper",
+        "quad": [
+          0,
+          0,
+          68.0563,
+          49.4648
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0241520623366245
+      },
+      "sharp": 1.024,
+      "native": null
+    },
+    {
+      "id": "kit:water-edge-golden-grass",
+      "name": "Water-edge golden grass",
+      "cat": "Painted landscaping",
+      "kind": "shrub",
+      "w": 58.5911,
+      "h": 48.2915,
+      "quad": [
+        0,
+        0,
+        58.5911,
+        48.2915
+      ],
+      "ax": 38.5572,
+      "ay": 40.885,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:water-edge-golden-grass",
+      "drawn": {
+        "id": "kit:water-edge-golden-grass",
+        "name": "Water-edge golden grass",
+        "quad": [
+          0,
+          0,
+          58.5911,
+          48.2915
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.0155125949162929
+      },
+      "sharp": 1.016,
+      "native": null
+    },
+    {
+      "id": "kit:water-edge-red-shrub",
+      "name": "Water-edge red shrub",
+      "cat": "Painted landscaping",
+      "kind": "shrub",
+      "w": 60.9635,
+      "h": 62.365,
+      "quad": [
+        0,
+        0,
+        60.9635,
+        62.365
+      ],
+      "ax": 41.3331,
+      "ay": 54.6622,
+      "base": 1,
+      "scale": 1,
+      "sizeId": "kit:water-edge-red-shrub",
+      "drawn": {
+        "id": "kit:water-edge-red-shrub",
+        "name": "Water-edge red shrub",
+        "quad": [
+          0,
+          0,
+          60.9635,
+          62.365
+        ],
+        "scale": 1,
+        "fill": 1,
+        "cap": 1.008578529623988
+      },
+      "sharp": 1.009,
+      "native": null
+    }
+  ],
+  "edits": [
+    {
+      "id": "kit:granite-small-grey",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:granite-small-grey",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:granite-broad-rosegrey",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:granite-broad-rosegrey",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:granite-tall-fern",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:granite-tall-fern",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:granite-moss-split",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:granite-moss-split",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:granite-golden-grass",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:granite-golden-grass",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:granite-pale-fern",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:granite-pale-fern",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:water-edge-fern",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:water-edge-fern",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:water-edge-sedge",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:water-edge-sedge",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:water-edge-cattails",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:water-edge-cattails",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:water-edge-juniper",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:water-edge-juniper",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:water-edge-golden-grass",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:water-edge-golden-grass",
+      "factor": 0.9259259259259258
+    },
+    {
+      "id": "kit:water-edge-red-shrub",
+      "factor": 1.08
+    },
+    {
+      "id": "kit:water-edge-red-shrub",
+      "factor": 0.9259259259259258
+    }
+  ],
+  "errors": [],
+  "actualApiSubjects": 12,
+  "editVerification": "Actual Studio controls invoked for all12 cards. Scale POSTs intercepted and echoed locally; no scale file or owner state was written.",
+  "displayZoom": 1.2
+}

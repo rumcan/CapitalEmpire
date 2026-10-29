@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "id": "golf:stone-boulders-grey",
+  "catalogueItem": 180,
+  "subjobKey": "180c-single-boulders",
+  "category": "landscaping",
+  "transparent": true,
+  "requiresLibraryRegistration": true,
+  "output": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1.png",
+  "provenance": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/golf-country-club-owner-20261028.png"
+  ],
+  "prompt": "Use case: stylized-concept. Production hand-painted illustrated game sprites matching reference1's art materials and reference2's grey granite pond rocks. A square sheet with SIX SEPARATE rounded weathered GREY GRANITE BOULDERS, one per cell in a clearly separated3columns x2rows layout on TRUE TRANSPARENT ALPHA. Exactly6 full isolated silhouettes, no touching.\nRow1: a small0.6m smooth coolgrey rock; a1.1m low broad grey boulder flecked subtly rose-grey; a1.8m taller rounded granite boulder with a small green fern at its foot.\nRow2: a0.8m split-rounded grey rock with a little moss on its crown; a1.5m broad slate-grey granite boulder with golden autumn grass tucked into its foot; a2m pale rose-grey granite boulder with a small green fern and moss at the foot.\nThese are grey/rose-grey granite, not tan sandstone or crystalline ore. Paint broad readable planes and softened weathered cracks, confident stylized brushwork, richly illustrated but no photographic noise. Fixed parallel2:1 dimetric game camera, ground-plane axes +/-26.565degrees, seen from above enough to match the terrain; not eyelevel. ONE sun fixed SCREEN UPPER RIGHT on EACH of the6 rocks: upperright warmsoft highlights, lowerleft coolshade, consistent even scene exposure. Keep15percent clear space insideeachcell. Rocks may sit low with their bottom partly buried in use, but show complete silhouette and planting. No drawn ground, dirt island, water, floor, detachedcastshadow, UI, text, border, numerals, magenta or other background colour. Native transparent PNG, one six-sprite sheet.",
+  "date": "2026-10-28",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-8b62d453-2bae-4807-9e2d-d0e6cd9de305.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "file": "art/theme-consistency/references/golf-country-club-owner-20261028.png",
+      "sha256": "14060410b73fd9f0215c2814049119d2390e4830a614e6bf9d8dfd02b8e674df"
+    }
+  ],
+  "integrationStatus": "pending-primary-review",
+  "processing": "Native generator PNG copied unchanged; no recolour, resample, mirror or warp."
+}

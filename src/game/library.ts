@@ -6,7 +6,7 @@ import { appendCars } from './cars-library';
 import { appendEast } from './east-library';
 import { appendBusinesses } from './business-library';
 import { appendConstruction } from './construction-library';
-import { appendGolf, appendKit, appendRangeArt } from './golf-library';
+import { appendGolf, appendKit, appendRangeArt, appendLandscapeArt } from './golf-library';
 import { appendViews } from './views-library';
 import { appendTrees } from './trees-library';
 import { appendAxisViews } from './axis-library';
@@ -1083,3 +1083,4 @@ appendAxisViews(LIBRARY, ATLAS_PAGES);
 appendKit(LIBRARY); // T231: the concept kit (on the golf page), appended before supplemental views
 appendExtraViews(LIBRARY, ATLAS_PAGES);
 appendRangeArt(LIBRARY); // T258: the range's ChatGPT art (on the golf page), appended last: no saved index moves
+appendLandscapeArt(LIBRARY); // T274: accepted organic art at the tail, on the same golf page

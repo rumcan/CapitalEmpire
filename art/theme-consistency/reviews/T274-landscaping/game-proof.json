@@ -1,0 +1,183 @@
+{
+  "records": [
+    {
+      "id": "kit:water-edge-fern",
+      "key": "water-edge-fern",
+      "x": 581,
+      "y": 1164,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7417,
+      "display": [
+        74.496,
+        76.416
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:water-edge-sedge",
+      "key": "water-edge-sedge",
+      "x": 583,
+      "y": 1162,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7418,
+      "display": [
+        57.8494,
+        51.58
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:water-edge-cattails",
+      "key": "water-edge-cattails",
+      "x": 585,
+      "y": 1160,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7419,
+      "display": [
+        90.2857,
+        103.4286
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:water-edge-juniper",
+      "key": "water-edge-juniper",
+      "x": 587,
+      "y": 1158,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7420,
+      "display": [
+        68.0563,
+        49.4648
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:water-edge-golden-grass",
+      "key": "water-edge-golden-grass",
+      "x": 589,
+      "y": 1156,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7421,
+      "display": [
+        58.5911,
+        48.2915
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:water-edge-red-shrub",
+      "key": "water-edge-red-shrub",
+      "x": 591,
+      "y": 1154,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7422,
+      "display": [
+        60.9635,
+        62.365
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:granite-small-grey",
+      "key": "granite-small-grey",
+      "x": 585,
+      "y": 1168,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7411,
+      "display": [
+        61.3829,
+        73.5167
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:granite-broad-rosegrey",
+      "key": "granite-broad-rosegrey",
+      "x": 587,
+      "y": 1166,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7412,
+      "display": [
+        87.7428,
+        80.3942
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:granite-tall-fern",
+      "key": "granite-tall-fern",
+      "x": 589,
+      "y": 1164,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7413,
+      "display": [
+        142.5047,
+        128.9824
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:granite-moss-split",
+      "key": "granite-moss-split",
+      "x": 591,
+      "y": 1162,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7414,
+      "display": [
+        67.8698,
+        74.5674
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:granite-golden-grass",
+      "key": "granite-golden-grass",
+      "x": 593,
+      "y": 1160,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7415,
+      "display": [
+        107.7116,
+        87.1275
+      ],
+      "page": 28
+    },
+    {
+      "id": "kit:granite-pale-fern",
+      "key": "granite-pale-fern",
+      "x": 595,
+      "y": 1158,
+      "scale": 1,
+      "flip": false,
+      "libraryIndex": 7416,
+      "display": [
+        148.3573,
+        150.3094
+      ],
+      "page": 28
+    }
+  ],
+  "atlasPages": 79,
+  "parcels": [
+    [
+      224,
+      1128,
+      450,
+      300
+    ]
+  ],
+  "saveFormat": "Game saves props by string library ID; normal PropsTool placement used, all POSTs intercepted.",
+  "errors": []
+}

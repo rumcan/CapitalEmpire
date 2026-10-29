@@ -74,6 +74,8 @@ never commit there.)
 
 ### 3. In flight
 
+**T274 #823 - accepted organic landscaping:** `lead/grey-granite-kit-20261028`, `worktrees/grey-granite-kit-20261028`, ready for parent review. Twelve native crops and separate hash-bound primary approvals; all1,471,583visible source pixels retained exactly once. Twelve individual decor/Studio cards, last append on existing golf page (25.4%area, no newGPUlayer),52 old golf/KIT records and UVs unchanged. Fresh-main typecheck PASS;10focused checks PASS. Actual game places all12 normally, scale1/no flips; Studio shows all12 and24size-control payloads verified with POST interception;0pageerrors. Evidence `art/theme-consistency/reviews/T274-landscaping/`. Own5189/5193/Edge stopped. Saves use string IDs, so future Range insertions do not reinterpret savedprops. Next: scoped PR, parent merge. No new generation, owner curation or worker/timer edits.
+
 **T272 #816 - menu art v2:** PR #818 ready for parent review, `lead/ui-tool-tiles-v2-20261028`, `worktrees/ui-tool-tiles-v2-20261028`. Twelve new assets and Course/Facilities aliases implemented; native source1448x1086 and exact4x3 crops in `art/ui-tool-tiles/sheet-v2.json`. All12 v1 hashes unchanged; fresh default typecheck PASS and focused checks21/21 PASS. Seven actual-game menu captures show all12 new icons loaded, with0pageerrors (`art/theme-consistency/reviews/T272-menu-tiles/`). Own5189 and Edge stopped. No generator/worker/task/quota or owner-file changes. Next: lead review/merge, then remove worktree.
 
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**

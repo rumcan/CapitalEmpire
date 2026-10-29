@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "id": "golf:water-edge-plants",
+  "source": {
+    "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1.png",
+    "sha256": "54bf835b51be8625794ce242761053144d7e878a3e420bb21d8f0b2dec4e6c08",
+    "dimensions": [
+      1536,
+      1024
+    ]
+  },
+  "sourceAppearance": {
+    "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1.appearance.json",
+    "sha256": "90e16ed70e72407d6cbb18a23dc68ecf8138e2b89b0e450e220a71f5af444c6a"
+  },
+  "processing": "Native RGBA pixels assigned once by nearest alpha>8 subject core; mask separates neighboring silhouettes, no resample/repaint/flip/warp. Every nonzero-alpha source pixel preserved exactly once.",
+  "subjects": [
+    {
+      "id": "kit:water-edge-fern",
+      "name": "Water-edge fern",
+      "metres": 1,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/01-water-edge-fern.native.png",
+      "sha256": "19dfbd580b81781ffa05413c8d9639b8943c708dda239cec6bd3e9203420fb54",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 582,
+        "height": 597
+      },
+      "coreBounds": {
+        "left": 49,
+        "top": 60,
+        "width": 500,
+        "height": 450
+      },
+      "nonzeroPixels": 159013
+    },
+    {
+      "id": "kit:water-edge-sedge",
+      "name": "Water-edge sedge",
+      "metres": 0.8,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/02-water-edge-sedge.native.png",
+      "sha256": "a14c158882678fb0d32da78b5fa0570addcc98b3e57c62339b59711b6159220c",
+      "sourceRect": {
+        "left": 541,
+        "top": 33,
+        "width": 609,
+        "height": 543
+      },
+      "coreBounds": {
+        "left": 579,
+        "top": 107,
+        "width": 539,
+        "height": 408
+      },
+      "nonzeroPixels": 148052
+    },
+    {
+      "id": "kit:water-edge-cattails",
+      "name": "Water-edge cattails",
+      "metres": 1.5,
+      "dimension": "height",
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/03-water-edge-cattails.native.png",
+      "sha256": "e6d01a550d61e2d0ff9b09be52ee78418ae77399fa4fe487858a774af452ed86",
+      "sourceRect": {
+        "left": 1061,
+        "top": 11,
+        "width": 474,
+        "height": 543
+      },
+      "coreBounds": {
+        "left": 1136,
+        "top": 24,
+        "width": 358,
+        "height": 504
+      },
+      "nonzeroPixels": 101878
+    },
+    {
+      "id": "kit:water-edge-juniper",
+      "name": "Water-edge juniper",
+      "metres": 1,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/04-water-edge-juniper.native.png",
+      "sha256": "de1bf513983d0cb8207872502e772bc3da877b57333c143f6bdff795fe0124d2",
+      "sourceRect": {
+        "left": 0,
+        "top": 569,
+        "width": 604,
+        "height": 439
+      },
+      "coreBounds": {
+        "left": 23,
+        "top": 619,
+        "width": 568,
+        "height": 367
+      },
+      "nonzeroPixels": 137397
+    },
+    {
+      "id": "kit:water-edge-golden-grass",
+      "name": "Water-edge golden grass",
+      "metres": 0.75,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/05-water-edge-golden-grass.native.png",
+      "sha256": "b556bfcc50b6e5950b46aa790e0d50b04a9ed9ea1fbd83a60044c63059402ec2",
+      "sourceRect": {
+        "left": 523,
+        "top": 527,
+        "width": 603,
+        "height": 497
+      },
+      "coreBounds": {
+        "left": 590,
+        "top": 542,
+        "width": 494,
+        "height": 449
+      },
+      "nonzeroPixels": 170452
+    },
+    {
+      "id": "kit:water-edge-red-shrub",
+      "name": "Water-edge red shrub",
+      "metres": 0.9,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/06-water-edge-red-shrub.native.png",
+      "sha256": "47da0d4c450bf036f99c71056942005fdc88fb1d4ba52e2feecc6101036f36c1",
+      "sourceRect": {
+        "left": 1089,
+        "top": 546,
+        "width": 435,
+        "height": 445
+      },
+      "coreBounds": {
+        "left": 1102,
+        "top": 570,
+        "width": 411,
+        "height": 402
+      },
+      "nonzeroPixels": 113612
+    }
+  ],
+  "pixelCoverage": {
+    "originalNonzero": 830404,
+    "preservedNonzero": 830404
+  }
+}
