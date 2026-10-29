@@ -116,8 +116,9 @@ function riverFollow(g: Game, x: number, y: number): ((s: number) => { X: number
 /** the grown-town scene's town time: 08:00, the morning peak (the fixture is saved at 06:30, the range's morning), and the time the tour
  *  waits after the clock moves, for the commute to fill the roads (15 s: 36 town minutes on the 10-minute town day) */
 const SCENE_MINUTE = 8 * 60, WARM_MS = 15000;
-/** T208: the course scene's town time, 11:00: the morning's groups are all out and the afternoon's are teeing off */
-const GOLF_MINUTE = 11 * 60;
+/** T208: the course scene's town time, 11:00: the morning's groups are all out and the afternoon's are teeing off (T269: ?golfMinute=N, bench.mjs
+ *  --golfMinute, another minute: 390, 06:30, the grounds crew at work before play) */
+const GOLF_MINUTE = (() => { const m = Number(new URLSearchParams(typeof location === 'undefined' ? '' : location.search).get('golfMinute')); return m > 0 && m < 1440 ? m : 11 * 60; })();
 
 /** The bench's game scenes (T098, issue #168), toured on the game the engine made in place of the synthetic city: `range` (?bench&start=range)
  *  the new range start; `fixture` (?bench&fixture=range20, dev/fixtures.ts) the range start's grown town at year 20, its town clock moved on

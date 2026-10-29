@@ -12,7 +12,9 @@ import CourseWorker from './course.worker?worker';
 
 /** a chunk job: chunks as cx cy pairs, the looks, the effective game month, the holes' centre lines and the cart paths and drives (flat
  *  segments ax, ay, bx, by in tiles: the tees' stairs face the nearest, T127) */
-export interface CourseJob { chunks: number[]; looks: CourseLooks; now: number; lines: [number, number[]][]; paths?: number[] }
+export interface CourseJob { chunks: number[]; looks: CourseLooks; now: number; lines: [number, number[]][]; paths?: number[];
+  /** T269: the grounds crew's cut per hole ([phase, leg, band], ground-protocol CourseLayer.stripes f); absent: none */
+  flips?: [number, number[]][] }
 /** a chunk's result: the chunk (cx, cy), its patch (null: nothing on it) and its grow key */
 export interface CourseChunkOut { cx: number; cy: number; patch: LotPatch | null; grow: string }
 
@@ -28,10 +30,10 @@ export type FromCourse =
 
 /** the patches of a chunk job on grid g (both threads run this) */
 export function runChunks(g: Grid, job: CourseJob): CourseChunkOut[] {
-  const lines = new Map(job.lines), out: CourseChunkOut[] = [];
+  const lines = new Map(job.lines), flips = job.flips?.length ? new Map(job.flips) : undefined, out: CourseChunkOut[] = [];
   for (let k = 0; k + 1 < job.chunks.length; k += 2) {
     const cx = job.chunks[k]!, cy = job.chunks[k + 1]!;
-    const patch = coursePatch(g, cx, cy, job.looks, job.now, lines, job.paths);
+    const patch = coursePatch(g, cx, cy, job.looks, job.now, lines, job.paths, flips);
     out.push({ cx, cy, patch, grow: courseGrowKey(g, cx, cy, job.now, patch?.course?.grow) });
   }
   return out;
