@@ -35,6 +35,11 @@ export function SeasonReportCard({ report, onContinue }: { report: SeasonReport;
             The range: {Math.round(report.range.golfers).toLocaleString()} golfers seen, {Math.round(report.range.buckets).toLocaleString()} buckets sold, {money(report.range.takings)} taken{report.range.lost > 0 ? `, ${Math.round(report.range.lost).toLocaleString()} drove on at the queue` : ''}
           </div>
         )}
+        {report.club && (
+          <div className="rounded-xl border border-white/10 bg-white/5 p-2 text-center text-xs text-slate-300" data-testid="season-memberships" title="The members' dues, paid month by month as each month began (in the takings above)">
+            Memberships: {report.club.members.toLocaleString()} {report.club.members === 1 ? 'member' : 'members'}, {money(report.club.dues)} of dues this season
+          </div>
+        )}
         <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
           <div className="mb-1 text-[12px] uppercase text-slate-400">The tour's invitation</div>
           <div className="flex flex-wrap gap-x-3 gap-y-1">

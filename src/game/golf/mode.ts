@@ -16,6 +16,7 @@ import { isTeeKind, migrateTees } from './teesets';
 import { normalizeTeeBoxes } from './teeplace';
 import { normalizeDayPins, type DayPinsSave } from './daypins';
 import { normalizeCrewSave, type CrewSave } from './crew';
+import { normalizeClubSave, type ClubSave } from './club';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -84,6 +85,9 @@ export interface GolfSave {
  dayPins?: DayPinsSave;
  /** T269 part 2: the grounds crew (golf/crew.ts CrewSave): the holes' stripe phases and the days their fairways were last cut whole. Missing: none */
  crew?: CrewSave;
+ /** T214 (#559, plan P26): the club's members (golf/club.ts ClubSave): the count, the dues a month, the founding drive, the month stepped to and the
+  *  season's books. Missing: an older save, whose members the engine seeds from T208's stand-in (club.ts legacyClub; P26 section 8) */
+ club?: ClubSave;
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
@@ -110,7 +114,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -148,5 +152,6 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   const dp = normalizeDayPins(dayPins); if (dp) out.dayPins = dp;
   // T269: the crew's stripes, well formed (nothing to keep: the field stays out)
   if (crew) { const c = normalizeCrewSave(crew); if (c.phase.length || c.mown.length || c.staff) out.crew = c; }
+  const cl = normalizeClubSave(club); if (cl) out.club = cl; // T214: the members, well formed only (none: the engine seeds an old save's)
   return out;
 }

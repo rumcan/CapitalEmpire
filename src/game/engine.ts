@@ -76,12 +76,13 @@ import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
 import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, carHeading, facings } from './traffic';
 import { bayCar, bayFoot, isWagon } from './vehicles';
-import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
+import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, paceSlow, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
+import { clampPrice, closeSeason as closeClubSeason, foundingDrive, holdTo, legacyClub, membersView, newClub, seasonMemberships, stepTo as stepClubTo, type ClubInputs, type MembersView } from './golf/club';
 import { choosePin, greenAt, pinIn, pinLine, pinReport, pinSlot, rollDayPins, withDayPins, type DayPin, type GreenShape } from './golf/daypins';
 import { crewCells, crewGround, type CrewGround } from './golf/crewground';
 import { crewDay, crewFlips, crewFor, fullyCut, holeWindows, normalizeCrewSave, rotaJobs, type CrewDay, type Veh as CrewVeh } from './golf/crew';
 import { CrewView, cupSetAt } from './golf/crewview';
-import { ROLE_NAME, WAGE, changeStaff, closeSeason, courseCondition, crewCard, crewNeed, freshStaff, payWages, pinReputation, qualityFactor, workDay, type CrewCardView, type StaffRole, type StaffState } from './golf/staff';
+import { ROLE_NAME, WAGE, changeStaff, closeSeason, clubTerms, courseCondition, crewCard, crewNeed, freshStaff, payWages, pinReputation, qualityFactor, wages as staffWages, workDay, type CrewCardView, type StaffRole, type StaffState } from './golf/staff';
 import { fairwayStripeLook } from './course-stripes';
 import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
@@ -149,7 +150,7 @@ import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, months
 import { MonthMoney, golfersAMonth, type TopStats } from './golf/topstats';
 import { afterRoute, driveOffer, driveStart, type DriveStopgap } from './golf/drivestopgap';
 import { growReadyLabel, hintWithGrow } from './golf/growlabel';
-import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
+import { computeTournamentCloseBook, computeYearEnd, dailyGolfers, type YearEndResult } from './golf/yearend';
 import { countParkedCars } from './golf/parkingfee';
 import { driveCuts, stopCut } from './street-marks';
 import { TYPE_PAINTS, bodyOf, paintAt } from './car-paint';
@@ -216,7 +217,7 @@ const RATING_MS = 2000;
 /** a range start's founding season as its season card shows it (plan P22 2.5.3): the season's year, the season's business takings ($: the range,
  *  and the clubhouse once placed), the residents, the invitation checklist at the season's end, and whether the tour had invited the player (too
  *  late for this season) */
-export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean; /** the range business's season (P24, T129) */ range?: RangeCounts; /** T221: the residents the club's earnings make room for (City.townRoom) */ room?: number }
+export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean; /** the range business's season (P24, T129) */ range?: RangeCounts; /** T221: the residents the club's earnings make room for (City.townRoom) */ room?: number; /** T214: the club's members at the season's end and the season's dues as booked ($, month by month: in takings already) */ club?: { members: number; dues: number } }
 /** the most townspeople walking at once */
 const PED_MAX = 3000;
 /** the sim speeds the time controls offer (sim s per s); 0 is paused */
@@ -2463,7 +2464,7 @@ export class Game {
       this.setBizDefs([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph, ground: 'dirt' }]; // T239: the car park starts as packed dirt
       // the ramp from the range to the first hole starts at the range card (P24 Phase 4a, T132)
-      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0, guide: newRangeGuide() }; // T239: the guided build's card
+      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0, guide: newRangeGuide() }; this.clubLegacy = false; // T239: the guided build's card (T214: a new club)
       // the range business (P24, T129): the starting range (T239: the guided build: no walkway laid, the player lays its path; the practice area
       // beside the car park is land for sale until bought)
       // (T237: its plot set back from the road, its car park in the frontage strip that leaves)
@@ -2504,7 +2505,7 @@ export class Game {
       this.setBizDefs([{ id: 1, type: 'clubhouse', x: vx, y: vy, w: vw, h: vh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
       this.paint.load(s.paints.map((a, i) => toTuple({ id: i + 1, ...a })));
-      this.golf = s.save; this.golf.progress = emptyProgress();
+      this.golf = s.save; this.golf.progress = emptyProgress(); this.clubLegacy = false; // (T214: a new club, its founding drive at the first frame)
       for (const p of dressCourse(s.layout, seed)) {
       const i = LIB_INDEX.get(p.id);
       if (i !== undefined) {
@@ -4586,7 +4587,9 @@ export class Game {
     if (tournamentDue(g.invited?.at, boundary)) return;
     const year = yearOf(this.seasonsDone());
     g.founding = (g.founding ?? 0) + 1;
-    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited, ...(g.range ? { range: { ...g.range.season } } : {}), ...(this.traffic.room !== null ? { room: this.traffic.room } : {}) };
+    const cl = g.club;
+    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited, ...(g.range ? { range: { ...g.range.season } } : {}), ...(this.traffic.room !== null ? { room: this.traffic.room } : {}), ...(cl && this.hasClubhouse ? { club: { members: Math.round(cl.members), dues: Math.round(cl.season.dues) } } : {}) };
+    if (cl) g.club = closeClubSeason(cl); // T214: the season's dues were booked month by month; a founding season books nothing more (and an old save's months before its load are dropped)
     this.scheduleSave();
   }
   private yearCheck() {
@@ -5390,6 +5393,7 @@ export class Game {
   // T208: the season's everyday play is in the year end (golfYearEnd): a new season starts
   this.dayBook?.endSeason();
   { const st = this.golf.crew?.staff; if (st) this.setStaff(closeSeason(st)); } // T269: and the crew's pin count
+  if (this.golf.club) this.golf.club = closeClubSeason(this.golf.club); // T214: and the club's season (its dues are in the book above, booked month by month)
   this.scheduleSave();
   }
   }
@@ -6170,6 +6174,7 @@ export class Game {
     return {
       money, monthChange: Number.isFinite(money) ? ch.value : null, monthSpan: ch.span, month: ch.month,
       rep: g.rep, golfers: r ? golfersAMonth(r.members + r.visitors) : 0, quality: this.ratingOf.quality, holes: this.ratingOf.holes,
+      ...(r && g.club ? { members: Math.round(g.club.members), memberRounds: golfersAMonth(r.members) } : {}), // (T214: the golfers chip's tip)
     };
   }
   /** counts a player action toward the tool unlocks (golf mode only; saved) */
@@ -6296,6 +6301,10 @@ export class Game {
   if (se) { ye.greenFeesPlayed = Math.round(se.fees); ye.paceRep = seasonPaceRep(se); ye.rep = Math.min(100, Math.max(0, ye.rep + ye.paceRep)); }
   // T269: the season's unmoved pins (golf/staff.ts pinReputation) move it too
   const st = this.golf.crew?.staff; if (st) { ye.pinRep = pinReputation(st.season); ye.rep = Math.min(100, Math.max(0, ye.rep + ye.pinRep)); }
+  // T214: the memberships are the club's (golf/club.ts): the season's dues as booked month by month (the close book does not book them again), plus
+  // an old save's months before its load at the old annual rate (computeYearEnd's annualMembershipIncome); the month's dues are this month's
+  const cl = this.golf.club;
+  if (cl) { const m = seasonMemberships(cl, ye.membershipIncome ?? 0); ye.duesBooked = m.booked; ye.membershipIncome = m.total; ye.monthlyMembership = this.hasClubhouse ? Math.round(cl.members) * cl.price : 0; }
   return ye;
   }
   /** the course's facts for the year end and everyday golf (T208): the derived holes, the course facts (holes, length, what the club has), the quality
@@ -6320,6 +6329,7 @@ export class Game {
     const g = this.golf; if (!g) return { quality: 0, rep: 0, holes: 0 };
     const { facts, baseQ, gCards } = this.golfFacts(g);
     const inp: DayInputs = { quality: applyCourseConsultantQuality(baseQ, gCards), rep: g.rep, holes: facts.holes };
+    if (g.club) inp.members = this.hasClubhouse ? Math.round(g.club.members) : 0; // T214: the club's members at the day's start (golf/club.ts)
     if (this.dayBusy !== undefined) inp.busy = this.dayBusy;
     return inp;
   }
@@ -6455,6 +6465,7 @@ export class Game {
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf); this.dayBook = null; this.dayPlay = null; this.clubCardOpen = false; // T208: everyday golf comes back from golf.everyday
+      this.clubLegacy = !!this.golf && !this.golf.club; // T214: a save from before P26 has no members saved: seeded at the first frame (stepClub)
       // a course grid that does not decode fails the load (the slot is backed up, T042), never an empty course saved over the real one
       const lg = this.golf ? loadCourseGrid(this.golf.grid) : 'migrate';
       if (lg === 'bad') { console.error('load failed: the course grid does not decode'); this.golf = null; return false; }
@@ -6970,6 +6981,7 @@ export class Game {
     const g = this.golf, tr = this.traffic;
     if (!g || !this.bizDefs.some(d => d.type === 'clubhouse')) { this.dayPlay = null; this.dropCrew(); return; }
     if (!this.dayBook || this.dayBookFor !== g) { this.dayBook = new DayBook(this.seed, normalizeDaySave(g.everyday)); this.dayBookFor = g; this.dayPlay = null; }
+    if (!g.club) this.stepClub(); // T214: the club (an old save's seeded, a new one's founding drive) before the day's first roster
     const at = townTimeOf(tr.town, tr.simTime(now)), free = tr.round.stage === 'free';
     this.dayMinute = at.dayMin;
     const b = this.dayBook.step(at.day, at.dayMin, free, () => this.dayInputs(), feeScale(tr.dayLen), r => this.dayPaceOf(r, now));
@@ -7039,6 +7051,62 @@ export class Game {
   }
   /** T269: the club card's Grounds crew block (null: no golf) */
   private crewCardView(): CrewCardView | null { return this.golf ? crewCard(this.staffNow(), this.staffHoles().length) : null; }
+  // ---------- T214 (#559, plan P26 phases 1-2): the club's members (golf/club.ts) ----------
+  /** a save from before P26 (no golf.club): its club is seeded at the first frame (stepClub: club.ts legacyClub) */
+  private clubLegacy = false;
+  /** what the club is this month (golf/club.ts ClubInputs): the club as the town day began (the day book's inputs; none yet: the course now), the
+   *  residents, the clubhouse's level, the season's waits so far (T211's pace: everyday.ts paceSlow) and the club staff (golf/staff.ts clubTerms) */
+  private clubInputs(): ClubInputs {
+    const g = this.golf!, inp = this.dayBook?.save?.inp ?? this.dayInputs(), se = this.dayBook?.season(), waitAvg = se && se.groups > 0 ? se.waitMin / se.groups : 0;
+    const club = this.bizDefs.find(d => d.type === 'clubhouse'), level = club ? this.traffic.biz.find(v => v.id === club.id)?.level ?? 1 : 1;
+    return { residents: this.traffic.pop, quality: inp.quality, rep: inp.rep, holes: inp.holes, visitors: dailyGolfers(inp.quality, inp.rep, inp.holes), level, waitAvg, slow: paceSlow(waitAvg), staff: clubTerms(g.crew?.staff) };
+  }
+  /** the club's month (P26 4.4-4.5 and section 8), every two seconds beside the crew's wages (and once before a club's first day):
+   *  - a save from before P26 has its club seeded (club.ts legacyClub: the members its Clubhouse card showed, $50, the founding drive done, its
+   *    months of this season before the load booked at the close at the old rate); a new game's club is made;
+   *  - with a clubhouse and holes, the founding drive once (FOUNDING of the pool joins, a toast);
+   *  - then each game month as it begins (a skip: each month it crossed, club.ts stepTo) the sales and the churn, the dues (business takings,
+   *    floated in at the clubhouse: they count in Budget.earned, P26.D2) and the members' upkeep (upkeep, P26.D3).
+   *  With no clubhouse nothing joins and nothing is booked, and the months move on */
+  private stepClub() {
+    const g = this.golf; if (!g) return;
+    const month = this.golfMonthIndex();
+    if (!g.club) {
+      g.club = this.clubLegacy ? legacyClub(g.everyday?.inp ?? this.dayInputs(), month, month - this.seasonsDone() * 12 + 1, this.hasClubhouse) : newClub(month);
+      this.clubLegacy = false; this.scheduleSave();
+    }
+    if (!this.hasClubhouse) { g.club = holdTo(g.club, month); return; }
+    const c = g.clubhouse, was = g.club;
+    if (!g.club.founded) {
+      const i = this.clubInputs();
+      if (i.holes > 0) {
+        const f = foundingDrive(g.club, i), n = Math.round(f.joined); g.club = f.s;
+        if (n > 0) this.toast(`${n} founding ${n === 1 ? 'member' : 'members'} joined the club at $${g.club.price} a month: the Clubhouse card sets the dues`, 'good');
+      }
+    }
+    const r = stepClubTo(g.club, month, () => this.clubInputs()), b = r.booked; g.club = r.s;
+    if (b.dues > 0) { this.traffic.spend('business', -b.dues); this.floatMoney({ x: c.x, y: c.y, amount: Math.round(b.dues), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
+    if (b.upkeep > 0) this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', b.upkeep);
+    if (g.club !== was) { this.scheduleSave(); if (this.clubCardOpen) this.emit(); }
+  }
+  /** T214: the Clubhouse card's dues stepper: the dues a month (club.ts clampPrice: a whole $5 from $10 to $300); the next month's sales, churn
+   *  and dues follow it */
+  setClubPrice(p: number) {
+    const g = this.golf; if (!g) return;
+    if (!g.club) this.stepClub();
+    const cl = g.club; if (!cl) return;
+    const price = clampPrice(p); if (price === cl.price) return;
+    g.club = { ...cl, price }; this.scheduleSave(); this.emit();
+  }
+  /** T214: the Clubhouse card's Members block (golf/club.ts membersView; null: no club yet, or no clubhouse) */
+  private clubMembersView(): MembersView | null { const g = this.golf; return g?.club && this.hasClubhouse ? membersView(g.club, this.clubInputs()) : null; }
+  /** T214: the money chip's drawer (P26 5.3): the dues a month (the members now x the price; none without a clubhouse) and the wages a month (the
+   *  grounds crew's and the club staff's: golf/staff.ts wages, the one wage book). Null outside golf */
+  clubMoney(): { dues: number; wages: number } | null {
+    const g = this.golf; if (!g) return null;
+    const cl = g.club, st = g.crew?.staff;
+    return { dues: cl && this.hasClubhouse ? Math.round(cl.members) * cl.price : 0, wages: st ? staffWages(st.staff, st.club) : 0 };
+  }
   // ---------- T269 (#810) part 2: the grounds crew (golf/crew.ts, crewground.ts, crewview.ts) ----------
   /** the day's crew: its day (the schedule), its playback, the town day it was made for, and the next cup event's minute (the flags) */
   private crew: { day: CrewDay; view: CrewView; town: number; nextCup: number } | null = null;
@@ -7225,7 +7293,7 @@ export class Game {
       g.dayPins = rollDayPins(g.dayPins ?? null, day, g.pins.map(p => ({ hole: p.hole, x: p.x, y: p.y })), (n, prev) => (cut.has(n) ? this.nextPin(day, n, prev) : null));
       this.pinRev++; this.dayCourse = null; this.scheduleSave();
     }
-    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); this.payStaff(); }
+    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); this.payStaff(); this.stepClub(); } // (T214: the members' month beside the wages)
     if (this.flagRev !== this.pinRev) this.syncFlags();
   }
   /** the day's cups against the course (when the grid or the pins changed): a hole with no cup today is given its placed pin, and a cup no longer on
@@ -7306,7 +7374,8 @@ export class Game {
   clubCard(): ClubCardView | null {
     const g = this.golf, bk = this.dayBook;
     if (!this.clubCardOpen || !g || !bk || !this.bizDefs.some(d => d.type === 'clubhouse')) return null;
-    return { ...clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen)), lots: this.lotsFor(g.clubhouse), crew: this.crewCardView() ?? undefined }; // (T237: its car parks; T269: its crew)
+    const mv = this.clubMembersView(); // T214: the Members block, and the header's count is the club's own
+    return { ...clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen)), lots: this.lotsFor(g.clubhouse), crew: this.crewCardView() ?? undefined, ...(mv ? { members: mv, clubMembers: mv.members } : {}) }; // (T237: its car parks; T269: its crew)
   }
   /** T208: opens or closes the clubhouse card (the select tool's click on the clubhouse, the top bar's Club chip) */
   openClubCard(open = !this.clubCardOpen) { this.clubCardOpen = open && !!this.golf && this.bizDefs.some(d => d.type === 'clubhouse'); if (this.clubCardOpen && this.range.cardOpen) this.range.cardOpen = false; this.emit(); }
