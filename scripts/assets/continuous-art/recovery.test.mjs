@@ -38,6 +38,18 @@ test('an error checkpoint can retry real network failure, but a capability check
   assert.equal(assessRecovery({exitCode:1,checkpoint:{status:'error',error:network},nowMs}).kind,'retry');
   assert.equal(assessRecovery({exitCode:1,checkpoint:{status:'capability-error',error:network},nowMs}).kind,'attention');
 });
+test('semantic dependency checkpoint outranks incidental websocket reconnect diagnostics',()=>{
+  for(const checkpoint of [
+    {status:'error',builtinImagegenUsed:false,error:'DEPENDENCY_HELD: view1 remains held; no imagegen call made.',failure:{origin:'dependency-validation',actualError:true,code:'DEPENDENCY_HELD'}},
+    {status:'error',builtinImagegenUsed:false,error:'DEPENDENCY_HELD: required accepted view is missing.'},
+  ])for(const exitCode of [0,1]){
+    const result=assessRecovery({exitCode,checkpoint,turnError:network,stderr:'Falling back from WebSockets to HTTPS transport.',nowMs});
+    assert.equal(result.kind,'attention');assert.equal(result.notBeforeUtc,undefined);assert.equal(result.message,checkpoint.error);
+  }
+});
+test('real tool quota still outranks a semantic dependency checkpoint',()=>{
+  assert.equal(assessRecovery({exitCode:1,checkpoint:{status:'error',error:'DEPENDENCY_HELD: view1'},actualUsageFailure:true,turnError:network,nowMs}).kind,'quota');
+});
 test('caller may extend completed statuses only after its own strict subjob validation',()=>{
   const options={exitCode:1,checkpoint:{status:'subjob-complete'},checkpointValid:true,turnError:network,nowMs};
   assert.equal(assessRecovery(options).kind,'retry');
