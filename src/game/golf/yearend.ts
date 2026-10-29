@@ -13,8 +13,8 @@ import { courseMonthlyUpkeep } from './costs';
 import { townGrowthLine, townGrowthRate } from './towngrowth';
 import { computeParkingIncome } from './parkingfee';
 
-/** the share of a year's surface maintenance (costs.ts courseMonthlyUpkeep x 12) the player is charged at the tournament: 25%, about 36,000 dollars for the old nine, which is what the campaign simulator assumes (the full figure, about 145,000, would bankrupt a tier 1 club that earns almost nothing; BALANCE TODO with green fees) */
-export const COURSE_UPKEEP_YEAR_SHARE = 0.25;
+/** the share of a year's surface maintenance (costs.ts courseMonthlyUpkeep x 12) the player is charged at the tournament: 20% (T269: 25% before the grounds crew's wages, golf/staff.ts, were their own monthly line; a full crew's $7,200 a season on the old nine is about the 5% taken off, so the two together are the 36,000 dollars the campaign simulator assumes) (the full figure, about 145,000, would bankrupt a tier 1 club that earns almost nothing; BALANCE TODO with green fees) */
+export const COURSE_UPKEEP_YEAR_SHARE = 0.2;
 
 /** Green fee ($) per round from the placed Clubhouse business ($22/visitor, GOLF-PLAN 2.1). */
 export const GREEN_FEE_PER_ROUND = BUSINESS.clubhouse.pricePerVisitor;
@@ -97,6 +97,8 @@ greenFeeIncome?: number;
 greenFeesPlayed?: number;
 /** T208: the pace term, the reputation points how the course played this season added (golf/everyday.ts seasonPaceRep; already in rep) */
 paceRep?: number;
+/** T269: the pin term, the reputation points the season's unmoved pins took (golf/staff.ts pinReputation; already in rep) */
+pinRep?: number;
 monthlyMembership?: number;
 membershipIncome?: number;
 tentRevenue?: number;

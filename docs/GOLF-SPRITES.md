@@ -338,3 +338,22 @@ the generated trees), the light from the upper right, shadows at 145°, autumn c
 
 Until they come, the belts use the existing pools (`BELT_BROAD_DEAL`, `BELT_CONIFER_DEAL`, the woods' dead snags in the swamp); a new species
 goes into `FOREST_BROADLEAF` (or a waterside pool in `river-trees.ts`) and `tree-sun.ts` measures its lit side.
+
+## Grounds crew (T269, #810: art requests)
+The grounds crew works the course every morning (`src/game/golf/crew.ts`, played back by `crewview.ts`, drawn by the engine's `crewMovers`):
+greenkeepers drive a utility cart green to green and change the cups (walk to the new spot, kneel and cut it, set the flag, walk back, kneel and
+fill the old one), mow the greens with a walk-behind and rake the bunkers; mower operators ride a reel mower along the fairway's stripe bands and a
+rotary mower down the rough. Until the art lands each is drawn as a labelled stand-in ("Stand In for <name>", the T213 caddie's pill).
+**The people and their clips are 3D work for RUN 3D** (`docs/HANDOVER-PEOPLE.md` "Grounds crew"); the vehicles are best made in 3D too
+(eight facings), else as 2D pictures through the ChatGPT queue. The sun at the upper right, shadows at 145°, nothing mirrored.
+
+| Sprite (id to use) | Frames / views | Today's stand-in | Look | P |
+| --- | --- | --- | --- | --- |
+| **Greenkeeper** (`staff_greenkeeper_m`, a person) | 8 facings: walk, idle, kneel and cut a cup (a hole-cutter twist, 4 frames), set the flag (2), rake (a bunker stroke, 4), push a walk-behind (walk with the arms out) | the spectator `spec_m_bucket_hat`, walking; `sit` for kneeling | 1985 greenkeeper: a cap or bucket hat, a green or khaki work shirt, khaki trousers, work boots | P1 |
+| **Mower operator** (`staff_mower_m`, a person) | 8 facings: walk, idle, ride (seated, hands on the wheel or the levers), push a walk-behind | the spectator `spec_m_young_cap`; `sit` on the mower | a cap and ear defenders, a work shirt, jeans | P1 |
+| **Ride-on reel mower** (`vehicle:fairway-mower`) | 8 facings | `business:golf-mower` (one view) | a 5-gang fairway reel mower, about 2.5 x 2.5 m, deep green with yellow reels, an open seat | P1 |
+| **Utility cart** (`vehicle:utility-cart`) | 8 facings | the hire cart `business:golf-cart-sw/se` (two views) | a two-seat utility vehicle with a cargo bed: a hole cutter, a cup and flag, a rake and a bucket of sand in the bed | P1 |
+| **Walk-behind greens mower** (`vehicle:greens-mower`) | 8 facings | `gen:lawnmower` | a 1980s walk-behind greens reel mower with its grass basket at the front | P2 |
+| **Rotary rough mower** (`vehicle:rough-mower`) | 8 facings | `expansion:rideon-mower` (one view) | a ride-on rotary mower with a wide deck, red or green | P2 |
+| **Maintenance barn** (`course:maintenance-barn`, 2D, four views) | four views | none: the crew come and go at the clubhouse car park's entrance | a timber barn with a wide roll-up door, a fuel tank and a sand bin beside it, about 14 x 10 m | P3 |
+

@@ -1,7 +1,10 @@
 // T269 (#810): in-game shots of the grounds crew and the day's pin (the old start's course, ?start=town):
 // - pin: the hole card with today's pin (hole-card-today-pin), and the green at the closest zoom on two mornings (day-pin-<n>), the flag on each
 //   day's cup; the console reports the cups against the placed pins;
-//   node scripts/dev/crew-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T269 [--only pin]
+// - crew: a frame strip of the greenkeeper changing a cup (greenkeeper-moving-hole) and of the ride-on mower finishing a band along the fairway, its
+//   fresh stripe laid behind it (mower-crossing-fairway), each with its middle frame;
+// - staff: the club card's Grounds crew as hired (club-card-staff) and after three short-handed days (club-card-staff-short);
+//   node scripts/dev/crew-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T269 [--only pin,crew,staff]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done. Saves are not written (non-GET requests are answered locally).
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -67,6 +70,56 @@ try {
     const sec = card.locator('xpath=ancestor::section[1]');
     await save(await sec.screenshot({ type: 'png' }), 'hole-card-today-pin');
     await page.evaluate(() => { const g = window.__game; g.closeHoleCard(); g.setTool('select'); g.emit(); });
+  }
+  if (want('crew')) {
+    // ---- the crew: each strip on a fresh day (05:00, the crew made with its play), the clock then moved on to its moment the same day
+    await page.addStyleTag({ content: 'html.noui * { visibility: hidden !important } html.noui canvas { visibility: visible !important }' });
+    // (a loaded game's first day keeps its cups: the next day is the crew's first)
+    const freshDay = async () => { for (let k = 0; k < 3; k++) { await jump(page, 5 * 60); await page.evaluate(() => window.__game.setSpeed(1)); await sleep(1500); await page.evaluate(() => window.__game.setSpeed(0)); if (await page.evaluate(() => (window.__game.crew?.day.cups.length ?? 0) > 0)) return; } };
+    const crewInfo = () => page.evaluate(() => {
+      const g = window.__game, c = g.crew; if (!c) return null;
+      const gk = c.day.workers.find(w => w.role === 'gk'), mo = c.day.workers.find(w => w.role === 'mo');
+      const cup = c.day.cups[1] ?? c.day.cups[0], gl = cup && gk?.legs.find(l => l.act === 'kneel' && l.t0 >= cup.t - 4);
+      // the mower near the end of his fourth band: its fresh stripe is laid as he finishes it
+      const e = c.day.mown[3], ml = e && mo?.legs.find(l => l.act === 'mow' && l.t1 >= e.t - 1e-6);
+      return { minute: g.dayMinute, day: c.town, cup, at: gl ? [gl.ax, gl.ay] : null, mow: ml ? { t: e.t, at: [ml.ax, ml.ay], to: [ml.bx, ml.by] } : null, cups: c.day.cups.length, mown: c.day.mown.length };
+    });
+    /** a strip of n frames of the clip box round (x, y) at zoom z, one every `every` ms of the game at speed 1 */
+    const strip = async (name, x, y, z, n, every, box = { w: 420, h: 300 }) => {
+      await page.evaluate(([x, y, z]) => window.__game.lookAt(x, y, z), [x, y, z]); await settle(page, 600);
+      await page.evaluate(() => document.documentElement.classList.add('noui'));
+      const frames = [];
+      await page.evaluate(() => window.__game.setSpeed(1));
+      for (let k = 0; k < n; k++) {
+        frames.push(await page.screenshot({ type: 'png', clip: { x: W / 2 - box.w / 2, y: H / 2 - box.h / 2, width: box.w, height: box.h } }));
+        console.log('  frame', k, JSON.stringify(await page.evaluate(() => { const g = window.__game, v = g.crew?.view; return { m: Math.round(g.dayMinute), people: v?.people.map(p => [p.role, Math.round(p.x), Math.round(p.y)]) }; })));
+        await sleep(every);
+      }
+      await page.evaluate(() => { window.__game.setSpeed(0); document.documentElement.classList.remove('noui'); });
+      const img = sharp({ create: { width: box.w * n + 4 * (n - 1), height: box.h, channels: 3, background: '#111' } }).composite(frames.map((f, k) => ({ input: f, left: k * (box.w + 4), top: 0 })));
+      await save(await img.png().toBuffer(), name);
+      await save(frames[Math.floor(n / 2)], `${name}-mid`);
+    };
+    await freshDay(); let info = await crewInfo(); console.log('crew', JSON.stringify(info));
+    if (info?.at) { await jump(page, info.cup.t - 5.5); await strip('greenkeeper-moving-hole', info.at[0], info.at[1], 0.3, 6, 1100); }
+    await freshDay(); info = await crewInfo(); console.log('crew', JSON.stringify(info));
+    if (info?.mow) { await jump(page, info.mow.t - 6); await strip('mower-crossing-fairway', info.mow.to[0], info.mow.to[1], 0.3, 6, 1500, { w: 640, h: 420 }); }
+  }
+  if (want('staff')) {
+    // ---- the club card's Grounds crew: as hired (the crew the course needs), then short-handed for three days
+    const card = async name => {
+      await page.evaluate(() => { const g = window.__game; g.openClubCard(true); g.emit(); }); await sleep(1500);
+      const el = page.locator('[data-testid="club-card"]').first();
+      await el.evaluate(e => { e.dataset.mh = e.style.maxHeight; e.style.maxHeight = 'none'; });
+      await sleep(400); await save(await el.screenshot({ type: 'png' }), name);
+      console.log(name, JSON.stringify(await page.evaluate(() => window.__game.clubCard()?.crew)));
+    };
+    const day = async () => { await jump(page, 5 * 60); await page.evaluate(() => window.__game.setSpeed(1)); await sleep(1200); await page.evaluate(() => window.__game.setSpeed(0)); };
+    await day(); await jump(page, 9 * 60); await card('club-card-staff');
+    await page.evaluate(() => { const g = window.__game; g.crewHire('gk', -1); g.crewHire('mo', -1); });
+    for (let k = 0; k < 3; k++) await day();
+    await jump(page, 9 * 60); await card('club-card-staff-short');
+    await page.evaluate(() => { const g = window.__game; g.crewHire('gk', 1); g.crewHire('mo', 1); g.openClubCard(false); });
   }
 } finally {
   await browser.close();

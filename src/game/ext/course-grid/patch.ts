@@ -217,7 +217,7 @@ const f32 = (a: readonly number[][]): Float32Array[] => a.map(q => Float32Array.
  *  stripes' holes (stripeAreas, T218: the playing lines, lines: per hole, flat tiles, and each hole's share of the chunk), and the growth mask rides along
  *  when something grows (now: the effective game month); the stairs of the tees within reach (T127) face the nearest of `paths` (the cart
  *  paths and drives, flat segments ax, ay, bx, by in tiles) */
-export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>, paths?: ArrayLike<number> | null): LotPatch | null {
+export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>, paths?: ArrayLike<number> | null, flips?: ReadonlyMap<number, readonly number[]>): LotPatch | null {
   // T271: the course as drawn (d: each custom grass a surface of its own; g itself with none): the outlines, walls, spill, stripes and looks
   // read it; the growth mask and the tees' stairs read the playing grid
   const d = drawView(g), S = COURSE_CHUNK, styles = courseStyles(looks.border, looks.base), heights = courseHeights(looks), outs = chunkOutlines(d, cx, cy, S, styles, true, roundOfLooks(d, looks)).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
@@ -247,7 +247,8 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
     if (pick?.alts.length) L.alts = pick.alts.map(a => ({ look: texOf(a.look.surf), ...(a.look.band ? { band: texOf(a.look.band) } : {}), ...(a.look.lip ? { g: texOf(a.look.lip) } : {}), runs: a.runs }));
     // the mowing stripes' holes: the fairway's (T218) and the green's (T227: the course finish's fine stripes, along its hole's line of play)
     // (T271: a custom grass with its stripes on, along the lines of the holes its cells belong to)
-    if ((o.surf === SURF.fairway || o.surf === SURF.green || looks.stripes?.includes(o.surf)) && o.fill.length) { const st = stripeAreas(d, cx, cy, lines, o.surf); if (st) L.stripes = st; }
+    // (T269: the grounds crew's cut on the fairway and the grasses mown as it, not on the green)
+    if ((o.surf === SURF.fairway || o.surf === SURF.green || looks.stripes?.includes(o.surf)) && o.fill.length) { const st = stripeAreas(d, cx, cy, lines, o.surf, o.surf === SURF.green ? undefined : flips); if (st) L.stripes = st; }
     if (L.fill.length || L.collar) layers.push(L);
   }
   if (!layers.length) return null;
@@ -283,10 +284,11 @@ export type StripeArea = NonNullable<CourseLayer['stripes']>[number];
  *  nearest fairway cell is its (a walk out from the fairway cells in rings, a tie to the lower hole). Every chunk walks the same cells round
  *  its seams the same way, so where an outline can lie (a few cells from its fairway) the shares agree across chunks. null: no fairway cell
  *  within reach. surf: the surface whose cells are walked (T227: the green's, for its fine stripes; the fairway's by default) */
-export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>, surf: number = SURF.fairway): StripeArea[] | null {
+export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>, surf: number = SURF.fairway, flips?: ReadonlyMap<number, readonly number[]>): StripeArea[] | null {
   const lineOf = (h: number) => { const l = h > 0 ? lines?.get(h) : undefined; return l && l.length >= 4 ? l : null; };
   const sh = cellShares(g, cx, cy, surf, c => { const h = g.hole[c]!; return lineOf(h) ? h : 0; }); if (!sh) return null;
-  const entry = (h: number): StripeArea => ({ hole: h, line: h ? lineOf(h)!.slice() : [] });
+  // (T269: a hole's crew cut rides along: flips, [phase, leg, band])
+  const entry = (h: number): StripeArea => { const f = h ? flips?.get(h) : undefined; return { hole: h, line: h ? lineOf(h)!.slice() : [], ...(f ? { f: [...f] } : {}) }; };
   return sh.runs ? sh.labels.map((h, k) => ({ ...entry(h), runs: sh.runs![k]! })) : [entry(sh.labels[0]!)];
 }
 /** T256 (generalising T218's walk): the shares of chunk (cx, cy) among the labels of the cells of surface `surf` (label(c), a cell index of g,
