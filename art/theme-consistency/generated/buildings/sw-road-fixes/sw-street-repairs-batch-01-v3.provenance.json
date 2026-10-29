@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "id": "batch:sw-street-repairs-01",
+  "category": "buildings",
+  "stage": "targeted-projection-and-porch-correction",
+  "transparent": true,
+  "output": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+  "provenance": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.provenance.json",
+  "references": [
+    "art/theme-consistency/references/sw-street-four-sprites-geometry-v1.png",
+    "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.png"
+  ],
+  "cells": [
+    {
+      "id": "variation:town-laundromat-43183f9e-plain:1",
+      "version": "variation-town-laundromat-43183f9e-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-laundromat-43183f9e-plain-1/NE.png",
+      "dir": "variation-town-laundromat-43183f9e-plain-1",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/01.native.png"
+    },
+    {
+      "index": 22,
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-cottage-fc52ce66-plain-1/NE.png",
+      "sha256": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302",
+      "width": 594,
+      "height": 456,
+      "dir": "variation-ref-building-house-cottage-fc52ce66-plain-1",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/02.native.png"
+    },
+    {
+      "index": 23,
+      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-dormer-b4413f08-plain-1/NE.png",
+      "sha256": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
+      "width": 558,
+      "height": 507,
+      "dir": "variation-ref-building-house-dormer-b4413f08-plain-1",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/03.native.png"
+    },
+    {
+      "index": 17,
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-ranch-long-a4ddd58c-plain-1/NE.png",
+      "sha256": "728b436a3b05653381f7f55e784a77e75005bae353df1cbc1865985cb299af8a",
+      "width": 693,
+      "height": 412,
+      "dir": "variation-gen-house-ranch-long-a4ddd58c-plain-1",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/04.native.png"
+    }
+  ],
+  "prompt": "Use case: sketch-to-render and precise object edit. ONE transparent 2x2 sheet containing FOUR DIFFERENT town building sprites. Image1 is exact ground-plane geometry authority; image2 is the finished identity/style reference and edit content. Keep image2's materials, roof details, windows, building identities and fourcell order. Repair its projection coherently, never shear an already painted building. All front/left walls SW facing must descend screenright at EXACT2:1 slope+0.500 (26.565degrees); all side/right walls SE facing ascend screenright at EXACT slope−0.500. Vertical edges vertical, orthographic30degree elevation45degreeyaw. Image1 red/bluebase lines define the exacttarget. Front eaves/floor beams/siding/foundations parallel+.500; side courses/foundation−.500. No perspective convergence. Preserve complete silhouettes with at least30px transparent gutters.\nTOPLEFT LAUNDRY: retain image2's excellent bluebrick laundromat, flatroofHVAC, teal LAUNDRY sign, glassdoubledoors, singleleafservicedooronrightside. Thisonealreadyfacescorrectly. Keepstyle andgeometry.\nTOPRIGHT COTTAGE: keepcreamplaster,browntimber,darkslateroof,tallcreamchimney,centralfrontgable,lowerleftwindowwing. CRITICAL ENTRANCE CORRECTION: the small gabled timber ENTRY PORCH belongs on the RIGHT PART OF THE FRONT/SW FACADE, beside the central front window, NOT on the right/SE sidewall. Porch DOOR faces the SAME direction as the big front window. The DOOR HEAD and DOOR THRESHOLD descend right at +0.500 like the frontfoundation; porchsteps project toward FRONT/SW. The right/SE wall only has sidewindows. Do NOT rotate the door around the corner. Redraw porch roof appropriately with frontgable above that front-facing door.\nBOTTOMLEFT DORMERHOUSE: keepimage2's creamboards,THREEfrontdormers,slateroof,brickchimney,entryporchLEFT,largewarmfrontwindowRIGHT. Precisely relax its frontwall axis from+.5485 to+.500. All frontstructural edges parallel+.500 including exposed foundation. Rightwall −.500. Keepentrance onfront/SW.\nBOTTOMRIGHT RANCH: keepcreamboardsoverredbricklowerwall,lowhip/gableroofs,greenfrontdoor,shutteredwarmwindows,OPENcarportphysicalRIGHT. Frontwall already+.507, holdat+.500. CRITICAL RIGHT WALL/CARPORT CORRECTION: current rightmainhousebase andcarportslabare−.60/−.62, too steep; redrawcoherentrightside with EXACT−.500 axis atallhousebrickcourses,carportsideslabedgesandroofsideedges. PreservecarportattachedRIGHT,donotmirror.\nRich handpainted stylized gamearchitecture, sourcepalette and brushdetail, sunUPPERRIGHT shadowLOWERLEFT. Exactlyfour distinct complete isolatedbuildings. Transparentalpha0outsiderealarchitecture; nofloors/lawns/groundtiles/scenery/backdrop/detachedshadow/guidecolours/labels. Highestnative squarePNG. Geometryandfrontdoor orientation are the entirepurpose ofthiscorrection.",
+  "generator": "built-in imagegen",
+  "originalSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-f9ba820f-9cbf-4836-a030-1046cc159360.png",
+  "review": "pending"
+}

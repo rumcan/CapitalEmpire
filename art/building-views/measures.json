@@ -583,6 +583,107 @@
      "sha256": "a9c63e3699950a370c1dc7f7a119a417c2ad483e9778dcf8a86ff9328f373130"
     }
    }
+  },
+  "variation:town-laundromat-43183f9e-plain:1": {
+   "version": "variation-town-laundromat-43183f9e-plain-1-4views-v2",
+   "gaugeScale": 1.31,
+   "footprintScale": 1,
+   "views": {
+    "NE": {
+     "sha256": "d1be389c5af1391883d9f95d33b19e02551901697094fb52d88f2969fa12aadc",
+     "door": 96,
+     "note": "Laundry ordinary single-leaf side door: x501 head476 threshold572,96px±3, full native sheet; storefront doors excluded."
+    },
+    "SE": {
+     "sha256": "e1f223e219538848521492c94840a54fdf077109ec5287b5889a26bc5de902b3",
+     "nativeScale": 0.7537625418060201,
+     "note": "Retain exact pre-repair game scale from variation-town-laundromat-43183f9e-plain-1-4views-v1"
+    },
+    "SW": {
+     "sha256": "cafb8bef9d02074cfaacb29728f00354ec6c6b8a132d79bc9d5f1bebbcb0791d",
+     "nativeScale": 0.7537625418060201,
+     "note": "Retain exact pre-repair game scale from variation-town-laundromat-43183f9e-plain-1-4views-v1"
+    },
+    "NW": {
+     "sha256": "4e13104696f4118528e13915b0a482f1a28d74e1441442d86283e5e3cdf779d7",
+     "nativeScale": 0.7537625418060201,
+     "note": "Retain exact pre-repair game scale from variation-town-laundromat-43183f9e-plain-1-4views-v1"
+    }
+   }
+  },
+  "variation:ref-building-house-dormer-b4413f08-plain:1": {
+   "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v3",
+   "gaugeScale": 1.469,
+   "footprintScale": 1,
+   "views": {
+    "NE": {
+     "sha256": "29d53dce609bd4541656982f38bc76174e6724cc11c0633498fefcba3562a813",
+     "door": 81,
+     "note": {
+      "cell": 3,
+      "kind": "single front leaf",
+      "nativeFullSheet": {
+       "x": 145,
+       "headY": 949,
+       "thresholdY": 1030,
+       "heightPx": 81
+      },
+      "uncertaintyPx": 3
+     }
+    },
+    "SE": {
+     "sha256": "6124db69e157512a2ba23eb83cda6d185407c48df695497c927b266ac38ad718",
+     "nativeScale": 0.7221326164874552,
+     "note": "Retain exact pre-repair game scale from variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2"
+    },
+    "SW": {
+     "sha256": "6832664a93a7944d9ac3a99f7b25de01e97d51e3cd0891e1bbb7866604e45172",
+     "nativeScale": 0.7221326164874552,
+     "note": "Retain exact pre-repair game scale from variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2"
+    },
+    "NW": {
+     "sha256": "2a98bde47db9192f330a059bca4ed56bcc789785d0fc976dfdf0b6c2e769f470",
+     "nativeScale": 0.7221326164874552,
+     "note": "Retain exact pre-repair game scale from variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2"
+    }
+   }
+  },
+  "variation:gen-house-ranch-long-a4ddd58c-plain:1": {
+   "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v2",
+   "gaugeScale": 1.066,
+   "footprintScale": 0.9999999999999999,
+   "views": {
+    "NE": {
+     "sha256": "6961b422d5ca452fa5958c4f5ca087d109b06d7e032ab6ceca67056fe844e038",
+     "door": 87,
+     "note": {
+      "cell": 4,
+      "kind": "single front leaf, unoccluded left part",
+      "nativeFullSheet": {
+       "x": 900,
+       "headY": 1003,
+       "thresholdY": 1090,
+       "heightPx": 87
+      },
+      "uncertaintyPx": 3
+     }
+    },
+    "SE": {
+     "sha256": "554a71d477debcf0f89b37c7e4cff9c2a50a7509bace3e58f5ad462b336b3855",
+     "nativeScale": 1.0056709956709955,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1"
+    },
+    "SW": {
+     "sha256": "67a322ae702bdc97dbe2125115723b89d9383d0aa042e9d9a700f3f620ccd423",
+     "nativeScale": 1.0056709956709955,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1"
+    },
+    "NW": {
+     "sha256": "b1b3ecf0d67ae68c300e3e573fa6f5d45c8b44e0a90a593da86e6d2475f9f073",
+     "nativeScale": 1.0056709956709955,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1"
+    }
+   }
   }
  }
 }

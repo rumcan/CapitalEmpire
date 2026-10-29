@@ -1,0 +1,55 @@
+{
+  "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+  "generator": "image_gen",
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+    "sheetSha256": "056e2dcb69a6f82193c55c24ed8a40875fe8eabd749eee1036320a6c23dd4caf",
+    "cell": 4,
+    "sourceRect": {
+      "left": 605,
+      "top": 698,
+      "width": 649,
+      "height": 556
+    },
+    "coreBounds": {
+      "left": 616,
+      "top": 749,
+      "width": 634,
+      "height": 426
+    },
+    "nonzeroPixels": 176811,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v3.review.json",
+      "sha256": "776396750e8af5ec62f6898902dc11857a3b20af91a7d59894dedb482394d123"
+    }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-01.json",
+    "sha256": "f7720e977c3e29e509069d07370a01c1251408771bfc6557c2e8129acc4bb855"
+  },
+  "original": {
+    "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+    "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1",
+    "files": {
+      "NE": "728b436a3b05653381f7f55e784a77e75005bae353df1cbc1865985cb299af8a",
+      "SE": "554a71d477debcf0f89b37c7e4cff9c2a50a7509bace3e58f5ad462b336b3855",
+      "SW": "67a322ae702bdc97dbe2125115723b89d9383d0aa042e9d9a700f3f620ccd423",
+      "NW": "b1b3ecf0d67ae68c300e3e573fa6f5d45c8b44e0a90a593da86e6d2475f9f073"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "6961b422d5ca452fa5958c4f5ca087d109b06d7e032ab6ceca67056fe844e038",
+    "SE": "554a71d477debcf0f89b37c7e4cff9c2a50a7509bace3e58f5ad462b336b3855",
+    "SW": "67a322ae702bdc97dbe2125115723b89d9383d0aa042e9d9a700f3f620ccd423",
+    "NW": "b1b3ecf0d67ae68c300e3e573fa6f5d45c8b44e0a90a593da86e6d2475f9f073"
+  }
+}

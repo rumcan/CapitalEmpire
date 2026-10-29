@@ -1,0 +1,111 @@
+{
+  "libraryItems": 7423,
+  "stableIdOrder": true,
+  "unchangedLogicalRecords": 7420,
+  "unchangedGeometryFields": [
+    "w",
+    "h",
+    "ax",
+    "ay",
+    "boxes",
+    "quad",
+    "glows",
+    "kind",
+    "solid",
+    "big",
+    "door",
+    "cost"
+  ],
+  "retainedOtherViewFiles": [
+    {
+      "id": "variation:town-laundromat-43183f9e-plain:1",
+      "dir": "SE",
+      "sha256": "e1f223e219538848521492c94840a54fdf077109ec5287b5889a26bc5de902b3"
+    },
+    {
+      "id": "variation:town-laundromat-43183f9e-plain:1",
+      "dir": "SW",
+      "sha256": "cafb8bef9d02074cfaacb29728f00354ec6c6b8a132d79bc9d5f1bebbcb0791d"
+    },
+    {
+      "id": "variation:town-laundromat-43183f9e-plain:1",
+      "dir": "NW",
+      "sha256": "4e13104696f4118528e13915b0a482f1a28d74e1441442d86283e5e3cdf779d7"
+    },
+    {
+      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "dir": "SE",
+      "sha256": "6124db69e157512a2ba23eb83cda6d185407c48df695497c927b266ac38ad718"
+    },
+    {
+      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "dir": "SW",
+      "sha256": "6832664a93a7944d9ac3a99f7b25de01e97d51e3cd0891e1bbb7866604e45172"
+    },
+    {
+      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "dir": "NW",
+      "sha256": "2a98bde47db9192f330a059bca4ed56bcc789785d0fc976dfdf0b6c2e769f470"
+    },
+    {
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "dir": "SE",
+      "sha256": "554a71d477debcf0f89b37c7e4cff9c2a50a7509bace3e58f5ad462b336b3855"
+    },
+    {
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "dir": "SW",
+      "sha256": "67a322ae702bdc97dbe2125115723b89d9383d0aa042e9d9a700f3f620ccd423"
+    },
+    {
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "dir": "NW",
+      "sha256": "b1b3ecf0d67ae68c300e3e573fa6f5d45c8b44e0a90a593da86e6d2475f9f073"
+    }
+  ],
+  "pixelProofs": [
+    {
+      "id": "variation:town-laundromat-43183f9e-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.png",
+      "cell": 1,
+      "sourceRect": {
+        "left": 0,
+        "top": 29,
+        "width": 661,
+        "height": 626
+      },
+      "nonzeroPixels": 209828,
+      "nativeRgbaExact": true,
+      "sha256": "d1be389c5af1391883d9f95d33b19e02551901697094fb52d88f2969fa12aadc"
+    },
+    {
+      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+      "cell": 3,
+      "sourceRect": {
+        "left": 0,
+        "top": 618,
+        "width": 675,
+        "height": 636
+      },
+      "nonzeroPixels": 234525,
+      "nativeRgbaExact": true,
+      "sha256": "29d53dce609bd4541656982f38bc76174e6724cc11c0633498fefcba3562a813"
+    },
+    {
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+      "cell": 4,
+      "sourceRect": {
+        "left": 605,
+        "top": 698,
+        "width": 649,
+        "height": 556
+      },
+      "nonzeroPixels": 176811,
+      "nativeRgbaExact": true,
+      "sha256": "6961b422d5ca452fa5958c4f5ca087d109b06d7e032ab6ceca67056fe844e038"
+    }
+  ],
+  "pageErrors": []
+}

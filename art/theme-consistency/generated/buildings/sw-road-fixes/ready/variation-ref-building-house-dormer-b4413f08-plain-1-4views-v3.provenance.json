@@ -1,0 +1,55 @@
+{
+  "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+  "generator": "image_gen",
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+    "sheetSha256": "056e2dcb69a6f82193c55c24ed8a40875fe8eabd749eee1036320a6c23dd4caf",
+    "cell": 3,
+    "sourceRect": {
+      "left": 0,
+      "top": 618,
+      "width": 675,
+      "height": 636
+    },
+    "coreBounds": {
+      "left": 17,
+      "top": 643,
+      "width": 606,
+      "height": 547
+    },
+    "nonzeroPixels": 234525,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v3.review.json",
+      "sha256": "776396750e8af5ec62f6898902dc11857a3b20af91a7d59894dedb482394d123"
+    }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-01.json",
+    "sha256": "f7720e977c3e29e509069d07370a01c1251408771bfc6557c2e8129acc4bb855"
+  },
+  "original": {
+    "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+    "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+    "files": {
+      "NE": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
+      "SE": "6124db69e157512a2ba23eb83cda6d185407c48df695497c927b266ac38ad718",
+      "SW": "6832664a93a7944d9ac3a99f7b25de01e97d51e3cd0891e1bbb7866604e45172",
+      "NW": "2a98bde47db9192f330a059bca4ed56bcc789785d0fc976dfdf0b6c2e769f470"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "29d53dce609bd4541656982f38bc76174e6724cc11c0633498fefcba3562a813",
+    "SE": "6124db69e157512a2ba23eb83cda6d185407c48df695497c927b266ac38ad718",
+    "SW": "6832664a93a7944d9ac3a99f7b25de01e97d51e3cd0891e1bbb7866604e45172",
+    "NW": "2a98bde47db9192f330a059bca4ed56bcc789785d0fc976dfdf0b6c2e769f470"
+  }
+}
