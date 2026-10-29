@@ -121,7 +121,7 @@ const handle = async (m: ToWorker) => {
         for (let r = 0; r < m.reps; r++) for (const p of list) for (const flag of r % 2 ? [false, true] : [true, false]) {
           painter.riverSwamp = flag; if (p.ts !== undefined) tex.tileTs = p.ts; if (m.cold) painter.clearSwampMemos(); // (cold: the bands made again, a first bake's)
           const t0 = performance.now(), cv = painter.paint(p.i, p.j, p.L, p.kind === 'm'), ms = performance.now() - t0;
-          cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); painter.takeShineMask();
+          cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); painter.takeShineMask(); painter.takeWaterMask();
           (flag ? on : off).push(ms);
         }
         painter.riverSwamp = keep; tex.tileTs = keepTs; tex.missing.clear();
@@ -129,6 +129,7 @@ const handle = async (m: ToWorker) => {
         break;
       }
       case 'grassShine': painter.grassShine = m.on; painter.shineWeights = m.weights; break;
+      case 'waterMotion': painter.waterMotion = m.on; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border, course surfaces and collars, wall art): built first, so the
@@ -234,8 +235,8 @@ const handle = async (m: ToWorker) => {
         tex.deferMakes = deferring; tex.deferNeed = !probing(m); tex.missing.clear();
         try { cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm'); }
         finally { tex.deferMakes = false; tex.deferNeed = true; }
-        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); painter.takeShineMask(); kick(); break; }
-        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); painter.takeShineMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
+        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); painter.takeShineMask(); painter.takeWaterMask(); kick(); break; }
+        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); painter.takeShineMask(); painter.takeWaterMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
         lastBake = performance.now(); if (deferring && m.kind !== 'p') aheadOf(m);
         const bmp = cv.transferToImageBitmap(), sm = m.kind === 'p' ? null : painter.takeShadeMask(), shade = sm ? sm.transferToImageBitmap() : undefined;
         // (T215: the reflection mask, when specCam is on and the chunk has a lamp pool on its asphalt)
@@ -244,9 +245,11 @@ const handle = async (m: ToWorker) => {
         const gm = m.kind === 'p' ? null : painter.takeGlossMask(), gloss = gm ? gm.transferToImageBitmap() : undefined;
         // (T262: the grass shine's weight mask, when the shine is on and the chunk has grass)
         const shine = m.kind === 'p' ? undefined : painter.takeShineMask() ?? undefined;
+        // (T248: the water's motion mask, when the motion is on and the chunk has water near)
+        const water = m.kind === 'p' ? undefined : painter.takeWaterMask() ?? undefined;
         const tc = tileStats ? { ...tex.tileStats, bytes: tex.tileBytes() + painter.tileCopyBytes() } : undefined;
         if (tc) tex.tileStats.peakBytes = tc.peakBytes = Math.max(tex.tileStats.peakBytes, tc.bytes, tex.tiles.peak + painter.tileCopyBytes());
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, gloss, shine, shineMs: painter.shineMs, ms: performance.now() - t0, prepMs, scaleMs: tex.tileStats.scaleMs - sc0, tc }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : []), ...(gloss ? [gloss] : []), ...(shine ? [shine.data.buffer] : [])]);
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, gloss, shine, shineMs: painter.shineMs, water, waterMs: painter.waterMs, ms: performance.now() - t0, prepMs, scaleMs: tex.tileStats.scaleMs - sc0, tc }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : []), ...(gloss ? [gloss] : []), ...(shine ? [shine.data.buffer] : []), ...(water ? [water.data.buffer] : [])]);
         tex.trimTiles(); // (T272: its decodes go once their mips are made; the cache back within its budget)
         break;
       }

@@ -3,6 +3,7 @@
 import type { Game } from '../game/engine';
 import { LIGHT_TYPES, NIGHT_DEFAULT, type LightKey, type NightSettings } from '../game/night-light';
 import { SHINE_GROUPS, SHINE_LOOK } from '../game/grass-shine';
+import { WATER_MOTION } from '../game/water-motion';
 
 const hour = (h: number) => `${String(Math.floor(h) % 24).padStart(2, '0')}:${h % 1 ? '30' : '00'}`;
 
@@ -103,6 +104,20 @@ export function NightPanel({ game, bump }: { game: Game; bump: () => void }) {
           <Row key={key} label={label} value={game.shine.weights[key]} min={0} max={2} step={0.01} show={pct(game.shine.weights[key])} set={v => { game.setShine({ weights: { [key]: v } }); bump(); }} />
         ))}
         <button className="btn mt-2 w-full" onClick={() => { game.setShine({ ...SHINE_LOOK, on: game.shine.on }); bump(); }}>The default shine</button>
+      </details>
+      {/* T248 (#718): the water moves (water-motion.ts), beside the grass's shine: on by default, remembered; the switch bakes the ground again
+          (off: the still water as before), the rest apply at once */}
+      <details className="px-2 py-1 text-xs">
+        <summary className="cursor-pointer py-1">Water motion</summary>
+        <label className="flex items-center gap-2 py-1" title="Ripples drifting over the ponds, the rivers flowing downstream, small waves lapping at the shore and wetting the bank, and the sun's sparkle. Off: the still water as before">
+          <input type="checkbox" checked={game.waterLook.on} onChange={e => { game.setWaterMotion({ on: e.target.checked }); bump(); }} />
+          <span>Moving water</span>
+        </label>
+        <Row label="Flow speed" value={game.waterLook.flow} min={0} max={3} step={0.01} show={`${game.waterLook.flow.toFixed(2)}x`} set={v => { game.setWaterMotion({ flow: v }); bump(); }} title="How fast the rivers run, the ponds' ripples drift and the waves come in" />
+        <Row label="Ripples" value={game.waterLook.ripple} min={0} max={3} step={0.01} show={pct(game.waterLook.ripple)} set={v => { game.setWaterMotion({ ripple: v }); bump(); }} />
+        <Row label="Foam" value={game.waterLook.foam} min={0} max={3} step={0.01} show={pct(game.waterLook.foam)} set={v => { game.setWaterMotion({ foam: v }); bump(); }} title="The waves' foam lapping at the shore and the swash up the bank" />
+        <Row label="Sparkle" value={game.waterLook.sparkle} min={0} max={3} step={0.01} show={pct(game.waterLook.sparkle)} set={v => { game.setWaterMotion({ sparkle: v }); bump(); }} title="The sun glinting on the ripples (none in the shadows, less after dusk)" />
+        <button className="btn mt-2 w-full" onClick={() => { game.setWaterMotion({ ...WATER_MOTION, on: game.waterLook.on }); bump(); }}>The default water</button>
       </details>
     </div>
   );
