@@ -8,9 +8,10 @@ import { Icon } from '../Icon';
 
 const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
-export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold }: {
+export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold, onScene }: {
   view: { lines: GuideLine[]; folded: boolean }; right?: string;
   onShow: (id: string) => void; /** a line's Skip (its id), or Skip guide (null) */ onSkip: (id: string | null) => void; onFold: (folded: boolean) => void;
+  /** T242: Set the scene: your range (its picture card; absent: no art) */ onScene?: () => void;
 }) {
   const { lines, folded } = view, done = lines.filter(l => l.state !== 'todo').length, cur = lines.find(l => l.current)!;
   return (
@@ -20,6 +21,7 @@ export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold
           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-400/80">Guide · build your range</div>
           <div className="text-[12px] text-slate-400">{done} of {lines.length} done</div>
         </div>
+        {onScene && <button className="chip ml-auto px-2 py-0.5" onClick={onScene} title="Set the scene: your range as it stands" data-testid="range-guide-scene"><Icon name="camera" size={16} />Scene</button>}
         <button className="btn-icon" onClick={() => onFold(!folded)} title={folded ? 'Show every step' : 'Fold to the current step'} aria-label={folded ? 'Show every step' : 'Fold the guide'} data-testid="range-guide-fold"><Icon name={folded ? 'up' : 'down'} size={16} /></button>
       </div>
       <ol className="mt-2 space-y-1">

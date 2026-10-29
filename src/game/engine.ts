@@ -35,7 +35,9 @@ import { facilityAt } from './golf/practicebuild';
 import { escapeLadder, numberKeyUse, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
-import { turned } from './lots/preset-art';
+import { sizeKey, turned } from './lots/preset-art';
+import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceHasArt, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
+import { homeStage } from './golf/rangesave';
 import { RangeHost } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { PracticeTool } from './golf/practicetool';
@@ -112,7 +114,7 @@ import { BELT, beltField, riverBeltCell, type BeltField } from './river-trees';
 const PLANT_FRAME_MS = 1;
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
-import { LU, LV, type LotTuple } from './lots/town';
+import { LU, LV, lotJobs, type LotTuple } from './lots/town';
 import { rectPlot, surveyBlocks, surveyPatch } from './lots/survey';
 /** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
 const LAND_SURVEY_INSET = 0.6;
@@ -373,7 +375,7 @@ const LABEL_KEY = { town: 1e6, growth: 2e6, stopped: 2.1e6, gallery: 3e6, waitin
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
-export interface Toast { id: number; text: string; t: number; kind: 'info' | 'warn' | 'good' }
+export interface Toast { id: number; text: string; t: number; kind: 'info' | 'warn' | 'good'; /** T242: its Set the scene button opens this place's picture card */ scene?: SceneRef }
 export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 /** a garden median's plants (P19): the beds' flowers and shrubs (lots/compose.ts FLOWERS and the bushes it scatters), picked by the prop's index */
@@ -2331,8 +2333,8 @@ export class Game {
 
   subscribe(fn: () => void) { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; }
   emit() { for (const l of this.listeners) l(); }
-  toast(text: string, kind: Toast['kind'] = 'info') {
-    this.toasts.push({ id: this.toastId++, text, t: performance.now(), kind });
+  toast(text: string, kind: Toast['kind'] = 'info', scene?: SceneRef) {
+    this.toasts.push({ id: this.toastId++, text, t: performance.now(), kind, ...(scene ? { scene } : {}) });
     if (this.toasts.length > 4) this.toasts.shift();
     this.emit();
   }
@@ -3343,6 +3345,78 @@ export class Game {
     return { id, name: placeName(def, this.townName(0)), kind: def.kind, pop: def.pop, w: def.preset.w * 2, d: def.preset.d * 2, standIns: [...new Set(Object.values(def.standIns))], town: this.traffic.pop };
   }
   closePlaceCard() { this.selectedPlace = null; this.emit(); }
+
+  // ---------- T242 (#702, P28 3): set the scene (scenes.ts: the places, the picture for their state, the lines and numbers; ui/SceneCard.tsx)
+  /** the picture card open (null: none), and its view kept half a second (its numbers move with the day; nothing is read while it is shut) */
+  sceneRef: SceneRef | null = null; private sceneCache: { ref: SceneRef; at: number; v: SceneCardView | null } | null = null;
+  /** opens the card on a place (null shuts it); a place with no picture for its state opens nothing (never a placeholder) */
+  openScene(ref: SceneRef | null) { this.sceneRef = ref; this.sceneCache = null; if (ref && !this.sceneCard()) this.sceneRef = null; this.emit(); }
+  closeScene() { if (!this.sceneRef) return; this.sceneRef = null; this.sceneCache = null; this.emit(); }
+  /** the card's tab (the range's road, bays, shop, green or home; a business's Outside or Inside) */
+  sceneView(view: string) { const r = this.sceneRef; if (!r || r.kind === 'farm') return; this.sceneRef = { ...r, view }; this.sceneCache = null; this.emit(); }
+  /** whether the range or the clubhouse has any picture (the cards' Set the scene buttons), or an iconic place */
+  sceneArt(kind: 'range' | 'club'): boolean { return kind === 'range' ? this.golf?.start === 'range' && sceneArt('range') : !!this.golf && sceneArt('club'); }
+  placeSceneArt(id: string): boolean { return placeHasArt(id); }
+  sceneCard(): SceneCardView | null {
+    const r = this.sceneRef; if (!r) return null;
+    const now = performance.now(), c = this.sceneCache;
+    if (c && c.ref === r && now - c.at < 500) return c.v;
+    const v = this.sceneOf(r); this.sceneCache = { ref: r, at: now, v }; return v;
+  }
+  private sceneOf(r: SceneRef): SceneCardView | null {
+    const town = this.townName(0) ?? 'the town';
+    switch (r.kind) {
+      case 'range': { const f = this.rangeSceneFacts(); return f && rangeScene(f, r.view); }
+      case 'club': {
+        const g = this.golf, bk = this.dayBook; if (!g || !bk || !sceneArt('club') || !this.bizDefs.some(d => d.type === 'clubhouse')) return null;
+        const v = clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen));
+        return clubScene({ tier: g.tier, members: v.clubMembers, visitors: v.today.visitors, fees: v.today.fees, rounds: v.season.members + v.season.visitors }, r.view);
+      }
+      case 'lot': {
+        const l = this.traffic.lots.get(r.key), p = LOT_PLACES.find(q => q.id === r.place); if (!l || !p) return null;
+        return lotScene(p, { level: l.level, decline: l.decline, jobs: lotJobs(l), town, pop: this.traffic.pop }, r.view);
+      }
+      case 'farm': { const f = this.farmMap.farms.get(r.key); return f ? farmScene({ ha: (f.p.w * f.p.d * 4) / 10000, town, fortune: townFortune(this.traffic.lots.values()) }) : null; }
+      case 'place': { const pc = this.places.find(q => q.id === r.id), def = placeDef(r.id); return pc && def ? placeScene({ id: r.id, name: placeName(def, this.townName(0)), pop: def.pop, w: def.preset.w * 2, d: def.preset.d * 2, fortune: townFortune(this.traffic.lots.values()) }, r.view) : null; }
+    }
+  }
+  /** the range's facts for its card (from the range card's view) */
+  private rangeSceneFacts(): RangeSceneFacts | null {
+    const v = this.golf?.start === 'range' ? this.range.view() : null; if (!v) return null;
+    const put = v.practice.find(p => p.id === 'putting');
+    return {
+      owned: v.biz.owned, putting: put?.state === 'open', home: v.home.stage, homeName: v.home.name, homeNext: v.home.next, lifetime: v.home.total,
+      golfers: v.today.golfers, playing: v.today.playing, queue: v.today.queue, lost: v.today.lost, bays: v.stats.bays, price: v.biz.price,
+      seasonTakings: v.biz.season.takings, seasonBuckets: v.biz.season.buckets, shopExtra: v.stats.extra, green: { today: put?.today ?? 0, golfers: put?.golfers ?? 0, takings: put?.takings ?? 0 },
+    };
+  }
+  /** the building a library picture shows (a view's, a turned set's, an east picture's own subject; a variation keeps its id: scenes.ts reads it) */
+  private sceneSubject(item: number): string {
+    const s = sizeKey(LIBRARY[item]?.id ?? ''); const v = /^view:(.+):(ne|nw|se|sw)$/.exec(s);
+    return v ? v[1]! : s.startsWith('east:') ? s.slice(5) : s;
+  }
+  /** a click on the map with Select inspects what it hit (the map press shut the card first): a range piece's view (its ground: the road), the
+   *  clubhouse, an iconic place, a business's building on its lot, a farm's farmhouse. Each opens only when it has a picture */
+  private inspectScene(p: Prop | null, club = false): void {
+    const a = p?.auto ?? '';
+    if (club) { if (this.sceneArt('club')) this.openScene({ kind: 'club' }); return; }
+    if (a.startsWith('range:') || !p) { if (this.sceneArt('range')) this.openScene({ kind: 'range', view: a ? rangeViewOfKey(a.slice(6)) : 'road' }); return; }
+    if (a.startsWith('place:')) { if (placeHasArt(a.slice(6))) this.openScene({ kind: 'place', id: a.slice(6) }); return; }
+    // (T270: a lot is the business it is drawn as: the picture newart.ts lookOf draws, else its own)
+    const drawn = this.sceneSubject(lookOf(p).item), own = this.sceneSubject(p.item);
+    if (a.startsWith('lot:')) { const pl = lotPlaceOf(drawn) ?? lotPlaceOf(own); if (pl && lotPlaceHasArt(pl)) this.openScene({ kind: 'lot', key: a.slice(4), place: pl.id }); return; }
+    if (a.startsWith('farm:') && (FARMHOUSE_SUBJECTS.has(drawn) || FARMHOUSE_SUBJECTS.has(own))) this.openScene({ kind: 'farm', key: a.slice(5) });
+  }
+  /** the range's pictures as last read (null: not yet, so a load never toasts), and the tick that reads them about once a second */
+  private sceneKeys: Record<RangeSceneView, string> | null = null; private sceneTick = 0;
+  /** an event turned a range view's picture (an upgrade built, the putting green open, the home smartened or moved): a toast offers its card */
+  private sceneNewsCheck() {
+    const b = this.golf?.range; if (this.golf?.start !== 'range' || !b || ++this.sceneTick % 6) return;
+    const f = { owned: b.owned, putting: this.range.practiceFacts()?.putting === 'open', home: homeStage(b), lifetime: b.total.takings }, k = rangeSceneKeys(f), was = this.sceneKeys;
+    this.sceneKeys = k; if (!was) return;
+    const view = (Object.keys(k) as RangeSceneView[]).find(v => k[v] && k[v] !== was[v]);
+    if (view) this.toast(rangeNews(view, f), 'good', { kind: 'range', view });
+  }
   /** the places every map gets (dev: window.__game.placeDefs) */
   readonly placeDefs = PLACE_DEFS;
   /** the farms follow the network (ext/farms): the parcels of the changed country roads are derived again (all after a load or a
@@ -4451,7 +4525,7 @@ export class Game {
       const r = s.reward ?? 0; if (r > 0) this.traffic.spend('construction', -r); // (the reward offsets the builds: booked against construction)
       this.toast(`Guide: ${s.title} ✓${r > 0 ? ` (+$${r.toLocaleString()})` : ''}`, 'good');
     }
-    if (!rangeGuideLines(gd)) this.toast('The guide is done: your range is built. Grow it, and the course, your way', 'good');
+    if (!rangeGuideLines(gd)) this.toast('The guide is done: your range is built. Grow it, and the course, your way', 'good', this.sceneArt('range') ? { kind: 'range', view: 'road' } : undefined); // (T242: Set the scene)
     this.scheduleSave(); this.emit();
   }
   /** Skip on a guide line (no reward), or Skip guide (id null): the whole card goes */
@@ -4631,6 +4705,7 @@ export class Game {
   const mx = e.offsetX, my = e.offsetY;
   this.moneyAt(this.tileAt(mx, my)); // T147: a spend this click makes floats up here
   this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
+  if (this.sceneRef) this.closeScene(); // T242: a press on the map puts the picture away (Select's click on a place opens its own below)
   // the owner's open shot (P4b) takes a left click on the course as its aim, before any tool does (a drag still pans; the aim is set on release)
   if (this.shot && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, aim: this.tileAt(mx, my) }; return; }
   // T268: a tee set in hand: a click lays it there, a right click puts it down (the middle button and Space still pan)
@@ -4684,14 +4759,14 @@ export class Game {
         if (this.cam.z >= DISTRICT_Z && this.repairAt(mx, my)) return;
         const p = this.propAt(mx, my), tl = this.tileAt(mx, my);
         // the range's own props and its front open the range card (P24, T129)
-        if (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y))) { this.openRangeCard(true); return; }
+        if (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y))) { this.openRangeCard(true); this.inspectScene(p); return; } // (T242: and its picture)
         // T208: the clubhouse (its footprint, and the building's height up the screen: 6 tiles back) opens the clubhouse card
         const club = this.golf && !p ? this.bizDefs.find(d => d.type === 'clubhouse') : undefined;
-        if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) { this.openClubCard(true); return; }
+        if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) { this.openClubCard(true); this.inspectScene(null, true); return; }
         // T219: an iconic place's props open its card
-        if (p?.auto?.startsWith('place:')) { this.selected = null; this.selectedPlace = p.auto.slice(6); this.emit(); return; }
+        if (p?.auto?.startsWith('place:')) { this.selected = null; this.selectedPlace = p.auto.slice(6); this.inspectScene(p); this.emit(); return; }
         this.selectedPlace = null;
-        if (p) { this.selected = p; this.emit(); return; }
+        if (p) { this.selected = p; this.inspectScene(p); this.emit(); return; } // (T242: a business's building or a farmhouse opens its picture)
         this.selected = null; this.emit();
         if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
       }
@@ -4847,6 +4922,7 @@ export class Game {
     const el = e.target as HTMLInputElement | null, tag = el?.tagName, typing = tag === 'INPUT' || tag === 'TEXTAREA';
     // Esc (P23 4.10): the topmost menu or card first (even from a checkbox or slider in it), then the tool's own step, then out to Select; a
     // focused text box keeps Esc from the tool
+    if (e.key === 'Escape' && this.sceneRef) { this.closeScene(); return; } // T242: the picture card, over everything, goes first
     if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
     if (typing) return;
     this.keys.add(e.key);
@@ -6106,6 +6182,7 @@ export class Game {
   private progressCheck() {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
     this.rangeGuideCheck(); // T239: the guided build's steps tick
+    this.sceneNewsCheck(); // T242: a range view's picture turned: a toast offers its card (about once a second)
     const f = this.playerProgressFacts(), was = p.ramp;
     if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
     // a ramp step opens (T132); not when its tools were open already, nor New hole's once a hole exists (T095)

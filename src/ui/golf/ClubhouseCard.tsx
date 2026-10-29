@@ -13,7 +13,7 @@ const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')
 /** minutes as "12 min" or "1 h 05" */
 const mins = (m: number) => m < 60 ? `${Math.round(m)} min` : `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, '0')}`;
 
-export function ClubhouseCard({ view, onClose, onStaff, right = 'right-3' }: { view: ClubCardView; onClose: () => void; onStaff?: (role: StaffRole, delta: 1 | -1) => void; right?: string }) {
+export function ClubhouseCard({ view, onClose, onStaff, right = 'right-3', onScene }: { view: ClubCardView; onClose: () => void; onStaff?: (role: StaffRole, delta: 1 | -1) => void; right?: string; /** T242: Set the scene (the clubhouse's picture card by tier; absent: no art yet) */ onScene?: () => void }) {
   const t = view.today, s = view.season, pace = s.paceRep > 0 ? `+${s.paceRep}` : `${s.paceRep}`;
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="club-card">
@@ -22,7 +22,10 @@ export function ClubhouseCard({ view, onClose, onStaff, right = 'right-3' }: { v
           <div className="font-semibold text-amber-200">Clubhouse</div>
           <div className="text-[12px] text-slate-400">{view.open ? `Open · ${clock(view.minute)} · green fee ${money(view.fee)}` : 'Closed today: the course is the tournament\'s'} · {view.clubMembers} members</div>
         </div>
-        <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
+        <div className="flex shrink-0 items-center gap-1">
+          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your clubhouse as it stands" data-testid="club-scene"><Icon name="camera" size={16} />Scene</button>}
+          <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
+        </div>
       </div>
       <div className="text-[12px] uppercase text-slate-400">Today</div>
       <div className="grid grid-cols-3 gap-1.5 text-center">
