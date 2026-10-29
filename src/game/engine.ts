@@ -168,7 +168,7 @@ import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin,
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
-import { BOOK_LEAD, PRESSURE, bookRound, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
+import { BOOK_LEAD, PRESSURE, bookRound, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -779,7 +779,8 @@ export class Game {
   private play: GolfPlay | null = null; private playTried = -1;
   /** T208 everyday golf: the town days' play (the save, the booking: golf/everyday.ts DayBook), the day's playback (its town day and course key; null:
    *  none on the course now), the played course (rebuilt when the holes change: its key), and the clubhouse card's open state */
-  private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string; /** T241: the day book's roster it was built from (yours on it or not), and your round's key ('' none) and your golfer's id (-1 none) */ base: DayRoster; you: string; youId: number } | null = null;
+  private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string; /** T241: the day book's roster it was built from (yours on it or not), your booking it was built with (null: none; a new booking, or one a session
+   *  rebooked, is a new object) and your golfer's id (-1 none) */ base: DayRoster; you: Booking | null; youId: number } | null = null;
   private dayCourse: { view: CourseView; key: string; at: number } | null = null; clubCardOpen = false;
   /** T269: the greens the cups are cut on (by hole: the key of the grid's rev, the placed pin and the approach they were found for), the day pins'
    *  revision (bumped when a cup moves: the flags and the play follow), the revision the flags stand at, and when the cups were last checked */
@@ -6988,11 +6989,11 @@ export class Game {
     const course = this.dayCourseOf(now);
     if (!course || !course.view.holes.length) { this.dayPlay = null; this.dropCrew(); return; }
     // T241: your round booked today (golf/player.ts): you join the day's playback alone at your tee time, with your game as you booked it
-    const me = g.player, bk = me?.booked && me.booked.day === s.day ? me.booked : null, you = bk ? `${bk.tee}:${JSON.stringify(bk.skills)}` : '';
-    if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key || this.dayPlay.you !== you) {
+    const me = g.player, bk = me?.booked && me.booked.day === s.day ? me.booked : null;
+    if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key || this.dayPlay.you !== bk) {
       const base = this.dayBook.rosterOf()!, roster = bk && me ? withYou(base, bookedGolfer(me, bk), bk.tee) : base, plan = dayPlan(course.view, roster);
       const youId = bk ? roster.golfers.length - 1 : -1;
-      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight), day: s.day, key: course.key, base, you, youId };
+      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight), day: s.day, key: course.key, base, you: bk, youId };
       this.dayArt = roster.golfers.map((p, i) => i === youId ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
       // (the whole day is played now: your score is known, and shown once your round is done)
       if (bk) bk.result = { strokes: plan.strokes[youId]!.reduce((a, b) => a + b, 0), par: course.view.holes.reduce((a, h) => a + h.par, 0), holes: course.view.holes.length, done: plan.done[youId] ?? Infinity };
@@ -7040,7 +7041,7 @@ export class Game {
   /** whether you are out on the course now: from your walk to the first tee to your round's end */
   private youOnCourse(day: number, minute: number): boolean {
     const b = this.golf?.player?.booked; if (!b || b.day !== day || minute < b.tee - BOOK_LEAD) return false;
-    return !b.result || minute < b.result.done;
+    return !!b.result && minute < b.result.done; // (not played yet: no course to play today)
   }
   /** your round today as the profile card shows it */
   private youRoundState(): RoundState {

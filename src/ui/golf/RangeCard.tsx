@@ -69,7 +69,6 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
             </span>
           </div>
           <Session s={you.sessions.find(x => x.kind === 'bucket')!} onPractise={onPractise} />
-          {you.busy && <div className="text-[12px] text-sky-200/90" data-testid="range-you-busy">{you.busy}</div>}
           {you.last && <div className="text-[12px] text-slate-400" data-testid="range-you-last">Last: {you.last.text} · ${you.last.cost.toLocaleString()} · handicap {hcp(you.last.hcp[0])} to <span className="text-emerald-300">{hcp(you.last.hcp[1])}</span></div>}
         </div>
       )}
