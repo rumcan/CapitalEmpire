@@ -81,7 +81,8 @@ test('every surface of the game wears a known painted family; the golf turf, the
   // that every surface has a look and every look names a known family; that the golf turf, the map's grass and the town lawns wear a tile set
   // (hand-painted, laid as authored: familyById(...).tiled); and that the rough and the decrepit lots' lawns wear the owner's rough (T162)
   const f = clampSurfaces(file), S = f.surfaces;
-  for (const s of SURFACES) assert.ok(f.surfaces[s.key], `${s.key} has a look`);
+  // (T259: an art slot, the farms' crop states, has none until its art lands: its stand-in draws)
+  for (const s of SURFACES) if (!s.slot) assert.ok(f.surfaces[s.key], `${s.key} has a look`);
   for (const [k, look] of Object.entries(S)) assert.ok(knownFamily(look!.family), `${k}: ${look!.family} is a known family`);
   const tiled = (id: string) => familyById(id)?.tiled === true;
   // the golf turf: the tee, the first cut, the fairway, the greens and their fringes, the rough (T145, T153, T165, T191)

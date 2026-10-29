@@ -19,7 +19,7 @@ export const BLOCK_UNDER = 'wasteSand'; // the owner, 2026-10-27: "change the bl
 export type SurfaceGroup = 'Golf' | 'Map' | 'Town' | 'Living ground' | 'Course walls';
 /** a surface the studio lists by its plain name: the textures it stands for (a photo texture id, or a preset's golf surface), its group and the
  *  families that fit it (the picker shows those first) */
-export interface SurfaceDef { key: string; name: string; group: SurfaceGroup; tex: readonly string[]; kinds: readonly PaintedKind[] }
+export interface SurfaceDef { key: string; name: string; group: SurfaceGroup; tex: readonly string[]; kinds: readonly PaintedKind[]; /** T259: an art slot waiting for its art (no look until it lands: its stand-in draws meanwhile) */ slot?: true }
 export const SURFACES: readonly SurfaceDef[] = [
   { key: 'green', name: 'Green', group: 'Golf', tex: ['golfGreen'], kinds: ['grass'] },
   { key: 'fringe', name: 'Fringe (the collar round a green)', group: 'Golf', tex: ['golfFringe'], kinds: ['grass'] },
@@ -48,8 +48,8 @@ export const SURFACES: readonly SurfaceDef[] = [
   // T259: the farms' crop states (ext/farms/crops.ts CROP_SURFACE: the art 185 and 186, a picture for rows along the map's x and one for its y).
   // Unset, a field of that state is its soil (Farm fields) with the stand-in rows; naming a family here swaps the art in
   ...([['fieldPloughed', 'ploughed'], ['cornYoung', 'corn, young'], ['cornRipe', 'corn, ripe'], ['cornStubble', 'corn stubble']] as const).flatMap(([k, n]) => [
-    { key: k, name: `Farm fields: ${n} (rows along x)`, group: 'Map' as const, tex: [k], kinds: ['cut', 'grass'] as const },
-    { key: `${k}Y`, name: `Farm fields: ${n} (rows along y)`, group: 'Map' as const, tex: [`${k}Y`], kinds: ['cut', 'grass'] as const },
+    { key: k, name: `Farm fields: ${n} (rows along x)`, group: 'Map' as const, tex: [k], kinds: ['cut', 'grass'] as const, slot: true as const },
+    { key: `${k}Y`, name: `Farm fields: ${n} (rows along y)`, group: 'Map' as const, tex: [`${k}Y`], kinds: ['cut', 'grass'] as const, slot: true as const },
   ]),
   { key: 'woodland', name: 'Woodland floor (under the trees; the forests on the planner map)', group: 'Map', tex: [WOODLAND], kinds: ['grass', 'cut'] },
   { key: 'outside', name: 'Outside the map', group: 'Map', tex: ['outside'], kinds: ['grass'] },
