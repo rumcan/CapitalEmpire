@@ -1,0 +1,168 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "source": {
+    "file": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+    "sha256": "056e2dcb69a6f82193c55c24ed8a40875fe8eabd749eee1036320a6c23dd4caf",
+    "width": 1254,
+    "height": 1254
+  },
+  "status": "partial-two-cells-ready",
+  "reviewType": "native-art-geometry-and-identity; final actual-game road overlay still required",
+  "referenceAxes": {
+    "frontSlope": 0.5,
+    "rightSlope": -0.5,
+    "angleDegrees": 26.56505117707799,
+    "toleranceDegrees": 2.25,
+    "authority": "Primary explicitly chose2.25deg consistent painted artwork tolerance; no change to road geometry and no acceptance beyond2.25."
+  },
+  "cells": [
+    {
+      "cell": 1,
+      "status": "not-selected",
+      "reason": "Keep prior approved laundry batch01v2; duplicate v3 not needed."
+    },
+    {
+      "cell": 2,
+      "status": "held",
+      "reason": "Entrance remains on side plane; original front/right entry physicalposition not preserved."
+    },
+    {
+      "cell": 3,
+      "status": "ready-for-integration-review",
+      "reason": "Front2.1065deg/right2.1027deg within explicit2.25deg limit; coherent axes, identity retained."
+    },
+    {
+      "cell": 4,
+      "status": "ready-for-integration-review",
+      "reason": "Front.3683deg/main-side1.5820deg/independentcarportside2.0454deg all within explicit2.25deg limit; identity retained."
+    }
+  ],
+  "measurements": [
+    {
+      "name": "dormer-front",
+      "cell": 3,
+      "kind": "unobscured masonry lower base",
+      "slope": 0.5468386685777992,
+      "angleErrorDegrees": 2.106492884956632,
+      "rmsPx": 0.2999457121622917,
+      "samples": 91,
+      "endpoints": [
+        [
+          265,
+          1115.5900621118012
+        ],
+        [
+          355,
+          1164.805542283803
+        ]
+      ]
+    },
+    {
+      "name": "dormer-side",
+      "cell": 3,
+      "kind": "exposed right masonry base",
+      "slope": -0.5467532467532468,
+      "angleErrorDegrees": 2.10272509168885,
+      "rmsPx": 0.6770526787694614,
+      "samples": 21,
+      "endpoints": [
+        [
+          440,
+          1171.2294372294373
+        ],
+        [
+          460,
+          1160.2943722943724
+        ]
+      ]
+    },
+    {
+      "name": "ranch-front",
+      "cell": 4,
+      "kind": "cream cap over brick plinth, exposed structural front course; groundbase hidden by flowers",
+      "slope": 0.4919902393081892,
+      "angleErrorDegrees": 0.3683153760909095,
+      "rmsPx": 0.5504769286336545,
+      "samples": 141,
+      "endpoints": [
+        [
+          685,
+          963.8372789931076
+        ],
+        [
+          825,
+          1032.715912496254
+        ]
+      ]
+    },
+    {
+      "name": "ranch-side",
+      "cell": 4,
+      "kind": "main-house exposed brick-plinth base",
+      "slope": -0.535006435006435,
+      "angleErrorDegrees": 1.582016688075555,
+      "rmsPx": 0.28680941510518126,
+      "samples": 36,
+      "endpoints": [
+        [
+          960,
+          1140.834834834835
+        ],
+        [
+          995,
+          1122.1096096096096
+        ]
+      ]
+    },
+    {
+      "name": "ranch-carport-side",
+      "cell": 4,
+      "kind": "independent exposed carport slab right-axis edge",
+      "slope": -0.5454545454545455,
+      "angleErrorDegrees": 2.045408488887233,
+      "rmsPx": 0.3235478258191509,
+      "samples": 66,
+      "endpoints": [
+        [
+          1150,
+          1166.090909090909
+        ],
+        [
+          1215,
+          1130.6363636363635
+        ]
+      ]
+    }
+  ],
+  "alphaAudit": {
+    "alpha16OrGreaterOuterEdgePixels": 0,
+    "nonzeroOuterEdgePixels": 129,
+    "note": "Alpha1–15 native noise only; no visible clipped building/backdrop."
+  },
+  "cropContract": "Use connected-component partition (lossless assignment, no repaint). Exact alpha16 component bounds may overlap other subject pixels inside rectangular crops; equal quadrant cropping clips sprites.",
+  "doorCalibration": [
+    {
+      "cell": 3,
+      "kind": "single front leaf",
+      "nativeFullSheet": {
+        "x": 145,
+        "headY": 949,
+        "thresholdY": 1030,
+        "heightPx": 81
+      },
+      "uncertaintyPx": 3
+    },
+    {
+      "cell": 4,
+      "kind": "single front leaf, unoccluded left part",
+      "nativeFullSheet": {
+        "x": 900,
+        "headY": 1003,
+        "thresholdY": 1090,
+        "heightPx": 87
+      },
+      "uncertaintyPx": 3
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-01.json",
+    "sha256": "f7720e977c3e29e509069d07370a01c1251408771bfc6557c2e8129acc4bb855"
+  },
+  "repairs": [
+    {
+      "status": "ready",
+      "id": "variation:town-laundromat-43183f9e-plain:1",
+      "slug": "variation-town-laundromat-43183f9e-plain-1",
+      "originalVersion": "variation-town-laundromat-43183f9e-plain-1-4views-v1",
+      "version": "variation-town-laundromat-43183f9e-plain-1-4views-v2",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.png",
+      "sheetSha256": "5e56c735bef22172c420df0afa10bfd0b802369cc0093e723ab850cbaa4e13a6",
+      "cell": 1,
+      "partition": "nearest-alpha-core",
+      "door": 96,
+      "doorNote": "Laundry ordinary single-leaf side door: x501 head476 threshold572,96px±3, full native sheet; storefront doors excluded.",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v2.review.json",
+        "sha256": "1d7525fb7d085fc710428a331a9da5b5961e897cc033e9f9b0225716cad12731"
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "slug": "variation-ref-building-house-dormer-b4413f08-plain-1",
+      "originalVersion": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+      "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+      "sheetSha256": "056e2dcb69a6f82193c55c24ed8a40875fe8eabd749eee1036320a6c23dd4caf",
+      "cell": 3,
+      "partition": "nearest-alpha-core",
+      "door": 81,
+      "doorNote": {
+        "cell": 3,
+        "kind": "single front leaf",
+        "nativeFullSheet": {
+          "x": 145,
+          "headY": 949,
+          "thresholdY": 1030,
+          "heightPx": 81
+        },
+        "uncertaintyPx": 3
+      },
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v3.review.json",
+        "sha256": "776396750e8af5ec62f6898902dc11857a3b20af91a7d59894dedb482394d123"
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "slug": "variation-gen-house-ranch-long-a4ddd58c-plain-1",
+      "originalVersion": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1",
+      "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v2",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+      "sheetSha256": "056e2dcb69a6f82193c55c24ed8a40875fe8eabd749eee1036320a6c23dd4caf",
+      "cell": 4,
+      "partition": "nearest-alpha-core",
+      "door": 87,
+      "doorNote": {
+        "cell": 4,
+        "kind": "single front leaf, unoccluded left part",
+        "nativeFullSheet": {
+          "x": 900,
+          "headY": 1003,
+          "thresholdY": 1090,
+          "heightPx": 87
+        },
+        "uncertaintyPx": 3
+      },
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v3.review.json",
+        "sha256": "776396750e8af5ec62f6898902dc11857a3b20af91a7d59894dedb482394d123"
+      }
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "id": "batch:sw-street-repairs-01",
+  "category": "buildings",
+  "stage": "guide-first-sketch-to-render-no-bad-camera-reference",
+  "transparent": true,
+  "output": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.png",
+  "provenance": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.provenance.json",
+  "references": [
+    "art/theme-consistency/references/sw-street-four-sprites-geometry-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "cells": [
+    {
+      "id": "variation:town-laundromat-43183f9e-plain:1",
+      "version": "variation-town-laundromat-43183f9e-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-laundromat-43183f9e-plain-1/NE.png",
+      "dir": "variation-town-laundromat-43183f9e-plain-1",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/01.native.png"
+    },
+    {
+      "index": 22,
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-cottage-fc52ce66-plain-1/NE.png",
+      "sha256": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302",
+      "width": 594,
+      "height": 456,
+      "dir": "variation-ref-building-house-cottage-fc52ce66-plain-1",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/02.native.png"
+    },
+    {
+      "index": 23,
+      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-dormer-b4413f08-plain-1/NE.png",
+      "sha256": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
+      "width": 558,
+      "height": 507,
+      "dir": "variation-ref-building-house-dormer-b4413f08-plain-1",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/03.native.png"
+    },
+    {
+      "index": 17,
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-ranch-long-a4ddd58c-plain-1/NE.png",
+      "sha256": "728b436a3b05653381f7f55e784a77e75005bae353df1cbc1865985cb299af8a",
+      "width": 693,
+      "height": 412,
+      "dir": "variation-gen-house-ranch-long-a4ddd58c-plain-1",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/04.native.png"
+    }
+  ],
+  "prompt": "Use case: sketch-to-render. Paint FOUR DIFFERENT finishedgamebuildings directly from IMAGE1's exact2x2 GEOMETRY DRAWING. IMAGE1 IS THE EDIT TARGET. IMAGE2 is painting/material/colourstyle only, neveritscamera. Keep IMAGE1's FOUR groundfootprints and exactfront/rightplaneangles. Red frontbase lines run DOWNRIGHT at slope+0.5; blue rightbase lines UP-RIGHTat slope-0.5. Groundfrontslines mustremainassteepasdrawn. Replaceflatguidecolours/lines withfinishedarchitecture, andremoveallguidebackgroundtoTRUEtransparentalpha.\nThis is a NEW painting from a precisegeometrydrawing. Do NOT invent a near-frontal or eye-level camera. Geometry is orthographic2:1 DIMETRIC at30degree elevation,45degree yaw, verticalsvertical. Frontface occupies SCREENLEFT, rightsideSCREENRIGHT. Everyfrontwallfoundation/siding/windowrow/fascia followsRED+0.5axis. Everyrightsidefoundation/siding/windowrowfollowsBLUE-0.5axis. No perspectiveconvergence. Do NOT flatten frontedges tohorizontal or slope+.15/.25. Retainallfournearestgroundcornersandfootprintorientationsinimage1; buildingheights/roofshapesmayextendupwardsasdescribed. GuideblocksareNOTflatroofdesignsforhouses.\nCELL IDENTITIES, row-major:\nTOPLEFT: LAUNDRY variation. One-storey blue-painted brick laundromat, creamstoneparapet aroundflatdarkroof, tealLAUNDRY signboard with whitehorizontaltrimmarks, warmwashers behindlargefrontwindows, centralglassdoubledoors, smallrecess/right-handprojection asidentity. Roofhas metalchimneypipe, several smallvents and boxyHVAC. Sign mustspellLAUNDRY correctly. Keepbluemasonrybase; noothertext.\nTOPRIGHT: creamplaster COTTAGE. Two-storeycentralfrontgable with brownwoodtrim, darkblueslateshingleroof and tallcreamchimney, lowerone-storeywindowwingonphysicalLEFT; smalltimbergabledentryporchonphysicalRIGHT, warmwindows andwoodendoor, greyblockfoundation. Preserve sourcearchitecture exactly, nowcorrectly projected.\nBOTTOMLEFT: creamclapboard DORMERHOUSE. Steepdarkslateroof with THREEfrontdormers (largercentral, smallonesoneitherside), redbrickchimneyatbackright, timberentryporchwithstonepiers onphysicalLEFT, largewarm3-pane windowwithdarkbluegreen shutters onphysicalRIGHT, greymasonrybase. Keepallthree dormers and allopenings.\nBOTTOMRIGHT: low long RANCHHOUSE. Creamhorizontalboards over red-brownbricklowerwall, darkslateinterlockinghip/gableroofs, greenfrontdoorunder smalltimbergable near physicalRIGHTofmainfrontwall, warmfrontwindowswithdarkshutters, OPENcarportattachedatphysicalRIGHTend. Keep thatcarport'sphysicalside and onevisiblefrontsupport, no mirroring oraddedgarage.\n\nPaint rich confident illustratedgamearchitecture matching IMAGE2: readable brick courses, creamplaster, paintedtimber, darkslateshingles, warmlyglowingwindows, restrainedwear. Same sun SCREEN UPPER RIGHT, soft lower-leftshading onall4, evenexposure. ExactlyFOUR isolatedcompletebuildingSPRITES in2x2grid, one ineachguidecell, clearspacebetween, nofloor/lawn/groundtile/soil/road/backdrop/people/detachedshadow/labels/guidecolour/textotherthanLAUNDRY. Alpha0everywhereoutsidetheactualbuildings. Complete roofs/foundationsinsideeachcell, highestnative squarePNGaround2048px. The finalstructure mustfollow thedrawing's correctangles.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-42ec7917-4532-4848-87bb-49710492cee2.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/references/sw-street-four-sprites-geometry-v1.png",
+      "sha256": "f94df55f45889eeeb0ae714c5e8517f47db3fb7fd28dd5185ae2721c80bcb88f"
+    },
+    {
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    }
+  ],
+  "integrationStatus": "pending-primary-geometry-review",
+  "processing": "Native generated PNG copied byte-for-byte; no warp/rotate/mirror/recolour/resample."
+}

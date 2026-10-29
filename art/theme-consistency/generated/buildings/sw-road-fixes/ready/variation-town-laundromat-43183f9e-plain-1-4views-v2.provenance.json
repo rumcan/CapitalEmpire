@@ -1,0 +1,55 @@
+{
+  "id": "variation:town-laundromat-43183f9e-plain:1",
+  "generator": "image_gen",
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.png",
+    "sheetSha256": "5e56c735bef22172c420df0afa10bfd0b802369cc0093e723ab850cbaa4e13a6",
+    "cell": 1,
+    "sourceRect": {
+      "left": 0,
+      "top": 29,
+      "width": 661,
+      "height": 626
+    },
+    "coreBounds": {
+      "left": 47,
+      "top": 119,
+      "width": 562,
+      "height": 503
+    },
+    "nonzeroPixels": 209828,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v2.review.json",
+      "sha256": "1d7525fb7d085fc710428a331a9da5b5961e897cc033e9f9b0225716cad12731"
+    }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-01.json",
+    "sha256": "f7720e977c3e29e509069d07370a01c1251408771bfc6557c2e8129acc4bb855"
+  },
+  "original": {
+    "id": "variation:town-laundromat-43183f9e-plain:1",
+    "version": "variation-town-laundromat-43183f9e-plain-1-4views-v1",
+    "files": {
+      "NE": "19c78242036dcb5e6fb0c05a37bb57a2b3c0e146a053b29fd3e4c709151068bf",
+      "SE": "e1f223e219538848521492c94840a54fdf077109ec5287b5889a26bc5de902b3",
+      "SW": "cafb8bef9d02074cfaacb29728f00354ec6c6b8a132d79bc9d5f1bebbcb0791d",
+      "NW": "4e13104696f4118528e13915b0a482f1a28d74e1441442d86283e5e3cdf779d7"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "d1be389c5af1391883d9f95d33b19e02551901697094fb52d88f2969fa12aadc",
+    "SE": "e1f223e219538848521492c94840a54fdf077109ec5287b5889a26bc5de902b3",
+    "SW": "cafb8bef9d02074cfaacb29728f00354ec6c6b8a132d79bc9d5f1bebbcb0791d",
+    "NW": "4e13104696f4118528e13915b0a482f1a28d74e1441442d86283e5e3cdf779d7"
+  }
+}

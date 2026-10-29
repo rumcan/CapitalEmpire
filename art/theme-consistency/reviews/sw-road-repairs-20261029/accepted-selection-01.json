@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "scope": "SWstreet-facing repairs only; canonical cameraNE. Other3existing views must remain byte-identical.",
+  "status": "art-approved; gameintegrationandroad-overlaypending",
+  "toleranceDegrees": 2.25,
+  "selected": [
+    {
+      "id": "variation:town-laundromat-43183f9e-plain:1",
+      "version": "variation-town-laundromat-43183f9e-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-laundromat-43183f9e-plain-1/NE.png",
+      "dir": "variation-town-laundromat-43183f9e-plain-1",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/01.native.png",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.png",
+      "sheetSha256": "5e56c735bef22172c420df0afa10bfd0b802369cc0093e723ab850cbaa4e13a6",
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v2.review.json",
+      "cropStrategy": "native component isolation; do not include other cells"
+    },
+    {
+      "index": 23,
+      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-dormer-b4413f08-plain-1/NE.png",
+      "sha256": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
+      "width": 558,
+      "height": 507,
+      "dir": "variation-ref-building-house-dormer-b4413f08-plain-1",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/03.native.png",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+      "sheetSha256": "056e2dcb69a6f82193c55c24ed8a40875fe8eabd749eee1036320a6c23dd4caf",
+      "alpha16ComponentRect": {
+        "left": 17,
+        "top": 643,
+        "width": 605,
+        "height": 547
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v3.review.json",
+      "cropStrategy": "connected-component partition; rectangular bbox overlaps foreign pixels",
+      "doorCalibration": {
+        "cell": 3,
+        "kind": "single front leaf",
+        "nativeFullSheet": {
+          "x": 145,
+          "headY": 949,
+          "thresholdY": 1030,
+          "heightPx": 81
+        },
+        "uncertaintyPx": 3
+      }
+    },
+    {
+      "index": 17,
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-ranch-long-a4ddd58c-plain-1/NE.png",
+      "sha256": "728b436a3b05653381f7f55e784a77e75005bae353df1cbc1865985cb299af8a",
+      "width": 693,
+      "height": 412,
+      "dir": "variation-gen-house-ranch-long-a4ddd58c-plain-1",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/04.native.png",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+      "sheetSha256": "056e2dcb69a6f82193c55c24ed8a40875fe8eabd749eee1036320a6c23dd4caf",
+      "alpha16ComponentRect": {
+        "left": 617,
+        "top": 749,
+        "width": 633,
+        "height": 426
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v3.review.json",
+      "cropStrategy": "connected-component partition; rectangular bbox overlaps foreign pixels",
+      "doorCalibration": {
+        "cell": 4,
+        "kind": "single front leaf, unoccluded left part",
+        "nativeFullSheet": {
+          "x": 900,
+          "headY": 1003,
+          "thresholdY": 1090,
+          "heightPx": 87
+        },
+        "uncertaintyPx": 3
+      }
+    }
+  ],
+  "held": [
+    "batch01v1all",
+    "batch01v2cottage/dormer/ranch notselected",
+    "batch01v3cottage",
+    "batch02v1all"
+  ],
+  "note": "Raw2x2sheets contain fourdistinctsubjects. Never interpret these4cells as4directions ofonebuilding."
+}

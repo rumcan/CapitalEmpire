@@ -14,6 +14,9 @@ const sourceRoot = path.resolve(process.argv[3] ?? root);
 const selection = JSON.parse(fs.readFileSync(path.resolve(process.argv[2]), 'utf8'));
 const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 const read = f => JSON.parse(fs.readFileSync(f, 'utf8'));
+const authorityBytes = fs.readFileSync(path.resolve(sourceRoot, selection.authority.file));
+if (sha(authorityBytes) !== selection.authority.sha256) throw Error('Canonical approval changed');
+const authority = JSON.parse(authorityBytes);
 const dirs = ['NE', 'SE', 'SW', 'NW'];
 const store = path.join(root, 'art/building-views');
 const measuresFile = path.join(store, 'measures.json'), measures = read(measuresFile);
@@ -41,6 +44,9 @@ for (const pick of selection.repairs) {
   if (pick.status !== 'ready' || pick.canonicalView !== 'NE' || pick.streetFacing !== 'SW') throw Error(`Unapproved/mislabelled repair ${pick.id}`);
   const sheetFile = path.resolve(sourceRoot, pick.sheet), sheet = fs.readFileSync(sheetFile);
   if (sha(sheet) !== pick.sheetSha256) throw Error(`Sheet changed: ${pick.sheet}`);
+  if (!authority.selected.some(s => s.id === pick.id && s.cell === pick.cell && s.sheetSha256 === pick.sheetSha256)) throw Error(`Subject/cell not canonically approved: ${pick.id}`);
+  const reviewBytes = fs.readFileSync(path.resolve(sourceRoot, pick.geometryReview.file)), review = JSON.parse(reviewBytes);
+  if (sha(reviewBytes) !== pick.geometryReview.sha256 || review.source.sha256 !== pick.sheetSha256 || !review.cells.some(c => c.cell === pick.cell && c.status === 'ready-for-integration-review')) throw Error(`Missing exact geometry approval: ${pick.id}`);
   const original = path.join(store, pick.slug), source = read(path.join(original, 'source.json'));
   if (source.id !== pick.id || source.version !== pick.originalVersion) throw Error(`Current source differs for ${pick.id}`);
   const base = items.get(pick.id); if (!base) throw Error(`Unknown library ID ${pick.id}`);
@@ -83,12 +89,13 @@ for (const pick of selection.repairs) {
     files[v.dir] = sha(bytes); fs.writeFileSync(path.join(dest, `${v.dir}.native.png`), bytes);
   }
   const retained = Object.fromEntries(existing.slice(1).map(v => [v.dir, { sha256: files[v.dir], nativeScale: v.s, note: `Retain exact pre-repair game scale from ${source.version}` }]));
-  if (!(pick.door > 0)) throw Error(`Missing native ordinary-door gauge for ${pick.id}`);
+  if (!(pick.door > 0 || (Number.isFinite(pick.nativeScale) && pick.nativeScale > 0))) throw Error(`Missing explicit native calibration for ${pick.id}`);
+  const frontMeasure = { sha256: files.NE, ...(pick.nativeScale > 0 ? { nativeScale: pick.nativeScale } : { door: pick.door }), note: pick.doorNote ?? pick.scaleNote };
   measures.subjects[pick.id] = { ...old, version, gaugeScale: kg, footprintScale: f,
-    views: { NE: { sha256: files.NE, door: pick.door, note: pick.doorNote }, ...retained } };
+    views: { NE: frontMeasure, ...retained } };
   const provenance = { id: pick.id, generator: 'image_gen', integrationStatus: 'ready',
     repair: { physicalStreetFacing: 'SW', canonicalView: 'NE', sheet: pick.sheet, sheetSha256: pick.sheetSha256, cell: pick.cell, ...crop, geometryReview: pick.geometryReview },
-    original: source, retainedDirections: dirs.slice(1), files };
+    authority: selection.authority, original: source, retainedDirections: dirs.slice(1), files };
   fs.writeFileSync(path.join(output, `${version}.provenance.json`), JSON.stringify(provenance, null, 2) + '\n');
   audit.push({ id: pick.id, version, files, original: source, footprintScale: f, gaugeScale: kg, retainedNativeScales: Object.fromEntries(existing.slice(1).map(v => [v.dir, v.s])) });
 }

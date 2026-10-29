@@ -1,0 +1,462 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "source": {
+    "file": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.png",
+    "sha256": "5e56c735bef22172c420df0afa10bfd0b802369cc0093e723ab850cbaa4e13a6",
+    "width": 1254,
+    "height": 1254
+  },
+  "provenance": {
+    "file": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.provenance.json",
+    "sha256": "9b38a267a6c43d74a65e1c9f09ca1039698f267b71f87393184a8f799a5028f1"
+  },
+  "status": "partial-one-cell-ready",
+  "scope": "Physical SW-facing corrected sprite is canonical camera NE. Four cells are FOUR DISTINCT subjects, not four rotations.",
+  "referenceAxes": {
+    "frontSlope": 0.5,
+    "rightSlope": -0.5,
+    "angleDegrees": 26.56505117707799,
+    "toleranceDegrees": 2
+  },
+  "alphaAudit": {
+    "clearPixels": 765897,
+    "nonzeroOuterEdgePixels": 61,
+    "alpha16OrGreaterOuterEdgePixels": 0,
+    "note": "Native alpha1–15 noise may touch border. No visible building clipping or backdrop; raw unchanged."
+  },
+  "cells": [
+    {
+      "cell": 1,
+      "status": "ready-for-integration-review",
+      "name": "laundry",
+      "reason": "Front1.286deg and side1.700deg fit road axes; same blue laundry identity. Rootapproved only this cell."
+    },
+    {
+      "cell": 2,
+      "status": "held",
+      "name": "cottage",
+      "reason": "Front angle good (.757deg) but entrance moved onto side plane; root identity review failed."
+    },
+    {
+      "cell": 3,
+      "status": "held",
+      "name": "dormer",
+      "reason": "Unobscured front masonry base2.180deg off axis; do not cherry-pick broader vegetation-contaminated span."
+    },
+    {
+      "cell": 4,
+      "status": "held",
+      "name": "ranch",
+      "reason": "Front cap.337deg good, right-side main-house base5.323deg and independent carport slab4.336deg off axis."
+    }
+  ],
+  "measurements": [
+    {
+      "cell": 1,
+      "name": "laundry",
+      "x0": 320,
+      "x1": 385,
+      "kind": "exposed structural masonry base, alpha boundary",
+      "fits": [
+        {
+          "slope": 0.5265212399540757,
+          "intercept": 397.3255053404307,
+          "rmsPx": 0.31136538120333784,
+          "samples": 66,
+          "endpoints": [
+            [
+              320,
+              565.812302125735
+            ],
+            [
+              385,
+              600.0361827227498
+            ]
+          ],
+          "threshold": 32,
+          "angleErrorDegrees": 1.2027066299751266
+        },
+        {
+          "slope": 0.5283790836029642,
+          "intercept": 396.0797063632885,
+          "rmsPx": 0.28870097216071616,
+          "samples": 66,
+          "endpoints": [
+            [
+              320,
+              565.161013116237
+            ],
+            [
+              385,
+              599.5056535504297
+            ]
+          ],
+          "threshold": 128,
+          "angleErrorDegrees": 1.2859849049576453
+        },
+        {
+          "slope": 0.5306752948543992,
+          "intercept": 394.54301916988493,
+          "rmsPx": 0.31003183764432735,
+          "samples": 66,
+          "endpoints": [
+            [
+              320,
+              564.3591135232926
+            ],
+            [
+              385,
+              598.8530076888286
+            ]
+          ],
+          "threshold": 230,
+          "angleErrorDegrees": 1.3887366280092381
+        }
+      ],
+      "slope": 0.5283790836029642,
+      "intercept": 396.0797063632885,
+      "rmsPx": 0.28870097216071616,
+      "samples": 66,
+      "endpoints": [
+        [
+          320,
+          565.161013116237
+        ],
+        [
+          385,
+          599.5056535504297
+        ]
+      ],
+      "threshold": 128,
+      "angleErrorDegrees": 1.2859849049576453
+    },
+    {
+      "cell": 2,
+      "name": "cottage",
+      "x0": 835,
+      "x1": 985,
+      "kind": "exposed structural masonry base, alpha boundary",
+      "fits": [
+        {
+          "slope": 0.5173579644475427,
+          "intercept": 102.20425235273615,
+          "rmsPx": 0.3104934872703981,
+          "samples": 151,
+          "endpoints": [
+            [
+              835,
+              534.1981526664342
+            ],
+            [
+              985,
+              611.8018473335657
+            ]
+          ],
+          "threshold": 32,
+          "angleErrorDegrees": 0.7900942794236094
+        },
+        {
+          "slope": 0.5166329731613805,
+          "intercept": 102.20836528407091,
+          "rmsPx": 0.32265626950292725,
+          "samples": 151,
+          "endpoints": [
+            [
+              835,
+              533.5968978738235
+            ],
+            [
+              985,
+              611.0918438480306
+            ]
+          ],
+          "threshold": 128,
+          "angleErrorDegrees": 0.7573163619725463
+        },
+        {
+          "slope": 0.5178110840013942,
+          "intercept": 100.2952248170094,
+          "rmsPx": 0.32279517139162917,
+          "samples": 151,
+          "endpoints": [
+            [
+              835,
+              532.6674799581735
+            ],
+            [
+              985,
+              610.3391425583827
+            ]
+          ],
+          "threshold": 230,
+          "angleErrorDegrees": 0.8105706310160528
+        }
+      ],
+      "slope": 0.5166329731613805,
+      "intercept": 102.20836528407091,
+      "rmsPx": 0.32265626950292725,
+      "samples": 151,
+      "endpoints": [
+        [
+          835,
+          533.5968978738235
+        ],
+        [
+          985,
+          611.0918438480306
+        ]
+      ],
+      "threshold": 128,
+      "angleErrorDegrees": 0.7573163619725463
+    },
+    {
+      "cell": 3,
+      "name": "dormer",
+      "x0": 275,
+      "x1": 350,
+      "kind": "exposed structural masonry base, alpha boundary",
+      "fits": [
+        {
+          "slope": 0.5464661654135339,
+          "intercept": 955.1503759398496,
+          "rmsPx": 0.3100735835668088,
+          "samples": 76,
+          "endpoints": [
+            [
+              275,
+              1105.4285714285713
+            ],
+            [
+              350,
+              1146.4135338345864
+            ]
+          ],
+          "threshold": 32,
+          "angleErrorDegrees": 2.0900604974977917
+        },
+        {
+          "slope": 0.548503075871497,
+          "intercept": 953.7375256322624,
+          "rmsPx": 0.31650721578218105,
+          "samples": 76,
+          "endpoints": [
+            [
+              275,
+              1104.575871496924
+            ],
+            [
+              350,
+              1145.7136021872864
+            ]
+          ],
+          "threshold": 128,
+          "angleErrorDegrees": 2.179852627517467
+        },
+        {
+          "slope": 0.5473274094326726,
+          "intercept": 953.3680792891319,
+          "rmsPx": 0.31791916859847386,
+          "samples": 76,
+          "endpoints": [
+            [
+              275,
+              1103.8831168831168
+            ],
+            [
+              350,
+              1144.9326725905673
+            ]
+          ],
+          "threshold": 230,
+          "angleErrorDegrees": 2.1280450987834705
+        }
+      ],
+      "slope": 0.548503075871497,
+      "intercept": 953.7375256322624,
+      "rmsPx": 0.31650721578218105,
+      "samples": 76,
+      "endpoints": [
+        [
+          275,
+          1104.575871496924
+        ],
+        [
+          350,
+          1145.7136021872864
+        ]
+      ],
+      "threshold": 128,
+      "angleErrorDegrees": 2.179852627517467
+    },
+    {
+      "cell": 4,
+      "name": "ranch-side",
+      "x0": 965,
+      "x1": 998,
+      "expected": -0.5,
+      "kind": "exposed structural masonry base, alpha boundary",
+      "fits": [
+        {
+          "slope": -0.6242933537051184,
+          "intercept": 1731.685103132162,
+          "rmsPx": 0.4355872075046981,
+          "samples": 34,
+          "endpoints": [
+            [
+              965,
+              1129.2420168067229
+            ],
+            [
+              998,
+              1108.640336134454
+            ]
+          ],
+          "threshold": 32,
+          "angleErrorDegrees": 5.4112079252299905
+        },
+        {
+          "slope": -0.6221543162719634,
+          "intercept": 1728.8209320091673,
+          "rmsPx": 0.4282312645148147,
+          "samples": 34,
+          "endpoints": [
+            [
+              965,
+              1128.4420168067227
+            ],
+            [
+              998,
+              1107.910924369748
+            ]
+          ],
+          "threshold": 128,
+          "angleErrorDegrees": 5.322935727366126
+        },
+        {
+          "slope": -0.6330022918258212,
+          "intercept": 1738.615278838808,
+          "rmsPx": 0.4262327779304789,
+          "samples": 34,
+          "endpoints": [
+            [
+              965,
+              1127.7680672268907
+            ],
+            [
+              998,
+              1106.8789915966386
+            ]
+          ],
+          "threshold": 230,
+          "angleErrorDegrees": 5.76885298249765
+        }
+      ],
+      "slope": -0.6221543162719634,
+      "intercept": 1728.8209320091673,
+      "rmsPx": 0.4282312645148147,
+      "samples": 34,
+      "endpoints": [
+        [
+          965,
+          1128.4420168067227
+        ],
+        [
+          998,
+          1107.910924369748
+        ]
+      ],
+      "threshold": 128,
+      "angleErrorDegrees": 5.322935727366126
+    },
+    {
+      "cell": 4,
+      "name": "ranch-front",
+      "kind": "exposed front cream-cap/brick-plinth structural boundary; foundation hidden by flowers",
+      "fits": [
+        {
+          "slope": 0.5073835770528684,
+          "intercept": 599.8236070491189,
+          "rmsPx": 0.6772239233800591,
+          "samples": 126,
+          "endpoints": [
+            [
+              695,
+              952.4551931008625
+            ],
+            [
+              820,
+              1015.878140232471
+            ]
+          ],
+          "angleErrorDegrees": 0.3374377303560865
+        }
+      ],
+      "samples": 126,
+      "slope": 0.5073835770528684,
+      "intercept": 599.8236070491189,
+      "rmsPx": 0.6772239233800591,
+      "endpoints": [
+        [
+          695,
+          952.4551931008625
+        ],
+        [
+          820,
+          1015.878140232471
+        ]
+      ],
+      "angleErrorDegrees": 0.3374377303560865
+    },
+    {
+      "name": "ranch-carport-side",
+      "kind": "exposed slab edge parallel to right axis, independent confirmation",
+      "target": -0.5,
+      "slope": -0.5985119047619047,
+      "rmsPx": 0.3625218076363315,
+      "samples": 64,
+      "angleErrorDegrees": 4.33597185901812,
+      "endpoints": [
+        [
+          1152,
+          1152.30625
+        ],
+        [
+          1215,
+          1114.6
+        ]
+      ]
+    },
+    {
+      "name": "laundry-side",
+      "kind": "exposed main masonry base",
+      "target": -0.5,
+      "slope": -0.5376623376623376,
+      "rmsPx": 0.4193819996084026,
+      "samples": 21,
+      "angleErrorDegrees": 1.700194349045412,
+      "endpoints": [
+        [
+          450,
+          606.6623376623377
+        ],
+        [
+          470,
+          595.9090909090909
+        ]
+      ]
+    }
+  ],
+  "doorCalibration": {
+    "subject": "laundry",
+    "kind": "single-leaf SIDE doorway",
+    "nativeFullSheet": {
+      "x": 501,
+      "headY": 476,
+      "thresholdY": 572,
+      "heightPx": 96
+    },
+    "uncertaintyPx": 3,
+    "note": "Not storefront double-glass opening; subtract crop offsets when registering. Existing owner gaugeScale must survive."
+  }
+}

@@ -1,38 +1,55 @@
 {
   "id": "variation:town-laundromat-43183f9e-plain:1",
   "generator": "image_gen",
-  "generated": "2026-10-24",
-  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-91be53d2-8a74-4318-bed4-6d2e4862082c.png",
-  "prompt": "SQUARE 1:1 CANVAS 2048x2048, exactly four SMALL complete building cutouts in 2x2 cells. Transparent RGBA alpha=0 outside the physical building. Each building occupies at most 60% of cell height; 100 pixels of fully clear padding around all sprites and canvas. Reference1 is STYLE ONLY: the Maple Bean street miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve architecture, not old rendering or blue night cast. All assets must belong beside reference1. Fixed orthographic 2:1 isometric camera, vertical walls vertical, ground axes +/-26.565deg, SCREEN UPPER RIGHT SUN in EVERY view; right planes warm, left planes cooler. Four TRUE rigid quarterturns: top-left NE=Afront+Bphysicalright, top-right SE=Bright+Crear, bottom-left SW=Crear+Dleft, bottom-right NW=Dleft+Afront. Afront appears on SCREEN LEFT in NE and SCREEN RIGHT in NW. Roof/chimney/doors/windows/equipment stay at fixed physical corners; reconstruct plain rear, NEVER fourfronts or samecorner repeated. Same scale each cell. NO FLOOR/BACKDROP/grey surface/terrain/paving/yard/leaves/broad shadow/haze/gradient/checkerboard/caption/label/divider/frame. No people, vehicles, Halloween or garlands. Only building and integral structural parts.  Subject library ID variation:town-laundromat-43183f9e-plain:1. Preserve exact building massing, floor count and roof in the identity reference. If source shows a rear wall, keep it as physical rear and construct a sensible front, not four duplicate rear walls. Signs and unique front entrances visible in exactlytwo of4true quarterturns. No paved surface or invented floor, no cropping.",
-  "references": [
-    {
-      "role": "authoritative-theme",
-      "file": "art/theme-consistency/references/theme-authoritative.png",
-      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.png",
+    "sheetSha256": "5e56c735bef22172c420df0afa10bfd0b802369cc0093e723ab850cbaa4e13a6",
+    "cell": 1,
+    "sourceRect": {
+      "left": 0,
+      "top": 29,
+      "width": 661,
+      "height": 626
     },
-    {
-      "role": "existing-subject-identity",
-      "id": "variation:town-laundromat-43183f9e-plain:1",
-      "direction": null,
-      "file": "art/theme-consistency/exports/buildings/variation-town-laundromat-43183f9e-plain-1.configured@2x.png",
-      "sha256": "efdcc22affd5413e00481a1dc59ce0fdf72ead6417d63214b9f76a51e06b0e4a"
+    "coreBounds": {
+      "left": 47,
+      "top": 119,
+      "width": 562,
+      "height": 503
+    },
+    "nonzeroPixels": 209828,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v2.review.json",
+      "sha256": "1d7525fb7d085fc710428a331a9da5b5961e897cc033e9f9b0225716cad12731"
     }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-01.json",
+    "sha256": "f7720e977c3e29e509069d07370a01c1251408771bfc6557c2e8129acc4bb855"
+  },
+  "original": {
+    "id": "variation:town-laundromat-43183f9e-plain:1",
+    "version": "variation-town-laundromat-43183f9e-plain-1-4views-v1",
+    "files": {
+      "NE": "19c78242036dcb5e6fb0c05a37bb57a2b3c0e146a053b29fd3e4c709151068bf",
+      "SE": "e1f223e219538848521492c94840a54fdf077109ec5287b5889a26bc5de902b3",
+      "SW": "cafb8bef9d02074cfaacb29728f00354ec6c6b8a132d79bc9d5f1bebbcb0791d",
+      "NW": "4e13104696f4118528e13915b0a482f1a28d74e1441442d86283e5e3cdf779d7"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
   ],
-  "integrationStatus": "blocked",
-  "integrationReason": "Laundry front views have nearly horizontal front base and compressed side plane, close to a frontal elevation unlike rear corners.",
-  "sourceReview": {
-    "reviewed": "2026-10-24",
-    "actualAlphaComposite": "output/building-priority/newest-review-2.png",
-    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
-    "corrections": [
-      {
-        "direction": "NE",
-        "brief": "Reconstruct teal LAUNDRY front LEFT plus physical right side RIGHT in genuine miniature isometric projection, two diagonal ground axes. Preserve projecting front-right utility annex, windows, vents and all roof fixtures."
-      },
-      {
-        "direction": "NW",
-        "brief": "Show opposite side LEFT plus teal LAUNDRY front RIGHT with clear two-face isometric camera. Preserve entrance/display/corner annex physical locations and rooftop chimney/HVAC."
-      }
-    ]
+  "files": {
+    "NE": "d1be389c5af1391883d9f95d33b19e02551901697094fb52d88f2969fa12aadc",
+    "SE": "e1f223e219538848521492c94840a54fdf077109ec5287b5889a26bc5de902b3",
+    "SW": "cafb8bef9d02074cfaacb29728f00354ec6c6b8a132d79bc9d5f1bebbcb0791d",
+    "NW": "4e13104696f4118528e13915b0a482f1a28d74e1441442d86283e5e3cdf779d7"
   }
 }

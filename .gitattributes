@@ -11,3 +11,7 @@ art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1.appe
 art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/review/geometry-decision.json -text whitespace=cr-at-eol
 art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/review/native-base-frame-measurements.json -text whitespace=cr-at-eol
 art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v2.provenance.json -text whitespace=cr-at-eol
+
+# T281: retain native generator/review bytes referenced by SHA256.
+art/theme-consistency/generated/buildings/sw-road-fixes/**.json -text whitespace=cr-at-eol
+art/theme-consistency/reviews/sw-road-repairs-20261029/**.json -text whitespace=cr-at-eol
