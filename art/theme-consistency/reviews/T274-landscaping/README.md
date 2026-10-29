@@ -8,7 +8,7 @@ Physical widths of the six rocks:0.6/1.1/1.8/0.8/1.5/2m. Plant widths: fern1m, s
 
 ## Checks
 
-- Fresh default `npm run typecheck`: PASS after merging main `dd86f141aa5a5e37d5fc4f895eec4aff6f4aa577`.
+- Fresh default `npm run typecheck`: PASS after merging main `dd86f141aa5a5e37d5fc4f895eec4aff6f4aa577`, and again after the final worker-only main update `2681dfcca0a3d7cbb9606209107ca98879130092`.
 - Focused `landscaping-kit` and neighboring `kit` tests:10/10 PASS. Includes overlapping-foliage crop reconstruction, hash bindings, unique tail registration, actual no-mirror behavior, existing kit/lot pools, placement and atlas budgets. The first resumed run lacked art files omitted by the sparse checkout; adding the exact source folders resolved that without changing code.
 - Existing golf page:52 old records byte-identical, including UVs;12 new records at the tail. One existing2048page,25.4% area, lowest shelf1049/2048. No page or GPU layer added; existing DPR1/2 budget checks pass. Detailed audit in integration-audit.json.
 - Actual game range-start proof: all12 placed through normal PropsTool ownership/collision checks at scale1, flip=false;0pageerrors. Screen1600x1000, DPR1, closest30% zoom. The cleared range-field location keeps forest trees from hiding the small props. Placement does not change owner data: POSTs were intercepted in a disposable browser context. `game-proof.json` records every ID, world point, scale and library index.
