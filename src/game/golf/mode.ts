@@ -147,6 +147,6 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   // T269: the day's pins, well formed only (none: the placed pins are today's)
   const dp = normalizeDayPins(dayPins); if (dp) out.dayPins = dp;
   // T269: the crew's stripes, well formed (nothing to keep: the field stays out)
-  if (crew) { const c = normalizeCrewSave(crew); if (c.phase.length || c.mown.length) out.crew = c; }
+  if (crew) { const c = normalizeCrewSave(crew); if (c.phase.length || c.mown.length || c.staff) out.crew = c; }
   return out;
 }

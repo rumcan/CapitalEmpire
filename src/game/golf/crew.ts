@@ -14,6 +14,7 @@
 // holes run at a cart's real speed (the pacer fades them, as the golfers' walks). Deterministic: no draw at all. Pure TS; game minutes, tiles.
 import type { Pt } from './holes';
 import type { CrewGround, Pass } from './crewground';
+import { normalizeStaff, type StaffState } from './staff';
 
 /** the crew come out at 06:00 (the golf hours' start: the night before it runs too fast to watch) */
 export const CREW_OUT = 360;
@@ -288,14 +289,18 @@ export function crewFor(holes: number): { gk: number; mo: number } { const n = M
 /** the crew as the save keeps it (GolfSave.crew): the holes whose stripes run the other way (phase: the last full cut ran that way), and the town
  *  day each hole's fairway was last cut whole (mown: [hole, day]; a cut finished today is in its phase already, so today's fresh stripes are not
  *  drawn again over it). Missing: no hole flipped, none cut */
-export interface CrewSave { phase: number[]; mown: [number, number][] }
+export interface CrewSave { phase: number[]; mown: [number, number][];
+  /** T269 part 3: the staff (golf/staff.ts StaffState: the crew hired, each hole's job days, today's jobs, the season's pins, the wages paid to).
+   *  Missing: an old save, which is given the crew its course needs */
+  staff?: StaffState }
 /** a saved crew, well formed (missing or bad: none flipped, none cut) */
 export function normalizeCrewSave(s: Partial<CrewSave> | null | undefined): CrewSave {
   const fin = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
   const phase = Array.isArray(s?.phase) ? [...new Set(s!.phase.filter(h => fin(h) && h > 0))].sort((a, b) => a - b) : [];
   const mown: [number, number][] = [], had = new Set<number>();
   if (Array.isArray(s?.mown)) for (const e of s!.mown) if (Array.isArray(e) && fin(e[0]) && fin(e[1]) && e[0] > 0 && !had.has(e[0])) { had.add(e[0]); mown.push([e[0], Math.floor(e[1])]); }
-  return { phase, mown };
+  const staff = normalizeStaff(s?.staff);
+  return { phase, mown, ...(staff ? { staff } : {}) };
 }
 
 /** the grounds crew's cut of each hole at minute m (ground-protocol stripes f: [phase, leg, band]): the saved phase, and today's fresh stripes behind

@@ -79,6 +79,7 @@ import { choosePin, greenAt, pinIn, pinLine, pinReport, pinSlot, rollDayPins, wi
 import { crewCells, crewGround, type CrewGround } from './golf/crewground';
 import { crewDay, crewFlips, crewFor, fullyCut, holeWindows, normalizeCrewSave, rotaJobs, type CrewDay, type Veh as CrewVeh } from './golf/crew';
 import { CrewView, cupSetAt } from './golf/crewview';
+import { ROLE_NAME, WAGE, changeStaff, closeSeason, courseCondition, crewCard, crewNeed, freshStaff, payWages, pinReputation, qualityFactor, workDay, type CrewCardView, type StaffRole, type StaffState } from './golf/staff';
 import { fairwayStripeLook } from './course-stripes';
 import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
@@ -5222,6 +5223,7 @@ export class Game {
   }
   // T208: the season's everyday play is in the year end (golfYearEnd): a new season starts
   this.dayBook?.endSeason();
+  { const st = this.golf.crew?.staff; if (st) this.setStaff(closeSeason(st)); } // T269: and the crew's pin count
   this.scheduleSave();
   }
   }
@@ -6111,6 +6113,8 @@ export class Game {
   // the course played (the pace term, golf/everyday.ts seasonPaceRep) moves the reputation
   const se = this.dayBook?.season();
   if (se) { ye.greenFeesPlayed = Math.round(se.fees); ye.paceRep = seasonPaceRep(se); ye.rep = Math.min(100, Math.max(0, ye.rep + ye.paceRep)); }
+  // T269: the season's unmoved pins (golf/staff.ts pinReputation) move it too
+  const st = this.golf.crew?.staff; if (st) { ye.pinRep = pinReputation(st.season); ye.rep = Math.min(100, Math.max(0, ye.rep + ye.pinRep)); }
   return ye;
   }
   /** the course's facts for the year end and everyday golf (T208): the derived holes, the course facts (holes, length, what the club has), the quality
@@ -6126,7 +6130,8 @@ export class Game {
   const gCards = g.cards ?? this.traffic.round.cards;
   for (const n of parkRideNeedsWithCards(g.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
   const baseQ = stats ? buildCourseStatsPanel({ areas: this.courseAreaList(), tees: g.tees, pins: g.pins, aims: g.aims, clubhouse: g.clubhouse }, g.tier, have, effectiveGrowInClockMonth(this.golfMonthIndex(), gCards), { field: this.courseHeight, areas: this.courseAreaList() }).qualityScore : 85;
-  return { holes, facts, baseQ, gCards };
+  // T269: the course's condition (the grounds crew keeping up, golf/staff.ts) takes up to a quarter off the quality score
+  return { holes, facts, baseQ: baseQ * this.crewQuality(), gCards };
   }
   /** T208: what the club is now, for a town day's everyday golf (golf/everyday.ts DayInputs): the quality score as the year end takes it (the course
    *  consultant's card included), the reputation and the holes (as yearend.ts computeYearEnd: no stats, no holes) */
@@ -6802,6 +6807,53 @@ export class Game {
     }
     this.crewFlags(); // T269: a flag moves when the greenkeeper sets it
   }
+  // ---------- T269 (#810) part 3: the grounds staff (golf/staff.ts) ----------
+  /** the course needs a crew and has none: said once a session */
+  private crewNagged = false;
+  /** the holes the crew keeps: every hole with a pin */
+  private staffHoles(): number[] { return [...new Set((this.golf?.pins ?? []).map(p => p.hole))].sort((a, b) => a - b); }
+  /** the staff's state (golf.crew.staff); an old save, or a new game, hires the crew its course needs with every job done today */
+  private staffNow(day?: number): StaffState {
+    const g = this.golf!, had = g.crew?.staff; if (had) return had;
+    const d = day ?? townTimeOf(this.traffic.town, this.traffic.simTime(performance.now())).day, s = freshStaff(d, this.staffHoles(), this.golfMonthIndex());
+    this.setStaff(s); return s;
+  }
+  private setStaff(s: StaffState) { const g = this.golf; if (!g) return; g.crew = { phase: g.crew?.phase ?? [], mown: g.crew?.mown ?? [], staff: s }; }
+  /** the crew's work for each town day since the last worked out, up to `day` (golf/staff.ts workDay, at most 60 days of a skip); with no clubhouse the
+   *  course is not open: every job is done and the season counts nothing. Returns the state */
+  private workStaff(day: number): StaffState {
+    let s = this.staffNow(day); if (day <= s.day) return s;
+    const holes = this.staffHoles();
+    if (!this.hasClubhouse) s = { ...freshStaff(day, holes, s.paid, s.staff), season: s.season };
+    else for (let d = Math.max(s.day + 1, day - 60); d <= day; d++) s = workDay(s, d, holes);
+    this.setStaff(s);
+    const need = crewNeed(holes.length);
+    if (this.hasClubhouse && need.gk + need.mo > 0 && s.staff.gk + s.staff.mo === 0 && !this.crewNagged) {
+      this.crewNagged = true; this.toast('Your course has no grounds crew: hire greenkeepers and mower operators in the Clubhouse card, or the grass grows long and the pins stay put', 'warn');
+    }
+    return s;
+  }
+  /** the crew's wages, each game month as it begins (golf/staff.ts payWages: a skip pays every month it crossed), booked as upkeep at the clubhouse */
+  private payStaff() {
+    const g = this.golf, st = g?.crew?.staff; if (!g || !st) return;
+    const { s, due } = payWages(st, this.golfMonthIndex()); if (s === st) return;
+    this.setStaff(s);
+    if (due > 0) { const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', due); this.scheduleSave(); }
+  }
+  /** the quality factor of the course's condition (golf/staff.ts qualityFactor; 1 with no staff state yet) */
+  private crewQuality(): number { const st = this.golf?.crew?.staff; return st ? qualityFactor(courseCondition(st)) : 1; }
+  /** T269: hires (+1) or lets go (-1) a greenkeeper or a mower operator (the club card's Grounds crew): a hire is paid from the next month, a let-go
+   *  costs a month's wage now (P26); the crew works its new size from the next morning */
+  crewHire(role: StaffRole, delta: 1 | -1) {
+    const g = this.golf; if (!g) return;
+    const r = changeStaff(this.staffNow(), role, delta); if (!r) return;
+    this.setStaff(r.s);
+    if (r.cost > 0) { const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', r.cost); }
+    this.toast(delta > 0 ? `Hired a ${ROLE_NAME[role][0]}: $${WAGE[role]} a month, at work from tomorrow morning` : `Let a ${ROLE_NAME[role][0]} go: a month's wage, $${WAGE[role]}`, delta > 0 ? 'good' : 'info');
+    this.scheduleSave(); this.emit();
+  }
+  /** T269: the club card's Grounds crew block (null: no golf) */
+  private crewCardView(): CrewCardView | null { return this.golf ? crewCard(this.staffNow(), this.staffHoles().length) : null; }
   // ---------- T269 (#810) part 2: the grounds crew (golf/crew.ts, crewground.ts, crewview.ts) ----------
   /** the day's crew: its day (the schedule), its playback, the town day it was made for, and the next cup event's minute (the flags) */
   private crew: { day: CrewDay; view: CrewView; town: number; nextCup: number } | null = null;
@@ -6809,8 +6861,8 @@ export class Game {
   private crewGrounds: { key: string; m: Map<number, CrewGround> } | null = null;
   /** the crew's vehicles as movers (reused Drawables), and the pool they come from */
   private crewOut: Drawable[] = []; private crewThingDraw: Drawable[] = [];
-  /** T269: the crew's size (part 3: the staff the player hired); for now the crew a course of its holes needs */
-  private crewSize(holes: number): { gk: number; mo: number } { return crewFor(holes); }
+  /** T269: the crew's size: the staff the player hired (part 3; before the staff state exists, the crew a course of its holes needs) */
+  private crewSize(holes: number): { gk: number; mo: number } { return this.golf?.crew?.staff?.staff ?? crewFor(holes); }
   /** each hole's crew ground (golf/crewground.ts), read from the grid once per course (its rev and the holes' lines) */
   private crewGroundsNow(): Map<number, CrewGround> {
     const grid = this.courseGrid, g = this.golf; if (!grid || !g) return new Map();
@@ -6836,7 +6888,9 @@ export class Game {
       const now = this.todayPin(h.n) ?? h.pin, old = (dp ? pinIn(dp.prev, h.n) : null) ?? now;
       return { ground, oldCup: { x: old.x, y: old.y }, newCup: { x: now.x, y: now.y }, moved: Math.hypot(now.x - old.x, now.y - old.y) > 0.5 };
     });
-    const jobs = rotaJobs(day, holes.map(h => h.n)), yard = this.dayPark?.entrances[0] ?? g.clubhouse;
+    // (part 3: the day's jobs as the staff worked them out, golf/staff.ts workDay; the rota before there is a day of them)
+    const st = g.crew?.staff, jobs = st && st.day === day ? { greens: new Set(st.today.greens), sands: new Set(st.today.sands), fairways: new Set(st.today.fairways), rough: new Set(st.today.rough) } : rotaJobs(day, holes.map(h => h.n));
+    const yard = this.dayPark?.entrances[0] ?? g.clubhouse;
     const pace = capped(this.golfPace);
     const cd = crewDay({ holes: crew, yard: { x: yard.x, y: yard.y }, gk: size.gk, mo: size.mo, ...jobs, windows, firstOn, pace: pace ? { walk: WALK_CAP * spm, cart: CART_CAP * spm } : null });
     this.crew = { day: cd, view: new CrewView(cd, pace ? { walk: WALK_CAP, cart: CART_CAP } : null), town: day, nextCup: -Infinity };
@@ -6845,7 +6899,7 @@ export class Game {
    *  course chunks carry it (CourseJob flips) */
   private mowFlips(): Map<number, number[]> {
     const g = this.golf; if (!g) return new Map();
-    return crewFlips(normalizeCrewSave(g.crew), this.crew?.day ?? null, this.crew?.town ?? -1, this.dayMinute);
+    return crewFlips(g.crew ?? { phase: [], mown: [] }, this.crew?.day ?? null, this.crew?.town ?? -1, this.dayMinute);
   }
   /** T269: the stripes follow the mowers: every LINES_EVERY_MS the holes' cuts are compared with those last sent, and a hole's chunks round its line
    *  are sent again when its cut moved (a band cut: a few chunks once a pass); a fairway cut whole today takes its new phase into the save */
@@ -6855,7 +6909,7 @@ export class Game {
     const g = this.golf, c = this.crew; if (!g || !this.courseGrid) return;
     // a fairway cut whole today: its phase flips in the save (drawn the same: the cut covered it)
     if (c) {
-      const done = fullyCut(c.day, new Map([...this.crewGroundsNow()].map(([h, q]) => [h, q.passes])), this.dayMinute), sv = normalizeCrewSave(g.crew), had = new Map(sv.mown);
+      const done = fullyCut(c.day, new Map([...this.crewGroundsNow()].map(([h, q]) => [h, q.passes])), this.dayMinute), sv = normalizeCrewSave(g.crew), had = new Map(sv.mown); // (a copy: written back whole)
       let changed = false;
       for (const h of done) if (had.get(h) !== c.town) { const ph = new Set(sv.phase); if (ph.has(h)) ph.delete(h); else ph.add(h); sv.phase = [...ph].sort((a, b) => a - b); had.set(h, c.town); changed = true; }
       if (changed) { sv.mown = [...had]; g.crew = sv; this.scheduleSave(); }
@@ -6974,10 +7028,12 @@ export class Game {
     const g = this.golf; if (!g) return;
     const tr = this.traffic, day = townTimeOf(tr.town, tr.simTime(now)).day;
     if (!g.dayPins || g.dayPins.day !== day) {
-      g.dayPins = rollDayPins(g.dayPins ?? null, day, g.pins.map(p => ({ hole: p.hole, x: p.x, y: p.y })), (n, prev) => this.nextPin(day, n, prev));
+      // T269 part 3: the day's work first (golf/staff.ts): only the cups the greenkeepers change today move; the others keep yesterday's pin
+      const cut = new Set(this.workStaff(day).today.cups);
+      g.dayPins = rollDayPins(g.dayPins ?? null, day, g.pins.map(p => ({ hole: p.hole, x: p.x, y: p.y })), (n, prev) => (cut.has(n) ? this.nextPin(day, n, prev) : null));
       this.pinRev++; this.dayCourse = null; this.scheduleSave();
     }
-    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); }
+    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); this.payStaff(); }
     if (this.flagRev !== this.pinRev) this.syncFlags();
   }
   /** the day's cups against the course (when the grid or the pins changed): a hole with no cup today is given its placed pin, and a cup no longer on
@@ -7058,7 +7114,7 @@ export class Game {
   clubCard(): ClubCardView | null {
     const g = this.golf, bk = this.dayBook;
     if (!this.clubCardOpen || !g || !bk || !this.bizDefs.some(d => d.type === 'clubhouse')) return null;
-    return { ...clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen)), lots: this.lotsFor(g.clubhouse) }; // (T237: its car parks)
+    return { ...clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen)), lots: this.lotsFor(g.clubhouse), crew: this.crewCardView() ?? undefined }; // (T237: its car parks; T269: its crew)
   }
   /** T208: opens or closes the clubhouse card (the select tool's click on the clubhouse, the top bar's Club chip) */
   openClubCard(open = !this.clubCardOpen) { this.clubCardOpen = open && !!this.golf && this.bizDefs.some(d => d.type === 'clubhouse'); if (this.clubCardOpen && this.range.cardOpen) this.range.cardOpen = false; this.emit(); }

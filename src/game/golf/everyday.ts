@@ -11,6 +11,7 @@ import { dayEntourage } from './play/entourage';
 import { rng } from './play/shot';
 import { everydaySet } from './teesets';
 import type { CourseView, Golfer, Group, RoundPlan, Sex } from './play/types';
+import type { CrewCardView } from './staff';
 
 /** the first and the last everyday tee time (07:00 and 15:00: an 18-hole round of about four and a half hours is in by the clubhouse's 19:00 close) */
 export const DAY_FIRST_TEE = 420, DAY_LAST_TEE = 900;
@@ -206,6 +207,8 @@ export interface ClubCardView {
   clubMembers: number; fee: number; scale: number;
   /** T237: the car parks within walking distance of the door (golf/walkserve.ts), nearest walk first (the engine adds them) */
   lots?: { id: number; bays: number; m: number }[];
+  /** T269: the grounds crew (golf/staff.ts crewCard; the engine adds it) */
+  crew?: CrewCardView;
 }
 
 /** the clubhouse card's view from the day book, the day's playback (null: none: a tournament day, no holes) and the minute */
