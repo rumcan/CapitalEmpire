@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { LIBRARY, ATLAS_PAGES } from '../src/game/library';
 import { DECOR } from '../src/game/golf/decor';
 import { KIT_GREY_GRANITE, KIT_WATER_EDGE_PLANTS } from '../src/game/kit';
+import { drawnAs } from '../src/game/mirror';
 
 test('component-aware native exports preserve overlapping foliage bounds and faint edge pixels', async () => {
   const { partitionSheet } = await import(pathToFileURL(path.resolve('scripts/assets/prep-landscaping-kit.mjs')).href);
@@ -61,6 +62,7 @@ test('organic art is twelve unique tail records on the existing golf page and tw
   for (const id of ids) {
     const matches = LIBRARY.filter(p => p.id === id); assert.equal(matches.length, 1);
     assert.equal(matches[0].tex[0], golfPage); assert.ok(matches[0].tex.slice(1).every(v => v >= 0 && v <= 1));
+    assert.deepEqual(drawnAs(matches[0], true), [id, false]); assert.deepEqual(drawnAs(matches[0], false), [id, false]);
     const cards = DECOR.filter(d => d.id === id); assert.equal(cards.length, 1); assert.equal(cards[0].natural, true); assert.equal(cards[0].standIn, undefined);
   }
   const golfSource = await fs.readFile('src/game/golf-library.ts', 'utf8');
