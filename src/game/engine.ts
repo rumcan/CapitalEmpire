@@ -6903,10 +6903,13 @@ export class Game {
   }
   /** T269: the stripes follow the mowers: every LINES_EVERY_MS the holes' cuts are compared with those last sent, and a hole's chunks round its line
    *  are sent again when its cut moved (a band cut: a few chunks once a pass); a fairway cut whole today takes its new phase into the save */
-  private flipsSeen = new Map<number, string>(); private flipsAt = 0;
+  private flipsSeen: Map<number, string> | null = null; private flipsAt = 0; private flipsKey = '';
   private watchMowFlips(now: number) {
     if (now - this.flipsAt < LINES_EVERY_MS) return; this.flipsAt = now;
     const g = this.golf, c = this.crew; if (!g || !this.courseGrid) return;
+    // (nothing to do until a band is cut, the day turns or a phase changes: the bands cut by now, counted)
+    let cut = 0; if (c) for (const e of c.day.mown) { if (e.t > this.dayMinute) break; cut++; }
+    const key = `${c?.town ?? -1}|${cut}|${g.crew?.phase.join(',') ?? ''}|${this.courseGrid.rev}`; if (key === this.flipsKey) return; this.flipsKey = key;
     // a fairway cut whole today: its phase flips in the save (drawn the same: the cut covered it)
     if (c) {
       const done = fullyCut(c.day, new Map([...this.crewGroundsNow()].map(([h, q]) => [h, q.passes])), this.dayMinute), sv = normalizeCrewSave(g.crew), had = new Map(sv.mown); // (a copy: written back whole)
@@ -6914,11 +6917,15 @@ export class Game {
       for (const h of done) if (had.get(h) !== c.town) { const ph = new Set(sv.phase); if (ph.has(h)) ph.delete(h); else ph.add(h); sv.phase = [...ph].sort((a, b) => a - b); had.set(h, c.town); changed = true; }
       if (changed) { sv.mown = [...had]; g.crew = sv; this.scheduleSave(); }
     }
-    const cur = this.mowFlips(), lines = this.holeLines(), moved = new Set<number>();
-    for (const [h, f] of cur) { const k = f.join(','); if (this.flipsSeen.get(h) !== k) moved.add(h); }
-    for (const h of this.flipsSeen.keys()) if (!cur.has(h)) moved.add(h);
-    if (!moved.size) return;
+    const cur = this.mowFlips(), lines = this.holeLines(), moved = new Set<number>(), seen = this.flipsSeen;
     this.flipsSeen = new Map([...cur].map(([h, f]) => [h, f.join(',')]));
+    // (the first look: the saved phases went with the first chunks; a cut of today's, made with the day's crew, may not have)
+    if (!seen) { for (const [h, f] of cur) if (f[1]! >= 0) moved.add(h); }
+    else {
+      for (const [h, f] of cur) { const k = f.join(','); if (seen.get(h) !== k) moved.add(h); }
+      for (const h of seen.keys()) if (!cur.has(h)) moved.add(h);
+    }
+    if (!moved.size) return;
     const R = LINES_REACH;
     for (const h of moved) {
       const l = lines.get(h); if (!l) continue;
