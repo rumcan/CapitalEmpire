@@ -1621,6 +1621,8 @@ export class GroundPainter {
     const softOn = this.softDirt, softLawn = (p: LotPatch) => softOn && p.lawn!.z >= 1 && p.lawn!.share >= 1 && this.softTex(this.lawnTexOf(p)) ? 1 : 0;
     const lawns = all.filter(p => p.lawn).sort((a, b) => a.lawn!.z - b.lawn!.z || (softOn ? softLawn(a) - softLawn(b) : 0)), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && !p.course && !p.lawn && p.tex !== 'marks'), paints = all.filter(p => p.paint || p.course).sort((a, b) => paintZ(a) - paintZ(b));
     const isPark = (p: LotPatch) => (!!p.lines?.length || !!p.park) && p.tex !== 'field' && p.tex !== 'dirt', parks = lots.filter(isPark), rest = lots.filter(p => !isPark(p));
+    // T259: a farm's lane and tracks (hard) over its fields and yard, whatever order the lot grid hands them in
+    if (rest.some(p => p.hard)) rest.sort((a, b) => (a.hard ? 1 : 0) - (b.hard ? 1 : 0));
     // T247: what the dirt areas' soft bands may meet: the areas near the chunk (out to the band's reach), the course, and the order they are
     // drawn in (lawns, lot ground, painted areas, car parks; an area drawn later or alongside keeps the hard edge between them)
     const sw0 = softOn ? softWidth(L) : 0, sReach = softOn ? sw0 / 2 + Math.max(SOFT.ease, SOFT.easeK * sw0) + Math.max(SOFT.probe, SOFT.probeK * sw0) + 4 : 0;
@@ -1656,12 +1658,12 @@ export class GroundPainter {
         }
       }
       // lines: parking bays in worn off-white; furrows (field and dirt patches, the farms' crop rows) in dark brown
-      // (and yellow parking lines, the bay rows that ask for them)
-      for (const kind of ['furrow', 'white', 'yellow'] as const) {
-        const set = list.filter(p => p.lines && p.lines.length && ((p.tex === 'field' || p.tex === 'dirt') ? 'furrow' : p.lineCol === 'yellow' ? 'yellow' : 'white') === kind);
+      // (and yellow parking lines, the bay rows that ask for them; T259: a farm lane's two wheel ruts, wide and dark, on its hard-edged dirt)
+      for (const kind of ['furrow', 'rut', 'white', 'yellow'] as const) {
+        const set = list.filter(p => p.lines && p.lines.length && ((p.tex === 'field' || p.tex === 'dirt') ? (p.hard ? 'rut' : 'furrow') : p.lineCol === 'yellow' ? 'yellow' : 'white') === kind);
         if (!set.length) continue;
         const lb = this.buffer('lotLines', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.lineCap = 'butt'; lg.lineJoin = 'round';
-        lg.strokeStyle = kind === 'furrow' ? 'rgba(74,58,36,0.5)' : kind === 'yellow' ? 'rgba(238,192,46,0.9)' : 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(kind === 'yellow' ? 0.1 : 0.08, minW); lg.beginPath();
+        lg.strokeStyle = kind === 'furrow' ? 'rgba(74,58,36,0.5)' : kind === 'rut' ? 'rgba(52,38,24,0.62)' : kind === 'yellow' ? 'rgba(238,192,46,0.9)' : 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(kind === 'rut' ? 0.24 : kind === 'yellow' ? 0.1 : 0.08, minW); lg.beginPath();
         for (const p of set) for (let k = 0; k + 3 < p.lines!.length; k += 4) { lg.moveTo(p.lines![k], p.lines![k + 1]); lg.lineTo(p.lines![k + 2], p.lines![k + 3]); }
         lg.stroke(); lg.setTransform(M); lg.globalCompositeOperation = 'destination-in'; lg.fillStyle = this.screenPattern(lg, 'wear', L, X0, Y0, Minv); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
         composite(lb);

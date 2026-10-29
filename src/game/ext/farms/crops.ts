@@ -69,7 +69,7 @@ export const ROW_LOOK: Readonly<Record<CropState, RowLook>> = {
   plough: { pitch: 0.45, width: 0.15, dash: null, colour: '#3f2c1d', detail: 0.55, wear: 0.2, shadow: { off: 0.05, depth: 0.5 }, shine: 0, ridge: 0.4 },
   young: { pitch: 0.38, width: 0.2, dash: [0.14, 0.07], colour: '#5a9a26', detail: 0.3, wear: 0.1, shadow: { off: 0.08, depth: 0.6 }, shine: 0.35, ridge: 0 },
   ripe: { pitch: 0.38, width: 0.3, dash: null, colour: '#b39257', detail: 0.65, wear: 0.14, shadow: { off: 0.15, depth: 0.75 }, shine: 0.4, ridge: 0 },
-  stubble: { pitch: 0.38, width: 0.09, dash: [0.06, 0.07], colour: '#efe0b0', detail: 0.3, wear: 0.15, shadow: { off: 0.06, depth: 0.6 }, shine: 0, ridge: 0 },
+  stubble: { pitch: 0.38, width: 0.12, dash: [0.07, 0.06], colour: '#f4e7c0', detail: 0.25, wear: 0.05, shadow: { off: 0.07, depth: 0.7 }, shine: 0, ridge: 0 },
 };
 /** the least spacing (device px) the stand-in rows are drawn at: further out the rows are drawn every second, fourth ... one, wider (no moire) */
 export const ROW_MIN_PX = 4;

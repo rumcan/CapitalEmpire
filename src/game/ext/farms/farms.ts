@@ -639,7 +639,8 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   // (T236: the yard's pickup is the yellow or the rusty one) parked on the yard's drive in front of the house
   if (r() < 0.85) { const span = B.vehicle(PICKUPS.length ? [...PICKUPS, ...Object.keys(RUSTY_PICKUPS)] : CARS, L.laneA, L.yardB0 + 0.6); if (span && r() < 0.3) B.vehicle(CARS, L.laneA, L.yardB0 + 0.8 + span); }
   B.scatter(names(['expansion:lumber-bundle', 'expansion:pallet-stack', 'expansion:oil-drums']), Math.max(1, L.ba - L.bw / 2), L.bb + L.bd / 2 + 0.8, Math.min(W - 1, L.ba + L.bw / 2), Math.min(D - 1, L.yardB1), 2);
-  if (r() < 0.25) B.put('ref:landmark-windmill', r() < 0.5 ? 2 : W - 2, L.yardB1 - 1.8);
+  // (the windmill in the yard's back corner on the barn's side: the fields reach the parcel's sides)
+  if (r() < 0.25) B.put('ref:landmark-windmill', L.side > 0 ? L.yA0 + 1.4 : L.yA1 - 1.4, L.yardB1 - 1.8);
   const gB0 = L.hb + L.hd / 2 + 0.9, gB1 = Math.max(gB0 + 1, L.yardB1 - 0.8);
   for (const [id, ch] of [['expansion:chicken-coop', 0.35], ['expansion:glasshouse', 0.25], ['expansion:outhouse', 0.3], ['expansion:wooden-well', 0.25], ['expansion:doghouse', 0.35]] as [string, number][])
     if (r() < ch) B.put(id, clamp(L.ha + (r() - 0.5) * L.hw, 1.4, W - 1.4), gB0 + (gB1 - gB0) * r());
