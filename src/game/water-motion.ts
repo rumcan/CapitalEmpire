@@ -77,11 +77,13 @@ export function motionMask(f: WaterField, ex: MotionExtras = {}): MotionMaskData
   let anyWater = false;
   for (let v = v0; v <= v1 && !anyWater; v++) for (let u = u0; u <= u1; u++) if (site[v * W + u]) { anyWater = true; break; }
   if (!anyWater) return null;
-  const out = f.bank(BANK_REACH + 1), flow = f.flow, amp = f.amp, data = new Uint8Array(w * h * 4);
+  // (the bank's distance over the crop and as far round it as the cap: no water farther off can be nearer)
+  const cap = BANK_REACH + 1, mg = Math.ceil(cap * res) + 1;
+  const out = f.bank(cap, [Math.max(0, u0 - mg), Math.max(0, v0 - mg), Math.min(W - 1, u1 + mg), Math.min(H - 1, v1 + mg)]), flow = f.flow, amp = f.amp, data = new Uint8Array(w * h * 4);
   const reach = BANK_REACH, R = Math.ceil(reach * res) + 1;
-  // the exclusions over the crop (1: none)
-  const ex1 = new Float32Array(w * h).fill(1);
-  const tileOf = (u: number, v: number): [number, number] => [x0 + (u + 0.5) / res, y0 + (v + 0.5) / res];
+  // the exclusions over the crop (1: none; null: none at all)
+  let ex1: Float32Array | null = null;
+  const exAt = () => (ex1 ??= new Float32Array(w * h).fill(1));
   for (const b of ex.bridges ?? []) {
     if (b.pts.length < 2) continue;
     const s = BRIDGE.shadowPx / (2 * HH), g = b.hw + BRIDGE.clear[1];
@@ -89,25 +91,27 @@ export function motionMask(f: WaterField, ex: MotionExtras = {}): MotionMaskData
     for (const q of b.pts) { bx0 = Math.min(bx0, q.x); by0 = Math.min(by0, q.y); bx1 = Math.max(bx1, q.x + s); by1 = Math.max(by1, q.y + s); }
     const ua = Math.max(u0, Math.floor((bx0 - g - x0) * res)), ub = Math.min(u1, Math.ceil((bx1 + g - x0) * res)), va = Math.max(v0, Math.floor((by0 - g - y0) * res)), vb = Math.min(v1, Math.ceil((by1 + g - y0) * res));
     for (let v = va; v <= vb; v++) for (let u = ua; u <= ub; u++) {
-      const [px, py] = tileOf(u, v); let best = Infinity;
+      const px = x0 + (u + 0.5) / res, py = y0 + (v + 0.5) / res; let best = Infinity;
       // the deck, its shadow down the screen and the piers between (the line at three shifts down the screen)
       for (const t of [0, 0.5, 1]) for (let i = 0; i + 1 < b.pts.length; i++) best = Math.min(best, segDist(px - t * s, py - t * s, b.pts[i]!, b.pts[i + 1]!));
-      const e = smooth(b.hw + BRIDGE.clear[0], b.hw + BRIDGE.clear[1], best), k = (v - v0) * w + (u - u0);
-      if (e < ex1[k]!) ex1[k] = e;
+      const e = smooth(b.hw + BRIDGE.clear[0], b.hw + BRIDGE.clear[1], best), k = (v - v0) * w + (u - u0), X = exAt();
+      if (e < X[k]!) X[k] = e;
     }
   }
   for (const r of ex.bands ?? []) {
     if (!r) continue;
     const { a, x0: bx, y0: by, res: br } = r;
-    for (let v = v0; v <= v1; v++) for (let u = u0; u <= u1; u++) {
-      const [px, py] = tileOf(u, v), i = Math.floor((px - bx) * br), j = Math.floor((py - by) * br);
-      if (i < 0 || j < 0 || i >= a.W || j >= a.H) continue;
-      const al = a.data[(j * a.W + i) * 4 + 3]! / 255; if (!(al > 0)) continue;
-      const k = (v - v0) * w + (u - u0); ex1[k] = Math.min(ex1[k]!, 1 - al);
+    for (let v = v0; v <= v1; v++) {
+      const j = Math.floor((y0 + (v + 0.5) / res - by) * br); if (j < 0 || j >= a.H) continue;
+      for (let u = u0; u <= u1; u++) {
+        const i = Math.floor((x0 + (u + 0.5) / res - bx) * br); if (i < 0 || i >= a.W) continue;
+        const al = a.data[(j * a.W + i) * 4 + 3]! / 255; if (!(al > 0)) continue;
+        const k = (v - v0) * w + (u - u0), X = exAt(); X[k] = Math.min(X[k]!, 1 - al);
+      }
     }
   }
   for (let v = v0; v <= v1; v++) for (let u = u0; u <= u1; u++) {
-    const k = v * W + u, o = 4 * ((v - v0) * w + (u - u0)), e = ex1[(v - v0) * w + (u - u0)]!;
+    const k = v * W + u, o = 4 * ((v - v0) * w + (u - u0)), e = ex1 ? ex1[(v - v0) * w + (u - u0)]! : 1;
     let fx = 0, fy = 0, a = 0, sd: number;
     if (site[k]) { sd = d[k]!; if (flow) { fx = flow[2 * k]!; fy = flow[2 * k + 1]!; a = amp![k]!; } else a = LAP.pond[0]; }
     else {

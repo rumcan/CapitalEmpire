@@ -130,6 +130,28 @@ T230's field plus one more distance transform in the bake; a branch in `FS_QUAD`
 two to five noise evaluations. Faded out toward the district zoom (the district chunks carry no mask). A gear-menu switch: off is today's
 frame, bit for bit (no mask is made, the shader's branch is never taken).
 
+## What was built (T248)
+
+`src/game/water-motion.ts`, with `WaterField.motion()` and `WaterField.bank()` in `water-look.ts`, the bake's step 13 in `renderer.ts`
+(`waterMotionMask`), and the pass in `gl.ts` `FS_QUAD` (`waterMotion`, first, so T215's lamps, the glint and T262's shine light the moving
+water).
+
+- **The mask:** RGBA8 on T230's field lattice, cropped to the chunk (a full chunk's is about 64 x 64 texels, 16 KB; 128 x 128 at the hi-DPI levels).
+  Red the signed distance from the shore (-2 to 6 tiles), green and blue the river's downstream direction, alpha the waves' strength times
+  the exclusions (bridges and their shadow; the swamp bands laid in the bake). Full chunks only; the district chunks carry none.
+- **The waterline is the picture's own.** The field's lattice is half a tile, so its zero line can sit a quarter tile off the painted shore.
+  The shader keys each pixel as water or bank by its colour (the water pictures are teal, the banks and grass are not), and a pixel within
+  0.75 tile of the shore reads up to 8 taps of the picture along the field's slope to find its own distance from the painted waterline. The
+  foam's arrival and the wet band use that distance, so nothing spills onto the bank and no line follows the lattice. A bank-coloured speck
+  floating on the water (a leaf) has water on both sides and is left alone.
+- **Ripples:** two gradient-noise layers (about 1.4 and 0.54 tiles a ripple), lit by the sun at the upper right as a multiply of up to about
+  +-10% (the painting stays); the ponds' layers drift with the wind in two directions; the river's run downstream by the flow map.
+- **Waves:** foam crests every 0.6 to 1.1 tiles (by the waves' strength), starting 1.2 to 3 tiles out, a tenth of a tile thin (never under a
+  device px), broken by the ripple layers, fading as they arrive; then the swash runs up a darker band of bank (multiply 0.6-0.68) and dries.
+- **Sparkle:** about half a percent of the water's pixels glint at a time, in patches, out of the shadows, faded after dusk.
+- **Knobs:** the gear menu's Night panel > Water motion: Moving water (on by default; off is today's frame, bit for bit), Flow speed,
+  Ripples, Foam, Sparkle. `window.__game.setWaterMotion({...})`; `window.__game.waterClock = t` holds the clock (captures, tests).
+
 ## Sources (checked 2026-10-29)
 
 1. Factorio, Friday Facts #323, "Animated water" (2019): https://direct.factorio.com/blog/post/fff-323

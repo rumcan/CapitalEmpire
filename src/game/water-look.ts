@@ -275,10 +275,11 @@ export class WaterField {
     }
   }
   /** the squared distance (in samples) from each sample to the nearest seed: D holds 0 at the seeds and INF elsewhere, and is overwritten (an
-   *  exact Euclidean distance transform, Felzenszwalb and Huttenlocher: one pass down each column, one along each row) */
-  private edt(D: Float64Array) {
-    const { W, H } = this;
-    const n = Math.max(W, H), f = new Float64Array(n), out = new Float64Array(n), v = new Int32Array(n), z = new Float64Array(n + 1);
+   *  exact Euclidean distance transform, Felzenszwalb and Huttenlocher: one pass down each column, one along each row); over the samples of
+   *  window r (u0, v0, u1, v1, inclusive; default all: seeds outside it are not seen) */
+  private edt(D: Float64Array, r: readonly number[] = [0, 0, this.W - 1, this.H - 1]) {
+    const { W } = this, [a0, b0, a1, b1] = r as [number, number, number, number], RW = a1 - a0 + 1, RH = b1 - b0 + 1;
+    const n = Math.max(RW, RH), f = new Float64Array(n), out = new Float64Array(n), v = new Int32Array(n), z = new Float64Array(n + 1);
     const pass = (len: number) => {
       let k = 0; v[0] = 0; z[0] = -Infinity; z[1] = Infinity;
       for (let q = 1; q < len; q++) {
@@ -289,8 +290,8 @@ export class WaterField {
       k = 0;
       for (let q = 0; q < len; q++) { while (z[k + 1]! < q) k++; const t = q - v[k]!; out[q] = t * t + f[v[k]!]!; }
     };
-    for (let x = 0; x < W; x++) { for (let y = 0; y < H; y++) f[y] = D[y * W + x]!; pass(H); for (let y = 0; y < H; y++) D[y * W + x] = out[y]!; }
-    for (let y = 0; y < H; y++) { for (let x = 0; x < W; x++) f[x] = D[y * W + x]!; pass(W); for (let x = 0; x < W; x++) D[y * W + x] = out[x]!; }
+    for (let x = a0; x <= a1; x++) { for (let y = 0; y < RH; y++) f[y] = D[(y + b0) * W + x]!; pass(RH); for (let y = 0; y < RH; y++) D[(y + b0) * W + x] = out[y]!; }
+    for (let y = b0; y <= b1; y++) { for (let x = 0; x < RW; x++) f[x] = D[y * W + x + a0]!; pass(RW); for (let x = 0; x < RW; x++) D[y * W + x + a0] = out[x]!; }
   }
   /** each water sample's distance in from its shore (tiles, at most cap): an exact Euclidean distance transform (Felzenszwalb and
    *  Huttenlocher) to the nearest land sample, less half a sample (the shore lies between the two). Past the field's border counts as more
@@ -302,12 +303,14 @@ export class WaterField {
     for (let k = 0; k < N; k++) d[k] = site[k] ? Math.min(cap, Math.max(0, (Math.sqrt(D[k]!) - 0.5) / res)) : 0;
   }
   /** T248: each land sample's distance out from the water (tiles, at most cap; 0 on the water): shore's twin the other way (the bank side of
-   *  the waves: water-motion.ts), the same transform to the nearest water sample, less half a sample */
-  bank(cap: number): Float32Array {
-    const { W, H, res, site } = this, N = W * H, INF = 1e20, D = new Float64Array(N), out = new Float32Array(N);
-    for (let k = 0; k < N; k++) D[k] = site[k] ? 0 : INF;
-    this.edt(D);
-    for (let k = 0; k < N; k++) out[k] = site[k] ? 0 : Math.min(cap, Math.max(0, (Math.sqrt(D[k]!) - 0.5) / res));
+   *  the waves: water-motion.ts), the same transform to the nearest water sample, less half a sample; over window r only (default all: the
+   *  rest read cap), which must reach cap past the samples asked for */
+  bank(cap: number, r?: readonly number[]): Float32Array {
+    const { W, H, res, site } = this, N = W * H, INF = 1e20, D = new Float64Array(N), out = new Float32Array(N).fill(cap);
+    const [a0, b0, a1, b1] = r ?? [0, 0, W - 1, H - 1];
+    for (let y = b0!; y <= b1!; y++) for (let x = a0!; x <= a1!; x++) { const k = y * W + x; D[k] = site[k] ? 0 : INF; }
+    this.edt(D, r);
+    for (let y = b0!; y <= b1!; y++) for (let x = a0!; x <= a1!; x++) { const k = y * W + x; out[k] = site[k] ? 0 : Math.min(cap, Math.max(0, (Math.sqrt(D[k]!) - 0.5) / res)); }
     return out;
   }
   /** the reflections of the casters (living-ground.ts records: trees and buildings; the rest are low) on the water, 0..1 a sample (the

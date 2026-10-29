@@ -604,20 +604,27 @@ export class GroundPainter {
     if (this.waterNow !== undefined) return this.waterNow;
     const look = waterLookOf(this.tex.surfaces), c = this.chunkNow, motion = this.waterMotion && !lite;
     if (!c || (!waterLookActive(look) && !this.specCam && !motion)) return (this.waterNow = null);
-    const f = WaterField.over(c.box, fieldPad(look), fieldRes(c.L, lite)), fb = f.box;
+    // the rivers, and the course's water and the painted water areas over the field's box (a pond reaching in from past the chunk counts: its
+    // shore sets the depth here), each as it is drawn (the warped course, the rugged outline); none: no field at all (T248: the motion asks
+    // every chunk, most of them dry)
+    const pad = fieldPad(look), fb = [Math.floor(c.box[0]) - pad, Math.floor(c.box[1]) - pad, Math.ceil(c.box[2]) + pad, Math.ceil(c.box[3]) + pad];
+    const rivers = this.waters.filter(w => w.w.kind === 'river' && w.box[2] >= fb[0] && w.box[0] <= fb[2] && w.box[3] >= fb[1] && w.box[1] <= fb[3]);
+    const ponds: { rings: readonly ArrayLike<number>[]; site: number }[] = [];
+    for (const p of this.lotsIn(fb as BBox)) {
+      if (p.top || p.layby) continue;
+      if (p.course) { for (const l of this.warpedCourse(p.course, lite).layers) if (l.s === COURSE_WATER && l.fill.length) ponds.push({ rings: l.fill, site: SITE.course }); }
+      else if (p.paint && waterTex(p.tex)) ponds.push({ rings: [this.ruggedOf(p).q.pts], site: SITE.paint });
+    }
+    if (!rivers.length && !ponds.length) return (this.waterNow = null);
+    const f = WaterField.over(c.box, pad, fieldRes(c.L, lite));
     // (T248: with the water's motion, each water sample's flow and waves' strength as it is marked)
     if (motion) f.motion();
-    // the rivers, and the course's water and the painted water areas over the field's box (a pond reaching in from past the chunk counts: its
-    // shore sets the depth here), each as it is drawn (the warped course, the rugged outline)
-    for (const w of this.waters) if (w.w.kind === 'river' && w.box[2] >= fb[0] && w.box[0] <= fb[2] && w.box[3] >= fb[1] && w.box[1] <= fb[3]) f.waterway(w.w.pts, SITE.river, 1, motion ? riverLap : undefined);
-    for (const p of this.lotsIn(fb)) {
-      if (p.top || p.layby) continue;
-      if (p.course) { for (const l of this.warpedCourse(p.course, lite).layers) if (l.s === COURSE_WATER && l.fill.length) f.rings(l.fill, SITE.course, motion ? pondLap : undefined); }
-      else if (p.paint && waterTex(p.tex)) f.rings([this.ruggedOf(p).q.pts], SITE.paint, motion ? pondLap : undefined);
-    }
+    for (const w of rivers) f.waterway(w.w.pts, SITE.river, 1, motion ? riverLap : undefined);
+    for (const q of ponds) f.rings(q.rings, q.site, motion ? pondLap : undefined);
     if (!f.any()) return (this.waterNow = null);
     f.shore(Math.max(look.reach, 3));
-    if (look.on && look.reflect > 0) f.reflect(this.casters.query([fb[0] - REFLECT.reach - 3, fb[1] - REFLECT.reach - 3, fb[2], fb[3]]));
+    const fb2 = f.box;
+    if (look.on && look.reflect > 0) f.reflect(this.casters.query([fb2[0] - REFLECT.reach - 3, fb2[1] - REFLECT.reach - 3, fb2[2], fb2[3]]));
     return (this.waterNow = { f, look });
   }
   /** T230: the water look over one water site just drawn on g (its samples of the chunk's water field), clipped to its shape (clip, tile

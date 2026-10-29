@@ -5,7 +5,7 @@
 // while the camera pans (the bench's speeds), its draw time, its GPU time (EXT_disjoint_timer_query_webgl2; --amplify N draws every ground
 // chunk N times so the ground pass stands out), and the masks' GPU bytes.
 //   node scripts/dev/water-motion-shots.mjs --base http://127.0.0.1:5187/ --out E:/ClaudeTemp/T248 [--only shots,anim,numbers] [--modes off,on | main]
-//     [--views river,pond,bridge] [--zooms 0.3,0.15] [--frames 16] [--tag v1] [--look '{"foam":1.5}'] [--amplify 20] [--rounds 3]
+//     [--views river,pond,bridge] [--zooms 0.3,0.15] [--frames 16] [--tag v1] [--look '{"foam":1.5}'] [--amplify 20] [--rounds 3] [--parts bake,pan,draw,gpu]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game. On a build without the
 // motion (main) the switch does nothing: run it with --modes main.
 import { chromium } from 'playwright-core';
@@ -17,6 +17,7 @@ const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--
 const base = opt('base', 'http://127.0.0.1:5187/'), out = opt('out', 'output/water-motion'), tag = opt('tag', '') ? `-${opt('tag', '')}` : '', seed = opt('seed', '7');
 const only = new Set(opt('only', 'shots,anim,numbers').split(',')), modes = opt('modes', 'off,on').split(','), look = JSON.parse(opt('look', '{}'));
 const views = opt('views', 'river,pond').split(','), zooms = opt('zooms', '0.3,0.15').split(',').map(Number), frames = +opt('frames', '16'), amplify = +opt('amplify', '1'), rounds = +opt('rounds', '3');
+const parts = new Set(opt('parts', 'bake,pan,draw,gpu').split(','));
 const W = 1280, H = 800, CLOCK = 12.3, CROP = { left: 427, top: 267, width: 426, height: 266 };
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
@@ -128,21 +129,23 @@ try {
         await lookAt(page, at.x, at.y, z);
         for (let round = 0; round < rounds; round++) for (const m of modes) {
           await setMode(page, m); await settle(page);
+          const key = `${Math.round(z * 100)}pct-${m}`, e = (num[key] ??= { bake: [], pan: [], draw: [], gpu: [] });
+          if (parts.has('bake')) {
           const n0 = await page.evaluate(() => { const g = window.__game; g.ground.invalidateAll(); return g.ground.baked; });
           await settle(page);
           const [ms, mk] = await page.evaluate(n0 => { const g = window.__game, l = [], k2 = []; for (let k = n0; k < g.ground.baked; k++) { l.push(g.ground.bakeLog[k % 4096]); k2.push(g.ground.waterLog?.[k % 4096] ?? 0); } return [l, k2]; }, n0);
           const med = a => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
-          const key = `${Math.round(z * 100)}pct-${m}`, e = (num[key] ??= { bake: [], pan: [], draw: [], gpu: [] });
-          e.bake.push({ bakes: ms.length, median: +med(ms).toFixed(2), mean: +(ms.reduce((a, b) => a + b, 0) / (ms.length || 1)).toFixed(2), maskMedian: +med(mk).toFixed(3), maskMax: +Math.max(0, ...mk).toFixed(2) });
-          const pan = await page.evaluate(async z => {
+          e.bake.push({ bakes: ms.length, median: +med(ms).toFixed(2), mean: +(ms.reduce((a, b) => a + b, 0) / (ms.length || 1)).toFixed(2), maskMedian: +med(mk).toFixed(3), maskMax: +Math.max(0, ...mk).toFixed(2), all: ms, masks: mk });
+          }
+          const pan = !parts.has('pan') ? null : await page.evaluate(async z => {
             const g = window.__game, x0 = g.cam.X, y0 = g.cam.Y, v = z >= 0.25 ? [500, 200] : z >= 0.12 ? [900, 350] : [1600, 600], cpu = [], t0 = performance.now(); let last = t0;
             g.camEase = null;
             await new Promise(res => { const step = now => { const dt = Math.min(0.05, (now - last) / 1000), t = (now - t0) / 1000, dir = Math.floor(t / 1.5) % 2 ? -1 : 1; last = now; g.cam.z = z; g.cam.X += v[0] * dt * dir; g.cam.Y += v[1] * dt * dir; if (t > 0.5) cpu.push(g.perf.cpuMs); if (t < 6.5) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); });
             g.cam.X = x0; g.cam.Y = y0; cpu.sort((a, b) => a - b);
             return { avg: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(3), p95: +(cpu[Math.floor(0.95 * cpu.length)] ?? 0).toFixed(3), n: cpu.length };
           }, z);
-          e.pan.push(pan); await settle(page);
-          const draw = await page.evaluate(() => {
+          if (pan) { e.pan.push(pan); await settle(page); }
+          const draw = !parts.has('draw') ? null : await page.evaluate(() => {
             const g = window.__game, gl = g.gl.gl, px = new Uint8Array(4); cancelAnimationFrame(g.raf);
             for (let i = 0; i < 20; i++) { g.draw(performance.now()); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
             const ts = [];
@@ -150,8 +153,8 @@ try {
             g.raf = requestAnimationFrame(g.frame); ts.sort((a, b) => a - b);
             return { median: +ts[120].toFixed(2), p95: +ts[228].toFixed(2), mean: +(ts.reduce((a, b) => a + b, 0) / ts.length).toFixed(2) };
           });
-          e.draw.push(draw);
-          const gpu = await page.evaluate(async amplify => {
+          if (draw) e.draw.push(draw);
+          const gpu = !parts.has('gpu') ? null : await page.evaluate(async amplify => {
             const g = window.__game, gl = g.gl.gl, ext = gl.getExtension('EXT_disjoint_timer_query_webgl2'); if (!ext) return null;
             const orig = g.gl.drawChunk; if (amplify > 1) g.gl.drawChunk = function (...a) { for (let k = 0; k < amplify; k++) orig.apply(this, a); };
             cancelAnimationFrame(g.raf); const qs = [], BATCH = 8, px = new Uint8Array(4);
@@ -169,9 +172,9 @@ try {
             res.sort((a, b) => a - b);
             return res.length ? { median: +res[res.length >> 1].toFixed(3), p95: +res[Math.floor(res.length * 0.95)].toFixed(3), n: res.length } : null;
           }, amplify);
-          e.gpu.push(gpu);
+          if (gpu) e.gpu.push(gpu);
           if (round === 0) e.mem = await page.evaluate(() => { const g = window.__game; return { groundMB: +(g.ground.residentPx * 4 / 1048576).toFixed(1), waterKB: +((g.ground.waterBytes ?? 0) / 1024).toFixed(1), chunks: [...g.ground.tiles.values()].filter(t => t.tex).length }; });
-          console.log(view, key, JSON.stringify({ bake: e.bake.at(-1), pan, draw, gpu, mem: e.mem }));
+          const b = e.bake.at(-1); console.log(view, key, JSON.stringify({ bake: b ? { ...b, all: undefined, masks: undefined } : null, pan, draw, gpu, mem: e.mem }));
         }
       }
       await page.evaluate(c => { window.__game.waterClock = c; }, CLOCK);
