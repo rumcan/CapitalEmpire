@@ -18,9 +18,10 @@ mkdirSync(out, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
 
-/** a page at width W (768 high, or 1440 at 2560), the old start, ready, the welcome closed and the clock stopped */
+/** a page at width W (1300 high, or 1440 at 2560: tall enough for the whole card in one shot; its width is what the rules are about), the old
+ *  start, ready, the welcome closed and the clock stopped */
 async function open(W, url = `${base}?start=town`) {
-  const ctx = await browser.newContext({ viewport: { width: W, height: W >= 2000 ? 1440 : 768 }, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({ viewport: { width: W, height: W >= 2000 ? 1440 : 1300 }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
   page.on('console', m => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 300)); });
@@ -83,6 +84,8 @@ try {
   }
   if (want('fresh')) {
     const { ctx, page } = await open(1366);
+    await page.screenshot({ path: join(out, 'club-founding-toast.png'), clip: { x: 0, y: 0, width: 1366, height: 768 } }); // the founding drive's toast
+    console.log(join(out, 'club-founding-toast.png'));
     await run(page, 1, 3000);
     const toasts = await page.evaluate(() => (window.__game.toasts ?? []).map(t => t.text));
     console.log('toasts', JSON.stringify(toasts));
@@ -90,11 +93,24 @@ try {
     console.log('fresh: the club', JSON.stringify(await page.evaluate(() => window.__game.golf.club)));
     await ctx.close();
   }
+  if (want('drawer')) {
+    // a few months on (speed 20): the dues booked; the money chip's drawer (Dues, Wages) and the golfers chip's tip
+    const { ctx, page } = await open(1366, `${base}?start=town&money=0`);
+    await run(page, 20, 15000);
+    console.log('the club', JSON.stringify(await page.evaluate(() => window.__game.golf.club)));
+    await page.hover('[data-stat="money"]'); await sleep(400);
+    const b = await page.locator('[data-stat="money"]').boundingBox(); await page.mouse.move(b.x + 30, b.y + b.height + 120); await sleep(500); // into the drawer: its tooltip goes
+    await page.screenshot({ path: join(out, 'club-money-drawer.png'), clip: { x: 0, y: 0, width: 700, height: 600 } });
+    console.log(join(out, 'club-money-drawer.png'));
+    console.log('golfers tip:', await page.evaluate(() => document.querySelector('[data-stat="golfers"]')?.getAttribute('data-tip')));
+    await ctx.close();
+  }
   if (want('prices')) {
     for (const W of [1366, 2560]) {
       const { ctx, page } = await open(W);
-      await run(page, 4, 8000); // a few months: some sales and churn on the headline
-      const fair = await page.evaluate(() => window.__game.clubCard()?.club?.fair ?? 50);
+      await run(page, 20, 12000); // a month or two: sales, churn and dues on the headline
+      const fair = await page.evaluate(() => { const g = window.__game; g.openClubCard(true); return g.clubCard()?.members?.fair ?? 50; });
+      console.log('fair', fair.toFixed(2));
       for (const [name, p] of [['cheap', Math.round(fair * 0.6 / 5) * 5], ['fair', Math.round(fair / 5) * 5], ['dear', Math.round(fair * 1.4 / 5) * 5]]) {
         await page.evaluate(p => { window.__game.setClubPrice(p); }, p);
         await page.evaluate(() => { const d = document.querySelector('[data-testid="club-why"]'); if (d) d.open = true; });
