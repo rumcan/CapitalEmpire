@@ -57,7 +57,7 @@ function devSave(): Plugin {
         const open = () => new Promise<boolean>(ok => { const s = net.connect(5191, "127.0.0.1"); s.once("connect", () => { s.end(); ok(true); }); s.once("error", () => ok(false)); });
         if (!(await open())) {
           const log = fs.openSync(path.resolve("output/studio.log"), "a");
-          const env = { ...process.env, STUDIO_HOST: "::", STUDIO_DEV_GAME: "1", STUDIO_GAME_URL: `http://localhost:${server.config.server.port ?? 5174}`, VIPS_CONCURRENCY: "1", TOT_REPO: process.env.TOT_REPO ?? path.resolve("../TrickOrTreat") };
+          const env = { ...process.env, STUDIO_HOST: "::", STUDIO_DEV_GAME: "1", STUDIO_GAME_URL: `http://localhost:${server.config.server.port ?? 5174}`, VIPS_CONCURRENCY: "1", TOT_REPO: process.env.TOT_REPO ?? ["../TrickOrTreat", "../../TrickOrTreat", "../../../TrickOrTreat"].map(p => path.resolve(p)).find(p => fs.existsSync(p)) };
           spawn(process.execPath, ["scripts/assets/review/server.mjs", "--port", "5191"], { cwd: process.cwd(), env, detached: true, stdio: ["ignore", log, log] }).unref();
           for (let i = 0; i < 60 && !(await open()); i++) await new Promise(r => setTimeout(r, 500));
         }
