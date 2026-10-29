@@ -236,3 +236,19 @@ after RUN's daily cap. **To bring them into the game:** a new branch from `origi
 fresh pack moves main's sprite pages 0-14 (it moved 7 sprites by under a pixel on 2026-10-25: their sources differ slightly from what main's
 pages were packed from), keep main's `src/assets/atlas/sprites-0..14-*.webp` and `LIBRARY` lines and take only the walker pages and exports;
 then typecheck, the touched tests (crowdview, galleries, golf-gallerydraw, gates, ext-pedestrians, bus, compose, newart), PR, merge.
+
+## 8. Grounds crew (T269, #810): wanted from RUN 3D
+The owner (2026-10-29): *"I want to start seeing maintanance people moving holes on greens after each day. guys cutting lawns. there should be
+an active staff running the golf course."* The crew is in the game (`src/game/golf/crew.ts`, `crewview.ts`) with labelled stand-ins: the
+greenkeeper is the spectator `spec_m_bucket_hat`, the mower operator `spec_m_young_cap`, and both use the spectators' `sit` frame to kneel and
+to ride. Wanted, two people in the townspeople's format (8 facings, as the spectators' sheets), with these clips:
+
+| Person | Clips | Notes |
+| --- | --- | --- |
+| `staff_greenkeeper_m` | idle, walk, **kneel and cut a cup** (down on one knee, the hole cutter twisted into the green, about 4 frames, a loop), **set the flag** (standing, 2), **rake** (a bunker stroke, 4, a loop), **push** (walking behind a greens mower) | a 1985 greenkeeper: a cap or bucket hat, a green or khaki work shirt, khaki trousers, boots |
+| `staff_mower_m` | idle, walk, **ride** (seated, hands on the wheel or levers; the seat height of a ride-on mower and a utility cart), push | a cap and ear defenders, a work shirt, jeans |
+
+The game reads them through `SPECTATOR_PEOPLE`-style entries: once packed, swap `Game.CREW_ART` in `engine.ts` (and the clip frames in
+`crewview.ts`: `sit` for kneel and ride today) and drop the stand-in labels. The vehicles (a ride-on reel mower, a utility cart, a walk-behind and a
+rotary mower, 8 facings each) are listed in `docs/GOLF-SPRITES.md` "Grounds crew".
+

@@ -66,7 +66,11 @@ export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill
   collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; w?: number; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[];
     /** T227: a bunker's lip band's grass with the course finish on (course-finish.ts: the fairway's first cut, so the bunker sits in the collar
      *  as in the concept); absent: its own look (the player picked a Border texture for the bunker) */
-    g?: CourseTex }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number }[];
+    g?: CourseTex }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number;
+    /** T269 (#810): the grounds crew's cut (ext/course-grid stripeAreas, the engine's mowFlips): [phase, leg, band]: the hole's bands drawn the
+     *  other way (phase 1: light for dark, as the last day's cut ran), and today's fresh stripes behind the mower: along the line, the legs before
+     *  `leg` and that leg's bands below `band` flipped again; across it, every leg's bands below `band` (leg -1: no cut today). Absent: as T218 */
+    f?: number[] }[];
   /** T256 (#743): the other looks its cells wear in this chunk (each hole, the property and each practice facility owns its looks: golf/looks.ts):
    *  each its fill, its collar band and a bunker's lip grass, drawn over the layer's own look within its share of the chunk (runs: boxes x0 y0
    *  x1 y1, tiles; ext/course-grid cellShares). Absent: the whole layer wears its own look */

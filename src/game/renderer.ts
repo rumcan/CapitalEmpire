@@ -17,7 +17,7 @@ import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
-import { fairwayStripeLook, holeStripeLegs, legArea, type StripeLook } from './course-stripes';
+import { cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, type StripeLook } from './course-stripes';
 import { LIP, collarToneOf, finishMow, finishOf, finishStripeLook, greenStripeLook, lipRuns, tonedCollar, type CourseFinish } from './course-finish';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
 import { SHINE_TEXEL, SHINE_TEXEL_PX, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
@@ -3312,12 +3312,16 @@ export class GroundPainter {
       }
       // a green is mown one way, along the approach: its hole's last leg alone (no chevron where an aim point lies near it)
       const all = holeStripeLegs(e.line, look, e.a), legs = l.s === SURF.green ? [{ m: all[all.length - 1]!.m, cut: null }] : all;
-      if (legs.length === 1) this.layBands(ctx, legs[0]!.m, eb, M, textured);
+      // T269: the grounds crew's cut (e.f): the hole's bands the other way, and today's fresh stripes behind the mower
+      const f = l.s === SURF.green ? undefined : e.f;
+      if (legs.length === 1 && !f) this.layBands(ctx, legs[0]!.m, eb, M, textured);
       else for (let i = 0; i < legs.length; i++) {
-        const q = legArea(legs, i, eb); if (!q.length) continue;
-        const p = new Path2D(); ringPath(p, q); let qx0 = Infinity, qy0 = Infinity, qx1 = -Infinity, qy1 = -Infinity;
-        for (let k = 0; k + 1 < q.length; k += 2) { qx0 = Math.min(qx0, q[k]!); qx1 = Math.max(qx1, q[k]!); qy0 = Math.min(qy0, q[k + 1]!); qy1 = Math.max(qy1, q[k + 1]!); }
-        ctx.save(); ctx.clip(p); this.layBands(ctx, legs[i]!.m, [qx0, qy0, qx1, qy1], M, textured); ctx.restore();
+        const q0 = legArea(legs, i, eb); if (!q0.length) continue;
+        for (const { poly: q, flip } of cutPieces(legs, i, q0, f, look.across)) {
+          const p = new Path2D(); ringPath(p, q); let qx0 = Infinity, qy0 = Infinity, qx1 = -Infinity, qy1 = -Infinity;
+          for (let k = 0; k + 1 < q.length; k += 2) { qx0 = Math.min(qx0, q[k]!); qx1 = Math.max(qx1, q[k]!); qy0 = Math.min(qy0, q[k + 1]!); qy1 = Math.max(qy1, q[k + 1]!); }
+          ctx.save(); ctx.clip(p); this.layBands(ctx, flip ? flipBands(legs[i]!.m) : legs[i]!.m, [qx0, qy0, qx1, qy1], M, textured); ctx.restore();
+        }
       }
       if (e.runs) ctx.restore();
     }
