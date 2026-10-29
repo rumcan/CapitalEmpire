@@ -419,8 +419,9 @@ const LAYBY_PAD = 0.3;
 /** the library index by id, and the props the town's lots add (auto 'lot:' + key) */
 const LIB_INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const isLotProp = (p: Prop) => !!p.auto && (p.auto.startsWith('lot:') || p.auto.startsWith('farm:'));
-/** the farms composed per frame at most (the rest wait in the queue), so a big network does not stall a frame */
-const FARMS_PER_FRAME = 4;
+/** the farms composed per frame at most (the rest wait in the queue), so a big network does not stall a frame; T259: and a frame composes no
+ *  more farms once they took FARM_FRAME_MS (a farm composes in 0.2-0.4 ms, 1.5 at most) */
+const FARMS_PER_FRAME = 4, FARM_FRAME_MS = 1;
 /** T219: how long a place with no free site waits before the next search (ms) */
 const PLACE_RETRY_MS = 30000;
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
@@ -3401,8 +3402,9 @@ export class Game {
   /** a farm composes on apply: its farmhouse, barn and fields as auto props ('farm:' + key, never saved) and its ground patches; at most FARMS_PER_FRAME a frame */
   private applyFarmQueue() {
     const q = this.farmQueue; if (!q.size) return;
-    let k = 0;
-    for (const key of q) { if (k++ >= FARMS_PER_FRAME) break; q.delete(key); this.placeFarm(key); }
+    let k = 0; const t0 = performance.now();
+    // (T259: and no more once the frame's farms took FARM_FRAME_MS: a month's change composes every farm whose fields turned, a few a frame)
+    for (const key of q) { if (k++ >= FARMS_PER_FRAME || (k > 1 && performance.now() - t0 > FARM_FRAME_MS)) break; q.delete(key); this.placeFarm(key); }
   }
   /** a farm composes (its model, the month: T259) as auto props ('farm:' + key, never saved) and its ground patches. Composed before (a new
    *  month), the props that stand where they stood stay and only the rest go and come (a month moves only the orchard's trees), and the ground
