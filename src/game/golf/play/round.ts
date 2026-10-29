@@ -4,7 +4,7 @@
 import { TILE_M } from '../types';
 import { carryM, chooseShot, hitShot, putt, rng } from './shot';
 import { CART_PACE } from './entourage';
-import type { Club, CourseView, Golfer, Group, GolferState, Lie, Pace, PlayHole, Pt, RoundPlan, Shot, Standing, Wait } from './types';
+import type { Club, CourseView, Golfer, Group, GolferState, Landing, Lie, Pace, PlayHole, Pt, RoundPlan, Shot, Standing, Wait } from './types';
 import type { TeeKind } from '../types';
 import { holeFrom } from './courseview';
 
@@ -73,7 +73,7 @@ export interface Player { id: number; pro: boolean; skill: number; owner: boolea
 
 /** the model's next stroke for a golfer, worked out before its minute: the club, where the ball ends and its lie, the penalty, whether it goes in, its
  *  flight, and whether it plays to the green (T211: aimed at the pin, or ending on the green), so it waits until the group ahead is off the green */
-interface Pending { club: Club; to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean; dur: number; green: boolean }
+interface Pending { club: Club; to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean; dur: number; green: boolean; /** T251: a full shot's landing */ landing?: Landing }
 
 /** what a round's play writes to: the course, the seed, the golfers by id, the shots (in the order struck), the done minutes and the pace (T211) */
 export interface PlayCtx { view: CourseView; seed: number; who: Map<number, Golfer>; out: Shot[]; done: number[]; pace: Pace }
@@ -118,8 +118,9 @@ export class HoleRun {
   /** records p's stroke, from his ball to `to`, struck at t (its flight dur): his strokes (a penalty adds one), his ball and stand, his walk to the new ball
    *  (ready at t + walk), and the group's last strike; a golfer holed out or picked up at PICK_UP is out of the hole. A strike later than the group's own
    *  pace is a wait on the group ahead (T211, pace.waits), and the first time every ball is out of the landing area is the group's clear minute */
-  record(p: Player, club: Club, t: number, dur: number, to: Pt, lie: Lie, penalty: 0 | 1, holed: boolean): Shot {
+  record(p: Player, club: Club, t: number, dur: number, to: Pt, lie: Lie, penalty: 0 | 1, holed: boolean, landing?: Landing): Shot {
     const from = { x: p.ball.x, y: p.ball.y }, s: Shot = { golfer: p.id, hole: this.h, stroke: p.strokes + 1, t, from, to, club, lie, penalty, holed };
+    if (landing) s.landing = landing; // (T251: the playback's bounce and roll)
     const free = this.strikeAt(p);
     if (t > free + 1e-9) { this.c.pace.waits.push({ group: this.g.idx, hole: this.h, at: p.lie === 'tee' ? 'tee' : 'green', from: free, to: t }); this.g.waited = this.h; }
     if (this.first < 0) this.first = t;
@@ -149,13 +150,13 @@ export class HoleRun {
       return p.pend = { club: 'putter', to, lie: o.holed ? 'green' : this.c.view.lieAt(to.x, to.y), penalty: 0, holed: o.holed, dur: PUTT_FLIGHT, green: true };
     }
     const o = hitShot(p.r, p.skill, p.lie, p.ball, k.aim, k.club, this.c.view), atPin = k.aim.x === hole.pin.x && k.aim.y === hole.pin.y;
-    return p.pend = { club: k.club, to: o.to, lie: o.lie, penalty: o.penalty, holed: false, dur: FLIGHT_TIME, green: atPin || o.lie === 'green' };
+    return p.pend = { club: k.club, to: o.to, lie: o.lie, penalty: o.penalty, holed: false, dur: FLIGHT_TIME, green: atPin || o.lie === 'green', landing: o.landing };
   }
   /** the model's stroke for p at its minute (timeOf, which must be known). Recorded, and returned */
   model(p: Player): Shot {
     const k = this.pending(p), t = this.timeOf(p);
     if (!Number.isFinite(t)) throw new Error(`HoleRun.model: golfer ${p.id} is held up on hole ${this.h}`);
-    return this.record(p, k.club, t, k.dur, k.to, k.lie, k.penalty, k.holed);
+    return this.record(p, k.club, t, k.dur, k.to, k.lie, k.penalty, k.holed, k.landing);
   }
 }
 

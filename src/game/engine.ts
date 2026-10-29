@@ -87,6 +87,8 @@ import { SimClient, type LotView } from './sim/client';
 import { localRate, townClockFor, townTimeOf } from './sim/townclock';
 import { CADDIE_CAP, CART_CAP, LONG_DAY_MIN, NIGHT_S, PACE_KEY, WALK_CAP, capped, dayNight, paceOf, paceOfSetting, settingOf, type GolfPace, type PaceSetting } from './golf/pace';
 import { Pacer } from './golf/play/pacer';
+import type { PlayBall } from './golf/play/view';
+import { ballPuff, ballSplash } from './golf/ballfx';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
@@ -130,7 +132,7 @@ import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } f
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import { normalizeGolfSave, type GolfPlaySave, type GolfSave, type GolfView } from './golf/mode';
-import { courseSlopeAt, createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
+import { courseSlopeAt, createCourseHeightField, sampleCourseGrid, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
@@ -162,6 +164,7 @@ import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
+import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
@@ -5861,17 +5864,27 @@ export class Game {
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
   /** the golf balls of the day (docs/GOLF-PLAY.md P2) at the street tier: each in the air raised by its height (1 m = HH * ze px, half a tile's screen
-   *  height) over a soft shadow on the ground, or at rest; a white ball with a dark rim. Culled to the view */
+   *  height) over a soft shadow on the ground, or at rest; a white ball with a dark rim. T251: bouncing and rolling after its landing (the same
+   *  drawing, its height a bounce's), a splash in water (rings and drops on the water, the ball gone) and a puff of sand round a ball plugged in a
+   *  bunker, drawn here as particles (not in the water's shader). Culled to the view */
   private drawBalls(ctx: CanvasRenderingContext2D) {
     const pl = this.play, dv = this.dayOff ? undefined : this.dayPlay?.view; if ((!pl && !dv) || this.cam.z < DISTRICT_Z) return;
+    const dpr = this.dpr, ze = this.cam.z * dpr, r = Math.max(1.5, 0.06 * HH * 2 * ze);
     // (T208: the everyday golfers' balls too, from the playback of the groups on screen)
-    const B = pl && dv ? pl.pv.balls.concat(dv.balls) : pl ? pl.pv.balls : dv!.balls, dpr = this.dpr, ze = this.cam.z * dpr, cw = this.cw, ch = this.ch, r = Math.max(1.5, 0.06 * HH * 2 * ze);
+    if (pl) this.drawBallList(ctx, pl.pv.balls, r, ze, dpr);
+    if (dv) this.drawBallList(ctx, dv.balls, r, ze, dpr);
+  }
+  /** the balls of one playback (drawBalls), r their radius (px) */
+  private drawBallList(ctx: CanvasRenderingContext2D, B: readonly PlayBall[], r: number, ze: number, dpr: number) {
+    const cw = this.cw, ch = this.ch, m = 7 * r; // (the margin: a splash's rings)
     ctx.lineWidth = dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
     for (let i = 0; i < B.length; i++) {
       const b = B[i]!, c = this.screen(b.x, b.y);
-      if (c.x < -r || c.y < -r || c.x > cw + r || c.y > ch + r) continue;
+      if (c.x < -m || c.y < -m || c.x > cw + m || c.y > ch + m) continue;
+      if (b.fx === FX_SPLASH) { ballSplash(ctx, c.x, c.y, r, b.fu ?? 0, HH * ze, dpr); ctx.lineWidth = dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; continue; }
       if (b.h > 0) { ctx.fillStyle = 'rgba(2,6,23,0.35)'; ctx.beginPath(); ctx.ellipse(c.x, c.y, 1.5 * r, 0.7 * r, 0, 0, Math.PI * 2); ctx.fill(); }
       ctx.beginPath(); ctx.arc(c.x, c.y - b.h * HH * ze, r, 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill(); ctx.stroke();
+      if (b.fx === FX_SAND) ballPuff(ctx, c.x, c.y, r, b.fu ?? 0, HH * ze);
     }
   }
   /** the bus tool's preview at the cursor: once the first stop is picked, a line from it to the plan (white dashed) and the plan's stop; the label: the reason,
@@ -5915,6 +5928,10 @@ export class Game {
   golf: GolfSave | null = null;
   /** the course's subtle height field (T027; saved in golf.height) */
   courseHeight: CourseHeightField = createCourseHeightField();
+  /** T251: the course height (metres) at a tile point, the field as it is now (0 on a field never edited): the balls' rolls bend with it, putts break on it */
+  private ballHeight: HeightAt = (x, y) => { const f = this.courseHeight; return f.rev ? sampleCourseGrid(f.data, x, y) : 0; };
+  /** T251 (dev, the bench's A/B): the balls bounce and roll after landing (on), or fly to where they end and lie there as before (off) */
+  setBallRoll(on: boolean) { ballRoll.on = on; }
   /** the course height as save chunks, cached by field and rev (see courseHeightChunks) */
   private chSave: { field: CourseHeightField; rev: number; chunks: CourseHeightSaveChunk[] } | null = null;
   /** golf mode: a new game is a golf game (one town, the old nine, the season); the stadium and the Business tool are off */
@@ -6885,7 +6902,7 @@ export class Game {
     if (!course || !course.view.holes.length) { this.dayPlay = null; this.dropCrew(); return; }
     if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key) {
       const roster = this.dayBook.rosterOf()!, plan = dayPlan(course.view, roster);
-      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null), day: s.day, key: course.key };
+      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight), day: s.day, key: course.key };
       this.dayArt = roster.golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
       this.buildCrew(g, plan, course.view, s.day); // T269: the grounds crew works round the day's groups
     }
@@ -7293,7 +7310,7 @@ export class Game {
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
-    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace() }), key, art, finish: new DayFinish(), own: null, waves: -1 };
+    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace(), height: this.ballHeight }), key, art, finish: new DayFinish(), own: null, waves: -1 };
     if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}) };
     return pl;
   }

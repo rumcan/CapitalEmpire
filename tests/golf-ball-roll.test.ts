@@ -4,8 +4,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
-import { chooseShot, hitShot, makeField, playRound, rng, teeTimes } from '../src/game/golf/play';
-import type { CourseView, Lie, PlayHole, Pt } from '../src/game/golf/play';
+import { BEND, BallRoll, FX_NONE, FX_SAND, FX_SPLASH, PUFF_S, PlayView, ROLL_DONE_S, SPLASH_S, chooseShot, crossSlope, hitShot, makeField, playRound, rng, teeTimes } from '../src/game/golf/play';
+import { FADE_OUT_S } from '../src/game/golf/play/pacer';
+import type { CourseView, HeightAt, Lie, PlayHole, Pt } from '../src/game/golf/play';
 
 /** the distance (tiles) from p to the segment a-b */
 function segDist(p: Pt, a: Pt, b: Pt): number {
@@ -80,4 +81,100 @@ test('the shot model: the end points of a fixed set of shots and the rounds\' sc
   assert.equal(shots.length, 1248, 'the same set of shots');
   assert.equal(fnv(shots.join('\n')), '4b84a59f', 'the end points, their lies and penalties as on main');
   assert.equal(fnv(fixedRounds(view)), 'ba0e470c', 'the rounds: every stroke, end point and minute as on main');
+});
+
+// ---------------------------------------------------------------- the landing the model records, and the roll drawn from it
+
+test('the landing: every full shot and chip records where it landed and where its roll stopped, with their lies; a dry shot\'s roll stops at its end', () => {
+  const view = rollCourse(), f = makeField(3, 23), plan = playRound(view, f, teeTimes(f, 23), 23);
+  let full = 0, dry = 0;
+  for (const s of plan.shots) {
+    if (s.club === 'putter') { assert.equal(s.landing, undefined, 'a putt has no landing'); continue; }
+    full++; const lg = s.landing; assert.ok(lg, 'a full shot has its landing');
+    assert.equal(lg.lie, view.lieAt(lg.at.x, lg.at.y)); assert.equal(lg.restLie, view.lieAt(lg.rest.x, lg.rest.y));
+    if (!s.penalty) { dry++; assert.deepEqual(lg.rest, s.to, 'a dry shot rests at its end'); assert.equal(lg.restLie, s.lie); }
+    // (the roll runs on along the flight's line)
+    const fx = lg.at.x - s.from.x, fy = lg.at.y - s.from.y, rx = lg.rest.x - lg.at.x, ry = lg.rest.y - lg.at.y;
+    assert.ok(Math.abs(fx * ry - fy * rx) < 1e-6 * Math.hypot(fx, fy) * (1 + Math.hypot(rx, ry)) && fx * rx + fy * ry >= -1e-9, 'the roll goes on along the line');
+  }
+  assert.ok(full > 200 && dry > 0.8 * full, `${full} full shots, ${dry} dry`);
+});
+
+/** the way of a roll sampled every 10 ms from its landing to its end: points (x y h) and effects */
+function sample(r: BallRoll): { pts: { x: number; y: number; h: number }[]; fx: number[] } {
+  const pts: { x: number; y: number; h: number }[] = [], fx: number[] = [], o = { x: 0, y: 0, h: 0 };
+  for (let k = 0; k * 0.01 <= r.end + 0.05; k++) { fx.push(r.at(k * 0.01, o)); pts.push({ ...o }); }
+  return { pts, fx };
+}
+const LAND = { x: 100, y: 50 }, REST = { x: 112, y: 50 };
+
+test('the bounce by surface: higher on the fairway than on the green, low in the rough and the fescue, a dead stop in a bunker (a puff), a splash in water', () => {
+  const top = (lie: Lie, carry = 220) => Math.max(...sample(new BallRoll().set(LAND, REST, lie, lie, carry, 0.8, null)).pts.map(p => p.h));
+  const fw = top('fairway'), gr = top('green'), ro = top('rough'), fe = top('fescue');
+  assert.ok(fw > 1 && fw > gr && gr > ro && ro > fe && fe > 0, `fairway ${fw.toFixed(2)} > green ${gr.toFixed(2)} > rough ${ro.toFixed(2)} > fescue ${fe.toFixed(2)} m`);
+  assert.ok(top('fairway', 90) < fw, 'a shorter carry bounces lower');
+  // two bounces on the fairway (a top between each landing), one in the rough
+  const tops = (lie: Lie) => { const p = sample(new BallRoll().set(LAND, REST, lie, lie, 220, 0.8, null)).pts; let n = 0; for (let i = 1; i + 1 < p.length; i++) if (p[i]!.h > 0 && p[i]!.h > p[i - 1]!.h && p[i]!.h >= p[i + 1]!.h) n++; return n; };
+  assert.equal(tops('fairway'), 2, 'two bounces on the fairway'); assert.equal(tops('rough'), 1, 'one in the rough');
+  // a bunker: plugged where it lands (no bounce, no roll), a puff of sand; water: a splash where it lands
+  const sand = new BallRoll().set(LAND, LAND, 'bunker', 'bunker', 150, 0.8, null), s = sample(sand);
+  assert.ok(s.pts.every(p => p.x === LAND.x && p.y === LAND.y && p.h === 0), 'a dead stop in the bunker');
+  assert.ok(s.fx.every(f => f === FX_SAND) && sand.rest === 0 && sand.end === PUFF_S, 'a puff of sand');
+  const wet = new BallRoll().set(LAND, LAND, 'water', 'water', 150, 0.8, null);
+  assert.ok(sample(wet).fx.every(f => f === FX_SPLASH) && wet.end === SPLASH_S, 'a splash where it lands in water');
+  // rolled into water: the bounces and the roll, then the splash where it stops
+  const into = new BallRoll().set(LAND, REST, 'fairway', 'water', 220, 0.8, null), w = sample(into), first = w.fx.indexOf(FX_SPLASH);
+  assert.ok(first > 0 && w.fx.slice(0, first).every(f => f === FX_NONE) && Math.abs(first * 0.01 - into.rest) < 0.011, 'the splash once it has rolled in');
+});
+
+test('the roll: ends exactly at the model\'s end point, at rest, within its time budget; slows to a stop; deterministic', () => {
+  for (const lie of ['tee', 'fairway', 'green', 'rough', 'fescue', 'out'] as Lie[]) for (const budget of [0.8, 1.3, 0.3]) {
+    const r = new BallRoll().set(LAND, REST, lie, lie, 230, budget, null), o = { x: 0, y: 0, h: 0 };
+    assert.ok(r.rest <= budget + 1e-9, `${lie}: done in ${r.rest.toFixed(3)} s of ${budget}`);
+    r.at(r.rest, o); assert.deepEqual(o, { x: REST.x, y: REST.y, h: 0 }, `${lie}: at the end point at rest`);
+    r.at(r.rest + 5, o); assert.deepEqual(o, { x: REST.x, y: REST.y, h: 0 }, `${lie}: and stays there`);
+    r.at(0, o); assert.deepEqual(o, { x: LAND.x, y: LAND.y, h: 0 }, `${lie}: from the landing`);
+    // never past the end, never back toward the landing (on flat ground)
+    const p = sample(r).pts; for (let i = 1; i < p.length; i++) assert.ok(p[i]!.x >= p[i - 1]!.x - 1e-9 && p[i]!.x <= REST.x + 1e-9, `${lie}: on toward the end`);
+    // slowing: the last tenth of the roll's time covers less ground than the tenth before it
+    const at = (t: number) => { r.at(t, o); return o.x; }, T = r.rest;
+    assert.ok(at(T) - at(0.9 * T) < at(0.9 * T) - at(0.8 * T) + 1e-9, `${lie}: slows to a stop`);
+  }
+  const hill: HeightAt = (x, y) => 0.03 * x - 0.02 * y;
+  assert.deepEqual(sample(new BallRoll().set(LAND, REST, 'fairway', 'fairway', 230, 0.8, hill)), sample(new BallRoll().set(LAND, REST, 'fairway', 'fairway', 230, 0.8, hill)), 'the same landing gives the same way');
+});
+
+test('the slope: a cross slope bends the roll (uphill of the line, breaking down to the end) without moving the end; flat ground keeps it straight', () => {
+  // the ground falls 3% toward +y: the line's left (-dy, dx) as the roll runs along +x
+  const tilt: HeightAt = (_x, y) => -0.03 * y * TILE_M, flat: HeightAt = () => 0.7;
+  const r = new BallRoll().set(LAND, REST, 'fairway', 'fairway', 230, 0.8, tilt), s = sample(r).pts, o = { x: 0, y: 0, h: 0 };
+  const off = s.map(p => p.y - LAND.y), most = Math.min(...off);
+  assert.ok(Math.abs(crossSlope(tilt, LAND.x, LAND.y, REST.x - LAND.x, 0, 12) - 0.03) < 1e-9, 'the ground falls to the line\'s left by 3%');
+  assert.ok(most < -0.3, `the way bulges uphill of the line (${most.toFixed(2)} tiles)`);
+  assert.ok(off.every(d => d <= 1e-9), 'never downhill of the line: it breaks down to the end');
+  assert.ok(Math.abs(most) <= BEND * 0.03 * 12 / 4 + 1e-9, 'by at most BEND * c * L / 4');
+  r.at(r.rest, o); assert.deepEqual(o, { x: REST.x, y: REST.y, h: 0 }, 'the end is the model\'s');
+  // a slope the other way bends it the other way
+  assert.ok(Math.max(...sample(new BallRoll().set(LAND, REST, 'fairway', 'fairway', 230, 0.8, (_x, y) => 0.03 * y * TILE_M)).pts.map(p => p.y - LAND.y)) > 0.3, 'the other way');
+  // a slope along the line (no cross slope), level ground and no field: straight
+  for (const h of [flat, null, ((x: number) => 0.05 * x * TILE_M) as HeightAt]) assert.ok(sample(new BallRoll().set(LAND, REST, 'fairway', 'fairway', 230, 0.8, h)).pts.every(p => Math.abs(p.y - LAND.y) < 1e-12), 'straight with no cross slope');
+  // a putt's line breaks on the green the same way and drops at its end; on flat ground it rolls straight, as before
+  const q = { x: 0, y: 0, h: 0 }, pt = new BallRoll().line(LAND, { x: 104, y: 50 }, tilt);
+  pt.along(0.5, q); assert.ok(q.y < LAND.y - 0.05 && q.h === 0, `a putt breaks (${(q.y - LAND.y).toFixed(3)} tiles at its middle)`);
+  pt.along(1, q); assert.deepEqual(q, { x: 104, y: 50, h: 0 }, 'and drops at its end');
+  new BallRoll().line(LAND, { x: 104, y: 50 }, null).along(0.5, q); assert.deepEqual(q, { x: 102, y: 50, h: 0 }, 'straight on flat ground');
+});
+
+test('the playback: a round\'s full shots land, bounce and roll to their ends by the swing\'s end, before a faded golfer comes back at the ball', () => {
+  assert.ok(ROLL_DONE_S <= 2.2 && FADE_OUT_S > 0, 'over by the swing\'s end (2.2 s); the pacer fades a golfer out only after it');
+  const view = rollCourse(), f = makeField(2, 5), plan = playRound(view, f, teeTimes(f, 5), 5), tilt: HeightAt = (x, y) => 0.02 * x * TILE_M + 0.015 * y * TILE_M;
+  const shots = plan.shots.filter(s => s.landing && s.landing.lie !== 'water' && s.landing.restLie !== 'water').slice(0, 80);
+  assert.ok(shots.length >= 60);
+  for (const s of shots) {
+    const pv = new PlayView(plan, view, { height: tilt }), lg = s.landing!, at = s.penalty ? s.to : lg.rest;
+    pv.update(s.t - 0.02, 50); pv.update(s.t, 51);
+    pv.update(s.t, 51.5); assert.ok(pv.balls.some(b => b.h > 0), 'a ball in the air in its flight');
+    pv.update(s.t, 51 + ROLL_DONE_S);
+    assert.ok(pv.balls.some(b => b.h === 0 && Math.abs(b.x - at.x) < 1e-9 && Math.abs(b.y - at.y) < 1e-9 && !b.fx), `at rest at its end by ${ROLL_DONE_S} s (${s.club}, ${lg.lie} to ${lg.restLie})`);
+  }
 });
