@@ -15,6 +15,7 @@ import type { Composition, Placed } from '../../lots/compose';
 import { OWNER_SCALE } from '../../lots/scales';
 import { TC } from '../../terrain/types';
 import { RUSTY_PICKUPS } from '../../vehicles';
+import { cornShift, cropState, orchardStage, type CropState, type FieldUse } from './crops';
 
 /** one rural parcel fronting a road: the frame origin (front-left corner, tiles), u along the road, n away from it;
  *  w (frontage) and d (depth) in tiles, side +1 to the left of a -> b and -1 to the right; key stable across seg splits */
@@ -154,7 +155,7 @@ const CHAIN: Pair = { x: 'expansion:chainlink-x', y: 'expansion:chainlink-y' };
 interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; fence: boolean; veh: boolean; street: boolean; plant: boolean }
 interface Spec { id: string; s: number; flip: boolean; h: Box4 }
 interface Opt { flip?: boolean; mul?: number; fixed?: boolean; street?: boolean; plant?: boolean; veh?: boolean }
-interface Patch { block: boolean; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
+interface Patch { block: boolean; tex: LotPatch['tex']; quad: number[]; lines?: number[]; crop?: LotPatch['crop'] }
 
 /** does an axis-aligned footprint overlap a convex quad (8 numbers, corners in order); touching is not overlap */
 function hit(fp: Box4, q: number[]): boolean {
@@ -227,10 +228,10 @@ class FB {
   /** the world quad (8 numbers) of a parcel-frame rectangle */
   quad(a0: number, b0: number, a1: number, b1: number): number[] { return [this.P(a0, b0), this.P(a1, b0), this.P(a1, b1), this.P(a0, b1)].flatMap(q => [q.x, q.y]); }
   /** a ground patch over a parcel-frame rectangle (clamped to the parcel); blocking patches (the drive, the track) keep uprights off */
-  pave(block: boolean, a0: number, b0: number, a1: number, b1: number, tex: LotPatch['tex'], lines?: number[]) {
+  pave(block: boolean, a0: number, b0: number, a1: number, b1: number, tex: LotPatch['tex'], lines?: number[], crop?: LotPatch['crop']) {
     const A0 = clamp(a0, 0, this.W), A1 = clamp(a1, 0, this.W), B0 = clamp(b0, 0, this.D), B1 = clamp(b1, 0, this.D);
     if (A1 - A0 < 0.05 || B1 - B0 < 0.05) return;
-    this.patches.push({ block, tex, quad: this.quad(A0, B0, A1, B1), lines });
+    this.patches.push(crop ? { block, tex, quad: this.quad(A0, B0, A1, B1), crop } : { block, tex, quad: this.quad(A0, B0, A1, B1), lines });
   }
   /** crop or furrow rows for a field rectangle: lines every ROW tiles running along u or along n, in world tiles.
    *  NOTE for the lead: the renderer paints every lot patch's lines in worn off-white today (parking bays); rows want a
@@ -283,7 +284,7 @@ class FB {
       }
       acc.push(it); props.push({ id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s });
     }
-    return { props, ground: this.patches.map(q => (q.lines?.length ? { pts: q.quad, tex: q.tex, lines: q.lines } : { pts: q.quad, tex: q.tex })) };
+    return { props, ground: this.patches.map(q => (q.crop ? { pts: q.quad, tex: q.tex, crop: q.crop } : q.lines?.length ? { pts: q.quad, tex: q.tex, lines: q.lines } : { pts: q.quad, tex: q.tex })) };
   }
 }
 
@@ -368,7 +369,7 @@ const world = (p: FarmParcel, a: number, b: number): Pt => ({ x: p.o.x + p.u.x *
 
 /** The farmstead of a parcel at a seed (world tiles): where the drive meets the front edge, the yard's centre and the two
  *  buildings composeFarm will place. The lead extends the gate along -n to the road's centreline to connect a trip end. */
-export function farmsteadOf(p: FarmParcel, seed: number): Farmstead {
+function farmsteadOf1(p: FarmParcel, seed: number): Farmstead {
   const L = layoutOf(p, seed);
   return { gate: world(p, L.driveA, 0), yard: world(p, L.driveA, (L.front + L.yardB1) / 2), house: world(p, L.ha, L.hb), barn: world(p, L.ba, L.bb), driveA: L.driveA };
 }
@@ -378,7 +379,7 @@ export function farmsteadOf(p: FarmParcel, seed: number): Farmstead {
  *  headland to a side gate. Legs chain end to end (the branch starts on the stem). The first leg is the drive connector:
  *  extend its start along -n to the road's centreline to join the network, or drop it and keep the rest as field track.
  *  Adding these as roads will spawn town lots along them unless the dirt class is kept out of LotMap (integration note). */
-export function farmTrack(p: FarmParcel, seed: number): { a: Pt; b: Pt }[] {
+function farmTrack1(p: FarmParcel, seed: number): { a: Pt; b: Pt }[] {
   const L = layoutOf(p, seed), f = trackFrame(L), legs: { a: Pt; b: Pt }[] = [];
   for (let i = 0; i + 1 < f.length; i++) legs.push({ a: world(p, f[i].a, f[i].b), b: world(p, f[i + 1].a, f[i + 1].b) });
   if (L.branchA !== null) legs.push({ a: world(p, L.driveA, L.branchB), b: world(p, L.branchA, L.branchB) });
@@ -392,7 +393,7 @@ export function farmTrack(p: FarmParcel, seed: number): { a: Pt; b: Pt }[] {
  *  painted as ground strips under the legs farmTrack returns. Deterministic in (parcel, seed); every prop id exists in
  *  LIBRARY; no two uprights share more than 35% of the smaller footprint; nothing stands in front of the parcel's front
  *  edge except the mailbox and the utility pole, within VERGE tiles of it and clear of the asphalt. */
-export function composeFarm(p: FarmParcel, seed: number): Composition {
+function composeFarm1(p: FarmParcel, seed: number): Composition {
   const L = layoutOf(p, seed), B = new FB(p, mulberry(mix(seed >>> 0, keyHash(p.key), 0xc09f))), { W, D, r, flip, rear } = B;
   // the ground, back to front (later patches paint over earlier): fields, the yard apron, the drive, the track
   for (const q of L.plots) {
@@ -454,4 +455,254 @@ export function composeFarm(p: FarmParcel, seed: number): Composition {
   const sideA = r() < 0.5 ? 1 : W - 1;
   for (let b = L.yardB1 + 6 + r() * 4; b < D - 3; b += 11 + r() * 6) B.put(pick(r, TREES), sideA, b, { plant: true });
   return B.done();
+}
+
+/* ---------- T259 (#759): the farm model 2, the farmstead set back on its lane and the fields by the season ---------- */
+
+/** the farm models a farm composes with: 1, T005's farmstead by the road (kept as it was for the saves made with it: Engine.farmModel); 2
+ *  (T259), the farmhouse and its yard set back 60-120 m on a dirt lane lined by a windbreak, the fields round them by the month, an orchard
+ *  on some farms */
+export type FarmModel = 1 | 2;
+export const FARM_MODEL: FarmModel = 2;
+/** what a farm composes with besides its parcel and seed: its model (FARM_MODEL when absent) and the calendar month (0 January; the
+ *  model 2 fields and orchards follow it; FARM_MONTH when absent) */
+export interface FarmLook { model?: FarmModel; month?: number }
+/** the month a farm composes at when none is given: October, the autumn the map's trees are in (ripe corn) */
+export const FARM_MONTH = 9;
+/** the farmhouse's front from the road edge (the parcel's front, b = 0), tiles: 30-60 (60-120 m); on a parcel the terrain cut short, as
+ *  deep as its yard still fits behind it, never under FARM_SETBACK_SHORT */
+export const FARM_SETBACK = [30, 60] as const, FARM_SETBACK_SHORT = 10;
+/** the windbreak (stand-ins for GOLF-ART-LIST 188, the poplars): its rows' offset either side of the lane's centre, the trees' spacing
+ *  along it (tiles: 5.2 m and 6.4 m) */
+export const WIND_OFF = 2.6, WIND_STEP = 3.2;
+/** the orchard (stand-ins for 187): the grid's pitch between rows and between the trees of a row (tiles: 6 m), the most trees across and
+ *  down, the trees' size (of their owner size: 4-5 m fruit trees) */
+export const ORCHARD_PITCH = 3, ORCHARD_MAX = 8, ORCHARD_MUL = 0.62;
+/** the fallow field's grass (the course's long grass: an unkept field, never the map's own grass, so it reads against it) */
+const FALLOW_TEX: LotPatch['tex'] = 'golfLongGrass';
+/** the windbreak's trees: the gold birch (a poplar's shape and autumn gold) on most farms, else a row of spruces; one tree a row */
+const WIND_POPLAR = names(['ref:tree-birch-gold']), WIND_SPRUCE = names(['ref:tree-spruce-blue', 'capital:tree-spruce-open']);
+/** the orchard's species: the library's round broadleaf capital trees, through their leaf stages by the month (crops.ts ORCHARD_YEAR) */
+const ORCHARD_SPECIES = ['oak', 'maple'] as const;
+export const orchardTreeId = (sp: string, month: number) => `capital:tree-${sp}-${orchardStage(month)}`;
+
+type PlotKind2 = 'corn' | 'plough' | 'fallow' | 'pasture' | 'orchard';
+interface Plot2 { a0: number; b0: number; a1: number; b1: number; kind: PlotKind2; shift: -1 | 0 | 1; alongU: boolean; ph: number }
+interface Orchard { q: Plot2; sp: (typeof ORCHARD_SPECIES)[number]; na: number; nb: number; a0: number; b0: number }
+interface Layout2 {
+  laneA: number; side: 1 | -1; houseId: string; houseMul: number; barnMul: number;
+  ha: number; hb: number; ba: number; bb: number; hw: number; hd: number; bw: number; bd: number;
+  /** the house's front (the setback), the yard apron's front and back, its sides (parcel frame, tiles) */
+  front: number; yardB0: number; yardB1: number; yA0: number; yA1: number;
+  /** the windbreak's rows (the sides of the lane, -1 toward a = 0), its tree, scale and the b span it runs */
+  wind: { sides: (1 | -1)[]; id: string; mul: number; b0: number; b1: number } | null;
+  /** the field track's end behind the yard (yardB1: none) */
+  endB: number; plots: Plot2[]; pasture: Plot2 | null; orchard: Orchard | null;
+}
+const plotUse = (k: PlotKind2): FieldUse | null => (k === 'corn' ? 'corn' : k === 'plough' ? 'plough' : k === 'fallow' ? 'fallow' : null);
+
+/** the model 2 layout of one farm from its parcel and seed alone (its own stream: the month never moves a draw, so a farm's props and
+ *  fields stay where they are all year and only the crop states and the orchard's leaves change) */
+function layoutOf2(p: FarmParcel, seed: number): Layout2 {
+  const r = mulberry(mix(seed >>> 0, keyHash(p.key), p.w, p.d, 0xfa59)), { flip, rear } = facing(p), W = p.w, D = p.d;
+  const hv = r(), houseId = rear ? (FARMHOUSE_REAR[0] ?? FARMHOUSE_FRONT[0]) : hv < 0.55 ? FARMHOUSE_FRONT[0] : FARMHOUSE_FRONT[1 + Math.floor(r() * (FARMHOUSE_FRONT.length - 1))] ?? FARMHOUSE_FRONT[0];
+  let [hw, hd] = frameExtents(p.u, p.n, houseId, flip);
+  let [bw, bd] = frameExtents(p.u, p.n, BARN[0], flip);
+  let houseMul = 1, barnMul = 1;
+  if (hw + bw + 4.8 > W) {
+    houseMul = barnMul = (W - 4.8) / (hw + bw);
+    [hw, hd] = frameExtents(p.u, p.n, houseId, flip, houseMul);
+    [bw, bd] = frameExtents(p.u, p.n, BARN[0], flip, barnMul);
+  }
+  // the lane from the road to the yard, the house on one side of it and the barn on the other (as model 1's drive)
+  const side = (r() < 0.5 ? -1 : 1) as 1 | -1;
+  const lo = (side > 0 ? bw : hw) + 2.4, hi = W - (side > 0 ? hw : bw) - 2.4;
+  const laneA = clamp(W * (0.38 + 0.24 * r()), lo, Math.max(lo, hi));
+  const ha = laneA + side * (1.7 + hw / 2), ba = laneA - side * (1.7 + bw / 2);
+  // the setback: the yard's depth behind the house's front (the barn a little deeper than the house), then 60-120 m from the road, as deep
+  // as the parcel lets that depth stand behind it
+  const bbOff = 2 + 4 * r(), back = 5 + 3 * r(), YD = Math.max(hd, hd / 2 + bbOff + bd / 2) + back;
+  const want = FARM_SETBACK[0] + (FARM_SETBACK[1] - FARM_SETBACK[0]) * r();
+  const front = Math.max(FARM_SETBACK_SHORT, Math.min(want, D - 2 - YD));
+  const hb = front + hd / 2, bb = hb + bbOff, yardB1 = Math.min(Math.max(hb + hd / 2, bb + bd / 2) + back, D - 1), yardB0 = Math.max(0, front - 2.5);
+  const yA0 = Math.min(ha - hw / 2, ba - bw / 2, laneA - 1) - 1.5, yA1 = Math.max(ha + hw / 2, ba + bw / 2, laneA + 1) + 1.5;
+  // the windbreak: a straight row of tall narrow trees down one side of the lane or both, from the road to the yard
+  const both = r() < 0.55, one = (r() < 0.5 ? -1 : 1) as 1 | -1, poplar = r() < 0.7 || !WIND_SPRUCE.length;
+  const wid = poplar ? WIND_POPLAR[0] : WIND_SPRUCE[Math.floor(r() * WIND_SPRUCE.length)], wmul = poplar ? 1.05 + 0.15 * r() : 0.8 + 0.15 * r();
+  const wind = wid && yardB0 - 3.5 >= 2 * WIND_STEP ? { sides: both ? [-1, 1] as (1 | -1)[] : [one], id: wid, mul: wmul, b0: 2.5, b1: yardB0 - 1 } : null;
+  const has = (s: 1 | -1) => !!wind && wind.sides.includes(s);
+  // the fields keep off the lane's strip (its windbreak and a headland) and the yard (a headland round it)
+  const G = 1.6, eL = laneA - (has(-1) ? WIND_OFF + 1.8 : 2.2), eR = laneA + (has(1) ? WIND_OFF + 1.8 : 2.2);
+  const room = D - 3 - yardB1, endB = room > 8 ? yardB1 + (0.55 + 0.4 * r()) * room : yardB1;
+  const rects: [number, number, number, number][] = [];
+  const add = (a0: number, b0: number, a1: number, b1: number) => { if (a1 - a0 >= 8 && b1 - b0 >= 8) rects.push([a0, b0, a1, b1]); };
+  /** a field along the side of the lane and the yard: split at the yard's front when it is tall, and in two across when wide */
+  const sideField = (a0: number, a1: number) => {
+    const cuts: [number, number][] = yardB1 - 1.5 > 44 && yardB0 - G - 1.5 >= 8 && yardB1 - yardB0 >= 8 ? [[1.5, yardB0 - G], [yardB0, yardB1]] : [[1.5, yardB1]];
+    for (const [b0, b1] of cuts) {
+      if (a1 - a0 > 38 && r() < 0.6) { const m = (a0 + a1) / 2 + (r() - 0.5) * 6; add(a0, b0, m - G / 2, b1); add(m + G / 2, b0, a1, b1); } else add(a0, b0, a1, b1);
+    }
+  };
+  // left of the lane: the outer field (in front of the yard and beside it), and between it and the lane where the yard reaches past the strip
+  const lOut = Math.min(eL, yA0 - G); sideField(1.5, lOut); add(lOut + G, 1.5, eL, yardB0 - G);
+  const rOut = Math.max(eR, yA1 + G); sideField(rOut, W - 1.5); add(eR, 1.5, rOut - G, yardB0 - G);
+  // behind the yard: bands across the depth, split by the field track
+  const f0 = yardB1 + G, f1 = D - 1.5, R = f1 - f0;
+  if (R >= 8) {
+    const bands = R > 70 ? 3 : R > 38 ? 2 : 1, edges = [f0];
+    let left = R;
+    for (let k = bands - 1; k >= 1; k--) { const take = left * (0.3 + 0.25 * r()); edges.push(edges[edges.length - 1]! + Math.min(take, left - 10 * k)); left = f1 - edges[edges.length - 1]!; }
+    edges.push(f1);
+    const spans: [number, number][] = endB > yardB1 ? [[1.5, laneA - G], [laneA + G, W - 1.5]] : [[1.5, W - 1.5]];
+    for (let k = 0; k + 1 < edges.length; k++) for (const [s0, s1] of spans) {
+      const b0 = edges[k]! + (k ? G / 2 : 0), b1 = edges[k + 1]! - (k + 2 < edges.length ? G / 2 : 0);
+      if (s1 - s0 > 38 && r() < 0.6) { const m = (s0 + s1) / 2 + (r() - 0.5) * 6; add(s0, b0, m - G / 2, b1); add(m + G / 2, b0, s1, b1); } else add(s0, b0, s1, b1);
+    }
+  }
+  // each field's use: corn, ploughed, fallow grass or the pasture; a corn field's month shift; its rows along its long side, their phase
+  const plots: Plot2[] = rects.map(([a0, b0, a1, b1]) => {
+    const v = r(), kind: PlotKind2 = v < 0.46 ? 'corn' : v < 0.66 ? 'plough' : v < 0.82 ? 'fallow' : 'pasture';
+    return { a0, b0, a1, b1, kind, shift: cornShift(r()), alongU: a1 - a0 >= b1 - b0, ph: Math.round(r() * 1000) / 1000 };
+  });
+  const area = (q: Plot2) => (q.a1 - q.a0) * (q.b1 - q.b0);
+  if (plots.length && !plots.some(q => q.kind === 'corn')) plots.reduce((a, b) => (area(b) > area(a) ? b : a)).kind = 'corn';
+  // the orchard (some farms): the corner nearest the house of the field nearest it (not the only corn, not a pasture), a strict grid of at most
+  // ORCHARD_MAX x ORCHARD_MAX trees; the rest of that field stays as it was, in at most two fields beside the orchard
+  let orchard: Orchard | null = null;
+  if (r() < 0.45) {
+    const corn = plots.filter(q => q.kind === 'corn').length, dist = (q: Plot2) => Math.hypot((q.a0 + q.a1) / 2 - ha, (q.b0 + q.b1) / 2 - hb);
+    const cands = plots.filter(q => q.a1 - q.a0 >= 14 && q.b1 - q.b0 >= 14 && q.kind !== 'pasture' && !(q.kind === 'corn' && corn === 1));
+    if (cands.length) {
+      const q = cands.reduce((a, b) => (dist(b) < dist(a) ? b : a)), sp = ORCHARD_SPECIES[r() < 0.5 ? 0 : 1]!, ext = 3 + (ORCHARD_MAX - 1) * ORCHARD_PITCH;
+      const ea = Math.min(q.a1 - q.a0, ext), eb = Math.min(q.b1 - q.b0, ext);
+      const nearA0 = Math.abs(q.a0 - ha) <= Math.abs(q.a1 - ha), nearB0 = Math.abs(q.b0 - hb) <= Math.abs(q.b1 - hb);
+      const oa0 = nearA0 ? q.a0 : q.a1 - ea, ob0 = nearB0 ? q.b0 : q.b1 - eb;
+      const rest: Plot2[] = [];
+      // the strip beside the orchard across the whole field, then the one beside it along the orchard's side
+      if (q.a1 - q.a0 - ea - G >= 8) rest.push({ ...q, a0: nearA0 ? oa0 + ea + G : q.a0, a1: nearA0 ? q.a1 : oa0 - G, alongU: false });
+      if (q.b1 - q.b0 - eb - G >= 8) rest.push({ ...q, a0: oa0, a1: oa0 + ea, b0: nearB0 ? ob0 + eb + G : q.b0, b1: nearB0 ? q.b1 : ob0 - G, alongU: true });
+      for (const z of rest) z.alongU = z.a1 - z.a0 >= z.b1 - z.b0;
+      Object.assign(q, { a0: oa0, b0: ob0, a1: oa0 + ea, b1: ob0 + eb, kind: 'orchard' as PlotKind2 });
+      plots.push(...rest);
+      const na = Math.floor((ea - 3) / ORCHARD_PITCH) + 1, nb = Math.floor((eb - 3) / ORCHARD_PITCH) + 1;
+      orchard = { q, sp, na, nb, a0: oa0 + (ea - (na - 1) * ORCHARD_PITCH) / 2, b0: ob0 + (eb - (nb - 1) * ORCHARD_PITCH) / 2 };
+    }
+  }
+  const pasture = plots.find(q => q.kind === 'pasture') ?? null;
+  return { laneA, side, houseId, houseMul, barnMul, ha, hb, ba, bb, hw, hd, bw, bd, front, yardB0, yardB1, yA0, yA1, wind, endB, plots, pasture, orchard };
+}
+/** a model 2 field's state in a month (null: no crop, grass) */
+const plotState = (q: Plot2, month: number): CropState | null => { const u = plotUse(q.kind); return u ? cropState(u, month, q.shift) : null; };
+
+function farmsteadOf2(p: FarmParcel, seed: number): Farmstead {
+  const L = layoutOf2(p, seed);
+  return { gate: world(p, L.laneA, 0), yard: world(p, L.laneA, (L.front + L.yardB1) / 2), house: world(p, L.ha, L.hb), barn: world(p, L.ba, L.bb), driveA: L.laneA };
+}
+function farmTrack2(p: FarmParcel, seed: number): { a: Pt; b: Pt }[] {
+  const L = layoutOf2(p, seed), legs = [{ a: world(p, L.laneA, 0), b: world(p, L.laneA, L.yardB1) }];
+  if (L.endB > L.yardB1 + 1e-6) legs.push({ a: world(p, L.laneA, L.yardB1), b: world(p, L.laneA, L.endB) });
+  return legs;
+}
+
+/** The model 2 composition of one farm in a month: the farmhouse and barn either side of the lane 60-120 m in from the road with the yard round
+ *  them (as model 1's yard: the silo, shed, garage, tractor, pickup, garden and clutter), the dirt lane from the gate lined by its windbreak,
+ *  the fields round the lane and the yard and behind them (corn by the month, ploughed, fallow grass, the pasture behind its paddock fence),
+ *  the orchard's grid on some farms, the board fence along the road, the picket at the back of the yard, hedgerow trees, and the field track
+ *  behind the yard. Deterministic in (parcel, seed, month); the month changes only the crop states and the orchard's trees */
+function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
+  const L = layoutOf2(p, seed), B = new FB(p, mulberry(mix(seed >>> 0, keyHash(p.key), 0xc0a2))), { W, D, r, flip, rear } = B;
+  B.cap = 150;
+  // the ground, back to front: the fields (crops with their rows' direction, fallow grass), the yard apron, the lane and the yard's drive, the track
+  for (const q of L.plots) {
+    const st = plotState(q, month);
+    if (st) { const d = q.alongU ? p.u : p.n; B.pave(false, q.a0, q.b0, q.a1, q.b1, 'field', undefined, { st, d: [Math.round(d.x * 1e4) / 1e4, Math.round(d.y * 1e4) / 1e4], ph: q.ph }); }
+    else if (q.kind === 'fallow') B.pave(false, q.a0, q.b0, q.a1, q.b1, FALLOW_TEX);
+  }
+  B.pave(false, L.yA0, L.yardB0, L.yA1, L.yardB1, 'gravel');
+  B.pave(true, L.laneA - 1, 0, L.laneA + 1, L.yardB0 + 0.5, 'dirt');
+  B.pave(true, L.laneA - 1, L.yardB0 + 0.5, L.laneA + 1, L.yardB1, 'gravel');
+  if (L.endB > L.yardB1) B.pave(true, L.laneA - 0.8, L.yardB1, L.laneA + 0.8, L.endB, 'dirt');
+  // the buildings, at their laid-out centres and scales (farmsteadOf stays exact)
+  B.put(L.houseId, L.ha, L.hb, { flip, mul: L.houseMul, fixed: true });
+  B.put(BARN[0], L.ba, L.bb, { flip, mul: L.barnMul, fixed: true });
+  if (SILO.length && r() < 0.55) { const [sw, sd] = frameExtents(p.u, p.n, SILO[0], flip); B.put(SILO[0], clamp(L.ba - L.side * (L.bw / 4), sw / 2 + 0.7, W - sw / 2 - 0.7), clamp(L.bb + L.bd / 2 + sd / 2 + 0.6, sd / 2 + 0.7, D - sd / 2 - 0.7), { flip }); }
+  if (SHED.length && r() < 0.75) B.put(SHED[0], clamp(L.ba + L.side * (L.bw / 5), 3, W - 3), Math.min(D - 2.5, L.bb + L.bd / 2 + 2.6), { flip });
+  if (r() < 0.45) B.put(rear ? (GARAGE_REAR[0] ?? pick(r, GARAGE_FRONT)) : pick(r, GARAGE_FRONT), clamp(L.ha + L.side * (L.hw / 2 + 2.6), 2.6, W - 2.6), L.hb + L.hd / 2 + 0.4, { flip });
+  if (r() < 0.75) B.put('expansion:farm-tractor', L.ba, L.bb - L.bd / 2 - 1.8, { veh: true });
+  if (r() < 0.35) B.put('expansion:utility-trailer', clamp(L.ba + L.bw / 2 + 1.6, 1.6, W - 1.6), L.bb + L.bd / 2 + 1.2, { veh: true });
+  // (T236: the yard's pickup is the yellow or the rusty one) parked on the yard's drive in front of the house
+  if (r() < 0.85) { const span = B.vehicle(PICKUPS.length ? [...PICKUPS, ...Object.keys(RUSTY_PICKUPS)] : CARS, L.laneA, L.yardB0 + 0.6); if (span && r() < 0.3) B.vehicle(CARS, L.laneA, L.yardB0 + 0.8 + span); }
+  B.scatter(names(['expansion:lumber-bundle', 'expansion:pallet-stack', 'expansion:oil-drums']), Math.max(1, L.ba - L.bw / 2), L.bb + L.bd / 2 + 0.8, Math.min(W - 1, L.ba + L.bw / 2), Math.min(D - 1, L.yardB1), 2);
+  if (r() < 0.25) B.put('ref:landmark-windmill', r() < 0.5 ? 2 : W - 2, L.yardB1 - 1.8);
+  const gB0 = L.hb + L.hd / 2 + 0.9, gB1 = Math.max(gB0 + 1, L.yardB1 - 0.8);
+  for (const [id, ch] of [['expansion:chicken-coop', 0.35], ['expansion:glasshouse', 0.25], ['expansion:outhouse', 0.3], ['expansion:wooden-well', 0.25], ['expansion:doghouse', 0.35]] as [string, number][])
+    if (r() < ch) B.put(id, clamp(L.ha + (r() - 0.5) * L.hw, 1.4, W - 1.4), gB0 + (gB1 - gB0) * r());
+  B.put(r() < 0.5 ? 'expansion:rural-mailboxes' : 'world:mailbox', clamp(L.laneA + 1.7, 1, W - 1), -0.3, { street: true });
+  if (r() < 0.45) B.put('town:utility_pole', r() < 0.5 ? 1.2 : W - 1.2, -0.35, { street: true });
+  for (const sx of [-1, 1]) B.put(pick(r, TREES), clamp(L.ha + sx * (L.hw / 2 + 1.3), 1, W - 1), L.hb + (r() - 0.5) * 2, { plant: true });
+  for (let a = L.ha - L.hw / 2; a <= L.ha + L.hw / 2; a += 1.6) B.put(pick(r, BUSHES), a, L.front - 0.8, { plant: true });
+  // the windbreak down the lane (before the other plants, so the cap never cuts a row short), then the orchard's grid
+  if (L.wind) for (const s of L.wind.sides) for (let b = L.wind.b0; b <= L.wind.b1 + 1e-9; b += WIND_STEP) B.put(L.wind.id, L.laneA + s * WIND_OFF, b, { plant: true, mul: L.wind.mul });
+  const o = L.orchard;
+  if (o) { const id = orchardTreeId(o.sp, month); for (let j = 0; j < o.nb; j++) for (let i = 0; i < o.na; i++) B.put(id, o.a0 + i * ORCHARD_PITCH, o.b0 + j * ORCHARD_PITCH, { plant: true, mul: ORCHARD_MUL, fixed: true }); }
+  // fences: board along the road (a gap at the lane), picket at the back of the yard, chain-link round the paddock
+  B.run(BOARD, 0.3, 0.35, W - 0.3, 0.35, [(L.laneA - 1.7) / W, (L.laneA + 1.7) / W]);
+  B.run(PICKET, Math.max(0.4, L.yA0), L.yardB1, L.laneA - 1.7, L.yardB1);
+  B.run(PICKET, L.laneA + 1.7, L.yardB1, Math.min(W - 0.4, L.yA1), L.yardB1);
+  const pad = L.pasture;
+  if (pad) {
+    const laneSideLeft = pad.a1 <= L.laneA;
+    B.run(CHAIN, pad.a0, pad.b0, pad.a1, pad.b0);
+    B.run(CHAIN, pad.a0, pad.b1, pad.a1, pad.b1);
+    B.run(CHAIN, pad.a0, pad.b0, pad.a0, pad.b1, laneSideLeft ? undefined : [0.42, 0.58]);
+    B.run(CHAIN, pad.a1, pad.b0, pad.a1, pad.b1, laneSideLeft ? [0.42, 0.58] : undefined);
+    B.scatter(names(['ref:halloween-hay-bales']), pad.a0 + 1.2, pad.b0 + 1.2, pad.a1 - 1.2, pad.b1 - 1.2, 2 + Math.floor(r() * 3));
+  }
+  for (const q of L.plots) {
+    if (q.kind === 'fallow') B.scatter(names(['ref:halloween-hay-bales']), q.a0 + 1.2, q.b0 + 1.2, q.a1 - 1.2, q.b1 - 1.2, 2);
+    else if (q.kind === 'pasture' && q !== pad) B.scatter(BUSHES, q.a0 + 1, q.b0 + 1, q.a1 - 1, q.b1 - 1, 2, { plant: true });
+  }
+  // hedgerow trees along the back and one side (not on the lane's side strip)
+  for (let a = 3 + r() * 4; a < W - 2; a += 9 + r() * 5) B.put(pick(r, TREES), a, D - 1.3, { plant: true });
+  const sideA = r() < 0.5 ? 1 : W - 1;
+  for (let b = L.yardB1 + 6 + r() * 4; b < D - 3; b += 11 + r() * 6) B.put(pick(r, TREES), sideA, b, { plant: true });
+  return B.done();
+}
+
+/** The farmstead of a parcel at a seed in a model (world tiles): where the lane meets the front edge, the yard's centre and the two buildings
+ *  composeFarm places. The lead extends the gate along -n to the road's centreline to connect a trip end. */
+export function farmsteadOf(p: FarmParcel, seed: number, model: FarmModel = FARM_MODEL): Farmstead { return model === 1 ? farmsteadOf1(p, seed) : farmsteadOf2(p, seed); }
+/** The farm track as dirt-road legs in world tiles (chained end to end, the first from the gate): model 1's drive, stem and branch; model 2's
+ *  lane to the yard and the field track behind it */
+export function farmTrack(p: FarmParcel, seed: number, model: FarmModel = FARM_MODEL): { a: Pt; b: Pt }[] { return model === 1 ? farmTrack1(p, seed) : farmTrack2(p, seed); }
+/** The composition of one farm (its props and ground patches, world tiles), in its model (model 1 exactly as T005 composed it) and month.
+ *  Deterministic in (parcel, seed, look); every prop id exists in LIBRARY; no two uprights share more than 35% of the smaller footprint;
+ *  nothing but the mailbox and the utility pole stands in front of the parcel's front edge */
+export function composeFarm(p: FarmParcel, seed: number, look: FarmLook = {}): Composition {
+  return (look.model ?? FARM_MODEL) === 1 ? composeFarm1(p, seed) : composeFarm2(p, seed, look.month ?? FARM_MONTH);
+}
+/** what a farm looks like in a month (model 2: its fields' crop states and its orchard's leaf stage; model 1 never changes): the engine
+ *  composes a farm again only when this changes from one month to the next */
+export function farmSeason(p: FarmParcel, seed: number, model: FarmModel, month: number): string {
+  if (model === 1) return '';
+  const L = layoutOf2(p, seed);
+  return L.plots.map(q => plotState(q, month)?.[0] ?? '-').join('') + (L.orchard ? orchardStage(month) : '');
+}
+/** T259: a farm's stand-ins (model 2) for their labels ("Stand In for <art>"): the windbreak's and the orchard's first tree (id: the prop the
+ *  label sits on), the largest field of each crop state this month and the lane's middle (no id: a ground point), world tiles */
+export function farmStandIns(p: FarmParcel, seed: number, month: number): { x: number; y: number; text: string; id?: string }[] {
+  const L = layoutOf2(p, seed), out: { x: number; y: number; text: string; id?: string }[] = [];
+  if (L.wind) { const c = world(p, L.laneA + L.wind.sides[0]! * WIND_OFF, L.wind.b0 + WIND_STEP * 2); out.push({ ...c, text: 'Stand In for windbreak poplars', id: L.wind.id }); }
+  if (L.orchard) { const c = world(p, L.orchard.a0, L.orchard.b0); out.push({ ...c, text: 'Stand In for orchard trees', id: orchardTreeId(L.orchard.sp, month) }); }
+  const NAME: Record<CropState, string> = { plough: 'ploughed field', young: 'corn field, young', ripe: 'corn field, ripe', stubble: 'corn field, stubble' };
+  const best = new Map<CropState, Plot2>();
+  for (const q of L.plots) { const st = plotState(q, month); if (!st) continue; const b = best.get(st); if (!b || (q.a1 - q.a0) * (q.b1 - q.b0) > (b.a1 - b.a0) * (b.b1 - b.b0)) best.set(st, q); }
+  for (const [st, q] of best) out.push({ ...world(p, (q.a0 + q.a1) / 2, (q.b0 + q.b1) / 2), text: `Stand In for ${NAME[st]}` });
+  out.push({ ...world(p, L.laneA, L.yardB0 / 2), text: 'Stand In for farm lane' });
+  return out;
+}
+/** the test hooks: a model 2 layout's setback, lane, windbreak and orchard grid (parcel frame, tiles) */
+export function farmLayoutForTest(p: FarmParcel, seed: number) {
+  const L = layoutOf2(p, seed);
+  return { front: L.front, yardB0: L.yardB0, yardB1: L.yardB1, laneA: L.laneA, wind: L.wind, orchard: L.orchard && { a0: L.orchard.a0, b0: L.orchard.b0, na: L.orchard.na, nb: L.orchard.nb, plot: { a0: L.orchard.q.a0, b0: L.orchard.q.b0, a1: L.orchard.q.a1, b1: L.orchard.q.b1 } }, plots: L.plots.map(q => ({ a0: q.a0, b0: q.b0, a1: q.a1, b1: q.b1, kind: q.kind, shift: q.shift, alongU: q.alongU })), ha: L.ha, hb: L.hb, hd: L.hd };
 }

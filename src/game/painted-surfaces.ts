@@ -45,6 +45,12 @@ export const SURFACES: readonly SurfaceDef[] = [
   // T199: the small streams' banks widen into swamp (swamp.ts); unpainted, a stream keeps its old creek bed
   { key: 'swamp', name: 'Swamp (round the small streams)', group: 'Map', tex: ['swamp'], kinds: ['water', 'grass'] },
   { key: 'field', name: 'Farm fields', group: 'Map', tex: ['field'], kinds: ['cut', 'grass'] },
+  // T259: the farms' crop states (ext/farms/crops.ts CROP_SURFACE: the art 185 and 186, a picture for rows along the map's x and one for its y).
+  // Unset, a field of that state is its soil (Farm fields) with the stand-in rows; naming a family here swaps the art in
+  ...([['fieldPloughed', 'ploughed'], ['cornYoung', 'corn, young'], ['cornRipe', 'corn, ripe'], ['cornStubble', 'corn stubble']] as const).flatMap(([k, n]) => [
+    { key: k, name: `Farm fields: ${n} (rows along x)`, group: 'Map' as const, tex: [k], kinds: ['cut', 'grass'] as const },
+    { key: `${k}Y`, name: `Farm fields: ${n} (rows along y)`, group: 'Map' as const, tex: [`${k}Y`], kinds: ['cut', 'grass'] as const },
+  ]),
   { key: 'woodland', name: 'Woodland floor (under the trees; the forests on the planner map)', group: 'Map', tex: [WOODLAND], kinds: ['grass', 'cut'] },
   { key: 'outside', name: 'Outside the map', group: 'Map', tex: ['outside'], kinds: ['grass'] },
   { key: 'lawn', name: 'Lawn (the Paint tool\'s lawn textures)', group: 'Town', tex: ['lawnLush', 'lawnClover'], kinds: ['grass'] },
