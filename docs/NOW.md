@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-30 07:20 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-30 08:10 SAST)
 
 **T273 #819, range geometry source review:** branch `lead/coffee-geometry-hold-20261028`, worktree `worktrees/coffee-geometry-hold-20261028`. Native hash-bound geometry holds/proofs cover the original two-view kiosk, targeted view1-v2 and new distance post; exact source/provenance and prior style approval retained. Native front-edge errors are3.15/9.44degrees (kiosk v1),3.67degrees (kiosk v2),5.31degrees (post), so none is ready for registration. Existing queue logic already honors nested negative review decisions; no code, runtime, scheduled-worker deployment/state/timer changes. Original v1 provenance/style bytes need narrow -text rules because previous Git newline normalization invalidated their native hash bindings. Next: validate source/proof hashes and open the scoped source-only PR for lead review.
 
@@ -76,7 +76,7 @@ never commit there.)
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
 | T241 | #705 | `arena/T241-your-skills` (a fresh worktree; port 5186) | **Started ~07:20.** P28 part 2: your skills (driving, irons, short game, putting, nerve) and a handicap; practice at the range and the greens raises them (gains shrink, costs time and money); the sim plays you with them. A small saved player profile that T240 (your character, waiting for its 3D looks art) will extend. |
-| T214 | #559 | `arena/T214-memberships` (a fresh worktree; port 5187) | **Started ~06:00.** P26 phases 1-2 in one PR: memberships as a real saved number (price, fair band, pool, sales, churn, dues), on the Clubhouse card beside the Grounds crew; Q1-Q4 at the plan's recommended values (pre-approved); staff terms on T269's `golf/staff.ts`. |
+| T214 | #559 | `arena/T214-pros` (a fresh worktree; port 5187) | **Phases 1-2 merged (#848). Phases 3-4 started ~08:10** in one PR: the pro's office and the teaching hut (stand-ins), the Staff card on T269's one wage book, lessons (a hook for T241's player), the staff as 3-6 movers. Then phases 5-7 (the clubhouse's trade, member events, the art). |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
@@ -110,7 +110,9 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
-#846 T251 balls bounce and roll after every landing (course, NPCs, you, the range), stopping exactly at the model's end point (scores
+#848 T214 P26 phases 1-2: memberships as a real saved number (`golf/club.ts`: price, fair band, pool, sales, churn, dues; a founding
+drive; old saves keep their members), the Members block above the Grounds crew, Dues and Wages in the money drawer; Q1-Q4 at the plan's
+recommendations · #846 T251 balls bounce and roll after every landing (course, NPCs, you, the range), stopping exactly at the model's end point (scores
 pinned by digests), the roll bending with the slope; splash and sand puff · #844 T242 set-the-scene cards (click a place, or its card's Scene button: its 1985 picture run-down or upgraded by state, a line of text,
 its numbers; `scripts/assets/prep-scenes.mjs` turns the owner's scene PNGs into WebPs, re-run it when batch 2 lands) · #842 T248 water that moves (`docs/art/WATER-RESEARCH.md`; two procedural ripple layers, river flow, foam lapping at the shore, a wet
 swash band; off by 10%; knobs in the Night panel; about +0.02 ms GPU a frame) · #841 T259 farms (model 2 for new games: the house 60-120 m back on
