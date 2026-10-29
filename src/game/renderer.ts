@@ -46,6 +46,7 @@ import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lo
 import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type LeafRoad } from './leaf-fall';
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
+import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
 import { LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
 const COMPOSED_BYTES = 64 << 20;
@@ -744,6 +745,53 @@ export class GroundPainter {
   private softTex(t: string): boolean { return this.softDirt && softDirt(t, this.tex.familyOf(t)); }
   /** T247: whether a patch is laid in dirt or desert with a soft edge (a lawn by the town lawn or look it wears) */
   private softPatch(q: LotPatch): boolean { return this.softTex(q.lawn ? this.lawnTexOf(q) : q.tex); }
+  /** T259: the painted surface a crop patch wears for its state (ext/farms/crops.ts CROP_SURFACE: the art 185 and 186, by its rows' axis), or
+   *  null while that surface has no look in painted-surfaces.json (the stand-in: its soil and drawCrops' rows) */
+  private cropArt(p: LotPatch): string | null {
+    const c = p.crop!, t = cropSurface(c.st, c.d[0], c.d[1]);
+    return this.tex.paintedOf(t) ? t : null;
+  }
+  /** T259: the crop fields' stand-in rows (ext/farms/crops.ts ROW_LOOK, the stand-ins for 185 and 186) over their soil, a state at a time:
+   *  - the rows along each field's direction, `pitch` apart (thinned out, wider, where they would fall under ROW_MIN_PX apart: no moire),
+   *    their plants dashed from a different start on each row so they never line up across the rows;
+   *  - their shadow toward the lower left (SHADOW_DIR: 145 degrees), multiplied in the cool shade (the soil's texture kept);
+   *  - the rows themselves in a chunk buffer: the crop's colour multiplied over the map grass's painted texture (its detail shows: no flat
+   *    wash), a thin lit edge toward the sun inside each row (soft light, so the texture masks it), cut to the rows, worn by the wear noise,
+   *    then laid on the chunk. The rows are cut to the chunk's tile box (rowSegments' box), so a big field costs a chunk only its share */
+  private drawCrops(ctx: C2D, list: readonly LotPatch[], M: DOMMatrix, L: number, W: number, H: number, box: BBox, lite: boolean, base: (g: C2D) => CanvasPattern | string, wear: (g: C2D) => CanvasPattern | string, composite: (b: Cnv) => void) {
+    const px = TILE_PX * L, [sx, sy] = SHADOW_DIR, clip = [box[0] - 2, box[1] - 2, box[2] + 2, box[3] + 2], [r, gc, b] = SHADE_RGB;
+    for (const st of CROP_STATES) {
+      const set = list.filter(p => p.crop!.st === st); if (!set.length) continue;
+      const lk = ROW_LOOK[st], k = rowStep(lk.pitch, px), pitch = lk.pitch * k, w = Math.max(Math.min(pitch * 0.85, lk.width * k), 1 / px);
+      const dash = lk.dash ? [lk.dash[0] * k, lk.dash[1] * k] : null, period = dash ? dash[0]! + dash[1]! : 0;
+      const rows = new Path2D(); let n = 0;
+      for (const p of set) {
+        const c = p.crop!, segs = rowSegments(p.pts, c.d[0], c.d[1], pitch, c.ph, 0.2, clip);
+        for (let i = 0; i + 3 < segs.length; i += 4) {
+          let x0 = segs[i]!, y0 = segs[i + 1]!; const x1 = segs[i + 2]!, y1 = segs[i + 3]!;
+          // (each row's plants start somewhere else along it: a hash of the row, so a re-bake draws the same)
+          if (period) { const h = Math.sin(x0 * 12.9898 + y0 * 78.233) * 43758.5453, j = (h - Math.floor(h)) * period, len = Math.hypot(x1 - x0, y1 - y0); if (len > j) { x0 += (x1 - x0) * j / len; y0 += (y1 - y0) * j / len; } }
+          rows.moveTo(x0, y0); rows.lineTo(x1, y1); n++;
+        }
+      }
+      if (!n) continue;
+      // the shadow on the soil (and the furrows' turned ridge toward the sun, in soft light so the soil's texture shows through it)
+      ctx.save(); ctx.setTransform(M.translate(sx * lk.shadow.off * k, sy * lk.shadow.off * k)); ctx.globalCompositeOperation = 'multiply';
+      ctx.lineCap = 'butt'; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash); ctx.strokeStyle = `rgba(${r},${gc},${b},${lk.shadow.depth})`; ctx.stroke(rows);
+      if (lk.ridge > 0) { ctx.setTransform(M.translate(-sx * w * 0.9, -sy * w * 0.9)); ctx.globalCompositeOperation = 'soft-light'; ctx.lineWidth = w * 0.7; ctx.strokeStyle = `rgba(255,236,200,${lk.ridge})`; ctx.stroke(rows); }
+      ctx.restore();
+      // the rows: the crop's colour, the painting's detail laid over it, the lit edge, cut to the rows
+      const buf = this.buffer('lotLines', W, H), g = ctx2d(buf); // (the lot lines' scratch: no new chunk-sized buffer)
+      g.setTransform(M); g.lineCap = 'butt'; g.lineWidth = w; if (dash) g.setLineDash(dash);
+      g.strokeStyle = lk.colour; g.stroke(rows);
+      g.globalCompositeOperation = 'overlay'; g.globalAlpha = lk.detail; g.fillStyle = base(g); g.fillRect(box[0], box[1], box[2] - box[0], box[3] - box[1]); g.globalAlpha = 1;
+      if (lk.shine > 0 && !lite) { g.globalCompositeOperation = 'soft-light'; g.setTransform(M.translate(-sx * w * 0.22, -sy * w * 0.22)); g.lineWidth = w * 0.4; g.strokeStyle = `rgba(255,246,220,${lk.shine})`; g.stroke(rows); g.setTransform(M); g.lineWidth = w; }
+      g.globalCompositeOperation = 'destination-in'; g.strokeStyle = '#000'; g.stroke(rows);
+      if (lk.wear > 0) { g.setLineDash([]); g.globalCompositeOperation = 'destination-out'; g.globalAlpha = lk.wear; g.fillStyle = wear(g); g.fillRect(box[0], box[1], box[2] - box[0], box[3] - box[1]); g.globalAlpha = 1; }
+      g.globalCompositeOperation = 'source-over'; g.setLineDash([]);
+      composite(buf);
+    }
+  }
   /** T247: the dirt areas' soft bands by chunk (its key holds the level) and drawn outline, with what they were made from (the areas near, the
    *  course and the road network's version: an edit there makes them again) */
   private softMemo = new Map<string, { cands: readonly LotPatch[]; courses: readonly CoursePatch[]; ver: number; areas: Map<readonly number[], SoftBandImg | null> }>();
@@ -1573,6 +1621,8 @@ export class GroundPainter {
     const softOn = this.softDirt, softLawn = (p: LotPatch) => softOn && p.lawn!.z >= 1 && p.lawn!.share >= 1 && this.softTex(this.lawnTexOf(p)) ? 1 : 0;
     const lawns = all.filter(p => p.lawn).sort((a, b) => a.lawn!.z - b.lawn!.z || (softOn ? softLawn(a) - softLawn(b) : 0)), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && !p.course && !p.lawn && p.tex !== 'marks'), paints = all.filter(p => p.paint || p.course).sort((a, b) => paintZ(a) - paintZ(b));
     const isPark = (p: LotPatch) => (!!p.lines?.length || !!p.park) && p.tex !== 'field' && p.tex !== 'dirt', parks = lots.filter(isPark), rest = lots.filter(p => !isPark(p));
+    // T259: a farm's lane and tracks (hard) over its fields and yard, whatever order the lot grid hands them in
+    if (rest.some(p => p.hard)) rest.sort((a, b) => (a.hard ? 1 : 0) - (b.hard ? 1 : 0));
     // T247: what the dirt areas' soft bands may meet: the areas near the chunk (out to the band's reach), the course, and the order they are
     // drawn in (lawns, lot ground, painted areas, car parks; an area drawn later or alongside keeps the hard edge between them)
     const sw0 = softOn ? softWidth(L) : 0, sReach = softOn ? sw0 / 2 + Math.max(SOFT.ease, SOFT.easeK * sw0) + Math.max(SOFT.probe, SOFT.probeK * sw0) + 4 : 0;
@@ -1593,29 +1643,34 @@ export class GroundPainter {
       const lotConc = list.some(p => p.tex === 'concrete') ? this.groundPattern(ctx, tex.mosaicFor('chipSeal', L), undefined) : null;
       for (const p of list) {
         const path = polyPath(p.pts);
-        // T247: a lot's dirt (a dirt car park, a vegetable bed, a building site, a field) with its soft band where it meets grass
-        if (sc && this.softTex(p.tex)) {
-          const fill = pat(p.tex as TexName);
+        // T259: a crop field wears its state's art once it lands (cropArt), else its soil (tex 'field') under the stand-in rows (drawCrops)
+        const art = p.crop ? this.cropArt(p) : p.hard && p.tex === 'dirt' && this.tex.paintedOf(LANE_SURFACE) ? LANE_SURFACE : null;
+        // T247: a lot's dirt (a dirt car park, a vegetable bed, a building site, a field) with its soft band where it meets grass (T259: not a farm lane)
+        if (sc && !p.hard && this.softTex(p.tex)) {
+          const fill = pat((art ?? p.tex) as TexName);
           this.softArea(ctx, softBand(p, p.pts, 0), M, () => { ctx.fillStyle = fill; ctx.fill(path); }, (g, r) => { g.fillStyle = fill; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); }, path);
           continue;
         }
         if (p.tex === 'slabs') { ctx.save(); ctx.clip(path); ctx.fillStyle = tex.curb.top; ctx.fill(path); if (!lite) this.slabGrid(ctx, new DOMMatrix(), quadBox(p.pts), M); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = pat('grime'); ctx.fill(path); ctx.restore(); ctx.setTransform(M); }
-        else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : p.tex === 'concrete' ? lotConc! : pat(p.tex as TexName); ctx.fill(path); }
+        else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : p.tex === 'concrete' ? lotConc! : pat((art ?? p.tex) as TexName); ctx.fill(path); }
         if (p.tex === 'asphalt' || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'concrete' || p.tex === 'slabs') {
           ctx.save(); ctx.clip(path); ctx.strokeStyle = p.tex === 'asphalt' ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = p.tex === 'asphalt' ? 0.3 : 0.16; ctx.stroke(path); ctx.restore();
         }
       }
       // lines: parking bays in worn off-white; furrows (field and dirt patches, the farms' crop rows) in dark brown
-      // (and yellow parking lines, the bay rows that ask for them)
-      for (const kind of ['furrow', 'white', 'yellow'] as const) {
-        const set = list.filter(p => p.lines && p.lines.length && ((p.tex === 'field' || p.tex === 'dirt') ? 'furrow' : p.lineCol === 'yellow' ? 'yellow' : 'white') === kind);
+      // (and yellow parking lines, the bay rows that ask for them; T259: a farm lane's two wheel ruts, wide and dark, on its hard-edged dirt)
+      for (const kind of ['furrow', 'rut', 'white', 'yellow'] as const) {
+        const set = list.filter(p => p.lines && p.lines.length && ((p.tex === 'field' || p.tex === 'dirt') ? (p.hard ? 'rut' : 'furrow') : p.lineCol === 'yellow' ? 'yellow' : 'white') === kind);
         if (!set.length) continue;
         const lb = this.buffer('lotLines', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.lineCap = 'butt'; lg.lineJoin = 'round';
-        lg.strokeStyle = kind === 'furrow' ? 'rgba(74,58,36,0.5)' : kind === 'yellow' ? 'rgba(238,192,46,0.9)' : 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(kind === 'yellow' ? 0.1 : 0.08, minW); lg.beginPath();
+        lg.strokeStyle = kind === 'furrow' ? 'rgba(74,58,36,0.5)' : kind === 'rut' ? 'rgba(52,38,24,0.62)' : kind === 'yellow' ? 'rgba(238,192,46,0.9)' : 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(kind === 'rut' ? 0.24 : kind === 'yellow' ? 0.1 : 0.08, minW); lg.beginPath();
         for (const p of set) for (let k = 0; k + 3 < p.lines!.length; k += 4) { lg.moveTo(p.lines![k], p.lines![k + 1]); lg.lineTo(p.lines![k + 2], p.lines![k + 3]); }
         lg.stroke(); lg.setTransform(M); lg.globalCompositeOperation = 'destination-in'; lg.fillStyle = this.screenPattern(lg, 'wear', L, X0, Y0, Minv); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
         composite(lb);
       }
+      // T259: the crop fields' stand-in rows (those whose state has no art yet)
+      const crops = list.filter(p => p.crop && !this.cropArt(p));
+      if (crops.length) this.drawCrops(ctx, crops, M, L, W, H, box, lite, g => this.photoFill(g, 'grass', L) ?? this.screenPattern(g, 'grass', L, X0, Y0, Minv), g => this.screenPattern(g, 'wear', L, X0, Y0, Minv), composite);
       ctx.setTransform(M);
     };
     // ---- 1a. the lawns (lawns.ts): the road blocks' grass in soft patches, then each lot's own lawn, under the lots' own ground

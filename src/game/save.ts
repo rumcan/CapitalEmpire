@@ -57,6 +57,9 @@ export interface SaveV5 {
   version: number; map: number;
   /** the shipped lot model the town's house lots compose with (T160, lots/lot-models; optional, no version bump; missing = v1) */
   lotModel?: number;
+  /** T259: the farm model the farms compose with (ext/farms FARM_MODEL: 2, the farmstead set back on its lane and the fields by the month;
+   *  optional, no version bump; missing = 1, the farms as before) and, with model 1, the keys of the farms rebuilt since on the new one */
+  farmModel?: number; farmsNew?: string[];
   /** the map seed: generateTerrain(seed) rebuilds the valley */
   seed: number;
   /** ax, ay, bx, by, class, line style, structure kind (0 ground, 1 bridge, 2 tunnel; missing = ground), and 1 when the towns' (Seg.town; optional 8th, missing = the player's) */

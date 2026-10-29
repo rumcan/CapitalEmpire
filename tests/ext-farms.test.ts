@@ -17,6 +17,8 @@ const isBad = (c: number) => c === TC.HILL || c === TC.WATER || c === TC.CREEK |
 const isFence = (id: string) => { const k = byId.get(id)?.kind; return k === 'fencex' || k === 'fencey' || id === 'world:hedge'; };
 const isHouse = (id: string) => (byId.get(id)?.cat === 'Houses' && byId.get(id)?.kind === 'house') || id === 'expansion:ranch-rear';
 const STREET = new Set(['world:mailbox', 'expansion:rural-mailboxes', 'town:utility_pole']);
+/** T259: these tests hold T005's farm (model 1), kept as it was for the saves made with it; tests/farm-crops.test.ts holds model 2 */
+const V1 = { model: 1 } as const;
 
 /** a flat all-GROUND map, with rectangles of terrain class painted in ([x0, y0, x1, y1, cls], tiles) */
 function flatMap(paint: [number, number, number, number, number][] = []): Uint8Array {
@@ -151,7 +153,7 @@ test('100 seeded farms: a farmhouse and barn by the road, fields with crop rows,
   const t0 = Date.now();
   let silos = 0, propsSum = 0, fenceSum = 0, patchesSum = 0;
   for (const { p, seed } of FARMS) {
-    const c = composeFarm(p, seed);
+    const c = composeFarm(p, seed, V1);
     propsSum += c.props.length; patchesSum += c.ground.length;
     fenceSum += c.props.filter(q => isFence(q.id)).length;
     assert.ok(c.props.length >= 20 && c.props.length <= 260, `${p.key}: ${c.props.length} props`);
@@ -181,7 +183,7 @@ test('100 seeded farms: a farmhouse and barn by the road, fields with crop rows,
     for (let i = 0; i < ups.length; i++) for (let j = i + 1; j < ups.length; j++)
       assert.ok(share(ups[i].fp, ups[j].fp) <= 0.35 + 1e-9, `${p.key}: ${ups[i].id} overlaps ${ups[j].id} by ${Math.round(100 * share(ups[i].fp, ups[j].fp))}%`);
     // the composed farmhouse stands where farmsteadOf says (to a fraction of a tile)
-    const st = farmsteadOf(p, seed), hq = c.props.find(q => isHouse(q.id))!, hfp = fpOf(hq);
+    const st = farmsteadOf(p, seed, 1), hq = c.props.find(q => isHouse(q.id))!, hfp = fpOf(hq);
     assert.ok(Math.hypot((hfp[0] + hfp[2]) / 2 - st.house.x, (hfp[1] + hfp[3]) / 2 - st.house.y) < 0.6, `${p.key}: farmhouse off the farmstead`);
     const gate = frame(p, st.gate.x, st.gate.y);
     assert.ok(Math.abs(gate.b) < 1e-9 && gate.a > 0 && gate.a < p.w, `${p.key}: gate on the front edge`);
@@ -193,8 +195,8 @@ test('100 seeded farms: a farmhouse and barn by the road, fields with crop rows,
 test('farm compositions are deterministic, and the seed changes them', () => {
   let changed = 0;
   for (const { p, seed } of FARMS) {
-    assert.equal(JSON.stringify(composeFarm(p, seed)), JSON.stringify(composeFarm(p, seed)), `${p.key}: not deterministic`);
-    if (JSON.stringify(composeFarm(p, seed)) !== JSON.stringify(composeFarm(p, (seed + 1) >>> 0))) changed++;
+    assert.equal(JSON.stringify(composeFarm(p, seed, V1)), JSON.stringify(composeFarm(p, seed, V1)), `${p.key}: not deterministic`);
+    if (JSON.stringify(composeFarm(p, seed, V1)) !== JSON.stringify(composeFarm(p, (seed + 1) >>> 0, V1))) changed++;
   }
   assert.ok(changed >= 90, `only ${changed} of 100 farms changed with the seed`);
 });
@@ -202,10 +204,10 @@ test('farm compositions are deterministic, and the seed changes them', () => {
 test('farm tracks: from the gate past the yard deep into the fields, inside the parcel and chained', () => {
   let branches = 0, lenSum = 0;
   for (const { p, seed } of FARMS) {
-    const legs = farmTrack(p, seed);
+    const legs = farmTrack(p, seed, 1);
     assert.ok(legs.length >= 1, `${p.key}: no track`);
-    assert.deepEqual(farmTrack(p, seed), legs, `${p.key}: track not deterministic`);
-    const st = farmsteadOf(p, seed);
+    assert.deepEqual(farmTrack(p, seed, 1), legs, `${p.key}: track not deterministic`);
+    const st = farmsteadOf(p, seed, 1);
     assert.ok(Math.hypot(legs[0].a.x - st.gate.x, legs[0].a.y - st.gate.y) < 1e-9, `${p.key}: track starts at the gate`);
     let maxB = 0, len = 0;
     const joints = legs.map(l => l.a);
@@ -229,12 +231,12 @@ test('the smallest parcels still compose: a 30x40-tile farm, axis-aligned and di
     { key: 'test|min-rear', o: { x: 700, y: 500 }, u: { x: 0, y: 1 }, n: { x: 1, y: 0 }, w: 30, d: 40, side: -1 },
   ];
   for (const p of minis) for (let seed = 1; seed <= 6; seed++) {
-    const c = composeFarm(p, seed);
+    const c = composeFarm(p, seed, V1);
     assert.equal(c.props.filter(q => isHouse(q.id)).length, 1, `${p.key} seed ${seed}: farmhouse`);
     assert.equal(c.props.filter(q => q.id === 'world:barn').length, 1, `${p.key} seed ${seed}: barn`);
     const ups = c.props.filter(q => !isFence(q.id)).map(fpOf);
     for (let i = 0; i < ups.length; i++) for (let j = i + 1; j < ups.length; j++) assert.ok(share(ups[i], ups[j]) <= 0.35 + 1e-9, `${p.key} seed ${seed}: overlap`);
-    assert.ok(farmTrack(p, seed).length >= 1, `${p.key} seed ${seed}: track`);
+    assert.ok(farmTrack(p, seed, 1).length >= 1, `${p.key} seed ${seed}: track`);
   }
 });
 

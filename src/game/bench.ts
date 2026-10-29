@@ -196,8 +196,79 @@ export function benchGame(g: Game, scene: BenchScene) {
       return;
     }
     if (follow) { const c = follow(0); g.cam.X = c.X; g.cam.Y = c.Y; startTour(g, { ...info, river: true }, RIVER_STAGES, follow); return; }
+    // T259: ?farms=1 (bench.mjs --farms 1), the farms' before and after on the same page: the farm model 1 (T005's, as main draws it) and 2 by turns
+    const farms = new URLSearchParams(location.search).get('farms') === '1' ? farmFollow(g) : null;
+    if (farms) { farmStage(g, farms, (r, month) => { const out = { ...info, farms: farms.n, month, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     startTour(g, info, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
   };
+}
+
+/** T259: the farms' line (the most farms in view): their centres in world px, in order along their spread's long axis (the county road they
+ *  front), and the camera's world px at s world px along that line (either way, clamped to its ends); null with fewer than two farms */
+function farmFollow(g: Game): ((s: number) => { X: number; Y: number }) & { n: number } | null {
+  const fm = (g as unknown as { farmMap: { farms: Map<string, { p: { o: { x: number; y: number }; u: { x: number; y: number }; n: { x: number; y: number }; w: number; d: number } }> } }).farmMap;
+  const P = [...fm.farms.values()].map(({ p }) => { const x = p.o.x + p.u.x * p.w / 2 + p.n.x * p.d / 2, y = p.o.y + p.u.y * p.w / 2 + p.n.y * p.d / 2; return { X: worldX(x, y), Y: worldY(x, y) }; });
+  if (P.length < 2) return null;
+  const mx = P.reduce((a, p) => a + p.X, 0) / P.length, my = P.reduce((a, p) => a + p.Y, 0) / P.length;
+  let sxx = 0, sxy = 0, syy = 0; for (const p of P) { sxx += (p.X - mx) ** 2; sxy += (p.X - mx) * (p.Y - my); syy += (p.Y - my) ** 2; }
+  const a = 0.5 * Math.atan2(2 * sxy, sxx - syy), ax = Math.cos(a), ay = Math.sin(a);
+  P.sort((p, q) => (p.X * ax + p.Y * ay) - (q.X * ax + q.Y * ay));
+  const L = [0]; for (let k = 1; k < P.length; k++) L.push(L[k - 1]! + Math.hypot(P[k]!.X - P[k - 1]!.X, P[k]!.Y - P[k - 1]!.Y));
+  const k0 = Math.floor(P.length / 2), s0 = L[k0]!;
+  const f = (s: number) => {
+    const t = Math.max(0, Math.min(L[L.length - 1]!, s0 + s)); let k = 1; while (k < L.length - 1 && L[k]! < t) k++;
+    const h = (t - L[k - 1]!) / Math.max(1e-6, L[k]! - L[k - 1]!); return { X: P[k - 1]!.X + (P[k]!.X - P[k - 1]!.X) * h, Y: P[k - 1]!.Y + (P[k]!.Y - P[k - 1]!.Y) * h };
+  };
+  return Object.assign(f, { n: P.length });
+}
+
+/** T259 (#759, "dont screw performance"): the farms' A/B on one page (the PC's other load falls alike on both): at 30%, 15% and 8%, the farm model
+ *  1 and 2 by turns (Engine.setFarmModel: every farm composes again, the trees round them planted again), three times each, in the month
+ *  ?farmMonth (default 7, August: ripe, young and ploughed fields side by side). Each run: the farms composed and the view settled (3 s), then
+ *  the view's chunks baked again over the middle farm (invalidateAll, 4 s: the bakes' ms), then 4 s of panning along the farms (the frames' cpu ms,
+ *  the most instances). Pooled per zoom and model: the bakes' median and p95, the frames' average and p95 */
+function farmStage(g: Game, follow: (s: number) => { X: number; Y: number }, done: (r: Record<string, unknown>[], month: number) => void) {
+  const m0 = Number(new URLSearchParams(location.search).get('farmMonth') ?? 7), month = Number.isFinite(m0) ? m0 : 7;
+  g.setFarmMonth(month);
+  const runs: { z: number; model: 1 | 2 }[] = [];
+  for (const z of [0.3, 0.15, 0.08]) for (let r = 0; r < 3; r++) runs.push({ z, model: r % 2 ? 2 : 1 }, { z, model: r % 2 ? 1 : 2 });
+  const bakes = new Map<string, number[]>(), frames = new Map<string, { cpu: number[]; inst: number; props: number }>(), out: Record<string, unknown>[] = [];
+  const q = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; };
+  const avg = (a: number[]) => a.reduce((p, v) => p + v, 0) / Math.max(1, a.length);
+  let k = 0, t = 0, phase = 0, b0 = 0, along = 0;
+  const next = () => {
+    if (k >= runs.length) {
+      g.onFrame = null; g.setFarmMonth(null);
+      for (const z of [0.3, 0.15, 0.08]) {
+        const tag = `${Math.round(z * 100)}%`, r: Record<string, unknown> = { stage: `farms ${tag}` };
+        for (const md of [1, 2] as const) {
+          const b = bakes.get(`${tag} m${md}`) ?? [], f = frames.get(`${tag} m${md}`) ?? { cpu: [], inst: 0, props: 0 };
+          r[`model${md}`] = { bakes: b.length, bakeMedianMs: +q(b, 0.5).toFixed(2), bakeP95Ms: +q(b, 0.95).toFixed(2), frames: f.cpu.length, cpuAvgMs: +avg(f.cpu).toFixed(2), cpuP95Ms: +q(f.cpu, 0.95).toFixed(2), maxInstances: f.inst, props: f.props };
+        }
+        const a = r.model1 as Record<string, number>, b = r.model2 as Record<string, number>;
+        r.delta = { bakeMedianMs: +(b.bakeMedianMs! - a.bakeMedianMs!).toFixed(2), bakeP95Ms: +(b.bakeP95Ms! - a.bakeP95Ms!).toFixed(2), cpuAvgMs: +(b.cpuAvgMs! - a.cpuAvgMs!).toFixed(2), cpuP95Ms: +(b.cpuP95Ms! - a.cpuP95Ms!).toFixed(2) };
+        out.push(r);
+      }
+      done(out, month); return;
+    }
+    const r = runs[k]!, tag = `${Math.round(r.z * 100)}% m${r.model}`, c0 = follow(0);
+    g.setFarmModel(r.model); g.cam = { X: c0.X, Y: c0.Y, z: r.z }; t = 0; phase = 0; along = 0;
+    g.onFrame = (_now, dt) => {
+      t += dt;
+      if (phase === 0) { if (g.farmsPending === 0 && t > 3) { phase = 1; t = 0; g.ground.invalidateAll(); b0 = g.ground.baked; } return; }
+      if (phase === 1) {
+        if (t < 4) return;
+        const a = bakes.get(tag) ?? []; for (let b = Math.max(b0, g.ground.baked - g.ground.bakeLog.length); b < g.ground.baked; b++) a.push(g.ground.bakeLog[b % g.ground.bakeLog.length]!);
+        bakes.set(tag, a); phase = 2; t = 0; return;
+      }
+      const v = frames.get(tag) ?? { cpu: [], inst: 0, props: 0 }; frames.set(tag, v);
+      const st = r.z >= 0.3 ? { vx: 900, vy: 300 } : r.z >= 0.15 ? { vx: 900, vy: 350 } : { vx: 4000, vy: 1500 };
+      const dir = Math.floor(t / 2) % 2 ? -1 : 1; along += Math.hypot(st.vx, st.vy) * dt * dir; const c = follow(along); g.cam.X = c.X; g.cam.Y = c.Y; g.cam.z = r.z;
+      if (t > 0.2) { v.cpu.push(g.perf.cpuMs); v.inst = Math.max(v.inst, g.perf.instances); v.props = g.props.size; }
+      if (t >= 4) { k++; next(); }
+    };
+  };
+  next();
 }
 
 function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STAGES, follow: ((s: number) => { X: number; Y: number }) | null = null) {
