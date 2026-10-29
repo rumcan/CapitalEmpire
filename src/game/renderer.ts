@@ -10,6 +10,7 @@ import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, riverStreams, swampStreams, type BandAlpha } from './swamp';
 import { RIVER_CUT, drawRiverCut } from './river-cut';
 import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
+import { motionMask, pondLap, riverLap, type BandRef, type MotionMaskData } from './water-motion';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
 import { layOnGround } from './base-grass';
@@ -503,6 +504,22 @@ export class GroundPainter {
   takeShineMask(): ShineMaskData | null { const m = this.shineNow; this.shineNow = null; return m; }
   /** T262: the worker ms the last bake's weight mask took (the bench's mask cost) */
   shineMs = 0;
+  /** T248 (#718): the water moves (water-motion.ts): on (the default; the gear menu's Water motion, GroundCache.setWaterMotion) each full chunk
+   *  bake with water near makes its motion mask (waterMotionMask); off makes none, the ground exactly as before */
+  waterMotion = true;
+  /** T248: the motion mask of the bake just done, or null; the worker ms it took */
+  private waterMask: MotionMaskData | null = null;
+  takeWaterMask(): MotionMaskData | null { const m = this.waterMask; this.waterMask = null; return m; }
+  waterMs = 0;
+  /** T248: the swamp bands laid in the bake in progress (the streams' and the river's: the waves stop at their margin) */
+  private bandsNow: (BandRef | null)[] = [];
+  /** T248: the motion mask over the chunk just baked: the chunk's water field (made now if no water site asked for it: a shore just past the
+   *  chunk still wets its bank here) with the bridges over it and the swamp bands laid; null without water near, or with the motion off */
+  private waterMotionMask(lite: boolean, net: FxView): MotionMaskData | null {
+    const w = this.waterField(lite); if (!w || !w.f.flow) return null;
+    const b = w.f.box, brs = net.bridges.filter(r => r.bbox[2] >= b[0] && r.bbox[0] <= b[2] && r.bbox[3] >= b[1] && r.bbox[1] <= b[3]);
+    return motionMask(w.f, { bridges: brs, bands: this.bandsNow });
+  }
   /** T262: the grass shine's weight mask over the chunk just baked (grass-shine.ts), a texel SHINE_TEXEL world px (or more), with a margin:
    *  the map's own grass first (its terrain: the ground, meadow and woodland floor in the map's grass weight, the water, creeks and banks none),
    *  then every surface's outline in its weight (ground that is no grass in none), in the order the bake lays them: the town lawns, the lots'
@@ -586,20 +603,29 @@ export class GroundPainter {
   /** T230: the chunk's water field (waterNow), made now if not yet */
   private waterField(lite: boolean): { f: WaterField; look: WaterLook } | null {
     if (this.waterNow !== undefined) return this.waterNow;
-    const look = waterLookOf(this.tex.surfaces), c = this.chunkNow;
-    if (!c || (!waterLookActive(look) && !this.specCam)) return (this.waterNow = null);
-    const f = WaterField.over(c.box, fieldPad(look), fieldRes(c.L, lite)), fb = f.box;
+    const look = waterLookOf(this.tex.surfaces), c = this.chunkNow, motion = this.waterMotion && !lite;
+    if (!c || (!waterLookActive(look) && !this.specCam && !motion)) return (this.waterNow = null);
     // the rivers, and the course's water and the painted water areas over the field's box (a pond reaching in from past the chunk counts: its
-    // shore sets the depth here), each as it is drawn (the warped course, the rugged outline)
-    for (const w of this.waters) if (w.w.kind === 'river' && w.box[2] >= fb[0] && w.box[0] <= fb[2] && w.box[3] >= fb[1] && w.box[1] <= fb[3]) f.waterway(w.w.pts, SITE.river);
-    for (const p of this.lotsIn(fb)) {
+    // shore sets the depth here), each as it is drawn (the warped course, the rugged outline); none: no field at all (T248: the motion asks
+    // every chunk, most of them dry)
+    const pad = fieldPad(look), fb = [Math.floor(c.box[0]) - pad, Math.floor(c.box[1]) - pad, Math.ceil(c.box[2]) + pad, Math.ceil(c.box[3]) + pad];
+    const rivers = this.waters.filter(w => w.w.kind === 'river' && w.box[2] >= fb[0] && w.box[0] <= fb[2] && w.box[3] >= fb[1] && w.box[1] <= fb[3]);
+    const ponds: { rings: readonly ArrayLike<number>[]; site: number }[] = [];
+    for (const p of this.lotsIn(fb as BBox)) {
       if (p.top || p.layby) continue;
-      if (p.course) { for (const l of this.warpedCourse(p.course, lite).layers) if (l.s === COURSE_WATER && l.fill.length) f.rings(l.fill, SITE.course); }
-      else if (p.paint && waterTex(p.tex)) f.rings([this.ruggedOf(p).q.pts], SITE.paint);
+      if (p.course) { for (const l of this.warpedCourse(p.course, lite).layers) if (l.s === COURSE_WATER && l.fill.length) ponds.push({ rings: l.fill, site: SITE.course }); }
+      else if (p.paint && waterTex(p.tex)) ponds.push({ rings: [this.ruggedOf(p).q.pts], site: SITE.paint });
     }
+    if (!rivers.length && !ponds.length) return (this.waterNow = null);
+    const f = WaterField.over(c.box, pad, fieldRes(c.L, lite));
+    // (T248: with the water's motion, each water sample's flow and waves' strength as it is marked)
+    if (motion) f.motion();
+    for (const w of rivers) f.waterway(w.w.pts, SITE.river, 1, motion ? riverLap : undefined);
+    for (const q of ponds) f.rings(q.rings, q.site, motion ? pondLap : undefined);
     if (!f.any()) return (this.waterNow = null);
     f.shore(Math.max(look.reach, 3));
-    if (look.on && look.reflect > 0) f.reflect(this.casters.query([fb[0] - REFLECT.reach - 3, fb[1] - REFLECT.reach - 3, fb[2], fb[3]]));
+    const fb2 = f.box;
+    if (look.on && look.reflect > 0) f.reflect(this.casters.query([fb2[0] - REFLECT.reach - 3, fb2[1] - REFLECT.reach - 3, fb2[2], fb2[3]]));
     return (this.waterNow = { f, look });
   }
   /** T230: the water look over one water site just drawn on g (its samples of the chunk's water field), clipped to its shape (clip, tile
@@ -1174,7 +1200,7 @@ export class GroundPainter {
   paintPlan(i: number, j: number, L: number): Cnv {
     const W = Math.round(PLAN_W * L), H = Math.round(PLAN_H * L), X0 = i * PLAN_W, Y0 = j * PLAN_H;
     const cv = canvas(W, H), ctx = ctx2d(cv);
-    this.shadeMask = null; this.specMask = null; this.glossMask = null; this.swampNow = null; // (T186, T215, T199: a planner bake keeps no shade, reflection or gloss mask)
+    this.shadeMask = null; this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterMask = null; // (T186, T215, T199, T248: a planner bake keeps no shade, reflection, gloss or motion mask)
     const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]);
     const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
     // the tile set families (T145) lay their tiles here as on the ground chunks (planTiled), at the camera's band (the furthest zoom: FAR)
@@ -1544,7 +1570,7 @@ export class GroundPainter {
     this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false; this.provisional = false;
     // T186: the shade mask (a quarter of the chunk's size), white (no shade) until a shade is laid on it; none for a district chunk (its
     // sprites' shadows are a few px: the far meshes)
-    this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterNow = undefined; this.riverNow = null;
+    this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterNow = undefined; this.riverNow = null; this.waterMask = null; this.bandsNow = [];
     if (lite) this.shadeMask = null;
     else { const mc = new OffscreenCanvas(Math.max(1, Math.ceil(W / SHADE_MASK_K)), Math.max(1, Math.ceil(H / SHADE_MASK_K))), mg = mc.getContext('2d')!; mg.fillStyle = '#fff'; mg.fillRect(0, 0, mc.width, mc.height); this.shadeMask = { cv: mc, g: scaledContext(mg, 1 / SHADE_MASK_K), used: false }; }
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
@@ -1591,6 +1617,7 @@ export class GroundPainter {
     const creekSwamp = !!(sw && swLaid);
     if (sband && swLaid) {
       const sb = sband.cv, sr = sband.res;
+      this.bandsNow = [sw ? { a: sw, x0: tx0, y0: ty0, res: cres } : null, rv ? { a: rv, x0: tx0, y0: ty0, res: rres } : null]; // (T248)
       this.swampNow = { cv: sb, x0: tx0, y0: ty0, res: sr };
       if (swBuf) layer('creek', g => { g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sb, tx0, ty0, sb.width / sr, sb.height / sr); }, g => { const p = g.createPattern(swBuf, 'no-repeat')!; p.setTransform(Minv); return p; });
       const tp = this.specCam ? this.tex.paintedOf('swamp')?.tiled : undefined;
@@ -1949,6 +1976,8 @@ export class GroundPainter {
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = Math.max(0.08, minW); ctx.strokeRect(0, 0, MAP, MAP);
     // ---- 12. T262: the grass shine's weight mask (and bump layer), with the shine on
     const s0 = performance.now(); this.shineNow = this.grassShine && !lite ? this.grassShineMask(lite, net) : null; this.shineMs = performance.now() - s0;
+    // ---- 13. T248: the water's motion mask (water-motion.ts), with the motion on and water near
+    const w0 = performance.now(); this.waterMask = this.waterMotion && !lite ? this.waterMotionMask(lite, net) : null; this.waterMs = performance.now() - w0;
     return cv;
   }
 
