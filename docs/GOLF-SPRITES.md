@@ -357,3 +357,30 @@ rotary mower down the rough. Until the art lands each is drawn as a labelled sta
 | **Rotary rough mower** (`vehicle:rough-mower`) | 8 facings | `expansion:rideon-mower` (one view) | a ride-on rotary mower with a wide deck, red or green | P2 |
 | **Maintenance barn** (`course:maintenance-barn`, 2D, four views) | four views | none: the crew come and go at the clubhouse car park's entrance | a timber barn with a wide roll-up door, a fuel tank and a sand bin beside it, about 14 x 10 m | P3 |
 
+
+## Farms (T259, #759: GOLF-ART-LIST 185-189, the slots and the swap)
+The farms' model 2 (`src/game/ext/farms/farms.ts`, `crops.ts`): the farmhouse and yard set back 60-120 m on a dirt lane lined by a windbreak, the
+fields round them by the calendar month (ploughed December to May, young corn June and July, ripe corn August to October, stubble in November,
+each field a month early, on time or late), an orchard's strict grid on some farms. Until the art lands every piece is a labelled stand-in
+("Stand In for <name>", the pills shown with the stand-ins on), and **each piece's swap is one line**: name the art in its slot below.
+The prompts are in `docs/art/CHATGPT-IMAGE-QUEUE.md` "Farms". The sun at the upper right, shadows at 145°, nothing mirrored.
+
+| Art | Slot (the one line) | File names (the queue's) | Today's stand-in |
+| --- | --- | --- | --- |
+| **185 corn, young** | `painted-surfaces.json` `surfaces.cornYoung` (rows along the map's x) and `cornYoungY` (rows along y): `{ "family": "<the tile set's family>", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 }` | `corn-young-30.png`, `corn-young-10.png` | the field's soil (Farm fields, `dirt-run`) with green rows of plants drawn along the field (`crops.ts` ROW_LOOK.young) |
+| **185 corn, ripe** | `surfaces.cornRipe` / `cornRipeY` | `corn-ripe-30.png`, `-10` | tan-gold rows, nearly closed, their shadows in the gaps (ROW_LOOK.ripe) |
+| **185 corn, stubble** | `surfaces.cornStubble` / `cornStubbleY` | `corn-stubble-30.png`, `-10` | short pale stalks in rows over the soil (ROW_LOOK.stubble) |
+| **186 ploughed field** | `surfaces.fieldPloughed` / `fieldPloughedY` | `ploughed-30.png`, `-10` | dark furrows with a lit ridge beside each, along the field (ROW_LOOK.plough) |
+| **187 orchard trees** | `farms.ts` `ORCHARD_ART`: the library id for each leaf stage (`open` summer, `moderate` autumn, `patchy`, `near-bare` winter) | `orchard-apple-red-1view-v1.png`, `orchard-pear-1view-v1.png`, `orchard-apple-young-1view-v1.png`, `orchard-apple-bare-1view-v1.png` | the capital oaks or maples (one species an orchard) at 0.62 of their size, through their own leaf stages |
+| **188 windbreak poplars** | `farms.ts` `POPLAR_ART`: `greengold` (April to September), `gold` (October, November), `bare` (December to March) | `poplar-gold-1view-v1.png`, `poplar-greengold-1view-v1.png`, `poplar-bare-1view-v1.png` | the gold birch (`ref:tree-birch-gold`) on most farms, a row of spruces on the rest |
+| **189 farm lane** | `surfaces.farmLane` | (P2: a two-rut dirt lane with a grass strip, or a dirt path family that reads right) | the Dirt surface with a hard edge and two wheel ruts drawn along it (the ruts stay with the art: they follow the lane) |
+
+- **For the lead (the queue): the ground pictures in a second direction.** The owner's method repaints a game screenshot, so a tile keeps the
+  direction its rows were painted in; a painted texture is laid unturned (its light would turn with it). A field takes the slot of the map axis
+  nearest its rows, so 185 and 186 want each picture twice: rows from the upper left toward the lower right (the queue's, the `x` slot) and
+  rows from the upper right toward the lower left (the `y` slot). With only one in, the fields of the other axis keep the stand-in rows.
+- **The sprites** (187, 188) go through the art pipeline as one-view trees (`tree-sun.ts` measures their lit side; nothing is mirrored): add
+  them to the library, then name their ids in `ORCHARD_ART` / `POPLAR_ART`. The orchard keeps its 6 m grid and the windbreak its 6.4 m
+  spacing whatever the picture.
+- **Old saves:** a save made before T259 keeps its farms as they were (model 1) until a farm is rebuilt (a road edit that changes its parcel,
+  a new farm on a new road); new games get model 2. The dev switch `window.__game.setFarmModel(1 | 2)` changes a game's farms at once.
