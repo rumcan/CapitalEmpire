@@ -167,6 +167,7 @@ import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
 import { SHINE_KEY, SHINE_LOOK, clampShineLook, shineExponent, shineGain, type ShineLook, type ShineWeights } from './grass-shine';
+import { WATER_MOTION, WATER_MOTION_KEY, clampWaterMotion, motionFrame, phasesAt, stepPhases, type WaterMotion } from './water-motion';
 import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from './grade';
 import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
@@ -2252,6 +2253,10 @@ export class Game {
     try { localStorage.removeItem('capitalempire.grassShine'); const s = localStorage.getItem(SHINE_KEY); if (s) this.shine = clampShineLook(JSON.parse(s)); } catch { /* the default look */ }
     { const q = new URLSearchParams(location.search).get('grassShine'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.shine = { ...this.shine, on: q === 'on' }; }
     this.ground.grassShine = this.shine.on; this.ground.shineWeights = { ...this.shine.weights };
+    // T248: the water's motion as the player left it (the gear menu's Water motion; on by default), and ?waterMotion=off|on (the dev server)
+    try { const s = localStorage.getItem(WATER_MOTION_KEY); if (s) this.waterLook = clampWaterMotion(JSON.parse(s)); } catch { /* the default look */ }
+    { const q = new URLSearchParams(location.search).get('waterMotion'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.waterLook = { ...this.waterLook, on: q === 'on' }; }
+    this.ground.waterMotion = this.waterLook.on;
     try { this.groundVariety = localStorage.getItem('capitalempire.groundVariety') !== '0'; } catch { /* the default, on */ }
     this.ground.living = { on: this.groundVariety, debug: false };
     try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
@@ -7475,6 +7480,22 @@ export class Game {
    *  switch, strength, gloss size and per-surface weights, beside T215's knobs; remembered), window.__game.setShine({ on, strength, size, weights,
    *  bump, eye, night }). The switch and the weights are baked into each chunk's weight mask, so changing them bakes the ground again (the
    *  weights a moment after the last change, as a slider is dragged); the rest are the shader's */
+  /** T248 (#718): the water moves (water-motion.ts): two ripple layers, the rivers' flow, waves lapping at the shore and the sparkle, on by
+   *  default; the gear menu's Water motion (its switch, the speed, the ripples', foam's and sparkle's strength; remembered),
+   *  window.__game.setWaterMotion({ on, flow, ripple, foam, sparkle }). The switch makes (or drops) each water chunk's motion mask, so it
+   *  bakes the ground again; off is the water as before, bit for bit. The rest are the shader's */
+  get waterMotion(): boolean { return this.waterLook.on; }
+  set waterMotion(on: boolean) { this.setWaterMotion({ on: !!on }); }
+  waterLook: WaterMotion = { ...WATER_MOTION };
+  setWaterMotion(p: Partial<WaterMotion>) {
+    this.waterLook = clampWaterMotion({ ...this.waterLook, ...p });
+    try { localStorage.setItem(WATER_MOTION_KEY, JSON.stringify(this.waterLook)); } catch { /* storage may be unavailable */ }
+    this.ground.setWaterMotion(this.waterLook.on); this.emit();
+  }
+  /** T248: the water's phases (the rivers' flow cycles, the waves, the ponds' drift), stepped by the real time each frame at the look's speed;
+   *  waterClock (seconds, the captures and tests): the phases held at that time instead (null: running) */
+  private waterPhases = { phase: 0, wave: 0, drift: [0, 0, 0, 0] }; private waterLast = 0;
+  waterClock: number | null = null;
   get grassShine(): boolean { return this.shine.on; }
   set grassShine(on: boolean) { this.setShine({ on: !!on }); }
   shine: ShineLook = clampShineLook(SHINE_LOOK);
@@ -7582,6 +7603,11 @@ export class Game {
       // T262: the grass shine's falloff (T215's), gain (by day, by the zoom) and look this frame; each picture's weight mask by the picture
       gl.shine = this.ground.grassShine ? { inner: this.spec.inner, outer: this.spec.outer, gain: shineGain(this.shine, this.nightAmount(), cam.z), exponent: shineExponent(this.shine), bump: this.shine.bump, eye: this.shine.eye } : null;
       gl.shineOf ??= tex => this.ground.shineOf(tex);
+      // T248: the water's motion this frame (its phases stepped by the real time; faded out toward the district zoom); each picture's mask by
+      // the picture
+      { const dt = this.waterLast ? Math.min(0.1, Math.max(0, (now - this.waterLast) / 1000)) : 0; this.waterLast = now; if (this.waterClock === null) stepPhases(this.waterPhases, dt, this.waterLook); }
+      gl.water = this.ground.waterMotion ? motionFrame(this.waterLook, cam.z, this.nightAmount(), ze, this.waterClock === null ? this.waterPhases : phasesAt(this.waterClock, this.waterLook)) : null;
+      gl.waterOf ??= tex => this.ground.waterOf(tex);
       const spec = (tex: WebGLTexture | null) => this.ground.specOf(tex);
       const shadeMasks: { tex: WebGLTexture; r: readonly [number, number, number, number] }[] = [];
       let baked = true;

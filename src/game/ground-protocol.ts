@@ -11,6 +11,7 @@ import type { GrassCellView } from './ext/grass-management';
 import type { EdgeProfile } from './paint-edges';
 import type { GrassArt } from './painted-grass-lod';
 import type { ShineWeights } from './grass-shine';
+import type { MotionMaskData } from './water-motion';
 /** T262: a chunk's grass shine weight mask as plain bytes, one channel (renderer.ts takeShineMask) */
 export interface ShineMaskData { w: number; h: number; data: Uint8Array }
 import type { RoughMix } from './rough-yards';
@@ -215,6 +216,9 @@ export type ToWorker =
   /** T262: the grass shine on (the default: each bake makes its weight mask) or off (none, the ground as before), and its weights per surface
    *  group (grass-shine.ts); every chunk is baked again */
   | { t: 'grassShine'; on: boolean; weights: ShineWeights }
+  /** T248: the water's motion on (the default: each bake of a chunk with water makes its motion mask) or off (none, the ground as before);
+   *  every chunk is baked again */
+  | { t: 'waterMotion'; on: boolean }
   /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
   | { t: 'slopeLight'; strength: number }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
@@ -248,7 +252,10 @@ export type FromWorker =
       gloss?: ImageBitmap;
       /** T262: the grass shine's weight mask (grass-shine.ts: SHINE_TEXEL world px a texel, spanning the chunk, one channel); none with the shine off or
        *  no grass on the chunk */
-      shine?: ShineMaskData; /** T262: the worker ms its weight mask took (in ms) */ shineMs?: number; ms: number;
+      shine?: ShineMaskData; /** T262: the worker ms its weight mask took (in ms) */ shineMs?: number;
+      /** T248: the water's motion mask (water-motion.ts: RGBA on the water field's lattice, its tile box); none with the motion off or no water
+       *  near, and the worker ms it took */
+      water?: MotionMaskData; waterMs?: number; ms: number;
       /** T272: the ms the bake waited for its pictures to decode (before ms), the ms of ms spent scaling tile set pictures (mips, pre-scaled
        *  copies), and (the bench's tileStats on) the worker's tile cache counts so far */
       prepMs?: number; scaleMs?: number; tc?: TileCacheStats }

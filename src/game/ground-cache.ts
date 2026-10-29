@@ -106,7 +106,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; const tileBytes = this.sentTileBytes = this.tileBytes ?? tileCacheBudget(this.budgetPx, this.workers.length); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits, tileBytes } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; const tileBytes = this.sentTileBytes = this.tileBytes ?? tileCacheBudget(this.budgetPx, this.workers.length); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits, tileBytes } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'waterMotion', on: this.waterMotion }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -203,9 +203,19 @@ export class GroundCache {
    *  masks (the same ring as bakeLog) */
   shineBytes = 0; shineLog: number[] = [];
   shineOf(tex: WebGLTexture | null): WebGLTexture | null { return (tex && this.shines.get(tex)?.mask) ?? null; }
-  /** delete a chunk picture and its reflection, gloss and shine masks */
+  /** T248 (#718): the water moves (water-motion.ts): on (the default: each bake of a chunk with water makes its motion mask, gl.ts FS_QUAD runs
+   *  the ripples, the flow and the waves by it) or off (no mask: the ground exactly as before); the gear menu's Water motion */
+  waterMotion = true;
+  setWaterMotion(on: boolean) { if (on === this.waterMotion) return; this.waterMotion = on; this.broadcast({ t: 'waterMotion', on }); this.invalidateAll(); }
+  /** T248: each chunk picture's water motion mask and its tile box, by picture, as its other masks (it goes and is deleted with it) */
+  private waterMasks = new Map<WebGLTexture, { mask: WebGLTexture; box: readonly number[]; bytes: number }>();
+  /** T248: the GPU bytes the motion masks of the pictures held take now, and the worker ms of the last BAKE_LOG bakes' masks */
+  waterBytes = 0; waterLog: number[] = [];
+  waterOf(tex: WebGLTexture | null): { mask: WebGLTexture; box: readonly number[] } | null { return (tex && this.waterMasks.get(tex)) ?? null; }
+  /** delete a chunk picture and its reflection, gloss, shine and motion masks */
   private dropPicture(tex: WebGLTexture) {
     this.gl.deleteTexture(tex); const s = this.specs.get(tex); if (s) { this.gl.deleteTexture(s); this.specs.delete(tex); }
+    const wm = this.waterMasks.get(tex); if (wm) { this.gl.deleteTexture(wm.mask); this.waterBytes -= wm.bytes; this.waterMasks.delete(tex); }
     const g = this.glosses.get(tex); if (g) { this.gl.deleteTexture(g); this.glosses.delete(tex); }
     const sh = this.shines.get(tex); if (sh) { this.gl.deleteTexture(sh.mask); this.shineBytes -= sh.bytes; this.shines.delete(tex); }
   }
@@ -334,7 +344,7 @@ export class GroundCache {
     if (this.firstBakes) { const k = `${m.kind}${m.i},${m.j}@${m.L}`; if (!this.firstBakes.has(k)) this.firstBakes.set(k, m.ms); } // (T265: the bench's first-bake pairs)
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.prepLog[this.baked % BAKE_LOG] = m.prepMs ?? 0; this.scaleLog[this.baked % BAKE_LOG] = m.scaleMs ?? 0; if (m.tc) this.tileStats[w] = m.tc;
-    this.bakeMs += m.ms; this.shineLog[this.baked % BAKE_LOG] = m.shineMs ?? 0; this.baked++;
+    this.bakeMs += m.ms; this.shineLog[this.baked % BAKE_LOG] = m.shineMs ?? 0; this.waterLog[this.baked % BAKE_LOG] = m.waterMs ?? 0; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
     const edited = r.gen !== t.gen;
@@ -352,6 +362,7 @@ export class GroundCache {
     if (m.spec) { this.specs.set(t.tex, this.gl.specTexture(m.spec)); m.spec.close(); }
     if (m.gloss) { this.glosses.set(t.tex, this.gl.specTexture(m.gloss)); m.gloss.close(); } // (T199: premultiplied, as the reflection mask)
     if (m.shine) { const sh = m.shine; this.shines.set(t.tex, { mask: this.gl.byteTexture(sh.data, sh.w, sh.h), bytes: sh.data.length }); this.shineBytes += sh.data.length; } // (T262: plain bytes, R8)
+    if (m.water) { const wm = m.water; this.waterMasks.set(t.tex, { mask: this.gl.rgbaTexture(wm.data, wm.w, wm.h), box: wm.box, bytes: wm.data.length }); this.waterBytes += wm.data.length; } // (T248: plain bytes, RGBA8)
     // T197: a picture that fell back to the photo where a tile set was not decoded yet shows meanwhile and is asked for again after a short
     // hold (the tiles decode on the way), so a placeholder never stays
     if (m.prov && !edited) { this.provisional++; const k = (this.provTries.get(t) ?? 0) + 1; this.provTries.set(t, k); if (k <= PROVISIONAL_TRIES) { t.stale = true; t.hold = u0 + PROVISIONAL_RETRY_MS; } }
