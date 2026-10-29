@@ -5,7 +5,7 @@ import { Icon } from './Icon';
 /** what the card shows (engine.ts placeCard) */
 export interface PlaceCardView { id: string; name: string; kind: string; pop: number; w: number; d: number; standIns: string[]; town: number }
 
-export function PlaceCard({ view, onClose, right = 'right-3' }: { view: PlaceCardView; onClose: () => void; right?: string }) {
+export function PlaceCard({ view, onClose, right = 'right-3', onScene }: { view: PlaceCardView; onClose: () => void; right?: string; /** T242: Set the scene (the place's picture card; absent: no art yet) */ onScene?: () => void }) {
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 w-[300px] space-y-2 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="place-card">
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
@@ -13,7 +13,10 @@ export function PlaceCard({ view, onClose, right = 'right-3' }: { view: PlaceCar
           <div className="font-semibold text-amber-200" data-testid="place-name">{view.name}</div>
           <div className="text-[12px] text-slate-400">{view.kind} · a landmark of the town</div>
         </div>
-        <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
+        <div className="flex shrink-0 items-center gap-1">
+          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of the place" data-testid="place-scene"><Icon name="camera" size={14} />Scene</button>}
+          <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-1.5 text-center">
         <div className="rounded-lg border border-white/10 bg-white/5 p-1.5"><div className="text-[12px] uppercase text-slate-400">Opened at</div><div className="text-sm font-bold text-white">{view.pop.toLocaleString()}</div><div className="text-[12px] text-slate-400">residents</div></div>

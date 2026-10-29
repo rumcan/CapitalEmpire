@@ -11,7 +11,7 @@ import { statusIcon } from '../status-icon';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
-export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3' }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string }) {
+export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void }) {
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
   const demandWord = pf >= 1.15 ? 'cheap: more golfers' : pf <= 0.85 ? 'dear: fewer golfers' : 'fair';
@@ -22,7 +22,10 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
           <div className="font-semibold text-amber-200">Driving range</div>
           <div className="text-[12px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · {st.counters} {st.counters === 1 ? 'counter' : 'counters'} · open {view.hours}</div>
         </div>
-        <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
+        <div className="flex shrink-0 items-center gap-1">
+          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your range as it stands" data-testid="range-scene"><Icon name="camera" size={14} />Scene</button>}
+          <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
+        </div>
       </div>
       <div className="grid grid-cols-3 gap-1.5 text-center">
         <Tile label="Today" value={`${Math.round(today.golfers)}`} sub="golfers" />
