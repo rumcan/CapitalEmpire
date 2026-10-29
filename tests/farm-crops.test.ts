@@ -200,13 +200,13 @@ test('model 2: the farmhouse and yard set back 60-120 m on a dirt lane lined by 
 test('model 2: the orchard is a strict grid of straight rows ORCHARD_PITCH (6 m) apart, inside its field, the same tree throughout', () => {
   let n = 0;
   for (const { p, seed } of FARMS) {
-    const L = farmLayoutForTest(p, seed); if (!L.orchard) continue;
+    const L = farmLayoutForTest(p, seed), o = L.orchard; if (!o) continue;
     n++;
     for (const m of [0, 6, 9]) {
-      const c = composeFarm(p, seed, { model: 2, month: m }), o = L.orchard;
+      const c = composeFarm(p, seed, { model: 2, month: m });
       // (the orchard's trees: the capital oaks or maples standing in its field; the farm's other trees stand outside every field)
-      const inPlot = (q: Placed) => { const f = frame(p, centre(q).x, centre(q).y); return f.a > o.plot.a0 && f.a < o.plot.a1 && f.b > o.plot.b0 && f.b < o.plot.b1; };
-      const trees = c.props.filter(q => isOrchardTree(q.id) && inPlot(q));
+      const inPlot = (q: Placed): boolean => { const f = frame(p, centre(q).x, centre(q).y); return f.a > o.plot.a0 && f.a < o.plot.a1 && f.b > o.plot.b0 && f.b < o.plot.b1; };
+      const trees: Placed[] = c.props.filter(q => isOrchardTree(q.id) && inPlot(q));
       assert.equal(trees.length, o.na * o.nb, `${p.key}: ${trees.length} of ${o.na} x ${o.nb} orchard trees`);
       assert.ok(!c.props.some(q => !isOrchardTree(q.id) && byId.get(q.id)?.kind === 'tree' && inPlot(q)), `${p.key}: another tree in the orchard`);
       assert.ok(o.na <= ORCHARD_MAX && o.nb <= ORCHARD_MAX && o.na >= 4 && o.nb >= 4, `${p.key}: grid ${o.na} x ${o.nb}`);
