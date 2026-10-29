@@ -101,7 +101,7 @@ test('computeYearEnd and computeTournamentCloseBook book Green fees and Membersh
   assert.equal(book.greenFeeIncome, expectedGreenFees);
   assert.equal(book.membershipIncome, expectedMemberships);
   assert.equal(book.bizIncome, expectedGreenFees + expectedMemberships);
-  assert.equal(COURSE_UPKEEP_YEAR_SHARE, 0.25);
+  assert.equal(COURSE_UPKEEP_YEAR_SHARE, 0.2); // (T269: 0.25 before the grounds crew's wages were their own monthly line, golf/staff.ts)
 
   const b = new Budget();
   b.spend('business', -book.bizIncome);

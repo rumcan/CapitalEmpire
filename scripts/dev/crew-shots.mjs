@@ -3,7 +3,8 @@
 //   day's cup; the console reports the cups against the placed pins;
 // - crew: a frame strip of the greenkeeper changing a cup (greenkeeper-moving-hole) and of the ride-on mower finishing a band along the fairway, its
 //   fresh stripe laid behind it (mower-crossing-fairway), each with its middle frame;
-//   node scripts/dev/crew-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T269 [--only pin,crew]
+// - staff: the club card's Grounds crew as hired (club-card-staff) and after three short-handed days (club-card-staff-short);
+//   node scripts/dev/crew-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T269 [--only pin,crew,staff]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done. Saves are not written (non-GET requests are answered locally).
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -103,6 +104,22 @@ try {
     if (info?.at) { await jump(page, info.cup.t - 5.5); await strip('greenkeeper-moving-hole', info.at[0], info.at[1], 0.3, 6, 1100); }
     await freshDay(); info = await crewInfo(); console.log('crew', JSON.stringify(info));
     if (info?.mow) { await jump(page, info.mow.t - 6); await strip('mower-crossing-fairway', info.mow.to[0], info.mow.to[1], 0.3, 6, 1500, { w: 640, h: 420 }); }
+  }
+  if (want('staff')) {
+    // ---- the club card's Grounds crew: as hired (the crew the course needs), then short-handed for three days
+    const card = async name => {
+      await page.evaluate(() => { const g = window.__game; g.openClubCard(true); g.emit(); }); await sleep(1500);
+      const el = page.locator('[data-testid="club-card"]').first();
+      await el.evaluate(e => { e.dataset.mh = e.style.maxHeight; e.style.maxHeight = 'none'; });
+      await sleep(400); await save(await el.screenshot({ type: 'png' }), name);
+      console.log(name, JSON.stringify(await page.evaluate(() => window.__game.clubCard()?.crew)));
+    };
+    const day = async () => { await jump(page, 5 * 60); await page.evaluate(() => window.__game.setSpeed(1)); await sleep(1200); await page.evaluate(() => window.__game.setSpeed(0)); };
+    await day(); await jump(page, 9 * 60); await card('club-card-staff');
+    await page.evaluate(() => { const g = window.__game; g.crewHire('gk', -1); g.crewHire('mo', -1); });
+    for (let k = 0; k < 3; k++) await day();
+    await jump(page, 9 * 60); await card('club-card-staff-short');
+    await page.evaluate(() => { const g = window.__game; g.crewHire('gk', 1); g.crewHire('mo', 1); g.openClubCard(false); });
   }
 } finally {
   await browser.close();
