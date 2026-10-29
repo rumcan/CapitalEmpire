@@ -6,12 +6,13 @@ import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
 import { FLIGHT_TIME, PUTT_FLIGHT } from '../src/game/golf/play';
 import type { CourseView, Group, Lie, PlayHole, Pt, RoundPlan, Shot } from '../src/game/golf/play';
-import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, DayBook, dayCourse, PACE_REP_GOOD, PACE_REP_SLOW, checkInsTo, dayMembers, dayPace, dayPlan, dayRoster, feeScale, normalizeDaySave, paceReputation, type DayInputs } from '../src/game/golf/everyday';
+import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, DayBook, dayCourse, dayVisitors, MEMBER_PLAY, paceSlow, PACE_REP_GOOD, PACE_REP_SLOW, checkInsTo, dayMembers, dayPace, dayPlan, dayRoster, feeScale, normalizeDaySave, paceReputation, type DayInputs } from '../src/game/golf/everyday';
 import { DayView } from '../src/game/golf/everydayview';
-import { GREEN_FEE_PER_ROUND, OFF_SEASON_PLAY_DAYS, computeTournamentCloseBook, computeYearEnd, dailyGolfers, greenFeeIncome } from '../src/game/golf/yearend';
+import { GREEN_FEE_PER_ROUND, OFF_SEASON_PLAY_DAYS, computeTournamentCloseBook, computeYearEnd, dailyGolfers, greenFeeIncome, legacyMonthlyMembership } from '../src/game/golf/yearend';
 import { SEASON_LEN } from '../src/game/golf/calendar';
 import type { CourseFacts, Need } from '../src/game/golf/tour';
 import type { RoundResult } from '../src/game/event/round';
+import { visitorsADay } from '../src/game/golf/club';
 
 /** the pars of the 18 holes */
 const PARS: (3 | 4 | 5)[] = [3, 4, 4, 5, 3, 4, 4, 4, 5, 4, 3, 4, 4, 4, 5, 4, 4, 5];
@@ -193,4 +194,41 @@ test('close book: the green fees the season played are its line, already in the 
   assert.equal(played.greenFeeIncome, 12345);
   assert.equal(played.bizIncome, before.bizIncome - before.greenFeeIncome);
   assert.equal(played.net, before.net - before.greenFeeIncome + 12345);
+});
+
+test("T214: a day saved before the club's members (its inputs without members) rebuilds main's roster: the same golfers come back on a mid-day reload", () => {
+  // T208's stand-in: the members a month's legacy dues over $50, rounded; all of dailyGolfers as visitors
+  for (const inp of [CLUB, { quality: 40, rep: 10, holes: 9 }, { quality: 95, rep: 90, holes: 18 }] as DayInputs[]) {
+    assert.equal(dayMembers(inp), Math.round(legacyMonthlyMembership(inp.quality, inp.rep, inp.holes) / 50));
+    assert.equal(dayVisitors(inp), dailyGolfers(inp.quality, inp.rep, inp.holes));
+  }
+  // pinned from main before T214 (members, visitors, fees, groups of seed 12345's days 1 and 17)
+  const pins: [DayInputs, number, number, number, number, number][] = [
+    [CLUB, 1, 8, 47, 1034, 16], [CLUB, 17, 9, 40, 880, 17], [{ quality: 40, rep: 10, holes: 9 }, 1, 2, 12, 264, 5], [{ quality: 95, rep: 90, holes: 18 }, 17, 16, 68, 1496, 28],
+    [{ quality: 85, rep: 30, holes: 9, busy: 150 }, 1, 5, 160, 3520, 51],
+  ];
+  for (const [inp, day, m, v, f, g] of pins) {
+    const r = dayRoster(SEED, day, inp);
+    assert.deepEqual([r.members, r.visitors, r.fees, r.groups.length], [m, v, f, g], `${JSON.stringify(inp)} day ${day}`);
+  }
+  // and a DaySave from before T214 (no members in its inputs) normalizes without them: the book's roster is that one
+  const old = normalizeDaySave(JSON.parse(JSON.stringify({ day: 1, inp: CLUB, paid: 0, closed: false, today: { members: 0, visitors: 0, fees: 0 }, season: {} })))!;
+  assert.equal('members' in old.inp, false);
+  assert.deepEqual(new DayBook(SEED, old).rosterOf()!.info, dayRoster(SEED, 1, CLUB).info);
+});
+
+test("T214: the club's members on the tee sheet: MEMBER_PLAY of them a day, and the visitors fewer by 0.15 a member (never below half); saved with the day", () => {
+  const inp: DayInputs = { ...CLUB, members: 120 }, D = dailyGolfers(inp.quality, inp.rep, inp.holes);
+  assert.equal(dayMembers(inp), 120); assert.equal(dayVisitors(inp), visitorsADay(D, 120)); assert.equal(dayVisitors(inp), D - 18);
+  assert.equal(dayVisitors({ ...CLUB, members: 5000 }), D / 2);
+  let mem = 0, vis = 0; for (let d = 1; d <= 60; d++) { const r = dayRoster(SEED, d, inp); mem += r.members; vis += r.visitors; }
+  assert.ok(Math.abs(mem / 60 - 120 * MEMBER_PLAY) <= 0.06 * 120 * MEMBER_PLAY + 1, `members a day ${mem / 60}`);
+  assert.ok(Math.abs(vis / 60 - (D - 18)) <= 0.06 * (D - 18) + 1, `visitors a day ${vis / 60}`);
+  // no members: nobody of the club plays, the visitors are all of dailyGolfers
+  const none = dayRoster(SEED, 2, { ...CLUB, members: 0 }); assert.equal(none.members, 0); assert.ok(none.visitors > 0);
+  // the members are kept by normalize (a reload brings the same day back)
+  const s = normalizeDaySave(JSON.parse(JSON.stringify({ day: 4, inp, paid: 3, closed: false, today: { members: 0, visitors: 0, fees: 0 }, season: {} })))!;
+  assert.equal(s.inp.members, 120); assert.deepEqual(new DayBook(SEED, s).rosterOf()!.info, dayRoster(SEED, 4, inp).info);
+  // the pace's slowness (T214's churn and appeal read it): 0 at 5 minutes or less, 1 at 30 or more
+  assert.equal(paceSlow(3), 0); assert.equal(paceSlow(17.5), 0.5); assert.equal(paceSlow(45), 1);
 });
