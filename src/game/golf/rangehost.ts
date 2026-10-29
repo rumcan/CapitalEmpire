@@ -111,7 +111,7 @@ export class RangeHost {
   private home: HomeStage | -1 = -1;
   private movers: Drawable[] = []; private carDraw: Drawable[] = [];
   /** the balls in the air (x y h triples) */
-  readonly flyingBuf = new Float32Array(3 * 160); nFlying = 0;
+  readonly flyingBuf = new Float32Array(3 * 600); nFlying = 0; // (T251: room for hundreds in the air and rolling, the bench's busy range)
   /** the range card is open */
   cardOpen = false;
   /** the practice facilities as the course grid holds them (T130; null: not read yet), the grid and its rev when read, frames since, and the

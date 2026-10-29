@@ -11,6 +11,7 @@ import type { CourseView, Pt, RoundPlan } from './play/types';
 import { holeFrom } from './play/courseview';
 import type { DayRoster } from './everyday';
 import { Pacer } from './play/pacer';
+import type { HeightAt } from './play/roll';
 
 /** a car's drive between the car park's entrance and its bay (game minutes) */
 export const DRIVE_MIN = 1.2;
@@ -79,11 +80,12 @@ export class DayView {
   /** T266: the watchable golfers' pacers (null: the schedule as it is): the golfers (by id, their round's too), and the day's cars */
   private walkers: Pacer | null = null; private carPace: Pacer | null = null;
 
-  constructor(plan: RoundPlan, roster: DayRoster, view: CourseView, ground: ClubGround, paths: CartPaths | null = null, pace: DayPace | null = null) {
+  /** T251: height, the ground's height (the course height field) the balls' rolls bend with (null: flat) */
+  constructor(plan: RoundPlan, roster: DayRoster, view: CourseView, ground: ClubGround, paths: CartPaths | null = null, pace: DayPace | null = null, height: HeightAt = null) {
     this.plan = plan; this.roster = roster; this.view = view; this.ground = ground;
     const n0 = plan.golfers.length;
     if (pace) { this.walkers = new Pacer(n0, pace.walk); this.carPace = new Pacer(roster.info.length * CAR_IDS, pace.car); }
-    this.pv = new PlayView(plan, view, { paths, home: ground.door, pace: pace && this.walkers ? { walkers: this.walkers, carts: new Pacer(n0, pace.cart) } : null });
+    this.pv = new PlayView(plan, view, { paths, home: ground.door, pace: pace && this.walkers ? { walkers: this.walkers, carts: new Pacer(n0, pace.cart) } : null, height });
     // T213: a cart's golfers ride it back to the clubhouse's door after their round, and walk to their car from there
     const cp = this.pv.cartPlay;
     const n = plan.golfers.length; this.only = new Uint8Array(n);

@@ -25,7 +25,12 @@ export interface Group { tee: number; players: number[] }
 export type Club = 'driver' | 'wood3' | 'iron4' | 'iron6' | 'iron8' | 'pw' | 'sw' | 'putter';
 /** one stroke: the golfer, hole index (0..17), stroke number (1-based), the minute struck, from and to (tiles), the club, the lie where it came
  *  to rest, the penalty stroke (water or out of bounds), and whether it went in */
-export interface Shot { golfer: number; hole: number; stroke: number; t: number; from: Pt; to: Pt; club: Club; lie: Lie; penalty: 0 | 1; holed: boolean }
+export interface Shot { golfer: number; hole: number; stroke: number; t: number; from: Pt; to: Pt; club: Club; lie: Lie; penalty: 0 | 1; holed: boolean;
+  /** T251: a full shot's or chip's landing (shot.ts hitShot), the playback's bounce and roll (play/roll.ts); absent: a putt, or a plan made by hand */
+  landing?: Landing }
+/** T251: where a full shot or chip landed and its lie there, and where its roll stopped and its lie there (rest: `to`, unless the ball went into water
+ *  or out of bounds, when `to` is the drop or the stroke again) */
+export interface Landing { at: Pt; lie: Lie; rest: Pt; restLie: Lie }
 /** T211 pace of play: a group's wait on the group ahead: the group (an index into groups), the hole index, where (on the tee, for the landing area; or
  *  short of the green, for the green), and from..to in game minutes (to is Infinity while the group ahead has not let it play yet) */
 export interface Wait { group: number; hole: number; at: 'tee' | 'green'; from: number; to: number }

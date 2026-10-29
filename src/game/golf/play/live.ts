@@ -7,7 +7,7 @@ import { appendShots, FLIGHT_TIME, liveField, PUTT_FLIGHT } from './round';
 import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
 import { carryM, chooseShot, hitShot, putt, rng } from './shot';
 import { holeFrom } from './courseview';
-import type { Club, CourseView, Lie, Pt, RoundPlan, Shot } from './types';
+import type { Club, CourseView, Landing, Lie, Pt, RoundPlan, Shot } from './types';
 
 /** the owner's input for his shot at a turn: the hole index and stroke it answers, the club, the aim point, and the power: 0.3..1 of the club's full
  *  carry (the putter: 0.5..1.5 of the putt's length) */
@@ -63,7 +63,7 @@ export class LiveGroup {
     if (!turn || !p || !g || !hr || this.field.caddied) throw new Error('LiveGroup.play: no owner turn to play (call advance first)');
     if (input.holeIdx !== turn.holeIdx || input.stroke !== turn.stroke) throw new Error(`LiveGroup.play: the input is for hole ${input.holeIdx} stroke ${input.stroke}, the turn is hole ${turn.holeIdx} stroke ${turn.stroke}`);
     const view = this.ctx.view, hole = view.holes[hr.h]!, from = p.ball, r = rng(this.ctx.seed, p.id, hr.h * 32 + turn.stroke), putting = input.club === 'putter';
-    let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false;
+    let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Landing | undefined;
     if (putting) {
       const pw = clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
       const dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0;
@@ -89,9 +89,9 @@ export class LiveGroup {
       if (L === 0) { ux = 1; uy = 0; L = 1; }
       const d = carryM(input.club, p.skill) * pw / TILE_M, at = { x: from.x + ux / L * d, y: from.y + uy / L * d };
       const o = hitShot(r, p.skill, p.lie, from, at, input.club, view);
-      to = o.to; lie = o.lie; penalty = o.penalty;
+      to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
     }
-    const s = hr.record(p, input.club, turn.t, putting ? PUTT_FLIGHT : FLIGHT_TIME, to, lie, penalty, holed);
+    const s = hr.record(p, input.club, turn.t, putting ? PUTT_FLIGHT : FLIGHT_TIME, to, lie, penalty, holed, landing);
     this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power });
     this.field.settle(g);
     this.turn = null; this.player = null; this.due = null;
