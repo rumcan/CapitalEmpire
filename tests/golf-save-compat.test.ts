@@ -4,6 +4,11 @@ import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
 import { SAVE_VERSION, upgradeSave, type SaveV5 } from '../src/game/save';
 import { normalizeGolfSave, type GolfSave } from '../src/game/golf/mode';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { POOL_TOWN, churnRate, joinRate, legacyClub, monthStep, newClub, seasonMemberships, stepTo, type ClubInputs } from '../src/game/golf/club';
+import { dayMembers } from '../src/game/golf/everyday';
+import { annualMembershipIncome } from '../src/game/golf/yearend';
 
 function makeClassicSaveV5(): SaveV5 {
   return {
@@ -201,4 +206,42 @@ test('a range start save (plan P22 T087) normalizes with its start, exits, townB
   assert.ok(o);
   for (const k of ['start', 'exits', 'townBoost', 'invited', 'founding']) assert.equal(k in o, false, `${k} is not added`);
   assert.deepEqual(o, { ...old });
+});
+
+// T214 (#559, plan P26 section 8): saves from before the club's members. The engine seeds golf.club at the first frame from golf.everyday.inp
+// (else the course then) with club.ts legacyClub; these check the pure half of that on the two saves P26 names.
+const CLUB_INP = (o: Partial<ClubInputs> = {}): ClubInputs => ({ residents: 400, quality: 86, rep: 30, holes: 9, visitors: 28, level: 1, waitAvg: 0, slow: 0, ...o });
+
+test('T214: an old start\'s save (?start=town, made on main) loads with the members its Clubhouse card showed (14), $50, the founding drive done; the season is booked once, then it steps on', () => {
+  // the golf part of a new old-start game saved on main before T214 (its card showed "14 members"): no golf.club; its day's inputs
+  const old = { v: 1, tier: 1, rep: 30, town: { x: 1100, y: 500 }, course: [1000, 300, 400, 400], parcel: [1000, 300, 400, 400], dir: 1, tees: [], pins: [], aims: [], clubhouse: { x: 1230, y: 400 },
+    everyday: { day: 1, inp: { quality: 86, rep: 30, holes: 9 }, paid: 0, closed: false, today: { members: 0, visitors: 0, fees: 0 }, season: { days: 0, members: 0, visitors: 0, turned: 0, fees: 0, groups: 0, waitMin: 0 } } };
+  const g = normalizeGolfSave(JSON.parse(JSON.stringify(old)) as Partial<GolfSave>)!;
+  assert.equal(g.club, undefined, 'no members saved: the engine seeds them');
+  assert.equal(dayMembers(g.everyday!.inp), 14, "the card's count on main");
+  // loaded in the season's first month (September: one month the old rule's)
+  const c = legacyClub(g.everyday!.inp, 0, 1, true);
+  assert.equal(Math.round(c.members), 14); assert.equal(c.price, 50); assert.equal(c.founded, true); assert.equal(c.legacyMonths, 1);
+  // the rest of the season month by month, the town set so the members hold (sales = churn): the close books within $1 of the old rule's year
+  const i0 = CLUB_INP({ residents: 0, visitors: 0 }), hold = CLUB_INP({ visitors: 0, residents: c.members * (1 + churnRate(i0, 50) / joinRate(i0, 50)) / POOL_TOWN });
+  const end = stepTo(c, 11, () => hold).s, annual = annualMembershipIncome(86, 30, 9), m = seasonMemberships(end, annual);
+  assert.ok(Math.abs(m.total - annual) <= 1, `${m.total} against ${annual}`);
+  // then it steps on, by P26's month: in a town of 400 (a pool of 38) its $50 is a little dear (fair $45) and it loses a few; in a town of 1,000
+  // (a pool of 62) it gains
+  const small = stepTo(c, 6, () => CLUB_INP()).s; assert.ok(small.members < c.members && small.members > c.members - 1, `${small.members}`);
+  const i = CLUB_INP({ residents: 1000 }), on = stepTo(c, 6, () => i).s; assert.ok(on.members > c.members, 'members join from the pool');
+  assert.ok(monthStep(on, i).s.members > on.members);
+  // saved and loaded again on the branch: the club comes back as it was
+  const again = normalizeGolfSave(JSON.parse(JSON.stringify({ ...g, club: on })))!;
+  assert.deepEqual(again.club, on);
+});
+
+test('T214: the range20 fixture (a grown range start, no clubhouse, no holes) loads with no members and its founding drive still to come', () => {
+  const raw = JSON.parse(readFileSync(join(process.cwd(), 'tests/fixtures/saves/golf-v5-range-20y.json'), 'utf8'));
+  const up = upgradeSave(raw)!, g = normalizeGolfSave(up.golf)!;
+  assert.equal(g.club, undefined);
+  assert.equal((up.biz ?? []).some(b => b[0] === 'clubhouse'), false, 'no clubhouse in the fixture');
+  const c = legacyClub({ quality: 85, rep: g.rep, holes: 0 }, 240, 1, false);
+  assert.equal(c.members, 0); assert.equal(c.founded, false); assert.equal(c.legacyMonths, undefined);
+  assert.deepEqual({ ...c, founded: false }, { ...newClub(240), price: 50 }, 'a new club at the old dues');
 });

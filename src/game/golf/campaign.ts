@@ -3,7 +3,7 @@ import { PARTY } from '../event/config';
 import type { RoundResult } from '../event/round';
 import type { PlacedEventStructure } from './eventtool';
 import { dayShare, spectatorDemand, tierInfo, verdict, type CourseFacts, type Need } from './tour';
-import { annualMembershipIncome, computeYearEnd, dailyGolfers, greenFeeIncome, monthlyMembershipIncome } from './yearend';
+import { annualMembershipIncome, computeYearEnd, dailyGolfers, greenFeeIncome, legacyMonthlyMembership } from './yearend';
 
 /** configuration options for running a multi-year campaign simulation */
 export interface CampaignOptions {
@@ -168,7 +168,7 @@ export function simulateCampaign(opts: CampaignOptions = {}): CampaignResult {
     const sponsorIncome = ye.sponsorIncome ?? 0;
     const yrDailyGolfers = ye.dailyGolfers ?? dailyGolfers(courseQualityScore, reputation, courseHoles);
     const yrGreenFees = ye.greenFeeIncome ?? greenFeeIncome(courseQualityScore, reputation, courseHoles);
-    const yrMonthlyMembership = ye.monthlyMembership ?? monthlyMembershipIncome(courseQualityScore, reputation, courseHoles);
+    const yrMonthlyMembership = ye.monthlyMembership ?? legacyMonthlyMembership(courseQualityScore, reputation, courseHoles);
     const yrMemberships = ye.membershipIncome ?? annualMembershipIncome(courseQualityScore, reputation, courseHoles);
     const totalIncome = yrGreenFees + yrMemberships + ticketIncome + tentRevenue + sponsorIncome;
 
