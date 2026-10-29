@@ -72,9 +72,9 @@ function CrewBlock({ c, onStaff }: { c: CrewCardView; onStaff?: (role: StaffRole
             <button className="btn-icon" disabled={!onStaff || c.staff[r] >= c.max} onClick={() => onStaff?.(r, 1)} title={`Hire a ${ROLE[r].one.toLowerCase()} (${money(c.wage[r])} a month)`} aria-label={`Hire a ${ROLE[r].one.toLowerCase()}`} data-testid={`crew-${r}-hire`}>+</button>
           </div>
         ))}
-        <div className="flex items-center justify-between border-t border-white/10 pt-1.5" data-testid="crew-condition" title="The course's condition: each job the crew falls behind on (greens, bunkers, fairways, rough) lowers it; it takes up to a quarter off the quality score the golfers, the members and the tournament see">
-          <span className="text-slate-300">Condition <span className={`font-semibold ${tone}`}>{c.condition}</span></span>
-          <span className="text-slate-400">greens {c.stimp.toFixed(1)} ft · fairways {c.fairwayMM} mm · rough {c.roughMM} mm</span>
+        <div className="border-t border-white/10 pt-1.5" data-testid="crew-condition" title="The course's condition: each job the crew falls behind on (greens, bunkers, fairways, rough) lowers it; it takes up to a quarter off the quality score the golfers, the members and the tournament see">
+          <div className="text-slate-300">Condition <span className={`font-semibold ${tone}`}>{c.condition}</span> of 100</div>
+          <div className="text-[12px] text-slate-400">Greens {c.stimp.toFixed(1)} ft on the stimp · fairways {c.fairwayMM} mm · rough {c.roughMM} mm</div>
         </div>
         {short.length > 0 && <div className="text-[12px] font-semibold text-amber-200" data-testid="crew-short">{short.map(r => `${c.need[r] - c.staff[r]} ${c.need[r] - c.staff[r] === 1 ? ROLE[r].one.toLowerCase() : ROLE[r].many.toLowerCase()} short`).join(', ')}: {short.includes('gk') ? 'cups stay put and the greens slow' : ''}{short.length === 2 ? '; ' : ''}{short.includes('mo') ? 'the grass grows long' : ''}</div>}
       </div>
