@@ -53,7 +53,7 @@ export const encodeSd = (sd: number) => Math.round(clamp((sd - SD_RANGE[0]) / (S
 export const decodeSd = (b: number) => SD_RANGE[0] + (b / 255) * (SD_RANGE[1] - SD_RANGE[0]);
 /** the waves' strength (0..1, the mask's alpha) by the water: a river by its width (tiles: narrow ones lap least, it flows), a pond or
  *  painted water by its area (tiles squared: a course pond gently, a lake-sized body most) */
-export const LAP = { river: [0.3, 0.55], riverWidth: [10, 40], pond: [0.5, 1], area: [500, 5000] } as const;
+export const LAP = { river: [0.3, 0.55], riverWidth: [10, 40], pond: [0.38, 1], area: [500, 5000] } as const;
 export const riverLap = (w: number) => LAP.river[0] + (LAP.river[1] - LAP.river[0]) * smooth(LAP.riverWidth[0], LAP.riverWidth[1], w);
 export const pondLap = (area: number) => LAP.pond[0] + (LAP.pond[1] - LAP.pond[0]) * smooth(LAP.area[0], LAP.area[1], area);
 /** the bank side the mask carries (tiles past the water's edge: the swash and the wet band reach no farther; the strength and the flow are
@@ -139,27 +139,32 @@ export const ZOOM = [0.1, 0.125] as const;
 /** the two ripple layers: their frequencies (a tile: the first about 1.4 tiles a ripple, the second finer), their slopes' shares, how much
  *  the sun-facing slope lights or shades the water (a share of its colour) and how far in from the shore they rise to whole (tiles); the
  *  ponds' wind drift of each (tiles a second at speed 1) */
-export const RIPPLE = { fa: 0.72, fb: 1.85, ra: 1, rb: 0.42, shade: 0.075, rise: [0.05, 1.1], driftA: [0.06, -0.035], driftB: [-0.025, -0.05] } as const;
+export const RIPPLE = { fa: 0.72, fb: 1.85, ra: 1, rb: 0.3, shade: 0.14, rise: [0.05, 1.1], driftA: [0.1, -0.06], driftB: [-0.045, -0.08] } as const;
 /** a river's flow: its surface speed (tiles a second at speed 1), how far a phase carries the pattern before the cross-fade (tiles), the
  *  finer layer's share of that (faster), and the slow noise that offsets the phase from place to place (its frequency, its reach in cycles) */
 export const FLOW = { speed: 0.42, travel: 1.1, fine: 1.35, offF: 0.085, offK: 1.6 } as const;
 /** the sparkle: the ripple normal's bump, the highlight's exponent and strength, its inset from the shore (tiles), and the sky colour it
- *  takes the water toward (0..1) with the water's own colour (textured: own share) */
-export const SPARKLE = { bump: 0.42, exp: 140, amount: 0.55, inset: [0.6, 1.8], sky: [0.86, 0.93, 0.96], own: 0.55, night: 0.85 } as const;
+ *  takes the water toward (0..1) with the water's own colour (textured: own share); patch: it glitters in patches (where the slow noise and
+ *  the first layer are high, as a gust ruffles the water), never evenly everywhere */
+export const SPARKLE = { bump: 0.4, exp: 220, amount: 0.6, inset: [0.6, 1.8], sky: [0.86, 0.93, 0.96], own: 0.55, night: 0.85, patch: [0.05, 0.6] } as const;
 /** the foam crests: their spacing (tiles) and how far out they start (tiles) at the waves' strength 0 and 1, the waves' speed (crests a
  *  second at speed 1), a crest's width (tiles, and never under this many device px), its soft trail behind (tiles), the most alpha, the
  *  river's share (it flows more than it laps), the breakup's threshold, the foam colour (0..1), and the device px a tile can shrink to before the
- *  crests fade out (they would flicker) */
-export const FOAM = { lam: [0.6, 1.1], reach: [1.2, 3], rate: 0.3, width: 0.07, widthPx: 1.3, tail: 0.32, alpha: 0.5, river: 0.55, broken: [0.42, 0.7], col: [0.84, 0.9, 0.87], fadePx: [0.15, 0.22] } as const;
+ *  crests fade out (they would flicker); power: the alpha goes as the strength to this power (a pond's gentle laps fainter) */
+export const FOAM = { lam: [0.6, 1.1], reach: [1.2, 3], rate: 0.3, width: 0.1, widthPx: 1, tail: 0.32, alpha: 0.85, power: 0.9, river: 0.8, broken: [0.42, 0.7], col: [0.84, 0.9, 0.87], fadePx: [0.09, 0.2] } as const;
 /** the bank side: the damp band (tiles past the waterline), the swash's run-up on top (tiles at strength 1), the wet colour's multiply (a
  *  cool darkening: the soil's texture stays) and its strength, and the swash's leading edge's foam alpha */
-export const WET = { damp: 0.13, run: 0.32, mul: [0.7, 0.72, 0.77], amount: 0.75, edge: 0.22 } as const;
+export const WET = { damp: 0.3, run: 0.4, mul: [0.6, 0.62, 0.68], amount: 0.9, edge: 0.3 } as const;
 /** the water key (0..255 a channel): the water pictures are teal (blue and green well over red: the pond #1e4342, the lake #0b5263); the
  *  bank, the grass, the soil, the roads and a bridge's deck are not. The shore taps: the steps (tiles) the picture is read at along the
  *  field's slope, and how far (the most a pixel's distance from the waterline is read as) */
 export const KEY = { br: [4, 14], gr: [6, 18] } as const;
 export const waterKey = (r: number, g: number, b: number) => smooth(KEY.br[0], KEY.br[1], b - r) * smooth(KEY.gr[0], KEY.gr[1], g - r);
 export const TAPS = { step: 0.1, n: 6 } as const;
+/** the bank's effects only where the field's shore lies (tiles in from it: whole to the first, none past the second; the field's waterline
+ *  lies within a quarter tile of the picture's): a leaf or a dark fleck floating on the water is no bank. And a bank pixel with water on its
+ *  far side too (a tap SPECK tiles away from the water) is such a speck */
+export const BANK_GATE = [0.05, 0.3] as const, SPECK = 0.12;
 
 /** the direction toward the sun along the ground (tiles, unit) and its elevation's sine: the screen's sun (grass-shine.ts SUN_SCREEN, the
  *  upper right) taken back through the iso projection (iso.ts: X = HW (x - y), Y = HH (x + y)) */
@@ -254,14 +259,15 @@ export function motionPixel(c: readonly number[], x: number, y: number, s: Motio
     const k = 1 + fr.ripple * RIPPLE.shade * clamp(lit, -2.5, 2.5) * smooth(RIPPLE.rise[0], RIPPLE.rise[1], sd) * ww;
     out = out.map(v => v * k);
     const nx = -gx * SPARKLE.bump, ny = -gy * SPARKLE.bump, nl = Math.hypot(nx, ny, 1), nh = Math.max(0, (nx * HALF[0] + ny * HALF[1] + HALF[2]) / nl);
-    const sp = Math.pow(nh, SPARKLE.exp) * fr.sparkle * SPARKLE.amount * ww * smooth(SPARKLE.inset[0], SPARKLE.inset[1], sd) * (1 - clamp(shade, 0, 1));
+    const sp = Math.pow(nh, SPARKLE.exp) * fr.sparkle * SPARKLE.amount * ww * smooth(SPARKLE.inset[0], SPARKLE.inset[1], sd) * smooth(SPARKLE.patch[0], SPARKLE.patch[1], off / FLOW.offK + 0.5 * a[0]!) * (1 - clamp(shade, 0, 1));
     if (sp > 0) out = out.map((v, i) => v + sp * (v * 1.6 * SPARKLE.own + SPARKLE.sky[i]! * (1 - SPARKLE.own)));
     const fo = foamAt(sd, e, A, fr, off, river ? a[0]! : b[0]!, river) * ww;
     if (fo > 0) { const t = 0.82 + 0.36 * (0.5 + b[0]!); out = out.map((v, i) => v + (FOAM.col[i]! * t - v) * fo); }
   }
-  if (key < 0.999 && sd < 0.45) {
-    // the bank: the damp band and the swash running up it, by the pixel's distance from the waterline
-    const bw = (1 - key), { wet, edge: fe } = bankAt(e, A, fr, off, b[0]!);
+  if (key < 0.999 && sd < 0.3) {
+    // the bank: the damp band and the swash running up it, by the pixel's distance from the waterline (only where the field's shore lies: a
+    // speck floating on open water is no bank)
+    const bw = (1 - key) * (1 - smooth(BANK_GATE[0], BANK_GATE[1], sd)), { wet, edge: fe } = bankAt(e, A, fr, off, b[0]!);
     if (wet > 0) out = out.map((v, i) => v * (1 + (WET.mul[i]! - 1) * wet * WET.amount * bw));
     if (fe > 0) out = out.map((v, i) => v + (FOAM.col[i]! - v) * fe * bw);
   }
@@ -274,8 +280,8 @@ export function foamAt(sd: number, e: number, A: number, fr: MotionFrame, off: n
   if (!(sd < R) || !(A > 0)) return 0;
   const q = fract(sd / lam + fr.wave + off * 0.6), aw = Math.max(FOAM.width, FOAM.widthPx * fr.pxTile) / lam, tail = FOAM.tail / lam;
   const crest = smooth(0, aw, q) * (1 - smooth(aw, aw + tail, q)), brk = smooth(FOAM.broken[0], FOAM.broken[1], 0.5 + 1.1 * n);
-  const env = smooth(R, 0.45 * R, sd) * smooth(0, 0.22, Math.min(e, Math.max(sd, 0) + 0.05)), far = 1 - smooth(FOAM.fadePx[0], FOAM.fadePx[1], fr.pxTile);
-  return clamp(fr.foam * FOAM.alpha * Math.pow(A, 0.7) * env * crest * brk * far * (river ? FOAM.river : 1), 0, 0.6);
+  const env = (1 - smooth(0.45 * R, R, sd)) * smooth(0, 0.22, Math.min(e, Math.max(sd, 0) + 0.05)), far = 1 - smooth(FOAM.fadePx[0], FOAM.fadePx[1], fr.pxTile);
+  return clamp(fr.foam * FOAM.alpha * Math.pow(A, FOAM.power) * env * crest * brk * far * (river ? FOAM.river : 1), 0, 0.6);
 }
 /** the bank e tiles past the picture's waterline: the wet band's share (0..1) and the swash edge's foam alpha, at the waves' strength A */
 export function bankAt(e: number, A: number, fr: MotionFrame, off: number, n: number): { wet: number; edge: number } {
@@ -318,11 +324,16 @@ vec3 wPic(vec2 p) {
   vec2 w = vec2(${g(HW)} * (p.x - p.y), ${g(HH)} * (p.x + p.y));
   return textureLod(uTex, uUV.xy + (w - uRect.xy) / (uRect.zw - uRect.xy) * (uUV.zw - uUV.xy), 0.0).rgb;
 }
-/** how far (tiles) the pixel at p lies from the picture's waterline, read along the field's slope (toWater: a bank pixel looks for water) */
-float wEdge(vec2 p, float sd, bool toWater) {
+/** the way to the water from p (tiles, unit; 0 where the field is flat): the field's slope, two more mask reads */
+vec2 wDir(vec2 p, float sd) {
   vec2 gr = vec2(wSd(wMask(p + vec2(0.3, 0.0))) - sd, wSd(wMask(p + vec2(0.0, 0.3))) - sd);
-  float gl = length(gr); if (gl < 1e-4) return ${g(TAPS.step * TAPS.n)};
-  vec2 dir = gr / gl * (toWater ? 1.0 : -1.0);
+  float gl = length(gr); return gl < 1e-4 ? vec2(0.0) : gr / gl;
+}
+/** how far (tiles) the pixel at p lies from the picture's waterline, read along the way to the water (toWater: a bank pixel looks for water, a
+ *  water pixel the other way for the bank) */
+float wEdge(vec2 p, vec2 w, bool toWater) {
+  if (w.x == 0.0 && w.y == 0.0) return ${g(TAPS.step * TAPS.n)};
+  vec2 dir = toWater ? w : -w;
   for (int i = 1; i <= ${TAPS.n}; i++) {
     float r = float(i) * ${g(TAPS.step)};
     if ((wKey(wPic(p + dir * r)) > 0.5) == toWater) {
@@ -355,12 +366,13 @@ vec3 waterMotion(vec3 c, vec2 p) {
   vec2 gs = a.yz * ${g(RIPPLE.fa * RIPPLE.ra)} + b.yz * ${g(RIPPLE.fb * RIPPLE.rb)};
   vec3 col = c;
   bool near = sd < 0.75;
-  float e = near ? wEdge(p, sd, key < 0.5) : ${g(TAPS.step * TAPS.n)};
+  vec2 wd = near ? wDir(p, sd) : vec2(0.0);
+  float e = near ? wEdge(p, wd, key < 0.5) : ${g(TAPS.step * TAPS.n)};
   if (key > 0.001 && sd > -0.6) {
     float ww = key * smoothstep(-0.6, -0.1, sd), lit = -dot(gs, ${v2(SUN_TILE)});
     col *= 1.0 + uWater.y * ${g(RIPPLE.shade)} * clamp(lit, -2.5, 2.5) * smoothstep(${g(RIPPLE.rise[0])}, ${g(RIPPLE.rise[1])}, sd) * ww;
     vec3 N = normalize(vec3(-gs * ${g(SPARKLE.bump)}, 1.0));
-    float sp = pow(max(dot(N, ${v3(HALF)}), 0.0), ${g(SPARKLE.exp)}) * uWater.w * ${g(SPARKLE.amount)} * ww * smoothstep(${g(SPARKLE.inset[0])}, ${g(SPARKLE.inset[1])}, sd);
+    float sp = pow(max(dot(N, ${v3(HALF)}), 0.0), ${g(SPARKLE.exp)}) * uWater.w * ${g(SPARKLE.amount)} * ww * smoothstep(${g(SPARKLE.inset[0])}, ${g(SPARKLE.inset[1])}, sd) * smoothstep(${g(SPARKLE.patch[0])}, ${g(SPARKLE.patch[1])}, off / ${g(FLOW.offK)} + 0.5 * a.x);
     if (sp > 0.002 && uLayerCam.w > 0.5) {
       // (no sun glint in a shadow: the last frame's shadow layer where this pixel's world point lay then, as T262's shine)
       vec2 q = (vW - uLayerCam.xy) * uLayerCam.z + 0.5 * uLayerScreen;
@@ -374,14 +386,17 @@ vec3 waterMotion(vec3 c, vec2 p) {
       float q = fract(sd / lam + uWaterT.y + off * 0.6), aw = max(${g(FOAM.width)}, ${g(FOAM.widthPx)} * uWaterT.w) / lam, tail = ${g(FOAM.tail)} / lam;
       float crest = smoothstep(0.0, aw, q) * (1.0 - smoothstep(aw, aw + tail, q));
       float brk = smoothstep(${g(FOAM.broken[0])}, ${g(FOAM.broken[1])}, 0.5 + 1.1 * (river ? a.x : b.x));
-      float env = smoothstep(R, 0.45 * R, sd) * smoothstep(0.0, 0.22, min(e, max(sd, 0.0) + 0.05)) * (1.0 - smoothstep(${g(FOAM.fadePx[0])}, ${g(FOAM.fadePx[1])}, uWaterT.w));
-      float fo = clamp(uWater.z * ${g(FOAM.alpha)} * pow(A, 0.7) * env * crest * brk * (river ? ${g(FOAM.river)} : 1.0), 0.0, 0.6) * ww;
+      float env = (1.0 - smoothstep(0.45 * R, R, sd)) * smoothstep(0.0, 0.22, min(e, max(sd, 0.0) + 0.05)) * (1.0 - smoothstep(${g(FOAM.fadePx[0])}, ${g(FOAM.fadePx[1])}, uWaterT.w));
+      float fo = clamp(uWater.z * ${g(FOAM.alpha)} * pow(A, ${g(FOAM.power)}) * env * crest * brk * (river ? ${g(FOAM.river)} : 1.0), 0.0, 0.6) * ww;
       col = mix(col, ${v3(FOAM.col)} * (0.82 + 0.36 * (0.5 + b.x)), fo);
     }
   }
-  if (key < 0.999 && sd < 0.45 && A > 0.001) {
+  float bw = (1.0 - key) * (1.0 - smoothstep(${g(BANK_GATE[0])}, ${g(BANK_GATE[1])}, sd));
+  // (a speck floating on the water, a leaf or a dark fleck: water on its far side too)
+  if (bw > 0.0 && key < 0.5 && (wd.x != 0.0 || wd.y != 0.0) && wKey(wPic(p - wd * ${g(SPECK)})) > 0.5) bw = 0.0;
+  if (bw > 0.001 && sd < 0.3 && A > 0.001) {
     // the bank: the damp band and the swash running up it
-    float bw = 1.0 - key, q0 = fract(uWaterT.y + off * 0.6), run = smoothstep(0.0, 0.1, q0) * (1.0 - smoothstep(0.1, 0.75, q0));
+    float q0 = fract(uWaterT.y + off * 0.6), run = smoothstep(0.0, 0.1, q0) * (1.0 - smoothstep(0.1, 0.75, q0));
     float rw = (${g(WET.damp)} + ${g(WET.run)} * A * run * min(1.0, uWater.z)) * (0.7 + 0.6 * clamp(0.5 + b.x, 0.0, 1.0));
     float wet = (1.0 - smoothstep(0.55 * rw, rw, e)) * smoothstep(0.02, 0.12, A) * min(1.0, uWater.x * 2.0);
     col *= 1.0 + (${v3(WET.mul)} - 1.0) * (wet * ${g(WET.amount)} * bw);
