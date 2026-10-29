@@ -1,4 +1,9 @@
 @import "tailwindcss";
+/* the files the studio and the lot lab save while you edit (dev-save.ts DEV_SAVE_FILES) hold no class names: scanning them rebuilt the
+   whole stylesheet on every save, up to once a second, until the dev server crashed (2026-10-29) */
+@source not "./game/lots/lot-presets.json";
+@source not "../scripts/assets/scale-overrides.json";
+@source not "../scripts/assets/removed.json";
 
 /* T180 (P23-UX D8.1): body text at 13 px or more. text-xs is the panels' body size: 13 px here (Tailwind's 12 px default was below the
    floor); secondary text (sub-lines, labels, key hints) is 12 px, the old 9 to 11 px sizes raised to it. */
