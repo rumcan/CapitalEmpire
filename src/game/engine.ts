@@ -6465,7 +6465,7 @@ export class Game {
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf); this.dayBook = null; this.dayPlay = null; this.clubCardOpen = false; // T208: everyday golf comes back from golf.everyday
-      this.clubLegacy = !!this.golf && !this.golf.club; // T214: a save from before P26 has no members saved: seeded at the first frame (ensureClub)
+      this.clubLegacy = !!this.golf && !this.golf.club; // T214: a save from before P26 has no members saved: seeded at the first frame (stepClub)
       // a course grid that does not decode fails the load (the slot is backed up, T042), never an empty course saved over the real one
       const lg = this.golf ? loadCourseGrid(this.golf.grid) : 'migrate';
       if (lg === 'bad') { console.error('load failed: the course grid does not decode'); this.golf = null; return false; }
