@@ -51,6 +51,8 @@ export const SURFACES: readonly SurfaceDef[] = [
     { key: k, name: `Farm fields: ${n} (rows along x)`, group: 'Map' as const, tex: [k], kinds: ['cut', 'grass'] as const, slot: true as const },
     { key: `${k}Y`, name: `Farm fields: ${n} (rows along y)`, group: 'Map' as const, tex: [`${k}Y`], kinds: ['cut', 'grass'] as const, slot: true as const },
   ]),
+  // T259: the farm lane (art 189; unset: the Dirt surface with its wheel ruts)
+  { key: 'farmLane', name: 'Farm lane (the dirt lane to a farmhouse)', group: 'Map', tex: ['farmLane'], kinds: ['cut', 'sand'], slot: true },
   { key: 'woodland', name: 'Woodland floor (under the trees; the forests on the planner map)', group: 'Map', tex: [WOODLAND], kinds: ['grass', 'cut'] },
   { key: 'outside', name: 'Outside the map', group: 'Map', tex: ['outside'], kinds: ['grass'] },
   { key: 'lawn', name: 'Lawn (the Paint tool\'s lawn textures)', group: 'Town', tex: ['lawnLush', 'lawnClover'], kinds: ['grass'] },

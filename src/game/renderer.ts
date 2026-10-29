@@ -46,7 +46,7 @@ import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lo
 import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type LeafRoad } from './leaf-fall';
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
-import { CROP_STATES, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
+import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
 import { LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
 const COMPOSED_BYTES = 64 << 20;
@@ -1644,7 +1644,7 @@ export class GroundPainter {
       for (const p of list) {
         const path = polyPath(p.pts);
         // T259: a crop field wears its state's art once it lands (cropArt), else its soil (tex 'field') under the stand-in rows (drawCrops)
-        const art = p.crop ? this.cropArt(p) : null;
+        const art = p.crop ? this.cropArt(p) : p.hard && p.tex === 'dirt' && this.tex.paintedOf(LANE_SURFACE) ? LANE_SURFACE : null;
         // T247: a lot's dirt (a dirt car park, a vegetable bed, a building site, a field) with its soft band where it meets grass (T259: not a farm lane)
         if (sc && !p.hard && this.softTex(p.tex)) {
           const fill = pat((art ?? p.tex) as TexName);

@@ -15,7 +15,7 @@ import type { Composition, Placed } from '../../lots/compose';
 import { OWNER_SCALE } from '../../lots/scales';
 import { TC } from '../../terrain/types';
 import { RUSTY_PICKUPS } from '../../vehicles';
-import { cornShift, cropState, orchardStage, type CropState, type FieldUse } from './crops';
+import { cornShift, cropState, orchardStage, type CropState, type FieldUse, type OrchardStage } from './crops';
 
 /** one rural parcel fronting a road: the frame origin (front-left corner, tiles), u along the road, n away from it;
  *  w (frontage) and d (depth) in tiles, side +1 to the left of a -> b and -1 to the right; key stable across seg splits */
@@ -482,11 +482,32 @@ export const LANE_HALF = 1.2;
 export const ORCHARD_PITCH = 3, ORCHARD_MAX = 8, ORCHARD_MUL = 0.62;
 /** the fallow field's grass (the course's long grass: an unkept field, never the map's own grass, so it reads against it) */
 const FALLOW_TEX: LotPatch['tex'] = 'golfLongGrass';
-/** the windbreak's trees: the gold birch (a poplar's shape and autumn gold) on most farms, else a row of spruces; one tree a row */
+/** the windbreak's trees: the gold birch (Stand In for the poplars: their shape and autumn gold) on most farms, else a row of spruces; one tree a row */
 const WIND_POPLAR = names(['ref:tree-birch-gold']), WIND_SPRUCE = names(['ref:tree-spruce-blue', 'capital:tree-spruce-open']);
-/** the orchard's species: the library's round broadleaf capital trees, through their leaf stages by the month (crops.ts ORCHARD_YEAR) */
+/** the orchard's species: the library's round broadleaf capital trees (Stand In for the orchard trees), through their leaf stages by the month
+ *  (crops.ts ORCHARD_YEAR) */
 const ORCHARD_SPECIES = ['oak', 'maple'] as const;
-export const orchardTreeId = (sp: string, month: number) => `capital:tree-${sp}-${orchardStage(month)}`;
+
+/** T259, the art swap (docs/GOLF-SPRITES.md "Farms"): the library ids of GOLF-ART-LIST 187 (the orchard trees) by leaf stage and 188 (the
+ *  windbreak poplars) by month, null until each lands. Naming one is the whole swap (one line): every orchard in that stage, every poplar row
+ *  in those months, wears it in place of the stand-in. The ground's swaps (185, 186, 189) are lines in painted-surfaces.json (crops.ts) */
+export const ORCHARD_ART: Readonly<Record<OrchardStage, string | null>> = {
+  open: null,          // 'orchard-apple-red-1view-v1' (summer, full leaf)
+  moderate: null,      // 'orchard-pear-1view-v1' or the red apple (autumn)
+  patchy: null,        // 'orchard-apple-bare-1view-v1' (half bare)
+  'near-bare': null,   // 'orchard-apple-bare-1view-v1' (winter)
+};
+export const POPLAR_ART: Readonly<Record<'greengold' | 'gold' | 'bare', string | null>> = {
+  greengold: null,     // 'poplar-greengold-1view-v1' (April to September)
+  gold: null,          // 'poplar-gold-1view-v1' (October, November)
+  bare: null,          // 'poplar-bare-1view-v1' (December to March)
+};
+/** the poplars' stage by calendar month (0 January) */
+const poplarStage = (month: number): 'greengold' | 'gold' | 'bare' => { const m = ((Math.floor(month) % 12) + 12) % 12; return m >= 3 && m <= 8 ? 'greengold' : m >= 9 && m <= 10 ? 'gold' : 'bare'; };
+/** an orchard tree in a month: its stage's art (ORCHARD_ART) once it lands, else the stand-in species' leaf stage */
+export const orchardTreeId = (sp: string, month: number) => ORCHARD_ART[orchardStage(month)] ?? `capital:tree-${sp}-${orchardStage(month)}`;
+/** a windbreak's tree in a month: a poplar row's stage art (POPLAR_ART) once it lands, else its stand-in (one tree all year) */
+const windTreeId = (id: string, month: number) => (WIND_POPLAR.includes(id) ? POPLAR_ART[poplarStage(month)] : null) ?? id;
 
 type PlotKind2 = 'corn' | 'plough' | 'fallow' | 'pasture' | 'orchard';
 interface Plot2 { a0: number; b0: number; a1: number; b1: number; kind: PlotKind2; shift: -1 | 0 | 1; alongU: boolean; ph: number }
@@ -649,7 +670,7 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   for (const sx of [-1, 1]) B.put(pick(r, TREES), clamp(L.ha + sx * (L.hw / 2 + 1.3), 1, W - 1), L.hb + (r() - 0.5) * 2, { plant: true });
   for (let a = L.ha - L.hw / 2; a <= L.ha + L.hw / 2; a += 1.6) B.put(pick(r, BUSHES), a, L.front - 0.8, { plant: true });
   // the windbreak down the lane (before the other plants, so the cap never cuts a row short), then the orchard's grid
-  if (L.wind) for (const s of L.wind.sides) for (let b = L.wind.b0; b <= L.wind.b1 + 1e-9; b += WIND_STEP) B.put(L.wind.id, L.laneA + s * WIND_OFF, b, { plant: true, mul: L.wind.mul });
+  if (L.wind) { const wid = windTreeId(L.wind.id, month); for (const s of L.wind.sides) for (let b = L.wind.b0; b <= L.wind.b1 + 1e-9; b += WIND_STEP) B.put(wid, L.laneA + s * WIND_OFF, b, { plant: true, mul: L.wind.mul }); }
   const o = L.orchard;
   if (o) { const id = orchardTreeId(o.sp, month); for (let j = 0; j < o.nb; j++) for (let i = 0; i < o.na; i++) B.put(id, o.a0 + i * ORCHARD_PITCH, o.b0 + j * ORCHARD_PITCH, { plant: true, mul: ORCHARD_MUL, fixed: true }); }
   // fences: board along the road (a gap at the lane), picket at the back of the yard, chain-link round the paddock
@@ -693,14 +714,14 @@ export function composeFarm(p: FarmParcel, seed: number, look: FarmLook = {}): C
 export function farmSeason(p: FarmParcel, seed: number, model: FarmModel, month: number): string {
   if (model === 1) return '';
   const L = layoutOf2(p, seed);
-  return L.plots.map(q => plotState(q, month)?.[0] ?? '-').join('') + (L.orchard ? orchardStage(month) : '');
+  return L.plots.map(q => plotState(q, month)?.[0] ?? '-').join('') + (L.orchard ? orchardTreeId(L.orchard.sp, month) : '') + (L.wind ? '|' + windTreeId(L.wind.id, month) : '');
 }
 /** T259: a farm's stand-ins (model 2) for their labels ("Stand In for <art>"): the windbreak's and the orchard's first tree (id: the prop the
  *  label sits on), the largest field of each crop state this month and the lane's middle (no id: a ground point), world tiles */
 export function farmStandIns(p: FarmParcel, seed: number, month: number): { x: number; y: number; text: string; id?: string }[] {
   const L = layoutOf2(p, seed), out: { x: number; y: number; text: string; id?: string }[] = [];
-  if (L.wind) { const c = world(p, L.laneA + L.wind.sides[0]! * WIND_OFF, L.wind.b0 + WIND_STEP * 2); out.push({ ...c, text: 'Stand In for windbreak poplars', id: L.wind.id }); }
-  if (L.orchard) { const c = world(p, L.orchard.a0, L.orchard.b0); out.push({ ...c, text: 'Stand In for orchard trees', id: orchardTreeId(L.orchard.sp, month) }); }
+  if (L.wind) { const c = world(p, L.laneA + L.wind.sides[0]! * WIND_OFF, L.wind.b0 + WIND_STEP * 2); if (windTreeId(L.wind.id, month) === L.wind.id) out.push({ ...c, text: 'Stand In for windbreak poplars', id: L.wind.id }); }
+  if (L.orchard && !ORCHARD_ART[orchardStage(month)]) { const c = world(p, L.orchard.a0, L.orchard.b0); out.push({ ...c, text: 'Stand In for orchard trees', id: orchardTreeId(L.orchard.sp, month) }); }
   const NAME: Record<CropState, string> = { plough: 'ploughed field', young: 'corn field, young', ripe: 'corn field, ripe', stubble: 'corn field, stubble' };
   const best = new Map<CropState, Plot2>();
   for (const q of L.plots) { const st = plotState(q, month); if (!st) continue; const b = best.get(st); if (!b || (q.a1 - q.a0) * (q.b1 - q.b0) > (b.a1 - b.a0) * (b.b1 - b.b0)) best.set(st, q); }

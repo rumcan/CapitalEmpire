@@ -51,6 +51,9 @@ export const CROP_SURFACE: Readonly<Record<CropState, { x: string; y: string }>>
   ripe: { x: 'cornRipe', y: 'cornRipeY' },
   stubble: { x: 'cornStubble', y: 'cornStubbleY' },
 };
+/** the farm lane's painted surface (GOLF-ART-LIST 189): unnamed in painted-surfaces.json, the lane is the Dirt surface with its wheel ruts drawn
+ *  over it (renderer.ts); named, the lane wears it (the ruts stay: they follow the lane, which a picture laid unturned cannot) */
+export const LANE_SURFACE = 'farmLane';
 /** the surface (texture id) a crop patch's art would be, by its state and its rows' direction (dx, dy) */
 export const cropSurface = (st: CropState, dx: number, dy: number): string => (Math.abs(dx) >= Math.abs(dy) ? CROP_SURFACE[st].x : CROP_SURFACE[st].y);
 

@@ -7,10 +7,10 @@ import { LIBRARY } from '../src/game/library';
 import { TREE_MIRROR } from '../src/game/tree-sun';
 import type { Placed } from '../src/game/lots/compose';
 import {
-  CORN_YEAR, CROP_SURFACE, ORCHARD_YEAR, ROW_LOOK, cornShift, cropState, cropSurface, monthOfYear, orchardStage, rowSegments, rowStep, ROW_MIN_PX,
+  CORN_YEAR, CROP_SURFACE, LANE_SURFACE, ORCHARD_YEAR, ROW_LOOK, cornShift, cropState, cropSurface, monthOfYear, orchardStage, rowSegments, rowStep, ROW_MIN_PX,
 } from '../src/game/ext/farms/crops';
 import {
-  FARM_SETBACK, FARM_SETBACK_SHORT, LANE_HALF, ORCHARD_PITCH, ORCHARD_MAX, WIND_OFF, WIND_STEP,
+  FARM_SETBACK, FARM_SETBACK_SHORT, LANE_HALF, ORCHARD_ART, ORCHARD_PITCH, ORCHARD_MAX, POPLAR_ART, WIND_OFF, WIND_STEP, orchardTreeId,
   composeFarm, farmLayoutForTest, farmParcels, farmSeason, farmStandIns, farmTrack, farmsteadOf, seedForParcel, type FarmParcel,
 } from '../src/game/ext/farms/farms';
 import { SURFACES } from '../src/game/painted-surfaces';
@@ -75,6 +75,10 @@ test('every field state has its art slot in the studio (painted-surfaces SURFACE
     assert.equal(cropSurface(st, 1, 0), CROP_SURFACE[st].x); assert.equal(cropSurface(st, 0, -1), CROP_SURFACE[st].y);
     assert.ok(ROW_LOOK[st].pitch > 0 && ROW_LOOK[st].width > 0 && ROW_LOOK[st].width < ROW_LOOK[st].pitch);
   }
+  // the lane's slot (189), and the sprite slots (187, 188): empty until their art lands, so the stand-ins draw (library trees, never mirrored)
+  assert.ok(keys.has(LANE_SURFACE) && SURFACES.find(s => s.key === LANE_SURFACE)?.slot);
+  for (const v of [...Object.values(ORCHARD_ART), ...Object.values(POPLAR_ART)]) assert.equal(v, null);
+  for (let m = 0; m < 12; m++) for (const sp of ['oak', 'maple']) { const id = orchardTreeId(sp, m); assert.ok(byId.get(id)?.kind === 'tree' && !TREE_MIRROR.has(id), id); }
 });
 
 test('stand-in rows: parallel to the field, a pitch apart, inside it and cut to a box', () => {
