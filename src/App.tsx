@@ -174,6 +174,9 @@ export default function App() {
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
   const setDev = (v: boolean) => { devRef.current = v; setDevState(v); try { localStorage.setItem(DEV_KEY, v ? '1' : '0'); } catch { /* storage may be unavailable */ } };
+  /** the developer readouts (the tile sets in view and the frame time and traffic panel): off unless F4 shows them (the owner, 2026-10-29) */
+  const [readouts, setReadouts] = useState(false);
+  useEffect(() => { const f4 = (e: KeyboardEvent) => { if (e.key === 'F4') { e.preventDefault(); setReadouts(v => !v); } }; window.addEventListener('keydown', f4); return () => window.removeEventListener('keydown', f4); }, []);
   useEffect(() => { const f3 = (e: KeyboardEvent) => { if (e.key === 'F3') { e.preventDefault(); setDev(!devRef.current); } }; window.addEventListener('keydown', f3); return () => window.removeEventListener('keydown', f3); }, []);
   /** the last tool picked in each rail item, so an item returns to it */
   const last = useRef<Record<string, Tool>>({});
@@ -469,7 +472,7 @@ export default function App() {
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} data-tip="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Performance panel, dev badge, Studio, traffic and growth controls (F3)"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Dev badge and Studio (F3); F4 shows the performance, traffic and growth panel and the tile readout"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
                     {/* T117: the unlocks' Settings switch (was the top bar's All tools chip): every tool and fine control now, whatever the stage */}
                     {game.playerProgressFacts() && (
                       <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip={ui ? `Tools open as your course grows (${ui.stageLabel}). Tick to show every tool and fine control now` : 'The dev sandbox shows every tool (?unlock=0 plays the unlocks)'}>
@@ -580,7 +583,7 @@ export default function App() {
                   </div>
                 )}
               </div>
-              {dev && ON_PC && <a className="btn" href={STUDIO_URL} target="studio" rel="noopener" title="The sprite studio (5179): sprites, lots, holes, the ground grass and map decals. Its Rebuild game sprites rebuilds this game: reload to see it">Studio</a>}
+              {dev && ON_PC && <a className="btn" href="/__dev/studio" target="studio" rel="noopener" title="The sprite studio (5191; started if it is not running): sprites, lots, holes, the ground grass and map decals. Its Rebuild game sprites rebuilds this game: reload to see it">Studio</a>}
               <button className="btn-icon" onClick={() => { setHelpTab('keys'); setHelp(true); }} data-tip="Help: the keys and how it works" data-tip-key="? or F1" aria-label="Help"><Icon name="help" size={22} /></button>
             </div>
           </div>
@@ -821,8 +824,8 @@ export default function App() {
           )}
 
           <Minimap game={game} />
-          {dev && <PerfPanel game={game} />}
-          {dev && <TilesPanel game={game} />}
+          {dev && readouts && <PerfPanel game={game} />}
+          {dev && readouts && <TilesPanel game={game} />}
         </>
       )}
       {/* T202: Help (the lab too: its ? opens the Keys sheet, its own keys under their heading) */}
@@ -1614,7 +1617,6 @@ function BusPanel({ game }: { game: Game }) {
 
 /** the game runs on the owner's PC (localhost): the HUD shows the Studio button, which opens the sprite studio on port 5179 of the same PC */
 const ON_PC = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
-const STUDIO_URL = `${location.protocol}//${location.hostname}:5179/`;
 /** the junction types the tool offers as brushes and in the Type control */
 type JunctionKind = 'plain' | 'stop' | 'mini' | 'signal' | 'roundabout';
 /** the segment and card names of the junction tool's types */

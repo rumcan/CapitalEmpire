@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { execSync, spawn } from "child_process";
+import net from "net";
 import { fileURLToPath, pathToFileURL } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -50,6 +51,18 @@ function devSave(): Plugin {
         const h = (k: string) => { const v = req.headers[k]; return Array.isArray(v) ? v[0] : v; };
         return checkDevRequest({ method: req.method ?? "", host: h("host"), origin: h("origin"), secFetchSite: h("sec-fetch-site"), contentType: h("content-type") });
       };
+      // the game's Studio button: starts the sprite studio (5191, this checkout, the launch config's settings) when it is not running, then opens it
+      server.middlewares.use("/__dev/studio", async (req, res) => {
+        if (req.headers["sec-fetch-site"] === "cross-site") return reply(res, 403, { error: "cross-site" });
+        const open = () => new Promise<boolean>(ok => { const s = net.connect(5191, "127.0.0.1"); s.once("connect", () => { s.end(); ok(true); }); s.once("error", () => ok(false)); });
+        if (!(await open())) {
+          const log = fs.openSync(path.resolve("output/studio.log"), "a");
+          const env = { ...process.env, STUDIO_HOST: "::", STUDIO_DEV_GAME: "1", STUDIO_GAME_URL: `http://localhost:${server.config.server.port ?? 5174}`, VIPS_CONCURRENCY: "1", TOT_REPO: process.env.TOT_REPO ?? path.resolve("../TrickOrTreat") };
+          spawn(process.execPath, ["scripts/assets/review/server.mjs", "--port", "5191"], { cwd: process.cwd(), env, detached: true, stdio: ["ignore", log, log] }).unref();
+          for (let i = 0; i < 60 && !(await open()); i++) await new Promise(r => setTimeout(r, 500));
+        }
+        res.statusCode = 302; res.setHeader("Location", `http://${(req.headers.host ?? "localhost").replace(/:\d+$/, "")}:5191/`); res.end();
+      });
       server.middlewares.use("/__dev/load", (req, res) => {
         const no = foreign(req); if (no) return reply(res, 403, { error: no });
         const rel = devSavePath(new URL(req.url ?? "", "http://x").searchParams.get("file"));
