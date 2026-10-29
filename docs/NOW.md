@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-30 05:00 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-30 07:20 SAST)
 
 **T273 #819, range geometry source review:** branch `lead/coffee-geometry-hold-20261028`, worktree `worktrees/coffee-geometry-hold-20261028`. Native hash-bound geometry holds/proofs cover the original two-view kiosk, targeted view1-v2 and new distance post; exact source/provenance and prior style approval retained. Native front-edge errors are3.15/9.44degrees (kiosk v1),3.67degrees (kiosk v2),5.31degrees (post), so none is ready for registration. Existing queue logic already honors nested negative review decisions; no code, runtime, scheduled-worker deployment/state/timer changes. Original v1 provenance/style bytes need narrow -text rules because previous Git newline normalization invalidated their native hash bindings. Next: validate source/proof hashes and open the scoped source-only PR for lead review.
 
@@ -75,8 +75,8 @@ never commit there.)
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
-| T251 | #728 | `arena/T251-ball-roll` (a fresh worktree; port 5186) | **Started ~04:40.** Balls bounce and roll after every landing (course, NPCs, you, the range), the stop point and scores unchanged, the roll bending with the slope; at most +0.3 ms a frame. |
-| T242 | #702 | `arena/T242-scene-cards` (a fresh worktree; port 5187) | **Started ~05:00.** P28's set-the-scene cards: inspect a place, a large card with its 1985 picture (run-down or upgraded by state), a line of text and its numbers; the scenes batch 1 (9 places, untracked PNGs in `E:/Repos/CapitalEmpire/art/theme-consistency/generated/scenes/`) converted to small WebPs by `scripts/assets/prep-scenes.mjs`. |
+| T241 | #705 | `arena/T241-your-skills` (a fresh worktree; port 5186) | **Started ~07:20.** P28 part 2: your skills (driving, irons, short game, putting, nerve) and a handicap; practice at the range and the greens raises them (gains shrink, costs time and money); the sim plays you with them. A small saved player profile that T240 (your character, waiting for its 3D looks art) will extend. |
+| T214 | #559 | `arena/T214-memberships` (a fresh worktree; port 5187) | **Started ~06:00.** P26 phases 1-2 in one PR: memberships as a real saved number (price, fair band, pool, sales, churn, dues), on the Clubhouse card beside the Grounds crew; Q1-Q4 at the plan's recommended values (pre-approved); staff terms on T269's `golf/staff.ts`. |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
@@ -110,7 +110,9 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
-#842 T248 water that moves (`docs/art/WATER-RESEARCH.md`; two procedural ripple layers, river flow, foam lapping at the shore, a wet
+#846 T251 balls bounce and roll after every landing (course, NPCs, you, the range), stopping exactly at the model's end point (scores
+pinned by digests), the roll bending with the slope; splash and sand puff · #844 T242 set-the-scene cards (click a place, or its card's Scene button: its 1985 picture run-down or upgraded by state, a line of text,
+its numbers; `scripts/assets/prep-scenes.mjs` turns the owner's scene PNGs into WebPs, re-run it when batch 2 lands) · #842 T248 water that moves (`docs/art/WATER-RESEARCH.md`; two procedural ripple layers, river flow, foam lapping at the shore, a wet
 swash band; off by 10%; knobs in the Night panel; about +0.02 ms GPU a frame) · #841 T259 farms (model 2 for new games: the house 60-120 m back on
 a windbreak lane, fields by month, orchards in grids; stand-ins until art 185-189; old saves byte-identical) · #835 T272 the ground tile cache (on main the chunks plus tiles reached 505-570 MB a worker against the 192 MB budget, tiles decoded
 1,100-1,700 times a tour; now <= 189 MB, 24-70 decodes, every bake p95 lower; a pixel diff shows the same ground) · #834 #838 T269 the grounds crew: a new cup each morning (play and the flag read it), a greenkeeper cutting it before each hole's first

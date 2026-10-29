@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { GOLFER_CLIPS } from '../src/game/library';
 import { TILE_M } from '../src/game/golf/types';
 import { golferRow } from '../src/game/crowdview';
-import { LiveGroup, OWNER_ADDRESS, PUTT_FLIGHT, PlayView, offOf, playRound, stateAt, walkMin } from '../src/game/golf/play';
+import { LiveGroup, OWNER_ADDRESS, PUTT_FLIGHT, PlayView, ROLL_DONE_S, offOf, playRound, stateAt, walkMin } from '../src/game/golf/play';
 import type { CourseView, Golfer, Group, Lie, OwnerTurn, PlayHole, RoundPlan, Shot } from '../src/game/golf/play';
 
 /** the pars of the three holes: a par 3 of 160 m, a par 4 of 380 m, a par 5 of 500 m */
@@ -89,18 +89,30 @@ test('putt: the address and the takeaway frames for 1.2 s after the putt is cros
   assert.equal(frameOf(pv, p.t + 0.01, 203), d.start, 'after the window he stands at the address (the putt action)');
 });
 
-test('ball: a full shot arcs (h = 0.12 of its metres at the top of the flight) and rests at the end of the shot', () => {
-  const { view, plan } = playOf(1234), pv = new PlayView(plan, view), s = shotOf(plan, 0, x => x.club !== 'putter' && x.club !== 'pw' && x.club !== 'sw');
+test('ball: a full shot arcs to its landing (h = 0.12 of its metres at the top of the flight), bounces and rolls on, and rests at the end of the shot by the swing\'s end (T251)', () => {
+  const { view, plan } = playOf(1234), pv = new PlayView(plan, view), s = shotOf(plan, 0, x => x.club !== 'putter' && x.club !== 'pw' && x.club !== 'sw' && x.landing?.lie === 'fairway');
+  const land = s.landing!.at;
+  assert.ok(Math.hypot(s.to.x - land.x, s.to.y - land.y) > 1, 'a fairway landing rolls on');
   pv.update(s.t - 0.05, 100);
   pv.update(s.t + 0.01, 101);
   pv.update(s.t + 0.01, 101.7); // half of the 1.4 s flight
-  const mx = s.from.x + (s.to.x - s.from.x) * 0.5, my = s.from.y + (s.to.y - s.from.y) * 0.5;
+  const mx = s.from.x + (land.x - s.from.x) * 0.5, my = s.from.y + (land.y - s.from.y) * 0.5;
   const b = pv.balls.find(q => Math.abs(q.x - mx) < 1e-9 && Math.abs(q.y - my) < 1e-9);
-  const metres = Math.hypot(s.to.x - s.from.x, s.to.y - s.from.y) * TILE_M;
-  assert.ok(b, 'the ball is at the middle of its flight');
-  assert.ok(metres > 0 && Math.abs(b.h - 0.12 * metres) < 1e-9, `the top of the arc: ${b.h} m for a ${metres} m shot`);
-  pv.update(s.t + 0.01, 102.5); // landed
-  assert.ok(pv.balls.some(q => q.h === 0 && q.x === s.to.x && q.y === s.to.y), 'at rest where the shot ended');
+  const metres = Math.hypot(land.x - s.from.x, land.y - s.from.y) * TILE_M;
+  assert.ok(b, 'the ball is at the middle of its flight to the landing');
+  assert.ok(metres > 0 && Math.abs(b.h - 0.12 * metres) < 1e-9, `the top of the arc: ${b.h} m for a ${metres} m carry`);
+  // after the landing: up again (the first bounce), between the landing and the end
+  let bounced = 0, along = 0;
+  for (let t = 1.42; t < ROLL_DONE_S; t += 0.02) {
+    pv.update(s.t + 0.01, 101 + t);
+    const q = pv.balls.find(p => Math.hypot(p.x - land.x, p.y - land.y) <= Math.hypot(s.to.x - land.x, s.to.y - land.y) + 1e-6 && Math.hypot(p.x - s.to.x, p.y - s.to.y) < Math.hypot(s.to.x - s.from.x, s.to.y - s.from.y));
+    assert.ok(q, `a ball between the landing and the end at ${t.toFixed(2)} s`);
+    bounced = Math.max(bounced, q.h); along = Math.max(along, Math.hypot(q.x - land.x, q.y - land.y));
+  }
+  assert.ok(bounced > 0.3, `it bounces (${bounced.toFixed(2)} m)`);
+  assert.ok(along > 0.5 * Math.hypot(s.to.x - land.x, s.to.y - land.y), 'and rolls on toward the end');
+  pv.update(s.t + 0.01, 101 + ROLL_DONE_S); // the swing's end
+  assert.ok(pv.balls.some(q => q.h === 0 && q.x === s.to.x && q.y === s.to.y), 'at rest where the shot ended, by the swing\'s end');
   assert.ok(pv.balls.every(q => q.h === 0), 'no ball left in the air');
 });
 

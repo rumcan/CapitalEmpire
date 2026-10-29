@@ -1,7 +1,7 @@
 // The shot model (docs/GOLF-PLAY.md decision 5): the club and aim a golfer picks, how a full shot flies and lands from its lie, and the putt.
 // Every golfer x hole draws from its own seeded stream (rng), so one golfer's play never shifts another's. Pure TS, no DOM, no Math.random.
 import { TILE_M } from '../types';
-import type { Club, CourseView, Lie, Pt, PlayHole } from './types';
+import type { Club, CourseView, Landing, Lie, Pt, PlayHole } from './types';
 
 /** the full carry in metres of each club at skill 1 (the putter has none); a skill s carries base * (0.75 + 0.25 s) */
 export const CLUBS: Record<Club, number> = { driver: 250, wood3: 225, iron4: 195, iron6: 170, iron8: 145, pw: 120, sw: 90, putter: 0 };
@@ -87,8 +87,9 @@ export function chooseShot(lie: Lie, from: Pt, hole: PlayHole, skill: number, te
 
 /** a full shot or chip (not the putt) from a lie at an aim with a club: where the ball comes to rest and its lie. Water at the final point
  *  is a penalty and the ball drops where it last was out of the water (on the way back from the water to the stroke). Out of bounds is a
- *  penalty too, and the ball goes back to where it was struck from, the same lie (stroke and distance) */
-export function hitShot(r: () => number, skill: number, lie: Lie, from: Pt, aim: Pt, club: Club, view: CourseView): { to: Pt; lie: Lie; penalty: 0 | 1; holed: false } {
+ *  penalty too, and the ball goes back to where it was struck from, the same lie (stroke and distance). T251: also where it landed and where
+ *  its roll stopped, with their lies (landing: the bounce and the roll are drawn from them; the same draws and lies as before) */
+export function hitShot(r: () => number, skill: number, lie: Lie, from: Pt, aim: Pt, club: Club, view: CourseView): { to: Pt; lie: Lie; penalty: 0 | 1; holed: false; landing: Landing } {
   const dM = Math.hypot(aim.x - from.x, aim.y - from.y) * TILE_M;
   const sand = lie === 'bunker' && club === 'sw' && dM < SAND_M;
   // a mishit carries a share of the shot and is also off line (the amateurs' topped and sliced shots)
@@ -99,9 +100,9 @@ export function hitShot(r: () => number, skill: number, lie: Lie, from: Pt, aim:
   const ang = Math.atan2(aim.y - from.y, aim.x - from.x) + gauss(r) * sA + (mis ? gauss(r) * MISHIT.deg * Math.PI / 180 : 0);
   const flown = Math.max(0, carry + gauss(r) * sD), cs = Math.cos(ang), sn = Math.sin(ang);
   const land = { x: from.x + cs * flown / TILE_M, y: from.y + sn * flown / TILE_M };
-  const roll = flown * ROLL[view.lieAt(land.x, land.y)] / TILE_M;
-  const end = { x: land.x + cs * roll, y: land.y + sn * roll }, endLie = view.lieAt(end.x, end.y);
-  if (endLie === 'out') return { to: { x: from.x, y: from.y }, lie, penalty: 1, holed: false };
+  const landLie = view.lieAt(land.x, land.y), roll = flown * ROLL[landLie] / TILE_M;
+  const end = { x: land.x + cs * roll, y: land.y + sn * roll }, endLie = view.lieAt(end.x, end.y), landing: Landing = { at: land, lie: landLie, rest: end, restLie: endLie };
+  if (endLie === 'out') return { to: { x: from.x, y: from.y }, lie, penalty: 1, holed: false, landing };
   if (endLie === 'water') {
     // walk back from the water in half-tile steps: the first point that is not water is where the ball drops
     const L = Math.hypot(end.x - from.x, end.y - from.y);
@@ -110,9 +111,9 @@ export function hitShot(r: () => number, skill: number, lie: Lie, from: Pt, aim:
       const p = { x: from.x + (end.x - from.x) * d / L, y: from.y + (end.y - from.y) * d / L }, l = view.lieAt(p.x, p.y);
       if (l !== 'water') { drop = p; dl = l; break; }
     }
-    return { to: drop, lie: PLAYABLE.has(dl) ? dl : 'rough', penalty: 1, holed: false };
+    return { to: drop, lie: PLAYABLE.has(dl) ? dl : 'rough', penalty: 1, holed: false, landing };
   }
-  return { to: end, lie: endLie, penalty: 0, holed: false };
+  return { to: end, lie: endLie, penalty: 0, holed: false, landing };
 }
 
 /** a putt from distM metres: the make chance falls with distance and rises with skill; a miss leaves the ball at least 0.3 m from the hole,

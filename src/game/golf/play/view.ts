@@ -11,14 +11,16 @@ import { CELEBRATE_S, celebrated } from './celebrate';
 import type { OwnerTurn } from './live';
 import type { CourseView, GolferState, Pt, RoundPlan, Shot } from './types';
 import type { Pacer } from './pacer';
+import { BallRoll, FX_NONE, ballRoll, type HeightAt } from './roll';
 
 /** a golfer to draw: his position (tiles), his id, his sheet row and his frame (absolute, in the row: the golfer clips' frames), and (T213) how high he
  *  hops (world px, a celebration's) */
 export interface PlayPerson { x: number; y: number; golfer: number; row: number; frame: number; lift?: number;
   /** T266: how visible he is (0..1; absent: 1): a watchable golfer fading out or in as he catches up his schedule (pacer.ts) */
   alpha?: number }
-/** a ball to draw: its ground position (tiles) and its height above the ground (metres: the flight's arc) */
-export interface PlayBall { x: number; y: number; h: number }
+/** a ball to draw: its ground position (tiles) and its height above the ground (metres: the flight's arc, a bounce); T251: its effect (roll.ts FX_SPLASH:
+ *  the ball gone into water, rings on it; FX_SAND: a puff of sand round a ball plugged in a bunker; 0 or absent: none) and the effect's progress (0..1) */
+export interface PlayBall { x: number; y: number; h: number; fx?: number; fu?: number }
 /** T213: a pro's caddie to draw: his position (tiles), his sheet row and frame (the spectator clips' frames: the stand-in is a spectator), the pro he
  *  walks with, and where his bag stands (tiles) */
 export interface PlayCaddie { x: number; y: number; row: number; frame: number; golfer: number; bx: number; by: number; /** T266: how visible (0..1; absent: 1) */ alpha?: number }
@@ -28,7 +30,9 @@ export interface PlayCheer { x: number; y: number; t: number }
 export interface PlayOpts { paths?: CartPaths | null; home?: Pt;
   /** T266: the watchable golfers (golf/pace.ts): the golfers', the carts' and (the tournament's) the caddies' pacers (pacer.ts), so they keep to a
    *  walk and a cart's speed */
-  pace?: PlayPace | null }
+  pace?: PlayPace | null;
+  /** T251: the ground's height (the course height field, metres) the balls' rolls bend with and the putts break on (absent: flat) */
+  height?: HeightAt }
 /** T266: a playback's pacers */
 export interface PlayPace { walkers: Pacer; carts: Pacer; caddies?: Pacer }
 
@@ -42,6 +46,9 @@ const PUTT_FRAMES = [0, 1, 0];
 const FLIGHT_S = 1.4, CHIP_S = 0.9, PUTT_FLIGHT_S = 0.8;
 /** the apex of a full shot's arc: metres of height per metre of its length (a putt rolls: no arc) */
 const APEX = 0.12;
+/** T251: a full shot's bounce and roll after its landing are over by the swing's end (real seconds from the swing), so the ball is at rest before a
+ *  golfer faded out on his walk (pacer.ts: FADE_OUT_S after the swing) comes back at it */
+export const ROLL_DONE_S = SWING_S;
 /** a golfer stands on the first tee this many game minutes before his tee time (he is not drawn before that) */
 const LEAD_MIN = 10;
 /** the walk cycle's offset per golfer, real seconds, so the golfers' walks are not in step */
@@ -95,9 +102,12 @@ export class PlayView {
   private pace: PlayPace | null; private simT = 0; private rate = 1;
   /** T266: the watchable golfers on (their pacers) or off (null: the schedule as it is) */
   setPace(p: PlayPace | null): void { this.pace = p; }
+  /** T251: the ground's height (null: flat), and per golfer id the bounce and roll (or the putt's line) of a shot of his (made on first use, then
+   *  reused) and the shot it was set for */
+  private height: HeightAt; private rolls: (BallRoll | undefined)[] = []; private rollFor: (Shot | null)[] = [];
 
   constructor(plan: RoundPlan, view: CourseView, opts: PlayOpts = {}) {
-    this.plan = plan; this.view = view; this.pace = opts.pace ?? null;
+    this.plan = plan; this.view = view; this.pace = opts.pace ?? null; this.height = opts.height ?? null;
     const size = Math.max(0, ...plan.golfers.map(g => g.id)) + 1;
     this.k = new Int32Array(size); this.swingAt = new Float64Array(size).fill(-Infinity); this.tee = new Float64Array(size);
     this.lx = new Float64Array(size); this.ly = new Float64Array(size); this.rows = new Uint8Array(size); this.seen = new Uint8Array(size);
@@ -132,7 +142,7 @@ export class PlayView {
       let k = old;
       while (k > 0 && list[k - 1]!.t > minute) k--;
       while (k < list.length && list[k]!.t <= minute) k++;
-      if (k !== old) { this.k[id] = k; this.swingAt[id] = k > old && fresh ? now : -Infinity; }
+      if (k !== old) { this.k[id] = k; this.swingAt[id] = k > old && fresh ? now : -Infinity; this.rollFor[id] = null; } // (T251: its roll set afresh, on the ground as it is now)
       const newest = k > 0 ? list[k - 1]! : null, dt = now - this.swingAt[id]!;
       // where he moved since the last update (at the first update: nowhere)
       const dx = s.x - this.lx[id]!, dy = s.y - this.ly[id]!, moved = fresh && dx * dx + dy * dy > MOVE2;
@@ -195,11 +205,19 @@ export class PlayView {
         // T213: his caddie: beside him, behind him off the line of a full shot, or off the green while he putts
         if (this.caddie[id]) nc = this.caddieAt(nc, id, s, x, y, row, moved ? dx : 0, moved ? dy : 0, tg ?? null, k < list.length ? list[k]! : null, minute, now);
       } else this.cm[id] = NaN;
-      // the ball: the newest shot's while it flies (its arc, in real seconds from its swing), else where it rests, unless it went in the hole
-      if (newest && dt < flightS(newest)) {
-        const u = dt / flightS(newest), H = newest.club === 'putter' ? 0 : APEX * Math.hypot(newest.to.x - newest.from.x, newest.to.y - newest.from.y) * TILE_M;
-        const b = this.slot(nb++);
-        b.x = newest.from.x + (newest.to.x - newest.from.x) * u; b.y = newest.from.y + (newest.to.y - newest.from.y) * u; b.h = 4 * H * u * (1 - u);
+      // the ball: the newest shot's while it flies (its arc, in real seconds from its swing), else where it rests, unless it went in the hole. T251: a
+      // full shot flies to its landing, then bounces and rolls to where the model has it stop (a splash in water, a puff of sand in a bunker), all by
+      // ROLL_DONE_S; a putt rolls on its line as before, breaking on a sloped green
+      const fs = newest ? flightS(newest) : 0, lg = newest && ballRoll.on ? newest.landing : undefined;
+      if (newest && dt < fs) {
+        const u = dt / fs, b = this.slot(nb++);
+        if (newest.club === 'putter') { if (ballRoll.on) this.rollOf(id, newest).along(u, b); else { b.x = newest.from.x + (newest.to.x - newest.from.x) * u; b.y = newest.from.y + (newest.to.y - newest.from.y) * u; b.h = 0; } }
+        else {
+          const to = lg ? lg.at : newest.to, H = APEX * Math.hypot(to.x - newest.from.x, to.y - newest.from.y) * TILE_M;
+          b.x = newest.from.x + (to.x - newest.from.x) * u; b.y = newest.from.y + (to.y - newest.from.y) * u; b.h = 4 * H * u * (1 - u);
+        }
+      } else if (newest && lg && dt < fs + this.rollOf(id, newest).end) {
+        const r = this.rolls[id]!, b = this.slot(nb++); b.fx = r.at(dt - fs, b); b.fu = r.fu;
       } else if (s.ball && !(newest?.holed && s.ball.x === newest.to.x && s.ball.y === newest.to.y)) {
         const b = this.slot(nb++); b.x = s.ball.x; b.y = s.ball.y; b.h = 0;
       }
@@ -303,6 +321,18 @@ export class PlayView {
     for (const s of this.plan.shots) { const hole = this.view.holes[s.hole]; if (s.holed && hole && celebrated(s.stroke + s.penalty, hole.par)) this.celebrate.add(s); }
   }
 
-  /** the ball object at index i of balls (made on first use, then reused) */
-  private slot(i: number): PlayBall { return this.balls[i] ?? (this.balls[i] = { x: 0, y: 0, h: 0 }); }
+  /** the ball object at index i of balls (made on first use, then reused), its effect cleared */
+  private slot(i: number): PlayBall { const b = this.balls[i] ?? (this.balls[i] = { x: 0, y: 0, h: 0, fx: FX_NONE, fu: 0 }); b.fx = FX_NONE; b.fu = 0; return b; }
+  /** T251: golfer id's roll for shot s, set once for it: a full shot's bounce and roll from its landing (within what is left of ROLL_DONE_S after its
+   *  flight), else (a putt, a shot made by hand) its line from the stroke to its end, breaking on the ground's slope */
+  private rollOf(id: number, s: Shot): BallRoll {
+    const r = this.rolls[id] ?? (this.rolls[id] = new BallRoll());
+    if (this.rollFor[id] !== s) {
+      this.rollFor[id] = s;
+      const lg = s.landing;
+      if (lg && s.club !== 'putter') r.set(lg.at, lg.rest, lg.lie, lg.restLie, Math.hypot(lg.at.x - s.from.x, lg.at.y - s.from.y) * TILE_M, ROLL_DONE_S - flightS(s), this.height);
+      else r.line(s.from, s.to, this.height);
+    }
+    return r;
+  }
 }
