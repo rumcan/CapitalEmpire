@@ -30,6 +30,7 @@ import { BuildingsPanel } from './ui/course/BuildingsPanel';
 import { PropsPanel } from './ui/course/PropsPanel';
 import { PracticePanel } from './ui/course/PracticePanel';
 import { MyLooksCard } from './ui/course/MyLooks';
+import { GrassCard } from './ui/course/GrassEditor';
 import { Rail } from './ui/Rail';
 import { RAIL, drawerEntries, drawerOf, entryKey, pickEntry, railEntries, railItemOf, toolDrawer, type RailItem, type RailTool } from './ui/rail-items';
 import { Flyouts } from './ui/Flyouts';
@@ -69,7 +70,9 @@ import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
 import { ClubhouseCard } from './ui/golf/ClubhouseCard';
+import { PlayerCard } from './ui/golf/PlayerCard';
 import { PlaceCard } from './ui/PlaceCard';
+import { SceneCard } from './ui/SceneCard';
 import { LandPanel } from './ui/golf/LandPanel';
 import { WelcomeCard } from './ui/golf/WelcomeCard';
 import { RangeGuideCard } from './ui/golf/RangeGuideCard';
@@ -165,7 +168,8 @@ export default function App() {
   /** T188: the Season card (the season chip opens it: the year, the founding checklist or the tournament plan, the Course stats) */
   const [seasonOpen, setSeasonOpen] = useState(false);
   // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
-  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? setLooks(false) : (setCourseStats(null), setSeasonOpen(false))) }; });
+  // (T271: the grass editor's card is a looks card too: Esc closes it first)
+  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen || grassOpen, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? (setLooks(false), game.paint.closeGrass()) : (setCourseStats(null), setSeasonOpen(false))) }; });
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
@@ -189,6 +193,11 @@ export default function App() {
   const [looks, setLooks] = useState(false);
   const looksOpen = looks && (game?.uiTool === 'course' || (game?.tool === 'practice' && !!game.practice.kind)); // T256: a facility's looks too
   useEffect(() => { if (!looksOpen && looks) setLooks(false); }, [looksOpen, looks]);
+  /** T271 (#812): the grass editor (Create your own, a grass's Edit): its card in My looks' place while the Holes tool is in hand */
+  const grassOpen = !!game?.paint.grassDraft && game.uiTool === 'course';
+  // another tool put in hand closes it (read live: a grass opened just after one closed is never shut by the older render)
+  useEffect(() => { if (game && game.uiTool !== 'course' && game.paint.grassDraft) game.paint.closeGrass(); }, [game?.uiTool]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (grassOpen && looks) setLooks(false); }, [grassOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
   const [watch, setWatch] = useState(false);
   /** the top bar wraps to two rows on narrow windows (how wide depends on its content): --hud-top follows its bottom, and the rail and the
@@ -231,7 +240,7 @@ export default function App() {
     return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); clearInterval(iv); };
   }, []);
 
-  const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];
+  const toasts = game ? game.toasts.filter(t => performance.now() - t.t < (t.scene ? 9000 : 4000)) : []; // (T242: one with a Set the scene button stays longer)
   const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
   // the rail item of the tool in hand (the road tool on the course is Paths, the course tool's clubhouse scope Buildings: game.uiTool)
   const item = game ? railItemOf(game.uiTool, activeRail.current) : undefined;
@@ -296,7 +305,7 @@ export default function App() {
     switch (act?.k) {
       case 'road': game.pickType(act.id as Parameters<Game['pickType']>[0]); break;
       case 'junction': game.brush = act.id as typeof game.brush; break;
-      case 'surface': p.setBrush(act.id as Parameters<typeof p.setBrush>[0]); break;
+      case 'surface': p.setBrush(act.id as Parameters<typeof p.setBrush>[0], 0); break;
       case 'newHole': newHole(game); break;
       case 'club': if (!game.bizDefs.some(d => d.type === 'clubhouse')) game.placeClubhouse(true); break;
       case 'halfway': game.placeHalfway(true); break;
@@ -340,6 +349,11 @@ export default function App() {
       <Stat icon="briefcase" label="Jobs" value={g.traffic.jobs.toLocaleString()} />
       <Stat icon="sun" label="Day" value={String(g.day)} sub={hhmm(g.clock())} />
       <Stat icon="income" label="Daily income" value={withIcon(trendKind(net), (net >= 0 ? '+' : '') + money(net))} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
+      {/* T214 (P26 5.3): the club's dues and the wages a month (the grounds crew's, and the club staff's from P26's phase 4) */}
+      {(() => { const cm = g.golfMode ? g.clubMoney() : null; return cm && <>
+        <Stat icon="house" label="Dues" value={`+${money(cm.dues)}/mo`} tone="text-emerald-300" title="The members' dues a month (the Clubhouse card sets them), paid into the treasury as each month begins" subTestId="drawer-dues" />
+        <Stat icon="people" label="Wages" value={`−${money(cm.wages)}/mo`} tone="text-red-300" title="The staff's wages a month (the grounds crew, hired in the Clubhouse card), paid as each month begins" />
+      </>; })()}
     </>
   );
   /** T202: Help (the Keys sheet and How it works); in the lot lab the lab's keys alone, drawn on the page over the lab's panels (the lab hides
@@ -356,7 +370,7 @@ export default function App() {
       <canvas
         ref={overlayRef}
         className="absolute inset-0 h-full w-full touch-none"
-        style={{ cursor: game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : game?.paintOn ? game.paint.cursorStyle : 'crosshair' }}
+        style={{ cursor: game?.teePlace ? (game.teePlace.drag ? 'grabbing' : 'copy') : game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : game?.paintOn ? game.paint.cursorStyle : 'crosshair' }}
         onPointerDown={e => game?.pointerDown(e.nativeEvent)}
         onPointerMove={e => game?.pointerMove(e.nativeEvent)}
         onPointerUp={() => game?.pointerUp()}
@@ -415,6 +429,8 @@ export default function App() {
                   {(() => { const left = gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`; return <Stat icon="calendar" label="Month" guide="month" value={gv.month} sub={left} subClass="max-[2399px]:hidden" title={`${gv.month}: ${left}`} />; })()}
                   {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip" data-guide="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
                   {game.hasClubhouse && <button className={`chip ${game.clubCardOpen ? 'chip-on' : ''}`} onClick={() => game.openClubCard()} data-tip="The clubhouse: today's members, visitors, green fees and waits" aria-label="Clubhouse" data-testid="club-chip"><Icon name="house" size={16} /><span className={WIDE}>Club</span></button>}
+                  {/* T241: your golf (the profile card: your skills, handicap, practice and your tee time) */}
+                  {game.golf && <button className={`chip ${game.playerCardOpen ? 'chip-on' : ''}`} onClick={() => game.openPlayerCard()} data-tip="Your golf: your skills, handicap, practice log and your round today" aria-label="You" data-testid="you-chip"><Icon name="people" size={16} /><span className={WIDE}>You</span></button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.weatherRun()); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
                   {/* T188 (P23-UX P2-2): the season chip opens the Season card (the founding checklist or the tournament plan, and the Course stats, which had a
@@ -658,7 +674,7 @@ export default function App() {
               {toolBody}
             </div>
             )}
-            {looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
+            {grassOpen ? <GrassCard game={game} onClose={() => game.paint.closeGrass()} /> : looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
           </div>
             </>;
           })()}
@@ -702,7 +718,8 @@ export default function App() {
 
           <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
             {toasts.map(t => (
-              <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span></div>
+              <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span>
+                {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => game.openScene(t.scene!)} data-testid="toast-scene"><Icon name="camera" size={16} />Set the scene</button>}</div>
             ))}
           </div>
 
@@ -753,13 +770,23 @@ export default function App() {
           {game.shotState() && <ShotPanel game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
-          {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open)
-            const gv = !game.seasonReport ? game.rangeGuideView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
-            return gv && <RangeGuideCard view={gv} right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} />;
+          {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
+            const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen ? game.rangeGuideView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
+            return gv && <RangeGuideCard view={gv} right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
-          {(() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} />; })()}
-          {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} />; })()}
-          {(() => { const pc = game.placeCard(); return pc && <PlaceCard view={pc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closePlaceCard()} />; })()}
+          {(() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} />; })()}
+          {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.practise(k)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} />; })()}
+          {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
+            const pv = game.playerCard(); if (!pv) return null;
+            const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace || game.holeCardHole !== null;
+            return <PlayerCard view={pv} right={side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} />;
+          })()}
+          {(() => { const pc = game.placeCard(); return pc && <PlaceCard view={pc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closePlaceCard()} onScene={game.placeSceneArt(pc.id) ? () => game.openScene({ kind: 'place', id: pc.id }) : undefined} />; })()}
+          {(() => { // T242: the set-the-scene card, centred left of the card on the right (the range's, the club's, a place's) and the side panel
+            const sc = game.sceneCard(); if (!sc) return null;
+            const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace, base = game.panel ? 19.5 : 0.75;
+            return <SceneCard view={sc} padRight={`${side ? base + 22 : Math.max(1, base + 0.75)}rem`} onView={v => game.sceneView(v)} onClose={() => game.closeScene()} />;
+          })()}
           {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
@@ -1072,7 +1099,7 @@ function EvalScreen({ game }: { game: Game }) {
           ))}
         </div>
         <p className="text-sm text-slate-200">
-        {book ? (<>{book.toll > 0 && <>Toll <span className="tabular-nums text-emerald-300">{sgn(book.toll)}</span> · </>}Green fees <span className="tabular-nums text-emerald-300">{sgn(book.greenFeeIncome)}</span> · Memberships <span className="tabular-nums text-emerald-300">{sgn(book.membershipIncome)}</span> · Tickets <span className="tabular-nums text-emerald-300">{sgn(book.tickets)}</span> · Parking <span className="tabular-nums text-emerald-300">{sgn(book.parking)}</span> · Tents <span className="tabular-nums text-emerald-300">{sgn(book.tents)}</span>{book.sponsors > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(book.sponsors)}</span></>}{book.tv > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(book.tv)}</span></>} · Purse <span className="tabular-nums text-red-300">−{money(book.purse)}</span> · Tent rent <span className="tabular-nums text-red-300">−{money(book.rent)}</span> · Tent upkeep <span className="tabular-nums text-red-300">−{money(book.annualTentUpkeep)}</span> · Course upkeep <span className="tabular-nums text-red-300">−{money(book.annualCourseUpkeep)}</span>{book.liveUpkeep > 0 && <> · Upkeep <span className="tabular-nums text-red-300">−{money(book.liveUpkeep)}</span></>} · Net <span className={`tabular-nums ${book.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(book.net)}</span></>) : (<>Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span></>)}
+        {book ? (<>{book.toll > 0 && <>Toll <span className="tabular-nums text-emerald-300">{sgn(book.toll)}</span> · </>}Green fees <span className="tabular-nums text-emerald-300">{sgn(book.greenFeeIncome)}</span> · <span data-tip="Memberships: the season's dues, paid month by month as the members' dues came in (in the treasury already)" data-testid="results-memberships">Memberships</span> <span className="tabular-nums text-emerald-300">{sgn(book.membershipIncome)}</span> · Tickets <span className="tabular-nums text-emerald-300">{sgn(book.tickets)}</span> · Parking <span className="tabular-nums text-emerald-300">{sgn(book.parking)}</span> · Tents <span className="tabular-nums text-emerald-300">{sgn(book.tents)}</span>{book.sponsors > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(book.sponsors)}</span></>}{book.tv > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(book.tv)}</span></>} · Purse <span className="tabular-nums text-red-300">−{money(book.purse)}</span> · Tent rent <span className="tabular-nums text-red-300">−{money(book.rent)}</span> · Tent upkeep <span className="tabular-nums text-red-300">−{money(book.annualTentUpkeep)}</span> · Course upkeep <span className="tabular-nums text-red-300">−{money(book.annualCourseUpkeep)}</span>{book.liveUpkeep > 0 && <> · Upkeep <span className="tabular-nums text-red-300">−{money(book.liveUpkeep)}</span></>} · Net <span className={`tabular-nums ${book.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(book.net)}</span></>) : (<>Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span></>)}
         </p>
         {last.stuck.length > 0 && (
           <div className="space-y-1">

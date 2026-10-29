@@ -304,3 +304,83 @@ the tile's navy square; a second sheet in 174's style would finish the panel (on
 
 All twelve are art 181, one sheet in the ChatGPT queue (`docs/art/CHATGPT-IMAGE-QUEUE.md`, first). Sheet order, row by row: waste,
 halfway-house, your-holes, tournament / land, bushes, palms, props / furniture, long-grass, chipping, build.
+
+## Shop fronts, venues and house backs for variety (T270, #811: art requests)
+Shop lots now show the shop their place calls for (`lots/variety.ts`): eight shop fronts (`SHOP_PALETTE`: bakery, Maple Falls Grocery,
+pharmacy, Video, laundry, Video Vault, fish and tackle, barbershop) take turns along every street, so neighbours never match, but a town of
+16 shops shows each one about twice, and the two named ones (Video Vault, Maple Falls Grocery) about once in eight. More shop fronts spread
+them thinner; the tour lots have only three venues (`VENUE_PALETTE`), so two venues can still match two or three lots apart. Each in four views
+(the NE view's id below, `east:`/`view:<id>:sw`/`:nw` as the others), sun at the upper right, shadows at 145°, early autumn dusk, about the
+footprint of the existing shops (5-7 x 4-5 tiles at their owner size) so they fit the presets' spots:
+| Sprite (id to use) | Footprint (m) / height | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Hardware store (`town:hardware`, four views) | 13 x 9 / 7 | only the straight-on `variation:town-hardware-...-plain:1` (frontal.ts: never on a lot) | a two-storey brick hardware store "Bellamy Hardware" with a green awning, tools and paint cans in the windows, a wheelbarrow out front | P1 |
+| Florist (`town:florist`, four views) | 10 x 8 / 6 | none | a narrow timber shop front painted sage green, buckets of mums and pumpkins on the sidewalk, a striped awning, a hand-painted sign "Petal & Stem" | P1 |
+| Book and record shop (`town:books`, four views) | 10 x 9 / 6 | none | a brick shop with a deep bay window full of books and LPs, a wooden sign "Second Chapter", warm lamp light inside | P1 |
+| Hair salon (`town:salon`, four views) | 9 x 8 / 5 | none | a single-storey stucco salon with a pink neon "Curl Up & Dye" sign, two chairs visible through the window | P2 |
+| Shoe repair and tailor (`town:cobbler`, four views) | 8 x 8 / 6 | none | a small two-storey brick shop, a hanging boot sign, "Main St Shoe Repair" painted on the glass | P2 |
+| Bank branch (`town:bank`, four views) | 13 x 10 / 8 | none | a small sandstone bank with two columns, a clock over the door, "Maple Falls Savings" carved on the lintel | P2 |
+| Ice cream parlour (venue, `world:ice_cream`, four views) | 9 x 8 / 5 | none | a pastel candy-striped parlour with a giant cone on the roof, café tables out front | P1 |
+| Mini golf hut (venue, `world:minigolf_hut`, four views) | 8 x 7 / 5 | none | a timber hut with a windmill gable and a ticket window, a putter rack and a little course flag beside it | P1 |
+| Pro shop and tackle (venue, `world:outfitter`, four views) | 11 x 8 / 6 | none | a timber outfitter with golf bags and fishing rods in the window, a canoe on the roof rack of a pickup outside | P2 |
+| A house back of the screened porch's size (`gen:back-porch-small`, four views) | 7 x 10 / 6 | `gen:back-screened-porch` is the only back of its size (no other back fits its lots: the lab's 14x10 house presets of roads 4 and 6 all show it) | the back of a small clapboard house with a screened porch, a grill and a hose reel, laundry on a line | P1 |
+| Two more small house backs (`gen:back-deck-small`, `gen:back-mudroom`, four views) | 7 x 10 / 6 | none | the backs of small houses: a timber deck with a kiddie pool; a mudroom door with boots, a woodpile and a garden shed | P2 |
+
+## Waterside trees (T265, #794: art requests)
+The tree belts along the rivers and creeks (`src/game/river-trees.ts`) deal the library's broadleaf trees, birches and aspens first, and some
+spruces and firs; the library has no waterside species of its own. Wanted, each as four views (ne, se, sw, nw, `gen:tree-<name>:<view>` like
+the generated trees), the light from the upper right, shadows at 145°, autumn colours to sit with the maples and birches, never mirrored:
+| Tree | Look | P |
+| --- | --- | --- |
+| `willow-weeping` | a broad weeping willow, its long drooping fronds reaching the ground, gold-green to yellow in autumn | P1 |
+| `alder` | a narrow, many-stemmed alder by the water, dark green going olive and brown, small cones | P2 |
+| `swamp-snag` | a dead grey tree standing in the swamp, broken top, a little moss at its foot (the woods' snags are drier) | P2 |
+
+Until they come, the belts use the existing pools (`BELT_BROAD_DEAL`, `BELT_CONIFER_DEAL`, the woods' dead snags in the swamp); a new species
+goes into `FOREST_BROADLEAF` (or a waterside pool in `river-trees.ts`) and `tree-sun.ts` measures its lit side.
+
+## Grounds crew (T269, #810: art requests)
+The grounds crew works the course every morning (`src/game/golf/crew.ts`, played back by `crewview.ts`, drawn by the engine's `crewMovers`):
+greenkeepers drive a utility cart green to green and change the cups (walk to the new spot, kneel and cut it, set the flag, walk back, kneel and
+fill the old one), mow the greens with a walk-behind and rake the bunkers; mower operators ride a reel mower along the fairway's stripe bands and a
+rotary mower down the rough. Until the art lands each is drawn as a labelled stand-in ("Stand In for <name>", the T213 caddie's pill).
+**The people and their clips are 3D work for RUN 3D** (`docs/HANDOVER-PEOPLE.md` "Grounds crew"); the vehicles are best made in 3D too
+(eight facings), else as 2D pictures through the ChatGPT queue. The sun at the upper right, shadows at 145°, nothing mirrored.
+
+| Sprite (id to use) | Frames / views | Today's stand-in | Look | P |
+| --- | --- | --- | --- | --- |
+| **Greenkeeper** (`staff_greenkeeper_m`, a person) | 8 facings: walk, idle, kneel and cut a cup (a hole-cutter twist, 4 frames), set the flag (2), rake (a bunker stroke, 4), push a walk-behind (walk with the arms out) | the spectator `spec_m_bucket_hat`, walking; `sit` for kneeling | 1985 greenkeeper: a cap or bucket hat, a green or khaki work shirt, khaki trousers, work boots | P1 |
+| **Mower operator** (`staff_mower_m`, a person) | 8 facings: walk, idle, ride (seated, hands on the wheel or the levers), push a walk-behind | the spectator `spec_m_young_cap`; `sit` on the mower | a cap and ear defenders, a work shirt, jeans | P1 |
+| **Ride-on reel mower** (`vehicle:fairway-mower`) | 8 facings | `business:golf-mower` (one view) | a 5-gang fairway reel mower, about 2.5 x 2.5 m, deep green with yellow reels, an open seat | P1 |
+| **Utility cart** (`vehicle:utility-cart`) | 8 facings | the hire cart `business:golf-cart-sw/se` (two views) | a two-seat utility vehicle with a cargo bed: a hole cutter, a cup and flag, a rake and a bucket of sand in the bed | P1 |
+| **Walk-behind greens mower** (`vehicle:greens-mower`) | 8 facings | `gen:lawnmower` | a 1980s walk-behind greens reel mower with its grass basket at the front | P2 |
+| **Rotary rough mower** (`vehicle:rough-mower`) | 8 facings | `expansion:rideon-mower` (one view) | a ride-on rotary mower with a wide deck, red or green | P2 |
+| **Maintenance barn** (`course:maintenance-barn`, 2D, four views) | four views | none: the crew come and go at the clubhouse car park's entrance | a timber barn with a wide roll-up door, a fuel tank and a sand bin beside it, about 14 x 10 m | P3 |
+
+
+## Farms (T259, #759: GOLF-ART-LIST 185-189, the slots and the swap)
+The farms' model 2 (`src/game/ext/farms/farms.ts`, `crops.ts`): the farmhouse and yard set back 60-120 m on a dirt lane lined by a windbreak, the
+fields round them by the calendar month (ploughed December to May, young corn June and July, ripe corn August to October, stubble in November,
+each field a month early, on time or late), an orchard's strict grid on some farms. Until the art lands every piece is a labelled stand-in
+("Stand In for <name>", the pills shown with the stand-ins on), and **each piece's swap is one line**: name the art in its slot below.
+The prompts are in `docs/art/CHATGPT-IMAGE-QUEUE.md` "Farms". The sun at the upper right, shadows at 145°, nothing mirrored.
+
+| Art | Slot (the one line) | File names (the queue's) | Today's stand-in |
+| --- | --- | --- | --- |
+| **185 corn, young** | `painted-surfaces.json` `surfaces.cornYoung` (rows along the map's x) and `cornYoungY` (rows along y): `{ "family": "<the tile set's family>", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 }` | `corn-young-30.png`, `corn-young-10.png` | the field's soil (Farm fields, `dirt-run`) with green rows of plants drawn along the field (`crops.ts` ROW_LOOK.young) |
+| **185 corn, ripe** | `surfaces.cornRipe` / `cornRipeY` | `corn-ripe-30.png`, `-10` | tan-gold rows, nearly closed, their shadows in the gaps (ROW_LOOK.ripe) |
+| **185 corn, stubble** | `surfaces.cornStubble` / `cornStubbleY` | `corn-stubble-30.png`, `-10` | short pale stalks in rows over the soil (ROW_LOOK.stubble) |
+| **186 ploughed field** | `surfaces.fieldPloughed` / `fieldPloughedY` | `ploughed-30.png`, `-10` | dark furrows with a lit ridge beside each, along the field (ROW_LOOK.plough) |
+| **187 orchard trees** | `farms.ts` `ORCHARD_ART`: the library id for each leaf stage (`open` summer, `moderate` autumn, `patchy`, `near-bare` winter) | `orchard-apple-red-1view-v1.png`, `orchard-pear-1view-v1.png`, `orchard-apple-young-1view-v1.png`, `orchard-apple-bare-1view-v1.png` | the capital oaks or maples (one species an orchard) at 0.62 of their size, through their own leaf stages |
+| **188 windbreak poplars** | `farms.ts` `POPLAR_ART`: `greengold` (April to September), `gold` (October, November), `bare` (December to March) | `poplar-gold-1view-v1.png`, `poplar-greengold-1view-v1.png`, `poplar-bare-1view-v1.png` | the gold birch (`ref:tree-birch-gold`) on most farms, a row of spruces on the rest |
+| **189 farm lane** | `surfaces.farmLane` | (P2: a two-rut dirt lane with a grass strip, or a dirt path family that reads right) | the Dirt surface with a hard edge and two wheel ruts drawn along it (the ruts stay with the art: they follow the lane) |
+
+- **For the lead (the queue): the ground pictures in a second direction.** The owner's method repaints a game screenshot, so a tile keeps the
+  direction its rows were painted in; a painted texture is laid unturned (its light would turn with it). A field takes the slot of the map axis
+  nearest its rows, so 185 and 186 want each picture twice: rows from the upper left toward the lower right (the queue's, the `x` slot) and
+  rows from the upper right toward the lower left (the `y` slot). With only one in, the fields of the other axis keep the stand-in rows.
+- **The sprites** (187, 188) go through the art pipeline as one-view trees (`tree-sun.ts` measures their lit side; nothing is mirrored): add
+  them to the library, then name their ids in `ORCHARD_ART` / `POPLAR_ART`. The orchard keeps its 6 m grid and the windbreak its 6.4 m
+  spacing whatever the picture.
+- **Old saves:** a save made before T259 keeps its farms as they were (model 1) until a farm is rebuilt (a road edit that changes its parcel,
+  a new farm on a new road); new games get model 2. The dev switch `window.__game.setFarmModel(1 | 2)` changes a game's farms at once.

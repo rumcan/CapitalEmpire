@@ -18,6 +18,8 @@ import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
 import { CAR_PAINT_GLSL } from './car-paint';
 import { GRASS_SHINE_GLSL, LUM_HP_STD, MASK_SCALE, SHINE_SHADE } from './grass-shine';
+import { WATER_MOTION_GLSL, type MotionFrame } from './water-motion';
+import { HH, HW } from './iso';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -68,6 +70,9 @@ void main() {
 // slope of its own colour's luminance high-pass (two more taps), times the mask's weight (inset from the edges, 0..2 as 0..1), the same camera
 // falloff (uShine.x, uShine.y), and none where the last frame's shadow layer (uShadeLayer, its view in uLayerCam / uLayerScreen: each pixel's
 // world point taken to where it lay then) had a sprite's shadow or the ground's baked shade. No mask: the chunk as before
+// T248: the water moves (water-motion.ts): a chunk with a motion mask (uWater.x > 0: the zoom's fade) runs its water's ripples, the rivers' flow,
+// the foam lapping at the shore, the wet bank and the sparkle over the picture's own colour, first, so the lamps, the glint and the shine light
+// the moving water. No mask: the chunk as before
 const FS_QUAD = `#version 300 es
 precision highp float;
 uniform sampler2D uTex; uniform sampler2D uMask; uniform int uMode; uniform vec2 uScreen; uniform float uAlpha;
@@ -79,9 +84,11 @@ in vec2 vUV; in vec2 vW; out vec4 o;
 ${SPEC_LIGHT_GLSL}
 ${GLOSS_LIGHT_GLSL}
 ${GRASS_SHINE_GLSL}
+${WATER_MOTION_GLSL}
 float lumOf(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
 void main() {
   vec4 c = texture(uTex, vUV);
+  if (uWater.x > 0.0) c.rgb = waterMotion(c.rgb, vec2(vW.x / ${(2 * HW).toFixed(1)} + vW.y / ${(2 * HH).toFixed(1)}, vW.y / ${(2 * HH).toFixed(1)} - vW.x / ${(2 * HW).toFixed(1)}));
   if (uSpec.z > 0.0) {
     vec4 m = texture(uSpecTex, vUV * vec2(textureSize(uTex, 0)) / (${SPEC_MASK_K.toFixed(1)} * vec2(textureSize(uSpecTex, 0))));
     if (m.a > 0.002) {
@@ -378,9 +385,10 @@ export class GLRenderer {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
-    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss', 'uShineMask', 'uShine', 'uShineLook', 'uShadeLayer', 'uLayerCam', 'uLayerScreen']);
-    // (T262: the grass shine's samplers on their own units, once: 4 its weight mask, 5 the last frame's shadow layer)
-    gl.useProgram(this.quad.p); gl.uniform1i(this.quad.u.uShineMask!, 4); gl.uniform1i(this.quad.u.uShadeLayer!, 5);
+    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss', 'uShineMask', 'uShine', 'uShineLook', 'uShadeLayer', 'uLayerCam', 'uLayerScreen', 'uWaterTex', 'uWater', 'uWaterBox', 'uWaterT', 'uWaterDrift']);
+    // (T262: the grass shine's samplers on their own units, once: 4 its weight mask, 5 the last frame's shadow layer; T248: 6 the water's
+    //  motion mask)
+    gl.useProgram(this.quad.p); gl.uniform1i(this.quad.u.uShineMask!, 4); gl.uniform1i(this.quad.u.uShadeLayer!, 5); gl.uniform1i(this.quad.u.uWaterTex!, 6);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift', 'uMinPx']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
@@ -457,6 +465,16 @@ export class GLRenderer {
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4); this.texParams(gl.TEXTURE_2D, false);
     return t;
   }
+  /** T248: a texture from plain RGBA bytes (a chunk's water motion mask: no premultiplying, its channels are data), bilinear, clamped */
+  rgbaTexture(data: Uint8Array, w: number, h: number) {
+    const gl = this.gl, t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, data); this.texParams(gl.TEXTURE_2D, false);
+    return t;
+  }
+  /** T248: the water's motion this frame (engine.ts waterFrame: water-motion.ts motionFrame), or null (off, or faded out by the zoom) */
+  water: MotionFrame | null = null;
+  /** T248: a chunk picture's water motion mask and the tile box it covers (GroundCache.waterOf), looked up by the picture itself */
+  waterOf: ((tex: WebGLTexture) => { mask: WebGLTexture; box: readonly number[] } | null) | null = null;
   /** T262: the grass shine this frame (engine.ts: grass-shine.ts shineGain and the knobs), or null (off): the falloff's inner and outer radius,
    *  the gain, and the look (the highlight's exponent, bump, eye) */
   shine: { inner: number; outer: number; gain: number; exponent: number; bump: number; eye: number } | null = null;
@@ -568,11 +586,17 @@ export class GLRenderer {
     // kind, the empty one while the shine is off: ANGLE checks every sampler's unit at the draw, read or not, and another pass may have left an
     // integer texture there; the sampler units themselves are set once
     const mask = this.shine && this.shine.gain > 0 && this.shineOf ? this.shineOf(tex) : null, sh = mask ? this.shine : null;
-    const lv = sh && this.layerTex && this.layerView && this.layerFrame === this.frameNo - 1 ? this.layerView : null;
+    // T248: the water's motion (its mask, unit 6), which reads the same shadow layer for its sparkle
+    const wm = this.water && this.waterOf ? this.waterOf(tex) : null, wf = wm ? this.water : null;
+    const lv = (sh || wf) && this.layerTex && this.layerView && this.layerFrame === this.frameNo - 1 ? this.layerView : null;
     gl.uniform4f(pr.u.uShine, sh ? sh.inner : 0, sh ? sh.outer : 1, sh ? sh.gain : 0, 0);
-    if (sh) { gl.uniform4f(pr.u.uShineLook, sh.exponent, sh.bump, sh.eye, 0); gl.uniform4f(pr.u.uLayerCam, lv ? lv.X : 0, lv ? lv.Y : 0, lv ? lv.ze : 1, lv ? 1 : 0); gl.uniform2f(pr.u.uLayerScreen, lv ? lv.cw : 1, lv ? lv.ch : 1); }
+    if (sh) gl.uniform4f(pr.u.uShineLook, sh.exponent, sh.bump, sh.eye, 0);
+    if (sh || wf) { gl.uniform4f(pr.u.uLayerCam, lv ? lv.X : 0, lv ? lv.Y : 0, lv ? lv.ze : 1, lv ? 1 : 0); gl.uniform2f(pr.u.uLayerScreen, lv ? lv.cw : 1, lv ? lv.ch : 1); }
+    gl.uniform4f(pr.u.uWater, wf ? wf.gain : 0, wf ? wf.ripple : 0, wf ? wf.foam : 0, wf ? wf.sparkle : 0);
+    if (wf) { const b = wm!.box, d = wf.drift; gl.uniform4f(pr.u.uWaterBox, b[0]!, b[1]!, b[2]!, b[3]!); gl.uniform4f(pr.u.uWaterT, wf.phase, wf.wave, 0, wf.pxTile); gl.uniform4f(pr.u.uWaterDrift, d[0]!, d[1]!, d[2]!, d[3]!); }
     gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, mask ?? this.emptyTex);
     gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, lv ? this.layerTex : this.emptyTex);
+    gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, wm ? wm.mask : this.emptyTex);
     gl.activeTexture(gl.TEXTURE0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.stats.draws++;
   }

@@ -5,7 +5,7 @@
  * relax calms staircase waves; the result is clipped per chunk into fill rings, edge polylines and collar rings.
  * Pure TS, no DOM. Units: tiles of 2 m for every input and output coordinate; cells of 1 m (0.5 tile) for radii and widths. */
 
-import { CELL_T, SURF, SURF_ORDER, surfAbove, type Grid } from '../course-grid';
+import { CELL_T, MAX_GRASSES, SURF, SURF_ORDER, surfAbove, type Grid } from '../course-grid';
 
 // ---- the course grid (T072): origin (x0, y0) in tiles, w x h cells of CELL_T tiles, surf row-major (j * w + i, as cellAt) ----
 
@@ -76,6 +76,9 @@ export const BLOB_STYLE: readonly BlobStyle[] = [
   /* waste */ { close: 1, relax: 1 },
   /* green */ { close: 1, relax: 2, collar: { name: 'fringe', width: 1, over: [NONE, ROUGH, FESCUE, LONG, FAIRWAY, TEE, WASTE] } },
   /* long grass (T238: the rough's old look, drawn between the rough and the fescue) */ { close: 2, relax: 1 },
+  // T271: the custom grasses (draw ids CUSTOM0..): each a grass with a first cut band of none by default (its Border, ext/course-grid/patch
+  // courseStyles, lays one at any width and gives it its base's closing and relax), so the layer codes stay the same for every course
+  ...Array.from({ length: MAX_GRASSES }, (): BlobStyle => ({ close: 2, relax: 1, collar: { name: 'first-cut', width: 0, over: [NONE, ROUGH, FESCUE, LONG] } })),
 ];
 
 // ---- outputs ----

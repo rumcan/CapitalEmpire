@@ -171,6 +171,9 @@ export function tilePermutation(familyId: string, band: TileBand, n = 4): number
 export function tileIndex(perm: readonly number[], ix: number, iy: number): number {
   const n = perm.length; return perm[(((ix + 2 * iy) % n) + n) % n]!;
 }
+/** T272: how wide a level's tiles are laid in a raster at L px per world px (a chunk at its raster level): their cells' widest (snappedCell),
+ *  the px the mip a bake draws must have */
+export const tilePx = (level: Pick<TiledLevel, 'native'>, ts: number, L: number): number => Math.max(1, Math.ceil(tileSize(level, ts)[0] * L - 1e-6));
 /** the grid cell under a world point (world px) for tiles w x h */
 export const cellOf = (X: number, Y: number, w: number, h: number): [number, number] => [Math.floor(X / w), Math.floor(Y / h)];
 /** the cells of a w x h grid a world-px rectangle touches, each with its rectangle */

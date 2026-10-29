@@ -6,7 +6,7 @@ import { PIECE_BUTTONS } from '../../game/ext/course-pieces';
 import { PlantControls } from '../../PaintPanel';
 import { LockMark } from '../Rail';
 import { ToolHead } from '../ToolHead';
-import { BrushShape, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
+import { BrushShape, GrassEdgesEntry, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
 import { HoleStrip, newHole } from './HoleStrip';
 import { HoleWizardPanel } from './HoleWizard';
 import { CourseEdges } from './CourseEdges';
@@ -68,13 +68,14 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
 function ShapeByHand({ game }: { game: Game }) {
   const p = game.paint, keys = surfaceKeysOf(game);
   const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece', run = brush && !!p.brushRun && cells > 0;
-  const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
+  // T271: a custom grass in hand goes by its own name; the keys: 1–8 the surfaces, 9 Create your own (golf), Shift + n your own grasses
+  const name = (armed && p.mode !== 'piece' ? p.grass?.name : undefined) ?? BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '', own = game.golfMode && !!game.courseGrid;
   return (
     <section data-section="shape" className="mt-3">
-      <div className="sec-head"><h3 className="label-caps">Shape by hand</h3><span className="sec-note">{`1 m cells · keys 1–${keys}`}</span></div>
+      <div className="sec-head"><h3 className="label-caps">Shape by hand</h3><span className="sec-note">{`1 m cells · keys 1–${keys}${own ? ' · 9 your own' : ''}`}</span></div>
       {/* T256: whose paint the brush lays: this hole's (Range › Build paints your property) */}
       {game.golfMode && armed && <div className="paint-owner" data-testid="paint-owner">{`Painting hole ${p.brushHole}`}</div>}
-      <SurfaceSwatches game={game} on={armed ? p.brushKind : null} pick={k => (p.mode === 'draw' ? p.setShape(k) : p.setBrush(k))} />
+      <SurfaceSwatches game={game} on={armed ? p.brushKind : null} pick={k => (p.mode === 'draw' ? p.setShape(k, 0) : p.setBrush(k, 0))} />
       <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {/* Brush | Run (T122, P23 4.5): the brush paints where you click and drag; Run lays a strip like a road, from click to click */}
@@ -106,7 +107,7 @@ function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; o
       <p className="sub-line mt-1.5 leading-snug">Not part of any hole: editing or deleting a hole never touches it, and it never paints over a hole. Priced as the course.</p>
       <section data-section="shape" className="mt-3">
         <div className="sec-head"><h3 className="label-caps">Surfaces</h3><span className="sec-note">{`1 m cells · keys 1–${keys}`}</span></div>
-        <SurfaceSwatches game={game} on={brush ? p.brushKind : null} pick={k => p.setBrush(k)} />
+        <SurfaceSwatches game={game} on={brush ? p.brushKind : null} pick={k => p.setBrush(k, 0)} />
         <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <div className="flex items-center gap-1.5" role="group" aria-label="Brush or Run" data-method={run ? 'run' : 'brush'}>
@@ -199,7 +200,7 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
           </Sub>
           {GRID_KINDS.includes(p.brushKind) && p.mode !== 'height' && p.mode !== 'plant' && p.mode !== 'hole' && (
             <Sub title="Edges">
-              <CourseEdges game={game} />
+              {p.grass && (p.mode === 'brush' || p.mode === 'draw') ? <GrassEdgesEntry game={game} /> : <CourseEdges game={game} />}
             </Sub>
           )}
           <Sub title="Look">

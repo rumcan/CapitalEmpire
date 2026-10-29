@@ -11,9 +11,11 @@ import { mulberry } from '../src/game/iso';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap } from '../src/game/lots/lots';
-import { compose, setGeneratedLots, lotPreset, setLotPresets, type PresetDrop } from '../src/game/lots/compose';
+import { compose, setGeneratedLots, setShopVariety, lotPreset, setLotPresets, type PresetDrop } from '../src/game/lots/compose';
 // these pin the frozen presets' own composition (?oldlots); T160's generated house lots are tested in tests/lots-on-the-fly.test.ts
 setGeneratedLots(false);
+// (T270: the editor's chain is pinned on the presets' own pictures, as ?oldshops draws them; a shop or house swapped by place is marked a stand-in)
+setShopVariety(false);
 import { LU, LV } from '../src/game/lots/town';
 import { footprintOf } from '../src/game/lots/preset-art';
 import { LIBRARY } from '../src/game/library';

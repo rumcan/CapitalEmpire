@@ -13,19 +13,31 @@ export interface PlayHole { n: number; par: 3 | 4 | 5; tee: Pt; pin: Pt; line: P
 export interface CourseView { holes: PlayHole[]; lieAt(x: number, y: number): Lie }
 /** a golfer's sex: the field's looks come from the golfer art of the matching sex */
 export type Sex = 'm' | 'w';
+/** T241: a golfer's skill by part of the game (0..1 each), as the shot model reads it (shot.ts skillFor): driving (the driver and the 3-wood), irons
+ *  (the irons and the pitching wedge), the short game (the sand wedge: chips, pitches and bunker shots) and putting. Your profile's nerve is already in
+ *  them (golf/player.ts gameSkills: what pressure takes off). A field golfer has none: his one skill plays every shot */
+export interface GameSkills { driving: number; irons: number; short: number; putting: number }
 /** a golfer: a unique id (0..size-1), name, sex, whether a pro, skill (0..1), look (0..4, the art variant), and the owner's golfer. T213 (entourage.ts):
  *  the cart he rides (an index shared by the two golfers of a cart; absent: he walks) and whether a caddie walks with him */
 export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skill: number; look: number; owner?: boolean; cart?: number; caddie?: boolean;
   /** T254: the tee set he plays from (golf/teesets.ts: a tournament's field the blue, everyday golfers by who they are, the owner his choice); on a
    *  hole without it, the nearest set there is. Absent: the hole's set furthest back */
-  tees?: TeeKind }
+  tees?: TeeKind;
+  /** T241: his skill by part of the game (your profile's, golf/player.ts); absent: `skill` plays every shot (the field). With it, `skill` is their
+   *  average (the tee times' order) */
+  skills?: GameSkills }
 /** a tee time: the game minute and the golfer ids in the group */
 export interface Group { tee: number; players: number[] }
 /** a club, or the putter */
 export type Club = 'driver' | 'wood3' | 'iron4' | 'iron6' | 'iron8' | 'pw' | 'sw' | 'putter';
 /** one stroke: the golfer, hole index (0..17), stroke number (1-based), the minute struck, from and to (tiles), the club, the lie where it came
  *  to rest, the penalty stroke (water or out of bounds), and whether it went in */
-export interface Shot { golfer: number; hole: number; stroke: number; t: number; from: Pt; to: Pt; club: Club; lie: Lie; penalty: 0 | 1; holed: boolean }
+export interface Shot { golfer: number; hole: number; stroke: number; t: number; from: Pt; to: Pt; club: Club; lie: Lie; penalty: 0 | 1; holed: boolean;
+  /** T251: a full shot's or chip's landing (shot.ts hitShot), the playback's bounce and roll (play/roll.ts); absent: a putt, or a plan made by hand */
+  landing?: Landing }
+/** T251: where a full shot or chip landed and its lie there, and where its roll stopped and its lie there (rest: `to`, unless the ball went into water
+ *  or out of bounds, when `to` is the drop or the stroke again) */
+export interface Landing { at: Pt; lie: Lie; rest: Pt; restLie: Lie }
 /** T211 pace of play: a group's wait on the group ahead: the group (an index into groups), the hole index, where (on the tee, for the landing area; or
  *  short of the green, for the green), and from..to in game minutes (to is Infinity while the group ahead has not let it play yet) */
 export interface Wait { group: number; hole: number; at: 'tee' | 'green'; from: number; to: number }

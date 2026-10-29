@@ -1,7 +1,7 @@
 // Golf mode (G1; docs/GOLF-PLAN.md sections 2-3 and 11): what a golf game saves and what the HUD reads. A save with a `golf` field is a golf
 // game; a save without one is a legacy (classic) game and loads as before. Pure TS, no DOM.
 import type { Pt } from '../network';
-import type { AimPoint, Pin, TeeKind, TeeMark } from './types';
+import type { AimPoint, Pin, TeeBoxRec, TeeKind, TeeMark } from './types';
 import type { PlacedEventStructure } from './eventtool';
 import type { CourseHeightSaveChunk } from '../ext/course-height';
 import type { GolfProgress } from '../ext/progressive-ui';
@@ -10,8 +10,15 @@ import type { OwnerInput } from './play/live';
 import { normalizeRangeBiz, type RangeBizSave } from './rangesave';
 import { normalizeDaySave, type DaySave } from './everyday';
 import { normalizeBook, type LookBook } from './looks';
+import { normalizeGrasses, type CustomGrass } from './grasses';
 import { normalizeMyHoles, type MyHole } from './myholes';
 import { isTeeKind, migrateTees } from './teesets';
+import { normalizeTeeBoxes } from './teeplace';
+import { normalizeDayPins, type DayPinsSave } from './daypins';
+import { normalizeCrewSave, type CrewSave } from './crew';
+import { normalizeClubSave, type ClubSave } from './club';
+import { normalizePlayer, type PlayerProfile } from './player';
+import type { GameSkills } from './play/types';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -42,11 +49,16 @@ export interface GolfSave {
  /** T256 (#743): the looks book (golf/looks.ts): each hole's, the property's and each practice facility's looks by owner key. Missing in older
   *  saves: every hole and the property take the course default (today's course-wide looks) as their own on load, so nothing changes */
  looks?: LookBook;
+ /** T271 (#812): the course's own grasses (golf/grasses.ts), by slot; the course grid's look layer names them per cell. Missing: none */
+ grasses?: CustomGrass[];
  /** T254 (#736): 1 once the tee markers are the four tee sets (blue, white, yellow, red). Missing: an older save, whose back, middle and forward
   *  stand as the blue, white and red and whose holes with a single tee marker become the white set on load (golf/teesets.ts migrateTees) */
  teeSets?: 1;
  /** T256: the player's saved holes ("My holes", golf/myholes.ts), kept with the game (and in the browser, across games) */
  myHoles?: MyHole[];
+ /** T268 (#809): the tee boxes Place and Add tee laid, by set (`hole:kind`, golf/teeplace.ts): each box's spot and the ground it covered, put back
+  *  when the set is moved or removed. Missing: none (an older box's ground goes back to the grass round it) */
+ teeBoxes?: Record<string, TeeBoxRec>;
  /** the hole plans, one save tuple per hole (plan P21 3.7: hole, tee, green, green shape and m², turn, bends, width handles, fairway start,
   *  seed; ext/hole-plan's HolePlanTuple once it lands); kept as they are, undo carries them */
  plans?: unknown[];
@@ -71,18 +83,32 @@ export interface GolfSave {
  everyday?: DaySave;
  /** T231: the ponds' edge marks, flat x y pairs (tiles): a pond with a mark in it has the stone edge (golf/ponds.ts); missing: every pond natural */
  ponds?: number[];
+ /** T269 (#810): the day's pins (golf/daypins.ts): the town day, today's cups and yesterday's. Missing: an older save, whose cups are its placed pins */
+ dayPins?: DayPinsSave;
+ /** T269 part 2: the grounds crew (golf/crew.ts CrewSave): the holes' stripe phases and the days their fairways were last cut whole. Missing: none */
+ crew?: CrewSave;
+ /** T214 (#559, plan P26): the club's members (golf/club.ts ClubSave): the count, the dues a month, the founding drive, the month stepped to and the
+  *  season's books. Missing: an older save, whose members the engine seeds from T208's stand-in (club.ts legacyClub; P26 section 8) */
+ club?: ClubSave;
+ /** T241 (#705): your golf (golf/player.ts): your name, skills, practice log, rounds and booked tee time; T240 extends it. Missing: an older save, whose
+  *  player starts with the starting profile the first time it is needed */
+ player?: PlayerProfile;
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
  *  he had played when he handed the rest to the caddie (null while he still plays). A replay of the inputs (then the caddie) gives the same round.
  *  Written when he joins, hits or caddies; dropped when the round is free */
-export interface GolfPlaySave { key: number; owner: 'm' | 'w'; inputs: OwnerInput[]; caddie: number | null; /** T254: the tee set he chose (absent: the white) */ tees?: TeeKind }
+export interface GolfPlaySave { key: number; owner: 'm' | 'w'; inputs: OwnerInput[]; caddie: number | null; /** T254: the tee set he chose (absent: the white) */ tees?: TeeKind;
+  /** T241: his skills as he joined (your profile under the tournament's pressure), so a reload replays the same round. Absent: a save from before T241,
+   *  which plays at OWNER_SKILL as it did */
+  skills?: GameSkills }
 
 /** a saved owner's play, or null when it is not well formed (no key, sex or inputs list); a missing caddie count is null */
 function normalizePlaySave(p: Partial<GolfPlaySave> | null | undefined): GolfPlaySave | null {
-  const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie, tees = p?.tees;
+  const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie, tees = p?.tees, sk = p?.skills;
   if (typeof key !== 'number' || !Number.isFinite(key) || (owner !== 'm' && owner !== 'w') || !Array.isArray(inputs)) return null;
-  return { key, owner, inputs, caddie: typeof caddie === 'number' && Number.isFinite(caddie) ? caddie : null, ...(isTeeKind(tees) ? { tees } : {}) };
+  const skills = sk && [sk.driving, sk.irons, sk.short, sk.putting].every(v => typeof v === 'number' && Number.isFinite(v)) ? { driving: sk.driving, irons: sk.irons, short: sk.short, putting: sk.putting } : null;
+  return { key, owner, inputs, caddie: typeof caddie === 'number' && Number.isFinite(caddie) ? caddie : null, ...(isTeeKind(tees) ? { tees } : {}), ...(skills ? { skills } : {}) };
 }
 
 /** a golf game's start money, $ (City.setBudget's golf treasury) */
@@ -97,7 +123,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -128,5 +154,15 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   // T256: the looks book and My holes, well formed only (a save without the book keeps none: the engine gives every owner today's looks)
   const lk = normalizeBook(looks); if (lk) out.looks = lk;
   const mh = normalizeMyHoles(myHoles); if (mh.length) out.myHoles = mh;
+  // T271: the custom grasses, well formed only (none kept: the field stays out)
+  const gr = normalizeGrasses(grasses); if (gr.length) out.grasses = gr;
+  const tb = normalizeTeeBoxes(teeBoxes); if (tb) out.teeBoxes = tb; // T268
+  // T269: the day's pins, well formed only (none: the placed pins are today's)
+  const dp = normalizeDayPins(dayPins); if (dp) out.dayPins = dp;
+  // T269: the crew's stripes, well formed (nothing to keep: the field stays out)
+  if (crew) { const c = normalizeCrewSave(crew); if (c.phase.length || c.mown.length || c.staff) out.crew = c; }
+  const cl = normalizeClubSave(club); if (cl) out.club = cl; // T214: the members, well formed only (none: the engine seeds an old save's)
+  // T241: your golf, well formed (none: the engine starts the starting profile when it is first needed)
+  const pp = normalizePlayer(player); if (pp) out.player = pp;
   return out;
 }

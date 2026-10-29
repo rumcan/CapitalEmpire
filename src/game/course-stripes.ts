@@ -81,7 +81,7 @@ export function bandAt(legs: readonly StripeLeg[], x: number, y: number): { leg:
 }
 
 /** a convex polygon (flat x y) cut to the half-plane where (p - c) . n >= 0 (Sutherland-Hodgman) */
-function keepSide(poly: readonly number[], cx: number, cy: number, nx: number, ny: number): number[] {
+export function keepSide(poly: readonly number[], cx: number, cy: number, nx: number, ny: number): number[] {
   const out: number[] = [], n = poly.length >> 1;
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n, ax = poly[2 * i]!, ay = poly[2 * i + 1]!, bx = poly[2 * j]!, by = poly[2 * j + 1]!;
@@ -100,4 +100,24 @@ export function legArea(legs: readonly StripeLeg[], i: number, box: readonly num
   if (c) p = keepSide(p, c.x, c.y, c.nx, c.ny);
   for (let j = i + 1; j < legs.length && p.length >= 6; j++) { const q = legs[j]!.cut; if (q) p = keepSide(p, q.x, q.y, -q.nx, -q.ny); }
   return p.length >= 6 ? p : [];
+}
+
+/** T269 (#810): a leg's bands drawn the other way: its origin moved one band along its axis, so each light band is dark and each dark light */
+export function flipBands(m: MowStripes): MowStripes { const w = Math.max(0.25, m.w); return { ...m, ox: m.ox + m.ux * w, oy: m.oy + m.uy * w }; }
+
+/** T269: leg i's share (a convex polygon, legArea) split by the grounds crew's cut f ([phase, leg, band], ground-protocol stripes f): the pieces and
+ *  whether each is drawn flipped (flipBands). The cut flips again the bands below `band`: across the line (across) on every leg, along it on the legs
+ *  before `leg` and that leg's bands below `band`; the phase flips the whole hole. No f: the share as it is */
+export function cutPieces(legs: readonly StripeLeg[], i: number, poly: number[], f: readonly number[] | undefined, across: boolean): { poly: number[]; flip: boolean }[] {
+  if (!f || f.length < 3 || !poly.length) return [{ poly, flip: false }];
+  const ph = f[0] === 1, L = f[1]!, k = f[2]!;
+  if (L < 0) return [{ poly, flip: ph }];
+  if (!across && i < L) return [{ poly, flip: !ph }];
+  if (!across && i > L) return [{ poly, flip: ph }];
+  // the cut: bands below k, (p - o) . u < k w
+  const m = legs[i]!.m, w = Math.max(0.25, m.w), cx = m.ox + m.ux * k * w, cy = m.oy + m.uy * k * w;
+  const below = keepSide(poly, cx, cy, -m.ux, -m.uy), above = keepSide(poly, cx, cy, m.ux, m.uy), out: { poly: number[]; flip: boolean }[] = [];
+  if (below.length >= 6) out.push({ poly: below, flip: !ph });
+  if (above.length >= 6) out.push({ poly: above, flip: ph });
+  return out;
 }

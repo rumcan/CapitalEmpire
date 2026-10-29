@@ -55,6 +55,8 @@ function yieldOf(T: number[][], s: LotState): number {
   const v = T[s.use][s.level - LV.BUILT];
   return s.decline >= 2 ? v >> 1 : v;
 }
+/** T242: a lot's jobs now (the set-the-scene card's Staff): none while building, half at decline 2+, none when derelict */
+export function lotJobs(s: Pick<LotState, 'use' | 'level' | 'decline'>): number { return JOBS[s.use] ? yieldOf(JOBS, s as LotState) : 0; }
 /** the value of a lot's frontage for growth: corner +0.3, +0.2 per paved class step above gravel */
 const lotValue = (l: Lot) => 1 + (l.corner ? 0.3 : 0) + 0.2 * Math.max(0, l.seg.cls.order + 1);
 const dist = (a: Pt, b: Pt) => Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));

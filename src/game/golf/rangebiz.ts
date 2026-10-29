@@ -17,6 +17,9 @@ import { practiceArea, type PracticeArea, type PracticeScan } from './practice';
 import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
 import { DEFAULT_RANGE_LOOK, type RangeLook } from './range-look';
 import { PIC_TILES } from './range-pics';
+import { BallRoll, ballRoll } from './play/roll';
+import { TILE_M } from './types';
+import type { Lie } from './play/types';
 import RANGE_PICS_FILE from '../../assets/ground/range-pics.json';
 import RANGE_ART_FILE from './range-art.json';
 
@@ -38,6 +41,12 @@ const LOT_STEP = 0.6;
 const FRONT_UV: [number, number, number, number] = [-2, 72, -2, 30];
 /** the far fence (v), the side fences (u) */
 const FAR_V = 149.4, SIDE_U: [number, number] = [0.6, 69.4];
+/** T251: a ball rolling out stops this far (tiles) short of a fence */
+const FENCE_GAP = 0.8;
+/** T251: a range ball's roll after it lands: a share of its carry on the outfield (the fairway's, times 0.6 to 1.4), sideways a little (a cross slope
+ *  of up to WOBBLE, m per m); round a target green, the hollow is HOLLOW tiles past its edge and gathers the balls landing within CATCH tiles of it
+ *  (a raised green holds HOLD of those landing on it, a short check of GREEN_RUN of the carry); all within ROLL_S sim seconds */
+const RUN = 0.08, WOBBLE = 0.03, HOLLOW = 1.4, CATCH = 3, HOLD = 0.4, GREEN_RUN = 0.02, ROLL_S = 1.1;
 /** the land's grass the outfield leaves round the tee box (tiles): room for the raised tee's face at the Height slider's top (T127, T130) */
 const TEE_GAP = 2.6;
 /** how far a desert start's dirt tee box reaches past the tee cells (tiles, T223): over the course's first-cut collar round them (1 m) */
@@ -52,6 +61,8 @@ const ROOF_V: [number, number] = [16.9, 20.5];
 const DECK_SPAN = 6.6;
 /** a ball's height unit in world px (rangehost drawOver: 32 x 1.4 px a unit) */
 const BALL_PX = 44.8;
+/** T251: a ball height unit in metres (a metre is 32 world px, the course's balls' HH): a bounce's metres over this */
+const UNIT_M = BALL_PX / 32;
 /** the coffee kiosk (T133): the kiosk, its counter (the line's head) and the line stepping back toward the path; its patio */
 const KIOSK = { u: 44.6, v: 8.6 }, KIOSK_AT = { u: 44.6, v: 11.4 }, KIOSK_STEP = 0.8, PATIO: [number, number, number, number] = [41.4, 47.8, 4, 15.4];
 /** the ball picker cart (T133): where it parks by day (beside the outfield at the tee end), its lanes down and up the outfield (u, from the far
@@ -172,6 +183,9 @@ export interface RangeScene {
   anchors: { lot: Pt[]; shop: Pt; tee: [Pt, Pt] };
   /** where the outfield's mowing stripes start (world: the tee end of the outfield, its middle) */
   mowFrom: Pt;
+  /** T251: the plot frame (its origin and its unit u and v, world) and the fences a rolling ball stops short of (the side fences' u, the far
+   *  fence's v); absent: none */
+  fence?: { o: Pt; u: Pt; v: Pt; u0: number; u1: number; v1: number };
 }
 
 /** the view index (0 NE .. 3 NW) whose front faces the frame's -v (the road) for a facing. The four-view sheets put the front in the NE and NW
@@ -383,6 +397,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     J: P(RANGE_PLOT[0] + 2, -NEAR - sb), driveEnd: P(RANGE_PLOT[0] + 2, 16), roadDir: { x: du.x - o.x, y: du.y - o.y }, rangeSide: { x: dv.x - o.x, y: dv.y - o.y },
     numbers, label: P(35, 60), box: [Math.min(c0.x, c1.x), Math.min(c0.y, c1.y), Math.max(c0.x, c1.x), Math.max(c0.y, c1.y)],
     mowFrom: P(U_MID, TEE[3] + TEE_GAP + 0.6),
+    fence: { o, u: { x: du.x - o.x, y: du.y - o.y }, v: { x: dv.x - o.x, y: dv.y - o.y }, u0: SIDE_U[0] + FENCE_GAP, u1: SIDE_U[1] - FENCE_GAP, v1: FAR_V - FENCE_GAP },
     front: [Math.min(f0.x, f1.x), Math.min(f0.y, f1.y), Math.max(f0.x, f1.x), Math.max(f0.y, f1.y)], walk: null,
     anchors: { lot: [P(lot[0], lot[2]), P(lot[1], lot[2]), P(lot[1], lot[3]), P(lot[0], lot[3])], shop: P(COUNTER.u, COUNTER.v), tee: [P(TEE[0], TEE[2]), P(TEE[1], TEE[2])] },
   };
@@ -667,7 +682,9 @@ interface Visit { id: number; person: number; car: number; slot: number; stage: 
   rc?: RangeCar }
 /** a ball in the air: from, to (tiles), launch time and flight time (s), and the arc's height (tiles); roll: a putt rolling on the green (it slows
  *  to the cup and is holed or picked up: it never lies) */
-interface Ball { x0: number; y0: number; x1: number; y1: number; t0: number; T: number; h: number; roll?: boolean; /** its start's height (units, T133: off the upper deck) */ h0?: number }
+interface Ball { x0: number; y0: number; x1: number; y1: number; t0: number; T: number; h: number; roll?: boolean; /** its start's height (units, T133: off the upper deck) */ h0?: number;
+  /** T251: its bounce and roll after it lands (it lies where that stops); absent: it lies where it lands */
+  after?: BallRoll }
 /** a golfer, the pro or a coffee drinker as the engine draws it: a crowd person, lifted onto the upper deck (world px, T133) */
 export type RangePerson = CrowdPerson & { lift: number };
 /** what the engine sees of the sim each frame */
@@ -687,6 +704,44 @@ export interface RangeToday { golfers: number; lost: number; queue: number; play
   coffees: number; lessons: number; kioskQueue: number; upstairs: number;
   /** T146: today's cars turned away because the car park was full (also in lost), and the hitting bays taken now (from the sale to the bucket's end) */
   noPark: number; taken: number }
+
+/** T251: a range ball's bounce and roll after it lands at (x, y), flown len tiles along (ux, uy). Near a target green (within CATCH tiles of the hollow
+ *  round it) it gathers in that hollow, HOLLOW tiles past the green's edge: from beyond it rolls back down into it, from the green's edge out into it,
+ *  and from the green itself (a raised green) it holds HOLD of the time (a short check) or runs off forward into the hollow behind; turned a little
+ *  about the green, so the balls ring it. Elsewhere it runs out along the outfield by RUN of its carry (0.6 to 1.4 times), bent a little. It stops
+ *  short of the fences. Its chances come from a hash of the landing, so the range's own stream (its golfers' business) is untouched */
+export function rollOut(x: number, y: number, ux: number, uy: number, len: number, sc: Pick<RangeScene, 'targets' | 'fence'>): BallRoll {
+  const qx = Math.floor(x * 1024), qy = Math.floor(y * 1024), h1 = hash(qx, qy), h2 = hash(qy ^ 0x5bd1e995, qx), land = { x, y };
+  let ex = x, ey = y, lie: Lie = 'fairway', cross = 0, best = Infinity;
+  let g: SceneTarget | null = null;
+  for (const t of sc.targets) { const d = Math.hypot(x - t.x, y - t.y) - t.r - HOLLOW; if (d < CATCH && d < best) { best = d; g = t; } }
+  if (g) {
+    const dx = x - g.x, dy = y - g.y, d = Math.hypot(dx, dy), R = g.r + HOLLOW;
+    if (d < g.r && h1 < HOLD) {
+      // held: a short check on, kept on the green (short of its edge)
+      const rr = g.r - 0.3, b = dx * ux + dy * uy, q = b * b - (d * d - rr * rr), edge = q > 0 ? Math.max(0, -b + Math.sqrt(q)) : 0, k = Math.min(len * GREEN_RUN * (0.5 + h2), edge);
+      lie = 'green'; ex = x + ux * k; ey = y + uy * k;
+    }
+    else {
+      // the way from the green's middle to where it gathers: through the landing (from the green itself, on forward), turned up to 0.25 rad
+      let ax = d < g.r ? dx + ux * g.r : dx, ay = d < g.r ? dy + uy * g.r : dy; const al = Math.hypot(ax, ay) || 1; ax /= al; ay /= al;
+      const a = (h2 - 0.5) * 0.5, c = Math.cos(a), sn = Math.sin(a), rx = ax * c - ay * sn, ry = ax * sn + ay * c;
+      ex = g.x + rx * R; ey = g.y + ry * R; lie = d < g.r ? 'green' : (ex - x) * ux + (ey - y) * uy < 0 ? 'fescue' : 'fairway'; // (rolling back down: a low hop)
+    }
+  } else { const k = len * RUN * (0.6 + 0.8 * h1); ex = x + ux * k; ey = y + uy * k; cross = (h2 - 0.5) * 2 * WOBBLE; }
+  // short of the fences: the way cut where it would cross one (none from a landing already past it)
+  const f = sc.fence;
+  if (f) {
+    const fu = (px: number, py: number) => (px - f.o.x) * f.u.x + (py - f.o.y) * f.u.y, fv = (px: number, py: number) => (px - f.o.x) * f.v.x + (py - f.o.y) * f.v.y;
+    const u0 = fu(x, y), v0 = fv(x, y), u1 = fu(ex, ey), v1 = fv(ex, ey);
+    let k = 1;
+    if (v1 > f.v1) k = Math.min(k, v0 >= f.v1 ? 0 : (f.v1 - v0) / (v1 - v0));
+    if (u1 > f.u1) k = Math.min(k, u0 >= f.u1 ? 0 : (f.u1 - u0) / (u1 - u0));
+    if (u1 < f.u0) k = Math.min(k, u0 <= f.u0 ? 0 : (u0 - f.u0) / (u0 - u1));
+    if (k < 1) { ex = x + (ex - x) * k; ey = y + (ey - y) * k; }
+  }
+  return new BallRoll().set(land, { x: ex, y: ey }, lie, lie, len * TILE_M, ROLL_S, null, cross);
+}
 
 /** The golfers you see (plan 2.2). step() moves them on and returns the takings booked ($); the counts go into the save's season and total */
 export class RangeSim {
@@ -759,14 +814,23 @@ export class RangeSim {
   }
   /** the balls in the air (or rolling on a practice green) now: each one's point and height (tiles), written into out as x y h triples; returns how many */
   flying(out: Float32Array): number {
-    let n = 0;
+    let n = 0; const p = this.rollPt;
     for (const b of this.balls) {
-      const k0 = (this.t - b.t0) / b.T; if (k0 < 0 || k0 > 1 || 3 * n + 2 >= out.length) continue;
+      const k0 = (this.t - b.t0) / b.T; if (k0 < 0 || 3 * n + 2 >= out.length) continue;
+      if (k0 > 1) {
+        // T251: bouncing and rolling on after its landing (heights in metres, out in units)
+        const a = ballRoll.on ? b.after : undefined, e = this.t - b.t0 - b.T; if (!a || e >= a.rest) continue;
+        a.at(e, p); out[3 * n] = p.x; out[3 * n + 1] = p.y; out[3 * n + 2] = p.h / UNIT_M; n++; continue;
+      }
       const k = b.roll ? 1 - (1 - k0) * (1 - k0) : k0;
       out[3 * n] = b.x0 + (b.x1 - b.x0) * k; out[3 * n + 1] = b.y0 + (b.y1 - b.y0) * k; out[3 * n + 2] = b.roll ? 0 : (b.h0 ?? 0) * (1 - k) + 4 * b.h * k * (1 - k); n++;
     }
     return n;
   }
+  /** T251: flying's point of a ball rolling */
+  private rollPt = { x: 0, y: 0, h: 0 };
+  /** T251 (the bench's busy range, bench.ts ?rangeBalls=N): this many balls kept in the air (0: none added), and their own stream */
+  benchBalls = 0; private benchRnd: (() => number) | null = null;
   /** the golfers on the range now (walking to the shop, queued, at the mats or going back) */
   get onFoot(): number { let n = 0; for (const v of this.visits) if (v.stage >= S.WalkShop && v.stage <= S.WalkCar) n++; return n; }
 
@@ -863,7 +927,10 @@ export class RangeSim {
     this.queue.forEach((id, k) => { const v = this.visits.find(q => q.id === id); if (v && v.stage === S.Queue) this.toward(v, this.queueSpot(k), dt); });
     this.desks.forEach((d, i) => { const v = d.id >= 0 ? this.visits.find(q => q.id === d.id) : undefined; if (v && v.stage === S.Queue) this.toward(v, sc.counters[i] ?? sc.counter, dt); });
     this.kq.forEach((id, k) => { const v = this.visits.find(q => q.id === id); if (v && v.stage === S.KioskQueue) this.toward(v, this.kioskSpot(k), dt); });
-    this.balls = this.balls.filter(b => { if (this.t < b.t0 + b.T) return true; if (!b.roll) this.lie(b.x1, b.y1); return false; });
+    // (T251: a ball lies where its bounce and roll stop)
+    this.balls = this.balls.filter(b => { const a = ballRoll.on ? b.after : undefined; if (this.t < b.t0 + b.T + (a ? a.rest : 0)) return true; if (!b.roll) { if (a) this.lie(a.ex, a.ey); else this.lie(b.x1, b.y1); } return false; });
+    // (T251, the bench's busy range: benchBalls balls kept in the air from the bays, on a stream of their own, so the range's business is as it was)
+    if (this.benchBalls > 0 && sc.bays.length) { const r = this.benchRnd ?? (this.benchRnd = mulberry(0xba11)); for (let k = 0; this.balls.length < this.benchBalls && k < this.benchBalls; k++) this.launchFrom(Math.floor(r() * sc.bays.length), sc, r); }
     // T152: a visit stays while its car is still on the road (it fell behind its timetable: drive)
     this.visits = this.visits.filter(v => v.stage !== S.Done || v.rc);
     // the balls are picked once the range is closed and empty: at once (D15), or by the ball picker cart driving its lanes (T133)
@@ -1220,17 +1287,21 @@ export class RangeSim {
       const len = L * (0.85 + 0.25 * this.rnd()), side = (this.rnd() - 0.5) * 0.35;
       this.balls.push({ x0: v.x + ux * 0.25, y0: v.y + uy * 0.25, x1: v.x + ux * len - uy * side, y1: v.y + uy * len + ux * side, t0: this.t, T: 1.1 + len / 2.5, h: 0, roll: true });
     } else {
-      const len = L * (0.8 + 0.35 * this.rnd()), side = (this.rnd() - 0.5) * L * 0.25;
-      this.balls.push({ x0: v.x + ux * 0.3, y0: v.y + uy * 0.3, x1: v.x + ux * len - uy * side, y1: v.y + uy * len + ux * side, t0: this.t, T: 0.8 + len / 10, h: 1 + len * 0.18 });
+      const len = L * (0.8 + 0.35 * this.rnd()), side = (this.rnd() - 0.5) * L * 0.25, x1 = v.x + ux * len - uy * side, y1 = v.y + uy * len + ux * side;
+      // (T251: a chip checks up on the practice green: a low bounce and a short roll on)
+      const k = len * GREEN_RUN * 3, after = ballRoll.on ? new BallRoll().set({ x: x1, y: y1 }, { x: x1 + ux * k, y: y1 + uy * k }, 'green', 'green', len * TILE_M, ROLL_S, null) : undefined;
+      this.balls.push({ x0: v.x + ux * 0.3, y0: v.y + uy * 0.3, x1, y1, t0: this.t, T: 0.8 + len / 10, h: 1 + len * 0.18, after });
     }
   }
   /** a ball from v's bay toward one of the targets (a golfer's aim: nearer greens more often), scattered across and along the line */
-  private launch(v: Visit, sc: RangeScene): void {
-    const b = sc.bays[v.bay]!.stand, tg = sc.aims, i = Math.min(tg.length - 1, Math.floor(Math.pow(this.rnd(), 1.4) * tg.length)), t = tg[i]!;
-    const dx = t.x - b.x, dy = t.y - b.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, len = L * (0.82 + 0.3 * this.rnd()), side = (this.rnd() - 0.5) * L * 0.22;
-    const x1 = b.x + ux * len - uy * side, y1 = b.y + uy * len + ux * side, lift = sc.bays[v.bay]!.lift;
-    // off the upper deck (T133) the ball starts at the deck's height
-    this.balls.push({ x0: b.x + ux * 0.6, y0: b.y + uy * 0.6, x1, y1, t0: this.t, T: 1.6 + len / 35, h: 4 + len * 0.16, ...(lift ? { h0: lift / BALL_PX } : {}) });
+  private launch(v: Visit, sc: RangeScene): void { this.launchFrom(v.bay, sc, this.rnd); }
+  /** a ball from bay k toward the targets, its chances from the stream rnd (the range's own; the bench's busy range, its own) */
+  private launchFrom(bay: number, sc: RangeScene, rnd: () => number): void {
+    const b = sc.bays[bay]!.stand, tg = sc.aims, i = Math.min(tg.length - 1, Math.floor(Math.pow(rnd(), 1.4) * tg.length)), t = tg[i]!;
+    const dx = t.x - b.x, dy = t.y - b.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, len = L * (0.82 + 0.3 * rnd()), side = (rnd() - 0.5) * L * 0.22;
+    const x1 = b.x + ux * len - uy * side, y1 = b.y + uy * len + ux * side, lift = sc.bays[bay]!.lift;
+    // off the upper deck (T133) the ball starts at the deck's height; T251: it bounces and rolls out after it lands
+    this.balls.push({ x0: b.x + ux * 0.6, y0: b.y + uy * 0.6, x1, y1, t0: this.t, T: 1.6 + len / 35, h: 4 + len * 0.16, ...(lift ? { h0: lift / BALL_PX } : {}), after: ballRoll.on ? rollOut(x1, y1, ux, uy, len, sc) : undefined });
   }
 
   /** the people and cars to draw (reused objects): every golfer on foot as a crowd person (walking: the walk clip toward its heading; queued:

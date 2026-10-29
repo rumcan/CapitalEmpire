@@ -5,7 +5,8 @@
 // hole built (T205: the plain panel with the badges and the status line's ✎ Edit hole, the hole card, and the editor's shape step, top and
 // end), the floating Grass panel and (a range start) the range card, top and end (T206: both once ran past the bottom at 125%). A box fails when it is wider than it shows (its content scrolls or is cut
 // sideways), when any element in it scrolls sideways, or when it passes the screen's edge. Nothing is saved: every POST is answered here.
-//   npm run ui:overflow -- --url http://localhost:5173 [--channel msedge|chrome] [--quick]
+// T214: and (the old start) the Clubhouse card with its Members block and its fold-out open, top and end (--club: that card alone).
+//   npm run ui:overflow -- --url http://localhost:5173 [--channel msedge|chrome] [--quick] [--club]
 import { chromium } from 'playwright-core';
 
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i > 0 ? process.argv[i + 1] : d; };
@@ -17,7 +18,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const check = () => {
   const out = [], W = innerWidth, H = innerHeight, se = document.scrollingElement;
   if (se && (se.scrollTop || se.scrollLeft)) out.push(['the page', `scrolled (${se.scrollLeft}, ${se.scrollTop})`]);
-  const boxes = [...document.querySelectorAll('[data-testid="rail"], [data-flyout-col], [data-testid="tool-panel"], [data-testid="help"], [data-testid="hole-card"], [data-testid="range-card"], [data-testid="grass-panel"]')].filter(e => e.offsetParent !== null);
+  const boxes = [...document.querySelectorAll('[data-testid="rail"], [data-flyout-col], [data-testid="tool-panel"], [data-testid="help"], [data-testid="hole-card"], [data-testid="range-card"], [data-testid="club-card"], [data-testid="grass-panel"]')].filter(e => e.offsetParent !== null);
   for (const b of boxes) {
     const name = b.getAttribute('data-testid') ?? `flyout ${b.getAttribute('data-flyout-col')}`, r = b.getBoundingClientRect();
     if (b.scrollWidth > b.clientWidth + 1) out.push([name, `content ${b.scrollWidth}px wide in ${b.clientWidth}px`]);
@@ -34,9 +35,34 @@ const check = () => {
 const browser = await chromium.launch({ channel: CHANNEL, headless: true });
 const fails = [];
 let looked = 0;
+/** T214: the Clubhouse card (the old start: it has a clubhouse from the first minute), with its Members block's fold-out open, at its top and its end */
+async function clubCard(W, H, S, tag) {
+  const cc = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+  await cc.addInitScript(s => { try { localStorage.clear(); localStorage.setItem('capitalempire.uiScale', String(s)); } catch { /* none */ } }, S);
+  const q = await cc.newPage();
+  await q.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
+  await q.goto(`${URL}/?start=town&unlock=0`, { waitUntil: 'domcontentloaded', timeout: 180000 });
+  await q.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
+  await sleep(2000);
+  await q.evaluate(() => { const g = window.__game; g.setSpeed(0); document.querySelectorAll('button[aria-label="Close"]').forEach(x => x.click()); g.openClubCard(true); g.emit(); });
+  await sleep(500);
+  await q.evaluate(() => { const d = document.querySelector('[data-testid="club-why"]'); if (d) d.open = true; }); await sleep(150);
+  const lookQ = async what => { looked++; for (const [box, why] of await q.evaluate(check)) fails.push(`${tag} · ${what} · ${box}: ${why}`); };
+  if (!(await q.$('[data-testid="club-card"]'))) fails.push(`${tag} · the Clubhouse card did not open on the old start`);
+  else if (!(await q.$('[data-testid="club-members-block"]'))) fails.push(`${tag} · the Clubhouse card has no Members block`);
+  else {
+    await lookQ('the Clubhouse card');
+    await q.evaluate(() => { const c = document.querySelector('[data-testid="club-card"]'); c.scrollTop = c.scrollHeight; }); await sleep(150);
+    await lookQ('the Clubhouse card, scrolled to its end');
+  }
+  await cc.close();
+}
+/** --club: the Clubhouse card alone (T214), at every size and UI scale */
+const ONLY_CLUB = process.argv.includes('--club');
 try {
   for (const [W, H] of SIZES) for (const S of SCALES) {
     const tag = `${W}x${H} @${Math.round(S * 100)}%`;
+    if (ONLY_CLUB) { await clubCard(W, H, S, tag); console.log(`${tag}: looked ${looked} times so far, ${fails.length} failures so far`); continue; }
     const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
     await ctx.addInitScript(s => { try { localStorage.clear(); localStorage.setItem('capitalempire.uiScale', String(s)); } catch { /* none */ } }, S);
     const p = await ctx.newPage();
@@ -171,8 +197,9 @@ try {
       }
       await rc.close();
     }
+    await clubCard(W, H, S, tag); // T214: the Clubhouse card with its Members block
     console.log(`${tag}: looked ${looked} times so far, ${fails.length} failures so far`);
   }
 } finally { await browser.close(); }
 if (fails.length) { console.log(`FAIL: ${fails.length}`); for (const f of fails.slice(0, 60)) console.log('  ' + f); process.exit(1); }
-console.log(`OK: no rail, flyout, tool panel, Help › Keys, Course › Holes, hole card, Grass panel or range card overflows (${looked} looks, ${SIZES.length} sizes x ${SCALES.length} UI scales)`);
+console.log(`OK: no rail, flyout, tool panel, Help › Keys, Course › Holes, hole card, Grass panel, range card or Clubhouse card overflows (${looked} looks, ${SIZES.length} sizes x ${SCALES.length} UI scales)`);

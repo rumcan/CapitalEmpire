@@ -197,40 +197,73 @@ export class WaterField {
   get box(): [number, number, number, number] { return [this.x0, this.y0, this.x0 + this.W / this.res, this.y0 + this.H / this.res]; }
   /** any water at all (of the sites in mask) */
   any(mask = 0xff) { for (let k = 0; k < this.site.length; k++) if (this.site[k]! & mask) return true; return false; }
-  /** a ring set (flat x, y rings, tiles) filled even-odd, as one surface (a course chunk's rings, an area's outline), marked with bit */
-  rings(rings: readonly ArrayLike<number>[], bit: number) {
+  /** T248 (water-motion.ts): the water motion's extras, made by motion() before the sites are marked (null: none): each water sample's
+   *  downstream direction (x, y a sample: a river's, from its spline; 0 on still water) and its waves' strength (the lap amplitude, 0..1: by
+   *  the river's width, by a pond's area), written by waterway and rings with their `lap` */
+  flow: Float32Array | null = null; amp: Float32Array | null = null;
+  /** T248: keep the motion's extras as the sites are marked */
+  motion(): this { const N = this.W * this.H; this.flow ??= new Float32Array(2 * N); this.amp ??= new Float32Array(N); return this; }
+  /** a ring set (flat x, y rings, tiles) filled even-odd, as one surface (a course chunk's rings, an area's outline), marked with bit; with
+   *  the motion's extras (motion()) and lap, each water sample takes the waves' strength lap(area) of the ring round it (its tiles squared; the
+   *  largest where rings nest) */
+  rings(rings: readonly ArrayLike<number>[], bit: number, lap?: (area: number) => number) {
     const { W, H, res, x0, y0, site } = this, xs: number[] = [];
     let ya = Infinity, yb = -Infinity;
     for (const p of rings) for (let i = 1; i < p.length; i += 2) { const y = p[i]!; if (y < ya) ya = y; if (y > yb) yb = y; }
-    const v0 = Math.max(0, Math.floor((ya - y0) * res - 0.5)), v1 = Math.min(H - 1, Math.ceil((yb - y0) * res - 0.5));
-    for (let v = v0; v <= v1; v++) {
-      const ty = y0 + (v + 0.5) / res; xs.length = 0;
-      for (const p of rings) {
-        const n = p.length >> 1;
-        for (let i = 0; i < n; i++) {
-          const j = (i + 1) % n, ay = p[2 * i + 1]!, by = p[2 * j + 1]!;
-          if ((ay <= ty) !== (by <= ty)) { const ax = p[2 * i]!, bx = p[2 * j]!; xs.push(ax + ((ty - ay) * (bx - ax)) / (by - ay)); }
+    /** the spans of the rings (all: even-odd) on each row, to f(v, u0, u1) */
+    const spans = (list: readonly ArrayLike<number>[], ya: number, yb: number, f: (v: number, u0: number, u1: number) => void) => {
+      const v0 = Math.max(0, Math.floor((ya - y0) * res - 0.5)), v1 = Math.min(H - 1, Math.ceil((yb - y0) * res - 0.5));
+      for (let v = v0; v <= v1; v++) {
+        const ty = y0 + (v + 0.5) / res; xs.length = 0;
+        for (const p of list) {
+          const n = p.length >> 1;
+          for (let i = 0; i < n; i++) {
+            const j = (i + 1) % n, ay = p[2 * i + 1]!, by = p[2 * j + 1]!;
+            if ((ay <= ty) !== (by <= ty)) { const ax = p[2 * i]!, bx = p[2 * j]!; xs.push(ax + ((ty - ay) * (bx - ax)) / (by - ay)); }
+          }
+        }
+        if (xs.length < 2) continue;
+        xs.sort((a, b) => a - b);
+        for (let k = 0; k + 1 < xs.length; k += 2) {
+          const u0 = Math.max(0, Math.ceil((xs[k]! - x0) * res - 0.5)), u1 = Math.min(W - 1, Math.ceil((xs[k + 1]! - x0) * res - 0.5) - 1);
+          if (u1 >= u0) f(v, u0, u1);
         }
       }
-      if (xs.length < 2) continue;
-      xs.sort((a, b) => a - b);
-      for (let k = 0; k + 1 < xs.length; k += 2) {
-        const u0 = Math.max(0, Math.ceil((xs[k]! - x0) * res - 0.5)), u1 = Math.min(W - 1, Math.ceil((xs[k + 1]! - x0) * res - 0.5) - 1);
-        for (let u = u0; u <= u1; u++) site[v * W + u] |= bit;
-      }
+    };
+    spans(rings, ya, yb, (v, u0, u1) => { for (let u = u0; u <= u1; u++) site[v * W + u] |= bit; });
+    const am = this.amp; if (!am || !lap) return;
+    for (const p of rings) {
+      // (the ring's own area, shoelace; its own spans: a pond's samples take its strength, an island's ring marks only land)
+      let A = 0, ra = Infinity, rb = -Infinity; const n = p.length >> 1;
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n, y = p[2 * i + 1]!; A += p[2 * i]! * p[2 * j + 1]! - p[2 * j]! * y; if (y < ra) ra = y; if (y > rb) rb = y; }
+      const a = lap(Math.abs(A) / 2);
+      spans([p], ra, rb, (v, u0, u1) => { for (let u = u0; u <= u1; u++) { const k = v * W + u; if (site[k]! & bit && a > am[k]!) am[k] = a; } });
     }
   }
-  /** a waterway (terrain-paint.ts waterShape at extra 0: a disc at each point, a trapezoid between each two) marked with bit */
-  waterway(pts: readonly { x: number; y: number; w: number }[], bit: number, widthScale = 1) {
-    const { W, H, res, x0, y0, site } = this, rad = (p: { w: number }) => Math.max(0.05, (p.w / 2) * widthScale);
+  /** a waterway (terrain-paint.ts waterShape at extra 0: a disc at each point, a trapezoid between each two) marked with bit; with the motion's
+   *  extras (motion()), each sample takes the way's direction there (its spline runs downstream: terrain generate, the source edge to the
+   *  exit) and, with lap, the waves' strength lap(width) of its width (tiles) */
+  waterway(pts: readonly { x: number; y: number; w: number }[], bit: number, widthScale = 1, lap?: (width: number) => number) {
+    const { W, H, res, x0, y0, site } = this, rad = (p: { w: number }) => Math.max(0.05, (p.w / 2) * widthScale), fl = this.flow, am = this.amp;
     const [bx0, by0, bx1, by1] = this.box;
-    const each = (xa: number, ya: number, xb: number, yb: number, f: (x: number, y: number) => boolean) => {
+    const each = (xa: number, ya: number, xb: number, yb: number, f: (x: number, y: number) => boolean, fx = 0, fy = 0, a = 0) => {
       if (xb < bx0 || xa > bx1 || yb < by0 || ya > by1) return;
       const u0 = Math.max(0, Math.floor((xa - x0) * res - 0.5)), u1 = Math.min(W - 1, Math.ceil((xb - x0) * res - 0.5));
       const v0 = Math.max(0, Math.floor((ya - y0) * res - 0.5)), v1 = Math.min(H - 1, Math.ceil((yb - y0) * res - 0.5));
-      for (let v = v0; v <= v1; v++) { const y = y0 + (v + 0.5) / res; for (let u = u0; u <= u1; u++) { const k = v * W + u; if (site[k]! & bit) continue; if (f(x0 + (u + 0.5) / res, y)) site[k] |= bit; } }
+      for (let v = v0; v <= v1; v++) {
+        const y = y0 + (v + 0.5) / res;
+        for (let u = u0; u <= u1; u++) {
+          const k = v * W + u; if (site[k]! & bit) continue;
+          if (f(x0 + (u + 0.5) / res, y)) { site[k] |= bit; if (fl) { fl[2 * k] = fx; fl[2 * k + 1] = fy; am![k] = a; } }
+        }
+      }
     };
-    for (const p of pts) { const r = rad(p), r2 = r * r; each(p.x - r, p.y - r, p.x + r, p.y + r, (x, y) => (x - p.x) ** 2 + (y - p.y) ** 2 <= r2); }
+    /** the way's unit direction at point i (its neighbours' chord; one-sided at the ends) */
+    const dirAt = (i: number): [number, number] => {
+      const a = pts[Math.max(0, i - 1)]!, b = pts[Math.min(pts.length - 1, i + 1)]!, l = Math.hypot(b.x - a.x, b.y - a.y);
+      return l > 1e-6 ? [(b.x - a.x) / l, (b.y - a.y) / l] : [0, 0];
+    };
+    pts.forEach((p, i) => { const r = rad(p), r2 = r * r, [fx, fy] = fl ? dirAt(i) : [0, 0]; each(p.x - r, p.y - r, p.x + r, p.y + r, (x, y) => (x - p.x) ** 2 + (y - p.y) ** 2 <= r2, fx, fy, fl && lap ? lap(p.w * widthScale) : 0); });
     for (let k = 0; k + 1 < pts.length; k++) {
       const a = pts[k]!, b = pts[k + 1]!, ra = rad(a), rb = rad(b), g = Math.max(ra, rb), dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
       if (!(len > 1e-6)) continue;
@@ -238,16 +271,15 @@ export class WaterField {
       each(Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g, (x, y) => {
         const t = ((x - a.x) * ux + (y - a.y) * uy) / len; if (t < 0 || t > 1) return false;
         return Math.abs((x - a.x) * uy - (y - a.y) * ux) <= ra + (rb - ra) * t;
-      });
+      }, ux, uy, fl && lap ? lap(((a.w + b.w) / 2) * widthScale) : 0);
     }
   }
-  /** each water sample's distance in from its shore (tiles, at most cap): an exact Euclidean distance transform (Felzenszwalb and
-   *  Huttenlocher) to the nearest land sample, less half a sample (the shore lies between the two). Past the field's border counts as more
-   *  of what lies there (no shore), so with the field padded by the cap every sample of the chunk reads its true distance */
-  shore(cap: number) {
-    const { W, H, res, site, d } = this, N = W * H, INF = 1e20, D = new Float64Array(N);
-    for (let k = 0; k < N; k++) D[k] = site[k] ? INF : 0;
-    const n = Math.max(W, H), f = new Float64Array(n), out = new Float64Array(n), v = new Int32Array(n), z = new Float64Array(n + 1);
+  /** the squared distance (in samples) from each sample to the nearest seed: D holds 0 at the seeds and INF elsewhere, and is overwritten (an
+   *  exact Euclidean distance transform, Felzenszwalb and Huttenlocher: one pass down each column, one along each row); over the samples of
+   *  window r (u0, v0, u1, v1, inclusive; default all: seeds outside it are not seen) */
+  private edt(D: Float64Array, r: readonly number[] = [0, 0, this.W - 1, this.H - 1]) {
+    const { W } = this, [a0, b0, a1, b1] = r as [number, number, number, number], RW = a1 - a0 + 1, RH = b1 - b0 + 1;
+    const n = Math.max(RW, RH), f = new Float64Array(n), out = new Float64Array(n), v = new Int32Array(n), z = new Float64Array(n + 1);
     const pass = (len: number) => {
       let k = 0; v[0] = 0; z[0] = -Infinity; z[1] = Infinity;
       for (let q = 1; q < len; q++) {
@@ -258,9 +290,28 @@ export class WaterField {
       k = 0;
       for (let q = 0; q < len; q++) { while (z[k + 1]! < q) k++; const t = q - v[k]!; out[q] = t * t + f[v[k]!]!; }
     };
-    for (let x = 0; x < W; x++) { for (let y = 0; y < H; y++) f[y] = D[y * W + x]!; pass(H); for (let y = 0; y < H; y++) D[y * W + x] = out[y]!; }
-    for (let y = 0; y < H; y++) { for (let x = 0; x < W; x++) f[x] = D[y * W + x]!; pass(W); for (let x = 0; x < W; x++) D[y * W + x] = out[x]!; }
+    for (let x = a0; x <= a1; x++) { for (let y = 0; y < RH; y++) f[y] = D[(y + b0) * W + x]!; pass(RH); for (let y = 0; y < RH; y++) D[(y + b0) * W + x] = out[y]!; }
+    for (let y = b0; y <= b1; y++) { for (let x = 0; x < RW; x++) f[x] = D[y * W + x + a0]!; pass(RW); for (let x = 0; x < RW; x++) D[y * W + x + a0] = out[x]!; }
+  }
+  /** each water sample's distance in from its shore (tiles, at most cap): an exact Euclidean distance transform (Felzenszwalb and
+   *  Huttenlocher) to the nearest land sample, less half a sample (the shore lies between the two). Past the field's border counts as more
+   *  of what lies there (no shore), so with the field padded by the cap every sample of the chunk reads its true distance */
+  shore(cap: number) {
+    const { W, H, res, site, d } = this, N = W * H, INF = 1e20, D = new Float64Array(N);
+    for (let k = 0; k < N; k++) D[k] = site[k] ? INF : 0;
+    this.edt(D);
     for (let k = 0; k < N; k++) d[k] = site[k] ? Math.min(cap, Math.max(0, (Math.sqrt(D[k]!) - 0.5) / res)) : 0;
+  }
+  /** T248: each land sample's distance out from the water (tiles, at most cap; 0 on the water): shore's twin the other way (the bank side of
+   *  the waves: water-motion.ts), the same transform to the nearest water sample, less half a sample; over window r only (default all: the
+   *  rest read cap), which must reach cap past the samples asked for */
+  bank(cap: number, r?: readonly number[]): Float32Array {
+    const { W, H, res, site } = this, N = W * H, INF = 1e20, D = new Float64Array(N), out = new Float32Array(N).fill(cap);
+    const [a0, b0, a1, b1] = r ?? [0, 0, W - 1, H - 1];
+    for (let y = b0!; y <= b1!; y++) for (let x = a0!; x <= a1!; x++) { const k = y * W + x; D[k] = site[k] ? 0 : INF; }
+    this.edt(D, r);
+    for (let y = b0!; y <= b1!; y++) for (let x = a0!; x <= a1!; x++) { const k = y * W + x; out[k] = site[k] ? 0 : Math.min(cap, Math.max(0, (Math.sqrt(D[k]!) - 0.5) / res)); }
+    return out;
   }
   /** the reflections of the casters (living-ground.ts records: trees and buildings; the rest are low) on the water, 0..1 a sample (the
    *  strongest of them, with its tint's index into REFLECT_TINTS: reflTint): each a soft silhouette straight down the screen from its foot,

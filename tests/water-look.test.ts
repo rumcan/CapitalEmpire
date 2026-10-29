@@ -118,7 +118,8 @@ test('T230 off is the identity: no images, no glint colour change, the pixel its
   assert.deepEqual(waterImages(f, 0xff, { ...DEFAULT_WATER_LOOK, depth: 0, reflect: 0, edge: 0 }), { edge: null, shade: null, tint: null });
   // the renderer: no field, nothing drawn, while the look and the glint are both off
   const r = readFileSync(resolve('src/game/renderer.ts'), 'utf8');
-  assert.match(r, /if \(!c \|\| \(!waterLookActive\(look\) && !this\.specCam\)\) return \(this\.waterNow = null\);/);
+  // (T248: and the water's motion off, which makes no field either)
+  assert.match(r, /if \(!c \|\| \(!waterLookActive\(look\) && !this\.specCam && !motion\)\) return \(this\.waterNow = null\);/);
   assert.match(r, /if \(!this\.specCam\) return;/);
 });
 

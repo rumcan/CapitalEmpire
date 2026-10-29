@@ -8,13 +8,16 @@ import type { LineStyle } from './types';
 import type { Waterway } from './terrain/types';
 import type { BBox } from './network';
 import type { GrassCellView } from './ext/grass-management';
+import type { CropState } from './ext/farms/crops';
 import type { EdgeProfile } from './paint-edges';
 import type { GrassArt } from './painted-grass-lod';
 import type { ShineWeights } from './grass-shine';
+import type { MotionMaskData } from './water-motion';
 /** T262: a chunk's grass shine weight mask as plain bytes, one channel (renderer.ts takeShineMask) */
 export interface ShineMaskData { w: number; h: number; data: Uint8Array }
 import type { RoughMix } from './rough-yards';
 import type { SurfacesFile } from './painted-surfaces';
+import type { TileCacheStats } from './textures';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone of the fill: t 1 darker or 2 lighter at strength ta (0..1), drawn
@@ -65,11 +68,18 @@ export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill
   collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; w?: number; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[];
     /** T227: a bunker's lip band's grass with the course finish on (course-finish.ts: the fairway's first cut, so the bunker sits in the collar
      *  as in the concept); absent: its own look (the player picked a Border texture for the bunker) */
-    g?: CourseTex }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number }[];
+    g?: CourseTex }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number;
+    /** T269 (#810): the grounds crew's cut (ext/course-grid stripeAreas, the engine's mowFlips): [phase, leg, band]: the hole's bands drawn the
+     *  other way (phase 1: light for dark, as the last day's cut ran), and today's fresh stripes behind the mower: along the line, the legs before
+     *  `leg` and that leg's bands below `band` flipped again; across it, every leg's bands below `band` (leg -1: no cut today). Absent: as T218 */
+    f?: number[] }[];
   /** T256 (#743): the other looks its cells wear in this chunk (each hole, the property and each practice facility owns its looks: golf/looks.ts):
    *  each its fill, its collar band and a bunker's lip grass, drawn over the layer's own look within its share of the chunk (runs: boxes x0 y0
    *  x1 y1, tiles; ext/course-grid cellShares). Absent: the whole layer wears its own look */
-  alts?: { look: CourseTex; band?: CourseTex; g?: CourseTex; runs: Float32Array }[] }
+  alts?: { look: CourseTex; band?: CourseTex; g?: CourseTex; runs: Float32Array }[];
+  /** T271 (#812): a custom grass's layer (s its draw id, ext/course-grid CUSTOM0..): the surface it plays as (its grow-in, its stripes' look);
+   *  absent on every other layer */
+  b?: number }
 /** T256: every texture a course layer lays (its fill, its collar's, a lip's grass, its alternates' and their blends), for the bakes' preloads */
 export function layerTexes(l: CourseLayer): string[] {
   const out: string[] = [];
@@ -107,6 +117,11 @@ export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) *
    *  look state (T155: its state's lawn, painted-surfaces.ts lawnTexFor); rough: a new or poor town's untended yard (T222, rough-yards.ts): fescue, dirt or desert in soft patches over the mown lawn */ lawn?: { a: number; share: number; soft: number; patch: number; z: number; st?: 'built' | 'upgraded' | 'declined'; rough?: RoughMix }; /** markings over the road (on-street parking): only its lines are drawn, white, with the road's own markings */ top?: boolean; /** the colour of its lines (parking bays; absent: worn off-white) */ lineCol?: 'yellow';
   /** an on-street parking lay-by cut into the sidewalk: drawn after the roads, over the sidewalk and the kerb, with its own kerb on the outer side */ layby?: boolean;
   /** T228: a lot's driveway (lots/compose-core.ts): its mouth on the road gets a cut (street-marks.ts driveCuts) */ drive?: true;
+  /** T259: a farm's crop field (ext/farms/crops.ts; tex 'field', its soil): its state this month, its rows' unit direction (world tiles) and
+   *  the rows' phase (0..1 of their pitch, so neighbouring fields' rows do not line up); renderer.ts drawCrops lays its rows, or its state's art */
+  crop?: { st: CropState; d: [number, number]; ph: number };
+  /** T259: drawn with its hard outline, never T247's soft band (a farm lane narrower than the band would dissolve in it) */
+  hard?: true;
   /** T237: drawn with the car parks (over their asphalt and the painted areas): a paved car park's kerbs and planting islands (event/parklook.ts) */
   park?: true;
   /** T232: a survey line round a plot (lots/survey.ts: a building site, the player's empty land): always with tex 'marks' (nothing filled), its
@@ -165,7 +180,9 @@ export interface WorkerLimits { tiles: number | null; painted: number | null; ea
   readCache?: boolean }
 export type ToWorker =
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
-  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits }
+  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits;
+      /** T272: the bytes this worker's tile cache may hold (tile-cache.ts tileCacheBudget: its share of the ground's GPU budget) */
+      tileBytes?: number }
   | { t: 'textures'; snap: TexSnapshot }
   /** the game's Grass setting changed (painted or photo): every chunk is baked again */
   | { t: 'grassArt'; art: GrassArt }
@@ -197,9 +214,17 @@ export type ToWorker =
   | { t: 'specCam'; on: boolean }
   /** T199: the small streams drawn as swamp (on, the default) or as their old creek bed (the dev switch, for comparing looks and bake times) */
   | { t: 'swamp'; on: boolean }
+  /** T265: the river's swamp band (on, the default) or the river as before (the dev switch) */
+  | { t: 'riverSwamp'; on: boolean }
+  /** T265, the bench (bench.ts bakeAB): the worker's last few bakes of this kind painted again reps times, the river's swamp on and off by
+   *  turns, each paint timed (the worker answers with bakeAB) */
+  | { t: 'bakeAB'; kind: 'g' | 'm'; reps: number; cold?: boolean }
   /** T262: the grass shine on (the default: each bake makes its weight mask) or off (none, the ground as before), and its weights per surface
    *  group (grass-shine.ts); every chunk is baked again */
   | { t: 'grassShine'; on: boolean; weights: ShineWeights }
+  /** T248: the water's motion on (the default: each bake of a chunk with water makes its motion mask) or off (none, the ground as before);
+   *  every chunk is baked again */
+  | { t: 'waterMotion'; on: boolean }
   /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
   | { t: 'slopeLight'; strength: number }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
@@ -208,9 +233,16 @@ export type ToWorker =
   | { t: 'prewarm'; tex: string[] }
   /** T172: report the pixels the worker holds, by owner (a 'log' line `mem {...}`, MB of RGBA8; scripts/perf/memory.mjs) */
   | { t: 'memProbe' }
+  /** T272, the bench: each baked chunk's reply carries the tile cache's counts (tc) */
+  | { t: 'tileStats'; on: boolean }
+  /** T272: the bytes this worker's tile cache may hold now (tile-cache.ts tileCacheBudget: its share of what the chunk pictures leave of the
+   *  ground's 192 MB), sent as they change */
+  | { t: 'tileBudget'; bytes: number }
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile spec the tile set families are laid at (painted-tiles.ts tileSpec: the band and the DPR; T145, T150) */ ts?: number };
 
 export type FromWorker =
+  /** T265, the bench: each paint's ms, the river's swamp on and off (bakeAB) */
+  | { t: 'bakeAB'; on: number[]; off: number[] }
   /** saving: the builder still writes the textures to this browser's cache (a fresh profile), seconds in which its bakes wait; 'saved' when done */
   | { t: 'ready'; ms: number; saving?: boolean }
   | { t: 'saved' }
@@ -226,6 +258,12 @@ export type FromWorker =
       gloss?: ImageBitmap;
       /** T262: the grass shine's weight mask (grass-shine.ts: SHINE_TEXEL world px a texel, spanning the chunk, one channel); none with the shine off or
        *  no grass on the chunk */
-      shine?: ShineMaskData; /** T262: the worker ms its weight mask took (in ms) */ shineMs?: number; ms: number }
+      shine?: ShineMaskData; /** T262: the worker ms its weight mask took (in ms) */ shineMs?: number;
+      /** T248: the water's motion mask (water-motion.ts: RGBA on the water field's lattice, its tile box); none with the motion off or no water
+       *  near, and the worker ms it took */
+      water?: MotionMaskData; waterMs?: number; ms: number;
+      /** T272: the ms the bake waited for its pictures to decode (before ms), the ms of ms spent scaling tile set pictures (mips, pre-scaled
+       *  copies), and (the bench's tileStats on) the worker's tile cache counts so far */
+      prepMs?: number; scaleMs?: number; tc?: TileCacheStats }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };

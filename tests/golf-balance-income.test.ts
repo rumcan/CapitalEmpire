@@ -13,7 +13,7 @@ import {
   OFF_SEASON_PLAY_DAYS,
   dailyGolfers,
   greenFeeIncome,
-  monthlyMembershipIncome,
+  legacyMonthlyMembership,
   annualMembershipIncome,
   computeYearEnd,
   computeTournamentCloseBook,
@@ -68,7 +68,7 @@ test('Clubhouse visit business plans golfer visits when its head-on road door is
   assert.ok(visitsWithDoor.counts(1).planned > 0, 'resolved clubhouse door should schedule golfer cars');
 });
 
-test('dailyGolfers, greenFeeIncome, and monthlyMembershipIncome scale with course quality, reputation, and holes', () => {
+test('dailyGolfers, greenFeeIncome, and legacyMonthlyMembership scale with course quality, reputation, and holes', () => {
   assert.equal(GREEN_FEE_PER_ROUND, BUSINESS.clubhouse.pricePerVisitor);
   assert.equal(OFF_SEASON_PLAY_DAYS, 24);
 
@@ -82,8 +82,8 @@ test('dailyGolfers, greenFeeIncome, and monthlyMembershipIncome scale with cours
 
   assert.equal(greenFeeIncome(100, 30, 9), highQ * BUSINESS.clubhouse.pricePerVisitor * OFF_SEASON_PLAY_DAYS);
 
-  const memStart = monthlyMembershipIncome(100, 30, 9);
-  const memGrow = monthlyMembershipIncome(100, 56, 9);
+  const memStart = legacyMonthlyMembership(100, 30, 9);
+  const memGrow = legacyMonthlyMembership(100, 56, 9);
   assert.ok(memStart >= 700, `expected starting monthly membership >= $700, got ${memStart}`);
   assert.ok(memGrow > memStart, `expected growing rep membership (${memGrow}) > start (${memStart})`);
   assert.equal(annualMembershipIncome(100, 30, 9), memStart * 12);
@@ -101,7 +101,7 @@ test('computeYearEnd and computeTournamentCloseBook book Green fees and Membersh
   assert.equal(book.greenFeeIncome, expectedGreenFees);
   assert.equal(book.membershipIncome, expectedMemberships);
   assert.equal(book.bizIncome, expectedGreenFees + expectedMemberships);
-  assert.equal(COURSE_UPKEEP_YEAR_SHARE, 0.25);
+  assert.equal(COURSE_UPKEEP_YEAR_SHARE, 0.2); // (T269: 0.25 before the grounds crew's wages were their own monthly line, golf/staff.ts)
 
   const b = new Budget();
   b.spend('business', -book.bizIncome);

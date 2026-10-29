@@ -13,8 +13,8 @@ import { courseMonthlyUpkeep } from './costs';
 import { townGrowthLine, townGrowthRate } from './towngrowth';
 import { computeParkingIncome } from './parkingfee';
 
-/** the share of a year's surface maintenance (costs.ts courseMonthlyUpkeep x 12) the player is charged at the tournament: 25%, about 36,000 dollars for the old nine, which is what the campaign simulator assumes (the full figure, about 145,000, would bankrupt a tier 1 club that earns almost nothing; BALANCE TODO with green fees) */
-export const COURSE_UPKEEP_YEAR_SHARE = 0.25;
+/** the share of a year's surface maintenance (costs.ts courseMonthlyUpkeep x 12) the player is charged at the tournament: 20% (T269: 25% before the grounds crew's wages, golf/staff.ts, were their own monthly line; a full crew's $7,200 a season on the old nine is about the 5% taken off, so the two together are the 36,000 dollars the campaign simulator assumes) (the full figure, about 145,000, would bankrupt a tier 1 club that earns almost nothing; BALANCE TODO with green fees) */
+export const COURSE_UPKEEP_YEAR_SHARE = 0.2;
 
 /** Green fee ($) per round from the placed Clubhouse business ($22/visitor, GOLF-PLAN 2.1). */
 export const GREEN_FEE_PER_ROUND = BUSINESS.clubhouse.pricePerVisitor;
@@ -36,8 +36,10 @@ export function greenFeeIncome(qualityScore: number, reputation: number, holes =
   return dailyGolfers(qualityScore, reputation, holes) * GREEN_FEE_PER_ROUND * OFF_SEASON_PLAY_DAYS;
 }
 
-/** Monthly club membership dues ($) scaling with course quality (0..100), reputation (0..100), and holes (GOLF-PLAN 2.1). */
-export function monthlyMembershipIncome(qualityScore: number, reputation: number, holes = 9): number {
+/** Monthly club membership dues ($) scaling with course quality (0..100), reputation (0..100), and holes (GOLF-PLAN 2.1): the rule before P26
+ *  (T214, golf/club.ts), when nobody sold memberships. Kept for two uses only (P26 4.7): seeding an old save's members (club.ts legacyClub) and
+ *  the campaign simulator (campaign.ts, range:gate's booking) until P05's T-C puts the simulator on the game's path. */
+export function legacyMonthlyMembership(qualityScore: number, reputation: number, holes = 9): number {
   if (holes <= 0) return 0;
   const q = Math.min(100, Math.max(0, qualityScore)) / 100;
   const r = Math.min(100, Math.max(0, reputation)) / 100;
@@ -45,9 +47,10 @@ export function monthlyMembershipIncome(qualityScore: number, reputation: number
   return Math.round((200 + 1800 * r) * (0.4 + 0.6 * q) * holeFactor);
 }
 
-/** Annual club membership income ($ over 12 months) booked through the Clubhouse business line. */
+/** Annual club membership income ($ over 12 months) under the rule before P26 (legacyMonthlyMembership x 12): the campaign simulator's, and the old
+ *  annual rate an old save's months before its load are booked at (club.ts seasonMemberships). */
 export function annualMembershipIncome(qualityScore: number, reputation: number, holes = 9): number {
-  return monthlyMembershipIncome(qualityScore, reputation, holes) * 12;
+  return legacyMonthlyMembership(qualityScore, reputation, holes) * 12;
 }
 import { computeSponsorBreakdown } from './sponsors';
 import {
@@ -97,8 +100,15 @@ greenFeeIncome?: number;
 greenFeesPlayed?: number;
 /** T208: the pace term, the reputation points how the course played this season added (golf/everyday.ts seasonPaceRep; already in rep) */
 paceRep?: number;
+/** T269: the pin term, the reputation points the season's unmoved pins took (golf/staff.ts pinReputation; already in rep) */
+pinRep?: number;
+/** the dues a month: the old rule's (legacyMonthlyMembership); T214, the game's: this month's dues (golf/club.ts) */
 monthlyMembership?: number;
+/** the season's memberships: the old rule's (annualMembershipIncome); T214, the game's: the dues booked month by month plus an old save's months
+ *  before its load at the old rate (golf/club.ts seasonMemberships) */
 membershipIncome?: number;
+/** T214: the dues already booked month by month (in the treasury: the close book shows them in membershipIncome and does not book them again) */
+duesBooked?: number;
 tentRevenue?: number;
 tentRentCost?: number;
 tentUpkeep?: number;
@@ -175,8 +185,11 @@ export function computeTournamentCloseBook(
   const playedLive = ye.greenFeesPlayed !== undefined;
   const greenFees = Math.max(0, Math.round(playedLive ? ye.greenFeesPlayed! : ye.greenFeeIncome ?? 0));
   const memberships = Math.max(0, Math.round(ye.membershipIncome ?? 0));
+  // T214: the dues the members paid month by month are in the treasury already: the line shows them, the close books only the rest (an old save's
+  // months before its load, at the old rate)
+  const duesLive = Math.min(memberships, Math.max(0, Math.round(ye.duesBooked ?? 0)));
   const parking = Math.max(0, Math.round(parkingIncomeOverride ?? ye.parkingIncome ?? 0));
-  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents + (playedLive ? 0 : greenFees) + memberships + parking));
+  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents + (playedLive ? 0 : greenFees) + memberships - duesLive + parking));
   const purse = Math.max(0, Math.round(ye.purse ?? 0));
   const rent = Math.max(0, Math.round(ye.tentRentCost ?? 0));
   const annualTentUpkeep = Math.max(0, Math.round((ye.tentUpkeep ?? 0) * 12));
@@ -190,7 +203,7 @@ export function computeTournamentCloseBook(
   const toll = Math.max(0, Math.round(liveDayToll));
   const liveUpkeep = Math.max(0, Math.round(liveDayUpkeep));
   const closeDelta = bizIncome - upkeepCost;
-  const net = toll + liveTickets + (playedLive ? greenFees : 0) - liveUpkeep + closeDelta;
+  const net = toll + liveTickets + (playedLive ? greenFees : 0) + duesLive - liveUpkeep + closeDelta;
   return {
     extraTickets,
     extraTents,
@@ -371,7 +384,7 @@ if (structures.length > 0) {
  const offSeasonHoles = hasOffSeasonCourse ? courseFacts.holes : 0;
  const golfersPerDay = dailyGolfers(effQuality, prevRep, offSeasonHoles);
  const greenFees = greenFeeIncome(effQuality, prevRep, offSeasonHoles);
- const monthlyMembers = monthlyMembershipIncome(effQuality, prevRep, offSeasonHoles);
+ const monthlyMembers = legacyMonthlyMembership(effQuality, prevRep, offSeasonHoles);
  const memberships = annualMembershipIncome(effQuality, prevRep, offSeasonHoles);
  const v = verdict(prevTier, rep, courseFacts, prevPoorYears);  
   

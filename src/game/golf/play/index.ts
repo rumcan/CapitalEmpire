@@ -13,3 +13,4 @@ export * from './finish';
 export * from './entourage';
 export * from './carts';
 export * from './celebrate';
+export * from './roll';

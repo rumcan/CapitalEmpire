@@ -55,6 +55,8 @@ const NAME_GROUP: Readonly<Record<string, ShineGroup>> = {
 };
 /** the group a texture's name belongs to, or null */
 export function shineGroup(tex: string): ShineGroup | null {
+  // T271: a custom grass (own:<play>:<family>) shines as the surface it plays as
+  if (tex.startsWith('own:')) { const i = tex.indexOf(':', 4); return i > 0 ? NAME_GROUP[tex.slice(4, i)] ?? null : null; }
   const n = tex.replace(/^(preset|pic):/, '');
   return NAME_GROUP[n] ?? (/^lawn:\d+$/.test(n) ? 'lawn' : null);
 }

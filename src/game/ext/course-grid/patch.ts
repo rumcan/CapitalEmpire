@@ -2,7 +2,7 @@
 // cg:<cx>:<cy>, holding its surfaces' droplet outlines (course-blobs chunkOutlines) in draw order with their textures, edge profiles,
 // collars, the fairway's mowing lines and the growth mask; plus the chunk walk and the grow key the month tick compares.
 // Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m; cells of 1 m (0.5 tile); months are game month indices.
-import { CELL_T, SURF, type Grid } from './index';
+import { CELL_T, CUSTOM0, N_DRAW, SURF, drawView, type Grid } from './index';
 import { BLOB_STYLE, CHUNK_MARGIN, DrawnSurfaces, ROUND_REACH_T, chunkOutlines, collarLaid, collarReach, roundRadius, type BlobStyle, type RoundOf } from '../course-blobs';
 import type { CourseLayer, CourseTex, LotPatch } from '../../ground-protocol';
 import type { EdgeProfile } from '../../paint-edges';
@@ -51,7 +51,13 @@ export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar:
   /** T256: the looks by owner (absent: every cell wears the looks above) */
   own?: CourseOwners;
   /** T253 (#735): Round off: each rounded surface's Smoothness (0..1) by surface id (course-look CourseLookSet.round); absent: none rounded */
-  round?: readonly (number | undefined)[] }
+  round?: readonly (number | undefined)[];
+  /** T271 (#812): the course's own grasses by draw id (CUSTOM0..: golf/grasses.ts grassLooks): the surface each plays as (its closing, relax,
+   *  height and edge profile are that surface's; the collars that lie over it lie over the grass); absent: none (the arrays above then hold
+   *  the grasses' fills, bands, Borders, Shadows and Round off at their draw ids too) */
+  base?: readonly (number | undefined)[];
+  /** T271: the custom grasses' draw ids with mowing stripes (a fairway-like grass with stripes on) */
+  stripes?: readonly number[] }
 /** T256 (#743): the looks each hole, the property and each practice facility wear (golf/looks.ts): looks[k], owner k's fills, collars, bands
  *  and lip grass (course-look.ts CourseLookSet); hole[h], the owner the cells of hole h wear (-1 or missing: the base looks of CourseLooks);
  *  zones, the facilities' boxes as five numbers each (k, x0, y0, x1, y1, tiles): a cell of no hole inside one wears owner k */
@@ -64,12 +70,21 @@ const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(
 /** BLOB_STYLE with the collars at the widths of `border` (metres = cells, by surface id; clamped to the Border slider's range; a missing or
  *  bad entry keeps the default width). T260: 0 (or less) is none: the collar entry stays, at width 0, so the draw order's layer codes stay
  *  the same (course-walls drawOrder, isOverlay, collarAfter), and course-blobs lays no band for it */
-export function courseStyles(border?: readonly (number | undefined)[]): readonly BlobStyle[] {
-  if (!border?.length) return BLOB_STYLE;
+export function courseStyles(border?: readonly (number | undefined)[], base?: readonly (number | undefined)[]): readonly BlobStyle[] {
+  if (!border?.length && !base?.length) return BLOB_STYLE;
+  // T271: the custom grasses (by draw id) the course has, with the surface each plays as
+  const own: [number, number][] = [];
+  if (base) for (let s = CUSTOM0; s < N_DRAW; s++) { const b = base[s]; if (b !== undefined && BLOB_STYLE[b]) own.push([s, b]); }
   return BLOB_STYLE.map((st, s) => {
-    const w = border[s];
-    if (!st.collar || w === undefined || !Number.isFinite(w)) return st;
-    return { ...st, collar: { ...st.collar, width: clampBorder(w) } };
+    const w = border?.[s], b = base?.[s];
+    // a custom grass: its base's closing and relax, and its own first cut band at its Border (none by default)
+    if (b !== undefined && s >= CUSTOM0 && BLOB_STYLE[b]) st = { ...st, close: BLOB_STYLE[b]!.close, relax: BLOB_STYLE[b]!.relax };
+    if (!st.collar) return st;
+    // a collar that lies over the surface a custom grass plays as lies over that grass too (a fairway's first cut over a custom rough)
+    const more = own.filter(([o, ob]) => o !== s && st.collar!.over.includes(ob)).map(([o]) => o);
+    const width = w === undefined || !Number.isFinite(w) ? st.collar.width : clampBorder(w);
+    if (!more.length && width === st.collar.width) return st;
+    return { ...st, collar: { ...st.collar, width, ...(more.length ? { over: [...st.collar.over, ...more] } : {}) } };
   });
 }
 /** the widest collar of a style table, cells (the edit reach) */
@@ -94,8 +109,9 @@ export function roundOfLooks(g: Grid, looks: Pick<CourseLooks, 'round' | 'own'>)
   return (s: number) => {
     let f = cache.get(s);
     if (f === undefined) {
-      const rad = (v: number | undefined) => (v === undefined ? 0 : roundRadius(v)), r0 = rad(base?.[s]), rk = own ? own.looks.map(l => rad(l.round?.[s])) : [];
-      f = r0 > 0 || rk.some(r => r > 0) ? (own ? (c: number) => { const k = ownerOf(c); return k >= 0 ? rk[k] ?? 0 : r0; } : () => r0) : null;
+      // T271: a custom grass is the course's, not an owner's: every cell of it is rounded as its preset says
+      const rad = (v: number | undefined) => (v === undefined ? 0 : roundRadius(v)), r0 = rad(base?.[s]), rk = own && s < CUSTOM0 ? own.looks.map(l => rad(l.round?.[s])) : [];
+      f = r0 > 0 || rk.some(r => r > 0) ? (own && s < CUSTOM0 ? (c: number) => { const k = ownerOf(c); return k >= 0 ? rk[k] ?? 0 : r0; } : () => r0) : null;
       cache.set(s, f);
     }
     return f;
@@ -108,9 +124,18 @@ export const roundReach = (looks: Pick<CourseLooks, 'round' | 'own'>): number =>
 /** T253: the lie test's reader of the drawn course (course-blobs DrawnSurfaces) for these looks, or null when nothing is rounded (the lie
  *  then reads the cells, as before) */
 export function drawnSurfaces(g: Grid, looks: CourseLooks): DrawnSurfaces | null {
-  const round = roundOfLooks(g, looks);
-  return round ? new DrawnSurfaces(g, courseStyles(looks.border), round) : null;
+  // T271: on the drawn course (a custom grass is a surface of its own there: at() gives its draw id, the lie reads what it plays as)
+  const d = drawView(g), round = roundOfLooks(d, looks);
+  return round ? new DrawnSurfaces(d, courseStyles(looks.border, looks.base), round) : null;
 }
+/** T271: the heights by draw id: the Height slider's (course-walls surfHeights), each custom grass at the height of the surface it plays as */
+export function courseHeights(looks: Pick<CourseLooks, 'height' | 'base'>): readonly number[] {
+  const h = surfHeights(looks.height), b = looks.base; if (!b?.length) return h;
+  const out = h.slice(); for (let s = CUSTOM0; s < N_DRAW; s++) { const v = b[s]; if (v !== undefined) out[s] = h[v] ?? 0; }
+  return out;
+}
+/** T271: the edge profile of a draw id (a custom grass: its base's) */
+const edgeOf = (s: number, base?: readonly (number | undefined)[]): EdgeProfile => SURF_EDGE[s >= CUSTOM0 ? base?.[s] ?? SURF.rough : s] ?? 'flat';
 
 /** the chunks (cx, cy) of the grid's extent that a tile box grown by pad touches, row by row */
 export function courseChunksIn(g: Grid, box: readonly number[], pad = 0): [number, number][] {
@@ -192,24 +217,27 @@ const f32 = (a: readonly number[][]): Float32Array[] => a.map(q => Float32Array.
  *  stripes' holes (stripeAreas, T218: the playing lines, lines: per hole, flat tiles, and each hole's share of the chunk), and the growth mask rides along
  *  when something grows (now: the effective game month); the stairs of the tees within reach (T127) face the nearest of `paths` (the cart
  *  paths and drives, flat segments ax, ay, bx, by in tiles) */
-export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>, paths?: ArrayLike<number> | null): LotPatch | null {
-  const S = COURSE_CHUNK, styles = courseStyles(looks.border), heights = surfHeights(looks.height), outs = chunkOutlines(g, cx, cy, S, styles, true, roundOfLooks(g, looks)).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
+export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>, paths?: ArrayLike<number> | null, flips?: ReadonlyMap<number, readonly number[]>): LotPatch | null {
+  // T271: the course as drawn (d: each custom grass a surface of its own; g itself with none): the outlines, walls, spill, stripes and looks
+  // read it; the growth mask and the tees' stairs read the playing grid
+  const d = drawView(g), S = COURSE_CHUNK, styles = courseStyles(looks.border, looks.base), heights = courseHeights(looks), outs = chunkOutlines(d, cx, cy, S, styles, true, roundOfLooks(d, looks)).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
   // the edges exactly as they will be drawn (capped), for the walls (T099): each layer's edges sorted into soft, joint and wall runs
   const capped = outs.map(o => ({ o, se: capPoints(o.fill, o.edges), ce: o.collar ? capPoints(o.collar.fill, o.collar.edges) : null }));
-  const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles, heights);
+  const cw = chunkWalls(d, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles, heights);
   // T204: where tall grass (the rough, the fescue, the map grass) meets the fairway or its first cut, read as the walls read their sides
   const stack = new LayerStack(coversOf(outs), styles, DRAW_ORDER, heights), spill: { p: Float32Array; o: number }[] = [];
   for (const { o, se, ce } of capped) if (SPILL_SURFACES.includes(o.surf)) {
-    for (const r of spillRuns(g, stack, layerCode(o.surf, false), se[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
-    if (ce) for (const r of spillRuns(g, stack, layerCode(o.surf, true), ce[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
+    for (const r of spillRuns(d, stack, layerCode(o.surf, false), se[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
+    if (ce) for (const r of spillRuns(d, stack, layerCode(o.surf, true), ce[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
   }
   // T256: the looks by owner: a surface whose cells here all wear one owner's look takes it; cells of several looks keep the most common as
   // the layer's own and the others as alternates over their share of the chunk (OwnerPick)
-  const pickOf = looks.own ? ownerPicker(g, cx, cy, looks) : null;
+  const pickOf = looks.own ? ownerPicker(d, cx, cy, looks) : null;
   for (const { o, se: [fill, edges], ce } of capped) {
     const col = styles[o.surf]?.collar, pick = pickOf?.(o.surf, col?.name) ?? null;
     const look = pick ? pick.base.surf : looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
-    const L: CourseLayer = { s: o.surf, ...texOf(look), e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
+    const b = o.surf >= CUSTOM0 ? looks.base?.[o.surf] : undefined; // T271: a custom grass's layer says what it plays as
+    const L: CourseLayer = { s: o.surf, ...texOf(look), e: edgeOf(o.surf, looks.base), fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []), ...(b !== undefined ? { b } : {}) };
     const lip = pick ? pick.base.lip : col?.name === 'lip' ? looks.lipGrass : undefined;
     const cl = col ? pick?.base.band ?? looks.band?.[o.surf] ?? looks.collar[col.name] : null;
     if (ce && col && cl) { const [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []), ...(col.name === 'lip' && lip ? { g: texOf(lip) } : {}) }; }
@@ -218,7 +246,9 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
     else if (col && cl && !collarLaid(col) && o.fill.length) L.collar = { n: col.name, ...texOf(cl), w: 0, fill: [], edges: [], soft: [] };
     if (pick?.alts.length) L.alts = pick.alts.map(a => ({ look: texOf(a.look.surf), ...(a.look.band ? { band: texOf(a.look.band) } : {}), ...(a.look.lip ? { g: texOf(a.look.lip) } : {}), runs: a.runs }));
     // the mowing stripes' holes: the fairway's (T218) and the green's (T227: the course finish's fine stripes, along its hole's line of play)
-    if ((o.surf === SURF.fairway || o.surf === SURF.green) && o.fill.length) { const st = stripeAreas(g, cx, cy, lines, o.surf); if (st) L.stripes = st; }
+    // (T271: a custom grass with its stripes on, along the lines of the holes its cells belong to)
+    // (T269: the grounds crew's cut on the fairway and the grasses mown as it, not on the green)
+    if ((o.surf === SURF.fairway || o.surf === SURF.green || looks.stripes?.includes(o.surf)) && o.fill.length) { const st = stripeAreas(d, cx, cy, lines, o.surf, o.surf === SURF.green ? undefined : flips); if (st) L.stripes = st; }
     if (L.fill.length || L.collar) layers.push(L);
   }
   if (!layers.length) return null;
@@ -228,7 +258,9 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   // the tees' stairs (T127): every tee within reach of the chunk's walls, its whole box, so each chunk it touches cuts the same steps
   const stairs = cw.walls.some(w => w.f && w.hs === SURF.tee) ? teeStairs(g, [x0, y0, x1, y1], paths, heights) : [];
   const st = stairs.length ? { st: stairs.flatMap(q => [q.x, q.y, q.nx, q.ny, q.half]) } : {};
-  const sh = looks.shadow?.length ? { sh: Array.from({ length: 9 }, (_, s) => { const v = looks.shadow![s]; return v !== undefined && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : defaultShadow(s); }) } : {};
+  // (T271: by draw id: a chunk with a custom grass carries the grasses' Shadows too; any other the nine entries it carried before, or none)
+  const shN = layers.some(l => l.s >= CUSTOM0) ? Math.max(9, looks.shadow?.length ?? 0) : 9, shOn = !!looks.shadow?.some((v, s) => v !== undefined && s < shN);
+  const sh = shOn ? { sh: Array.from({ length: shN }, (_, s) => { const v = looks.shadow![s]; return v !== undefined && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : defaultShadow(s); }) } : {};
   return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, ...(spill.length ? { spill } : {}), z: 0 } };
 }
 
@@ -252,10 +284,11 @@ export type StripeArea = NonNullable<CourseLayer['stripes']>[number];
  *  nearest fairway cell is its (a walk out from the fairway cells in rings, a tie to the lower hole). Every chunk walks the same cells round
  *  its seams the same way, so where an outline can lie (a few cells from its fairway) the shares agree across chunks. null: no fairway cell
  *  within reach. surf: the surface whose cells are walked (T227: the green's, for its fine stripes; the fairway's by default) */
-export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>, surf: number = SURF.fairway): StripeArea[] | null {
+export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>, surf: number = SURF.fairway, flips?: ReadonlyMap<number, readonly number[]>): StripeArea[] | null {
   const lineOf = (h: number) => { const l = h > 0 ? lines?.get(h) : undefined; return l && l.length >= 4 ? l : null; };
   const sh = cellShares(g, cx, cy, surf, c => { const h = g.hole[c]!; return lineOf(h) ? h : 0; }); if (!sh) return null;
-  const entry = (h: number): StripeArea => ({ hole: h, line: h ? lineOf(h)!.slice() : [] });
+  // (T269: a hole's crew cut rides along: flips, [phase, leg, band])
+  const entry = (h: number): StripeArea => { const f = h ? flips?.get(h) : undefined; return { hole: h, line: h ? lineOf(h)!.slice() : [], ...(f ? { f: [...f] } : {}) }; };
   return sh.runs ? sh.labels.map((h, k) => ({ ...entry(h), runs: sh.runs![k]! })) : [entry(sh.labels[0]!)];
 }
 /** T256 (generalising T218's walk): the shares of chunk (cx, cy) among the labels of the cells of surface `surf` (label(c), a cell index of g,

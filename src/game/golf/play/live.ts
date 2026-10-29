@@ -5,9 +5,9 @@
 import { TILE_M } from '../types';
 import { appendShots, FLIGHT_TIME, liveField, PUTT_FLIGHT } from './round';
 import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
-import { carryM, chooseShot, hitShot, putt, rng } from './shot';
+import { carryM, chooseShot, hitShot, putt, rng, skillFor } from './shot';
 import { holeFrom } from './courseview';
-import type { Club, CourseView, Lie, Pt, RoundPlan, Shot } from './types';
+import type { Club, CourseView, Landing, Lie, Pt, RoundPlan, Shot } from './types';
 
 /** the owner's input for his shot at a turn: the hole index and stroke it answers, the club, the aim point, and the power: 0.3..1 of the club's full
  *  carry (the putter: 0.5..1.5 of the putt's length) */
@@ -63,14 +63,14 @@ export class LiveGroup {
     if (!turn || !p || !g || !hr || this.field.caddied) throw new Error('LiveGroup.play: no owner turn to play (call advance first)');
     if (input.holeIdx !== turn.holeIdx || input.stroke !== turn.stroke) throw new Error(`LiveGroup.play: the input is for hole ${input.holeIdx} stroke ${input.stroke}, the turn is hole ${turn.holeIdx} stroke ${turn.stroke}`);
     const view = this.ctx.view, hole = view.holes[hr.h]!, from = p.ball, r = rng(this.ctx.seed, p.id, hr.h * 32 + turn.stroke), putting = input.club === 'putter';
-    let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false;
+    let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Landing | undefined;
     if (putting) {
       const pw = clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
       const dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0;
       const ax = input.aim.x - from.x, ay = input.aim.y - from.y;
       const e = Math.atan2(ux * ay - uy * ax, ux * ax + uy * ay); // the aim's angle off the pin's line (radians, signed)
       const distM = L * TILE_M, factor = Math.abs(e) * 180 / Math.PI <= AIM_DEG ? Math.max(0, 1 - 4 * Math.abs(pw - 1)) : 0;
-      const k = putt(r, p.skill, distM, factor);
+      const k = putt(r, skillFor(p.sk, 'putter'), distM, factor);
       if (k.holed) { to = { x: hole.pin.x, y: hole.pin.y }; lie = 'green'; holed = true; }
       else {
         // a miss: past the cup (short of it under 1) by the model's leave plus the power's error, and off the line by the aim's error
@@ -87,11 +87,11 @@ export class LiveGroup {
       let ux = input.aim.x - from.x, uy = input.aim.y - from.y, L = Math.hypot(ux, uy);
       if (L === 0) { ux = hole.pin.x - from.x; uy = hole.pin.y - from.y; L = Math.hypot(ux, uy); }
       if (L === 0) { ux = 1; uy = 0; L = 1; }
-      const d = carryM(input.club, p.skill) * pw / TILE_M, at = { x: from.x + ux / L * d, y: from.y + uy / L * d };
-      const o = hitShot(r, p.skill, p.lie, from, at, input.club, view);
-      to = o.to; lie = o.lie; penalty = o.penalty;
+      const d = carryM(input.club, skillFor(p.sk, input.club)) * pw / TILE_M, at = { x: from.x + ux / L * d, y: from.y + uy / L * d };
+      const o = hitShot(r, p.sk, p.lie, from, at, input.club, view); // (T241: his part of the game's skill)
+      to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
     }
-    const s = hr.record(p, input.club, turn.t, putting ? PUTT_FLIGHT : FLIGHT_TIME, to, lie, penalty, holed);
+    const s = hr.record(p, input.club, turn.t, putting ? PUTT_FLIGHT : FLIGHT_TIME, to, lie, penalty, holed, landing);
     this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power });
     this.field.settle(g);
     this.turn = null; this.player = null; this.due = null;
@@ -111,9 +111,9 @@ export class LiveGroup {
   /** the owner's turn at the golfer p's stroke on the hole hr at minute t (his group's pace and the group ahead's gate), and the model's suggestion for his lie (on the green the putter at
    *  the pin; else the club and aim chooseShot gives, and the power that carries to the aim) */
   private turnOf(p: Player, hr: HoleRun, t: number): OwnerTurn {
-    const hole = holeFrom(this.ctx.view.holes[hr.h]!, p.set), sg = chooseShot(p.lie, p.ball, hole, p.skill, p.lie === 'tee'), putting = sg.club === 'putter'; // T254: his set's line
+    const hole = holeFrom(this.ctx.view.holes[hr.h]!, p.set), sg = chooseShot(p.lie, p.ball, hole, p.sk, p.lie === 'tee'), putting = sg.club === 'putter'; // T254: his set's line
     const distM = Math.hypot(hole.pin.x - p.ball.x, hole.pin.y - p.ball.y) * TILE_M, dM = Math.hypot(sg.aim.x - p.ball.x, sg.aim.y - p.ball.y) * TILE_M;
-    const power = putting ? 1 : clamp(dM / carryM(sg.club, p.skill), POWER[0]!, POWER[1]!);
+    const power = putting ? 1 : clamp(dM / carryM(sg.club, skillFor(p.sk, sg.club)), POWER[0]!, POWER[1]!);
     return { golfer: p.id, holeIdx: hr.h, hole: hole.n, par: hole.par, stroke: p.strokes + 1, t, lie: p.lie, ball: { x: p.ball.x, y: p.ball.y },
       pin: { x: hole.pin.x, y: hole.pin.y }, distM, suggested: { club: sg.club, aim: { x: sg.aim.x, y: sg.aim.y }, power } };
   }

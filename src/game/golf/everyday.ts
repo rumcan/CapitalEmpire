@@ -4,21 +4,21 @@
 // play model (play/round.ts playRound: T211's Field, so the groups wait for each other as a tournament field does). The green fees are booked as each
 // group checks in at the clubhouse; members pay nothing on the day (their dues are the memberships). Pure TS, no DOM; times are game minutes of the town day.
 import { SEASON_LEN } from './calendar';
-import { dailyGolfers, GREEN_FEE_PER_ROUND, greenFeeIncome, monthlyMembershipIncome, OFF_SEASON_PLAY_DAYS } from './yearend';
+import { dailyGolfers, GREEN_FEE_PER_ROUND, OFF_SEASON_PLAY_DAYS } from './yearend';
+import { legacyMembers, visitorsADay, type MembersView } from './club';
 import { AM_SKILL, GOLFER_NAMES } from './play/field';
 import { playRound } from './play/round';
 import { dayEntourage } from './play/entourage';
 import { rng } from './play/shot';
 import { everydaySet } from './teesets';
 import type { CourseView, Golfer, Group, RoundPlan, Sex } from './play/types';
+import type { CrewCardView } from './staff';
 
 /** the first and the last everyday tee time (07:00 and 15:00: an 18-hole round of about four and a half hours is in by the clubhouse's 19:00 close) */
 export const DAY_FIRST_TEE = 420, DAY_LAST_TEE = 900;
 /** the least gap between two everyday tee times (game minutes): the tee sheet holds (DAY_LAST_TEE - DAY_FIRST_TEE) / TEE_GAP + 1 groups, and the
  *  golfers past that are turned away */
 export const DAY_TEE_GAP = 8;
-/** the club's monthly dues per member ($): the members are monthlyMembershipIncome / MEMBER_DUES (T214 prices memberships properly) */
-export const MEMBER_DUES = 50;
 /** the share of the members who play on a given day */
 export const MEMBER_PLAY = 0.35;
 /** the day-to-day spread of the visitors: a day has dailyGolfers x (1 +- DAY_SPREAD), uniform */
@@ -39,9 +39,10 @@ export const MEN = 0.7;
  *  (PACE_REP_SLOW), linear between. Rounded to whole points */
 export const PACE_WAIT_OK = 5, PACE_WAIT_SLOW = 30, PACE_REP_GOOD = 1, PACE_REP_SLOW = -3;
 
-/** what the club was at the day's start: the course's quality score (0..100), the reputation (0..100) and the holes, and an optional busy day (the
+/** what the club was at the day's start: the course's quality score (0..100), the reputation (0..100) and the holes, the club's members (T214,
+ *  golf/club.ts: rounded; missing: a day saved before T214, whose roster is rebuilt with T208's stand-in, dayMembers), and an optional busy day (the
  *  bench's: this many visitors in place of dailyGolfers) */
-export interface DayInputs { quality: number; rep: number; holes: number; busy?: number }
+export interface DayInputs { quality: number; rep: number; holes: number; members?: number; busy?: number }
 /** a group on the day's tee sheet: members or visitors, its golfers' count, when its car parks (arrive), when it checks in and pays at the clubhouse
  *  (checkIn), its tee time, the green fees it pays ($, before the scale: 0 for members) and its cars (one per two golfers) */
 export interface DayGroup { member: boolean; size: number; arrive: number; checkIn: number; tee: number; fee: number; cars: number }
@@ -50,8 +51,14 @@ export interface DayGroup { member: boolean; size: number; arrive: number; check
  *  before the scale) */
 export interface DayRoster { day: number; seed: number; golfers: Golfer[]; groups: Group[]; info: DayGroup[]; order: number[]; members: number; visitors: number; turned: number; fees: number }
 
-/** the club's members: the membership dues a month (yearend.ts monthlyMembershipIncome) over MEMBER_DUES */
-export function clubMembers(quality: number, rep: number, holes: number): number { return Math.round(monthlyMembershipIncome(quality, rep, holes) / MEMBER_DUES); }
+/** the club's members on a day (T214: the club's, golf/club.ts; a day saved before T214 has none, and counts them as T208 did: club.ts legacyMembers,
+ *  rounded, so a mid-day reload of an old save brings the same golfers back) */
+export function dayMembers(inp: DayInputs): number { return inp.members ?? Math.round(legacyMembers(inp.quality, inp.rep, inp.holes)); }
+/** the paying visitors a day the club expects (before the day's spread): dailyGolfers, less the regulars who are members now (club.ts visitorsADay;
+ *  a day saved before T214: all of them) */
+export function dayVisitors(inp: DayInputs): number {
+  const d = dailyGolfers(inp.quality, inp.rep, inp.holes); return inp.members === undefined ? d : visitorsADay(d, inp.members);
+}
 
 /** the billing days one town day of play stands for: the season's OFF_SEASON_PLAY_DAYS over the town days in a season (SEASON_LEN sim s of the
  *  season clock over the town day's dayLen sim s). A visitor's green fee is booked times this, so a season of play books about greenFeeIncome
@@ -79,7 +86,7 @@ function groupSizes(n: number, r: () => number): number[] {
   return out;
 }
 
-/** the day's roster (deterministic from the seed and the day): the members who play (MEMBER_PLAY of clubMembers), the visitors (dailyGolfers, or the
+/** the day's roster (deterministic from the seed and the day): the members who play (MEMBER_PLAY of dayMembers), the visitors (dayVisitors, or the
  *  busy count, times 1 +- DAY_SPREAD), in groups of two to four, members and visitors apart; the tee times evenly from DAY_FIRST_TEE to DAY_LAST_TEE
  *  (at least DAY_TEE_GAP apart, jittered within the gap), the members' groups a little earlier on the sheet. When the sheet is full the last visitors'
  *  groups are turned away. Each group parks ARRIVE_LEAD (+ up to ARRIVE_JITTER) before its tee time and checks in DESK_WALK later, paying its
@@ -88,8 +95,8 @@ export function dayRoster(seed: number, day: number, inp: DayInputs): DayRoster 
   const s = daySeed(seed, day), r = rng(s, -2, 0);
   const empty: DayRoster = { day, seed: s, golfers: [], groups: [], info: [], order: [], members: 0, visitors: 0, turned: 0, fees: 0 };
   if (inp.holes <= 0) return empty;
-  const memN = Math.round(clubMembers(inp.quality, inp.rep, inp.holes) * MEMBER_PLAY * (1 + DAY_SPREAD * (2 * r() - 1)));
-  const visN = Math.round((inp.busy ?? dailyGolfers(inp.quality, inp.rep, inp.holes)) * (1 + DAY_SPREAD * (2 * r() - 1)));
+  const memN = Math.round(dayMembers(inp) * MEMBER_PLAY * (1 + DAY_SPREAD * (2 * r() - 1)));
+  const visN = Math.round((inp.busy ?? dayVisitors(inp)) * (1 + DAY_SPREAD * (2 * r() - 1)));
   // the groups (members' first), each with a key for its place on the sheet: the members' a little earlier
   const gs: { member: boolean; size: number; key: number }[] = [];
   for (const sz of groupSizes(Math.max(0, memN), r)) gs.push({ member: true, size: sz, key: 0.75 * r() });
@@ -160,11 +167,13 @@ export function dayPace(plan: RoundPlan): DayPace {
   return { groups: G, waitMin: per.reduce((a, b) => a + b, 0), worstMin: G ? Math.max(...per) : 0, roundMin: n ? round / n : 0 };
 }
 
+/** how slow an average wait per group of `avgWait` minutes is: 0 at PACE_WAIT_OK or less, 1 at PACE_WAIT_SLOW or more, linear between (the pace
+ *  term's, and T214's members: golf/club.ts ClubInputs.slow) */
+export function paceSlow(avgWait: number): number { return Math.min(1, Math.max(0, (avgWait - PACE_WAIT_OK) / (PACE_WAIT_SLOW - PACE_WAIT_OK))); }
 /** the pace term (T208): the reputation points for an average wait per group of `avgWait` minutes (see PACE_WAIT_OK, PACE_WAIT_SLOW); 0 with no play */
 export function paceReputation(avgWait: number, groups: number): number {
   if (!(groups > 0)) return 0;
-  const u = Math.min(1, Math.max(0, (avgWait - PACE_WAIT_OK) / (PACE_WAIT_SLOW - PACE_WAIT_OK)));
-  return Math.round(PACE_REP_GOOD + (PACE_REP_SLOW - PACE_REP_GOOD) * u);
+  return Math.round(PACE_REP_GOOD + (PACE_REP_SLOW - PACE_REP_GOOD) * paceSlow(avgWait));
 }
 
 /** the season's everyday play so far (the save): the days played, the members' and the visitors' rounds, the visitors turned away, the green fees booked
@@ -186,6 +195,7 @@ export function normalizeDaySave(s: Partial<DaySave> | null | undefined): DaySav
   if (!s || typeof s.day !== 'number' || !Number.isFinite(s.day) || !s.inp) return null;
   const i = s.inp, se = (s.season ?? {}) as Partial<DaySeason>, t = (s.today ?? {}) as Partial<DaySave['today']>;
   const inp: DayInputs = { quality: num(i.quality), rep: num(i.rep), holes: num(i.holes) };
+  if (typeof i.members === 'number' && Number.isFinite(i.members)) inp.members = Math.max(0, i.members);
   if (typeof i.busy === 'number' && Number.isFinite(i.busy)) inp.busy = i.busy;
   return {
     day: s.day, inp, paid: Math.max(0, Math.floor(num(s.paid))), closed: !!s.closed,
@@ -206,6 +216,10 @@ export interface ClubCardView {
   clubMembers: number; fee: number; scale: number;
   /** T237: the car parks within walking distance of the door (golf/walkserve.ts), nearest walk first (the engine adds them) */
   lots?: { id: number; bays: number; m: number }[];
+  /** T269: the grounds crew (golf/staff.ts crewCard; the engine adds it) */
+  crew?: CrewCardView;
+  /** T214: the Members block (golf/club.ts membersView; the engine adds it, and then clubMembers is the club's own count) */
+  members?: MembersView;
 }
 
 /** the clubhouse card's view from the day book, the day's playback (null: none: a tournament day, no holes) and the minute */
@@ -225,8 +239,8 @@ export function clubCardView(bk: DayBook, dv: { plan: RoundPlan; outNow(m: numbe
       members: r?.members ?? 0, visitors: r?.visitors ?? 0, inMembers: s?.today.members ?? 0, inVisitors: s?.today.visitors ?? 0, fees: s?.today.fees ?? 0, turned: r?.turned ?? 0,
       out: dv ? dv.outNow(minute) : 0, parked: dv ? dv.parkedNow(minute) : 0, next, waiting, waitMin, waitAvg: teed ? waitMin / teed : 0, worst,
     },
-    season: { days: se.days, members: se.members, visitors: se.visitors, fees: se.fees, expected: greenFeeIncome(inp.quality, inp.rep, inp.holes), waitAvg: se.groups ? se.waitMin / se.groups : 0, paceRep: seasonPaceRep(se) },
-    clubMembers: clubMembers(inp.quality, inp.rep, inp.holes), fee: GREEN_FEE_PER_ROUND, scale,
+    season: { days: se.days, members: se.members, visitors: se.visitors, fees: se.fees, expected: dayVisitors(inp) * GREEN_FEE_PER_ROUND * OFF_SEASON_PLAY_DAYS, waitAvg: se.groups ? se.waitMin / se.groups : 0, paceRep: seasonPaceRep(se) },
+    clubMembers: dayMembers(inp), fee: GREEN_FEE_PER_ROUND, scale,
   };
 }
 

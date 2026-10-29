@@ -10,6 +10,8 @@ import { OFF_SEASON_PLAY_DAYS } from './yearend';
 export interface TopStats {
   money: number; monthChange: number | null; monthSpan: number; month: number;
   rep: number; golfers: number; quality: number | null; holes: number;
+  /** T214: the club's members (golf/club.ts, rounded) and the members' rounds a month of the golfers (missing: no club yet) */
+  members?: number; memberRounds?: number;
 }
 
 /** T208's everyday rounds a month at a play day's tee sheet of n golfers (members and visitors). A town day of play stands for feeScale billing

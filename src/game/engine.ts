@@ -4,7 +4,7 @@ import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GREENKEEPING } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
-import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
+import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { drawRefusedCross, strokeHatch } from './ext/refused-mark';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { CourseCursor, type CursorView } from './ext/course-cursor';
@@ -21,21 +21,24 @@ import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
-import { borderDefault, finishBorders, finishOf } from './course-finish';
+import { borderDefault, finishBorders, finishOf, finishStripeLook } from './course-finish';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
-import { PaintTool } from './paint-tool';
-import { courseLookSet, type LookStyle } from './course-look';
+import { LAND_WHY, PaintTool } from './paint-tool';
+import { collarTexes, courseLookSet, type BrushLooks, type LookStyle } from './course-look';
+import { lookOfTex } from './painted-surfaces';
 import { FACILITY_OWNERS, LOOK_KINDS, holeOwner, ownerHole, seedOwner, type FacilityOwner } from './golf/looks';
 import { facilityAt } from './golf/practicebuild';
 import { escapeLadder, numberKeyUse, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
-import { turned } from './lots/preset-art';
-import { RangeHost } from './golf/rangehost';
+import { sizeKey, turned } from './lots/preset-art';
+import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceHasArt, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
+import { homeStage } from './golf/rangesave';
+import { RangeHost, type RangeCardView } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { PracticeTool } from './golf/practicetool';
 import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
@@ -48,7 +51,8 @@ import { welcomeReady } from './golf/firstview';
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type BrushKind, type PaintTuple, type PaintTex } from './paint';
-import { CELL_T, SURF, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintDisc, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, grassSlot, landGridBox, lookCellsDiff, looksUsed, makeGrid, paintDisc, paintStroke, setLook, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { PLAY_SURF, golfSurfaceOf, grassLooks, normalizeGrasses, type CustomGrass, type GrassPlay } from './golf/grasses';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
 import { aimsFromPlans, decodePlans, encodePlans, frameView, planSeed, type FreeRect, type WizardGhost } from './ext/hole-wizard';
@@ -60,7 +64,7 @@ import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, t
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
-import { surfacePreset } from './paint-presets';
+import { PRESETS, surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
 import { ParkingTool } from './parking-tool';
 import { gateSpots } from './parking-props';
@@ -72,13 +76,22 @@ import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
 import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, carHeading, facings } from './traffic';
 import { bayCar, bayFoot, isWagon } from './vehicles';
-import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
+import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, paceSlow, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
+import { clampPrice, closeSeason as closeClubSeason, foundingDrive, holdTo, legacyClub, membersView, newClub, seasonMemberships, stepTo as stepClubTo, type ClubInputs, type MembersView } from './golf/club';
+import { choosePin, greenAt, pinIn, pinLine, pinReport, pinSlot, rollDayPins, withDayPins, type DayPin, type GreenShape } from './golf/daypins';
+import { crewCells, crewGround, type CrewGround } from './golf/crewground';
+import { crewDay, crewFlips, crewFor, fullyCut, holeWindows, normalizeCrewSave, rotaJobs, type CrewDay, type Veh as CrewVeh } from './golf/crew';
+import { CrewView, cupSetAt } from './golf/crewview';
+import { ROLE_NAME, WAGE, changeStaff, closeSeason, clubTerms, courseCondition, crewCard, crewNeed, freshStaff, payWages, pinReputation, qualityFactor, wages as staffWages, workDay, type CrewCardView, type StaffRole, type StaffState } from './golf/staff';
+import { fairwayStripeLook } from './course-stripes';
 import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
 import { localRate, townClockFor, townTimeOf } from './sim/townclock';
 import { CADDIE_CAP, CART_CAP, LONG_DAY_MIN, NIGHT_S, PACE_KEY, WALK_CAP, capped, dayNight, paceOf, paceOfSetting, settingOf, type GolfPace, type PaceSetting } from './golf/pace';
 import { Pacer } from './golf/play/pacer';
+import type { PlayBall } from './golf/play/view';
+import { ballPuff, ballSplash } from './golf/ballfx';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
@@ -98,9 +111,13 @@ import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorTowa
 import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
 import { ROUGH_YARDS_DEFAULT, clampRoughYards, roughShare, roughSig, roughYard } from './rough-yards';
 import { townTreeCell } from './towntrees';
+import { BELT, beltField, riverBeltCell, type BeltField } from './river-trees';
+/** T265: a frame plants its second tree cell only while its planting has taken under this (ms): two heavy cells (a forest cell with its belt)
+ *  are planted a frame apart, so no frame carries both */
+const PLANT_FRAME_MS = 1;
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
-import { LU, LV, type LotTuple } from './lots/town';
+import { LU, LV, lotJobs, type LotTuple } from './lots/town';
 import { rectPlot, surveyBlocks, surveyPatch } from './lots/survey';
 /** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
 const LAND_SURVEY_INSET = 0.6;
@@ -111,14 +128,14 @@ import { LotMap } from './lots/lots';
 import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
-import { FarmMap, claimedLots, composeFarm } from './ext/farms';
+import { FARM_MODEL, FarmMap, claimedLots, composeFarm, farmSeason, farmStandIns, parcelCorners, type FarmModel, type FarmParcel } from './ext/farms';
 import { SIG, shown, sigKey } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import { normalizeGolfSave, type GolfPlaySave, type GolfSave, type GolfView } from './golf/mode';
-import { createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
+import { courseSlopeAt, createCourseHeightField, sampleCourseGrid, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
@@ -133,7 +150,7 @@ import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, months
 import { MonthMoney, golfersAMonth, type TopStats } from './golf/topstats';
 import { afterRoute, driveOffer, driveStart, type DriveStopgap } from './golf/drivestopgap';
 import { growReadyLabel, hintWithGrow } from './golf/growlabel';
-import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
+import { computeTournamentCloseBook, computeYearEnd, dailyGolfers, type YearEndResult } from './golf/yearend';
 import { countParkedCars } from './golf/parkingfee';
 import { driveCuts, stopCut } from './street-marks';
 import { TYPE_PAINTS, bodyOf, paintAt } from './car-paint';
@@ -148,18 +165,22 @@ import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input'
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
-import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeKind, type TeeMark } from './golf/types';
+import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
-import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
+import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
+import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
+import { BOOK_LEAD, PRESSURE, bookRound, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
 import { SHINE_KEY, SHINE_LOOK, clampShineLook, shineExponent, shineGain, type ShineLook, type ShineWeights } from './grass-shine';
+import { WATER_MOTION, WATER_MOTION_KEY, clampWaterMotion, motionFrame, phasesAt, stepPhases, type WaterMotion } from './water-motion';
 import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from './grade';
 import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, teePropId } from './golf/dressing';
-import { BOX_LEN_M, BOX_WID_M, TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, markerWarnings, teeBox } from './golf/teesets';
+import { BOX_LEN_M, BOX_WID_M, TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, markerWarnings } from './golf/teesets';
+import { TEE_SCALE_STEP, TEE_TURN_DEG, boxAngle, boxOutline, clampTeeScale, dropHoleBoxes, handOver, layDown, oldBox, planTee, recStands, snapTurn, swapTeeBoxes, takeUp, teeAim, teeBoxM, teeCells, teeKey, type TeeCourse, type TeeOld, type TeePlan, type TeeRoad } from './golf/teeplace';
 import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
@@ -197,7 +218,7 @@ const RATING_MS = 2000;
 /** a range start's founding season as its season card shows it (plan P22 2.5.3): the season's year, the season's business takings ($: the range,
  *  and the clubhouse once placed), the residents, the invitation checklist at the season's end, and whether the tour had invited the player (too
  *  late for this season) */
-export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean; /** the range business's season (P24, T129) */ range?: RangeCounts; /** T221: the residents the club's earnings make room for (City.townRoom) */ room?: number }
+export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean; /** the range business's season (P24, T129) */ range?: RangeCounts; /** T221: the residents the club's earnings make room for (City.townRoom) */ room?: number; /** T214: the club's members at the season's end and the season's dues as booked ($, month by month: in takings already) */ club?: { members: number; dues: number } }
 /** the most townspeople walking at once */
 const PED_MAX = 3000;
 /** the sim speeds the time controls offer (sim s per s); 0 is paused */
@@ -269,7 +290,8 @@ const ownerArt = (sex: Sex): number => { const i = GOLFER_PEOPLE.findIndex(p => 
 interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; finish: DayFinish; own: OwnerPlay | null; waves: number }
 /** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): his golfer's id, sex and skill, his group's tee time, his live group (live.ts), his next
  *  turn (null once his group is done), and the count of inputs he had played when he handed to the caddie (null while he plays) */
-interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null; /** T254: his tee set */ tees?: TeeKind }
+interface OwnerPlay { id: number; sex: Sex; /** T241: his skill (OWNER_SKILL) or his skills by part of the game (your profile's as he joined) */ skill: ShotSkill; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null; /** T254: his tee set */ tees?: TeeKind;
+  /** T241: your profile's skills as he joined (saved, so a reload replays the same round) */ skills?: GameSkills }
 /** the owner's open shot (P4b, the shot panel): his turn and his input so far (the club, the aim point in tiles, the power: see powerFor) */
 export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number } }
 /** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
@@ -293,6 +315,13 @@ function segDist(p: Pt, s: Seg): number { const d = sub(s.b, s.a), L2 = dot(d, d
 function lotBoxOf(o: ArrayLike<number>, u: ArrayLike<number>, n: ArrayLike<number>, w: number, d: number): number[] {
   const ax = o[0]! + u[0]! * w, ay = o[1]! + u[1]! * w, bx = o[0]! + n[0]! * d, by = o[1]! + n[1]! * d, cx = ax + n[0]! * d, cy = ay + n[1]! * d;
   return [Math.min(o[0]!, ax, bx, cx), Math.min(o[1]!, ay, by, cy), Math.max(o[0]!, ax, bx, cx), Math.max(o[1]!, ay, by, cy)];
+}
+/** T259: a farm parcel's box x0 y0 x1 y1 (tiles: its four corners) */
+function parcelBox(p: FarmParcel): number[] { const c = parcelCorners(p); return [Math.min(c[0].x, c[1].x, c[2].x, c[3].x), Math.min(c[0].y, c[1].y, c[2].y, c[3].y), Math.max(c[0].x, c[1].x, c[2].x, c[3].x), Math.max(c[0].y, c[1].y, c[2].y, c[3].y)]; }
+/** T259: the distance from tile (x, y) to a farm parcel (0 inside) */
+function parcelGap(p: FarmParcel, x: number, y: number): number {
+  const dx = x - p.o.x, dy = y - p.o.y, a = dx * p.u.x + dy * p.u.y, b = dx * p.n.x + dy * p.n.y;
+  return Math.hypot(Math.max(0, -a, a - p.w), Math.max(0, -b, b - p.d));
 }
 /** the distance from tile (x, y) to a lot's rectangle (0 inside), the lot's frame as in lotBoxOf */
 function lotGap(l: LotView, x: number, y: number): number {
@@ -352,7 +381,7 @@ const LABEL_KEY = { town: 1e6, growth: 2e6, stopped: 2.1e6, gallery: 3e6, waitin
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
-export interface Toast { id: number; text: string; t: number; kind: 'info' | 'warn' | 'good' }
+export interface Toast { id: number; text: string; t: number; kind: 'info' | 'warn' | 'good'; /** T242: its Set the scene button opens this place's picture card */ scene?: SceneRef }
 export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 /** a garden median's plants (P19): the beds' flowers and shrubs (lots/compose.ts FLOWERS and the bushes it scatters), picked by the prop's index */
@@ -399,8 +428,9 @@ const LAYBY_PAD = 0.3;
 /** the library index by id, and the props the town's lots add (auto 'lot:' + key) */
 const LIB_INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const isLotProp = (p: Prop) => !!p.auto && (p.auto.startsWith('lot:') || p.auto.startsWith('farm:'));
-/** the farms composed per frame at most (the rest wait in the queue), so a big network does not stall a frame */
-const FARMS_PER_FRAME = 4;
+/** the farms composed per frame at most (the rest wait in the queue), so a big network does not stall a frame; T259: and a frame composes no
+ *  more farms once they took FARM_FRAME_MS (a farm composes in 0.2-0.4 ms, 1.5 at most) */
+const FARMS_PER_FRAME = 4, FARM_FRAME_MS = 1;
 /** T219: how long a place with no free site waits before the next search (ms) */
 const PLACE_RETRY_MS = 30000;
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
@@ -435,6 +465,9 @@ export class Game {
   private slope: Float32Array = new Float32Array(0); private clearing: Noise = makeNoise(0); private forest = new Map<number, Prop[]>(); private forestItem = new Map<string, number>();
   /** town trees: the same cells (key cj * 32 + ci) planted on the free ground in and around the towns, sprites only; the clump noise; the boxes of the lots and painted areas last seen (a change drops the cells around them) */
   private townClump: Noise = makeNoise(0); private townTrees = new Map<number, Prop[]>(); private lotBoxes = new Map<string, number[]>(); private paintBoxes = new Map<string, number[]>();
+  /** T265 (#794): the tree belts along the rivers and creeks (river-trees.ts), planted with each forest cell (plantCell: in its list, after its
+   *  forest trees; beltN, how many of them a cell holds); the belts' field of the terrain; the dev switch window.__game.setRiverTrees(false) */
+  private belt: BeltField | null = null; private beltN = new Map<number, number>(); private beltOn = true;
   /** tunnel mouths of the network: key of the last synced set, and the points themselves */
   private portalKey = ''; private portalPts: PortalRec[] = [];
   ground: GroundCache;
@@ -747,13 +780,19 @@ export class Game {
   private play: GolfPlay | null = null; private playTried = -1;
   /** T208 everyday golf: the town days' play (the save, the booking: golf/everyday.ts DayBook), the day's playback (its town day and course key; null:
    *  none on the course now), the played course (rebuilt when the holes change: its key), and the clubhouse card's open state */
-  private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string } | null = null;
+  private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string; /** T241: the day book's roster it was built from (yours on it or not), your booking it was built with (null: none; a new booking, or one a session
+   *  rebooked, is a new object) and your golfer's id (-1 none) */ base: DayRoster; you: Booking | null; youId: number } | null = null;
   private dayCourse: { view: CourseView; key: string; at: number } | null = null; clubCardOpen = false;
+  /** T269: the greens the cups are cut on (by hole: the key of the grid's rev, the placed pin and the approach they were found for), the day pins'
+   *  revision (bumped when a cup moves: the flags and the play follow), the revision the flags stand at, and when the cups were last checked */
+  private greens = new Map<number, { key: string; g: GreenShape | null }>(); private pinRev = 0; private flagRev = -1; private pinsCheckedAt = 0; private pinsCheckKey = '';
   /** T233: the top bar's money chip: the treasury as the golf months go by (its change a month); the course rating's quality, worked out at most
    *  every RATING_MS (Course stats derives the holes) */
   private monthMoney = new MonthMoney(); private ratingAt = -Infinity; private ratingOf: { quality: number | null; holes: number } = { quality: null, holes: 0 };
   /** T208: the bench's busy day (?golfers=N: this many visitors in place of dailyGolfers; dev and bench only) */
   private dayBusy: number | undefined; private devSeed = 0; private dayOff = false;
+  /** T251 (dev, ?tourney=1: the bench's tournament day and the ball captures): today plays the tournament's round as if its day had come */
+  private devTourney = false;
   /** T266: golf's pace (golf/pace.ts): watchable (mix) by default, or the old fast pace (main), as the gear menu's Golf pace has it (remembered);
    *  the dev server's ?golfPace plays any of the prototype's options for the session */
   golfPace: GolfPace = 'mix';
@@ -795,7 +834,7 @@ export class Game {
   private grassVisible = false;
   private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
   private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, /** T265: the belt trees planted, and the most ms a frame's planting took (plantForest) */ belt: 0, plantMs: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -824,6 +863,8 @@ export class Game {
     // Build (the range's plot too), and an owner's look changed: its cells alone are drawn again
     lookBook: () => (this.golf ? (this.golf.looks ??= {}) : null), facility: () => (this.tool === 'practice' ? this.practice.kind : null),
     landAt: (x, y) => this.ownedAt(x, y), lookChanged: o => this.ownerLookChanged(o),
+    // T271 (#812): the course's own grasses (the game save's), a new grass's family, and the first cut a grass's Border is laid in
+    grasses: () => this.grasses(), setGrasses: (l, redraw) => this.setGrasses(l, redraw), grassFamily: (): string | null => this.fairwayFamily(), firstCutTex: (): CourseTex => collarTexes(this.paint.brush as BrushLooks)['first-cut'],
     frameTreePrice: () => DECOR_BY_KEY.get(FRAME_TREE_KEY)?.price ?? 0, placeFrame: (n, trees) => this.placeSavedFrame(n, trees),
     // T254 (#736): Edit Hole Layout moves the markers (one undo step with them), and its warnings read where they would stand
     layoutBuilt: (n, base, plan) => this.layoutBuilt(n, base, plan), placeTees: (n, tees) => this.placeTees(n, tees), markersKey: () => this.markersKey(), setMarkers: k => this.setMarkers(k),
@@ -848,7 +889,7 @@ export class Game {
   /** opens hole n's card (its Holes panel badge, or its area clicked with Select) and makes it the current hole */
   openHoleCard(n: number) { if (!this.golf || !this.courseHoleViews()[n - 1]?.started) return; this.holeCardHole = n; this.paint.setHole(n); this.emit(); }
   /** closes the card (its ✕, Esc, a click on open ground) */
-  closeHoleCard() { if (this.holeCardHole === null) return; this.holeCardHole = null; this.markerDrag = false; this.selectedGolfMarker = null; this.emit(); }
+  closeHoleCard() { if (this.holeCardHole === null) return; this.holeCardHole = null; this.markerDrag = false; this.selectedGolfMarker = null; if (this.teePlace && this.tool === 'select') this.teePlace = null; this.emit(); }
   /** the hole of the course under tile t: the course grid's cell (a playing surface or rough of a hole), else a painted area's hole; 0: none */
   courseHoleAt(t: Pt | null): number {
     const g = this.courseGrid; if (!t || !this.golf) return 0;
@@ -870,7 +911,7 @@ export class Game {
   holeCardFix(f: HoleFix) {
     const n = this.holeCardHole; if (n === null) return;
     if (f.kind === 'edit') { this.editHole(n); return; }
-    if (f.kind === 'brush') { this.setTool('course'); if (this.tool !== 'course') return; this.paint.setHole(n); this.paint.setBrush(f.surface); this.emit(); return; }
+    if (f.kind === 'brush') { this.setTool('course'); if (this.tool !== 'course') return; this.paint.setHole(n); this.paint.setBrush(f.surface, 0); this.emit(); return; }
     if (!this.holesTool) this.toggleHolesTool();
     // T254: the tees' Fix picks up the hole's first set (blue, white, yellow, red: the one off its tee first)
     const g = this.golf, areas = this.courseAreaList(), mine = TEE_KINDS.flatMap(k => g?.tees.find(t => t.hole === n && t.kind === k) ?? []);
@@ -902,6 +943,7 @@ export class Game {
         if (keep) { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale); if (p.decor) q.decor = p.decor; }
       }
       this.frameRev++;
+      dropHoleBoxes(this.golf?.teeBoxes, n); this.teeRev++; // T268: its tee boxes' records go with it (undo brings the cells back as older boxes)
     });
     if (ok) { this.closeHoleCard(); this.holeCache = null; this.cardCache = null; }
     return ok;
@@ -973,6 +1015,8 @@ export class Game {
     // the markers' props are keyed by hole (the pin of hole 9 is yellow): drop both holes' and put them back under their new numbers
     for (const h of [a, b]) for (const k of ['pin', ...TEE_KINDS] as const) { const key = k === 'pin' ? 'pin:' + h : `tee:${h}:${k}`, pr = this.golfProps.get(key); if (pr) { this.removeProp(pr); this.golfProps.delete(key); } }
     g.pins = r.pins; g.tees = r.tees; g.aims = r.aims; g.plans = encodePlans(r.plans);
+    if (g.teeBoxes) g.teeBoxes = swapTeeBoxes(g.teeBoxes, a, b); this.teeRev++; // T268: the tee boxes' records follow their sets
+    if (g.dayPins) { const sw = (q: DayPin) => (q.hole === a ? { ...q, hole: b } : q.hole === b ? { ...q, hole: a } : q); g.dayPins = { ...g.dayPins, today: g.dayPins.today.map(sw), prev: g.dayPins.prev.map(sw) }; this.pinRev++; } // T269: so do the day's cups
     for (const p of this.props) if (p.frame === a) p.frame = b; else if (p.frame === b) p.frame = a; // T229: the frame trees follow their hole
     // T256: so do their looks
     const bk = g.looks; if (bk) { const la = bk[holeOwner(a)], lb = bk[holeOwner(b)]; if (lb) bk[holeOwner(a)] = lb; else delete bk[holeOwner(a)]; if (la) bk[holeOwner(b)] = la; else delete bk[holeOwner(b)]; this.paint.looksRev++; }
@@ -998,6 +1042,9 @@ export class Game {
     const n = this.holeCardHole, g = this.golf, h = this.hover; if (n === null || !g || !h) return false;
     const pin = g.pins.find(p => p.hole === n && Math.hypot(h.x - p.x, h.y - p.y) <= 3);
     if (pin) { this.selectedGolfMarker = { hole: n, kind: 'pin', x: pin.x, y: pin.y }; this.markerDrag = true; this.emit(); return true; }
+    // T268: a press on one of its tee boxes picks the box up with its markers: it goes down where the drag is let go (one undo step)
+    const k = this.teeBoxAt(n, h.x, h.y);
+    if (k) { const o = this.teeOld(n, k); return this.placeTee(n, k, { drag: true, grab: o ? { x: o.x - h.x, y: o.y - h.y } : { x: 0, y: 0 } }); }
     const tee = g.tees.find(t => t.hole === n && Math.hypot(h.x - t.x, h.y - t.y) <= 2);
     if (tee) { this.selectedGolfMarker = { hole: n, kind: tee.kind, x: tee.x, y: tee.y }; this.markerDrag = true; this.emit(); return true; }
     return false;
@@ -1070,17 +1117,19 @@ export class Game {
   /** places or moves a pin or tee marker with its prop, marked auto (it goes when its green or tee is gone); held (T254, Edit Hole Layout): it
    *  stays where it is put, off its turf or not */
   private setGolfMarker(hole: number, kind: MarkerKind, x: number, y: number, held = false) {
-    const g = this.golf!; this.removeGolfMarker(hole, kind);
+    const g = this.golf!; this.removeGolfMarker(hole, kind); this.teeRev++; // T268
     const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : teePropId(kind);
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, MARKER_SCALE[kind]));
     if (kind === 'pin') g.pins.push({ hole, x, y, auto: !held, ...(held ? { held } : {}) }); else g.tees.push({ hole, kind, x, y, auto: !held, ...(held ? { held } : {}) });
+    if (kind === 'pin') this.setTodayPin(hole, x, y); // T269: a pin put down is today's cup
     if (kind === 'pin' && g.start === 'range') this.sendGolf(); // T090: a new hole speeds a range start's town
   }
   /** removes a pin or tee marker and its prop (if there is one) */
   private removeGolfMarker(hole: number, kind: MarkerKind) {
     const g = this.golf!, key = kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, prop = this.golfProps.get(key);
     if (prop) { this.removeProp(prop); this.golfProps.delete(key); }
+    this.teeRev++; // T268
     const L: { hole: number; kind?: string }[] = kind === 'pin' ? g.pins : g.tees;
     for (let i = L.length - 1; i >= 0; i--) if (L[i]!.hole === hole && (kind === 'pin' || L[i]!.kind === kind)) L.splice(i, 1);
   }
@@ -1097,22 +1146,26 @@ export class Game {
   }
   /** the course surface at tile (x, y): the course grid's where it is painted, else the painted areas' (null: none) */
   private surfaceHere(x: number, y: number): GolfSurface | null {
-    const grid = this.courseGrid, i = grid ? cellAt(grid, x, y) : -1;
-    return (i >= 0 ? SURF_SURFACE[grid!.surf[i]!] : null) ?? surfaceAt(this.courseAreaList(), x, y);
+    const grid = this.courseGrid, i = grid ? cellAt(grid, x, y) : -1, k = i >= 0 && grid!.draw ? grassSlot(grid!.draw[i]!) : 0, p = k ? this.grassAt(k)?.plays : undefined;
+    return (i >= 0 ? (p ? golfSurfaceOf(p) : SURF_SURFACE[grid!.surf[i]!]) : null) ?? surfaceAt(this.courseAreaList(), x, y); // (T271: a custom grass plays as its grass)
   }
+  /** T271: each custom grass's play by slot */
+  private grassPlays(): Map<number, GrassPlay> { return new Map(this.grasses().map(g => [g.k, g.plays])); }
   /** a saved hole placed as hole n (My holes, T256): its tee sets' markers where it had them (T254); the white alone when it saved none */
   private placeTees(n: number, tees: readonly { kind: TeeKind; x: number; y: number }[]) {
     const g = this.golf; if (!g || !tees.length) return;
     for (const t of g.tees.filter(q => q.hole === n)) this.removeGolfMarker(n, t.kind);
+    dropHoleBoxes(g.teeBoxes, n); // T268: its boxes are the placed hole's own now
     for (const t of tees) this.setGolfMarker(n, t.kind, t.x, t.y);
     this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave();
   }
-  /** the pins and tee markers as text (an Edit Hole Layout step's undo and redo carry them) */
-  private markersKey(): string { const g = this.golf; return JSON.stringify(g ? [g.pins, g.tees] : [[], []]); }
+  /** the pins and tee markers as text (an Edit Hole Layout step's undo and redo carry them; T268: and the tee boxes' records, a Place step's) */
+  private markersKey(): string { const g = this.golf; return JSON.stringify(g ? [g.pins, g.tees, g.teeBoxes ?? {}] : [[], [], {}]); }
   /** the pins and tee markers back as markersKey had them, their props with them */
   private setMarkers(key: string) {
     const g = this.golf; if (!g) return;
-    let v: [Pin[], TeeMark[]]; try { v = JSON.parse(key); } catch { return; }
+    let v: [Pin[], TeeMark[], Record<string, TeeBoxRec>?]; try { v = JSON.parse(key); } catch { return; }
+    if (v[2] && Object.keys(v[2]).length) g.teeBoxes = v[2]; else if (v.length > 2) delete g.teeBoxes; // T268
     for (const p of [...g.pins]) this.removeGolfMarker(p.hole, 'pin');
     for (const t of [...g.tees]) this.removeGolfMarker(t.hole, t.kind);
     for (const p of v[0]) { this.setGolfMarker(p.hole, 'pin', p.x, p.y, !!p.held); const q = g.pins[g.pins.length - 1]!; if (p.auto === undefined) delete q.auto; else q.auto = p.auto; }
@@ -1120,41 +1173,200 @@ export class Game {
     this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
   }
   /** "Add tee" (the hole card): hole n's set `kind` laid as a new 14 x 8 m tee box behind or ahead along the line of play (golf/teesets.ts
-   *  addTeeSpot), painted as tee turf and priced like a tee (one undo step), its pair of markers on it. False with a toast when it cannot */
+   *  addTeeSpot), painted as tee turf and priced like a tee (one undo step), its pair of markers on it. False with a toast when it cannot.
+   *  T268: the quick Place: laid as Place lays a box (layTee: its record, its level pad), its refused cells left out as before */
   addTeeSet(n: number, kind: TeeKind): boolean {
     const g = this.golf; if (!g || !this.courseGrid) return false;
     const h = deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims ?? []).find(q => q.n === n);
     if (!h || h.line.length < 2) { this.toast(`Hole ${n} needs a flag and a tee before another tee set`, 'warn'); return false; }
     const at = addTeeSpot(kind, g.tees.filter(t => t.hole === n), h.line);
     if (!at) { this.toast(`Hole ${n} has the ${TEE_SET[kind].colour} tees already`, 'info'); return false; }
-    const r = this.paint.addTeeBox(n, teeBox(at.at, at.dir), `add the ${TEE_SET[kind].colour} tee to hole ${n}`);
-    if (!r) return false;
-    this.setGolfMarker(n, kind, Math.round(at.at.x * 100) / 100, Math.round(at.at.y * 100) / 100);
-    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
-    this.toast(`Hole ${n}: the ${TEE_SET[kind].colour} tee laid${r.cost ? ` for $${r.cost.toLocaleString()}` : ''} (${TEE_SET[kind].who})`, 'good');
+    const p = this.teePlan(n, kind, at.at.x, at.at.y, Math.atan2(at.dir.y, at.dir.x), 1, false, false);
+    if (p.why) { this.toast(p.why === 'No room for a tee box there' ? 'No room for a tee box there: your land, the practice area or another hole is in the way' : `No room for a tee box there: ${p.why.toLowerCase()}`, 'warn'); return false; }
+    if (!this.layTee(n, kind, p, `add the ${TEE_SET[kind].colour} tee to hole ${n}`)) return false;
+    this.toast(`Hole ${n}: the ${TEE_SET[kind].colour} tee laid${p.cost ? ` for $${p.cost.toLocaleString()}` : ''} (${TEE_SET[kind].who})`, 'good');
     return true;
   }
   /** "Add tee"'s price: a 14 x 8 m tee box of tee turf at the brush's planting (Seed or Sod), the cells it lays (about; the real price counts the
    *  cells that change) */
   teeBoxPrice(): number { return Math.round(((BOX_LEN_M - BOX_WID_M) * BOX_WID_M + Math.PI * (BOX_WID_M / 2) ** 2) * unitBuildCost('tee', this.paint.plantKind)); }
+  // ---------- T268 (#809): each tee set placed, moved and removed by hand (golf/teeplace.ts) ----------
+  /** the tee set in hand (Place or Move on the hole card or in Edit Hole Layout, or its box dragged on the map with the card open): its hole and
+   *  set, its turn off the line of play (degrees: R, Shift+R) and size (TEE_SCALE_MIN..MAX: [ ]); moving: the set has a box already, which goes
+   *  from where it stands (its old ground back); drag: picked up by a press on its box, it goes down on the release; grab: the box's middle less
+   *  the press (tiles); from: the press */
+  teePlace: { hole: number; kind: TeeKind; turn: number; scale: number; moving: boolean; drag: boolean; grab: Pt; from: Pt | null } | null = null;
+  /** bumped whenever a tee marker or a box record changes: the ghost's and the old box's cache keys (the markers' text is never built a frame) */
+  private teeRev = 0;
+  private teeGhostMemo: { key: string; v: TeePlan } | null = null;
+  private teeOldMemo: { key: string; v: TeeOld | null } | null = null;
+  /** Place and Move (the card's and Edit Hole Layout's buttons; opts.drag: a press on the set's box with the card open): hole n's set `kind` in
+   *  hand as a ghost at the pointer, facing the line of play; a set the hole has already is moved, its size and turn kept. The next click (or the
+   *  drag's release) lays it; Esc or a right click puts it down. False with a toast when the hole has no flag to face */
+  placeTee(n: number, kind: TeeKind, opts: { drag?: boolean; grab?: Pt } = {}): boolean {
+    const g = this.golf; if (!g || !this.courseGrid) return false;
+    if (!g.pins.some(p => p.hole === n)) { this.toast(`Hole ${n} needs a flag before its tees are placed`, 'warn'); return false; }
+    const moving = g.tees.some(t => t.hole === n && t.kind === kind), old = moving ? this.teeOld(n, kind) : null;
+    const turn = old ? snapTurn(((old.a - boxAngle(old, teeAim(n, g.pins, g.aims ?? []), 0)) * 180) / Math.PI) : 0;
+    this.teePlace = { hole: n, kind, turn, scale: old?.s ?? 1, moving, drag: !!opts.drag, grab: opts.grab ?? { x: 0, y: 0 }, from: this.hover ? { x: this.hover.x, y: this.hover.y } : null };
+    this.teeGhostMemo = null; this.emit();
+    if (!opts.drag) this.toast(`${moving ? 'Move' : 'Place'} hole ${n}'s ${TEE_SET[kind].colour} tee: click the map to lay it · R turns it · [ ] size it · Esc puts it down`, 'info');
+    return true;
+  }
+  /** puts the tee set in hand down (nothing laid) */
+  cancelTeePlace() { if (!this.teePlace) return; this.teePlace = null; this.teeGhostMemo = null; this.emit(); }
+  /** R (back: Shift+R): the box in hand turns TEE_TURN_DEG */
+  turnTeePlace(back = false) { const tp = this.teePlace; if (!tp) return; tp.turn = snapTurn(tp.turn + (back ? -TEE_TURN_DEG : TEE_TURN_DEG)); this.emit(); }
+  /** ] and [: the box in hand a size step up or down, within the tee's limits (a toast at the limit) */
+  sizeTeePlace(up: boolean) {
+    const tp = this.teePlace; if (!tp) return;
+    const s = clampTeeScale(tp.scale + (up ? TEE_SCALE_STEP : -TEE_SCALE_STEP));
+    if (s === tp.scale) { const m = teeBoxM(s); this.toast(`A tee box goes no ${up ? 'bigger' : 'smaller'}: ${m.len} x ${m.wid} m`, 'info'); return; }
+    tp.scale = s; this.emit();
+  }
+  /** the box in hand at the pointer (teePlan), worked out again only when the pointer's cell, the turn or size, the course, the ground, the roads,
+   *  the money or the markers change: a frame draws it and no more */
+  teeGhost(): TeePlan | null {
+    const tp = this.teePlace, h = this.hover, g = this.golf, grid = this.courseGrid; if (!tp || !h || !g || !grid) return null;
+    const x = Math.round((h.x + tp.grab.x) * 2) / 2, y = Math.round((h.y + tp.grab.y) * 2) / 2;
+    const key = `${tp.hole}|${tp.kind}|${x}|${y}|${tp.turn}|${tp.scale}|${tp.moving}|${grid.rev}|${this.courseHeight?.rev ?? -1}|${this.net.version}|${this.paint.plantKind}|${Math.round(this.money)}|${this.teeRev}`;
+    if (this.teeGhostMemo?.key !== key) this.teeGhostMemo = { key, v: this.teePlan(tp.hole, tp.kind, x, y, boxAngle({ x, y }, teeAim(tp.hole, g.pins, g.aims ?? []), tp.turn), tp.scale, tp.moving, true) };
+    return this.teeGhostMemo.v;
+  }
+  /** the roads and cart paths within r of tile (x, y), for a tee box's refusal and its pad */
+  private teeRoads(x: number, y: number, r: number): TeeRoad[] {
+    return [...this.net.segsNear({ x, y }, r)].map(s => ({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, hw: s.cls.h + s.cls.walk, name: s.cls.name.toLowerCase() }));
+  }
+  /** whether tile (x, y) lies in the driving range's practice area (the paint host's practiceAt) */
+  private teePractice(x: number, y: number): boolean { return this.golf?.start === 'range' && !!this.range.scene && inPractice(this.range.scene.practice, x, y); }
+  /** the course a tee box is worked out on (golf/teeplace.ts TeeCourse): the grid and height field, the markers and the boxes' records, your land
+   *  (the range's plot is not the course's), the practice area, the roads and cart paths, and the prices (a tee cell at the brush's Seed or Sod) */
+  private teeCourse(): TeeCourse | null {
+    const g = this.golf, grid = this.courseGrid; if (!g || !grid) return null;
+    return {
+      grid, field: this.courseHeight, pins: g.pins, tees: g.tees, aims: g.aims ?? [], boxes: g.teeBoxes ?? {},
+      own: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => LAND_WHY[this.onRangePlot(x, y) ? 'range' : 'off'],
+      practice: (x, y) => this.teePractice(x, y), roadsNear: (x, y, r) => this.teeRoads(x, y, r), golf: this.golfMode, unit: unitBuildCost('tee', this.paint.plantKind),
+    };
+  }
+  /** hole n's set `kind` as a box at (x, y), heading a, size s (golf/teeplace.ts planTee: its cells, why not, its price, its length and par);
+   *  moving: the set's box as it stands goes back first. strict false: Add tee's (refused cells left out) */
+  private teePlan(n: number, kind: TeeKind, x: number, y: number, a: number, s: number, moving: boolean, strict: boolean): TeePlan {
+    return planTee(this.teeCourse()!, n, kind, x, y, a, s, moving ? this.teeOld(n, kind) : null, strict);
+  }
+  /** hole n's set `kind`'s box as it stands and what a move or a removal puts back (golf/teeplace.ts oldBox), kept until the course, the ground or
+   *  the markers change */
+  private teeOld(n: number, kind: TeeKind): TeeOld | null {
+    const c = this.teeCourse(); if (!c) return null;
+    const key = `${n}|${kind}|${c.grid.rev}|${c.field?.rev ?? -1}|${this.teeRev}`;
+    if (this.teeOldMemo?.key !== key) this.teeOldMemo = { key, v: oldBox(c, n, kind) };
+    return this.teeOldMemo.v;
+  }
+  /** lays plan p (teePlan) for hole n's set `kind` as one undo step (PaintTool.teeStep, golf/teeplace.ts layDown): the set's old box goes back (a
+   *  move: its cells and its pad's heights as they were), the box's cells become tee turf (Seed or Sod), its pad is levelled, the price is paid,
+   *  and the set's marker stands in the box's middle with the box's record (GolfSave.teeBoxes; a set left on the old box takes the old record).
+   *  False with a toast when p cannot go or the money is short */
+  private layTee(n: number, kind: TeeKind, p: TeePlan, label: string): boolean {
+    const g = this.golf, c = this.teeCourse(); if (!g || !c) return false;
+    if (p.why) { this.toast(p.why, 'warn'); return false; }
+    if (this.golfMode && p.cost > this.money) { this.toast(`Not enough money: the tee box costs $${p.cost.toLocaleString()} · you have $${Math.round(this.money).toLocaleString()}`, 'warn'); return false; }
+    const ok = this.paint.teeStep(label, e => {
+      const r = layDown(c, n, p, e);
+      handOver((g.teeBoxes ??= {}), n, kind, p.old, r.rec); this.teeRev++;
+      this.setGolfMarker(n, kind, Math.round(p.x * 100) / 100, Math.round(p.y * 100) / 100);
+    });
+    if (!ok) return false;
+    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
+    return true;
+  }
+  /** a click with a tee set in hand (or its drag's release): the ghost's box is laid there (layTee) and the toast gives the set's length, par and
+   *  price; else the toast says why and the set stays in hand (a dragged box goes back where it was) */
+  private placeTeeAt(): boolean {
+    const tp = this.teePlace, gh = this.teeGhost(); if (!tp) return false;
+    if (!gh) { if (tp.drag) this.cancelTeePlace(); return false; }
+    const col = TEE_SET[tp.kind].colour, ok = this.layTee(tp.hole, tp.kind, gh, `${tp.moving ? 'move' : 'place'} hole ${tp.hole}'s ${col} tee`);
+    if (ok) this.toast(`Hole ${tp.hole}: the ${col} tee ${tp.moving ? 'moved' : 'placed'}, ${gh.m} m, par ${gh.par}${gh.cost ? ` · $${gh.cost.toLocaleString()}` : ''}${gh.m3 >= 1 ? ` (a level pad, ${Math.round(gh.m3)} m³)` : ''}`, 'good');
+    if (ok || tp.drag) { this.teePlace = null; this.teeGhostMemo = null; }
+    this.emit(); return ok;
+  }
+  /** the release of a box dragged with the card open: laid where it is let go; a press that did not move puts it down */
+  private teeDragDrop() {
+    const tp = this.teePlace, h = this.hover; if (!tp?.drag) return;
+    if (!h || !tp.from || Math.hypot(h.x - tp.from.x, h.y - tp.from.y) < 0.75) { this.cancelTeePlace(); return; }
+    this.placeTeeAt();
+  }
+  /** Remove (the card's ✕): hole n's set `kind` goes, its marker and its box with it, the old ground back (a box another set stands on stays); never
+   *  the hole's last set. One undo step, no refund */
+  removeTeeSet(n: number, kind: TeeKind): boolean {
+    const g = this.golf; if (!g || !this.courseGrid) return false;
+    const mine = g.tees.filter(t => t.hole === n), col = TEE_SET[kind].colour;
+    if (!mine.some(t => t.kind === kind)) return false;
+    if (mine.length <= 1) { this.toast(`Hole ${n} keeps its last tee: place another set before the ${col} goes`, 'warn'); return false; }
+    const old = this.teeOld(n, kind);
+    if (this.teePlace?.hole === n && this.teePlace.kind === kind) this.teePlace = null;
+    this.paint.teeStep(`remove hole ${n}'s ${col} tee`, e => {
+      takeUp(old, e);
+      if (g.teeBoxes) { handOver(g.teeBoxes, n, kind, old, null); if (!Object.keys(g.teeBoxes).length) delete g.teeBoxes; }
+      this.removeGolfMarker(n, kind);
+    });
+    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
+    this.toast(`Hole ${n}: the ${col} tee removed${old?.shared.length ? ` (its box stays: the ${old.shared.map(k => TEE_SET[k].colour).join(' and ')} tee${old.shared.length > 1 ? 's stand' : ' stands'} on it)` : old?.back?.n ? ', the ground as it was' : ''}`);
+    return true;
+  }
+  /** Edit Hole Layout's tee rows: hole n's sets with their lengths and pars (back to front) and the sets Add tee can lay */
+  teeSetRows(n: number): { tees: { kind: TeeKind; m: number; par: 3 | 4 | 5 }[]; addable: TeeKind[] } {
+    const g = this.golf; if (!g) return { tees: [], addable: [] };
+    const tees = teeLengths(n, g.pins, g.tees, g.aims ?? []);
+    return { tees, addable: tees.length ? TEE_KINDS.filter(k => !tees.some(t => t.kind === k)) : [] };
+  }
+  /** the set of hole n whose tee box holds tile (x, y) (its recorded box, else the older box its marker stands on: the nearest marker's), or null */
+  private teeBoxAt(n: number, x: number, y: number): TeeKind | null {
+    const g = this.golf, grid = this.courseGrid; if (!g || !grid) return null;
+    const i = cellAt(grid, x, y); if (i < 0 || grid.surf[i] !== SURF.tee || grid.hole[i] !== n) return null;
+    const mine = TEE_KINDS.flatMap(k => g.tees.find(t => t.hole === n && t.kind === k) ?? []);
+    for (const t of mine) { const r = g.teeBoxes?.[teeKey(n, t.kind)]; if (r && recStands(grid, r, n) && inPoly(boxOutline(r.x, r.y, r.a, r.s), x, y)) return t.kind; }
+    const cells = new Set(teeCells(grid, n, i));
+    let best: TeeKind | null = null, bd = Infinity;
+    for (const t of mine) { if (!cells.has(cellAt(grid, t.x, t.y))) continue; const d = Math.hypot(t.x - x, t.y - y); if (d < bd) { bd = d; best = t.kind; } }
+    return best;
+  }
+  /** a tee set's pair of markers (a small ball each side of the line, in the set's colour), lit from the upper right; r: the ball's radius (px) */
+  private drawTeePair(ctx: CanvasRenderingContext2D, x: number, y: number, ux: number, uy: number, kind: TeeKind, r: number) {
+    const set = TEE_SET[kind], half = 1.6, d = this.dpr; // the pair stands 3.2 tiles (6.4 m) apart, across the line
+    for (const sgn of [-1, 1]) {
+      const p = this.screen(x - uy * half * sgn, y + ux * half * sgn);
+      if (p.x < -r || p.y < -r || p.x > this.cw + r || p.y > this.ch + r) continue;
+      ctx.beginPath(); ctx.ellipse(p.x - r * 0.35, p.y + r * 0.45, r * 1.05, r * 0.5, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(20,30,40,0.28)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y - r * 0.6, r, 0, Math.PI * 2); ctx.fillStyle = set.fill; ctx.fill();
+      ctx.lineWidth = Math.max(1, 0.9 * d); ctx.strokeStyle = set.rim; ctx.stroke();
+      ctx.beginPath(); ctx.arc(p.x + r * 0.32, p.y - r * 0.95, r * 0.32, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fill();
+    }
+  }
+  /** the tee set in hand at the pointer: its box in the set's colour (red and hatched where it cannot go, with the ✕), its pair of markers, and
+   *  the label by the pointer (the set's length and par from there and the price, or why not). Worked out once a cell (teeGhost): a frame only
+   *  draws a polygon, two balls and a label */
+  private drawTeeGhost(ctx: CanvasRenderingContext2D) {
+    const tp = this.teePlace; if (!tp) return;
+    const gh = this.teeGhost(); if (!gh) return;
+    const v = this.ghostView(ctx), set = TEE_SET[tp.kind], short = this.golfMode && gh.cost > this.money, bad = !!gh.why || short;
+    drawGhostPoly(v, gh.pts, bad ? 'invalid' : 'valid', { fillColor: bad ? undefined : rgbaOf(set.fill, 0.42), lineWidthPx: 2 });
+    if (!bad && this.cam.z >= 0.06) { const a = this.screen(0, 0), b = this.screen(1, 0), r = Math.max(2.2 * this.dpr, Math.hypot(b.x - a.x, b.y - a.y) * 0.22), aim = teeAim(tp.hole, this.golf!.pins, this.golf!.aims ?? []), u = boxAngle(gh, aim); this.drawTeePair(ctx, gh.x, gh.y, Math.cos(u), Math.sin(u), tp.kind, r); }
+    const gm = this.ghostMouse; if (!gm) return;
+    const size = teeBoxM(gh.s), label = gh.why ? gh.why : short ? `Not enough money: $${gh.cost.toLocaleString()}` : `${set.name} tee · ${gh.m} m, par ${gh.par} · ${size.len} x ${size.wid} m${gh.cost ? ` · $${gh.cost.toLocaleString()}` : ''}`;
+    drawGhostHint(v, gm.mx, gm.my, label, bad);
+  }
   /** each tee set's markers on the map (T254: a pair of small balls in the set's colour, drawn in code: the tee marker picture is still to come),
    *  across the line of play at each set's spot, lit from the upper right, their shadows to the lower left; from the street tier in */
   private drawTeeMarkers(ctx: CanvasRenderingContext2D) {
     const g = this.golf; if (!g || !g.tees.length || this.cam.z < 0.1) return;
     const d = this.dpr, a = this.screen(0, 0), b = this.screen(1, 0), tilePx = Math.hypot(b.x - a.x, b.y - a.y), r = Math.max(2.2 * d, tilePx * 0.22);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const tp = this.teePlace; // T268: a set being moved shows on its ghost alone
     for (const t of g.tees) {
+      if (tp?.moving && tp.hole === t.hole && tp.kind === t.kind) continue;
       const pin = g.pins.find(p => p.hole === t.hole), aim = (g.aims ?? []).filter(q => q.hole === t.hole).sort((p, q) => p.order - q.order)[0] ?? pin;
       let ux = 1, uy = 0; if (aim) { const L = Math.hypot(aim.x - t.x, aim.y - t.y); if (L > 1e-6) { ux = (aim.x - t.x) / L; uy = (aim.y - t.y) / L; } }
-      const set = TEE_SET[t.kind], half = 1.6; // the pair stands 3.2 tiles (6.4 m) apart, across the line
-      for (const sgn of [-1, 1]) {
-        const p = this.screen(t.x - uy * half * sgn, t.y + ux * half * sgn);
-        if (p.x < -r || p.y < -r || p.x > this.cw + r || p.y > this.ch + r) continue;
-        ctx.beginPath(); ctx.ellipse(p.x - r * 0.35, p.y + r * 0.45, r * 1.05, r * 0.5, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(20,30,40,0.28)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(p.x, p.y - r * 0.6, r, 0, Math.PI * 2); ctx.fillStyle = set.fill; ctx.fill();
-        ctx.lineWidth = Math.max(1, 0.9 * d); ctx.strokeStyle = set.rim; ctx.stroke();
-        ctx.beginPath(); ctx.arc(p.x + r * 0.32, p.y - r * 0.95, r * 0.32, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fill();
-      }
+      this.drawTeePair(ctx, t.x, t.y, ux, uy, t.kind, r);
     }
   }
   /** a golf game's painted course by hole (golf/holeview.ts tagByHole): untagged course areas take the hole they belong to (a hole tag, no
@@ -1244,6 +1456,7 @@ export class Game {
       const gone = new Set(migrateAreas(g, this.paint.areas));
       if (gone.size) { this.paint.takeAreas(a => gone.has(a)); this.paintRev++; this.scheduleSave(); }
     } else this.fitCourseGrid();
+    this.dropOrphanLooks(); // T271
     this.gaDirty = null; this.gaRev++;
     this.seedLooks(); // T256: every owner wears today's looks as its own (an old save changes nothing)
     this.resendCourse();
@@ -1260,7 +1473,40 @@ export class Game {
     // T256: the course default's looks are the base; each hole, the property and each facility wear their own (courseOwners)
     // T253: each surface's Round off rides along (the course default's; an owner's in its own looks)
     const { surf, collar, band, lipGrass, round } = courseLookSet(this.paint.brush, pre), own = this.courseOwners(pre);
-    return { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
+    const looks: CourseLooks = { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
+    return this.withGrasses(looks);
+  }
+  /** T271 (#812): the course's own grasses (golf/grasses.ts) into the looks, at their draw ids: each one's fill, its band (the course's first
+   *  cut), Border, Shadow and Round off, the surface it plays as and its stripes; the looks as they were with none */
+  private withGrasses(looks: CourseLooks): CourseLooks {
+    const list = this.golf?.grasses; if (!list?.length) return looks;
+    const gl = grassLooks(list, looks.collar['first-cut'], this.grassArt === 'photo');
+    const put = <T,>(a: readonly (T | undefined)[] | undefined, b: readonly (T | undefined)[]): (T | undefined)[] => { const o = a ? a.slice() : []; b.forEach((v, s) => { if (v !== undefined) o[s] = v; }); return o; };
+    return { ...looks, surf: put(looks.surf, gl.surf), band: put(looks.band, gl.band), border: put(looks.border, gl.border), shadow: put(looks.shadow, gl.shadow), round: put(looks.round, gl.round), base: gl.base, ...(gl.stripes ? { stripes: gl.stripes } : {}) };
+  }
+  /** T271: the course's own grasses (the game save's; [] outside a golf game) */
+  grasses(): readonly CustomGrass[] { return this.golf?.grasses ?? []; }
+  /** T271: the custom grass in slot k, or null */
+  grassAt(k: number): CustomGrass | null { return this.golf?.grasses?.find(g => g.k === k) ?? null; }
+  /** T271: the grasses as a whole changed (made, edited, deleted, or an undo of one): saved, and the course drawn again in them */
+  private setGrasses(list: readonly CustomGrass[], redraw = true) {
+    const g = this.golf; if (!g) return;
+    const next = normalizeGrasses(list);
+    if (next.length) g.grasses = next; else delete g.grasses;
+    this.paint.looksRev++; this.scheduleSave(); if (redraw) this.resendCourse(); this.emit();
+  }
+  /** T271: the painted family the fairway wears now (a new grass starts in it), null when it is laid as its photo */
+  private fairwayFamily(): string | null {
+    const st = this.paint.lookOf(this.paint.lookOwner, 'fairway');
+    return lookOfTex(st.tex, paintedSurfaces(), PRESETS)?.family ?? null;
+  }
+  /** T271: a custom grass slot a cell names with no grass in the save (a save edited by hand) goes back to its surface's own look: the cells
+   *  keep what they play as. A grid with no custom cell is not touched */
+  private dropOrphanLooks() {
+    const g = this.courseGrid; if (!g?.look) return;
+    const have = new Set(this.grasses().map(q => q.k));
+    for (const k of looksUsed(g)) if (!have.has(k)) applyDiff(g, lookCellsDiff(g, k), false);
+    if (!looksUsed(g).size) setLook(g, null);
   }
   /** T256 (#743): the looks each owner wears on the course grid (golf/looks.ts): the property's (the cells of no hole), each hole's and each
    *  practice facility's (the cells of no hole in its footprint, zones); owners that look alike share one entry; undefined when every owner
@@ -1408,7 +1654,7 @@ export class Game {
   sendCourseChunks(box: readonly number[], stale = false, at = performance.now()) {
     const g = this.contourGrid(); if (!g) return;
     // a wide Border reaches further, and so does Round off's wider kernel (T253)
-    const reach = courseEditReach(widestCollar(courseStyles(this.courseBorders()))) + roundReach(this.courseLooks()), R = reach + COURSE_PATCH_REACH;
+    const lk = this.courseLooks(), reach = courseEditReach(widestCollar(courseStyles(lk.border, lk.base))) + roundReach(lk), R = reach + COURSE_PATCH_REACH; // (T271: a custom grass's Border too)
     this.queueChunks(courseChunksIn(g, box, reach), stale ? [box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R] : null, at);
   }
   /** chunks for the contour worker: a job now, or (one in flight) merged into the next */
@@ -1426,7 +1672,7 @@ export class Game {
     this.cgWait = null; this.cgJob = true;
     const chunks: number[] = []; for (const k of w.chunks) chunks.push(Math.floor(k / 4096), k % 4096);
     const now = this.growMonth();
-    this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()], paths: this.coursePaths() }, (out, ms) => {
+    this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()], paths: this.coursePaths(), flips: [...this.mowFlips()] }, (out, ms) => {
       this.perf.courseJobMs = ms; this.perf.courseJobChunks = chunks.length / 2;
       const t0 = performance.now();
       this.cgJob = false;
@@ -1782,7 +2028,8 @@ export class Game {
       this.grassWait.delete(key);
       const keep: string[] = [];
       for (const p of patches ?? []) for (const l of p.course?.layers ?? []) {
-        const surface = grassSurface(SURFACE_TEX_ID[SURF_SURFACE[l.s] ?? 'other']); if (!surface) continue;
+        const k = grassSlot(l.s), p = k ? this.grassAt(k)?.plays : undefined; // T271: a custom grass is cared for as the grass it plays as
+        const surface = grassSurface(SURFACE_TEX_ID[p ? golfSurfaceOf(p) : SURF_SURFACE[l.s] ?? 'other']); if (!surface) continue;
         l.fill.forEach((r, k) => { if (ringArea(r) <= 0) return; const id = `${key}/${l.s}/${k}`, step = Math.ceil(r.length / 2000), pts: number[] = []; for (let j = 0; j + 1 < r.length; j += 2 * step) pts.push(r[j]!, r[j + 1]!); keep.push(id); this.grass.register(id, pts, surface, 'maintained'); });
       }
       for (const id of this.grassZones.get(key) ?? []) if (!keep.includes(id)) this.grass.remove(id);
@@ -1891,6 +2138,14 @@ export class Game {
   private laybys = new Map<string, number[]>(); private laybyDirty: number[][] = [];
   /** the farms (ext/farms): the accepted parcels follow the network; their props by key (auto 'farm:' + key, never saved), the keys queued to compose, the dev switch */
   private farmMap = new FarmMap(); private farmProps = new Map<string, Prop[]>(); private farmQueue = new Set<string>(); private farmsEnabled = true; private farmTick = 0;
+  /** T259 (#759): the farm model new farms compose with (ext/farms FARM_MODEL: the farmstead set back on its lane, the fields by the month); a
+   *  save from before T259 has none, and its farms keep model 1 until they are rebuilt (a road edit that moves a parcel, a new farm on a new road:
+   *  farmsNew, saved with it). farmPropKey: each farm prop's place in its composition (a month's change keeps every prop that stands where it
+   *  stood); the ground each farm last sent; the month the farms show; each farm's season (farmSeason) as composed; its stand-in labels */
+  private farmModel: FarmModel = FARM_MODEL; private farmsNew = new Set<string>(); private farmPropKey = new WeakMap<Prop, string>(); private farmGround = new Map<string, string>();
+  private farmMonthNow = -1; private farmSeasons = new Map<string, string>(); private farmLabels = new Map<string, { p: Drawable; text: string; box: number[] }[]>();
+  /** T259 (dev): the calendar month the farms show (window.__game.farmMonthOverride = 0..11, 0 January; setFarmMonth); null: the season clock's */
+  farmMonthOverride: number | null = null;
   /** scratch for the starter check (the lot's box, the props found); the planner's last building refresh (ms) and the timer of the town's lot refresh */
   private lotBox: BBox = [0, 0, 0, 0]; private lotHits = new Set<Prop>(); private blocksAt = -Infinity; private lotBlocksTimer = 0;
   private raf = 0; private last = 0;
@@ -2000,6 +2255,7 @@ export class Game {
     this.net.paintData = false;
     this.ground = new GroundCache(this.gl, boot.groundWorkers ?? undefined);
     this.ground.budgetPx = boot.groundPx;
+    if (boot.tileMB != null) this.ground.tileBytes = Math.round(boot.tileMB * 1e6); // (T272: a dev build's ?boot=tileMB:N, MB as groundPx's)
     // the ground workers' limits and levers (T157 the lab's; T166 the game's too: its workers make their textures on first use)
     this.ground.limits = { tiles: boot.tileSources, painted: boot.paintedSources, eager: boot.eagerPhotos ? [...boot.eagerPhotos] : null, saveCache: boot.saveTextureCache, readCache: boot.readTextureCache, soft: boot.softCanvases, lazy: boot.lazyTextures, tints: boot.lazyTints };
     this.traffic = new SimClient(boot.sim);
@@ -2024,6 +2280,10 @@ export class Game {
     try { localStorage.removeItem('capitalempire.grassShine'); const s = localStorage.getItem(SHINE_KEY); if (s) this.shine = clampShineLook(JSON.parse(s)); } catch { /* the default look */ }
     { const q = new URLSearchParams(location.search).get('grassShine'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.shine = { ...this.shine, on: q === 'on' }; }
     this.ground.grassShine = this.shine.on; this.ground.shineWeights = { ...this.shine.weights };
+    // T248: the water's motion as the player left it (the gear menu's Water motion; on by default), and ?waterMotion=off|on (the dev server)
+    try { const s = localStorage.getItem(WATER_MOTION_KEY); if (s) this.waterLook = clampWaterMotion(JSON.parse(s)); } catch { /* the default look */ }
+    { const q = new URLSearchParams(location.search).get('waterMotion'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.waterLook = { ...this.waterLook, on: q === 'on' }; }
+    this.ground.waterMotion = this.waterLook.on;
     try { this.groundVariety = localStorage.getItem('capitalempire.groundVariety') !== '0'; } catch { /* the default, on */ }
     this.ground.living = { on: this.groundVariety, debug: false };
     try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
@@ -2046,7 +2306,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
@@ -2082,8 +2342,8 @@ export class Game {
 
   subscribe(fn: () => void) { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; }
   emit() { for (const l of this.listeners) l(); }
-  toast(text: string, kind: Toast['kind'] = 'info') {
-    this.toasts.push({ id: this.toastId++, text, t: performance.now(), kind });
+  toast(text: string, kind: Toast['kind'] = 'info', scene?: SceneRef) {
+    this.toasts.push({ id: this.toastId++, text, t: performance.now(), kind, ...(scene ? { scene } : {}) });
     if (this.toasts.length > 4) this.toasts.shift();
     this.emit();
   }
@@ -2140,7 +2400,7 @@ export class Game {
     else if (!save || !this.load(save)) {
       // a save that read fine but failed to load: keep its bytes before the new game's autosave (T042), or never save over it
       if (save) { if (await backupTownSlot('loadfailed')) readNote = { text: 'The save could not be loaded. It is kept as a backup; a new game started.', kind: 'warn' }; else { this.saveBlocked = true; readNote = { text: 'The save could not be loaded or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; } if (this.dead) return; }
-      setLotModel(LATEST_LOT_MODEL); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
+      setLotModel(LATEST_LOT_MODEL); this.farmModel = FARM_MODEL; this.farmsNew.clear(); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
     tick(0.7);
@@ -2176,6 +2436,7 @@ export class Game {
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
     for (const ps of this.townTrees.values()) for (const p of ps) this.sprites.remove(p);
     this.townTrees.clear(); this.perf.townTrees = 0; this.townClump = makeNoise(this.terrain.seed ^ 0x7c1a); this.lotBoxes.clear(); this.paintBoxes.clear();
+    this.belt = beltField(this.terrain.seed, this.terrain.waters); this.beltN.clear(); this.perf.belt = 0;
     this.ground.dropCasters('f:'); this.ground.dropCasters('t:');
   }
   /** a new game by the start mode (?start=): a range start, else (or with ?start=town) the old start; true when a golf game was laid. False
@@ -2183,6 +2444,8 @@ export class Game {
   private newGame(): boolean {
     // a new town composes its house lots with the latest shipped lot model (T160; the save records it: lotModel)
     setLotModel(LATEST_LOT_MODEL);
+    // T259: and its farms with the latest farm model (the save records it: farmModel)
+    this.farmModel = FARM_MODEL; this.farmsNew.clear();
     if (this.startMode === 'valley') return false;
     return (this.startMode === 'range' && this.newRangeGame()) || this.newGolfGame();
   }
@@ -2204,7 +2467,7 @@ export class Game {
       this.setBizDefs([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph, ground: 'dirt' }]; // T239: the car park starts as packed dirt
       // the ramp from the range to the first hole starts at the range card (P24 Phase 4a, T132)
-      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0, guide: newRangeGuide() }; // T239: the guided build's card
+      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0, guide: newRangeGuide() }; this.clubLegacy = false; // T239: the guided build's card (T214: a new club)
       // the range business (P24, T129): the starting range (T239: the guided build: no walkway laid, the player lays its path; the practice area
       // beside the car park is land for sale until bought)
       // (T237: its plot set back from the road, its car park in the frontage strip that leaves)
@@ -2245,7 +2508,7 @@ export class Game {
       this.setBizDefs([{ id: 1, type: 'clubhouse', x: vx, y: vy, w: vw, h: vh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
       this.paint.load(s.paints.map((a, i) => toTuple({ id: i + 1, ...a })));
-      this.golf = s.save; this.golf.progress = emptyProgress();
+      this.golf = s.save; this.golf.progress = emptyProgress(); this.clubLegacy = false; // (T214: a new club, its founding drive at the first frame)
       for (const p of dressCourse(s.layout, seed)) {
       const i = LIB_INDEX.get(p.id);
       if (i !== undefined) {
@@ -2398,7 +2661,7 @@ export class Game {
    *  cells per frame (forest and town together). A town cell has key + N * N (N cells a side) */
   private plantForest(X0: number, Y0: number, X1: number, Y1: number, g = FOREST_VIEW_MARGIN) {
     const N = MAP / FOREST_CELL, NN = N * N, [ci0, cj0, ci1, cj1] = forestCellRange(X0, Y0, X1, Y1, g);
-    let todo: number[] | null = null;
+    let todo: number[] | null = null; this.perf.plantMs = 0;
     for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) {
       const key = cj * N + ci;
       if (!this.forest.has(key)) { if (!todo) todo = []; todo.push(key); }
@@ -2411,17 +2674,34 @@ export class Game {
     const m = tileOf((X0 + X1) / 2, (Y0 + Y1) / 2), mx = clamp(Math.floor(m.x / FOREST_CELL), 0, N - 1), my = clamp(Math.floor(m.y / FOREST_CELL), 0, N - 1);
     const dd = (q: number) => { const k = q % NN; return ((k % N) - mx) ** 2 + (Math.floor(k / N) - my) ** 2; };
     todo.sort((p, q) => dd(p) - dd(q));
+    const t0 = performance.now();
     for (let k = 0; k < Math.min(2, todo.length); k++) {
+      if (k > 0 && performance.now() - t0 > PLANT_FRAME_MS) break; // (T265: a second cell only while the frame's planting is short: no two heavy cells in one frame)
       const q = todo[k]!, key = q % NN;
       if (q >= NN) this.plantTownCell(key, key % N, Math.floor(key / N)); else this.plantCell(key, key % N, Math.floor(key / N));
     }
+    this.perf.plantMs = performance.now() - t0; // (T265: the bench's hitch check)
   }
   /** plant one forest cell as sprites (not props: no selection, bulldozing or saving), without the trees on or beside anything built (T025b) */
   private plantCell(key: number, ci: number, cj: number) {
     const { free } = this.treeClearance(ci, cj);
     const out = this.treeSprites(forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj).filter(t => free(t.x, t.y, 1)));
-    this.forest.set(key, out); this.perf.forest += out.length; this.ground.casters([['f:' + key, this.casterRecs(out)]]);
+    // T265: the cell's belt along its rivers and creeks (river-trees.ts), cleared as the forest is (free, FOREST_CLEAR)
+    const belt = this.beltOn && this.belt ? this.treeSprites(riverBeltCell(this.terrain.seed, this.terrain.cls, this.slope, this.belt, ci, cj, free, FOREST_CLEAR)) : [];
+    if (belt.length) { out.push(...belt); this.beltN.set(key, belt.length); this.perf.belt += belt.length; }
+    this.forest.set(key, out); this.perf.forest += out.length - belt.length; this.ground.casters([['f:' + key, this.casterRecs(out)]]);
   }
+  /** T265: the belts (river-trees.ts) take the ground near the water: a town tree is not planted where the belt is thick (within BELT.full + 3
+   *  tiles of the bank, outside its open stretches), so their trunks never stand in each other */
+  private beltClaims(x: number, y: number): boolean {
+    const f = this.belt; if (!this.beltOn || !f) return false;
+    const q = f.water.nearest(f.water.near(x, y, x, y), x, y, { d: 0, kind: 0, nx: 0, ny: 0 });
+    return q.d - (q.kind === 0 ? BELT.river.bank : BELT.creek.bank) < BELT.full + 3;
+  }
+  /** T265 (#794): the tree belts along the rivers and creeks on (the default) or off (the dev switch window.__game.setRiverTrees(false): the
+   *  forest and the town trees as before): every planted cell is dropped and planted again as the camera reaches it */
+  setRiverTrees(on: boolean) { if (on === this.beltOn) return; this.beltOn = on; this.dropTownTrees(0, 0, MAP, MAP); }
+  get riverTrees() { return this.beltOn; }
   /** the sprites of planted trees (not props), skipping the ones in front of a tunnel mouth */
   private treeSprites(trees: ForestTree[]): Prop[] {
     const out: Prop[] = [];
@@ -2450,6 +2730,8 @@ export class Game {
     const rb = this.range.scene?.box, pb = this.range.scene?.practice.box; // the driving range's plot and its practice area keep clear of trees (P24, T129, T130)
     const lab = this.labClear; // the lot lab's lot and street keep clear of trees (stageLab): only the lot's own art shows round its props
     const places = this.placeBoxes().filter(b => boxNear(b, x0, y0, x1, y1, g)); // T219: the iconic places keep clear of trees
+    // T259: a model 2 farm keeps the river belts and the town trees off its land (its windbreak, orchard, fields and yard are its own planting)
+    const farms: FarmParcel[] = []; for (const [k, f] of this.farmMap.farms) if (this.farmModelOf(k) === 2 && boxNear(parcelBox(f.p), x0, y0, x1, y1, g)) farms.push(f.p);
     // T229: a hole's frame trees (props): a planted tree keeps 2 tiles off them, so the woods never grow through a frame
     const frames: number[] = []; if (grid) for (const p of this.propGrid.query([x0 - g, y0 - g, x1 + g, y1 + g])) if (p.frame) frames.push(p.x, p.y);
     const free = (x: number, y: number, r: number) => {
@@ -2459,6 +2741,7 @@ export class Game {
       if (rb && x > rb[0] - r && x < rb[2] + r && y > rb[1] - r && y < rb[3] + r) return false;
       if (pb && x > pb[0] - r && x < pb[2] + r && y > pb[1] - r && y < pb[3] + r) return false;
       for (const l of lots) if (lotGap(l, x, y) < r) return false;
+      for (const f of farms) if (parcelGap(f, x, y) < r) return false;
       const p = { x, y };
       for (const s of this.net.segsNear(p, r + 16)) if (segDist(p, s) < s.cls.h + s.cls.walk + r + 0.5) return false;
       for (const d of bizs) if (x > d.x - r && x < d.x + d.w + r && y > d.y - r && y < d.y + d.h + r) return false;
@@ -2473,7 +2756,7 @@ export class Game {
   /** plant one town-tree cell as sprites: the predicates are built from the lots, roads, businesses, car parks, toll plazas, painted areas and portals near the cell */
   private plantTownCell(key: number, ci: number, cj: number) {
     const { lots, free } = this.treeClearance(ci, cj);
-    const near = (x: number, y: number) => { for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
+    const near = (x: number, y: number) => { if (this.beltClaims(x, y)) return false; for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
     const out = this.treeSprites(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near));
     this.townTrees.set(key, out); this.perf.townTrees += out.length; this.ground.casters([['t:' + key, this.casterRecs(out)]]);
   }
@@ -2490,7 +2773,7 @@ export class Game {
       const ci = k % N, cj = Math.floor(k / N);
       if (!boxNear([x0, y0, x1, y1], ci * FOREST_CELL, cj * FOREST_CELL, (ci + 1) * FOREST_CELL, (cj + 1) * FOREST_CELL, g)) continue;
       for (const p of ps) this.sprites.remove(p);
-      this.perf.forest -= ps.length; this.forest.delete(k);
+      const nb = this.beltN.get(k) ?? 0; this.perf.forest -= ps.length - nb; this.perf.belt -= nb; this.beltN.delete(k); this.forest.delete(k);
     }
   }
   /** a lot's rectangle changed (or went): the town trees around its old and new box are dropped (a change of level alone does not move the trees) */
@@ -3071,16 +3354,119 @@ export class Game {
     return { id, name: placeName(def, this.townName(0)), kind: def.kind, pop: def.pop, w: def.preset.w * 2, d: def.preset.d * 2, standIns: [...new Set(Object.values(def.standIns))], town: this.traffic.pop };
   }
   closePlaceCard() { this.selectedPlace = null; this.emit(); }
+
+  // ---------- T242 (#702, P28 3): set the scene (scenes.ts: the places, the picture for their state, the lines and numbers; ui/SceneCard.tsx)
+  /** the picture card open (null: none), and its view kept half a second (its numbers move with the day; nothing is read while it is shut) */
+  sceneRef: SceneRef | null = null; private sceneCache: { ref: SceneRef; at: number; v: SceneCardView | null } | null = null;
+  /** opens the card on a place (null shuts it); a place with no picture for its state opens nothing (never a placeholder) */
+  openScene(ref: SceneRef | null) { this.sceneRef = ref; this.sceneCache = null; if (ref && !this.sceneCard()) this.sceneRef = null; this.emit(); }
+  closeScene() { if (!this.sceneRef) return; this.sceneRef = null; this.sceneCache = null; this.emit(); }
+  /** the card's tab (the range's road, bays, shop, green or home; a business's Outside or Inside) */
+  sceneView(view: string) { const r = this.sceneRef; if (!r || r.kind === 'farm') return; this.sceneRef = { ...r, view }; this.sceneCache = null; this.emit(); }
+  /** whether the range or the clubhouse has any picture (the cards' Set the scene buttons), or an iconic place */
+  sceneArt(kind: 'range' | 'club'): boolean { return kind === 'range' ? this.golf?.start === 'range' && sceneArt('range') : !!this.golf && sceneArt('club'); }
+  placeSceneArt(id: string): boolean { return placeHasArt(id); }
+  sceneCard(): SceneCardView | null {
+    const r = this.sceneRef; if (!r) return null;
+    const now = performance.now(), c = this.sceneCache;
+    if (c && c.ref === r && now - c.at < 500) return c.v;
+    const v = this.sceneOf(r); this.sceneCache = { ref: r, at: now, v }; return v;
+  }
+  private sceneOf(r: SceneRef): SceneCardView | null {
+    const town = this.townName(0) ?? 'the town';
+    switch (r.kind) {
+      case 'range': { const f = this.rangeSceneFacts(); return f && rangeScene(f, r.view); }
+      case 'club': {
+        const g = this.golf, bk = this.dayBook; if (!g || !bk || !sceneArt('club') || !this.bizDefs.some(d => d.type === 'clubhouse')) return null;
+        const v = clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen));
+        return clubScene({ tier: g.tier, members: v.clubMembers, visitors: v.today.visitors, fees: v.today.fees, rounds: v.season.members + v.season.visitors }, r.view);
+      }
+      case 'lot': {
+        const l = this.traffic.lots.get(r.key), p = LOT_PLACES.find(q => q.id === r.place); if (!l || !p) return null;
+        return lotScene(p, { level: l.level, decline: l.decline, jobs: lotJobs(l), town, pop: this.traffic.pop }, r.view);
+      }
+      case 'farm': { const f = this.farmMap.farms.get(r.key); return f ? farmScene({ ha: (f.p.w * f.p.d * 4) / 10000, town, fortune: townFortune(this.traffic.lots.values()) }) : null; }
+      case 'place': { const pc = this.places.find(q => q.id === r.id), def = placeDef(r.id); return pc && def ? placeScene({ id: r.id, name: placeName(def, this.townName(0)), pop: def.pop, w: def.preset.w * 2, d: def.preset.d * 2, fortune: townFortune(this.traffic.lots.values()) }, r.view) : null; }
+    }
+  }
+  /** the range's facts for its card (from the range card's view) */
+  private rangeSceneFacts(): RangeSceneFacts | null {
+    const v = this.golf?.start === 'range' ? this.range.view() : null; if (!v) return null;
+    const put = v.practice.find(p => p.id === 'putting');
+    return {
+      owned: v.biz.owned, putting: put?.state === 'open', home: v.home.stage, homeName: v.home.name, homeNext: v.home.next, lifetime: v.home.total,
+      golfers: v.today.golfers, playing: v.today.playing, queue: v.today.queue, lost: v.today.lost, bays: v.stats.bays, price: v.biz.price,
+      seasonTakings: v.biz.season.takings, seasonBuckets: v.biz.season.buckets, shopExtra: v.stats.extra, green: { today: put?.today ?? 0, golfers: put?.golfers ?? 0, takings: put?.takings ?? 0 },
+    };
+  }
+  /** the building a library picture shows (a view's, a turned set's, an east picture's own subject; a variation keeps its id: scenes.ts reads it) */
+  private sceneSubject(item: number): string {
+    const s = sizeKey(LIBRARY[item]?.id ?? ''); const v = /^view:(.+):(ne|nw|se|sw)$/.exec(s);
+    return v ? v[1]! : s.startsWith('east:') ? s.slice(5) : s;
+  }
+  /** a click on the map with Select inspects what it hit (the map press shut the card first): a range piece's view (its ground: the road), the
+   *  clubhouse, an iconic place, a business's building on its lot, a farm's farmhouse. Each opens only when it has a picture */
+  private inspectScene(p: Prop | null, club = false): void {
+    const a = p?.auto ?? '';
+    if (club) { if (this.sceneArt('club')) this.openScene({ kind: 'club' }); return; }
+    if (a.startsWith('range:') || !p) { if (this.sceneArt('range')) this.openScene({ kind: 'range', view: a ? rangeViewOfKey(a.slice(6)) : 'road' }); return; }
+    if (a.startsWith('place:')) { if (placeHasArt(a.slice(6))) this.openScene({ kind: 'place', id: a.slice(6) }); return; }
+    // (T270: a lot is the business it is drawn as: the picture newart.ts lookOf draws, else its own)
+    const drawn = this.sceneSubject(lookOf(p).item), own = this.sceneSubject(p.item);
+    if (a.startsWith('lot:')) { const pl = lotPlaceOf(drawn) ?? lotPlaceOf(own); if (pl && lotPlaceHasArt(pl)) this.openScene({ kind: 'lot', key: a.slice(4), place: pl.id }); return; }
+    if (a.startsWith('farm:') && (FARMHOUSE_SUBJECTS.has(drawn) || FARMHOUSE_SUBJECTS.has(own))) this.openScene({ kind: 'farm', key: a.slice(5) });
+  }
+  /** the range's pictures as last read (null: not yet, so a load never toasts), and the tick that reads them about once a second */
+  private sceneKeys: Record<RangeSceneView, string> | null = null; private sceneTick = 0;
+  /** an event turned a range view's picture (an upgrade built, the putting green open, the home smartened or moved): a toast offers its card */
+  private sceneNewsCheck() {
+    const b = this.golf?.range; if (this.golf?.start !== 'range' || !b || ++this.sceneTick % 6) return;
+    const f = { owned: b.owned, putting: this.range.practiceFacts()?.putting === 'open', home: homeStage(b), lifetime: b.total.takings }, k = rangeSceneKeys(f), was = this.sceneKeys;
+    this.sceneKeys = k; if (!was) return;
+    const view = (Object.keys(k) as RangeSceneView[]).find(v => k[v] && k[v] !== was[v]);
+    if (view) this.toast(rangeNews(view, f), 'good', { kind: 'range', view });
+  }
   /** the places every map gets (dev: window.__game.placeDefs) */
   readonly placeDefs = PLACE_DEFS;
   /** the farms follow the network (ext/farms): the parcels of the changed country roads are derived again (all after a load or a
    *  new valley); the parcels that went lose their props and ground, the new ones queue to compose */
-  private farmsUpdate(full = false) {
+  private farmsUpdate(full = false, load = false) {
     if (!this.farmsEnabled || !this.terrain) return;
+    // (T259: the model 2 farms' parcels keep the river belts and the town trees off them: treeClearance; the trees round a farm that came or went
+    //  are planted again)
+    const before = new Map<string, number[]>(); for (const [k, f] of this.farmMap.farms) if (this.farmModelOf(k) === 2) before.set(k, parcelBox(f.p));
     const { added, removed } = this.farmMap.update(this.net, { cls: this.terrain.cls, seed: this.seed }, { towns: this.townPts, site: this.site, parks: this.farmParks() }, this.traffic.lots, full || this.net.lastFull);
-    for (const k of removed) this.dropFarm(k);
-    for (const k of added) this.farmQueue.add(k);
+    // T259: an old save's farm that is rebuilt (its parcel changed, or a new farm on a new road) takes the new model; a load composes each as saved
+    const added2 = new Set(added);
+    for (const k of removed) { this.dropFarm(k); if (!added2.has(k)) this.farmsNew.delete(k); }
+    for (const k of added) { if (!load && this.farmModel === 1) this.farmsNew.add(k); this.farmQueue.add(k); }
+    if (!load) {
+      for (const k of removed) { const b = before.get(k); if (b) this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!); }
+      for (const k of added) { const f = this.farmMap.farms.get(k); if (f && this.farmModelOf(k) === 2) { const b = parcelBox(f.p); this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!); } }
+    }
   }
+  /** T259: the model a farm composes with: the game's (a new game's FARM_MODEL), or the new one for an old save's farm rebuilt since */
+  private farmModelOf(key: string): FarmModel { return this.farmModel === 1 && !this.farmsNew.has(key) ? 1 : FARM_MODEL; }
+  /** T259: the calendar month the farms show (0 January): the season clock's (golf/calendar.ts seasonMonth; on tournament day read a unit
+   *  earlier, as golfMonthIndex does), or the dev override */
+  farmMonth(): number {
+    if (this.farmMonthOverride !== null) return ((Math.floor(this.farmMonthOverride) % 12) + 12) % 12;
+    const r = this.traffic.round, c = this.traffic.clockTime(performance.now()) - (r.stage !== 'free' ? 1 : 0);
+    return seasonMonth(c);
+  }
+  /** T259: the month moved on: the model 2 farms whose look changes (a field's crop state, the orchard's leaves: farmSeason) compose again,
+   *  FARMS_PER_FRAME a frame, each keeping every prop and patch that did not change */
+  private farmSeasonTick() {
+    const m = this.farmMonth(); if (m === this.farmMonthNow) return;
+    this.farmMonthNow = m;
+    for (const [k, f] of this.farmMap.farms) { const model = this.farmModelOf(k); if (model !== 2 || !this.farmProps.has(k)) continue; if (farmSeason(f.p, f.seed, model, m) !== this.farmSeasons.get(k)) this.farmQueue.add(k); }
+  }
+  /** T259 (dev, the shots and the bench): the farms show calendar month m (0 January; null: the season clock again) */
+  setFarmMonth(m: number | null) { this.farmMonthOverride = m; this.farmSeasonTick(); }
+  /** T259 (dev, the bench's before and after): every farm composes with model m (1: T005's, as before T259; 2: the new); a save then keeps it */
+  setFarmModel(m: FarmModel) { this.farmModel = m; this.farmsNew.clear(); for (const k of this.farmMap.farms.keys()) this.farmQueue.add(k); this.dropTownTrees(0, 0, MAP, MAP); this.scheduleSave(); }
+  /** T259: the farms waiting to compose (the bench and the shots wait for none) */
+  get farmsPending(): number { return this.farmQueue.size; }
   /** what the farms keep clear of besides the town and the site: the car parks, and in golf mode the course's rect too (the farm map's update and stale checks read the same list) */
   private farmParks(): { x: number; y: number; w: number; h: number }[] {
     if (!this.golf) return this.parkDefs;
@@ -3094,6 +3480,7 @@ export class Game {
     const ps = this.farmProps.get(key);
     if (ps) { for (const p of ps) if (this.props.has(p)) this.removeProp(p); this.farmProps.delete(key); }
     this.setLotGround('farm:' + key, null);
+    this.farmGround.delete(key); this.farmSeasons.delete(key); this.farmLabels.delete(key);
   }
   /** every farm goes (a reset, the farms switched off) */
   private dropAllFarms() {
@@ -3103,18 +3490,44 @@ export class Game {
   /** a farm composes on apply: its farmhouse, barn and fields as auto props ('farm:' + key, never saved) and its ground patches; at most FARMS_PER_FRAME a frame */
   private applyFarmQueue() {
     const q = this.farmQueue; if (!q.size) return;
-    let k = 0;
-    for (const key of q) { if (k++ >= FARMS_PER_FRAME) break; q.delete(key); this.placeFarm(key); }
+    let k = 0; const t0 = performance.now();
+    // (T259: and no more once the frame's farms took FARM_FRAME_MS: a month's change composes every farm whose fields turned, a few a frame)
+    for (const key of q) { if (k++ >= FARMS_PER_FRAME || (k > 1 && performance.now() - t0 > FARM_FRAME_MS)) break; q.delete(key); this.placeFarm(key); }
   }
+  /** a farm composes (its model, the month: T259) as auto props ('farm:' + key, never saved) and its ground patches. Composed before (a new
+   *  month), the props that stand where they stood stay and only the rest go and come (a month moves only the orchard's trees), and the ground
+   *  is sent only when it changed (a field's crop state) */
   private placeFarm(key: string) {
     const f = this.farmMap.farms.get(key); if (!f) return;
-    this.dropFarm(key);
-    const fp = farmPreset(f.p), c = fp ? compose({ o: f.p.o, u: f.p.u, n: f.p.n, w: f.p.w, d: f.p.d }, { use: LU.NONE, level: LV.BUILT, decline: 0, seed: f.seed, preset: fp.id }) : composeFarm(f.p, f.seed), ps: Prop[] = [], pk = 'farm:' + key;
-    for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, pk, q.foot ? { foot: q.foot } : undefined)); }
-    this.farmProps.set(key, ps); this.setLotGround(pk, c.ground);
+    this.farmQueue.delete(key);
+    const model = this.farmModelOf(key), month = this.farmMonth(), pk = 'farm:' + key;
+    const fp = farmPreset(f.p), c = fp ? compose({ o: f.p.o, u: f.p.u, n: f.p.n, w: f.p.w, d: f.p.d }, { use: LU.NONE, level: LV.BUILT, decline: 0, seed: f.seed, preset: fp.id }) : composeFarm(f.p, f.seed, { model, month });
+    const old = new Map<string, Prop[]>(), ps: Prop[] = [];
+    for (const p of this.farmProps.get(key) ?? []) { const k = this.farmPropKey.get(p); if (k === undefined || !this.props.has(p)) { if (this.props.has(p)) this.removeProp(p); continue; } const l = old.get(k); if (l) l.push(p); else old.set(k, [p]); }
+    for (const q of c.props) {
+      const k = `${q.id}|${q.x}|${q.y}|${q.flip ? 1 : 0}|${q.scale}|${q.foot ? q.foot.join(',') : ''}`, kept = old.get(k)?.pop();
+      if (kept) { ps.push(kept); continue; }
+      const i = LIB_INDEX.get(q.id); if (i === undefined) continue;
+      const p = this.addProp(i, q.x, q.y, q.flip, q.scale, pk, q.foot ? { foot: q.foot } : undefined); this.farmPropKey.set(p, k); ps.push(p);
+    }
+    for (const l of old.values()) for (const p of l) if (this.props.has(p)) this.removeProp(p);
+    this.farmProps.set(key, ps);
+    const gs = JSON.stringify(c.ground); if (this.farmGround.get(key) !== gs) { this.setLotGround(pk, c.ground); this.farmGround.set(key, gs); }
+    this.farmSeasons.set(key, fp ? '' : farmSeason(f.p, f.seed, model, month));
+    // T259: the model 2 farm's stand-in labels ("Stand In for <art>": the windbreak's and the orchard's first tree, each crop state's biggest field, the lane)
+    if (fp || model !== 2) { this.farmLabels.delete(key); return; }
+    const labels: { p: Drawable; text: string; box: number[] }[] = [], at = LIB_INDEX.get('world:mailbox') ?? 0;
+    for (const s of farmStandIns(f.p, f.seed, month)) {
+      let p: Drawable | null = null, best = 9;
+      if (s.id) for (const q of ps) { if (LIBRARY[q.item]!.id !== s.id) continue; const d = Math.hypot(q.x - s.x, q.y - s.y); if (d < best) { best = d; p = q; } }
+      if (s.id && !p) continue;
+      p ??= { item: at, x: s.x, y: s.y, flip: false, scale: 1e-4, x0: s.x, y0: s.y, x1: s.x, y1: s.y };
+      labels.push({ p, text: s.text, box: [s.x - 2, s.y - 2, s.x + 2, s.y + 2] });
+    }
+    this.farmLabels.set(key, labels);
   }
   /** the dev switch (window.__game.farmsOn(false)): farms on (the default) or off; off removes every farm's props and ground */
-  farmsOn(on: boolean) { this.farmsEnabled = on; if (on) this.farmsUpdate(true); else this.dropAllFarms(); }
+  farmsOn(on: boolean) { this.farmsEnabled = on; if (on) { this.farmsUpdate(true, true); this.dropTownTrees(0, 0, MAP, MAP); } else this.dropAllFarms(); }
   /** median trees, roundabout trees and traffic lights follow the road network (only what the last rebuild changed) */
   /** the town street lamps waiting for houses near them (AutoProp.town), by key: tried again when the lots change (sendBlocks) */
   private lampWait = new Map<string, AutoProp>();
@@ -3183,7 +3596,7 @@ export class Game {
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false); this.syncBlockLawns();
     this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP]); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs); this.syncStopCuts();
-    this.farmsUpdate(true);
+    this.farmMonthNow = -1; this.farmsUpdate(true, true);
     this.syncPlaces();
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
     this.sendGolf();
@@ -3286,10 +3699,13 @@ export class Game {
     const key = 'pin:' + pin.hole;
     const id = pin.hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID;
     const item = LIB_INDEX.get(id);
+    // (T269: the flag stands on the day's cup, today's or yesterday's, else on the placed pin)
+    const dp = this.golf.dayPins, at = [pin, ...(dp ? [pinIn(dp.today, pin.hole), pinIn(dp.prev, pin.hole)] : [])].filter((q): q is DayPin | typeof pin => !!q);
     for (const p of this.props) {
-    if (p.item === item && Math.hypot(p.x - pin.x, p.y - pin.y) < 2) { this.golfProps.set(key, p); break; }
+    if (p.item === item && at.some(q => Math.hypot(p.x - q.x, p.y - q.y) < 2)) { this.golfProps.set(key, p); break; }
     }
     }
+    this.flagRev = -1; // (T269: the flags are put on today's cups again)
     // the pictures that stood in for the tee markers before T111 (a flagstick, the bag trolley): a save's prop of one on a tee goes (never a pin's)
     const oldTee = new Set(OLD_TEE_IDS.flatMap(id => LIB_INDEX.get(id) ?? [])), pinProps = new Set(this.golfProps.values()), tees = this.golf.tees ?? [];
     for (const p of [...this.props]) if (oldTee.has(p.item) && !pinProps.has(p) && tees.some(t => Math.hypot(p.x - t.x, p.y - t.y) < 2)) this.removeProp(p);
@@ -3348,6 +3764,7 @@ export class Game {
     }
     const holes0 = this.holesBuilt();
     this.golf.pins = r.pins; this.golf.tees = r.tees;
+    if (kind === 'pin') this.setTodayPin(hole, x, y); // T269: the pin dragged is today's cup
     if (this.golf.start === 'range' && this.holesBuilt() !== holes0) this.sendGolf(); // T090: a new hole speeds a range start's town
     this.selectedGolfMarker = null;
     this.scheduleSave();
@@ -3357,7 +3774,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
+  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.teePlace = null; /* T268 */ this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -4117,7 +4534,7 @@ export class Game {
       const r = s.reward ?? 0; if (r > 0) this.traffic.spend('construction', -r); // (the reward offsets the builds: booked against construction)
       this.toast(`Guide: ${s.title} ✓${r > 0 ? ` (+$${r.toLocaleString()})` : ''}`, 'good');
     }
-    if (!rangeGuideLines(gd)) this.toast('The guide is done: your range is built. Grow it, and the course, your way', 'good');
+    if (!rangeGuideLines(gd)) this.toast('The guide is done: your range is built. Grow it, and the course, your way', 'good', this.sceneArt('range') ? { kind: 'range', view: 'road' } : undefined); // (T242: Set the scene)
     this.scheduleSave(); this.emit();
   }
   /** Skip on a guide line (no reward), or Skip guide (id null): the whole card goes */
@@ -4173,7 +4590,9 @@ export class Game {
     if (tournamentDue(g.invited?.at, boundary)) return;
     const year = yearOf(this.seasonsDone());
     g.founding = (g.founding ?? 0) + 1;
-    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited, ...(g.range ? { range: { ...g.range.season } } : {}), ...(this.traffic.room !== null ? { room: this.traffic.room } : {}) };
+    const cl = g.club;
+    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited, ...(g.range ? { range: { ...g.range.season } } : {}), ...(this.traffic.room !== null ? { room: this.traffic.room } : {}), ...(cl && this.hasClubhouse ? { club: { members: Math.round(cl.members), dues: Math.round(cl.season.dues) } } : {}) };
+    if (cl) g.club = closeClubSeason(cl); // T214: the season's dues were booked month by month; a founding season books nothing more (and an old save's months before its load are dropped)
     this.scheduleSave();
   }
   private yearCheck() {
@@ -4297,8 +4716,11 @@ export class Game {
   const mx = e.offsetX, my = e.offsetY;
   this.moneyAt(this.tileAt(mx, my)); // T147: a spend this click makes floats up here
   this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
+  if (this.sceneRef) this.closeScene(); // T242: a press on the map puts the picture away (Select's click on a place opens its own below)
   // the owner's open shot (P4b) takes a left click on the course as its aim, before any tool does (a drag still pans; the aim is set on release)
   if (this.shot && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, aim: this.tileAt(mx, my) }; return; }
+  // T268: a tee set in hand: a click lays it there, a right click puts it down (the middle button and Space still pan)
+  if (this.teePlace && !this.teePlace.drag && !this.keys.has(' ') && (e.button === 0 || e.button === 2)) { this.hover = this.tileAt(mx, my); if (e.button === 0) this.placeTeeAt(); else this.cancelTeePlace(); return; }
   // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
   const side = this.tool === 'select';
   if (this.tool === 'greenkeeping' && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; } // T175
@@ -4322,7 +4744,8 @@ export class Game {
     return;
     }
     for (const pin of this.golf.pins) {
-    if (Math.hypot(this.hover.x - pin.x, this.hover.y - pin.y) <= 3) {
+    const cup = this.todayPin(pin.hole) ?? pin; // (T269: or its flag on the day's cup)
+    if (Math.hypot(this.hover.x - pin.x, this.hover.y - pin.y) <= 3 || Math.hypot(this.hover.x - cup.x, this.hover.y - cup.y) <= 3) {
     this.selectGolfMarker(pin.hole, 'pin'); return;
     }
     }
@@ -4347,14 +4770,14 @@ export class Game {
         if (this.cam.z >= DISTRICT_Z && this.repairAt(mx, my)) return;
         const p = this.propAt(mx, my), tl = this.tileAt(mx, my);
         // the range's own props and its front open the range card (P24, T129)
-        if (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y))) { this.openRangeCard(true); return; }
+        if (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y))) { this.openRangeCard(true); this.inspectScene(p); return; } // (T242: and its picture)
         // T208: the clubhouse (its footprint, and the building's height up the screen: 6 tiles back) opens the clubhouse card
         const club = this.golf && !p ? this.bizDefs.find(d => d.type === 'clubhouse') : undefined;
-        if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) { this.openClubCard(true); return; }
+        if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) { this.openClubCard(true); this.inspectScene(null, true); return; }
         // T219: an iconic place's props open its card
-        if (p?.auto?.startsWith('place:')) { this.selected = null; this.selectedPlace = p.auto.slice(6); this.emit(); return; }
+        if (p?.auto?.startsWith('place:')) { this.selected = null; this.selectedPlace = p.auto.slice(6); this.inspectScene(p); this.emit(); return; }
         this.selectedPlace = null;
-        if (p) { this.selected = p; this.emit(); return; }
+        if (p) { this.selected = p; this.inspectScene(p); this.emit(); return; } // (T242: a business's building or a farmhouse opens its picture)
         this.selected = null; this.emit();
         if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
       }
@@ -4406,7 +4829,7 @@ export class Game {
     if (this.tool === 'bus') this.busUpdate(mx, my);
     if (this.clubPlacing && this.tool === 'course') this.clubUpdate(mx, my);
     else if (this.halfwayPlacing && this.tool === 'course') this.halfwayUpdate(mx, my);
-    else if (this.paintOn) this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift'));
+    else if (this.paintOn && !this.teePlace) this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift')); // (T268: a tee set in hand is the engine's)
     if (this.tool === 'park') {
       if (this.parking.mode === 'rows') { if (this.hover) { this.parking.snap15 = this.keys.has('Shift'); this.parking.move(this.hover, mx, my); } }
       else if (this.parking.mode === 'curb') this.parking.hover(this.hover ? this.net.pieceNear(this.hover)?.seg ?? null : null, this.hover ?? { x: 0, y: 0 }, mx, my);
@@ -4415,6 +4838,7 @@ export class Game {
   pointerUp() {
     const d = this.dragging; this.moneyAt(this.hover); // T147: a spend this release makes floats up here
     if (this.markerDrag) this.holeCardDrop(); // T174
+    if (this.teePlace?.drag) this.teeDragDrop(); // T268
     if (this.badgeDrag) { const b = this.badgeDrag, to = b.moved ? this.badgeAt(b.mx, b.my) : 0; this.badgeDrag = null; if (!b.moved) this.openHoleCard(b.n); else if (to && to !== b.n) this.renumberHole(b.n, to); this.emit(); }
     if (d?.kind === 'pan' && d.hole !== undefined && !d.moved) { if (d.hole) this.openHoleCard(d.hole); else this.closeHoleCard(); }
     if (d?.kind === 'park') this.parkRelease();
@@ -4509,9 +4933,21 @@ export class Game {
     const el = e.target as HTMLInputElement | null, tag = el?.tagName, typing = tag === 'INPUT' || tag === 'TEXTAREA';
     // Esc (P23 4.10): the topmost menu or card first (even from a checkbox or slider in it), then the tool's own step, then out to Select; a
     // focused text box keeps Esc from the tool
+    if (e.key === 'Escape' && this.sceneRef) { this.closeScene(); return; } // T242: the picture card, over everything, goes first
     if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
     if (typing) return;
     this.keys.add(e.key);
+    // T268: the tee set in hand: R turns it (Shift+R back), [ ] size it
+    if (this.teePlace && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (e.key === 'r' || e.key === 'R') { this.turnTeePlace(e.shiftKey); return; }
+      if (e.key === ']' || e.key === '[') { this.sizeTeePlace(e.key === ']'); return; }
+    }
+    // T268: with the hole card open in Select, Ctrl+Z and Ctrl+Y take back the course's steps (a tee placed, moved or removed from the card)
+    if (this.holeCardHole !== null && !this.paintOn && (e.ctrlKey || e.metaKey) && !e.altKey) {
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); this.paint.undoTop(); return; }
+      if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.paint.redoTop(); return; }
+    }
     if (this.clubPlacing && this.tool === 'course' && (e.key === 'r' || e.key === 'R')) {
       this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.clubUpdate(h.mx, h.my); this.emit();
       return;
@@ -4593,6 +5029,7 @@ export class Game {
    *  junction picked, the car watched, the bus stop picked, the route, the selection, the pin or tee picked, the Land or Holes switch);
    *  true when it did (else Esc puts the tool down for Select) */
   private escHand(e: KeyboardEvent): boolean {
+    if (this.teePlace) { this.cancelTeePlace(); return true; } // T268: the tee set in hand first
     if (this.tool === 'greenkeeping' && this.grassAction) { this.grassAction = null; this.emit(); return true; } // T175: the care in hand first
     if (this.holeCardHole !== null) { this.closeHoleCard(); return true; } // T174: the hole card first
     if (this.clubPlacing && this.tool === 'course') { this.placeClubhouse(false); return true; }
@@ -4958,6 +5395,8 @@ export class Game {
   }
   // T208: the season's everyday play is in the year end (golfYearEnd): a new season starts
   this.dayBook?.endSeason();
+  { const st = this.golf.crew?.staff; if (st) this.setStaff(closeSeason(st)); } // T269: and the crew's pin count
+  if (this.golf.club) this.golf.club = closeClubSeason(this.golf.club); // T214: and the club's season (its dues are in the book above, booked month by month)
   this.scheduleSave();
   }
   }
@@ -5515,17 +5954,27 @@ export class Game {
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
   /** the golf balls of the day (docs/GOLF-PLAY.md P2) at the street tier: each in the air raised by its height (1 m = HH * ze px, half a tile's screen
-   *  height) over a soft shadow on the ground, or at rest; a white ball with a dark rim. Culled to the view */
+   *  height) over a soft shadow on the ground, or at rest; a white ball with a dark rim. T251: bouncing and rolling after its landing (the same
+   *  drawing, its height a bounce's), a splash in water (rings and drops on the water, the ball gone) and a puff of sand round a ball plugged in a
+   *  bunker, drawn here as particles (not in the water's shader). Culled to the view */
   private drawBalls(ctx: CanvasRenderingContext2D) {
     const pl = this.play, dv = this.dayOff ? undefined : this.dayPlay?.view; if ((!pl && !dv) || this.cam.z < DISTRICT_Z) return;
+    const dpr = this.dpr, ze = this.cam.z * dpr, r = Math.max(1.5, 0.06 * HH * 2 * ze);
     // (T208: the everyday golfers' balls too, from the playback of the groups on screen)
-    const B = pl && dv ? pl.pv.balls.concat(dv.balls) : pl ? pl.pv.balls : dv!.balls, dpr = this.dpr, ze = this.cam.z * dpr, cw = this.cw, ch = this.ch, r = Math.max(1.5, 0.06 * HH * 2 * ze);
+    if (pl) this.drawBallList(ctx, pl.pv.balls, r, ze, dpr);
+    if (dv) this.drawBallList(ctx, dv.balls, r, ze, dpr);
+  }
+  /** the balls of one playback (drawBalls), r their radius (px) */
+  private drawBallList(ctx: CanvasRenderingContext2D, B: readonly PlayBall[], r: number, ze: number, dpr: number) {
+    const cw = this.cw, ch = this.ch, m = 7 * r; // (the margin: a splash's rings)
     ctx.lineWidth = dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
     for (let i = 0; i < B.length; i++) {
       const b = B[i]!, c = this.screen(b.x, b.y);
-      if (c.x < -r || c.y < -r || c.x > cw + r || c.y > ch + r) continue;
+      if (c.x < -m || c.y < -m || c.x > cw + m || c.y > ch + m) continue;
+      if (b.fx === FX_SPLASH) { ballSplash(ctx, c.x, c.y, r, b.fu ?? 0, HH * ze, dpr); ctx.lineWidth = dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; continue; }
       if (b.h > 0) { ctx.fillStyle = 'rgba(2,6,23,0.35)'; ctx.beginPath(); ctx.ellipse(c.x, c.y, 1.5 * r, 0.7 * r, 0, 0, Math.PI * 2); ctx.fill(); }
       ctx.beginPath(); ctx.arc(c.x, c.y - b.h * HH * ze, r, 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill(); ctx.stroke();
+      if (b.fx === FX_SAND) ballPuff(ctx, c.x, c.y, r, b.fu ?? 0, HH * ze);
     }
   }
   /** the bus tool's preview at the cursor: once the first stop is picked, a line from it to the plan (white dashed) and the plan's stop; the label: the reason,
@@ -5569,6 +6018,10 @@ export class Game {
   golf: GolfSave | null = null;
   /** the course's subtle height field (T027; saved in golf.height) */
   courseHeight: CourseHeightField = createCourseHeightField();
+  /** T251: the course height (metres) at a tile point, the field as it is now (0 on a field never edited): the balls' rolls bend with it, putts break on it */
+  private ballHeight: HeightAt = (x, y) => { const f = this.courseHeight; return f.rev ? sampleCourseGrid(f.data, x, y) : 0; };
+  /** T251 (dev, the bench's A/B): the balls bounce and roll after landing (on), or fly to where they end and lie there as before (off) */
+  setBallRoll(on: boolean) { ballRoll.on = on; }
   /** the course height as save chunks, cached by field and rev (see courseHeightChunks) */
   private chSave: { field: CourseHeightField; rev: number; chunks: CourseHeightSaveChunk[] } | null = null;
   /** golf mode: a new game is a golf game (one town, the old nine, the season); the stadium and the Business tool are off */
@@ -5724,6 +6177,7 @@ export class Game {
     return {
       money, monthChange: Number.isFinite(money) ? ch.value : null, monthSpan: ch.span, month: ch.month,
       rep: g.rep, golfers: r ? golfersAMonth(r.members + r.visitors) : 0, quality: this.ratingOf.quality, holes: this.ratingOf.holes,
+      ...(r && g.club ? { members: Math.round(g.club.members), memberRounds: golfersAMonth(r.members) } : {}), // (T214: the golfers chip's tip)
     };
   }
   /** counts a player action toward the tool unlocks (golf mode only; saved) */
@@ -5755,6 +6209,7 @@ export class Game {
   private progressCheck() {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
     this.rangeGuideCheck(); // T239: the guided build's steps tick
+    this.sceneNewsCheck(); // T242: a range view's picture turned: a toast offers its card (about once a second)
     const f = this.playerProgressFacts(), was = p.ramp;
     if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
     // a ramp step opens (T132); not when its tools were open already, nor New hole's once a hole exists (T095)
@@ -5847,6 +6302,12 @@ export class Game {
   // the course played (the pace term, golf/everyday.ts seasonPaceRep) moves the reputation
   const se = this.dayBook?.season();
   if (se) { ye.greenFeesPlayed = Math.round(se.fees); ye.paceRep = seasonPaceRep(se); ye.rep = Math.min(100, Math.max(0, ye.rep + ye.paceRep)); }
+  // T269: the season's unmoved pins (golf/staff.ts pinReputation) move it too
+  const st = this.golf.crew?.staff; if (st) { ye.pinRep = pinReputation(st.season); ye.rep = Math.min(100, Math.max(0, ye.rep + ye.pinRep)); }
+  // T214: the memberships are the club's (golf/club.ts): the season's dues as booked month by month (the close book does not book them again), plus
+  // an old save's months before its load at the old annual rate (computeYearEnd's annualMembershipIncome); the month's dues are this month's
+  const cl = this.golf.club;
+  if (cl) { const m = seasonMemberships(cl, ye.membershipIncome ?? 0); ye.duesBooked = m.booked; ye.membershipIncome = m.total; ye.monthlyMembership = this.hasClubhouse ? Math.round(cl.members) * cl.price : 0; }
   return ye;
   }
   /** the course's facts for the year end and everyday golf (T208): the derived holes, the course facts (holes, length, what the club has), the quality
@@ -5862,7 +6323,8 @@ export class Game {
   const gCards = g.cards ?? this.traffic.round.cards;
   for (const n of parkRideNeedsWithCards(g.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
   const baseQ = stats ? buildCourseStatsPanel({ areas: this.courseAreaList(), tees: g.tees, pins: g.pins, aims: g.aims, clubhouse: g.clubhouse }, g.tier, have, effectiveGrowInClockMonth(this.golfMonthIndex(), gCards), { field: this.courseHeight, areas: this.courseAreaList() }).qualityScore : 85;
-  return { holes, facts, baseQ, gCards };
+  // T269: the course's condition (the grounds crew keeping up, golf/staff.ts) takes up to a quarter off the quality score
+  return { holes, facts, baseQ: baseQ * this.crewQuality(), gCards };
   }
   /** T208: what the club is now, for a town day's everyday golf (golf/everyday.ts DayInputs): the quality score as the year end takes it (the course
    *  consultant's card included), the reputation and the holes (as yearend.ts computeYearEnd: no stats, no holes) */
@@ -5870,6 +6332,7 @@ export class Game {
     const g = this.golf; if (!g) return { quality: 0, rep: 0, holes: 0 };
     const { facts, baseQ, gCards } = this.golfFacts(g);
     const inp: DayInputs = { quality: applyCourseConsultantQuality(baseQ, gCards), rep: g.rep, holes: facts.holes };
+    if (g.club) inp.members = this.hasClubhouse ? Math.round(g.club.members) : 0; // T214: the club's members at the day's start (golf/club.ts)
     if (this.dayBusy !== undefined) inp.busy = this.dayBusy;
     return inp;
   }
@@ -5965,6 +6428,8 @@ export class Game {
     if (this.saveBlocked) return 0;
     const d: SaveV5 = {
       version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(),
+      // T259: the farm model (an old save's farms rebuilt since on the new one: farmsNew)
+      farmModel: this.farmModel, ...(this.farmModel === 1 && this.farmsNew.size ? { farmsNew: [...this.farmsNew] } : {}),
       segs: [...this.net.segs].map(segRec),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => propTuple(LIBRARY[p.item].id, p)),
@@ -5997,10 +6462,13 @@ export class Game {
     try {
       // the town's house lots compose with the lot model it was made with (T160: a save from before has none: v1)
       setLotModel(d.lotModel ?? 1);
+      // T259: its farms compose with the farm model it was made with (a save from before has none: model 1), those rebuilt since on the new one
+      this.farmModel = d.farmModel === 2 ? 2 : 1; this.farmsNew = new Set(this.farmModel === 1 && Array.isArray(d.farmsNew) ? d.farmsNew.filter(k => typeof k === 'string') : []);
       this.bizOpenSeen = null;
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf); this.dayBook = null; this.dayPlay = null; this.clubCardOpen = false; // T208: everyday golf comes back from golf.everyday
+      this.clubLegacy = !!this.golf && !this.golf.club; // T214: a save from before P26 has no members saved: seeded at the first frame (stepClub)
       // a course grid that does not decode fails the load (the slot is backed up, T042), never an empty course saved over the real one
       const lg = this.golf ? loadCourseGrid(this.golf.grid) : 'migrate';
       if (lg === 'bad') { console.error('load failed: the course grid does not decode'); this.golf = null; return false; }
@@ -6425,6 +6893,7 @@ export class Game {
     }
     m = this.playMovers(out, m, X0, Y0, X1, Y1);
     m = this.dayMovers(out, m, X0, Y0, X1, Y1, now); // T208: everyday golf
+    m = this.crewMovers(out, m, X0, Y0, X1, Y1, now); // T269: the grounds crew
     out.length = m;
     return out;
   }
@@ -6481,7 +6950,7 @@ export class Game {
    *  when the round is free, or when there is no golf */
   private updatePlay(now: number) {
     const tr = this.traffic, r = tr?.round;
-    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; this.playSavedHr = -1; this.resultsEarly = false; this.clearFeatured(); if (this.shot) this.closeShot(); this.holdDay(now, false); return; }
+    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval' && !this.devTourney)) { this.play = null; this.playTried = -1; this.playSavedHr = -1; this.resultsEarly = false; this.clearFeatured(); if (this.shot) this.closeShot(); this.holdDay(now, false); return; }
     if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlaySaved(r.runs); }
     if (!this.play) { this.clearFeatured(); this.holdDay(now, true); return; }
     const minute = this.playMinute(this.play, townTimeOf(tr.town, tr.simTime(now)).dayMin);
@@ -6513,8 +6982,10 @@ export class Game {
    *  day or the course's holes change; none on a tournament day, without a clubhouse or without holes. The movers and the balls read it */
   private updateEveryday(now: number) {
     const g = this.golf, tr = this.traffic;
-    if (!g || !this.bizDefs.some(d => d.type === 'clubhouse')) { this.dayPlay = null; return; }
+    if (g?.player?.booked) this.youRoundDone(now); // T241: your round, once it is done (or its day is over)
+    if (!g || !this.bizDefs.some(d => d.type === 'clubhouse')) { this.dayPlay = null; this.dropCrew(); return; }
     if (!this.dayBook || this.dayBookFor !== g) { this.dayBook = new DayBook(this.seed, normalizeDaySave(g.everyday)); this.dayBookFor = g; this.dayPlay = null; }
+    if (!g.club) this.stepClub(); // T214: the club (an old save's seeded, a new one's founding drive) before the day's first roster
     const at = townTimeOf(tr.town, tr.simTime(now)), free = tr.round.stage === 'free';
     this.dayMinute = at.dayMin;
     const b = this.dayBook.step(at.day, at.dayMin, free, () => this.dayInputs(), feeScale(tr.dayLen), r => this.dayPaceOf(r, now));
@@ -6526,14 +6997,343 @@ export class Game {
     // the card follows the day (the golfers out, the waits): once a second while it is open
     if (this.clubCardOpen && (b.members + b.visitors > 0 || now - this.clubEmitAt > 1000)) { this.clubEmitAt = now; this.emit(); }
     const s = this.dayBook.save;
-    if (!free || !s || s.closed || s.day !== at.day) { this.dayPlay = null; return; }
+    if (!free || !s || s.closed || s.day !== at.day) { this.dayPlay = null; this.dropCrew(); return; }
     const course = this.dayCourseOf(now);
-    if (!course || !course.view.holes.length) { this.dayPlay = null; return; }
-    if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key) {
-      const roster = this.dayBook.rosterOf()!, plan = dayPlan(course.view, roster);
-      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null), day: s.day, key: course.key };
-      this.dayArt = roster.golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
+    if (!course || !course.view.holes.length) { this.dayPlay = null; this.dropCrew(); return; }
+    // T241: your round booked today (golf/player.ts): you join the day's playback alone at your tee time, with your game as you booked it
+    const me = g.player, bk = me?.booked && me.booked.day === s.day ? me.booked : null;
+    if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key || this.dayPlay.you !== bk) {
+      const base = this.dayBook.rosterOf()!, roster = bk && me ? withYou(base, bookedGolfer(me, bk), bk.tee) : base, plan = dayPlan(course.view, roster);
+      const youId = bk ? roster.golfers.length - 1 : -1;
+      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight), day: s.day, key: course.key, base, you: bk, youId };
+      this.dayArt = roster.golfers.map((p, i) => i === youId ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
+      // (the whole day is played now: your score is known, and shown once your round is done)
+      if (bk) bk.result = { strokes: plan.strokes[youId]!.reduce((a, b) => a + b, 0), par: course.view.holes.reduce((a, h) => a + h.par, 0), holes: course.view.holes.length, done: plan.done[youId] ?? Infinity };
+      this.buildCrew(g, plan, course.view, s.day); // T269: the grounds crew works round the day's groups
     }
+    this.crewFlags(); // T269: a flag moves when the greenkeeper sets it
+  }
+  // ---------- T241 (#705): your golf (golf/player.ts): the profile, practice, your everyday round ----------
+  /** your profile card ("Your golf") is open */
+  playerCardOpen = false;
+  /** your profile (golf.player); an older save, or a new game, starts the starting profile the first time it is needed (null: not a golf game) */
+  playerNow(): PlayerProfile | null { const g = this.golf; if (!g) return null; if (!g.player) g.player = startProfile(); return g.player; }
+  private setPlayer(p: PlayerProfile) { if (!this.golf) return; this.golf.player = p; this.scheduleSave(); }
+  /** P26's lessons (docs/plans/P26.md 3.2: the teaching pro): the lesson a pro gives with a session of this kind (golf/player.ts Lesson: its bonus and
+   *  price). The hook P26 fills: null until the teaching pro is built */
+  lessonFor(_kind: PracticeKind): Lesson | null { return null; }
+  /** the town day and its minute now */
+  private townNow() { const tr = this.traffic; return townTimeOf(tr.town, tr.simTime(performance.now())); }
+  /** each practice session's place now (golf/player.ts PracticeCtx), from the range card's view: the range's hours, the bucket price, the practice greens'
+   *  fee and whether each green is open, your money, and whether you are out on the course */
+  private practiceCtx(v: RangeCardView): Record<PracticeKind, PracticeCtx> {
+    const at = this.townNow(), st = v.stats, money = this.money, onCourse = this.youOnCourse(at.day, at.dayMin);
+    const c = (price: number, facility: boolean): PracticeCtx => ({ day: at.day, minute: at.dayMin, open: st.open * 60, close: st.close * 60, price, facility, money, onCourse });
+    const open = (id: 'putting' | 'chipping') => v.practice.some(f => f.id === id && f.state === 'open');
+    return { bucket: c(v.biz.price, true), putting: c(v.fee, open('putting')), chipping: c(v.fee, open('chipping')) };
+  }
+  /** the range card's "You" block and its practice greens' rows (golf/player.ts youRangeView), from the card's view; null with no card or profile */
+  youRange(v: RangeCardView | null): YouRangeView | null { const p = v ? this.playerNow() : null; return p && v ? youRangeView(p, this.practiceCtx(v), this.lessonFor('bucket')) : null; }
+  /** a practice session now (golf/player.ts practise): its gains at once, you busy for its minutes, and its cost (the bucket price at the range, the green's
+   *  fee at a practice green: the balls and the wear, booked as upkeep and floated over the place). A round booked today and not begun plays with your new
+   *  game. A toast says why not, or what it gave */
+  practise(kind: PracticeKind) {
+    const p = this.playerNow(), v = this.range.view(); if (!p || !v) return;
+    const c = this.practiceCtx(v)[kind], lesson = this.lessonFor(kind), why = practiceWhy(p, kind, c, lesson);
+    if (why) { this.toast(why, 'warn'); return; }
+    const { profile, entry } = practise(p, kind, c, lesson);
+    this.setPlayer(rebook(profile, entry.day, entry.at));
+    if (entry.cost > 0) {
+      const at = kind === 'bucket' ? this.rangeSpot() : this.range.scene ? { ...this.range.scene.practice.label } : null;
+      this.spendAt(at, 'upkeep', entry.cost);
+    }
+    this.toast(`${entryText(entry)} · handicap ${hcpText(entry.hcp[0])} to ${hcpText(entry.hcp[1])} · $${entry.cost.toLocaleString()}`, 'good');
+    this.emit();
+  }
+  /** whether you are out on the course now: from your walk to the first tee to your round's end */
+  private youOnCourse(day: number, minute: number): boolean {
+    const b = this.golf?.player?.booked; if (!b || b.day !== day || minute < b.tee - BOOK_LEAD) return false;
+    return !!b.result && minute < b.result.done; // (not played yet: no course to play today)
+  }
+  /** your round today as the profile card shows it */
+  private youRoundState(): RoundState {
+    const p = this.golf?.player, at = this.townNow(), b = p?.booked;
+    if (b && b.day === at.day) {
+      if (b.result && at.dayMin >= b.result.done) return { k: 'done', strokes: b.result.strokes, par: b.result.par };
+      return at.dayMin < b.tee - BOOK_LEAD ? { k: 'booked', tee: b.tee } : { k: 'out', tee: b.tee };
+    }
+    const last = p?.rounds[p.rounds.length - 1];
+    if (last && last.day === at.day && last.kind === 'everyday') return { k: 'done', strokes: last.strokes, par: last.par };
+    const why = this.youBookWhy(at.day);
+    return { k: 'none', next: why ? null : freeTee(this.dayPlay?.base ?? this.dayBook?.rosterOf() ?? null, at.dayMin), why };
+  }
+  /** why you cannot book a round today (null: you can) */
+  private youBookWhy(day: number): string | null {
+    if (!this.hasClubhouse) return 'Build a clubhouse to book a tee time';
+    const s = this.dayBook?.save;
+    if (!s || s.day !== day) return 'The tee sheet opens with the day';
+    if (s.closed || this.traffic.round.stage !== 'free') return 'The course is closed for the tournament today';
+    if (!this.dayPlay) return 'The course has no holes to play yet';
+    return null;
+  }
+  /** the profile card ("Your golf", golf/player.ts playerCardView); null while closed */
+  playerCard(): PlayerCardView | null { const p = this.playerCardOpen ? this.playerNow() : null; return p ? playerCardView(p, this.youRoundState()) : null; }
+  openPlayerCard(open = !this.playerCardOpen) { this.playerCardOpen = open && !!this.golf; this.emit(); }
+  /** books your everyday round at the next free tee time on today's sheet (golf/player.ts freeTee: BOOK_LEAD ahead at least, clear of the groups' tee
+   *  times); the day's playback is played again with you in it */
+  bookYourRound() {
+    const p = this.playerNow(), at = this.townNow(); if (!p) return;
+    if (p.booked && p.booked.day === at.day) { this.toast('You have a round booked today', 'warn'); return; }
+    const why = this.youBookWhy(at.day); if (why) { this.toast(why, 'warn'); return; }
+    const tee = freeTee(this.dayPlay?.base ?? this.dayBook?.rosterOf() ?? null, at.dayMin);
+    if (tee === null) { this.toast('No tee times left today: book tomorrow morning', 'warn'); return; }
+    this.setPlayer(bookRound(p, at.day, tee));
+    this.toast(`Your round: tee time ${clock(tee)} on the first tee`, 'good');
+    this.emit();
+  }
+  /** cancels your round booked today, until you walk to the tee */
+  cancelYourRound() {
+    const p = this.playerNow(), b = p?.booked, at = this.townNow(); if (!p || !b) return;
+    if (b.day === at.day && at.dayMin >= b.tee - BOOK_LEAD) { this.toast('You are already out on the course', 'warn'); return; }
+    this.setPlayer({ ...p, booked: null }); this.emit();
+  }
+  /** your round, once it is done (or its day is over: a skip): its score goes into your rounds (your nerve up a little, golf/player.ts playedRound) and a
+   *  toast says it; a round never played (no course, a tournament day) is dropped */
+  private youRoundDone(now: number) {
+    const p = this.golf?.player, b = p?.booked; if (!p || !b) return;
+    const tr = this.traffic, at = townTimeOf(tr.town, tr.simTime(now));
+    if (b.day === at.day && !(b.result && at.dayMin >= b.result.done)) return;
+    let next: PlayerProfile = { ...p, booked: null };
+    if (b.result && Number.isFinite(b.result.done)) {
+      next = playedRound(next, { day: b.day, kind: 'everyday', strokes: b.result.strokes, par: b.result.par, holes: b.result.holes });
+      this.toast(`Your round: ${b.result.strokes} (${toParWord(b.result.strokes - b.result.par)}) · handicap ${hcpText(next.rounds[next.rounds.length - 1]!.hcp)}`, 'good');
+    }
+    this.setPlayer(next); this.emit();
+  }
+  // ---------- T269 (#810) part 3: the grounds staff (golf/staff.ts) ----------
+  /** the course needs a crew and has none: said once a session */
+  private crewNagged = false;
+  /** the holes the crew keeps: every hole with a pin */
+  private staffHoles(): number[] { return [...new Set((this.golf?.pins ?? []).map(p => p.hole))].sort((a, b) => a - b); }
+  /** the staff's state (golf.crew.staff); an old save, or a new game, hires the crew its course needs with every job done today */
+  private staffNow(day?: number): StaffState {
+    const g = this.golf!, had = g.crew?.staff; if (had) return had;
+    const d = day ?? townTimeOf(this.traffic.town, this.traffic.simTime(performance.now())).day, s = freshStaff(d, this.staffHoles(), this.golfMonthIndex());
+    this.setStaff(s); return s;
+  }
+  private setStaff(s: StaffState) { const g = this.golf; if (!g) return; g.crew = { phase: g.crew?.phase ?? [], mown: g.crew?.mown ?? [], staff: s }; }
+  /** the crew's work for each town day since the last worked out, up to `day` (golf/staff.ts workDay, at most 60 days of a skip); with no clubhouse the
+   *  course is not open: every job is done and the season counts nothing. Returns the state */
+  private workStaff(day: number): StaffState {
+    let s = this.staffNow(day); if (day <= s.day) return s;
+    const holes = this.staffHoles();
+    if (!this.hasClubhouse) s = { ...freshStaff(day, holes, s.paid, s.staff), season: s.season };
+    else for (let d = Math.max(s.day + 1, day - 60); d <= day; d++) s = workDay(s, d, holes);
+    this.setStaff(s);
+    const need = crewNeed(holes.length);
+    if (this.hasClubhouse && need.gk + need.mo > 0 && s.staff.gk + s.staff.mo === 0 && !this.crewNagged) {
+      this.crewNagged = true; this.toast('Your course has no grounds crew: hire greenkeepers and mower operators in the Clubhouse card, or the grass grows long and the pins stay put', 'warn');
+    }
+    return s;
+  }
+  /** the crew's wages, each game month as it begins (golf/staff.ts payWages: a skip pays every month it crossed), booked as upkeep at the clubhouse */
+  private payStaff() {
+    const g = this.golf, st = g?.crew?.staff; if (!g || !st) return;
+    const { s, due } = payWages(st, this.golfMonthIndex()); if (s === st) return;
+    this.setStaff(s);
+    if (due > 0) { const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', due); this.scheduleSave(); }
+  }
+  /** the quality factor of the course's condition (golf/staff.ts qualityFactor; 1 with no staff state yet) */
+  private crewQuality(): number { const st = this.golf?.crew?.staff; return st ? qualityFactor(courseCondition(st)) : 1; }
+  /** T269: hires (+1) or lets go (-1) a greenkeeper or a mower operator (the club card's Grounds crew): a hire is paid from the next month, a let-go
+   *  costs a month's wage now (P26); the crew works its new size from the next morning */
+  crewHire(role: StaffRole, delta: 1 | -1) {
+    const g = this.golf; if (!g) return;
+    const r = changeStaff(this.staffNow(), role, delta); if (!r) return;
+    this.setStaff(r.s);
+    if (r.cost > 0) { const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', r.cost); }
+    this.toast(delta > 0 ? `Hired a ${ROLE_NAME[role][0]}: $${WAGE[role]} a month, at work from tomorrow morning` : `Let a ${ROLE_NAME[role][0]} go: a month's wage, $${WAGE[role]}`, delta > 0 ? 'good' : 'info');
+    this.scheduleSave(); this.emit();
+  }
+  /** T269: the club card's Grounds crew block (null: no golf) */
+  private crewCardView(): CrewCardView | null { return this.golf ? crewCard(this.staffNow(), this.staffHoles().length) : null; }
+  // ---------- T214 (#559, plan P26 phases 1-2): the club's members (golf/club.ts) ----------
+  /** a save from before P26 (no golf.club): its club is seeded at the first frame (stepClub: club.ts legacyClub) */
+  private clubLegacy = false;
+  /** what the club is this month (golf/club.ts ClubInputs): the club as the town day began (the day book's inputs; none yet: the course now), the
+   *  residents, the clubhouse's level, the season's waits so far (T211's pace: everyday.ts paceSlow) and the club staff (golf/staff.ts clubTerms) */
+  private clubInputs(): ClubInputs {
+    const g = this.golf!, inp = this.dayBook?.save?.inp ?? this.dayInputs(), se = this.dayBook?.season(), waitAvg = se && se.groups > 0 ? se.waitMin / se.groups : 0;
+    const club = this.bizDefs.find(d => d.type === 'clubhouse'), level = club ? this.traffic.biz.find(v => v.id === club.id)?.level ?? 1 : 1;
+    return { residents: this.traffic.pop, quality: inp.quality, rep: inp.rep, holes: inp.holes, visitors: dailyGolfers(inp.quality, inp.rep, inp.holes), level, waitAvg, slow: paceSlow(waitAvg), staff: clubTerms(g.crew?.staff) };
+  }
+  /** the club's month (P26 4.4-4.5 and section 8), every two seconds beside the crew's wages (and once before a club's first day):
+   *  - a save from before P26 has its club seeded (club.ts legacyClub: the members its Clubhouse card showed, $50, the founding drive done, its
+   *    months of this season before the load booked at the close at the old rate); a new game's club is made;
+   *  - with a clubhouse and holes, the founding drive once (FOUNDING of the pool joins, a toast);
+   *  - then each game month as it begins (a skip: each month it crossed, club.ts stepTo) the sales and the churn, the dues (business takings,
+   *    floated in at the clubhouse: they count in Budget.earned, P26.D2) and the members' upkeep (upkeep, P26.D3).
+   *  With no clubhouse nothing joins and nothing is booked, and the months move on */
+  private stepClub() {
+    const g = this.golf; if (!g) return;
+    const month = this.golfMonthIndex();
+    if (!g.club) {
+      g.club = this.clubLegacy ? legacyClub(g.everyday?.inp ?? this.dayInputs(), month, month - this.seasonsDone() * 12 + 1, this.hasClubhouse) : newClub(month);
+      this.clubLegacy = false; this.scheduleSave();
+    }
+    if (!this.hasClubhouse) { g.club = holdTo(g.club, month); return; }
+    const c = g.clubhouse, was = g.club;
+    if (!g.club.founded) {
+      const i = this.clubInputs();
+      if (i.holes > 0) {
+        const f = foundingDrive(g.club, i), n = Math.round(f.joined); g.club = f.s;
+        if (n > 0) this.toast(`${n} founding ${n === 1 ? 'member' : 'members'} joined the club at $${g.club.price} a month: the Clubhouse card sets the dues`, 'good');
+      }
+    }
+    const r = stepClubTo(g.club, month, () => this.clubInputs()), b = r.booked; g.club = r.s;
+    if (b.dues > 0) { this.traffic.spend('business', -b.dues); this.floatMoney({ x: c.x, y: c.y, amount: Math.round(b.dues), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
+    if (b.upkeep > 0) this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', b.upkeep);
+    if (g.club !== was) { this.scheduleSave(); if (this.clubCardOpen) this.emit(); }
+  }
+  /** T214: the Clubhouse card's dues stepper: the dues a month (club.ts clampPrice: a whole $5 from $10 to $300); the next month's sales, churn
+   *  and dues follow it */
+  setClubPrice(p: number) {
+    const g = this.golf; if (!g) return;
+    if (!g.club) this.stepClub();
+    const cl = g.club; if (!cl) return;
+    const price = clampPrice(p); if (price === cl.price) return;
+    g.club = { ...cl, price }; this.scheduleSave(); this.emit();
+  }
+  /** T214: the Clubhouse card's Members block (golf/club.ts membersView; null: no club yet, or no clubhouse) */
+  private clubMembersView(): MembersView | null { const g = this.golf; return g?.club && this.hasClubhouse ? membersView(g.club, this.clubInputs()) : null; }
+  /** T214: the money chip's drawer (P26 5.3): the dues a month (the members now x the price; none without a clubhouse) and the wages a month (the
+   *  grounds crew's and the club staff's: golf/staff.ts wages, the one wage book). Null outside golf */
+  clubMoney(): { dues: number; wages: number } | null {
+    const g = this.golf; if (!g) return null;
+    const cl = g.club, st = g.crew?.staff;
+    return { dues: cl && this.hasClubhouse ? Math.round(cl.members) * cl.price : 0, wages: st ? staffWages(st.staff, st.club) : 0 };
+  }
+  // ---------- T269 (#810) part 2: the grounds crew (golf/crew.ts, crewground.ts, crewview.ts) ----------
+  /** the day's crew: its day (the schedule), its playback, the town day it was made for, and the next cup event's minute (the flags) */
+  private crew: { day: CrewDay; view: CrewView; town: number; nextCup: number } | null = null;
+  /** the crew's ground per hole, kept with its key (the grid's rev and the holes' lines) */
+  private crewGrounds: { key: string; m: Map<number, CrewGround> } | null = null;
+  /** the crew's vehicles as movers (reused Drawables), and the pool they come from */
+  private crewOut: Drawable[] = []; private crewThingDraw: Drawable[] = [];
+  /** T269: the crew's size: the staff the player hired (part 3; before the staff state exists, the crew a course of its holes needs) */
+  private crewSize(holes: number): { gk: number; mo: number } { return this.golf?.crew?.staff?.staff ?? crewFor(holes); }
+  /** each hole's crew ground (golf/crewground.ts), read from the grid once per course (its rev and the holes' lines) */
+  private crewGroundsNow(): Map<number, CrewGround> {
+    const grid = this.courseGrid, g = this.golf; if (!grid || !g) return new Map();
+    const lines = this.holeLines(), key = `${grid.rev}|${JSON.stringify([...lines])}`;
+    if (this.crewGrounds?.key === key) return this.crewGrounds.m;
+    // (the bands the ground draws: T227's finish's, along the line, else T218's own)
+    const cells = crewCells(grid), base = fairwayStripeLook(), look = finishStripeLook(finishOf(paintedSurfaces()), base) ?? base, m = new Map<number, CrewGround>();
+    for (const p of g.pins) {
+      const next = g.tees.find(t => t.hole === p.hole + 1 && t.kind === 'back') ?? g.tees.find(t => t.hole === p.hole + 1) ?? null;
+      m.set(p.hole, crewGround(grid, p.hole, cells.get(p.hole), lines.get(p.hole), look, this.greenOf(p.hole), next));
+    }
+    this.crewGrounds = { key, m }; return m;
+  }
+  /** the crew's day for town day `day` round the day's play (plan: its groups' times on each hole), on the day's course (each hole once) */
+  private buildCrew(g: GolfSave, plan: RoundPlan, view: CourseView, day: number) {
+    const holes = view.holes, N = holes.length, grounds = this.crewGroundsNow(), dp = g.dayPins;
+    const size = this.crewSize(new Set(holes.map(h => h.n)).size);
+    const done = plan.groups.map(gr => Math.max(...gr.players.map(id => plan.done[id] ?? 0)));
+    const { windows, firstOn } = holeWindows(plan.pace?.arrive ?? [], done, N);
+    const T = this.traffic, prof = T.town.prof, spm = (prof ? prof.k : 1) / Math.max(1e-6, T.town.rate); // (sim s a game minute in the golf hours)
+    const crew = holes.map(h => {
+      const ground: CrewGround = grounds.get(h.n) ?? { n: h.n, passes: [], rough: [], sands: [], greenPasses: [], park: null };
+      const now = this.todayPin(h.n) ?? h.pin, old = (dp ? pinIn(dp.prev, h.n) : null) ?? now;
+      return { ground, oldCup: { x: old.x, y: old.y }, newCup: { x: now.x, y: now.y }, moved: Math.hypot(now.x - old.x, now.y - old.y) > 0.5 };
+    });
+    // (part 3: the day's jobs as the staff worked them out, golf/staff.ts workDay; the rota before there is a day of them)
+    const st = g.crew?.staff, jobs = st && st.day === day ? { greens: new Set(st.today.greens), sands: new Set(st.today.sands), fairways: new Set(st.today.fairways), rough: new Set(st.today.rough) } : rotaJobs(day, holes.map(h => h.n));
+    const yard = this.dayPark?.entrances[0] ?? g.clubhouse;
+    const pace = capped(this.golfPace);
+    const cd = crewDay({ holes: crew, yard: { x: yard.x, y: yard.y }, gk: size.gk, mo: size.mo, ...jobs, windows, firstOn, pace: pace ? { walk: WALK_CAP * spm, cart: CART_CAP * spm } : null });
+    this.crew = { day: cd, view: new CrewView(cd, pace ? { walk: WALK_CAP, cart: CART_CAP } : null), town: day, nextCup: -Infinity };
+  }
+  /** T269: the grounds crew's cut of each hole now (golf/crew.ts crewFlips: the saved phases and today's fresh stripes behind the mowers), as the
+   *  course chunks carry it (CourseJob flips) */
+  private mowFlips(): Map<number, number[]> {
+    const g = this.golf; if (!g) return new Map();
+    return crewFlips(g.crew ?? { phase: [], mown: [] }, this.crew?.day ?? null, this.crew?.town ?? -1, this.dayMinute);
+  }
+  /** T269: the stripes follow the mowers: every LINES_EVERY_MS the holes' cuts are compared with those last sent, and a hole's chunks round its line
+   *  are sent again when its cut moved (a band cut: a few chunks once a pass); a fairway cut whole today takes its new phase into the save */
+  private flipsSeen: Map<number, string> | null = null; private flipsAt = 0; private flipsKey = '';
+  private watchMowFlips(now: number) {
+    if (now - this.flipsAt < LINES_EVERY_MS) return; this.flipsAt = now;
+    const g = this.golf, c = this.crew; if (!g || !this.courseGrid) return;
+    // (nothing to do until a band is cut, the day turns or a phase changes: the bands cut by now, counted)
+    let cut = 0; if (c) for (const e of c.day.mown) { if (e.t > this.dayMinute) break; cut++; }
+    const key = `${c?.town ?? -1}|${cut}|${g.crew?.phase.join(',') ?? ''}|${this.courseGrid.rev}`; if (key === this.flipsKey) return; this.flipsKey = key;
+    // a fairway cut whole today: its phase flips in the save (drawn the same: the cut covered it)
+    if (c) {
+      const done = fullyCut(c.day, new Map([...this.crewGroundsNow()].map(([h, q]) => [h, q.passes])), this.dayMinute), sv = normalizeCrewSave(g.crew), had = new Map(sv.mown); // (a copy: written back whole)
+      let changed = false;
+      for (const h of done) if (had.get(h) !== c.town) { const ph = new Set(sv.phase); if (ph.has(h)) ph.delete(h); else ph.add(h); sv.phase = [...ph].sort((a, b) => a - b); had.set(h, c.town); changed = true; }
+      if (changed) { sv.mown = [...had]; g.crew = sv; this.scheduleSave(); }
+    }
+    const cur = this.mowFlips(), lines = this.holeLines(), moved = new Set<number>(), seen = this.flipsSeen;
+    this.flipsSeen = new Map([...cur].map(([h, f]) => [h, f.join(',')]));
+    // (the first look: the saved phases went with the first chunks; a cut of today's, made with the day's crew, may not have)
+    if (!seen) { for (const [h, f] of cur) if (f[1]! >= 0) moved.add(h); }
+    else {
+      for (const [h, f] of cur) { const k = f.join(','); if (seen.get(h) !== k) moved.add(h); }
+      for (const h of seen.keys()) if (!cur.has(h)) moved.add(h);
+    }
+    if (!moved.size) return;
+    const R = LINES_REACH;
+    for (const h of moved) {
+      const l = lines.get(h); if (!l) continue;
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (let k = 0; k + 1 < l.length; k += 2) { x0 = Math.min(x0, l[k]!); y0 = Math.min(y0, l[k + 1]!); x1 = Math.max(x1, l[k]!); y1 = Math.max(y1, l[k + 1]!); }
+      this.sendCourseChunks([x0 - R, y0 - R, x1 + R, y1 + R]);
+    }
+  }
+  /** no crew today (a tournament day, no clubhouse or no holes): the flags stand on today's cups */
+  private dropCrew() { if (this.crew) { this.crew = null; this.syncFlags(); } }
+  /** the flags follow the greenkeepers: when the minute passes a cup event the flags are synced (and once after the crew is made) */
+  private crewFlags() {
+    const c = this.crew; if (!c) return;
+    if (this.dayMinute >= c.nextCup) {
+      c.nextCup = c.day.cups.find(e => e.t > this.dayMinute)?.t ?? Infinity;
+      this.syncFlags();
+    }
+  }
+  /** the crew's stand-ins (until the art: GOLF-SPRITES.md "Grounds crew"): the greenkeeper a spectator in a bucket hat, the mower operator one in a cap */
+  private static readonly CREW_ART: Record<'gk' | 'mo', number> = {
+    gk: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_bucket_hat')), mo: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_young_cap')),
+  };
+  /** the crew's vehicles' stand-ins (the hire cart's two facings, the golf mower, the push mower, the ride-on), their footprints' half sides and labels */
+  private static readonly CREW_VEH: Record<Exclude<CrewVeh, 'none'>, { items: number[]; label: string; r: number }> = {
+    cart: { items: [libIndexOf('business:golf-cart-sw'), libIndexOf('business:golf-cart-se')], label: 'Stand In for utility cart', r: 0.6 },
+    reel: { items: [libIndexOf('business:golf-mower')], label: 'Stand In for ride-on reel mower', r: 0.7 },
+    push: { items: [libIndexOf('gen:lawnmower')], label: 'Stand In for walk-behind mower', r: 0.3 },
+    rotary: { items: [libIndexOf('expansion:rideon-mower')], label: 'Stand In for rotary mower', r: 0.6 },
+  };
+  /** T269: the grounds crew in the tile box, from mover m on (as dayMovers): each worker as his stand-in person (labelled), his vehicles to crewOut.
+   *  Returns the next mover index */
+  private crewMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number, now: number): number {
+    this.crewOut.length = 0; const c = this.crew; if (!c || this.dayOff) return m;
+    const T = this.traffic, st = T.simTime(performance.now()), v = c.view; v.update(this.dayMinute, now, X0, Y0, X1, Y1, st, localRate(T.town, st));
+    const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 });
+    for (const p of v.people) {
+      if (p.x < X0 || p.x > X1 || p.y < Y0 || p.y > Y1) continue;
+      t.group = 0; t.x = p.x; t.y = p.y; t.person = Game.CREW_ART[p.role]; t.row = p.row; t.frame = p.frame;
+      crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha < 1) out[m]!.alpha = p.alpha;
+      this.caddieLabels.push({ p: out[m]!, text: p.role === 'gk' ? 'Stand In for greenkeeper' : 'Stand In for mower operator' }); m++;
+    }
+    let n = 0;
+    for (const th of v.things) {
+      if (th.veh === 'none' || th.x < X0 || th.x > X1 || th.y < Y0 || th.y > Y1) continue;
+      const a = Game.CREW_VEH[th.veh], item = a.items.length > 1 ? a.items[th.hx - th.hy < 0 ? 0 : 1]! : a.items[0]!; if (item < 0) continue;
+      const d = this.propDrawable(this.crewThingDraw, n++, item, th.x, th.y, a.r); if (th.alpha < 1) d.alpha = th.alpha;
+      this.crewOut.push(d); this.caddieLabels.push({ p: d, text: a.label });
+    }
+    return m;
   }
   /** T208: the town day's minute everyday golf is played back at (set each frame) and each everyday golfer's art (indices into GOLFER_PEOPLE) */
   private dayMinute = 0; private dayArt: number[] = []; private dayBookFor: GolfSave | null = null; private clubEmitAt = 0; private dayPark: CarPark | null = null;
@@ -6541,7 +7341,7 @@ export class Game {
   private dayCarDraw: Drawable[] = []; private dayCarOut: Drawable[] = [];
   /** T208: the pace of a day's roster for the season's pace term: the day on screen's plan, else the day played now (a day a skip jumped) */
   private dayPaceOf(r: DayRoster, now: number) {
-    if (this.dayPlay && this.dayPlay.view.roster === r) return dayPace(this.dayPlay.view.plan);
+    if (this.dayPlay && (this.dayPlay.view.roster === r || this.dayPlay.base === r)) return dayPace(this.dayPlay.view.plan); // (T241: yours too)
     const c = this.dayCourseOf(now); return c && c.view.holes.length ? dayPace(dayPlan(c.view, r)) : null;
   }
   /** T208: the played course for everyday golf, rebuilt when the tees, pins or aim points change (looked at every 2 s) */
@@ -6549,10 +7349,92 @@ export class Game {
     const g = this.golf; if (!g) return null;
     const c = this.dayCourse;
     if (c && now - c.at < 2000) return c;
-    const key = JSON.stringify([g.tees, g.pins, g.aims]);
+    const key = JSON.stringify([g.tees, g.pins, g.aims, g.dayPins?.today ?? null]); // (T269: and the day's cups)
     if (c && c.key === key) { c.at = now; return c; }
     this.dayCourse = { view: dayCourse(this.playCourse(g)), key, at: now }; // (each hole once: a 9-hole course is a 9-hole round)
     return this.dayCourse;
+  }
+  // ---------- T269 (#810): the day's pins (golf/daypins.ts) ----------
+  /** today's cup of hole n: the day's (golf.dayPins), else its placed pin; null: no pin */
+  todayPin(n: number): Pt | null {
+    const g = this.golf; if (!g) return null;
+    const t = g.dayPins ? pinIn(g.dayPins.today, n) : null; if (t) return t;
+    return g.pins.find(p => p.hole === n) ?? null;
+  }
+  /** sets hole n's cup today (a pin put down or dragged is today's cup) */
+  private setTodayPin(n: number, x: number, y: number) {
+    const s = this.golf?.dayPins; if (!s) return; // (no day pins yet: the placed pins are today's)
+    const t = pinIn(s.today, n); if (t) { t.x = x; t.y = y; } else s.today.push({ hole: n, x, y });
+    this.pinRev++; this.dayCourse = null;
+  }
+  /** the point before hole n's pin on its line of play (its last aim point, else its back tee); null: none */
+  private approachOf(n: number): Pt | null {
+    const g = this.golf; if (!g) return null;
+    const aims = (g.aims ?? []).filter(q => q.hole === n).sort((p, q) => p.order - q.order), a = aims[aims.length - 1];
+    if (a) return { x: a.x, y: a.y };
+    const t = g.tees.find(q => q.hole === n && q.kind === 'back') ?? g.tees.find(q => q.hole === n);
+    return t ? { x: t.x, y: t.y } : null;
+  }
+  /** hole n's green round its placed pin (golf/daypins.ts greenAt), kept until the grid, the pin or its approach changes */
+  private greenOf(n: number): GreenShape | null {
+    const g = this.golf, grid = this.courseGrid; if (!g || !grid) return null;
+    const pin = g.pins.find(p => p.hole === n); if (!pin) return null;
+    const from = this.approachOf(n), key = `${grid.rev}|${pin.x},${pin.y}|${from ? `${from.x},${from.y}` : ''}`, c = this.greens.get(n);
+    if (c?.key === key) return c.g;
+    const gr = greenAt(grid, n, pin.x, pin.y, from); this.greens.set(n, { key, g: gr }); return gr;
+  }
+  /** the rota's new cup for hole n on town day `day`, away from yesterday's (golf/daypins.ts choosePin on its green, on T263's slopes) */
+  private nextPin(day: number, n: number, prev: Pt): Pt | null {
+    const { depth, side } = pinSlot(day, n), f = this.courseHeight;
+    return choosePin(this.greenOf(n), depth, side, prev, f.rev ? (x, y) => courseSlopeAt(f, x, y).mag : null, this.seed, day, n);
+  }
+  /** T269, each frame in golf: a new town day cuts every hole's cup anew (rollDayPins; an old save's cups are its placed pins); every 2 s, when the
+   *  grid or the pins changed, a cup no longer on its hole's green goes back to the placed pin. The flags follow the cups */
+  private updateDayPins(now: number) {
+    const g = this.golf; if (!g) return;
+    const tr = this.traffic, day = townTimeOf(tr.town, tr.simTime(now)).day;
+    if (!g.dayPins || g.dayPins.day !== day) {
+      // T269 part 3: the day's work first (golf/staff.ts): only the cups the greenkeepers change today move; the others keep yesterday's pin
+      const cut = new Set(this.workStaff(day).today.cups);
+      g.dayPins = rollDayPins(g.dayPins ?? null, day, g.pins.map(p => ({ hole: p.hole, x: p.x, y: p.y })), (n, prev) => (cut.has(n) ? this.nextPin(day, n, prev) : null));
+      this.pinRev++; this.dayCourse = null; this.scheduleSave();
+    }
+    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); this.payStaff(); this.stepClub(); } // (T214: the members' month beside the wages)
+    if (this.flagRev !== this.pinRev) this.syncFlags();
+  }
+  /** the day's cups against the course (when the grid or the pins changed): a hole with no cup today is given its placed pin, and a cup no longer on
+   *  its hole's green (repainted, the pin moved) goes back to the placed pin */
+  private checkDayPins() {
+    const g = this.golf, grid = this.courseGrid, s = g?.dayPins; if (!g || !s) return;
+    const key = () => `${grid?.rev ?? -1}|${this.pinRev}|${g.pins.length}`; if (key() === this.pinsCheckKey) return;
+    let moved = false;
+    for (const p of g.pins) {
+      const t = pinIn(s.today, p.hole);
+      if (!t) { s.today.push({ hole: p.hole, x: p.x, y: p.y }); moved = true; continue; }
+      if (!grid || (t.x === p.x && t.y === p.y)) continue;
+      const i = cellAt(grid, t.x, t.y);
+      if (i < 0 || grid.surf[i] !== SURF.green || grid.hole[i] !== p.hole) { t.x = p.x; t.y = p.y; moved = true; }
+    }
+    if (moved) { this.pinRev++; this.dayCourse = null; this.scheduleSave(); }
+    this.pinsCheckKey = key();
+  }
+  /** where hole n's flag stands now: today's cup, once the greenkeeper has set it (T269 part 2: until his cup event, yesterday's) */
+  private shownPin(n: number): Pt | null {
+    const t = cupSetAt(this.crew?.day ?? null, n), prev = this.golf?.dayPins ? pinIn(this.golf.dayPins.prev, n) : null;
+    return t !== null && this.dayMinute < t && prev ? prev : this.todayPin(n);
+  }
+  /** the flags (the pins' props, golfProps) to the cups shown now: moved in place (propChanged; a flag casts nothing, so no ground re-bakes) */
+  private syncFlags() {
+    const g = this.golf; this.flagRev = this.pinRev; if (!g) return;
+    for (const p of g.pins) {
+      const pr = this.golfProps.get('pin:' + p.hole), at = this.shownPin(p.hole); if (!pr || !at) continue;
+      if (Math.abs(pr.x - at.x) > 1e-6 || Math.abs(pr.y - at.y) > 1e-6) { pr.x = at.x; pr.y = at.y; this.propChanged(pr); }
+    }
+  }
+  /** T269: the hole card's line for hole n's cup today ("back left · 24 m on, 5 m from the left edge"); null: no green to read it on */
+  todayPinText(n: number): string | null {
+    const p = this.todayPin(n), gr = p ? this.greenOf(n) : null;
+    return p && gr ? pinLine(pinReport(gr, p)) : null;
   }
   /** T208: the club's ground for the everyday golfers' walks and cars: the clubhouse's door, and the car park that serves it (T237: the nearest
    *  walk of those within WALK_SERVE_M, golf/walkserve.ts; none in reach: no bays, so the golfers find no parking) with its bays (nearest the
@@ -6598,13 +7480,16 @@ export class Game {
   clubCard(): ClubCardView | null {
     const g = this.golf, bk = this.dayBook;
     if (!this.clubCardOpen || !g || !bk || !this.bizDefs.some(d => d.type === 'clubhouse')) return null;
-    return { ...clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen)), lots: this.lotsFor(g.clubhouse) }; // (T237: its car parks)
+    const mv = this.clubMembersView(); // T214: the Members block, and the header's count is the club's own
+    return { ...clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen)), lots: this.lotsFor(g.clubhouse), crew: this.crewCardView() ?? undefined, ...(mv ? { members: mv, clubMembers: mv.members } : {}) }; // (T237: its car parks; T269: its crew)
   }
   /** T208: opens or closes the clubhouse card (the select tool's click on the clubhouse, the top bar's Club chip) */
   openClubCard(open = !this.clubCardOpen) { this.clubCardOpen = open && !!this.golf && this.bizDefs.some(d => d.type === 'clubhouse'); if (this.clubCardOpen && this.range.cardOpen) this.range.cardOpen = false; this.emit(); }
   /** T208: whether the game has a clubhouse (the top bar's Club chip) */
   get hasClubhouse(): boolean { return !!this.golf && this.bizDefs.some(d => d.type === 'clubhouse'); }
   /** T208: the everyday golfers out at the club now (checked in, not yet back at their car; the bench logs it) */
+  /** T251 (dev): where most of the tournament's golfers are (the bench's and the captures' camera); null with no play */
+  playFocus(): Pt | null { const P = this.play?.pv.people; if (!P?.length) return null; let best: Pt | null = null, bn = -1; for (const p of P) { let n = 0; for (const q of P) if (Math.abs(q.x - p.x) + Math.abs(q.y - p.y) < 50) n++; if (n > bn) { bn = n; best = { x: p.x, y: p.y }; } } return best; }
   dayOutNow(): number { return this.dayPlay ? this.dayPlay.view.outNow(this.dayMinute) : 0; }
   /** T208: the busiest spot of the everyday golfers now (the golfer with the most others within 50 tiles) (the bench's camera; null: none) */
   dayFocus(): Pt | null { const v = this.dayPlay?.view; if (!v) return null; { const T = this.traffic, st = T.simTime(performance.now()); v.update(this.dayMinute, performance.now() / 1000, -1e6, -1e6, 1e6, 1e6, st, localRate(T.town, st)); } let best: Pt | null = null, bn = -1; for (const p of v.people) { let n = 0; for (const q of v.people) if (Math.abs(q.x - p.x) + Math.abs(q.y - p.y) < 50) n++; if (n > bn) { bn = n; best = { x: p.x, y: p.y }; } } return best; }
@@ -6686,8 +7571,8 @@ export class Game {
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
-    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace() }), key, art, finish: new DayFinish(), own: null, waves: -1 };
-    if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}) };
+    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace(), height: this.ballHeight }), key, art, finish: new DayFinish(), own: null, waves: -1 };
+    if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: owner.skills ?? OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}), ...(owner.skills ? { skills: owner.skills } : {}) };
     return pl;
   }
   /** the played course (docs/GOLF-PLAY.md P2a): the derived holes with a line, the lie from the course grid's surface where it is painted, else the painted
@@ -6699,11 +7584,18 @@ export class Game {
     // the drawn shape cut a corner off: the areas are read without that surface's own (their outlines are the cells'), its collars kept
     const drawn = grid ? drawnSurfaces(grid, this.courseLooks()) : null, but = new Map<number, CourseAreaRec[]>();
     const areasBut = (c: number) => { let v = but.get(c); if (!v) { v = areas.filter(a => { const q = a as Partial<GridArea>; return q.s !== c || !!q.collar; }); but.set(c, v); } return v; };
+    // T271: a custom grass plays as its grass (the cells hold that surface; the first cut's hold rough, so the lie reads the grass's own play)
+    const plays = this.grassPlays();
     const surfAt = (x: number, y: number): GolfSurface | null => {
-      const i = grid ? cellAt(grid, x, y) : -1, c = i >= 0 ? grid!.surf[i]! : 0, d = drawn && i >= 0 ? drawn.at(x, y) : c, s = i >= 0 ? SURF_SURFACE[d] : null;
+      const i = grid ? cellAt(grid, x, y) : -1, c = i >= 0 ? grid!.surf[i]! : 0;
+      // the surface drawn on top (the rounded outlines' where they are near, else the cell's): a draw id, so a custom grass is its own
+      const d0 = drawn && i >= 0 ? drawn.at(x, y) : i >= 0 && grid!.draw ? grid!.draw[i]! : c;
+      const k = grassSlot(d0), p = k ? plays.get(k) : undefined, d = k ? (p ? PLAY_SURF[p] : c) : d0;
+      const s = i >= 0 ? (p ? golfSurfaceOf(p) : SURF_SURFACE[d]) : null;
       return s ?? surfaceAt(d !== c && c ? areasBut(c) : areas, x, y);
     };
-    return makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt);
+    // T269: play reads the day's cups (golf/daypins.ts): the pin and the end of each line; the par and the tees are the placed pin's
+    return withDayPins(makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt), n => this.todayPin(n));
   }
   /** the round of a tournament key from the save: the save's owner play when it is this tournament's (buildPlay replays his inputs). A save the course no
    *  longer fits (its inputs throw) is dropped, and the day is played without him */
@@ -6724,7 +7616,9 @@ export class Game {
    *  the save records him. `sex` picks his look: golf_am_m3 for 'm', golf_am_w1 for 'w' */
   joinTournament(sex: Sex, tees: TeeKind = 'middle') {
     const pl = this.play; if (!pl || !this.canJoinTournament()) return;
-    const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null, tees }); // T254: from the tee set he chose
+    // T254: from the tee set he chose; T241: with your skills under the tournament's pressure (golf/player.ts), kept in the save for the replay
+    const me = this.playerNow(), skills = me ? gameSkills(me.skills, PRESSURE.tournament) : undefined;
+    const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null, tees, ...(skills ? { skills } : {}) });
     if (!built) return;
     this.play = built; this.saveOwner(); this.emit();
   }
@@ -6784,7 +7678,7 @@ export class Game {
   /** writes the owner's play to the save (GolfSave.play): his tournament key, sex, the inputs he has played and his caddie count */
   private saveOwner() {
     const pl = this.play, o = pl?.own; if (!pl || !o || !this.golf) return;
-    this.golf.play = { key: pl.key, owner: o.sex, inputs: o.live.inputs.slice(), caddie: o.caddie, ...(o.tees ? { tees: o.tees } : {}) };
+    this.golf.play = { key: pl.key, owner: o.sex, inputs: o.live.inputs.slice(), caddie: o.caddie, ...(o.tees ? { tees: o.tees } : {}), ...(o.skills ? { skills: o.skills } : {}) };
     this.scheduleSave();
   }
   /** toasts the owner's score once his group is done ("You shot 82 (+10)") */
@@ -6792,6 +7686,9 @@ export class Game {
     const id = pl.own?.id; if (id === undefined) return;
     const total = pl.plan.strokes[id]!.reduce((a, b) => a + b, 0), par = pl.view.holes.reduce((a, h) => a + h.par, 0);
     this.toast(`You shot ${total} (${toParText(total - par)})`, 'good');
+    // T241: the round goes into your rounds (a tournament: your nerve up the most)
+    const me = pl.own?.skills ? this.playerNow() : null;
+    if (me) this.setPlayer(playedRound(me, { day: this.townNow().day, kind: 'tournament', strokes: total, par, holes: pl.view.holes.length }));
   }
   /** the owner's open shot on the course (P4b, the 2D overlay): a line from his ball to the aim, a white ring at the aim, his ball, and for a full shot the
    *  faint ellipse of its expected spread at the landing point (the carry along the aim): two sigmas along (0.03 + 0.07 * (1 - skill) of the carry) and
@@ -6802,7 +7699,7 @@ export class Game {
     ctx.save();
     if (i.club !== 'putter') {
       const L = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) || 1, ux = (i.aim.x - t.ball.x) / L, uy = (i.aim.y - t.ball.y) / L;
-      const carry = carryM(i.club, own.skill) * i.power / TILE_M, k = 1 - own.skill;
+      const sk = skillFor(own.skill, i.club), carry = carryM(i.club, sk) * i.power / TILE_M, k = 1 - sk; // (T241: his club's part of the game)
       const px = t.ball.x + ux * carry, py = t.ball.y + uy * carry, A = 2 * (0.03 + 0.07 * k) * carry, B = 2 * carry * Math.tan((1.5 + 5 * k) * Math.PI / 180);
       const c = this.screen(px, py), e1 = this.screen(px + ux * A, py + uy * A), e2 = this.screen(px - uy * B, py + ux * B);
       // the unit circle through the spread's axes (their screen vectors from the landing point), filled faint
@@ -6824,9 +7721,11 @@ export class Game {
     this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
     if (this.grassWait.size) { const tg = performance.now(); this.courseGrass(1); this.cMs += performance.now() - tg; }
     if (++this.surveyTick % 30 === 0) this.syncSurvey(); // T232
-    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.watchHoleLines(performance.now()); this.flushLotGround(); this.flushCasters(); this.laybyLots();
+    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.watchHoleLines(performance.now()); this.watchMowFlips(performance.now()); this.flushLotGround(); this.flushCasters(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
+    // T259: the farms' fields and orchards by the month (checked four times a second; only the farms whose look changes compose again)
+    if (this.farmsEnabled && this.farmTick % 15 === 7) this.farmSeasonTick();
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
     this.yearCheck(); this.foundingCheck(); this.progressCheck(); this.ghostTreesCheck(); this.ghostFrameCheck(performance.now()); // T176, T229
     const t0 = performance.now();
@@ -6944,6 +7843,22 @@ export class Game {
    *  switch, strength, gloss size and per-surface weights, beside T215's knobs; remembered), window.__game.setShine({ on, strength, size, weights,
    *  bump, eye, night }). The switch and the weights are baked into each chunk's weight mask, so changing them bakes the ground again (the
    *  weights a moment after the last change, as a slider is dragged); the rest are the shader's */
+  /** T248 (#718): the water moves (water-motion.ts): two ripple layers, the rivers' flow, waves lapping at the shore and the sparkle, on by
+   *  default; the gear menu's Water motion (its switch, the speed, the ripples', foam's and sparkle's strength; remembered),
+   *  window.__game.setWaterMotion({ on, flow, ripple, foam, sparkle }). The switch makes (or drops) each water chunk's motion mask, so it
+   *  bakes the ground again; off is the water as before, bit for bit. The rest are the shader's */
+  get waterMotion(): boolean { return this.waterLook.on; }
+  set waterMotion(on: boolean) { this.setWaterMotion({ on: !!on }); }
+  waterLook: WaterMotion = { ...WATER_MOTION };
+  setWaterMotion(p: Partial<WaterMotion>) {
+    this.waterLook = clampWaterMotion({ ...this.waterLook, ...p });
+    try { localStorage.setItem(WATER_MOTION_KEY, JSON.stringify(this.waterLook)); } catch { /* storage may be unavailable */ }
+    this.ground.setWaterMotion(this.waterLook.on); this.emit();
+  }
+  /** T248: the water's phases (the rivers' flow cycles, the waves, the ponds' drift), stepped by the real time each frame at the look's speed;
+   *  waterClock (seconds, the captures and tests): the phases held at that time instead (null: running) */
+  private waterPhases = { phase: 0, wave: 0, drift: [0, 0, 0, 0] }; private waterLast = 0;
+  waterClock: number | null = null;
   get grassShine(): boolean { return this.shine.on; }
   set grassShine(on: boolean) { this.setShine({ on: !!on }); }
   shine: ShineLook = clampShineLook(SHINE_LOOK);
@@ -6992,7 +7907,7 @@ export class Game {
     this.ground.tilesAhead(bandsAhead(z, tb));
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
-    this.updatePlay(now); this.updateEveryday(now);
+    this.updateDayPins(now); this.updatePlay(now); this.updateEveryday(now); // T269: the day's cups first, so the day's play reads them
     if (this.golf) this.monthMoney.note(this.golfMonthAt(now), this.money); // T233: the money chip's change a month
     // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)
     gl.grade = this.boot.kind === 'game' ? gradeFrame(this.grade, this.nightAmount()) : null;
@@ -7051,6 +7966,11 @@ export class Game {
       // T262: the grass shine's falloff (T215's), gain (by day, by the zoom) and look this frame; each picture's weight mask by the picture
       gl.shine = this.ground.grassShine ? { inner: this.spec.inner, outer: this.spec.outer, gain: shineGain(this.shine, this.nightAmount(), cam.z), exponent: shineExponent(this.shine), bump: this.shine.bump, eye: this.shine.eye } : null;
       gl.shineOf ??= tex => this.ground.shineOf(tex);
+      // T248: the water's motion this frame (its phases stepped by the real time; faded out toward the district zoom); each picture's mask by
+      // the picture
+      { const dt = this.waterLast ? Math.min(0.1, Math.max(0, (now - this.waterLast) / 1000)) : 0; this.waterLast = now; if (this.waterClock === null) stepPhases(this.waterPhases, dt, this.waterLook); }
+      gl.water = this.ground.waterMotion ? motionFrame(this.waterLook, cam.z, this.nightAmount(), ze, this.waterClock === null ? this.waterPhases : phasesAt(this.waterClock, this.waterLook)) : null;
+      gl.waterOf ??= tex => this.ground.waterOf(tex);
       const spec = (tex: WebGLTexture | null) => this.ground.specOf(tex);
       const shadeMasks: { tex: WebGLTexture; r: readonly [number, number, number, number] }[] = [];
       let baked = true;
@@ -7091,7 +8011,7 @@ export class Game {
       // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
-      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1), this.dayCarOut, this.golfCartOut) : cars;
+      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1), this.dayCarOut, this.golfCartOut, this.crewOut) : cars;
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
       // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)
       if (this.ground.castersUsed) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2, LIVING_PLANT_MARGIN); }
@@ -7451,6 +8371,7 @@ export class Game {
     this.drawTollPreview(ctx);
     this.drawBizPreview(ctx);
     this.drawEventGhosts(ctx);
+    this.drawTeeGhost(ctx); // T268
     this.drawDecorGhost(ctx);
     this.drawPracticeGhost(ctx);
     this.drawBusPreview(ctx);
@@ -7588,6 +8509,8 @@ export class Game {
     for (const p of this.siHits) this.standInPill(p, p, ze);
     for (const p of this.businessProps) this.standInPill(p, p, ze);
     for (const l of this.range.labels) this.standInPill(l, l.p, ze, l.text);
+    // T259: the farms' stand-ins (the windbreak, the orchard, the crop fields, the lane) in the view's box
+    for (const ls of this.farmLabels.values()) for (const l of ls) if (l.box[2]! >= b[0]! && l.box[0]! <= b[2]! && l.box[3]! >= b[1]! && l.box[1]! <= b[3]!) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.decor.labels) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.placeStandIns) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.caddieLabels) this.standInPill(l.p, l.p, ze, l.text); // T213: the caddies' stand-in
