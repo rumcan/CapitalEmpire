@@ -1,5 +1,7 @@
 # SW street-facing repairs — first delivery
 
+The next three approved repairs are documented separately in [HANDOFF-02.md](HANDOFF-02.md).
+
 Only three corrected fronts are integrated in this delivery:
 
 | Library ID | Selected sheet / cell | New complete version |

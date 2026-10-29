@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "id": "batch:sw-street-repairs-03",
+  "output": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+  "references": [
+    "art/theme-consistency/references/sw-street-batch03-architecture-guide-v1.png"
+  ],
+  "cells": [
+    {
+      "index": 17,
+      "id": "variation:town-grocery-46d5dc39-plain:1",
+      "version": "variation-town-grocery-46d5dc39-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-grocery-46d5dc39-plain-1/NE.png",
+      "sha256": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+      "width": 567,
+      "height": 566,
+      "dir": "variation-town-grocery-46d5dc39-plain-1",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW"
+    },
+    {
+      "index": 18,
+      "id": "variation:town-hardware-bf36737f-plain:1",
+      "version": "variation-town-hardware-bf36737f-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-hardware-bf36737f-plain-1/NE.png",
+      "sha256": "49c4af45ca781a7e3d186e04ae2b86defae956ae050760311f03bff434a2e115",
+      "width": 552,
+      "height": 540,
+      "dir": "variation-town-hardware-bf36737f-plain-1",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW"
+    },
+    {
+      "index": 21,
+      "id": "variation:town-postoffice-1c7025b8-plain:1",
+      "version": "variation-town-postoffice-1c7025b8-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-postoffice-1c7025b8-plain-1/NE.png",
+      "sha256": "c0686b817b349a1c1f10b76ef8117db2b93212a4ba0ef5a70f030326fa2181ee",
+      "width": 589,
+      "height": 533,
+      "dir": "variation-town-postoffice-1c7025b8-plain-1",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW"
+    },
+    {
+      "index": 25,
+      "id": "variation:ref-building-house-garage-a1d986d3-plain:1",
+      "version": "variation-ref-building-house-garage-a1d986d3-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-garage-a1d986d3-plain-1/NE.png",
+      "sha256": "756031ccacf00b3f246770a69f6a50121036f0571c52fbe0b92d598496978d7d",
+      "width": 580,
+      "height": 496,
+      "dir": "variation-ref-building-house-garage-a1d986d3-plain-1",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW"
+    }
+  ],
+  "transparent": true,
+  "prompt": "Paint over this architectural line drawing to create four different finished building sprites on one 2×2 transparent sheet. Preserve every structural outline and camera angle. The drawing is geometry authority, not a loose composition reference. Do not rotate any building relative to it.\n\nEvery FRONT wall base descends exactly one pixel per two pixels right. Every RIGHT wall base rises exactly one pixel per two pixels right. Keep both equally steep, and verticals upright. Foundations, door headers, window rows and floor beams follow these axes. Preserve these exact drawn edges while adding surface painting.\n\nTop left: red brick two-storey grocery with cream stone quoins, four upper front windows, dark slate mansard roof with dormer, roof HVAC and rear chimney. Dark green shopfront, central glass double doors, fruit and vegetable display windows, pale green and cream striped awning. Gold \"MAPLE FAMILY MARKET\" lettering and small maple leaves on the front sign.\nTop right: two-storey golden-orange brick hardware shop. Dark green timber storefront and window trim, four upper front windows, flat roof and cream parapet, brick chimney and metal vents. Central green door, two tool-filled shop windows, \"BELLAMY HARDWARE\" sign with crossed tools. Small front bench, blue postbox, tool stand and tyres close to the facade.\nBottom left: one-storey red brick post office, cream stone quoins and sills, grey foundation, dark slate hip roof, front entrance gable with round clock and \"MAPLE FALLS POST OFFICE\" sign. Central dark green double door, warm transom and one tall window either side, brass lanterns, broad stone entry steps with stone cheeks. Front door faces the red-line front plane, not the right side.\nBottom right: cream clapboard garage workshop, dark slate gables, small cupola with warm window and weathercock, brick chimney. Tall left front gable over wide grey segmented garage door, three horizontal attic windows and round gable louvre. Lower right wing has brown single garage door and narrow cream service door. Small close tools, hose and stacked wood. Both garage openings and service door stay on the drawn FRONT plane.\n\nUse rich hand-painted stylized game art akin to World of Warcraft/Hearthstone environments: broad confident painted shapes, readable masonry and timber, detailed slate shingles, warm glowing windows, restrained wear. Sun from upper right, shade lower left, consistent across all four. Complete isolated buildings with clear gutters and margins, genuine alpha transparency. Paint out all guide colours. No floor planes, ground patches, roads, scenery, background, labels or detached shadows. Native square PNG.",
+  "stage": "architecture-guide-only-redraw",
+  "generator": "built-in imagegen",
+  "originalSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-17e8918f-6746-475c-9941-46c12ea57d7a.png",
+  "review": "pending"
+}

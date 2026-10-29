@@ -1,38 +1,55 @@
 {
   "id": "variation:town-hardware-bf36737f-plain:1",
   "generator": "image_gen",
-  "generated": "2026-10-24",
-  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-76a34ef3-6ce5-4265-89be-3e085e318e74.png",
-  "prompt": "SQUARE 1:1 CANVAS 2048x2048, exactly four SMALL complete building cutouts in 2x2 cells. Transparent RGBA alpha=0 outside the physical building. Each building occupies at most 60% of cell height; 100 pixels of fully clear padding around all sprites and canvas. Reference1 is STYLE ONLY: the Maple Bean street miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve architecture, not old rendering or blue night cast. All assets must belong beside reference1. Fixed orthographic 2:1 isometric camera, vertical walls vertical, ground axes +/-26.565deg, SCREEN UPPER RIGHT SUN in EVERY view; right planes warm, left planes cooler. Four TRUE rigid quarterturns: top-left NE=Afront+Bphysicalright, top-right SE=Bright+Crear, bottom-left SW=Crear+Dleft, bottom-right NW=Dleft+Afront. Afront appears on SCREEN LEFT in NE and SCREEN RIGHT in NW. Roof/chimney/doors/windows/equipment stay at fixed physical corners; reconstruct plain rear, NEVER fourfronts or samecorner repeated. Same scale each cell. NO FLOOR/BACKDROP/grey surface/terrain/paving/yard/leaves/broad shadow/haze/gradient/checkerboard/caption/label/divider/frame. No people, vehicles, Halloween or garlands. Only building and integral structural parts.  Subject library ID variation:town-hardware-bf36737f-plain:1. Preserve exact building massing, floor count and roof in the identity reference. If source shows a rear wall, keep it as physical rear and construct a sensible front, not four duplicate rear walls. Signs and unique front entrances visible in exactlytwo of4true quarterturns. No paved surface or invented floor, no cropping.",
-  "references": [
-    {
-      "role": "authoritative-theme",
-      "file": "art/theme-consistency/references/theme-authoritative.png",
-      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+    "sheetSha256": "ae36723d1455e098a6e6a33ec22a2ea8b9285067f0e47f2f86eb4964eee974ce",
+    "cell": 2,
+    "sourceRect": {
+      "left": 608,
+      "top": 21,
+      "width": 628,
+      "height": 652
     },
-    {
-      "role": "existing-subject-identity",
-      "id": "variation:town-hardware-bf36737f-plain:1",
-      "direction": null,
-      "file": "art/theme-consistency/exports/buildings/variation-town-hardware-bf36737f-plain-1.configured@2x.png",
-      "sha256": "359210454a45299d03f698465fae5bc7f0509eefaad0f085409377a324ed3e7f"
+    "coreBounds": {
+      "left": 712,
+      "top": 79,
+      "width": 509,
+      "height": 564
+    },
+    "nonzeroPixels": 227269,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-03-v2.review.json",
+      "sha256": "7d5a9cc960930be1b943733a4a92d1b80f5f214c932fbb7c6d1eaf6f8683bd75"
     }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-02.json",
+    "sha256": "8858d7df8851009fed181f62f4e724dc635e5a62f4980267b171048713eab8ce"
+  },
+  "original": {
+    "id": "variation:town-hardware-bf36737f-plain:1",
+    "version": "variation-town-hardware-bf36737f-plain-1-4views-v1",
+    "files": {
+      "NE": "49c4af45ca781a7e3d186e04ae2b86defae956ae050760311f03bff434a2e115",
+      "SE": "ee6d002cd8bb8ff0c1a3ef195f33533f0eca24ceda7f73a706bffcf6e74b499a",
+      "SW": "5ce1a1a847ecf540c652cf51249d2dddea6f92fc98a37e668648c08055d8ce18",
+      "NW": "66af7bc43fa5a51f67c3f9bec76ef861151eadd8f9315e7df63338f46027bfa0"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
   ],
-  "integrationStatus": "blocked",
-  "integrationReason": "Both front views are close to elevation: broad hardware front foundation almost horizontal and a very narrow side; inconsistent camera against rear views/master.",
-  "sourceReview": {
-    "reviewed": "2026-10-24",
-    "actualAlphaComposite": "output/building-priority/newest-review-2.png",
-    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
-    "corrections": [
-      {
-        "direction": "NE",
-        "brief": "Preserve hardware facade/windows/sign and all architecture; show front LEFT plus right side RIGHT with clearly diagonal two ground axes and equal isometric foreshortening. No nearly horizontal front foundation."
-      },
-      {
-        "direction": "NW",
-        "brief": "Preserve hardware facade/windows/sign; show opposite side LEFT plus front RIGHT at same isometric camera, both planes clearly exposed. No nearly horizontal front foundation."
-      }
-    ]
+  "files": {
+    "NE": "1400e78f4098929e262f995a3867c8dda3ea54b794b4da958eb73bb81bc1c4d0",
+    "SE": "ee6d002cd8bb8ff0c1a3ef195f33533f0eca24ceda7f73a706bffcf6e74b499a",
+    "SW": "5ce1a1a847ecf540c652cf51249d2dddea6f92fc98a37e668648c08055d8ce18",
+    "NW": "66af7bc43fa5a51f67c3f9bec76ef861151eadd8f9315e7df63338f46027bfa0"
   }
 }

@@ -114,7 +114,7 @@ until its views land, so it may face the other way but its light stays on the ri
 | `variation:gen-house-duplex-c39d1a23-plain-corner:1` | Duplex — variation 1 | done: variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1 |
 | `variation:gen-house-duplex-north-521714ac-plain:1` | Duplex — variation 1 | done: variation-gen-house-duplex-north-521714ac-plain-1-4views-v2 |
 | `variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1` | Farmhouse — wraparound porch — variation 1 | done: variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1 |
-| `variation:gen-house-farmhouse-wrap-2b0eea83-plain:1` | Farmhouse — wraparound porch — variation 1 | done: variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2 |
+| `variation:gen-house-farmhouse-wrap-2b0eea83-plain:1` | Farmhouse — wraparound porch — variation 1 | done: variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v3 |
 | `variation:gen-house-farmhouse-wrap-north-446969e5-plain:1` | Farmhouse — wraparound porch — variation 1 | done: variation-gen-house-farmhouse-wrap-north-446969e5-plain-1-4views-v2 |
 | `variation:gen-house-l-ranch-18552ce5-plain-corner:1` |  | missing: not generated yet |
 | `variation:gen-house-l-ranch-18552ce5-plain:1` | Ranch — L-shape, corner porch — variation 1 | done: variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2 |
@@ -171,8 +171,8 @@ until its views land, so it may face the other way but its light stays on the ri
 | `variation:town-barber-13c5ef06-plain:1` | Clip Joint Barbers — variation 1 | done: variation-town-barber-13c5ef06-plain-1-4views-v1 |
 | `variation:town-firestation-north-0ac85582-plain:1` | Maple Falls Fire House — variation 1 | done: variation-town-firestation-north-0ac85582-plain-1-4views-v1 |
 | `variation:town-fish_tackle-99c1401c-plain:1` | Pike & Pine Outfitters — variation 1 | done: variation-town-fish_tackle-99c1401c-plain-1-4views-v1 |
-| `variation:town-grocery-46d5dc39-plain:1` | Maple Family Market — variation 1 | done: variation-town-grocery-46d5dc39-plain-1-4views-v1 |
-| `variation:town-hardware-bf36737f-plain:1` | Bellamy Hardware — variation 1 | done: variation-town-hardware-bf36737f-plain-1-4views-v1 |
+| `variation:town-grocery-46d5dc39-plain:1` | Maple Family Market — variation 1 | done: variation-town-grocery-46d5dc39-plain-1-4views-v2 |
+| `variation:town-hardware-bf36737f-plain:1` | Bellamy Hardware — variation 1 | done: variation-town-hardware-bf36737f-plain-1-4views-v2 |
 | `variation:town-laundromat-43183f9e-plain:1` | Spin Cycle Laundry — variation 1 | done: variation-town-laundromat-43183f9e-plain-1-4views-v2 |
 | `variation:town-pharmacy-d87b861c-plain:1` | Maple Pharmacy — variation 1 | done: variation-town-pharmacy-d87b861c-plain-1-4views-v1 |
 | `variation:town-postoffice-1c7025b8-plain:1` | Maple Falls Post Office — variation 1 | done: variation-town-postoffice-1c7025b8-plain-1-4views-v2 |

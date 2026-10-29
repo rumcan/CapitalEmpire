@@ -1,0 +1,231 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "source": {
+    "file": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-02-v2.png",
+    "sha256": "e714c295ca48c3afcc9a530780f0ab180cb28154bf1b2bd1d84c51fe29e2b903"
+  },
+  "status": "partial-one-cell-ready",
+  "toleranceDegrees": 2.25,
+  "cells": [
+    {
+      "cell": 1,
+      "name": "farmhouse",
+      "status": "ready-for-integration-review",
+      "reason": "Front1.709deg/right1.806deg within2.25. Primary identityinspection confirms visibleRIGHTrailing is short frontporch-endreturn, notfullrightsidewrap; originalphysicalLEFTwrap hiddenatcorrectcamera."
+    },
+    {
+      "cell": 2,
+      "name": "duplex",
+      "status": "held",
+      "reason": "Frontbeam1.35deg good/right2.779deg beyond2.25."
+    },
+    {
+      "cell": 3,
+      "name": "split-level",
+      "status": "held",
+      "reason": "Front2.894deg/right2.988deg beyond2.25."
+    },
+    {
+      "cell": 4,
+      "name": "L-ranch",
+      "status": "held",
+      "reason": "Front2.259deg/right3.202deg beyond2.25."
+    }
+  ],
+  "measurements": [
+    {
+      "name": "farm-front",
+      "kind": "actual structural lower base, alpha boundary",
+      "target": 0.5,
+      "slope": 0.5378604963112005,
+      "intercept": 395.30633802816897,
+      "samples": 71,
+      "rmsPx": 0.3178048081608507,
+      "endpoints": [
+        [
+          280,
+          545.9072769953051
+        ],
+        [
+          350,
+          583.5575117370892
+        ]
+      ],
+      "angleErrorDegrees": 1.7090011793516011
+    },
+    {
+      "name": "farm-side",
+      "kind": "actual structural lower base, alpha boundary",
+      "target": -0.5,
+      "slope": -0.5400402414486919,
+      "intercept": 800.6277665995974,
+      "samples": 71,
+      "rmsPx": 0.3126089800621555,
+      "endpoints": [
+        [
+          480,
+          541.4084507042253
+        ],
+        [
+          550,
+          503.60563380281684
+        ]
+      ],
+      "angleErrorDegrees": 1.805780209402849
+    },
+    {
+      "name": "split-front",
+      "kind": "actual structural lower base, alpha boundary",
+      "target": 0.5,
+      "slope": 0.5648222669349431,
+      "intercept": 932.5670690811536,
+      "samples": 71,
+      "rmsPx": 0.30456345943460716,
+      "endpoints": [
+        [
+          275,
+          1087.893192488263
+        ],
+        [
+          345,
+          1127.430751173709
+        ]
+      ],
+      "angleErrorDegrees": 2.893677315851597
+    },
+    {
+      "name": "split-side",
+      "kind": "actual structural lower base, alpha boundary",
+      "target": -0.5,
+      "slope": -0.5670058587727412,
+      "intercept": 1362.8501387604072,
+      "samples": 46,
+      "rmsPx": 0.3223020136386703,
+      "endpoints": [
+        [
+          465,
+          1099.1924144310824
+        ],
+        [
+          510,
+          1073.677150786309
+        ]
+      ],
+      "angleErrorDegrees": 2.9884394960605283
+    },
+    {
+      "name": "Lranch-front",
+      "kind": "actual structural lower base, alpha boundary",
+      "target": 0.5,
+      "slope": 0.5503089768385301,
+      "intercept": 605.9292891174113,
+      "samples": 86,
+      "rmsPx": 0.29611861399485806,
+      "endpoints": [
+        [
+          685,
+          982.8909382518043
+        ],
+        [
+          770,
+          1029.6672012830795
+        ]
+      ],
+      "angleErrorDegrees": 2.2593324001091872
+    },
+    {
+      "name": "Lranch-side",
+      "kind": "actual structural lower base, alpha boundary",
+      "target": -0.5,
+      "slope": -0.571938206720816,
+      "intercept": 1742.3088071348948,
+      "samples": 91,
+      "rmsPx": 0.31400816570293744,
+      "endpoints": [
+        [
+          1100,
+          1113.176779741997
+        ],
+        [
+          1190,
+          1061.7023411371238
+        ]
+      ],
+      "angleErrorDegrees": 3.201837558381768
+    },
+    {
+      "name": "duplex-side",
+      "kind": "actual structural lower base, alpha boundary",
+      "target": -0.5,
+      "slope": -0.5621951219512198,
+      "intercept": 1167.7804878048782,
+      "samples": 41,
+      "rmsPx": 0.35982843423233807,
+      "endpoints": [
+        [
+          1080,
+          560.6097560975609
+        ],
+        [
+          1120,
+          538.1219512195121
+        ]
+      ],
+      "angleErrorDegrees": 2.779431005822531
+    },
+    {
+      "name": "duplex-front-floorbeam-710",
+      "kind": "lower edge elevated structural balcony floorbeam; not handrail",
+      "target": 0.5,
+      "slope": 0.5300366300366297,
+      "intercept": -43.95787545787522,
+      "samples": 91,
+      "rmsPx": 0.9690559094050625,
+      "endpoints": [
+        [
+          710,
+          332.36813186813185
+        ],
+        [
+          800,
+          380.07142857142856
+        ]
+      ],
+      "angleErrorDegrees": 1.3601770068656232
+    },
+    {
+      "name": "duplex-front-floorbeam-870",
+      "kind": "lower edge elevated structural balcony floorbeam; not handrail",
+      "target": 0.5,
+      "slope": 0.5298830940052314,
+      "intercept": -43.4483264826776,
+      "samples": 131,
+      "rmsPx": 2.6082763255870267,
+      "endpoints": [
+        [
+          870,
+          417.54996530187367
+        ],
+        [
+          1000,
+          486.4347675225537
+        ]
+      ],
+      "angleErrorDegrees": 1.3533089775124074
+    }
+  ],
+  "doorCalibration": {
+    "cell": 1,
+    "kind": "visible doorleaf only; head partly hidden by porchawning",
+    "nativeFullSheet": {
+      "x": 241,
+      "visibleLeafTopY": 417,
+      "thresholdY": 465,
+      "visibleHeightPx": 48
+    },
+    "uncertaintyPx": 3,
+    "usableAsCompleteDoorGauge": false,
+    "recommendation": "Preserve existing calibrated physicalscale/footprint or obtain unoccluded singleleaf gauge. Do not infer2.1m standarddoor fromvisible48px."
+  }
+}

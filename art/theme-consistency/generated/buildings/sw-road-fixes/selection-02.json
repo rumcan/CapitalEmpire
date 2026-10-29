@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-02.json",
+    "sha256": "8858d7df8851009fed181f62f4e724dc635e5a62f4980267b171048713eab8ce"
+  },
+  "repairs": [
+    {
+      "status": "ready",
+      "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+      "slug": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1",
+      "originalVersion": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2",
+      "version": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-02-v2.png",
+      "sheetSha256": "e714c295ca48c3afcc9a530780f0ab180cb28154bf1b2bd1d84c51fe29e2b903",
+      "cell": 1,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-02-v2.review.json",
+        "sha256": "c334a1c5b0bc35787136dcb2f3339fffb11680a6d4cdd802576854e2fa6447e6"
+      },
+      "nativeScale": 0.8939193047485473,
+      "scaleNote": {
+        "kind": "estimated architectural-height retention; not a standard-door gauge",
+        "reason": "Door head hidden by porchawning;48px is visible fragment only",
+        "oldSourceSha256": "c30b889b6265094fda96f82729884c11512f5a2ab406bdfc1d1d723285b1a5d6",
+        "oldNativeHeight": 434,
+        "oldVisibleRows": [
+          4,
+          429
+        ],
+        "oldRenderedHeight": 502.71,
+        "oldVisibleRenderedHeight": 493.4434562211981,
+        "newVisibleHeight": 552,
+        "nativeScale": 0.8939193047485473,
+        "method": "Keep prior visible whole-building architectural height using alpha16 extents; uniform scale estimate, preserve original footprint and retained-view scales."
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:town-grocery-46d5dc39-plain:1",
+      "slug": "variation-town-grocery-46d5dc39-plain-1",
+      "originalVersion": "variation-town-grocery-46d5dc39-plain-1-4views-v1",
+      "version": "variation-town-grocery-46d5dc39-plain-1-4views-v2",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+      "sheetSha256": "ae36723d1455e098a6e6a33ec22a2ea8b9285067f0e47f2f86eb4964eee974ce",
+      "cell": 1,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-03-v2.review.json",
+        "sha256": "7d5a9cc960930be1b943733a4a92d1b80f5f214c932fbb7c6d1eaf6f8683bd75"
+      },
+      "nativeScale": 0.91190825340737,
+      "scaleNote": {
+        "kind": "estimated architectural-height retention; not a standard-door gauge",
+        "reason": "Tall glazed double storefront doors excluded by gauge contract;93px is an observation only",
+        "oldSourceSha256": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+        "oldNativeHeight": 566,
+        "oldVisibleRows": [
+          5,
+          561
+        ],
+        "oldRenderedHeight": 518.92,
+        "oldVisibleRenderedHeight": 510.6686219081272,
+        "newVisibleHeight": 560,
+        "nativeScale": 0.91190825340737,
+        "method": "Keep prior visible whole-building architectural height using alpha16 extents; uniform scale estimate, preserve original footprint and retained-view scales."
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:town-hardware-bf36737f-plain:1",
+      "slug": "variation-town-hardware-bf36737f-plain-1",
+      "originalVersion": "variation-town-hardware-bf36737f-plain-1-4views-v1",
+      "version": "variation-town-hardware-bf36737f-plain-1-4views-v2",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+      "sheetSha256": "ae36723d1455e098a6e6a33ec22a2ea8b9285067f0e47f2f86eb4964eee974ce",
+      "cell": 2,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-03-v2.review.json",
+        "sha256": "7d5a9cc960930be1b943733a4a92d1b80f5f214c932fbb7c6d1eaf6f8683bd75"
+      },
+      "door": 100,
+      "doorNote": {
+        "cell": 2,
+        "kind": "single front pedestrian leaf",
+        "nativeFullSheet": {
+          "x": 880,
+          "headY": 447,
+          "thresholdY": 547,
+          "heightPx": 100
+        },
+        "uncertaintyPx": 3
+      }
+    }
+  ]
+}

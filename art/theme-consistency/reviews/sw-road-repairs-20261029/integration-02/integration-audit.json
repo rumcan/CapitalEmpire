@@ -1,0 +1,111 @@
+{
+  "libraryItems": 7423,
+  "stableIdOrder": true,
+  "unchangedLogicalRecords": 7420,
+  "unchangedGeometryFields": [
+    "w",
+    "h",
+    "ax",
+    "ay",
+    "boxes",
+    "quad",
+    "glows",
+    "kind",
+    "solid",
+    "big",
+    "door",
+    "cost"
+  ],
+  "retainedOtherViewFiles": [
+    {
+      "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+      "dir": "SE",
+      "sha256": "3731532cf11c4ff3317bf3b8e6b89d2070c4e527579edcf93022b4ac5e7cfaa9"
+    },
+    {
+      "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+      "dir": "SW",
+      "sha256": "24beefbe38fb07eb269726c5ed1acfc56b915afa282d6a132fd886ae3e5261cb"
+    },
+    {
+      "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+      "dir": "NW",
+      "sha256": "154499cd566abaab7ae3965dec69d974eec787f6170548e8e3d9723cf8a5767a"
+    },
+    {
+      "id": "variation:town-grocery-46d5dc39-plain:1",
+      "dir": "SE",
+      "sha256": "9a2cc8bac4187a6d011a7ea49fee9ef3e6404ff18dc996460813c91449a04ac5"
+    },
+    {
+      "id": "variation:town-grocery-46d5dc39-plain:1",
+      "dir": "SW",
+      "sha256": "33f228cf7242f9afd98de8d6586b00bb683a9e9971721216a9e24fac93ca976a"
+    },
+    {
+      "id": "variation:town-grocery-46d5dc39-plain:1",
+      "dir": "NW",
+      "sha256": "ac9bfbdb6ac36d6c50d12ba1787ec5e3486987a1ce90574aea4d9b1ccb1a0c1b"
+    },
+    {
+      "id": "variation:town-hardware-bf36737f-plain:1",
+      "dir": "SE",
+      "sha256": "ee6d002cd8bb8ff0c1a3ef195f33533f0eca24ceda7f73a706bffcf6e74b499a"
+    },
+    {
+      "id": "variation:town-hardware-bf36737f-plain:1",
+      "dir": "SW",
+      "sha256": "5ce1a1a847ecf540c652cf51249d2dddea6f92fc98a37e668648c08055d8ce18"
+    },
+    {
+      "id": "variation:town-hardware-bf36737f-plain:1",
+      "dir": "NW",
+      "sha256": "66af7bc43fa5a51f67c3f9bec76ef861151eadd8f9315e7df63338f46027bfa0"
+    }
+  ],
+  "pixelProofs": [
+    {
+      "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-02-v2.png",
+      "cell": 1,
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 663,
+        "height": 607
+      },
+      "nonzeroPixels": 205332,
+      "nativeRgbaExact": true,
+      "sha256": "8b7e8e5f991f7ca98baa8a93a47242bd4949a0366fe6115508b04a6edb90eab5"
+    },
+    {
+      "id": "variation:town-grocery-46d5dc39-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+      "cell": 1,
+      "sourceRect": {
+        "left": 15,
+        "top": 39,
+        "width": 638,
+        "height": 614
+      },
+      "nonzeroPixels": 223276,
+      "nativeRgbaExact": true,
+      "sha256": "fee70f4b58390c50b6712fea3c1347877ffe61145ecec3441221f6bcb6fba8b0"
+    },
+    {
+      "id": "variation:town-hardware-bf36737f-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+      "cell": 2,
+      "sourceRect": {
+        "left": 608,
+        "top": 21,
+        "width": 628,
+        "height": 652
+      },
+      "nonzeroPixels": 227269,
+      "nativeRgbaExact": true,
+      "sha256": "1400e78f4098929e262f995a3867c8dda3ea54b794b4da958eb73bb81bc1c4d0"
+    }
+  ],
+  "pageErrors": []
+}
