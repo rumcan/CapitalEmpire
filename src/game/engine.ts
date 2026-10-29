@@ -38,7 +38,7 @@ import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { sizeKey, turned } from './lots/preset-art';
 import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceHasArt, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
 import { homeStage } from './golf/rangesave';
-import { RangeHost } from './golf/rangehost';
+import { RangeHost, type RangeCardView } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { PracticeTool } from './golf/practicetool';
 import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
@@ -168,7 +168,8 @@ import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
-import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
+import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
+import { BOOK_LEAD, PRESSURE, bookRound, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -289,7 +290,8 @@ const ownerArt = (sex: Sex): number => { const i = GOLFER_PEOPLE.findIndex(p => 
 interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; finish: DayFinish; own: OwnerPlay | null; waves: number }
 /** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): his golfer's id, sex and skill, his group's tee time, his live group (live.ts), his next
  *  turn (null once his group is done), and the count of inputs he had played when he handed to the caddie (null while he plays) */
-interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null; /** T254: his tee set */ tees?: TeeKind }
+interface OwnerPlay { id: number; sex: Sex; /** T241: his skill (OWNER_SKILL) or his skills by part of the game (your profile's as he joined) */ skill: ShotSkill; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null; /** T254: his tee set */ tees?: TeeKind;
+  /** T241: your profile's skills as he joined (saved, so a reload replays the same round) */ skills?: GameSkills }
 /** the owner's open shot (P4b, the shot panel): his turn and his input so far (the club, the aim point in tiles, the power: see powerFor) */
 export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number } }
 /** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
@@ -778,7 +780,8 @@ export class Game {
   private play: GolfPlay | null = null; private playTried = -1;
   /** T208 everyday golf: the town days' play (the save, the booking: golf/everyday.ts DayBook), the day's playback (its town day and course key; null:
    *  none on the course now), the played course (rebuilt when the holes change: its key), and the clubhouse card's open state */
-  private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string } | null = null;
+  private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string; /** T241: the day book's roster it was built from (yours on it or not), your booking it was built with (null: none; a new booking, or one a session
+   *  rebooked, is a new object) and your golfer's id (-1 none) */ base: DayRoster; you: Booking | null; youId: number } | null = null;
   private dayCourse: { view: CourseView; key: string; at: number } | null = null; clubCardOpen = false;
   /** T269: the greens the cups are cut on (by hole: the key of the grid's rev, the placed pin and the approach they were found for), the day pins'
    *  revision (bumped when a cup moves: the flags and the play follow), the revision the flags stand at, and when the cups were last checked */
@@ -6979,6 +6982,7 @@ export class Game {
    *  day or the course's holes change; none on a tournament day, without a clubhouse or without holes. The movers and the balls read it */
   private updateEveryday(now: number) {
     const g = this.golf, tr = this.traffic;
+    if (g?.player?.booked) this.youRoundDone(now); // T241: your round, once it is done (or its day is over)
     if (!g || !this.bizDefs.some(d => d.type === 'clubhouse')) { this.dayPlay = null; this.dropCrew(); return; }
     if (!this.dayBook || this.dayBookFor !== g) { this.dayBook = new DayBook(this.seed, normalizeDaySave(g.everyday)); this.dayBookFor = g; this.dayPlay = null; }
     if (!g.club) this.stepClub(); // T214: the club (an old save's seeded, a new one's founding drive) before the day's first roster
@@ -6996,13 +7000,115 @@ export class Game {
     if (!free || !s || s.closed || s.day !== at.day) { this.dayPlay = null; this.dropCrew(); return; }
     const course = this.dayCourseOf(now);
     if (!course || !course.view.holes.length) { this.dayPlay = null; this.dropCrew(); return; }
-    if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key) {
-      const roster = this.dayBook.rosterOf()!, plan = dayPlan(course.view, roster);
-      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight), day: s.day, key: course.key };
-      this.dayArt = roster.golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
+    // T241: your round booked today (golf/player.ts): you join the day's playback alone at your tee time, with your game as you booked it
+    const me = g.player, bk = me?.booked && me.booked.day === s.day ? me.booked : null;
+    if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key || this.dayPlay.you !== bk) {
+      const base = this.dayBook.rosterOf()!, roster = bk && me ? withYou(base, bookedGolfer(me, bk), bk.tee) : base, plan = dayPlan(course.view, roster);
+      const youId = bk ? roster.golfers.length - 1 : -1;
+      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight), day: s.day, key: course.key, base, you: bk, youId };
+      this.dayArt = roster.golfers.map((p, i) => i === youId ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
+      // (the whole day is played now: your score is known, and shown once your round is done)
+      if (bk) bk.result = { strokes: plan.strokes[youId]!.reduce((a, b) => a + b, 0), par: course.view.holes.reduce((a, h) => a + h.par, 0), holes: course.view.holes.length, done: plan.done[youId] ?? Infinity };
       this.buildCrew(g, plan, course.view, s.day); // T269: the grounds crew works round the day's groups
     }
     this.crewFlags(); // T269: a flag moves when the greenkeeper sets it
+  }
+  // ---------- T241 (#705): your golf (golf/player.ts): the profile, practice, your everyday round ----------
+  /** your profile card ("Your golf") is open */
+  playerCardOpen = false;
+  /** your profile (golf.player); an older save, or a new game, starts the starting profile the first time it is needed (null: not a golf game) */
+  playerNow(): PlayerProfile | null { const g = this.golf; if (!g) return null; if (!g.player) g.player = startProfile(); return g.player; }
+  private setPlayer(p: PlayerProfile) { if (!this.golf) return; this.golf.player = p; this.scheduleSave(); }
+  /** P26's lessons (docs/plans/P26.md 3.2: the teaching pro): the lesson a pro gives with a session of this kind (golf/player.ts Lesson: its bonus and
+   *  price). The hook P26 fills: null until the teaching pro is built */
+  lessonFor(_kind: PracticeKind): Lesson | null { return null; }
+  /** the town day and its minute now */
+  private townNow() { const tr = this.traffic; return townTimeOf(tr.town, tr.simTime(performance.now())); }
+  /** each practice session's place now (golf/player.ts PracticeCtx), from the range card's view: the range's hours, the bucket price, the practice greens'
+   *  fee and whether each green is open, your money, and whether you are out on the course */
+  private practiceCtx(v: RangeCardView): Record<PracticeKind, PracticeCtx> {
+    const at = this.townNow(), st = v.stats, money = this.money, onCourse = this.youOnCourse(at.day, at.dayMin);
+    const c = (price: number, facility: boolean): PracticeCtx => ({ day: at.day, minute: at.dayMin, open: st.open * 60, close: st.close * 60, price, facility, money, onCourse });
+    const open = (id: 'putting' | 'chipping') => v.practice.some(f => f.id === id && f.state === 'open');
+    return { bucket: c(v.biz.price, true), putting: c(v.fee, open('putting')), chipping: c(v.fee, open('chipping')) };
+  }
+  /** the range card's "You" block and its practice greens' rows (golf/player.ts youRangeView), from the card's view; null with no card or profile */
+  youRange(v: RangeCardView | null): YouRangeView | null { const p = v ? this.playerNow() : null; return p && v ? youRangeView(p, this.practiceCtx(v), this.lessonFor('bucket')) : null; }
+  /** a practice session now (golf/player.ts practise): its gains at once, you busy for its minutes, and its cost (the bucket price at the range, the green's
+   *  fee at a practice green: the balls and the wear, booked as upkeep and floated over the place). A round booked today and not begun plays with your new
+   *  game. A toast says why not, or what it gave */
+  practise(kind: PracticeKind) {
+    const p = this.playerNow(), v = this.range.view(); if (!p || !v) return;
+    const c = this.practiceCtx(v)[kind], lesson = this.lessonFor(kind), why = practiceWhy(p, kind, c, lesson);
+    if (why) { this.toast(why, 'warn'); return; }
+    const { profile, entry } = practise(p, kind, c, lesson);
+    this.setPlayer(rebook(profile, entry.day, entry.at));
+    if (entry.cost > 0) {
+      const at = kind === 'bucket' ? this.rangeSpot() : this.range.scene ? { ...this.range.scene.practice.label } : null;
+      this.spendAt(at, 'upkeep', entry.cost);
+    }
+    this.toast(`${entryText(entry)} · handicap ${hcpText(entry.hcp[0])} to ${hcpText(entry.hcp[1])} · $${entry.cost.toLocaleString()}`, 'good');
+    this.emit();
+  }
+  /** whether you are out on the course now: from your walk to the first tee to your round's end */
+  private youOnCourse(day: number, minute: number): boolean {
+    const b = this.golf?.player?.booked; if (!b || b.day !== day || minute < b.tee - BOOK_LEAD) return false;
+    return !!b.result && minute < b.result.done; // (not played yet: no course to play today)
+  }
+  /** your round today as the profile card shows it */
+  private youRoundState(): RoundState {
+    const p = this.golf?.player, at = this.townNow(), b = p?.booked;
+    if (b && b.day === at.day) {
+      if (b.result && at.dayMin >= b.result.done) return { k: 'done', strokes: b.result.strokes, par: b.result.par };
+      return at.dayMin < b.tee - BOOK_LEAD ? { k: 'booked', tee: b.tee } : { k: 'out', tee: b.tee };
+    }
+    const last = p?.rounds[p.rounds.length - 1];
+    if (last && last.day === at.day && last.kind === 'everyday') return { k: 'done', strokes: last.strokes, par: last.par };
+    const why = this.youBookWhy(at.day);
+    return { k: 'none', next: why ? null : freeTee(this.dayPlay?.base ?? this.dayBook?.rosterOf() ?? null, at.dayMin), why };
+  }
+  /** why you cannot book a round today (null: you can) */
+  private youBookWhy(day: number): string | null {
+    if (!this.hasClubhouse) return 'Build a clubhouse to book a tee time';
+    const s = this.dayBook?.save;
+    if (!s || s.day !== day) return 'The tee sheet opens with the day';
+    if (s.closed || this.traffic.round.stage !== 'free') return 'The course is closed for the tournament today';
+    if (!this.dayPlay) return 'The course has no holes to play yet';
+    return null;
+  }
+  /** the profile card ("Your golf", golf/player.ts playerCardView); null while closed */
+  playerCard(): PlayerCardView | null { const p = this.playerCardOpen ? this.playerNow() : null; return p ? playerCardView(p, this.youRoundState()) : null; }
+  openPlayerCard(open = !this.playerCardOpen) { this.playerCardOpen = open && !!this.golf; this.emit(); }
+  /** books your everyday round at the next free tee time on today's sheet (golf/player.ts freeTee: BOOK_LEAD ahead at least, clear of the groups' tee
+   *  times); the day's playback is played again with you in it */
+  bookYourRound() {
+    const p = this.playerNow(), at = this.townNow(); if (!p) return;
+    if (p.booked && p.booked.day === at.day) { this.toast('You have a round booked today', 'warn'); return; }
+    const why = this.youBookWhy(at.day); if (why) { this.toast(why, 'warn'); return; }
+    const tee = freeTee(this.dayPlay?.base ?? this.dayBook?.rosterOf() ?? null, at.dayMin);
+    if (tee === null) { this.toast('No tee times left today: book tomorrow morning', 'warn'); return; }
+    this.setPlayer(bookRound(p, at.day, tee));
+    this.toast(`Your round: tee time ${clock(tee)} on the first tee`, 'good');
+    this.emit();
+  }
+  /** cancels your round booked today, until you walk to the tee */
+  cancelYourRound() {
+    const p = this.playerNow(), b = p?.booked, at = this.townNow(); if (!p || !b) return;
+    if (b.day === at.day && at.dayMin >= b.tee - BOOK_LEAD) { this.toast('You are already out on the course', 'warn'); return; }
+    this.setPlayer({ ...p, booked: null }); this.emit();
+  }
+  /** your round, once it is done (or its day is over: a skip): its score goes into your rounds (your nerve up a little, golf/player.ts playedRound) and a
+   *  toast says it; a round never played (no course, a tournament day) is dropped */
+  private youRoundDone(now: number) {
+    const p = this.golf?.player, b = p?.booked; if (!p || !b) return;
+    const tr = this.traffic, at = townTimeOf(tr.town, tr.simTime(now));
+    if (b.day === at.day && !(b.result && at.dayMin >= b.result.done)) return;
+    let next: PlayerProfile = { ...p, booked: null };
+    if (b.result && Number.isFinite(b.result.done)) {
+      next = playedRound(next, { day: b.day, kind: 'everyday', strokes: b.result.strokes, par: b.result.par, holes: b.result.holes });
+      this.toast(`Your round: ${b.result.strokes} (${toParWord(b.result.strokes - b.result.par)}) · handicap ${hcpText(next.rounds[next.rounds.length - 1]!.hcp)}`, 'good');
+    }
+    this.setPlayer(next); this.emit();
   }
   // ---------- T269 (#810) part 3: the grounds staff (golf/staff.ts) ----------
   /** the course needs a crew and has none: said once a session */
@@ -7235,7 +7341,7 @@ export class Game {
   private dayCarDraw: Drawable[] = []; private dayCarOut: Drawable[] = [];
   /** T208: the pace of a day's roster for the season's pace term: the day on screen's plan, else the day played now (a day a skip jumped) */
   private dayPaceOf(r: DayRoster, now: number) {
-    if (this.dayPlay && this.dayPlay.view.roster === r) return dayPace(this.dayPlay.view.plan);
+    if (this.dayPlay && (this.dayPlay.view.roster === r || this.dayPlay.base === r)) return dayPace(this.dayPlay.view.plan); // (T241: yours too)
     const c = this.dayCourseOf(now); return c && c.view.holes.length ? dayPace(dayPlan(c.view, r)) : null;
   }
   /** T208: the played course for everyday golf, rebuilt when the tees, pins or aim points change (looked at every 2 s) */
@@ -7466,7 +7572,7 @@ export class Game {
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
     const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace(), height: this.ballHeight }), key, art, finish: new DayFinish(), own: null, waves: -1 };
-    if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}) };
+    if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: owner.skills ?? OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}), ...(owner.skills ? { skills: owner.skills } : {}) };
     return pl;
   }
   /** the played course (docs/GOLF-PLAY.md P2a): the derived holes with a line, the lie from the course grid's surface where it is painted, else the painted
@@ -7510,7 +7616,9 @@ export class Game {
    *  the save records him. `sex` picks his look: golf_am_m3 for 'm', golf_am_w1 for 'w' */
   joinTournament(sex: Sex, tees: TeeKind = 'middle') {
     const pl = this.play; if (!pl || !this.canJoinTournament()) return;
-    const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null, tees }); // T254: from the tee set he chose
+    // T254: from the tee set he chose; T241: with your skills under the tournament's pressure (golf/player.ts), kept in the save for the replay
+    const me = this.playerNow(), skills = me ? gameSkills(me.skills, PRESSURE.tournament) : undefined;
+    const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null, tees, ...(skills ? { skills } : {}) });
     if (!built) return;
     this.play = built; this.saveOwner(); this.emit();
   }
@@ -7570,7 +7678,7 @@ export class Game {
   /** writes the owner's play to the save (GolfSave.play): his tournament key, sex, the inputs he has played and his caddie count */
   private saveOwner() {
     const pl = this.play, o = pl?.own; if (!pl || !o || !this.golf) return;
-    this.golf.play = { key: pl.key, owner: o.sex, inputs: o.live.inputs.slice(), caddie: o.caddie, ...(o.tees ? { tees: o.tees } : {}) };
+    this.golf.play = { key: pl.key, owner: o.sex, inputs: o.live.inputs.slice(), caddie: o.caddie, ...(o.tees ? { tees: o.tees } : {}), ...(o.skills ? { skills: o.skills } : {}) };
     this.scheduleSave();
   }
   /** toasts the owner's score once his group is done ("You shot 82 (+10)") */
@@ -7578,6 +7686,9 @@ export class Game {
     const id = pl.own?.id; if (id === undefined) return;
     const total = pl.plan.strokes[id]!.reduce((a, b) => a + b, 0), par = pl.view.holes.reduce((a, h) => a + h.par, 0);
     this.toast(`You shot ${total} (${toParText(total - par)})`, 'good');
+    // T241: the round goes into your rounds (a tournament: your nerve up the most)
+    const me = pl.own?.skills ? this.playerNow() : null;
+    if (me) this.setPlayer(playedRound(me, { day: this.townNow().day, kind: 'tournament', strokes: total, par, holes: pl.view.holes.length }));
   }
   /** the owner's open shot on the course (P4b, the 2D overlay): a line from his ball to the aim, a white ring at the aim, his ball, and for a full shot the
    *  faint ellipse of its expected spread at the landing point (the carry along the aim): two sigmas along (0.03 + 0.07 * (1 - skill) of the carry) and
@@ -7588,7 +7699,7 @@ export class Game {
     ctx.save();
     if (i.club !== 'putter') {
       const L = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) || 1, ux = (i.aim.x - t.ball.x) / L, uy = (i.aim.y - t.ball.y) / L;
-      const carry = carryM(i.club, own.skill) * i.power / TILE_M, k = 1 - own.skill;
+      const sk = skillFor(own.skill, i.club), carry = carryM(i.club, sk) * i.power / TILE_M, k = 1 - sk; // (T241: his club's part of the game)
       const px = t.ball.x + ux * carry, py = t.ball.y + uy * carry, A = 2 * (0.03 + 0.07 * k) * carry, B = 2 * carry * Math.tan((1.5 + 5 * k) * Math.PI / 180);
       const c = this.screen(px, py), e1 = this.screen(px + ux * A, py + uy * A), e2 = this.screen(px - uy * B, py + ux * B);
       // the unit circle through the spread's axes (their screen vectors from the landing point), filled faint
