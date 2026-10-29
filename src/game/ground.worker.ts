@@ -37,6 +37,8 @@ const loadGrass = async (id: string) => {
   catch { grassLoads.delete(id); } // Current grass stays usable when an optional generated image is unavailable.
 };
 let ready: Promise<void> | null = null, gotTextures: (() => void) | null = null;
+/** T272, the bench: each bake's reply carries the tile cache's counts */
+let tileStats = false;
 /** resolved once this worker has its textures (built, cached or sent): a paint that arrives before init waits for it */
 let texReady!: () => void;
 const hasTextures = new Promise<void>(res => { texReady = res; });
@@ -61,7 +63,8 @@ const handle = async (m: ToWorker) => {
         painter.setTerrain(m.terrain, m.height, m.waters);
         // a light boot's limits (T157, boot.ts): smaller decode caches, fewer photos built up front, the texture cache only read
         const lim = m.limits;
-        if (lim?.tiles != null) tex.tileLimit = lim.tiles;
+        if (lim?.tiles != null) tex.tiles.maxSources = lim.tiles;
+        if (m.tileBytes != null) tex.tiles.budget = m.tileBytes; // (T272: this worker's share of the ground's GPU budget)
         if (lim?.painted != null) tex.paintedLimit = lim.painted;
         if (lim?.eager) eager = new Set(lim.eager);
         if (lim?.soft) softCanvases(true);
@@ -138,6 +141,8 @@ const handle = async (m: ToWorker) => {
         painter.setLotGround(m.set, m.drop);
         break;
       }
+      case 'tileStats': tileStats = m.on; tex.resetDrawn(); break;
+      case 'tileBudget': tex.tiles.budget = m.bytes; tex.tiles.trim(); break; // (T272: the chunk pictures grew or shrank)
       case 'memProbe': {
         post({ t: 'log', message: 'mem ' + JSON.stringify(memProbe()) });
         break;
@@ -160,6 +165,8 @@ const handle = async (m: ToWorker) => {
         await hasTextures;
         // the tile spec the tile set families are laid at (T145, T150, painted-tiles.ts tileSpec: the camera's band and the screen's DPR), with this bake
         if (m.ts !== undefined) tex.tileTs = m.ts;
+        tex.tileL = m.L; // (T272: the raster level its tile set pictures are made ready at)
+        const p0 = performance.now(); // (T272: the wait for its pictures' decodes)
         if (m.kind !== 'p') await (woods ??= tex.ensure(WOODLAND_TEX).catch(err => post({ t: 'error', message: String(err) })));
         // the painted grass pictures this chunk needs at its art level (painted-grass-lod.ts): the base grass and its tints, and every texture
         // its lots, lawns, painted areas, course surfaces and managed turf use (a painted preset among them); never all of them
@@ -218,7 +225,7 @@ const handle = async (m: ToWorker) => {
           }
           if (painter.grassMowing) ids.add('mowing-stripes'); await Promise.all([...ids].map(loadGrass));
         }
-        const t0 = performance.now();
+        const t0 = performance.now(), prepMs = t0 - p0, sc0 = tex.tileStats.scaleMs;
         let cv: OffscreenCanvas;
         // T168: textures not made yet: the bake goes on with placeholders to learn them all, is thrown away, and the chunk waits aside until
         // they are made in slices; the other chunks are baked meanwhile
@@ -237,7 +244,10 @@ const handle = async (m: ToWorker) => {
         const gm = m.kind === 'p' ? null : painter.takeGlossMask(), gloss = gm ? gm.transferToImageBitmap() : undefined;
         // (T262: the grass shine's weight mask, when the shine is on and the chunk has grass)
         const shine = m.kind === 'p' ? undefined : painter.takeShineMask() ?? undefined;
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, gloss, shine, shineMs: painter.shineMs, ms: performance.now() - t0 }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : []), ...(gloss ? [gloss] : []), ...(shine ? [shine.data.buffer] : [])]);
+        const tc = tileStats ? { ...tex.tileStats, bytes: tex.tileBytes() + painter.tileCopyBytes() } : undefined;
+        if (tc) tex.tileStats.peakBytes = tc.peakBytes = Math.max(tex.tileStats.peakBytes, tc.bytes, tex.tiles.peak + painter.tileCopyBytes());
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, gloss, shine, shineMs: painter.shineMs, ms: performance.now() - t0, prepMs, scaleMs: tex.tileStats.scaleMs - sc0, tc }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : []), ...(gloss ? [gloss] : []), ...(shine ? [shine.data.buffer] : [])]);
+        tex.trimTiles(); // (T272: its decodes go once their mips are made; the cache back within its budget)
         break;
       }
     }
@@ -334,7 +344,8 @@ function memProbe(): Record<string, number> {
   };
   const add = (k: string, v: unknown) => { const n = px(v); if (n) out[k] = Math.round((n / 1048576) * 10) / 10; };
   const T = tex as unknown as Record<string, unknown>, P = painter as unknown as Record<string, unknown>;
-  for (const k of ['mips', 'mosaics', 'photoSrc', 'paintedPics', 'tilePics']) add('tex.' + k, T[k]);
+  for (const k of ['mips', 'mosaics', 'photoSrc', 'paintedPics']) add('tex.' + k, T[k]);
+  out['tex.tiles'] = Math.round((tex.tileBytes() / 1048576) * 10) / 10; // (T272: the tile cache's own count)
   add('tex.fixed', ['slabs', 'leaves', 'pool1', 'pool2', 'decals', 'soil', 'lotDecals', 'nature'].map(k => T[k]));
   for (const k of ['grassImages', 'toned', 'planPics', 'wallPics', 'composed', 'scratch', 'leafChunks', 'livingMade']) add('painter.' + k, P[k]);
   add('painter.leafPic', [P.leafPic]);

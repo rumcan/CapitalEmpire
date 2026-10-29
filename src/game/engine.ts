@@ -2227,6 +2227,7 @@ export class Game {
     this.net.paintData = false;
     this.ground = new GroundCache(this.gl, boot.groundWorkers ?? undefined);
     this.ground.budgetPx = boot.groundPx;
+    if (boot.tileMB != null) this.ground.tileBytes = Math.round(boot.tileMB * 1e6); // (T272: a dev build's ?boot=tileMB:N, MB as groundPx's)
     // the ground workers' limits and levers (T157 the lab's; T166 the game's too: its workers make their textures on first use)
     this.ground.limits = { tiles: boot.tileSources, painted: boot.paintedSources, eager: boot.eagerPhotos ? [...boot.eagerPhotos] : null, saveCache: boot.saveTextureCache, readCache: boot.readTextureCache, soft: boot.softCanvases, lazy: boot.lazyTextures, tints: boot.lazyTints };
     this.traffic = new SimClient(boot.sim);

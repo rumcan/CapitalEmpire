@@ -22,6 +22,8 @@ import { REFLECT, clampWaterLook, waterLookOf, type WaterLook } from './water-lo
 import type { PaintedLook } from './painted-families';
 import { pictureCurrent } from './ground-layers';
 import { SHINE_WEIGHTS, type ShineWeights } from './grass-shine';
+import type { TileCacheStats } from './textures';
+import { tileCacheBudget } from './tile-cache';
 
 export interface Tile {
   kind: TileKind; i: number; j: number;
@@ -76,6 +78,19 @@ export class GroundCache {
   uploadsThisSecond = 0; uploadMsPerSecond = 0; private upCount = 0; private upMs = 0; private upT = 0;
   /** GPU pixel budget for baked chunks (RGBA, so x4 bytes) */
   budgetPx = 48e6;
+  /** T272: each worker's tile cache in bytes (a dev build's ?boot=tileMB:N), or null: tileCacheBudget, its share of what the chunk pictures
+   *  leave of the ground's GPU budget (GAME-PLAN 2.3's 192 MB), followed as they come and go (syncTileBudget), never less than budgetPx leaves */
+  tileBytes: number | null = null;
+  /** T272: the tile budget the workers were last sent */
+  private sentTileBytes = 0;
+  /** T272: the workers' tile budget follows the chunk pictures held (residentPx; tileCacheBudget's steps): sent when it changes (the chunks and
+   *  the tiles together stay inside the 192 MB, the tiles taking what the chunks leave) */
+  private syncTileBudget() {
+    if (this.tileBytes != null || !this.workers.length) return;
+    const b = tileCacheBudget(this.budgetPx, this.workers.length, this.residentPx);
+    if (b === this.sentTileBytes) return;
+    this.sentTileBytes = b; this.broadcast({ t: 'tileBudget', bytes: b });
+  }
   /** the baked pictures' pixels on the GPU at the last evict (chunks, their zoom crossfade and build reveal pictures), and the most so far */
   residentPx = 0; peakPx = 0;
   constructor(public gl: GLRenderer, workers = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 4) - 2))) {
@@ -91,7 +106,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; const tileBytes = this.sentTileBytes = this.tileBytes ?? tileCacheBudget(this.budgetPx, this.workers.length); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits, tileBytes } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -160,6 +175,10 @@ export class GroundCache {
   /** T265, the bench (?tourOnly=1): each chunk picture's first bake ms by kind, chunk and level, so two runs (the river's swamp on and off)
    *  pair the same chunks' first bakes; null (the default) keeps none */
   firstBakes: Map<string, number> | null = null;
+  /** T272, the bench: each bake's wait for its pictures' decodes and its ms scaling tile set pictures (the same ring as bakeLog), and each
+   *  worker's tile cache counts as its last bake reported them (setTileStats on) */
+  prepLog: number[] = []; scaleLog: number[] = []; tileStats: (TileCacheStats | undefined)[] = [];
+  setTileStats(on: boolean) { this.broadcast({ t: 'tileStats', on }); }
   /** T265, the bench: every worker paints its last bakes of this kind again, the river's swamp on and off by turns, and answers each paint's ms */
   private abWait = new Map<number, (m: { on: number[]; off: number[] }) => void>();
   bakeAB(kind: 'g' | 'm', reps: number, cold = false): Promise<{ on: number[]; off: number[] }> {
@@ -314,6 +333,7 @@ export class GroundCache {
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
     if (this.firstBakes) { const k = `${m.kind}${m.i},${m.j}@${m.L}`; if (!this.firstBakes.has(k)) this.firstBakes.set(k, m.ms); } // (T265: the bench's first-bake pairs)
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
+    this.prepLog[this.baked % BAKE_LOG] = m.prepMs ?? 0; this.scaleLog[this.baked % BAKE_LOG] = m.scaleMs ?? 0; if (m.tc) this.tileStats[w] = m.tc;
     this.bakeMs += m.ms; this.shineLog[this.baked % BAKE_LOG] = m.shineMs ?? 0; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
@@ -346,6 +366,7 @@ export class GroundCache {
   evict(now: number) {
     let px = 0, held = 0; for (const t of this.tiles.values()) { px += (t.tex ? t.px : 0) + t.fadePx; if (t.prev && t.prev !== t.tex) held += t.px; }
     this.residentPx = px + held; this.peakPx = Math.max(this.peakPx, this.residentPx);
+    this.syncTileBudget();
     if (px <= this.budgetPx) return;
     const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now).sort((a, b) => a.used - b.used);
     for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.dropPicture(t.tex!); t.tex = null; if (t.shade) { this.gl.deleteTexture(t.shade); t.shade = null; } if (t.prev) { this.dropPicture(t.prev); t.prev = null; } if (t.fadeFrom) { this.dropPicture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }

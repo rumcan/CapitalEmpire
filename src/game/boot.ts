@@ -22,6 +22,9 @@ export interface BootOptions {
   groundPx: number;
   /** what each ground worker keeps decoded: tile-set tiles (textures.ts MAX_TILE_SOURCES) and painted pictures (MAX_PAINTED_SOURCES); null: the game's */
   tileSources: number | null; paintedSources: number | null;
+  /** T272: each ground worker's tile cache in MB (tile-cache.ts); absent or null: its share of GAME-PLAN 2.3's ground budget left by groundPx
+   *  (tileCacheBudget). A dev build's ?boot=tileMB:96 measures another */
+  tileMB?: number | null;
   /** the photo textures each ground worker builds up front (null: grass-art.ts EAGER_PHOTO, all of them); the others are built on first use */
   eagerPhotos: readonly string[] | null;
   /** the ground workers draw their canvases on the CPU (willReadFrequently) instead of the GPU */
@@ -86,7 +89,7 @@ export function withGroundLevers(boot: BootOptions, spec: string): BootOptions {
 
 /* ---- T172 (#403): a dev build's way to measure the memory budgets one at a time ---- */
 /** the numeric boot options a dev build's ?boot=<key>:<value>,... may set (a value of null: the game's own default) */
-export const BOOT_NUMBERS = ['atlasMB', 'atlasKeep', 'groundPx', 'tileSources', 'paintedSources'] as const;
+export const BOOT_NUMBERS = ['atlasMB', 'atlasKeep', 'groundPx', 'tileSources', 'paintedSources', 'tileMB'] as const;
 /** a boot with the named numbers set (?boot=atlasKeep:2,tileSources:12); unknown keys and values that are not numbers are ignored */
 export function withBootNumbers(boot: BootOptions, spec: string): BootOptions {
   const out: BootOptions = { ...boot };

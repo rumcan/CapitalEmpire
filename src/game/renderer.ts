@@ -53,8 +53,6 @@ const COMPOSED_BYTES = 64 << 20;
 const PAINT_CELL = 128;
 /** T199: the swamp tiles' glosses a worker keeps (two bands' worth, a quarter of a MB each) */
 const GLOSS_TILES = 8;
-/** T265: the swamp's tiles a worker keeps pre-scaled to the size they land at (tilePlan: four tiles, a few sizes each, at the levels in view; 5-15 MB) */
-const EXACT_TILES = 48;
 /** T265: the river's swamp band's samples a tile on a ground chunk (the streams' take 4): a wide band, its rim half a tile soft, at a quarter
  *  of the work; a district chunk's at its own 1 */
 const RIVER_RES = 2;
@@ -572,15 +570,14 @@ export class GroundPainter {
   /** T199: each swamp tile's gloss (swamp.ts glossTile), by the tile's URL: made once per tile, the first time a bake lays it with the glint on
    *  (one read back of the tile, never of a chunk) */
   private glossTiles = new Map<string, Cnv>();
-  /** T265: the swamp's tiles at the px size they land at (by URL and size), drawn once as tiledBuf drew them (the same mip, smoothing and
-   *  size) so each cell is a plain copy, not a scaled draw: the river's band lays the swamp over much of a chunk */
-  private exactTiles = new Map<string, Cnv>();
-  private exactTile(url: string, img: Cnv | ImageBitmap, w: number, h: number): Cnv {
-    const k = `${url}@${w}x${h}`, have = this.exactTiles.get(k); if (have) { this.exactTiles.delete(k); this.exactTiles.set(k, have); return have; }
-    const c = canvas(w, h), g = ctx2d(c); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium'; g.drawImage(img, 0, 0, w, h);
-    this.exactTiles.set(k, c); trimLru(this.exactTiles, new Set([k]), EXACT_TILES);
-    return c;
+  /** T265: a swamp tile at the px size it lands at, drawn once as tiledBuf drew it (the same mip, smoothing and size) so each cell is a plain
+   *  copy, not a scaled draw: the river's band lays the swamp over much of a chunk. T272: kept in the tile cache with the tile's mips (one
+   *  budget, the least recently used going first: Textures.tileExact); null when the mip is not there */
+  private exactTile(url: string, w: number, h: number): Cnv | null {
+    return this.tex.tileExact(url, w, h, img => { const c = canvas(w, h), g = ctx2d(c); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium'; g.drawImage(img, 0, 0, w, h); return c; });
   }
+  /** T272: the bytes the painter's own tile copies hold (the swamp tiles' glosses; their pre-scaled copies are in the tile cache) */
+  tileCopyBytes(): number { let n = 0; for (const c of this.glossTiles.values()) n += c.width * c.height * 4; return n; }
   /** T230: the water field of the bake in progress (water-look.ts WaterField: where the chunk's rivers, course ponds and painted water lie,
    *  each sample's distance from its shore and the shore's reflections), made the first time a water site asks (waterOver), with its look;
    *  undefined until then, null when the look is off and the glint too, or the chunk has no water */
@@ -1372,9 +1369,9 @@ export class GroundPainter {
     // the mip drawn is at most twice the size it lands at (Textures.tileImage), so plain bilinear filtering keeps it sharp and cheap
     g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
     for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
-      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, img = this.tex.tileImage(url, a2 - a);
-      if (!img) return false;
-      g.drawImage(exact ? this.exactTile(url, img, a2 - a, b2 - b) : img, a - ox, b - oy, a2 - a, b2 - b);
+      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, pic = exact ? this.exactTile(url, a2 - a, b2 - b) : this.tex.tileImage(url, a2 - a);
+      if (!pic) return false;
+      this.tex.noteDrawn(url, pic); g.drawImage(pic, a - ox, b - oy, a2 - a, b2 - b);
     }
     return true;
   }
@@ -1418,17 +1415,15 @@ export class GroundPainter {
     return true;
   }
   /** T265: the tiles a tile set family lays over the device-px rectangle rect of the chunk being baked (as tilesInto), each pre-scaled to the
-   *  size it lands at (exactTile; kept, so a tile the worker dropped and decodes again is not scaled again, nor its mips made again), with
-   *  where it goes; null when a tile is neither kept at that size nor decoded */
+   *  size it lands at (exactTile; kept with the tile's mips in the tile cache, T272), with where it goes; null when a tile is neither kept at
+   *  that size nor its mip */
   private tilePlan(tp: TiledPick, rect: readonly number[]): { img: Cnv; x: number; y: number; w: number; h: number }[] | null {
     const c = this.chunkNow!, ts = this.tex.tileTs, band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band, urls.length);
     const L = c.L, ox = -c.M.e, oy = -c.M.f, out: { img: Cnv; x: number; y: number; w: number; h: number }[] = [];
     for (const q of cellsIn((rect[0]! + ox) / L, (rect[1]! + oy) / L, (rect[0]! + rect[2]! + ox) / L, (rect[1]! + rect[3]! + oy) / L, w, h)) {
-      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, tw = a2 - a, th = b2 - b, k = `${url}@${tw}x${th}`;
-      let e = this.exactTiles.get(k);
-      if (e) { this.exactTiles.delete(k); this.exactTiles.set(k, e); }
-      else { const img = this.tex.tileImage(url, tw); if (!img) return null; e = this.exactTile(url, img, tw, th); }
-      out.push({ img: e, x: a - ox, y: b - oy, w: tw, h: th });
+      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, tw = a2 - a, th = b2 - b, e = this.exactTile(url, tw, th);
+      if (!e) return null;
+      this.tex.noteDrawn(url, e); out.push({ img: e, x: a - ox, y: b - oy, w: tw, h: th });
     }
     return out;
   }
@@ -1451,10 +1446,12 @@ export class GroundPainter {
     if (cut) { g.globalCompositeOperation = 'destination-out'; g.fillStyle = '#000'; g.fill(cut); }
     return out;
   }
-  /** T199: a swamp tile's gloss (swamp.ts glossTile at GLOSS.tileScale of its native size), made once (a read back of the tile, not of a chunk) */
+  /** T199: a swamp tile's gloss (swamp.ts glossTile at GLOSS.tileScale of its native size), made once (a read back of the tile, not of a chunk)
+   *  from its full-size decode; T272: when the tile cache has dropped that (its mips kept), the bake is provisional and the next preparation
+   *  decodes it again */
   private glossTileOf(url: string): Cnv | null {
     const have = this.glossTiles.get(url); if (have) { this.glossTiles.delete(url); this.glossTiles.set(url, have); return have; }
-    const img = this.tex.tileImage(url); if (!img) return null;
+    const img = this.tex.tileSource(url); if (!img) { this.provisional = true; return null; }
     const w = Math.max(1, Math.round(img.width * GLOSS.tileScale)), h = Math.max(1, Math.round(img.height * GLOSS.tileScale)), cv = canvas(w, h), g = ctx2d(cv, { willReadFrequently: true });
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, w, h);
     g.putImageData(new ImageData(glossTile(g.getImageData(0, 0, w, h).data, w, h) as Uint8ClampedArray<ArrayBuffer>, w, h), 0, 0);

@@ -14,6 +14,7 @@ import { courseAreas } from './golf/paintcourse';
 import { surfaceOfTex } from './golf/costs';
 import { roundCorners } from './paint';
 import { HoleWizard, newPlan } from './ext/hole-wizard';
+import type { TileCacheStats } from './textures';
 
 export const BENCH_CARS = 10000;
 
@@ -97,6 +98,45 @@ export const SCENE_STAGES: Record<BenchScene, Stage[]> = {
   golf: [{ name: 'course 30% pan', z: 0.3, vx: 500, vy: 200, secs: 6 }, { name: 'course 15% pan', z: 0.15, vx: 900, vy: 350, secs: 6 }],
 };
 export type BenchScene = 'range' | 'fixture' | 'golf';
+/** T272 (?zooms=30,15,8, bench.mjs --zooms 30,15,8): a scene's tour at these zooms (%) instead of its own, each panned at the speed of the
+ *  nearest of STAGES' zooms */
+export function zoomStages(spec: string | null): Stage[] | null {
+  const zs = (spec ?? '').split(',').map(Number).filter(z => Number.isFinite(z) && z > 0);
+  if (!zs.length) return null;
+  return zs.map(p => { const z = p / 100, near = STAGES.slice(0, 4).reduce((a, b) => (Math.abs(b.z - z) < Math.abs(a.z - z) ? b : a)); return { name: `tour ${p}% pan`, z, vx: near.vx, vy: near.vy, secs: 6 }; });
+}
+/** T272: the tile caches' counts summed over the ground workers (as their last bakes reported them) */
+function tileTotals(g: Game): TileCacheStats {
+  const out: TileCacheStats = { decodes: {}, redecodes: {}, drops: {}, scaleMs: 0, scales: 0, bytes: 0, peakBytes: 0, painted: { decodes: 0, redecodes: 0, drops: 0 }, drawn: 0, drawnBytes: 0 };
+  const add = (a: Record<string, number>, b: Record<string, number>) => { for (const [k, v] of Object.entries(b)) a[k] = (a[k] ?? 0) + v; };
+  for (const t of g.ground.tileStats) {
+    if (!t) continue;
+    add(out.decodes, t.decodes); add(out.redecodes, t.redecodes); add(out.drops, t.drops);
+    out.scaleMs += t.scaleMs; out.scales += t.scales; out.bytes += t.bytes; out.peakBytes += t.peakBytes;
+    out.drawn += t.drawn; out.drawnBytes += t.drawnBytes; out.sourceDrops = (out.sourceDrops ?? 0) + (t.sourceDrops ?? 0); out.needed = (out.needed ?? 0) + (t.needed ?? 0); out.neededBytes = (out.neededBytes ?? 0) + (t.neededBytes ?? 0); out.painted.decodes += t.painted.decodes; out.painted.redecodes += t.painted.redecodes; out.painted.drops += t.painted.drops;
+  }
+  return out;
+}
+/** T272: one stage's bakes (from bake b0 on: their ms, their wait for decodes, their ms scaling tiles, median and p95) and what the tile caches
+ *  did meanwhile (against the counts at its start, s0): decodes, redecodes and drops in all and by family, the caches' MB now and at most */
+function tileStage(g: Game, b0: number, s0: TileCacheStats, sumPeak = 0): Record<string, unknown> {
+  const n = Math.min(g.ground.baked - b0, g.ground.bakeLog.length), ms: number[] = [], prep: number[] = [], scale: number[] = [], work: number[] = [];
+  for (let k = g.ground.baked - n; k < g.ground.baked; k++) { const i = k % g.ground.bakeLog.length, a = g.ground.bakeLog[i]!, b = g.ground.prepLog[i] ?? 0; ms.push(a); prep.push(b); scale.push(g.ground.scaleLog[i] ?? 0); work.push(a + b); }
+  const q = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - y); return +(s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0).toFixed(2); };
+  const s1 = tileTotals(g), d = (a: Record<string, number>, b: Record<string, number>) => { const o: Record<string, number> = {}; for (const [k, v] of Object.entries(a)) { const x = v - (b[k] ?? 0); if (x) o[k] = x; } return o; };
+  const dec = d(s1.decodes, s0.decodes), re = d(s1.redecodes, s0.redecodes), dr = d(s1.drops, s0.drops), sum = (o: Record<string, number>) => Object.values(o).reduce((p, v) => p + v, 0);
+  const fams = new Set([...Object.keys(dec), ...Object.keys(dr)]), byFamily: Record<string, [number, number, number]> = {};
+  for (const f of [...fams].sort()) byFamily[f] = [dec[f] ?? 0, re[f] ?? 0, dr[f] ?? 0];
+  return {
+    bakes: ms.length, bakeMedianMs: q(ms, 0.5), bakeP95Ms: q(ms, 0.95), prepMedianMs: q(prep, 0.5), prepP95Ms: q(prep, 0.95), scaleMedianMs: q(scale, 0.5), scaleP95Ms: q(scale, 0.95), workMedianMs: q(work, 0.5), workP95Ms: q(work, 0.95),
+    decodes: sum(dec), redecodes: sum(re), drops: sum(dr), sourceDrops: (s1.sourceDrops ?? 0) - (s0.sourceDrops ?? 0), scales: s1.scales - s0.scales, scaleMs: +(s1.scaleMs - s0.scaleMs).toFixed(1),
+    paintedDecodes: s1.painted.decodes - s0.painted.decodes, paintedRedecodes: s1.painted.redecodes - s0.painted.redecodes,
+    drawnPictures: s1.drawn, drawnMB: +(s1.drawnBytes / 1048576).toFixed(1), neededPictures: s1.needed ?? 0, neededMB: +((s1.neededBytes ?? 0) / 1048576).toFixed(1), tileCacheMB: +(s1.bytes / 1048576).toFixed(1), tileCachePeakMB: +(s1.peakBytes / 1048576).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576),
+    // (the chunk pictures and the tile caches together, now and at most over the stage's frames, in MB of 1e6 bytes as GAME-PLAN 2.3's 192)
+    groundPlusTilesMB: Math.round((g.ground.residentPx * 4 + s1.bytes) / 1e6), groundPlusTilesPeakMB: Math.round(Math.max(sumPeak, g.ground.residentPx * 4 + s1.bytes) / 1e6),
+    byFamily,
+  };
+}
 /** T265 (#794, ?bench&fixture=range20&river=1, bench.mjs --river 1): the grown town's river where it runs through the town, the camera following
  *  the river (back and forth along its line) at 30%, 15% and 8%, with the belts and the river's swamp in view; then the bake check (bakeStage) */
 export const RIVER_STAGES: Stage[] = [{ name: 'river 30% pan', z: 0.3, vx: 900, vy: 300, secs: 6 }, { name: 'river 15% pan', z: 0.15, vx: 900, vy: 350, secs: 6 }, { name: 'river 8% pan', z: 0.08, vx: 4000, vy: 1500, secs: 6 }];
@@ -125,7 +165,7 @@ const GOLF_MINUTE = (() => { const m = Number(new URLSearchParams(typeof locatio
  *  to 08:00 and its commute let build for WARM_MS. The tour pans from the start's or the save's camera with the game's own traffic, once the
  *  game is ready and a loaded town's lots are composed (at most 30 s) */
 export function benchGame(g: Game, scene: BenchScene) {
-  g.benchMode = true;
+  g.benchMode = true; g.ground.setTileStats(true); // (T272: each bake reports the tile cache's counts)
   if (new URLSearchParams(location.search).get('tourOnly') === '1') (g.ground as unknown as { firstBakes: Map<string, number> | null }).firstBakes = new Map();
   // T265: ?belts=0 (bench.mjs --belts 0): the tree belts off for the run (Engine.setRiverTrees), the forest and the town trees as before
   if (new URLSearchParams(location.search).get('belts') === '0') (g as unknown as { setRiverTrees?: (on: boolean) => void }).setRiverTrees?.(false);
@@ -156,7 +196,7 @@ export function benchGame(g: Game, scene: BenchScene) {
       return;
     }
     if (follow) { const c = follow(0); g.cam.X = c.X; g.cam.Y = c.Y; startTour(g, { ...info, river: true }, RIVER_STAGES, follow); return; }
-    startTour(g, info, SCENE_STAGES[scene]);
+    startTour(g, info, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
   };
 }
 
@@ -165,6 +205,8 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
   let s = 0, t = -2, frames: number[] = [], cpu: number[] = [], inst = 0, draws = 0, upload = 0, up = 0;
   /** T265: the most ms a frame's tree planting took this stage (perf.plantMs, the hitch check), the frames that planted, the distance along the river */
   let plantMax = 0, plantFrames = 0, along = 0; const bake0 = g.ground.baked;
+  /** T272: the stage's first bake and the tile caches' counts at its start (tileStage) */
+  let sb0 = g.ground.baked, ss0 = tileTotals(g), sumPeak = 0; g.ground.setTileStats(true);
   /** the sim worker's tick time: the max per stage, and the average and max over the whole tour */
   let stageSim = 0, simSum = 0, simN = 0, simMax = 0;
   const startX = g.cam.X, startY = g.cam.Y;
@@ -180,12 +222,13 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
     else { g.cam.X += st.vx * dt * dir; g.cam.Y += st.vy * dt * dir; }
     const pm = (g.perf as { plantMs?: number }).plantMs ?? 0; if (t > 1 && pm > 0) { plantMax = Math.max(plantMax, pm); plantFrames++; }
     if (st.z < PLANNER_Z / 3) { g.cam.X = 0; g.cam.Y = MAP * 32; }
-    up = Math.max(up, g.ground.uploadsThisSecond);
+    up = Math.max(up, g.ground.uploadsThisSecond); sumPeak = Math.max(sumPeak, g.ground.residentPx * 4 + tileTotals(g).bytes);
     if (t > 1) { frames.push(g.perf.frameMs); cpu.push(g.perf.cpuMs); inst = Math.max(inst, g.perf.instances); draws = Math.max(draws, g.perf.draws); upload = Math.max(upload, g.perf.uploadKB); }
     if (t >= st.secs) {
       const sorted = [...cpu].sort((a, b) => a - b), q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
       const fAvg = frames.reduce((a, b) => a + b, 0) / Math.max(1, frames.length);
-      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}) });
+      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}), tiles: tileStage(g, sb0, ss0, sumPeak) });
+      sb0 = g.ground.baked; ss0 = tileTotals(g); sumPeak = 0; g.ground.setTileStats(true); // (the next stage's working set counted afresh)
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY; plantMax = 0; plantFrames = 0; along = 0;
       if (s >= stages.length) {
         g.onFrame = null;
