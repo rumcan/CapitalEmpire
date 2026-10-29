@@ -142,7 +142,7 @@ export class PlayView {
       let k = old;
       while (k > 0 && list[k - 1]!.t > minute) k--;
       while (k < list.length && list[k]!.t <= minute) k++;
-      if (k !== old) { this.k[id] = k; this.swingAt[id] = k > old && fresh ? now : -Infinity; }
+      if (k !== old) { this.k[id] = k; this.swingAt[id] = k > old && fresh ? now : -Infinity; this.rollFor[id] = null; } // (T251: its roll set afresh, on the ground as it is now)
       const newest = k > 0 ? list[k - 1]! : null, dt = now - this.swingAt[id]!;
       // where he moved since the last update (at the first update: nowhere)
       const dx = s.x - this.lx[id]!, dy = s.y - this.ly[id]!, moved = fresh && dx * dx + dy * dy > MOVE2;
