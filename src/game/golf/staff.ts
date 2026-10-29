@@ -16,6 +16,15 @@ export const SHIFT: Readonly<Record<StaffRole, number>> = { gk: 420, mo: 600 };
 export const ROLE_NAME: Readonly<Record<StaffRole, [string, string]>> = { gk: ['greenkeeper', 'greenkeepers'], mo: ['mower operator', 'mower operators'] };
 /** the most of each a club takes on */
 export const STAFF_MAX = 6;
+/** T214 (#559, P26 section 2): the club's own staff, hired from P26's phase 4 (the Staff card, the pro's office and the teaching huts): the head
+ *  pro, the teaching pros (one a hut) and the membership secretary. They sit in the same staff state as the grounds crew (StaffState.club) and are
+ *  paid with it, in the same month (payWages), so there is one wage book. Their wages ($ a month) are P26's owner question Q3 at the lead's
+ *  recommendation (pre-approved); golf/club.ts reads the head pro and the secretary as the sales and renewal terms (clubTerms) */
+export type ClubRole = 'head' | 'teach' | 'sec';
+export const CLUB_ROLES: readonly ClubRole[] = ['head', 'teach', 'sec'];
+export const CLUB_WAGE: Readonly<Record<ClubRole, number>> = { head: 900, teach: 300, sec: 450 };
+/** the most of each club role: one head pro, a teaching pro for each of up to three huts, one secretary */
+export const CLUB_MAX: Readonly<Record<ClubRole, number>> = { head: 1, teach: 3, sec: 1 };
 /** the jobs, in the order a role works them (the first are done first when the crew is short) */
 export type Job = 'cups' | 'sands' | 'greens' | 'fairways' | 'rough';
 export const JOBS: readonly Job[] = ['cups', 'sands', 'greens', 'fairways', 'rough'];
@@ -38,9 +47,11 @@ export const PIN_REP_WORST = -3;
 /** each hole's jobs as the save keeps them: the town day each was last done */
 export type JobDays = Record<Job, number>;
 /** the staff's state (CrewSave's part): the crew hired, each hole's job days, the day the jobs were last worked out and that day's jobs (the holes
- *  each was done on: the visible crew plays them), the season's hole-days and those with an unmoved pin, and the game month the wages were paid to */
+ *  each was done on: the visible crew plays them), the season's hole-days and those with an unmoved pin, and the game month the wages were paid to;
+ *  T214: the club's own staff (missing: none, until P26's phase 4 hires them) */
 export interface StaffState {
   staff: Record<StaffRole, number>;
+  club?: Partial<Record<ClubRole, number>>;
   holes: Record<number, JobDays>;
   day: number; today: Record<Job, number[]>;
   season: { holeDays: number; stale: number };
@@ -60,8 +71,11 @@ export function workNeed(holes: number): Record<StaffRole, number> {
 export function crewNeed(holes: number): Record<StaffRole, number> {
   const w = workNeed(holes); return { gk: Math.max(0, Math.ceil(w.gk / SHIFT.gk - 1e-9)), mo: Math.max(0, Math.ceil(w.mo / SHIFT.mo - 1e-9)) };
 }
-/** the crew's wages a month ($) */
-export const wages = (staff: Readonly<Record<StaffRole, number>>): number => staff.gk * WAGE.gk + staff.mo * WAGE.mo;
+/** the wages a month ($): the crew's, and (T214) the club staff's when given */
+export const wages = (staff: Readonly<Record<StaffRole, number>>, club: Readonly<Partial<Record<ClubRole, number>>> = {}): number =>
+  staff.gk * WAGE.gk + staff.mo * WAGE.mo + CLUB_ROLES.reduce((a, r) => a + (club[r] ?? 0) * CLUB_WAGE[r], 0);
+/** T214: the club staff's terms in the members' month (golf/club.ts StaffTerms): a head pro and a secretary on the staff */
+export const clubTerms = (s: Pick<StaffState, 'club'> | null | undefined): { head: boolean; sec: boolean } => ({ head: (s?.club?.head ?? 0) > 0, sec: (s?.club?.sec ?? 0) > 0 });
 
 /** a fresh state: the crew the course needs hired (an old save's, a new game's), every job on time today (each job's holes staggered over its
  *  interval, as a rota runs: the k-th hole last done k mod INTERVAL days ago, so the days after carry an even share), the season empty, the wages
@@ -119,12 +133,12 @@ export function pinReputation(season: { holeDays: number; stale: number }): numb
   return season.holeDays > 0 ? Math.round(PIN_REP_WORST * Math.min(1, season.stale / season.holeDays)) || 0 : 0;
 }
 
-/** the wages due from s.paid to game month `month` ($: each month passed, the crew as it is now), and the state paid to it; a month before s.paid
- *  (a new clock) pays nothing and starts from it */
+/** the wages due from s.paid to game month `month` ($: each month passed, the crew and (T214) the club staff as they are now), and the state paid
+ *  to it; a month before s.paid (a new clock) pays nothing and starts from it */
 export function payWages(s: StaffState, month: number): { s: StaffState; due: number } {
   const m = Math.floor(month);
   if (m <= s.paid) return { s: m < s.paid ? { ...s, paid: m } : s, due: 0 };
-  return { s: { ...s, paid: m }, due: (m - s.paid) * wages(s.staff) };
+  return { s: { ...s, paid: m }, due: (m - s.paid) * wages(s.staff, s.club) };
 }
 /** one more (+1) or one fewer (-1) of a role, within 0..STAFF_MAX; letting one go costs a month's wage (P26). Null: no change */
 export function changeStaff(s: StaffState, role: StaffRole, delta: 1 | -1): { s: StaffState; cost: number } | null {
@@ -144,7 +158,10 @@ export function normalizeStaff(v: unknown): StaffState | null {
   const holes: Record<number, JobDays> = {};
   for (const [k, d] of Object.entries(o.holes ?? {})) { const n = Number(k); if (!(n > 0) || !d) continue; const jd = {} as JobDays; for (const j of JOBS) jd[j] = Math.floor(num((d as Partial<JobDays>)[j], o.day)); holes[n] = jd; }
   const today = noJobs(); for (const j of JOBS) { const a = (o.today as Partial<Record<Job, unknown>> | undefined)?.[j]; if (Array.isArray(a)) today[j] = a.filter((n): n is number => typeof n === 'number' && n > 0); }
-  return { staff: { gk: cl(o.staff.gk), mo: cl(o.staff.mo) }, holes, day: Math.floor(o.day), today, season: { holeDays: Math.max(0, num(o.season?.holeDays)), stale: Math.max(0, num(o.season?.stale)) }, paid: Math.floor(num(o.paid)) };
+  const out: StaffState = { staff: { gk: cl(o.staff.gk), mo: cl(o.staff.mo) }, holes, day: Math.floor(o.day), today, season: { holeDays: Math.max(0, num(o.season?.holeDays)), stale: Math.max(0, num(o.season?.stale)) }, paid: Math.floor(num(o.paid)) };
+  // T214: the club's own staff, each role within its most (none kept: the field stays out)
+  if (o.club && typeof o.club === 'object') { const c: Partial<Record<ClubRole, number>> = {}; for (const r of CLUB_ROLES) { const n = Math.max(0, Math.min(CLUB_MAX[r], Math.floor(num(o.club[r])))); if (n > 0) c[r] = n; } if (Object.keys(c).length) out.club = c; }
+  return out;
 }
 
 /** the club card's Grounds crew block (ui/golf/ClubhouseCard.tsx): the crew hired and needed, the wages ($ a month: the crew's, and each role's), the

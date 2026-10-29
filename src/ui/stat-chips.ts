@@ -35,6 +35,14 @@ export function changeWhen(s: Pick<TopStats, 'monthSpan' | 'month'>): string {
   return `A month on average over the last ${s.monthSpan} months (${monthIndexLabel(s.month)} to ${monthIndexLabel(s.month + s.monthSpan - 1)})`;
 }
 
+/** the golfers chip's tooltip: the rounds a month at today's tee sheet and (T214, P26 5.3) how many of them are members' and the club's members */
+export function golfersTip(s: Pick<TopStats, 'golfers' | 'members' | 'memberRounds'>): string {
+  if (!(s.golfers > 0)) return 'Golfers a month: none yet. Members and visitors play once the club has holes and a clubhouse';
+  const n = (v: number) => v.toLocaleString('en-US');
+  const club = s.members === undefined ? '' : `; ${n(s.memberRounds ?? 0)} of them members' (the club has ${n(s.members)} ${s.members === 1 ? 'member' : 'members'}, who play free on their dues)`;
+  return `Golfers a month: ${n(s.golfers)} rounds, members and visitors, at today's tee sheet${club} (the Club chip)`;
+}
+
 /** the four chips, in the concept's order: money, reputation, golfers a month, course rating. Status is never colour alone (T180): the money
  *  in the red carries !, its change ▲ or ▼; debtLeft: the days left before bankruptcy while in the red (its line replaces the change) */
 export function statChips(s: TopStats, debtLeft: number | null = null): StatChipView[] {
@@ -51,7 +59,7 @@ export function statChips(s: TopStats, debtLeft: number | null = null): StatChip
   return [
     moneyChip,
     { id: 'rep', icon: 'chart', value: `${Math.round(s.rep)}%`, label: 'Reputation', tip: `Reputation: ${Math.round(s.rep)} of 100. The tournaments, the pace of play and the course move it; golfers and members follow it` },
-    { id: 'golfers', icon: 'people', value: s.golfers.toLocaleString('en-US'), label: 'Golfers/mo', tip: s.golfers > 0 ? `Golfers a month: ${s.golfers.toLocaleString('en-US')} rounds, members and visitors, at today's tee sheet (the Club chip)` : 'Golfers a month: none yet. Members and visitors play once the club has holes and a clubhouse' },
+    { id: 'golfers', icon: 'people', value: s.golfers.toLocaleString('en-US'), label: 'Golfers/mo', tip: golfersTip(s) },
     { id: 'rating', icon: 'leaf', value: rating === null ? '—' : String(rating), ...(rating === null ? {} : { unit: '/5' }), label: 'Course rating', tip: rating === null ? 'Course rating: no holes yet' : `Course rating: ${rating} of 5, from the course's quality, ${Math.round(s.quality!)} of 100 (${s.holes} ${s.holes === 1 ? 'hole' : 'holes'}; the Season chip's Course stats)` },
   ];
 }

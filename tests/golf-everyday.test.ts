@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
 import { FLIGHT_TIME, PUTT_FLIGHT } from '../src/game/golf/play';
 import type { CourseView, Group, Lie, PlayHole, Pt, RoundPlan, Shot } from '../src/game/golf/play';
-import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, DayBook, dayCourse, PACE_REP_GOOD, PACE_REP_SLOW, checkInsTo, clubMembers, dayPace, dayPlan, dayRoster, feeScale, normalizeDaySave, paceReputation, type DayInputs } from '../src/game/golf/everyday';
+import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, DayBook, dayCourse, PACE_REP_GOOD, PACE_REP_SLOW, checkInsTo, dayMembers, dayPace, dayPlan, dayRoster, feeScale, normalizeDaySave, paceReputation, type DayInputs } from '../src/game/golf/everyday';
 import { DayView } from '../src/game/golf/everydayview';
 import { GREEN_FEE_PER_ROUND, OFF_SEASON_PLAY_DAYS, computeTournamentCloseBook, computeYearEnd, dailyGolfers, greenFeeIncome } from '../src/game/golf/yearend';
 import { SEASON_LEN } from '../src/game/golf/calendar';
@@ -80,7 +80,7 @@ test('money: members pay no fee; a group pays its visitors\' green fees at check
   assert.equal(all.paid, r.order.length);
   // a club with members only (no visitors: a busy count of 0) books nothing
   const m = dayRoster(SEED, 4, { ...CLUB, busy: 0 }); assert.ok(m.members > 0); assert.equal(m.visitors, 0); assert.equal(m.fees, 0);
-  assert.ok(clubMembers(80, 50, 18) > clubMembers(80, 10, 18));
+  assert.ok(dayMembers({ quality: 80, rep: 50, holes: 18 }) > dayMembers({ quality: 80, rep: 10, holes: 18 }));
 });
 
 /** each group's time on each green, from its shots (as golf-play-pace.test.ts) */
