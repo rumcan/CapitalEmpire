@@ -8,6 +8,7 @@ import type { LineStyle } from './types';
 import type { Waterway } from './terrain/types';
 import type { BBox } from './network';
 import type { GrassCellView } from './ext/grass-management';
+import type { CropState } from './ext/farms/crops';
 import type { EdgeProfile } from './paint-edges';
 import type { GrassArt } from './painted-grass-lod';
 import type { ShineWeights } from './grass-shine';
@@ -116,6 +117,11 @@ export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) *
    *  look state (T155: its state's lawn, painted-surfaces.ts lawnTexFor); rough: a new or poor town's untended yard (T222, rough-yards.ts): fescue, dirt or desert in soft patches over the mown lawn */ lawn?: { a: number; share: number; soft: number; patch: number; z: number; st?: 'built' | 'upgraded' | 'declined'; rough?: RoughMix }; /** markings over the road (on-street parking): only its lines are drawn, white, with the road's own markings */ top?: boolean; /** the colour of its lines (parking bays; absent: worn off-white) */ lineCol?: 'yellow';
   /** an on-street parking lay-by cut into the sidewalk: drawn after the roads, over the sidewalk and the kerb, with its own kerb on the outer side */ layby?: boolean;
   /** T228: a lot's driveway (lots/compose-core.ts): its mouth on the road gets a cut (street-marks.ts driveCuts) */ drive?: true;
+  /** T259: a farm's crop field (ext/farms/crops.ts; tex 'field', its soil): its state this month, its rows' unit direction (world tiles) and
+   *  the rows' phase (0..1 of their pitch, so neighbouring fields' rows do not line up); renderer.ts drawCrops lays its rows, or its state's art */
+  crop?: { st: CropState; d: [number, number]; ph: number };
+  /** T259: drawn with its hard outline, never T247's soft band (a farm lane narrower than the band would dissolve in it) */
+  hard?: true;
   /** T237: drawn with the car parks (over their asphalt and the painted areas): a paved car park's kerbs and planting islands (event/parklook.ts) */
   park?: true;
   /** T232: a survey line round a plot (lots/survey.ts: a building site, the player's empty land): always with tex 'marks' (nothing filled), its

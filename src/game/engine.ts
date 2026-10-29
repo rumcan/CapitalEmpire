@@ -123,7 +123,7 @@ import { LotMap } from './lots/lots';
 import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
-import { FarmMap, claimedLots, composeFarm } from './ext/farms';
+import { FARM_MODEL, FarmMap, claimedLots, composeFarm, farmSeason, farmStandIns, parcelCorners, type FarmModel, type FarmParcel } from './ext/farms';
 import { SIG, shown, sigKey } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
@@ -308,6 +308,13 @@ function lotBoxOf(o: ArrayLike<number>, u: ArrayLike<number>, n: ArrayLike<numbe
   const ax = o[0]! + u[0]! * w, ay = o[1]! + u[1]! * w, bx = o[0]! + n[0]! * d, by = o[1]! + n[1]! * d, cx = ax + n[0]! * d, cy = ay + n[1]! * d;
   return [Math.min(o[0]!, ax, bx, cx), Math.min(o[1]!, ay, by, cy), Math.max(o[0]!, ax, bx, cx), Math.max(o[1]!, ay, by, cy)];
 }
+/** T259: a farm parcel's box x0 y0 x1 y1 (tiles: its four corners) */
+function parcelBox(p: FarmParcel): number[] { const c = parcelCorners(p); return [Math.min(c[0].x, c[1].x, c[2].x, c[3].x), Math.min(c[0].y, c[1].y, c[2].y, c[3].y), Math.max(c[0].x, c[1].x, c[2].x, c[3].x), Math.max(c[0].y, c[1].y, c[2].y, c[3].y)]; }
+/** T259: the distance from tile (x, y) to a farm parcel (0 inside) */
+function parcelGap(p: FarmParcel, x: number, y: number): number {
+  const dx = x - p.o.x, dy = y - p.o.y, a = dx * p.u.x + dy * p.u.y, b = dx * p.n.x + dy * p.n.y;
+  return Math.hypot(Math.max(0, -a, a - p.w), Math.max(0, -b, b - p.d));
+}
 /** the distance from tile (x, y) to a lot's rectangle (0 inside), the lot's frame as in lotBoxOf */
 function lotGap(l: LotView, x: number, y: number): number {
   const dx = x - l.o[0], dy = y - l.o[1], a = dx * l.u[0] + dy * l.u[1], b = dx * l.n[0] + dy * l.n[1];
@@ -413,8 +420,9 @@ const LAYBY_PAD = 0.3;
 /** the library index by id, and the props the town's lots add (auto 'lot:' + key) */
 const LIB_INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const isLotProp = (p: Prop) => !!p.auto && (p.auto.startsWith('lot:') || p.auto.startsWith('farm:'));
-/** the farms composed per frame at most (the rest wait in the queue), so a big network does not stall a frame */
-const FARMS_PER_FRAME = 4;
+/** the farms composed per frame at most (the rest wait in the queue), so a big network does not stall a frame; T259: and a frame composes no
+ *  more farms once they took FARM_FRAME_MS (a farm composes in 0.2-0.4 ms, 1.5 at most) */
+const FARMS_PER_FRAME = 4, FARM_FRAME_MS = 1;
 /** T219: how long a place with no free site waits before the next search (ms) */
 const PLACE_RETRY_MS = 30000;
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
@@ -2119,6 +2127,14 @@ export class Game {
   private laybys = new Map<string, number[]>(); private laybyDirty: number[][] = [];
   /** the farms (ext/farms): the accepted parcels follow the network; their props by key (auto 'farm:' + key, never saved), the keys queued to compose, the dev switch */
   private farmMap = new FarmMap(); private farmProps = new Map<string, Prop[]>(); private farmQueue = new Set<string>(); private farmsEnabled = true; private farmTick = 0;
+  /** T259 (#759): the farm model new farms compose with (ext/farms FARM_MODEL: the farmstead set back on its lane, the fields by the month); a
+   *  save from before T259 has none, and its farms keep model 1 until they are rebuilt (a road edit that moves a parcel, a new farm on a new road:
+   *  farmsNew, saved with it). farmPropKey: each farm prop's place in its composition (a month's change keeps every prop that stands where it
+   *  stood); the ground each farm last sent; the month the farms show; each farm's season (farmSeason) as composed; its stand-in labels */
+  private farmModel: FarmModel = FARM_MODEL; private farmsNew = new Set<string>(); private farmPropKey = new WeakMap<Prop, string>(); private farmGround = new Map<string, string>();
+  private farmMonthNow = -1; private farmSeasons = new Map<string, string>(); private farmLabels = new Map<string, { p: Drawable; text: string; box: number[] }[]>();
+  /** T259 (dev): the calendar month the farms show (window.__game.farmMonthOverride = 0..11, 0 January; setFarmMonth); null: the season clock's */
+  farmMonthOverride: number | null = null;
   /** scratch for the starter check (the lot's box, the props found); the planner's last building refresh (ms) and the timer of the town's lot refresh */
   private lotBox: BBox = [0, 0, 0, 0]; private lotHits = new Set<Prop>(); private blocksAt = -Infinity; private lotBlocksTimer = 0;
   private raf = 0; private last = 0;
@@ -2373,7 +2389,7 @@ export class Game {
     else if (!save || !this.load(save)) {
       // a save that read fine but failed to load: keep its bytes before the new game's autosave (T042), or never save over it
       if (save) { if (await backupTownSlot('loadfailed')) readNote = { text: 'The save could not be loaded. It is kept as a backup; a new game started.', kind: 'warn' }; else { this.saveBlocked = true; readNote = { text: 'The save could not be loaded or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; } if (this.dead) return; }
-      setLotModel(LATEST_LOT_MODEL); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
+      setLotModel(LATEST_LOT_MODEL); this.farmModel = FARM_MODEL; this.farmsNew.clear(); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
     tick(0.7);
@@ -2417,6 +2433,8 @@ export class Game {
   private newGame(): boolean {
     // a new town composes its house lots with the latest shipped lot model (T160; the save records it: lotModel)
     setLotModel(LATEST_LOT_MODEL);
+    // T259: and its farms with the latest farm model (the save records it: farmModel)
+    this.farmModel = FARM_MODEL; this.farmsNew.clear();
     if (this.startMode === 'valley') return false;
     return (this.startMode === 'range' && this.newRangeGame()) || this.newGolfGame();
   }
@@ -2701,6 +2719,8 @@ export class Game {
     const rb = this.range.scene?.box, pb = this.range.scene?.practice.box; // the driving range's plot and its practice area keep clear of trees (P24, T129, T130)
     const lab = this.labClear; // the lot lab's lot and street keep clear of trees (stageLab): only the lot's own art shows round its props
     const places = this.placeBoxes().filter(b => boxNear(b, x0, y0, x1, y1, g)); // T219: the iconic places keep clear of trees
+    // T259: a model 2 farm keeps the river belts and the town trees off its land (its windbreak, orchard, fields and yard are its own planting)
+    const farms: FarmParcel[] = []; for (const [k, f] of this.farmMap.farms) if (this.farmModelOf(k) === 2 && boxNear(parcelBox(f.p), x0, y0, x1, y1, g)) farms.push(f.p);
     // T229: a hole's frame trees (props): a planted tree keeps 2 tiles off them, so the woods never grow through a frame
     const frames: number[] = []; if (grid) for (const p of this.propGrid.query([x0 - g, y0 - g, x1 + g, y1 + g])) if (p.frame) frames.push(p.x, p.y);
     const free = (x: number, y: number, r: number) => {
@@ -2710,6 +2730,7 @@ export class Game {
       if (rb && x > rb[0] - r && x < rb[2] + r && y > rb[1] - r && y < rb[3] + r) return false;
       if (pb && x > pb[0] - r && x < pb[2] + r && y > pb[1] - r && y < pb[3] + r) return false;
       for (const l of lots) if (lotGap(l, x, y) < r) return false;
+      for (const f of farms) if (parcelGap(f, x, y) < r) return false;
       const p = { x, y };
       for (const s of this.net.segsNear(p, r + 16)) if (segDist(p, s) < s.cls.h + s.cls.walk + r + 0.5) return false;
       for (const d of bizs) if (x > d.x - r && x < d.x + d.w + r && y > d.y - r && y < d.y + d.h + r) return false;
@@ -3326,12 +3347,43 @@ export class Game {
   readonly placeDefs = PLACE_DEFS;
   /** the farms follow the network (ext/farms): the parcels of the changed country roads are derived again (all after a load or a
    *  new valley); the parcels that went lose their props and ground, the new ones queue to compose */
-  private farmsUpdate(full = false) {
+  private farmsUpdate(full = false, load = false) {
     if (!this.farmsEnabled || !this.terrain) return;
+    // (T259: the model 2 farms' parcels keep the river belts and the town trees off them: treeClearance; the trees round a farm that came or went
+    //  are planted again)
+    const before = new Map<string, number[]>(); for (const [k, f] of this.farmMap.farms) if (this.farmModelOf(k) === 2) before.set(k, parcelBox(f.p));
     const { added, removed } = this.farmMap.update(this.net, { cls: this.terrain.cls, seed: this.seed }, { towns: this.townPts, site: this.site, parks: this.farmParks() }, this.traffic.lots, full || this.net.lastFull);
-    for (const k of removed) this.dropFarm(k);
-    for (const k of added) this.farmQueue.add(k);
+    // T259: an old save's farm that is rebuilt (its parcel changed, or a new farm on a new road) takes the new model; a load composes each as saved
+    const added2 = new Set(added);
+    for (const k of removed) { this.dropFarm(k); if (!added2.has(k)) this.farmsNew.delete(k); }
+    for (const k of added) { if (!load && this.farmModel === 1) this.farmsNew.add(k); this.farmQueue.add(k); }
+    if (!load) {
+      for (const k of removed) { const b = before.get(k); if (b) this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!); }
+      for (const k of added) { const f = this.farmMap.farms.get(k); if (f && this.farmModelOf(k) === 2) { const b = parcelBox(f.p); this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!); } }
+    }
   }
+  /** T259: the model a farm composes with: the game's (a new game's FARM_MODEL), or the new one for an old save's farm rebuilt since */
+  private farmModelOf(key: string): FarmModel { return this.farmModel === 1 && !this.farmsNew.has(key) ? 1 : FARM_MODEL; }
+  /** T259: the calendar month the farms show (0 January): the season clock's (golf/calendar.ts seasonMonth; on tournament day read a unit
+   *  earlier, as golfMonthIndex does), or the dev override */
+  farmMonth(): number {
+    if (this.farmMonthOverride !== null) return ((Math.floor(this.farmMonthOverride) % 12) + 12) % 12;
+    const r = this.traffic.round, c = this.traffic.clockTime(performance.now()) - (r.stage !== 'free' ? 1 : 0);
+    return seasonMonth(c);
+  }
+  /** T259: the month moved on: the model 2 farms whose look changes (a field's crop state, the orchard's leaves: farmSeason) compose again,
+   *  FARMS_PER_FRAME a frame, each keeping every prop and patch that did not change */
+  private farmSeasonTick() {
+    const m = this.farmMonth(); if (m === this.farmMonthNow) return;
+    this.farmMonthNow = m;
+    for (const [k, f] of this.farmMap.farms) { const model = this.farmModelOf(k); if (model !== 2 || !this.farmProps.has(k)) continue; if (farmSeason(f.p, f.seed, model, m) !== this.farmSeasons.get(k)) this.farmQueue.add(k); }
+  }
+  /** T259 (dev, the shots and the bench): the farms show calendar month m (0 January; null: the season clock again) */
+  setFarmMonth(m: number | null) { this.farmMonthOverride = m; this.farmSeasonTick(); }
+  /** T259 (dev, the bench's before and after): every farm composes with model m (1: T005's, as before T259; 2: the new); a save then keeps it */
+  setFarmModel(m: FarmModel) { this.farmModel = m; this.farmsNew.clear(); for (const k of this.farmMap.farms.keys()) this.farmQueue.add(k); this.dropTownTrees(0, 0, MAP, MAP); this.scheduleSave(); }
+  /** T259: the farms waiting to compose (the bench and the shots wait for none) */
+  get farmsPending(): number { return this.farmQueue.size; }
   /** what the farms keep clear of besides the town and the site: the car parks, and in golf mode the course's rect too (the farm map's update and stale checks read the same list) */
   private farmParks(): { x: number; y: number; w: number; h: number }[] {
     if (!this.golf) return this.parkDefs;
@@ -3345,6 +3397,7 @@ export class Game {
     const ps = this.farmProps.get(key);
     if (ps) { for (const p of ps) if (this.props.has(p)) this.removeProp(p); this.farmProps.delete(key); }
     this.setLotGround('farm:' + key, null);
+    this.farmGround.delete(key); this.farmSeasons.delete(key); this.farmLabels.delete(key);
   }
   /** every farm goes (a reset, the farms switched off) */
   private dropAllFarms() {
@@ -3354,18 +3407,44 @@ export class Game {
   /** a farm composes on apply: its farmhouse, barn and fields as auto props ('farm:' + key, never saved) and its ground patches; at most FARMS_PER_FRAME a frame */
   private applyFarmQueue() {
     const q = this.farmQueue; if (!q.size) return;
-    let k = 0;
-    for (const key of q) { if (k++ >= FARMS_PER_FRAME) break; q.delete(key); this.placeFarm(key); }
+    let k = 0; const t0 = performance.now();
+    // (T259: and no more once the frame's farms took FARM_FRAME_MS: a month's change composes every farm whose fields turned, a few a frame)
+    for (const key of q) { if (k++ >= FARMS_PER_FRAME || (k > 1 && performance.now() - t0 > FARM_FRAME_MS)) break; q.delete(key); this.placeFarm(key); }
   }
+  /** a farm composes (its model, the month: T259) as auto props ('farm:' + key, never saved) and its ground patches. Composed before (a new
+   *  month), the props that stand where they stood stay and only the rest go and come (a month moves only the orchard's trees), and the ground
+   *  is sent only when it changed (a field's crop state) */
   private placeFarm(key: string) {
     const f = this.farmMap.farms.get(key); if (!f) return;
-    this.dropFarm(key);
-    const fp = farmPreset(f.p), c = fp ? compose({ o: f.p.o, u: f.p.u, n: f.p.n, w: f.p.w, d: f.p.d }, { use: LU.NONE, level: LV.BUILT, decline: 0, seed: f.seed, preset: fp.id }) : composeFarm(f.p, f.seed), ps: Prop[] = [], pk = 'farm:' + key;
-    for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, pk, q.foot ? { foot: q.foot } : undefined)); }
-    this.farmProps.set(key, ps); this.setLotGround(pk, c.ground);
+    this.farmQueue.delete(key);
+    const model = this.farmModelOf(key), month = this.farmMonth(), pk = 'farm:' + key;
+    const fp = farmPreset(f.p), c = fp ? compose({ o: f.p.o, u: f.p.u, n: f.p.n, w: f.p.w, d: f.p.d }, { use: LU.NONE, level: LV.BUILT, decline: 0, seed: f.seed, preset: fp.id }) : composeFarm(f.p, f.seed, { model, month });
+    const old = new Map<string, Prop[]>(), ps: Prop[] = [];
+    for (const p of this.farmProps.get(key) ?? []) { const k = this.farmPropKey.get(p); if (k === undefined || !this.props.has(p)) { if (this.props.has(p)) this.removeProp(p); continue; } const l = old.get(k); if (l) l.push(p); else old.set(k, [p]); }
+    for (const q of c.props) {
+      const k = `${q.id}|${q.x}|${q.y}|${q.flip ? 1 : 0}|${q.scale}|${q.foot ? q.foot.join(',') : ''}`, kept = old.get(k)?.pop();
+      if (kept) { ps.push(kept); continue; }
+      const i = LIB_INDEX.get(q.id); if (i === undefined) continue;
+      const p = this.addProp(i, q.x, q.y, q.flip, q.scale, pk, q.foot ? { foot: q.foot } : undefined); this.farmPropKey.set(p, k); ps.push(p);
+    }
+    for (const l of old.values()) for (const p of l) if (this.props.has(p)) this.removeProp(p);
+    this.farmProps.set(key, ps);
+    const gs = JSON.stringify(c.ground); if (this.farmGround.get(key) !== gs) { this.setLotGround(pk, c.ground); this.farmGround.set(key, gs); }
+    this.farmSeasons.set(key, fp ? '' : farmSeason(f.p, f.seed, model, month));
+    // T259: the model 2 farm's stand-in labels ("Stand In for <art>": the windbreak's and the orchard's first tree, each crop state's biggest field, the lane)
+    if (fp || model !== 2) { this.farmLabels.delete(key); return; }
+    const labels: { p: Drawable; text: string; box: number[] }[] = [], at = LIB_INDEX.get('world:mailbox') ?? 0;
+    for (const s of farmStandIns(f.p, f.seed, month)) {
+      let p: Drawable | null = null, best = 9;
+      if (s.id) for (const q of ps) { if (LIBRARY[q.item]!.id !== s.id) continue; const d = Math.hypot(q.x - s.x, q.y - s.y); if (d < best) { best = d; p = q; } }
+      if (s.id && !p) continue;
+      p ??= { item: at, x: s.x, y: s.y, flip: false, scale: 1e-4, x0: s.x, y0: s.y, x1: s.x, y1: s.y };
+      labels.push({ p, text: s.text, box: [s.x - 2, s.y - 2, s.x + 2, s.y + 2] });
+    }
+    this.farmLabels.set(key, labels);
   }
   /** the dev switch (window.__game.farmsOn(false)): farms on (the default) or off; off removes every farm's props and ground */
-  farmsOn(on: boolean) { this.farmsEnabled = on; if (on) this.farmsUpdate(true); else this.dropAllFarms(); }
+  farmsOn(on: boolean) { this.farmsEnabled = on; if (on) { this.farmsUpdate(true, true); this.dropTownTrees(0, 0, MAP, MAP); } else this.dropAllFarms(); }
   /** median trees, roundabout trees and traffic lights follow the road network (only what the last rebuild changed) */
   /** the town street lamps waiting for houses near them (AutoProp.town), by key: tried again when the lots change (sendBlocks) */
   private lampWait = new Map<string, AutoProp>();
@@ -3434,7 +3513,7 @@ export class Game {
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false); this.syncBlockLawns();
     this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP]); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs); this.syncStopCuts();
-    this.farmsUpdate(true);
+    this.farmMonthNow = -1; this.farmsUpdate(true, true);
     this.syncPlaces();
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
     this.sendGolf();
@@ -6240,6 +6319,8 @@ export class Game {
     if (this.saveBlocked) return 0;
     const d: SaveV5 = {
       version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(),
+      // T259: the farm model (an old save's farms rebuilt since on the new one: farmsNew)
+      farmModel: this.farmModel, ...(this.farmModel === 1 && this.farmsNew.size ? { farmsNew: [...this.farmsNew] } : {}),
       segs: [...this.net.segs].map(segRec),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => propTuple(LIBRARY[p.item].id, p)),
@@ -6272,6 +6353,8 @@ export class Game {
     try {
       // the town's house lots compose with the lot model it was made with (T160: a save from before has none: v1)
       setLotModel(d.lotModel ?? 1);
+      // T259: its farms compose with the farm model it was made with (a save from before has none: model 1), those rebuilt since on the new one
+      this.farmModel = d.farmModel === 2 ? 2 : 1; this.farmsNew = new Set(this.farmModel === 1 && Array.isArray(d.farmsNew) ? d.farmsNew.filter(k => typeof k === 'string') : []);
       this.bizOpenSeen = null;
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
@@ -7363,6 +7446,8 @@ export class Game {
     this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.watchHoleLines(performance.now()); this.watchMowFlips(performance.now()); this.flushLotGround(); this.flushCasters(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
+    // T259: the farms' fields and orchards by the month (checked four times a second; only the farms whose look changes compose again)
+    if (this.farmsEnabled && this.farmTick % 15 === 7) this.farmSeasonTick();
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
     this.yearCheck(); this.foundingCheck(); this.progressCheck(); this.ghostTreesCheck(); this.ghostFrameCheck(performance.now()); // T176, T229
     const t0 = performance.now();
@@ -8146,6 +8231,8 @@ export class Game {
     for (const p of this.siHits) this.standInPill(p, p, ze);
     for (const p of this.businessProps) this.standInPill(p, p, ze);
     for (const l of this.range.labels) this.standInPill(l, l.p, ze, l.text);
+    // T259: the farms' stand-ins (the windbreak, the orchard, the crop fields, the lane) in the view's box
+    for (const ls of this.farmLabels.values()) for (const l of ls) if (l.box[2]! >= b[0]! && l.box[0]! <= b[2]! && l.box[3]! >= b[1]! && l.box[1]! <= b[3]!) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.decor.labels) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.placeStandIns) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.caddieLabels) this.standInPill(l.p, l.p, ze, l.text); // T213: the caddies' stand-in
