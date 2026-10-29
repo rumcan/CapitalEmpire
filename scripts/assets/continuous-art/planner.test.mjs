@@ -83,6 +83,30 @@ test('held prior image does not unlock a dependent edit',async()=>{
   const f=await fixture();const first=job(f,'base'),edit=job(f,'edit',{dependsOn:['base'],references:[{job:'base'}]});const artifact=await saveArt(first,'held');
   const states=await jobStates(plan(f,[first,edit]),{...f.item,artifacts:[artifact]},f.config);assert.equal(states[1].status,'waiting-dependency');
 });
+test('negative provenance review keeps a dependent turn waiting and selects independent work',async()=>{
+  const f=await fixture();const first=job(f,'view1'),turn=job(f,'view2',{dependsOn:['view1'],references:[{job:'view1'}]}),other=job(f,'independent');
+  await saveArt(first);const provenance=first.output.replace(/\.png$/,'.provenance.json');
+  const bytes=Buffer.from(JSON.stringify({id:first.id,output:first.output,subjobKey:first.key,review:'held',reviewReason:'Actual native geometry review is held.'}));await fs.writeFile(provenance,bytes);
+  await savePlan(f,plan(f,[first,turn,other]));const q=await snapshotQueue(f.config),item=q.items[0];
+  assert.equal(item.artifacts[0].review,'held');assert.match(item.artifacts[0].holdReason,/geometry/);
+  assert.equal(item.jobs[0].status,'existing-held');assert.equal(item.jobs[1].status,'waiting-dependency');
+  assert.equal(q.next.job.key,'independent');assert.ok((await fs.readFile(provenance)).equals(bytes),'inventory must preserve original generation provenance');
+});
+test('accepted dependency requirement waits for a hash-bound decision, not raw presence or a provenance claim',async()=>{
+  const f=await fixture();const first=job(f,'view1'),turn=job(f,'view2',{dependsOn:['view1'],references:[{job:'view1'}],dependencyRequirement:'Use accepted view1; do not execute from an unreviewed first view.'}),other=job(f,'independent');
+  await saveArt(first);await savePlan(f,plan(f,[first,turn,other]));let q=await snapshotQueue(f.config);
+  assert.equal(q.items[0].jobs[1].status,'waiting-dependency');assert.equal(q.next.job.key,'independent');
+  await fs.writeFile(first.output.replace(/\.png$/,'.provenance.json'),JSON.stringify({id:first.id,output:first.output,review:'accepted'}));
+  q=await snapshotQueue(f.config);assert.equal(q.items[0].jobs[1].status,'waiting-dependency','bare provenance acceptance is not primary hash-bound acceptance');
+  await fs.writeFile(first.output.replace(/\.png$/,'.appearance.json'),JSON.stringify({id:first.id,decision:'accepted-for-art-appearance',files:[{file:first.output,sha256:hash(png)}]}));
+  q=await snapshotQueue(f.config);assert.equal(q.items[0].jobs[0].status,'existing-reviewed');assert.equal(q.items[0].jobs[1].status,'pending');assert.equal(q.next.job.key,'view2');
+});
+test('negative provenance review statuses stay held without a sidecar',async()=>{
+  for(const review of ['held','held-for-art-geometry','blocked','rejected']){
+    const f=await fixture(),first=job(f,'view1');await saveArt(first);await fs.writeFile(first.output.replace(/\.png$/,'.provenance.json'),JSON.stringify({id:first.id,output:first.output,review}));
+    assert.equal((await snapshotQueue(f.config)).items[0].artifacts[0].review,'held',review);
+  }
+});
 test('dependency cycles, unknown dependencies and undeclared job references are rejected',async()=>{
   const f=await fixture();for(const jobs of [[job(f,'a',{dependsOn:['b']}),job(f,'b',{dependsOn:['a']})],[job(f,'a',{dependsOn:['missing']})],[job(f,'a'),job(f,'b',{references:[{job:'a'}]})]])assert.equal(await validatePlan(plan(f,jobs),f.item,f.config),false);
 });

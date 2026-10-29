@@ -21,8 +21,9 @@ async function artInventory(roots,catalogue){
     resolvedCandidates.sort((a,b)=>Number(local(b))-Number(local(a)));
     let image=null;for(const resolved of resolvedCandidates){try{const bytes=await fs.readFile(resolved);image={file:resolved,sha256:sha(bytes),bytes:bytes.length};break;}catch{}}
     if(!image)continue;
-    const blocked=prov.integrationStatus==='blocked'||/hold|held|blocked|reject/i.test(prov.visualReviewStatus??'')||/[\\/](?:rejected|held)(?:[\\/]|-)/i.test(image.file);
+    const blocked=prov.integrationStatus==='blocked'||/hold|held|blocked|reject/i.test(prov.visualReviewStatus??'')||/^(?:held|blocked|rejected)(?:$|[- :])/i.test(prov.review??'')||/[\\/](?:rejected|held)(?:[\\/]|-)/i.test(image.file);
     const record={...image,id:prov.id,inventoryRoot:root,provenance:file,provenanceSha256:sha(await fs.readFile(file)),review:blocked?'held':'pending',registration:'not-verified',main:'not-verified',directions:prov.viewsOrder??[prov.view??prov.facing].filter(Boolean),viewSet:prov.viewSet??null,subjobKey:prov.subjobKey??null};
+    if(blocked&&prov.reviewReason)record.holdReason=prov.reviewReason;
     const decision=prov.appearanceDecision??prov.visualDecision;
     // Supplemental primary decisions preserve exact generator provenance unchanged.
     const decisionPaths=[...(decision?.file?[{file:path.isAbsolute(decision.file)?decision.file:path.resolve(root,decision.file),sha256:decision.sha256}]:[]),{file:image.file.replace(/\.png$/i,'.appearance.json'),sha256:null}];
