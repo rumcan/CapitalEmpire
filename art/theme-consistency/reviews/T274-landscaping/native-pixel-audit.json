@@ -1,0 +1,22 @@
+[
+  {
+    "source": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1.png",
+    "subjects": 6,
+    "changedVisiblePixels": 0,
+    "overlappingVisiblePixels": 0,
+    "pixelCoverage": {
+      "originalNonzero": 641179,
+      "preservedNonzero": 641179
+    }
+  },
+  {
+    "source": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1.png",
+    "subjects": 6,
+    "changedVisiblePixels": 0,
+    "overlappingVisiblePixels": 0,
+    "pixelCoverage": {
+      "originalNonzero": 830404,
+      "preservedNonzero": 830404
+    }
+  }
+]

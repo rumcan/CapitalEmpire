@@ -1,0 +1,47 @@
+{
+  "oldGeneratedRecords": {
+    "ITEMS": {
+      "count": 5,
+      "unchanged": true,
+      "sha256": "abb167eb1a50306a7ee2b3b74ede5f45b5ac0dc2efb0d9fb70431f4eba2f4755"
+    },
+    "KIT": {
+      "count": 47,
+      "unchanged": true,
+      "sha256": "c42926feb8e07a954ba2d7b800e8e654057bb609f89347c64e55d7fd423cfe74"
+    },
+    "RANGE": {
+      "count": 0,
+      "unchanged": true,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "newTailIds": [
+    "kit:granite-small-grey",
+    "kit:granite-broad-rosegrey",
+    "kit:granite-tall-fern",
+    "kit:granite-moss-split",
+    "kit:granite-golden-grass",
+    "kit:granite-pale-fern",
+    "kit:water-edge-fern",
+    "kit:water-edge-sedge",
+    "kit:water-edge-cattails",
+    "kit:water-edge-juniper",
+    "kit:water-edge-golden-grass",
+    "kit:water-edge-red-shrub"
+  ],
+  "golfAtlas": {
+    "pageSize": 2048,
+    "existingRecords": 52,
+    "newRecords": 12,
+    "newPages": 0,
+    "areaFraction": 0.2536811828613281,
+    "lowestShelf": 1049
+  },
+  "saveFormat": {
+    "record": "props: [string,number,number,number,number,...][]",
+    "write": "engine.ts propTuple(LIBRARY[p.item].id,p)",
+    "read": "engine.ts resolves savedid with index.get(id)",
+    "futureRangeInsertions": "Runtime numeric indices may move when new Range records arrive, but placed props reload by string ID. This change preserves all current entries and appends its12at the tail."
+  }
+}
