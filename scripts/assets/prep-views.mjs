@@ -35,6 +35,7 @@ import { findGlows } from './find-glows.mjs';
 import { cropFourViews } from './four-view-cells.mjs';
 import { readScales } from './overrides.mjs';
 import { prepExtraViews } from './prep-extra-views.mjs';
+import { calibratedViewScale, calibratedFootprintScale } from './view-calibration.mjs';
 
 // Garages already use their base ID for the N picture; append their reviewed diagonal IDs separately, preserving existing saves.
 await prepExtraViews(process.argv.slice(2));
@@ -142,7 +143,7 @@ for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STO
     let by = -1, bx = 0, n = 0;
     for (let y = info.height - 1; y >= 0 && by < 0; y--) { for (let x = 0; x < info.width; x++) if (data[(y * info.width + x) * 4 + 3] > 128) { bx += x; n++; } if (n) by = y; }
     const m = meas?.views?.[v], door = m?.door && m.sha256 === files[v] ? m.door : 0;
-    views.push({ dir: v, png, W: info.width, H: info.height, bx: bx / n, by: by + 1, door, s: door ? measures.standardDoor / (door * kg) : 0 });
+    views.push({ dir: v, png, W: info.width, H: info.height, bx: bx / n, by: by + 1, door, s: calibratedViewScale(m, files[v], measures.standardDoor, kg) });
   }
   // business artwork is drawn at a share of its parcel (business/art.ts), whatever its size here: it keeps the original width, no door gauge
   const business = base.kind === 'business', measured = business ? [] : views.filter(x => x.s);
@@ -154,7 +155,7 @@ for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STO
     const cap = 3 / (MIP0 * k), over = Math.max(...views.map(x => x.s / cap));
     if (over > 1.001) { for (const x of views) x.s = Math.min(x.s, cap); capped.push(`${id} (x${over.toFixed(2)} past 3x its pixels at scale ${k.toFixed(2)}: drawn ${(100 / over).toFixed(0)}% as big)`); }
   }
-  const f = business ? 1 : views[0].W * views[0].s / (base.quad[2] - base.quad[0]);
+  const f = calibratedFootprintScale(meas, version, business ? 1 : views[0].W * views[0].s / (base.quad[2] - base.quad[0]));
   for (const x of views) {
     const turn = x.dir === 'SE' || x.dir === 'NW';
     x.boxes = base.boxes.map(b => turn ? { hx: +(b.hy * f).toFixed(2), hy: +(b.hx * f).toFixed(2), dx: 0, dy: 0 } : { hx: +(b.hx * f).toFixed(2), hy: +(b.hy * f).toFixed(2), dx: 0, dy: 0 });
