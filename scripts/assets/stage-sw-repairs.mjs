@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import { fileURLToPath } from 'node:url';
 import { calibratedViewScale, calibratedFootprintScale } from './view-calibration.mjs';
 import { readScales } from './overrides.mjs';
+import { partitionSheet } from './prep-landscaping-kit.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const sourceRoot = path.resolve(process.argv[3] ?? root);
@@ -35,6 +36,7 @@ for (const lib of ['library','east-library','business-library','construction-lib
 const output = path.join(root, 'art/theme-consistency/generated/buildings/sw-road-fixes/ready');
 fs.mkdirSync(output, { recursive: true });
 const audit = [];
+const partitions = new Map();
 for (const pick of selection.repairs) {
   if (pick.status !== 'ready' || pick.canonicalView !== 'NE' || pick.streetFacing !== 'SW') throw Error(`Unapproved/mislabelled repair ${pick.id}`);
   const sheetFile = path.resolve(sourceRoot, pick.sheet), sheet = fs.readFileSync(sheetFile);
@@ -55,11 +57,26 @@ for (const pick of selection.repairs) {
   const measured = base.kind === 'business' ? [] : existing.filter(v => v.s);
   const fallback = measured.length ? measured.reduce((n, v) => n + v.s, 0) / measured.length : (base.quad[2] - base.quad[0]) / existing[0].W;
   for (const v of existing) if (!v.s || base.kind === 'business') v.s = fallback;
+  if (base.kind !== 'business') {
+    const cap = 3 / (0.6 * owner);
+    if (Math.max(...existing.map(v => v.s / cap)) > 1.001) for (const v of existing) v.s = Math.min(v.s, cap);
+  }
   const f = calibratedFootprintScale(old, source.version, base.kind === 'business' ? 1 : existing[0].W * existing[0].s / (base.quad[2] - base.quad[0]));
   const version = pick.version;
   if (!new RegExp(`^${pick.slug}-4views-v[0-9]+$`).test(version)) throw Error(`Invalid repair version ${version}`);
   const dest = path.join(output, version); fs.mkdirSync(dest, { recursive: true });
-  const front = await sharp(sheet).extract(pick.rect).png().toBuffer();
+  let front, crop = { sourceRect: pick.rect, processing: 'Literal native rectangle, no resample' };
+  if (pick.partition === 'nearest-alpha-core') {
+    if (!partitions.has(pick.sheetSha256)) {
+      const { data, info } = await sharp(sheet).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      partitions.set(pick.sheetSha256, partitionSheet(data, info.width, info.height, 4));
+    }
+    const piece = partitions.get(pick.sheetSha256)[pick.cell - 1];
+    if (!piece) throw Error(`Invalid cell ${pick.cell}`);
+    front = await sharp(piece.rgba, { raw: { width: piece.width, height: piece.height, channels: 4 } }).png().toBuffer();
+    crop = { sourceRect: piece.sourceRect, coreBounds: piece.coreBounds, nonzeroPixels: piece.nonzeroPixels,
+      processing: 'Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp' };
+  } else front = await sharp(sheet).extract(pick.rect).png().toBuffer();
   const files = {};
   for (const v of existing) {
     const bytes = v.dir === 'NE' ? front : v.bytes;
@@ -70,7 +87,7 @@ for (const pick of selection.repairs) {
   measures.subjects[pick.id] = { ...old, version, gaugeScale: kg, footprintScale: f,
     views: { NE: { sha256: files.NE, door: pick.door, note: pick.doorNote }, ...retained } };
   const provenance = { id: pick.id, generator: 'image_gen', integrationStatus: 'ready',
-    repair: { physicalStreetFacing: 'SW', canonicalView: 'NE', sheet: pick.sheet, sheetSha256: pick.sheetSha256, sourceRect: pick.rect, geometryReview: pick.geometryReview },
+    repair: { physicalStreetFacing: 'SW', canonicalView: 'NE', sheet: pick.sheet, sheetSha256: pick.sheetSha256, cell: pick.cell, ...crop, geometryReview: pick.geometryReview },
     original: source, retainedDirections: dirs.slice(1), files };
   fs.writeFileSync(path.join(output, `${version}.provenance.json`), JSON.stringify(provenance, null, 2) + '\n');
   audit.push({ id: pick.id, version, files, original: source, footprintScale: f, gaugeScale: kg, retainedNativeScales: Object.fromEntries(existing.slice(1).map(v => [v.dir, v.s])) });
