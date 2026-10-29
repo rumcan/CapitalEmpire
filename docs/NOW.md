@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-30 01:30 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-30 03:10 SAST)
 
 **T273 #819, range geometry source review:** branch `lead/coffee-geometry-hold-20261028`, worktree `worktrees/coffee-geometry-hold-20261028`. Native hash-bound geometry holds/proofs cover the original two-view kiosk, targeted view1-v2 and new distance post; exact source/provenance and prior style approval retained. Native front-edge errors are3.15/9.44degrees (kiosk v1),3.67degrees (kiosk v2),5.31degrees (post), so none is ready for registration. Existing queue logic already honors nested negative review decisions; no code, runtime, scheduled-worker deployment/state/timer changes. Original v1 provenance/style bytes need narrow -text rules because previous Git newline normalization invalidated their native hash bindings. Next: validate source/proof hashes and open the scoped source-only PR for lead review.
 
@@ -60,6 +60,8 @@ never commit there.)
 - **UI:** side-opening flyouts, never a sideways scrollbar. The club's tools are in the left drawer; the town's in the footer, which stands
   in the bottom right corner (#770).
 - **The town's traffic jams are the player's job** (they upgrade roads); never auto-fix congestion.
+- **Stacked PRs** (part 2 on part 1's branch): before merging a later part, `gh pr edit <n> --base main` once the earlier part is merged; the
+  repo does not delete merged heads, so a stacked PR never retargets itself and would merge into the old branch (it happened with #836/#837).
 - **Performance is a gate** (the owner, 2026-10-28: "dont screw performance"): a ticket that adds things to draw or bake benches main
   vs branch and gets a stated ms ceiling in its brief; thin it until it fits, or stop and report; never merge over GAME-PLAN 2.3's budgets.
 - The owner wants screenshots of every visible change. Commits end with the `Co-Authored-By:` line, PR bodies with the Claude Code line.
@@ -71,8 +73,7 @@ never commit there.)
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
-| T269 | #810 | `arena/T269-grounds-crew` (a fresh worktree; port 5186) | **Started ~00:20.** The grounds crew: a plan on the issue first, then parts: (1) the day's pin (play, flag, hole card), (2) the crew you can see (greenkeeper moving holes, mowers with fresh stripes, a raker), (3) staff as a system (hire, wages, condition and reputation). 3D people art requested; stand-ins until then. At most +0.3 ms a frame. |
-| T272 | #825 | `arena/T272-tile-cache` (a fresh worktree; port 5187) | **Started ~01:30.** Ground tiles decoded about 70 times a tour: measure, then keep them decoded and pre-scaled under an LRU budget inside the 192 MB ground cache; main vs branch bake and frame numbers. |
+| T272 | #825 | `arena/T272-tile-cache`, PR #835 (its worktree `.claude/worktrees/agent-ab419f75081475ec7`; port 5187) | **Built, not merged yet:** on main the ground's chunks plus tiles reach 505-570 MB a worker (the budget is 192) and tiles are decoded 1,100-1,700 times a tour; the branch keeps them decoded and pre-scaled under a budget that follows the chunk pictures: <= 189 MB, 24-70 decodes, every bake p95 lower. **Waiting on a main-vs-branch pixel diff** (9 pairs) before the merge. |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
@@ -110,6 +111,9 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
+#834 #838 T269 the grounds crew: a new cup each morning (play and the flag read it), a greenkeeper cutting it before each hole's first
+group, mowers redrawing the stripes, a raker; staff in the club card ($320 / $280 a month, one each per 9 holes; short staff lowers condition,
+slows greens, leaves pins); course upkeep share 0.25 -> 0.2 so a staffed club pays about as before; 3D people and vehicle art requested ·
 #832 T268 place each tee set yourself (Place / Move / ✕ / Add per colour on the hole card and in Edit Hole Layout; a ghost box,
 R turns, [ ] sizes; refusals with reasons; a level pad at $5/m³; the old ground back via `GolfSave.teeBoxes`) · #830 ui-holes-panel's two tests green again (its fake game gained groundCost and the Edges calls) · #829 T271 create your own grass
 (option 9 in Shape by hand: name, plays as, any painted grass family, scale, Exposure, stripes, Edges; up to 8, Shift+1-8; a per-cell `Grid.look`
