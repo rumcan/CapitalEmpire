@@ -45,6 +45,8 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
             </label>
           </div>
           <div className="mt-0.5 text-[13px] text-slate-300">{c.par ? `Par ${c.par} · ${length} m` : 'No par yet: it needs a pin and a tee'}</div>
+          {/* T269 (#810): today's cup, where the greenkeeper cut it this morning (its own line; the length above is to the placed pin) */}
+          {c.par > 0 && game.todayPinText && (() => { const t = game.todayPinText(c.n); return t ? <div className="mt-0.5 text-[12px] text-slate-400" data-testid="hole-today-pin" title="Each morning the greenkeeper cuts the cup in a new spot on the green: off its edges, on flat ground, front, middle and back in turn. The golfers play to it; the length above is to the pin you placed">Today's pin: {t}</div> : null; })()}
           <div className={`mt-0.5 flex items-center gap-1.5 text-[12px] ${state.tone}`} data-testid="hole-state"><span aria-hidden className="font-bold">{state.icon}</span>{state.word}</div>
           {bad.length > 0 && c.ready !== null && <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-sky-300"><span aria-hidden className="font-bold">◔</span>growing · ready {monthIndexLabel(c.ready)}</div>}
         </div>
