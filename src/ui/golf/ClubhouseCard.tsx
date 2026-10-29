@@ -23,7 +23,7 @@ export function ClubhouseCard({ view, onClose, onStaff, right = 'right-3', onSce
           <div className="text-[12px] text-slate-400">{view.open ? `Open · ${clock(view.minute)} · green fee ${money(view.fee)}` : 'Closed today: the course is the tournament\'s'} · {view.clubMembers} members</div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your clubhouse as it stands" data-testid="club-scene"><Icon name="camera" size={14} />Scene</button>}
+          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your clubhouse as it stands" data-testid="club-scene"><Icon name="camera" size={16} />Scene</button>}
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>
       </div>

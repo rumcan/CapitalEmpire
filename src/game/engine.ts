@@ -3364,7 +3364,7 @@ export class Game {
     const v = this.sceneOf(r); this.sceneCache = { ref: r, at: now, v }; return v;
   }
   private sceneOf(r: SceneRef): SceneCardView | null {
-    const town = this.townName(0) ?? 'The town';
+    const town = this.townName(0) ?? 'the town';
     switch (r.kind) {
       case 'range': { const f = this.rangeSceneFacts(); return f && rangeScene(f, r.view); }
       case 'club': {
@@ -3402,16 +3402,17 @@ export class Game {
     if (club) { if (this.sceneArt('club')) this.openScene({ kind: 'club' }); return; }
     if (a.startsWith('range:') || !p) { if (this.sceneArt('range')) this.openScene({ kind: 'range', view: a ? rangeViewOfKey(a.slice(6)) : 'road' }); return; }
     if (a.startsWith('place:')) { if (placeHasArt(a.slice(6))) this.openScene({ kind: 'place', id: a.slice(6) }); return; }
-    const subject = this.sceneSubject(p.item);
-    if (a.startsWith('lot:')) { const pl = lotPlaceOf(subject); if (pl && lotPlaceHasArt(pl)) this.openScene({ kind: 'lot', key: a.slice(4), place: pl.id }); return; }
-    if (a.startsWith('farm:') && FARMHOUSE_SUBJECTS.has(subject)) this.openScene({ kind: 'farm', key: a.slice(5) });
+    // (T270: a lot is the business it is drawn as: the picture newart.ts lookOf draws, else its own)
+    const drawn = this.sceneSubject(lookOf(p).item), own = this.sceneSubject(p.item);
+    if (a.startsWith('lot:')) { const pl = lotPlaceOf(drawn) ?? lotPlaceOf(own); if (pl && lotPlaceHasArt(pl)) this.openScene({ kind: 'lot', key: a.slice(4), place: pl.id }); return; }
+    if (a.startsWith('farm:') && (FARMHOUSE_SUBJECTS.has(drawn) || FARMHOUSE_SUBJECTS.has(own))) this.openScene({ kind: 'farm', key: a.slice(5) });
   }
   /** the range's pictures as last read (null: not yet, so a load never toasts), and the tick that reads them about once a second */
   private sceneKeys: Record<RangeSceneView, string> | null = null; private sceneTick = 0;
   /** an event turned a range view's picture (an upgrade built, the putting green open, the home smartened or moved): a toast offers its card */
   private sceneNewsCheck() {
     const b = this.golf?.range; if (this.golf?.start !== 'range' || !b || ++this.sceneTick % 6) return;
-    const f = { owned: b.owned, putting: b.practice.putting.open, home: homeStage(b), lifetime: b.total.takings }, k = rangeSceneKeys(f), was = this.sceneKeys;
+    const f = { owned: b.owned, putting: this.range.practiceFacts()?.putting === 'open', home: homeStage(b), lifetime: b.total.takings }, k = rangeSceneKeys(f), was = this.sceneKeys;
     this.sceneKeys = k; if (!was) return;
     const view = (Object.keys(k) as RangeSceneView[]).find(v => k[v] && k[v] !== was[v]);
     if (view) this.toast(rangeNews(view, f), 'good', { kind: 'range', view });

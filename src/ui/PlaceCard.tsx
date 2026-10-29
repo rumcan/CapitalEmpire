@@ -14,7 +14,7 @@ export function PlaceCard({ view, onClose, right = 'right-3', onScene }: { view:
           <div className="text-[12px] text-slate-400">{view.kind} · a landmark of the town</div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of the place" data-testid="place-scene"><Icon name="camera" size={14} />Scene</button>}
+          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of the place" data-testid="place-scene"><Icon name="camera" size={16} />Scene</button>}
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>
       </div>

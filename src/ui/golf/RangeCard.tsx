@@ -23,7 +23,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
           <div className="text-[12px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · {st.counters} {st.counters === 1 ? 'counter' : 'counters'} · open {view.hours}</div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your range as it stands" data-testid="range-scene"><Icon name="camera" size={14} />Scene</button>}
+          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your range as it stands" data-testid="range-scene"><Icon name="camera" size={16} />Scene</button>}
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>
       </div>
