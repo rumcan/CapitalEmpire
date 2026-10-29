@@ -95,9 +95,10 @@ export function gainOf(skill: number, base: number, today = 0, lessonBonus = 0):
 export interface PracticeEntry { day: number; at: number; kind: PracticeKind; cost: number; min: number; gains: Partial<Record<SkillId, number>>; lesson?: boolean; hcp: [number, number] }
 /** a round in the log: the town day, its kind, your strokes, the par and holes played, the nerve it gave, and the handicap you played off */
 export interface RoundEntry { day: number; kind: RoundKind; strokes: number; par: number; holes: number; nerve: number; hcp: number }
-/** your everyday round booked on the tee sheet (T208): the town day and the tee time; the result once the day's round is played (the whole day is
- *  played at its first frame, so it is known from the start: shown once your round is done, booked at the day's end at the latest) */
-export interface Booking { day: number; tee: number; result?: { strokes: number; par: number; holes: number; done: number } }
+/** your everyday round booked on the tee sheet (T208): the town day and the tee time; your game as the round plays it (gameSkills at PRESSURE.everyday:
+ *  as you booked, and after each session you practise before you walk to the tee); the result once the day's round is played (the whole day is played
+ *  when it is built, so it is known from the start: shown once your round is done, put in your rounds at the day's end at the latest) */
+export interface Booking { day: number; tee: number; skills: GameSkills; result?: { strokes: number; par: number; holes: number; done: number } }
 /** the profile (GolfSave.player): the name and sex (defaults until T240), the skills, the practice log and the rounds (the last LOG_MAX and ROUNDS_MAX),
  *  today's sessions by kind (the fatigue), the minute you are busy until (a session under way), and your booked round */
 export interface PlayerProfile {
@@ -139,7 +140,8 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
   const b = p.busy, bk = p.booked;
   let booked: Booking | null = null;
   if (bk && Number.isFinite(bk.day) && Number.isFinite(bk.tee)) {
-    booked = { day: bk.day, tee: bk.tee };
+    const q = bk.skills, ok = q && [q.driving, q.irons, q.short, q.putting].every(v => typeof v === 'number' && Number.isFinite(v));
+    booked = { day: bk.day, tee: bk.tee, skills: ok ? { driving: q.driving, irons: q.irons, short: q.short, putting: q.putting } : gameSkills(skills, PRESSURE.everyday) };
     const r = bk.result;
     if (r && [r.strokes, r.par, r.holes, r.done].every(v => typeof v === 'number' && Number.isFinite(v))) booked.result = { strokes: r.strokes, par: r.par, holes: r.holes, done: r.done };
   }
@@ -221,6 +223,19 @@ export function freeTee(roster: Pick<DayRoster, 'groups'> | null, minute: number
   const tees = roster?.groups.map(g => g.tee) ?? [];
   for (let t = Math.max(DAY_FIRST_TEE, Math.ceil(minute + BOOK_LEAD)); t <= DAY_LAST_TEE; t++) if (tees.every(x => Math.abs(x - t) >= BOOK_GAP)) return t;
   return null;
+}
+
+/** your round booked at a tee time on a town day, played with your game as it is now */
+export function bookRound(p: PlayerProfile, day: number, tee: number): PlayerProfile { return { ...p, booked: { day, tee, skills: gameSkills(p.skills, PRESSURE.everyday) } }; }
+/** after a session: your round booked today and not begun (before its walk to the tee) plays with your game as it is now */
+export function rebook(p: PlayerProfile, day: number, minute: number): PlayerProfile {
+  const b = p.booked; if (!b || b.day !== day || minute >= b.tee - BOOK_LEAD) return p;
+  return { ...p, booked: { day, tee: b.tee, skills: gameSkills(p.skills, PRESSURE.everyday) } };
+}
+/** your golfer in the everyday round you booked: as playerGolfer, with the booking's game */
+export function bookedGolfer(p: PlayerProfile, b: Booking): Golfer {
+  const s = b.skills;
+  return { id: 0, name: p.name, sex: p.sex, pro: false, skill: (s.driving + s.irons + s.short + s.putting) / 4, look: 0, tees: 'middle', skills: { ...s } };
 }
 
 /** the day's roster with you on it (the playback's, not the day book's: you pay no green fee and bring no car): your golfer as the next id, alone in a

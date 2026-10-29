@@ -1,8 +1,10 @@
 // The range card (plan P24 Phase 1, T129): the driving range as a business. Today's golfers, the queue and the lost; the season's takings; the
 // bucket price with what it does to the visitors; the upgrades, each with its cost, its effect and a Build button. Opened by clicking the range
 // with the select tool, or the top bar's Range chip; the map changes the moment an upgrade is built. T206: each practice facility's row has a
-// Build button (Facilities ▸ Practice armed with it, the practice area shown).
+// Build button (Facilities ▸ Practice armed with it, the practice area shown). T241: your golf (the "You" block: hit a bucket, with its gain and cost, and
+// the last session's result; an open practice green's row has its own Practise button) and the profile card behind it.
 import type { RangeCardView } from '../../game/golf/rangehost';
+import type { PracticeKind, YouPracticeView, YouRangeView } from '../../game/golf/player';
 import { PRICE_MAX, PRICE_MIN, PROPS_APPEAL_CAP, dayDemand, priceFactor, rangeScale } from '../../game/golf/rangesave';
 import { appealText } from '../../game/golf/decor';
 import { WALK_SERVE_M, lotsLine } from '../../game/golf/walkserve';
@@ -11,7 +13,8 @@ import { statusIcon } from '../status-icon';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
-export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void }) {
+export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onProfile, profileOpen = false }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
+  /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void; onProfile?: () => void; profileOpen?: boolean }) {
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
   const demandWord = pf >= 1.15 ? 'cheap: more golfers' : pf <= 0.85 ? 'dear: fewer golfers' : 'fair';
@@ -56,6 +59,20 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
         </div>
         <div className="mt-1 text-[12px] text-slate-400">Each golfer you see stands for {scale} customers over the season.</div>
       </div>
+      {you && (
+        <div className="space-y-1 rounded-lg border border-sky-400/25 bg-sky-400/5 p-2 text-xs" data-testid="range-you">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[12px] uppercase text-slate-400">Your golf</span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-slate-300" title="Your handicap: the strokes over par your skills average over 18 holes">{you.name} · handicap <span className="font-semibold text-white" data-testid="range-you-hcp">{you.hcpText}</span></span>
+              {onProfile && <button className={`chip normal-case ${profileOpen ? 'chip-on' : ''}`} onClick={onProfile} title="Your skills, your practice log, your rounds and your tee time" data-testid="range-you-profile">Profile</button>}
+            </span>
+          </div>
+          <Session s={you.sessions.find(x => x.kind === 'bucket')!} onPractise={onPractise} />
+          {you.busy && <div className="text-[12px] text-sky-200/90" data-testid="range-you-busy">{you.busy}</div>}
+          {you.last && <div className="text-[12px] text-slate-400" data-testid="range-you-last">Last: {you.last.text} · ${you.last.cost.toLocaleString()} · handicap {hcp(you.last.hcp[0])} to <span className="text-emerald-300">{hcp(you.last.hcp[1])}</span></div>}
+        </div>
+      )}
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-props-appeal" title="Props within 15 tiles of the shop or the mats (the Props tool): more golfers, and a higher fair price">
         <span className="text-slate-300">Appeal from props: <span className={st.propsAppeal > 0 ? 'font-semibold text-emerald-300' : 'text-white'}>{appealText(st.propsAppeal)}</span> <span className="text-slate-400">(of {appealText(PROPS_APPEAL_CAP)})</span></span>
       </div>
@@ -74,6 +91,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
             </div>
             <div className="text-[12px] text-slate-400">{f.words}</div>
             {f.state !== 'open' && practiceWhy && <div className="text-[12px] text-amber-300/80">{practiceWhy}</div>}
+            {f.state === 'open' && you && (() => { const s = you.sessions.find(x => x.kind === f.id); return s && <div className="mt-1"><Session s={s} onPractise={onPractise} /></div>; })()}
             <div className="mt-0.5 flex justify-between text-[12px] text-slate-400">
               <span>+{Math.round(f.appeal * 100)}% visitors · ${view.fee} a golfer</span>
               <span>{f.today} today · {Math.round(f.golfers)} this season · <span className="text-emerald-300/90">{money(f.takings)}</span></span>
@@ -116,6 +134,23 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+/** a handicap as golfers write it (+ below scratch) */
+const hcp = (h: number) => h < 0 ? `+${(-h).toFixed(1)}` : h.toFixed(1);
+/** T241: one practice session's button: its cost and minutes, the gain to each skill it raises and the handicap after; the reason when it cannot start */
+function Session({ s, onPractise }: { s: YouPracticeView; onPractise?: (k: PracticeKind) => void }) {
+  const gains = s.gains.map(g => `${g.name.toLowerCase()} +${g.gain.toFixed(1)}`).join(', ');
+  return (
+    <div className="space-y-0.5" data-testid={`practise-${s.kind}`}>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <button className="chip chip-on disabled:opacity-40" disabled={!onPractise || !!s.why} onClick={() => onPractise?.(s.kind)} title={s.why ?? `${s.name}: $${s.cost} and ${s.min} minutes; ${gains}`} data-testid={`practise-${s.kind}-go`}>{s.name}</button>
+        <span className="text-slate-300">${s.cost.toLocaleString()} · {s.min} min</span>
+        <span className="text-emerald-300/90">{gains}</span>
+        <span className="text-slate-400">handicap {hcp(s.hcp[0])} to {hcp(s.hcp[1])}</span>
+      </div>
+      {s.why && <div className="text-[12px] text-amber-300/80" data-testid={`practise-${s.kind}-why`}>{s.why}</div>}
     </div>
   );
 }

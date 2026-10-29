@@ -16,6 +16,8 @@ import { isTeeKind, migrateTees } from './teesets';
 import { normalizeTeeBoxes } from './teeplace';
 import { normalizeDayPins, type DayPinsSave } from './daypins';
 import { normalizeCrewSave, type CrewSave } from './crew';
+import { normalizePlayer, type PlayerProfile } from './player';
+import type { GameSkills } from './play/types';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -84,18 +86,25 @@ export interface GolfSave {
  dayPins?: DayPinsSave;
  /** T269 part 2: the grounds crew (golf/crew.ts CrewSave): the holes' stripe phases and the days their fairways were last cut whole. Missing: none */
  crew?: CrewSave;
+ /** T241 (#705): your golf (golf/player.ts): your name, skills, practice log, rounds and booked tee time; T240 extends it. Missing: an older save, whose
+  *  player starts with the starting profile the first time it is needed */
+ player?: PlayerProfile;
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
  *  he had played when he handed the rest to the caddie (null while he still plays). A replay of the inputs (then the caddie) gives the same round.
  *  Written when he joins, hits or caddies; dropped when the round is free */
-export interface GolfPlaySave { key: number; owner: 'm' | 'w'; inputs: OwnerInput[]; caddie: number | null; /** T254: the tee set he chose (absent: the white) */ tees?: TeeKind }
+export interface GolfPlaySave { key: number; owner: 'm' | 'w'; inputs: OwnerInput[]; caddie: number | null; /** T254: the tee set he chose (absent: the white) */ tees?: TeeKind;
+  /** T241: his skills as he joined (your profile under the tournament's pressure), so a reload replays the same round. Absent: a save from before T241,
+   *  which plays at OWNER_SKILL as it did */
+  skills?: GameSkills }
 
 /** a saved owner's play, or null when it is not well formed (no key, sex or inputs list); a missing caddie count is null */
 function normalizePlaySave(p: Partial<GolfPlaySave> | null | undefined): GolfPlaySave | null {
-  const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie, tees = p?.tees;
+  const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie, tees = p?.tees, sk = p?.skills;
   if (typeof key !== 'number' || !Number.isFinite(key) || (owner !== 'm' && owner !== 'w') || !Array.isArray(inputs)) return null;
-  return { key, owner, inputs, caddie: typeof caddie === 'number' && Number.isFinite(caddie) ? caddie : null, ...(isTeeKind(tees) ? { tees } : {}) };
+  const skills = sk && [sk.driving, sk.irons, sk.short, sk.putting].every(v => typeof v === 'number' && Number.isFinite(v)) ? { driving: sk.driving, irons: sk.irons, short: sk.short, putting: sk.putting } : null;
+  return { key, owner, inputs, caddie: typeof caddie === 'number' && Number.isFinite(caddie) ? caddie : null, ...(isTeeKind(tees) ? { tees } : {}), ...(skills ? { skills } : {}) };
 }
 
 /** a golf game's start money, $ (City.setBudget's golf treasury) */
@@ -110,7 +119,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, player, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -148,5 +157,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   const dp = normalizeDayPins(dayPins); if (dp) out.dayPins = dp;
   // T269: the crew's stripes, well formed (nothing to keep: the field stays out)
   if (crew) { const c = normalizeCrewSave(crew); if (c.phase.length || c.mown.length || c.staff) out.crew = c; }
+  // T241: your golf, well formed (none: the engine starts the starting profile when it is first needed)
+  const pp = normalizePlayer(player); if (pp) out.player = pp;
   return out;
 }
