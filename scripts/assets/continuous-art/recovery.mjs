@@ -26,6 +26,10 @@ export function assessRecovery({
   }
   // A malformed or semantically mismatched completion cannot become successful via a network error.
   if (terminal && checkpointValid !== true) return {kind:'attention', message:'Durable checkpoint failed strict action/id/tool/hash validation'};
+  // A saved semantic refusal is the outcome; earlier transport reconnect messages cannot make it retryable.
+  if (checkpoint?.status === 'error' && (checkpoint.failure?.code === 'DEPENDENCY_HELD' || /^DEPENDENCY_HELD\b/.test(checkpoint.error ?? ''))) {
+    return {kind:'attention', message:checkpoint.error || 'DEPENDENCY_HELD: required source artwork is not accepted'};
+  }
   if (isTransientNetworkFailure(message)) return {
     kind:'retry', status:'transient-backoff', message,
     notBeforeUtc:new Date(nowMs + TRANSIENT_RETRY_MS).toISOString(),

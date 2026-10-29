@@ -93,7 +93,10 @@ export async function jobStates(plan,item,config,reservations=[]){
       reservedJob(reservations,item,job)?'reserved':sourceArtifact?'copy-existing':'pending';
     states.push({...job,status,existing,prior:prior??null,sourceArtifact:sourceArtifact??null});
   }
-  for(const job of states)if(job.status==='pending'&&job.dependsOn.some(key=>!states.some(d=>d.key===key&&d.existing&&d.status!=='existing-held')))job.status='waiting-dependency';
+  for(const job of states)if(job.status==='pending'){
+    const acceptedRequired=typeof job.dependencyRequirement==='string'&&/\baccepted\b/i.test(job.dependencyRequirement);
+    if(job.dependsOn.some(key=>!states.some(d=>d.key===key&&d.existing&&d.status!=='existing-held'&&(!acceptedRequired||d.status==='existing-reviewed'))))job.status='waiting-dependency';
+  }
   return states;
 }
 
