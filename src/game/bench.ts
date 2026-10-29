@@ -171,6 +171,8 @@ export function benchGame(g: Game, scene: BenchScene) {
   if (new URLSearchParams(location.search).get('belts') === '0') (g as unknown as { setRiverTrees?: (on: boolean) => void }).setRiverTrees?.(false);
   // T265: ?riverSwamp=0 (bench.mjs --riverSwamp 0): the river's swamp off for the run (GroundCache.setRiverSwamp)
   if (new URLSearchParams(location.search).get('riverSwamp') === '0') (g.ground as unknown as { setRiverSwamp?: (on: boolean) => void }).setRiverSwamp?.(false);
+  // T251: ?rangeBalls=N (bench.mjs --rangeBalls N), the busy range: N balls kept in the air from its bays (RangeSim.benchBalls)
+  { const rb = Number(new URLSearchParams(location.search).get('rangeBalls')); if (rb > 0) g.range.sim.benchBalls = Math.floor(rb); }
   const t0 = performance.now();
   let warm = 0;
   g.onFrame = () => {
@@ -187,6 +189,8 @@ export function benchGame(g: Game, scene: BenchScene) {
     const at = townTimeOf(g.traffic.town, g.traffic.simTime(performance.now())), clock = `${String(at.hour).padStart(2, '0')}:${String(at.minute).padStart(2, '0')}`;
     const info = { scene, ...(scene === 'golf' ? { golfersOut: g.dayOutNow() } : {}), heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0), clock, carsAtStart: g.perf.simActive };
     console.log('[bench] scene', info);
+    // T251: ?ballRoll=ab (bench.mjs --ballRoll ab), the balls' bounce and roll on and off by turns over the action (rollStage)
+    if (new URLSearchParams(location.search).get('ballRoll') === 'ab') { rollStage(g, scene, r => { const out = { ...info, ballRoll: 'ab', rangeBalls: g.range.sim.benchBalls, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     // T265: ?river=1, the river through the town (its point nearest the first town's centre)
     const town = g.townPts[0], follow = scene === 'fixture' && new URLSearchParams(location.search).get('river') === '1' && town ? riverFollow(g, town.x, town.y) : null;
     // (?river=1&bakeab=1, bench.mjs --river 1 --bakeab 1: only the bake check, on a fresh page: no tour before it, so no long session's heap and
@@ -201,6 +205,51 @@ export function benchGame(g: Game, scene: BenchScene) {
     if (farms) { farmStage(g, farms, (r, month) => { const out = { ...info, farms: farms.n, month, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     startTour(g, info, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
   };
+}
+
+/** T251 (#728, "dont screw performance"): the balls' bounce and roll A/B on one page (the PC's other load falls alike on both): at 30% and 15%, on (the
+ *  roll) and off (the balls fly to where they end and lie there, as before T251: Engine.setBallRoll) by turns, three times each, the camera held over
+ *  the action: the tournament's golfers (?tourney=1; else the everyday golfers'), or on the range scene its outfield (busy with ?rangeBalls=N). Each
+ *  run settles 1 s, then 4 s of frames: the cpu ms (average and p95) and the balls (the range's in motion; the course's drawn). Pooled per zoom and
+ *  switch, with on less off */
+function rollStage(g: Game, scene: BenchScene, done: (r: Record<string, unknown>[]) => void) {
+  const zooms = [0.3, 0.15], runs: { z: number; on: boolean }[] = [];
+  for (const z of zooms) for (let r = 0; r < 3; r++) runs.push({ z, on: r % 2 === 0 }, { z, on: r % 2 !== 0 });
+  const frames = new Map<string, { cpu: number[]; balls: number[] }>();
+  const q = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; };
+  const avg = (a: number[]) => a.reduce((p, v) => p + v, 0) / Math.max(1, a.length);
+  const focus = (): { x: number; y: number } | null => {
+    if (scene !== 'range') return g.playFocus() ?? g.dayFocus();
+    const sc = g.range.scene; if (!sc) return null;
+    const b = sc.bays[Math.floor(sc.bays.length / 2)]?.stand ?? sc.mowFrom, a = sc.aims[Math.floor(sc.aims.length / 2)] ?? b;
+    return { x: (b.x + a.x) / 2, y: (b.y + a.y) / 2 };
+  };
+  const e = g as unknown as { play: { pv: { balls: unknown[] } } | null; dayPlay: { view: { balls: unknown[] } } | null };
+  const balls = () => scene === 'range' ? g.range.nFlying : (e.play?.pv.balls.length ?? 0) + (e.dayPlay?.view.balls.length ?? 0);
+  let k = 0, t = 0;
+  const next = () => {
+    if (k >= runs.length) {
+      g.onFrame = null; g.setBallRoll(true);
+      const out: Record<string, unknown>[] = [];
+      for (const z of zooms) {
+        const tag = `${Math.round(z * 100)}%`, r: Record<string, unknown> = { stage: `balls ${tag}` };
+        for (const on of [false, true]) { const f = frames.get(`${tag} ${on ? 'on' : 'off'}`) ?? { cpu: [], balls: [] }; r[on ? 'on' : 'off'] = { frames: f.cpu.length, cpuAvgMs: +avg(f.cpu).toFixed(3), cpuP95Ms: +q(f.cpu, 0.95).toFixed(3), ballsAvg: +avg(f.balls).toFixed(1), ballsMax: Math.max(0, ...f.balls) }; }
+        const a = r.off as Record<string, number>, b = r.on as Record<string, number>;
+        r.delta = { cpuAvgMs: +(b.cpuAvgMs! - a.cpuAvgMs!).toFixed(3), cpuP95Ms: +(b.cpuP95Ms! - a.cpuP95Ms!).toFixed(3) };
+        out.push(r);
+      }
+      done(out); return;
+    }
+    const r = runs[k]!, tag = `${Math.round(r.z * 100)}% ${r.on ? 'on' : 'off'}`, f = focus();
+    g.setBallRoll(r.on); t = 0;
+    if (f) g.lookAt(f.x, f.y, r.z); else g.cam.z = r.z;
+    g.onFrame = (_now, dt) => {
+      t += dt; if (t < 1) return;
+      const v = frames.get(tag) ?? { cpu: [], balls: [] }; frames.set(tag, v); v.cpu.push(g.perf.cpuMs); v.balls.push(balls());
+      if (t >= 5) { k++; next(); }
+    };
+  };
+  next();
 }
 
 /** T259: the farms' line (the most farms in view): their centres in world px, in order along their spread's long axis (the county road they

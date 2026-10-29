@@ -4,8 +4,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
-import { BEND, BallRoll, FX_NONE, FX_SAND, FX_SPLASH, PUFF_S, PlayView, ROLL_DONE_S, SPLASH_S, chooseShot, crossSlope, hitShot, makeField, playRound, rng, teeTimes } from '../src/game/golf/play';
+import { BEND, BallRoll, FX_NONE, FX_SAND, FX_SPLASH, PUFF_S, PlayView, ROLL_DONE_S, SPLASH_S, ballRoll, chooseShot, crossSlope, hitShot, makeField, playRound, rng, teeTimes } from '../src/game/golf/play';
 import { FADE_OUT_S } from '../src/game/golf/play/pacer';
+import { RangeSim, defaultRangeBiz, rangeScene, rollOut, withUpgrade, type CarSlot, type RangeBizSave, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import type { CourseView, HeightAt, Lie, PlayHole, Pt } from '../src/game/golf/play';
 
 /** the distance (tiles) from p to the segment a-b */
@@ -177,4 +178,54 @@ test('the playback: a round\'s full shots land, bounce and roll to their ends by
     pv.update(s.t, 51 + ROLL_DONE_S);
     assert.ok(pv.balls.some(b => b.h === 0 && Math.abs(b.x - at.x) < 1e-9 && Math.abs(b.y - at.y) < 1e-9 && !b.fx), `at rest at its end by ${ROLL_DONE_S} s (${s.club}, ${lg.lie} to ${lg.restLie})`);
   }
+});
+
+// ---------------------------------------------------------------- the driving range
+
+test('the range: a ball runs out along its flight on the outfield; near a target green it gathers in the hollow round it; short of the far fence; deterministic', () => {
+  const G = { x: 100, y: 200, r: 4, m: 100 }, sc = { targets: [G], fence: { o: { x: 0, y: 0 }, u: { x: 1, y: 0 }, v: { x: 0, y: 1 }, u0: 1.4, u1: 300, v1: 290 } };
+  const end = (r: BallRoll) => { const o = { x: 0, y: 0, h: 0 }; r.at(r.rest, o); return o; };
+  // the outfield: on along the flight by 0.6 to 1.4 times RUN (8%) of the carry, the end on the line (a wobble only bends the way)
+  for (let k = 0; k < 40; k++) {
+    const x = 20 + 3.7 * k, y = 120 + (k % 5), r = rollOut(x, y, 0, 1, 100, sc), e = end(r);
+    assert.ok(Math.abs(e.x - x) < 1e-9 && e.y - y >= 0.6 * 8 - 1e-9 && e.y - y <= 1.4 * 8 + 1e-9, `on along the flight (${(e.y - y).toFixed(2)} tiles)`);
+    assert.ok(r.rest > 0 && r.rest <= 1.1 + 1e-9, 'within the roll\'s time');
+  }
+  // round the green: every ball landing within the catch gathers in the hollow (r + 1.4 from the middle), but some held on the raised green
+  let ring = 0, held = 0, onGreen = 0;
+  for (let i = 0; i < 400; i++) {
+    const a = i * 2.39996, d = (i % 37) / 37 * (G.r + 1.4 + 3 - 0.01), x = G.x + Math.cos(a) * d, y = G.y + Math.sin(a) * d, e = end(rollOut(x, y, 0, 1, 90, sc)), de = Math.hypot(e.x - G.x, e.y - G.y);
+    if (d < G.r) onGreen++;
+    if (Math.abs(de - (G.r + 1.4)) < 1e-9) ring++; else { assert.ok(d < G.r && de < G.r + 0.5, `held on the green (landed ${d.toFixed(2)}, rests ${de.toFixed(2)} from the middle)`); held++; }
+  }
+  assert.ok(ring > 250 && held > 0.25 * onGreen && held < 0.55 * onGreen, `${ring} in the hollow, ${held} of ${onGreen} held on the green`);
+  // the far fence: a ball rolling at it stops short of it; one landing past it does not roll
+  const atFence = end(rollOut(20, 286, 0, 1, 120, sc)); assert.ok(atFence.y <= 290 + 1e-9 && atFence.y > 286, `short of the fence (${atFence.y.toFixed(2)})`);
+  const past = end(rollOut(20, 292, 0, 1, 120, sc)); assert.deepEqual([past.x, past.y], [20, 292], 'past the fence already: it stays');
+  // the same landing, the same roll
+  const a = rollOut(55.5, 140.25, 0.6, 0.8, 80, sc), b = rollOut(55.5, 140.25, 0.6, 0.8, 80, sc), oa = { x: 0, y: 0, h: 0 }, ob = { x: 0, y: 0, h: 0 };
+  for (let t = 0; t <= 1.2; t += 0.05) { a.at(t, oa); b.at(t, ob); assert.deepEqual(oa, ob); }
+});
+
+test('the range in play: balls bounce and roll out, then lie where they stop (in the hollows round the greens too); the business is unchanged by it', () => {
+  const plot: [number, number, number, number] = [200, 200, 70, 150], s0 = ['greens', 'bays8', 'bays12', 'targets'].reduce((s, id) => withUpgrade(s, id as RangeUpgradeId), defaultRangeBiz());
+  const play = (on: boolean) => {
+    ballRoll.on = on;
+    const s = JSON.parse(JSON.stringify(s0)) as RangeBizSave, sc = rangeScene(plot, 2, s), r = new RangeSim(7, 10), fl = new Float32Array(3 * 400);
+    const slots: CarSlot[] = Array.from({ length: 12 }, (_, i) => ({ x: plot[0] + 52 + (i % 6) * 2.6, y: plot[1] + 6 + Math.floor(i / 6) * 6, hx: 0, hy: 1 }));
+    r.setScene(sc, slots, { x: plot[0] + 69, y: plot[1] + 10 });
+    let rolling = 0;
+    for (let t = 0; t < 500; t += 0.1) { r.step(0.1, { hour: 12, day: 1 }, s, { tier: 3, exits: 2, residents: 3000 }, 600); const n = r.flying(fl); for (let k = 0; k < n; k++) if (fl[3 * k + 2]! < 0.5) rolling++; }
+    return { s, sc, r, rolling };
+  };
+  try {
+    const off = play(false), on = play(true);
+    assert.deepEqual(on.s.season, off.s.season, 'the same golfers, buckets and takings with the roll as without it');
+    assert.ok(on.rolling > off.rolling, `balls rolling low on the ground (${on.rolling} ball-frames, ${off.rolling} without)`);
+    const L = on.r.lying, n = on.r.nLying, G = on.sc.targets;
+    assert.ok(n > 50 && G.length >= 3, `balls lie (${n})`);
+    let inHollow = 0;
+    for (let i = 0; i < n; i++) if (G.some(g => Math.abs(Math.hypot(L[2 * i]! - g.x, L[2 * i + 1]! - g.y) - g.r - 1.4) < 1e-3)) inHollow++;
+    assert.ok(inHollow > 0.1 * n, `${inHollow} of ${n} lie in the hollows round the greens`);
+  } finally { ballRoll.on = true; }
 });
