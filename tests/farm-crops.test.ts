@@ -109,7 +109,7 @@ test('stand-in rows: parallel to the field, a pitch apart, inside it and cut to 
 });
 
 test('model 1 (T005\'s farm, the saves made with it) composes exactly as before T259', () => {
-  // the digest pinned from main before T259 (output/t259-pin/pin.ts): compositions, tracks and farmsteads of the first 100 fixture farms
+  // the digest pinned from main before T259 (7ed8b99, composeFarm/farmTrack/farmsteadOf as they were): the first 100 fixture farms' compositions, tracks and farmsteads
   const out = FARMS.slice(0, 100).map(({ p, seed }) => JSON.stringify(composeFarm(p, seed, { model: 1 })) + JSON.stringify(farmTrack(p, seed, 1)) + JSON.stringify(farmsteadOf(p, seed, 1)));
   assert.equal(fnv(out.join('|')), 'd5ebd258');
   assert.equal(farmSeason(FARMS[0].p, FARMS[0].seed, 1, 3), farmSeason(FARMS[0].p, FARMS[0].seed, 1, 9));
