@@ -1,7 +1,7 @@
 // The shot model (docs/GOLF-PLAY.md decision 5): the club and aim a golfer picks, how a full shot flies and lands from its lie, and the putt.
 // Every golfer x hole draws from its own seeded stream (rng), so one golfer's play never shifts another's. Pure TS, no DOM, no Math.random.
 import { TILE_M } from '../types';
-import type { Club, CourseView, Landing, Lie, Pt, PlayHole } from './types';
+import type { Club, CourseView, GameSkills, Landing, Lie, Pt, PlayHole } from './types';
 
 /** the full carry in metres of each club at skill 1 (the putter has none); a skill s carries base * (0.75 + 0.25 s) */
 export const CLUBS: Record<Club, number> = { driver: 250, wood3: 225, iron4: 195, iron6: 170, iron8: 145, pw: 120, sw: 90, putter: 0 };
@@ -47,6 +47,15 @@ export function gauss(r: () => number): number {
 /** the full carry in metres of a club for a skill (0..1): a club amateur (skill 0.4) drives about 190 m */
 export function carryM(club: Club, skill: number): number { return CLUBS[club] * (0.65 + 0.35 * skill); }
 
+/** T241: a golfer's skill for the shot model: one number for every shot (a field golfer), or by part of the game (GameSkills: your profile) */
+export type ShotSkill = number | GameSkills;
+/** T241: the part of the game each club plays: the driver and the 3-wood drive, the irons and the pitching wedge are the irons, the sand wedge is the
+ *  short game (chooseShot takes it only near the pin or in a greenside bunker: chips, pitches and splashes), the putter putts */
+export const CLUB_PART: Readonly<Record<Club, keyof GameSkills>> = { driver: 'driving', wood3: 'driving', iron4: 'irons', iron6: 'irons', iron8: 'irons', pw: 'irons', sw: 'short', putter: 'putting' };
+/** T241: the skill (0..1) a shot with a club is played at: the golfer's one skill, or his part of the game's (CLUB_PART). A field golfer's is his skill,
+ *  so the field plays exactly as before */
+export function skillFor(s: ShotSkill, club: Club): number { return typeof s === 'number' ? s : s[CLUB_PART[club]]; }
+
 /** the arc length (tiles) along a polyline to its point nearest p */
 function nearestArc(line: Pt[], p: Pt): number {
   let best = Infinity, arc = 0, acc = 0;
@@ -73,14 +82,15 @@ function arcPoint(line: Pt[], s: number): Pt {
 
 /** the club and aim for a shot from a lie. On the green: the putter at the pin. Near the pin (or in a greenside bunker): a wedge at the pin.
  *  Else the shortest club whose carry reaches the wanted distance (the driver only from a tee on a par 4 or 5), aimed along the hole's line */
-export function chooseShot(lie: Lie, from: Pt, hole: PlayHole, skill: number, teeShot: boolean): { club: Club; aim: Pt } {
+export function chooseShot(lie: Lie, from: Pt, hole: PlayHole, skill: ShotSkill, teeShot: boolean): { club: Club; aim: Pt } {
   const pin = hole.pin, D = Math.hypot(pin.x - from.x, pin.y - from.y) * TILE_M;
   if (lie === 'green') return { club: 'putter', aim: { x: pin.x, y: pin.y } };
-  const sw = carryM('sw', skill);
+  // (T241: each club's carry at its own part of the game's skill: one number for a field golfer, as before)
+  const sw = carryM('sw', skillFor(skill, 'sw'));
   if (D <= sw || (lie === 'bunker' && D < SAND_M)) return { club: D > sw ? 'pw' : 'sw', aim: { x: pin.x, y: pin.y } };
   const longest: Club = teeShot && hole.par > 3 ? 'driver' : 'wood3';
-  const W = Math.min(D, carryM(longest, skill)); // the wanted distance, metres
-  const club = SHORT_TO_LONG.find(c => carryM(c, skill) >= W) ?? longest;
+  const W = Math.min(D, carryM(longest, skillFor(skill, longest))); // the wanted distance, metres
+  const club = SHORT_TO_LONG.find(c => carryM(c, skillFor(skill, c)) >= W) ?? longest;
   if (W >= D - 1) return { club, aim: { x: pin.x, y: pin.y } };
   return { club, aim: arcPoint(hole.line, nearestArc(hole.line, from) + W / TILE_M) };
 }
@@ -88,9 +98,10 @@ export function chooseShot(lie: Lie, from: Pt, hole: PlayHole, skill: number, te
 /** a full shot or chip (not the putt) from a lie at an aim with a club: where the ball comes to rest and its lie. Water at the final point
  *  is a penalty and the ball drops where it last was out of the water (on the way back from the water to the stroke). Out of bounds is a
  *  penalty too, and the ball goes back to where it was struck from, the same lie (stroke and distance). T251: also where it landed and where
- *  its roll stopped, with their lies (landing: the bounce and the roll are drawn from them; the same draws and lies as before) */
-export function hitShot(r: () => number, skill: number, lie: Lie, from: Pt, aim: Pt, club: Club, view: CourseView): { to: Pt; lie: Lie; penalty: 0 | 1; holed: false; landing: Landing } {
-  const dM = Math.hypot(aim.x - from.x, aim.y - from.y) * TILE_M;
+ *  its roll stopped, with their lies (landing: the bounce and the roll are drawn from them; the same draws and lies as before). T241: the skill is the
+ *  club's part of the game's (skillFor) */
+export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim: Pt, club: Club, view: CourseView): { to: Pt; lie: Lie; penalty: 0 | 1; holed: false; landing: Landing } {
+  const skill = skillFor(sk, club), dM = Math.hypot(aim.x - from.x, aim.y - from.y) * TILE_M;
   const sand = lie === 'bunker' && club === 'sw' && dM < SAND_M;
   // a mishit carries a share of the shot and is also off line (the amateurs' topped and sliced shots)
   const mis = r() < MISHIT.base + MISHIT.skillK * (1 - skill) ** 2, mf = mis ? MISHIT.carry[0] + (MISHIT.carry[1] - MISHIT.carry[0]) * r() : 1;

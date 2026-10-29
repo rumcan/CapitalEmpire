@@ -2,7 +2,7 @@
 // game minute for the playback. Times are game minutes of the day; distances are tiles unless named M. Pure TS, no DOM.
 // The stepping (HoleRun, GroupRun) is shared by playRound and the owner's live group (live.ts), so both keep one time model.
 import { TILE_M } from '../types';
-import { carryM, chooseShot, hitShot, putt, rng } from './shot';
+import { carryM, chooseShot, hitShot, putt, rng, skillFor, type ShotSkill } from './shot';
 import { CART_PACE } from './entourage';
 import type { Club, CourseView, Golfer, Group, GolferState, Landing, Lie, Pace, PlayHole, Pt, RoundPlan, Shot, Standing, Wait } from './types';
 import type { TeeKind } from '../types';
@@ -68,7 +68,7 @@ export function offOf(rest: Pt, pin: Pt, toward: Pt, slot: number, t0: number): 
  *  when he strikes), whether his shots come from the owner's input (owner, live.ts), his own random stream for this hole, and the model's next stroke
  *  once worked out (pend, T211: its outcome does not depend on the minute, so whether it must wait for the green can follow from where it ends); T213:
  *  whether he rides a cart (his moves take CART_PACE of the walk) */
-export interface Player { id: number; pro: boolean; skill: number; owner: boolean; cart: boolean; ball: Pt; stand: Pt; lie: Lie; strokes: number; holed: boolean; cup: boolean; end: number; ready: number; r: () => number; pend: Pending | null;
+export interface Player { id: number; pro: boolean; skill: number; /** T241: the skill each shot is played at (his skills by part of the game, else his one skill: shot.ts skillFor) */ sk: ShotSkill; owner: boolean; cart: boolean; ball: Pt; stand: Pt; lie: Lie; strokes: number; holed: boolean; cup: boolean; end: number; ready: number; r: () => number; pend: Pending | null;
   /** T254: the tee set he plays from (absent: the hole's furthest back) */ set?: TeeKind }
 
 /** the model's next stroke for a golfer, worked out before its minute: the club, where the ball ends and its lie, the penalty, whether it goes in, its
@@ -92,7 +92,7 @@ export class HoleRun {
     this.c = c; this.h = h; this.now = start; this.g = g; this.ahead = ahead;
     const hole = c.view.holes[h]!;
     // T254: each golfer tees off from his own set (the nearest the hole has)
-    this.ps = gr.players.map(id => { const q = c.who.get(id)!, tee = holeFrom(hole, q.tees).tee; return { id, pro: q.pro, skill: q.skill, owner: !!q.owner, cart: q.cart !== undefined && !q.owner, ball: { ...tee }, stand: { ...tee }, lie: 'tee' as Lie, strokes: 0, holed: false, cup: false, end: start, ready: start, r: rng(c.seed, id, h), pend: null, ...(q.tees ? { set: q.tees } : {}) }; });
+    this.ps = gr.players.map(id => { const q = c.who.get(id)!, tee = holeFrom(hole, q.tees).tee; return { id, pro: q.pro, skill: q.skill, sk: q.skills ?? q.skill, owner: !!q.owner, cart: q.cart !== undefined && !q.owner, ball: { ...tee }, stand: { ...tee }, lie: 'tee' as Lie, strokes: 0, holed: false, cup: false, end: start, ready: start, r: rng(c.seed, id, h), pend: null, ...(q.tees ? { set: q.tees } : {}) }; });
   }
   /** the golfer to strike next: the one farthest from the pin among those not holed (the group's order on a tie); null when the hole is over */
   next(): Player | null {
@@ -109,7 +109,7 @@ export class HoleRun {
     const a = this.ahead; if (!a) return -Infinity;
     const h = this.h, hole = this.c.view.holes[h]!;
     let g = p.lie === 'tee' ? a.clear[h]! : -Infinity;
-    const green = p.owner ? Math.hypot(hole.pin.x - p.ball.x, hole.pin.y - p.ball.y) * TILE_M <= OWNER_REACH * carryM('driver', p.skill) + OWNER_REACH_M : this.pending(p).green;
+    const green = p.owner ? Math.hypot(hole.pin.x - p.ball.x, hole.pin.y - p.ball.y) * TILE_M <= OWNER_REACH * carryM('driver', skillFor(p.sk, 'driver')) + OWNER_REACH_M : this.pending(p).green;
     if (green) g = Math.max(g, a.out[h]!);
     return g;
   }
@@ -142,14 +142,14 @@ export class HoleRun {
   /** the model's stroke for p, worked out once (the club and aim from his lie, chooseShot; a putt by putt, else hitShot) */
   private pending(p: Player): Pending {
     if (p.pend) return p.pend;
-    const hole = holeFrom(this.c.view.holes[this.h]!, p.set), k = chooseShot(p.lie, p.ball, hole, p.skill, p.lie === 'tee'); // T254: his set's line
+    const hole = holeFrom(this.c.view.holes[this.h]!, p.set), k = chooseShot(p.lie, p.ball, hole, p.sk, p.lie === 'tee'); // T254: his set's line
     if (k.club === 'putter') {
-      const from = p.ball, dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), o = putt(p.r, p.skill, L * TILE_M);
+      const from = p.ball, dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), o = putt(p.r, skillFor(p.sk, 'putter'), L * TILE_M);
       // a miss leaves the ball on the putt's line, on the far side of the pin
       const s = L > 0 ? o.leaveM / TILE_M / L : 0, to = o.holed ? { x: hole.pin.x, y: hole.pin.y } : { x: hole.pin.x + dx * s, y: hole.pin.y + dy * s };
       return p.pend = { club: 'putter', to, lie: o.holed ? 'green' : this.c.view.lieAt(to.x, to.y), penalty: 0, holed: o.holed, dur: PUTT_FLIGHT, green: true };
     }
-    const o = hitShot(p.r, p.skill, p.lie, p.ball, k.aim, k.club, this.c.view), atPin = k.aim.x === hole.pin.x && k.aim.y === hole.pin.y;
+    const o = hitShot(p.r, p.sk, p.lie, p.ball, k.aim, k.club, this.c.view), atPin = k.aim.x === hole.pin.x && k.aim.y === hole.pin.y;
     return p.pend = { club: k.club, to: o.to, lie: o.lie, penalty: o.penalty, holed: false, dur: FLIGHT_TIME, green: atPin || o.lie === 'green', landing: o.landing };
   }
   /** the model's stroke for p at its minute (timeOf, which must be known). Recorded, and returned */

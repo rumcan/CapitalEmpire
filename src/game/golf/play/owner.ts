@@ -1,13 +1,13 @@
 // The owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): the golfer he is, the clubs he may take from a lie, the power a club starts at, and
 // his live group started from a fresh plan (a replay of his saved inputs, then the caddie if he handed over); and the day's round as the engine builds it
 // (dayRound: the same after a reload, T209). Pure TS, no DOM.
-import { carryM } from './shot';
+import { carryM, skillFor, type ShotSkill } from './shot';
 import { makeField, teeTimes } from './field';
 import { playRound } from './round';
 import { fieldEntourage } from './entourage';
 import { LiveGroup, POWER } from './live';
 import type { OwnerInput, OwnerTurn } from './live';
-import type { Club, CourseView, Golfer, Lie, RoundPlan, Sex } from './types';
+import type { Club, CourseView, GameSkills, Golfer, Lie, RoundPlan, Sex } from './types';
 import type { TeeKind } from '../types';
 
 /** the owner's address: his shot opens this many game minutes before his strike, where the game pauses (docs/GOLF-PLAY.md decision 7); the playback
@@ -19,8 +19,15 @@ export const OWNER_SKILL = 0.4;
 export const OWNER_ART: Record<Sex, string> = { m: 'golfer:golf_am_m3', w: 'golfer:golf_am_w1' };
 
 /** the owner's golfer with id `id` (the next after the field's): "You", an amateur of his sex, the first group by teeTimes; T254: from the tee set he
- *  chose (P28: the white unless he picks another) */
-export function ownerGolfer(id: number, sex: Sex, tees: TeeKind = 'middle'): Golfer { return { id, name: 'You', sex, pro: false, skill: OWNER_SKILL, look: 0, owner: true, tees }; }
+ *  chose (P28: the white unless he picks another). T241: with skills (your profile's under the tournament's pressure, golf/player.ts gameSkills) he plays
+ *  each shot at his part of the game's skill, and his skill is their average; without (a save from before T241), OWNER_SKILL as before */
+export function ownerGolfer(id: number, sex: Sex, tees: TeeKind = 'middle', skills?: GameSkills): Golfer {
+  const g: Golfer = { id, name: 'You', sex, pro: false, skill: skills ? meanSkill(skills) : OWNER_SKILL, look: 0, owner: true, tees };
+  if (skills) g.skills = { ...skills };
+  return g;
+}
+/** T241: the average of the four parts of the game (a golfer with skills: his skill, the tee times' order) */
+export const meanSkill = (s: GameSkills): number => (s.driving + s.irons + s.short + s.putting) / 4;
 
 /** the clubs the owner may take from a lie: the driver only from the tee (teeShot), the putter only on the green, the others any time. Longest first */
 export function allowedClubs(lie: Lie, teeShot: boolean): Club[] {
@@ -33,14 +40,16 @@ export function allowedClubs(lie: Lie, teeShot: boolean): Club[] {
 
 /** the power a club starts at for the distance to the aim (metres): the share of its full carry that reaches it, at most 1 and at least the slider's
  *  floor (POWER[0]); the putter starts at 1 (the putt's full length to the pin) */
-export function powerFor(club: Club, distM: number, skill: number): number {
+export function powerFor(club: Club, distM: number, skill: ShotSkill): number {
   if (club === 'putter') return 1;
-  return Math.min(POWER[1]!, Math.max(POWER[0]!, distM / carryM(club, skill)));
+  return Math.min(POWER[1]!, Math.max(POWER[0]!, distM / carryM(club, skillFor(skill, club))));
 }
 
 /** the owner in the day as the save keeps him (GolfPlaySave without its key): his sex, the inputs he played in order, and how many he had played when he
  *  handed the rest to the caddie (null while he plays) */
-export interface DayOwner { owner: Sex; inputs: OwnerInput[]; caddie: number | null; /** T254: his tee set */ tees?: TeeKind }
+export interface DayOwner { owner: Sex; inputs: OwnerInput[]; caddie: number | null; /** T254: his tee set */ tees?: TeeKind;
+  /** T241: his skills as he joined (your profile under the tournament's pressure), kept so a reload replays the same round; absent: OWNER_SKILL */
+  skills?: GameSkills }
 /** the owner's part of a day's round: his golfer's id, his group's index and tee time, his live group and his next turn (null once his group is done) */
 export interface DayOwnerPlay { id: number; li: number; tee: number; live: LiveGroup; turn: OwnerTurn | null }
 
@@ -48,7 +57,7 @@ export interface DayOwnerPlay { id: number; li: number; tee: number; live: LiveG
  *  owner (when he plays) as the next id, the tee times, and the round; his group is played live from his saved inputs (startOwner: replayed, then the
  *  caddie) and his next turn is due. Throws when his inputs no longer fit the course (startOwner) */
 export function dayRound(view: CourseView, tier: number, seed: number, owner: DayOwner | null): { plan: RoundPlan; golfers: Golfer[]; own: DayOwnerPlay | null } {
-  const field = makeField(tier, seed), id = field.length, golfers = owner ? [...field, ownerGolfer(id, owner.owner, owner.tees)] : field;
+  const field = makeField(tier, seed), id = field.length, golfers = owner ? [...field, ownerGolfer(id, owner.owner, owner.tees, owner.skills)] : field;
   const groups = teeTimes(golfers, seed), li = owner ? groups.findIndex(gr => gr.players.includes(id)) : -1;
   // T213: the tour's pros have caddies, the small events' amateurs ride carts (their moves between shots a little quicker)
   fieldEntourage(golfers, groups, tier);
