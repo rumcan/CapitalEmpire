@@ -5,7 +5,7 @@
 // while the camera pans (the bench's speeds), its draw time, its GPU time (EXT_disjoint_timer_query_webgl2; --amplify N draws every ground
 // chunk N times so the ground pass stands out), and the masks' GPU bytes.
 //   node scripts/dev/water-motion-shots.mjs --base http://127.0.0.1:5187/ --out E:/ClaudeTemp/T248 [--only shots,anim,numbers] [--modes off,on | main]
-//     [--views river,pond,bridge] [--zooms 0.3,0.15] [--frames 16] [--tag v1] [--look '{"foam":1.5}'] [--amplify 20] [--rounds 3] [--parts bake,pan,draw,gpu]
+//     [--png (the stills kept lossless too: the off-is-main pixel diff)] [--views river,pond,bridge] [--zooms 0.3,0.15] [--frames 16] [--tag v1] [--look '{"foam":1.5}'] [--amplify 20] [--rounds 3] [--parts bake,pan,draw,gpu]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game. On a build without the
 // motion (main) the switch does nothing: run it with --modes main.
 import { chromium } from 'playwright-core';
@@ -28,7 +28,8 @@ const settle = async (page, ms = 900) => {
   await page.waitForTimeout(300);
 };
 const png = page => page.screenshot({ type: 'png' });
-const save = async (buf, name) => { const file = join(out, `${name}${tag}.jpg`); await sharp(buf).jpeg({ quality: 90, mozjpeg: true }).toFile(file); console.log(file); return file; };
+const keepPng = args.includes('--png');
+const save = async (buf, name, raw = false) => { if (raw && keepPng) writeFileSync(join(out, `${name}${tag}.png`), buf); const file = join(out, `${name}${tag}.jpg`); await sharp(buf).jpeg({ quality: 90, mozjpeg: true }).toFile(file); console.log(file); return file; };
 const open = async url => {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
@@ -88,7 +89,7 @@ try {
     if (only.has('shots')) {
       for (const z of zooms) {
         await lookAt(page, at.x, at.y, z); const bufs = [];
-        for (const m of modes) { await setMode(page, m); await clock(page, CLOCK); await settle(page); const b = await png(page); bufs.push(b); await save(b, `${view}-${Math.round(z * 100)}pct-${m}`); }
+        for (const m of modes) { await setMode(page, m); await clock(page, CLOCK); await settle(page); const b = await png(page); bufs.push(b); await save(b, `${view}-${Math.round(z * 100)}pct-${m}`, true); }
         if (bufs.length > 1) {
           const half = await Promise.all(bufs.map(b => sharp(b).resize(W / 2, H / 2).png().toBuffer()));
           const sbs = await sharp({ create: { width: W + 6, height: H / 2, channels: 3, background: '#000' } }).composite([{ input: half[0], left: 0, top: 0 }, { input: half.at(-1), left: W / 2 + 6, top: 0 }, { input: label(W / 2, `${modes[0]} (before)`), left: 0, top: 0 }, { input: label(W / 2, `${modes.at(-1)} (after)`), left: W / 2 + 6, top: 0 }]).png().toBuffer();
