@@ -1,83 +1,83 @@
 [
   {
-    "id": "variation:town-laundromat-43183f9e-plain:1",
-    "version": "variation-town-laundromat-43183f9e-plain-1-4views-v2",
+    "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+    "version": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v3",
     "files": {
-      "NE": "d1be389c5af1391883d9f95d33b19e02551901697094fb52d88f2969fa12aadc",
-      "SE": "e1f223e219538848521492c94840a54fdf077109ec5287b5889a26bc5de902b3",
-      "SW": "cafb8bef9d02074cfaacb29728f00354ec6c6b8a132d79bc9d5f1bebbcb0791d",
-      "NW": "4e13104696f4118528e13915b0a482f1a28d74e1441442d86283e5e3cdf779d7"
+      "NE": "8b7e8e5f991f7ca98baa8a93a47242bd4949a0366fe6115508b04a6edb90eab5",
+      "SE": "3731532cf11c4ff3317bf3b8e6b89d2070c4e527579edcf93022b4ac5e7cfaa9",
+      "SW": "24beefbe38fb07eb269726c5ed1acfc56b915afa282d6a132fd886ae3e5261cb",
+      "NW": "154499cd566abaab7ae3965dec69d974eec787f6170548e8e3d9723cf8a5767a"
     },
     "original": {
-      "id": "variation:town-laundromat-43183f9e-plain:1",
-      "version": "variation-town-laundromat-43183f9e-plain-1-4views-v1",
+      "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+      "version": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2",
       "files": {
-        "NE": "19c78242036dcb5e6fb0c05a37bb57a2b3c0e146a053b29fd3e4c709151068bf",
-        "SE": "e1f223e219538848521492c94840a54fdf077109ec5287b5889a26bc5de902b3",
-        "SW": "cafb8bef9d02074cfaacb29728f00354ec6c6b8a132d79bc9d5f1bebbcb0791d",
-        "NW": "4e13104696f4118528e13915b0a482f1a28d74e1441442d86283e5e3cdf779d7"
+        "NE": "c30b889b6265094fda96f82729884c11512f5a2ab406bdfc1d1d723285b1a5d6",
+        "SE": "3731532cf11c4ff3317bf3b8e6b89d2070c4e527579edcf93022b4ac5e7cfaa9",
+        "SW": "24beefbe38fb07eb269726c5ed1acfc56b915afa282d6a132fd886ae3e5261cb",
+        "NW": "154499cd566abaab7ae3965dec69d974eec787f6170548e8e3d9723cf8a5767a"
       }
     },
     "footprintScale": 1,
-    "gaugeScale": 1.31,
+    "gaugeScale": 1.209,
     "retainedNativeScales": {
-      "SE": 0.7537625418060201,
-      "SW": 0.7537625418060201,
-      "NW": 0.7537625418060201
+      "SE": 1.1583128295254834,
+      "SW": 1.1583128295254834,
+      "NW": 1.1583128295254834
     }
   },
   {
-    "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
-    "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v3",
+    "id": "variation:town-grocery-46d5dc39-plain:1",
+    "version": "variation-town-grocery-46d5dc39-plain-1-4views-v2",
     "files": {
-      "NE": "29d53dce609bd4541656982f38bc76174e6724cc11c0633498fefcba3562a813",
-      "SE": "6124db69e157512a2ba23eb83cda6d185407c48df695497c927b266ac38ad718",
-      "SW": "6832664a93a7944d9ac3a99f7b25de01e97d51e3cd0891e1bbb7866604e45172",
-      "NW": "2a98bde47db9192f330a059bca4ed56bcc789785d0fc976dfdf0b6c2e769f470"
+      "NE": "fee70f4b58390c50b6712fea3c1347877ffe61145ecec3441221f6bcb6fba8b0",
+      "SE": "9a2cc8bac4187a6d011a7ea49fee9ef3e6404ff18dc996460813c91449a04ac5",
+      "SW": "33f228cf7242f9afd98de8d6586b00bb683a9e9971721216a9e24fac93ca976a",
+      "NW": "ac9bfbdb6ac36d6c50d12ba1787ec5e3486987a1ce90574aea4d9b1ccb1a0c1b"
     },
     "original": {
-      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
-      "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+      "id": "variation:town-grocery-46d5dc39-plain:1",
+      "version": "variation-town-grocery-46d5dc39-plain-1-4views-v1",
       "files": {
-        "NE": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
-        "SE": "6124db69e157512a2ba23eb83cda6d185407c48df695497c927b266ac38ad718",
-        "SW": "6832664a93a7944d9ac3a99f7b25de01e97d51e3cd0891e1bbb7866604e45172",
-        "NW": "2a98bde47db9192f330a059bca4ed56bcc789785d0fc976dfdf0b6c2e769f470"
+        "NE": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+        "SE": "9a2cc8bac4187a6d011a7ea49fee9ef3e6404ff18dc996460813c91449a04ac5",
+        "SW": "33f228cf7242f9afd98de8d6586b00bb683a9e9971721216a9e24fac93ca976a",
+        "NW": "ac9bfbdb6ac36d6c50d12ba1787ec5e3486987a1ce90574aea4d9b1ccb1a0c1b"
       }
     },
     "footprintScale": 1,
-    "gaugeScale": 1.469,
+    "gaugeScale": 1.371,
     "retainedNativeScales": {
-      "SE": 0.7221326164874552,
-      "SW": 0.7221326164874552,
-      "NW": 0.7221326164874552
+      "SE": 0.9168253968253969,
+      "SW": 0.9168253968253969,
+      "NW": 0.9168253968253969
     }
   },
   {
-    "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
-    "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v2",
+    "id": "variation:town-hardware-bf36737f-plain:1",
+    "version": "variation-town-hardware-bf36737f-plain-1-4views-v2",
     "files": {
-      "NE": "6961b422d5ca452fa5958c4f5ca087d109b06d7e032ab6ceca67056fe844e038",
-      "SE": "554a71d477debcf0f89b37c7e4cff9c2a50a7509bace3e58f5ad462b336b3855",
-      "SW": "67a322ae702bdc97dbe2125115723b89d9383d0aa042e9d9a700f3f620ccd423",
-      "NW": "b1b3ecf0d67ae68c300e3e573fa6f5d45c8b44e0a90a593da86e6d2475f9f073"
+      "NE": "1400e78f4098929e262f995a3867c8dda3ea54b794b4da958eb73bb81bc1c4d0",
+      "SE": "ee6d002cd8bb8ff0c1a3ef195f33533f0eca24ceda7f73a706bffcf6e74b499a",
+      "SW": "5ce1a1a847ecf540c652cf51249d2dddea6f92fc98a37e668648c08055d8ce18",
+      "NW": "66af7bc43fa5a51f67c3f9bec76ef861151eadd8f9315e7df63338f46027bfa0"
     },
     "original": {
-      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
-      "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1",
+      "id": "variation:town-hardware-bf36737f-plain:1",
+      "version": "variation-town-hardware-bf36737f-plain-1-4views-v1",
       "files": {
-        "NE": "728b436a3b05653381f7f55e784a77e75005bae353df1cbc1865985cb299af8a",
-        "SE": "554a71d477debcf0f89b37c7e4cff9c2a50a7509bace3e58f5ad462b336b3855",
-        "SW": "67a322ae702bdc97dbe2125115723b89d9383d0aa042e9d9a700f3f620ccd423",
-        "NW": "b1b3ecf0d67ae68c300e3e573fa6f5d45c8b44e0a90a593da86e6d2475f9f073"
+        "NE": "49c4af45ca781a7e3d186e04ae2b86defae956ae050760311f03bff434a2e115",
+        "SE": "ee6d002cd8bb8ff0c1a3ef195f33533f0eca24ceda7f73a706bffcf6e74b499a",
+        "SW": "5ce1a1a847ecf540c652cf51249d2dddea6f92fc98a37e668648c08055d8ce18",
+        "NW": "66af7bc43fa5a51f67c3f9bec76ef861151eadd8f9315e7df63338f46027bfa0"
       }
     },
-    "footprintScale": 0.9999999999999999,
-    "gaugeScale": 1.066,
+    "footprintScale": 1,
+    "gaugeScale": 1.106,
     "retainedNativeScales": {
-      "SE": 1.0056709956709955,
-      "SW": 1.0056709956709955,
-      "NW": 1.0056709956709955
+      "SE": 0.827481884057971,
+      "SW": 0.827481884057971,
+      "NW": 0.827481884057971
     }
   }
 ]

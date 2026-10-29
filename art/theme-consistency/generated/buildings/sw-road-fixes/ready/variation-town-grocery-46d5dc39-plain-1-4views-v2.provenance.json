@@ -1,0 +1,55 @@
+{
+  "id": "variation:town-grocery-46d5dc39-plain:1",
+  "generator": "image_gen",
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+    "sheetSha256": "ae36723d1455e098a6e6a33ec22a2ea8b9285067f0e47f2f86eb4964eee974ce",
+    "cell": 1,
+    "sourceRect": {
+      "left": 15,
+      "top": 39,
+      "width": 638,
+      "height": 614
+    },
+    "coreBounds": {
+      "left": 33,
+      "top": 69,
+      "width": 540,
+      "height": 560
+    },
+    "nonzeroPixels": 223276,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-03-v2.review.json",
+      "sha256": "7d5a9cc960930be1b943733a4a92d1b80f5f214c932fbb7c6d1eaf6f8683bd75"
+    }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-02.json",
+    "sha256": "8858d7df8851009fed181f62f4e724dc635e5a62f4980267b171048713eab8ce"
+  },
+  "original": {
+    "id": "variation:town-grocery-46d5dc39-plain:1",
+    "version": "variation-town-grocery-46d5dc39-plain-1-4views-v1",
+    "files": {
+      "NE": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+      "SE": "9a2cc8bac4187a6d011a7ea49fee9ef3e6404ff18dc996460813c91449a04ac5",
+      "SW": "33f228cf7242f9afd98de8d6586b00bb683a9e9971721216a9e24fac93ca976a",
+      "NW": "ac9bfbdb6ac36d6c50d12ba1787ec5e3486987a1ce90574aea4d9b1ccb1a0c1b"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "fee70f4b58390c50b6712fea3c1347877ffe61145ecec3441221f6bcb6fba8b0",
+    "SE": "9a2cc8bac4187a6d011a7ea49fee9ef3e6404ff18dc996460813c91449a04ac5",
+    "SW": "33f228cf7242f9afd98de8d6586b00bb683a9e9971721216a9e24fac93ca976a",
+    "NW": "ac9bfbdb6ac36d6c50d12ba1787ec5e3486987a1ce90574aea4d9b1ccb1a0c1b"
+  }
+}

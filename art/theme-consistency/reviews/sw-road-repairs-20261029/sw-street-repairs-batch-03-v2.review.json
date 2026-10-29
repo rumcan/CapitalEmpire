@@ -1,0 +1,214 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "source": {
+    "file": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+    "sha256": "ae36723d1455e098a6e6a33ec22a2ea8b9285067f0e47f2f86eb4964eee974ce",
+    "width": 1254,
+    "height": 1254
+  },
+  "status": "partial-two-cells-ready",
+  "toleranceDegrees": 2.25,
+  "cells": [
+    {
+      "cell": 1,
+      "status": "ready-for-integration-review",
+      "reason": "Front.828deg/right1.252deg; primaryidentityreviewaccepted."
+    },
+    {
+      "cell": 2,
+      "status": "ready-for-integration-review",
+      "reason": "Front1.761deg/right1.493deg; primaryidentityreviewaccepted."
+    },
+    {
+      "cell": 3,
+      "status": "held",
+      "reason": "Independentleft/rightfrontfoundation spans2.542/2.626deg exceed2.25; rightaxis1.976deg good."
+    },
+    {
+      "cell": 4,
+      "status": "held",
+      "reason": "Servicepersondoor movedfromSWfronttoSEside. Frontaxis1.246deg good; sampledsidealphafitcontaminatedbytoolshelfsoexcluded."
+    }
+  ],
+  "measurements": [
+    {
+      "name": "grocery-front",
+      "kind": "actual lower structural base, alpha boundary",
+      "slope": 0.5182023486901536,
+      "target": 0.5,
+      "angleErrorDegrees": 0.8282456827517002,
+      "rmsPx": 0.300799489339442,
+      "samples": 81,
+      "endpoints": [
+        [
+          80,
+          472.27190605239383
+        ],
+        [
+          160,
+          513.7280939476061
+        ]
+      ]
+    },
+    {
+      "name": "grocery-side",
+      "kind": "actual lower structural base, alpha boundary",
+      "slope": -0.5276295864880606,
+      "target": -0.5,
+      "angleErrorDegrees": 1.2524038877475676,
+      "rmsPx": 0.29805511219427394,
+      "samples": 101,
+      "endpoints": [
+        [
+          450,
+          593.2824694234129
+        ],
+        [
+          550,
+          540.5195107746068
+        ]
+      ]
+    },
+    {
+      "name": "hardware-front",
+      "kind": "actual lower structural base, alpha boundary",
+      "slope": 0.5390243902439023,
+      "target": 0.5,
+      "angleErrorDegrees": 1.7606991109053647,
+      "rmsPx": 0.4461274967807444,
+      "samples": 81,
+      "endpoints": [
+        [
+          820,
+          522.1797651309846
+        ],
+        [
+          900,
+          565.3017163504969
+        ]
+      ]
+    },
+    {
+      "name": "hardware-side",
+      "kind": "actual lower structural base, alpha boundary",
+      "slope": -0.5330143540669856,
+      "target": -0.5,
+      "angleErrorDegrees": 1.49320502549423,
+      "rmsPx": 0.30442054967629834,
+      "samples": 76,
+      "endpoints": [
+        [
+          1125,
+          595.3827751196171
+        ],
+        [
+          1200,
+          555.4066985645932
+        ]
+      ]
+    },
+    {
+      "name": "post-front-left",
+      "kind": "actual lower structural base, alpha boundary",
+      "slope": 0.4457013574660634,
+      "target": 0.5,
+      "angleErrorDegrees": 2.5424533496954953,
+      "rmsPx": 0.31553494025896883,
+      "samples": 51,
+      "endpoints": [
+        [
+          50,
+          1028.2496229260937
+        ],
+        [
+          100,
+          1050.534690799397
+        ]
+      ]
+    },
+    {
+      "name": "post-front-right",
+      "kind": "actual lower structural base, alpha boundary",
+      "slope": 0.4439450026441039,
+      "target": 0.5,
+      "angleErrorDegrees": 2.6264623888674556,
+      "rmsPx": 0.3075611999051803,
+      "samples": 61,
+      "endpoints": [
+        [
+          315,
+          1149.3865679534638
+        ],
+        [
+          375,
+          1176.0232681121101
+        ]
+      ]
+    },
+    {
+      "name": "post-side",
+      "kind": "actual lower structural base, alpha boundary",
+      "slope": -0.5438788584740825,
+      "target": -0.5,
+      "angleErrorDegrees": 1.975783385824812,
+      "rmsPx": 0.3077348700014391,
+      "samples": 101,
+      "endpoints": [
+        [
+          450,
+          1159.5998835177634
+        ],
+        [
+          550,
+          1105.2119976703552
+        ]
+      ]
+    },
+    {
+      "name": "garage-front",
+      "kind": "actual lower structural base, alpha boundary",
+      "slope": 0.47309422211970936,
+      "target": 0.5,
+      "angleErrorDegrees": 1.2464905595514737,
+      "rmsPx": 0.3111596959762764,
+      "samples": 116,
+      "endpoints": [
+        [
+          700,
+          1060.2108753315651
+        ],
+        [
+          815,
+          1114.6167108753316
+        ]
+      ]
+    }
+  ],
+  "doorCalibration": [
+    {
+      "cell": 1,
+      "kind": "front shop double door, measure ONE vertical leaf; not combinedwidth",
+      "nativeFullSheet": {
+        "x": 210,
+        "headY": 443,
+        "thresholdY": 536,
+        "heightPx": 93
+      },
+      "uncertaintyPx": 4,
+      "note": "Awning shadows topedge; confirmvisualphysicalscale in game."
+    },
+    {
+      "cell": 2,
+      "kind": "single front pedestrian leaf",
+      "nativeFullSheet": {
+        "x": 880,
+        "headY": 447,
+        "thresholdY": 547,
+        "heightPx": 100
+      },
+      "uncertaintyPx": 3
+    }
+  ],
+  "note": "Nativeartapproval; actualgameSWroadoverlaystillrequired. Otherthreeoldviews mustremainbyte-identical."
+}

@@ -1,151 +1,55 @@
 {
   "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
   "generator": "image_gen",
-  "generated": "2026-10-24",
-  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-2684c31c-f699-4241-8266-dbc2389b9eaa.png",
-  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:gen-house-farmhouse-wrap-2b0eea83-plain:1. Preserve the exact dwelling/barn massing from identity reference. Distinguish its actual front and rear before drawing. Four clockwise physical rotations around one stationary object, never four views of the same porch. No invented yard, driveway or ground slab. Keep only integral balconies, steps, porch structure.",
-  "references": [
-    {
-      "role": "authoritative-theme",
-      "file": "art/theme-consistency/references/theme-authoritative.png",
-      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
-    },
-    {
-      "role": "existing-subject-identity",
-      "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
-      "direction": null,
-      "file": "art/theme-consistency/exports/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-1.configured@2x.png",
-      "sha256": "3e6a89dcb4ae7d113d3997cd3f38b7fc20e0b752336de19c41274c878e769940"
-    }
-  ],
   "integrationStatus": "ready",
-  "integrationReason": "Porch front and rear are distinct; chimney/roof/side gable follow rigid turns. Needs clear-gap repack. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
-  "sourceVisualReview": {
-    "reviewedAt": "2026-10-24T10:27:17.645Z",
-    "reviewer": "building_variation_review",
-    "alphaCompositeBackground": "#b91b91",
-    "allFourViewsInspected": true,
-    "themeReference": "art/theme-consistency/references/theme-authoritative.png",
-    "result": "ready",
-    "reason": "Porch front and rear are distinct; chimney/roof/side gable follow rigid turns. Needs clear-gap repack. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
-    "postRepackContact": "output/building-priority/variation-post-repack-1.png"
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-02-v2.png",
+    "sheetSha256": "e714c295ca48c3afcc9a530780f0ab180cb28154bf1b2bd1d84c51fe29e2b903",
+    "cell": 1,
+    "sourceRect": {
+      "left": 0,
+      "top": 0,
+      "width": 663,
+      "height": 607
+    },
+    "coreBounds": {
+      "left": 39,
+      "top": 51,
+      "width": 558,
+      "height": 552
+    },
+    "nonzeroPixels": 205332,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-02-v2.review.json",
+      "sha256": "c334a1c5b0bc35787136dcb2f3339fffb11680a6d4cdd802576854e2fa6447e6"
+    }
   },
-  "layoutCorrection": {
-    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining faint pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
-    "originalSheet": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v1.png",
-    "originalSheetSha256": "48142a23e76c04cd75323e278156f3555531b3671ea62eb306daa2212fffa42e",
-    "outputSheetSha256": "3db3131931dc8d15165158c530b7be6b386bad5541788da1087b0a6065cce9ed",
-    "originalDimensions": [
-      1774,
-      887
-    ],
-    "outputDimensions": [
-      2560,
-      2560
-    ],
-    "cellSize": 1280,
-    "nonzeroAlphaPixels": 654390,
-    "nonzeroAndVisiblePixelConservation": true,
-    "exactVisibleRgbaConservation": true,
-    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign faint fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
-    "views": [
-      {
-        "direction": "NE",
-        "dominantComponent": {
-          "label": 1,
-          "pixels": 169182,
-          "bounds": [
-            217,
-            15,
-            777,
-            440
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 209,
-          "y0": 12,
-          "x1": 876,
-          "y1": 495,
-          "count": 175999
-        },
-        "translation": {
-          "x": 97,
-          "y": 386
-        }
-      },
-      {
-        "direction": "SE",
-        "dominantComponent": {
-          "label": 2,
-          "pixels": 162610,
-          "bounds": [
-            1029,
-            48,
-            1609,
-            463
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 920,
-          "y0": 38,
-          "x1": 1698,
-          "y1": 505,
-          "count": 170537
-        },
-        "translation": {
-          "x": 610,
-          "y": 368
-        }
-      },
-      {
-        "direction": "SW",
-        "dominantComponent": {
-          "label": 14,
-          "pixels": 147387,
-          "bounds": [
-            243,
-            440,
-            779,
-            848
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 33,
-          "y0": 438,
-          "x1": 912,
-          "y1": 863,
-          "count": 154595
-        },
-        "translation": {
-          "x": 167,
-          "y": 1269
-        }
-      },
-      {
-        "direction": "NW",
-        "dominantComponent": {
-          "label": 16,
-          "pixels": 145177,
-          "bounds": [
-            1066,
-            463,
-            1592,
-            869
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 911,
-          "y0": 460,
-          "x1": 1596,
-          "y1": 872,
-          "count": 153259
-        },
-        "translation": {
-          "x": 666,
-          "y": 1253
-        }
-      }
-    ],
-    "visualReviewRequired": true
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-02.json",
+    "sha256": "8858d7df8851009fed181f62f4e724dc635e5a62f4980267b171048713eab8ce"
+  },
+  "original": {
+    "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+    "version": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2",
+    "files": {
+      "NE": "c30b889b6265094fda96f82729884c11512f5a2ab406bdfc1d1d723285b1a5d6",
+      "SE": "3731532cf11c4ff3317bf3b8e6b89d2070c4e527579edcf93022b4ac5e7cfaa9",
+      "SW": "24beefbe38fb07eb269726c5ed1acfc56b915afa282d6a132fd886ae3e5261cb",
+      "NW": "154499cd566abaab7ae3965dec69d974eec787f6170548e8e3d9723cf8a5767a"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "8b7e8e5f991f7ca98baa8a93a47242bd4949a0366fe6115508b04a6edb90eab5",
+    "SE": "3731532cf11c4ff3317bf3b8e6b89d2070c4e527579edcf93022b4ac5e7cfaa9",
+    "SW": "24beefbe38fb07eb269726c5ed1acfc56b915afa282d6a132fd886ae3e5261cb",
+    "NW": "154499cd566abaab7ae3965dec69d974eec787f6170548e8e3d9723cf8a5767a"
   }
 }

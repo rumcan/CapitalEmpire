@@ -684,6 +684,125 @@
      "note": "Retain exact pre-repair game scale from variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1"
     }
    }
+  },
+  "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1": {
+   "version": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v3",
+   "gaugeScale": 1.209,
+   "footprintScale": 1,
+   "views": {
+    "NE": {
+     "sha256": "8b7e8e5f991f7ca98baa8a93a47242bd4949a0366fe6115508b04a6edb90eab5",
+     "nativeScale": 0.8939193047485473,
+     "note": {
+      "kind": "estimated architectural-height retention; not a standard-door gauge",
+      "reason": "Door head hidden by porchawning;48px is visible fragment only",
+      "oldSourceSha256": "c30b889b6265094fda96f82729884c11512f5a2ab406bdfc1d1d723285b1a5d6",
+      "oldNativeHeight": 434,
+      "oldVisibleRows": [
+       4,
+       429
+      ],
+      "oldRenderedHeight": 502.71,
+      "oldVisibleRenderedHeight": 493.4434562211981,
+      "newVisibleHeight": 552,
+      "nativeScale": 0.8939193047485473,
+      "method": "Keep prior visible whole-building architectural height using alpha16 extents; uniform scale estimate, preserve original footprint and retained-view scales."
+     }
+    },
+    "SE": {
+     "sha256": "3731532cf11c4ff3317bf3b8e6b89d2070c4e527579edcf93022b4ac5e7cfaa9",
+     "nativeScale": 1.1583128295254834,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2"
+    },
+    "SW": {
+     "sha256": "24beefbe38fb07eb269726c5ed1acfc56b915afa282d6a132fd886ae3e5261cb",
+     "nativeScale": 1.1583128295254834,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2"
+    },
+    "NW": {
+     "sha256": "154499cd566abaab7ae3965dec69d974eec787f6170548e8e3d9723cf8a5767a",
+     "nativeScale": 1.1583128295254834,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2"
+    }
+   }
+  },
+  "variation:town-grocery-46d5dc39-plain:1": {
+   "version": "variation-town-grocery-46d5dc39-plain-1-4views-v2",
+   "gaugeScale": 1.371,
+   "footprintScale": 1,
+   "views": {
+    "NE": {
+     "sha256": "fee70f4b58390c50b6712fea3c1347877ffe61145ecec3441221f6bcb6fba8b0",
+     "nativeScale": 0.91190825340737,
+     "note": {
+      "kind": "estimated architectural-height retention; not a standard-door gauge",
+      "reason": "Tall glazed double storefront doors excluded by gauge contract;93px is an observation only",
+      "oldSourceSha256": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+      "oldNativeHeight": 566,
+      "oldVisibleRows": [
+       5,
+       561
+      ],
+      "oldRenderedHeight": 518.92,
+      "oldVisibleRenderedHeight": 510.6686219081272,
+      "newVisibleHeight": 560,
+      "nativeScale": 0.91190825340737,
+      "method": "Keep prior visible whole-building architectural height using alpha16 extents; uniform scale estimate, preserve original footprint and retained-view scales."
+     }
+    },
+    "SE": {
+     "sha256": "9a2cc8bac4187a6d011a7ea49fee9ef3e6404ff18dc996460813c91449a04ac5",
+     "nativeScale": 0.9168253968253969,
+     "note": "Retain exact pre-repair game scale from variation-town-grocery-46d5dc39-plain-1-4views-v1"
+    },
+    "SW": {
+     "sha256": "33f228cf7242f9afd98de8d6586b00bb683a9e9971721216a9e24fac93ca976a",
+     "nativeScale": 0.9168253968253969,
+     "note": "Retain exact pre-repair game scale from variation-town-grocery-46d5dc39-plain-1-4views-v1"
+    },
+    "NW": {
+     "sha256": "ac9bfbdb6ac36d6c50d12ba1787ec5e3486987a1ce90574aea4d9b1ccb1a0c1b",
+     "nativeScale": 0.9168253968253969,
+     "note": "Retain exact pre-repair game scale from variation-town-grocery-46d5dc39-plain-1-4views-v1"
+    }
+   }
+  },
+  "variation:town-hardware-bf36737f-plain:1": {
+   "version": "variation-town-hardware-bf36737f-plain-1-4views-v2",
+   "gaugeScale": 1.106,
+   "footprintScale": 1,
+   "views": {
+    "NE": {
+     "sha256": "1400e78f4098929e262f995a3867c8dda3ea54b794b4da958eb73bb81bc1c4d0",
+     "door": 100,
+     "note": {
+      "cell": 2,
+      "kind": "single front pedestrian leaf",
+      "nativeFullSheet": {
+       "x": 880,
+       "headY": 447,
+       "thresholdY": 547,
+       "heightPx": 100
+      },
+      "uncertaintyPx": 3
+     }
+    },
+    "SE": {
+     "sha256": "ee6d002cd8bb8ff0c1a3ef195f33533f0eca24ceda7f73a706bffcf6e74b499a",
+     "nativeScale": 0.827481884057971,
+     "note": "Retain exact pre-repair game scale from variation-town-hardware-bf36737f-plain-1-4views-v1"
+    },
+    "SW": {
+     "sha256": "5ce1a1a847ecf540c652cf51249d2dddea6f92fc98a37e668648c08055d8ce18",
+     "nativeScale": 0.827481884057971,
+     "note": "Retain exact pre-repair game scale from variation-town-hardware-bf36737f-plain-1-4views-v1"
+    },
+    "NW": {
+     "sha256": "66af7bc43fa5a51f67c3f9bec76ef861151eadd8f9315e7df63338f46027bfa0",
+     "nativeScale": 0.827481884057971,
+     "note": "Retain exact pre-repair game scale from variation-town-hardware-bf36737f-plain-1-4views-v1"
+    }
+   }
   }
  }
 }

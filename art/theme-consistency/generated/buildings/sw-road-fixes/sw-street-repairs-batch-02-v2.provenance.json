@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "id": "batch:sw-street-repairs-02",
+  "output": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-02-v2.png",
+  "references": [
+    "art/theme-consistency/references/sw-street-batch02-architecture-guide-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "cells": [
+    {
+      "index": 10,
+      "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+      "version": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-farmhouse-wrap-2b0eea83-plain-1/NE.png",
+      "sha256": "c30b889b6265094fda96f82729884c11512f5a2ab406bdfc1d1d723285b1a5d6",
+      "width": 569,
+      "height": 434,
+      "dir": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW"
+    },
+    {
+      "index": 9,
+      "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-duplex-north-521714ac-plain-1/NE.png",
+      "sha256": "55c38d4e300c4db913319ada4764c9d41ba9f2b9015b7a73b51526b21fe26dd5",
+      "width": 625,
+      "height": 448,
+      "dir": "variation-gen-house-duplex-north-521714ac-plain-1",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW"
+    },
+    {
+      "index": 20,
+      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-splitlevel-north-63bc759e-plain-1/NE.png",
+      "sha256": "0069bb8658c8d91647c4e77d7092363e831f11c4dbdd39e3c1f411bc8ccb4b74",
+      "width": 634,
+      "height": 454,
+      "dir": "variation-gen-house-splitlevel-north-63bc759e-plain-1",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW"
+    },
+    {
+      "index": 13,
+      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-ranch-18552ce5-plain-1/NE.png",
+      "sha256": "9e548e9c08dace47d3daba8af439879bd9a0b5eaccc487a66248027659d0980e",
+      "width": 628,
+      "height": 548,
+      "dir": "variation-gen-house-l-ranch-18552ce5-plain-1",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW"
+    }
+  ],
+  "transparent": true,
+  "prompt": "Paint over image 1 to make four finished, hand-painted town-game building sprites on one transparent 2×2 sheet. Image 1 is the architectural drawing to retain. Keep every wall, window, doorway, balcony floor and porch on its drawn plane. Image 2 supplies only the rich illustrated materials, colours and brushwork.\n\nKeep the drawing's orthographic camera exactly. Every front wall foundation and front floor beam descends one pixel for every two pixels right. Every right side foundation rises one pixel for every two pixels right. Both axes are equally steep. Keep vertical edges vertical. Do not flatten fronts or make right sides steeper. The red and blue lines are immutable structural alignment guides, to be painted out in the finished picture.\n\nFour different houses, row-major:\nTOP LEFT: grey-cream clapboard farmhouse. Two-storey gabled main mass on the left, lower two-storey wing on the right. Dark slate roof, red brick chimney on the right wing, arched attic window in the front gable. Broad wooden front porch wrapping around the left, cream posts, central brown front door, warm windows and two entrance pots.\nTOP RIGHT: brown timber duplex. Dark slate hipped roof, long full-width upper front balcony, two upper doors and two lower doors. Warm windows, simple timber balusters and posts, separate lower entry steps, electric meters, hose reels and grey bins.\nBOTTOM LEFT: forest-green clapboard split-level house with cream trim. Taller gabled right wing, lower left roof, red brick chimney on the right outside wall. Warm windows, lower sliding glass doors on the left, wide lower window on the right. Full-front timber deck with central stairs, railings, a bench on the right and a chair. The structural front deck beam must retain the red guide's exact angle.\nBOTTOM RIGHT: grey clapboard L-shaped house. Taller two-storey gabled right mass with two shuttered upper windows and one lower window. Lower one-storey left gable with a large three-pane window. Dark slate roof, brick chimney. Central small timber entry porch with balusters, steps, a burgundy front door and brass lantern. Keep this door facing the front red-line plane.\n\nAdd detailed slate shingles, painted boards, timber trim, warm glass and restrained wear while preserving the drawing's structural edges. All four share sunlight from the upper right and soft lower-left shade. Complete isolated buildings, clear gutters and outer margin, genuine alpha transparency. No guide colours, background, ground patches, lawn, roads, labels or detached shadows. Keep all roofs, foundations and steps inside their cells.",
+  "generator": "built-in imagegen",
+  "originalSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-27dceae5-2bcd-4675-8cab-cb1b0cb4ff85.png",
+  "review": "pending"
+}
