@@ -52,7 +52,7 @@
     "SW": "0889df868a621167b624add5ed864ac91843a4e8422352498647bf6b09238862",
     "NW": "1725d492e81eba8ebd060d1ef51c087434fd6f9b371972658aa55f3909374481"
   },
-  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged.",
+  "authorityMetadata": "v3 corrects the occluded rundown-door observation; selected native artwork and approved geometry unchanged, no owner baseline change.",
   "calibrationCorrection": {
     "kind": "estimated prior architectural-height retention; NOT standard-door calibration",
     "reason": "57px is only the visible boarded leaf below porchroof; actual head is occluded.",
