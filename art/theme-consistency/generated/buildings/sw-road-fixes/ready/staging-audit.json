@@ -134,5 +134,113 @@
       "SW": 0.7592818671454219,
       "NW": 0.7592818671454219
     }
+  },
+  {
+    "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+    "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v3",
+    "files": {
+      "NE": "29276b5b4bd767b63b6659e205261643aef7e13f163cdd1221416641141d5a92",
+      "SE": "3f07932bc260d5d1659e88351c6aeb31144b0fbe5f15c0866a2de8e5ddc67866",
+      "SW": "290d36c80106547ad46ccebc50f881109936194a55fccf27e0de68ca973d2238",
+      "NW": "2481a7fd786e66c21a8728800db91425f2a697d9d0fb2cdeb5894510de2a2a67"
+    },
+    "original": {
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2",
+      "files": {
+        "NE": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302",
+        "SE": "3f07932bc260d5d1659e88351c6aeb31144b0fbe5f15c0866a2de8e5ddc67866",
+        "SW": "290d36c80106547ad46ccebc50f881109936194a55fccf27e0de68ca973d2238",
+        "NW": "2481a7fd786e66c21a8728800db91425f2a697d9d0fb2cdeb5894510de2a2a67"
+      }
+    },
+    "footprintScale": 1,
+    "gaugeScale": 1.851,
+    "retainedNativeScales": {
+      "SE": 0.6799663299663299,
+      "SW": 0.6799663299663299,
+      "NW": 0.6799663299663299
+    }
+  },
+  {
+    "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+    "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v3",
+    "files": {
+      "NE": "95c53d46e6849b2011d992d3fa4aeb35da7be2fa3088c034f372504d232eb501",
+      "SE": "87149c48deeea86c05dbe9b651dc635cbd55262a36c62c62448a0588751d0429",
+      "SW": "c823252aaab7658fc8e0e976dbc6cfa8ab0f5da9fad4e2fc10b48c90a6fddd5f",
+      "NW": "9b95c00ffa2bc3587d1cdffc47dbbf216094f4cdeab39386ca964b8502043509"
+    },
+    "original": {
+      "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v2",
+      "files": {
+        "NE": "55c38d4e300c4db913319ada4764c9d41ba9f2b9015b7a73b51526b21fe26dd5",
+        "SE": "87149c48deeea86c05dbe9b651dc635cbd55262a36c62c62448a0588751d0429",
+        "SW": "c823252aaab7658fc8e0e976dbc6cfa8ab0f5da9fad4e2fc10b48c90a6fddd5f",
+        "NW": "9b95c00ffa2bc3587d1cdffc47dbbf216094f4cdeab39386ca964b8502043509"
+      }
+    },
+    "footprintScale": 1,
+    "gaugeScale": 1.449,
+    "retainedNativeScales": {
+      "SE": 0.955216,
+      "SW": 0.955216,
+      "NW": 0.955216
+    }
+  },
+  {
+    "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+    "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v3",
+    "files": {
+      "NE": "ba6c546f77b85b191d4fbc35496ce515a7d010acea3d215af8efd28175755ec4",
+      "SE": "9e74a81221a04bc0be095082ea30f523eedbcfc5265f3adda636c4a0ce8c5f30",
+      "SW": "0c121a407e241da955b06b0a59c9ac991f60c299d7c799bb0ae50854c28df415",
+      "NW": "7920b3b36cba560ef0dad2d2ba643040b6212ad17ba4da633ae9ce67ebf79c84"
+    },
+    "original": {
+      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2",
+      "files": {
+        "NE": "0069bb8658c8d91647c4e77d7092363e831f11c4dbdd39e3c1f411bc8ccb4b74",
+        "SE": "9e74a81221a04bc0be095082ea30f523eedbcfc5265f3adda636c4a0ce8c5f30",
+        "SW": "0c121a407e241da955b06b0a59c9ac991f60c299d7c799bb0ae50854c28df415",
+        "NW": "7920b3b36cba560ef0dad2d2ba643040b6212ad17ba4da633ae9ce67ebf79c84"
+      }
+    },
+    "footprintScale": 0.9999999999999999,
+    "gaugeScale": 1.851,
+    "retainedNativeScales": {
+      "SE": 0.8047791798107254,
+      "SW": 0.8047791798107254,
+      "NW": 0.8047791798107254
+    }
+  },
+  {
+    "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+    "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v3",
+    "files": {
+      "NE": "3f43dd0b9c0adab715abdee2d9cdb44dc356eaccd9379f681be2a98b10719a6a",
+      "SE": "ed2cdda7412ae32d338bb79b31085ee318f4f1f76c1e4c08a6f904836762c204",
+      "SW": "fda9129c8c1a9b2c163d751858b9d17fd18d0d1e7d036d3f407a898d9eb60dbf",
+      "NW": "7ea3c0bc6147847ea06f3ce7f39acd6c9e53b26712a629ab73803e26709d10e9"
+    },
+    "original": {
+      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2",
+      "files": {
+        "NE": "9e548e9c08dace47d3daba8af439879bd9a0b5eaccc487a66248027659d0980e",
+        "SE": "ed2cdda7412ae32d338bb79b31085ee318f4f1f76c1e4c08a6f904836762c204",
+        "SW": "fda9129c8c1a9b2c163d751858b9d17fd18d0d1e7d036d3f407a898d9eb60dbf",
+        "NW": "7ea3c0bc6147847ea06f3ce7f39acd6c9e53b26712a629ab73803e26709d10e9"
+      }
+    },
+    "footprintScale": 1,
+    "gaugeScale": 1.204,
+    "retainedNativeScales": {
+      "SE": 0.9678662420382165,
+      "SW": 0.9678662420382165,
+      "NW": 0.9678662420382165
+    }
   }
 ]

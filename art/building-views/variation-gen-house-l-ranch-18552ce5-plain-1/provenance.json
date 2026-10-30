@@ -1,166 +1,56 @@
 {
   "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
   "generator": "image_gen",
-  "generated": "2026-10-24",
-  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-236b3607-a81b-42bc-ba5c-00440e70ded0.png",
-  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:gen-house-l-ranch-18552ce5-plain:1. Preserve the exact dwelling/barn massing from identity reference. Distinguish its actual front and rear before drawing. Four clockwise physical rotations around one stationary object, never four views of the same porch. No invented yard, driveway or ground slab. Keep only integral balconies, steps, porch structure.",
-  "references": [
-    {
-      "role": "authoritative-theme",
-      "file": "art/theme-consistency/references/theme-authoritative.png",
-      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
-    },
-    {
-      "role": "existing-subject-identity",
-      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
-      "direction": null,
-      "file": "art/theme-consistency/exports/buildings/variation-gen-house-l-ranch-18552ce5-plain-1.configured@2x.png",
-      "sha256": "61caae577b2cc290952b8454ff9256eefb5b640c7ed3b7b2f5d4ddce35a6023b"
-    }
-  ],
   "integrationStatus": "ready",
-  "integrationReason": "Four views keep tall main/low projecting wing and opposite front/back door faces consistent; pixel-preserving v2 repack.",
-  "layoutCorrection": {
-    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
-    "originalSheet": "art/theme-consistency/generated/buildings/variation-gen-house-l-ranch-18552ce5-plain-1-4views-v1.png",
-    "originalSheetSha256": "f6114a78545ee1ff8d1fd2ccf536a8bdf709c073f327773731768339d30485f7",
-    "originalDimensions": [
-      1269,
-      1239
-    ],
-    "outputDimensions": [
-      2048,
-      2048
-    ],
-    "outputSheetSha256": "e2b143d8c5f7a6847b355de48a7bde37ab682f9646f1bf4e099a99a5b55c0bab",
-    "cellSize": 1024,
-    "minimumCellMarginFraction": 0.15,
-    "padding": 4,
-    "rowGap": {
-      "start": 590,
-      "endExclusive": 619,
-      "midpoint": 604,
-      "alphaThreshold": 8
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+    "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+    "cell": 4,
+    "sourceRect": {
+      "left": 656,
+      "top": 639,
+      "width": 570,
+      "height": 587
     },
-    "columnGaps": [
-      {
-        "row": 0,
-        "start": 650,
-        "endExclusive": 676,
-        "midpoint": 663,
-        "alphaThreshold": 8
-      },
-      {
-        "row": 1,
-        "start": 616,
-        "endExclusive": 634,
-        "midpoint": 625,
-        "alphaThreshold": 8
-      }
-    ],
-    "extractionRects": [
-      {
-        "direction": "NE",
-        "row": 0,
-        "column": 0,
-        "extraction": {
-          "left": 0,
-          "top": 14,
-          "width": 663,
-          "height": 577
-        },
-        "sourceTouchesCanvasThreshold8": false,
-        "nonzeroAlphaPixels": 255876,
-        "visibleAlphaPixelsThreshold8": 248179,
-        "nonzeroRgbaSha256": "eeb788c4ebb9ab9ad61e206ef0a99613d2be591f7b6071c72d82aa62efe2562d",
-        "destination": {
-          "left": 180,
-          "top": 223,
-          "width": 663,
-          "height": 577
-        }
-      },
-      {
-        "direction": "SE",
-        "row": 0,
-        "column": 1,
-        "extraction": {
-          "left": 663,
-          "top": 34,
-          "width": 596,
-          "height": 565
-        },
-        "sourceTouchesCanvasThreshold8": false,
-        "nonzeroAlphaPixels": 232342,
-        "visibleAlphaPixelsThreshold8": 226709,
-        "nonzeroRgbaSha256": "241b9e0d21b26cb3b1b6238a41e0f5f59b5076bb011606dce06c976545f78e48",
-        "destination": {
-          "left": 1238,
-          "top": 229,
-          "width": 596,
-          "height": 565
-        }
-      },
-      {
-        "direction": "SW",
-        "row": 1,
-        "column": 0,
-        "extraction": {
-          "left": 0,
-          "top": 622,
-          "width": 625,
-          "height": 573
-        },
-        "sourceTouchesCanvasThreshold8": false,
-        "nonzeroAlphaPixels": 239995,
-        "visibleAlphaPixelsThreshold8": 234340,
-        "nonzeroRgbaSha256": "edd4643c2a9c24ce2323d2f5eed4816e0c15b32dd2d7afabddf22f0ed31d5e86",
-        "destination": {
-          "left": 199,
-          "top": 1249,
-          "width": 625,
-          "height": 573
-        }
-      },
-      {
-        "direction": "NW",
-        "row": 1,
-        "column": 1,
-        "extraction": {
-          "left": 625,
-          "top": 604,
-          "width": 602,
-          "height": 585
-        },
-        "sourceTouchesCanvasThreshold8": false,
-        "nonzeroAlphaPixels": 249292,
-        "visibleAlphaPixelsThreshold8": 243362,
-        "nonzeroRgbaSha256": "3e3f0d76c5afcfe11d2cecff9c6611834ee1026de23611d7785ed39b0cf7f228",
-        "destination": {
-          "left": 1235,
-          "top": 1243,
-          "width": 602,
-          "height": 585
-        }
-      }
-    ],
-    "sourcePixelCounts": {
-      "nonzeroAlphaPixels": 977505,
-      "visibleAlphaPixelsThreshold8": 952590,
-      "nonzeroRgbaSha256": "7758411f3c09989abb1cb43b5753400354c6a5c9d95099fdda834c54b52f0b6f"
+    "coreBounds": {
+      "left": 666,
+      "top": 660,
+      "width": 556,
+      "height": 493
     },
-    "nonzeroAndVisiblePixelConservation": true,
-    "exactVisibleRgbaConservation": true,
-    "visualReviewRequired": true,
-    "warnings": []
+    "nonzeroPixels": 186395,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+      "sha256": "431770806b5430bf91ac77fa06f1370d14178bbbb291001417b85e03ca6aab76"
+    }
   },
-  "sourceVisualReview": {
-    "reviewedAt": "2026-10-24T10:19:26.301Z",
-    "reviewer": "building_variation_review",
-    "alphaCompositeBackground": "#b91b91",
-    "allFourViewsInspected": true,
-    "themeReference": "art/theme-consistency/references/theme-authoritative.png",
-    "result": "ready",
-    "reason": "Four views keep tall main/low projecting wing and opposite front/back door faces consistent; pixel-preserving v2 repack."
-  }
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
+  },
+  "original": {
+    "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+    "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2",
+    "files": {
+      "NE": "9e548e9c08dace47d3daba8af439879bd9a0b5eaccc487a66248027659d0980e",
+      "SE": "ed2cdda7412ae32d338bb79b31085ee318f4f1f76c1e4c08a6f904836762c204",
+      "SW": "fda9129c8c1a9b2c163d751858b9d17fd18d0d1e7d036d3f407a898d9eb60dbf",
+      "NW": "7ea3c0bc6147847ea06f3ce7f39acd6c9e53b26712a629ab73803e26709d10e9"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "3f43dd0b9c0adab715abdee2d9cdb44dc356eaccd9379f681be2a98b10719a6a",
+    "SE": "ed2cdda7412ae32d338bb79b31085ee318f4f1f76c1e4c08a6f904836762c204",
+    "SW": "fda9129c8c1a9b2c163d751858b9d17fd18d0d1e7d036d3f407a898d9eb60dbf",
+    "NW": "7ea3c0bc6147847ea06f3ce7f39acd6c9e53b26712a629ab73803e26709d10e9"
+  },
+  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged."
 }

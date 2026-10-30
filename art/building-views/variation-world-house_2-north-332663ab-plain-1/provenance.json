@@ -1,34 +1,57 @@
 {
   "id": "variation:world-house_2-north-332663ab-plain:1",
   "generator": "image_gen",
-  "generated": "2026-10-24",
-  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-3a6103b2-1f3f-4abf-833c-c32ce0157bff.png",
-  "prompt": "SQUARE 1:1 CANVAS 2048x2048, exactly four SMALL complete building cutouts in 2x2 cells. Transparent RGBA alpha=0 outside the physical building. Each building occupies at most 60% of cell height; 100 pixels of fully clear padding around all sprites and canvas. Reference1 is STYLE ONLY: the Maple Bean street miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve architecture, not old rendering or blue night cast. All assets must belong beside reference1. Fixed orthographic 2:1 isometric camera, vertical walls vertical, ground axes +/-26.565deg, SCREEN UPPER RIGHT SUN in EVERY view; right planes warm, left planes cooler. Four TRUE rigid quarterturns: top-left NE=Afront+Bphysicalright, top-right SE=Bright+Crear, bottom-left SW=Crear+Dleft, bottom-right NW=Dleft+Afront. Afront appears on SCREEN LEFT in NE and SCREEN RIGHT in NW. Roof/chimney/doors/windows/equipment stay at fixed physical corners; reconstruct plain rear, NEVER fourfronts or samecorner repeated. Same scale each cell. NO FLOOR/BACKDROP/grey surface/terrain/paving/yard/leaves/broad shadow/haze/gradient/checkerboard/caption/label/divider/frame. No people, vehicles, Halloween or garlands. Only building and integral structural parts.  Subject library ID variation:world-house_2-north-332663ab-plain:1. Identity image can be frontal or rear elevation. Do NOT copy that head-on camera. Reconstruct its 3D volume under exact orthographic2:1, with equal two-facequarter-corner exposure. Four true quarterturns, firsttwo opposite backfaces and frontpairatoppositecorners, no copiedcorner, no sign relocatedtofourwalls. Keep specific door/baywindow/porch/deck/roofandchimney layout but unify materials andcolourresponse toMapleBeanstreet. No attached lawn or shrublandfloor.",
-  "references": [
-    {
-      "role": "authoritative-theme",
-      "file": "art/theme-consistency/references/theme-authoritative.png",
-      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+    "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+    "cell": 4,
+    "sourceRect": {
+      "left": 626,
+      "top": 610,
+      "width": 598,
+      "height": 644
     },
-    {
-      "role": "existing-subject-identity",
-      "id": "variation:world-house_2-north-332663ab-plain:1",
-      "direction": null,
-      "file": "art/theme-consistency/exports/buildings/variation-world-house_2-north-332663ab-plain-1.configured@2x.png",
-      "sha256": "d96cf45a47e2f8927e78a1a056dd8c4570dcc453276042a75ee19dc83e134094"
+    "coreBounds": {
+      "left": 699,
+      "top": 636,
+      "width": 497,
+      "height": 569
+    },
+    "nonzeroPixels": 208640,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+      "sha256": "93df03926706f07330420e69d781f0682767901e70a55b168b166f9a6fe82ae7"
     }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
+  },
+  "original": {
+    "id": "variation:world-house_2-north-332663ab-plain:1",
+    "version": "variation-world-house_2-north-332663ab-plain-1-4views-v1",
+    "files": {
+      "NE": "4003b054ceb6c8a9182a4e53e310f0c87c9e16ef4a6d337a2b17de82d8a21a0e",
+      "SE": "84422fb880b118456d550af15e0e3674ba1665f2a4b3a42165f0c061f35adf10",
+      "SW": "bc1fd3b1b9b98794d6b8c53ea39b36f6c66badcfd64b2a9bbefe3f4c4039e1b1",
+      "NW": "2904f786841ac69e453ecbd52576ea2578a0b766215130106ba0dd1f464b5c37"
+    },
+    "cropsBy": "prep-views (four-view-cells.mjs)"
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
   ],
-  "integrationStatus": "blocked",
-  "integrationReason": "Both rear views retain long rear wall LEFT and gabled end RIGHT; need an actual opposite rear corner.",
-  "sourceReview": {
-    "reviewed": "2026-10-24",
-    "actualAlphaComposite": "output/building-priority/newest-review-4.png",
-    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
-    "corrections": [
-      {
-        "direction": "SW",
-        "brief": "Show long plain rear wall RIGHT and opposite gabled end LEFT, opposite existing SE. Preserve two-storey olive siding, rear window counts and chimney fixed. Front entry deck must be hidden."
-      }
-    ]
-  }
+  "files": {
+    "NE": "0b83dfd8221c9c7a1102981233bb5e8239f2cb55c60209704cfaae587b50e450",
+    "SE": "84422fb880b118456d550af15e0e3674ba1665f2a4b3a42165f0c061f35adf10",
+    "SW": "bc1fd3b1b9b98794d6b8c53ea39b36f6c66badcfd64b2a9bbefe3f4c4039e1b1",
+    "NW": "2904f786841ac69e453ecbd52576ea2578a0b766215130106ba0dd1f464b5c37"
+  },
+  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged."
 }

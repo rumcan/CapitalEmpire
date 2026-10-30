@@ -1,0 +1,187 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "id": "batch:sw-street-repairs-06",
+  "output": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+  "references": [
+    "art/theme-consistency/references/sw-street-batch06-compensated-guide-v1.png"
+  ],
+  "cells": [
+    {
+      "index": 22,
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-cottage-fc52ce66-plain-1/NE.png",
+      "sha256": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302",
+      "width": 594,
+      "height": 456,
+      "dir": "variation-ref-building-house-cottage-fc52ce66-plain-1",
+      "family": "house",
+      "status": "measured-fail-repair",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "fit": {
+        "threshold": 128,
+        "slope": 0.12976031601985796,
+        "angleErrorDegrees": 19.171644113927066,
+        "rmsPx": 0.3007282114927807,
+        "samples": 131,
+        "endpoints": [
+          [
+            200,
+            411.1380985426787
+          ],
+          [
+            330,
+            428.0069396252602
+          ]
+        ]
+      },
+      "measurementSource": "E:/ClaudeTemp/SW-road-audit/first-three-native-base-fits.json",
+      "proof": "E:/ClaudeTemp/SW-road-audit/first-22-base.png",
+      "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-22.png",
+      "notes": "",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "guideIsInputCompensation": true,
+      "frontInputSlope": 0.5,
+      "rightInputSlope": -0.4,
+      "finalTargetFrontSlope": 0.5,
+      "finalTargetRightSlope": -0.5
+    },
+    {
+      "index": 9,
+      "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-duplex-north-521714ac-plain-1/NE.png",
+      "sha256": "55c38d4e300c4db913319ada4764c9d41ba9f2b9015b7a73b51526b21fe26dd5",
+      "width": 625,
+      "height": 448,
+      "dir": "variation-gen-house-duplex-north-521714ac-plain-1",
+      "family": "house",
+      "status": "measured-fail-repair",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "fit": {
+        "slope": 0.18800982908024688,
+        "angleErrorDegrees": 15.917179527786887,
+        "rmsPx": 0.31806454388676564,
+        "samples": 337
+      },
+      "measurementKind": "Elevated upper balcony STRUCTURAL FLOOR-BEAM lower face, not foundation/ground, no top railing/roof/stairs/bbox",
+      "measurementSource": "E:/ClaudeTemp/SW-road-audit/duplex-native-floor-beam-fit.json",
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-9-beam.png",
+      "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-09.png",
+      "notes": "",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "guideIsInputCompensation": true,
+      "frontInputSlope": 0.5,
+      "rightInputSlope": -0.4,
+      "finalTargetFrontSlope": 0.5,
+      "finalTargetRightSlope": -0.5
+    },
+    {
+      "index": 20,
+      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-splitlevel-north-63bc759e-plain-1/NE.png",
+      "sha256": "0069bb8658c8d91647c4e77d7092363e831f11c4dbdd39e3c1f411bc8ccb4b74",
+      "width": 634,
+      "height": 454,
+      "dir": "variation-gen-house-splitlevel-north-63bc759e-plain-1",
+      "family": "house",
+      "status": "measured-fail-repair",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "fit": {
+        "threshold": 128,
+        "slope": 0.14784201305940436,
+        "angleErrorDegrees": 18.15524646196745,
+        "rmsPx": 0.2911602576245114,
+        "samples": 91,
+        "endpoints": [
+          [
+            40,
+            367.7646918299092
+          ],
+          [
+            130,
+            381.0704730052556
+          ]
+        ]
+      },
+      "measurementKind": "elevated left porch/deck floor-beam lower edge; not ground wall base",
+      "measurementSource": "E:/ClaudeTemp/SW-road-audit/next-native-base-fits.json",
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-20-base.png",
+      "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-20.png",
+      "notes": "",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "guideIsInputCompensation": true,
+      "frontInputSlope": 0.5,
+      "rightInputSlope": -0.4,
+      "finalTargetFrontSlope": 0.5,
+      "finalTargetRightSlope": -0.5
+    },
+    {
+      "index": 13,
+      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-ranch-18552ce5-plain-1/NE.png",
+      "sha256": "9e548e9c08dace47d3daba8af439879bd9a0b5eaccc487a66248027659d0980e",
+      "width": 628,
+      "height": 548,
+      "dir": "variation-gen-house-l-ranch-18552ce5-plain-1",
+      "family": "house",
+      "status": "measured-fail-repair",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "fit": {
+        "threshold": 128,
+        "slope": 0.1960082023239918,
+        "angleErrorDegrees": 15.475203069407673,
+        "rmsPx": 0.2924805001511469,
+        "samples": 76,
+        "endpoints": [
+          [
+            420,
+            501.28127136021874
+          ],
+          [
+            495,
+            515.9818865345181
+          ]
+        ]
+      },
+      "measurementKind": "exposed main-front foundation/plinth boundary to right of porch",
+      "measurementSource": "E:/ClaudeTemp/SW-road-audit/next-native-base-fits.json",
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-13-base.png",
+      "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-13.png",
+      "notes": "",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "guideIsInputCompensation": true,
+      "frontInputSlope": 0.5,
+      "rightInputSlope": -0.4,
+      "finalTargetFrontSlope": 0.5,
+      "finalTargetRightSlope": -0.5
+    }
+  ],
+  "transparent": true,
+  "guideCompensation": {
+    "frontInputSlope": 0.5,
+    "rightInputSlope": -0.4,
+    "finalTargetFront": 0.5,
+    "finalTargetRight": -0.5,
+    "toleranceDegrees": 2.25
+  },
+  "prompt": "Paint over this architectural drawing into four different hand-painted town-game building sprites on a transparent 2×2 sheet. Retain its structural outlines, wall shapes, front-facing doors, floor beams and camera. Add surface details without turning the buildings. The right wall edges should stay as shallow as drawn; do not steepen them. The front edges descend right along the red guides. Keep all verticals upright. Preserve the drawing's structure throughout painting, then paint out all guide colours.\n\nTOP LEFT: cream plaster cottage with brown timber trim, central two-storey front gable, dark blue slate roof and tall cream chimney, lower left window wing. The small gabled entry porch is on the RIGHT PART OF THE FRONT WALL, as drawn. Its brown door faces the same way as the large central front window. Door header follows the red front line, never the blue right-side line. Warm windows, cream stone porch pillars and grey foundation.\nTOP RIGHT: two-storey brown timber duplex with dark slate hip roof. Full-width upper FRONT balcony with two doors, timber posts and balusters. Two lower FRONT doors and warm windows, separate entry steps, small meters and hose reels, grey bins. Balcony floor beam retains the drawn red-line angle.\nBOTTOM LEFT: two-storey forest-green clapboard split-level house with cream trim, taller gabled right wing, lower left roof, red brick chimney on the outside right wall. Warm upper windows, lower sliding glass doors at left, wide lower window at right. Full front timber deck with rails, central steps, bench at right and a chair. Keep the structural deck floor exactly on its drawn plane.\nBOTTOM RIGHT: grey clapboard L-shaped house with taller two-storey gabled right mass, two shuttered upper front windows and lower front window; lower left gabled wing with large three-pane window. Dark slate roofs, brick chimney. Central small covered timber porch with balusters, steps, burgundy front door and brass lantern. Keep porch door facing the front red-line plane.\n\nRich confident hand-painted fantasy town-game art akin to World of Warcraft/Hearthstone: readable boards, plaster, slate shingles and stone, warm glowing windows, restrained wear. Upper-right sunlight, lower-left shade. Four complete isolated building sprites, clear transparent gutters and outer margin. No ground, floor planes, lawns, roads, scenery, detached shadows, backgrounds, labels or visible guide colours. True alpha PNG.",
+  "generator": "built-in imagegen",
+  "originalSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-b482a41e-782a-45eb-885e-29d74e72a5a5.png",
+  "review": "pending"
+}

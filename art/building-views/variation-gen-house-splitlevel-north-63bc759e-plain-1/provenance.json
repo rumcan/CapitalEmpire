@@ -1,151 +1,56 @@
 {
   "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
   "generator": "image_gen",
-  "generated": "2026-10-24",
-  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-9af9f4ee-bd66-47e2-aa2d-b4224fc37bf8.png",
-  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:gen-house-splitlevel-north-63bc759e-plain:1. Preserve the exact dwelling/barn massing from identity reference. Distinguish its actual front and rear before drawing. Four clockwise physical rotations around one stationary object, never four views of the same porch. No invented yard, driveway or ground slab. Keep only integral balconies, steps, porch structure.",
-  "references": [
-    {
-      "role": "authoritative-theme",
-      "file": "art/theme-consistency/references/theme-authoritative.png",
-      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
-    },
-    {
-      "role": "existing-subject-identity",
-      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
-      "direction": null,
-      "file": "art/theme-consistency/exports/buildings/variation-gen-house-splitlevel-north-63bc759e-plain-1.configured@2x.png",
-      "sha256": "3541f0785c512d3df9d799fde7882e4c81bd6b13ec4de7d77ff5c00f2ce79994"
-    }
-  ],
   "integrationStatus": "ready",
-  "integrationReason": "Deck/sliding door front and smaller awning back stay distinct; chimney switches side under rigid rotation. Needs repack. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
-  "sourceVisualReview": {
-    "reviewedAt": "2026-10-24T10:27:17.704Z",
-    "reviewer": "building_variation_review",
-    "alphaCompositeBackground": "#b91b91",
-    "allFourViewsInspected": true,
-    "themeReference": "art/theme-consistency/references/theme-authoritative.png",
-    "result": "ready",
-    "reason": "Deck/sliding door front and smaller awning back stay distinct; chimney switches side under rigid rotation. Needs repack. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
-    "postRepackContact": "output/building-priority/variation-post-repack-1.png"
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+    "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+    "cell": 3,
+    "sourceRect": {
+      "left": 0,
+      "top": 576,
+      "width": 697,
+      "height": 678
+    },
+    "coreBounds": {
+      "left": 34,
+      "top": 647,
+      "width": 571,
+      "height": 526
+    },
+    "nonzeroPixels": 215098,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+      "sha256": "431770806b5430bf91ac77fa06f1370d14178bbbb291001417b85e03ca6aab76"
+    }
   },
-  "layoutCorrection": {
-    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining faint pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
-    "originalSheet": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v1.png",
-    "originalSheetSha256": "4cef326250cac8bf2c71562035d5316416c1dd1350d5c1161b06b389f882a823",
-    "outputSheetSha256": "c967913d7511ab9a785e95aa395c919f748296d4c701d66e2e55e6bff5a17582",
-    "originalDimensions": [
-      1774,
-      887
-    ],
-    "outputDimensions": [
-      2560,
-      2560
-    ],
-    "cellSize": 1280,
-    "nonzeroAlphaPixels": 831220,
-    "nonzeroAndVisiblePixelConservation": true,
-    "exactVisibleRgbaConservation": true,
-    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign faint fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
-    "views": [
-      {
-        "direction": "NE",
-        "dominantComponent": {
-          "label": 2,
-          "pixels": 213302,
-          "bounds": [
-            210,
-            8,
-            835,
-            453
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 140,
-          "y0": 1,
-          "x1": 900,
-          "y1": 455,
-          "count": 220772
-        },
-        "translation": {
-          "x": 119,
-          "y": 411
-        }
-      },
-      {
-        "direction": "SE",
-        "dominantComponent": {
-          "label": 1,
-          "pixels": 193705,
-          "bounds": [
-            944,
-            4,
-            1558,
-            456
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 896,
-          "y0": 0,
-          "x1": 1705,
-          "y1": 465,
-          "count": 201113
-        },
-        "translation": {
-          "x": 619,
-          "y": 407
-        }
-      },
-      {
-        "direction": "SW",
-        "dominantComponent": {
-          "label": 5,
-          "pixels": 198142,
-          "bounds": [
-            175,
-            427,
-            810,
-            877
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 144,
-          "y0": 420,
-          "x1": 890,
-          "y1": 886,
-          "count": 205455
-        },
-        "translation": {
-          "x": 122,
-          "y": 1266
-        }
-      },
-      {
-        "direction": "NW",
-        "dominantComponent": {
-          "label": 6,
-          "pixels": 196260,
-          "bounds": [
-            979,
-            436,
-            1579,
-            872
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 888,
-          "y0": 414,
-          "x1": 1735,
-          "y1": 876,
-          "count": 203880
-        },
-        "translation": {
-          "x": 608,
-          "y": 1274
-        }
-      }
-    ],
-    "visualReviewRequired": true
-  }
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
+  },
+  "original": {
+    "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+    "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2",
+    "files": {
+      "NE": "0069bb8658c8d91647c4e77d7092363e831f11c4dbdd39e3c1f411bc8ccb4b74",
+      "SE": "9e74a81221a04bc0be095082ea30f523eedbcfc5265f3adda636c4a0ce8c5f30",
+      "SW": "0c121a407e241da955b06b0a59c9ac991f60c299d7c799bb0ae50854c28df415",
+      "NW": "7920b3b36cba560ef0dad2d2ba643040b6212ad17ba4da633ae9ce67ebf79c84"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "ba6c546f77b85b191d4fbc35496ce515a7d010acea3d215af8efd28175755ec4",
+    "SE": "9e74a81221a04bc0be095082ea30f523eedbcfc5265f3adda636c4a0ce8c5f30",
+    "SW": "0c121a407e241da955b06b0a59c9ac991f60c299d7c799bb0ae50854c28df415",
+    "NW": "7920b3b36cba560ef0dad2d2ba643040b6212ad17ba4da633ae9ce67ebf79c84"
+  },
+  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged."
 }

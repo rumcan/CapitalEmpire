@@ -28,8 +28,8 @@
     }
   },
   "authority": {
-    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03.json",
-    "sha256": "9f07727ffe850cdfc15586048e6239916e569d5fcce7d7a75bceb66505c8dff9"
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
   },
   "original": {
     "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
@@ -51,5 +51,6 @@
     "SE": "a7b183aef8d13b68b45baada38c7c4f42f74d1c5ff0b579987d83d4ab5dd46d9",
     "SW": "374d38e03eb0ea9fdd273fde92288e8ef71cc28dff0188e2f016fc086502941d",
     "NW": "cc8d813fa764852224cb7493e054e9d8eb788c6388a5ac7823acfa94207802a3"
-  }
+  },
+  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged."
 }

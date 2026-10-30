@@ -101,7 +101,7 @@ until its views land, so it may face the other way but its light stays on the ri
 | `variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1` | Dilapidated backyard shed — variation 1 | done: variation-expansion-lean-to-shed-0b83bbf7-plain-corner-1-4views-v2 |
 | `variation:expansion-lean-to-shed-0b83bbf7-plain:1` | Dilapidated backyard shed — variation 1 | done: variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1 |
 | `variation:expansion-rundown-house-a7c17683-plain-corner:1` |  | missing: not generated yet |
-| `variation:expansion-rundown-house-a7c17683-plain:1` | Boarded-up timber house — variation 1 | done: variation-expansion-rundown-house-a7c17683-plain-1-4views-v2 |
+| `variation:expansion-rundown-house-a7c17683-plain:1` | Boarded-up timber house — variation 1 | done: variation-expansion-rundown-house-a7c17683-plain-1-4views-v3 |
 | `variation:expansion-rundown-house-north-24ae3116-plain:1` |  | missing: not generated yet |
 | `variation:expansion-treehouse-north-1d02f68a-plain:1` | 1980s backyard treehouse — variation 1 | done: variation-expansion-treehouse-north-1d02f68a-plain-1-4views-v3 |
 | `variation:gen-back-bbq-deck-b546df1a-plain:1` |  | missing: not generated yet |
@@ -112,20 +112,20 @@ until its views land, so it may face the other way but its light stays on the ri
 | `variation:gen-back-swingset-a10c81b7-plain-corner:1` |  | missing: not generated yet |
 | `variation:gen-back-swingset-a10c81b7-plain:1` |  | missing: not generated yet |
 | `variation:gen-house-duplex-c39d1a23-plain-corner:1` | Duplex — variation 1 | done: variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1 |
-| `variation:gen-house-duplex-north-521714ac-plain:1` | Duplex — variation 1 | done: variation-gen-house-duplex-north-521714ac-plain-1-4views-v2 |
+| `variation:gen-house-duplex-north-521714ac-plain:1` | Duplex — variation 1 | done: variation-gen-house-duplex-north-521714ac-plain-1-4views-v3 |
 | `variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1` | Farmhouse — wraparound porch — variation 1 | done: variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1 |
 | `variation:gen-house-farmhouse-wrap-2b0eea83-plain:1` | Farmhouse — wraparound porch — variation 1 | done: variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v3 |
 | `variation:gen-house-farmhouse-wrap-north-446969e5-plain:1` | Farmhouse — wraparound porch — variation 1 | done: variation-gen-house-farmhouse-wrap-north-446969e5-plain-1-4views-v2 |
 | `variation:gen-house-l-ranch-18552ce5-plain-corner:1` |  | missing: not generated yet |
-| `variation:gen-house-l-ranch-18552ce5-plain:1` | Ranch — L-shape, corner porch — variation 1 | done: variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2 |
+| `variation:gen-house-l-ranch-18552ce5-plain:1` | Ranch — L-shape, corner porch — variation 1 | done: variation-gen-house-l-ranch-18552ce5-plain-1-4views-v3 |
 | `variation:gen-house-l-ranch-north-2edc5f59-plain:1` |  | missing: not generated yet |
 | `variation:gen-house-l-shape-e0e3b328-plain-corner:1` | Colonial — L-shape, double garage — variation 1 | done: variation-gen-house-l-shape-e0e3b328-plain-corner-1-4views-v1 |
 | `variation:gen-house-l-shape-e0e3b328-plain:1` | Colonial — L-shape, double garage — variation 1 | done: variation-gen-house-l-shape-e0e3b328-plain-1-4views-v1 |
-| `variation:gen-house-l-shape-north-79eba705-plain:1` | Colonial — L-shape, double garage — variation 1 | done: variation-gen-house-l-shape-north-79eba705-plain-1-4views-v2 |
+| `variation:gen-house-l-shape-north-79eba705-plain:1` | Colonial — L-shape, double garage — variation 1 | done: variation-gen-house-l-shape-north-79eba705-plain-1-4views-v3 |
 | `variation:gen-house-ranch-long-a4ddd58c-plain-corner:1` | Ranch house — long, carport — variation 1 | done: variation-gen-house-ranch-long-a4ddd58c-plain-corner-1-4views-v2 |
 | `variation:gen-house-ranch-long-a4ddd58c-plain:1` | Ranch house — long, carport — variation 1 | done: variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v2 |
 | `variation:gen-house-splitlevel-8b6b4aa4-plain:1` | Split-level house — variation 1 | done: variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1 |
-| `variation:gen-house-splitlevel-north-63bc759e-plain:1` | Split-level house — variation 1 | done: variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2 |
+| `variation:gen-house-splitlevel-north-63bc759e-plain:1` | Split-level house — variation 1 | done: variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v3 |
 | `variation:industrial-auto-body-shop-63875699:1` | Auto body workshop — variation 1 | done: variation-industrial-auto-body-shop-63875699-1-4views-v2 |
 | `variation:industrial-bottling-plant-13e91e4e:1` | Small bottling plant — variation 1 | done: variation-industrial-bottling-plant-13e91e4e-1-4views-v2 |
 | `variation:industrial-brick-machine-shop-34206b23:1` | Brick machine shop — variation 1 | done: variation-industrial-brick-machine-shop-34206b23-1-4views-v2 |
@@ -146,16 +146,16 @@ until its views land, so it may face the other way but its light stays on the ri
 | `variation:ref-building-diner-1e19ec22-plain:1` | Diner — variation 1 | done: variation-ref-building-diner-1e19ec22-plain-1-4views-v2 |
 | `variation:ref-building-drive-in-screen-b0bccc2a-plain:1` | Drive In Screen — variation 1 | done: variation-ref-building-drive-in-screen-b0bccc2a-plain-1-4views-v4 |
 | `variation:ref-building-farm-shed-0280794d-plain:1` | Farm Shed — variation 1 | done: variation-ref-building-farm-shed-0280794d-plain-1-4views-v3 |
-| `variation:ref-building-farmhouse-ef501a21-plain:1` | Farmhouse — variation 1 | done: variation-ref-building-farmhouse-ef501a21-plain-1-4views-v2 |
+| `variation:ref-building-farmhouse-ef501a21-plain:1` | Farmhouse — variation 1 | done: variation-ref-building-farmhouse-ef501a21-plain-1-4views-v3 |
 | `variation:ref-building-farmhouse-north-408a9ca6-plain:1` |  | missing: not generated yet |
 | `variation:ref-building-garage-0f7895a1-plain:1` | Garage — variation 1 | done: variation-ref-building-garage-0f7895a1-plain-1-4views-v2 |
 | `variation:ref-building-gas-canopy-543306a0-plain:1` | Gas Canopy — variation 1 | done: variation-ref-building-gas-canopy-543306a0-plain-1-4views-v2 |
 | `variation:ref-building-gas-shop-3326e70f-plain:1` | Gas Shop — variation 1 | done: variation-ref-building-gas-shop-3326e70f-plain-1-4views-v2 |
 | `variation:ref-building-grocery-79498713-plain:1` | Grocery — variation 1 | done: variation-ref-building-grocery-79498713-plain-1-4views-v4 |
-| `variation:ref-building-house-cottage-fc52ce66-plain:1` | House Cottage — variation 1 | done: variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2 |
+| `variation:ref-building-house-cottage-fc52ce66-plain:1` | House Cottage — variation 1 | done: variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v3 |
 | `variation:ref-building-house-cottage-north-304e5431-plain:1` | House Cottage — variation 1 | missing: not generated yet |
 | `variation:ref-building-house-dormer-b4413f08-plain:1` | House Dormer — variation 1 | done: variation-ref-building-house-dormer-b4413f08-plain-1-4views-v3 |
-| `variation:ref-building-house-dormer-north-6952cea5-plain:1` | House Dormer — variation 1 | done: variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v2 |
+| `variation:ref-building-house-dormer-north-6952cea5-plain:1` | House Dormer — variation 1 | done: variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v3 |
 | `variation:ref-building-house-garage-a1d986d3-plain:1` | House Garage — variation 1 | done: variation-ref-building-house-garage-a1d986d3-plain-1-4views-v2 |
 | `variation:ref-building-house-garage-north-a7184edf-plain:1` | House Garage — variation 1 | missing: not generated yet |
 | `variation:ref-building-house-large-20cb9f9e-plain:1` | House Large — variation 1 | done: variation-ref-building-house-large-20cb9f9e-plain-1-4views-v4 |
@@ -186,7 +186,7 @@ until its views land, so it may face the other way but its light stays on the ri
 | `variation:world-house_1-ba13ed2e-plain:1` |  | missing: not generated yet |
 | `variation:world-house_1-north-2521eca8-plain:1` | House 1 — variation 1 | missing: not generated yet |
 | `variation:world-house_2-e2dddf71-plain:1` |  | missing: not generated yet |
-| `variation:world-house_2-north-332663ab-plain:1` | House 2 — variation 1 | done: variation-world-house_2-north-332663ab-plain-1-4views-v1 |
+| `variation:world-house_2-north-332663ab-plain:1` | House 2 — variation 1 | done: variation-world-house_2-north-332663ab-plain-1-4views-v2 |
 | `variation:world-house_3-north-2638a034-plain:1` | House 3 — variation 1 | missing: not generated yet |
 | `variation:world-house_4-north-630f880a-plain:1` | House 4 — variation 1 | missing: not generated yet |
 | `variation:world-house_5-d6198cb0-plain:1` | House 5 — variation 1 | done: variation-world-house_5-d6198cb0-plain-1-4views-v1 |

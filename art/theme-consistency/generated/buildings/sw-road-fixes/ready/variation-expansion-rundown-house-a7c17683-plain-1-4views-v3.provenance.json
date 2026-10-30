@@ -24,12 +24,12 @@
     "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
     "geometryReview": {
       "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
-      "sha256": "6a6d66fd9cf905ef49ee39a51a1cfe3899858a3d76d2822a39ffdc05c9e3503b"
+      "sha256": "93df03926706f07330420e69d781f0682767901e70a55b168b166f9a6fe82ae7"
     }
   },
   "authority": {
-    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03.json",
-    "sha256": "9f07727ffe850cdfc15586048e6239916e569d5fcce7d7a75bceb66505c8dff9"
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
   },
   "original": {
     "id": "variation:expansion-rundown-house-a7c17683-plain:1",
@@ -51,5 +51,48 @@
     "SE": "64b7013c97e47de7de107124b2b8a6dd8dc4c740345afd083b9476860f78640c",
     "SW": "0889df868a621167b624add5ed864ac91843a4e8422352498647bf6b09238862",
     "NW": "1725d492e81eba8ebd060d1ef51c087434fd6f9b371972658aa55f3909374481"
+  },
+  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged.",
+  "calibrationCorrection": {
+    "kind": "estimated prior architectural-height retention; NOT standard-door calibration",
+    "reason": "57px is only the visible boarded leaf below porchroof; actual head is occluded.",
+    "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+    "oldSourceSha256": "3d40f6e920bc57bd32ec2b7413ad27acb1c100fdffb0ce28af44ad42ba18dd7b",
+    "oldNativeHeight": 456,
+    "oldVisibleRows": [
+      5,
+      451
+    ],
+    "oldRenderedHeight": 476.73,
+    "oldVisibleRenderedHeight": 467.3208552631579,
+    "newVisibleHeight": 545,
+    "nativeScale": 0.8574694591984549,
+    "doorObservation": {
+      "cell": 1,
+      "kind": "visible boardedleaf belowporchroof; actualdoorheadOCCLUDED",
+      "nativeFullSheet": {
+        "x": 225,
+        "visibleLeafTopY": 419,
+        "thresholdY": 476,
+        "visibleHeightPx": 57
+      },
+      "uncertaintyPx": 4,
+      "usableAsCompleteDoorGauge": false,
+      "correctionDate": "2026-10-30",
+      "correction": "Earlier57pxstandarddoorlabelwaswrong. Upperobservededgeisporchroofocclusion, notdoorhead. Noactualcompleteheightcanberead.",
+      "recommendation": "Preservepre-repaircalibratedphysicalheight; doNOTinfer2.1mstandardheightfrom57pxvisiblepart.",
+      "heightPreservationReference": {
+        "oldNative": {
+          "width": 488,
+          "height": 456
+        },
+        "newAlpha16Component": {
+          "width": 498,
+          "height": 545
+        },
+        "newWidthRelativeToOldWidthForEqualHeight": 0.8538426831102421,
+        "note": "Dimensionratioonly, notmeasuredworldsize. Integrationmustreadpre-repairworldheightandpreserveitinfinalpack."
+      }
+    }
   }
 }

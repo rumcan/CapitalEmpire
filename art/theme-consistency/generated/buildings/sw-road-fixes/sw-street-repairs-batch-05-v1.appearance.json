@@ -219,14 +219,30 @@
   "doorCalibration": [
     {
       "cell": 1,
-      "kind": "front boarded singleleaf, upperedgepartlyshadowed",
+      "kind": "visible boardedleaf belowporchroof; actualdoorheadOCCLUDED",
       "nativeFullSheet": {
         "x": 225,
-        "headY": 419,
+        "visibleLeafTopY": 419,
         "thresholdY": 476,
-        "heightPx": 57
+        "visibleHeightPx": 57
       },
-      "uncertaintyPx": 4
+      "uncertaintyPx": 4,
+      "usableAsCompleteDoorGauge": false,
+      "correctionDate": "2026-10-30",
+      "correction": "Earlier57pxstandarddoorlabelwaswrong. Upperobservededgeisporchroofocclusion, notdoorhead. Noactualcompleteheightcanberead.",
+      "recommendation": "Preservepre-repaircalibratedphysicalheight; doNOTinfer2.1mstandardheightfrom57pxvisiblepart.",
+      "heightPreservationReference": {
+        "oldNative": {
+          "width": 488,
+          "height": 456
+        },
+        "newAlpha16Component": {
+          "width": 498,
+          "height": 545
+        },
+        "newWidthRelativeToOldWidthForEqualHeight": 0.8538426831102421,
+        "note": "Dimensionratioonly, notmeasuredworldsize. Integrationmustreadpre-repairworldheightandpreserveitinfinalpack."
+      }
     },
     {
       "cell": 2,
@@ -252,5 +268,17 @@
       "recommendation": "Preserveexistingcalibratedphysicalsize; do not treatvisibleleafsectionasfullheight."
     }
   ],
-  "note": "ActualgameSWroadverification stillrequired; oldother3views remainunchanged."
+  "note": "ActualgameSWroadverification stillrequired; oldother3views remainunchanged.",
+  "reviewCorrections": [
+    {
+      "date": "2026-10-30",
+      "subject": "rundown door gauge",
+      "reason": "Earlier57pxstandarddoorlabelwaswrong. Upperobservededgeisporchroofocclusion, notdoorhead. Noactualcompleteheightcanberead.",
+      "geometryApprovalUnchanged": true
+    }
+  ],
+  "doorOcclusionProof": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.rundown-door-occlusion.png",
+    "sha256": "fecc5eda6498bbbe8615ff34f47e3e3490a50b2535d3a352874c9cb9cce98b90"
+  }
 }

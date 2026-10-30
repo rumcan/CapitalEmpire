@@ -1,0 +1,11 @@
+{
+  "screenshots": 18,
+  "processing": "Lossless WebP copies of actual full-viewport game screenshots; decoded RGBA verified identical.",
+  "pngBytes": 43738055,
+  "webpBytes": 37348060,
+  "calibrationCorrection": {
+    "afterFrame": 2,
+    "wholeLibrarySnapshotRefreshed": true,
+    "remainingEight": "Unchanged native artworks and complete library records, previous actual renderings reused after atlas-only repack."
+  }
+}

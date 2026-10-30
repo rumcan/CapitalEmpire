@@ -24,12 +24,12 @@
     "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
     "geometryReview": {
       "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
-      "sha256": "6a6d66fd9cf905ef49ee39a51a1cfe3899858a3d76d2822a39ffdc05c9e3503b"
+      "sha256": "93df03926706f07330420e69d781f0682767901e70a55b168b166f9a6fe82ae7"
     }
   },
   "authority": {
-    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03.json",
-    "sha256": "9f07727ffe850cdfc15586048e6239916e569d5fcce7d7a75bceb66505c8dff9"
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
   },
   "original": {
     "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
@@ -51,5 +51,6 @@
     "SE": "0061202601307757cdd73d511e1c24e6f504ef56de71219b4a37c61ab9c35d8e",
     "SW": "fd94ecdebaca1af95047bf7ee8cc99c884a833ba6ad6abd10b67870f99273b8e",
     "NW": "56b4f5d0bb72b320e51e6129debaa4734ea81e7c5a70027a85316157ba588fbc"
-  }
+  },
+  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged."
 }

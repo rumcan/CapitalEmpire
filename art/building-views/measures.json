@@ -849,17 +849,48 @@
    "views": {
     "NE": {
      "sha256": "bd79441c80eda925c0717345ce4e8edd89ba24ecc9e8f6b2afd3cf6eaf9e35bd",
-     "door": 57,
+     "nativeScale": 0.8574694591984549,
      "note": {
-      "cell": 1,
-      "kind": "front boarded singleleaf, upperedgepartlyshadowed",
-      "nativeFullSheet": {
-       "x": 225,
-       "headY": 419,
-       "thresholdY": 476,
-       "heightPx": 57
-      },
-      "uncertaintyPx": 4
+      "kind": "estimated prior architectural-height retention; NOT standard-door calibration",
+      "reason": "57px is only the visible boarded leaf below porchroof; actual head is occluded.",
+      "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "oldSourceSha256": "3d40f6e920bc57bd32ec2b7413ad27acb1c100fdffb0ce28af44ad42ba18dd7b",
+      "oldNativeHeight": 456,
+      "oldVisibleRows": [
+       5,
+       451
+      ],
+      "oldRenderedHeight": 476.73,
+      "oldVisibleRenderedHeight": 467.3208552631579,
+      "newVisibleHeight": 545,
+      "nativeScale": 0.8574694591984549,
+      "doorObservation": {
+       "cell": 1,
+       "kind": "visible boardedleaf belowporchroof; actualdoorheadOCCLUDED",
+       "nativeFullSheet": {
+        "x": 225,
+        "visibleLeafTopY": 419,
+        "thresholdY": 476,
+        "visibleHeightPx": 57
+       },
+       "uncertaintyPx": 4,
+       "usableAsCompleteDoorGauge": false,
+       "correctionDate": "2026-10-30",
+       "correction": "Earlier57pxstandarddoorlabelwaswrong. Upperobservededgeisporchroofocclusion, notdoorhead. Noactualcompleteheightcanberead.",
+       "recommendation": "Preservepre-repaircalibratedphysicalheight; doNOTinfer2.1mstandardheightfrom57pxvisiblepart.",
+       "heightPreservationReference": {
+        "oldNative": {
+         "width": 488,
+         "height": 456
+        },
+        "newAlpha16Component": {
+         "width": 498,
+         "height": 545
+        },
+        "newWidthRelativeToOldWidthForEqualHeight": 0.8538426831102421,
+        "note": "Dimensionratioonly, notmeasuredworldsize. Integrationmustreadpre-repairworldheightandpreserveitinfinalpack."
+       }
+      }
      }
     },
     "SE": {
@@ -995,6 +1026,154 @@
      "sha256": "2904f786841ac69e453ecbd52576ea2578a0b766215130106ba0dd1f464b5c37",
      "nativeScale": 0.7592818671454219,
      "note": "Retain exact pre-repair game scale from variation-world-house_2-north-332663ab-plain-1-4views-v1"
+    }
+   }
+  },
+  "variation:ref-building-house-cottage-fc52ce66-plain:1": {
+   "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v3",
+   "gaugeScale": 1.851,
+   "footprintScale": 1,
+   "views": {
+    "NE": {
+     "sha256": "29276b5b4bd767b63b6659e205261643aef7e13f163cdd1221416641141d5a92",
+     "door": 73,
+     "note": {
+      "cell": 1,
+      "kind": "front singlepedestrianleaf underporch",
+      "nativeFullSheet": {
+       "x": 375,
+       "headY": 458,
+       "thresholdY": 531,
+       "heightPx": 73
+      },
+      "uncertaintyPx": 4
+     }
+    },
+    "SE": {
+     "sha256": "3f07932bc260d5d1659e88351c6aeb31144b0fbe5f15c0866a2de8e5ddc67866",
+     "nativeScale": 0.6799663299663299,
+     "note": "Retain exact pre-repair game scale from variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2"
+    },
+    "SW": {
+     "sha256": "290d36c80106547ad46ccebc50f881109936194a55fccf27e0de68ca973d2238",
+     "nativeScale": 0.6799663299663299,
+     "note": "Retain exact pre-repair game scale from variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2"
+    },
+    "NW": {
+     "sha256": "2481a7fd786e66c21a8728800db91425f2a697d9d0fb2cdeb5894510de2a2a67",
+     "nativeScale": 0.6799663299663299,
+     "note": "Retain exact pre-repair game scale from variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2"
+    }
+   }
+  },
+  "variation:gen-house-duplex-north-521714ac-plain:1": {
+   "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v3",
+   "gaugeScale": 1.449,
+   "footprintScale": 1,
+   "views": {
+    "NE": {
+     "sha256": "95c53d46e6849b2011d992d3fa4aeb35da7be2fa3088c034f372504d232eb501",
+     "door": 75,
+     "note": {
+      "cell": 2,
+      "kind": "groundfloorleft frontsinglepedestrianleaf",
+      "nativeFullSheet": {
+       "x": 800,
+       "headY": 398,
+       "thresholdY": 473,
+       "heightPx": 75
+      },
+      "uncertaintyPx": 4
+     }
+    },
+    "SE": {
+     "sha256": "87149c48deeea86c05dbe9b651dc635cbd55262a36c62c62448a0588751d0429",
+     "nativeScale": 0.955216,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-duplex-north-521714ac-plain-1-4views-v2"
+    },
+    "SW": {
+     "sha256": "c823252aaab7658fc8e0e976dbc6cfa8ab0f5da9fad4e2fc10b48c90a6fddd5f",
+     "nativeScale": 0.955216,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-duplex-north-521714ac-plain-1-4views-v2"
+    },
+    "NW": {
+     "sha256": "9b95c00ffa2bc3587d1cdffc47dbbf216094f4cdeab39386ca964b8502043509",
+     "nativeScale": 0.955216,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-duplex-north-521714ac-plain-1-4views-v2"
+    }
+   }
+  },
+  "variation:gen-house-splitlevel-north-63bc759e-plain:1": {
+   "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v3",
+   "gaugeScale": 1.851,
+   "footprintScale": 0.9999999999999999,
+   "views": {
+    "NE": {
+     "sha256": "ba6c546f77b85b191d4fbc35496ce515a7d010acea3d215af8efd28175755ec4",
+     "door": 76,
+     "note": {
+      "cell": 3,
+      "kind": "one frontsliding-glassentrypanel; verticalleafheight",
+      "nativeFullSheet": {
+       "x": 190,
+       "headY": 919,
+       "thresholdY": 995,
+       "heightPx": 76
+      },
+      "uncertaintyPx": 4
+     }
+    },
+    "SE": {
+     "sha256": "9e74a81221a04bc0be095082ea30f523eedbcfc5265f3adda636c4a0ce8c5f30",
+     "nativeScale": 0.8047791798107254,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2"
+    },
+    "SW": {
+     "sha256": "0c121a407e241da955b06b0a59c9ac991f60c299d7c799bb0ae50854c28df415",
+     "nativeScale": 0.8047791798107254,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2"
+    },
+    "NW": {
+     "sha256": "7920b3b36cba560ef0dad2d2ba643040b6212ad17ba4da633ae9ce67ebf79c84",
+     "nativeScale": 0.8047791798107254,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2"
+    }
+   }
+  },
+  "variation:gen-house-l-ranch-18552ce5-plain:1": {
+   "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v3",
+   "gaugeScale": 1.204,
+   "footprintScale": 1,
+   "views": {
+    "NE": {
+     "sha256": "3f43dd0b9c0adab715abdee2d9cdb44dc356eaccd9379f681be2a98b10719a6a",
+     "door": 71,
+     "note": {
+      "cell": 4,
+      "kind": "front singlepedestrianleaf underporch",
+      "nativeFullSheet": {
+       "x": 900,
+       "headY": 990,
+       "thresholdY": 1061,
+       "heightPx": 71
+      },
+      "uncertaintyPx": 4
+     }
+    },
+    "SE": {
+     "sha256": "ed2cdda7412ae32d338bb79b31085ee318f4f1f76c1e4c08a6f904836762c204",
+     "nativeScale": 0.9678662420382165,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2"
+    },
+    "SW": {
+     "sha256": "fda9129c8c1a9b2c163d751858b9d17fd18d0d1e7d036d3f407a898d9eb60dbf",
+     "nativeScale": 0.9678662420382165,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2"
+    },
+    "NW": {
+     "sha256": "7ea3c0bc6147847ea06f3ce7f39acd6c9e53b26712a629ab73803e26709d10e9",
+     "nativeScale": 0.9678662420382165,
+     "note": "Retain exact pre-repair game scale from variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2"
     }
    }
   }

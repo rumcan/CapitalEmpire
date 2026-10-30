@@ -1,169 +1,56 @@
 {
   "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
   "generator": "image_gen",
-  "generated": "2026-10-24",
-  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-fd37bf59-4acb-4f41-a9d3-b1920da3ea13.png",
-  "prompt": "SQUARE 1:1 CANVAS, 2048x2048. Four small isolated building cutouts, widely separated in a 2x2 grid. All 4 silhouettes COMPLETE, each occupies only 60% of its cell height, with a fully transparent 100-pixel border all around and between sprites. ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:ref-building-house-dormer-north-6952cea5-plain:1. Rebuild this exact architecture in the shared Maple Bean art theme. Keep building height, wing/deck/garage position and roof shape. True opposite rear facades, no duplicated entrance/porch on all four sides. If identity is a rear view, retain it as one real rear face and reconstruct a sensible front; never clone the rear facade four times. Keep full roof/chimney and steps well clear of all canvas edges; small sprites with generous transparent space, no floors or yards.",
-  "references": [
-    {
-      "role": "authoritative-theme",
-      "file": "art/theme-consistency/references/theme-authoritative.png",
-      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
-    },
-    {
-      "role": "existing-subject-identity",
-      "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
-      "direction": null,
-      "file": "art/theme-consistency/exports/buildings/variation-ref-building-house-dormer-north-6952cea5-plain-1.configured@2x.png",
-      "sha256": "b20b6a10b90658fd52cd6f5d8f5509220bbee5350ee042f65475e89f56f81a1b"
-    }
-  ],
   "integrationStatus": "ready",
-  "integrationReason": "Front porch and three dormers rotate together; rear roof has one small dormer, rear meters/side windows stay coherent. Pixel-preserving v2 layout inspected on magenta; alpha audit passes with zero crop/split warnings.",
-  "layoutCorrection": {
-    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
-    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v1.png",
-    "originalSheetSha256": "985f457ad1ce41b9a662b4aab542522517e428cc2a7fe83563706b288dc91305",
-    "originalDimensions": [
-      1254,
-      1254
-    ],
-    "outputDimensions": [
-      2048,
-      2048
-    ],
-    "outputSheetSha256": "432076258268ffaf15a1bbd8282f05f9d7d09ea0cef29917c8caf33291dc6e0c",
-    "cellSize": 1024,
-    "minimumCellMarginFraction": 0.15,
-    "padding": 4,
-    "partitionMode": "row-first",
-    "rowFirstFailure": null,
-    "rowGap": {
-      "start": 626,
-      "endExclusive": 680,
-      "midpoint": 653,
-      "alphaThreshold": 8
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+    "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+    "cell": 3,
+    "sourceRect": {
+      "left": 0,
+      "top": 600,
+      "width": 657,
+      "height": 654
     },
-    "columnGaps": [
-      {
-        "row": 0,
-        "start": 622,
-        "endExclusive": 657,
-        "midpoint": 639,
-        "alphaThreshold": 8
-      },
-      {
-        "row": 1,
-        "start": 607,
-        "endExclusive": 661,
-        "midpoint": 634,
-        "alphaThreshold": 8
-      }
-    ],
-    "globalColumnGap": null,
-    "columnRowGaps": [],
-    "extractionRects": [
-      {
-        "direction": "NE",
-        "row": 0,
-        "column": 0,
-        "extraction": {
-          "left": 0,
-          "top": 23,
-          "width": 639,
-          "height": 601
-        },
-        "sourceTouchesCanvasThreshold8": false,
-        "nonzeroAlphaPixels": 203378,
-        "visibleAlphaPixelsThreshold8": 196524,
-        "nonzeroRgbaSha256": "a94fda773351a125811d631fabc036cdaac1a3004aa1d6544cfae917c2f55fe8",
-        "destination": {
-          "left": 192,
-          "top": 211,
-          "width": 639,
-          "height": 601
-        }
-      },
-      {
-        "direction": "SE",
-        "row": 0,
-        "column": 1,
-        "extraction": {
-          "left": 639,
-          "top": 19,
-          "width": 596,
-          "height": 634
-        },
-        "sourceTouchesCanvasThreshold8": false,
-        "nonzeroAlphaPixels": 203414,
-        "visibleAlphaPixelsThreshold8": 196826,
-        "nonzeroRgbaSha256": "41199a7cda751f188f261cdafa3260932b17e3569a65149027fe33f535a90204",
-        "destination": {
-          "left": 1238,
-          "top": 195,
-          "width": 596,
-          "height": 634
-        }
-      },
-      {
-        "direction": "SW",
-        "row": 1,
-        "column": 0,
-        "extraction": {
-          "left": 0,
-          "top": 654,
-          "width": 634,
-          "height": 568
-        },
-        "sourceTouchesCanvasThreshold8": false,
-        "nonzeroAlphaPixels": 191582,
-        "visibleAlphaPixelsThreshold8": 183458,
-        "nonzeroRgbaSha256": "ca18a4fc1940b193e3a0b4b07ae5a07e3b1dfe62ae6bb423087529973d8676ea",
-        "destination": {
-          "left": 195,
-          "top": 1252,
-          "width": 634,
-          "height": 568
-        }
-      },
-      {
-        "direction": "NW",
-        "row": 1,
-        "column": 1,
-        "extraction": {
-          "left": 634,
-          "top": 653,
-          "width": 596,
-          "height": 586
-        },
-        "sourceTouchesCanvasThreshold8": false,
-        "nonzeroAlphaPixels": 201425,
-        "visibleAlphaPixelsThreshold8": 194170,
-        "nonzeroRgbaSha256": "8fcbcab0a914891f173baebcf52e74b448d7771f1e9374f709f5ae55ecec4055",
-        "destination": {
-          "left": 1238,
-          "top": 1243,
-          "width": 596,
-          "height": 586
-        }
-      }
-    ],
-    "sourcePixelCounts": {
-      "nonzeroAlphaPixels": 799799,
-      "visibleAlphaPixelsThreshold8": 770978,
-      "nonzeroRgbaSha256": "47e3f3f84844ef79f870b8217a1bb315d9b1c70a482e0fae9624ee0f537f1bc5"
+    "coreBounds": {
+      "left": 74,
+      "top": 646,
+      "width": 510,
+      "height": 531
     },
-    "nonzeroAndVisiblePixelConservation": true,
-    "exactVisibleRgbaConservation": true,
-    "visualReviewRequired": true,
-    "warnings": []
+    "nonzeroPixels": 195533,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+      "sha256": "93df03926706f07330420e69d781f0682767901e70a55b168b166f9a6fe82ae7"
+    }
   },
-  "sourceVisualReview": {
-    "reviewer": "building_variation_review",
-    "allFourViewsInspected": true,
-    "alphaCompositeBackground": "#b91b91",
-    "result": "ready",
-    "reason": "Front porch and three dormers rotate together; rear roof has one small dormer, rear meters/side windows stay coherent. Pixel-preserving v2 layout inspected on magenta; alpha audit passes with zero crop/split warnings.",
-    "reviewedAt": "2026-10-24T10:38:12.517Z"
-  }
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
+  },
+  "original": {
+    "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+    "version": "variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v2",
+    "files": {
+      "NE": "d21a0a06b4911ce4c5abd8daaa72f4bca6c1b149eea4721b1cf7f21397533b50",
+      "SE": "386ac3c76e0b67d43ccb470944369693ac44fdea7c500574f2b456fe03858892",
+      "SW": "b73448e6bbb469cf7e5b2ad6594f1588269659bc2247669e7ce9f64afc2bdb30",
+      "NW": "14d9bb87af966587f18df519a39c40ea8d9b69df9015f8a68bbe5dd91a955709"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "203e5f2f998c2aecabef51c0f17cd6bf94ad1f13f8c26165b3720240e9bea125",
+    "SE": "386ac3c76e0b67d43ccb470944369693ac44fdea7c500574f2b456fe03858892",
+    "SW": "b73448e6bbb469cf7e5b2ad6594f1588269659bc2247669e7ce9f64afc2bdb30",
+    "NW": "14d9bb87af966587f18df519a39c40ea8d9b69df9015f8a68bbe5dd91a955709"
+  },
+  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged."
 }

@@ -24,12 +24,12 @@
     "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
     "geometryReview": {
       "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
-      "sha256": "6a6d66fd9cf905ef49ee39a51a1cfe3899858a3d76d2822a39ffdc05c9e3503b"
+      "sha256": "93df03926706f07330420e69d781f0682767901e70a55b168b166f9a6fe82ae7"
     }
   },
   "authority": {
-    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03.json",
-    "sha256": "9f07727ffe850cdfc15586048e6239916e569d5fcce7d7a75bceb66505c8dff9"
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
   },
   "original": {
     "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
@@ -51,5 +51,6 @@
     "SE": "386ac3c76e0b67d43ccb470944369693ac44fdea7c500574f2b456fe03858892",
     "SW": "b73448e6bbb469cf7e5b2ad6594f1588269659bc2247669e7ce9f64afc2bdb30",
     "NW": "14d9bb87af966587f18df519a39c40ea8d9b69df9015f8a68bbe5dd91a955709"
-  }
+  },
+  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged."
 }

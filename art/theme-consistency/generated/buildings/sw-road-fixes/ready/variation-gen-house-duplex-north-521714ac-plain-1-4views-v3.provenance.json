@@ -1,0 +1,56 @@
+{
+  "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+  "generator": "image_gen",
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+    "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+    "cell": 2,
+    "sourceRect": {
+      "left": 612,
+      "top": 19,
+      "width": 604,
+      "height": 632
+    },
+    "coreBounds": {
+      "left": 650,
+      "top": 86,
+      "width": 558,
+      "height": 525
+    },
+    "nonzeroPixels": 215997,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+      "sha256": "431770806b5430bf91ac77fa06f1370d14178bbbb291001417b85e03ca6aab76"
+    }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
+  },
+  "original": {
+    "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+    "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v2",
+    "files": {
+      "NE": "55c38d4e300c4db913319ada4764c9d41ba9f2b9015b7a73b51526b21fe26dd5",
+      "SE": "87149c48deeea86c05dbe9b651dc635cbd55262a36c62c62448a0588751d0429",
+      "SW": "c823252aaab7658fc8e0e976dbc6cfa8ab0f5da9fad4e2fc10b48c90a6fddd5f",
+      "NW": "9b95c00ffa2bc3587d1cdffc47dbbf216094f4cdeab39386ca964b8502043509"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "95c53d46e6849b2011d992d3fa4aeb35da7be2fa3088c034f372504d232eb501",
+    "SE": "87149c48deeea86c05dbe9b651dc635cbd55262a36c62c62448a0588751d0429",
+    "SW": "c823252aaab7658fc8e0e976dbc6cfa8ab0f5da9fad4e2fc10b48c90a6fddd5f",
+    "NW": "9b95c00ffa2bc3587d1cdffc47dbbf216094f4cdeab39386ca964b8502043509"
+  },
+  "authorityMetadata": "Clarified source-audit labels only; selected subject/cell/PNG and native geometry approval unchanged."
+}
