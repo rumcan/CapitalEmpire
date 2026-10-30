@@ -1,0 +1,163 @@
+{
+  "schema": 1,
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03.json",
+    "sha256": "9f07727ffe850cdfc15586048e6239916e569d5fcce7d7a75bceb66505c8dff9"
+  },
+  "repairs": [
+    {
+      "status": "ready",
+      "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+      "slug": "variation-ref-building-farmhouse-ef501a21-plain-1",
+      "originalVersion": "variation-ref-building-farmhouse-ef501a21-plain-1-4views-v2",
+      "version": "variation-ref-building-farmhouse-ef501a21-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-04-v1.png",
+      "sheetSha256": "953af11836ccc03015200a5a8019e779fb79f1e41656b6cb0a5526c0220d97a1",
+      "cell": 2,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-04-v1.review.json",
+        "sha256": "112e8ce0726e215a3b6ffc35c7c452d89c0eaa0886dbf09d36f32e14a7137e1c"
+      },
+      "door": 60,
+      "doorNote": {
+        "cell": 2,
+        "kind": "front single leaf under porch, shadowedhead",
+        "nativeFullSheet": {
+          "x": 810,
+          "headY": 425,
+          "thresholdY": 485,
+          "heightPx": 60
+        },
+        "uncertaintyPx": 4,
+        "note": "Checkphysicalscale usingpreservedowner/donorcalibration; porchdoorlooks smallrelativehouse."
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "slug": "variation-expansion-rundown-house-a7c17683-plain-1",
+      "originalVersion": "variation-expansion-rundown-house-a7c17683-plain-1-4views-v2",
+      "version": "variation-expansion-rundown-house-a7c17683-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+      "cell": 1,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+        "sha256": "6a6d66fd9cf905ef49ee39a51a1cfe3899858a3d76d2822a39ffdc05c9e3503b"
+      },
+      "door": 57,
+      "doorNote": {
+        "cell": 1,
+        "kind": "front boarded singleleaf, upperedgepartlyshadowed",
+        "nativeFullSheet": {
+          "x": 225,
+          "headY": 419,
+          "thresholdY": 476,
+          "heightPx": 57
+        },
+        "uncertaintyPx": 4
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
+      "slug": "variation-gen-house-l-shape-north-79eba705-plain-1",
+      "originalVersion": "variation-gen-house-l-shape-north-79eba705-plain-1-4views-v2",
+      "version": "variation-gen-house-l-shape-north-79eba705-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+      "cell": 2,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+        "sha256": "6a6d66fd9cf905ef49ee39a51a1cfe3899858a3d76d2822a39ffdc05c9e3503b"
+      },
+      "door": 88,
+      "doorNote": {
+        "cell": 2,
+        "kind": "mainhousefront singlepedestrianleaf, notgarageopening",
+        "nativeFullSheet": {
+          "x": 785,
+          "headY": 342,
+          "thresholdY": 430,
+          "heightPx": 88
+        },
+        "uncertaintyPx": 3
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+      "slug": "variation-ref-building-house-dormer-north-6952cea5-plain-1",
+      "originalVersion": "variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v2",
+      "version": "variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+      "cell": 3,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+        "sha256": "6a6d66fd9cf905ef49ee39a51a1cfe3899858a3d76d2822a39ffdc05c9e3503b"
+      },
+      "nativeScale": 0.651762504214478,
+      "scaleNote": {
+        "kind": "estimated architectural-height retention; not a standard-door gauge",
+        "reason": "Door threshold occluded by balustrade; visible leaf fragment is not a complete standard-door gauge",
+        "oldSourceSha256": "d21a0a06b4911ce4c5abd8daaa72f4bca6c1b149eea4721b1cf7f21397533b50",
+        "oldNativeHeight": 499,
+        "oldVisibleRows": [
+          4,
+          494
+        ],
+        "oldRenderedHeight": 350.4,
+        "oldVisibleRenderedHeight": 344.7823647294589,
+        "newVisibleHeight": 529,
+        "nativeScale": 0.651762504214478,
+        "method": "Keep prior visible whole-building architectural height using alpha16 extents; uniform scale estimate, preserve original footprint and retained-view scales."
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:world-house_2-north-332663ab-plain:1",
+      "slug": "variation-world-house_2-north-332663ab-plain-1",
+      "originalVersion": "variation-world-house_2-north-332663ab-plain-1-4views-v1",
+      "version": "variation-world-house_2-north-332663ab-plain-1-4views-v2",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+      "cell": 4,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+        "sha256": "6a6d66fd9cf905ef49ee39a51a1cfe3899858a3d76d2822a39ffdc05c9e3503b"
+      },
+      "nativeScale": 0.7005724139977644,
+      "scaleNote": {
+        "kind": "estimated architectural-height retention; not a standard-door gauge",
+        "reason": "Door threshold occluded by balustrade; visible leaf fragment is not a complete standard-door gauge",
+        "oldSourceSha256": "4003b054ceb6c8a9182a4e53e310f0c87c9e16ef4a6d337a2b17de82d8a21a0e",
+        "oldNativeHeight": 533,
+        "oldVisibleRows": [
+          4,
+          528
+        ],
+        "oldRenderedHeight": 404.7,
+        "oldVisibleRenderedHeight": 398.6257035647279,
+        "newVisibleHeight": 569,
+        "nativeScale": 0.7005724139977644,
+        "method": "Keep prior visible whole-building architectural height using alpha16 extents; uniform scale estimate, preserve original footprint and retained-view scales."
+      }
+    }
+  ]
+}

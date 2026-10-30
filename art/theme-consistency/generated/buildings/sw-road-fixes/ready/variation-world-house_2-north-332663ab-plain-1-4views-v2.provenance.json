@@ -1,0 +1,56 @@
+{
+  "id": "variation:world-house_2-north-332663ab-plain:1",
+  "generator": "image_gen",
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+    "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+    "cell": 4,
+    "sourceRect": {
+      "left": 626,
+      "top": 610,
+      "width": 598,
+      "height": 644
+    },
+    "coreBounds": {
+      "left": 699,
+      "top": 636,
+      "width": 497,
+      "height": 569
+    },
+    "nonzeroPixels": 208640,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+      "sha256": "6a6d66fd9cf905ef49ee39a51a1cfe3899858a3d76d2822a39ffdc05c9e3503b"
+    }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03.json",
+    "sha256": "9f07727ffe850cdfc15586048e6239916e569d5fcce7d7a75bceb66505c8dff9"
+  },
+  "original": {
+    "id": "variation:world-house_2-north-332663ab-plain:1",
+    "version": "variation-world-house_2-north-332663ab-plain-1-4views-v1",
+    "files": {
+      "NE": "4003b054ceb6c8a9182a4e53e310f0c87c9e16ef4a6d337a2b17de82d8a21a0e",
+      "SE": "84422fb880b118456d550af15e0e3674ba1665f2a4b3a42165f0c061f35adf10",
+      "SW": "bc1fd3b1b9b98794d6b8c53ea39b36f6c66badcfd64b2a9bbefe3f4c4039e1b1",
+      "NW": "2904f786841ac69e453ecbd52576ea2578a0b766215130106ba0dd1f464b5c37"
+    },
+    "cropsBy": "prep-views (four-view-cells.mjs)"
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "0b83dfd8221c9c7a1102981233bb5e8239f2cb55c60209704cfaae587b50e450",
+    "SE": "84422fb880b118456d550af15e0e3674ba1665f2a4b3a42165f0c061f35adf10",
+    "SW": "bc1fd3b1b9b98794d6b8c53ea39b36f6c66badcfd64b2a9bbefe3f4c4039e1b1",
+    "NW": "2904f786841ac69e453ecbd52576ea2578a0b766215130106ba0dd1f464b5c37"
+  }
+}
