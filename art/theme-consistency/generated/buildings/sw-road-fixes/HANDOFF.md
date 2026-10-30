@@ -1,6 +1,7 @@
 # SW street-facing repairs — first delivery
 
 The next three approved repairs are documented separately in [HANDOFF-02.md](HANDOFF-02.md).
+The following nine and the later SE-facing render brief are in [HANDOFF-03.md](HANDOFF-03.md).
 
 Only three corrected fronts are integrated in this delivery:
 

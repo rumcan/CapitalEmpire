@@ -1,0 +1,284 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "source": {
+    "file": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+    "sha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+    "width": 1254,
+    "height": 1254
+  },
+  "status": "ready-for-integration-review",
+  "toleranceDegrees": 2.25,
+  "cells": [
+    {
+      "cell": 1,
+      "status": "ready-for-integration-review",
+      "reason": "Frontstructuralfloorbeam2.121deg/rightfoundation.748deg within2.25; nativebeamproofchecked."
+    },
+    {
+      "cell": 2,
+      "status": "ready-for-integration-review",
+      "reason": "Front.436deg, separatesidefoundations.431/.111deg within2.25. Primaryexplicitlyacceptsroof-dormerplacementdifferenceforalignmentrepair; notstrictidentityclone.",
+      "identityDifferences": [
+        "Two dormers ongaragewing andnoneonmainroof ratherthanoneeach; sametwo-storeymass, twofrontgarageopenings, SWpedestrianentry andfootprint retained."
+      ]
+    },
+    {
+      "cell": 3,
+      "status": "ready-for-integration-review",
+      "reason": "Front.919deg/right.088deg; primaryvisualidentityaccepted."
+    },
+    {
+      "cell": 4,
+      "status": "ready-for-integration-review",
+      "reason": "Front1.304deg/right1.370deg; primaryvisualidentityaccepted."
+    }
+  ],
+  "measurements": [
+    {
+      "name": "rundown-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.5164357381748685,
+      "target": -0.5,
+      "angleErrorDegrees": 0.7483957247417744,
+      "rmsPx": 0.3697254268504118,
+      "samples": 91,
+      "endpoints": [
+        [
+          450,
+          565.129718107979
+        ],
+        [
+          540,
+          518.6505016722408
+        ]
+      ]
+    },
+    {
+      "name": "Lshape-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.5095556617295748,
+      "target": 0.5,
+      "angleErrorDegrees": 0.43632306090873285,
+      "rmsPx": 0.33072375094678436,
+      "samples": 91,
+      "endpoints": [
+        [
+          850,
+          529.2458193979934
+        ],
+        [
+          940,
+          575.1058289536551
+        ]
+      ]
+    },
+    {
+      "name": "dormernorth-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.5202170963364994,
+      "target": 0.5,
+      "angleErrorDegrees": 0.9191707502697399,
+      "rmsPx": 0.32570524334306455,
+      "samples": 66,
+      "endpoints": [
+        [
+          185,
+          1079.2596110357304
+        ],
+        [
+          250,
+          1113.073722297603
+        ]
+      ]
+    },
+    {
+      "name": "dormernorth-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.5019104674748809,
+      "target": -0.5,
+      "angleErrorDegrees": 0.08750244225715506,
+      "rmsPx": 0.3491499769300692,
+      "samples": 86,
+      "endpoints": [
+        [
+          465,
+          1130.6102646351242
+        ],
+        [
+          550,
+          1087.9478748997592
+        ]
+      ]
+    },
+    {
+      "name": "world2north-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.5287889013873266,
+      "target": 0.5,
+      "angleErrorDegrees": 1.3043378910031336,
+      "rmsPx": 0.3105656755957361,
+      "samples": 126,
+      "endpoints": [
+        [
+          750,
+          1068.5935508061493
+        ],
+        [
+          875,
+          1134.6921634795651
+        ]
+      ]
+    },
+    {
+      "name": "world2north-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.5302495930548019,
+      "target": -0.5,
+      "angleErrorDegrees": 1.3697019010997353,
+      "rmsPx": 0.29758998676039244,
+      "samples": 96,
+      "endpoints": [
+        [
+          1055,
+          1150.3326890034364
+        ],
+        [
+          1150,
+          1099.9589776632301
+        ]
+      ]
+    },
+    {
+      "name": "Lshape-side-1005",
+      "kind": "separatecontinuoussidefoundation, excludesL-wingverticaloffset",
+      "slope": -0.5094326725905673,
+      "angleErrorDegrees": 0.4307285496448176,
+      "rmsPx": 0.2961833679372146,
+      "samples": 56,
+      "endpoints": [
+        [
+          1005,
+          592.5808270676691
+        ],
+        [
+          1060,
+          564.562030075188
+        ]
+      ]
+    },
+    {
+      "name": "Lshape-side-1100",
+      "kind": "separatecontinuoussidefoundation, excludesL-wingverticaloffset",
+      "slope": -0.49758551307847104,
+      "angleErrorDegrees": 0.11077877989427191,
+      "rmsPx": 0.34804898532064465,
+      "samples": 71,
+      "endpoints": [
+        [
+          1100,
+          540.4718309859155
+        ],
+        [
+          1170,
+          505.64084507042253
+        ]
+      ]
+    },
+    {
+      "name": "rundown-front-floorbeam",
+      "kind": "elevated structural floorbeam lowerface above lattice; nothandrail",
+      "method": "robust line support across RGB beam edge, excluding interruptions at posts/lattice",
+      "slope": 0.45454756480992276,
+      "angleErrorDegrees": 2.1209961911317308,
+      "rmsPx": 0.7920386970475213,
+      "samples": 58,
+      "rejectedSamples": 58,
+      "endpoints": [
+        [
+          236,
+          521.719325093328
+        ],
+        [
+          348,
+          572.6286523520394
+        ]
+      ]
+    }
+  ],
+  "rejectedMeasurements": [
+    {
+      "name": "rundown-front",
+      "reason": "Alphaedge followsbrokenlattice/vegetation, notstructuralfloorbeam."
+    },
+    {
+      "name": "Lshape-side",
+      "reason": "Combinedspan crossedtwooffsetparallelfoundationplanes atL-wingjunction. Separatecontinuousspans usedinstead."
+    }
+  ],
+  "doorCalibration": [
+    {
+      "cell": 1,
+      "kind": "visible boardedleaf belowporchroof; actualdoorheadOCCLUDED",
+      "nativeFullSheet": {
+        "x": 225,
+        "visibleLeafTopY": 419,
+        "thresholdY": 476,
+        "visibleHeightPx": 57
+      },
+      "uncertaintyPx": 4,
+      "usableAsCompleteDoorGauge": false,
+      "correctionDate": "2026-10-30",
+      "correction": "Earlier57pxstandarddoorlabelwaswrong. Upperobservededgeisporchroofocclusion, notdoorhead. Noactualcompleteheightcanberead.",
+      "recommendation": "Preservepre-repaircalibratedphysicalheight; doNOTinfer2.1mstandardheightfrom57pxvisiblepart.",
+      "heightPreservationReference": {
+        "oldNative": {
+          "width": 488,
+          "height": 456
+        },
+        "newAlpha16Component": {
+          "width": 498,
+          "height": 545
+        },
+        "newWidthRelativeToOldWidthForEqualHeight": 0.8538426831102421,
+        "note": "Dimensionratioonly, notmeasuredworldsize. Integrationmustreadpre-repairworldheightandpreserveitinfinalpack."
+      }
+    },
+    {
+      "cell": 2,
+      "kind": "mainhousefront singlepedestrianleaf, notgarageopening",
+      "nativeFullSheet": {
+        "x": 785,
+        "headY": 342,
+        "thresholdY": 430,
+        "heightPx": 88
+      },
+      "uncertaintyPx": 3
+    },
+    {
+      "cell": 3,
+      "kind": "frontleaf threshold occluded bybalustrade",
+      "usableAsCompleteDoorGauge": false,
+      "recommendation": "Preserveexistingcalibratedphysicalsize; do not treatvisibleleafsectionasfullheight."
+    },
+    {
+      "cell": 4,
+      "kind": "frontleaf threshold occluded bybalustrade",
+      "usableAsCompleteDoorGauge": false,
+      "recommendation": "Preserveexistingcalibratedphysicalsize; do not treatvisibleleafsectionasfullheight."
+    }
+  ],
+  "note": "ActualgameSWroadverification stillrequired; oldother3views remainunchanged.",
+  "reviewCorrections": [
+    {
+      "date": "2026-10-30",
+      "subject": "rundown door gauge",
+      "reason": "Earlier57pxstandarddoorlabelwaswrong. Upperobservededgeisporchroofocclusion, notdoorhead. Noactualcompleteheightcanberead.",
+      "geometryApprovalUnchanged": true
+    }
+  ],
+  "doorOcclusionProof": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.rundown-door-occlusion.png",
+    "sha256": "fecc5eda6498bbbe8615ff34f47e3e3490a50b2535d3a352874c9cb9cce98b90"
+  }
+}

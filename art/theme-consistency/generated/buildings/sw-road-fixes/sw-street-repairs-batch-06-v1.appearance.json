@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "date": "2026-10-30",
+  "planningJobDate": "2026-10-29",
+  "source": {
+    "file": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+    "sha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+    "width": 1254,
+    "height": 1254
+  },
+  "status": "ready-for-integration-review",
+  "toleranceDegrees": 2.25,
+  "compensation": {
+    "inputGuideRightSlope": -0.4,
+    "finalRequiredRightSlope": -0.5,
+    "finalRequiredFrontSlope": 0.5,
+    "note": "Guideinputcompensatedgeneratorsteepening; finalacceptancebasedactualnativePNGedgesnotguide."
+  },
+  "cells": [
+    {
+      "cell": 1,
+      "status": "ready-for-integration-review",
+      "reason": "Front1.016deg/right1.394deg. Entry nowcorrectSWfrontplane; primaryidentityaccepted."
+    },
+    {
+      "cell": 2,
+      "status": "ready-for-integration-review",
+      "reason": "Independentfrontfloorbeamspans.784/.455deg, right1.624deg; primaryidentityaccepted."
+    },
+    {
+      "cell": 3,
+      "status": "ready-for-integration-review",
+      "reason": "Front1.917deg/right1.021deg; primaryidentityaccepted."
+    },
+    {
+      "cell": 4,
+      "status": "ready-for-integration-review",
+      "reason": "Front.746deg/right.426deg; primaryidentityaccepted."
+    }
+  ],
+  "measurements": [
+    {
+      "name": "cottage-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.5223577235772359,
+      "target": 0.5,
+      "angleErrorDegrees": 1.015612512487041,
+      "rmsPx": 0.489974811296607,
+      "samples": 81,
+      "endpoints": [
+        [
+          190,
+          455.2785305630834
+        ],
+        [
+          270,
+          497.0671484492623
+        ]
+      ]
+    },
+    {
+      "name": "cottage-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.4699561300061325,
+      "target": -0.5,
+      "angleErrorDegrees": 1.3935854681308333,
+      "rmsPx": 0.3218720861330256,
+      "samples": 86,
+      "endpoints": [
+        [
+          485,
+          540.7289494787491
+        ],
+        [
+          570,
+          500.7826784282279
+        ]
+      ]
+    },
+    {
+      "name": "duplex-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.4650632130743139,
+      "target": -0.5,
+      "angleErrorDegrees": 1.6236456558201522,
+      "rmsPx": 0.29088315977831436,
+      "samples": 46,
+      "endpoints": [
+        [
+          1140,
+          560.9204440333024
+        ],
+        [
+          1185,
+          539.9925994449583
+        ]
+      ]
+    },
+    {
+      "name": "split-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.5425553319919522,
+      "target": 0.5,
+      "angleErrorDegrees": 1.917229320479059,
+      "rmsPx": 0.2885802219599837,
+      "samples": 71,
+      "endpoints": [
+        [
+          275,
+          1108.2781690140844
+        ],
+        [
+          345,
+          1146.2570422535211
+        ]
+      ]
+    },
+    {
+      "name": "split-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.4779185520361991,
+      "target": -0.5,
+      "angleErrorDegrees": 1.0210503811325606,
+      "rmsPx": 0.2958890847208082,
+      "samples": 51,
+      "endpoints": [
+        [
+          465,
+          1137.3597285067874
+        ],
+        [
+          515,
+          1113.4638009049775
+        ]
+      ]
+    },
+    {
+      "name": "Lranch-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.5163934426229507,
+      "target": 0.5,
+      "angleErrorDegrees": 0.7464825746891929,
+      "rmsPx": 0.34092843185385935,
+      "samples": 61,
+      "endpoints": [
+        [
+          715,
+          994.655737704918
+        ],
+        [
+          775,
+          1025.639344262295
+        ]
+      ]
+    },
+    {
+      "name": "Lranch-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.4907419967444384,
+      "target": -0.5,
+      "angleErrorDegrees": 0.42592508007662366,
+      "rmsPx": 0.31326566387100657,
+      "samples": 96,
+      "endpoints": [
+        [
+          1080,
+          1144.4456615120275
+        ],
+        [
+          1175,
+          1097.825171821306
+        ]
+      ]
+    },
+    {
+      "name": "duplex-front-floorbeam-700",
+      "kind": "elevatedstructuralfloorbeamunderbalcony, nothandrail",
+      "method": "absoluteRGBgradient atactualbeamwallboundary",
+      "slope": 0.5172320217096337,
+      "angleErrorDegrees": 0.7844016154350472,
+      "rmsPx": 1.6378236949075995,
+      "samples": 66,
+      "endpoints": [
+        [
+          700,
+          342.0687471732248
+        ],
+        [
+          765,
+          375.688828584351
+        ]
+      ]
+    },
+    {
+      "name": "duplex-front-floorbeam-880",
+      "kind": "elevatedstructuralfloorbeamunderbalcony, nothandrail",
+      "method": "absoluteRGBgradient atactualbeamwallboundary",
+      "slope": 0.49012230634828197,
+      "angleErrorDegrees": 0.4545465761708538,
+      "rmsPx": 1.4453239793097925,
+      "samples": 101,
+      "endpoints": [
+        [
+          880,
+          433.17705299941764
+        ],
+        [
+          980,
+          482.18928363424584
+        ]
+      ]
+    }
+  ],
+  "doorCalibration": [
+    {
+      "cell": 1,
+      "kind": "front singlepedestrianleaf underporch",
+      "nativeFullSheet": {
+        "x": 375,
+        "headY": 458,
+        "thresholdY": 531,
+        "heightPx": 73
+      },
+      "uncertaintyPx": 4
+    },
+    {
+      "cell": 2,
+      "kind": "groundfloorleft frontsinglepedestrianleaf",
+      "nativeFullSheet": {
+        "x": 800,
+        "headY": 398,
+        "thresholdY": 473,
+        "heightPx": 75
+      },
+      "uncertaintyPx": 4
+    },
+    {
+      "cell": 3,
+      "kind": "one frontsliding-glassentrypanel; verticalleafheight",
+      "nativeFullSheet": {
+        "x": 190,
+        "headY": 919,
+        "thresholdY": 995,
+        "heightPx": 76
+      },
+      "uncertaintyPx": 4
+    },
+    {
+      "cell": 4,
+      "kind": "front singlepedestrianleaf underporch",
+      "nativeFullSheet": {
+        "x": 900,
+        "headY": 990,
+        "thresholdY": 1061,
+        "heightPx": 71
+      },
+      "uncertaintyPx": 4
+    }
+  ],
+  "rejectedMeasurements": [
+    {
+      "name": "duplex-one-sided-luminance-drop",
+      "reason": "Selectedwoodgrain/windowbrightnessoutliers, highRMS; replacedbyactualbeam-to-wallabsoluteRGBboundary andnativeproofinspection."
+    }
+  ],
+  "note": "Raw/provenanceunchanged. Nativeartapproval; actualgameSWroadcomparisonstillrequired. Other3existingviews remainbyte-identical."
+}
