@@ -921,6 +921,19 @@ export class Game {
     const tee = mine.find(t => surfaceAt(areas, t.x, t.y) !== 'tee') ?? mine[0];
     this.selectGolfMarker(n, f.marker === 'pin' ? 'pin' : tee?.kind ?? 'middle');
   }
+  /** Build (the hole card's top right; the owner, 2026-10-31: "a build button that takes you straight to building on this hole"): the
+   *  Course tool with hole n in hand, its brushes ready, the hole framed by its pin and tees; the card closes. Any hole, planned or painted by
+   *  hand */
+  buildHole(n: number): boolean {
+    const shown = this.uiTool === 'course';
+    this.setTool('course'); if (this.tool !== 'course') return false;
+    // New hole's planner or another paint mode left open: the brushes (Shape by hand), as New hole's Done
+    this.closeHoleCard(); if (this.paint.planOpen || this.paint.mode !== 'draw') this.paint.leavePlan(); this.paint.setHole(n);
+    const marks = this.golf ? [...this.golf.pins.filter(p => p.hole === n), ...this.golf.tees.filter(t => t.hole === n)] : [];
+    // the Holes panel opens with this press (from Select): frame the hole once it is laid out, so it is not under the panel
+    if (marks.length) { if (shown || typeof requestAnimationFrame !== 'function') this.fitView(marks, true); else requestAnimationFrame(() => this.fitView(marks, true)); }
+    this.emit(); return true;
+  }
   /** Edit hole (the hole card, the Holes panel's status line): New hole's editor on hole n's plan, framed by the camera, with a toast
    *  (PaintTool.editHole; T205: when it is already open it stays, drags and all); the card closes. False with a toast for a hole painted by
    *  hand (the card stays) */
