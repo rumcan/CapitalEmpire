@@ -304,6 +304,8 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 /* no horizontal sliders in a tool panel (T193): its rows wrap, its long words break */
 .tool-panel { overflow-wrap: anywhere; }
 .tool-panel .flex:not(.flex-col):not(.flex-nowrap) { flex-wrap: wrap; }
+.bunker-settings-card { flex-shrink: 0; max-width: calc(100vw / var(--ui-scale, 1) - 1.5rem); }
+@media (max-width: 1000px) { .bunker-settings-card { position: fixed; left: 0.75rem; top: var(--hud-top, 5.75rem); z-index: 45; } }
 
 /* T200 (#524): Land for sale's key and card (LandPanel.tsx): the bands carry a $ label beside their colour (never colour alone); text wraps */
 .land-key { display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.4rem; }

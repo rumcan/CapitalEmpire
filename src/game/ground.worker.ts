@@ -54,6 +54,8 @@ let lazyTex = false;
 const handle = async (m: ToWorker) => {
   try {
     switch (m.t) {
+      case 'bunkerExpected': painter.bunkerStages.expect(m.set, m.drop); break;
+      case 'bunker': painter.bunkerStages.install(m.set, m.drop); break;
       case 'grass': {
         painter.grassStrength = Math.min(1, Math.max(0, m.strength)); painter.grassHeat = m.heat; painter.grassMowing = m.mowing;
         for (const c of m.cells) { if (c.active) painter.grassCells.set(c.id, c); else painter.grassCells.delete(c.id); }
@@ -145,7 +147,7 @@ const handle = async (m: ToWorker) => {
       case 'tileStats': tileStats = m.on; tex.resetDrawn(); break;
       case 'tileBudget': tex.tiles.budget = m.bytes; tex.tiles.trim(); break; // (T272: the chunk pictures grew or shrank)
       case 'memProbe': {
-        post({ t: 'log', message: 'mem ' + JSON.stringify(memProbe()) });
+        post({ t: 'log', message: 'mem ' + JSON.stringify({ ...memProbe(), bunkerAtlases: painter.bunkerStages.stats }) });
         break;
       }
       case 'prewarm': {

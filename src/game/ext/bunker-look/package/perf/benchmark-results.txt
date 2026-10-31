@@ -1,0 +1,29 @@
+CapitalEmpire bunker bitmap benchmark
+
+Measured: 2026-10-30T21:48:58.553Z
+Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36
+WebGL renderer: ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)
+Native approved bake: 4869x3143 = 58.38 MiB RGBA
+Approved depth: 1.5 metres
+One render + gl.finish: 3183.50 ms
+Approved game display: 502x324
+
+Cached 512px LOD Canvas2D drawing (CPU submission only):
+1 instances; cull=false; overdraw=false; 1 draws, 0 culled; mean=0.0750ms p95=0.1000ms
+1 instances; cull=true; overdraw=false; 1 draws, 0 culled; mean=0.0725ms p95=0.2000ms
+10 instances; cull=false; overdraw=false; 10 draws, 0 culled; mean=0.0600ms p95=0.2000ms
+10 instances; cull=true; overdraw=false; 4 draws, 6 culled; mean=0.0750ms p95=0.1000ms
+100 instances; cull=false; overdraw=false; 100 draws, 0 culled; mean=0.1775ms p95=0.3000ms
+100 instances; cull=true; overdraw=false; 12 draws, 88 culled; mean=0.0875ms p95=0.2000ms
+100 instances; cull=true; overdraw=true; 100 draws, 0 culled; mean=0.1925ms p95=0.3000ms
+
+Decoded LOD memory and 32MiB limits:
+256x165: 0.161MiB; 198 unique sprites (or 148 with 4/3 mip estimate)
+512x331: 0.646MiB; 49 unique sprites (or 37 with 4/3 mip estimate)
+1024x661: 2.582MiB; 12 unique sprites (or 9 with 4/3 mip estimate)
+
+These are measured headless-browser costs, not in-game FPS promises.
+- Benchmark is isolated headless Chromium, not CapitalEmpire or its target hardware.
+- All instances reuse one approved ImageBitmap; 100 unique shapes have different cache pressure.
+- Canvas2D CPU submission/RAF intervals are not a GPU frame-time or FPS guarantee.
+- Decoded RGBA accounting excludes driver alignment, additional CPU copies and transient bake buffers.

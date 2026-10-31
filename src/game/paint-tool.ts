@@ -1,5 +1,6 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
+import type { BunkerState } from './ext/bunker-look/controller';
 import { lookChanged, type BrushLooks, type LookStyle } from './course-look';
 import { LOOK_KINDS, copyLook, copySet, defaultSet as defaultSetOf, holeOwner, lookOf as bookLook, ownerHole, seedOwner, type FacilityOwner, type LookBook, type LookSet } from './golf/looks';
 import { placeMyHole, type MyHole, type Placed } from './golf/myholes';
@@ -203,6 +204,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** T231: the ponds' edge marks (GolfSave.ponds: a pond with a mark in it is edged with stones) and their setter: undo and redo carry them */
   pondMarks?(): number[];
   setPondMarks?(m: number[]): void;
+  /** Connected native-grid bunker profile metadata travels with the existing course undo journal. */
+  bunkerState?(): BunkerState;
+  setBunkerState?(state: unknown): void;
   /** hole n's pin (the New hole wizard's walk label), if it has one */
   pinOf?(hole: number): { x: number; y: number } | null;
   /** New hole (P23 4.4, T119): the camera frames tiles pts beside the panel (after the tee and the green clicks, and Show me); zoomIn false
@@ -1338,7 +1342,13 @@ export class PaintTool {
   private begin(label: string, looks = false) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey(), ...(looks ? { looks } : {}) }; this.host.journal?.begin(); this.hj.begin(); }
   /** the hole plans, the ponds' edge marks (T231) and the custom grasses (T271: a grass made or deleted is an undo step, with its cells) as text
    *  (undo compares and restores them) */
-  private plansKey(): string { return JSON.stringify([this.host.plans?.() ?? [], this.host.pondMarks?.() ?? [], this.host.grasses?.() ?? []]); }
+  private plansKey(): string { return JSON.stringify([this.host.plans?.() ?? [], this.host.pondMarks?.() ?? [], this.host.grasses?.() ?? [], this.host.bunkerState?.() ?? null]); }
+  /** Record a profile-only edit in the course's existing undo stack without rebuilding geometry or refitting markers. */
+  recordBunkerEdit(label: string, mutate: () => void): void {
+    this.cancel(); this.begin(label, true);
+    try { mutate(); } finally { this.commit(); }
+    this.host.save(); this.host.emit();
+  }
   /** ends an undoable action: it becomes an undo step when it changed the areas or the props, or spent money (the redo steps are dropped) */
   private commit() {
     const t = this.tx; if (!t || --t.depth > 0) return;
@@ -1385,11 +1395,12 @@ export class PaintTool {
     if (u.plans) {
       try {
         // [plans, pond marks]: each part goes back only when it changed (T231)
-        const [p0, m0, g0] = JSON.parse(u.plans.before) as [unknown[], number[], CustomGrass[]?], [p1, m1, g1] = JSON.parse(u.plans.after) as [unknown[], number[], CustomGrass[]?];
+        const [p0, m0, g0, b0] = JSON.parse(u.plans.before) as [unknown[], number[], CustomGrass[]?, BunkerState?], [p1, m1, g1, b1] = JSON.parse(u.plans.after) as [unknown[], number[], CustomGrass[]?, BunkerState?];
         if (JSON.stringify(p0) !== JSON.stringify(p1)) this.host.setPlans?.(undo ? p0 : p1);
         if (JSON.stringify(m0) !== JSON.stringify(m1)) this.host.setPondMarks?.(undo ? m0 : m1);
         // T271: the custom grasses (a step from before them has none on either side)
         if (g0 && g1 && JSON.stringify(g0) !== JSON.stringify(g1)) { const v = undo ? g0 : g1; this.host.setGrasses?.(v); if (this.grassInHand && !v.some(g => g.k === this.grassInHand)) this.grassInHand = 0; if (this.grassDraft?.k && !v.some(g => g.k === this.grassDraft!.k)) this.grassDraft = null; }
+        if (JSON.stringify(b0) !== JSON.stringify(b1)) this.host.setBunkerState?.(undo ? b0 : b1);
       } catch { /* the text is our own JSON */ }
     }
     // T256: the looks owners the step gave, took or changed go back (or forward), and their cells are drawn again

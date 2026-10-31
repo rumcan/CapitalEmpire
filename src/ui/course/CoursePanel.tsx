@@ -11,6 +11,7 @@ import { HoleStrip, newHole } from './HoleStrip';
 import { HoleWizardPanel } from './HoleWizard';
 import { CourseEdges } from './CourseEdges';
 import { GRID_KINDS } from '../../game/paint-tool';
+import { BunkerSettingsEntry } from '../BunkerSettings';
 
 /** the paint modes that live under More options (the brush is Shape by hand's; plan is New hole's) */
 const MORE_MODES = new Set(['draw', 'piece', 'height', 'plant', 'hole']);
@@ -26,14 +27,14 @@ export { lookName } from './BrushControls';
  *  in its place while New hole is open), then, once a hole exists (stage 2), your holes as badges with the current hole's status, Shape by
  *  hand with the marked surfaces (eight since T222's Waste area), and one collapsed More options drawer in sections. At stage 1 it is New hole and its line only.
  *  looks / onLooks: Holes > More options > My looks (the style editor's card beside the panel: App's state, so Esc closes it first) */
-export function CoursePanel({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
+export function CoursePanel({ game, looks = false, onLooks, bunkers = false, onBunkers }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void; bunkers?: boolean; onBunkers?: (open: boolean) => void }) {
   const p = game.paint, ui = game.toolUi();
   // New hole's editor on screen (T238: Edit hole with a brush in hand too): its card in New hole's place, Shape by hand under it hidden
   const shape = !ui || ui.shapeByHand, plan = p.planOpen, lock = ui?.newHoleLock ?? null;
   // ↶ ↷ name what they take back (P23 4.3); in New hole its own clicks and drags come first (P23 4.4, T119)
   const un = p.topUndo, re = p.topRedo;
   // T256 (#743): Range › Build: the same painting tools, on your property (cells of no hole)
-  if (p.property) return <PropertyPanel game={game} looks={looks} onLooks={onLooks} />;
+  if (p.property) return <PropertyPanel game={game} looks={looks} onLooks={onLooks} bunkers={bunkers} onBunkers={onBunkers} />;
   return (
     <div className="tp" data-panel="holes">
       <ToolHead icon="trophy" title="Holes" desc="Each hole is a park: build it, then shape it">
@@ -55,7 +56,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
       {shape && (
         <>
           <HoleStrip game={game} />
-          {!plan && <ShapeByHand game={game} />}
+          {!plan && <ShapeByHand game={game} bunkers={bunkers} onBunkers={onBunkers} />}
           {!plan && <MoreOptions game={game} looks={looks} onLooks={onLooks} />}
         </>
       )}
@@ -65,7 +66,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
 
 /** Shape by hand (P23 4.3, 4.5): the surfaces as swatches (keys 1–8; T252: each the surface's puck, no cart path), the brush's shape (T238:
  *  Square or Round) and size ([ ]), Brush and Erase */
-function ShapeByHand({ game }: { game: Game }) {
+function ShapeByHand({ game, bunkers, onBunkers }: { game: Game; bunkers: boolean; onBunkers?: (open: boolean) => void }) {
   const p = game.paint, keys = surfaceKeysOf(game);
   const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece', run = brush && !!p.brushRun && cells > 0;
   // T271: a custom grass in hand goes by its own name; the keys: 1–8 the surfaces, 9 Create your own (golf), Shift + n your own grasses
@@ -76,6 +77,7 @@ function ShapeByHand({ game }: { game: Game }) {
       {/* T256: whose paint the brush lays: this hole's (Range › Build paints your property) */}
       {game.golfMode && armed && <div className="paint-owner" data-testid="paint-owner">{`Painting hole ${p.brushHole}`}</div>}
       <SurfaceSwatches game={game} on={armed ? p.brushKind : null} pick={k => (p.mode === 'draw' ? p.setShape(k, 0) : p.setBrush(k, 0))} />
+      <BunkerSettingsEntry game={game} open={bunkers} onOpen={onBunkers} />
       <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {/* Brush | Run (T122, P23 4.5): the brush paints where you click and drag; Run lays a strip like a road, from click to click */}
@@ -94,7 +96,7 @@ function ShapeByHand({ game }: { game: Game }) {
  *  work on you range and practice area and around the whole property, they are not connected to you hole"): Range › Build's panel. The
  *  holes' painting tools (the surfaces, Square or Round, Brush or Run, Erase, My looks, Ground height) on your property: they lay cells of no
  *  hole, never touch a hole's, and hole edits and deletes never touch them. Done goes back to the Holes panel */
-function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
+function PropertyPanel({ game, looks, onLooks, bunkers, onBunkers }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void; bunkers: boolean; onBunkers?: (open: boolean) => void }) {
   const p = game.paint, brush = p.mode === 'brush', height = p.mode === 'height', run = brush && !!p.brushRun && p.brushCells > 0, keys = surfaceKeysOf(game);
   const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '', un = p.topUndo, re = p.topRedo;
   return (
@@ -108,6 +110,7 @@ function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; o
       <section data-section="shape" className="mt-3">
         <div className="sec-head"><h3 className="label-caps">Surfaces</h3><span className="sec-note">{`1 m cells · keys 1–${keys}`}</span></div>
         <SurfaceSwatches game={game} on={brush ? p.brushKind : null} pick={k => p.setBrush(k, 0)} />
+        <BunkerSettingsEntry game={game} open={bunkers} onOpen={onBunkers} />
         <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <div className="flex items-center gap-1.5" role="group" aria-label="Brush or Run" data-method={run ? 'run' : 'brush'}>
