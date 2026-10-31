@@ -2681,11 +2681,16 @@ export class GroundPainter {
         // T256: an alternate look's band (its lip grass with the finish), as tex; none: it keeps the layer's band
         const atone = (l: CourseLayer, a: Alt): CollarTone | null => (collarTone && l.collar && (tonedCollar(l.collar.n) || (fin.on && a.g)) ? collarTone : null);
         const band = (l: CourseLayer, draw: (t: CourseTex, tn: CollarTone | null) => void) => alts(l, a => { const t = fin.on && a.g ? a.g : a.band; if (t) draw(t, atone(l, a)); });
-        if (!lite) for (const { l } of ls) if (l.collar) { const sf = l.collar.soft ?? l.collar.edges, w = Math.min(flatF, Math.max(l.collar.w ?? flatF, 0.6 * flatF)); feather(tex(l), sf, w, tone(l)); band(l, (t, tn) => feather(t, sf, w, tn)); }
-        // T196: every edge of a raised band (a green's fringe, a tee's cut) softened a little, its walls' tops too: the band's texture fades
-        // over the top of the face hanging from it (a pond's bank keeps its own wet edge)
-        if (!lite && code !== layerCode(SURF.water, true)) for (const { l } of ls) if (l.collar) { const e = l.collar.edges; feather(tex(l), e, wallF, tone(l)); band(l, (t, tn) => feather(t, e, wallF, tn)); }
-        for (const { l } of ls) if (l.collar) { const cf = l.collar.fill; fill(tex(l), cf, tone(l)); band(l, (t, tn) => fill(t, cf, tn)); }
+        const collars = () => {
+          if (!lite) for (const { l } of ls) if (l.collar) { const sf = l.collar.soft ?? l.collar.edges, w = Math.min(flatF, Math.max(l.collar.w ?? flatF, 0.6 * flatF)); feather(tex(l), sf, w, tone(l)); band(l, (t, tn) => feather(t, sf, w, tn)); }
+          // T196: every edge of a raised band (a green's fringe, a tee's cut) softened a little, its walls' tops too: the band's texture fades
+          // over the top of the face hanging from it (a pond's bank keeps its own wet edge)
+          if (!lite && code !== layerCode(SURF.water, true)) for (const { l } of ls) if (l.collar) { const e = l.collar.edges; feather(tex(l), e, wallF, tone(l)); band(l, (t, tn) => feather(t, e, wallF, tn)); }
+          for (const { l } of ls) if (l.collar) { const cf = l.collar.fill; fill(tex(l), cf, tone(l)); band(l, (t, tn) => fill(t, cf, tn)); }
+        };
+        // a green's fringe lies over a bunker's grass but never over its sand and lip (the owner, 2026-10-31: "the fringe is over the bunker
+        // grass but never over the lip of the bunker"): kept off every bunker's fill, as drawn natively or as its picture
+        if (s === SURF.green && ls.some(q => q.l.collar)) offFills([SURF.bunker], collars); else collars();
         // T260: a Border of none (CourseLayer.collar.w 0) lays no band: the bunker's grass lip and the pond's wet soil and stones lie round the
         // sand and the water on the ground there, kept off the sand and the water (offFills)
         const bare = ls.filter(q => q.l.collar?.w === 0).map(q => q.l), banded = ls.filter(q => q.l.collar?.w !== 0).map(q => q.l);

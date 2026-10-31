@@ -88,7 +88,8 @@ export function buildBunkerGeometry(
   for (const { shape, owners: [owner] } of matches) {
     const component = owner.component;
     const ringsTiles = shape.ringsTiles.map(ring => options.rugged === false ? ring.slice() : Float64Array.from(warpLine(ring, true, RUGGED.courseStep)));
-    const settings = Object.freeze({ ...component.settings, shadow: lookShadow(component.settings.shadow, patches, owner.anchor) });
+    // no rim mound (Rim height is gone from the card: the course draws the ground round a bunker), whatever an older save holds
+    const settings = Object.freeze({ ...component.settings, rim: 0, shadow: lookShadow(component.settings.shadow, patches, owner.anchor) });
     const dirty = getDirtyBoundsTiles(ringsTiles, bunkerAppearance(settings));
     // Include interior and neighbouring course chunks as well as boundary
     // chunks: the complete collar and projected wall can reach beyond the sand.

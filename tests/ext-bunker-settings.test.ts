@@ -17,7 +17,7 @@ test('approved defaults and JSON round trips preserve every exact appearance val
   assert.equal(defaults.collar, 0.05);
   assert.equal(defaults.rim, 0);
   assert.equal(defaults.wall, 1.2);
-  assert.deepEqual(BUNKER_SETTING_FIELDS.filter(field => field.hidden).map(field => field.key).sort(), ['fairwayScale', 'roundness']);
+  assert.deepEqual(BUNKER_SETTING_FIELDS.filter(field => field.hidden).map(field => field.key).sort(), ['fairwayScale', 'rim', 'roundness'], 'Rim height is gone from the card');
   for (const key of ['slope', 'collar', 'firstCut']) assert.equal(BUNKER_SETTING_FIELDS.find(field => field.key === key)?.displayScale, 2);
 });
 
