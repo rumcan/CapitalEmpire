@@ -2,6 +2,9 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { Game } from '../game/engine';
 import { BUNKER_SETTING_FIELDS, BUNKER_TEXTURE_SLOTS, type BunkerSettingField, type BunkerSettings, type BunkerTextureSlotInfo } from '../game/ext/bunker-look/settings';
 import { bunkerTexture, bunkerTextureGroups } from '../game/ext/bunker-look/texture-library';
+import { bunkerLookPicture } from '../game/ext/bunker-look/look-picture';
+import { DEFAULT_BUNKER_TEXTURES } from '../game/ext/bunker-look/settings';
+import { lookName } from './course/BrushControls';
 import type { BunkerTextureEntry } from '../game/ext/bunker-look/stage-materials';
 
 const FIELDS = BUNKER_SETTING_FIELDS.filter(field => !field.hidden);
@@ -76,14 +79,20 @@ function TextureSwatch({ entry }: { entry: BunkerTextureEntry }) {
 }
 
 /** One swappable bunker picture: which texture it draws, and its own scale. */
-function TextureSlotControl({ slot, settings, scope, onChange }: {
+/** lookTex: the bunker's My looks texture (the hole in hand's): the Sand slot's default lays it, so the slot says so and shows it */
+function TextureSlotControl({ slot, settings, scope, lookTex, onChange }: {
   slot: Readonly<BunkerTextureSlotInfo>;
   settings: Readonly<BunkerSettings>;
   scope: string;
+  lookTex?: string;
   onChange(change: Partial<BunkerSettings>): void;
 }) {
-  const id = useId(), entry = bunkerTexture(slot.slot, settings[slot.key]), scale = fieldOf(slot.scale);
-  const known = entry.id === settings[slot.key];
+  const id = useId(), picked = bunkerTexture(slot.slot, settings[slot.key]), scale = fieldOf(slot.scale);
+  const known = picked.id === settings[slot.key];
+  // the Sand slot left at its default follows My looks (the owner, 2026-10-31: "the my looks need to apply to the bunkers")
+  const follows = slot.slot === 'sand' && picked.id === DEFAULT_BUNKER_TEXTURES.sand, look = follows && lookTex ? bunkerLookPicture(lookTex) : null;
+  const followLabel = `My looks${lookTex ? ` (${lookName(lookTex)})` : ''}`;
+  const entry: BunkerTextureEntry = look ? { ...look, label: followLabel, group: '' } : picked;
   return (
     <div className="mt-3 border-t pt-2" style={{ borderColor: 'var(--line)' }} data-bunker-texture={slot.slot}>
       <label htmlFor={`${id}-texture`} className="text-xs font-semibold">{slot.label}</label>
@@ -95,12 +104,13 @@ function TextureSlotControl({ slot, settings, scope, onChange }: {
           className="min-w-0 flex-1 rounded-lg border px-1.5 py-1 text-xs disabled:opacity-40">
           {TEXTURE_GROUPS.map(({ group, entries }) => (
             <optgroup key={group} label={group}>
-              {entries.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
+              {entries.map(option => <option key={option.id} value={option.id}>{slot.slot === 'sand' && option.id === DEFAULT_BUNKER_TEXTURES.sand ? followLabel : option.label}</option>)}
             </optgroup>
           ))}
         </select>
       </div>
       {!known && <p className="sub-line mt-0.5">{`Saved texture "${settings[slot.key]}" is not here; drawing the default.`}</p>}
+      {follows && <p className="sub-line mt-0.5" data-bunker-sand-follows>{`The sand is My looks' bunker texture${lookTex ? `, ${lookName(lookTex)}` : ''}: change it there, or pick a texture here to keep this bunker's own.`}</p>}
       {scale && <NumberControl field={scale} value={settings[scale.key]} scope={scope} onChange={value => onChange({ [scale.key]: value })} />}
     </div>
   );
@@ -178,7 +188,7 @@ export function BunkerSettingsCard({ game, onClose }: { game: Game; onClose: () 
           <summary className="sub-head cursor-pointer select-none">Materials</summary>
           <p className="sub-line mt-1.5">Swap any bunker picture for another texture and scale each one. New pictures dropped into the bunker texture folder show under Added textures.</p>
           {controls(OVERALL)}
-          {BUNKER_TEXTURE_SLOTS.map(slot => <TextureSlotControl key={slot.slot} slot={slot} settings={settings} scope={scopeLabel} onChange={update} />)}
+          {BUNKER_TEXTURE_SLOTS.map(slot => <TextureSlotControl key={slot.slot} slot={slot} settings={settings} scope={scopeLabel} lookTex={game.paint.lookOf?.(game.paint.lookOwner ?? 'default', 'bunker')?.tex} onChange={update} />)}
         </details>
       </fieldset>
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
