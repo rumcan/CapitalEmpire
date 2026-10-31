@@ -296,6 +296,8 @@ export const collarLaid = (c: CollarStyle | undefined): boolean => !!c && collar
 /** how many whole cells of a green's fringe a bunker's sand keeps off (the owner, 2026-10-31: "make the bunker not cross the green fringe,
  *  right now it pushed the fringe back"): the fringe's whole rings, so the sand's edge runs along the fringe's (its partial ring is drawn
  *  kept off the sand: renderer drawCourses) */
+/** how many cells short of a green's fringe a bunker still reaches it (1 m) */
+const FRINGE_SNAP = 2;
 export function bunkerOffFringe(styles: readonly (BlobStyle | undefined)[]): number {
   const c = styles[GREEN]?.collar;
   return c && collarLaid(c) && c.over.includes(BUNKER) ? collarRings(c.width).whole : 0;
@@ -891,16 +893,20 @@ function surfaceOcc(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar:
   const rings = col ? collarRings(col.width) : { whole: 0, part: 0 };
   const close = Math.max(0, Math.round(st.close)), cw0 = rings.whole + (rings.part > 0 ? 1 : 0);
   // T253: a rounded surface reads further, for its wider kernels and their thickness caps
-  const pad = 3 + 2 * close + cw0 + (radius ? ROUND_PAD : 0) + fringe;
+  const pad = 3 + 2 * close + cw0 + (radius ? ROUND_PAD : 0) + (fringe ? fringe + FRINGE_SNAP : 0);
   const ci0 = (a0 >> 1) - pad, cj0 = (b0 >> 1) - pad, cw = (a1 >> 1) + pad + 1 - ci0, ch = (b1 >> 1) + pad + 1 - cj0;
   const sw = readSurf(g, ci0, cj0, cw, ch), cv = readCarve(g, ci0, cj0, cw, ch), n = cw * ch;
   let occ: Uint8Array = new Uint8Array(n);
   for (let i = 0; i < n; i++) occ[i] = sw[i] === s ? 1 : 0;
   if (close > 0) occ = closeCells(occ, sw, s, cw, ch, close, cv);
-  // a bunker's cells under a green's fringe (its whole rings) are the fringe's, not sand (bunkerOffFringe)
+  // a bunker's cells under a green's fringe (its whole rings) are the fringe's, not sand (bunkerOffFringe); and a bunker that stops just
+  // short of the fringe reaches it, so its edge follows the green's (the owner, 2026-10-31: "the bunker must follow the green including the
+  // fringe border or its broke"): the cells between them, within FRINGE_SNAP of both, are drawn as sand
   if (fringe > 0) {
     const gr = new Uint8Array(n); for (let i = 0; i < n; i++) gr[i] = sw[i] === GREEN ? 1 : 0;
     const band = dilate(gr, cw, ch, fringe); for (let i = 0; i < n; i++) if (band[i] && sw[i] !== GREEN) occ[i] = 0;
+    const reach = dilate(gr, cw, ch, fringe + FRINGE_SNAP), near = dilate(occ, cw, ch, FRINGE_SNAP);
+    for (let i = 0; i < n; i++) if (!occ[i] && !band[i] && reach[i] && near[i] && claimable(BUNKER, sw[i]) && !cv?.[i]) occ[i] = 1;
   }
   const oS: Occ = { occ, ci0, cj0, cw, ch };
   const rS = radius ? roundCodes(occ, sw, s, cw, ch, ci0, cj0, g.w, radius, close + 1) : null;
