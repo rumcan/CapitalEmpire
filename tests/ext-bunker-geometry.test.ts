@@ -152,15 +152,15 @@ test('the course look\'s Shadow (Edges) scales the picture\'s shadow: its defaul
   assert.ok(Math.abs(at(0.15) - own / 2) < 1e-9); assert.equal(at(1), 3);
 });
 
-test('the cut face points at the nearest green within reach, and stays even with none', () => {
+test('a bunker carries the green rings right beside it (its tall face), none from a green far off', () => {
   const sand = patch(0, 0, [ring(10, 10, 14, 12)]);
-  const green = patch(0, 0, [], SURF.green); green.layers[0].fill = [Float32Array.from(ring(30, 10, 36, 12))];
+  const green = patch(0, 0, [], SURF.green); green.layers[0].fill = [Float32Array.from(ring(15, 10, 20, 12))];
   sand.layers.push(green.layers[0]);
-  const [x, y] = buildBunkerGeometry([sand], [component(22, 22)], flat).inputs[0].face!;
-  assert.ok(Math.abs(x - 1) < 0.05 && Math.abs(y) < 0.1, `toward +x, got ${x}, ${y}`);
-  assert.equal(buildBunkerGeometry([patch(0, 0, [ring(10, 10, 14, 12)])], [component(22, 22)], flat).inputs[0].face, undefined);
-  const far = patch(0, 0, [ring(10, 10, 14, 12)]), away = patch(0, 0, [], SURF.green); away.layers[0].fill = [Float32Array.from(ring(60, 10, 62, 12))]; far.layers.push(away.layers[0]);
-  assert.equal(buildBunkerGeometry([far], [component(22, 22)], flat).inputs[0].face, undefined, 'a green past 60 m is not this bunker’s');
+  const near = buildBunkerGeometry([sand], [component(22, 22)], flat).inputs[0].greens!;
+  assert.equal(near.length, 1); assert.equal(near[0][0], 15);
+  assert.equal(buildBunkerGeometry([patch(0, 0, [ring(10, 10, 14, 12)])], [component(22, 22)], flat).inputs[0].greens, undefined);
+  const far = patch(0, 0, [ring(10, 10, 14, 12)]), away = patch(0, 0, [], SURF.green); away.layers[0].fill = [Float32Array.from(ring(30, 10, 34, 12))]; far.layers.push(away.layers[0]);
+  assert.equal(buildBunkerGeometry([far], [component(22, 22)], flat).inputs[0].greens, undefined, 'a green 32 m off stands behind none of its walls');
 });
 
 test('the sand wears the My looks texture of the owner whose share holds the bunker', () => {

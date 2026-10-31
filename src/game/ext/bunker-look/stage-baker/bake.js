@@ -33,17 +33,18 @@ export class BunkerBaker{
   if(this.disposed)throw Error('Baker disposed');
   for(const name of ['textureScale','roughScale','firstScale','sandScale','soilScale','earthScale'])if(settings[name]!==undefined&&(!Number.isFinite(settings[name])||settings[name]<=0))throw Error('Invalid texture scale: '+name);
   for(const name of ['collar','firstCut','slope'])if(settings[name]!==undefined&&(!Number.isFinite(settings[name])||settings[name]<=0))throw Error('Invalid bank width: '+name);
-  for(const name of ['wall','rim','shadow'])if(settings[name]!==undefined&&(!Number.isFinite(settings[name])||settings[name]<0))throw Error('Invalid bank appearance: '+name);
+  for(const name of ['wall','wallLow','rim','shadow'])if(settings[name]!==undefined&&(!Number.isFinite(settings[name])||settings[name]<0))throw Error('Invalid bank appearance: '+name);
   if((settings.collar??.65)+(settings.firstCut??.9)>7.5)throw Error('Grass bands exceed the supported 15 metre combined width');
   if(request.ringsTiles){let count=0;for(const ring of request.ringsTiles){if(ring.length<6||ring.length%2||Array.from(ring).some(v=>!Number.isFinite(v)))throw Error('Invalid authoritative bunker boundary');count+=ring.length/2;}if(count>65536)throw Error('Bunker boundary is too large');}
-  const depthScale=.75/Math.max(1,2*(grid.width+grid.height+32)+depth+(settings.wall??.25)+(settings.rim??.16));
-  const face=Array.isArray(request.face)&&request.face.length===2&&request.face.every(Number.isFinite)&&Math.abs(Math.hypot(request.face[0],request.face[1])-1)<.01?request.face:null;
-  const renderOptions={...settings,face,textures,wallAspect:loaded[4].aspect,semanticPass:Boolean(request.semanticPass),authoritativeRings:request.ringsTiles,textureOriginTiles:originTiles,depthScale};
+  const depthScale=.75/Math.max(1,2*(grid.width+grid.height+32)+depth+Math.max(settings.wall??.25,settings.wallLow??.25)+(settings.rim??.16));
+  // Host: the green rings near the bunker (tiles) in the bake's own coordinates (tiles from the guide's origin)
+  const greens=Array.isArray(request.greens)?request.greens.filter(r=>Array.isArray(r)&&r.length>=6&&r.length%2===0&&r.every(Number.isFinite)).slice(0,64).map(r=>r.map((v,i)=>v-(i%2?originTiles.y:originTiles.x))):[];
+  const renderOptions={...settings,greens,textures,wallAspect:loaded[4].aspect,semanticPass:Boolean(request.semanticPass),authoritativeRings:request.ringsTiles,textureOriginTiles:originTiles,depthScale};
   const terrain=renderer.prepare(grid,renderOptions);let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
   for(const ring of terrain.contours)for(const [x,y]of ring){const px=(x-y)*projection.halfWidth,py=(x+y)*projection.halfHeight;minX=Math.min(minX,px);maxX=Math.max(maxX,px);minY=Math.min(minY,py);maxY=Math.max(maxY,py);}
   if(!Number.isFinite(minX))throw Error('Guide contains no bunker');
   const band=(settings.collar??.65)+(settings.firstCut??.9)+.15,marginX=band*Math.SQRT2*projection.halfWidth+3,marginY=band*Math.SQRT2*projection.halfHeight+3;
-  minX=Math.floor(minX-marginX);maxX=Math.ceil(maxX+marginX);minY=Math.floor(minY-marginY-(settings.rim??.16)*projection.verticalPixelsPerMetre);maxY=Math.ceil(maxY+marginY+(depth+(settings.wall??.25))*projection.verticalPixelsPerMetre);
+  minX=Math.floor(minX-marginX);maxX=Math.ceil(maxX+marginX);minY=Math.floor(minY-marginY-(settings.rim??.16)*projection.verticalPixelsPerMetre);maxY=Math.ceil(maxY+marginY+(depth+Math.max(settings.wall??.25,settings.wallLow??.25))*projection.verticalPixelsPerMetre);
   const worldW=maxX-minX,worldH=maxY-minY,maxEdge=Math.floor(Math.min(request.maxEdge??this.maxOutputEdge,this.maxOutputEdge)),requestedScale=request.rasterScale??.6;
   if(!Number.isFinite(maxEdge)||maxEdge<32||!Number.isFinite(requestedScale)||requestedScale<=0)throw Error('Invalid raster size');
   const rasterScale=Math.min(requestedScale,maxEdge/Math.max(worldW,worldH));

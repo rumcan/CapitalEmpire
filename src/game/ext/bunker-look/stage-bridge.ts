@@ -1,5 +1,5 @@
 import { BunkerCache, StaleBakeError } from './package/runtime/bunker-cache.js';
-import { buildBakeRequest } from './package/runtime/capital-empire-adapter.js';
+import { buildBakeRequest, getDirtyBoundsTiles } from './package/runtime/capital-empire-adapter.js';
 import { bunkerAppearance, DEFAULT_BUNKER_TEXTURES } from './settings';
 import { bunkerMaterials } from './texture-library';
 import type { BunkerStageInput, BunkerStageReady, BunkerStageRef, BunkerStageRequest, BunkerStageSprite } from './stage-types';
@@ -22,6 +22,12 @@ export interface BunkerStageBridgeOptions {
   maxBytes?: number;
   /** the picture a My looks texture is laid with (look-picture.ts bunkerLookPicture), or null */
   lookPicture?(tex: string): { id: string; url: string } | null;
+}
+/** a short hash of rings (FNV-1a over their coordinates to the cm), for the bake key */
+function ringsHash(rings: readonly number[][]): string {
+  let h = 0x811c9dc5;
+  for (const ring of rings) { for (const v of ring) { h ^= Math.round(v * 100) & 0xffffffff; h = Math.imul(h, 0x01000193); } h ^= 0x7f; h = Math.imul(h, 0x01000193); }
+  return (h >>> 0).toString(36);
 }
 const copyRef = (ref: BunkerStageRef): BunkerStageRef => ({ ...ref, ringsTiles: ref.ringsTiles.map(r => r.slice()), sourcePatchKeys: ref.sourcePatchKeys.slice(), dirtyBoundsTiles: [...ref.dirtyBoundsTiles] });
 
@@ -61,9 +67,11 @@ export class BunkerStageBridge {
     const keep = new Set<string>(), updates: BunkerStageRef[] = [], jobs: { state: State; request: BunkerStageRequest }[] = [];
     for (const input of inputs) {
       try {
-        const materials = this.materialsOf(input), textures = Object.values(materials).map(m => m.id).join(','), face = input.face ? [input.face[0], input.face[1]] as [number, number] : undefined;
-        const request: BunkerStageRequest = { ...buildBakeRequest({ id: input.id, revision: `native-stages-v1:${input.revision}:${textures}:${face ? face.map(v => v.toFixed(3)).join(',') : 'even'}`, ringsTiles: input.ringsTiles,
-          appearance: bunkerAppearance(input.settings), rasterScale: 0.6, maxEdge: 512 }), sourcePatchKeys: [...input.sourcePatchKeys], materials, ...(face ? { face } : {}) };
+        const materials = this.materialsOf(input), textures = Object.values(materials).map(m => m.id).join(','), greens = input.greens?.length ? input.greens.map(r => Array.from(r)) : undefined;
+        const request: BunkerStageRequest = { ...buildBakeRequest({ id: input.id, revision: `native-stages-v1:${input.revision}:${textures}:${greens ? ringsHash(greens) : 'no-green'}`, ringsTiles: input.ringsTiles,
+          appearance: bunkerAppearance(input.settings), rasterScale: 0.6, maxEdge: 512 }), sourcePatchKeys: [...input.sourcePatchKeys], materials, ...(greens ? { greens } : {}) };
+        // the picture reaches as far as its taller face (the no-green Wall height may be the higher one)
+        if (input.settings.wallLow > input.settings.wall) request.dirtyBoundsTiles = getDirtyBoundsTiles(request.ringsTiles, bunkerAppearance({ ...input.settings, wall: input.settings.wallLow }));
         keep.add(input.id);
         let state = this.states.get(input.id);
         if (!state || state.ref.key !== request.key) {

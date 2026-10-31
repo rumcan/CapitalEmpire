@@ -13,8 +13,8 @@ export interface BunkerGeometryInput {
   ringsTiles: readonly Float64Array[];
   settings: Readonly<BunkerSettings>;
   sourcePatchKeys: readonly string[];
-  /** toward the nearest green (faceToGreen): the side whose cut face is full height */
-  face?: readonly [number, number];
+  /** the greens near it (greensNear): its cut face stands tall only where one is behind it */
+  greens?: readonly Float64Array[];
   /** the My looks texture its sand wears (lookTexAt) */
   lookTex?: string;
 }
@@ -94,7 +94,8 @@ export function buildBunkerGeometry(
     // the look of whoever owns the bunker's cells (a hole, the property, a facility: My looks), else the component's own (a host without looks)
     const base = options.settingsAt?.(owner.anchor) ?? component.settings;
     const settings = Object.freeze({ ...base, rim: 0, shadow: lookShadow(base.shadow, patches, owner.anchor) });
-    const dirty = getDirtyBoundsTiles(ringsTiles, bunkerAppearance(settings));
+    // the picture reaches as far as its taller face (the no-green height may be the higher one)
+    const dirty = getDirtyBoundsTiles(ringsTiles, bunkerAppearance({ ...settings, wall: Math.max(settings.wall, settings.wallLow) }));
     // Include interior and neighbouring course chunks as well as boundary
     // chunks: the complete collar and projected wall can reach beyond the sand.
     const sourcePatchKeys = patches.filter(patch => intersects(dirty, [patch.cx * patch.size, patch.cy * patch.size, (patch.cx + 1) * patch.size, (patch.cy + 1) * patch.size]))
@@ -102,31 +103,30 @@ export function buildBunkerGeometry(
     // A native contour can split one raw component (a removed thin neck). These
     // are render parts of the same existing owner, anchored by real sand cells.
     const id = counts.get(component.id) === 1 ? component.id : `${component.id}/part:${owner.anchor[0]}:${owner.anchor[1]}`;
-    const face = faceToGreen(shape.ringsTiles, patches), lookTex = lookTexAt(patches, owner.anchor);
+    const greens = greensNear(shape.ringsTiles, patches), lookTex = lookTexAt(patches, owner.anchor);
     batch.inputs.push({ id, revision: options.rugged === false ? 'course-4676-flat-v1' : 'course-4676-rugged-v1',
-      ringsTiles, settings, sourcePatchKeys: Object.freeze(sourcePatchKeys), ...(face ? { face } : {}), ...(lookTex ? { lookTex } : {}) });
+      ringsTiles, settings, sourcePatchKeys: Object.freeze(sourcePatchKeys), ...(greens.length ? { greens } : {}), ...(lookTex ? { lookTex } : {}) });
   }
   return batch;
 }
 
-/** How far (tiles) a bunker looks for its green: 60 m. */
-const GREEN_REACH = 30;
-/** The unit vector (tiles) from a bunker's middle toward the nearest point of a green within GREEN_REACH of its outline, or null: the cut
- *  face stands on the side toward the green (the owner, 2026-10-31: "it is always the side closest to the green"). */
-export function faceToGreen(rings: readonly ArrayLike<number>[], patches: readonly CoursePatch[]): readonly [number, number] | null {
-  let sx = 0, sy = 0, n = 0, x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const ring of rings) for (let i = 0; i + 1 < ring.length; i += 2) { const x = ring[i]!, y = ring[i + 1]!; sx += x; sy += y; n++; x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
-  if (!n) return null;
-  const cx = sx / n, cy = sy / n, reach = GREEN_REACH + Math.hypot(x1 - x0, y1 - y0) / 2;
-  let best = reach * reach, bx = 0, by = 0;
+/** How far (tiles) past a bunker's outline its greens are read: past FACE_FAR in the bake, a green stands behind no wall. */
+const GREEN_REACH = 4;
+/** The green rings (tiles, as the course patches clip them) within GREEN_REACH of a bunker's outline: its cut face stands tall only where
+ *  the green is right behind it (the owner, 2026-10-31: "make any vertical wall that does not have the green behind it small"). */
+export function greensNear(rings: readonly ArrayLike<number>[], patches: readonly CoursePatch[]): Float64Array[] {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const ring of rings) for (let i = 0; i + 1 < ring.length; i += 2) { x0 = Math.min(x0, ring[i]!); y0 = Math.min(y0, ring[i + 1]!); x1 = Math.max(x1, ring[i]!); y1 = Math.max(y1, ring[i + 1]!); }
+  const out: Float64Array[] = []; if (!Number.isFinite(x0)) return out;
+  x0 -= GREEN_REACH; y0 -= GREEN_REACH; x1 += GREEN_REACH; y1 += GREEN_REACH;
   for (const patch of patches) {
-    if (patch.cx * patch.size > cx + reach || (patch.cx + 1) * patch.size < cx - reach || patch.cy * patch.size > cy + reach || (patch.cy + 1) * patch.size < cy - reach) continue;
-    for (const layer of patch.layers) if (layer.s === SURF.green) for (const ring of layer.fill) for (let i = 0; i + 1 < ring.length; i += 2) {
-      const d = (ring[i]! - cx) ** 2 + (ring[i + 1]! - cy) ** 2; if (d < best) { best = d; bx = ring[i]! - cx; by = ring[i + 1]! - cy; }
+    if (patch.cx * patch.size > x1 || (patch.cx + 1) * patch.size < x0 || patch.cy * patch.size > y1 || (patch.cy + 1) * patch.size < y0) continue;
+    for (const layer of patch.layers) if (layer.s === SURF.green) for (const ring of layer.fill) {
+      let near = false; for (let i = 0; i + 1 < ring.length && !near; i += 2) near = ring[i]! >= x0 && ring[i]! <= x1 && ring[i + 1]! >= y0 && ring[i + 1]! <= y1;
+      if (near) out.push(Float64Array.from(ring));
     }
   }
-  const length = Math.hypot(bx, by);
-  return length > 1e-6 ? [bx / length, by / length] : null;
+  return out;
 }
 
 /** The My looks texture the bunker layer lays at a cell: the look of the owner whose share holds it (a hole's, the property's, a facility's:

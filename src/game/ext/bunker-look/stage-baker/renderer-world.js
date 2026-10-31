@@ -5,15 +5,17 @@ import {WallRenderer} from './wall-renderer.js';
 const VS=`#version 300 es
 precision highp float;layout(location=0)in vec3 aPosition;layout(location=1)in vec2 aWorld;out vec2 vWorld;void main(){gl_Position=vec4(aPosition,1.);vWorld=aWorld;}`;
 const FS=`#version 300 es
-precision highp float;in vec2 vWorld;out vec4 outColor;uniform sampler2D uSand;uniform sampler2D uSoil;uniform sampler2D uGrass;uniform sampler2D uFirstCut;uniform sampler2D uField;uniform vec2 uWorldSize;uniform vec2 uMaterialOrigin;uniform float uDepth;uniform float uCollar;uniform float uFirstWidth;uniform float uRim;uniform float uSlope;uniform float uShadow;uniform float uWall;uniform vec2 uFace;uniform vec2 uFaceSpan;uniform float uTextureScale;uniform float uRoughScale;uniform float uFirstScale;uniform float uSandScale;uniform float uSandAngle;uniform float uSandExposure;uniform float uEarthScale;uniform float uSoilScale;uniform int uBorder;uniform int uSemantic;
+precision highp float;in vec2 vWorld;out vec4 outColor;uniform sampler2D uSand;uniform sampler2D uSoil;uniform sampler2D uGrass;uniform sampler2D uFirstCut;uniform sampler2D uField;uniform vec2 uWorldSize;uniform vec2 uMaterialOrigin;uniform float uDepth;uniform float uCollar;uniform float uFirstWidth;uniform float uRim;uniform float uSlope;uniform float uShadow;uniform float uWall;uniform float uWallLow;uniform sampler2D uFaceK;uniform float uTextureScale;uniform float uRoughScale;uniform float uFirstScale;uniform float uSandScale;uniform float uSandAngle;uniform float uSandExposure;uniform float uEarthScale;uniform float uSoilScale;uniform int uBorder;uniform int uSemantic;
 float ss(float a,float b,float v){float t=clamp((v-a)/(b-a),0.,1.);return t*t*(3.-2.*t);}
 float distanceAt(vec2 p){vec2 rg=texture(uField,clamp((p+8.)/uWorldSize,0.,1.)).rg;return ((rg.r*255.*256.+rg.g*255.)/65535.)*16.-8.;}
 float hash2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float noise2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash2(i),hash2(i+vec2(1,0)),f.x),mix(hash2(i+vec2(0,1)),hash2(i+1.),f.x),f.y);}
-// Host: the cut face is full height on the side toward the green and half on the far side (faceK; uFace zero: even all round)
-float faceK(vec2 p){if(dot(uFace,uFace)<.5)return 1.;return .75+.25*clamp((dot(p,uFace)-uFaceSpan.x)/uFaceSpan.y,-1.,1.);}
-float heightAt(vec2 p){float d=distanceAt(p);float t=max(d,0.);float bowl=.72*ss(-.045,uSlope,d)+.28*(1.-exp(-t/2.5));float mound=uRim*exp(-pow((d+uCollar*.26)/(uCollar*.47),2.));return -uDepth*bowl+mound-uWall*faceK(p)*ss(-.006,.008,d);}
-float slopeHeightAt(vec2 p){float d=distanceAt(p);return heightAt(p)+uWall*faceK(p)*ss(-.006,.008,d);}
+// Host: the cut face's height: Wall height where the green is right behind it, the no-green Wall height elsewhere (faceField's weight, unit
+// 6; the owner, 2026-10-31: "make any vertical wall that does not have the green behind it small ... you should still be able to make
+// [it] higher")
+float wallAt(vec2 p){return mix(uWallLow,uWall,texture(uFaceK,clamp((p+8.)/uWorldSize,0.,1.)).r);}
+float heightAt(vec2 p){float d=distanceAt(p);float t=max(d,0.);float bowl=.72*ss(-.045,uSlope,d)+.28*(1.-exp(-t/2.5));float mound=uRim*exp(-pow((d+uCollar*.26)/(uCollar*.47),2.));return -uDepth*bowl+mound-wallAt(p)*ss(-.006,.008,d);}
+float slopeHeightAt(vec2 p){float d=distanceAt(p);return heightAt(p)+wallAt(p)*ss(-.006,.008,d);}
 vec3 rawMat(sampler2D s,vec2 uv){return texture(s,.008+.984*uv).rgb;}
 vec3 seamless(sampler2D s,vec2 p){vec2 q=fract(p),r=fract(p+.5);vec2 w=vec2(ss(.27,.47,abs(q.x-.5)),ss(.27,.47,abs(q.y-.5)));return mix(mix(rawMat(s,q),rawMat(s,vec2(r.x,q.y)),w.x),mix(rawMat(s,vec2(q.x,r.y)),rawMat(s,r),w.x),w.y);}
 vec3 grassTexture(vec2 p){vec2 uv=vec2((p.x-p.y)*.08,(p.x+p.y)*.09)/(uTextureScale*uRoughScale);vec2 q=fract(uv),r=fract(uv+.5);vec2 w=vec2(ss(.32,.48,abs(q.x-.5)),ss(.32,.48,abs(q.y-.5)));return mix(mix(texture(uGrass,q).rgb,texture(uGrass,vec2(r.x,q.y)).rgb,w.x),mix(texture(uGrass,vec2(q.x,r.y)).rgb,texture(uGrass,r).rgb,w.x),w.y);}
@@ -80,18 +82,38 @@ precision highp float;layout(location=0)in vec3 aPosition;layout(location=1)in v
 const BLADE_FS=`#version 300 es
 precision highp float;in vec3 vColor;out vec4 outColor;uniform int uSemantic;void main(){outColor=uSemantic==1?vec4(0.,0.,1.,1.):vec4(vColor,1.);}`;
 export function surfaceHeight(d,depth,options={}){const ss=(a,b,v)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t);};const collar=options.collar??.65,rim=options.rim??.16,slope=options.slope??1.1;return -depth*(.72*ss(-.045,slope,d)+.28*(1-Math.exp(-Math.max(d,0)/2.5)))+rim*Math.exp(-Math.pow((d+collar*.26)/(collar*.47),2))-(options.wall??.25)*ss(-.006,.008,d);}
-/** Host: the cut face's direction (options.face: a unit vector in tiles toward the green) across this bunker's outline: the outline's
- *  middle and half its reach along it, or null (no green: the face is even all round). */
-export function faceSpan(contours,face){if(!face||!contours?.length)return null;let lo=Infinity,hi=-Infinity;for(const path of contours)for(const [x,y]of path){const t=x*face[0]+y*face[1];lo=Math.min(lo,t);hi=Math.max(hi,t);}return hi>lo?{face,c:(lo+hi)/2,r:(hi-lo)/2}:null;}
-/** Host: the share of the cut face's height at a point (1 on the green side, .5 on the far side; the shader's faceK). */
-export function faceK(span,x,y){return span ? .75+.25*Math.max(-1,Math.min(1,(x*span.face[0]+y*span.face[1]-span.c)/span.r)):1;}
+/** Host: how far past a green's edge (bake units: tiles) a cut face still has the green behind it: full Wall height to FACE_NEAR, the
+ *  no-green Wall height from FACE_FAR. */
+export const FACE_NEAR=1.25,FACE_FAR=2.5;
+const inRing=(r,x,y)=>{let inside=false;for(let i=0,j=r.length-2;i<r.length;j=i,i+=2){const ay=r[j+1],by=r[i+1];if((ay>y)!==(by>y)&&x<(r[i]-r[j])*(y-ay)/(by-ay)+r[j])inside=!inside;}return inside;};
+/** Host: how much a green stands behind the cut face (0 none .. 1 right behind), on a 160-wide grid over the bake's terrain, box-blurred so
+ *  the floor's slope shades without steps (the distance field's mapping): 0 beyond FACE_FAR of a green (options.greens, bake units), 1
+ *  inside FACE_NEAR. at(x, y) samples it as the GPU does. */
+export function faceField(terrain,greens){
+  const W=160,H=Math.max(2,Math.round(W*terrain.height/terrain.width)),raw=new Float32Array(W*H),k=new Float32Array(W*H),data=new Uint8Array(W*H),rings=(greens??[]).filter(r=>r.length>=6);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+   const px=(x+.5)/W*terrain.width-8,py=(y+.5)/H*terrain.height-8;let v=0;
+   if(rings.length){let d=Infinity;for(const r of rings){if(inRing(r,px,py)){d=0;break;}for(let i=0;i<r.length;i+=2){const j=(i+2)%r.length,ax=r[i],ay=r[i+1],dx=r[j]-ax,dy=r[j+1]-ay,l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/l)):0;d=Math.min(d,Math.hypot(px-ax-t*dx,py-ay-t*dy));}}
+    const u=Math.max(0,Math.min(1,(FACE_FAR-d)/(FACE_FAR-FACE_NEAR)));v=u*u*(3-2*u);}
+   raw[y*W+x]=v;
+  }
+  // a 5x5 box blur (two passes of 3): the bilinear field's creases would show as steps in the floor's light
+  const blur=(src,dst)=>{for(let y=0;y<H;y++)for(let x=0;x<W;x++){let sum=0,n=0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=x+i,yy=y+j;if(xx<0||yy<0||xx>=W||yy>=H)continue;sum+=src[yy*W+xx];n++;}dst[y*W+x]=sum/n;}};
+  blur(raw,k);blur(k,raw);k.set(raw);
+  for(let i=0;i<W*H;i++)data[i]=Math.round(k[i]*255);
+  const at=(px,py)=>{const fx=Math.max(0,Math.min(W-1,(px+8)/terrain.width*W-.5)),fy=Math.max(0,Math.min(H-1,(py+8)/terrain.height*H-.5)),x0=Math.floor(fx),y0=Math.floor(fy),x1=Math.min(x0+1,W-1),y1=Math.min(y0+1,H-1),u=fx-x0,v=fy-y0;
+   return (k[y0*W+x0]*(1-u)+k[y0*W+x1]*u)*(1-v)+(k[y1*W+x0]*(1-u)+k[y1*W+x1]*u)*v;};
+  return {W,H,data,at};
+}
+/** Host: the cut face's height (metres) at a point: between the no-green Wall height and the Wall height by faceField's weight (the shader's wallAt). */
+export function wallAt(field,options,x,y){const hi=options.wall??.25,lo=options.wallLow??.25;return field?lo+(hi-lo)*field.at(x,y):lo;}
 export class WorldRenderer{
  constructor(){
   this.canvas=typeof document==='undefined'?new OffscreenCanvas(1,1):document.createElement('canvas');this.canvas.width=1488;this.canvas.height=768;
   const gl=this.gl=this.canvas.getContext('webgl2',{alpha:true,antialias:true,premultipliedAlpha:false,preserveDrawingBuffer:true});if(!gl)throw Error('WebGL2 required');
   const p=this.program=gl.createProgram();gl.attachShader(p,compile(gl,gl.VERTEX_SHADER,VS));gl.attachShader(p,compile(gl,gl.FRAGMENT_SHADER,FS));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));gl.useProgram(p);
-  this.u={};for(const n of ['uSand','uSoil','uGrass','uFirstCut','uField','uWorldSize','uMaterialOrigin','uDepth','uCollar','uFirstWidth','uRim','uSlope','uShadow','uWall','uFace','uFaceSpan','uTextureScale','uRoughScale','uFirstScale','uSandScale','uSandAngle','uSandExposure','uEarthScale','uSoilScale','uBorder','uSemantic'])this.u[n]=gl.getUniformLocation(p,n);
-  // texture units: 0 sand, 1 distance field, 2 rough, 3 first cut, 4 wall (WallRenderer), 5 soil, 7 uploads
+  this.u={};for(const n of ['uSand','uSoil','uGrass','uFirstCut','uField','uWorldSize','uMaterialOrigin','uDepth','uCollar','uFirstWidth','uRim','uSlope','uShadow','uWall','uWallLow','uFaceK','uTextureScale','uRoughScale','uFirstScale','uSandScale','uSandAngle','uSandExposure','uEarthScale','uSoilScale','uBorder','uSemantic'])this.u[n]=gl.getUniformLocation(p,n);
+  // texture units: 0 sand, 1 distance field, 2 rough, 3 first cut, 4 wall (WallRenderer), 5 soil, 6 the cut face's height (faceField), 7 uploads
   gl.uniform1i(this.u.uSand,0);gl.uniform1i(this.u.uSoil,5);gl.uniform1i(this.u.uGrass,2);gl.uniform1i(this.u.uFirstCut,3);
   this.fieldTex=gl.createTexture();gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,this.fieldTex);for(const what of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,what,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.uniform1i(this.u.uField,1);
   this.vao=gl.createVertexArray();gl.bindVertexArray(this.vao);this.buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,20,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,2,gl.FLOAT,false,20,12);gl.enable(gl.DEPTH_TEST);gl.disable(gl.BLEND);this.gridKey='';
@@ -141,12 +163,14 @@ export class WorldRenderer{
   for(let y=0;y<NY;y++)for(let x=0;x<NX;x++){tri(points[y][x],points[y][x+1],points[y+1][x+1]);tri(points[y][x],points[y+1][x+1],points[y+1][x]);}
   this.mesh=new Float32Array(data);return this.mesh;
  }
+ /** Host: the cut face's field for this terrain and these greens, made once per bake (its colour and semantic passes share it) */
+ faceOf(t,greens){const key=JSON.stringify(greens??[]);if(this.faceCache?.t!==t||this.faceCache.key!==key)this.faceCache={t,key,field:faceField(t,greens)};return this.faceCache.field;}
  render(grid,depth,scale,origin,border=false,options={}){
   const P=options.projection??{halfWidth:256,halfHeight:148,verticalPixelsPerMetre:147.8};const width=options.width??1488,height=options.height??768;if(this.canvas.width!==width||this.canvas.height!==height){this.canvas.width=width;this.canvas.height=height;}
   this.prepare(grid,options);
-  const gl=this.gl,t=this.terrain,mesh=this.buildMesh(),v=new Float32Array(mesh.length/4*5),baseOptions={...options,wall:0},span=faceSpan(t.contours,options.face);options={...options,faceSpan:span};let i=0;
-  for(let k=0;k<mesh.length;k+=4){const x=mesh[k],y=mesh[k+1],z=surfaceHeight(mesh[k+2],depth,baseOptions)-mesh[k+3]*(options.wall??.25)*faceK(span,x,y),px=origin.x+(x-y)*P.halfWidth*scale,py=origin.y+(x+y)*P.halfHeight*scale-z*P.verticalPixelsPerMetre*scale;v[i++]=px/(width/2)-1;v[i++]=1-py/(height/2);v[i++]=-(2*(x+y)+z)*(options.depthScale??.01);v[i++]=x;v[i++]=y;}
-  gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);gl.bufferData(gl.ARRAY_BUFFER,v,gl.STREAM_DRAW);gl.uniform2f(this.u.uWorldSize,t.width,t.height);gl.uniform2f(this.u.uMaterialOrigin,options.textureOriginTiles?.x??0,options.textureOriginTiles?.y??0);gl.uniform1f(this.u.uDepth,depth);gl.uniform1f(this.u.uCollar,options.collar??.65);gl.uniform1f(this.u.uFirstWidth,options.firstCut??.9);gl.uniform1f(this.u.uRim,options.rim??.16);gl.uniform1f(this.u.uSlope,options.slope??1.1);gl.uniform1f(this.u.uShadow,options.shadow??1.25);gl.uniform1f(this.u.uWall,options.wall??.25);gl.uniform2f(this.u.uFace,span?span.face[0]:0,span?span.face[1]:0);gl.uniform2f(this.u.uFaceSpan,span?span.c:0,span?span.r:1);gl.uniform1f(this.u.uTextureScale,options.textureScale??1);gl.uniform1f(this.u.uRoughScale,options.roughScale??1);gl.uniform1f(this.u.uFirstScale,options.firstScale??1);gl.uniform1f(this.u.uSandScale,options.sandScale??1);gl.uniform1f(this.u.uSandAngle,(options.sandAngle??0)*Math.PI/180);gl.uniform1f(this.u.uSandExposure,options.sandExposure??1);gl.uniform1f(this.u.uEarthScale,options.earthScale??1);gl.uniform1f(this.u.uSoilScale,options.soilScale??options.earthScale??1);this.bindTextures(options.textures);gl.uniform1i(this.u.uBorder,border?1:0);gl.uniform1i(this.u.uSemantic,options.semanticPass?1:0);gl.viewport(0,0,width,height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,v.length/5);this.wallRenderer.draw({terrain:t,depth,scale,origin,options,width,height,heightAt:surfaceHeight});this.drawGrass(depth,scale,origin,options);return this.canvas;
+  const gl=this.gl,t=this.terrain,mesh=this.buildMesh(),v=new Float32Array(mesh.length/4*5),baseOptions={...options,wall:0},span=this.faceOf(t,options.greens);options={...options,faceSpan:span};let i=0;
+  for(let k=0;k<mesh.length;k+=4){const x=mesh[k],y=mesh[k+1],z=surfaceHeight(mesh[k+2],depth,baseOptions)-mesh[k+3]*wallAt(span,options,x,y),px=origin.x+(x-y)*P.halfWidth*scale,py=origin.y+(x+y)*P.halfHeight*scale-z*P.verticalPixelsPerMetre*scale;v[i++]=px/(width/2)-1;v[i++]=1-py/(height/2);v[i++]=-(2*(x+y)+z)*(options.depthScale??.01);v[i++]=x;v[i++]=y;}
+  gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);gl.bufferData(gl.ARRAY_BUFFER,v,gl.STREAM_DRAW);gl.uniform2f(this.u.uWorldSize,t.width,t.height);gl.uniform2f(this.u.uMaterialOrigin,options.textureOriginTiles?.x??0,options.textureOriginTiles?.y??0);gl.uniform1f(this.u.uDepth,depth);gl.uniform1f(this.u.uCollar,options.collar??.65);gl.uniform1f(this.u.uFirstWidth,options.firstCut??.9);gl.uniform1f(this.u.uRim,options.rim??.16);gl.uniform1f(this.u.uSlope,options.slope??1.1);gl.uniform1f(this.u.uShadow,options.shadow??1.25);gl.uniform1f(this.u.uWall,options.wall??.25);gl.uniform1f(this.u.uWallLow,options.wallLow??.25);this.faceTex??=gl.createTexture();gl.activeTexture(gl.TEXTURE6);gl.bindTexture(gl.TEXTURE_2D,this.faceTex);gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,span.W,span.H,0,gl.RED,gl.UNSIGNED_BYTE,span.data);gl.pixelStorei(gl.UNPACK_ALIGNMENT,4);for(const what of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,what,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.uniform1i(this.u.uFaceK,6);gl.uniform1f(this.u.uTextureScale,options.textureScale??1);gl.uniform1f(this.u.uRoughScale,options.roughScale??1);gl.uniform1f(this.u.uFirstScale,options.firstScale??1);gl.uniform1f(this.u.uSandScale,options.sandScale??1);gl.uniform1f(this.u.uSandAngle,(options.sandAngle??0)*Math.PI/180);gl.uniform1f(this.u.uSandExposure,options.sandExposure??1);gl.uniform1f(this.u.uEarthScale,options.earthScale??1);gl.uniform1f(this.u.uSoilScale,options.soilScale??options.earthScale??1);this.bindTextures(options.textures);gl.uniform1i(this.u.uBorder,border?1:0);gl.uniform1i(this.u.uSemantic,options.semanticPass?1:0);gl.viewport(0,0,width,height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,v.length/5);this.wallRenderer.draw({terrain:t,depth,scale,origin,options,width,height,heightAt:surfaceHeight});this.drawGrass(depth,scale,origin,options);return this.canvas;
  }
 }
 

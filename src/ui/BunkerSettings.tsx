@@ -11,12 +11,12 @@ import type { BunkerTextureEntry } from '../game/ext/bunker-look/stage-materials
 
 const fieldOf = (key: BunkerSettingKey) => BUNKER_SETTING_FIELDS.find(field => field.key === key)!;
 /** the bunker's shape, as the card lays it out */
-const SHAPE_FIELDS = (['depth', 'wall', 'slope'] as const).map(fieldOf);
+const SHAPE_FIELDS = (['depth', 'wall', 'wallLow', 'slope'] as const).map(fieldOf);
 /** the pictures the look picks (the sand is the look's own texture; the grass round it is the course's Border) */
 const PICTURE_SLOTS = BUNKER_TEXTURE_SLOTS.filter(slot => slot.slot === 'soil' || slot.slot === 'wall');
 const TEXTURE_GROUPS = bunkerTextureGroups();
 const displayNumber = (value: number) => Number(value.toFixed(3)).toString();
-const fieldLabel = (field: BunkerSettingField) => field.key === 'depth' ? 'Floor depth' : field.key === 'wall' ? 'Wall height (green side)' : field.key === 'textureScale' ? 'All pictures’ scale' : field.label;
+const fieldLabel = (field: BunkerSettingField) => field.key === 'depth' ? 'Floor depth' : field.key === 'wall' ? 'Wall height (green side)' : field.key === 'wallLow' ? 'Wall height (no green behind)' : field.key === 'textureScale' ? 'All pictures’ scale' : field.label;
 
 /** A local draft survives game updates and commits only after the player finishes typing. */
 function NumberControl({ field, value, scope, onChange }: {
@@ -66,7 +66,7 @@ function NumberControl({ field, value, scope, onChange }: {
           className="w-20 rounded-lg border px-1.5 py-1 text-right text-xs disabled:opacity-40" />
       </div>
       {field.key === 'depth' && <p className="sub-line mt-0.5">Below the cut wall</p>}
-      {field.key === 'wall' && <p className="sub-line mt-0.5">Half of it on the side away from the green</p>}
+      {field.key === 'wall' && <p className="sub-line mt-0.5">Where the green is right behind it</p>}
     </div>
   );
 }

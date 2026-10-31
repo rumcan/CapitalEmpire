@@ -1,6 +1,7 @@
 // Host adaptation of the supplied SDK: the ordinary colour pass is unchanged.
 // semanticPass only emits geometry IDs for native floor/wall/lip staging; original vendor files remain preserved.
 // Vertical soil faces for the continuous bunker terrain. Uses texture unit 4.
+import { wallAt } from './renderer-world.js';
 const VS = `#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPosition;
@@ -89,16 +90,18 @@ export class WallRenderer {
 
   draw({terrain, depth, scale, origin, options = {}, width, height, heightAt}) {
     const P=options.projection??{halfWidth:256,halfHeight:148,verticalPixelsPerMetre:147.8};
-    if (!terrain?.contours?.length || (options.wall ?? .25) <= 0) return 0;
+    // Host: the face runs between two heights (renderer-world wallAt): it is drawn while either is above none
+    const wmax = Math.max(options.wall ?? .25, options.wallLow ?? .25), tall = { ...options, wall: wmax };
+    if (!terrain?.contours?.length || wmax <= 0) return 0;
     if (typeof heightAt !== 'function') throw new TypeError('WallRenderer.draw requires heightAt(d, depth, options).');
-    const top = heightAt(-.012, depth, options);
-    const bottom = heightAt(.012, depth, options);
+    const top = heightAt(-.012, depth, tall);
+    const bottom = heightAt(.012, depth, tall);
     if (!Number.isFinite(top) || !Number.isFinite(bottom)) throw new TypeError('Wall profile heights must be finite.');
     if (top <= bottom + .000001) return 0;
-    // Host: the face drops less away from the green (options.faceSpan: 1 on the green side, .5 on the far side, as renderer-world faceK);
-    // its top stays at the ground, its foot follows
-    const span = options.faceSpan, wall = options.wall ?? .25;
-    const footAt = (x, y) => span ? bottom + wall * (.25 - .25 * Math.max(-1, Math.min(1, (x * span.face[0] + y * span.face[1] - span.c) / span.r))) : bottom;
+    // Host: the face's height follows the green behind it (options.faceSpan, renderer-world wallAt); its top stays at the ground, its foot
+    // follows
+    const span = options.faceSpan;
+    const footAt = (x, y) => bottom + wmax - wallAt(span, options, x, y);
     const textureScale = Math.max(.01, options.textureScale ?? 1);
     const earthScale = Math.max(.01, options.earthScale ?? 1);
     const textureSize = textureScale * earthScale;

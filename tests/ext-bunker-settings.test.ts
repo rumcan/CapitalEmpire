@@ -11,7 +11,7 @@ test('approved defaults and JSON round trips preserve every exact appearance val
   const defaults = clampBunkerSettings(JSON.parse(JSON.stringify(DEFAULT_BUNKER_SETTINGS)));
   assert.deepEqual(defaults, DEFAULT_BUNKER_SETTINGS);
   // the approved look, but the course draws the grass round a bunker: no own grass bands, no rim mound; the edge soil starts at the earth scale
-  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, depth: 0.3, settings: { ...APPROVED_APPEARANCE.settings, collar: 0.05, firstCut: 0.05, rim: 0, wall: 1.2, soilScale: APPROVED_APPEARANCE.settings.earthScale, sandAngle: 0, sandExposure: 1 } });
+  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, depth: 0.3, settings: { ...APPROVED_APPEARANCE.settings, collar: 0.05, firstCut: 0.05, rim: 0, wall: 1.2, wallLow: 0.25, soilScale: APPROVED_APPEARANCE.settings.earthScale, sandAngle: 0, sandExposure: 1 } });
   assert.equal(defaults.version, 1);
   assert.equal(defaults.depth, 0.3);
   assert.equal(defaults.collar, 0.05);
