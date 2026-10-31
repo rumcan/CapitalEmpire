@@ -68,13 +68,29 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
       </div>
       <div className="sub-line mt-1">{`The ball lies as on the ${play.name.toLowerCase()}: ${play.note}.`}</div>
 
+      {/* Main texture first, then the Border (the owner, 2026-10-31: "Main first and then Border") */}
+      <h4 className="sub-head mt-3">Main texture</h4>
+      <TexturePicker label="Texture" testId="grass" value={d.family} options={grassTextureOptions()} onUpload={addOwnTexture} onPick={id => id && set({ family: id })}
+        edits={[{ id: 'scale', label: `Scale ${Math.round(d.scale * 100)}%`, panel: (
+            <div className="flex items-center gap-1">
+              <button className="btn" onClick={() => set({ scale: d.scale / 1.25 })}>−</button>
+              <span className="w-12 text-center text-xs text-slate-200" data-testid="grass-scale">{`${Math.round(d.scale * 100)}%`}</span>
+              <button className="btn" onClick={() => set({ scale: d.scale * 1.25 })}>+</button>
+              <button className="btn" onClick={() => set({ scale: 1 })}>Reset</button>
+            </div>) },
+          // a painted grass is never turned (its light stays at the upper right); any other texture turns
+          ...(!isGrassFamily(d.family) ? [{ id: 'angle', label: `Angle ${Math.round(d.angle ?? 0)}°`, panel: (
+            <div className="flex items-center gap-2">
+              <input type="range" aria-label="Angle" min={-90} max={90} step={5} value={d.angle ?? 0} onChange={e => set({ angle: +e.target.value })} className="flex-1" />
+              <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(d.angle ?? 0)}°`}</span>
+            </div>) }] : [])]} />
       <ExposureRow label="Exposure" f={x} set={f => set(toneOfExposure(f))} title="The texture itself made darker or lighter, keeping its detail and colour: the middle is none, the ends one stop darker or lighter (double-click: none)" />
       <label className={`mt-2 flex items-center gap-2 text-[12px] ${stripesOk(d.plays) ? 'text-slate-300' : 'text-slate-600'}`} title={stripesOk(d.plays) ? 'Mowing stripes along each hole\'s line, as the fairway has' : 'Only a fairway or a first cut is mown in stripes'}>
         <input type="checkbox" aria-label="Mowing stripes" disabled={!stripesOk(d.plays)} checked={d.stripes && stripesOk(d.plays)} onChange={e => set({ stripes: e.target.checked })} data-testid="grass-stripes" />
         <span>{stripesOk(d.plays) ? 'Mowing stripes' : 'Mowing stripes (fairway and first cut only)'}</span>
       </label>
 
-      <h4 className="sub-head mt-3">Edges</h4>
+      <h4 className="sub-head mt-3">Border</h4>
       <div className="flex items-center gap-2 text-[12px] text-slate-400" title={`A first cut band round it: none, a hairline, up to ${BORDER_MAX_M} m`}>
         <span className="w-12 shrink-0">Border</span>
         <input type="range" aria-label="Border: a first cut band round it" min={0} max={BORDER_STEPS} step={1} value={courseBorderPos(d.border)} onChange={e => set({ border: courseBorderAt(+e.target.value) })} className="min-w-0 flex-1" />
@@ -114,23 +130,6 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
         <span className="w-16 text-right text-xs text-slate-200">{shadowLabel(d.shadow)}</span>
       </div>
 
-      {/* the settings above, the textures in a scrollable window under them (the owner, 2026-10-31: "move the settings to above the scrollable
-          texture window") */}
-      <h4 className="sub-head mt-3">Texture</h4>
-      <TexturePicker label="Its texture" testId="grass" value={d.family} options={grassTextureOptions()} onUpload={addOwnTexture} onPick={id => id && set({ family: id })}
-        edits={[{ id: 'scale', label: `Scale ${Math.round(d.scale * 100)}%`, panel: (
-            <div className="flex items-center gap-1">
-              <button className="btn" onClick={() => set({ scale: d.scale / 1.25 })}>−</button>
-              <span className="w-12 text-center text-xs text-slate-200" data-testid="grass-scale">{`${Math.round(d.scale * 100)}%`}</span>
-              <button className="btn" onClick={() => set({ scale: d.scale * 1.25 })}>+</button>
-              <button className="btn" onClick={() => set({ scale: 1 })}>Reset</button>
-            </div>) },
-          // a painted grass is never turned (its light stays at the upper right); any other texture turns
-          ...(!isGrassFamily(d.family) ? [{ id: 'angle', label: `Angle ${Math.round(d.angle ?? 0)}°`, panel: (
-            <div className="flex items-center gap-2">
-              <input type="range" aria-label="Angle" min={-90} max={90} step={5} value={d.angle ?? 0} onChange={e => set({ angle: +e.target.value })} className="flex-1" />
-              <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(d.angle ?? 0)}°`}</span>
-            </div>) }] : [])]} />
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {made ? (<>
           <button className="chip chip-on" onClick={onClose} data-testid="grass-done">Done</button>
