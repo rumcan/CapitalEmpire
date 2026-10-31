@@ -37,7 +37,8 @@ export class BunkerBaker{
   if((settings.collar??.65)+(settings.firstCut??.9)>7.5)throw Error('Grass bands exceed the supported 15 metre combined width');
   if(request.ringsTiles){let count=0;for(const ring of request.ringsTiles){if(ring.length<6||ring.length%2||Array.from(ring).some(v=>!Number.isFinite(v)))throw Error('Invalid authoritative bunker boundary');count+=ring.length/2;}if(count>65536)throw Error('Bunker boundary is too large');}
   const depthScale=.75/Math.max(1,2*(grid.width+grid.height+32)+depth+(settings.wall??.25)+(settings.rim??.16));
-  const renderOptions={...settings,textures,wallAspect:loaded[4].aspect,semanticPass:Boolean(request.semanticPass),authoritativeRings:request.ringsTiles,textureOriginTiles:originTiles,depthScale};
+  const face=Array.isArray(request.face)&&request.face.length===2&&request.face.every(Number.isFinite)&&Math.abs(Math.hypot(request.face[0],request.face[1])-1)<.01?request.face:null;
+  const renderOptions={...settings,face,textures,wallAspect:loaded[4].aspect,semanticPass:Boolean(request.semanticPass),authoritativeRings:request.ringsTiles,textureOriginTiles:originTiles,depthScale};
   const terrain=renderer.prepare(grid,renderOptions);let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
   for(const ring of terrain.contours)for(const [x,y]of ring){const px=(x-y)*projection.halfWidth,py=(x+y)*projection.halfHeight;minX=Math.min(minX,px);maxX=Math.max(maxX,px);minY=Math.min(minY,py);maxY=Math.max(maxY,py);}
   if(!Number.isFinite(minX))throw Error('Guide contains no bunker');

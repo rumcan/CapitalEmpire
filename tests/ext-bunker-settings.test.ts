@@ -11,12 +11,12 @@ test('approved defaults and JSON round trips preserve every exact appearance val
   const defaults = clampBunkerSettings(JSON.parse(JSON.stringify(DEFAULT_BUNKER_SETTINGS)));
   assert.deepEqual(defaults, DEFAULT_BUNKER_SETTINGS);
   // the approved look, but the course draws the grass round a bunker: no own grass bands, no rim mound; the edge soil starts at the earth scale
-  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, settings: { ...APPROVED_APPEARANCE.settings, collar: 0.05, firstCut: 0.05, rim: 0, soilScale: APPROVED_APPEARANCE.settings.earthScale } });
+  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, depth: 0.3, settings: { ...APPROVED_APPEARANCE.settings, collar: 0.05, firstCut: 0.05, rim: 0, wall: 1.2, soilScale: APPROVED_APPEARANCE.settings.earthScale } });
   assert.equal(defaults.version, 1);
-  assert.equal(defaults.depth, 1.5);
+  assert.equal(defaults.depth, 0.3);
   assert.equal(defaults.collar, 0.05);
   assert.equal(defaults.rim, 0);
-  assert.equal(defaults.wall, 1.93929756637);
+  assert.equal(defaults.wall, 1.2);
   assert.deepEqual(BUNKER_SETTING_FIELDS.filter(field => field.hidden).map(field => field.key).sort(), ['fairwayScale', 'roundness']);
   for (const key of ['slope', 'collar', 'firstCut']) assert.equal(BUNKER_SETTING_FIELDS.find(field => field.key === key)?.displayScale, 2);
 });
@@ -61,7 +61,7 @@ test('inherited groups track global changes while full custom snapshots remain i
   const appearance = bunkerAppearance(custom);
   appearance.settings.wall = 3;
   assert.equal(custom.wall, 0.75);
-  assert.equal(APPROVED_APPEARANCE.settings.wall, DEFAULT_BUNKER_SETTINGS.wall);
+  assert.equal(APPROVED_APPEARANCE.settings.wall, 1.93929756637, 'the approved preset itself is untouched');
 });
 
 test('texture ids per slot round-trip, partial edits keep the rest, and bad values fall back', () => {

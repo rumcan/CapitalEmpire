@@ -95,6 +95,10 @@ export class WallRenderer {
     const bottom = heightAt(.012, depth, options);
     if (!Number.isFinite(top) || !Number.isFinite(bottom)) throw new TypeError('Wall profile heights must be finite.');
     if (top <= bottom + .000001) return 0;
+    // Host: the face drops less away from the green (options.faceSpan: 1 on the green side, .5 on the far side, as renderer-world faceK);
+    // its top stays at the ground, its foot follows
+    const span = options.faceSpan, wall = options.wall ?? .25;
+    const footAt = (x, y) => span ? bottom + wall * (.25 - .25 * Math.max(-1, Math.min(1, (x * span.face[0] + y * span.face[1] - span.c) / span.r))) : bottom;
     const textureScale = Math.max(.01, options.textureScale ?? 1);
     const earthScale = Math.max(.01, options.earthScale ?? 1);
     const textureSize = textureScale * earthScale;
@@ -150,8 +154,9 @@ export class WallRenderer {
         const nb = normalAt(b[0], b[1], fallback);
         const ua = distance / total * repeats;
         const ub = (distance + length) / total * repeats;
-        emit(a, top, ua, na, 1); emit(a, bottom, ua, na, 0); emit(b, bottom, ub, nb, 0);
-        emit(a, top, ua, na, 1); emit(b, bottom, ub, nb, 0); emit(b, top, ub, nb, 1);
+        const fa = footAt(a[0], a[1]), fb = footAt(b[0], b[1]);
+        emit(a, top, ua, na, 1); emit(a, fa, ua, na, 0); emit(b, fb, ub, nb, 0);
+        emit(a, top, ua, na, 1); emit(b, fb, ub, nb, 0); emit(b, top, ub, nb, 1);
         distance += length;
       }
     }

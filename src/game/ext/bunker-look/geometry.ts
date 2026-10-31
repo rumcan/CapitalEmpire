@@ -13,6 +13,8 @@ export interface BunkerGeometryInput {
   ringsTiles: readonly Float64Array[];
   settings: Readonly<BunkerSettings>;
   sourcePatchKeys: readonly string[];
+  /** toward the nearest green (faceToGreen): the side whose cut face is full height */
+  face?: readonly [number, number];
 }
 export interface BunkerGeometryOptions {
   /** A complete host course-patch generation, not a per-feature bake key. */
@@ -93,10 +95,31 @@ export function buildBunkerGeometry(
     // A native contour can split one raw component (a removed thin neck). These
     // are render parts of the same existing owner, anchored by real sand cells.
     const id = counts.get(component.id) === 1 ? component.id : `${component.id}/part:${owner.anchor[0]}:${owner.anchor[1]}`;
+    const face = faceToGreen(shape.ringsTiles, patches);
     batch.inputs.push({ id, revision: options.rugged === false ? 'course-4676-flat-v1' : 'course-4676-rugged-v1',
-      ringsTiles, settings, sourcePatchKeys: Object.freeze(sourcePatchKeys) });
+      ringsTiles, settings, sourcePatchKeys: Object.freeze(sourcePatchKeys), ...(face ? { face } : {}) });
   }
   return batch;
+}
+
+/** How far (tiles) a bunker looks for its green: 60 m. */
+const GREEN_REACH = 30;
+/** The unit vector (tiles) from a bunker's middle toward the nearest point of a green within GREEN_REACH of its outline, or null: the cut
+ *  face stands on the side toward the green (the owner, 2026-10-31: "it is always the side closest to the green"). */
+export function faceToGreen(rings: readonly ArrayLike<number>[], patches: readonly CoursePatch[]): readonly [number, number] | null {
+  let sx = 0, sy = 0, n = 0, x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const ring of rings) for (let i = 0; i + 1 < ring.length; i += 2) { const x = ring[i]!, y = ring[i + 1]!; sx += x; sy += y; n++; x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  if (!n) return null;
+  const cx = sx / n, cy = sy / n, reach = GREEN_REACH + Math.hypot(x1 - x0, y1 - y0) / 2;
+  let best = reach * reach, bx = 0, by = 0;
+  for (const patch of patches) {
+    if (patch.cx * patch.size > cx + reach || (patch.cx + 1) * patch.size < cx - reach || patch.cy * patch.size > cy + reach || (patch.cy + 1) * patch.size < cy - reach) continue;
+    for (const layer of patch.layers) if (layer.s === SURF.green) for (const ring of layer.fill) for (let i = 0; i + 1 < ring.length; i += 2) {
+      const d = (ring[i]! - cx) ** 2 + (ring[i + 1]! - cy) ** 2; if (d < best) { best = d; bx = ring[i]! - cx; by = ring[i + 1]! - cy; }
+    }
+  }
+  const length = Math.hypot(bx, by);
+  return length > 1e-6 ? [bx / length, by / length] : null;
 }
 
 /** The course look's Shadow (Edges > Shadow, 0..1 on the bunker's chunk) scales the picture's: its default gives the card's own strength. */
