@@ -201,7 +201,7 @@ test('Long grass is a brush (T252: key 8, the cart path brush gone, at stage 2),
   assert.ok(surfAbove(SURF.longGrass, SURF.rough) && surfAbove(SURF.fescue, SURF.longGrass) && surfAbove(SURF.fairway, SURF.longGrass));
   const rank = (s: number) => DRAW_ORDER.indexOf(layerCode(s, false));
   assert.ok(rank(SURF.rough) < rank(SURF.longGrass) && rank(SURF.longGrass) < rank(SURF.fescue), 'drawn between the rough and the fescue');
-  assert.equal(collarAfter(SURF.bunker), SURF.green, 'the bunker\'s lip is still laid after the green');
+  assert.equal(collarAfter(SURF.bunker), SURF.waste, 'the bunker\'s lip is laid before the green, never over it');
 });
 
 test('Long grass lays: over the rough and the map grass, under the fairway and the green; Erase gives back the rough', () => {

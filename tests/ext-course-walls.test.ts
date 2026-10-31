@@ -46,8 +46,8 @@ test('1. the draw order and the heights', () => {
   // T238: the long grass (id 9) draws between the rough and the fescue
   // T271: the eight custom grass ids (10..17: each its first cut band, then its fill) after the fescue
   const own = Array.from({ length: MAX_GRASSES }, (_, k) => [code(CUSTOM0 + k, true), code(CUSTOM0 + k, false)]).flat();
-  assert.deepEqual(DRAW_ORDER, [code(ROUGH, false), code(SURF.longGrass, false), code(FESCUE, false), ...own, code(WATER, true), code(WATER, false), code(FAIRWAY, true), code(FAIRWAY, false), code(TEE, true), code(TEE, false), code(BUNKER, false), code(SURF.waste, false), code(GREEN, true), code(GREEN, false), code(BUNKER, true)]);
-  assert.equal(collarAfter(BUNKER), GREEN, "the bunker's lip is laid after the green");
+  assert.deepEqual(DRAW_ORDER, [code(ROUGH, false), code(SURF.longGrass, false), code(FESCUE, false), ...own, code(WATER, false), code(FAIRWAY, true), code(FAIRWAY, false), code(TEE, true), code(TEE, false), code(BUNKER, false), code(WATER, true), code(SURF.waste, false), code(BUNKER, true), code(GREEN, true), code(GREEN, false)]);
+  assert.equal(collarAfter(BUNKER), SURF.waste, "the bunker's lip is laid before the green and its fringe, which lie over it");
   assert.ok(SURF_HEIGHT[WATER]! < SURF_HEIGHT[BUNKER]! && SURF_HEIGHT[BUNKER]! < 0 && SURF_HEIGHT[ROUGH] === 0 && SURF_HEIGHT[FAIRWAY]! > 0 && SURF_HEIGHT[FAIRWAY]! < SURF_HEIGHT[GREEN]! && SURF_HEIGHT[GREEN]! < SURF_HEIGHT[TEE]!, 'water < bunker < rough < fairway < green < tee');
   assert.ok(faceLight(-0.17, -0.99) > 0.95 && faceLight(0.17, 0.99) < 0.05, 'a face toward the upper right is lit, one toward the lower left in shade');
 });
@@ -135,7 +135,8 @@ test('5. the wall height is the difference of the two sides: tee on fairway, wat
   {
     const g = base(); blob(g, WATER, 32, 34, 7, 4); blob(g, BUNKER, 31, 28.5, 3, 2);
     const ws = walls(g).walls;
-    assert.ok(near(ws, code(WATER, false), SURF_HEIGHT[BUNKER]! - SURF_HEIGHT[WATER]!), 'a bunker above the water: a 0.2 m step');
+    // the pond's bank lies between them (the bunker's sand keeps off it): the water drops from the bank's ground, as from any grass
+    assert.ok(near(ws, code(WATER, false), -SURF_HEIGHT[WATER]!), 'a bunker by the water: the bank between, the water 0.8 m below it');
   }
 });
 

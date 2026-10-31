@@ -18,6 +18,7 @@ export interface ShineMaskData { w: number; h: number; data: Uint8Array }
 import type { RoughMix } from './rough-yards';
 import type { SurfacesFile } from './painted-surfaces';
 import type { TileCacheStats } from './textures';
+import type { BunkerStageReady, BunkerStageRef } from './ext/bunker-look/stage-types';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone of the fill: t 1 darker or 2 lighter at strength ta (0..1), drawn
@@ -179,6 +180,8 @@ export interface WorkerLimits { tiles: number | null; painted: number | null; ea
   /** T166: a cached pack is read (absent: yes; the game's: no, it builds its own and the old cache is deleted) */
   readCache?: boolean }
 export type ToWorker =
+  | { t: 'bunkerExpected'; set: BunkerStageRef[]; drop: string[] }
+  | { t: 'bunker'; set: BunkerStageReady[]; drop: { id: string; key: string }[] }
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
   | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits;
       /** T272: the bytes this worker's tile cache may hold (tile-cache.ts tileCacheBudget: its share of the ground's GPU budget) */

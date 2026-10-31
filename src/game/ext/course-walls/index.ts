@@ -118,8 +118,8 @@ export function drawOrder(styles: readonly BlobStyle[] = BLOB_STYLE): number[] {
   }
   return out;
 }
-/** the default draw order (BLOB_STYLE): rough, long grass, fescue, bank, water, first cut, fairway, first cut, tee, bunker, waste, fringe,
- *  green, lip */
+/** the default draw order (BLOB_STYLE): rough, long grass, fescue, bank, water, first cut, fairway, first cut, tee, bunker, waste, lip,
+ *  fringe, green */
 export const DRAW_ORDER: readonly number[] = drawOrder();
 
 /** a wall's material, from the ground it drops to: turf (a raised green's or tee's grassy bank), sand (a bunker's cut face), water (a pond's

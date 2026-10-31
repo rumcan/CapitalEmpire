@@ -1,0 +1,105 @@
+CapitalEmpire integration: preserve the approved bake, cache the result
+
+Scope
+These files are a standalone integration package and benchmark. Nothing was
+installed into, built in, or changed in the CapitalEmpire game repository.
+The benchmark uses approved-game-look.json, not the older preview defaults.
+
+Measured approved look
+Source bake: 4869x3143 transparent pixels, 61,213,068 decoded RGBA bytes
+(58.38 MiB). The approved preview zoom is 10.3162755217%, approximately
+502x324 screen pixels. The native image alone exceeds a 32 MiB runtime budget.
+
+One exact current WorldRenderer.render() at the approved1.5m depth, followed
+by gl.finish(), took3183.50 ms in this isolated browser run. Material decode
+took101.30 ms, renderer construction59.10 ms, and native ImageBitmap
+creation187.00 ms.
+This is not a target-game hardware measurement. The reported WebGL backend was
+ANGLE Microsoft Basic Render Driver, not a representative dedicated game GPU.
+
+Pipeline costs to keep outside the game frame loop
+- prepare(): builds a padded signed-distance texture after guide/roundness
+  changes. It includes contour extraction, Gaussian smoothing and distance work.
+- buildMesh(): creates a dense clipped terrain mesh after terrain changes.
+- render(): transforms/uploads terrain vertex data even when geometry is cached.
+- The fragment shader samples multiple materials, computes slope normals and
+  evaluates an 18-step directional shadow ray for visible fragments.
+- Wall and fringe geometry are emitted/uploaded each render.
+- Capturing and resizing the native bake creates additional transient surfaces.
+
+Observed nested wrappers: prepare864.20 ms, buildMesh79.20 ms,
+wallDraw2.10 ms, drawGrass2181.50 ms. These are wall-clock wrappers, can include
+driver/GPU synchronization, and overlap the total. In particular, the grass
+wrapper does not prove that CPU blade generation alone costs two seconds.
+Do not reduce approved blade density, shadows, rakes or material detail merely
+from these wrapper timings. Move the exact renderer into the baking path.
+
+Game frame path
+1. Project object anchors and choose an already cached LOD.
+2. Reject offscreen sprite rectangles using the viewport AABB.
+3. Issue one drawImage per visible sprite, preserving its pixel anchor.
+No field building, contour work, mesh work, shader rendering, shadow marching,
+PNG decoding, ImageBitmap creation or worker waits belongs in draw().
+
+Cache request keys
+Include a stable guide hash, exact preset/depth/material settings, source texture
+versions, renderer version and LOD. Snapshot mutable guide/settings data before
+queueing. Multiple placed instances of the same look should draw the same cache
+id; coalescing is per id/key, not a promise to deduplicate unrelated ids.
+Keep the previous ready sprite while an edited version bakes. Ignore stale
+request rejections; stale completion images must be closed. Production can
+register prebaked ImageBitmaps through load() and omit the baker entirely.
+
+LOD and memory recommendation
+Use the same approved native bake as the source for high-quality bitmap LODs:
+- 256x165 for objects <=256 physical screen pixels wide: 168,960 RGBA bytes.
+- 512x331 for the approved approximately502px display at DPR1: 677,888 bytes.
+- 1024x661 for approximately512 CSS pixels at DPR2 or closer inspection:
+  2,707,456 bytes. Make 1024 the normal runtime cap for this approved view.
+Retain the 4869px master only for authoring/offline export, not the runtime LRU.
+For a different guide, preserve aspect ratio and scale the anchor with its LOD.
+Choose LOD from display CSS width times devicePixelRatio, with zoom hysteresis.
+Decode/load a different LOD on demand, not on every camera tick.
+
+Within 32 MiB ready-RGBA accounting, this aspect ratio fits at most 198 unique
+256px images, 49 unique512px images, or12 unique1024px images. If the target
+engine generates full mip chains, estimate 4/3 extra and use148,37,9 instead.
+Four preloaded depth variants divide those distinct-shape counts by four.
+Keep only used depth/LOD combinations resident. Compressed PNG bytes are not
+decoded memory. Driver allocation, GPU upload copies and bake intermediates
+are additional, so these counts are upper bounds rather than total-memory claims.
+
+Runtime cache budget
+runtime/bunker-cache.js defaults to32 MiB and one asynchronous bake at a time.
+The limit covers ready entry width*height*4 only. A worker must resize the native
+master before transferring a result: returning the58.38 MiB master would exceed
+the budget and is rejected/closed. The in-flight worker can temporarily require
+more memory than the runtime cache, so keep the default one-bake concurrency.
+
+Measured cached drawing
+Canvas:1920x1080, ImageBitmap512px LOD, target502x324,40 warmed samples/case.
+Mean CPU submission times, not GPU frame times:
+  1 placed ->1 draw:0.0750ms; culling version0.0725ms.
+ 10 placed ->10 submitted:0.0600ms;4 visible after culling:0.0750ms.
+100 placed ->100 submitted:0.1775ms;12 visible after culling:0.0875ms.
+100 deliberately overlapping visible sprites:0.1925ms mean,0.3000ms p95.
+Instances reuse the same bitmap.100 distinct shapes have different memory and
+loading pressure. Timers are coarse at sub-millisecond scales. These observations
+do not promise a CapitalEmpire frame rate or include its remaining render work.
+
+Look comparison at approved display size
+The512px LOD is visually close to the native bake drawn at502x324. Measured
+premultiplied RGB RMSE was2.57/255 (PSNR39.93dB);1024px was1.66/255
+(PSNR43.74dB). Alpha MAE was0.27/255 and0.20/255 respectively. Fringe
+pixels have larger local alpha differences from resizing; keep the1024px option
+for high-DPI displays. comparison.png and individual images show the actual
+approved baked image, with no shader simplification or regenerated artwork.
+
+Benchmark reproduction
+Serve the kit root at127.0.0.1:8768 and run a local Chromium CDP endpoint8769.
+Run node integration/perf/run-benchmark.mjs. It creates/disposes an isolated
+browser context, performs exactly one terrain render, and then benchmarks only
+cached drawImage calls. No external packages or game installation are required.
+
+Machine/browser limits and raw measurements are in benchmark-results.json.
+The standalone runtime's fake-image Node tests are in runtime/test-bunker-cache.mjs.

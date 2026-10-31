@@ -34,7 +34,7 @@ export function courseBandOf(kind: BrushKind, st: LookStyle, dflt: CourseTex): C
 }
 /** the style fields the course grid's look reads: a change to any of them draws the course again (the tints ride along: T261 no longer draws
  *  them, but a look that differs only in one is still another look) */
-export const LOOK_FIELDS = ['tex', 'scale', 'angle', 'tone', 'toneAmt', 'tint', 'mtex', 'mshare', 'msoft', 'mpatch', 'btex', 'bscale', 'bangle', 'btone', 'btoneAmt', 'btint', 'round', 'smooth'] as const;
+export const LOOK_FIELDS = ['tex', 'scale', 'angle', 'tone', 'toneAmt', 'tint', 'mtex', 'mshare', 'msoft', 'mpatch', 'btex', 'bscale', 'bangle', 'btone', 'btoneAmt', 'btint', 'round', 'smooth', 'bunker'] as const;
 export const lookChanged = (a: Partial<LookStyle>, b: Partial<LookStyle>) => LOOK_FIELDS.some(k => a[k] !== b[k]);
 
 /** a course collar band's name (course-blobs BLOB_STYLE): the green's fringe, the fairway's and the tee's first cut, a bunker's lip, a pond's bank */

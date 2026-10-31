@@ -169,7 +169,7 @@ export default function App() {
   const [seasonOpen, setSeasonOpen] = useState(false);
   // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
   // (T271: the grass editor's card is a looks card too: Esc closes it first)
-  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen || grassOpen, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? (setLooks(false), game.paint.closeGrass()) : (setCourseStats(null), setSeasonOpen(false))) }; });
+  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen || grassOpen, bunkers: false, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? (setLooks(false), game.paint.closeGrass()) : (setCourseStats(null), setSeasonOpen(false))) }; });
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
@@ -198,6 +198,9 @@ export default function App() {
   useEffect(() => { if (!looksOpen && looks) setLooks(false); }, [looksOpen, looks]);
   /** T271 (#812): the grass editor (Create your own, a grass's Edit): its card in My looks' place while the Holes tool is in hand */
   const grassOpen = !!game?.paint.grassDraft && game.uiTool === 'course';
+  /** a picked bunker (Pick bunker, or a click on one with Select) opens its look: My looks with the bunker in hand (the engine put the Holes
+   *  tool and its hole in hand); every valid pick, not just a changed id */
+  useEffect(() => { if (game?.bunkers?.selection) { game.paint.closeGrass(); setLooks(true); } }, [game, game?.bunkerSelectionSerial]);
   // another tool put in hand closes it (read live: a grass opened just after one closed is never shut by the older render)
   useEffect(() => { if (game && game.uiTool !== 'course' && game.paint.grassDraft) game.paint.closeGrass(); }, [game?.uiTool]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (grassOpen && looks) setLooks(false); }, [grassOpen]); // eslint-disable-line react-hooks/exhaustive-deps

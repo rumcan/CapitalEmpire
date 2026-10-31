@@ -6,6 +6,7 @@ import type { PlacedEventStructure } from './eventtool';
 import type { CourseHeightSaveChunk } from '../ext/course-height';
 import type { GolfProgress } from '../ext/progressive-ui';
 import type { GridSave } from '../ext/course-grid';
+import type { BunkerState } from '../ext/bunker-look/controller';
 import type { OwnerInput } from './play/live';
 import { normalizeRangeBiz, type RangeBizSave } from './rangesave';
 import { normalizeDaySave, type DaySave } from './everyday';
@@ -46,6 +47,8 @@ export interface GolfSave {
  /** the course grid (plan P21 3.7, T078: ext/course-grid encodeGrid); missing in older saves, whose golf-surface paint areas then move into
   *  a new grid on load. The engine keeps the live grid; this field is only written by a save */
  grid?: GridSave;
+  /** Connected bunker appearance defaults and custom anchors; missing older saves use the approved appearance. */
+  bunkers?: BunkerState;
  /** T256 (#743): the looks book (golf/looks.ts): each hole's, the property's and each practice facility's looks by owner key. Missing in older
   *  saves: every hole and the property take the course default (today's course-wide looks) as their own on load, so nothing changes */
  looks?: LookBook;

@@ -1,0 +1,13 @@
+Use case: stylized-concept. Production INTERNAL DIFFUSE ALBEDO MATERIAL TEXTURE ATLAS for a deterministic 3D isometric golf terrain renderer. This is a flat texture input, not a sprite sheet and not a rendered scene.
+
+OUTPUT: one opaque high-detail square PNG, prefer 2048x2048. The complete canvas is filled edge-to-edge by precisely FOUR EQUAL SQUARE MATERIAL SWATCHES in a 2x2 arrangement. Each swatch occupies exactly one quarter of the square canvas. No margins, no gutters, no frames, no outline, no empty pixels, no text. The four squares meet at perfectly straight central horizontal and vertical lines. Entire atlas fully OPAQUE.
+
+MATERIAL POSITIONS:
+TOP LEFT: olive-green fine rough grass with a sparse few sun-dried golden tips, the natural bunker grass collar material matching the original references. Dense small fine grass blades, no oversized tufts.
+TOP RIGHT: warm pale cream-peach fine bunker sand with extremely subtle short straight rake grain. Restrained fine repeatable microtexture, no curved rake spirals or large raking patterns, no pebbles or footprints.
+BOTTOM LEFT: natural sandy medium-brown cut-bank soil with fine subtle root fibers and fine earth granules. Organic natural dirt albedo, no rocks, no large cracks, no elevation or cutaway geometry.
+BOTTOM RIGHT: a slightly lighter, drier olive-green rough grass variation with a few straw-gold tips, same blade scale and density as top-left.
+
+CAMERA AND LIGHTING: exact TOP-DOWN orthographic 2D scanned material swatches. Flat even UNLIT DIFFUSE ALBEDO ONLY. No directional sunlight, no shadows, no ambient occlusion, no specular highlights, no vignette, no depth illusion, no shading gradients. All 3D light and relief will be computed later by a renderer.
+
+MATERIAL SCALE: high-detail naturalistic golf-game materials matching the two references. Keep consistent fine texture density across the four swatches. Each individual square is a seamless repeatable material sample; material color and density continue naturally across its own opposite edges. No obvious individual hero objects or repeating macropatterns. Inputs 1 and 2 are PALETTE/MATERIAL REFERENCES ONLY: do not copy scene layout, grass/sand border, bank geometry, bunker shapes, UI, rocks, cactus, plants or scenery. Do not generate any grass-to-sand transition within a swatch. Four flat uninterrupted single-material swatches only.

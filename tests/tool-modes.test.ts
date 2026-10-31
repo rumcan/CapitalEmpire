@@ -50,13 +50,14 @@ test('2. opening a side mode closes the others (the caller switches to Select); 
 });
 
 test('3. Esc closes the topmost menu or card first: Help, the gear menu, My looks, Event, Grass, Course stats, Budget or Bottlenecks', () => {
-  assert.deepEqual(ESC_CARDS, ['help', 'menu', 'looks', 'event', 'grass', 'stats', 'panel']);
+  assert.deepEqual(ESC_CARDS, ['help', 'menu', 'looks', 'bunkers', 'event', 'grass', 'stats', 'panel']);
   assert.equal(topCard({}), null);
-  const open: Partial<Record<EscCard, boolean>> = { help: true, menu: true, looks: true, event: true, grass: true, stats: true, panel: true };
+  const open: Partial<Record<EscCard, boolean>> = { help: true, menu: true, looks: true, bunkers: true, event: true, grass: true, stats: true, panel: true };
   const order: EscCard[] = [];
   for (let c = topCard(open); c; c = topCard(open)) { order.push(c); open[c] = false; }
-  assert.deepEqual(order, ['help', 'menu', 'looks', 'event', 'grass', 'stats', 'panel']);
+  assert.deepEqual(order, ['help', 'menu', 'looks', 'bunkers', 'event', 'grass', 'stats', 'panel']);
   assert.equal(topCard({ looks: true, grass: true }), 'looks', 'Holes > My looks closes before the Grass panel');
+  assert.equal(topCard({ bunkers: true, grass: true }), 'bunkers', 'the bunker card closes before the Grass panel');
   assert.equal(topCard({ stats: true, grass: true }), 'grass');
   assert.equal(topCard({ stats: true, menu: true }), 'menu');
 });

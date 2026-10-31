@@ -1,0 +1,31 @@
+{
+  "materialRevision": "sha256:7519ef4166909696025569d2df4083d018612ed3fa2e4bb20817eea7b55ae431",
+  "rendererRevision": "sha256:cb1f6fb1a0d65c681cd0ce0c3873fa1ba01456bfca3604569334cc9d21d01bcf",
+  "files": [
+    {
+      "file": "textures/material-atlas.png",
+      "bytes": 4544420,
+      "sha256": "aa40b8c933f3574cfb4caf191b123ea381999e65c9627d1b9d5309cdc5dba149"
+    },
+    {
+      "file": "textures/border-grass.png",
+      "bytes": 2877145,
+      "sha256": "010140b06ad9cfd4970cdd586a3450d4069d43ec70aeb2a533fec2be7281f114"
+    },
+    {
+      "file": "textures/first-cut.png",
+      "bytes": 2927418,
+      "sha256": "5a0d6400fb2e7a100e4a88eb2bd07d5fb642fbdba93f285d6bcaafe1f51e44f7"
+    },
+    {
+      "file": "textures/wall-earth.png",
+      "bytes": 2683323,
+      "sha256": "ae7957b0edf293be40e0b415c2392cd71f757bb41992a44fad0f49238aeddaed"
+    },
+    {
+      "file": "textures/fairway-seamless.png",
+      "bytes": 2645895,
+      "sha256": "828323188dcb4ad8e7a9e6f263ebca89b68879f17cde9f093c52920b617a7476"
+    }
+  ]
+}

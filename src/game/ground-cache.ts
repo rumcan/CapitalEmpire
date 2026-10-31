@@ -24,6 +24,11 @@ import { pictureCurrent } from './ground-layers';
 import { SHINE_WEIGHTS, type ShineWeights } from './grass-shine';
 import type { TileCacheStats } from './textures';
 import { tileCacheBudget } from './tile-cache';
+import { BunkerStageBridge } from './ext/bunker-look/stage-bridge';
+import { BunkerStageBaker } from './ext/bunker-look/stage-client';
+import { bunkerLookPicture } from './ext/bunker-look/look-picture';
+import { loadOwnTextures } from './ext/bunker-look/uploads';
+import type { BunkerStageReady, BunkerStageRef } from './ext/bunker-look/stage-types';
 
 export interface Tile {
   kind: TileKind; i: number; j: number;
@@ -93,13 +98,56 @@ export class GroundCache {
   }
   /** the baked pictures' pixels on the GPU at the last evict (chunks, their zoom crossfade and build reveal pictures), and the most so far */
   residentPx = 0; peakPx = 0;
+  /** Edit-time staged bunker source cache; each ground worker owns an independently bounded bitmap copy. */
+  readonly bunkers: BunkerStageBridge;
+  bunkerGeometryChanged: (() => void) | null = null;
+  private readonly bunkerRefs = new Map<string, BunkerStageRef>();
+  private readonly bunkerPublishing = new Map<string, { key: string }>();
+  /** The area of a re-baking bunker's previous picture, which the workers keep showing until the new one lands (stage-registry held). */
+  private readonly bunkerHeldBounds = new Map<string, BBox>();
+  private stopped = false;
   constructor(public gl: GLRenderer, workers = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 4) - 2))) {
     for (let w = 0; w < workers; w++) {
       const wk = new GroundWorker(); wk.onmessage = (e: MessageEvent<FromWorker>) => this.onMessage(w, e.data);
       this.workers.push(wk); this.inflight.push(0);
     }
+    let baker: BunkerStageBaker | null = null;
+    // the player's own bunker textures kept in this browser: once they are in the library, bunkers naming one bake with it
+    void loadOwnTextures().then(n => { if (n && !this.stopped) this.bunkerGeometryChanged?.(); });
+    this.bunkers = new BunkerStageBridge({ bake: request => (baker ??= new BunkerStageBaker()).bake(request), disposeBake: () => baker?.dispose(), lookPicture: bunkerLookPicture,
+      expected: (set, drop) => {
+        let bounds: BBox | null = null;
+        for (const id of drop) { const old = this.bunkerRefs.get(id); if (old) bounds = unionBox(bounds, old.dirtyBoundsTiles); this.bunkerRefs.delete(id); this.bunkerHeldBounds.delete(id); }
+        for (const ref of set) {
+          const old = this.bunkerRefs.get(ref.id);
+          if (old) bounds = unionBox(bounds, old.dirtyBoundsTiles);
+          if (old && old.key !== ref.key) this.bunkerHeldBounds.set(ref.id, unionBox(this.bunkerHeldBounds.get(ref.id) ?? null, old.dirtyBoundsTiles));
+          bounds = unionBox(bounds, ref.dirtyBoundsTiles); this.bunkerRefs.set(ref.id, ref);
+        }
+        if (this.stopped) return;
+        this.broadcast({ t: 'bunkerExpected', set, drop }); if (bounds) this.invalidate(bounds, false, 0, 'gmp');
+      }, ready: value => this.publishBunker(value), drop: (id, key, bounds) => {
+        if (this.bunkerPublishing.get(id)?.key === key) this.bunkerPublishing.delete(id);
+        if (this.stopped) return;
+        this.broadcast({ t: 'bunker', set: [], drop: [{ id, key }] }); this.invalidate(this.withHeld(id, bounds), false, 0, 'gmp');
+      }, error: (error, id) => { const message = `bunker ${id}: ${String(error)}`; this.errors.push(message); console.error('[bunker worker]', message); } });
   }
-  terminate() { for (const w of this.workers) w.terminate(); this.workers = []; this.unsurfaces?.(); this.unsurfaces = null; }
+  terminate() { this.stopped = true; this.bunkerPublishing.clear(); this.bunkers.dispose(); this.bunkerRefs.clear(); this.bunkerHeldBounds.clear(); this.bunkerGeometryChanged = null; for (const w of this.workers) w.terminate(); this.workers = []; this.unsurfaces?.(); this.unsurfaces = null; }
+  /** A bunker's new bounds plus its held previous picture's (the workers drop that picture now), forgetting the held area. */
+  private withHeld(id: string, bounds: BBox): BBox { const held = this.bunkerHeldBounds.get(id); this.bunkerHeldBounds.delete(id); return held ? unionBox(held, bounds) : bounds; }
+  /** Clone before transfer; a newer edit or eviction revokes a publication still awaiting bitmap copies. */
+  private async publishBunker(value: BunkerStageReady): Promise<void> {
+    const token = { key: value.key }, workers = this.workers.slice(), copies: ImageBitmap[] = []; this.bunkerPublishing.set(value.id, token);
+    try {
+      const results = await Promise.allSettled(workers.map(() => createImageBitmap(value.image)));
+      for (const result of results) if (result.status === 'fulfilled') copies.push(result.value);
+      const failure = results.find(result => result.status === 'rejected'); if (failure?.status === 'rejected') throw failure.reason;
+      if (this.stopped || this.bunkerPublishing.get(value.id) !== token || !this.bunkers.isCurrent(value.id, value.key)) return;
+      for (let i = 0; i < workers.length; i++) workers[i].postMessage({ t: 'bunker', set: [{ ...value, image: copies[i] }], drop: [] } satisfies ToWorker, [copies[i]]);
+      this.invalidate(this.withHeld(value.id, value.dirtyBoundsTiles), false, 0, 'gmp');
+    } catch (error) { if (!this.stopped && this.bunkers.isCurrent(value.id, value.key)) throw error; }
+    finally { for (const copy of copies) copy.close(); value.image.close(); if (this.bunkerPublishing.get(value.id) === token) this.bunkerPublishing.delete(value.id); }
+  }
   /** the game's Grass setting (painted-grass-lod.ts GrassArt), sent with the art */
   grassArt: GrassArt = GRASS_ART_DEFAULT;
   /** the Grass setting changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
@@ -140,7 +188,7 @@ export class GroundCache {
   /** Ground variety or its debug view changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   /** T204: the rugged edges on or off (the dev switch: window.__game.ground.setRugged(false) compares the looks and the bake times) */
   rugged = true;
-  setRugged(on: boolean) { if (on === this.rugged) return; this.rugged = on; this.broadcast({ t: 'rugged', on }); this.invalidateAll(); }
+  setRugged(on: boolean) { if (on === this.rugged) return; this.rugged = on; this.broadcast({ t: 'rugged', on }); this.invalidateAll(); this.bunkerGeometryChanged?.(); }
   /** T247: the soft dirt edges on (the default) or off (the dev switch: window.__game.ground.setSoftDirt(false) shows the look before T247 and
    *  compares the bake times) */
   softDirt = true;

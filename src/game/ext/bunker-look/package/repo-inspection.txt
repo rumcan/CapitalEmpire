@@ -1,0 +1,443 @@
+CAPITAL EMPIRE: READ-ONLY INTEGRATION INSPECTION
+Inspected: 2026-10-30. No game code or assets changed.
+
+TARGET IDENTITY AND VERSION SCOPE
+
+Repository: C:/Work Admin/PERSONAL/Repos/CapitalEmpire
+Origin URL: https://github.com/rumcan/CapitalEmpire.git
+Actual checkout branch: main
+Actual checkout HEAD: ffbd0b6a3bdec0752691d3bef000c678865aacc4
+HEAD date: 2026-10-23T21:30:40+02:00
+HEAD subject: Ghost preview tests: money labels in the machine's locale (the code uses toLocaleString; an en-ZA machine writes $1 200)
+Working tree observed clean; the previously supplied arena/T016-grass-management / eight-edit session metadata is stale for this exact folder.
+
+Existing cached origin/main ref: 30ed9a24b171bcdf6083d6c2bcb8e341c9678dd3
+Ref date: 2026-10-27T16:21:37+02:00
+Ref subject: Merge pull request #571 from rumcan/lead/now-t205-start
+HEAD...origin/main counts: 0 commits unique to HEAD; 1122 commits unique to origin/main.
+HEAD -> origin/main diff summary: 3129 files changed, 598885 insertions, 5660 deletions.
+This cached remote ref was inspected with git show; it was not fetched or checked out.
+
+The README on cached origin/main still calls this a road-building traffic game. That prose is stale as a complete game description: both the actual checkout's CLAUDE.md and its golf source explicitly implement the golf-events pivot. Cached origin/main contains a substantially newer course-grid, course-height and course-wall implementation. The important compatibility split is OLD LOCAL CHECKOUT versus NEWER CACHED GOLF CODE, not road game versus golf game.
+
+Do not claim a single internal adapter is already wired to both versions. Record a target commit in the package. No fresh remote state beyond the existing ref was verified.
+
+INSTRUCTIONS AND INSPECTION BOUNDARY
+
+Read AGENTS.md, agents/arena/INSTRUCTIONS.md, CLAUDE.md and relevant project continuation material. The repository coding workflow calls for scoped modules and deterministic exports with units; it also forbids arbitrary main changes and manual ground rebuild steps. This was an external read-only inspection, so no ticket, branch, PR or game change was created. No checkout, edit, fetch, build, installation, test run, commit or push was performed inside the repository.
+
+ACTUAL RENDERING ARCHITECTURE
+
+The project uses Vite, React 19 and strict TypeScript. package.json defines Vite build, esbuild-bundled Node tests and TypeScript checking. These commands were inspected, not executed.
+
+1. Ground painting is Canvas 2D on OffscreenCanvas in ground workers.
+   src/game/renderer.ts:51 exports GroundPainter.
+   src/game/ground.worker.ts:15 constructs one GroundPainter per worker.
+   The worker holds its own terrain, road-network and texture state.
+
+2. The visible game renderer is WebGL2, compositing baked ground textures and sprite quads.
+   src/game/gl.ts:140 exports GLRenderer.
+   At :150 it requests WebGL2; :161 uses premultiplied alpha blending ONE / ONE_MINUS_SRC_ALPHA.
+   src/game/gl.ts:183 allocates the sprite TEXTURE_2D_ARRAY.
+   Ground chunks use separate ordinary TEXTURE_2D textures, not that sprite array.
+   The inspected ground path does not run a 3D bunker mesh on each animation frame.
+
+3. GroundCache owns the worker pool, dirty-generation checks and GPU chunk cache.
+   src/game/ground-cache.ts:25 exports GroundCache.
+   Pool default: one to three workers, based on navigator.hardwareConcurrency.
+   budgetPx = 48e6 (:35), approximately 192 MB of RGBA pixel storage before other resources. This is a configured budget, not a measured total-memory result.
+   Existing baked pictures remain visible while stale chunks are rebuilt; planner pictures provide fallback.
+
+COORDINATE AND RESOLUTION CONTRACT
+
+The actual checkout and cached origin/main share the same basic projection:
+  src/game/iso.ts:1-5: world coordinates are tiles; one tile = 2 metres.
+  TW = 128, TH = 64, HW = 64, HH = 32.
+  worldX(x,y) = (x-y)*64; worldY(x,y) = (x+y)*32.
+  Actual checkout exports are at iso.ts:38 and :39.
+  This is a 2:1 projected diamond; do not label it as the kit's exact 35.264-degree camera.
+
+Chunk dimensions are projected world pixels at zoom 1:
+  Full: CHUNK_W 2000, CHUNK_H 1000.
+  District: MID_K 4, so 8000 x 4000 world pixels.
+  Planner: PLAN_K 8, so 16000 x 8000 world pixels.
+  Full raster levels: [0.6,0.45,0.3,0.2,0.15,0.1,0.07].
+  District levels: [0.14,0.1,0.07,0.05,0.035].
+  Planner levels: [0.06,0.03,0.015].
+  Closest CSS camera zoom is 0.3. Effective resolution also depends on device pixel density.
+
+GroundPainter.paint(i,j,L,lite=false), actual renderer.ts:198:
+  CW = CHUNK_W * (lite ? MID_K : 1), CH similarly.
+  Raster dimensions = round(CW*L), round(CH*L).
+  Projected chunk origin X0=i*CW, Y0=j*CH.
+  Tile-to-raster matrix:
+    [64*L, 32*L, -64*L, 32*L, -X0*L, -Y0*L].
+
+The standalone bunker kit currently uses horizontal/vertical ground coefficients 256 and 148, and a vertical-height coefficient near 147.8 pixels per metre before its scale. These coefficients are not the game contract. Scaling a finished kit PNG by 64/256 horizontally and 32/148 vertically would also squash its vertical wall relief. An exact game-compatible bake should parameterize X/Y/Z projection before rasterization.
+
+The newer cached game uses src/game/ext/course-walls/index.ts:
+  :46 WALL_PX_PER_M = 80.
+  :49 WALL_DROP = WALL_PX_PER_M/(2*32).
+  Height/drop data is in metres, while contour coordinates are tiles.
+For that target, a recommended bake projection is halfWidth=64, halfHeight=32, verticalPixelsPerMetre=80, all multiplied by bake L. The old local checkout has no equivalent public bunker-depth contract; supply an explicit adapter option rather than inventing one.
+
+CURRENT LOCAL BUNKER / COURSE EDIT HOOKS (HEAD ffbd0b6a)
+
+This version renders a bunker as an ordinary painted polygon, with sand fill and an optional grass border. It has no dedicated geometric bunker-wall painter.
+
+- src/game/paint.ts:16 PaintArea: id, flat x/y polygon points, texture, texture scale/angle, border style, corner radius, tone and related style.
+- src/game/paint.ts:291 BRUSH_PRESETS bunker entry uses bunkerSand (or a surface preset), border size 2 and a rough-grass border.
+- src/game/golf/paintcourse.ts:7 SURFACE_TEX maps bunker to bunkerSand.
+- src/game/golf/paintcourse.ts:50 courseAreas(layout, stats?) converts course polygons to PaintArea-like records; large polygons are clipped into 200-tile cells.
+- src/game/paint-tool.ts:177 PaintTool.patch(a,mature=true): LotPatch rounds corners and maps PaintArea style into a polygon patch.
+- src/game/paint-tool.ts:187 send(a,currentMonth?) calls host.setLotGround('paint:'+a.id,[patch]).
+- src/game/engine.ts:887 setLotGround(key,patches|null) batches patches and keeps managed-grass registration in sync.
+- src/game/engine.ts:923 flushLotGround() sends the batch to GroundCache.lotGround().
+- src/game/renderer.ts:74 GroundPainter.setLotGround(set,drop) maintains a spatial index.
+- src/game/renderer.ts:557 private drawPaints(...) draws each polygon texture, clipping, tone, managed grass and an inside border stroke.
+- src/game/renderer.ts:282 invokes drawPaints before later roads/car parks. A baked bunker should respect the same ordering.
+
+The existing PaintArea/patch protocol has no field for an arbitrary pre-baked transparent bunker bitmap, its projected anchor, or a bake cache key. Therefore merely dropping the exported PNG sheets into an assets directory does not wire this effect into the old game. A future owner-approved adapter hook would be required. This inspection did not add one.
+
+EXISTING WORKER / CACHE INTERFACES (ACTUAL LOCAL CHECKOUT)
+
+src/game/ground-protocol.ts:15 PatchPaint describes fill/border scale, angle, widths and tones.
+:18 LotPatch uses flat tile-space pts plus a typed texture name and optional paint/lawn/marks.
+:61 ToWorker includes:
+  {t:'lotground',set:[string,LotPatch[]][],drop:string[]}
+  {t:'paint',id:number,kind:'g'|'m'|'p',i:number,j:number,L:number}
+:72 FromWorker includes:
+  {t:'tile',id,kind,i,j,L,bmp:ImageBitmap,ms:number}
+
+src/game/ground-cache.ts:
+  :43 init(terrain)
+  :44 broadcast(message, transferFactory?)
+  :57 lotGround(set,drop)
+  :76 invalidate(tileSpaceBBox,keepPrev=false,until=0,kinds='gmp')
+  :89 need(tile,L,priority,now)
+  :91 pump()
+  :104 private onMessage(workerIndex,message)
+  :121 evict(now)
+
+lotGround unions old and new patch bounds, broadcasts the edit, then invalidates affected full/district/planner chunks with a one-tile margin. A taller wall, broad collar or cast shadow can extend farther than the polygon: an adapter must include their full reach in the dirty bounds, not depend on this fixed margin.
+
+ground.worker.ts queues messages after init/textures in arrival order, so an edit does not get overtaken by its following paint request. The lotground handler ensures needed photo textures before installing patches. The paint handler:
+  cv = painter.paintPlan(...) or painter.paint(...);
+  bmp = cv.transferToImageBitmap();
+  postMessage({t:'tile',...bmp...},[bmp]).
+
+GroundCache stores a requested generation with each in-flight job. If the chunk changed during the bake, the stale reply bitmap is closed and discarded. A valid bitmap is uploaded with GLRenderer.textureFrom(), then closed; replaced GPU textures are deleted. LRU eviction drops old chunk textures above the configured pixel budget. An external bake cache must likewise release ImageBitmap and GPU resources on replacement/eviction.
+
+src/game/gl.ts:194 textureFrom(bmp:ImageBitmap): WebGLTexture.
+src/game/gl.ts:218 drawChunk(texture,X0,Y0,X1,Y1,masked=false,alpha=1,uv=[0,0,1,1]).
+drawChunk consumes projected world-pixel rectangles. Do not pass raw tile coordinates to it. In the worker path, draw the baked image in raster pixel coordinates after temporarily resetting the Canvas 2D transform, or explicitly compose the correct world-to-raster matrix. Do not project an already projected image a second time.
+
+ART AND TEXTURE INTERFACES (ACTUAL LOCAL CHECKOUT)
+
+src/game/grass-art.ts:46 PhotoTexEntry:
+  {tex:string,src:string,mix:number,px?:number,tiles?:number}.
+mix is coverage in metres for mixed photos; mix=0 is a plain repeating tile.
+PHOTO_TEX contains golfFairway, golfRough, golfFirstCut, bunkerSand and other course surfaces.
+src/game/textures.ts:221 configure(art); :326 sourceFor(textureName,L); :334 has(name); :337 ensure(name).
+Textures retains source pictures and mip chains; workers build/decode only needed pictures.
+src/game/texture-share.ts:7 TexSnapshot contains names, ImageBitmaps, curb colours and stampAngle.
+:16 snapshot(), :20 restore(), :37 cacheKey(), :39 loadCached(), :46 saveCached().
+This IndexedDB cache is primarily the procedural/material texture pack. It is not already a persistent cache of arbitrary per-outline bunker renders.
+
+Registering the user's provided grass/sand images through these material interfaces can supply materials, but material registration alone does not reproduce the kit's 3D lip, vertical cut, sand slope and self-shading.
+
+NEWER CACHED origin/main CONTRACT (NOT THE CHECKED-OUT FILE CONTENTS)
+
+The following symbol locations refer specifically to commit 30ed9a24, not the old working-tree files:
+
+- src/game/ground-protocol.ts:43 CourseLayer stores surface code, texture look, fill rings, true-boundary edges, optional soft/joint edge runs and a textured collar.
+- :52 CourseWall stores Float32Array x,y,drop triples; x/y are tiles, drop is metres. Higher ground is on the left; the face looks along the right-hand normal.
+- :57 CourseRim stores top-edge x/y pairs.
+- :63 CoursePatch stores cx,cy,size,layers,walls,rims,growth/shadow state.
+- :77 LotPatch.course carries that course chunk.
+- src/game/ext/course-grid/patch.ts:14 COURSE_CHUNK=64; :19 COURSE_PATCH_REACH=4.
+- :136 coursePatch(grid,cx,cy,looks,now,lines?,paths?) -> LotPatch|null constructs course fills, collars, wall/rim runs and dirty reach.
+- src/game/ext/course-walls/index.ts:116 WallMat; :120 WALL_TEX=['wallTurf','wallSand','wallBank']; :316 chunkWalls(...); :660 SUN_DIR; :662 faceLight(...).
+- src/game/renderer.ts:1308 drawCourses(...); :1515 courseWalls(...); :1916 courseRims(...); :2002 wallArt(...).
+- wallArt anchors wall textures to world coordinates and mip resolution so neighbouring chunks agree. It has a wallSand surface/material slot, separate from bunker sand fill.
+- src/game/painted-surfaces.ts:50 registers wallSand as 'Bunker wall'; :60 SurfacesFile; :83 lookOfTex(...).
+- src/game/ground-cache.ts:152 lotGround(set,drop,staleMap?) accepts more precise per-key changed bounds. :134 courseHeight(...) sends course-height sample edits.
+- src/game/ground-protocol.ts:152 paint requests additionally carry artL and tile-spec ts; :159 replies can carry artL,ts,tiled,prov and a separate quarter-resolution shade bitmap.
+- src/game/gl.ts:329 textureFrom(...), :353 drawChunk(...).
+
+Prefer this newer course geometry/material handoff if the eventual target is cached origin/main. Do not throw away CoursePatch walls, collars, growth, clipping, shade masks or LOD metadata merely to insert a generic old PaintArea patch. Likewise avoid drawing the game's native bunker wall and a complete pre-rendered kit wall over the same contour: choose one owner of that geometry/shade.
+
+RECOMMENDED EXTERNAL PACKAGE API (PROPOSAL, NOT AN EXISTING GAME API)
+
+Keep the reusable kit and the game-specific binding separate. Suggested deterministic contract:
+
+  prepareMaterials({rough,firstCut,sand,earth,fairway,materialRevision})
+    -> Promise<MaterialHandle>
+
+  bakeBunker({
+    id, geometryRevision,
+    ringsTiles: Float32Array[],
+    profileMetres: {depth,wall,rim,roughWidth,firstCutWidth,slopeWidth},
+    textureScales: {all,rough,firstCut,sand,earth,fairway},
+    light: {fixedUpperRight:true,shadowStrength},
+    projection: {halfWidth:64,halfHeight:32,verticalPixelsPerMetre:80},
+    rasterScale: number,
+    materialRevision, rendererRevision
+  }) -> Promise<{
+    key:string,
+    boundsWorldPx:[number,number,number,number],
+    dirtyBoundsTiles:[number,number,number,number],
+    image:ImageBitmap,
+    rasterScale:number,
+    premultipliedAlpha:boolean
+  }>
+
+  drawBunkerIntoChunk(ctx,bake,{worldX0,worldY0,rasterScale})
+    -> void
+
+  releaseBunker(bake) -> void
+
+Include units in exported JSDoc. Keep projection coefficients and vertical pixels per metre explicit, not scattered constants. The renderer should receive a stable edited outline and an immutable material handle; it must not inspect the entire game state.
+
+The cache key should hash canonical geometry, profile, texture scales, material content/revision, fixed light, projection, raster scale and renderer version. Do not key solely by an area id, a preset name or the apparent image filename. Those can stay unchanged while their content changes. Geometry/texture/light changes invalidate a bake; panning and camera motion do not.
+
+FAST RUNTIME HANDOFF
+
+1. On course design/style/height edit, update only the affected bunker/corner region and its complete old/new dirty reach.
+2. Prepare material images once per worker (or share cloned ImageBitmap snapshots, as the existing texture pack does).
+3. Bake the selected depth/profile once, outside the animation frame. If the profile changes during that bake, replace/discard by revision.
+4. Keep one projected raster at a sufficient top resolution; lazily cache lower raster levels or derive their mip images. Do not keep all four exported height alternatives decoded by default unless they are actually in use.
+5. Composite that raster into the existing worker ground chunk at the correct draw-order stage, then let the normal bitmap-transfer/upload/cache path handle frames.
+6. The per-frame path stays cached 2D GL chunk draws. Do not run SDF generation, triangle mesh building, shader compilation, grass blade expansion or image readback per frame.
+7. Planner/distant views should reuse the game's simplified course fill and existing LOD policy. Fine roots and sand rake detail need not be redrawn at far zoom.
+8. Match premultiplied-alpha conventions at bitmap creation/upload. Keep a conservative transparent gutter for bilinear filtering and wall/shadow reach. Document whether colour/shading is already baked so the newer shade-mask pipeline does not apply it twice.
+9. Preserve deterministic global material coordinates across chunk boundaries. The four PNG sections of one edited outline are an export layout, not interchangeable universal corner tiles.
+
+The newer cached origin/main already follows the broad bake-on-edit architecture; exploit that rather than introducing a second runtime WebGL scene or modifying the game's texture-array sprite atlas for a ground-only asset.
+
+WHAT THIS INSPECTION DOES NOT CLAIM
+
+No package was installed or integrated into Capital Empire. No game build, benchmark or runtime test was run. No performance gain or pixel-perfect game match has been measured. No current game protocol was found that automatically consumes the kit's four-piece PNG atlas or its standalone WebGL renderer. The inspection identifies version-specific interfaces for a later authorized integration, while all deliverables stay outside the game repository.
+
+A finite fixed atlas is not an arbitrary-outline solution. The kit's builder can render an edited outline and export four mutually matching pieces; another outline requires another bake. Baking once and caching the result is how to preserve the detailed look at cheap runtime cost.
+
+CURRENT GITHUB MAIN AND WHOLE-APPEARANCE REPLACEMENT HANDOFF
+Authoritative addendum: 2026-10-30. This section supersedes cached-ref assumptions above.
+
+Read-only git ls-remote --heads origin main returned:
+4676a0184aebcdb0b1e27af649607cf759e4143e refs/heads/main
+The current files at that exact SHA were then read with gh api contents requests (raw media type). No fetch, checkout or repository ref update occurred. Cached origin/main remains 30ed9a24; the actual checkout remains main at ffbd0b6a.
+
+The goal is REPLACEMENT OF THE EXISTING BUNKER APPEARANCE, not adding another bunker or placing a freestanding decoration. The package must keep the game's course grid, bunker/owner identifiers, collision, ball physics, navigation, save entities and all non-bunker materials unchanged. Only the rendered appearance of the existing bunker and its owned collar/wall/rim regions is substituted.
+
+CURRENT VERIFIED TYPES AND SYMBOLS (commit 4676a018)
+
+src/game/ground-protocol.ts:
+  :47 CourseTex = {tex:string; sc:number; a:number; x?:number; m?:{t:string;s:number;f:number;p:number}}.
+  x is exposure; do not send the older t/ta/tc CourseTex shape from cached 30ed9a24.
+  :61 CourseLayer extends CourseTex:
+    s:number; e:EdgeProfile; fill:Float32Array[]; edges:Float32Array[];
+    soft?:Float32Array[]; joint?:Float32Array[];
+    collar?:CourseTex & {
+      n:'first-cut'|'fringe'|'lip'|'bank'; w?:number;
+      fill:Float32Array[]; edges:Float32Array[]; soft?:Float32Array[]; g?:CourseTex
+    };
+    stripes?:{hole:number;line:number[];runs?:Float32Array;a?:number;f?:number[]}[];
+    alts?:{look:CourseTex;band?:CourseTex;g?:CourseTex;runs:Float32Array}[];
+    b?:number.
+  collar.g is the bunker's lip grass with the course finish. alts preserves per-hole/property/facility looks within runs. b is a custom grass's playing surface.
+  :92 CourseWall = {p:Float32Array;lo:number;m:number;hs?:number;f?:number;r?:number}.
+  :97 CourseRim = {p:Float32Array;hi:number}.
+  :103 CoursePatch = {
+    cx:number;cy:number;size:number;layers:CourseLayer[];
+    walls?:CourseWall[];rims?:CourseRim[];grow?:Uint8Array;sh?:number[];
+    st?:number[];spill?:{p:Float32Array;o:number}[];z:number
+  }.
+  :134 LotPatch.course?:CoursePatch.
+
+CoursePatch has no universal stable per-connected-bunker entity id. Pass the existing owner's identifier through from the calling game system; for chunk ownership the existing key is cg:<cx>:<cy>. Never manufacture a second gameplay entity to hold the rendered image.
+
+src/game/ext/course-grid/index.ts: SURF.bunker is still 6. Long grass is 9; custom grasses have additional draw ids. Draw order now uses SURF_ORDER, never numeric sorting of s.
+src/game/ext/course-walls/index.ts:
+  :44 WALL_PX_PER_M=80; :47 WALL_DROP=80/(2*32).
+  :90 layerCode(s,collar)=2*s+(collar?1:0).
+  Bunker fill code 12; lip/collar code 13.
+  :123 DRAW_ORDER=drawOrder(); :127 WallMat.Sand=1; :131 WALL_TEX[1]='wallSand'.
+src/game/iso.ts: HW=64, HH=32, tile=2 m, unchanged.
+
+Current renderer.ts locations:
+  :1566 tile-to-raster matrix [64L,32L,-64L,32L,-X0L,-Y0L].
+  :2394 drawCourses(ctx,cs,L,X0,Y0,M,Minv,box,lite,under=null).
+  :2617 walls(lo).
+  :2655 rims(hi).
+  :2657 for(code of DRAW_ORDER).
+  :2681-2683 bunkerGrassLip() for code13, including the border-width-zero case.
+  :2759 courseWalls(...).
+  :3217 courseRims(...).
+  :3307 wallArt(...).
+  :2745 walls(code) runs after each drawn layer.
+Current ext/course-grid/patch.ts:220 coursePatch(...) builds the existing render handoff; :264 returns the CoursePatch.
+
+WHOLE LOOK, CORRECT DRAW OWNERSHIP
+
+The replacement owns the approved sand texture/raking, sand slope, vertical brown cut face and root grain, rim shoulder, rough collar, first-cut band, soft outer grass blend, contact shade, fixed upper-right sunlight and floor lighting. Its appearance input carries all corresponding settings:
+  collar / firstCut / slope: tile widths, one tile=2m;
+  depth / wall / rim: metres;
+  roundness: 0..1;
+  shadow: strength;
+  textureScale, roughScale, firstScale, sandScale, earthScale, fairwayScale: scale factors;
+  material content/revisions: the user's approved supplied pictures.
+Bunker Size and View zoom are editor controls, not permission to change the existing game's bunker footprint or camera. Preserve the game's outline and pass its rings into the bake request. Keep its gameplay-height model unchanged; visual profile settings are appearance only.
+
+Use the current native layer ordering. A complete image pasted after every course layer can wrongly cover greens or unrelated grass. An image pasted only at sand-fill code12 can have its grass lip overwritten later. Use semantic ownership masks/passes:
+  - sand floor/slope at existing bunker fill code12;
+  - cut face and its shadow at native walls(12), clipped to the owned sand region as native walls are;
+  - grass/lip/rim at code13's actual DRAW_ORDER position (it can be after a higher neighbour, e.g. green).
+The same cached raster may be drawn through separate precomputed masks; no per-frame 3D calculation is required. The generic packaged draw helper supplies placement, not automatic ordering/mask insertion.
+
+Suppress duplicate native sand fill, native sunken-floor lighting, bunkerGrassLip, WallMat.Sand/lo12 cut faces and only the selected boundary's rims after a matching replacement bake is valid. A rim's hi belongs to the higher neighbour and is NOT necessarily code13. Never delete all rims, all walls or every grass collar. Match rim spans to the selected true boundary/ownership mask. Preserve shared tee/green geometry and every non-bunker pass.
+
+While a new bake is pending, missing, failed or stale by key, native drawing remains the fallback. Activate all replacement parts as one matching revision, not a partially loaded floor without its wall.
+
+GEOMETRY AUTHORING AND THE PACKAGED CONVERSION
+
+CourseLayer.fill rings are closed but clipped to the chunk box with a 0.1-tile overlap. They are not complete feature outlines. Rendering every clipped ring independently creates walls across chunk seams. Combining overlapping chunk fills into one global even-odd path can also cancel overlap strips into holes.
+
+CourseLayer.edges contains only true physical boundaries. Its polylines are open where cut at a chunk boundary, and a whole enclosed ring repeats its first point. Assemble neighbouring true runs globally until every boundary node has degree two, then create complete rings; preserve components and holes. An incomplete neighbourhood must fail explicitly or wait for more neighbours. It must never close an open run with an invented segment. Alternatively pass whole feature rings from the authoritative existing bunker geometry.
+
+CourseWall.p is x,y,drop triples: x/y tiles, drop metres. CourseRim.p is x/y pairs. The higher side is on the left. The packaged conversion preserves these as read-only appearance-source data; it does not rewrite the game grid. Rim candidates include their original source patch because hi alone cannot establish bunker ownership.
+
+NEW PACKAGED FILES (OUTSIDE THE GAME REPOSITORY)
+
+  integration/runtime/capital-empire-adapter.js
+  integration/runtime/capital-empire-adapter.d.ts
+
+No external dependencies. Key exports:
+
+  GAME_PROJECTION = {halfWidth:64,halfHeight:32,verticalPixelsPerMetre:80}
+  GAME_TARGET = {commit:'4676a018...',surface:6,fillCode:12,lipCode:13,wallMaterial:1}
+
+  createGuideFromRings(ringsTiles,paddingTiles=4)
+    -> {vertices,width,height,originTiles:{x,y}}
+  A one-tile/2m vertex guide with even-odd holes and disconnected components. Global tile origin is explicit. Sub-grid features can be approximated by this guide; do not claim exact preservation of features smaller than its sampling interval.
+
+  assembleBoundaryRings(trueBoundaryRuns,tolerance=1e-4)
+    -> Float32Array[]
+  Deduplicates exact shared segments, joins globally, rejects open/ambiguous boundaries.
+
+  extractBunkerGeometry(coursePatches,{ringsTiles?,tolerance?})
+    -> {ringsTiles,boundaryRuns,sourcePatchKeys,layers,wallRuns,rimCandidates,ownership}|null
+  Only selects s6 and wall material1/lo12. The optional ringsTiles must be complete authoritative feature rings. Without those, true CourseLayer.edges must close globally; clipped-only fills throw clearly. Original CoursePatch/Layer objects are not mutated.
+
+  buildBakeRequest({
+    id:existingOwnerKey,revision:existingGeometryOrAppearanceRevision,
+    ringsTiles,appearance:{settings:approvedSettings,depth:1.5},
+    rasterScale:.6,maxEdge:1024,paddingTiles?,previousDirtyBounds?
+  })
+    -> {id,revision,guide,appearance,projection,rasterScale,maxEdge,dirtyBoundsTiles,key}
+
+  getDirtyBoundsTiles(rings,appearance,previousBounds?)
+  unionDirtyBounds(oldBounds,newBounds)
+  projectBoundsTiles(tileBounds,projection,heightRangeMetres)
+  Dirty bounds include collars, first-cut, slope support, projected wall drop and shadow reach.
+
+  getReplacementOwnership(bake,expectedKey)
+    -> {active,nativeFallback,surface,fillCode,lipCode,wallMaterial,
+        suppress:{sandFill,floorLighting,grassLip,wallSand,ownedRims},...}
+  Wrong-key, absent or invalid bakes keep nativeFallback=true. The metadata is scoped to the selected existing feature; the future renderer hook must apply its ownership mask rather than globally disabling those pass kinds.
+
+  drawBunkerIntoChunk(ctx,bake,{worldX0,worldY0,rasterScale})
+    -> boolean
+  Saves context state, resets the transform, draws the already projected image through the caller's existing clip into chunk raster pixels, then restores even on error. boundsWorldPx is projected world pixels at zoom1. No SDF or geometry work occurs in this drawing helper. Check expected-key ownership before calling it.
+
+CONCRETE CALLER HANDOFF (EXAMPLE, NOT INSTALLED)
+
+  import {
+    extractBunkerGeometry, buildBakeRequest,
+    getReplacementOwnership, drawBunkerIntoChunk
+  } from './capital-empire-adapter.js';
+
+  // Existing owner's neighbouring render patches; no new course entity.
+  const geometry = extractBunkerGeometry(existingNeighbourCoursePatches);
+  if (!geometry) return; // no bunker: every native material stays untouched
+
+  const request = buildBakeRequest({
+    id: existingOwnerKey,
+    revision: existingEditRevision,
+    ringsTiles: geometry.ringsTiles,
+    appearance: {settings: approvedSettings, depth: 1.5},
+    rasterScale: 0.6,
+    maxEdge: 1024,
+    previousDirtyBounds: previousBake?.dirtyBoundsTiles
+  });
+
+  // Execute only when the design/look changes; baker is supplied by the package.
+  // The completed result must carry this request's key, actual rasterScale,
+  // projected bounds and native image dimensions, including any maxEdge reduction.
+  const completed = await suppliedBaker(request);
+  const ownership = getReplacementOwnership(completed, currentRequest.key);
+
+  // In the later authorized renderer hook, at each correct existing bunker stage:
+  if (!ownership.active) drawExistingNativeBunkerPass();
+  else {
+    // Clip to THIS feature's precomputed floor/wall/lip ownership for this stage.
+    drawBunkerIntoChunk(ctx, completed, {
+      worldX0: X0, worldY0: Y0, rasterScale: L
+    });
+  }
+
+These helpers intentionally do not monkey-patch private methods, replace a game's whole CoursePatch, create workers in the game, or register assets by themselves. Binding this package into the current private drawCourses pipeline still requires a deliberate future game code change. The present task packages the replacement adapter and its contract without installing or modifying the game.
+
+VERIFICATION OF THE NEW ADAPTER
+
+Node syntax passed. Pure geometry/fake-Canvas checks passed:
+  disconnected components and holes;
+  global true-edge assembly across two patches;
+  rejection of incomplete and clipped-fill-only geometry;
+  input immutability;
+  deterministic edit/revision keys;
+  conservative old/new dirty bounds;
+  64/32 projection;
+  native fallback for absent/wrong-key bakes;
+  raster placement in projected chunk coordinates;
+  context restoration on normal drawing and drawImage failure.
+No actual game build, rendering integration or in-game performance measurement was run.
+
+COMPONENT BAKES, AUTHORITATIVE RINGS AND CHUNK DRAW CULLING
+
+The canonical runtime is bunker-border-kit/integration/runtime (not an earlier edge-matched sibling).
+
+splitBunkerComponents(ringsTiles) returns:
+  Array<{ringsTiles:Float64Array[],componentKey:string,boundsTiles:[x0,y0,x1,y1]}>
+
+Complete, nonintersecting rings use even-odd containment. Each outer ring keeps its immediate holes; a sand island nested inside a hole becomes its own component, with its own holes. Disconnected bunkers therefore get separate bounded images instead of sharing a downsampled 64-tile course bitmap. Input ring order, winding and start vertex do not change componentKey. Identical ring pairs cancel under even-odd fill.
+
+componentKey is a geometry/cache identity, NOT a stable course entity ID. Geometry edits can change it. The caller must keep a component registry tied to the existing bunker/owner identifiers, preserve those identifiers across edits, and retain the previous dirty bounds for replacement/removal. If the game's grid has no separate bunker entity, this registry remains render-only; do not create a new physics/navigation/save entity just to hold a component image. Source CoursePatch/grid/ball/collision/navigation data stays unchanged.
+
+Typical binding sequence:
+  geometry = extractBunkerGeometry(allRequiredNeighbourPatches);
+  components = splitBunkerComponents(geometry.ringsTiles);
+  for each component:
+    existingId = callerOwnedComponentRegistry.resolveExistingOwner(component);
+    request = buildBakeRequest({
+      id: existingId, revision: existingEditRevision,
+      ringsTiles: component.ringsTiles,
+      appearance: approvedAppearance,
+      previousDirtyBounds: registry.previousDirtyBounds(existingId),
+      rasterScale: 0.6, maxEdge: 1024
+    });
+
+The registry resolver is the game's binding responsibility, not a new entity generator in this helper. Never use the changing componentKey as the persisted gameplay ID. Retire stale image/cache records when a component is removed or replaced, while invalidating the union of its old and new reachable bounds.
+
+buildBakeRequest now carries ringsTiles as independent Float64Array copies of the exact input coordinates. Game Float32 coordinates remain exactly representable; higher-precision caller coordinates are not quantized down. Its deterministic key includes these exact rings. A sub-tile edit therefore changes the bake key even if the coarse vertex guide is byte-for-byte unchanged.
+
+Exact game rings are the production boundary authority. The production baker must construct its vector-ring SDF from request.ringsTiles and bypass authoring-guide re-rounding/contouring when they are present. The one-tile/2m guide remains useful for bounds and standalone authoring fallback. Appearance.roundness affects guide-authored shapes only; it must not reshape a game's already-authored outline. The helper does not mutate the original rings or game CoursePatch data.
+
+drawBunkerIntoChunk now checks the projected destination rectangle against ctx.canvas.width/height when available and returns false before any save/draw if wholly outside. Partial overlaps still draw through the caller's existing clip. Context state is restored on success and on drawImage failure; fake/non-canvas contexts retain the previous drawing behavior.
+
+Native pass ownership remains conditional: only a valid bake whose key matches the current request activates replacement. While pending, missing or stale, native sand/lip/wall/rim/floor-light passes stay active. Once ready, replace only this existing bunker's owned floor/wall/lip spans at their native stages; never suppress unrelated native materials, shared neighbours or all rims globally.
+
+The canonical test-capital-empire-adapter.mjs verifies component+hole grouping, nested islands, ring-order/winding/start-invariant geometry keys, exact Float64 copying, source immutability, same-guide/different-key sub-tile edits, duplicate even-odd cancellation, outside-canvas culling, partial placement, context restoration and pending native fallback. It does not claim in-game installation or performance measurements.
+
+
+

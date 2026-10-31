@@ -1,7 +1,7 @@
 // The hole card (plan P23-UX 6.2 P2-4, T174): a selected hole's facts as the game has them (D7.3: par, lengths from each tee, grow-in, its
 // surfaces' areas, its checks and warnings), each check with the Fix that arms the tool that mends it; the pin and tee markers dragged on the map
 // while it is open (no re-plan, no charge); Edit hole (New hole's editor on it, framed, with a toast; "Editing hole n" while that editor is open,
-// T205); Delete with a confirm that states the refund; the number, which
+// T205); Build at the top right (the Course tool with this hole in hand, its brushes ready); Delete with a confirm that states the refund; the number, which
 // trades places with another hole's (D4.12, as dragging the Holes panel's badges). Opened by a hole's badge in the Holes panel or a click on the
 // hole with Select; Esc or ✕ closes it. In New hole's card style; colour never alone (P23 D8.1: ✓ ◔ ! ✗ beside the colours, 13 px body).
 import { useState } from 'react';
@@ -50,7 +50,11 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
           <div className={`mt-0.5 flex items-center gap-1.5 text-[12px] ${state.tone}`} data-testid="hole-state"><span aria-hidden className="font-bold">{state.icon}</span>{state.word}</div>
           {bad.length > 0 && c.ready !== null && <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-sky-300"><span aria-hidden className="font-bold">◔</span>growing · ready {monthIndexLabel(c.ready)}</div>}
         </div>
-        <button className="btn-icon" onClick={() => game.closeHoleCard()} title="Close (Esc)" aria-label="Close the hole card"><Icon name="close" size={18} /></button>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {/* Build: straight to painting this hole (the Course tool, this hole in hand, its brushes) */}
+          <button className="chip" onClick={() => game.buildHole(c.n)} title={`Build on hole ${c.n}: the Course tool opens with hole ${c.n} in hand, ready to paint its surfaces`} data-testid="hole-build"><Icon name="trophy" size={14} />Build</button>
+          <button className="btn-icon" onClick={() => game.closeHoleCard()} title="Close (Esc)" aria-label="Close the hole card"><Icon name="close" size={18} /></button>
+        </div>
       </div>
 
       {c.tees.length > 0 && (

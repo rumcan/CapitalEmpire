@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "geometryMode": "authoritative-rings",
+  "projection": {
+    "halfWidth": 64,
+    "halfHeight": 32,
+    "verticalPixelsPerMetre": 80
+  },
+  "imageIsBitmap": true,
+  "dimensions": [
+    512,
+    348
+  ],
+  "boundsWorldPx": [
+    -7355,
+    9333,
+    -5429,
+    10642
+  ],
+  "worldOriginTiles": {
+    "x": 94,
+    "y": 194
+  },
+  "premultipliedAlpha": true,
+  "key": "capital-empire-bunker-v1:subtile-contract:91ff25b0",
+  "bakeMs": 1171.199999999255,
+  "sourceGuideImmutable": true,
+  "sourceRingsImmutable": true,
+  "ringCount": 2,
+  "subtileCoordinates": true,
+  "gpuChecksPassedViaBaker": true,
+  "browserExceptions": []
+}

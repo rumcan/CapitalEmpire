@@ -2,6 +2,7 @@
 import { MAP } from './iso';
 import { isPhotoTex, type GrassTex } from './grass-art';
 import { PRESETS, presetTex, surfacePreset } from './paint-presets';
+import type { BunkerLookFields } from './ext/bunker-look/look-settings';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the photo textures of grass-art.ts PHOTO_TEX) */
 export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}`;
@@ -16,6 +17,8 @@ export type BorderSize = number;
  *  the border band has its own scale, angle, tone, strength and tint (bscale, bangle, btone, btoneAmt, btint), by default the fill's scale and angle with no tone;
  *  plantKind / plantedMonth: a golf area sown from seed (grows in) or laid as sod, and the month it was planted */
 export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string; bscale: number; bangle: number; btone: 0 | 1 | 2; btoneAmt: number; btint: string; hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number;
+  /** a bunker's look only: its depth, walls and bake pictures (ext/bunker-look/look-settings.ts; absent: the defaults) */
+  bunker?: BunkerLookFields;
   /** a second texture blended over the fill in soft patches (the map grass's mix): mtex the texture, mshare how much of the area it covers (0..1),
    *  msoft how soft its edge is, mpatch the patches' size (1 = about 5 tiles); absent = no blend */
   mtex?: PaintTex; mshare?: number; msoft?: number; mpatch?: number;
@@ -336,26 +339,27 @@ const COURSE_SURFACE_OF: Record<string, [string, PaintTex]> = {
 /** a course texture as the brushes lay it: the owner's preset for its golf surface, else the brushes' photo, so a placed piece and a brush stroke
  *  of the same surface always match (the owner, 2026-10-24: the pieces laid a blocky old fairway photo the brushes never use) */
 export function courseTex(tex: PaintTex): PaintTex { const s = COURSE_SURFACE_OF[tex]; return s ? S(s[0], s[1]) : tex; }
+// every course surface is rounded off at full Smoothness by default (the owner, 2026-10-29 for the bunker: "the default for edges on bunker
+// should be round ticked and smoothness 100%"; 2026-10-31: "make round off checked by default and 100% by default on all the presets"); a look
+// saved without Round off (an old save's hole, the course default in storage) takes it too, as its missing fields come from its preset
+// (golf/looks.ts normalizeBook, paint-tool loadBrush)
 export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> }[] = [
-  { kind: 'fairway', name: 'Fairway', r: 5, style: clampStyle({ ...DEFAULT_STYLE, tex: S('fairway', 'golfFairway'), border: 3, btex: S('firstCut', 'golfFirstCut'), radius: 0 }) },
-  { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('green', 'golfGreen'), border: 2, btex: S('fringe', 'golfFringe') }) },
-  { kind: 'tee', name: 'Tee', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('tee', 'golfTee'), border: 1, btex: S('firstCut', 'golfFirstCut') }) },
-  { kind: 'rough', name: 'Rough', r: 8, style: clampStyle({ ...DEFAULT_STYLE, tex: S('rough', 'golfRough'), border: 0 }) },
-  // a bunker is rounded off at full Smoothness by default (the owner, 2026-10-29: "the default for edges on bunker should be round ticked and
-  // smoothness 100%"); a look saved without Round off (an old save's hole, the course default in storage) takes it too, as its missing fields
-  // come from this preset (golf/looks.ts normalizeBook, paint-tool loadBrush)
+  { kind: 'fairway', name: 'Fairway', r: 5, style: clampStyle({ ...DEFAULT_STYLE, tex: S('fairway', 'golfFairway'), border: 3, btex: S('firstCut', 'golfFirstCut'), radius: 0, round: true, smooth: 1 }) },
+  { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('green', 'golfGreen'), border: 2, btex: S('fringe', 'golfFringe'), round: true, smooth: 1 }) },
+  { kind: 'tee', name: 'Tee', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('tee', 'golfTee'), border: 1, btex: S('firstCut', 'golfFirstCut'), round: true, smooth: 1 }) },
+  { kind: 'rough', name: 'Rough', r: 8, style: clampStyle({ ...DEFAULT_STYLE, tex: S('rough', 'golfRough'), border: 0, round: true, smooth: 1 }) },
   { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('bunker', 'bunkerSand'), border: 2, btex: S('rough', 'golfRough'), round: true, smooth: 1 }) },
-  { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('water', 'waterDark'), border: 2, btex: 'dirt' }) },
+  { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('water', 'waterDark'), border: 2, btex: 'dirt', round: true, smooth: 1 }) },
   // T222 (the owner, 2026-10-27: "add desert as a waste bunker in the course"): the Waste area, the course grid's waste surface (the desert, Painted ›
   // Waste area sand). Key 7 (T252: the cart path brush is gone, SURFACE_BRUSHES), so the keys 1-6 stay as they were and the stage 2 keys run 1-7 with no gap;
   // priced like a bunker (golf/costs.ts) and played as sand (golf/play)
-  { kind: 'waste', name: 'Waste area', r: 3, style: clampStyle({ ...DEFAULT_STYLE, tex: S('waste', 'wasteSand'), border: 0 }) },
+  { kind: 'waste', name: 'Waste area', r: 3, style: clampStyle({ ...DEFAULT_STYLE, tex: S('waste', 'wasteSand'), border: 0, round: true, smooth: 1 }) },
   { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: S('path', 'asphalt'), border: 0 }) },
   // T238 (the owner, 2026-10-28: "the current course rough being a long grass option the player can add"): Long grass, the course grid's
   // long grass surface, wearing the owner's rough paintings (Painted › Long grass: rough-owner) now the rough wears the town lawns' grass
   // (#696). Key 8 (T252: was 9, after the cart path brush that went); drawn between the rough and the fescue, priced like the rough (golf/costs.ts) and
   // played as heavy rough, the deep grass lie (golf/play)
-  { kind: 'longGrass', name: 'Long grass', r: 6, style: clampStyle({ ...DEFAULT_STYLE, tex: S('longGrass', 'golfLongGrass'), border: 0 }) },
+  { kind: 'longGrass', name: 'Long grass', r: 6, style: clampStyle({ ...DEFAULT_STYLE, tex: S('longGrass', 'golfLongGrass'), border: 0, round: true, smooth: 1 }) },
 ];
 /** T252 (the owner, 2026-10-28: "remove cart path from that menu. cart paths are part of the paths section"): the surfaces the course brush
  *  paints, in their keys' order (Shape by hand's and Edit hole's swatches, the keys 1-8, the Holes flyout, Help › Keys): every brush but the
