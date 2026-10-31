@@ -66,3 +66,18 @@ test('metadata-only source updates and verified contour suspension reuse source 
   assert.equal(ready.length, 2); assert.deepEqual(ready[1].sourcePatchKeys, ['cg:0:0', 'cg:1:0']);
   bridge.dispose(); ready.forEach(value => value.image.close());
 });
+
+test('a texture swap is a new bake key and carries the slot pictures to the worker', async () => {
+  const jobs: BunkerStageRequest[] = [];
+  const bridge = new BunkerStageBridge({ bake: async request => { jobs.push(request); return sprite(request); },
+    cloneImage: async () => bitmap() as unknown as ImageBitmap, expected() {}, ready: value => value.image.close(), drop() {} });
+  bridge.sync([input()]); await flush();
+  assert.equal(jobs[0].materials.sand.id, 'bunker:sand');
+  bridge.sync([{ ...input(), settings: clampBunkerSettings({ sandTex: 'bunker:wall-earth' }) }]); await flush();
+  assert.equal(jobs.length, 2);
+  assert.notEqual(jobs[1].key, jobs[0].key);
+  assert.equal(jobs[1].materials.sand.id, 'bunker:wall-earth');
+  bridge.sync([{ ...input(), settings: clampBunkerSettings({ sandTex: 'bunker:wall-earth', sandScale: 2 }) }]); await flush();
+  assert.notEqual(jobs[2].key, jobs[1].key, 'a scale change re-bakes too');
+  bridge.dispose();
+});

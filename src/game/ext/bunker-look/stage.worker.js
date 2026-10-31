@@ -9,9 +9,9 @@ function pixels(image) {
   context.drawImage(image, 0, 0); const result = context.getImageData(0, 0, image.width, image.height).data;
   canvas.width = canvas.height = 1; return result;
 }
-async function bake(request, materialURLs) {
+async function bake(request) {
   const started = performance.now();
-  baker ??= new BunkerBaker({ materialURLs, maxRenderPixels: 4194304, maxOutputEdge: 512 });
+  baker ??= new BunkerBaker({ maxRenderPixels: 4194304, maxOutputEdge: 512 });
   let colour, semantics, atlas, canvas;
   try {
     const snapshot = { ...request, maxEdge: 512 };
@@ -32,7 +32,7 @@ self.onmessage = ({ data }) => {
   if (data.t === 'dispose') { chain = chain.then(() => { baker?.dispose(); self.close(); }); return; }
   if (data.t !== 'bake') return;
   chain = chain.then(async () => {
-    try { const sprite = await bake(data.request, data.materialURLs); self.postMessage({ id: data.id, sprite }, [sprite.image]); }
+    try { const sprite = await bake(data.request); self.postMessage({ id: data.id, sprite }, [sprite.image]); }
     catch (error) { self.postMessage({ id: data.id, error: error?.message ?? String(error) }); }
   });
 };

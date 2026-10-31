@@ -1,7 +1,6 @@
 // Host adaptation of the supplied SDK: the ordinary colour pass is unchanged.
 // semanticPass only emits geometry IDs for native floor/wall/lip staging; original vendor files remain preserved.
 import {WorldRenderer} from './renderer-world.js';
-import {DEFAULT_MATERIAL_URLS} from '../package/baker/material-urls.js';
 export const GAME_PROJECTION=Object.freeze({halfWidth:64,halfHeight:32,verticalPixelsPerMetre:80});
 export const PREVIEW_PROJECTION=Object.freeze({halfWidth:256,halfHeight:148,verticalPixelsPerMetre:147.8});
 export function gridFromGuide(guide){
@@ -10,23 +9,35 @@ export function gridFromGuide(guide){
  if(width>512||height>512||rows.some(r=>!Array.isArray(r)||r.length!==width+1||r.some(v=>v!==0&&v!==1)))throw Error('Invalid or oversized guide');
  const grid={width,height,vertices:rows.map(r=>[...r])};grid.caseAt=(x,y)=>{const v=grid.vertices,mask=v[y][x]+2*v[y][x+1]+4*v[y+1][x+1]+8*v[y+1][x];return{mask,variant:'sand'};};return grid;
 }
-async function image(url){const r=await fetch(url);if(!r.ok)throw Error('Texture load failed: '+url);return createImageBitmap(await r.blob());}
+// Host: one picture per slot, chosen per bake (texture-library.ts); crop picks a part of an atlas (fractions of the image).
+async function image(material){const r=await fetch(material.url);if(!r.ok)throw Error('Texture load failed: '+material.id);const full=await createImageBitmap(await r.blob());if(!material.crop)return full;
+ try{const [x,y,w,h]=material.crop;return await createImageBitmap(full,Math.round(x*full.width),Math.round(y*full.height),Math.max(1,Math.round(w*full.width)),Math.max(1,Math.round(h*full.height)));}finally{full.close();}}
+const SLOTS=['sand','soil','rough','firstCut','wall'],MAX_TEXTURES=24;
 export class BunkerBaker{
- constructor({textureBaseURL,materialURLs,maxRenderPixels=4194304,maxOutputEdge=1024}={}){if(!Number.isSafeInteger(maxRenderPixels)||maxRenderPixels<1||!Number.isSafeInteger(maxOutputEdge)||maxOutputEdge<32)throw Error('Invalid bake pixel limits');this.materialURLs=materialURLs??(textureBaseURL?Object.fromEntries(['material','rough','firstCut','earth'].map((key,i)=>[key,new URL(['material-atlas.png','border-grass.png','first-cut.png','wall-earth.png'][i],textureBaseURL).href])):DEFAULT_MATERIAL_URLS);this.maxRenderPixels=maxRenderPixels;this.maxOutputEdge=maxOutputEdge;this.ready=null;this.disposed=false;}
- async init(){if(this.disposed)throw Error('Baker disposed');if(!this.ready)this.ready=(async()=>{const settled=await Promise.allSettled(['material','rough','firstCut','earth'].map(key=>image(this.materialURLs[key]))),images=settled.filter(r=>r.status==='fulfilled').map(r=>r.value);try{const failure=settled.find(r=>r.status==='rejected');if(failure)throw failure.reason;if(this.disposed)throw Error('Baker disposed');this.renderer=new WorldRenderer(...images);return this.renderer;}finally{images.forEach(i=>i.close());}})().catch(error=>{this.ready=null;throw error;});return this.ready;}
+ constructor({maxRenderPixels=4194304,maxOutputEdge=1024}={}){if(!Number.isSafeInteger(maxRenderPixels)||maxRenderPixels<1||!Number.isSafeInteger(maxOutputEdge)||maxOutputEdge<32)throw Error('Invalid bake pixel limits');this.maxRenderPixels=maxRenderPixels;this.maxOutputEdge=maxOutputEdge;this.renderer=null;this.textures=new Map();this.disposed=false;}
+ init(){if(this.disposed)throw Error('Baker disposed');return this.renderer??=new WorldRenderer();}
+ // GL textures by id (the wall repeats, the rest clamp), least recently used dropped beyond MAX_TEXTURES; a failed load is retried next bake.
+ texture(material,repeat){const key=(repeat?'r:':'c:')+material.id;let entry=this.textures.get(key);if(entry){this.textures.delete(key);this.textures.set(key,entry);return entry.ready;}
+  entry={ready:image(material).then(img=>{try{if(this.disposed)throw Error('Baker disposed');return {texture:this.renderer.upload(img,repeat),aspect:img.width/img.height};}finally{img.close();}})};
+  entry.ready.catch(()=>{if(this.textures.get(key)===entry)this.textures.delete(key);});this.textures.set(key,entry);
+  while(this.textures.size>MAX_TEXTURES){const [oldKey,old]=this.textures.entries().next().value;this.textures.delete(oldKey);old.ready.then(t=>this.renderer?.gl.deleteTexture(t.texture),()=>{});}
+  return entry.ready;}
  async bake(request){
-  const start=performance.now(),renderer=await this.init(),grid=gridFromGuide(request.guide),settings={...request.appearance?.settings},depth=request.appearance?.depth??1.5,projection={...GAME_PROJECTION,...request.projection},originTiles=request.guide.originTiles??{x:0,y:0};
+  const start=performance.now(),renderer=this.init(),grid=gridFromGuide(request.guide),settings={...request.appearance?.settings},depth=request.appearance?.depth??1.5,projection={...GAME_PROJECTION,...request.projection},originTiles=request.guide.originTiles??{x:0,y:0};
   if(this.disposed)throw Error('Baker disposed');
   if(!Number.isFinite(originTiles.x)||!Number.isFinite(originTiles.y))throw Error('Invalid guide tile origin');
   for(const value of Object.values(projection))if(!Number.isFinite(value)||value<=0)throw Error('Invalid projection');
   if(!Number.isFinite(depth)||depth<0||depth>30)throw Error('Invalid bunker depth');
-  for(const name of ['textureScale','roughScale','firstScale','sandScale','earthScale'])if(settings[name]!==undefined&&(!Number.isFinite(settings[name])||settings[name]<=0))throw Error('Invalid texture scale: '+name);
+  if(!request.materials||SLOTS.some(slot=>!request.materials[slot]?.url))throw Error('Bunker bake needs a picture for every texture slot');
+  const loaded=await Promise.all(SLOTS.map(slot=>this.texture(request.materials[slot],slot==='wall'))),textures=Object.fromEntries(SLOTS.map((slot,i)=>[slot,loaded[i].texture]));
+  if(this.disposed)throw Error('Baker disposed');
+  for(const name of ['textureScale','roughScale','firstScale','sandScale','soilScale','earthScale'])if(settings[name]!==undefined&&(!Number.isFinite(settings[name])||settings[name]<=0))throw Error('Invalid texture scale: '+name);
   for(const name of ['collar','firstCut','slope'])if(settings[name]!==undefined&&(!Number.isFinite(settings[name])||settings[name]<=0))throw Error('Invalid bank width: '+name);
   for(const name of ['wall','rim','shadow'])if(settings[name]!==undefined&&(!Number.isFinite(settings[name])||settings[name]<0))throw Error('Invalid bank appearance: '+name);
   if((settings.collar??.65)+(settings.firstCut??.9)>7.5)throw Error('Grass bands exceed the supported 15 metre combined width');
   if(request.ringsTiles){let count=0;for(const ring of request.ringsTiles){if(ring.length<6||ring.length%2||Array.from(ring).some(v=>!Number.isFinite(v)))throw Error('Invalid authoritative bunker boundary');count+=ring.length/2;}if(count>65536)throw Error('Bunker boundary is too large');}
   const depthScale=.75/Math.max(1,2*(grid.width+grid.height+32)+depth+(settings.wall??.25)+(settings.rim??.16));
-  const renderOptions={...settings,semanticPass:Boolean(request.semanticPass),authoritativeRings:request.ringsTiles,textureOriginTiles:originTiles,depthScale};
+  const renderOptions={...settings,textures,wallAspect:loaded[4].aspect,semanticPass:Boolean(request.semanticPass),authoritativeRings:request.ringsTiles,textureOriginTiles:originTiles,depthScale};
   const terrain=renderer.prepare(grid,renderOptions);let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
   for(const ring of terrain.contours)for(const [x,y]of ring){const px=(x-y)*projection.halfWidth,py=(x+y)*projection.halfHeight;minX=Math.min(minX,px);maxX=Math.max(maxX,px);minY=Math.min(minY,py);maxY=Math.max(maxY,py);}
   if(!Number.isFinite(minX))throw Error('Guide contains no bunker');
@@ -50,6 +61,6 @@ export class BunkerBaker{
   const result={image:bitmap,width:bitmap.width,height:bitmap.height,anchor:{x:-minX*rasterScale,y:-minY*rasterScale},boundsWorldPx,dirtyBoundsTiles:request.dirtyBoundsTiles,rasterScale,key:request.key,projection,worldOriginTiles:originTiles,geometryMode:request.ringsTiles?'authoritative-rings':'authored-guide',decodedBytes:bitmap.width*bitmap.height*4,bakeMs:performance.now()-start,premultipliedAlpha:true};
   return result;
  }
- dispose(){if(this.disposed)return;this.disposed=true;this.ready=null;if(this.renderer){const gl=this.renderer.gl;for(const name of['program','bladeProgram'])if(this.renderer[name])gl.deleteProgram(this.renderer[name]);for(const name of['buffer','bladeBuffer'])if(this.renderer[name])gl.deleteBuffer(this.renderer[name]);gl.getExtension('WEBGL_lose_context')?.loseContext();this.renderer.canvas.width=this.renderer.canvas.height=1;this.renderer=null;}}
+ dispose(){if(this.disposed)return;this.disposed=true;if(this.renderer){for(const entry of this.textures.values())entry.ready.then(t=>this.renderer?.gl.deleteTexture(t.texture),()=>{});const gl=this.renderer.gl;for(const name of['program','bladeProgram'])if(this.renderer[name])gl.deleteProgram(this.renderer[name]);for(const name of['buffer','bladeBuffer'])if(this.renderer[name])gl.deleteBuffer(this.renderer[name]);gl.getExtension('WEBGL_lose_context')?.loseContext();this.renderer.canvas.width=this.renderer.canvas.height=1;this.renderer=null;}}
 }
 

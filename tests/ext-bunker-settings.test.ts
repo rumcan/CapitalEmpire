@@ -1,15 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  BUNKER_SETTING_FIELDS, DEFAULT_BUNKER_SETTINGS, bunkerAppearance, clampBunkerSettings,
+  BUNKER_SETTING_FIELDS, BUNKER_TEXTURE_SLOTS, DEFAULT_BUNKER_SETTINGS, DEFAULT_BUNKER_TEXTURES, bunkerAppearance, clampBunkerSettings,
   readBunkerSettings, resolveBunkerSettings,
 } from '../src/game/ext/bunker-look/settings';
 import { APPROVED_APPEARANCE } from '../src/game/ext/bunker-look/package/approved-preset.js';
+import { BUNKER_TEXTURE_LIBRARY, bunkerMaterials, bunkerTexture } from '../src/game/ext/bunker-look/texture-library';
 
 test('approved defaults and JSON round trips preserve every exact appearance value', () => {
   const defaults = clampBunkerSettings(JSON.parse(JSON.stringify(DEFAULT_BUNKER_SETTINGS)));
   assert.deepEqual(defaults, DEFAULT_BUNKER_SETTINGS);
-  assert.deepEqual(bunkerAppearance(defaults), APPROVED_APPEARANCE);
+  // the edge soil's own scale starts at the shared earth scale, so the approved look is unchanged
+  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, settings: { ...APPROVED_APPEARANCE.settings, soilScale: APPROVED_APPEARANCE.settings.earthScale } });
   assert.equal(defaults.version, 1);
   assert.equal(defaults.depth, 1.5);
   assert.equal(defaults.collar, 2.647123893805);
@@ -59,4 +61,43 @@ test('inherited groups track global changes while full custom snapshots remain i
   appearance.settings.wall = 3;
   assert.equal(custom.wall, 0.75);
   assert.equal(APPROVED_APPEARANCE.settings.wall, DEFAULT_BUNKER_SETTINGS.wall);
+});
+
+test('texture ids per slot round-trip, partial edits keep the rest, and bad values fall back', () => {
+  const defaults = clampBunkerSettings(undefined);
+  for (const slot of BUNKER_TEXTURE_SLOTS) assert.equal(defaults[slot.key], DEFAULT_BUNKER_TEXTURES[slot.slot]);
+  const swapped = clampBunkerSettings({ sandTex: 'photo:wasteSand', wallScale: 3 }, defaults);
+  assert.equal(swapped.sandTex, 'photo:wasteSand');
+  assert.equal(swapped.wallTex, DEFAULT_BUNKER_TEXTURES.wall);
+  assert.deepEqual(clampBunkerSettings(JSON.parse(JSON.stringify(swapped))), swapped);
+  const kept = clampBunkerSettings({ roughTex: 'file:My grass' }, swapped);
+  assert.equal(kept.sandTex, 'photo:wasteSand', 'a later edit keeps the earlier swap');
+  assert.equal(kept.roughTex, 'file:My grass');
+  assert.equal(clampBunkerSettings({ sandTex: 12 }, swapped).sandTex, 'photo:wasteSand');
+  assert.equal(clampBunkerSettings({ sandTex: '' }).sandTex, DEFAULT_BUNKER_TEXTURES.sand);
+  assert.equal(readBunkerSettings({ soilTex: 'photo:dirt' })?.soilTex, 'photo:dirt', 'a texture-only custom snapshot is a custom override');
+});
+
+test('the edge soil gets its own scale; older saves keep it on the wall earth scale', () => {
+  const old = { ...DEFAULT_BUNKER_SETTINGS, earthScale: 2 } as Record<string, unknown>;
+  delete old.soilScale;
+  assert.equal(clampBunkerSettings(old).soilScale, 2);
+  const base = clampBunkerSettings({ soilScale: 1.5 });
+  const wallOnly = clampBunkerSettings({ earthScale: 4 }, base);
+  assert.equal(wallOnly.earthScale, 4);
+  assert.equal(wallOnly.soilScale, 1.5, 'moving the wall slider leaves the soil alone');
+  assert.equal(bunkerAppearance(wallOnly).settings.soilScale, 1.5);
+});
+
+test('the library resolves every slot; unknown ids draw the slot default', () => {
+  const ids = new Set(BUNKER_TEXTURE_LIBRARY.map(entry => entry.id));
+  assert.equal(ids.size, BUNKER_TEXTURE_LIBRARY.length, 'texture ids are unique');
+  for (const id of Object.values(DEFAULT_BUNKER_TEXTURES)) assert.ok(ids.has(id), id);
+  assert.equal(bunkerTexture('sand', 'file:missing').id, DEFAULT_BUNKER_TEXTURES.sand);
+  assert.equal(bunkerTexture('wall', 'bunker:sand').id, 'bunker:sand', 'any texture fits any slot');
+  const materials = bunkerMaterials(clampBunkerSettings({ wallTex: 'bunker:sand', soilTex: 'nope' }));
+  assert.equal(materials.wall.id, 'bunker:sand');
+  assert.deepEqual(materials.wall.crop, [0.5, 0, 0.5, 0.5]);
+  assert.equal(materials.soil.id, DEFAULT_BUNKER_TEXTURES.soil);
+  assert.deepEqual(Object.keys(materials).sort(), ['firstCut', 'rough', 'sand', 'soil', 'wall']);
 });

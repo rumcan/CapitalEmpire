@@ -1,8 +1,7 @@
 import StageWorker from './stage.worker.js?worker';
-import { BUNKER_STAGE_MATERIALS } from './stage-materials';
 import type { BunkerStageRequest, BunkerStageSprite } from './stage-types';
 
-/** One edit worker with reusable materials/mesh; frame and camera code never call this class. */
+/** One edit worker with reusable materials (cached by texture id)/mesh; frame and camera code never call this class. */
 export class BunkerStageBaker {
   private readonly worker: Worker;
   private readonly jobs = new Map<number, { resolve(value: BunkerStageSprite): void; reject(error: unknown): void }>();
@@ -23,7 +22,7 @@ export class BunkerStageBaker {
     const id = this.next++;
     return new Promise((resolve, reject) => {
       this.jobs.set(id, { resolve, reject });
-      try { this.worker.postMessage({ t: 'bake', id, request, materialURLs: BUNKER_STAGE_MATERIALS }); }
+      try { this.worker.postMessage({ t: 'bake', id, request }); }
       catch (error) { this.jobs.delete(id); reject(error); }
     });
   }

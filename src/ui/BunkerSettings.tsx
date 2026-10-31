@@ -1,11 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { Game } from '../game/engine';
-import { BUNKER_SETTING_FIELDS, type BunkerSettingField, type BunkerSettings } from '../game/ext/bunker-look/settings';
+import { BUNKER_SETTING_FIELDS, BUNKER_TEXTURE_SLOTS, type BunkerSettingField, type BunkerSettings, type BunkerTextureSlotInfo } from '../game/ext/bunker-look/settings';
+import { bunkerTexture, bunkerTextureGroups } from '../game/ext/bunker-look/texture-library';
+import type { BunkerTextureEntry } from '../game/ext/bunker-look/stage-materials';
 
 const FIELDS = BUNKER_SETTING_FIELDS.filter(field => !field.hidden);
 const PRIMARY = FIELDS.filter(field => field.key === 'depth' || field.key === 'wall');
 const SHAPE = FIELDS.filter(field => field.group === 'shape' && field.key !== 'depth' && field.key !== 'wall');
-const MATERIALS = FIELDS.filter(field => field.group === 'texture');
+const OVERALL = FIELDS.filter(field => field.key === 'textureScale');
+const fieldOf = (key: string) => FIELDS.find(field => field.key === key);
+const TEXTURE_GROUPS = bunkerTextureGroups();
 const displayNumber = (value: number) => Number(value.toFixed(3)).toString();
 const fieldLabel = (field: BunkerSettingField) => field.key === 'depth' ? 'Floor depth' : field.key === 'wall' ? 'Wall height' : field.label;
 
@@ -57,6 +61,47 @@ function NumberControl({ field, value, scope, onChange }: {
           className="w-20 rounded-lg border px-1.5 py-1 text-right text-xs disabled:opacity-40" />
       </div>
       {field.key === 'depth' && <p className="sub-line mt-0.5">Below the cut wall</p>}
+    </div>
+  );
+}
+
+/** The picture itself (a crop shows only its part of the atlas). */
+function TextureSwatch({ entry }: { entry: BunkerTextureEntry }) {
+  const [x, y, w, h] = entry.crop ?? [0, 0, 1, 1];
+  return (
+    <span aria-hidden className="inline-block h-9 w-9 shrink-0 rounded-md border"
+      style={{ borderColor: 'var(--line)', backgroundImage: `url("${entry.url}")`, backgroundRepeat: 'no-repeat',
+        backgroundSize: `${100 / w}% ${100 / h}%`, backgroundPosition: `${w < 1 ? (x / (1 - w)) * 100 : 0}% ${h < 1 ? (y / (1 - h)) * 100 : 0}%` }} />
+  );
+}
+
+/** One swappable bunker picture: which texture it draws, and its own scale. */
+function TextureSlotControl({ slot, settings, scope, onChange }: {
+  slot: Readonly<BunkerTextureSlotInfo>;
+  settings: Readonly<BunkerSettings>;
+  scope: string;
+  onChange(change: Partial<BunkerSettings>): void;
+}) {
+  const id = useId(), entry = bunkerTexture(slot.slot, settings[slot.key]), scale = fieldOf(slot.scale);
+  const known = entry.id === settings[slot.key];
+  return (
+    <div className="mt-3 border-t pt-2" style={{ borderColor: 'var(--line)' }} data-bunker-texture={slot.slot}>
+      <label htmlFor={`${id}-texture`} className="text-xs font-semibold">{slot.label}</label>
+      <div className="mt-1 flex flex-nowrap items-center gap-2">
+        <TextureSwatch entry={entry} />
+        <select id={`${id}-texture`} value={entry.id} aria-label={`${scope} ${slot.label.toLowerCase()} texture`}
+          onChange={event => onChange({ [slot.key]: event.target.value })}
+          style={{ borderColor: 'var(--line)', background: 'var(--panel-2)', color: 'var(--ink)' }}
+          className="min-w-0 flex-1 rounded-lg border px-1.5 py-1 text-xs disabled:opacity-40">
+          {TEXTURE_GROUPS.map(({ group, entries }) => (
+            <optgroup key={group} label={group}>
+              {entries.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+      {!known && <p className="sub-line mt-0.5">{`Saved texture "${settings[slot.key]}" is not here; drawing the default.`}</p>}
+      {scale && <NumberControl field={scale} value={settings[scale.key]} scope={scope} onChange={value => onChange({ [scale.key]: value })} />}
     </div>
   );
 }
@@ -131,7 +176,9 @@ export function BunkerSettingsCard({ game, onClose }: { game: Game; onClose: () 
         </details>
         <details className="mt-3">
           <summary className="sub-head cursor-pointer select-none">Materials</summary>
-          {controls(MATERIALS)}
+          <p className="sub-line mt-1.5">Swap any bunker picture for another texture and scale each one. New pictures dropped into the bunker texture folder show under Added textures.</p>
+          {controls(OVERALL)}
+          {BUNKER_TEXTURE_SLOTS.map(slot => <TextureSlotControl key={slot.slot} slot={slot} settings={settings} scope={scopeLabel} onChange={update} />)}
         </details>
       </fieldset>
       <div className="mt-3 flex flex-wrap items-center gap-1.5">

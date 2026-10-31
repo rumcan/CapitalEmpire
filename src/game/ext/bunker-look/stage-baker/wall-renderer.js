@@ -53,9 +53,9 @@ function shader(gl, type, source) {
 }
 
 export class WallRenderer {
-  constructor(gl, wallImage) {
+  // Host: the wall picture comes per bake (options.textures.wall, options.wallAspect = its width / height).
+  constructor(gl) {
     this.gl = gl;
-    this.textureAspect = (wallImage.naturalWidth || wallImage.width) / (wallImage.naturalHeight || wallImage.height);
     const vertex = shader(gl, gl.VERTEX_SHADER, VS);
     const fragment = shader(gl, gl.FRAGMENT_SHADER, FS);
     const program = this.program = gl.createProgram();
@@ -78,15 +78,6 @@ export class WallRenderer {
       gl.enableVertexAttribArray(location);
       gl.vertexAttribPointer(location, size, gl.FLOAT, false, 32, offset);
     }
-    this.texture = gl.createTexture();
-    gl.activeTexture(gl.TEXTURE4);
-    gl.bindTexture(gl.TEXTURE_2D, this.texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, wallImage);
-    gl.generateMipmap(gl.TEXTURE_2D);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
     gl.bindVertexArray(null);
   }
 
@@ -142,7 +133,7 @@ export class WallRenderer {
       if (total < 1e-8) continue;
       // The broad source covers about ten ground metres (five grid units).
       // Larger controls enlarge its grain; whole repeats close the loop UV.
-      const repeats = Math.max(1, Math.round(total / (.6 * this.textureAspect * textureSize)));
+      const repeats = Math.max(1, Math.round(total / (.6 * (options.wallAspect ?? 1) * textureSize)));
       let distance = 0;
       for (let i = 0; i < count; i++) {
         const a = path[i], b = path[(i + 1) % count];
@@ -165,7 +156,7 @@ export class WallRenderer {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STREAM_DRAW);
     gl.activeTexture(gl.TEXTURE4);
-    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+    gl.bindTexture(gl.TEXTURE_2D, options.textures.wall);
     gl.uniform1i(this.earthUniform, 4);
     gl.uniform1f(this.shadowUniform, options.shadow ?? 1.5);
     gl.uniform1i(this.semanticUniform, options.semanticPass ? 1 : 0);

@@ -1,6 +1,7 @@
 import { BunkerCache, StaleBakeError } from './package/runtime/bunker-cache.js';
 import { buildBakeRequest } from './package/runtime/capital-empire-adapter.js';
 import { bunkerAppearance } from './settings';
+import { bunkerMaterials } from './texture-library';
 import type { BunkerStageInput, BunkerStageReady, BunkerStageRef, BunkerStageRequest, BunkerStageSprite } from './stage-types';
 import type { BBox } from '../../network';
 
@@ -49,8 +50,9 @@ export class BunkerStageBridge {
     const keep = new Set<string>(), updates: BunkerStageRef[] = [], jobs: { state: State; request: BunkerStageRequest }[] = [];
     for (const input of inputs) {
       try {
-        const request: BunkerStageRequest = { ...buildBakeRequest({ id: input.id, revision: `native-stages-v1:${input.revision}`, ringsTiles: input.ringsTiles,
-          appearance: bunkerAppearance(input.settings), rasterScale: 0.6, maxEdge: 512 }), sourcePatchKeys: [...input.sourcePatchKeys] };
+        const materials = bunkerMaterials(input.settings), textures = Object.values(materials).map(m => m.id).join(',');
+        const request: BunkerStageRequest = { ...buildBakeRequest({ id: input.id, revision: `native-stages-v1:${input.revision}:${textures}`, ringsTiles: input.ringsTiles,
+          appearance: bunkerAppearance(input.settings), rasterScale: 0.6, maxEdge: 512 }), sourcePatchKeys: [...input.sourcePatchKeys], materials };
         keep.add(input.id);
         let state = this.states.get(input.id);
         if (!state || state.ref.key !== request.key) {
