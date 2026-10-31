@@ -187,3 +187,13 @@ test('the bake’s face field: full where the face looks away from the green, no
   for (let x = 6.5; x < 17.5; x += 0.25) assert.ok(Math.abs(f.at(x + 0.25, 7) - f.at(x, 7)) < 0.2, `smooth at ${x}`);
   assert.equal(faceField(terrain, []).at(12, 7), 0);
 });
+
+test('a bunker hugging the green round its end keeps its tall face all along the green', async () => {
+  const { faceField } = await import('../src/game/ext/bunker-look/stage-baker/renderer-world.js');
+  const arc = (r: number, back = false) => Array.from({ length: 97 }, (_, i) => { const a = Math.PI * 0.5 + (back ? 96 - i : i) / 96 * Math.PI; return [20 + Math.cos(a) * r, 13 + Math.sin(a) * r]; });
+  const contour = [...arc(5.5), ...arc(2.2, true)]; contour.push([...contour[0]!]);
+  const terrain = { width: 50, height: 40, contours: [contour], sample: (x: number, y: number) => { const r = Math.hypot(x - 20, y - 13); return Math.min(r - 2.2, 5.5 - r) * (x < 20.5 ? 1 : -1); } };
+  const f = faceField(terrain, [[20, 10.6, 32, 10.6, 32, 15.4, 20, 15.4]]);
+  for (const deg of [135, 180, 225]) { const a = deg * Math.PI / 180; assert.ok(f.at(20 + Math.cos(a) * 2.3, 13 + Math.sin(a) * 2.3) > 0.9, `tall at ${deg} degrees`); }
+  assert.ok(f.at(14.6, 13) < 0.05, 'the outer edge stays low');
+});

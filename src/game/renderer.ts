@@ -2690,7 +2690,8 @@ export class GroundPainter {
         };
         // a green's fringe lies over a bunker's grass but never over its sand and lip (the owner, 2026-10-31: "the fringe is over the bunker
         // grass but never over the lip of the bunker"): kept off every bunker's fill, as drawn natively or as its picture
-        if (s === SURF.green && ls.some(q => q.l.collar)) offFills([SURF.bunker], collars); else collars();
+        // (a pond's bank, which lies over a bunker's cells next to the water, likewise)
+        if ((s === SURF.green || s === SURF.water) && ls.some(q => q.l.collar)) offFills([SURF.bunker], collars); else collars();
         // T260: a Border of none (CourseLayer.collar.w 0) lays no band: the bunker's grass lip and the pond's wet soil and stones lie round the
         // sand and the water on the ground there, kept off the sand and the water (offFills)
         const bare = ls.filter(q => q.l.collar?.w === 0).map(q => q.l), banded = ls.filter(q => q.l.collar?.w !== 0).map(q => q.l);

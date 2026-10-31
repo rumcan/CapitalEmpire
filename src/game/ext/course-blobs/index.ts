@@ -69,7 +69,9 @@ export const BLOB_STYLE: readonly BlobStyle[] = [
   /* none */ { close: 0, relax: 0 },
   /* rough */ { close: 2, relax: 1 },
   /* fescue */ { close: 2, relax: 1 },
-  /* water */ { close: 2, relax: 2, collar: { name: 'bank', width: 1, over: [NONE, ROUGH, FESCUE, LONG] } },
+  // the bank lies over a bunker's cells too: a bunker's sand keeps off it, so a pond against a bunker has its bank and its wall all round
+  // (the owner, 2026-10-31: "transitions from water ... and bunkers etc are not clean"; bunkerOffBank)
+  /* water */ { close: 2, relax: 2, collar: { name: 'bank', width: 1, over: [NONE, ROUGH, FESCUE, LONG, BUNKER] } },
   /* fairway */ { close: 2, relax: 2, collar: { name: 'first-cut', width: 2, over: [NONE, ROUGH, FESCUE, LONG] } },
   /* tee */ { close: 0, relax: 2, collar: { name: 'first-cut', width: 1, over: [NONE, ROUGH, FESCUE, LONG] } },
   // never over a green (the owner, 2026-10-31: "the bunker border is on the green. That is what i said should not happen"): drawn before
@@ -296,6 +298,11 @@ export const collarLaid = (c: CollarStyle | undefined): boolean => !!c && collar
 /** how many whole cells of a green's fringe a bunker's sand keeps off (the owner, 2026-10-31: "make the bunker not cross the green fringe,
  *  right now it pushed the fringe back"): the fringe's whole rings, so the sand's edge runs along the fringe's (its partial ring is drawn
  *  kept off the sand: renderer drawCourses) */
+/** how many whole cells of a pond's bank a bunker's sand keeps off (bunkerOffFringe's, for the water: the bank's whole rings, at least one) */
+export function bunkerOffBank(styles: readonly (BlobStyle | undefined)[]): number {
+  const c = styles[WATER]?.collar;
+  return c && collarLaid(c) && c.over.includes(BUNKER) ? Math.max(1, collarRings(c.width).whole) : 0;
+}
 /** how many cells short of a green's fringe a bunker still reaches it (1 m) */
 const FRINGE_SNAP = 2;
 export function bunkerOffFringe(styles: readonly (BlobStyle | undefined)[]): number {
@@ -885,7 +892,7 @@ function cellBox(g: Grid, b: BlobBox): BlobBox {
 
 /** a surface's cells over box (tiles) grown by `margin` tiles, as the outlines read them: its own, closed per style, with their kernel codes
  *  when some are rounded (radius, T253), and its collar's when asked (the band laid round them); with the lattice window over the same box */
-function surfaceOcc(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar: boolean, radius: RoundCells | null = null, margin = CHUNK_MARGIN, fringe = 0) {
+function surfaceOcc(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar: boolean, radius: RoundCells | null = null, margin = CHUNK_MARGIN, fringe = 0, bank = 0) {
   const a0 = Math.floor((box.x0 - margin - g.x0) / LATTICE), a1 = Math.ceil((box.x1 + margin - g.x0) / LATTICE);
   const b0 = Math.floor((box.y0 - margin - g.y0) / LATTICE), b1 = Math.ceil((box.y1 + margin - g.y0) / LATTICE);
   const L: Lat = { a0, b0, na: a1 - a0 + 1, nb: b1 - b0 + 1 };
@@ -893,7 +900,7 @@ function surfaceOcc(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar:
   const rings = col ? collarRings(col.width) : { whole: 0, part: 0 };
   const close = Math.max(0, Math.round(st.close)), cw0 = rings.whole + (rings.part > 0 ? 1 : 0);
   // T253: a rounded surface reads further, for its wider kernels and their thickness caps
-  const pad = 3 + 2 * close + cw0 + (radius ? ROUND_PAD : 0) + (fringe ? fringe + FRINGE_SNAP : 0);
+  const pad = 3 + 2 * close + cw0 + (radius ? ROUND_PAD : 0) + (fringe ? fringe + FRINGE_SNAP : 0) + bank;
   const ci0 = (a0 >> 1) - pad, cj0 = (b0 >> 1) - pad, cw = (a1 >> 1) + pad + 1 - ci0, ch = (b1 >> 1) + pad + 1 - cj0;
   const sw = readSurf(g, ci0, cj0, cw, ch), cv = readCarve(g, ci0, cj0, cw, ch), n = cw * ch;
   let occ: Uint8Array = new Uint8Array(n);
@@ -907,6 +914,11 @@ function surfaceOcc(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar:
     const band = dilate(gr, cw, ch, fringe); for (let i = 0; i < n; i++) if (band[i] && sw[i] !== GREEN) occ[i] = 0;
     const reach = dilate(gr, cw, ch, fringe + FRINGE_SNAP), near = dilate(occ, cw, ch, FRINGE_SNAP);
     for (let i = 0; i < n; i++) if (!occ[i] && !band[i] && reach[i] && near[i] && claimable(BUNKER, sw[i]) && !cv?.[i]) occ[i] = 1;
+  }
+  // and its cells under a pond's bank are the bank's (bunkerOffBank)
+  if (bank > 0) {
+    const wt = new Uint8Array(n); for (let i = 0; i < n; i++) wt[i] = sw[i] === WATER ? 1 : 0;
+    const band = dilate(wt, cw, ch, bank); for (let i = 0; i < n; i++) if (band[i] && sw[i] !== WATER) occ[i] = 0;
   }
   const oS: Occ = { occ, ci0, cj0, cw, ch };
   const rS = radius ? roundCodes(occ, sw, s, cw, ch, ci0, cj0, g.w, radius, close + 1) : null;
@@ -933,8 +945,8 @@ function surfaceOcc(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar:
 
 /** a surface's contours over box (tiles) plus a margin: its own (closed per style) and, when asked, its collar's; radius: its rounded cells
  *  (T253) */
-function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar: boolean, radius: RoundCells | null = null, fringe = 0) {
-  const { L, oS, oC } = surfaceOcc(g, s, st, box, withCollar, radius, CHUNK_MARGIN, fringe);
+function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar: boolean, radius: RoundCells | null = null, fringe = 0, bank = 0) {
+  const { L, oS, oC } = surfaceOcc(g, s, st, box, withCollar, radius, CHUNK_MARGIN, fringe, bank);
   const keep = cellBox(g, { x0: box.x0 - 1, y0: box.y0 - 1, x1: box.x1 + 1, y1: box.y1 + 1 });
   const chains = contour(oS, L, keep);
   for (const c of chains) relaxChain(c, st.relax);
@@ -1025,7 +1037,7 @@ export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles
   for (const s of far) {
     const rc = round?.(s) ?? null; if (!rc && far !== near && !near.includes(s)) continue;
     const st = styles[s] ?? { close: 0, relax: 0 };
-    const sc = surfaceChains(g, s, st, box, true, rc, s === BUNKER ? bunkerOffFringe(styles) : 0);
+    const sc = surfaceChains(g, s, st, box, true, rc, s === BUNKER ? bunkerOffFringe(styles) : 0, s === BUNKER ? bunkerOffBank(styles) : 0);
     // a thin collar (under 0.4 m) is simplified finer, with its surface, so the band keeps its width all round instead of breaking up
     const tol = st.collar && collarLaid(st.collar) ? Math.min(SIMPLIFY_TOL, Math.max(0.004, 0.2 * st.collar.width * CELL)) : SIMPLIFY_TOL;
     presimplify(sc.chains, cb, tol);
@@ -1086,7 +1098,7 @@ export class DrawnSurfaces {
     const surfs = surfacesNear(g, box, 3 + Math.ceil(ROUND_R_MAX)), occ: Occ[] = [];
     let rounded = false;
     for (const s of surfs) {
-      const o = surfaceOcc(g, s, this.styles[s] ?? { close: 0, relax: 0 }, box, false, this.round(s), 0, s === BUNKER ? bunkerOffFringe(this.styles) : 0).oS;
+      const o = surfaceOcc(g, s, this.styles[s] ?? { close: 0, relax: 0 }, box, false, this.round(s), 0, s === BUNKER ? bunkerOffFringe(this.styles) : 0, s === BUNKER ? bunkerOffBank(this.styles) : 0).oS;
       if (o.rq) rounded = true;
       occ.push(o);
     }

@@ -85,6 +85,9 @@ export function surfaceHeight(d,depth,options={}){const ss=(a,b,v)=>{const t=Mat
 /** Host: a green behind a cut face counts in full to FACE_FULL (bake units: tiles; 40 m) and fades out by FACE_REACH (60 m); the face has
  *  the green behind it where its outward direction and the way to the green agree (cosine FACE_COS_LO none .. FACE_COS_HI full). */
 export const FACE_FULL=20,FACE_REACH=30,FACE_COS_LO=.25,FACE_COS_HI=.7;
+/** Host: within FACE_HUG (tiles; 6 m) of a green the test is lenient (FACE_HUG_LO .. FACE_HUG_HI): a bunker hugging the green round its
+ *  ends and corners keeps its tall face all along the green's edge, where the way to the nearest green point turns away from the edge's normal */
+export const FACE_HUG=3,FACE_HUG_FAR=8,FACE_HUG_LO=-.15,FACE_HUG_HI=.3;
 const smooth01=t=>{const u=Math.max(0,Math.min(1,t));return u*u*(3-2*u);};
 const inRing=(r,x,y)=>{let inside=false;for(let i=0,j=r.length-2;i<r.length;j=i,i+=2){const ay=r[j+1],by=r[i+1];if((ay>y)!==(by>y)&&x<(r[i]-r[j])*(y-ay)/(by-ay)+r[j])inside=!inside;}return inside;};
 /** Host: how much a green stands behind the cut face (0 none .. 1 full), on a 160-wide grid over the bake's terrain, smooth so the
@@ -105,7 +108,8 @@ export function faceField(terrain,greens){
     let d=Infinity,qx=0,qy=0;
     for(const r of rings){if(inRing(r,px,py)){d=0;break;}for(let q=0;q<r.length;q+=2){const j=(q+2)%r.length,cx0=r[q],cy0=r[q+1],dx=r[j]-cx0,dy=r[j+1]-cy0,l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,((px-cx0)*dx+(py-cy0)*dy)/l)):0,cx=cx0+t*dx,cy=cy0+t*dy,e=Math.hypot(px-cx,py-cy);if(e<d){d=e;qx=cx;qy=cy;}}}
     const near=1-smooth01((d-FACE_FULL)/(FACE_REACH-FACE_FULL)),c=d>0?(nx*(qx-px)+ny*(qy-py))/d:1;
-    edge.push(px,py,near*smooth01((c-FACE_COS_LO)/(FACE_COS_HI-FACE_COS_LO)));
+    const hug=1-smooth01((d-FACE_HUG)/(FACE_HUG_FAR-FACE_HUG)),lo=FACE_COS_LO+(FACE_HUG_LO-FACE_COS_LO)*hug,hi=FACE_COS_HI+(FACE_HUG_HI-FACE_COS_HI)*hug;
+    edge.push(px,py,near*smooth01((c-lo)/(hi-lo)));
    }
   }
   // the field: the edge weights blended over the floor by inverse distance (every edge point counts, the near ones most), smooth
