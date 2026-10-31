@@ -32,29 +32,10 @@ function ringOwned(ref: BunkerStageRef, ring: ArrayLike<number>): boolean {
   for (let i = 0; i + 1 < ring.length; i += 2) if (bunkerOwnsPoint(ref, ring[i]!, ring[i + 1]!)) return true;
   return false;
 }
-function collarOwners(ring: ArrayLike<number>, refs: readonly BunkerStageRef[], width: number): string[] {
-  return refs.filter(ref => ringOwned(ref, ring) || ref.ringsTiles.some(q => {
-    for (let i = 0; i + 1 < q.length; i += 2) if (inRing(ring, q[i]!, q[i + 1]!)) return true;
-    for (let i = 0; i + 1 < ring.length; i += 2) if (nearBoundary(ref, ring[i]!, ring[i + 1]!, width + 0.5)) return true;
-    return false;
-  })).map(ref => ref.id);
-}
-
-/** A shared native collar is replaced atomically; pending/evicted neighbours keep only that local group native. */
-export function activeBunkerStages(courses: readonly CoursePatch[], refs: readonly BunkerStageRef[], ready: ReadonlyMap<string, string>): Set<string> {
-  const active = new Set(refs.filter(ref => ready.get(ref.id) === ref.key).map(ref => ref.id));
-  const groups: string[][] = [];
-  for (const c of courses) {
-    const local = refs.filter(ref => ref.sourcePatchKeys.includes(courseKey(c)));
-    for (const l of c.layers) if (l.s === BUNKER && l.collar?.fill.length) for (const ring of l.collar.fill) {
-      const owners = collarOwners(ring, local, l.collar.w ?? 0);
-      // An unlabelled band's own native geometry stays untouched; it must not couple unrelated components elsewhere in this chunk.
-      if (owners.length) groups.push(owners);
-    }
-  }
-  let changed = true;
-  while (changed) { changed = false; for (const group of groups) if (group.some(id => !active.has(id))) for (const id of group) if (active.delete(id)) changed = true; }
-  return active;
+/** A bunker's picture replaces only its sand and walls: the course still draws its collar (the look's Border band round it), so a ready
+ *  picture shows on its own, never held back by a neighbour that shares that band. */
+export function activeBunkerStages(_courses: readonly CoursePatch[], refs: readonly BunkerStageRef[], ready: ReadonlyMap<string, string>): Set<string> {
+  return new Set(refs.filter(ref => ready.get(ref.id) === ref.key).map(ref => ref.id));
 }
 
 /** Split true polyline segments, retaining their original coordinates and metre drops; never invent a closing edge. */
@@ -69,17 +50,17 @@ function spans(points: Float32Array, stride: 2 | 3, keep: (x: number, y: number,
 }
 
 export interface NativeBunkerCourse { course: CoursePatch; teeSand: CourseWall[] }
-/** Remove only owned native bunker runs. Other surfaces, materials and unowned rim spans retain object identity. */
+/** Remove only owned native bunker runs (not its collar). Other surfaces, materials and unowned rim spans retain object identity. */
 export function nativeBunkerCourse(c: CoursePatch, refs: readonly BunkerStageRef[], active: ReadonlySet<string>): NativeBunkerCourse {
   const local = refs.filter(ref => active.has(ref.id) && ref.sourcePatchKeys.includes(courseKey(c)));
   if (!local.length) return { course: c, teeSand: [] };
   const owned = (x: number, y: number) => local.some(ref => bunkerOwnsPoint(ref, x, y));
   const edge = (x: number, y: number) => local.some(ref => nearBoundary(ref, x, y));
-  const keepRuns = (all: readonly Float32Array[] | undefined, width = 0) => all?.flatMap(q => spans(q, 2, (x, y) => !local.some(ref => width ? nearBoundary(ref, x, y, width + 0.5) : nearBoundary(ref, x, y))));
+  const keepRuns = (all: readonly Float32Array[] | undefined) => all?.flatMap(q => spans(q, 2, (x, y) => !local.some(ref => nearBoundary(ref, x, y))));
   const layers = c.layers.map((l): CourseLayer => {
     if (l.s !== BUNKER) return l;
-    const collar = l.collar && { ...l.collar, fill: l.collar.fill.filter(ring => !collarOwners(ring, local, l.collar!.w ?? 0).length), edges: keepRuns(l.collar.edges, l.collar.w ?? 0)!, soft: keepRuns(l.collar.soft, l.collar.w ?? 0) };
-    return { ...l, fill: l.fill.filter(ring => !local.some(ref => ringOwned(ref, ring))), edges: keepRuns(l.edges)!, soft: keepRuns(l.soft), joint: keepRuns(l.joint), ...(collar ? { collar } : {}) };
+    // its collar (the look's Border band) stays the course's to draw, as round an old bunker
+    return { ...l, fill: l.fill.filter(ring => !local.some(ref => ringOwned(ref, ring))), edges: keepRuns(l.edges)!, soft: keepRuns(l.soft), joint: keepRuns(l.joint) };
   });
   const teeSand: CourseWall[] = [], walls: CourseWall[] = [];
   for (const wall of c.walls ?? []) {

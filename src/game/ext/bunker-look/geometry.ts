@@ -1,6 +1,7 @@
 import type { CoursePatch } from '../../ground-protocol';
 import { RUGGED, warpLine } from '../../rugged-edges';
 import { CELL_T, SURF } from '../course-grid';
+import { BUNKER_SHADOW } from '../course-walls';
 import type { BunkerCell, BunkerComponent } from './controller';
 import { bunkerAppearance, type BunkerSettings } from './settings';
 import { assembleBoundaryRings, getDirtyBoundsTiles, splitBunkerComponents } from './package/runtime/capital-empire-adapter.js';
@@ -83,7 +84,7 @@ export function buildBunkerGeometry(
   for (const { shape, owners: [owner] } of matches) {
     const component = owner.component;
     const ringsTiles = shape.ringsTiles.map(ring => options.rugged === false ? ring.slice() : Float64Array.from(warpLine(ring, true, RUGGED.courseStep)));
-    const settings = Object.freeze({ ...component.settings });
+    const settings = Object.freeze({ ...component.settings, shadow: lookShadow(component.settings.shadow, patches, owner.anchor) });
     const dirty = getDirtyBoundsTiles(ringsTiles, bunkerAppearance(settings));
     // Include interior and neighbouring course chunks as well as boundary
     // chunks: the complete collar and projected wall can reach beyond the sand.
@@ -96,6 +97,14 @@ export function buildBunkerGeometry(
       ringsTiles, settings, sourcePatchKeys: Object.freeze(sourcePatchKeys) });
   }
   return batch;
+}
+
+/** The course look's Shadow (Edges > Shadow, 0..1 on the bunker's chunk) scales the picture's: its default gives the card's own strength. */
+function lookShadow(own: number, patches: readonly CoursePatch[], anchor: BunkerCell): number {
+  const x = (anchor[0] + 0.5) * CELL_T, y = (anchor[1] + 0.5) * CELL_T;
+  const patch = patches.find(p => x >= p.cx * p.size && x < (p.cx + 1) * p.size && y >= p.cy * p.size && y < (p.cy + 1) * p.size);
+  const look = patch?.sh?.[SURF.bunker];
+  return look === undefined || !Number.isFinite(look) ? own : Math.min(3, Math.max(0, own * look / BUNKER_SHADOW));
 }
 
 /** Even-odd rings retain islands/holes independently of winding; coordinates are unwarped tiles. */

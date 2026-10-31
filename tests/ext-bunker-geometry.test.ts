@@ -140,3 +140,13 @@ test('unowned contours never activate a replacement, while a genuinely empty gri
   assert.equal(empty.complete, true);
   assert.deepEqual(empty.inputs, []);
 });
+
+test('the course look\'s Shadow (Edges) scales the picture\'s shadow: its default keeps the card\'s strength', () => {
+  const at = (sh?: number) => {
+    const p = patch(0, 0, [ring(10, 10, 12, 12)]); if (sh !== undefined) p.sh = [0, 0, 0, 0, 0, 0, sh];
+    return buildBunkerGeometry([p], [component(21, 21)], flat).inputs[0].settings.shadow;
+  };
+  const own = clampBunkerSettings(undefined).shadow;
+  assert.equal(at(), own); assert.equal(at(0.3), own); assert.equal(at(0), 0);
+  assert.ok(Math.abs(at(0.15) - own / 2) < 1e-9); assert.equal(at(1), 3);
+});

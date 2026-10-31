@@ -35,21 +35,21 @@ test('native stage replacement removes only the ready feature and preserves tee 
   assert.equal(value.course.rims?.[1], source.rims?.[2]);
 });
 
-test('shared collar readiness and eviction affect that local group without coupling an unrelated bunker', () => {
+test('a ready picture shows on its own and the course keeps drawing every collar (the look’s Border)', () => {
   const source = course(true), refs = [ref('a', 1), ref('b', 10), ref('c', 40)], current = new Map([['a', refs[0].key], ['c', refs[2].key]]);
-  assert.deepEqual([...activeBunkerStages([source], refs, current)], ['c']);
-  current.set('b', refs[1].key); assert.deepEqual([...activeBunkerStages([source], refs, current)].sort(), ['a', 'b', 'c']);
-  current.delete('b'); assert.deepEqual([...activeBunkerStages([source], refs, current)], ['c']);
+  assert.deepEqual([...activeBunkerStages([source], refs, current)].sort(), ['a', 'c']);
+  const value = nativeBunkerCourse(source, refs, new Set(['a', 'c']));
+  assert.equal(value.course.layers[0].fill.length, 1); assert.equal(value.course.layers[0].collar, source.layers[0].collar, 'the Border band stays native');
 });
 
-test('worker registry rejects stale images, restores local native fallback on eviction, and closes every owned copy', () => {
+test('worker registry rejects stale images, restores native fallback for an evicted bunker, and closes every owned copy', () => {
   const source = course(true), a = ref('a', 1), b = ref('b', 10), registry = new BunkerStageRegistry();
   registry.setCourses([['cg:0:0', source]], []); registry.expect([a, b], []);
   const first = ready(a), second = ready(b), stale = ready({ ...a, key: 'old' });
-  registry.install([first.sprite, stale.sprite], []); assert.equal(stale.image.closes, 1); assert.equal(registry.stats.active, 0);
+  registry.install([first.sprite, stale.sprite], []); assert.equal(stale.image.closes, 1); assert.equal(registry.stats.active, 1);
   registry.install([second.sprite], []); assert.equal(registry.stats.active, 2); assert.equal(registry.nativeCourse(source).course.layers[0].fill.length, 1);
-  registry.install([], [{ id: 'b', key: b.key }]); assert.equal(second.image.closes, 1); assert.equal(registry.stats.active, 0);
-  assert.equal(registry.nativeCourse(source).course, source);
+  registry.install([], [{ id: 'b', key: b.key }]); assert.equal(second.image.closes, 1); assert.equal(registry.stats.active, 1);
+  assert.equal(registry.nativeCourse(source).course.layers[0].fill.length, 2, 'only the evicted bunker is drawn natively again');
   registry.dispose(); assert.equal(first.image.closes, 1);
 });
 
