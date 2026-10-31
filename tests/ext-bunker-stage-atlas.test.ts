@@ -28,6 +28,7 @@ test('antialiased semantic boundaries keep original alpha in exactly one native 
 
 test('missing geometry IDs or mismatched/oversized passes fail before installing any replacement', () => {
   assert.throws(() => packBunkerStageAtlas(Uint8ClampedArray.from([2, 3, 4, 255]), new Uint8ClampedArray(4), 1, 1), /classification/);
+  assert.deepEqual(packBunkerStageAtlas(Uint8ClampedArray.from([2, 3, 4, 20]), new Uint8ClampedArray(4), 1, 1).pixels, [0, 0, 0], 'a faint unlabelled fringe pixel is dropped');
   assert.throws(() => packBunkerStageAtlas(new Uint8ClampedArray(4), new Uint8ClampedArray(8), 1, 1), /identical/);
   assert.throws(() => packBunkerStageAtlas(new Uint8ClampedArray(4), new Uint8ClampedArray(4), 513, 1), /512/);
 });

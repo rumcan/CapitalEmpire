@@ -50,8 +50,21 @@ test('worker registry rejects stale images, restores local native fallback on ev
   registry.install([second.sprite], []); assert.equal(registry.stats.active, 2); assert.equal(registry.nativeCourse(source).course.layers[0].fill.length, 1);
   registry.install([], [{ id: 'b', key: b.key }]); assert.equal(second.image.closes, 1); assert.equal(registry.stats.active, 0);
   assert.equal(registry.nativeCourse(source).course, source);
-  registry.expect([{ ...a, key: 'new' }], []); assert.equal(first.image.closes, 1); assert.equal(registry.stats.bytes, 0);
   registry.dispose(); assert.equal(first.image.closes, 1);
+});
+
+test('an edited bunker keeps its previous picture until the re-bake lands; a failed re-bake falls back to native', () => {
+  const a = ref('a', 1), registry = new BunkerStageRegistry(), source = course(), first = ready(a);
+  registry.setCourses([['cg:0:0', source]], []); registry.expect([a], []); registry.install([first.sprite], []);
+  assert.equal(registry.stats.active, 1);
+  const edited = { ...a, key: 'new' };
+  registry.expect([edited], []); assert.equal(first.image.closes, 0); assert.equal(registry.stats.active, 1);
+  assert.equal(registry.nativeCourse(source).course.layers[0].fill.length, 2, 'the held picture still replaces its native bunker');
+  const next = ready(edited); registry.install([next.sprite], []); assert.equal(first.image.closes, 1); assert.equal(registry.stats.active, 1);
+  registry.expect([{ ...a, key: 'newer' }], []); assert.equal(next.image.closes, 0);
+  registry.install([], [{ id: 'a', key: 'newer' }]); assert.equal(next.image.closes, 1); assert.equal(registry.stats.active, 0); assert.equal(registry.stats.bytes, 0);
+  assert.equal(registry.nativeCourse(source).course, source);
+  registry.dispose(); assert.equal(first.image.closes, 1); assert.equal(next.image.closes, 1);
 });
 
 const originalPath = globalThis.Path2D;

@@ -7,6 +7,8 @@ import type { BBox } from '../../network';
 
 /** Ready source atlas bytes only; every consumer holds an independently bounded copy of this same set. */
 export const BUNKER_STAGE_CACHE_BYTES = 32 * 1024 * 1024;
+/** How long a suspension may keep the previous pictures up before the native drawing takes over. */
+export const BUNKER_SUSPEND_HOLD_MS = 3000;
 interface State { ref: BunkerStageRef; pending: boolean }
 interface Sprite extends BunkerStageSprite { ref: BunkerStageRef }
 export interface BunkerStageBridgeOptions {
@@ -28,6 +30,7 @@ export class BunkerStageBridge {
   private readonly cache: BunkerCache<BunkerStageRequest, Sprite>;
   private closed = false;
   private suspended = false;
+  private suspendTimer: ReturnType<typeof setTimeout> | null = null;
   private failures = 0;
   private requested = 0;
   private lastError: string | null = null;
@@ -46,7 +49,7 @@ export class BunkerStageBridge {
   }
   sync(inputs: readonly BunkerStageInput[]): void {
     if (this.closed) return;
-    const resumed = this.suspended; this.suspended = false;
+    const resumed = this.suspended; this.suspended = false; this.clearSuspendTimer();
     const keep = new Set<string>(), updates: BunkerStageRef[] = [], jobs: { state: State; request: BunkerStageRequest }[] = [];
     for (const input of inputs) {
       try {
@@ -72,11 +75,19 @@ export class BunkerStageBridge {
     if (updates.length || removed.length) this.options.expected(updates, removed);
     for (const job of jobs) this.enqueue(job.state, job.request);
   }
-  /** Re-contouring may change ownership: retain bounded source pixels, but native fallback remains until a complete generation is verified. */
-  suspend(): void { if (this.closed || this.suspended) return; this.suspended = true; this.options.expected([], [...this.states.keys()]); }
+  /** Re-contouring may change ownership: nothing new publishes until a complete generation is verified. The workers keep showing the
+   *  current pictures meanwhile (every course edit suspends; dropping them flashed every bunker back to the native drawing), and the
+   *  resuming sync replaces or drops them. Only a generation that stays unresolved falls back to native. */
+  suspend(): void {
+    if (this.closed || this.suspended) return;
+    this.suspended = true;
+    this.suspendTimer = setTimeout(() => { this.suspendTimer = null; if (this.suspended && !this.closed) this.options.expected([], [...this.states.keys()]); }, BUNKER_SUSPEND_HOLD_MS);
+    (this.suspendTimer as { unref?(): void }).unref?.();
+  }
+  private clearSuspendTimer(): void { if (this.suspendTimer) clearTimeout(this.suspendTimer); this.suspendTimer = null; }
   isCurrent(id: string, key: string): boolean { return !this.closed && !this.suspended && this.states.get(id)?.ref.key === key && this.resident.get(id) === key; }
   get stats() { return { ...this.cache.metrics, maxSourceBytes: this.cache.maxBytes, requested: this.requested, ready: this.suspended ? 0 : [...this.states].filter(([id, state]) => this.resident.get(id) === state.ref.key).length, suspended: this.suspended, errors: this.failures, lastError: this.lastError }; }
-  dispose(): void { if (this.closed) return; this.closed = true; this.cache.dispose(); this.options.disposeBake?.(); this.states.clear(); this.resident.clear(); }
+  dispose(): void { if (this.closed) return; this.closed = true; this.clearSuspendTimer(); this.cache.dispose(); this.options.disposeBake?.(); this.states.clear(); this.resident.clear(); }
   private enqueue(state: State, request: BunkerStageRequest): void {
     state.pending = true; this.requested++;
     void this.cache.request(state.ref.id, request).then(async sprite => {

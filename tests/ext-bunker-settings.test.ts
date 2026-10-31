@@ -10,11 +10,12 @@ import { BUNKER_TEXTURE_LIBRARY, bunkerMaterials, bunkerTexture } from '../src/g
 test('approved defaults and JSON round trips preserve every exact appearance value', () => {
   const defaults = clampBunkerSettings(JSON.parse(JSON.stringify(DEFAULT_BUNKER_SETTINGS)));
   assert.deepEqual(defaults, DEFAULT_BUNKER_SETTINGS);
-  // the edge soil's own scale starts at the shared earth scale, so the approved look is unchanged
-  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, settings: { ...APPROVED_APPEARANCE.settings, soilScale: APPROVED_APPEARANCE.settings.earthScale } });
+  // the approved look, but the course draws the grass round a bunker: no own grass bands, no rim mound; the edge soil starts at the earth scale
+  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, settings: { ...APPROVED_APPEARANCE.settings, collar: 0.05, firstCut: 0.05, rim: 0, soilScale: APPROVED_APPEARANCE.settings.earthScale } });
   assert.equal(defaults.version, 1);
   assert.equal(defaults.depth, 1.5);
-  assert.equal(defaults.collar, 2.647123893805);
+  assert.equal(defaults.collar, 0.05);
+  assert.equal(defaults.rim, 0);
   assert.equal(defaults.wall, 1.93929756637);
   assert.deepEqual(BUNKER_SETTING_FIELDS.filter(field => field.hidden).map(field => field.key).sort(), ['fairwayScale', 'roundness']);
   for (const key of ['slope', 'collar', 'firstCut']) assert.equal(BUNKER_SETTING_FIELDS.find(field => field.key === key)?.displayScale, 2);

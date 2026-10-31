@@ -1,5 +1,6 @@
 /** Geometry-labelled bunker atlas: one 512-edge picture per native floor, wall and lip stage. */
 export const BUNKER_STAGES = ['floor', 'wall', 'lip'] as const;
+const FAINT_ALPHA = 32;
 export type BunkerStage = typeof BUNKER_STAGES[number];
 
 /** Pixel rectangles in the shared bitmap; native stages read only their own row. */
@@ -24,7 +25,11 @@ export function packBunkerStageAtlas(colour: Uint8ClampedArray, semantics: Uint8
     let stage = 0;
     if (semantics[i + 1] > semantics[i]) stage = 1;
     if (semantics[i + 2] > semantics[i + stage]) stage = 2;
-    if (semantics[i + stage] === 0 || semantics[i + 3] === 0) throw new Error('Visible bunker pixel has no geometry-stage classification.');
+    if (semantics[i + stage] === 0 || semantics[i + 3] === 0) {
+      // a faint antialiased fringe pixel can round to no label in the label pass (thin grass bands make many): it is dropped, not fatal
+      if (colour[i + 3] < FAINT_ALPHA) continue;
+      throw new Error('Visible bunker pixel has no geometry-stage classification.');
+    }
     const to = stage * length + i;
     data[to] = colour[i]; data[to + 1] = colour[i + 1]; data[to + 2] = colour[i + 2]; data[to + 3] = colour[i + 3]; pixels[stage]++;
   }

@@ -101,6 +101,8 @@ export class GroundCache {
   bunkerGeometryChanged: (() => void) | null = null;
   private readonly bunkerRefs = new Map<string, BunkerStageRef>();
   private readonly bunkerPublishing = new Map<string, { key: string }>();
+  /** The area of a re-baking bunker's previous picture, which the workers keep showing until the new one lands (stage-registry held). */
+  private readonly bunkerHeldBounds = new Map<string, BBox>();
   private stopped = false;
   constructor(public gl: GLRenderer, workers = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 4) - 2))) {
     for (let w = 0; w < workers; w++) {
@@ -111,17 +113,24 @@ export class GroundCache {
     this.bunkers = new BunkerStageBridge({ bake: request => (baker ??= new BunkerStageBaker()).bake(request), disposeBake: () => baker?.dispose(),
       expected: (set, drop) => {
         let bounds: BBox | null = null;
-        for (const id of drop) { const old = this.bunkerRefs.get(id); if (old) bounds = unionBox(bounds, old.dirtyBoundsTiles); this.bunkerRefs.delete(id); }
-        for (const ref of set) { const old = this.bunkerRefs.get(ref.id); if (old) bounds = unionBox(bounds, old.dirtyBoundsTiles); bounds = unionBox(bounds, ref.dirtyBoundsTiles); this.bunkerRefs.set(ref.id, ref); }
+        for (const id of drop) { const old = this.bunkerRefs.get(id); if (old) bounds = unionBox(bounds, old.dirtyBoundsTiles); this.bunkerRefs.delete(id); this.bunkerHeldBounds.delete(id); }
+        for (const ref of set) {
+          const old = this.bunkerRefs.get(ref.id);
+          if (old) bounds = unionBox(bounds, old.dirtyBoundsTiles);
+          if (old && old.key !== ref.key) this.bunkerHeldBounds.set(ref.id, unionBox(this.bunkerHeldBounds.get(ref.id) ?? null, old.dirtyBoundsTiles));
+          bounds = unionBox(bounds, ref.dirtyBoundsTiles); this.bunkerRefs.set(ref.id, ref);
+        }
         if (this.stopped) return;
         this.broadcast({ t: 'bunkerExpected', set, drop }); if (bounds) this.invalidate(bounds, false, 0, 'gmp');
       }, ready: value => this.publishBunker(value), drop: (id, key, bounds) => {
         if (this.bunkerPublishing.get(id)?.key === key) this.bunkerPublishing.delete(id);
         if (this.stopped) return;
-        this.broadcast({ t: 'bunker', set: [], drop: [{ id, key }] }); this.invalidate(bounds, false, 0, 'gmp');
+        this.broadcast({ t: 'bunker', set: [], drop: [{ id, key }] }); this.invalidate(this.withHeld(id, bounds), false, 0, 'gmp');
       }, error: (error, id) => { const message = `bunker ${id}: ${String(error)}`; this.errors.push(message); console.error('[bunker worker]', message); } });
   }
-  terminate() { this.stopped = true; this.bunkerPublishing.clear(); this.bunkers.dispose(); this.bunkerRefs.clear(); this.bunkerGeometryChanged = null; for (const w of this.workers) w.terminate(); this.workers = []; this.unsurfaces?.(); this.unsurfaces = null; }
+  terminate() { this.stopped = true; this.bunkerPublishing.clear(); this.bunkers.dispose(); this.bunkerRefs.clear(); this.bunkerHeldBounds.clear(); this.bunkerGeometryChanged = null; for (const w of this.workers) w.terminate(); this.workers = []; this.unsurfaces?.(); this.unsurfaces = null; }
+  /** A bunker's new bounds plus its held previous picture's (the workers drop that picture now), forgetting the held area. */
+  private withHeld(id: string, bounds: BBox): BBox { const held = this.bunkerHeldBounds.get(id); this.bunkerHeldBounds.delete(id); return held ? unionBox(held, bounds) : bounds; }
   /** Clone before transfer; a newer edit or eviction revokes a publication still awaiting bitmap copies. */
   private async publishBunker(value: BunkerStageReady): Promise<void> {
     const token = { key: value.key }, workers = this.workers.slice(), copies: ImageBitmap[] = []; this.bunkerPublishing.set(value.id, token);
@@ -131,7 +140,7 @@ export class GroundCache {
       const failure = results.find(result => result.status === 'rejected'); if (failure?.status === 'rejected') throw failure.reason;
       if (this.stopped || this.bunkerPublishing.get(value.id) !== token || !this.bunkers.isCurrent(value.id, value.key)) return;
       for (let i = 0; i < workers.length; i++) workers[i].postMessage({ t: 'bunker', set: [{ ...value, image: copies[i] }], drop: [] } satisfies ToWorker, [copies[i]]);
-      this.invalidate(value.dirtyBoundsTiles, false, 0, 'gmp');
+      this.invalidate(this.withHeld(value.id, value.dirtyBoundsTiles), false, 0, 'gmp');
     } catch (error) { if (!this.stopped && this.bunkers.isCurrent(value.id, value.key)) throw error; }
     finally { for (const copy of copies) copy.close(); value.image.close(); if (this.bunkerPublishing.get(value.id) === token) this.bunkerPublishing.delete(value.id); }
   }
