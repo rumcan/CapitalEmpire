@@ -7,7 +7,7 @@ import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard
 import { SHAPE_RATE_M3, growInMonths } from '../../game/golf/costs';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
 import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
-import { BrushShape, GrassEdgesEntry, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
+import { BrushShape, GrassEdgesEntry, GroundHeight, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
 import { CourseEdges } from './CourseEdges';
 import { GRID_KINDS } from '../../game/paint-tool';
 import { EditTees } from '../golf/TeeSets';
@@ -25,8 +25,8 @@ const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
  *  mode is on: the hole and its number (Number ▾ offers the free ones), the steps, Build · $X and Cancel on top, par and length, the price
  *  split, Seed (the default) or Sod with what each does to the season, the money line, the check table with its fixes, and the keys. The
  *  map shows the ghost, the handles, the gold Build pill and the label beside the pointer. Self-contained: it reads and drives game.paint.
- *  looks / onLooks: My looks' card (T252: Edit hole's paint section opens it too; App's state, as the Holes panel's) */
-export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
+ *  (a look is edited in Create your own since My looks merged into it, 2026-10-31) */
+export function HoleWizardPanel({ game }: { game: Game }) {
   const p = game.paint, w = p.wizard;
   const gh = w.step !== 'tee' && w.plan ? w.ghost() : null;
   const c = w.step === 'shape' ? w.check() : null;
@@ -77,7 +77,7 @@ export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; 
       )}
       {gh && <Stats game={game} />}
       {w.base && w.step === 'shape' && <EditTees game={game} n={w.base.hole} /> /* T268: place, move and remove each tee set */}
-      {w.base && w.step === 'shape' && <EditPaint game={game} looks={looks} onLooks={onLooks} />}
+      {w.base && w.step === 'shape' && <EditPaint game={game} />}
       {gh && !w.base && <Planting game={game} /> /* T254: Edit Hole Layout plants nothing */}
       {gh && w.step === 'shape' && !w.base && <Frame game={game} cost={gh.cost} />}
       {gh && w.step === 'shape' && !w.base && <Ground game={game} cost={gh.cost} />}
@@ -139,7 +139,7 @@ function FromMyHoles({ game }: { game: Game }) {
  *  brush down. T252: My looks (the look of the surface in hand: course-wide, every hole wears it) and Ground height (Raise, Lower, Smooth,
  *  Flatten: the owner, 2026-10-28: "add the sculpting too to raise and lower and flatten ground to the hole editing"), the handles still
  *  dragging under it; picking a surface puts it down, and Ground height puts the surface brush down */
-function EditPaint({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
+function EditPaint({ game }: { game: Game }) {
   const p = game.paint, n = p.editingHole, on = p.mode === 'brush' && p.planOpen, height = p.mode === 'height' && p.planOpen;
   // T271: a custom grass in hand paints too (its swatch after the eight); the lit swatch again puts the brush down
   const gr = on ? p.grass : null, name = gr?.name ?? SURFACE_BRUSHES.find(b => b.kind === p.brushKind)?.name ?? '', keys = surfaceKeysOf(game);
@@ -166,9 +166,6 @@ function EditPaint({ game, looks, onLooks }: { game: Game; looks: boolean; onLoo
           {gr ? <GrassEdgesEntry game={game} /> : <CourseEdges game={game} />}
         </div>
       )}
-      <div className="mt-2">
-        <LooksEntry game={game} looks={looks} onLooks={onLooks} arm={() => { if (!on) p.setEditBrush(p.brushKind); }} />
-      </div>
     </section>
   );
 }

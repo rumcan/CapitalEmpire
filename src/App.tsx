@@ -200,7 +200,7 @@ export default function App() {
   const grassOpen = !!game?.paint.grassDraft && game.uiTool === 'course';
   /** a picked bunker (Pick bunker, or a click on one with Select) opens its look: My looks with the bunker in hand (the engine put the Holes
    *  tool and its hole in hand); every valid pick, not just a changed id */
-  useEffect(() => { if (game?.bunkers?.selection) { game.paint.closeGrass(); setLooks(true); } }, [game, game?.bunkerSelectionSerial]);
+  useEffect(() => { if (game?.bunkers?.selection) { setLooks(false); game.paint.openGrass(); } }, [game, game?.bunkerSelectionSerial]);
   // another tool put in hand closes it (read live: a grass opened just after one closed is never shut by the older render)
   useEffect(() => { if (game && game.uiTool !== 'course' && game.paint.grassDraft) game.paint.closeGrass(); }, [game?.uiTool]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (grassOpen && looks) setLooks(false); }, [grassOpen]); // eslint-disable-line react-hooks/exhaustive-deps

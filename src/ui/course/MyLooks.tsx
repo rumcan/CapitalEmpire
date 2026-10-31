@@ -38,7 +38,8 @@ function LookDisc({ kind, tex, scale, angle, tone, toneAmt }: { kind: string; te
  *  editor that was under Show every tool now > Fine tuning. On a golf course's grid every cell of that surface wears the look's texture, size
  *  and angle at once (and the disc at the pointer shows it); a classic game's painted areas keep the whole editor. A card beside the Holes
  *  panel; Esc or × closes it */
-export function MyLooksCard({ game, onClose }: { game: Game; onClose: () => void }) {
+/** embedded: inside Create your own (its Bunker part, the owner 2026-10-31: My looks merged into Create your own): no card of its own, no title */
+export function MyLooksCard({ game, onClose, embedded = false }: { game: Game; onClose: () => void; embedded?: boolean }) {
   const p = game.paint, kind = p.brushKind, name = BRUSH_PRESETS.find(b => b.kind === kind)?.name ?? kind, s = p.style;
   /** a golf course's 1 m grid wears a look's texture, size and angle only (its collars are automatic) */
   const grid = game.golfMode && !!game.courseGrid;
@@ -48,12 +49,8 @@ export function MyLooksCard({ game, onClose }: { game: Game; onClose: () => void
   const [done, setDone] = useState('');
   // the card shows the look of whoever it edits now (the owner changed under it: another hole, the property, a facility)
   useEffect(() => { if (grid && p.pickLook) p.pickLook(facility && !(FACILITY_KINDS as readonly string[]).includes(kind) ? 'green' : kind); setDone(''); }, [grid, owner]); // eslint-disable-line react-hooks/exhaustive-deps
-  return (
-    <section className="glass tp w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-card="looks" aria-label={`My looks: ${name}`}>
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="font-display text-xl font-bold">{`My looks · ${name}`}</h2>
-        <button className="round-btn" aria-label="Close My looks" title="Close (Esc)" onClick={onClose}>×</button>
-      </div>
+  const body = (
+    <>
       {grid && <div className="looks-what mb-2" data-testid="looks-what"><span className="label-caps">Editing</span> <b>{what}</b></div>}
       {grid && facility && (
         <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="Surface">
@@ -77,6 +74,15 @@ export function MyLooksCard({ game, onClose }: { game: Game; onClose: () => void
       <StyleEditor game={game} gridOnly={grid} />
       {/* the bunker's depth, walls and 3D pictures: one card for everything a bunker wears (the owner, 2026-10-31) */}
       {grid && kind === 'bunker' && <BunkerLookShape game={game} />}
+    </>
+  );
+  return embedded ? <div data-looks-embedded>{body}</div> : (
+    <section className="glass tp w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-card="looks" aria-label={`My looks: ${name}`}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="font-display text-xl font-bold">{`My looks · ${name}`}</h2>
+        <button className="round-btn" aria-label="Close My looks" title="Close (Esc)" onClick={onClose}>×</button>
+      </div>
+      {body}
     </section>
   );
 }

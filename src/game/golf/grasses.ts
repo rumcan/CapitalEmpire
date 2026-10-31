@@ -39,15 +39,19 @@ const SHADOW_START = 0.15;
 /** a custom grass (GolfSave.grasses): its slot k, name, play, painted family, scale, exposure (saved as a tone, exposure.ts: tone 0 none,
  *  1 darker at toneAmt, 2 lighter), mowing stripes, Border (metres: 0 none, else a first cut band that wide), Round off and its Smoothness,
  *  and Shadow (0 none .. 1 strong) */
-export interface CustomGrass { k: number; name: string; plays: GrassPlay; family: string; scale: number; tone: 0 | 1 | 2; toneAmt: number; stripes: boolean; border: number; round: boolean; smooth: number; shadow: number }
+/** family: a painted grass family, or (the owner, 2026-10-31: My looks merged into Create your own) any texture: a texture preset (preset:<id>)
+ *  or the player's own uploaded picture (upload:<hash>); angle: its turn in degrees (a painted family is never turned: its light stays upper right) */
+export interface CustomGrass { k: number; name: string; plays: GrassPlay; family: string; scale: number; angle: number; tone: 0 | 1 | 2; toneAmt: number; stripes: boolean; border: number; round: boolean; smooth: number; shadow: number }
 
 /** the painted grass families the editor offers (every painted family of kind grass), in the registry's order */
 export const GRASS_FAMILIES: readonly { id: string; name: string }[] = FAMILIES.filter(f => f.kind === 'grass').map(f => ({ id: f.id, name: f.name }));
 /** whether a family id is a painted grass family */
 export const isGrassFamily = (id: string) => familyById(id)?.kind === 'grass';
+/** whether an id is a texture a custom grass may wear: a painted grass family, a texture preset or an uploaded picture */
+export const isGrassTexture = (id: string) => isGrassFamily(id) || /^preset:[a-z0-9-]{1,40}$/.test(id) || /^upload:[0-9a-f]{12}$/.test(id);
 /** the texture id a custom grass is laid with: own:<play>:<family> (painted-surfaces lookOfTex lays the family as painted, no tint, no tone;
  *  grass-shine shineGroup reads the play: the grass shines as the surface it plays as) */
-export const grassTex = (g: Pick<CustomGrass, 'plays' | 'family'>) => `own:${g.plays}:${g.family}`;
+export const grassTex = (g: Pick<CustomGrass, 'plays' | 'family'>) => (isGrassFamily(g.family) ? `own:${g.plays}:${g.family}` : g.family);
 /** the family and play a custom grass texture id names, or null when it is not one */
 export function ownTex(tex: string): { play: GrassPlay; family: string } | null {
   if (!tex.startsWith('own:')) return null;
@@ -63,7 +67,7 @@ export const GRASS_NAME_MAX = 24;
 
 /** a new grass's starting values in slot k (a fairway-like grass in the given family, banded with a 2 m first cut as the fairway is) */
 export function newGrass(k: number, family: string, n = k): CustomGrass {
-  return { k, name: `My grass ${n}`, plays: 'fairway', family, scale: 1, tone: 0, toneAmt: 0.35, stripes: true, border: 2, round: false, smooth: 0.5, shadow: SHADOW_START };
+  return { k, name: `My grass ${n}`, plays: 'fairway', family, scale: 1, angle: 0, tone: 0, toneAmt: 0.35, stripes: true, border: 2, round: true, smooth: 1, shadow: SHADOW_START };
 }
 /** a grass held to its ranges (a bad family falls back to `fallback`); null when it is not one at all (no slot, no play) */
 export function clampGrass(v: unknown, fallback = GRASS_FAMILIES[0]?.id ?? 'emerald-medium'): CustomGrass | null {
@@ -72,9 +76,9 @@ export function clampGrass(v: unknown, fallback = GRASS_FAMILIES[0]?.id ?? 'emer
   const k = o.k; if (typeof k !== 'number' || !Number.isInteger(k) || k < 1 || k > MAX_GRASSES) return null;
   const plays = o.plays as GrassPlay; if (PLAY_SURF[plays] === undefined) return null;
   const name = (typeof o.name === 'string' ? o.name.trim().slice(0, GRASS_NAME_MAX) : '') || `My grass ${k}`;
-  const family = typeof o.family === 'string' && isGrassFamily(o.family) ? o.family : fallback;
+  const family = typeof o.family === 'string' && isGrassTexture(o.family) ? o.family : fallback;
   const tone = o.tone === 1 || o.tone === 2 ? o.tone : 0;
-  return { k, name, plays, family, scale: r3(clamp(o.scale, 0.25, 4, 1)), tone, toneAmt: r3(clamp(o.toneAmt, 0, 1, 0.35)), stripes: !!o.stripes && stripesOk(plays),
+  return { k, name, plays, family, scale: r3(clamp(o.scale, 0.25, 4, 1)), angle: r3(clamp(o.angle, -180, 180, 0)), tone, toneAmt: r3(clamp(o.toneAmt, 0, 1, 0.35)), stripes: !!o.stripes && stripesOk(plays),
     border: r3(clampBorder(clamp(o.border, 0, BORDER_MAX_M, 0))), round: !!o.round, smooth: r3(clamp(o.smooth, 0, 1, 0.5)), shadow: r3(clamp(o.shadow, 0, 1, SHADOW_START)) };
 }
 /** the grasses from a save: each well formed one, one per slot (the first wins), by slot; [] for none (every older save) */
@@ -92,7 +96,7 @@ export function freeSlot(list: readonly Pick<CustomGrass, 'k'>[]): number {
 /** a grass's fill as a course texture: its family at its scale, with its exposure when it has one (a texture, never a tint) */
 export function grassCourseTex(g: CustomGrass): CourseTex {
   const x = exposureOf(g.tone, g.toneAmt);
-  return { tex: grassTex(g), sc: g.scale, a: 0, ...(exposed(x) ? { x } : {}) };
+  return { tex: grassTex(g), sc: g.scale, a: isGrassFamily(g.family) ? 0 : g.angle ?? 0, ...(exposed(x) ? { x } : {}) };
 }
 
 /** what CourseLooks carries for the custom grasses, by draw id: each one's fill, its band (the course's first cut), its Border, Shadow and
@@ -111,7 +115,7 @@ export function grassLooks(list: readonly CustomGrass[], firstCut: CourseTex, ph
 /** a custom grass's puck (the Holes swatch, the editor's preview, the brush chip: ext/course-cursor swatchPuck): its family at its scale with
  *  its exposure on the top face, and the first cut band round it when it has a Border (firstCut: the course's first cut texture) */
 export function grassPuck(g: CustomGrass, firstCut: CourseTex | null): { st: PuckStyle; pb: PuckBand | null } {
-  const st: PuckStyle = { tex: grassTex(g) as PaintTex, scale: g.scale, angle: 0, border: 0, btex: 'dirt', tone: g.tone, toneAmt: g.toneAmt, tint: '#ffffff', bscale: 1, bangle: 0 };
+  const st: PuckStyle = { tex: grassTex(g) as PaintTex, scale: g.scale, angle: isGrassFamily(g.family) ? 0 : g.angle ?? 0, border: 0, btex: 'dirt', tone: g.tone, toneAmt: g.toneAmt, tint: '#ffffff', bscale: 1, bangle: 0 };
   return { st, pb: g.border > 0 && firstCut ? { name: 'first-cut', tex: firstCut, tone: null } : null };
 }
 /** the brush kind that carries a custom grass's brush (its size, the cursor's chip shape and mark): the fairway's for a fairway, the rough's for

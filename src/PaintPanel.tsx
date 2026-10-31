@@ -27,9 +27,9 @@ export const swatch = (t: { id: string; col: string }) => {
 const paintedTex = (game: Game, id: string) => game.grassArt === 'painted' && !!paintedSwatch(id);
 const LIB_BY_ID = new Map(LIBRARY.map(it => [it.id, it]));
 /** a picker's textures and, after them, the player's own uploaded pictures (Upload your own texture) */
-const withOwn = (options: readonly TextureOption[]): TextureOption[] => [...options, ...ownTextures().map(e => ({ id: e.id, name: e.label, col: '#6b6b52', pic: e.url }))];
+export const withOwn = (options: readonly TextureOption[]): TextureOption[] => [...options, ...ownTextures().map(e => ({ id: e.id, name: e.label, col: '#6b6b52', pic: e.url }))];
 /** the textures the pickers offer, by their plain names */
-const MENU_OPTIONS: TextureOption[] = MENU_TEXES.map(t => ({ id: t.id, name: plainName(t.name), col: t.col }));
+export const MENU_OPTIONS: TextureOption[] = MENU_TEXES.map(t => ({ id: t.id, name: plainName(t.name), col: t.col }));
 /** a texture's plain name for the menus (P23 P1-E): the owner's preset names as saved in the studio ("Golf - Green", "Path_worn", "sand",
  *  "First Cut") read as words ("Green", "Worn path", "Sand", "First cut"): a "Golf -" prefix goes, underscores become spaces, a trailing
  *  adjective moves to the front, and the name is in sentence case */

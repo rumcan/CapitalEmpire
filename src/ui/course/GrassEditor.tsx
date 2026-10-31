@@ -6,7 +6,14 @@
 // put in hand; an edit of a made one applies as it changes (its cells drawn again). Delete asks first: its cells keep how they play.
 import { useState } from 'react';
 import type { Game } from '../../game/engine';
-import { GRASS_FAMILIES, GRASS_NAME_MAX, GRASS_PLAYS, stripesOk, type CustomGrass } from '../../game/golf/grasses';
+import { GRASS_FAMILIES, GRASS_NAME_MAX, GRASS_PLAYS, isGrassFamily, stripesOk, type CustomGrass } from '../../game/golf/grasses';
+import { MENU_OPTIONS, withOwn } from '../../PaintPanel';
+import { TexPuck, TexturePicker, type TextureOption } from '../TexturePicker';
+import { addOwnTexture } from '../../game/ext/bunker-look/uploads';
+import { paintedUrl } from '../../game/painted-grass-art';
+import { resolveFamily } from '../../game/painted-families';
+import { tiledFamily } from '../../game/painted-tiles';
+import { MyLooksCard } from './MyLooks';
 import { BORDER_MAX_M } from '../../game/ext/course-grid/patch';
 import { exposureOf, toneOfExposure } from '../../game/exposure';
 import { ExposureRow } from '../../PaintPanel';
@@ -21,12 +28,43 @@ function Puck({ game, g, css }: { game: Game; g: CustomGrass; css: number }) {
   return pk ? <img src={pk.url} width={pk.w} height={pk.h} alt="" draggable={false} /> : <SurfaceMark kind={GRASS_KIND[g.plays]} size={Math.round(css * 0.9)} />;
 }
 
+/** a painted grass family's picture (its finest painting, a tile set's first near tile), or '' */
+function familyPic(id: string): string {
+  const fam = resolveFamily({ family: id, version: null, scale: 1 }); if (!fam) return '';
+  const tf = fam.tiled ? tiledFamily(id) : undefined;
+  return (tf ? paintedUrl(tf.levels.near.tiles[0]?.file ?? '') : paintedUrl(fam.near.file)) ?? '';
+}
+/** every texture a grass of your own may wear: the painted grasses first, then the texture presets (the owner's new pictures among them),
+ *  then the player's uploads */
+export function grassTextureOptions(): TextureOption[] {
+  return withOwn([...GRASS_FAMILIES.map(f => ({ id: f.id, name: f.name, col: '#4f6b2a', pic: familyPic(f.id) })), ...MENU_OPTIONS]);
+}
+
 /** the grass editor's card (Esc or × closes it; a new grass not made is dropped) */
 export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }) {
   const p = game.paint, d = p.grassDraft;
   const [ask, setAsk] = useState(false);
+  // its two parts (the owner, 2026-10-31: My looks merged into Create your own): a grass of your own, and the bunker's look (the bunker in
+  // hand opens on it)
+  const [part, setPart] = useState<'grass' | 'bunker'>(() => (p.brushKind === 'bunker' ? 'bunker' : 'grass'));
   useSwatchPucks();
   if (!d) return null;
+  const parts = (
+    <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="Create your own" data-create-part={part}>
+      <button className={`chip ${part === 'grass' ? 'chip-on' : ''}`} aria-pressed={part === 'grass'} onClick={() => setPart('grass')}>{d.k > 0 ? 'Your grass' : 'New grass'}</button>
+      <button className={`chip ${part === 'bunker' ? 'chip-on' : ''}`} aria-pressed={part === 'bunker'} title="The bunkers' look: sand, edges, depth and walls" onClick={() => { p.pickLook('bunker'); setPart('bunker'); }} data-create-bunker>Bunker</button>
+    </div>
+  );
+  if (part === 'bunker') return (
+    <section className="glass tp w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3" data-card="grass" aria-label="Create your own: bunker">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="font-display text-xl font-bold">Create your own · Bunker</h2>
+        <button className="round-btn" aria-label="Close the grass editor" title="Close (Esc)" onClick={onClose}>×</button>
+      </div>
+      {parts}
+      <MyLooksCard game={game} onClose={onClose} embedded />
+    </section>
+  );
   const made = d.k > 0, set = (q: Partial<Omit<CustomGrass, 'k'>>) => p.editGrass(q), x = exposureOf(d.tone, d.toneAmt), play = GRASS_PLAYS.find(q => q.play === d.plays)!;
   const plain = d.plays === 'firstCut' ? 'rough' : play.name.toLowerCase();
   return (
@@ -35,8 +73,9 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
         <h2 className="font-display text-xl font-bold">{made ? `Your grass · ${d.name}` : 'Create your own'}</h2>
         <button className="round-btn" aria-label="Close the grass editor" title="Close (Esc)" onClick={onClose}>×</button>
       </div>
+      {parts}
       <div className="flex items-center gap-3" data-testid="grass-preview">
-        <span className="grid h-[64px] w-[84px] shrink-0 place-items-center"><Puck game={game} g={d} css={72} /></span>
+        <span className="grid h-[64px] w-[84px] shrink-0 place-items-center">{isGrassFamily(d.family) ? <Puck game={game} g={d} css={72} /> : <TexPuck t={grassTextureOptions().find(o => o.id === d.family) ?? null} css={72} />}</span>
         <div className="min-w-0">
           <label className="block text-[12px] text-slate-400" htmlFor="grass-name">Name</label>
           <input id="grass-name" className="mt-0.5 w-full rounded-md border border-white/15 bg-black/30 px-2 py-1 text-[13px] text-slate-100" maxLength={GRASS_NAME_MAX} value={d.name} onChange={e => set({ name: e.target.value })} data-testid="grass-name" />
@@ -50,13 +89,6 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
       </div>
       <div className="sub-line mt-1">{`The ball lies as on the ${play.name.toLowerCase()}: ${play.note}.`}</div>
 
-      <div className="mt-2 flex items-center gap-1 text-[12px] text-slate-400">
-        <span className="w-12 shrink-0">Scale</span>
-        <button className="btn" onClick={() => set({ scale: d.scale / 1.25 })}>−</button>
-        <span className="w-12 text-center text-xs text-slate-200" data-testid="grass-scale">{`${Math.round(d.scale * 100)}%`}</span>
-        <button className="btn" onClick={() => set({ scale: d.scale * 1.25 })}>+</button>
-        <button className="btn" onClick={() => set({ scale: 1 })}>Reset</button>
-      </div>
       <ExposureRow label="Exposure" f={x} set={f => set(toneOfExposure(f))} title="The texture itself made darker or lighter, keeping its detail and colour: the middle is none, the ends one stop darker or lighter (double-click: none)" />
       <label className={`mt-2 flex items-center gap-2 text-[12px] ${stripesOk(d.plays) ? 'text-slate-300' : 'text-slate-600'}`} title={stripesOk(d.plays) ? 'Mowing stripes along each hole\'s line, as the fairway has' : 'Only a fairway or a first cut is mown in stripes'}>
         <input type="checkbox" aria-label="Mowing stripes" disabled={!stripesOk(d.plays)} checked={d.stripes && stripesOk(d.plays)} onChange={e => set({ stripes: e.target.checked })} data-testid="grass-stripes" />
@@ -87,19 +119,20 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
       {/* the settings above, the textures in a scrollable window under them (the owner, 2026-10-31: "move the settings to above the scrollable
           texture window") */}
       <h4 className="sub-head mt-3">Texture</h4>
-      <div className="mt-1 max-h-[16rem] overflow-y-auto overflow-x-hidden rounded-lg border border-white/10 p-1" data-texture-window>
-      <div className="swatches" role="group" aria-label="Painted grass" data-testid="grass-families">
-        {GRASS_FAMILIES.map(f => {
-          const lit = d.family === f.id;
-          return (
-            <button key={f.id} data-family={f.id} aria-pressed={lit} title={f.name} className={`swatch ${lit ? 'swatch-on' : ''}`} onClick={() => set({ family: f.id })}>
-              <span className="swatch-puck"><Puck game={game} g={{ ...d, family: f.id, border: 0 }} css={44} /></span>
-              <span className="swatch-name">{f.name}</span>
-            </button>
-          );
-        })}
-      </div>
-      </div>
+      <TexturePicker label="Its texture" testId="grass" value={d.family} options={grassTextureOptions()} onUpload={addOwnTexture} onPick={id => id && set({ family: id })}
+        edits={[{ id: 'scale', label: `Scale ${Math.round(d.scale * 100)}%`, panel: (
+            <div className="flex items-center gap-1">
+              <button className="btn" onClick={() => set({ scale: d.scale / 1.25 })}>−</button>
+              <span className="w-12 text-center text-xs text-slate-200" data-testid="grass-scale">{`${Math.round(d.scale * 100)}%`}</span>
+              <button className="btn" onClick={() => set({ scale: d.scale * 1.25 })}>+</button>
+              <button className="btn" onClick={() => set({ scale: 1 })}>Reset</button>
+            </div>) },
+          // a painted grass is never turned (its light stays at the upper right); any other texture turns
+          ...(!isGrassFamily(d.family) ? [{ id: 'angle', label: `Angle ${Math.round(d.angle ?? 0)}°`, panel: (
+            <div className="flex items-center gap-2">
+              <input type="range" aria-label="Angle" min={-90} max={90} step={5} value={d.angle ?? 0} onChange={e => set({ angle: +e.target.value })} className="flex-1" />
+              <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(d.angle ?? 0)}°`}</span>
+            </div>) }] : [])]} />
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {made ? (<>
           <button className="chip chip-on" onClick={onClose} data-testid="grass-done">Done</button>

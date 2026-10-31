@@ -792,7 +792,8 @@ export class PaintTool {
    *  fairway). With every slot taken it says so */
   openGrass(k = 0) {
     const list = this.grasses, made = k ? list.find(g => g.k === k) : undefined;
-    if (!made && list.length >= MAX_GRASSES) { this.host.toast(`You have ${MAX_GRASSES} grasses of your own: delete one to make another`, 'warn'); return; }
+    // (with the bunker in hand it opens for the bunker's look, Create your own's Bunker part, whatever the grasses)
+    if (!made && list.length >= MAX_GRASSES && this.brushKind !== 'bunker') { this.host.toast(`You have ${MAX_GRASSES} grasses of your own: delete one to make another`, 'warn'); return; }
     this.grassDraft = made ? { ...made } : { ...newGrass(0, this.host.grassFamily?.() ?? GRASS_FAMILIES[0]?.id ?? 'emerald-medium', freeSlot(list)), k: 0 };
     this.host.emit();
   }
