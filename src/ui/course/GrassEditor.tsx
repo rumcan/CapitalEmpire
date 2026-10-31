@@ -80,6 +80,25 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
         <input type="range" aria-label="Border: a first cut band round it" min={0} max={BORDER_STEPS} step={1} value={courseBorderPos(d.border)} onChange={e => set({ border: courseBorderAt(+e.target.value) })} className="min-w-0 flex-1" />
         <span className="w-16 text-right text-xs text-slate-200" data-border={d.border > 0 ? 'on' : 'none'}>{d.border > 0 ? borderLabel(d.border) : 'none'}</span>
       </div>
+      {/* the band's own texture, scale, angle and exposure (the owner, 2026-10-31: "you cant set a border in the create your own section");
+          None: the course's first cut */}
+      {d.border > 0 && (<>
+        <TexturePicker label="Border texture" testId="grass-border" value={d.btex} none="The course's first cut" options={grassTextureOptions()} onUpload={addOwnTexture}
+          onPick={id => set(id ? { btex: id } : { btex: undefined, bscale: undefined, bangle: undefined, btone: undefined, btoneAmt: undefined })}
+          edits={d.btex ? [{ id: 'scale', label: `Scale ${Math.round((d.bscale ?? 1) * 100)}%`, panel: (
+              <div className="flex items-center gap-1">
+                <button className="btn" onClick={() => set({ bscale: (d.bscale ?? 1) / 1.25 })}>−</button>
+                <span className="w-12 text-center text-xs text-slate-200">{`${Math.round((d.bscale ?? 1) * 100)}%`}</span>
+                <button className="btn" onClick={() => set({ bscale: (d.bscale ?? 1) * 1.25 })}>+</button>
+                <button className="btn" onClick={() => set({ bscale: 1 })}>Reset</button>
+              </div>) },
+            ...(!isGrassFamily(d.btex) ? [{ id: 'angle', label: `Angle ${Math.round(d.bangle ?? 0)}°`, panel: (
+              <div className="flex items-center gap-2">
+                <input type="range" aria-label="Border angle" min={-90} max={90} step={5} value={d.bangle ?? 0} onChange={e => set({ bangle: +e.target.value })} className="flex-1" />
+                <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(d.bangle ?? 0)}°`}</span>
+              </div>) }] : [])] : []} />
+        {d.btex && <ExposureRow label="Border exposure" f={exposureOf(d.btone ?? 0, d.btoneAmt ?? 0.35)} set={f => { const t = toneOfExposure(f); set({ btone: t.tone, btoneAmt: t.toneAmt }); }} title="The border's texture itself made darker or lighter: the middle is none, the ends one stop darker or lighter (double-click: none)" />}
+      </>)}
       <label className="mt-1 flex items-center gap-2 text-[12px] text-slate-300" data-round={d.round ? 'on' : 'off'} title="Round off: its stepped 1 m outline becomes a smooth curve, its corners rounded">
         <input type="checkbox" aria-label="Round off" checked={d.round} onChange={e => set({ round: e.target.checked })} />
         <span>Round off</span>

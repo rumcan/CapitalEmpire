@@ -223,3 +223,15 @@ test('Shape by hand and Edit hole show the grasses as swatches with their keys, 
   const classic = renderToStaticMarkup(createElement(SurfaceSwatches, { game: { ...game, golfMode: false } as unknown as Game, on: null, pick: () => {} }));
   assert.ok(!classic.includes('grass-new'));
 });
+
+test('a grass of your own has its own Border texture: kept through a save, laid as its band, the first cut without one', async () => {
+  const { clampGrass, grassBandTex, newGrass } = await import('../src/game/golf/grasses');
+  const fc = { tex: 'preset:first-cut', sc: 1, a: 0 };
+  const plain = newGrass(1, 'emerald-medium');
+  assert.equal(grassBandTex(plain, fc), fc, 'no Border texture: the course’s first cut');
+  const own = clampGrass(JSON.parse(JSON.stringify({ ...plain, btex: 'preset:sand', bscale: 2, bangle: 30, btone: 1, btoneAmt: 0.4 })))!;
+  assert.equal(own.btex, 'preset:sand'); assert.equal(own.bscale, 2); assert.equal(own.bangle, 30);
+  const band = grassBandTex(own, fc); assert.equal(band.tex, 'preset:sand'); assert.equal(band.sc, 2); assert.equal(band.a, 30); assert.ok(band.x !== undefined && band.x < 1);
+  assert.equal(grassBandTex(clampGrass({ ...plain, btex: 'emerald-long' })!, fc).tex, 'own:fairway:emerald-long', 'a painted grass as the band');
+  assert.equal(clampGrass({ ...plain, btex: 'no such thing' })!.btex, undefined, 'an unknown one is dropped');
+});
