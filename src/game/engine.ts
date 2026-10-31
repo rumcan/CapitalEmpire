@@ -27,6 +27,8 @@ import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-l
 import { lotBatch, type CoursePatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BunkerController } from './ext/bunker-look/controller';
 import { buildBunkerGeometry } from './ext/bunker-look/geometry';
+import { bunkerSettingsOfLook } from './ext/bunker-look/look-settings';
+import type { BunkerSettings } from './ext/bunker-look/settings';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { LAND_WHY, PaintTool } from './paint-tool';
@@ -1413,10 +1415,23 @@ export class Game {
   selectBunkerAt(tile: Pt): boolean {
     this.bunkers.reconcile(this.courseGrid);
     if (!this.bunkers.selectAt(tile)) return false;
+    // its look opens (App: My looks with the bunker in hand): the Holes tool with its hole in hand, or your property's paint for a bunker of
+    // no hole (a facility's bunker: its own looks, edited from Facilities ▸ Practice)
+    const g = this.courseGrid, c = g ? cellAt(g, tile.x, tile.y) : -1, n = g && c >= 0 ? g.hole[c] ?? 0 : 0;
+    this.setTool('course');
+    if (this.tool === 'course') { this.paint.setLookDefault?.(false); if (n > 0) { this.paint.setProperty(false); this.paint.setHole(n); this.paint.setBrush('bunker'); } else this.paint.setProperty(true, 'bunker'); }
     this.bunkerSelectionSerial++; this.emit(); return true;
   }
   /** The normal Select tool inspects bunkers; no building brush click is intercepted. */
   armBunkerPick(): void { this.landMode = false; this.holesTool = false; this.eventTool = false; this.grassPanel = false; this.setTool('select'); this.toast('Click a bunker to edit its whole connected shape'); this.emit(); }
+  /** The bake settings of a bunker anchored at a cell (global cell coordinates): the bunker look of whoever owns it (its hole, a practice
+   *  facility's footprint, else the property), My looks' Bunker look */
+  private bunkerLookAt(grid: CourseGrid, cell: readonly [number, number]): BunkerSettings {
+    const i = Math.round(cell[1] - grid.y0 / CELL_T) * grid.w + Math.round(cell[0] - grid.x0 / CELL_T), n = grid.hole[i] ?? 0;
+    const x = (cell[0] + 0.5) * CELL_T, y = (cell[1] + 0.5) * CELL_T;
+    const owner = n > 0 ? holeOwner(n) : FACILITY_OWNERS.find(f => { const b = this.facilityBox(f); return !!b && x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]; }) ?? 'property';
+    return bunkerSettingsOfLook(this.paint.lookOf(owner, 'bunker'));
+  }
   /** Only complete contour generations feed immutable worker requests. View frames never call this path. */
   private syncBunkerBakes(): void {
     if (this.syncingBunkers || !this.ground) return;
@@ -1426,7 +1441,7 @@ export class Game {
       if (!grid) { this.ground.bunkers.sync([]); return; }
       if (this.bunkerContourGrid !== grid || this.bunkerContourRev !== grid.rev || this.cgJob || this.cgWait) { this.ground.bunkers.suspend(); return; }
       if (this.bunkerJoinedGeneration !== this.bunkerGeneration) { this.bunkerJoinedGeneration = this.bunkerGeneration; this.bunkers.setRenderedJoins([], grid.rev); }
-      const patches = [...this.bunkerPatches.values()], options = { geometryRevision: this.bunkerGeneration, ready: true, rugged: this.ground.rugged };
+      const patches = [...this.bunkerPatches.values()], options = { geometryRevision: this.bunkerGeneration, ready: true, rugged: this.ground.rugged, settingsAt: (cell: readonly [number, number]) => this.bunkerLookAt(grid, cell) };
       let batch = buildBunkerGeometry(patches, this.bunkers.components, options);
       if (batch.complete && batch.joins.length) { this.bunkers.setRenderedJoins(batch.joins, grid.rev); batch = buildBunkerGeometry(patches, this.bunkers.components, options); }
       this.bunkerGeometryIssues = batch.issues;

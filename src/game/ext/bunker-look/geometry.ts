@@ -25,6 +25,8 @@ export interface BunkerGeometryOptions {
   rugged?: boolean;
   /** Hosts with per-patch generation tokens can reject a mixed asynchronous batch. */
   patchRevision?(patch: CoursePatch): string | number;
+  /** the settings a bunker anchored at this cell bakes with (its owner's look: look-settings bunkerSettingsOfLook); absent: its component's */
+  settingsAt?(anchor: BunkerCell): BunkerSettings | undefined;
 }
 export interface BunkerGeometryBatch {
   geometryRevision: string | number;
@@ -89,7 +91,9 @@ export function buildBunkerGeometry(
     const component = owner.component;
     const ringsTiles = shape.ringsTiles.map(ring => options.rugged === false ? ring.slice() : Float64Array.from(warpLine(ring, true, RUGGED.courseStep)));
     // no rim mound (Rim height is gone from the card: the course draws the ground round a bunker), whatever an older save holds
-    const settings = Object.freeze({ ...component.settings, rim: 0, shadow: lookShadow(component.settings.shadow, patches, owner.anchor) });
+    // the look of whoever owns the bunker's cells (a hole, the property, a facility: My looks), else the component's own (a host without looks)
+    const base = options.settingsAt?.(owner.anchor) ?? component.settings;
+    const settings = Object.freeze({ ...base, rim: 0, shadow: lookShadow(base.shadow, patches, owner.anchor) });
     const dirty = getDirtyBoundsTiles(ringsTiles, bunkerAppearance(settings));
     // Include interior and neighbouring course chunks as well as boundary
     // chunks: the complete collar and projected wall can reach beyond the sand.

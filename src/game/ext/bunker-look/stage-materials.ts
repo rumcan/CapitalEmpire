@@ -12,8 +12,6 @@ const PACK = 'Bunker pack';
 export const BUNKER_PACK_TEXTURES: readonly BunkerTextureEntry[] = Object.freeze([
   // the Sand slot's default: the bunker's My looks texture where it has a picture, else this sand (stage-bridge materialsOf)
   { id: 'bunker:sand', label: 'Bunker sand', group: PACK, url: ATLAS, crop: [0.5, 0, 0.5, 0.5] },
-  // the same sand picked on purpose: it stays whatever My looks says
-  { id: 'bunker:sand-fixed', label: 'Bunker sand (not My looks)', group: PACK, url: ATLAS, crop: [0.5, 0, 0.5, 0.5] },
   { id: 'bunker:soil', label: 'Edge soil and roots', group: PACK, url: ATLAS, crop: [0, 0.5, 0.5, 0.5] },
   { id: 'bunker:border-grass', label: 'Border grass', group: PACK, url: new URL('./package/textures/border-grass.png', import.meta.url).href },
   { id: 'bunker:first-cut', label: 'First cut', group: PACK, url: new URL('./package/textures/first-cut.png', import.meta.url).href },

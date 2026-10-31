@@ -1,20 +1,22 @@
+// The bunker's own part of its look (My looks with the bunker in hand: one card edits everything a bunker wears; the owner, 2026-10-31:
+// "two different texture editors ... consolidate into one single component"): its depth and walls and the 3D bake's edge soil and cut wall
+// pictures, saved with the rest of the look (look-settings.ts BUNKER_LOOK_KEYS). The sand's texture, size, angle and exposure, the Border,
+// Round off and Shadow are the look's own controls above it. And Pick bunker: click a bunker to open its look.
 import { useEffect, useId, useRef, useState } from 'react';
 import type { Game } from '../game/engine';
-import { BUNKER_SETTING_FIELDS, BUNKER_TEXTURE_SLOTS, type BunkerSettingField, type BunkerSettings, type BunkerTextureSlotInfo } from '../game/ext/bunker-look/settings';
+import { BUNKER_SETTING_FIELDS, BUNKER_TEXTURE_SLOTS, type BunkerSettingField, type BunkerSettingKey, type BunkerTextureSlotInfo } from '../game/ext/bunker-look/settings';
+import { bunkerSettingsOfLook, type BunkerLookFields, type BunkerLookKey } from '../game/ext/bunker-look/look-settings';
 import { bunkerTexture, bunkerTextureGroups } from '../game/ext/bunker-look/texture-library';
-import { bunkerLookPicture } from '../game/ext/bunker-look/look-picture';
-import { DEFAULT_BUNKER_TEXTURES } from '../game/ext/bunker-look/settings';
-import { lookName } from './course/BrushControls';
 import type { BunkerTextureEntry } from '../game/ext/bunker-look/stage-materials';
 
-const FIELDS = BUNKER_SETTING_FIELDS.filter(field => !field.hidden);
-const PRIMARY = FIELDS.filter(field => field.key === 'depth' || field.key === 'wall');
-const SHAPE = FIELDS.filter(field => field.group === 'shape' && field.key !== 'depth' && field.key !== 'wall');
-const OVERALL = FIELDS.filter(field => field.key === 'textureScale');
-const fieldOf = (key: string) => FIELDS.find(field => field.key === key);
+const fieldOf = (key: BunkerSettingKey) => BUNKER_SETTING_FIELDS.find(field => field.key === key)!;
+/** the bunker's shape, as the card lays it out */
+const SHAPE_FIELDS = (['depth', 'wall', 'slope'] as const).map(fieldOf);
+/** the pictures the look picks (the sand is the look's own texture; the grass round it is the course's Border) */
+const PICTURE_SLOTS = BUNKER_TEXTURE_SLOTS.filter(slot => slot.slot === 'soil' || slot.slot === 'wall');
 const TEXTURE_GROUPS = bunkerTextureGroups();
 const displayNumber = (value: number) => Number(value.toFixed(3)).toString();
-const fieldLabel = (field: BunkerSettingField) => field.key === 'depth' ? 'Floor depth' : field.key === 'wall' ? 'Wall height' : field.label;
+const fieldLabel = (field: BunkerSettingField) => field.key === 'depth' ? 'Floor depth' : field.key === 'wall' ? 'Wall height (green side)' : field.key === 'textureScale' ? 'All pictures’ scale' : field.label;
 
 /** A local draft survives game updates and commits only after the player finishes typing. */
 function NumberControl({ field, value, scope, onChange }: {
@@ -64,6 +66,7 @@ function NumberControl({ field, value, scope, onChange }: {
           className="w-20 rounded-lg border px-1.5 py-1 text-right text-xs disabled:opacity-40" />
       </div>
       {field.key === 'depth' && <p className="sub-line mt-0.5">Below the cut wall</p>}
+      {field.key === 'wall' && <p className="sub-line mt-0.5">Half of it on the side away from the green</p>}
     </div>
   );
 }
@@ -79,20 +82,15 @@ function TextureSwatch({ entry }: { entry: BunkerTextureEntry }) {
 }
 
 /** One swappable bunker picture: which texture it draws, and its own scale. */
-/** lookTex: the bunker's My looks texture (the hole in hand's): the Sand slot's default lays it, so the slot says so and shows it */
-function TextureSlotControl({ slot, settings, scope, lookTex, onChange }: {
+/** A picture slot: the texture (any bunker pack picture, ground photo or added picture) and its scale. */
+function PictureControl({ slot, value, scale, scope, onChange }: {
   slot: Readonly<BunkerTextureSlotInfo>;
-  settings: Readonly<BunkerSettings>;
+  value: string;
+  scale: number;
   scope: string;
-  lookTex?: string;
-  onChange(change: Partial<BunkerSettings>): void;
+  onChange(change: BunkerLookFields): void;
 }) {
-  const id = useId(), picked = bunkerTexture(slot.slot, settings[slot.key]), scale = fieldOf(slot.scale);
-  const known = picked.id === settings[slot.key];
-  // the Sand slot left at its default follows My looks (the owner, 2026-10-31: "the my looks need to apply to the bunkers")
-  const follows = slot.slot === 'sand' && picked.id === DEFAULT_BUNKER_TEXTURES.sand, look = follows && lookTex ? bunkerLookPicture(lookTex) : null;
-  const followLabel = `My looks${lookTex ? ` (${lookName(lookTex)})` : ''}`;
-  const entry: BunkerTextureEntry = look ? { ...look, label: followLabel, group: '' } : picked;
+  const id = useId(), entry = bunkerTexture(slot.slot, value), field = fieldOf(slot.scale);
   return (
     <div className="mt-3 border-t pt-2" style={{ borderColor: 'var(--line)' }} data-bunker-texture={slot.slot}>
       <label htmlFor={`${id}-texture`} className="text-xs font-semibold">{slot.label}</label>
@@ -101,100 +99,47 @@ function TextureSlotControl({ slot, settings, scope, lookTex, onChange }: {
         <select id={`${id}-texture`} value={entry.id} aria-label={`${scope} ${slot.label.toLowerCase()} texture`}
           onChange={event => onChange({ [slot.key]: event.target.value })}
           style={{ borderColor: 'var(--line)', background: 'var(--panel-2)', color: 'var(--ink)' }}
-          className="min-w-0 flex-1 rounded-lg border px-1.5 py-1 text-xs disabled:opacity-40">
+          className="min-w-0 flex-1 rounded-lg border px-1.5 py-1 text-xs">
           {TEXTURE_GROUPS.map(({ group, entries }) => (
             <optgroup key={group} label={group}>
-              {entries.map(option => <option key={option.id} value={option.id}>{slot.slot === 'sand' && option.id === DEFAULT_BUNKER_TEXTURES.sand ? followLabel : option.label}</option>)}
+              {entries.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
             </optgroup>
           ))}
         </select>
       </div>
-      {!known && <p className="sub-line mt-0.5">{`Saved texture "${settings[slot.key]}" is not here; drawing the default.`}</p>}
-      {follows && <p className="sub-line mt-0.5" data-bunker-sand-follows>{`The sand is My looks' bunker texture${lookTex ? `, ${lookName(lookTex)}` : ''}: change it there, or pick a texture here to keep this bunker's own.`}</p>}
-      {scale && <NumberControl field={scale} value={settings[scale.key]} scope={scope} onChange={value => onChange({ [scale.key]: value })} />}
+      <NumberControl field={field} value={scale} scope={scope} onChange={v => onChange({ [slot.scale]: v } as BunkerLookFields)} />
     </div>
   );
 }
 
-/** A short entry under the existing surfaces; the controls open beside the tool panel. */
-export function BunkerSettingsEntry({ game, open = false, onOpen }: {
-  game: Game;
-  open?: boolean;
-  onOpen?: (open: boolean) => void;
-}) {
+/** My looks' bunker part (shown under the look's own controls with the bunker in hand): the depth and walls, and the bake's pictures, for
+ *  whoever the card edits (a hole, the property, a facility, the course default); every change re-bakes that owner's bunkers. */
+export function BunkerLookShape({ game }: { game: Game }) {
+  const p = game.paint, st = p.style, now = bunkerSettingsOfLook(st), scope = 'Bunker';
+  const set = (change: BunkerLookFields) => p.setStyle({ bunker: { ...(st.bunker ?? {}), ...change } });
+  const number = (key: BunkerLookKey & BunkerSettingKey) => <NumberControl key={key} field={fieldOf(key)} value={now[key]} scope={scope} onChange={v => set({ [key]: v })} />;
+  return (
+    <div data-bunker-look>
+      <details className="mt-3" open>
+        <summary className="sub-head cursor-pointer select-none">Depth and walls</summary>
+        {SHAPE_FIELDS.map(field => number(field.key as BunkerLookKey & BunkerSettingKey))}
+      </details>
+      <details className="mt-3">
+        <summary className="sub-head cursor-pointer select-none">Soil and wall pictures</summary>
+        <p className="sub-line mt-1.5">The 3D bunker's edge soil and cut wall. New pictures dropped into the bunker texture folder show under Added textures.</p>
+        {number('textureScale')}
+        {PICTURE_SLOTS.map(slot => <PictureControl key={slot.slot} slot={slot} value={now[slot.key]} scale={now[slot.scale]} scope={scope} onChange={set} />)}
+      </details>
+    </div>
+  );
+}
+
+/** Pick bunker (the brushes' panel): the next click on a bunker opens its look (its hole's, the property's, a facility's) */
+export function BunkerPickEntry({ game }: { game: Game }) {
   if (!game.golfMode || !game.courseGrid || !game.bunkers) return null;
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5" data-bunker-entry>
-      <button type="button" className={`chip ${open ? 'chip-on' : ''}`} aria-expanded={open}
-        aria-controls="bunker-settings-card" onClick={() => onOpen?.(!open)}>Bunker settings <span aria-hidden>▸</span></button>
-      <button type="button" className="chip" onClick={() => { onOpen?.(false); game.armBunkerPick(); }}>Pick bunker</button>
+      <button type="button" className="chip" title="Click a bunker on the map: its look opens (the bunkers of its hole wear it)" onClick={() => game.armBunkerPick()}>Pick bunker</button>
     </div>
-  );
-}
-
-/** The whole connected bunker is the selection, independent of hole ownership and chunk boundaries. */
-export function BunkerSettingsCard({ game, onClose }: { game: Game; onClose: () => void }) {
-  const controller = game.bunkers, selected = controller.selection;
-  const [scope, setScope] = useState<'defaults' | 'selected'>(() => selected ? 'selected' : 'defaults');
-  useEffect(() => {
-    if (selected) setScope('selected');
-    else setScope('defaults');
-  }, [selected?.id, game.bunkerSelectionSerial]);
-  const editingSelected = scope === 'selected' && selected !== null;
-  const settings = editingSelected ? selected.settings : controller.defaults;
-  const inherited = editingSelected && selected.mode === 'default';
-  const scopeLabel = editingSelected ? 'Selected bunker' : 'Global bunker default';
-  const update = (change: Partial<BunkerSettings>) => {
-    if (editingSelected) controller.setSelectedSettings(change);
-    else controller.setDefaults(change);
-  };
-  const controls = (fields: typeof FIELDS) => fields.map(field => (
-    <NumberControl key={field.key} field={field} value={settings[field.key]} scope={scopeLabel}
-      onChange={value => update({ [field.key]: value })} />
-  ));
-  return (
-    <section id="bunker-settings-card" className="bunker-settings-card glass tp w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3"
-      data-card="bunkers" aria-label="Bunker settings">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="font-display text-xl font-bold">Bunker settings</h2>
-        <button type="button" className="round-btn" aria-label="Close Bunker settings" title="Close (Esc)" onClick={onClose}>×</button>
-      </div>
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Bunker settings scope">
-        <button type="button" className={`chip ${!editingSelected ? 'chip-on' : ''}`} aria-pressed={!editingSelected}
-          onClick={() => setScope('defaults')}>Global defaults</button>
-        <button type="button" className={`chip ${editingSelected ? 'chip-on' : ''} disabled:opacity-40`}
-          disabled={!selected} aria-pressed={editingSelected} onClick={() => setScope('selected')}>Selected bunker</button>
-      </div>
-      {editingSelected ? (
-        <>
-          <p className="sub-line mt-2">{`${selected.cells.length.toLocaleString()} m². Changes apply to the whole connected bunker.`}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Selected bunker settings mode">
-            <button type="button" className={`chip ${inherited ? 'chip-on' : ''}`} aria-pressed={inherited}
-              onClick={() => controller.setMode('default')}>Default</button>
-            <button type="button" className={`chip ${!inherited ? 'chip-on' : ''}`} aria-pressed={!inherited}
-              onClick={() => controller.setMode('custom')}>Custom</button>
-          </div>
-          {inherited && <p className="sub-line mt-1.5">Follows global defaults. Choose Custom to edit this bunker.</p>}
-        </>
-      ) : <p className="sub-line mt-2">Used by new bunkers and every bunker set to Default.</p>}
-      <fieldset key={editingSelected ? `selected-${selected.id}` : 'defaults'} disabled={inherited} className="min-w-0">
-        <legend className="sr-only">{scopeLabel} appearance controls</legend>
-        {controls(PRIMARY)}
-        <details className="mt-3">
-          <summary className="sub-head cursor-pointer select-none">Shape and edges</summary>
-          {controls(SHAPE)}
-        </details>
-        <details className="mt-3">
-          <summary className="sub-head cursor-pointer select-none">Materials</summary>
-          <p className="sub-line mt-1.5">Swap any bunker picture for another texture and scale each one. New pictures dropped into the bunker texture folder show under Added textures.</p>
-          {controls(OVERALL)}
-          {BUNKER_TEXTURE_SLOTS.map(slot => <TextureSlotControl key={slot.slot} slot={slot} settings={settings} scope={scopeLabel} lookTex={game.paint.lookOf?.(game.paint.lookOwner ?? 'default', 'bunker')?.tex} onChange={update} />)}
-        </details>
-      </fieldset>
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <button type="button" className="chip" onClick={() => { onClose(); game.armBunkerPick(); }}>Pick bunker</button>
-        {!selected && <span className="sub-line">Click any bunker to set its own appearance.</span>}
-      </div>
-    </section>
   );
 }

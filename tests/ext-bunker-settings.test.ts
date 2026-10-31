@@ -11,13 +11,13 @@ test('approved defaults and JSON round trips preserve every exact appearance val
   const defaults = clampBunkerSettings(JSON.parse(JSON.stringify(DEFAULT_BUNKER_SETTINGS)));
   assert.deepEqual(defaults, DEFAULT_BUNKER_SETTINGS);
   // the approved look, but the course draws the grass round a bunker: no own grass bands, no rim mound; the edge soil starts at the earth scale
-  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, depth: 0.3, settings: { ...APPROVED_APPEARANCE.settings, collar: 0.05, firstCut: 0.05, rim: 0, wall: 1.2, soilScale: APPROVED_APPEARANCE.settings.earthScale } });
+  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, depth: 0.3, settings: { ...APPROVED_APPEARANCE.settings, collar: 0.05, firstCut: 0.05, rim: 0, wall: 1.2, soilScale: APPROVED_APPEARANCE.settings.earthScale, sandAngle: 0, sandExposure: 1 } });
   assert.equal(defaults.version, 1);
   assert.equal(defaults.depth, 0.3);
   assert.equal(defaults.collar, 0.05);
   assert.equal(defaults.rim, 0);
   assert.equal(defaults.wall, 1.2);
-  assert.deepEqual(BUNKER_SETTING_FIELDS.filter(field => field.hidden).map(field => field.key).sort(), ['fairwayScale', 'rim', 'roundness'], 'Rim height is gone from the card');
+  assert.deepEqual(BUNKER_SETTING_FIELDS.filter(field => field.hidden).map(field => field.key).sort(), ['fairwayScale', 'rim', 'roundness', 'sandAngle', 'sandExposure', 'sandScale'], 'the sand is the look’s; Rim height is gone');
   for (const key of ['slope', 'collar', 'firstCut']) assert.equal(BUNKER_SETTING_FIELDS.find(field => field.key === key)?.displayScale, 2);
 });
 
@@ -30,7 +30,7 @@ test('normalization rejects nonfinite values, clamps renderer limits and ignores
   assert.equal(normalized.slope, 0.05);
   assert.equal(normalized.collar + normalized.firstCut, 7.5, 'the SDK supports at most 15 m combined grass bands');
   assert.equal(normalized.textureScale, base.textureScale);
-  assert.equal(normalized.sandScale, 6);
+  assert.equal(normalized.sandScale, 24);
   assert.equal('garbage' in normalized, false);
   for (const field of BUNKER_SETTING_FIELDS) assert.ok(normalized[field.key] >= field.min && normalized[field.key] <= field.max);
   assert.equal(clampBunkerSettings({ depth: 0, wall: 0, rim: 0 }).depth, 0);
@@ -111,4 +111,14 @@ test('a game save keeps only changed defaults; an older full save drops the form
   assert.equal(old.defaults.depth, DEFAULT_BUNKER_SETTINGS.depth); assert.equal(old.defaults.wall, DEFAULT_BUNKER_SETTINGS.wall); assert.equal(old.defaults.shadow, 2);
   const chosen = new BunkerController(); chosen.setDefaults({ depth: APPROVED_APPEARANCE.depth });
   const again = new BunkerController(); again.load(chosen.serialize(), null); assert.equal(again.defaults.depth, APPROVED_APPEARANCE.depth, 'a depth chosen on purpose survives');
+});
+
+test('a bunker look gives the bake its sand size, turn and exposure and its own depth, walls and pictures', async () => {
+  const { bunkerSettingsOfLook } = await import('../src/game/ext/bunker-look/look-settings');
+  const plain = bunkerSettingsOfLook({ scale: 1, angle: 0, tone: 0, toneAmt: 0.35 });
+  assert.equal(plain.sandScale, DEFAULT_BUNKER_SETTINGS.sandScale); assert.equal(plain.sandAngle, 0); assert.equal(plain.sandExposure, 1); assert.equal(plain.depth, DEFAULT_BUNKER_SETTINGS.depth);
+  const own = bunkerSettingsOfLook({ scale: 2, angle: 30, tone: 1, toneAmt: 0.4, bunker: { depth: 0.8, wall: 2, wallTex: 'bunker:soil', earthScale: 1.5, shadow: 3 } as never });
+  assert.equal(own.sandScale, DEFAULT_BUNKER_SETTINGS.sandScale * 2); assert.equal(own.sandAngle, 30); assert.ok(own.sandExposure < 1, 'Exposure darker');
+  assert.equal(own.depth, 0.8); assert.equal(own.wall, 2); assert.equal(own.wallTex, 'bunker:soil'); assert.equal(own.earthScale, 1.5);
+  assert.equal(own.shadow, DEFAULT_BUNKER_SETTINGS.shadow, 'the Shadow is the course look’s Edges, not a look field');
 });

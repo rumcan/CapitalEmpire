@@ -2,6 +2,7 @@
 import { MAP } from './iso';
 import { isPhotoTex, type GrassTex } from './grass-art';
 import { PRESETS, presetTex, surfacePreset } from './paint-presets';
+import type { BunkerLookFields } from './ext/bunker-look/look-settings';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the photo textures of grass-art.ts PHOTO_TEX) */
 export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}`;
@@ -16,6 +17,8 @@ export type BorderSize = number;
  *  the border band has its own scale, angle, tone, strength and tint (bscale, bangle, btone, btoneAmt, btint), by default the fill's scale and angle with no tone;
  *  plantKind / plantedMonth: a golf area sown from seed (grows in) or laid as sod, and the month it was planted */
 export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string; bscale: number; bangle: number; btone: 0 | 1 | 2; btoneAmt: number; btint: string; hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number;
+  /** a bunker's look only: its depth, walls and bake pictures (ext/bunker-look/look-settings.ts; absent: the defaults) */
+  bunker?: BunkerLookFields;
   /** a second texture blended over the fill in soft patches (the map grass's mix): mtex the texture, mshare how much of the area it covers (0..1),
    *  msoft how soft its edge is, mpatch the patches' size (1 = about 5 tiles); absent = no blend */
   mtex?: PaintTex; mshare?: number; msoft?: number; mpatch?: number;

@@ -169,3 +169,10 @@ test('the sand wears the My looks texture of the owner whose share holds the bun
   p.layers[0].alts = [{ look: { tex: 'preset:hole3', sc: 1, a: 0 }, runs: Float32Array.from([8, 8, 16, 16]) }];
   assert.equal(buildBunkerGeometry([p], [component(22, 22)], flat).inputs[0].lookTex, 'preset:hole3');
 });
+
+test('each bunker bakes with its owner’s look (settingsAt), its rim always flat', () => {
+  const p = patch(0, 0, [ring(10, 10, 14, 12)]), seen: number[][] = [];
+  const settingsAt = (cell: readonly [number, number]) => { seen.push([...cell]); return clampBunkerSettings({ depth: 2.2, wall: 0.7, rim: 1 }); };
+  const input = buildBunkerGeometry([p], [component(22, 22)], { ...flat, settingsAt }).inputs[0];
+  assert.deepEqual(seen, [[22, 22]]); assert.equal(input.settings.depth, 2.2); assert.equal(input.settings.wall, 0.7); assert.equal(input.settings.rim, 0);
+});

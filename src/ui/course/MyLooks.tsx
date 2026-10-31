@@ -9,6 +9,7 @@ import { SurfaceMark } from './SurfaceMark';
 import { lookName } from './CoursePanel';
 import { paintedSwatch } from '../../game/painted-surfaces-live';
 import { exposed, exposureOf } from '../../game/exposure';
+import { BunkerLookShape } from '../BunkerSettings';
 
 // the owner's presets' baked pictures, by preset id (Vite fills the glob in when it builds; under plain node there is none: the disc then
 // shows the surface's colour)
@@ -83,6 +84,8 @@ export function MyLooksCard({ game, onClose }: { game: Game; onClose: () => void
         </div>
       )}
       <StyleEditor game={game} gridOnly={grid} />
+      {/* the bunker's depth, walls and 3D pictures: one card for everything a bunker wears (the owner, 2026-10-31) */}
+      {grid && kind === 'bunker' && <BunkerLookShape game={game} />}
     </section>
   );
 }

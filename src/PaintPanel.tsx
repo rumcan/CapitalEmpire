@@ -164,6 +164,8 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
   // cannot (a grid surface's corners, the kerb as its band, a painted look's angle) are left out
   const grid = (gridOnly || p.course) && GRID_KINDS.includes(p.brushKind) && !p.selected, band = grid && !!BORDER_KINDS[p.brushKind];
   const fillPainted = paintedTex(game, s.tex), bandPainted = paintedTex(game, s.btex);
+  // a bunker on the grid is a 3D picture (ext/bunker-look): its sand turns with Angle whatever the texture, and it lays no blend
+  const bunker = grid && p.brushKind === 'bunker';
   const picked = p.selected ? p.areas.find(a => a.id === p.selected) : undefined;
   const pts = picked ? picked.pts : p.pts;
   // the border follows the fill's scale and angle until either is set (the renderer draws it that way), so show the fill's values then
@@ -181,12 +183,13 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
         </div>
         <div className="text-[12px] text-slate-400">Page Up / Down, Shift for front / back (or Ctrl+] / Ctrl+[)</div>
       </Section>)}
-      <Section id="texture" title="Texture and blend">
+      <Section id="texture" title={bunker ? 'Sand' : 'Texture and blend'}>
       <div className="mt-2 text-[12px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
         {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
         {!MENU_TEXES.length && <div className="text-[12px] text-slate-400">No texture presets yet: make them in the studio (Ground → Texture presets), then Rebuild game sprites.</div>}
       </div>
+      {!bunker && (<>
       <div className="mt-2 text-[12px] text-slate-400">Blend with</div>
       <div className="flex flex-wrap gap-1">
         <button className={`chip ${!s.mtex ? 'chip-on' : ''}`} onClick={() => p.setStyle({ mtex: undefined })}>None</button>
@@ -203,6 +206,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
           ))}
         </>
       )}
+      </>)}
       </Section>
       <Section id="look" title="Size, angle and colour">
       <div className="mt-2 text-[12px] text-slate-400">Scale</div>
@@ -212,7 +216,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
         <button className="btn" onClick={() => p.setStyle({ scale: s.scale * 1.25 })}>+</button>
         <button className="btn" onClick={() => p.setStyle({ scale: 1 })}>Reset</button>
       </div>
-      {!fillPainted && (<>
+      {(!fillPainted || bunker) && (<>
       <div className="mt-2 text-[12px] text-slate-400">Angle</div>
       <div className="flex items-center gap-2">
         <input type="range" min={-90} max={90} step={5} value={s.angle} onChange={e => p.setStyle({ angle: +e.target.value })} className="flex-1" />

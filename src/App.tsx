@@ -26,7 +26,6 @@ import { BUILD } from './game/save';
 import { bootFor } from './game/dev/lab-boot';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
-import { BunkerSettingsCard } from './ui/BunkerSettings';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
 import { PropsPanel } from './ui/course/PropsPanel';
 import { PracticePanel } from './ui/course/PracticePanel';
@@ -170,7 +169,7 @@ export default function App() {
   const [seasonOpen, setSeasonOpen] = useState(false);
   // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
   // (T271: the grass editor's card is a looks card too: Esc closes it first)
-  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen || grassOpen, bunkers: bunkersOpen, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? (setLooks(false), game.paint.closeGrass()) : c === 'bunkers' ? setBunkers(false) : (setCourseStats(null), setSeasonOpen(false))) }; });
+  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen || grassOpen, bunkers: false, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? (setLooks(false), game.paint.closeGrass()) : (setCourseStats(null), setSeasonOpen(false))) }; });
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
@@ -199,13 +198,9 @@ export default function App() {
   useEffect(() => { if (!looksOpen && looks) setLooks(false); }, [looksOpen, looks]);
   /** T271 (#812): the grass editor (Create your own, a grass's Edit): its card in My looks' place while the Holes tool is in hand */
   const grassOpen = !!game?.paint.grassDraft && game.uiTool === 'course';
-  /** Bunker settings open beside the tool, including a fresh pick of the same connected bunker. */
-  const [bunkers, setBunkers] = useState(false);
-  const bunkersOpen = bunkers && !!game && game.golfMode && !!game.courseGrid && (game.uiTool === 'course' || game.tool === 'select');
-  const openBunkers = (on: boolean) => { setBunkers(on); if (on && game) { setLooks(false); game.paint.closeGrass(); } };
-  useEffect(() => { if (!bunkersOpen && bunkers) setBunkers(false); }, [bunkersOpen, bunkers]);
-  useEffect(() => { if (grassOpen || looksOpen) setBunkers(false); }, [grassOpen, looksOpen]);
-  useEffect(() => { if (game?.bunkers?.selection) openBunkers(true); }, [game, game?.bunkerSelectionSerial]); // every valid pick, not just a changed id
+  /** a picked bunker (Pick bunker, or a click on one with Select) opens its look: My looks with the bunker in hand (the engine put the Holes
+   *  tool and its hole in hand); every valid pick, not just a changed id */
+  useEffect(() => { if (game?.bunkers?.selection) { game.paint.closeGrass(); setLooks(true); } }, [game, game?.bunkerSelectionSerial]);
   // another tool put in hand closes it (read live: a grass opened just after one closed is never shut by the older render)
   useEffect(() => { if (game && game.uiTool !== 'course' && game.paint.grassDraft) game.paint.closeGrass(); }, [game?.uiTool]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (grassOpen && looks) setLooks(false); }, [grassOpen]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -658,7 +653,7 @@ export default function App() {
               </Panel>
             )}
             {game.tool === 'paint' && <PaintPanel game={game} />}
-            {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} bunkers={bunkersOpen} onBunkers={openBunkers} />}
+            {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
             {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
             {GREENKEEPING && game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
             {game.tool === 'props' && <PropsPanel game={game} />}
@@ -685,7 +680,7 @@ export default function App() {
               {toolBody}
             </div>
             )}
-            {bunkersOpen ? <BunkerSettingsCard game={game} onClose={() => setBunkers(false)} /> : grassOpen ? <GrassCard game={game} onClose={() => game.paint.closeGrass()} /> : looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
+            {grassOpen ? <GrassCard game={game} onClose={() => game.paint.closeGrass()} /> : looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
           </div>
             </>;
           })()}
