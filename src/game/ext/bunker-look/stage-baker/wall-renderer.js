@@ -24,9 +24,13 @@ in float vHeight;
 uniform sampler2D uEarth;
 uniform float uShadow;
 uniform int uSemantic;
+uniform float uZ0;
+uniform float uZScale;
 out vec4 outColor;
 void main() {
-  if(uSemantic==1){outColor=vec4(0.,1.,0.,1.);return;}
+  // Host: the face's part above the ground (the rim lifts the lip over the cut) is the lip's stage, not the wall's: the ground worker
+  // clips the wall stage to the drawn outline at ground level, so on the far side that strip was cut off and the course showed through.
+  if(uSemantic==1){outColor=vUV.y*uZScale+uZ0>0.?vec4(0.,0.,1.,1.):vec4(0.,1.,0.,1.);return;}
   vec3 source = texture(uEarth, vUV).rgb;
   // The supplied earth is already brown; preserve its stones, roots and colour.
   vec3 earth = pow(max(source, vec3(.001)), vec3(.94)) * vec3(1.025, 1., .96);
@@ -70,6 +74,8 @@ export class WallRenderer {
     this.earthUniform = gl.getUniformLocation(program, 'uEarth');
     this.shadowUniform = gl.getUniformLocation(program, 'uShadow');
     this.semanticUniform = gl.getUniformLocation(program, 'uSemantic');
+    this.z0Uniform = gl.getUniformLocation(program, 'uZ0');
+    this.zScaleUniform = gl.getUniformLocation(program, 'uZScale');
     this.vao = gl.createVertexArray();
     gl.bindVertexArray(this.vao);
     this.buffer = gl.createBuffer();
@@ -160,6 +166,8 @@ export class WallRenderer {
     gl.uniform1i(this.earthUniform, 4);
     gl.uniform1f(this.shadowUniform, options.shadow ?? 1.5);
     gl.uniform1i(this.semanticUniform, options.semanticPass ? 1 : 0);
+    gl.uniform1f(this.z0Uniform, bottom);
+    gl.uniform1f(this.zScaleUniform, 1.2 * textureSize);
     gl.viewport(0, 0, width, height);
     gl.enable(gl.DEPTH_TEST);
     gl.depthMask(true);
