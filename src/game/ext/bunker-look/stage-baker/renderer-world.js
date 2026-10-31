@@ -108,14 +108,12 @@ export function faceField(terrain,greens){
     edge.push(px,py,near*smooth01((c-FACE_COS_LO)/(FACE_COS_HI-FACE_COS_LO)));
    }
   }
-  // the field: the edge weights blended over the floor (a Gaussian of the distance to each edge point), so it has no crease anywhere
-  const S=1.6,S2=2*S*S,R2=9*S*S;
+  // the field: the edge weights blended over the floor by inverse distance (every edge point counts, the near ones most), smooth
+  // everywhere: a floor of no crease or step, so its light and the cast shadows across it stay clean however wide the bunker
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){
    const px=(x+.5)/W*terrain.width-8,py=(y+.5)/H*terrain.height-8;let num=0,den=0;
-   for(let i=0;i<edge.length;i+=3){const dx=edge[i]-px,dy=edge[i+1]-py,d2=dx*dx+dy*dy;if(d2>R2)continue;const w=Math.exp(-d2/S2);num+=w*edge[i+2];den+=w;}
-   let v=0;
-   if(den>1e-9)v=num/den;else if(edge.length){let best=Infinity;for(let i=0;i<edge.length;i+=3){const d2=(edge[i]-px)**2+(edge[i+1]-py)**2;if(d2<best){best=d2;v=edge[i+2];}}}
-   k[y*W+x]=v;data[y*W+x]=Math.round(v*255);
+   for(let i=0;i<edge.length;i+=3){const dx=edge[i]-px,dy=edge[i+1]-py,q=dx*dx+dy*dy+.3,w=1/(q*q);num+=w*edge[i+2];den+=w;}
+   const v=den>0?num/den:0;k[y*W+x]=v;data[y*W+x]=Math.round(v*255);
   }
   const at=(px,py)=>{const fx=Math.max(0,Math.min(W-1,(px+8)/terrain.width*W-.5)),fy=Math.max(0,Math.min(H-1,(py+8)/terrain.height*H-.5)),x0=Math.floor(fx),y0=Math.floor(fy),x1=Math.min(x0+1,W-1),y1=Math.min(y0+1,H-1),u=fx-x0,v=fy-y0;
    return (k[y0*W+x0]*(1-u)+k[y0*W+x1]*u)*(1-v)+(k[y1*W+x0]*(1-u)+k[y1*W+x1]*u)*v;};
