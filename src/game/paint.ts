@@ -5,7 +5,7 @@ import { PRESETS, presetTex, surfacePreset } from './paint-presets';
 import type { BunkerLookFields } from './ext/bunker-look/look-settings';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the photo textures of grass-art.ts PHOTO_TEX) */
-export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}`;
+export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}` | `upload:${string}`;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
 /** the border width as a step on a continuous scale (the owner, 2026-10-25: "should be a slider"): 0 none, 1 small, 2 medium, 3 large (the
@@ -108,7 +108,9 @@ export const MENU_TEXES = PAINT_TEXES.filter(t => t.id.startsWith('preset:'));
 export const BORDER_MENU: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...MENU_TEXES];
 /** true for a texture laid in tile space (a photo of grass-art.ts PHOTO_TEX, an owner's preset, or T258's range pictures 'pic:<name>',
  *  golf/range-pics.ts), not a screen-space painting */
-export const isPaintPhoto = (t: string) => t.startsWith('preset:') || t.startsWith('pic:') || isPhotoTex(t);
+export const isPaintPhoto = (t: string) => t.startsWith('preset:') || t.startsWith('pic:') || isOwnTex(t) || isPhotoTex(t);
+/** a picture the player uploaded (ext/bunker-look/uploads.ts: kept in this browser), laid as a tile-space photo like a preset */
+export const isOwnTex = (t: string) => /^upload:[0-9a-f]{12}$/.test(t);
 /** the border width in tiles at the old whole steps (none, small, medium, large) */
 export const BORDER_W = [0, 0.25, 0.5, 1];
 /** the largest border step: a band 4 tiles (8 m) wide */
@@ -293,11 +295,11 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
   const tone = Math.min(2, Math.max(0, Math.round(fin(s.tone, 0)))) as 0 | 1 | 2, btone = Math.min(2, Math.max(0, Math.round(fin(s.btone, 0)))) as 0 | 1 | 2;
   return {
     ...s,
-    tex: TEX_IDS.has(s.tex) ? s.tex : 'paving',
+    tex: TEX_IDS.has(s.tex) || isOwnTex(s.tex) ? s.tex : 'paving',
     scale: Math.min(SCALE_MAX, Math.max(SCALE_MIN, fin(s.scale, 1))),
     angle: wrapAngle(fin(s.angle, 0)),
     border: Math.round(Math.min(BORDER_STEP_MAX, Math.max(0, fin(s.border, 0))) * 1000) / 1000,
-    btex: BTEX_IDS.has(s.btex) ? s.btex : 'kerb',
+    btex: BTEX_IDS.has(s.btex) || isOwnTex(s.btex) ? s.btex : 'kerb',
     radius: Math.min(RADIUS_MAX, Math.max(0, fin(s.radius, 0))),
     tone,
     toneAmt: Math.min(1, Math.max(0, fin(s.toneAmt, 0.35))),

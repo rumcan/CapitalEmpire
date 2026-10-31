@@ -96,6 +96,7 @@ const handle = async (m: ToWorker) => {
       case 'textures': restore(tex, m.snap); if (lazyTex) tex.lazyMissing(); texReady(); gotTextures?.(); break;
       case 'grassArt': tex.setPaintedOn(m.art !== 'photo'); painter.resetPlanColours(); break;
       case 'surfaces': tex.setSurfaces(m.file); painter.resetPainted(); break;
+      case 'photos': tex.addPhotos(m.add); break;
       case 'net': { const t0 = performance.now(); applyOps(net, m.ops); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `net ops ${m.ops.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'tilesAhead': tex.tilesAhead = m.bands; break;
       case 'lamps': { const t0 = performance.now(), pts = []; for (let i = 0; i + 1 < m.pts.length; i += 2) pts.push({ x: m.pts[i], y: m.pts[i + 1] }); net.setLamps(pts); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `lamps ${pts.length} in ${ms.toFixed(0)} ms` }); break; }

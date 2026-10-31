@@ -28,6 +28,7 @@ import { BunkerStageBridge } from './ext/bunker-look/stage-bridge';
 import { BunkerStageBaker } from './ext/bunker-look/stage-client';
 import { bunkerLookPicture } from './ext/bunker-look/look-picture';
 import { loadOwnTextures } from './ext/bunker-look/uploads';
+import { onOwnTextures, ownTextures } from './ext/bunker-look/texture-library';
 import type { BunkerStageReady, BunkerStageRef } from './ext/bunker-look/stage-types';
 
 export interface Tile {
@@ -101,6 +102,7 @@ export class GroundCache {
   /** Edit-time staged bunker source cache; each ground worker owns an independently bounded bitmap copy. */
   readonly bunkers: BunkerStageBridge;
   bunkerGeometryChanged: (() => void) | null = null;
+  private unOwn: (() => void) | null = null;
   private readonly bunkerRefs = new Map<string, BunkerStageRef>();
   private readonly bunkerPublishing = new Map<string, { key: string }>();
   /** The area of a re-baking bunker's previous picture, which the workers keep showing until the new one lands (stage-registry held). */
@@ -114,6 +116,8 @@ export class GroundCache {
     let baker: BunkerStageBaker | null = null;
     // the player's own bunker textures kept in this browser: once they are in the library, bunkers naming one bake with it
     void loadOwnTextures().then(n => { if (n && !this.stopped) this.bunkerGeometryChanged?.(); });
+    // and every ground worker lays them where a look wears one (upload:<hash>, a plain tile-space photo of 16 tiles)
+    this.unOwn = onOwnTextures(() => { if (this.stopped) return; this.broadcast({ t: 'photos', add: ownTextures().map(e => ({ tex: e.id, src: e.url, mix: 0, tiles: 16 })) }); this.invalidateAll(); });
     this.bunkers = new BunkerStageBridge({ bake: request => (baker ??= new BunkerStageBaker()).bake(request), disposeBake: () => baker?.dispose(), lookPicture: bunkerLookPicture,
       expected: (set, drop) => {
         let bounds: BBox | null = null;
@@ -132,7 +136,7 @@ export class GroundCache {
         this.broadcast({ t: 'bunker', set: [], drop: [{ id, key }] }); this.invalidate(this.withHeld(id, bounds), false, 0, 'gmp');
       }, error: (error, id) => { const message = `bunker ${id}: ${String(error)}`; this.errors.push(message); console.error('[bunker worker]', message); } });
   }
-  terminate() { this.stopped = true; this.bunkerPublishing.clear(); this.bunkers.dispose(); this.bunkerRefs.clear(); this.bunkerHeldBounds.clear(); this.bunkerGeometryChanged = null; for (const w of this.workers) w.terminate(); this.workers = []; this.unsurfaces?.(); this.unsurfaces = null; }
+  terminate() { this.stopped = true; this.bunkerPublishing.clear(); this.bunkers.dispose(); this.bunkerRefs.clear(); this.bunkerHeldBounds.clear(); this.bunkerGeometryChanged = null; this.unOwn?.(); this.unOwn = null; for (const w of this.workers) w.terminate(); this.workers = []; this.unsurfaces?.(); this.unsurfaces = null; }
   /** A bunker's new bounds plus its held previous picture's (the workers drop that picture now), forgetting the held area. */
   private withHeld(id: string, bounds: BBox): BBox { const held = this.bunkerHeldBounds.get(id); this.bunkerHeldBounds.delete(id); return held ? unionBox(held, bounds) : bounds; }
   /** Clone before transfer; a newer edit or eviction revokes a publication still awaiting bitmap copies. */

@@ -12,6 +12,8 @@ import { PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from './game/plant';
 import { Thumb } from './ui/Thumb';
 import { exposureAtStops, exposureLabel, exposureOf, exposureStops, toneOfExposure } from './game/exposure';
 import { TexturePicker, type TextureOption } from './ui/TexturePicker';
+import { ownTextures } from './game/ext/bunker-look/texture-library';
+import { addOwnTexture } from './game/ext/bunker-look/uploads';
 
 const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }];
 const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
@@ -24,6 +26,8 @@ export const swatch = (t: { id: string; col: string }) => {
 /** whether a texture is laid with its painted look in this game (its angle then does nothing: a painted look is never turned, its light stays upper right) */
 const paintedTex = (game: Game, id: string) => game.grassArt === 'painted' && !!paintedSwatch(id);
 const LIB_BY_ID = new Map(LIBRARY.map(it => [it.id, it]));
+/** a picker's textures and, after them, the player's own uploaded pictures (Upload your own texture) */
+const withOwn = (options: readonly TextureOption[]): TextureOption[] => [...options, ...ownTextures().map(e => ({ id: e.id, name: e.label, col: '#6b6b52', pic: e.url }))];
 /** the textures the pickers offer, by their plain names */
 const MENU_OPTIONS: TextureOption[] = MENU_TEXES.map(t => ({ id: t.id, name: plainName(t.name), col: t.col }));
 /** a texture's plain name for the menus (P23 P1-E): the owner's preset names as saved in the studio ("Golf - Green", "Path_worn", "sand",
@@ -209,13 +213,13 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       </Section>)}
       <Section id="texture" title={bunker ? 'Sand' : 'Texture and blend'}>
       <TexturePicker label="Texture" testId="fill" value={bunker && s.bunker?.sandTex ? undefined : s.tex} none={bunker && s.bunker?.sandTex ? 'Your own texture (Your textures, below)' : undefined}
-        options={MENU_OPTIONS} onPick={id => id && p.setStyle({ tex: id as PaintTex, ...(bunker && s.bunker?.sandTex ? { bunker: { ...s.bunker, sandTex: undefined } } : {}) })}
+        options={withOwn(MENU_OPTIONS)} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ tex: id as PaintTex, ...(bunker && s.bunker?.sandTex ? { bunker: { ...s.bunker, sandTex: undefined } } : {}) })}
         edits={[{ id: 'scale', label: `Scale ${Math.round(s.scale * 100)}%`, panel: scaleRow(s.scale, v => p.setStyle({ scale: v })) },
           ...((!fillPainted || bunker) ? [{ id: 'angle', label: `Angle ${Math.round(s.angle)}°`, panel: angleRow(s.angle, v => p.setStyle({ angle: v })) }] : [])]}
         note={<>{!MENU_TEXES.length && <div className="text-[12px] text-slate-400">No texture presets yet: make them in the studio (Ground → Texture presets), then Rebuild game sprites.</div>}
           {bunker && s.bunker?.sandTex && <div className="text-[11px] text-amber-300" data-sand-own>Your own texture is on the sand (Your textures, below); pick one here to go back.</div>}</>} />
       {!bunker && (<>
-      <TexturePicker label="Blend with" testId="blend" value={s.mtex} none="None" options={MENU_OPTIONS} onPick={id => p.setStyle({ mtex: id as PaintTex | undefined })} />
+      <TexturePicker label="Blend with" testId="blend" value={s.mtex} none="None" options={withOwn(MENU_OPTIONS)} onUpload={addOwnTexture} onPick={id => p.setStyle({ mtex: id as PaintTex | undefined })} />
       {s.mtex && (
         <>
           {([['Share', 'mshare', 0, 1, 0.01, (v: number) => `${Math.round(v * 100)}%`, 0.5], ['Softness', 'msoft', 0.01, 0.5, 0.01, (v: number) => v.toFixed(2), 0.12], ['Patch size', 'mpatch', 0.25, 4, 0.05, (v: number) => `${v.toFixed(2)}x`, 1]] as const).map(([label, key, lo, hi, step, fmt, def]) => (
@@ -252,7 +256,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       {/* T260: the Border texture only while a border is on (a course surface whose Border is none, or that has no band, lays none) */}
       {(grid ? band && (p.courseBorder() ?? 0) > 0 : s.border > 0) && (
         <>
-          <TexturePicker label="Border texture" testId="border" value={s.btex} options={BORDER_MENU.filter(t => !grid || t.id !== 'kerb').map(t => ({ id: t.id, name: plainName(t.name), col: t.col }))} onPick={id => id && p.setStyle({ btex: id as typeof s.btex })}
+          <TexturePicker label="Border texture" testId="border" value={s.btex} options={withOwn(BORDER_MENU.filter(t => !grid || t.id !== 'kerb').map(t => ({ id: t.id, name: plainName(t.name), col: t.col })))} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ btex: id as typeof s.btex })}
             edits={[{ id: 'scale', label: `Scale ${Math.round(bScale * 100)}%`, panel: <>{scaleRow(bScale, v => bOwn({ bscale: v }))}<button className={`chip mt-1.5 ${bFollow ? 'chip-on' : ''}`} title="The border uses the fill's scale and angle" onClick={() => p.setStyle({ bscale: 1, bangle: 0 })}>Follow the fill</button></> },
               ...(!bandPainted ? [{ id: 'angle', label: `Angle ${Math.round(bAngle)}°`, panel: angleRow(bFollow ? s.angle : s.bangle, v => bOwn({ bangle: v }), !bFollow) }] : [])]} />
           <ExposureRow label="Border exposure" f={exposureOf(s.btone, s.btoneAmt)} set={f => { const t = toneOfExposure(f); p.setStyle({ btone: t.tone, btoneAmt: t.toneAmt }); }} title="The border's texture itself made darker or lighter: the middle is none, the ends one stop darker or lighter (double-click: none)" />

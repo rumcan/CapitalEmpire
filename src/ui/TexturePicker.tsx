@@ -5,11 +5,13 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { PHOTO_TEX } from '../game/grass-art';
 import { paintedSwatch } from '../game/painted-surfaces-live';
+import { ownTexture } from '../game/ext/bunker-look/texture-library';
 
 // the owner's presets' baked pictures, by preset id (Vite fills the glob in when it builds; under plain node there is none)
 const PICS: Record<string, string> = (() => { try { return import.meta.glob('../assets/ground/preset-*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>; } catch { return {}; } })();
 /** a texture's picture: its painted look's near painting, else an owner's preset, else a Paint photo, or '' for one drawn as a colour */
 export function texPic(tex: string): string {
+  if (tex.startsWith('upload:')) return ownTexture(tex)?.url ?? '';
   const p = paintedSwatch(tex); if (p?.img) return p.img;
   if (tex.startsWith('preset:')) return PICS[`../assets/ground/preset-${tex.slice(7)}.webp`] ?? '';
   return PHOTO_TEX.find(t => t.tex === tex)?.src ?? '';
@@ -39,12 +41,18 @@ export function TexPuck({ t, css }: { t: TextureOption | null; css: number }) {
 /** an Edit button and the controls it opens */
 export interface TextureEdit { id: string; label: string; panel: ReactNode }
 
-export function TexturePicker({ label, value, options, onPick, none, edits = [], note, testId }: {
+export function TexturePicker({ label, value, options, onPick, none, edits = [], note, testId, onUpload }: {
   label: string; value: string | undefined; options: readonly TextureOption[]; onPick(id: string | undefined): void;
+  /** Upload your own texture (the first tile): keeps the picture and gives its texture id, which is then picked */ onUpload?(file: File): Promise<string>;
   /** a first entry that picks nothing (the blend's None) */ none?: string;
   edits?: readonly TextureEdit[]; note?: ReactNode; testId?: string;
 }) {
   const [open, setOpen] = useState(false), [edit, setEdit] = useState<string | null>(null), box = useRef<HTMLDivElement>(null);
+  const file = useRef<HTMLInputElement>(null), [upNote, setUpNote] = useState('');
+  const upload = async (f: File | undefined) => {
+    if (!f || !onUpload) return; setUpNote('Uploading…');
+    try { const id = await onUpload(f); setUpNote(''); onPick(id); setOpen(false); } catch (e) { setUpNote(e instanceof Error ? e.message : String(e)); }
+  };
   useEffect(() => {
     if (!open) return;
     const away = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
@@ -71,7 +79,14 @@ export function TexturePicker({ label, value, options, onPick, none, edits = [],
       {/* the window opens in place under the picker (in the card's flow, so the card's own scroll never clips it) */}
       {open && (
         <div role="listbox" aria-label={label} className="mt-1 max-h-[22rem] overflow-y-auto overflow-x-hidden rounded-lg border border-white/15 bg-slate-950/60 p-2" data-texture-window>
+          {onUpload && <input ref={file} type="file" accept="image/png,image/jpeg,image/webp" hidden aria-label="Your texture file" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; void upload(f); }} />}
+          {upNote && <div className="sub-line mb-1" role="status">{upNote}</div>}
           <div className="swatches">
+            {onUpload && (
+              <button type="button" className="swatch" title="Upload a picture from your computer (PNG, JPEG or WebP): it is kept in this browser and laid like any texture" onClick={() => file.current?.click()} data-upload-texture>
+                <span className="swatch-puck grid place-items-center text-2xl text-amber-300" aria-hidden>+</span><span className="swatch-name">Upload your own texture</span>
+              </button>
+            )}
             {none !== undefined && (
               <button type="button" role="option" aria-selected={!value} className={`swatch ${!value ? 'swatch-on' : ''}`} onClick={() => { onPick(undefined); setOpen(false); }}>
                 <span className="swatch-puck"><TexPuck t={null} css={52} /></span><span className="swatch-name">{none}</span>

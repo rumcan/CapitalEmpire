@@ -27,13 +27,19 @@ const BY_ID = new Map(BUNKER_TEXTURE_LIBRARY.map(entry => [entry.id, entry]));
 /** the player's own pictures (uploads.ts, kept in this browser), group 'Your textures', in the order they were added */
 const OWN: BunkerTextureEntry[] = [];
 let ownRev = 0;
+const ownListeners = new Set<() => void>();
+/** calls back when the player's own pictures change (the ground tells its workers); returns the unsubscribe */
+export function onOwnTextures(cb: () => void): () => void { ownListeners.add(cb); return () => { ownListeners.delete(cb); }; }
+const ownChanged = () => { ownRev++; for (const cb of ownListeners) cb(); };
+/** one of the player's own pictures by id (upload:<hash>), or undefined */
+export const ownTexture = (id: string): BunkerTextureEntry | undefined => OWN.find(e => e.id === id);
 /** adds (or replaces) one of the player's own pictures; a bunker naming it bakes with it from now on */
 export function registerOwnTexture(entry: BunkerTextureEntry): void {
   const at = OWN.findIndex(e => e.id === entry.id); if (at >= 0) OWN[at] = entry; else OWN.push(entry);
-  BY_ID.set(entry.id, entry); ownRev++;
+  BY_ID.set(entry.id, entry); ownChanged();
 }
 /** forgets one of the player's own pictures (a bunker naming it draws its slot's default) */
-export function unregisterOwnTexture(id: string): void { const at = OWN.findIndex(e => e.id === id); if (at >= 0) OWN.splice(at, 1); BY_ID.delete(id); ownRev++; }
+export function unregisterOwnTexture(id: string): void { const at = OWN.findIndex(e => e.id === id); if (at >= 0) OWN.splice(at, 1); BY_ID.delete(id); ownChanged(); }
 /** the player's own pictures, and a number that changes with them (for the card's re-render) */
 export const ownTextures = (): readonly BunkerTextureEntry[] => OWN;
 export const ownTexturesRev = () => ownRev;

@@ -5,6 +5,7 @@ import { resolveFamily } from '../../painted-families';
 import { lookOfTex, type PresetRef } from '../../painted-surfaces';
 import { paintedSurfaces } from '../../painted-surfaces-live';
 import { tiledFamily } from '../../painted-tiles';
+import { ownTexture } from './texture-library';
 
 let presets: { photos: { tex: string; src: string }[]; refs: PresetRef[] } | null = null;
 function presetSets() {
@@ -19,6 +20,8 @@ function presetSets() {
  *  tile set's first near tile), else its photo; null when it has none (the bake keeps the bunker card's sand). The id names the look, so a
  *  change in My looks or in the studio's surfaces gives a new bake key. */
 export function bunkerLookPicture(tex: string): { id: string; url: string } | null {
+  // the player's own picture (an upload worn as the look's texture)
+  if (tex.startsWith('upload:')) { const own = ownTexture(tex); return own ? { id: own.id, url: own.url } : null; }
   const { photos, refs } = presetSets(), look = lookOfTex(tex, paintedSurfaces(), refs);
   if (look) {
     const fam = resolveFamily(look), tiled = fam?.tiled ? tiledFamily(fam.id) : undefined;
