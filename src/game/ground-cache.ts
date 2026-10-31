@@ -26,6 +26,7 @@ import type { TileCacheStats } from './textures';
 import { tileCacheBudget } from './tile-cache';
 import { BunkerStageBridge } from './ext/bunker-look/stage-bridge';
 import { BunkerStageBaker } from './ext/bunker-look/stage-client';
+import { bunkerLookPicture } from './ext/bunker-look/look-picture';
 import type { BunkerStageReady, BunkerStageRef } from './ext/bunker-look/stage-types';
 
 export interface Tile {
@@ -110,7 +111,7 @@ export class GroundCache {
       this.workers.push(wk); this.inflight.push(0);
     }
     let baker: BunkerStageBaker | null = null;
-    this.bunkers = new BunkerStageBridge({ bake: request => (baker ??= new BunkerStageBaker()).bake(request), disposeBake: () => baker?.dispose(),
+    this.bunkers = new BunkerStageBridge({ bake: request => (baker ??= new BunkerStageBaker()).bake(request), disposeBake: () => baker?.dispose(), lookPicture: bunkerLookPicture,
       expected: (set, drop) => {
         let bounds: BBox | null = null;
         for (const id of drop) { const old = this.bunkerRefs.get(id); if (old) bounds = unionBox(bounds, old.dirtyBoundsTiles); this.bunkerRefs.delete(id); this.bunkerHeldBounds.delete(id); }

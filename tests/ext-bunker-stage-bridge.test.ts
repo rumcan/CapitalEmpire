@@ -81,3 +81,19 @@ test('a texture swap is a new bake key and carries the slot pictures to the work
   assert.notEqual(jobs[2].key, jobs[1].key, 'a scale change re-bakes too');
   bridge.dispose();
 });
+
+test('the bunker’s My looks texture is its sand unless the bunker card picked one; a look change re-bakes', async () => {
+  const jobs: BunkerStageRequest[] = [];
+  const lookPicture = (tex: string) => tex === 'preset:bunker' ? { id: 'look:preset:bunker', url: 'raked.webp' } : tex === 'preset:white' ? { id: 'look:preset:white', url: 'white.webp' } : null;
+  const bridge = new BunkerStageBridge({ bake: async request => { jobs.push(request); return sprite(request); }, lookPicture,
+    cloneImage: async () => bitmap() as unknown as ImageBitmap, expected() {}, ready: value => value.image.close(), drop() {} });
+  bridge.sync([{ ...input(), lookTex: 'preset:bunker' }]); await flush();
+  assert.deepEqual(jobs[0].materials.sand, { id: 'look:preset:bunker', url: 'raked.webp' });
+  bridge.sync([{ ...input(), lookTex: 'preset:white' }]); await flush();
+  assert.equal(jobs[1].materials.sand.url, 'white.webp'); assert.notEqual(jobs[1].key, jobs[0].key);
+  bridge.sync([{ ...input(), lookTex: 'preset:white', settings: clampBunkerSettings({ sandTex: 'bunker:wall-earth' }) }]); await flush();
+  assert.equal(jobs[2].materials.sand.id, 'bunker:wall-earth', 'the card’s own pick wins');
+  bridge.sync([{ ...input(), lookTex: 'nothing' }]); await flush();
+  assert.equal(jobs[3].materials.sand.id, 'bunker:sand', 'a look with no picture keeps the pack sand');
+  bridge.dispose();
+});

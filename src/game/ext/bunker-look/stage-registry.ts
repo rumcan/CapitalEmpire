@@ -21,6 +21,8 @@ export class BunkerStageRegistry {
   /** The previous picture of a component that is re-baking after an edit: shown (clipped to the new outline) until the new one lands,
    *  so an edited bunker never drops back to the native drawing for the bake's second. Closed when the new picture installs or fails. */
   private readonly held = new Map<string, BunkerStageReady>();
+  /** The key whose bake failed or was evicted, by component: only then does the native drawing stand in for it. */
+  private readonly failed = new Map<string, string>();
   private readonly courses = new Map<string, CoursePatch>();
   private readonly grid = new Map<string, Set<string>>();
   private readonly native = new WeakMap<CoursePatch, { version: number; value: NativeBunkerCourse }>();
@@ -38,8 +40,9 @@ export class BunkerStageRegistry {
     if (changed) this.version++;
   }
   expect(set: BunkerStageRef[], drop: string[]): void {
-    for (const id of drop) { this.expected.delete(id); this.close(id); }
+    for (const id of drop) { this.expected.delete(id); this.failed.delete(id); this.close(id); }
     for (const ref of set) {
+      if (this.failed.get(ref.id) !== ref.key) this.failed.delete(ref.id);
       const old = this.ready.get(ref.id);
       if (old && old.key !== ref.key) { this.closeHeld(ref.id); this.held.set(ref.id, old); this.ready.delete(ref.id); }
       else if (old) this.ready.set(ref.id, { ...old, ...ref });
@@ -56,6 +59,7 @@ export class BunkerStageRegistry {
       if (this.ready.get(item.id)?.key === item.key) this.close(item.id);
       // the bake for the current shape failed or was evicted: the held old picture no longer stands in for it
       else if (this.expected.get(item.id)?.key === item.key) this.closeHeld(item.id);
+      if (this.expected.get(item.id)?.key === item.key) this.failed.set(item.id, item.key);
     }
     for (const sprite of set) {
       const b = sprite.boundsWorldPx;
@@ -76,7 +80,12 @@ export class BunkerStageRegistry {
   private activeIds(): Set<string> {
     if (this.activeVersion !== this.version) {
       const ready = new Map<string, string>();
-      for (const ref of this.expected.values()) { const sprite = this.shown(ref.id); if (sprite?.sourcePatchKeys.every(key => this.courses.has(key))) ready.set(sprite.id, sprite.key); }
+      // One renderer per bunker: a bunker on its way to its first picture is not drawn natively either (the owner, 2026-10-31: the old
+      // drawing and then the new picture over it read as two bunkers); only a failed or evicted bake hands it back to the native drawing.
+      for (const ref of this.expected.values()) {
+        const sprite = this.shown(ref.id), own = sprite ?? (this.failed.get(ref.id) === ref.key ? undefined : ref);
+        if (own?.sourcePatchKeys.every(key => this.courses.has(key))) ready.set(own.id, own.key);
+      }
       this.active = activeBunkerStages([...this.courses.values()].map(c => this.drawnCourse(c)), this.shownRefs(), ready); this.activeVersion = this.version;
     }
     return this.active;
@@ -91,7 +100,10 @@ export class BunkerStageRegistry {
   /** Cached native fallback variant for this exact drawn patch and current ready-key set. */
   nativeCourse(course: CoursePatch): NativeBunkerCourse {
     const had = this.native.get(course); if (had?.version === this.version) return had.value;
-    const value = nativeBunkerCourse(course, this.shownRefs(), this.activeIds()); this.native.set(course, { version: this.version, value }); return value;
+    // a re-baking bunker's native sand, walls and lit rims go along its new outline (the course data's) as well as its held picture's: an
+    // edit (a brush stroke, Round off's Smoothness) never shows the native rim and shadow along the new edge while the picture bakes
+    const refs = [...this.expected.values()].flatMap(ref => { const shown = this.shown(ref.id); return shown && shown.key !== ref.key ? [shown, ref] : [shown ?? ref]; });
+    const value = nativeBunkerCourse(course, refs, this.activeIds()); this.native.set(course, { version: this.version, value }); return value;
   }
   private ownPath(ref: BunkerStageRef): Path2D { let path = this.paths.get(ref); if (!path) { path = new Path2D(); ref.ringsTiles.forEach((q, i) => ring(path!, q, i === 0)); this.paths.set(ref, path); } return path; }
   /** Draw a single explicit semantic atlas row at its native stage; no distance fields, geometry extraction or texture decoding occurs here. */
@@ -120,5 +132,5 @@ export class BunkerStageRegistry {
     }
   }
   get stats() { return { bytes: this.bytes, entries: this.ready.size, expected: this.expected.size, active: this.activeIds().size, maxBytes: BUNKER_STAGE_CACHE_BYTES }; }
-  dispose(): void { for (const id of [...this.ready.keys(), ...this.held.keys()]) this.close(id); this.expected.clear(); this.courses.clear(); this.grid.clear(); this.version++; }
+  dispose(): void { for (const id of [...this.ready.keys(), ...this.held.keys()]) this.close(id); this.expected.clear(); this.failed.clear(); this.courses.clear(); this.grid.clear(); this.version++; }
 }

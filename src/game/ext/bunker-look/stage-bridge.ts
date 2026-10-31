@@ -1,6 +1,6 @@
 import { BunkerCache, StaleBakeError } from './package/runtime/bunker-cache.js';
 import { buildBakeRequest } from './package/runtime/capital-empire-adapter.js';
-import { bunkerAppearance } from './settings';
+import { bunkerAppearance, DEFAULT_BUNKER_TEXTURES } from './settings';
 import { bunkerMaterials } from './texture-library';
 import type { BunkerStageInput, BunkerStageReady, BunkerStageRef, BunkerStageRequest, BunkerStageSprite } from './stage-types';
 import type { BBox } from '../../network';
@@ -20,6 +20,8 @@ export interface BunkerStageBridgeOptions {
   error?(error: unknown, id: string): void;
   cloneImage?(image: ImageBitmap): Promise<ImageBitmap>;
   maxBytes?: number;
+  /** the picture a My looks texture is laid with (look-picture.ts bunkerLookPicture), or null */
+  lookPicture?(tex: string): { id: string; url: string } | null;
 }
 const copyRef = (ref: BunkerStageRef): BunkerStageRef => ({ ...ref, ringsTiles: ref.ringsTiles.map(r => r.slice()), sourcePatchKeys: ref.sourcePatchKeys.slice(), dirtyBoundsTiles: [...ref.dirtyBoundsTiles] });
 
@@ -34,6 +36,12 @@ export class BunkerStageBridge {
   private failures = 0;
   private requested = 0;
   private lastError: string | null = null;
+  /** The five pictures: the bunker card's, with the sand the bunker's My looks texture while the card leaves Sand at its default. */
+  private materialsOf(input: BunkerStageInput) {
+    const materials = bunkerMaterials(input.settings);
+    const look = input.settings.sandTex === DEFAULT_BUNKER_TEXTURES.sand && input.lookTex ? this.options.lookPicture?.(input.lookTex) : null;
+    return look ? { ...materials, sand: look } : materials;
+  }
   constructor(private readonly options: BunkerStageBridgeOptions) {
     this.cache = new BunkerCache({ maxBytes: options.maxBytes ?? BUNKER_STAGE_CACHE_BYTES, maxConcurrentBakes: 1,
       bake: async request => {
@@ -53,7 +61,7 @@ export class BunkerStageBridge {
     const keep = new Set<string>(), updates: BunkerStageRef[] = [], jobs: { state: State; request: BunkerStageRequest }[] = [];
     for (const input of inputs) {
       try {
-        const materials = bunkerMaterials(input.settings), textures = Object.values(materials).map(m => m.id).join(','), face = input.face ? [input.face[0], input.face[1]] as [number, number] : undefined;
+        const materials = this.materialsOf(input), textures = Object.values(materials).map(m => m.id).join(','), face = input.face ? [input.face[0], input.face[1]] as [number, number] : undefined;
         const request: BunkerStageRequest = { ...buildBakeRequest({ id: input.id, revision: `native-stages-v1:${input.revision}:${textures}:${face ? face.map(v => v.toFixed(3)).join(',') : 'even'}`, ringsTiles: input.ringsTiles,
           appearance: bunkerAppearance(input.settings), rasterScale: 0.6, maxEdge: 512 }), sourcePatchKeys: [...input.sourcePatchKeys], materials, ...(face ? { face } : {}) };
         keep.add(input.id);

@@ -1,6 +1,6 @@
 // Host adaptation of the supplied SDK: the ordinary colour pass is unchanged.
 // semanticPass only emits geometry IDs for native floor/wall/lip staging; original vendor files remain preserved.
-import {buildTerrain} from '../package/baker/core/terrain-field.js';
+import {buildTerrain} from './terrain-field.js';
 import {WallRenderer} from './wall-renderer.js';
 const VS=`#version 300 es
 precision highp float;layout(location=0)in vec3 aPosition;layout(location=1)in vec2 aWorld;out vec2 vWorld;void main(){gl_Position=vec4(aPosition,1.);vWorld=aWorld;}`;

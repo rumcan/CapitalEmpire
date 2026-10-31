@@ -102,3 +102,13 @@ test('the library resolves every slot; unknown ids draw the slot default', () =>
   assert.equal(materials.soil.id, DEFAULT_BUNKER_TEXTURES.soil);
   assert.deepEqual(Object.keys(materials).sort(), ['firstCut', 'rough', 'sand', 'soil', 'wall']);
 });
+
+test('a game save keeps only changed defaults; an older full save drops the former preset values', async () => {
+  const { BunkerController } = await import('../src/game/ext/bunker-look/controller');
+  const c = new BunkerController(); c.setDefaults({ shadow: 2 });
+  const saved = c.serialize(); assert.equal(saved.sparse, true); assert.deepEqual(Object.keys(saved.defaults).sort(), ['shadow', 'version']);
+  const old = new BunkerController(); old.load({ version: 1, defaults: { ...DEFAULT_BUNKER_SETTINGS, depth: APPROVED_APPEARANCE.depth, wall: APPROVED_APPEARANCE.settings.wall, shadow: 2 }, custom: [] }, null);
+  assert.equal(old.defaults.depth, DEFAULT_BUNKER_SETTINGS.depth); assert.equal(old.defaults.wall, DEFAULT_BUNKER_SETTINGS.wall); assert.equal(old.defaults.shadow, 2);
+  const chosen = new BunkerController(); chosen.setDefaults({ depth: APPROVED_APPEARANCE.depth });
+  const again = new BunkerController(); again.load(chosen.serialize(), null); assert.equal(again.defaults.depth, APPROVED_APPEARANCE.depth, 'a depth chosen on purpose survives');
+});

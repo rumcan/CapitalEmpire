@@ -15,6 +15,8 @@ export interface BunkerGeometryInput {
   sourcePatchKeys: readonly string[];
   /** toward the nearest green (faceToGreen): the side whose cut face is full height */
   face?: readonly [number, number];
+  /** the My looks texture its sand wears (lookTexAt) */
+  lookTex?: string;
 }
 export interface BunkerGeometryOptions {
   /** A complete host course-patch generation, not a per-feature bake key. */
@@ -95,9 +97,9 @@ export function buildBunkerGeometry(
     // A native contour can split one raw component (a removed thin neck). These
     // are render parts of the same existing owner, anchored by real sand cells.
     const id = counts.get(component.id) === 1 ? component.id : `${component.id}/part:${owner.anchor[0]}:${owner.anchor[1]}`;
-    const face = faceToGreen(shape.ringsTiles, patches);
+    const face = faceToGreen(shape.ringsTiles, patches), lookTex = lookTexAt(patches, owner.anchor);
     batch.inputs.push({ id, revision: options.rugged === false ? 'course-4676-flat-v1' : 'course-4676-rugged-v1',
-      ringsTiles, settings, sourcePatchKeys: Object.freeze(sourcePatchKeys), ...(face ? { face } : {}) });
+      ringsTiles, settings, sourcePatchKeys: Object.freeze(sourcePatchKeys), ...(face ? { face } : {}), ...(lookTex ? { lookTex } : {}) });
   }
   return batch;
 }
@@ -120,6 +122,16 @@ export function faceToGreen(rings: readonly ArrayLike<number>[], patches: readon
   }
   const length = Math.hypot(bx, by);
   return length > 1e-6 ? [bx / length, by / length] : null;
+}
+
+/** The My looks texture the bunker layer lays at a cell: the look of the owner whose share holds it (a hole's, the property's, a facility's:
+ *  the layer's alts), else the layer's own. */
+export function lookTexAt(patches: readonly CoursePatch[], anchor: BunkerCell): string | undefined {
+  const x = (anchor[0] + 0.5) * CELL_T, y = (anchor[1] + 0.5) * CELL_T;
+  const patch = patches.find(p => x >= p.cx * p.size && x < (p.cx + 1) * p.size && y >= p.cy * p.size && y < (p.cy + 1) * p.size);
+  const layer = patch?.layers.find(l => l.s === SURF.bunker); if (!layer) return undefined;
+  for (const alt of layer.alts ?? []) for (let i = 0; i + 3 < alt.runs.length; i += 4) if (x >= alt.runs[i]! && y >= alt.runs[i + 1]! && x < alt.runs[i + 2]! && y < alt.runs[i + 3]!) return alt.look.tex;
+  return layer.tex;
 }
 
 /** The course look's Shadow (Edges > Shadow, 0..1 on the bunker's chunk) scales the picture's: its default gives the card's own strength. */

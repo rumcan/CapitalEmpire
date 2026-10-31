@@ -162,3 +162,10 @@ test('the cut face points at the nearest green within reach, and stays even with
   const far = patch(0, 0, [ring(10, 10, 14, 12)]), away = patch(0, 0, [], SURF.green); away.layers[0].fill = [Float32Array.from(ring(60, 10, 62, 12))]; far.layers.push(away.layers[0]);
   assert.equal(buildBunkerGeometry([far], [component(22, 22)], flat).inputs[0].face, undefined, 'a green past 60 m is not this bunker’s');
 });
+
+test('the sand wears the My looks texture of the owner whose share holds the bunker', () => {
+  const p = patch(0, 0, [ring(10, 10, 14, 12)]); p.layers[0].tex = 'preset:bunker';
+  assert.equal(buildBunkerGeometry([p], [component(22, 22)], flat).inputs[0].lookTex, 'preset:bunker');
+  p.layers[0].alts = [{ look: { tex: 'preset:hole3', sc: 1, a: 0 }, runs: Float32Array.from([8, 8, 16, 16]) }];
+  assert.equal(buildBunkerGeometry([p], [component(22, 22)], flat).inputs[0].lookTex, 'preset:hole3');
+});

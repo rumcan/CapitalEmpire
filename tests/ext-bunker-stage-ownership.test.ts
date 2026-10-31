@@ -46,7 +46,7 @@ test('worker registry rejects stale images, restores native fallback for an evic
   const source = course(true), a = ref('a', 1), b = ref('b', 10), registry = new BunkerStageRegistry();
   registry.setCourses([['cg:0:0', source]], []); registry.expect([a, b], []);
   const first = ready(a), second = ready(b), stale = ready({ ...a, key: 'old' });
-  registry.install([first.sprite, stale.sprite], []); assert.equal(stale.image.closes, 1); assert.equal(registry.stats.active, 1);
+  registry.install([first.sprite, stale.sprite], []); assert.equal(stale.image.closes, 1); assert.equal(registry.stats.active, 2, 'b, still baking, is not drawn natively either');
   registry.install([second.sprite], []); assert.equal(registry.stats.active, 2); assert.equal(registry.nativeCourse(source).course.layers[0].fill.length, 1);
   registry.install([], [{ id: 'b', key: b.key }]); assert.equal(second.image.closes, 1); assert.equal(registry.stats.active, 1);
   assert.equal(registry.nativeCourse(source).course.layers[0].fill.length, 2, 'only the evicted bunker is drawn natively again');
@@ -79,5 +79,15 @@ test('only explicit floor12/wall12/lip13 source rows draw, each once, with conte
   assert.ok(calls.every(call => JSON.stringify(call.slice(5)) === JSON.stringify([-6, -3, 60, 36])));
   calls.length = 0; registry.draw(ctx, 'floor', [0, 0, 64, 64], 0.3, 120, 10, [source]);
   assert.deepEqual(calls[0].slice(5), [-36, -3, 60, 36], 'neighbouring chunks use the same world-projected raster instead of rebaking clipped pieces');
+  registry.dispose();
+});
+
+test('one renderer per bunker: a bunker baking its first picture is not drawn natively; only a failed bake brings the native drawing back', () => {
+  const a = ref('a', 1), registry = new BunkerStageRegistry(), source = course();
+  registry.setCourses([['cg:0:0', source]], []); registry.expect([a], []);
+  assert.equal(registry.nativeCourse(source).course.layers[0].fill.length, 2, 'pending: the native sand is gone already');
+  assert.equal(registry.near([0, 0, 64, 64]).length, 0, 'and there is no picture yet');
+  registry.install([], [{ id: 'a', key: a.key }]); assert.equal(registry.nativeCourse(source).course, source, 'failed: native again');
+  registry.expect([{ ...a, key: 'retry' }], []); assert.equal(registry.nativeCourse(source).course.layers[0].fill.length, 2, 'a new shape tries again');
   registry.dispose();
 });

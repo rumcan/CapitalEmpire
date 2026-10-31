@@ -1,5 +1,5 @@
 import { CELL_T, SURF, type Grid } from '../course-grid';
-import { clampBunkerSettings, readBunkerSettings, type BunkerSettings } from './settings';
+import { clampBunkerSettings, fromSavedBunkerSettings, readBunkerSettings, toSavedBunkerSettings, type BunkerSettings } from './settings';
 
 /** Integer world coordinates of a 1 m grid cell, independent of grid origin/size. */
 export type BunkerCell = readonly [number, number];
@@ -14,7 +14,8 @@ export interface BunkerComponent {
 export type BunkerSelection = BunkerComponent;
 export interface BunkerMark { seed: [number, number]; settings: BunkerSettings }
 /** Only custom component anchors are saved; inherited components have no copied settings. */
-export interface BunkerState { version: 1; defaults: BunkerSettings; custom: BunkerMark[] }
+/** sparse: defaults holds only what differs from the code's defaults (absent: an older save with every value, migrated on load) */
+export interface BunkerState { version: 1; defaults: BunkerSettings; custom: BunkerMark[]; sparse?: true }
 export interface BunkerControllerOptions {
   changed?(components: readonly BunkerComponent[]): void;
   emit?(): void;
@@ -163,14 +164,14 @@ export class BunkerController {
   serialize(): BunkerState {
     this.reconcile(this.grid);
     const custom = this.pendingMarks ?? this.list.filter(component => component.custom).map(component => ({ seed: [...component.seed] as [number, number], settings: component.custom! }));
-    return { version: 1, defaults: { ...this.defaultSettings }, custom: custom.map(mark => ({ seed: [...mark.seed], settings: { ...mark.settings } })) };
+    return { version: 1, sparse: true, defaults: toSavedBunkerSettings(this.defaultSettings) as BunkerSettings, custom: custom.map(mark => ({ seed: [...mark.seed], settings: { ...mark.settings } })) };
   }
 
   /** Call with the loaded grid; without a grid argument this also restores host undo snapshots. */
   load(value: unknown, grid: Grid | null | undefined = this.grid): void {
     const input = value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
     const supported = input?.version === 1;
-    this.defaultSettings = Object.freeze(clampBunkerSettings(supported ? input.defaults : undefined));
+    this.defaultSettings = Object.freeze(clampBunkerSettings(supported ? (input.sparse === true ? input.defaults : fromSavedBunkerSettings(input.defaults)) : undefined));
     this.pendingMarks = supported ? readMarks(input.custom) : [];
     // Rebuilding on load must use saved anchors, never accidentally inherit the
     // profiles that happened to be resident before a different save/undo state.
