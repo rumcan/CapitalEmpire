@@ -82,25 +82,41 @@ precision highp float;layout(location=0)in vec3 aPosition;layout(location=1)in v
 const BLADE_FS=`#version 300 es
 precision highp float;in vec3 vColor;out vec4 outColor;uniform int uSemantic;void main(){outColor=uSemantic==1?vec4(0.,0.,1.,1.):vec4(vColor,1.);}`;
 export function surfaceHeight(d,depth,options={}){const ss=(a,b,v)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t);};const collar=options.collar??.65,rim=options.rim??.16,slope=options.slope??1.1;return -depth*(.72*ss(-.045,slope,d)+.28*(1-Math.exp(-Math.max(d,0)/2.5)))+rim*Math.exp(-Math.pow((d+collar*.26)/(collar*.47),2))-(options.wall??.25)*ss(-.006,.008,d);}
-/** Host: how far past a green's edge (bake units: tiles) a cut face still has the green behind it: full Wall height to FACE_NEAR, the
- *  no-green Wall height from FACE_FAR. */
-export const FACE_NEAR=1.25,FACE_FAR=2.5;
+/** Host: a green behind a cut face counts in full to FACE_FULL (bake units: tiles; 40 m) and fades out by FACE_REACH (60 m); the face has
+ *  the green behind it where its outward direction and the way to the green agree (cosine FACE_COS_LO none .. FACE_COS_HI full). */
+export const FACE_FULL=20,FACE_REACH=30,FACE_COS_LO=.25,FACE_COS_HI=.7;
+const smooth01=t=>{const u=Math.max(0,Math.min(1,t));return u*u*(3-2*u);};
 const inRing=(r,x,y)=>{let inside=false;for(let i=0,j=r.length-2;i<r.length;j=i,i+=2){const ay=r[j+1],by=r[i+1];if((ay>y)!==(by>y)&&x<(r[i]-r[j])*(y-ay)/(by-ay)+r[j])inside=!inside;}return inside;};
-/** Host: how much a green stands behind the cut face (0 none .. 1 right behind), on a 160-wide grid over the bake's terrain, box-blurred so
- *  the floor's slope shades without steps (the distance field's mapping): 0 beyond FACE_FAR of a green (options.greens, bake units), 1
- *  inside FACE_NEAR. at(x, y) samples it as the GPU does. */
+/** Host: how much a green stands behind the cut face (0 none .. 1 full), on a 160-wide grid over the bake's terrain, smooth so the
+ *  floor's slope shades without steps (the distance field's mapping). Along the edge: the bunker's outward direction there (the contour's
+ *  normal) against the way to the nearest green (options.greens, bake units): a face looking away from the green, the green
+ *  behind it, is full height, wherever it is round the green (the owner, 2026-10-31: "the edges facing away from the green needs to be as
+ *  high as the ones at the green"); the weight fades with the green's distance (FACE_FULL .. FACE_REACH); over the floor the edge's weights blend smoothly. at(x, y) samples it
+ *  as the GPU does. */
 export function faceField(terrain,greens){
-  const W=160,H=Math.max(2,Math.round(W*terrain.height/terrain.width)),raw=new Float32Array(W*H),k=new Float32Array(W*H),data=new Uint8Array(W*H),rings=(greens??[]).filter(r=>r.length>=6);
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-   const px=(x+.5)/W*terrain.width-8,py=(y+.5)/H*terrain.height-8;let v=0;
-   if(rings.length){let d=Infinity;for(const r of rings){if(inRing(r,px,py)){d=0;break;}for(let i=0;i<r.length;i+=2){const j=(i+2)%r.length,ax=r[i],ay=r[i+1],dx=r[j]-ax,dy=r[j+1]-ay,l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/l)):0;d=Math.min(d,Math.hypot(px-ax-t*dx,py-ay-t*dy));}}
-    const u=Math.max(0,Math.min(1,(FACE_FAR-d)/(FACE_FAR-FACE_NEAR)));v=u*u*(3-2*u);}
-   raw[y*W+x]=v;
+  const W=160,H=Math.max(2,Math.round(W*terrain.height/terrain.width)),k=new Float32Array(W*H),data=new Uint8Array(W*H),rings=(greens??[]).filter(r=>r.length>=6);
+  // each edge point's weight: its outward direction (the contour's normal, pointing out of the sand) against the way to the nearest green
+  const edge=[];
+  if(rings.length)for(const path of terrain.contours??[])for(let i=0;i+1<path.length;i++){
+   const [ax,ay]=path[i],[bx,by]=path[i+1],len=Math.hypot(bx-ax,by-ay);if(len<1e-6)continue;
+   for(let s=0;s<len;s+=.25){
+    const px=ax+(bx-ax)*s/len,py=ay+(by-ay)*s/len;let nx=(by-ay)/len,ny=-(bx-ax)/len;
+    if(terrain.sample(px+nx*.1,py+ny*.1)>terrain.sample(px-nx*.1,py-ny*.1)){nx=-nx;ny=-ny;}
+    let d=Infinity,qx=0,qy=0;
+    for(const r of rings){if(inRing(r,px,py)){d=0;break;}for(let q=0;q<r.length;q+=2){const j=(q+2)%r.length,cx0=r[q],cy0=r[q+1],dx=r[j]-cx0,dy=r[j+1]-cy0,l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,((px-cx0)*dx+(py-cy0)*dy)/l)):0,cx=cx0+t*dx,cy=cy0+t*dy,e=Math.hypot(px-cx,py-cy);if(e<d){d=e;qx=cx;qy=cy;}}}
+    const near=1-smooth01((d-FACE_FULL)/(FACE_REACH-FACE_FULL)),c=d>0?(nx*(qx-px)+ny*(qy-py))/d:1;
+    edge.push(px,py,near*smooth01((c-FACE_COS_LO)/(FACE_COS_HI-FACE_COS_LO)));
+   }
   }
-  // a 5x5 box blur (two passes of 3): the bilinear field's creases would show as steps in the floor's light
-  const blur=(src,dst)=>{for(let y=0;y<H;y++)for(let x=0;x<W;x++){let sum=0,n=0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=x+i,yy=y+j;if(xx<0||yy<0||xx>=W||yy>=H)continue;sum+=src[yy*W+xx];n++;}dst[y*W+x]=sum/n;}};
-  blur(raw,k);blur(k,raw);k.set(raw);
-  for(let i=0;i<W*H;i++)data[i]=Math.round(k[i]*255);
+  // the field: the edge weights blended over the floor (a Gaussian of the distance to each edge point), so it has no crease anywhere
+  const S=1.6,S2=2*S*S,R2=9*S*S;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+   const px=(x+.5)/W*terrain.width-8,py=(y+.5)/H*terrain.height-8;let num=0,den=0;
+   for(let i=0;i<edge.length;i+=3){const dx=edge[i]-px,dy=edge[i+1]-py,d2=dx*dx+dy*dy;if(d2>R2)continue;const w=Math.exp(-d2/S2);num+=w*edge[i+2];den+=w;}
+   let v=0;
+   if(den>1e-9)v=num/den;else if(edge.length){let best=Infinity;for(let i=0;i<edge.length;i+=3){const d2=(edge[i]-px)**2+(edge[i+1]-py)**2;if(d2<best){best=d2;v=edge[i+2];}}}
+   k[y*W+x]=v;data[y*W+x]=Math.round(v*255);
+  }
   const at=(px,py)=>{const fx=Math.max(0,Math.min(W-1,(px+8)/terrain.width*W-.5)),fy=Math.max(0,Math.min(H-1,(py+8)/terrain.height*H-.5)),x0=Math.floor(fx),y0=Math.floor(fy),x1=Math.min(x0+1,W-1),y1=Math.min(y0+1,H-1),u=fx-x0,v=fy-y0;
    return (k[y0*W+x0]*(1-u)+k[y0*W+x1]*u)*(1-v)+(k[y1*W+x0]*(1-u)+k[y1*W+x1]*u)*v;};
   return {W,H,data,at};

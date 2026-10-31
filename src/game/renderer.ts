@@ -2760,7 +2760,9 @@ export class GroundPainter {
         if (s === SURF.fairway && !lite && this.rugged) spill();                                                   // 9: the tall grass's spill (T204)
       }
       if (!lite && code === 12) this.bunkerStages.draw(ctx, 'floor', box, L, X0, Y0, originalCourses);
-      if (!lite && code === 13 && this.bunkerStages.near(box).length) {
+      // the bunker's lip (its soil and grass edge) after the greens' fringe: the fringe lies over the bunker's grass but never over its lip
+      // (the owner, 2026-10-31: "see the fringe hanging over the bunker"); kept off every neighbouring fill, the green's included
+      if (!lite && code === layerCode(SURF.green, true) && this.bunkerStages.near(box).length) {
         ctx.save(); ctx.setTransform(M);
         // Like the native lip, approved grass stays off neighbouring faces, including the preserved tee rock continuation.
         for (const wall of allWalls.concat(bunkerBanks)) if (near(wall)) {

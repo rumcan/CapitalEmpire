@@ -110,10 +110,11 @@ export function buildBunkerGeometry(
   return batch;
 }
 
-/** How far (tiles) past a bunker's outline its greens are read: past FACE_FAR in the bake, a green stands behind no wall. */
-const GREEN_REACH = 4;
-/** The green rings (tiles, as the course patches clip them) within GREEN_REACH of a bunker's outline: its cut face stands tall only where
- *  the green is right behind it (the owner, 2026-10-31: "make any vertical wall that does not have the green behind it small"). */
+/** How far (tiles) past a bunker's outline its greens are read: 60 m (the bake's FACE_REACH: past it a green stands behind no wall). */
+const GREEN_REACH = 30;
+/** The green rings (tiles, as the course patches clip them) within GREEN_REACH of a bunker's outline: its cut face stands tall where it
+ *  looks away from a green, the green behind it (the owner, 2026-10-31: "make any vertical wall that does not have the green behind it small";
+ *  "the edges facing away from the green needs to be as high as the ones at the green"). */
 export function greensNear(rings: readonly ArrayLike<number>[], patches: readonly CoursePatch[]): Float64Array[] {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const ring of rings) for (let i = 0; i + 1 < ring.length; i += 2) { x0 = Math.min(x0, ring[i]!); y0 = Math.min(y0, ring[i + 1]!); x1 = Math.max(x1, ring[i]!); y1 = Math.max(y1, ring[i + 1]!); }

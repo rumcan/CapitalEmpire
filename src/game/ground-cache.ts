@@ -27,6 +27,7 @@ import { tileCacheBudget } from './tile-cache';
 import { BunkerStageBridge } from './ext/bunker-look/stage-bridge';
 import { BunkerStageBaker } from './ext/bunker-look/stage-client';
 import { bunkerLookPicture } from './ext/bunker-look/look-picture';
+import { loadOwnTextures } from './ext/bunker-look/uploads';
 import type { BunkerStageReady, BunkerStageRef } from './ext/bunker-look/stage-types';
 
 export interface Tile {
@@ -111,6 +112,8 @@ export class GroundCache {
       this.workers.push(wk); this.inflight.push(0);
     }
     let baker: BunkerStageBaker | null = null;
+    // the player's own bunker textures kept in this browser: once they are in the library, bunkers naming one bake with it
+    void loadOwnTextures().then(n => { if (n && !this.stopped) this.bunkerGeometryChanged?.(); });
     this.bunkers = new BunkerStageBridge({ bake: request => (baker ??= new BunkerStageBaker()).bake(request), disposeBake: () => baker?.dispose(), lookPicture: bunkerLookPicture,
       expected: (set, drop) => {
         let bounds: BBox | null = null;

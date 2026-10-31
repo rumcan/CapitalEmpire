@@ -152,15 +152,15 @@ test('the course look\'s Shadow (Edges) scales the picture\'s shadow: its defaul
   assert.ok(Math.abs(at(0.15) - own / 2) < 1e-9); assert.equal(at(1), 3);
 });
 
-test('a bunker carries the green rings right beside it (its tall face), none from a green far off', () => {
+test('a bunker carries the green rings within 60 m (its tall faces look away from them), none from a green farther off', () => {
   const sand = patch(0, 0, [ring(10, 10, 14, 12)]);
   const green = patch(0, 0, [], SURF.green); green.layers[0].fill = [Float32Array.from(ring(15, 10, 20, 12))];
   sand.layers.push(green.layers[0]);
   const near = buildBunkerGeometry([sand], [component(22, 22)], flat).inputs[0].greens!;
   assert.equal(near.length, 1); assert.equal(near[0][0], 15);
   assert.equal(buildBunkerGeometry([patch(0, 0, [ring(10, 10, 14, 12)])], [component(22, 22)], flat).inputs[0].greens, undefined);
-  const far = patch(0, 0, [ring(10, 10, 14, 12)]), away = patch(0, 0, [], SURF.green); away.layers[0].fill = [Float32Array.from(ring(30, 10, 34, 12))]; far.layers.push(away.layers[0]);
-  assert.equal(buildBunkerGeometry([far], [component(22, 22)], flat).inputs[0].greens, undefined, 'a green 32 m off stands behind none of its walls');
+  const far = patch(0, 0, [ring(10, 10, 14, 12)]), away = patch(0, 0, [], SURF.green); away.layers[0].fill = [Float32Array.from(ring(50, 10, 54, 12))]; far.layers.push(away.layers[0]);
+  assert.equal(buildBunkerGeometry([far], [component(22, 22)], flat).inputs[0].greens, undefined, 'a green 72 m off stands behind none of its walls');
 });
 
 test('the sand wears the My looks texture of the owner whose share holds the bunker', () => {
@@ -175,4 +175,15 @@ test('each bunker bakes with its owner’s look (settingsAt), its rim always fla
   const settingsAt = (cell: readonly [number, number]) => { seen.push([...cell]); return clampBunkerSettings({ depth: 2.2, wall: 0.7, rim: 1 }); };
   const input = buildBunkerGeometry([p], [component(22, 22)], { ...flat, settingsAt }).inputs[0];
   assert.deepEqual(seen, [[22, 22]]); assert.equal(input.settings.depth, 2.2); assert.equal(input.settings.wall, 0.7); assert.equal(input.settings.rim, 0);
+});
+
+test('the bake’s face field: full where the face looks away from the green, none on the far or side faces, none with no green', async () => {
+  const { faceField } = await import('../src/game/ext/bunker-look/stage-baker/renderer-world.js');
+  const contour: [number, number][] = Array.from({ length: 65 }, (_, i) => [12 + Math.cos(i / 64 * 2 * Math.PI) * 6, 7 + Math.sin(i / 64 * 2 * Math.PI) * 3.6]);
+  const terrain = { width: 40, height: 30, contours: [contour], sample: (x: number, y: number) => 3 - Math.hypot((x - 12) / 2, (y - 7) / 1.2) };
+  const f = faceField(terrain, [[20, 5, 26, 5, 26, 9, 20, 9]]);
+  assert.ok(f.at(17.8, 7) > 0.85, 'the side toward the green'); assert.ok(f.at(6.2, 7) < 0.05, 'the far side'); assert.ok(f.at(12, 10.5) < 0.05, 'a side face');
+  // no crease: the field changes smoothly across the floor
+  for (let x = 6.5; x < 17.5; x += 0.25) assert.ok(Math.abs(f.at(x + 0.25, 7) - f.at(x, 7)) < 0.2, `smooth at ${x}`);
+  assert.equal(faceField(terrain, []).at(12, 7), 0);
 });

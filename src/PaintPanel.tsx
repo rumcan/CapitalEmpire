@@ -186,8 +186,9 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       <Section id="texture" title={bunker ? 'Sand' : 'Texture and blend'}>
       <div className="mt-2 text-[12px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
-        {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
+        {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id && !(bunker && s.bunker?.sandTex) ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id, ...(bunker && s.bunker?.sandTex ? { bunker: { ...s.bunker, sandTex: undefined } } : {}) })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
         {!MENU_TEXES.length && <div className="text-[12px] text-slate-400">No texture presets yet: make them in the studio (Ground → Texture presets), then Rebuild game sprites.</div>}
+        {bunker && s.bunker?.sandTex && <div className="text-[11px] text-amber-300" data-sand-own>Your own texture is on the sand (Your textures, below); pick one here to go back.</div>}
       </div>
       {!bunker && (<>
       <div className="mt-2 text-[12px] text-slate-400">Blend with</div>

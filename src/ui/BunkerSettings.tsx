@@ -6,7 +6,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { Game } from '../game/engine';
 import { BUNKER_SETTING_FIELDS, BUNKER_TEXTURE_SLOTS, type BunkerSettingField, type BunkerSettingKey, type BunkerTextureSlotInfo } from '../game/ext/bunker-look/settings';
 import { bunkerSettingsOfLook, type BunkerLookFields, type BunkerLookKey } from '../game/ext/bunker-look/look-settings';
-import { bunkerTexture, bunkerTextureGroups } from '../game/ext/bunker-look/texture-library';
+import { bunkerTexture, bunkerTextureGroups, ownTextures } from '../game/ext/bunker-look/texture-library';
+import { addOwnTexture, removeOwnTexture } from '../game/ext/bunker-look/uploads';
 import type { BunkerTextureEntry } from '../game/ext/bunker-look/stage-materials';
 
 const fieldOf = (key: BunkerSettingKey) => BUNKER_SETTING_FIELDS.find(field => field.key === key)!;
@@ -14,7 +15,6 @@ const fieldOf = (key: BunkerSettingKey) => BUNKER_SETTING_FIELDS.find(field => f
 const SHAPE_FIELDS = (['depth', 'wall', 'wallLow', 'slope'] as const).map(fieldOf);
 /** the pictures the look picks (the sand is the look's own texture; the grass round it is the course's Border) */
 const PICTURE_SLOTS = BUNKER_TEXTURE_SLOTS.filter(slot => slot.slot === 'soil' || slot.slot === 'wall');
-const TEXTURE_GROUPS = bunkerTextureGroups();
 const displayNumber = (value: number) => Number(value.toFixed(3)).toString();
 const fieldLabel = (field: BunkerSettingField) => field.key === 'depth' ? 'Floor depth' : field.key === 'wall' ? 'Wall height (green side)' : field.key === 'wallLow' ? 'Wall height (no green behind)' : field.key === 'textureScale' ? 'All pictures’ scale' : field.label;
 
@@ -100,7 +100,7 @@ function PictureControl({ slot, value, scale, scope, onChange }: {
           onChange={event => onChange({ [slot.key]: event.target.value })}
           style={{ borderColor: 'var(--line)', background: 'var(--panel-2)', color: 'var(--ink)' }}
           className="min-w-0 flex-1 rounded-lg border px-1.5 py-1 text-xs">
-          {TEXTURE_GROUPS.map(({ group, entries }) => (
+          {bunkerTextureGroups().map(({ group, entries }) => (
             <optgroup key={group} label={group}>
               {entries.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
             </optgroup>
@@ -124,6 +124,7 @@ export function BunkerLookShape({ game }: { game: Game }) {
         <summary className="sub-head cursor-pointer select-none">Depth and walls</summary>
         {SHAPE_FIELDS.map(field => number(field.key as BunkerLookKey & BunkerSettingKey))}
       </details>
+      <OwnTextures game={game} now={now} set={set} />
       <details className="mt-3">
         <summary className="sub-head cursor-pointer select-none">Soil and wall pictures</summary>
         <p className="sub-line mt-1.5">The 3D bunker's edge soil and cut wall. New pictures dropped into the bunker texture folder show under Added textures.</p>
@@ -131,6 +132,41 @@ export function BunkerLookShape({ game }: { game: Game }) {
         {PICTURE_SLOTS.map(slot => <PictureControl key={slot.slot} slot={slot} value={now[slot.key]} scale={now[slot.scale]} scope={scope} onChange={set} />)}
       </details>
     </div>
+  );
+}
+
+/** Your textures (the owner, 2026-10-31: "add an upload your own texture button"): upload a picture from disk (kept in this browser), then put
+ *  it on the sand, the edge soil or the cut wall of the bunkers this look is for; the soil and wall pickers list it too. */
+function OwnTextures({ game, now, set }: { game: Game; now: ReturnType<typeof bunkerSettingsOfLook>; set(change: BunkerLookFields): void }) {
+  const pick = useRef<HTMLInputElement>(null), [note, setNote] = useState('');
+  const upload = async (file: File | undefined) => {
+    if (!file) return; setNote('Uploading…');
+    try { const id = await addOwnTexture(file); setNote(''); set({ sandTex: id }); } catch (e) { setNote(e instanceof Error ? e.message : String(e)); }
+    game.emit();
+  };
+  const slots = [['sandTex', 'Sand'], ['soilTex', 'Soil'], ['wallTex', 'Wall']] as const;
+  return (
+    <details className="mt-3" open data-own-textures>
+      <summary className="sub-head cursor-pointer select-none">Your textures</summary>
+      <p className="sub-line mt-1.5">A picture from your computer (PNG, JPEG or WebP), kept in this browser. It goes on the sand when you upload it; put it on the soil or the wall too, or take it off again.</p>
+      <input ref={pick} type="file" accept="image/png,image/jpeg,image/webp" hidden aria-label="Your texture file" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; void upload(f); }} />
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <button type="button" className="chip" onClick={() => pick.current?.click()} data-upload-texture>Upload your own texture</button>
+        {note && <span className="sub-line" role="status">{note}</span>}
+      </div>
+      {ownTextures().map(entry => (
+        <div key={entry.id} className="mt-2 flex items-center gap-1.5" data-own-texture={entry.id}>
+          <TextureSwatch entry={entry} />
+          <span className="min-w-0 flex-1 truncate text-xs" title={entry.label}>{entry.label}</span>
+          {slots.map(([key, name]) => (
+            <button key={key} type="button" className={`chip ${now[key] === entry.id ? 'chip-on' : ''}`} aria-pressed={now[key] === entry.id}
+              title={now[key] === entry.id ? `Take it off the ${name.toLowerCase()}` : `Put it on the ${name.toLowerCase()}`}
+              onClick={() => set({ [key]: now[key] === entry.id ? undefined : entry.id })}>{name}</button>
+          ))}
+          <button type="button" className="round-btn" aria-label={`Remove ${entry.label}`} title="Remove it from this browser" onClick={() => { void removeOwnTexture(entry.id).then(() => game.emit()); }}>×</button>
+        </div>
+      ))}
+    </details>
   );
 }
 

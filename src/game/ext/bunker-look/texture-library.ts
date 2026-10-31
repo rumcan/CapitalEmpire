@@ -16,13 +16,27 @@ function droppedTextures(): BunkerTextureEntry[] {
   }).sort((a, b) => a.label.localeCompare(b.label));
 }
 
-/** Every picture a bunker slot can use: the bunker pack, the game's ground photos (the Paint tool's), and the drop-in folder. */
+/** Every picture a bunker slot can use: the bunker pack, the game's ground photos (the Paint tool's), and the drop-in folder (and the player's
+ *  own uploads: registerOwnTexture). */
 export const BUNKER_TEXTURE_LIBRARY: readonly BunkerTextureEntry[] = Object.freeze([
   ...BUNKER_PACK_TEXTURES,
   ...PHOTO_TEX.filter(photo => photo.src).map(photo => ({ id: `photo:${photo.tex}`, label: photo.tex === 'pad' ? 'Concrete' : words(photo.tex), group: 'Ground photos', url: photo.src })),
   ...droppedTextures(),
 ]);
 const BY_ID = new Map(BUNKER_TEXTURE_LIBRARY.map(entry => [entry.id, entry]));
+/** the player's own pictures (uploads.ts, kept in this browser), group 'Your textures', in the order they were added */
+const OWN: BunkerTextureEntry[] = [];
+let ownRev = 0;
+/** adds (or replaces) one of the player's own pictures; a bunker naming it bakes with it from now on */
+export function registerOwnTexture(entry: BunkerTextureEntry): void {
+  const at = OWN.findIndex(e => e.id === entry.id); if (at >= 0) OWN[at] = entry; else OWN.push(entry);
+  BY_ID.set(entry.id, entry); ownRev++;
+}
+/** forgets one of the player's own pictures (a bunker naming it draws its slot's default) */
+export function unregisterOwnTexture(id: string): void { const at = OWN.findIndex(e => e.id === id); if (at >= 0) OWN.splice(at, 1); BY_ID.delete(id); ownRev++; }
+/** the player's own pictures, and a number that changes with them (for the card's re-render) */
+export const ownTextures = (): readonly BunkerTextureEntry[] => OWN;
+export const ownTexturesRev = () => ownRev;
 
 /** The entry a slot draws: an unknown id (a texture another browser had, or one since removed) draws the slot's default. */
 export function bunkerTexture(slot: BunkerTextureSlot, id: string | undefined, library: ReadonlyMap<string, BunkerTextureEntry> = BY_ID): BunkerTextureEntry {
@@ -42,6 +56,6 @@ export function bunkerMaterials(settings: Readonly<BunkerSettings>, library?: Re
 /** Groups in picker order. */
 export function bunkerTextureGroups(): { group: string; entries: BunkerTextureEntry[] }[] {
   const groups = new Map<string, BunkerTextureEntry[]>();
-  for (const entry of BUNKER_TEXTURE_LIBRARY) groups.set(entry.group, [...(groups.get(entry.group) ?? []), entry]);
+  for (const entry of [...OWN, ...BUNKER_TEXTURE_LIBRARY]) groups.set(entry.group, [...(groups.get(entry.group) ?? []), entry]);
   return [...groups].map(([group, entries]) => ({ group, entries }));
 }
