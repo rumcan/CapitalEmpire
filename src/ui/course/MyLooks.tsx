@@ -2,25 +2,16 @@ import { useEffect, useState } from 'react';
 import type { Game } from '../../game/engine';
 import { lookWhat } from '../../game/golf/looks';
 import { BRUSH_PRESETS } from '../../game/paint';
-import { PHOTO_TEX } from '../../game/grass-art';
 import { SURFACE_TINT } from '../../game/ext/course-cursor';
 import { StyleEditor } from '../../PaintPanel';
 import { SurfaceMark } from './SurfaceMark';
 import { lookName } from './CoursePanel';
-import { paintedSwatch } from '../../game/painted-surfaces-live';
 import { exposed, exposureOf } from '../../game/exposure';
 import { BunkerLookShape } from '../BunkerSettings';
+import { texPic } from '../TexturePicker';
 
-// the owner's presets' baked pictures, by preset id (Vite fills the glob in when it builds; under plain node there is none: the disc then
-// shows the surface's colour)
-const PICS: Record<string, string> = (() => { try { return import.meta.glob('../../assets/ground/preset-*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>; } catch { return {}; } })();
-
-/** a texture's picture (its painted look's near painting, else an owner's preset, else a Paint photo), or '' for one drawn as a colour */
-function picOf(tex: string): string {
-  const p = paintedSwatch(tex); if (p?.img) return p.img;
-  if (tex.startsWith('preset:')) return PICS[`../../assets/ground/preset-${tex.slice(7)}.webp`] ?? '';
-  return PHOTO_TEX.find(t => t.tex === tex)?.src ?? '';
-}
+/** a texture's picture (TexturePicker's: its painted look, an owner's preset or a Paint photo; '' for a colour) */
+const picOf = texPic;
 
 /** the look's preview disc (P23 decision 3: "with the disc as its preview"): the surface's puck, as the cursor's chip draws it, its top face
  *  wearing the look's picture at the look's scale and angle, with its exposure (T261: the picture's own brightness, brightness(f)), and the
