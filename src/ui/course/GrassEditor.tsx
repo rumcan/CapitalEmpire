@@ -50,18 +50,6 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
       </div>
       <div className="sub-line mt-1">{`The ball lies as on the ${play.name.toLowerCase()}: ${play.note}.`}</div>
 
-      <h4 className="sub-head mt-3">Texture</h4>
-      <div className="swatches" role="group" aria-label="Painted grass" data-testid="grass-families">
-        {GRASS_FAMILIES.map(f => {
-          const lit = d.family === f.id;
-          return (
-            <button key={f.id} data-family={f.id} aria-pressed={lit} title={f.name} className={`swatch ${lit ? 'swatch-on' : ''}`} onClick={() => set({ family: f.id })}>
-              <span className="swatch-puck"><Puck game={game} g={{ ...d, family: f.id, border: 0 }} css={44} /></span>
-              <span className="swatch-name">{f.name}</span>
-            </button>
-          );
-        })}
-      </div>
       <div className="mt-2 flex items-center gap-1 text-[12px] text-slate-400">
         <span className="w-12 shrink-0">Scale</span>
         <button className="btn" onClick={() => set({ scale: d.scale / 1.25 })}>−</button>
@@ -96,6 +84,22 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
         <span className="w-16 text-right text-xs text-slate-200">{shadowLabel(d.shadow)}</span>
       </div>
 
+      {/* the settings above, the textures in a scrollable window under them (the owner, 2026-10-31: "move the settings to above the scrollable
+          texture window") */}
+      <h4 className="sub-head mt-3">Texture</h4>
+      <div className="mt-1 max-h-[16rem] overflow-y-auto overflow-x-hidden rounded-lg border border-white/10 p-1" data-texture-window>
+      <div className="swatches" role="group" aria-label="Painted grass" data-testid="grass-families">
+        {GRASS_FAMILIES.map(f => {
+          const lit = d.family === f.id;
+          return (
+            <button key={f.id} data-family={f.id} aria-pressed={lit} title={f.name} className={`swatch ${lit ? 'swatch-on' : ''}`} onClick={() => set({ family: f.id })}>
+              <span className="swatch-puck"><Puck game={game} g={{ ...d, family: f.id, border: 0 }} css={44} /></span>
+              <span className="swatch-name">{f.name}</span>
+            </button>
+          );
+        })}
+      </div>
+      </div>
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {made ? (<>
           <button className="chip chip-on" onClick={onClose} data-testid="grass-done">Done</button>

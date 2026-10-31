@@ -113,8 +113,9 @@ test('a texture finds its look: photo ids, presets by their golf surface (fescue
   assert.equal(surfaceOfTex('golfFescue'), 'fescue');
   // the woodland floor is a surface of its own (T128: a forest on the planner map need not wear the course's fescue)
   assert.equal(lookOfTex(WOODLAND, f), f.surfaces.woodland); assert.equal(surfaceOfTex(WOODLAND), 'woodland');
-  // every preset of the game is painted (none left on its photo mix)
-  for (const p of PRESETS) assert.ok(lookOfTex('preset:' + p.id, f, PRESETS), p.id);
+  // every preset of the game is painted (none left on its photo mix), but the owner's own grass pictures (2026-10-31, new-*: laid as
+  // the pictures they are)
+  for (const p of PRESETS) if (!p.id.startsWith('new-')) assert.ok(lookOfTex('preset:' + p.id, f, PRESETS), p.id);
 });
 
 test('the studio round trip: a saved file reads back the same, bad looks are dropped, lawns capped', () => {
