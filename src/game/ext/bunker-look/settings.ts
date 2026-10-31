@@ -65,8 +65,9 @@ export interface BunkerSettingField {
 /** Widths are 2 m tiles internally; all displayed lengths are metres. */
 export const BUNKER_SETTING_FIELDS: readonly Readonly<BunkerSettingField>[] = Object.freeze([
   { key: 'depth', label: 'Floor depth below cut wall', min: 0, max: 6, step: 0.1, unit: 'm', displayScale: 1, group: 'shape' },
-  { key: 'wall', label: 'Cut face height', min: 0, max: 4, step: 0.05, unit: 'm', displayScale: 1, group: 'shape' },
-  { key: 'wallLow', label: 'Cut face height with no green behind', min: 0, max: 4, step: 0.05, unit: 'm', displayScale: 1, group: 'shape' },
+  // both cut faces up to 2 m (the owner, 2026-10-31: "set wall height to max for 2m")
+  { key: 'wall', label: 'Cut face height', min: 0, max: 2, step: 0.05, unit: 'm', displayScale: 1, group: 'shape' },
+  { key: 'wallLow', label: 'Cut face height with no green behind', min: 0, max: 2, step: 0.05, unit: 'm', displayScale: 1, group: 'shape' },
   // hidden (the owner, 2026-10-31: "remove this"): the course draws the ground round a bunker, so its rim stays flat (0)
   { key: 'rim', label: 'Rim height', min: 0, max: 1.5, step: 0.05, unit: 'm', displayScale: 1, group: 'shape', hidden: true },
   { key: 'slope', label: 'Sand slope width', min: 0.05, max: 7.5, step: 0.05, unit: 'm', displayScale: 2, group: 'shape' },

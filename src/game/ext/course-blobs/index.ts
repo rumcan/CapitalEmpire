@@ -72,7 +72,9 @@ export const BLOB_STYLE: readonly BlobStyle[] = [
   /* water */ { close: 2, relax: 2, collar: { name: 'bank', width: 1, over: [NONE, ROUGH, FESCUE, LONG] } },
   /* fairway */ { close: 2, relax: 2, collar: { name: 'first-cut', width: 2, over: [NONE, ROUGH, FESCUE, LONG] } },
   /* tee */ { close: 0, relax: 2, collar: { name: 'first-cut', width: 1, over: [NONE, ROUGH, FESCUE, LONG] } },
-  /* bunker */ { close: 1, relax: 1, collar: { name: 'lip', width: 1, over: [NONE, ROUGH, FESCUE, LONG, FAIRWAY, TEE, WASTE, GREEN] } },
+  // never over a green (the owner, 2026-10-31: "the bunker border is on the green. That is what i said should not happen"): drawn before
+  // the green and its fringe, which lie over it
+  /* bunker */ { close: 1, relax: 1, collar: { name: 'lip', width: 1, over: [NONE, ROUGH, FESCUE, LONG, FAIRWAY, TEE, WASTE] } },
   /* waste */ { close: 1, relax: 1 },
   // the fringe lies over a bunker's cells too: a bunker never pushes it back (its sand stops at the fringe: bunkerOffFringe)
   /* green */ { close: 1, relax: 2, collar: { name: 'fringe', width: 1, over: [NONE, ROUGH, FESCUE, LONG, FAIRWAY, TEE, WASTE, BUNKER] } },
