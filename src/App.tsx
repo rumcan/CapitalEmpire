@@ -194,13 +194,14 @@ export default function App() {
   const footRef = useRef<HTMLElement | null>(null), footBox = useRef<HTMLDivElement | null>(null);
   /** Holes > More options > My looks (P23 decision 3): the surface style editor's card beside the Holes panel; Esc closes it first */
   const [looks, setLooks] = useState(false);
-  const looksOpen = looks && (game?.uiTool === 'course' || (game?.tool === 'practice' && !!game.practice.kind)); // T256: a facility's looks too
+  // the Bunker look (the bunker in hand in the Holes tool; My looks itself merged into Create your own, 2026-10-31), or a facility's looks (T256)
+  const looksOpen = looks && ((game?.uiTool === 'course' && game.paint.brushKind === 'bunker') || (game?.tool === 'practice' && !!game.practice.kind));
   useEffect(() => { if (!looksOpen && looks) setLooks(false); }, [looksOpen, looks]);
   /** T271 (#812): the grass editor (Create your own, a grass's Edit): its card in My looks' place while the Holes tool is in hand */
   const grassOpen = !!game?.paint.grassDraft && game.uiTool === 'course';
   /** a picked bunker (Pick bunker, or a click on one with Select) opens its look: My looks with the bunker in hand (the engine put the Holes
    *  tool and its hole in hand); every valid pick, not just a changed id */
-  useEffect(() => { if (game?.bunkers?.selection) { setLooks(false); game.paint.openGrass(); } }, [game, game?.bunkerSelectionSerial]);
+  useEffect(() => { if (game?.bunkers?.selection) { game.paint.closeGrass(); setLooks(true); } }, [game, game?.bunkerSelectionSerial]);
   // another tool put in hand closes it (read live: a grass opened just after one closed is never shut by the older render)
   useEffect(() => { if (game && game.uiTool !== 'course' && game.paint.grassDraft) game.paint.closeGrass(); }, [game?.uiTool]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (grassOpen && looks) setLooks(false); }, [grassOpen]); // eslint-disable-line react-hooks/exhaustive-deps

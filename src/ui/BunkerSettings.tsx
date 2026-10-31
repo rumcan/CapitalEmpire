@@ -170,11 +170,13 @@ function OwnTextures({ game, now, set }: { game: Game; now: ReturnType<typeof bu
   );
 }
 
-/** Pick bunker (the brushes' panel): the next click on a bunker opens its look (its hole's, the property's, a facility's) */
-export function BunkerPickEntry({ game }: { game: Game }) {
+/** Bunker look and Pick bunker (the brushes' panel, the bunker in hand): the bunkers' look card (sand, edges, depth and walls, pictures), and
+ *  the next click on a bunker opens the look of that bunker's hole */
+export function BunkerPickEntry({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
   if (!game.golfMode || !game.courseGrid || !game.bunkers) return null;
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5" data-bunker-entry>
+      <button type="button" className={`chip ${looks ? 'chip-on' : ''}`} aria-pressed={looks} title="The bunkers' look on this hole: sand, edges, depth and walls, and the soil and wall pictures" onClick={() => { game.paint.closeGrass(); onLooks?.(!looks); }} data-bunker-look>Bunker look ▸</button>
       <button type="button" className="chip" title="Click a bunker on the map: its look opens (the bunkers of its hole wear it)" onClick={() => game.armBunkerPick()}>Pick bunker</button>
     </div>
   );

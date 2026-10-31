@@ -218,7 +218,7 @@ test('Shape by hand and Edit hole show the grasses as swatches with their keys, 
   const opts = grassTextureOptions();
   assert.deepEqual(opts.slice(0, GRASS_FAMILIES.length).map(o => o.id), GRASS_FAMILIES.map(f => f.id), 'every painted grass family');
   assert.ok(opts.some(o => o.id.startsWith('preset:')), 'and the texture presets');
-  assert.match(card, /data-texture-picker="grass"/); assert.match(card, /data-create-bunker/, 'its Bunker part');
+  assert.match(card, /data-texture-picker="grass"/); assert.doesNotMatch(card, /data-create-bunker/, 'a grass card only: the bunker look has its own card');
   // a classic game (no course grid) shows none of it
   const classic = renderToStaticMarkup(createElement(SurfaceSwatches, { game: { ...game, golfMode: false } as unknown as Game, on: null, pick: () => {} }));
   assert.ok(!classic.includes('grass-new'));

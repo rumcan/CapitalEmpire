@@ -79,7 +79,7 @@ export function MyLooksCard({ game, onClose, embedded = false }: { game: Game; o
   return embedded ? <div data-looks-embedded>{body}</div> : (
     <section className="glass tp w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-card="looks" aria-label={`My looks: ${name}`}>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="font-display text-xl font-bold">{`My looks · ${name}`}</h2>
+        <h2 className="font-display text-xl font-bold">{kind === 'bunker' ? 'Bunker look' : `My looks · ${name}`}</h2>
         <button className="round-btn" aria-label="Close My looks" title="Close (Esc)" onClick={onClose}>×</button>
       </div>
       {body}

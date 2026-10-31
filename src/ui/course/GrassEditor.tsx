@@ -13,7 +13,6 @@ import { addOwnTexture } from '../../game/ext/bunker-look/uploads';
 import { paintedUrl } from '../../game/painted-grass-art';
 import { resolveFamily } from '../../game/painted-families';
 import { tiledFamily } from '../../game/painted-tiles';
-import { MyLooksCard } from './MyLooks';
 import { BORDER_MAX_M } from '../../game/ext/course-grid/patch';
 import { exposureOf, toneOfExposure } from '../../game/exposure';
 import { ExposureRow } from '../../PaintPanel';
@@ -44,27 +43,8 @@ export function grassTextureOptions(): TextureOption[] {
 export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }) {
   const p = game.paint, d = p.grassDraft;
   const [ask, setAsk] = useState(false);
-  // its two parts (the owner, 2026-10-31: My looks merged into Create your own): a grass of your own, and the bunker's look (the bunker in
-  // hand opens on it)
-  const [part, setPart] = useState<'grass' | 'bunker'>(() => (p.brushKind === 'bunker' ? 'bunker' : 'grass'));
   useSwatchPucks();
   if (!d) return null;
-  const parts = (
-    <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="Create your own" data-create-part={part}>
-      <button className={`chip ${part === 'grass' ? 'chip-on' : ''}`} aria-pressed={part === 'grass'} onClick={() => setPart('grass')}>{d.k > 0 ? 'Your grass' : 'New grass'}</button>
-      <button className={`chip ${part === 'bunker' ? 'chip-on' : ''}`} aria-pressed={part === 'bunker'} title="The bunkers' look: sand, edges, depth and walls" onClick={() => { p.pickLook('bunker'); setPart('bunker'); }} data-create-bunker>Bunker</button>
-    </div>
-  );
-  if (part === 'bunker') return (
-    <section className="glass tp w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3" data-card="grass" aria-label="Create your own: bunker">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="font-display text-xl font-bold">Create your own · Bunker</h2>
-        <button className="round-btn" aria-label="Close the grass editor" title="Close (Esc)" onClick={onClose}>×</button>
-      </div>
-      {parts}
-      <MyLooksCard game={game} onClose={onClose} embedded />
-    </section>
-  );
   const made = d.k > 0, set = (q: Partial<Omit<CustomGrass, 'k'>>) => p.editGrass(q), x = exposureOf(d.tone, d.toneAmt), play = GRASS_PLAYS.find(q => q.play === d.plays)!;
   const plain = d.plays === 'firstCut' ? 'rough' : play.name.toLowerCase();
   return (
@@ -73,7 +53,6 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
         <h2 className="font-display text-xl font-bold">{made ? `Your grass · ${d.name}` : 'Create your own'}</h2>
         <button className="round-btn" aria-label="Close the grass editor" title="Close (Esc)" onClick={onClose}>×</button>
       </div>
-      {parts}
       <div className="flex items-center gap-3" data-testid="grass-preview">
         <span className="grid h-[64px] w-[84px] shrink-0 place-items-center">{isGrassFamily(d.family) ? <Puck game={game} g={d} css={72} /> : <TexPuck t={grassTextureOptions().find(o => o.id === d.family) ?? null} css={72} />}</span>
         <div className="min-w-0">

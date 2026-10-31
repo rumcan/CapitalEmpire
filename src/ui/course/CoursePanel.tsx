@@ -34,7 +34,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
   // ↶ ↷ name what they take back (P23 4.3); in New hole its own clicks and drags come first (P23 4.4, T119)
   const un = p.topUndo, re = p.topRedo;
   // T256 (#743): Range › Build: the same painting tools, on your property (cells of no hole)
-  if (p.property) return <PropertyPanel game={game} />;
+  if (p.property) return <PropertyPanel game={game} looks={looks} onLooks={onLooks} />;
   return (
     <div className="tp" data-panel="holes">
       <ToolHead icon="trophy" title="Holes" desc="Each hole is a park: build it, then shape it">
@@ -56,7 +56,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
       {shape && (
         <>
           <HoleStrip game={game} />
-          {!plan && <ShapeByHand game={game} />}
+          {!plan && <ShapeByHand game={game} looks={looks} onLooks={onLooks} />}
           {!plan && <MoreOptions game={game} looks={looks} onLooks={onLooks} />}
         </>
       )}
@@ -66,7 +66,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
 
 /** Shape by hand (P23 4.3, 4.5): the surfaces as swatches (keys 1–8; T252: each the surface's puck, no cart path), the brush's shape (T238:
  *  Square or Round) and size ([ ]), Brush and Erase */
-function ShapeByHand({ game }: { game: Game }) {
+function ShapeByHand({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, keys = surfaceKeysOf(game);
   const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece', run = brush && !!p.brushRun && cells > 0;
   // T271: a custom grass in hand goes by its own name; the keys: 1–8 the surfaces, 9 Create your own (golf), Shift + n your own grasses
@@ -77,7 +77,7 @@ function ShapeByHand({ game }: { game: Game }) {
       {/* T256: whose paint the brush lays: this hole's (Range › Build paints your property) */}
       {game.golfMode && armed && <div className="paint-owner" data-testid="paint-owner">{`Painting hole ${p.brushHole}`}</div>}
       <SurfaceSwatches game={game} on={armed ? p.brushKind : null} pick={k => (p.mode === 'draw' ? p.setShape(k, 0) : p.setBrush(k, 0))} />
-      {p.brushKind === 'bunker' && <BunkerPickEntry game={game} />}
+      {p.brushKind === 'bunker' && <BunkerPickEntry game={game} looks={looks} onLooks={onLooks} />}
       <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {/* Brush | Run (T122, P23 4.5): the brush paints where you click and drag; Run lays a strip like a road, from click to click */}
@@ -96,7 +96,7 @@ function ShapeByHand({ game }: { game: Game }) {
  *  work on you range and practice area and around the whole property, they are not connected to you hole"): Range › Build's panel. The
  *  holes' painting tools (the surfaces, Square or Round, Brush or Run, Erase, My looks, Ground height) on your property: they lay cells of no
  *  hole, never touch a hole's, and hole edits and deletes never touch them. Done goes back to the Holes panel */
-function PropertyPanel({ game }: { game: Game }) {
+function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, brush = p.mode === 'brush', height = p.mode === 'height', run = brush && !!p.brushRun && p.brushCells > 0, keys = surfaceKeysOf(game);
   const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '', un = p.topUndo, re = p.topRedo;
   return (
@@ -110,7 +110,7 @@ function PropertyPanel({ game }: { game: Game }) {
       <section data-section="shape" className="mt-3">
         <div className="sec-head"><h3 className="label-caps">Surfaces</h3><span className="sec-note">{`1 m cells · keys 1–${keys}`}</span></div>
         <SurfaceSwatches game={game} on={brush ? p.brushKind : null} pick={k => p.setBrush(k, 0)} />
-        {p.brushKind === 'bunker' && <BunkerPickEntry game={game} />}
+        {p.brushKind === 'bunker' && <BunkerPickEntry game={game} looks={looks} onLooks={onLooks} />}
         <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <div className="flex items-center gap-1.5" role="group" aria-label="Brush or Run" data-method={run ? 'run' : 'brush'}>
