@@ -30,7 +30,24 @@ export const shadowLabel = (s: number) => (s <= 0.005 ? 'none' : Math.abs(s - SH
 /** T253: a Smoothness as the slider reads it: its share and about how round a corner comes out */
 export const smoothLabel = (v: number) => `${Math.round(v * 100)}% · ${roundCornerM(v).toFixed(1)} m`;
 /** T285: a grass length as the slider reads it (1 the green's cut .. 5 the fescue) */
-export const lengthLabel = (n: number) => `${n} · ${['green', 'fairway', 'rough', 'long', 'fescue'][Math.min(5, Math.max(1, n)) - 1]}`;
+export const lengthLabel = (n: number) => `${n} of 5 · ${['green', 'fairway', 'rough', 'long', 'fescue'][Math.min(5, Math.max(1, n)) - 1]}`;
+/** T285: the Grass length control (the owner, 2026-11-01: "Grass length ... show it's a scale from 1 - 5 short to long"): its name, the slider
+ *  between Short and Long, and the value as "n of 5" with the grass it is as long as */
+export function GrassLength({ value, onChange, label, tip, className = 'mt-1' }: { value: number; onChange: (v: number) => void; label: string; tip: string; className?: string }) {
+  return (
+    <div className={`${className} text-[12px] text-slate-400`} title={tip} data-grass-length>
+      <div className="flex items-center justify-between gap-2">
+        <span>Grass length</span>
+        <span className="text-xs text-slate-200" data-length={value}>{lengthLabel(value)}</span>
+      </div>
+      <div className="mt-0.5 flex items-center gap-2">
+        <span className="shrink-0 text-[11px]">Short</span>
+        <input type="range" aria-label={label} min={1} max={5} step={1} value={value} onChange={e => onChange(+e.target.value)} className="min-w-0 flex-1" />
+        <span className="shrink-0 text-[11px]">Long</span>
+      </div>
+    </div>
+  );
+}
 /** a Height as the slider reads it, with the form a tee takes there (T127: a grass bank, rock with stairs, a steep rock face) */
 export const heightLabel = (m: number, tee: boolean) => `${m.toFixed(2)} m${!tee ? '' : m < STAIR_MIN_H ? ' · bank' : m < ROCK_FROM ? ' · bank, steps' : m < 0.75 * ROCK_STEEP_H ? ' · rock, steps' : ' · rock face'}`;
 
@@ -84,11 +101,8 @@ export function CourseEdges({ game }: { game: Game }) {
       )}
       {/* T285 (#869): the grass's length: a longer grass casts a shade from right to left onto a shorter one beside it, none on one as long */}
       {len !== null && (
-        <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title={`How long every ${name.toLowerCase()} is cut, 1 (a green) to 5 (fescue): a longer grass beside it shades it from the right, a shorter one it shades`}>
-          <span className="w-12 shrink-0">Length</span>
-          <input type="range" aria-label={`Length of every ${name.toLowerCase()}`} min={1} max={5} step={1} value={len} onChange={e => p.setCourseLength(+e.target.value)} className="min-w-0 flex-1" />
-          <span className="w-16 text-right text-xs text-slate-200" data-length={len}>{lengthLabel(len)}</span>
-        </div>
+        <GrassLength value={len} onChange={v => p.setCourseLength(v)} label={`Grass length of every ${name.toLowerCase()}`}
+          tip={`How long every ${name.toLowerCase()} is cut, 1 (short, a green) to 5 (long, fescue): a longer grass beside it shades it, a shorter one it shades`} />
       )}
       {ht !== null && hr && (
         <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title={kind === 'tee' ? `How high every tee box stands: low on a grass bank, from ${ROCK_FROM} m on rocky sides with stairs up from the nearest cart path, higher a steep rock face` : `How high every ${name.toLowerCase()} stands on its gentle grass bank`}>

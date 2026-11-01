@@ -1108,6 +1108,8 @@ export class GroundPainter {
         })),
         walls: c.walls?.map(x => ({ ...x, p: warpTriples(x.p, step) })), rims: c.rims?.map(r => ({ ...r, p: warpLine(r.p, false, step) })), st,
         spill: c.spill?.map(s => ({ ...s, p: warpLine(s.p) })),
+        // (T285: the grass length's shade runs along the edges as drawn, the wobble included)
+        shade: c.shade?.map(s => ({ ...s, p: warpLine(s.p, false, step) })),
       };
       cache.set(c, w);
     }
