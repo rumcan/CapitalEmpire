@@ -4,7 +4,7 @@ import type { Lot, LotMap } from './lots';
 import type { Pt } from '../network';
 import { zoneOf } from '../sim/routing';
 import type { Built } from '../sim/trips';
-import { GROWN_BASE, GROWN_BUILD_S, GROWN_PER_BUILT, GROWN_PER_HOLE, GROWN_RING0, GROWN_RING_K, PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT } from '../event/config';
+import { FARM_LINE, GROWN_BASE, GROWN_BUILD_S, GROWN_PER_BUILT, GROWN_PER_HOLE, GROWN_RING0, GROWN_RING_K, PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT } from '../event/config';
 import { inCommercial, inIndustrial, industrialRect } from './districts';
 
 export const LU = { NONE: 0, RES: 1, COM: 2, IND: 3, TOUR: 4, GOV: 5 } as const;
@@ -272,6 +272,7 @@ export class Town {
       const l = this.cand[i]; w[i] = 0;
       if (grown) { if ((side === OWN) !== (!!l.seg.town || l.cls === 'gravel')) continue; }
       else if (side && (side === PAVED) === (l.cls === 'gravel')) continue;
+      if (side !== PLAYER && this.pastFarmLine(l.c)) continue; // (T276: the farms' roads; the player's own streets grow wherever they are)
       const zg = this.openness(l, ctx); if (zg <= 0) continue;
       const d = this.nAct ? this.candDn[i] : dist(l.c, grown ? gc : ctx.entry);
       w[i] = zg * Math.exp(-d / 40) * lotValue(l) * (grown ? grownRing(dist(l.c, gc), this.built) : 1); sel[m++] = i;
@@ -280,6 +281,13 @@ export class Town {
     const q = this.drawTop(w, sel, m); return q < 0 ? null : this.cand[q];
   }
 
+  /** T276 (#855): whether a lot lies past the farm line (FARM_LINE from every town centre): the town starts none there, the farms take the
+   *  road. No centres (a classic town grown from the entry): never */
+  private pastFarmLine(c: Pt): boolean {
+    if (!this.centres.length) return false;
+    for (const t of this.centres) if (dist(c, t) <= FARM_LINE) return false;
+    return true;
+  }
   /** T090: the grown town's anchored centre: halfway between its seed (the first centre) and the built lots' mean (the seed while none is built) */
   private anchoredCentre(): Pt {
     const s = this.centres[0]!; let sx = 0, sy = 0, k = 0;

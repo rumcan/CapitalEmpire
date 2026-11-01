@@ -114,6 +114,10 @@ export const TOWN_RATE_BASE = 5;
 export const TOWN_RATE_PER_BUILT = 0.02;
 /** with town centres: the lots a game hour the player's paved roads grow on their own (the EMPTY lots fronting paved roads), times the speed */
 export const PAVED_RATE = 6;
+/** the farm line (T276, #855; the owner, 2026-11-01: "make sure only farms build on roads when there is space. i saw in one game my main road
+ *  was just commercial lots"): past this many tiles from every town centre the town starts no lot of its own (the county road and its gravel),
+ *  the roads there are the farms' (ext/farms/farmmap.ts TOWN_CLEAR: a farm's road lies past it); the player's own streets grow lots anywhere */
+export const FARM_LINE = 300;
 /** with town centres: the town lays at most one gravel leg every this many game hours, times the speed */
 export const GRAVEL_EVERY_H = 6;
 /** T090 (plan P22 2.3.3): a range start's grown town builds (GROWN_BASE + GROWN_PER_HOLE x min(holes, 18) + GROWN_PER_BUILT x built lots) x

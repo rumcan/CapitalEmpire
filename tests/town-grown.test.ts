@@ -11,7 +11,7 @@ import { CLASS, RoadNetwork, type Leg, type Pt } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { MAP } from '../src/game/iso';
 import { NEAR } from '../src/game/golf/rangestart';
-import { GROWN_BASE, GROWN_BUILD_S, GROWN_PER_HOLE, PAVED_RATE } from '../src/game/event/config';
+import { FARM_LINE, GROWN_BASE, GROWN_BUILD_S, GROWN_PER_HOLE, PAVED_RATE } from '../src/game/event/config';
 import { grownRing, LV, type Town, type TownEvent } from '../src/game/lots/town';
 import type { LotMap } from '../src/game/lots/lots';
 import type { Budget } from '../src/game/budget';
@@ -108,4 +108,13 @@ test('the career milestones pay their grants in range starts (Village at 250 res
   const done = [...I.town.states.values()].filter(s => s.level >= LV.BUILT);
   assert.ok(done.length > 0, 'lots completed');
   assert.equal(I.feeKeys.size, 0, 'no lot on a town road paid the player');
+});
+
+test('T276 (#855): the town starts no lot of its own past the farm line (FARM_LINE from its centre): the county road out there is the farms’', () => {
+  const { city, editor } = grownCity('range', 9, 1.8);
+  const I = city as unknown as Inside, cen = (I.town as unknown as { centres: Pt[] }).centres;
+  assert.ok(cen.length > 0, 'a grown town has its centre');
+  const built = builds(run(city, editor, 72 * HOUR)).map(e => I.lots.lots.get(e.key)!).filter(Boolean);
+  assert.ok(built.length > 0, 'the town grows');
+  for (const l of built) assert.ok(cen.some(c => Math.hypot(l.c.x - c.x, l.c.y - c.y) <= FARM_LINE), `a lot at (${l.c.x.toFixed(0)}, ${l.c.y.toFixed(0)}) past the farm line`);
 });
