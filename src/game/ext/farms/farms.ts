@@ -148,8 +148,10 @@ const ORCHARD = names(['ref:tree-birch-gold', 'ref:tree-maple-crimson', 'world:t
 const CARS = cat(i => i.cat === 'Vehicles' && /_[news](-v2)?$/.test(i.id)), PICKUPS = CARS.filter(id => /pickup|van/.test(id));
 const FACE: Record<string, Pt> = { n: { x: 0, y: -1 }, s: { x: 0, y: 1 }, e: { x: 1, y: 0 }, w: { x: -1, y: 0 } };
 interface Pair { x: string; y: string }
-const PICKET: Pair = { x: 'world:fence_picket_x', y: 'world:fence_picket_y' };
-const BOARD: Pair = { x: 'expansion:fence-privacy-x', y: 'expansion:fence-privacy-y' };   // the longest pair in the library: fewest props per long edge
+/** The farm fence (timber posts and wire, T291; art coming from RUN.world). When set, the frontage and yard runs use it (with the drive's
+ *  gate gap) instead of nothing; null leaves those runs out. Farms never use the town's wood fences (the owner, 2026-11-01: "remove wood
+ *  fences from farms. they should only have the farm fences"). */
+const FARM_FENCE: Pair | null = null;
 const CHAIN: Pair = { x: 'expansion:chainlink-x', y: 'expansion:chainlink-y' };
 
 interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; fence: boolean; veh: boolean; street: boolean; plant: boolean }
@@ -389,7 +391,7 @@ function farmTrack1(p: FarmParcel, seed: number): { a: Pt; b: Pt }[] {
 /** The composition of one farm: the farmhouse and barn either side of a gravel drive near the road (a silo, shed or garage
  *  on most farms, the tractor and the pickup in the yard, the mailbox at the gate), fields behind — crop (field tex with row
  *  lines), ploughed dirt, fallow, pasture kept as grass behind a chain-link paddock fence with hay bales, and orchards as a
- *  tree grid — a board fence along the frontage, a picket fence at the back of the yard, hedgerow trees, and the dirt track
+ *  tree grid — the farm fence along the frontage and round the back of the yard when FARM_FENCE is set (none by default), hedgerow trees, and the dirt track
  *  painted as ground strips under the legs farmTrack returns. Deterministic in (parcel, seed); every prop id exists in
  *  LIBRARY; no two uprights share more than 35% of the smaller footprint; nothing stands in front of the parcel's front
  *  edge except the mailbox and the utility pole, within VERGE tiles of it and clear of the asphalt. */
@@ -429,10 +431,12 @@ function composeFarm1(p: FarmParcel, seed: number): Composition {
   for (const sx of [-1, 1]) B.put(pick(r, TREES), clamp(L.ha + sx * (L.hw / 2 + 1.3), 1, W - 1), L.hb + (r() - 0.5) * 2, { plant: true });
   B.put(pick(r, TREES), clamp(L.ha - L.hw / 4, 1, W - 1), Math.max(1.2, L.front - 2), { plant: true });
   for (let a = L.ha - L.hw / 2; a <= L.ha + L.hw / 2; a += 1.6) B.put(pick(r, BUSHES), a, L.front - 0.8, { plant: true });
-  // fences: board along the road frontage (a gate gap at the drive), picket at the back of the yard, chain-link round the paddock
-  B.run(BOARD, 0.3, 0.35, W - 0.3, 0.35, [(L.driveA - 1.7) / W, (L.driveA + 1.7) / W]);
-  B.run(PICKET, Math.max(0.4, yA0), L.yardB1, L.driveA - 1.7, L.yardB1);
-  B.run(PICKET, L.driveA + 1.7, L.yardB1, Math.min(W - 0.4, yA1), L.yardB1);
+  // fences: the farm fence along the road frontage (a gate gap at the drive) and at the back of the yard when FARM_FENCE is set, chain-link round the paddock
+  if (FARM_FENCE) {
+    B.run(FARM_FENCE, 0.3, 0.35, W - 0.3, 0.35, [(L.driveA - 1.7) / W, (L.driveA + 1.7) / W]);
+    B.run(FARM_FENCE, Math.max(0.4, yA0), L.yardB1, L.driveA - 1.7, L.yardB1);
+    B.run(FARM_FENCE, L.driveA + 1.7, L.yardB1, Math.min(W - 0.4, yA1), L.yardB1);
+  }
   const pad = L.pasture;
   if (pad) {
     const laneSideLeft = pad.a1 <= L.driveA;   // the gate gap goes on the paddock side facing the track lane
@@ -639,7 +643,7 @@ function farmTrack2(p: FarmParcel, seed: number): { a: Pt; b: Pt }[] {
 /** The model 2 composition of one farm in a month: the farmhouse and barn either side of the lane 60-120 m in from the road with the yard round
  *  them (as model 1's yard: the silo, shed, garage, tractor, pickup, garden and clutter), the dirt lane from the gate lined by its windbreak,
  *  the fields round the lane and the yard and behind them (corn by the month, ploughed, fallow grass, the pasture behind its paddock fence),
- *  the orchard's grid on some farms, the board fence along the road, the picket at the back of the yard, hedgerow trees, and the field track
+ *  the orchard's grid on some farms, the farm fence along the road and at the back of the yard when FARM_FENCE is set, hedgerow trees, and the field track
  *  behind the yard. Deterministic in (parcel, seed, month); the month changes only the crop states and the orchard's trees */
 function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   const L = layoutOf2(p, seed), B = new FB(p, mulberry(mix(seed >>> 0, keyHash(p.key), 0xc0a2))), { W, D, r, flip, rear } = B;
@@ -690,10 +694,12 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   }
   const o = L.orchard;
   if (o) { const id = orchardTreeId(o.sp, month); for (let j = 0; j < o.nb; j++) for (let i = 0; i < o.na; i++) B.put(id, o.a0 + i * ORCHARD_PITCH, o.b0 + j * ORCHARD_PITCH, { plant: true, mul: ORCHARD_MUL, fixed: true }); }
-  // fences: board along the road (a gap at the lane), picket at the back of the yard, chain-link round the paddock
-  B.run(BOARD, 0.3, 0.35, W - 0.3, 0.35, [(L.laneA - 1.7) / W, (L.laneA + 1.7) / W]);
-  B.run(PICKET, Math.max(0.4, L.yA0), L.yardB1, L.laneA - 1.7, L.yardB1);
-  B.run(PICKET, L.laneA + 1.7, L.yardB1, Math.min(W - 0.4, L.yA1), L.yardB1);
+  // fences: the farm fence along the road (a gap at the lane) and at the back of the yard when FARM_FENCE is set, chain-link round the paddock
+  if (FARM_FENCE) {
+    B.run(FARM_FENCE, 0.3, 0.35, W - 0.3, 0.35, [(L.laneA - 1.7) / W, (L.laneA + 1.7) / W]);
+    B.run(FARM_FENCE, Math.max(0.4, L.yA0), L.yardB1, L.laneA - 1.7, L.yardB1);
+    B.run(FARM_FENCE, L.laneA + 1.7, L.yardB1, Math.min(W - 0.4, L.yA1), L.yardB1);
+  }
   const pad = L.pasture;
   if (pad) {
     const laneSideLeft = pad.a1 <= L.laneA;
