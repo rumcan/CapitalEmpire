@@ -606,7 +606,7 @@ export class GroundPainter {
   /** T230: the chunk's water field (waterNow), made now if not yet */
   private waterField(lite: boolean): { f: WaterField; look: WaterLook } | null {
     if (this.waterNow !== undefined) return this.waterNow;
-    const look = waterLookOf(this.tex.surfaces), c = this.chunkNow, motion = this.waterMotion && !lite;
+    const look = waterLookOf(this.tex.surfaces), c = this.chunkNow, motion = this.waterMotion;
     if (!c || (!waterLookActive(look) && !this.specCam && !motion)) return (this.waterNow = null);
     // the rivers, and the course's water and the painted water areas over the field's box (a pond reaching in from past the chunk counts: its
     // shore sets the depth here), each as it is drawn (the warped course, the rugged outline); none: no field at all (T248: the motion asks
@@ -619,12 +619,15 @@ export class GroundPainter {
       if (p.course) { for (const l of this.warpedCourse(p.course, lite).layers) if (l.s === COURSE_WATER && l.fill.length) ponds.push({ rings: l.fill, site: SITE.course }); }
       else if (p.paint && waterTex(p.tex)) ponds.push({ rings: [this.ruggedOf(p).q.pts], site: SITE.paint });
     }
-    if (!rivers.length && !ponds.length) return (this.waterNow = null);
+    // (with the motion, the creeks too, as narrow as they are drawn: their water moves, flowing down them; no look of their own)
+    const creeks = motion ? this.waters.filter(w => w.w.kind === 'creek' && w.box[2] >= fb[0] && w.box[0] <= fb[2] && w.box[3] >= fb[1] && w.box[1] <= fb[3]) : [];
+    if (!rivers.length && !ponds.length && !creeks.length) return (this.waterNow = null);
     const f = WaterField.over(c.box, pad, fieldRes(c.L, lite));
     // (T248: with the water's motion, each water sample's flow and waves' strength as it is marked)
     if (motion) f.motion();
     for (const w of rivers) f.waterway(w.w.pts, SITE.river, 1, motion ? riverLap : undefined);
     for (const q of ponds) f.rings(q.rings, q.site, motion ? pondLap : undefined);
+    for (const w of creeks) f.waterway(w.w.pts, SITE.creek, SWAMP.water, riverLap);
     if (!f.any()) return (this.waterNow = null);
     f.shore(Math.max(look.reach, 3));
     const fb2 = f.box;
@@ -1985,7 +1988,7 @@ export class GroundPainter {
     // ---- 12. T262: the grass shine's weight mask (and bump layer), with the shine on
     const s0 = performance.now(); this.shineNow = this.grassShine && !lite ? this.grassShineMask(lite, net) : null; this.shineMs = performance.now() - s0;
     // ---- 13. T248: the water's motion mask (water-motion.ts), with the motion on and water near
-    const w0 = performance.now(); this.waterMask = this.waterMotion && !lite ? this.waterMotionMask(lite, net) : null; this.waterMs = performance.now() - w0;
+    const w0 = performance.now(); this.waterMask = this.waterMotion ? this.waterMotionMask(lite, net) : null; this.waterMs = performance.now() - w0;
     return cv;
   }
 

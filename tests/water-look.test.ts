@@ -185,7 +185,8 @@ test('T230 the renderer: the river, the course\'s water and painted water draw t
   const r = readFileSync(resolve('src/game/renderer.ts'), 'utf8'), step1 = r.slice(r.indexOf('// ---- 1. terrain:'), r.indexOf('const walk = net.walkF'));
   const riverWater = step1.indexOf("if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3), water);"), riverLook = step1.indexOf('this.waterOver(ctx, SITE.river');
   assert.ok(riverWater > 0 && riverLook > riverWater, 'the river\'s look right after its water');
-  assert.ok(!/waterOver\([^)]*creek/.test(r) && !/SITE\.creek/.test(r), 'no creek site: the streams (and the swamp\'s own) keep their look');
+  // (2026-11-01: the creeks' water joins the field for its motion only, SITE.creek, never a look: no waterOver of it)
+  assert.ok(!/waterOver\([^)]*creek/i.test(r), 'no look over the creeks: the streams (and the swamp\'s own) keep their look');
   assert.ok(step1.indexOf('this.swampField.alpha(') < riverLook, 'the swamp band is laid before, untouched');
   assert.match(r, /if \(s === SURF\.water\) this\.waterOver\(ctx, SITE\.course, \(\) => ringsOfCode\(code\), ls\[0\]!\.l\.tex, lite\);/);
   assert.match(r, /if \(waterTex\(p\.tex\)\) this\.waterOver\(g, SITE\.paint, \(\) => polyPath\(p\.pts\), p\.tex, lite\);/);

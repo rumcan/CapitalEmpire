@@ -145,3 +145,17 @@ test('the shader carries the same numbers', () => {
   for (const k of ['uWaterTex', 'uWaterBox', 'uWaterT', 'uWaterDrift', 'vec3 waterMotion(vec3 c, vec2 p)', 'textureLod(uShadeLayer']) assert.ok(WATER_MOTION_GLSL.includes(k), k);
   assert.ok(!/NaN|undefined/.test(WATER_MOTION_GLSL));
 });
+
+test('2026-11-01: the motion reaches the district zoom (it fades out only toward the planner map), and a creek\'s own water moves through its swamp band', () => {
+  assert.ok(ZOOM[0] <= 0.035 + 1e-9 && ZOOM[1] < 0.1, `the fade sits below the district zoom (10%): ${ZOOM}`);
+  const f = WaterField.over([0, 0, 20, 20], 2, 2); f.motion();
+  f.waterway([{ x: 0, y: 10, w: 2 }, { x: 20, y: 10, w: 2 }], SITE.creek, 1, () => 0.3);
+  f.shore(3);
+  // the swamp band over the whole box (alpha 1 everywhere): the bank is still, the creek's water is not
+  const band = { a: { data: new Uint8ClampedArray(40 * 40 * 4).fill(255), W: 40, H: 40 }, x0: -10, y0: -10, res: 1 };
+  const m = motionMask(f, { bands: [band as never] })!;
+  assert.ok(m, 'a mask');
+  const at = (x: number, y: number) => { const u = Math.floor((x - m.box[0]) / (m.box[2] - m.box[0]) * m.w), v = Math.floor((y - m.box[1]) / (m.box[3] - m.box[1]) * m.h); return m.data[4 * (v * m.w + u) + 3]!; };
+  assert.ok(at(10, 10) > 0, 'the creek\'s water moves');
+  assert.equal(at(10, 15), 0, 'the swamp past its bank is still');
+});
