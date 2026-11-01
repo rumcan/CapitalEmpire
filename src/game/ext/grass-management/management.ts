@@ -1,3 +1,4 @@
+import { MAP } from '../../iso';
 import { GRASS_SURFACES, GROUND_MATERIALS, type GrassSurface, type GrassCondition } from './catalog';
 /** Care operations; amounts are normalized 0..1, mowing angle in degrees. */
 export type GrassAction = 'mow' | 'water' | 'fertilise' | 'aerate' | 'seed' | 'sod' | 'repair';
@@ -51,8 +52,8 @@ export class GrassManagement {
   private refs: Uint16Array; private initialized: Uint8Array; private surface: Uint8Array;
   private data: Float32Array[]; private dirty: Uint8Array; private queue: Int32Array; private queued = 0;
   private live: Int32Array; private count = 0; private views: (GrassCellView | undefined)[];
-  /** Construct bounded grids up to the game's 2048 tile map. */
-  constructor(size = 2048, cell = 4) {
+  /** Construct bounded grids up to the game's map (MAP tiles; 2048 at most). */
+  constructor(size = MAP, cell = 4) {
     this.size = Math.floor(clamp(size, 4, 2048)); this.cell = Math.floor(clamp(cell, 1, 32)); this.side = Math.ceil(this.size / this.cell);
     const n = this.side * this.side;
     this.refs = new Uint16Array(n); this.initialized = new Uint8Array(n); this.surface = new Uint8Array(n); this.data = Array.from({ length: 13 }, () => new Float32Array(n));

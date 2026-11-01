@@ -3,8 +3,8 @@ import { MAP, clamp } from '../iso';
 /** terrain classes, one per 2 m tile: GROUND and PATCH are buildable, HILL is not (roads tunnel through), CREEK is a dry channel */
 export const TC = { GROUND: 0, PATCH: 1, HILL: 2, WATER: 3, CREEK: 4, BANK: 5 } as const;
 export type TerrainClass = (typeof TC)[keyof typeof TC];
-/** height samples per side, and tiles per sample */
-export const HS = 256, HSTEP = 8;
+/** height samples per side, and tiles per sample (the map's side: MAP / HSTEP samples, T280) */
+export const HSTEP = 8, HS = MAP / HSTEP;
 /** map edges: N is y=0, S is y=MAP, W is x=0, E is x=MAP */
 export type Edge = 'N' | 'E' | 'S' | 'W';
 /** a point on a waterway centreline, in tiles; w is the full water width in tiles */
