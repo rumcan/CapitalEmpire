@@ -2665,6 +2665,8 @@ export class GroundPainter {
     /** the lit top edges on layer hi, clipped to it (a green's a hairline: its raised edge reads by a thin light, the owner 2026-10-25; T260:
      *  a tee's own top too, lit where it has no first cut round it: on its bright grass a full band read as a lime line) */
     const rims = (hi: number) => { const rs = rimsOn.get(hi); if (rs && !lite) this.courseRims(ctx, rs, L, M, hi ? ringsOfCode(hi) : null, hi >> 1 === SURF.green || hi === layerCode(SURF.tee, false) ? 0.35 : 1); };
+    /** whether layer `code` is drawn after the water (so its feathers would lie over it), the water's own band and fill aside */
+    const overWater = (code: number) => code >> 1 !== SURF.water && rankOf(code) > rankOf(layerCode(SURF.water, false));
     walls(0); rims(0);
     for (const code of DRAW_ORDER) {
       const s = code >> 1, ls = layers(s), bk = banksAt.get(code);
@@ -2691,7 +2693,9 @@ export class GroundPainter {
         // a green's fringe lies over a bunker's grass but never over its sand and lip (the owner, 2026-10-31: "the fringe is over the bunker
         // grass but never over the lip of the bunker"): kept off every bunker's fill, as drawn natively or as its picture
         // (a pond's bank, which lies over a bunker's cells next to the water, likewise)
-        if ((s === SURF.green || s === SURF.water) && ls.some(q => q.l.collar)) offFills([SURF.bunker], collars); else collars();
+        // (and every band drawn after the water keeps its feathers off the water, as the fills do)
+        const offCut = [...((s === SURF.green || s === SURF.water) && ls.some(q => q.l.collar) ? [SURF.bunker] : []), ...(!lite && overWater(code) ? [SURF.water] : [])];
+        if (offCut.length) offFills(offCut, collars); else collars();
         // T260: a Border of none (CourseLayer.collar.w 0) lays no band: the bunker's grass lip and the pond's wet soil and stones lie round the
         // sand and the water on the ground there, kept off the sand and the water (offFills)
         const bare = ls.filter(q => q.l.collar?.w === 0).map(q => q.l), banded = ls.filter(q => q.l.collar?.w !== 0).map(q => q.l);
@@ -2728,9 +2732,14 @@ export class GroundPainter {
         }
         for (const q of ims) { put(q.im.shadow, q.x0, q.y0, 'multiply'); this.onShadeMask(m => put(q.im.shadow, q.x0, q.y0, 'multiply', m)); } // 1
         // T256: each in the layer's own look, then in its alternate looks over their shares
-        if (!lite) for (const { l } of ls) { const e = l.soft ?? l.edges; feather(l, e, f); alts(l, a => feather(a.look, e, f)); } // 2
-        if (!lite) for (const { l } of ls) if (l.joint?.length) { const j = l.joint, jf = jointFeather(L); feather(l, j, jf); alts(l, a => feather(a.look, j, jf)); } // 2b: the cross-fade over its own collar (T196)
-        if (!lite && !prof?.sunken && s !== SURF.water) for (const { l } of ls) { feather(l, l.edges, wallF); alts(l, a => feather(a.look, l.edges, wallF)); } // 2c: its walls' tops softened (T196)
+        const feathers = () => {
+          if (!lite) for (const { l } of ls) { const e = l.soft ?? l.edges; feather(l, e, f); alts(l, a => feather(a.look, e, f)); } // 2
+          if (!lite) for (const { l } of ls) if (l.joint?.length) { const j = l.joint, jf = jointFeather(L); feather(l, j, jf); alts(l, a => feather(a.look, j, jf)); } // 2b: the cross-fade over its own collar (T196)
+          if (!lite && !prof?.sunken && s !== SURF.water) for (const { l } of ls) { feather(l, l.edges, wallF); alts(l, a => feather(a.look, l.edges, wallF)); } // 2c: its walls' tops softened (T196)
+        };
+        // a surface drawn after the water feathers its edges onto the ground round it but never onto the water (the owner, 2026-11-01: "waters
+        // edge still bleeds": a fairway against a pond softened its edge out over the water)
+        if (!lite && overWater(code)) offFills([SURF.water], feathers); else feathers();
         for (const { l } of ls) { fill(l, l.fill); alts(l, a => fill(a.look, l.fill)); }         // 3
         if (COURSE_DIRT) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 4: every tier, the grow-in is the ground's state (P23 D5.1)
         for (const q of ims) {                                                                     // 5
