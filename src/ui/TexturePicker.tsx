@@ -63,7 +63,16 @@ export function TexturePicker({ label, value, options, onPick, none, edits = [],
   const cur = options.find(o => o.id === value) ?? null, shown = edits.find(e => e.id === edit);
   // the owner, 2026-11-01: "a left and right texture button i can click that will quickly swap in the next textures from the library": the
   // texture before or after the one in use, round the list (from none: the first or the last)
-  const step = (d: 1 | -1) => { if (!options.length) return; const i = options.findIndex(o => o.id === value); onPick(options[i < 0 ? (d > 0 ? 0 : options.length - 1) : (i + d + options.length) % options.length]!.id); };
+  // (a pick that does not take, a texture this surface refuses, leaves the value as it was: the next click goes on from the one tried, so the
+  //  buttons never stick on it; the owner, 2026-11-01: "it stopped changing even when i kept clicking the button")
+  const tried = useRef<{ from: string | undefined; i: number } | null>(null);
+  const step = (d: 1 | -1) => {
+    const n = options.length; if (!n) return;
+    const at = options.findIndex(o => o.id === value), i = tried.current && tried.current.from === value ? tried.current.i : at;
+    const j = i < 0 ? (d > 0 ? 0 : n - 1) : (i + d + n) % n;
+    tried.current = { from: value, i: j };
+    onPick(options[j]!.id);
+  };
   return (
     <div className="mt-2" ref={box} data-texture-picker={testId}>
       <div className="text-[12px] text-slate-400">{label}</div>
