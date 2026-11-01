@@ -118,7 +118,6 @@ function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; o
             <button className={`chip ${run ? 'chip-on' : ''}`} aria-pressed={run} title={`Run: lay a strip of ${name} as wide as the size, like a road`} onClick={() => p.setBrushRun(true)}>Run</button>
           </div>
           <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title="Erase takes your property's top surface under the brush (never a hole's); no refund" onClick={() => { const v = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
-          <button className={`chip ${height ? 'chip-on' : ''}`} data-ground-height aria-pressed={height} aria-expanded={height} title="Ground height: raise, lower, smooth or flatten your land (earthworks are paid for)" onClick={() => (height ? p.setBrush(p.brushKind) : p.setHeight())}>Ground height <span aria-hidden>{height ? '▾' : '▸'}</span></button>
         </div>
         {height && <GroundHeight game={game} on arm={() => p.setHeight()} />}
       </section>
@@ -217,7 +216,6 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
               <button className={`chip ${p.mode === 'hole' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'hole'} onClick={() => p.setMode('hole')}>Saved holes <span aria-hidden>▸</span></button>
               {game.golfMode && p.hasPlan(n) && <button className="chip" title={`Hole ${n}'s layout: move the tee, the green and the bends; the tee markers and the flag follow, no grass is laid`} onClick={() => p.editPlan(n)}>{`Edit Hole Layout ${n}`}</button>}
               <button className={`chip ${p.mode === 'plant' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'plant'} onClick={() => p.setPlant(p.plantBrush)}>Plants <span aria-hidden>▸</span></button>
-              <button className={`chip ${p.mode === 'height' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'height'} onClick={() => p.setHeight()}>Ground height <span aria-hidden>▸</span></button>
             </div>
             {p.mode === 'hole' && (
               <>

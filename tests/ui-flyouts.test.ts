@@ -106,7 +106,7 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     for (const golf of [true, false]) for (const r of RAIL) {
       if (r.only && r.only !== (golf ? 'golf' : 'classic')) continue;
       const rows = menuOf(r, ctx(golf, null)), leaves = leavesOf(rows);
-      if (!rows.length) { assert.ok(['select', 'bulldoze'].includes(r.id), `${r.id} has a flyout`); continue; }
+      if (!rows.length) { assert.ok(['select', 'bulldoze', 'ground'].includes(r.id), `${r.id} has a flyout`); continue; }
       if (r.action) continue;
       for (const t of toolsIn(r, golf)) assert.ok(leaves.some(l => entryKey(l.row.leaf!.entry) === entryKey(t)), `${golf ? 'golf' : 'classic'} ${r.id}: ${entryKey(t)} reachable`);
       // a leaf's path opens again from its keys (the tool panel's back arrow)

@@ -26,6 +26,7 @@ import { BUILD } from './game/save';
 import { bootFor } from './game/dev/lab-boot';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
+import { GroundHeight } from './ui/course/BrushControls';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
 import { PropsPanel } from './ui/course/PropsPanel';
 import { PracticePanel } from './ui/course/PracticePanel';
@@ -257,6 +258,7 @@ export default function App() {
     activeRail.current = itemId; lastEntry.current[itemId] = entryKey(t);
     if (t.view) game.decor.setView(t.view.where, t.view.group ?? null);
     game.setTool(t.id);
+    if (itemId === 'ground') game.paint.setHeight(); // the footer's Ground height: the height brush in hand
   };
   if (game && item) last.current[item.id] = game.uiTool;
   /** T193: a rail item's flyout rows (none: Select and Bulldoze, a click picks their tool) */
@@ -654,7 +656,12 @@ export default function App() {
               </Panel>
             )}
             {game.tool === 'paint' && <PaintPanel game={game} />}
-            {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
+            {game.uiTool === 'course' && activeRail.current !== 'ground' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
+            {game.uiTool === 'course' && activeRail.current === 'ground' && (
+              <Panel title="Ground height" icon="up" desc="Raise, lower, smooth or flatten your land. Earthworks are paid for.">
+                <GroundHeight game={game} on={game.paint.mode === 'height'} arm={() => game.paint.setHeight()} />
+              </Panel>
+            )}
             {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
             {GREENKEEPING && game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
             {game.tool === 'props' && <PropsPanel game={game} />}
