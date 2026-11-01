@@ -18,6 +18,15 @@ export function facingOf(n: Pt): 0 | 1 | 2 | 3 {
   return Math.abs(fx) > Math.abs(fy) ? (fx > 0 ? 1 : 3) : (fy > 0 ? 0 : 2);
 }
 
+/** TEMPORARY (the owner, 2026-11-01: "temporarily make the game only build houses on lots with angled roads and never on vertically or
+ *  horizontally straight roads and hide it from lots for now as a coverage option"): the screen-straight roads (the odd Road angles, ↓ → ↑ ←:
+ *  the map's diagonals) take no house, and the lot lab's coverage shows the angled ones (↙ ↘ ↗ ↖) alone. Off (setAngledRoadsOnly(false)): as before */
+let ANGLED = true;
+export const angledRoadsOnly = (): boolean => ANGLED;
+export function setAngledRoadsOnly(on: boolean): void { ANGLED = on; }
+/** whether road angle r is screen-straight (vertical or horizontal on screen: a map diagonal) */
+export const screenStraight = (r: number): boolean => r % 2 === 1;
+
 /** a lot's road angle (presets.ts Road) from its away vector n: the street lies along -n, to the nearest eighth turn, so a lot a few degrees off an axis keeps it */
 export function roadOf(n: Pt): Road {
   const angle = Math.atan2(-n.x, -n.y), r = Math.round(angle / (Math.PI / 4));

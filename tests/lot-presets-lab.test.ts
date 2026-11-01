@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { LU, LV } from '../src/game/lots/town';
 import { approvedFor, fitPreset, formatPresets, parsePresets, type LotPreset, type Road } from '../src/game/lots/presets';
-import { facingOf, frameOf, quarterOfRoad, roadOf, type Pt } from '../src/game/lots/preset-frame';
+import { facingOf, frameOf, quarterOfRoad, roadOf, setAngledRoadsOnly, type Pt } from '../src/game/lots/preset-frame';
 import { presetFromComposition } from '../src/game/lots/preset-from';
 import { compose, lotPreset, pickedPreset, setLotPresets, type ComposeState } from '../src/game/lots/compose';
 import PRESET_FIXTURE from './fixtures/lot-presets.json';
@@ -91,6 +91,7 @@ describe('the lot lab presets (road set, approved)', () => {
   });
 
   it('5. compose: an approved lab preset on its road is drawn, a draft is not (only forced); a diagonal lot is a green until an approved preset of its road exists', () => {
+    setAngledRoadsOnly(false); // (the owner's temporary rule, 2026-11-01, off: this checks the diagonal roads' presets as they work without it)
     try {
       const labAxis: LotPreset = { id: 'lab-res-built-10x16-r0-test', use: 'res', state: 'built', w: 10, d: 16, props: [HOUSE], patches: [], road: 0, approved: true };
       const draft: LotPreset = { id: labAxis.id, use: 'res', state: 'built', w: 10, d: 16, props: [HOUSE], patches: [], road: 0 };
@@ -127,7 +128,7 @@ describe('the lot lab presets (road set, approved)', () => {
       assert.equal(lotPreset(near, RES)?.frame.q, 0);
       assert.ok(compose(near, RES).props.some(q => q.from?.preset === diag.id), 'a lot a few degrees off the diagonal is drawn');
     } finally {
-      setLotPresets(FIXTURE.presets, FIXTURE.meta);
+      setLotPresets(FIXTURE.presets, FIXTURE.meta); setAngledRoadsOnly(true);
     }
   });
 

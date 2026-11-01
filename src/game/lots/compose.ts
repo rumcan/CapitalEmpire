@@ -24,7 +24,7 @@ import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor,
 import { AXIS_PROPS, drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
 import { fixedArt } from './art-fix';
 import { share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear)
-import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
+import { angledRoadsOnly, frameOf, listToWorld, quarterOfRoad, roadOf, screenStraight, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
 import { isFence, kindOfId, kindPools } from './item-kinds';
@@ -317,7 +317,10 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
   if (st.preset !== undefined) { const forced = PRESETS.find(p => p.id === st.preset); if (forced) return { preset: forced }; }
   const use = presetUse(st), state = stateOf(st.level, st.decline);
   if (!use || !state) return null;
-  const road = roadOf(lot.n), angled = isAngled(lot), ok = angled && road % 2 === 0 ? [] : approvedOf(use, state, lot.w, lot.d, road);
+  const road = roadOf(lot.n), angled = isAngled(lot);
+  // (TEMPORARY, preset-frame.ts angledRoadsOnly: no house on a screen-straight road)
+  if (use === 'res' && angledRoadsOnly() && screenStraight(road)) return null;
+  const ok = angled && road % 2 === 0 ? [] : approvedOf(use, state, lot.w, lot.d, road);
   // the frozen preset of the lot's slot, among those whose house fits the lot's band at today's sizes (houseFits: a list where every one fits,
   // nearly all, picks as before; neighbours still differ); none fits: among all, the house centred in its band
   const frozen = () => { const list = presetsOf(use, state, lot.w, lot.d), fits = list.filter(q => houseFits(q, lot)); return fits.length ? fits : list; };

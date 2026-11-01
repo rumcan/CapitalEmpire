@@ -36,7 +36,7 @@ import { composeFarm, type FarmParcel } from '../ext/farms/farms';
 import type { ComposeState, LotGeom } from '../lots/compose-core';
 import { compose, lotPresets, setLotPresets } from '../lots/compose';
 import { approvedFor, bucketOf, fitPreset, presetsFor, WHOLE_FRONT, type LotPreset, type PresetDecal, type PresetPatch, type PresetState, type PresetUse, type Road } from '../lots/presets';
-import { frameOf, quarterOfRoad, toFrame, toWorld, type Pt, type PresetFrame } from '../lots/preset-frame';
+import { angledRoadsOnly, frameOf, quarterOfRoad, screenStraight, toFrame, toWorld, type Pt, type PresetFrame } from '../lots/preset-frame';
 import { presetFromComposition } from '../lots/preset-from';
 import { LU, LV } from '../lots/town';
 import { allocOf, allows, STATE_WORDS, toggled, type HouseAlloc } from '../lots/house-alloc';
@@ -969,13 +969,15 @@ export function installLotLab(game: Game): () => void {
     if (!ss.length) { box.append(el('div', 'opacity:.75', 'no presets of this type and state yet')); return box; }
     const t = el('table', 'width:100%;border-collapse:separate;border-spacing:2px;font-size:11px'), hr = el('tr');
     hr.append(el('td', 'opacity:.7', 'size'));
-    ARROW.forEach(a => hr.append(el('td', 'text-align:center;color:#7dd3fc;font-size:13px', a)));
+    // (TEMPORARY, preset-frame.ts angledRoadsOnly: the screen-straight roads' columns hidden)
+    const shown = [0, 1, 2, 3, 4, 5, 6, 7].filter(r => !(angledRoadsOnly() && screenStraight(r)));
+    shown.forEach(r => hr.append(el('td', 'text-align:center;color:#7dd3fc;font-size:13px', ARROW[r]!)));
     t.append(hr);
     let ok = 0, all = 0;
     for (const s of ss) {
       const tr = el('tr');
       tr.append(el('td', 'white-space:nowrap;padding-right:2px', sizeLabel(s)));
-      for (let r = 0; r < 8; r++) {
+      for (const r of shown) {
         const rr = r as Road, a = approvedIn(s.key, rr), dr = cell(s.key, rr).length - a, cur = s.key === size && rr === road;
         all++; if (a) ok++;
         const td = el('td', `text-align:center;padding:3px 0;border-radius:4px;cursor:pointer;background:${a ? '#14532d' : dr ? '#713f12' : '#1e293b'};${cur ? 'outline:2px solid #38bdf8;' : ''}`);
