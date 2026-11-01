@@ -24,7 +24,7 @@ test('T265 the river\'s band: past its bank, never on its water, in stretches an
   assert.deepEqual(riverStreams([R, creek(10, 10, 10)]), [R]);
   let some = 0, none = 0; const rims: number[] = [];
   for (let x = 100; x < 1100; x += 2) for (const side of [-1, 1]) {
-    for (let d = 0; d < hw + 0.5; d += 0.5) assert.equal(f.cover(x, 300 + side * d), 0, `the water at ${x}, ${300 + side * d}`);
+    for (let d = 0; d < hw - 1; d += 0.5) assert.equal(f.cover(x, 300 + side * d), 0, `(2026-11-01: from under the water's edge, the water drawn over it) the water at ${x}, ${300 + side * d}`);
     // past the farthest reach (on the plain distance, less the soft union's most), nothing
     for (let d = hw + RIVER_SWAMP_OUT + RIVER_SWAMP.soft * Math.log(8); d < hw + RIVER_SWAMP_OUT + 12; d += 1.5) assert.equal(f.cover(x, 300 + side * d), 0, `past the reach at ${x}, ${d}`);
     let rim = 0; for (let d = hw + RIVER_SWAMP.bank + 0.5; d < hw + RIVER_SWAMP_OUT + 3; d += 0.25) if (f.cover(x, 300 + side * d) > 0.5) rim = d - hw; else break;

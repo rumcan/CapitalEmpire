@@ -1623,7 +1623,9 @@ export class GroundPainter {
     // the river's bank first, out past its swamp band by RIVER_SWAMP.border (growBand), the band laid over it below: water, swamp, then the
     // dirt border (the owner, 2026-11-01: "the same swamp around the big river. in between the water and the dirt border")
     const border = rv ? growBand(rv, Math.max(1, Math.round(RIVER_SWAMP.border * rres))) : null;
-    if (border) layer('bank', g => { if (rivers.length) shore(g, rivers, 3, 0.8); g.globalCompositeOperation = 'lighter'; overlay(g, border, rres); g.globalCompositeOperation = 'source-over'; });
+    // (the owner, 2026-11-01: "the dirt layer on the outside not between the swamp and water": the band runs from under the water's edge, the
+    // bank only round it; where the band is cut (a road, a lot), the bank's own strip at the water as before)
+    if (border) layer('bank', g => { if (rivers.length) shore(g, rivers, 1, 0.5); g.globalCompositeOperation = 'lighter'; overlay(g, border, rres); g.globalCompositeOperation = 'source-over'; });
     const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, rv.box, lite) : null, rres) : null;
     // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
     //  painted look composed and laid as before)

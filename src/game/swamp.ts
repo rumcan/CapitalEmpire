@@ -102,7 +102,7 @@ export const CREEK_BAND: BandLook = { out: SWAMP_OUT, soft: SWAMP.soft, softReac
  *    eight on a district chunk (its bank a pixel or two: the band starts under it whatever the lattice) (a wide river's distance runs straight
  *    across a lattice cell: bilinear is as good, at a quarter of the work) */
 export const RIVER_SWAMP = {
-  floor: 0.5, border: 2.5, bank: 3, inner: [0.5, 0.9], k: 0.45, cap: 7, stretch: [-0.05, 0.25], stretchWave: 70, bay: 2.5, bayWave: 21,
+  floor: 0.5, border: 2.5, bank: 3, inner: [-0.8, -0.4], k: 0.45, cap: 7, stretch: [-0.05, 0.25], stretchWave: 70, bay: 2.5, bayWave: 21,
   rag: 2.4, ragWave: 6, feather: 0.4, soft: 1, ragStep: 1, latStep: 2, farStep: 8, farRag: 3,
 } as const;
 /** the farthest the river's band reaches past the water's edge (tiles, on the soft distance) */
