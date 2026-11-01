@@ -3,10 +3,11 @@
 // (props 'farm:' + key, ground via setLotGround); nothing here is saved, the parcels derive from the network, the terrain
 // classes and the world seed.
 import { Grid, SK, unionBox, type BBox, type Pt, type RoadNetwork, type Seg } from '../../network';
+import { FARM_LINE } from '../../event/config';
 import { farmParcels, parcelCentre, parcelCorners, parcelsOverlap, seedForParcel, FARM_DEPTH_MAX, FARM_VERGE, type FarmParcel } from './farms';
 
 /** a farm's seg midpoint is more than TOWN_CLEAR tiles from every town centre, and more than EVENT_CLEAR from the event's site and car parks */
-export const TOWN_CLEAR = 300, EVENT_CLEAR = 150;
+export const TOWN_CLEAR = FARM_LINE, EVENT_CLEAR = 150;
 /** a rectangle in tiles (the event's site, a car park def) */
 export interface Rect { x: number; y: number; w: number; h: number }
 /** a town lot's frame as the sim sends it (origin, along u, away n, tiles), the same frame as a farm parcel */

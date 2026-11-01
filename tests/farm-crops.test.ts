@@ -173,14 +173,17 @@ test('model 2: the farmhouse and yard set back 60-120 m on a dirt lane lined by 
     assert.ok(Math.abs(Math.max(...lb.map(f => f.a)) - Math.min(...lb.map(f => f.a)) - 2 * LANE_HALF) < 1e-6, `${p.key}: lane width`);
     assert.ok(lane!.lines && lane!.lines.length === 8, `${p.key}: the lane's two ruts`);
     const gate = frame(p, st.gate.x, st.gate.y); assert.ok(Math.abs(gate.b) < 1e-9 && Math.abs(gate.a - L.laneA) < 1e-9);
-    // the windbreak: on each of its sides a straight row along the lane, WIND_STEP apart, from the road to the yard
+    // the windbreak (T276, #855): one row on one side of the lane, from the road to the yard, its trees a little off its line and its
+    // spacing (one tree family: a spruce row mixes in young spruces), each its own size
     assert.ok(L.wind, `${p.key}: no windbreak`);
     if (L.wind!.sides.length === 2) both++;
     for (const s of L.wind!.sides) {
-      const row = c.props.filter(q => q.id === L.wind!.id).map(q => frame(p, centre(q).x, centre(q).y)).filter(f => Math.abs(f.a - (L.laneA + s * WIND_OFF)) < 1e-6).sort((x, y) => x.b - y.b);
+      const fam = /spruce/.test(L.wind!.id) ? (id: string) => /spruce/.test(id) : (id: string) => id === L.wind!.id;
+      const trees = c.props.filter(q => fam(q.id)).map(q => ({ f: frame(p, centre(q).x, centre(q).y), s: q.scale })).filter(t => Math.abs(t.f.a - (L.laneA + s * WIND_OFF)) < 0.3).sort((x, y) => x.f.b - y.f.b), row = trees.map(t => t.f);
       assert.ok(row.length >= 2, `${p.key}: a windbreak row of ${row.length}`);
-      for (let i = 1; i < row.length; i++) assert.ok(Math.abs(row[i].b - row[i - 1].b - WIND_STEP) < 1e-6 || row[i].b - row[i - 1].b > WIND_STEP, `${p.key}: windbreak spacing`);
+      for (let i = 1; i < row.length; i++) assert.ok(row[i].b - row[i - 1].b > 0.5 * WIND_STEP, `${p.key}: windbreak spacing`);
       assert.ok(row[row.length - 1].b < L.yardB0, `${p.key}: the windbreak stops at the yard`);
+      if (trees.length >= 3) assert.ok(new Set(trees.map(t => t.s.toFixed(3))).size > 1, `${p.key}: the windbreak's trees all one size`);
     }
     // every prop inside the parcel (street furniture just in front of it), no two uprights sharing more than 35% of the smaller footprint
     const ups: number[][] = [];
@@ -198,7 +201,7 @@ test('model 2: the farmhouse and yard set back 60-120 m on a dirt lane lined by 
     assert.ok(labels.includes('Stand In for windbreak poplars') && labels.includes('Stand In for farm lane') && labels.some(t => /corn field|ploughed/.test(t)), `${p.key}: labels ${labels}`);
   }
   assert.ok(deep >= FARMS.length * 0.8, `${deep} of ${FARMS.length} farms 60-120 m deep`);
-  assert.ok(both >= FARMS.length * 0.35 && both <= FARMS.length * 0.75, `${both} windbreaks on both sides`);
+  assert.equal(both, 0, `${both} windbreaks on both sides (T276: one row, one side)`);
 });
 
 test('model 2: the orchard is a strict grid of straight rows ORCHARD_PITCH (6 m) apart, inside its field, the same tree throughout', () => {

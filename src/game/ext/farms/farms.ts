@@ -484,6 +484,14 @@ export const ORCHARD_PITCH = 3, ORCHARD_MAX = 8, ORCHARD_MUL = 0.62;
 const FALLOW_TEX: LotPatch['tex'] = 'golfLongGrass';
 /** the windbreak's trees: the gold birch (Stand In for the poplars: their shape and autumn gold) on most farms, else a row of spruces; one tree a row */
 const WIND_POPLAR = names(['ref:tree-birch-gold']), WIND_SPRUCE = names(['ref:tree-spruce-blue', 'capital:tree-spruce-open']);
+/** T276 (#855; the owner, 2026-10-29: "Farm roads' tree lines become a single row on one side of the road only ... vary each tree's size and
+ *  shape, keeping one tree family per line ... so it never reads as copies"): on, a farm lane's windbreak is one row, each tree its own size
+ *  and place in the row, a spruce row mixing in young spruces (same family, other crowns); off, the old look (one or both sides, every
+ *  tree the same) */
+export let VARIED_TREE_LINES = true;
+export function setVariedTreeLines(on: boolean): void { VARIED_TREE_LINES = on; }
+/** a spruce row's other crowns (the young spruce's four views) */
+const WIND_SPRUCE_YOUNG = names(['gen:tree-spruce-young:ne', 'gen:tree-spruce-young:se', 'gen:tree-spruce-young:sw', 'gen:tree-spruce-young:nw']);
 /** the orchard's species: the library's round broadleaf capital trees (Stand In for the orchard trees), through their leaf stages by the month
  *  (crops.ts ORCHARD_YEAR) */
 const ORCHARD_SPECIES = ['oak', 'maple'] as const;
@@ -553,7 +561,7 @@ function layoutOf2(p: FarmParcel, seed: number): Layout2 {
   // far side on screen (its crowns never hide the lane: a step along +u goes down the screen when u.x + u.y > 0)
   const both = r() < 0.55, one: 1 | -1 = p.u.x + p.u.y > 1e-9 ? -1 : 1, poplar = r() < 0.7 || !WIND_SPRUCE.length;
   const wid = poplar ? WIND_POPLAR[0] : WIND_SPRUCE[Math.floor(r() * WIND_SPRUCE.length)], wmul = poplar ? 1.05 + 0.15 * r() : 0.8 + 0.15 * r();
-  const wind = wid && yardB0 - 3.5 >= 2 * WIND_STEP ? { sides: both ? [-1, 1] as (1 | -1)[] : [one], id: wid, mul: wmul, b0: 2.5, b1: yardB0 - 1 } : null;
+  const wind = wid && yardB0 - 3.5 >= 2 * WIND_STEP ? { sides: both && !VARIED_TREE_LINES ? [-1, 1] as (1 | -1)[] : [one], id: wid, mul: wmul, b0: 2.5, b1: yardB0 - 1 } : null;
   const has = (s: 1 | -1) => !!wind && wind.sides.includes(s);
   // the fields keep off the lane's strip (its windbreak and a headland) and the yard (a headland round it)
   const G = 1.6, eL = laneA - (has(-1) ? WIND_OFF + 1.8 : LANE_HALF + 1.4), eR = laneA + (has(1) ? WIND_OFF + 1.8 : LANE_HALF + 1.4);
@@ -670,7 +678,16 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   for (const sx of [-1, 1]) B.put(pick(r, TREES), clamp(L.ha + sx * (L.hw / 2 + 1.3), 1, W - 1), L.hb + (r() - 0.5) * 2, { plant: true });
   for (let a = L.ha - L.hw / 2; a <= L.ha + L.hw / 2; a += 1.6) B.put(pick(r, BUSHES), a, L.front - 0.8, { plant: true });
   // the windbreak down the lane (before the other plants, so the cap never cuts a row short), then the orchard's grid
-  if (L.wind) { const wid = windTreeId(L.wind.id, month); for (const s of L.wind.sides) for (let b = L.wind.b0; b <= L.wind.b1 + 1e-9; b += WIND_STEP) B.put(wid, L.laneA + s * WIND_OFF, b, { plant: true, mul: L.wind.mul }); }
+  if (L.wind && !VARIED_TREE_LINES) { const wid = windTreeId(L.wind.id, month); for (const s of L.wind.sides) for (let b = L.wind.b0; b <= L.wind.b1 + 1e-9; b += WIND_STEP) B.put(wid, L.laneA + s * WIND_OFF, b, { plant: true, mul: L.wind.mul }); }
+  else if (L.wind) {
+    // (T276: its own stream, so the rest of the farm draws as before; each tree 0.75..1.2 of the row's size, a little off the row's line and
+    //  spacing, never mirrored (its lit side stays toward the sun at the upper right); a spruce row a young spruce now and then)
+    const t = mulberry(mix(seed >>> 0, keyHash(p.key), 0x7276)), base = windTreeId(L.wind.id, month), spruce = WIND_SPRUCE.includes(L.wind.id);
+    for (const s of L.wind.sides) for (let b = L.wind.b0; b <= L.wind.b1 + 1e-9; b += WIND_STEP * (0.85 + 0.3 * t())) {
+      const young = spruce && WIND_SPRUCE_YOUNG.length && t() < 0.35, id = young ? WIND_SPRUCE_YOUNG[Math.floor(t() * WIND_SPRUCE_YOUNG.length)]! : base;
+      B.put(id, L.laneA + s * (WIND_OFF + (t() - 0.5) * 0.5), Math.min(L.wind.b1, b + (t() - 0.5) * 0.8), { plant: true, mul: L.wind.mul * (young ? 1.05 : 1) * (0.75 + 0.45 * t()) });
+    }
+  }
   const o = L.orchard;
   if (o) { const id = orchardTreeId(o.sp, month); for (let j = 0; j < o.nb; j++) for (let i = 0; i < o.na; i++) B.put(id, o.a0 + i * ORCHARD_PITCH, o.b0 + j * ORCHARD_PITCH, { plant: true, mul: ORCHARD_MUL, fixed: true }); }
   // fences: board along the road (a gap at the lane), picket at the back of the yard, chain-link round the paddock
