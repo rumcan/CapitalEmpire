@@ -7,6 +7,15 @@ import { priorityFlood, flowDirs, flowAccum, traceDown } from './flow';
 const CREEK_MIN_ACC = 60;
 /** creeks: at most this many per map */
 const MAX_CREEKS = 6;
+/** the valleys: the mountain edges that wall the map into a valley (2 or 3 of its sides). Off (the owner, 2026-11-01: "there should only be one
+ *  town that starts at your driving range and expands SLOWLY. No valleys anymore"): open land on every side, the woods in patches, the river
+ *  and creeks as before; the three town sites become optional (a range start grows its one town across the road from the range) */
+export let VALLEYS = false;
+export function setValleys(on: boolean): void { VALLEYS = on; }
+/** with VALLEYS off, where the woods' patches start on their noise (lower: more woods; with the valleys 0.40) */
+export const WOODS_FROM = 0.24;
+/** the three town sites' spacing, tiles (750-1500 on the 4 km map: scaled with MAP) */
+const TOWN_GAP = [750 * MAP / 2048, 1500 * MAP / 2048] as const;
 /** creeks: a traced creek needs at least this many samples */
 const CREEK_MIN_CELLS = 30;
 /** creeks: heads of accepted creeks are at least this many samples apart (Chebyshev) */
@@ -142,8 +151,8 @@ export function checkGuarantees(t: Terrain): GuaranteeReport {
     for (let y = t.start.y; y < t.start.y + t.start.size; y++) for (let x = t.start.x; x < t.start.x + t.start.size; x++) if (!buildable(t.cls[y * MAP + x])) bad++;
     if (bad) reasons.push(`start block has ${bad} unbuildable tiles`);
   }
-  if (t.towns.length !== 3) reasons.push('fewer than 3 town sites');
-  else for (let k = 0; k < 3; k++) {
+  if (VALLEYS && t.towns.length !== 3) reasons.push('fewer than 3 town sites');
+  else for (let k = 0; k < t.towns.length; k++) {
     const tw = t.towns[k];
     let bad = 0;
     for (let y = tw.y; y < tw.y + tw.size; y++) for (let x = tw.x; x < tw.x + tw.size; x++) if (!buildable(t.cls[y * MAP + x])) bad++;
@@ -157,8 +166,8 @@ export function checkGuarantees(t: Terrain): GuaranteeReport {
 /** one attempt: edges, height field, main river, classes, highway entry, start block, town sites, chokepoints */
 function build(genSeed: number): Terrain {
   const r = mulberry(genSeed);
-  // 1. edges: 2 or 3 mountain edges, a random exit off them, the source opposite the exit
-  const nMount = r() < 0.5 ? 2 : 3;
+  // 1. edges: 2 or 3 mountain edges (none with VALLEYS off), a random exit off them, the source opposite the exit
+  const nMount = VALLEYS ? (r() < 0.5 ? 2 : 3) : 0;
   const mountainEdges: Edge[] = [];
   while (mountainEdges.length < nMount) { const e = EDGES[Math.floor(r() * 4)]; if (!mountainEdges.includes(e)) mountainEdges.push(e); }
   const exitOpts = EDGES.filter(e => !mountainEdges.includes(e));
@@ -193,7 +202,8 @@ function build(genSeed: number): Terrain {
     for (const e of mountainEdges) m = Math.max(m, smoothstep(0.16, 0.03, dEdge(e, u, v) + 0.09 * edgeN));
     const upM = m * (250 + 350 * ridged(nRidge, u * 6, v * 6, 5));
     const w = fbm(nB, u * 4 + 1.5 * fbm(nW1, u * 2, v * 2, 3), v * 4 + 1.5 * fbm(nW2, u * 2, v * 2, 3), 4);
-    const b = smoothstep(0.40, 0.48, w) * (1 - smoothstep(0.1, 0.4, m));
+    // (no valleys: the woods' patches a little more of the open land, as the mountain edges no longer give any)
+    const b = (VALLEYS ? smoothstep(0.40, 0.48, w) : smoothstep(WOODS_FROM, WOODS_FROM + 0.08, w)) * (1 - smoothstep(0.1, 0.4, m));
     const upB = b * (40 + 40 * ridged(nB2, u * 8, v * 8, 3));
     let up = Math.max(upM, upB);
     up *= smoothstep(0.015, 0.05, gd);
@@ -228,7 +238,7 @@ function build(genSeed: number): Terrain {
   const waters: Waterway[] = [{ kind: 'river', pts }];
   // 6. classes: hills and patches from the detail grids, then river water and banks on top
   const cls = new Uint8Array(MAP * MAP);
-  const G = 512;
+  const G = MAP / 4;
   const detailG = new Float32Array(G * G), patchG = new Float32Array(G * G);
   for (let cj = 0; cj < G; cj++) for (let ci = 0; ci < G; ci++) {
     const x = ci * 4 + 2, y = cj * 4 + 2, c = cj * G + ci;
@@ -467,10 +477,10 @@ function build(genSeed: number): Terrain {
   let bestMin = -1, bestSum = -1;
   for (let i = 0; i < kept.length; i++) for (let j = i + 1; j < kept.length; j++) {
     const dij = Math.hypot(kept[i].cx - kept[j].cx, kept[i].cy - kept[j].cy);
-    if (dij < 750 || dij > 1500) continue;
+    if (dij < TOWN_GAP[0] || dij > TOWN_GAP[1]) continue;
     for (let k = j + 1; k < kept.length; k++) {
       const dik = Math.hypot(kept[i].cx - kept[k].cx, kept[i].cy - kept[k].cy), djk = Math.hypot(kept[j].cx - kept[k].cx, kept[j].cy - kept[k].cy);
-      if (dik < 750 || dik > 1500 || djk < 750 || djk > 1500) continue;
+      if (dik < TOWN_GAP[0] || dik > TOWN_GAP[1] || djk < TOWN_GAP[0] || djk > TOWN_GAP[1]) continue;
       const s = [kept[i].score, kept[j].score, kept[k].score];
       const mn = Math.min(s[0], s[1], s[2]), sum = s[0] + s[1] + s[2];
       if (mn > bestMin || (mn === bestMin && sum > bestSum)) { bestMin = mn; bestSum = sum; bestTri = [kept[i], kept[j], kept[k]]; }

@@ -5,7 +5,7 @@ export const HW = 64;
 export const HH = 32;
 /** tiles per side of the map: 4 x 4 km. The one setting (T280, #859: every copy of the size follows it; 1024 halves the map once the
  *  generator's distances scale with it) */
-export const MAP = 2048;
+export const MAP = 1024;
 /** simulation / content cells (tiles per side) */
 export const CELL = 64;
 /** The builder's 30% zoom is the closest the game camera gets. */
