@@ -8,7 +8,7 @@ import { SurfaceMark } from './SurfaceMark';
 import { lookName } from './CoursePanel';
 import { exposed, exposureOf } from '../../game/exposure';
 import { BunkerLookShape } from '../BunkerSettings';
-import { texPic } from '../TexturePicker';
+import { PUCK_TILE, texPic, texRepeatTiles } from '../TexturePicker';
 
 /** a texture's picture (TexturePicker's: its painted look, an owner's preset or a Paint photo; '' for a colour) */
 const picOf = texPic;
@@ -17,7 +17,8 @@ const picOf = texPic;
  *  wearing the look's picture at the look's scale and angle, with its exposure (T261: the picture's own brightness, brightness(f)), and the
  *  surface's mark over it */
 export function LookDisc({ kind, tex, scale, angle, tone, toneAmt, width = 120 }: { kind: string; tex: string; scale: number; angle: number; tone: number; toneAmt: number; width?: number }) {
-  const pic = picOf(tex), id = `look-${kind}`, tile = Math.max(8, 48 * scale), f = exposureOf(tone, toneAmt), lit = exposed(f) ? { filter: `brightness(${f})` } : undefined;
+  // (the game's scale at its closest zoom: one repeat of the picture as many tiles as it covers there, times the look's Scale)
+  const pic = picOf(tex), id = `look-${kind}`, tile = Math.max(8, texRepeatTiles(tex) * PUCK_TILE * scale), f = exposureOf(tone, toneAmt), lit = exposed(f) ? { filter: `brightness(${f})` } : undefined;
   return (
     <svg viewBox="0 0 120 84" width={width} height={width * 0.7} role="img" aria-label={`${kind} look preview`} className="shrink-0">
       <defs>

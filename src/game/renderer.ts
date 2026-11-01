@@ -2762,7 +2762,10 @@ export class GroundPainter {
         // T256: each in the layer's own look, then in its alternate looks over their shares
         const feathers = () => {
           if (!lite) for (const { l } of ls) { const e = l.soft ?? l.edges; feather(l, e, f); alts(l, a => feather(a.look, e, f)); } // 2
-          if (!lite) for (const { l } of ls) if (l.joint?.length) { const j = l.joint, jf = jointFeather(L); feather(l, j, jf); alts(l, a => feather(a.look, j, jf)); } // 2b: the cross-fade over its own collar (T196)
+          // 2b: the cross-fade over its own collar (T196), a hairline (about a pixel): wider, a fairway against a first cut of another colour
+          //     showed as a band of its own texture (the owner, 2026-11-01: "this green thing between the fringe and the fairway"); the grass
+          //     length's light and shade (courseShade) mark the step instead
+          if (!lite) for (const { l } of ls) if (l.joint?.length) { const j = l.joint, jf = Math.min(jointFeather(L), 1.2 / (TILE_PX * Math.max(L, 1e-3))); feather(l, j, jf); alts(l, a => feather(a.look, j, jf)); }
           if (!lite && !prof?.sunken && s !== SURF.water) for (const { l } of ls) { feather(l, l.edges, wallF); alts(l, a => feather(a.look, l.edges, wallF)); } // 2c: its walls' tops softened (T196)
         };
         // a surface drawn after the water feathers its edges onto the ground round it but never onto the water (the owner, 2026-11-01: "waters
@@ -2819,27 +2822,43 @@ export class GroundPainter {
    *  the upper right, so the shade falls toward the lower left), as wide and dark as the length difference: three bands, darkest at the edge.
    *  Bucketed by darkness, one fill each, under the chunk transform M */
   private courseShade(ctx: C2D, cs: readonly CoursePatch[], code: number, M: DOMMatrix) {
-    const LEVELS = 6, paths: (Path2D | null)[] = Array.from({ length: LEVELS }, () => null), BANDS = [[0, 1 / 3, 1], [1 / 3, 2 / 3, 0.6], [2 / 3, 1, 0.3]] as const;
+    // (the owner, 2026-11-01: "the ends of the shadows need to taper off, not have such an abrupt stop", and the light on the longer grass's
+    //  sunny edge a highlight that "brightens the exposure of whatever is below it", never a shape of its own colour)
+    const LEVELS = 8, shadeP: (Path2D | null)[] = Array(LEVELS).fill(null), litP: (Path2D | null)[] = Array(LEVELS).fill(null);
+    const BANDS = [[0, 0.25, 1], [0.25, 0.5, 0.72], [0.5, 0.75, 0.42], [0.75, 1, 0.16]] as const, TAPER = 2.2;
     let any = false;
     for (const c of cs) for (const run of c.shade ?? []) {
       if (run.c !== code) continue;
-      const p = run.p, w = 0.45 + 0.35 * run.d, a0 = Math.min(0.5, 0.2 + 0.08 * run.d); // 1 step: 0.8 tiles at 0.28; 4 steps: 1.85 tiles at 0.5
+      const p = run.p, d = run.d;
+      // shade: 1 step 0.8 tiles at 0.28, 4 steps 1.85 tiles at 0.5; light: narrower and fainter, a lift of the longer grass's own texture
+      const ws = 0.45 + 0.35 * d, as = Math.min(0.5, 0.2 + 0.08 * d), wl = 0.3 + 0.22 * d, al = Math.min(0.42, 0.18 + 0.06 * d);
+      // the run's length, for the taper at both its ends (over TAPER tiles, or a third of a short run)
+      let L = 0; for (let i = 0; i + 3 < p.length; i += 2) L += Math.hypot(p[i + 2]! - p[i]!, p[i + 3]! - p[i + 1]!);
+      const T = Math.min(TAPER, L / 3);
+      let s0 = 0;
       for (let i = 0; i + 3 < p.length; i += 2) {
         const ax = p[i]!, ay = p[i + 1]!, bx = p[i + 2]!, by = p[i + 3]!, dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy); if (len < 1e-6) continue;
-        // the longer grass lies along (dy, -dx); its shade falls on the other side, only where it stands toward the sun
-        const tx = dy / len, ty = -dx / len, sun = tx * SUN_TILE_DIR.x + ty * SUN_TILE_DIR.y; if (sun <= 0.05) continue;
-        const k = Math.min(1, (sun - 0.05) / 0.45), sx = -tx, sy = -ty;
+        const sm = s0 + len / 2; s0 += len;
+        const end = T > 0 ? Math.min(1, Math.min(sm, L - sm) / T) : 1, taper = end * end * (3 - 2 * end);
+        // the longer grass lies along (dy, -dx): where it stands toward the sun its shade falls on this (shorter) side; where it lies away
+        // from the sun its edge here faces the sun, and its top is lit just past the edge, on its side
+        const tx = dy / len, ty = -dx / len, sun = tx * SUN_TILE_DIR.x + ty * SUN_TILE_DIR.y, lit = sun < -0.05; if ((!lit && sun <= 0.05) || taper <= 0) continue;
+        const k = Math.min(1, (Math.abs(sun) - 0.05) / 0.45) * taper, sx = lit ? tx : -tx, sy = lit ? ty : -ty, a0 = lit ? al : as, ww = (lit ? wl : ws) * (0.35 + 0.65 * taper);
         for (const [f0, f1, m] of BANDS) {
           const lvl = Math.min(LEVELS - 1, Math.round(a0 * k * m / 0.5 * (LEVELS - 1))); if (lvl <= 0) continue;
-          const q = paths[lvl] ??= new Path2D(), o0 = w * f0, o1 = w * f1;
+          const set = lit ? litP : shadeP, q = set[lvl] ??= new Path2D(), o0 = ww * f0 + (lit ? 0.04 : 0), o1 = ww * f1 + (lit ? 0.04 : 0);
           q.moveTo(ax + sx * o0, ay + sy * o0); q.lineTo(bx + sx * o0, by + sy * o0); q.lineTo(bx + sx * o1, by + sy * o1); q.lineTo(ax + sx * o1, ay + sy * o1); q.closePath();
           any = true;
         }
       }
     }
     if (!any) return;
-    ctx.save(); ctx.setTransform(M); ctx.globalCompositeOperation = 'multiply';
-    for (let l = 1; l < LEVELS; l++) { const q = paths[l]; if (!q) continue; ctx.fillStyle = `rgba(28,40,14,${(0.5 * l / (LEVELS - 1)).toFixed(3)})`; ctx.fill(q); }
+    ctx.save(); ctx.setTransform(M);
+    ctx.globalCompositeOperation = 'multiply';
+    for (let l = 1; l < LEVELS; l++) { const q = shadeP[l]; if (!q) continue; ctx.fillStyle = `rgba(28,40,14,${(0.5 * l / (LEVELS - 1)).toFixed(3)})`; ctx.fill(q); }
+    // the light: a screen of warm sunlight, so the texture under it (grass, or a first cut painted brown) keeps its detail and only brightens
+    ctx.globalCompositeOperation = 'screen';
+    for (let l = 1; l < LEVELS; l++) { const q = litP[l]; if (!q) continue; ctx.fillStyle = `rgba(255,236,190,${(0.5 * l / (LEVELS - 1)).toFixed(3)})`; ctx.fill(q); }
     ctx.restore();
   }
   /** the walls hanging over one layer (T099; ext/course-walls WallRun: each run's top edge with its drop, the higher side on the left, the

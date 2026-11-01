@@ -6,6 +6,19 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { PHOTO_TEX } from '../game/grass-art';
 import { paintedSwatch } from '../game/painted-surfaces-live';
 import { ownTexture } from '../game/ext/bunker-look/texture-library';
+import { PRESETS } from '../game/paint-presets';
+
+/** the owner, 2026-11-01 ("these round texture pucks don't seem to have the texture on, just flat colour. can this be the same scale as the game"):
+ *  a puck's 120-unit disc shows its texture as the game does at its closest zoom (30%): a tile (2 m) PUCK_TILE units on a side before the
+ *  disc's iso squash (128 px x 0.3 across a tile's diamond, / sqrt 2) */
+export const PUCK_TILE = 27;
+/** the tiles one repeat of a texture's picture covers in the game: a preset's size, a photo's mix (metres) or plain period, else 8 */
+export function texRepeatTiles(tex: string): number {
+  if (tex.startsWith('preset:')) { const p = PRESETS.find(q => `preset:${q.id}` === tex); if (p) return p.size; }
+  const ph = PHOTO_TEX.find(t => t.tex === tex);
+  if (ph) return ph.mix > 0 ? ph.mix / 2 : ph.tiles ?? 12;
+  return 8;
+}
 
 // the owner's presets' baked pictures, by preset id (Vite fills the glob in when it builds; under plain node there is none)
 const PICS: Record<string, string> = (() => { try { return import.meta.glob('../assets/ground/preset-*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>; } catch { return {}; } })();
@@ -29,7 +42,7 @@ export function TexPuck({ t, css }: { t: TextureOption | null; css: number }) {
     <svg viewBox="0 0 120 84" width={css} height={css * 0.7} aria-hidden>
       <defs>
         <clipPath id={`${id}-top`}><ellipse cx="60" cy="38" rx="56" ry="30" /></clipPath>
-        {pic && <pattern id={`${id}-pic`} patternUnits="userSpaceOnUse" width="64" height="64" patternTransform="translate(60 38) scale(1 0.536) rotate(45)"><image href={pic} width="64" height="64" preserveAspectRatio="none" /></pattern>}
+        {pic && (() => { const r = t ? texRepeatTiles(t.id) * PUCK_TILE : 64; return <pattern id={`${id}-pic`} patternUnits="userSpaceOnUse" width={r} height={r} patternTransform="translate(60 38) scale(1 0.536) rotate(45)"><image href={pic} width={r} height={r} preserveAspectRatio="none" /></pattern>; })()}
       </defs>
       <path d="M4 38 V50 A56 30 0 0 0 116 50 V38 Z" fill="#4a3a28" />
       <ellipse cx="60" cy="38" rx="56" ry="30" fill={t?.col ?? '#3a3a3a'} />
