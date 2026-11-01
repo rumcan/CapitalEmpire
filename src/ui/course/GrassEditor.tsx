@@ -6,7 +6,7 @@
 // put in hand; an edit of a made one applies as it changes (its cells drawn again). Delete asks first: its cells keep how they play.
 import { useState } from 'react';
 import type { Game } from '../../game/engine';
-import { GRASS_FAMILIES, GRASS_NAME_MAX, GRASS_PLAYS, isGrassFamily, stripesOk, type CustomGrass } from '../../game/golf/grasses';
+import { GRASS_FAMILIES, GRASS_NAME_MAX, GRASS_PLAYS, PLAY_LENGTH, isGrassFamily, stripesOk, type CustomGrass } from '../../game/golf/grasses';
 import { MENU_OPTIONS, withOwn } from '../../PaintPanel';
 import { TexPuck, TexturePicker, type TextureOption } from '../TexturePicker';
 import { addOwnTexture } from '../../game/ext/bunker-look/uploads';
@@ -16,7 +16,7 @@ import { tiledFamily } from '../../game/painted-tiles';
 import { BORDER_MAX_M } from '../../game/ext/course-grid/patch';
 import { exposureOf, toneOfExposure } from '../../game/exposure';
 import { ExposureRow } from '../../PaintPanel';
-import { borderLabel, courseBorderAt, courseBorderPos, shadowLabel, smoothLabel, BORDER_STEPS } from './CourseEdges';
+import { borderLabel, courseBorderAt, courseBorderPos, lengthLabel, shadowLabel, smoothLabel, BORDER_STEPS } from './CourseEdges';
 import { grassPuckImage, useSwatchPucks } from './swatch-puck';
 import { SurfaceMark } from './SurfaceMark';
 import { GRASS_KIND } from '../../game/golf/grasses';
@@ -90,6 +90,11 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
         <span>{stripesOk(d.plays) ? 'Mowing stripes' : 'Mowing stripes (fairway and first cut only)'}</span>
       </label>
 
+      <div className="mt-2 flex items-center gap-2 text-[12px] text-slate-400" title="How long it is cut, 1 (a green) to 5 (fescue): a longer grass beside it shades it from the right, a shorter one it shades">
+        <span className="w-12 shrink-0">Length</span>
+        <input type="range" aria-label="Length" min={1} max={5} step={1} value={d.length ?? PLAY_LENGTH[d.plays]} onChange={e => set({ length: +e.target.value })} className="min-w-0 flex-1" />
+        <span className="w-16 text-right text-xs text-slate-200" data-length={d.length ?? PLAY_LENGTH[d.plays]}>{lengthLabel(d.length ?? PLAY_LENGTH[d.plays])}</span>
+      </div>
       <h4 className="sub-head mt-3">Border</h4>
       <div className="flex items-center gap-2 text-[12px] text-slate-400" title={`A first cut band round it: none, a hairline, up to ${BORDER_MAX_M} m`}>
         <span className="w-12 shrink-0">Border</span>

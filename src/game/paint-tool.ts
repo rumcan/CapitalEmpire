@@ -30,6 +30,7 @@ import type { PuckBand } from './course-look';
 import type { PuckStyle } from './ext/course-cursor';
 import { borderBase, clampBorder } from './ext/course-grid/patch';
 import { HEIGHT_RANGE, SURF_HEIGHT, defaultShadow } from './ext/course-walls';
+import { DEFAULT_LENGTH } from './ext/course-walls/spill';
 import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
 import { runCells, runPoint, straightTo } from './ext/course-cursor/run';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
@@ -114,7 +115,10 @@ const UNDO_CELLS = 2_000_000;
  *  grid, the collar band's width in metres (bw: the Border slider), its walls' shadow (sh: the Shadow slider, 0 none .. 1 strong) and, for a
  *  raised surface, its height in metres (ht: the Height slider, T127); absent: the defaults (the host's collarDefault band, course-walls defaultShadow
  *  and SURF_HEIGHT) */
-type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>; bw?: number; sh?: number; ht?: number };
+type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>; bw?: number; sh?: number; ht?: number;
+  /** T285: the grass's length (1 the green's cut .. 5 the fescue; absent: course-walls DEFAULT_LENGTH) */ len?: number };
+/** T285: the brush kinds that paint grass, with their surface ids (the Length slider's surfaces) */
+export const LENGTH_KINDS: Partial<Record<BrushKind, number>> = { fairway: SURF.fairway, green: SURF.green, tee: SURF.tee, rough: SURF.rough, longGrass: SURF.longGrass };
 /** the brush kinds whose course-grid surface has a collar band (the Border slider's surfaces), with their surface ids and the band's name */
 export const BORDER_KINDS: Partial<Record<BrushKind, { s: number; band: string }>> = {
   fairway: { s: SURF.fairway, band: 'first cut' }, tee: { s: SURF.tee, band: 'first cut' }, green: { s: SURF.green, band: 'fringe' },
@@ -147,10 +151,11 @@ function loadBrush(): Record<BrushKind, BrushSet> {
     const saved = JSON.parse(localStorage.getItem(BRUSH_KEY) ?? 'null') as Partial<Record<BrushKind, { r?: number; style?: Partial<BrushSet['style']> }>> | null;
     if (saved && typeof saved === 'object') for (const p of BRUSH_PRESETS) {
       const s = saved[p.kind]; if (!s || typeof s !== 'object') continue;
-      const { bw, sh, ht } = s as { bw?: unknown; sh?: unknown; ht?: unknown }, hr = HEIGHT_RANGE[BORDER_KINDS[p.kind]?.s ?? 0];
+      const { bw, sh, ht, len } = s as { bw?: unknown; sh?: unknown; ht?: unknown; len?: unknown }, hr = HEIGHT_RANGE[BORDER_KINDS[p.kind]?.s ?? 0];
       out[p.kind] = { r: Number.isFinite(s.r) ? Math.min(BR_MAX, Math.max(BR_MIN, s.r!)) : p.r, style: clampStyle({ ...p.style, ...s.style }),
         ...(typeof bw === 'number' && Number.isFinite(bw) ? { bw: clampBorder(bw) } : {}), ...(typeof sh === 'number' && Number.isFinite(sh) ? { sh: Math.min(1, Math.max(0, sh)) } : {}),
-        ...(hr && typeof ht === 'number' && Number.isFinite(ht) ? { ht: Math.min(hr[1], Math.max(hr[0], ht)) } : {}) };
+        ...(hr && typeof ht === 'number' && Number.isFinite(ht) ? { ht: Math.min(hr[1], Math.max(hr[0], ht)) } : {}),
+        ...(LENGTH_KINDS[p.kind] !== undefined && typeof len === 'number' && Number.isFinite(len) ? { len: Math.min(5, Math.max(1, Math.round(len))) } : {}) };
     }
   } catch { /* no storage or a bad save: the defaults */ }
   return out;
@@ -659,6 +664,24 @@ export class PaintTool {
     const s = Math.min(1, Math.max(0, v)); if (s === this.courseShadow(kind)) return;
     this.brush[kind] = { ...this.brush[kind], sh: s }; this.saveBrush();
     this.lookSoon(); this.host.emit();
+  }
+  /** T285: a grass kind's length (1 the green's cut .. 5 the fescue), or null for a kind that is not grass */
+  courseLength(kind: BrushKind = this.brushKind): number | null {
+    const s = LENGTH_KINDS[kind]; if (s === undefined) return null;
+    return this.brush[kind].len ?? DEFAULT_LENGTH[s] ?? 3;
+  }
+  /** sets a grass kind's length (1..5), remembered with its brush look; the course is drawn again (its shades) */
+  setCourseLength(v: number, kind: BrushKind = this.brushKind) {
+    if (LENGTH_KINDS[kind] === undefined || !Number.isFinite(v)) return;
+    const n = Math.min(5, Math.max(1, Math.round(v))); if (n === this.courseLength(kind)) return;
+    this.brush[kind] = { ...this.brush[kind], len: n }; this.saveBrush();
+    this.lookSoon(); this.host.emit();
+  }
+  /** the lengths set with the slider, by surface id (the engine's CourseLooks.length; unset ones are left out: their defaults) */
+  courseLengths(): (number | undefined)[] {
+    const out: (number | undefined)[] = [];
+    for (const [k, s] of Object.entries(LENGTH_KINDS) as [BrushKind, number][]) { const n = this.brush[k].len; if (n !== undefined) out[s] = n; }
+    return out;
   }
   /** the Shadows set with the slider, by surface id (the engine's CourseLooks.shadow; unset ones are left out: their defaults) */
   courseShadows(): (number | undefined)[] {

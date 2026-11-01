@@ -9,7 +9,7 @@ import type { EdgeProfile } from '../../paint-edges';
 import { MONTH_BASE } from './areas';
 import { growMask } from '../course-fx';
 import { DRAW_ORDER, LayerStack, chunkWalls, coversOf, defaultShadow, layerCode, surfHeights, teeStairs } from '../course-walls';
-import { SPILL_SURFACES, TALL_CODES, spillRuns } from '../course-walls/spill';
+import { SPILL_SURFACES, TALL_CODES, lengthOfCode, shadeRuns, spillRuns } from '../course-walls/spill';
 
 /** a course chunk's side, tiles (128 cells) */
 export const COURSE_CHUNK = 64;
@@ -43,6 +43,8 @@ export const SURF_EDGE: readonly EdgeProfile[] = ['flat', 'flat', 'flat', 'water
  *  hairline) and a tee's or green's height in metres (the Height slider, T127; a missing one: course-walls SURF_HEIGHT) */
 export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>;
   border?: readonly (number | undefined)[]; shadow?: readonly (number | undefined)[]; height?: readonly (number | undefined)[];
+  /** T285: each surface's grass length by draw id (1 the green's cut .. 5 the fescue; a missing one: course-walls DEFAULT_LENGTH) */
+  length?: readonly (number | undefined)[];
   /** each surface's own collar look by surface id (the course look's Border texture, scale, angle and tone; a missing one: collar by name) */
   band?: readonly (CourseTex | undefined)[];
   /** T227: the grass a bunker's lip band wears with the course finish on (the fairway's first cut), when the bunker's Border texture is its
@@ -230,6 +232,13 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
     for (const r of spillRuns(d, stack, layerCode(o.surf, false), se[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
     if (ce) for (const r of spillRuns(d, stack, layerCode(o.surf, true), ce[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
   }
+  // T285 (#869): where a longer grass lies just outside a grass layer's edge (its fill's, its band's), the shade it casts on this layer there
+  // (the renderer lays it only where that grass is on the sun's side, so it falls right to left); equal lengths cast none
+  const lengthOf = (code: number) => lengthOfCode(code, looks.length, styles, looks.base), shade: { p: Float32Array; d: number; c: number }[] = [];
+  for (const { o, se, ce } of capped) {
+    const fc = layerCode(o.surf, false); for (const r of shadeRuns(d, stack, fc, se[1], lengthOf, styles)) shade.push({ p: Float32Array.from(r.p), d: r.d, c: fc });
+    if (ce) { const cc = layerCode(o.surf, true); for (const r of shadeRuns(d, stack, cc, ce[1], lengthOf, styles)) shade.push({ p: Float32Array.from(r.p), d: r.d, c: cc }); }
+  }
   // T256: the looks by owner: a surface whose cells here all wear one owner's look takes it; cells of several looks keep the most common as
   // the layer's own and the others as alternates over their share of the chunk (OwnerPick)
   const pickOf = looks.own ? ownerPicker(d, cx, cy, looks) : null;
@@ -261,14 +270,14 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   // (T271: by draw id: a chunk with a custom grass carries the grasses' Shadows too; any other the nine entries it carried before, or none)
   const shN = layers.some(l => l.s >= CUSTOM0) ? Math.max(9, looks.shadow?.length ?? 0) : 9, shOn = !!looks.shadow?.some((v, s) => v !== undefined && s < shN);
   const sh = shOn ? { sh: Array.from({ length: shN }, (_, s) => { const v = looks.shadow![s]; return v !== undefined && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : defaultShadow(s); }) } : {};
-  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, ...(spill.length ? { spill } : {}), z: 0 } };
+  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, ...(spill.length ? { spill } : {}), ...(shade.length ? { shade } : {}), z: 0 } };
 }
 
 /** the buffers of a patch's typed arrays (a postMessage transfer list) */
 export function patchBuffers(p: LotPatch): ArrayBuffer[] {
   const out: ArrayBuffer[] = [], c = p.course; if (!c) return out;
   for (const l of c.layers) for (const a of [...l.fill, ...l.edges, ...(l.soft ?? []), ...(l.joint ?? []), ...(l.collar ? [...l.collar.fill, ...l.collar.edges, ...(l.collar.soft ?? [])] : []), ...(l.stripes?.flatMap(q => (q.runs ? [q.runs] : [])) ?? []), ...(l.alts?.map(q => q.runs) ?? [])]) out.push(a.buffer as ArrayBuffer);
-  for (const w of [...(c.walls ?? []), ...(c.rims ?? []), ...(c.spill ?? [])]) out.push(w.p.buffer as ArrayBuffer);
+  for (const w of [...(c.walls ?? []), ...(c.rims ?? []), ...(c.spill ?? []), ...(c.shade ?? [])]) out.push(w.p.buffer as ArrayBuffer);
   if (c.grow) out.push(c.grow.buffer as ArrayBuffer);
   return out;
 }

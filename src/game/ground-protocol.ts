@@ -108,7 +108,10 @@ export interface CoursePatch { cx: number; cy: number; size: number; layers: Cou
   /** T204: where tall grass meets the flat short turf (the fairway and its first cut): runs along that turf's outer edges, each with the tall side
    *  on its (dy, -dx) side and o, the layer code of the tall grass there (0 the map grass, 2 the rough, 4 the fescue); the renderer lays the tall
    *  grass's ragged spill over the turf along them (rugged-edges spillBlades) */
-  spill?: { p: Float32Array; o: number }[]; z: number }
+  spill?: { p: Float32Array; o: number }[];
+  /** T285: where a longer grass lies just outside a grass layer's edge: the run (x y pairs, tiles, the longer grass on each piece's (dy, -dx)
+   *  side), d how much longer (1..4), c the layer's code (its shade is laid right after that layer, onto it) */
+  shade?: { p: Float32Array; d: number; c: number }[]; z: number }
 
 /** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
 export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}` | `pic:${string}` | `upload:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;

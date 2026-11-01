@@ -44,7 +44,11 @@ const SHADOW_START = 0.15;
 export interface CustomGrass { k: number; name: string; plays: GrassPlay; family: string; scale: number; angle: number; tone: 0 | 1 | 2; toneAmt: number; stripes: boolean; border: number; round: boolean; smooth: number; shadow: number;
   /** its Border band's own texture (as family: a painted grass, a preset or an upload), scale, angle and exposure (the owner, 2026-10-31: "you
    *  cant set a border in the create your own section"); absent: the course's first cut */
-  btex?: string; bscale?: number; bangle?: number; btone?: 0 | 1 | 2; btoneAmt?: number }
+  btex?: string; bscale?: number; bangle?: number; btone?: 0 | 1 | 2; btoneAmt?: number;
+  /** T285: its grass length (1 the green's cut .. 5 the fescue); absent: its play's (PLAY_LENGTH) */
+  length?: number }
+/** T285: a play's grass length, a new grass's start */
+export const PLAY_LENGTH: Readonly<Record<GrassPlay, number>> = { fairway: 2, firstCut: 3, rough: 3, longGrass: 4, fescue: 5 };
 
 /** the painted grass families the editor offers (every painted family of kind grass), in the registry's order */
 export const GRASS_FAMILIES: readonly { id: string; name: string }[] = FAMILIES.filter(f => f.kind === 'grass').map(f => ({ id: f.id, name: f.name }));
@@ -83,7 +87,8 @@ export function clampGrass(v: unknown, fallback = GRASS_FAMILIES[0]?.id ?? 'emer
   const tone = o.tone === 1 || o.tone === 2 ? o.tone : 0;
   const band = typeof o.btex === 'string' && isGrassTexture(o.btex) ? { btex: o.btex, bscale: r3(clamp(o.bscale, 0.25, 4, 1)), bangle: r3(clamp(o.bangle, -180, 180, 0)), btone: (o.btone === 1 || o.btone === 2 ? o.btone : 0) as 0 | 1 | 2, btoneAmt: r3(clamp(o.btoneAmt, 0, 1, 0.35)) } : {};
   return { k, name, plays, family, scale: r3(clamp(o.scale, 0.25, 4, 1)), angle: r3(clamp(o.angle, -180, 180, 0)), tone, toneAmt: r3(clamp(o.toneAmt, 0, 1, 0.35)), stripes: !!o.stripes && stripesOk(plays),
-    border: r3(clampBorder(clamp(o.border, 0, BORDER_MAX_M, 0))), round: !!o.round, smooth: r3(clamp(o.smooth, 0, 1, 0.5)), shadow: r3(clamp(o.shadow, 0, 1, SHADOW_START)), ...band };
+    border: r3(clampBorder(clamp(o.border, 0, BORDER_MAX_M, 0))), round: !!o.round, smooth: r3(clamp(o.smooth, 0, 1, 0.5)), shadow: r3(clamp(o.shadow, 0, 1, SHADOW_START)), ...band,
+    ...(typeof o.length === 'number' && Number.isFinite(o.length) ? { length: Math.min(5, Math.max(1, Math.round(o.length))) } : {}) };
 }
 /** the grasses from a save: each well formed one, one per slot (the first wins), by slot; [] for none (every older save) */
 export function normalizeGrasses(raw: unknown): CustomGrass[] {
@@ -113,15 +118,16 @@ export function grassBandTex(g: CustomGrass, firstCut: CourseTex): CourseTex {
 /** what CourseLooks carries for the custom grasses, by draw id: each one's fill, its band (the course's first cut), its Border, Shadow and
  *  Round off, the surface it plays as (base) and the ids with mowing stripes. photo: lay each in its play's own photo texture (the dev
  *  server's ?grass=photo, where no painted family is laid) */
-export function grassLooks(list: readonly CustomGrass[], firstCut: CourseTex, photo = false): Required<Pick<CourseLooks, 'base'>> & Pick<CourseLooks, 'stripes'> & { surf: (CourseTex | undefined)[]; band: (CourseTex | undefined)[]; border: (number | undefined)[]; shadow: (number | undefined)[]; round: (number | undefined)[] } {
-  const surf: (CourseTex | undefined)[] = [], band: (CourseTex | undefined)[] = [], border: (number | undefined)[] = [], shadow: (number | undefined)[] = [], round: (number | undefined)[] = [], base: (number | undefined)[] = [], stripes: number[] = [];
+export function grassLooks(list: readonly CustomGrass[], firstCut: CourseTex, photo = false): Required<Pick<CourseLooks, 'base'>> & Pick<CourseLooks, 'stripes'> & { length: (number | undefined)[]; surf: (CourseTex | undefined)[]; band: (CourseTex | undefined)[]; border: (number | undefined)[]; shadow: (number | undefined)[]; round: (number | undefined)[] } {
+  const surf: (CourseTex | undefined)[] = [], band: (CourseTex | undefined)[] = [], border: (number | undefined)[] = [], shadow: (number | undefined)[] = [], round: (number | undefined)[] = [], base: (number | undefined)[] = [], stripes: number[] = [], length: (number | undefined)[] = [];
   for (const g of list) {
     const id = grassId(g.k), t = grassCourseTex(g);
     surf[id] = photo ? { ...t, tex: PHOTO_TEX[g.plays] } : t; band[id] = grassBandTex(g, firstCut); border[id] = g.border; shadow[id] = g.shadow; base[id] = PLAY_SURF[g.plays];
     if (g.round) round[id] = g.smooth;
+    length[id] = g.length ?? PLAY_LENGTH[g.plays];
     if (g.stripes && stripesOk(g.plays)) stripes.push(id);
   }
-  return { surf, band, border, shadow, round, base, ...(stripes.length ? { stripes } : {}) };
+  return { surf, band, border, shadow, round, base, length, ...(stripes.length ? { stripes } : {}) };
 }
 /** a custom grass's puck (the Holes swatch, the editor's preview, the brush chip: ext/course-cursor swatchPuck): its family at its scale with
  *  its exposure on the top face, and the first cut band round it when it has a Border (firstCut: the course's first cut texture) */

@@ -1541,7 +1541,7 @@ export class Game {
     // T256: the course default's looks are the base; each hole, the property and each facility wear their own (courseOwners)
     // T253: each surface's Round off rides along (the course default's; an owner's in its own looks)
     const { surf, collar, band, lipGrass, round } = courseLookSet(this.paint.brush, pre), own = this.courseOwners(pre);
-    const looks: CourseLooks = { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
+    const looks: CourseLooks = { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), length: this.paint.courseLengths(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
     return this.withGrasses(looks);
   }
   /** T271 (#812): the course's own grasses (golf/grasses.ts) into the looks, at their draw ids: each one's fill, its band (the course's first
@@ -1550,7 +1550,7 @@ export class Game {
     const list = this.golf?.grasses; if (!list?.length) return looks;
     const gl = grassLooks(list, looks.collar['first-cut'], this.grassArt === 'photo');
     const put = <T,>(a: readonly (T | undefined)[] | undefined, b: readonly (T | undefined)[]): (T | undefined)[] => { const o = a ? a.slice() : []; b.forEach((v, s) => { if (v !== undefined) o[s] = v; }); return o; };
-    return { ...looks, surf: put(looks.surf, gl.surf), band: put(looks.band, gl.band), border: put(looks.border, gl.border), shadow: put(looks.shadow, gl.shadow), round: put(looks.round, gl.round), base: gl.base, ...(gl.stripes ? { stripes: gl.stripes } : {}) };
+    return { ...looks, surf: put(looks.surf, gl.surf), band: put(looks.band, gl.band), border: put(looks.border, gl.border), shadow: put(looks.shadow, gl.shadow), length: put(looks.length, gl.length), round: put(looks.round, gl.round), base: gl.base, ...(gl.stripes ? { stripes: gl.stripes } : {}) };
   }
   /** T271: the course's own grasses (the game save's; [] outside a golf game) */
   grasses(): readonly CustomGrass[] { return this.golf?.grasses ?? []; }

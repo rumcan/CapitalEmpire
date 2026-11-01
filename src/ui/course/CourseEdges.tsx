@@ -29,6 +29,8 @@ export const shadowLabel = (s: number) => (s <= 0.005 ? 'none' : Math.abs(s - SH
 
 /** T253: a Smoothness as the slider reads it: its share and about how round a corner comes out */
 export const smoothLabel = (v: number) => `${Math.round(v * 100)}% · ${roundCornerM(v).toFixed(1)} m`;
+/** T285: a grass length as the slider reads it (1 the green's cut .. 5 the fescue) */
+export const lengthLabel = (n: number) => `${n} · ${['green', 'fairway', 'rough', 'long', 'fescue'][Math.min(5, Math.max(1, n)) - 1]}`;
 /** a Height as the slider reads it, with the form a tee takes there (T127: a grass bank, rock with stairs, a steep rock face) */
 export const heightLabel = (m: number, tee: boolean) => `${m.toFixed(2)} m${!tee ? '' : m < STAIR_MIN_H ? ' · bank' : m < ROCK_FROM ? ' · bank, steps' : m < 0.75 * ROCK_STEEP_H ? ' · rock, steps' : ' · rock face'}`;
 
@@ -39,7 +41,7 @@ export const heightLabel = (m: number, tee: boolean) => `${m.toFixed(2)} m${!tee
  *  a green stands (T127: a tee's bank turns to rock with stairs from ROCK_FROM, a steep rock face higher). All apply live (the course is
  *  drawn again as the slider moves) and are remembered with the brush look */
 export function CourseEdges({ game }: { game: Game }) {
-  const p = game.paint, kind = p.brushKind, band = BORDER_KINDS[kind], bw = p.courseBorder(kind), sh = p.courseShadow(kind), ht = p.surfaceHeight(kind), hr = band ? HEIGHT_RANGE[band.s] : null, rd = p.roundOff(kind);
+  const p = game.paint, kind = p.brushKind, band = BORDER_KINDS[kind], bw = p.courseBorder(kind), sh = p.courseShadow(kind), ht = p.surfaceHeight(kind), hr = band ? HEIGHT_RANGE[band.s] : null, rd = p.roundOff(kind), len = p.courseLength?.(kind) ?? null;
   const name = BRUSH_PRESETS.find(b => b.kind === kind)?.name ?? '';
   // T260 (#763; the owner, 2026-10-29: "an accordion for border that doesnt open anything"): never empty. A surface with no band on the
   // course grid (the waste area, the rough, the long grass) reads Border: none with a note; a banded one's slider starts at none
@@ -78,6 +80,14 @@ export function CourseEdges({ game }: { game: Game }) {
           <span className="w-12 shrink-0">Shadow</span>
           <input type="range" aria-label={`Shadow of every ${name.toLowerCase()}`} min={0} max={100} step={1} value={Math.round(sh * 100)} onChange={e => p.setCourseShadow(+e.target.value / 100)} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200">{shadowLabel(sh)}</span>
+        </div>
+      )}
+      {/* T285 (#869): the grass's length: a longer grass casts a shade from right to left onto a shorter one beside it, none on one as long */}
+      {len !== null && (
+        <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title={`How long every ${name.toLowerCase()} is cut, 1 (a green) to 5 (fescue): a longer grass beside it shades it from the right, a shorter one it shades`}>
+          <span className="w-12 shrink-0">Length</span>
+          <input type="range" aria-label={`Length of every ${name.toLowerCase()}`} min={1} max={5} step={1} value={len} onChange={e => p.setCourseLength(+e.target.value)} className="min-w-0 flex-1" />
+          <span className="w-16 text-right text-xs text-slate-200" data-length={len}>{lengthLabel(len)}</span>
         </div>
       )}
       {ht !== null && hr && (

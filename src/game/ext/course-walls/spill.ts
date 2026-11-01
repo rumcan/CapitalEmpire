@@ -27,6 +27,11 @@ export interface SpillRun { p: number[]; o: number }
  *  `step` tiles and cut halfway between two readings that differ (another tall layer, or none); tall: the layer codes that count as tall
  *  grass outside */
 export function spillRuns(g: Grid, st: LayerStack, code: number, edges: readonly ArrayLike<number>[], tall: readonly number[], styles: readonly BlobStyle[] = BLOB_STYLE, step = 0.35): SpillRun[] {
+  return edgeRuns(g, st, code, edges, lo => tall.includes(lo), styles, step);
+}
+/** the runs of layer `code`'s edges along which the layer on top just outside passes `outside` (spillRuns' walk, for any test), each with o, that
+ *  layer's code */
+export function edgeRuns(g: Grid, st: LayerStack, code: number, edges: readonly ArrayLike<number>[], outside: (lo: number) => boolean, styles: readonly BlobStyle[] = BLOB_STYLE, step = 0.35): SpillRun[] {
   const out: SpillRun[] = [];
   // a collar on its surface's platform (the first cut): its inside is the band and the surface alike
   const plat = (code & 1) === 1 && collarOnTop(styles[code >> 1]?.collar?.name ?? '');
@@ -60,7 +65,7 @@ export function spillRuns(g: Grid, st: LayerStack, code: number, edges: readonly
         if (Number.isNaN(ou)) continue;
         if (!own(st.top(iu, iv))) return { o: -1, s };
         const lo = st.top(ou, ov);
-        return { o: tall.includes(lo) ? lo : -1, s };
+        return { o: outside(lo) ? lo : -1, s };
       }
       return { o: -1, s: 1 };
     }
@@ -82,4 +87,31 @@ export function spillRuns(g: Grid, st: LayerStack, code: number, edges: readonly
     }
   }
   return out;
+}
+
+// ---- T285 (#869; the owner, 2026-10-31: "a length setting on all grass and the longer the grass is the more shadow it spills from right to
+// left onto the shorter grass next to it. if the grass is both the same length they dont cast any shadow. maybe a grass length 1 - 5 setting.
+// where 1 is green grass and 5 is fescue") ----
+
+/** each surface's grass length by surface id (1 the green's cut .. 5 the fescue), its Length slider's start; undefined: not grass (water,
+ *  bunker, waste). The map grass round the course (id 0) stands as tall as the long grass */
+export const DEFAULT_LENGTH: readonly (number | undefined)[] = [4, 3, 5, undefined, 2, 1, undefined, undefined, 1, 4];
+/** a collar band's grass length by its name: the first cut a step above the fairway, the fringe a step above the green; the lip and the bank
+ *  are no grass of their own */
+export const BAND_LENGTH: Readonly<Record<string, number>> = { 'first-cut': 3, fringe: 2 };
+/** the grass length of the layer drawn with `code` (a fill 2 s: the Length set for surface s, else its default; a collar 2 s + 1: its band's;
+ *  0 the map grass), or undefined where it is not grass */
+export function lengthOfCode(code: number, lengths: readonly (number | undefined)[] | undefined, styles: readonly BlobStyle[] = BLOB_STYLE, base?: readonly (number | undefined)[]): number | undefined {
+  if (code === 0) return lengths?.[0] ?? DEFAULT_LENGTH[0];
+  const s = code >> 1;
+  if (code & 1) { const name = styles[s]?.collar?.name; return name ? BAND_LENGTH[name] : undefined; }
+  return lengths?.[s] ?? DEFAULT_LENGTH[base?.[s] ?? s];
+}
+/** one shade run: its points (flat x y, tiles) with the longer grass on each piece's (dy, -dx) side, and d, how much longer it is (1..4) */
+export interface ShadeRun { p: number[]; d: number }
+/** the runs of a grass layer's edges where a longer grass lies just outside it (its shadow falls on this layer there, where that grass is on the
+ *  sun's side: the renderer's part), each with the length difference */
+export function shadeRuns(g: Grid, st: LayerStack, code: number, edges: readonly ArrayLike<number>[], lengthOf: (code: number) => number | undefined, styles: readonly BlobStyle[] = BLOB_STYLE): ShadeRun[] {
+  const own = lengthOf(code); if (own === undefined) return [];
+  return edgeRuns(g, st, code, edges, lo => (lengthOf(lo) ?? -1) > own, styles).map(r => ({ p: r.p, d: lengthOf(r.o)! - own }));
 }

@@ -34,7 +34,7 @@ import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { RUGGED, SPILL, SPILL_SHADE_OFF, inPoly, ruggedKind, ruggedRing, spillBlades, spillScale, warpLine, warpPoint, warpTriples, type RuggedKind } from './rugged-edges';
 import { AREA_SHADE, EDGE_LOOKS, JOINT_SOFT, SHADE_RGB, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, jointFeather, jointLen, jointRamp, jointShadeWeight, litBox, type EdgeImage } from './paint-edges';
-import { CH_SIZE } from './ext/course-height';
+import { CH_SIZE, SUN_TILE_DIR } from './ext/course-height';
 import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
 import { faceShift, kerbFace, stepReach, upScreen } from './kerb-face';
 import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
@@ -2771,8 +2771,39 @@ export class GroundPainter {
         }
         this.bunkerStages.draw(ctx, 'lip', box, L, X0, Y0, originalCourses); ctx.restore();
       }
+      // T285 (#869): the longer grass's shade over this layer's edge, before the walls hanging over it
+      if (!lite) this.courseShade(ctx, cs, code, M);
       walls(code);
     }
+  }
+  /** T285 (#869; the owner, 2026-10-31: "the longer the grass is the more shadow it spills from right to left onto the shorter grass next to
+   *  it ... the same length they dont cast any shadow"): the shade of layer `code`'s shade runs (CoursePatch.shade: a longer grass just outside its
+   *  edge, on each piece's (dy, -dx) side), laid on this layer's side of the edge where that grass is on the sun's side (SUN_TILE_DIR: the sun at
+   *  the upper right, so the shade falls toward the lower left), as wide and dark as the length difference: three bands, darkest at the edge.
+   *  Bucketed by darkness, one fill each, under the chunk transform M */
+  private courseShade(ctx: C2D, cs: readonly CoursePatch[], code: number, M: DOMMatrix) {
+    const LEVELS = 6, paths: (Path2D | null)[] = Array.from({ length: LEVELS }, () => null), BANDS = [[0, 1 / 3, 1], [1 / 3, 2 / 3, 0.6], [2 / 3, 1, 0.3]] as const;
+    let any = false;
+    for (const c of cs) for (const run of c.shade ?? []) {
+      if (run.c !== code) continue;
+      const p = run.p, w = 0.45 + 0.35 * run.d, a0 = Math.min(0.5, 0.2 + 0.08 * run.d); // 1 step: 0.8 tiles at 0.28; 4 steps: 1.85 tiles at 0.5
+      for (let i = 0; i + 3 < p.length; i += 2) {
+        const ax = p[i]!, ay = p[i + 1]!, bx = p[i + 2]!, by = p[i + 3]!, dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy); if (len < 1e-6) continue;
+        // the longer grass lies along (dy, -dx); its shade falls on the other side, only where it stands toward the sun
+        const tx = dy / len, ty = -dx / len, sun = tx * SUN_TILE_DIR.x + ty * SUN_TILE_DIR.y; if (sun <= 0.05) continue;
+        const k = Math.min(1, (sun - 0.05) / 0.45), sx = -tx, sy = -ty;
+        for (const [f0, f1, m] of BANDS) {
+          const lvl = Math.min(LEVELS - 1, Math.round(a0 * k * m / 0.5 * (LEVELS - 1))); if (lvl <= 0) continue;
+          const q = paths[lvl] ??= new Path2D(), o0 = w * f0, o1 = w * f1;
+          q.moveTo(ax + sx * o0, ay + sy * o0); q.lineTo(bx + sx * o0, by + sy * o0); q.lineTo(bx + sx * o1, by + sy * o1); q.lineTo(ax + sx * o1, ay + sy * o1); q.closePath();
+          any = true;
+        }
+      }
+    }
+    if (!any) return;
+    ctx.save(); ctx.setTransform(M); ctx.globalCompositeOperation = 'multiply';
+    for (let l = 1; l < LEVELS; l++) { const q = paths[l]; if (!q) continue; ctx.fillStyle = `rgba(28,40,14,${(0.5 * l / (LEVELS - 1)).toFixed(3)})`; ctx.fill(q); }
+    ctx.restore();
   }
   /** the walls hanging over one layer (T099; ext/course-walls WallRun: each run's top edge with its drop, the higher side on the left, the
    *  face looking along the right-hand normal toward the camera), all chunks' at once so a run cut at a chunk border is one shape. A face
