@@ -487,6 +487,8 @@ export class GroundPainter {
   /** T199: the swamp band of the bake in progress (its cover over the chunk's tile box, res samples a tile, from x0 y0), which the living ground
    *  leaves alone; null when the chunk lays none */
   private swampNow: { cv: Cnv; x0: number; y0: number; res: number } | null = null;
+  /** the river's swamp with its dirt border and fescue round it (growBand) in the bake in progress: the living ground leaves it alone too */
+  private ringNow: { a: BandAlpha; x0: number; y0: number; res: number } | null = null;
   /** T265: the river's band over the bake in progress, as its field made it (before the cut; null a: none on this chunk), so the fallen leaves
    *  read it there instead of asking the field point by point (each new lattice point of a point query costs a pass over the river's
    *  segments: thousands under a belt's trees); null outside a ground chunk's bake */
@@ -1211,7 +1213,7 @@ export class GroundPainter {
   paintPlan(i: number, j: number, L: number): Cnv {
     const W = Math.round(PLAN_W * L), H = Math.round(PLAN_H * L), X0 = i * PLAN_W, Y0 = j * PLAN_H;
     const cv = canvas(W, H), ctx = ctx2d(cv);
-    this.shadeMask = null; this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterMask = null; // (T186, T215, T199, T248: a planner bake keeps no shade, reflection, gloss or motion mask)
+    this.shadeMask = null; this.specMask = null; this.glossMask = null; this.swampNow = null; this.ringNow = null; this.waterMask = null; // (T186, T215, T199, T248: a planner bake keeps no shade, reflection, gloss or motion mask)
     const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]);
     const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
     // the tile set families (T145) lay their tiles here as on the ground chunks (planTiled), at the camera's band (the furthest zoom: FAR)
@@ -1581,7 +1583,7 @@ export class GroundPainter {
     this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false; this.provisional = false;
     // T186: the shade mask (a quarter of the chunk's size), white (no shade) until a shade is laid on it; none for a district chunk (its
     // sprites' shadows are a few px: the far meshes)
-    this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterNow = undefined; this.riverNow = null; this.waterMask = null; this.bandsNow = [];
+    this.specMask = null; this.glossMask = null; this.swampNow = null; this.ringNow = null; this.waterNow = undefined; this.riverNow = null; this.waterMask = null; this.bandsNow = [];
     if (lite) this.shadeMask = null;
     else { const mc = new OffscreenCanvas(Math.max(1, Math.ceil(W / SHADE_MASK_K)), Math.max(1, Math.ceil(H / SHADE_MASK_K))), mg = mc.getContext('2d')!; mg.fillStyle = '#fff'; mg.fillRect(0, 0, mc.width, mc.height); this.shadeMask = { cv: mc, g: scaledContext(mg, 1 / SHADE_MASK_K), used: false }; }
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
@@ -1620,12 +1622,23 @@ export class GroundPainter {
     //      course (riverCut), merged with the streams' into one band (swampBand): one layer, one gloss, one cover the living ground leaves alone
     const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, rres = Math.min(cres, RIVER_RES), rv = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, bw, bh, rres) : null;
     if (this.riverSwampOn()) this.riverNow = { a: rv, x0: tx0, y0: ty0, res: rres };
-    // the river's bank first, out past its swamp band by RIVER_SWAMP.border (growBand), the band laid over it below: water, swamp, then the
-    // dirt border (the owner, 2026-11-01: "the same swamp around the big river. in between the water and the dirt border")
-    const border = rv ? growBand(rv, Math.max(1, Math.round(RIVER_SWAMP.border * rres))) : null;
-    // (the owner, 2026-11-01: "the dirt layer on the outside not between the swamp and water": the band runs from under the water's edge, the
-    // bank only round it; where the band is cut (a road, a lot), the bank's own strip at the water as before)
-    if (border) layer('bank', g => { if (rivers.length) shore(g, rivers, 1, 0.5); g.globalCompositeOperation = 'lighter'; overlay(g, border, rres); g.globalCompositeOperation = 'source-over'; });
+    // the owner, 2026-11-01: "water then swamp then dirt then fescue": round the river's swamp band (laid over them below) a dirt border
+    // RIVER_SWAMP.border wide, and past it a ring of fescue (growBand: the band grown, from its alpha over the chunk padded by both, so the rings
+    // run on across the chunks' edges); the dirt where the band is cut (a road, a lot) too. The living ground leaves them alone (ringNow)
+    const RP = Math.ceil(RIVER_SWAMP.border + RIVER_SWAMP.fescue) + 1;
+    const rvp = rv ? this.riverField.alpha(tx0 - RP, ty0 - RP, bw + 2 * RP, bh + 2 * RP, rres) : null;
+    const border = rvp ? growBand(rvp, Math.max(1, Math.round(RIVER_SWAMP.border * rres))) : null;
+    const tall = rvp ? growBand(rvp, Math.max(2, Math.round((RIVER_SWAMP.border + RIVER_SWAMP.fescue) * rres))) : null;
+    // (kept 2 tiles back from the water: never a dirt or fescue line at the waterline where the band is thin or cut, the owner: "the dirt
+    // texture ... should not be there")
+    const ringOf = (a: BandAlpha) => (g: C2D) => {
+      const s = this.buffer('ring', a.W, a.H); ctx2d(s).putImageData(new ImageData(a.data as Uint8ClampedArray<ArrayBuffer>, a.W, a.H), 0, 0); g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(s, tx0 - RP, ty0 - RP, a.W / rres, a.H / rres);
+      const p = new Path2D(); let any = false; for (const w of rivers) any = waterShape(p, w.w.pts, 2, box) || any;
+      if (any) { g.globalCompositeOperation = 'destination-out'; g.fill(p); g.globalCompositeOperation = 'source-over'; }
+    };
+    if (tall) layer('golfFescue', ringOf(tall));
+    if (border) layer('dirt', ringOf(border));
+    this.ringNow = tall ? { a: tall, x0: tx0 - RP, y0: ty0 - RP, res: rres } : null;
     const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, rv.box, lite) : null, rres) : null;
     // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
     //  painted look composed and laid as before)
@@ -1649,7 +1662,9 @@ export class GroundPainter {
     if (this.shadeMask) { const d = hs.data.slice(); let any = false; for (let k = 3; k < d.length; k += 4) { if (d[k - 1]! >= 160) d[k] = 0; else if (d[k]! > 4) any = true; } if (any) this.onShadeMask(g => overlay(g, { data: d, W: hs.W, H: hs.H }, sres)); }
     if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3), water);
     // T230: the river's depth, light edge and reflections (water-look.ts), clipped to its water; with the glint on, its gloss
-    if (rivers.length) this.waterOver(ctx, SITE.river, () => { const p = new Path2D(); for (const w of rivers) waterShape(p, w.w.pts, 0.3, box); return p; }, 'water', lite);
+    // (with the swamp round it, clipped to the water itself: its shade past the waterline read as the water's shadow on the swamp, the owner
+    // 2026-11-01: "water is casting a shadow onto the swamp")
+    if (rivers.length) this.waterOver(ctx, SITE.river, () => { const p = new Path2D(); for (const w of rivers) waterShape(p, w.w.pts, border ? 0 : 0.3, box); return p; }, 'water', lite);
 
     const walk = net.walkF.filter(f => vis(f.bbox)), asph = net.asphF.filter(f => vis(f.bbox));
     const med = net.medianF.filter(f => vis(f.bbox)), isl = net.islandF.filter(f => vis(f.bbox));
@@ -2044,9 +2059,9 @@ export class GroundPainter {
     if (wallPath) ex.push({ path: wallPath, rule: 'nonzero' });
     for (const w of waters) { const q = new Path2D(); if (waterShape(q, w.w.pts, 0, box, w.w.kind === 'creek' ? 0.35 : 1)) ex.push({ path: q, rule: 'nonzero' }); }
     // (T199: and the streams' swamp, by its cover: a tile set keeps its art)
-    const sw = this.swampNow;
+    const sw = this.swampNow, rg = this.ringNow;
     // the variants go onto a copy of the chunk when some ground is left alone (cut out at the end), else straight onto it
-    const V = ex.length || sw ? this.buffer('living', W, H) : null, vg = V ? ctx2d(V) : ctx;
+    const V = ex.length || sw || rg ? this.buffer('living', W, H) : null, vg = V ? ctx2d(V) : ctx;
     if (V) vg.drawImage(ctx.canvas, 0, 0);
     const lay = (layer: Cnv, op: GlobalCompositeOperation, alpha = 1) => { vg.save(); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = op; vg.globalAlpha = alpha; vg.drawImage(layer, 0, 0); vg.restore(); };
     // a painted variant is composed only over the part of the chunk its mask reaches (T128: the lush, patchy and soil looks)
@@ -2136,6 +2151,8 @@ export class GroundPainter {
       const mb = this.buffer('livingMask', W, H), mg = ctx2d(mb);
       mg.fillStyle = '#000'; mg.fillRect(0, 0, W, H); mg.setTransform(M); mg.globalCompositeOperation = 'destination-out'; for (const e of ex) mg.fill(e.path, e.rule);
       if (sw) { mg.imageSmoothingEnabled = true; mg.drawImage(sw.cv, sw.x0, sw.y0, sw.cv.width / sw.res, sw.cv.height / sw.res); }
+      // (the river's swamp, its dirt border and the fescue round it: the autumn cover kept off them, so they read as laid)
+      if (rg) { const rc = this.buffer('ringCut', rg.a.W, rg.a.H); ctx2d(rc).putImageData(new ImageData(rg.a.data as Uint8ClampedArray<ArrayBuffer>, rg.a.W, rg.a.H), 0, 0); mg.imageSmoothingEnabled = true; mg.drawImage(rc, rg.x0, rg.y0, rg.a.W / rg.res, rg.a.H / rg.res); }
       vg.globalCompositeOperation = 'destination-in'; vg.drawImage(mb, 0, 0); vg.globalCompositeOperation = 'source-over';
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(V, 0, 0); ctx.restore();
     }

@@ -102,7 +102,7 @@ export const CREEK_BAND: BandLook = { out: SWAMP_OUT, soft: SWAMP.soft, softReac
  *    eight on a district chunk (its bank a pixel or two: the band starts under it whatever the lattice) (a wide river's distance runs straight
  *    across a lattice cell: bilinear is as good, at a quarter of the work) */
 export const RIVER_SWAMP = {
-  floor: 0.5, border: 2.5, bank: 3, inner: [-0.8, -0.4], k: 0.45, cap: 7, stretch: [-0.05, 0.25], stretchWave: 70, bay: 2.5, bayWave: 21,
+  floor: 0.5, border: 2.5, fescue: 3, bank: 3, inner: [-0.8, -0.4], k: 0.45, cap: 7, stretch: [-0.05, 0.25], stretchWave: 70, bay: 2.5, bayWave: 21,
   rag: 2.4, ragWave: 6, feather: 0.4, soft: 1, ragStep: 1, latStep: 2, farStep: 8, farRag: 3,
 } as const;
 /** the farthest the river's band reaches past the water's edge (tiles, on the soft distance) */
@@ -142,11 +142,12 @@ const ALPHA_MEMO = 48;
 /** a band's cover over a tile box (SwampField alpha) */
 export interface BandAlpha { data: Uint8ClampedArray; W: number; H: number; box: [number, number, number, number] }
 /** the river's dirt border (the owner, 2026-11-01: the swamp "in between the water and the dirt border"): band a grown r pixels each way (a
- *  square max, then its rim softened by a pixel's average), the ground the river's bank lays before the band goes over it */
+ *  square max, made solid where the band reaches at all), the ground the river's bank lays before the band goes over it */
 export function growBand(a: BandAlpha, r: number): BandAlpha {
   const { W, H, data } = a, row = new Uint8ClampedArray(W * H), out = new Uint8ClampedArray(W * H * 4);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let m = 0; for (let i = Math.max(0, x - r); i <= Math.min(W - 1, x + r); i++) { const v = data[(y * W + i) * 4 + 3]!; if (v > m) m = v; } row[y * W + x] = m; }
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let m = 0; for (let j = Math.max(0, y - r); j <= Math.min(H - 1, y + r); j++) { const v = row[j * W + x]!; if (v > m) m = v; } out[(y * W + x) * 4 + 3] = m; }
+  // (solid wherever the band reaches at all: its faint rim carried out would leave the border as thin as the rim)
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let m = 0; for (let j = Math.max(0, y - r); j <= Math.min(H - 1, y + r); j++) { const v = row[j * W + x]!; if (v > m) m = v; } out[(y * W + x) * 4 + 3] = Math.min(255, m * 8); }
   return { data: out, W, H, box: a.box };
 }
 const NONE: readonly number[] = [];

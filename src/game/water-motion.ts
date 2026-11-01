@@ -25,9 +25,7 @@
  *  node tests run the mask and the shader's CPU twin (motionPixel); gl.ts builds its shader from WATER_MOTION_GLSL. Units: tiles of 2 m. */
 import { HH, HW } from './iso';
 import { SUN_SCREEN } from './grass-shine';
-import { SITE, type WaterField } from './water-look';
-/** a creek's water samples (water-look.ts SITE.creek) */
-const CREEK = SITE.creek;
+import type { WaterField } from './water-look';
 
 // ---------- the knobs ----------
 /** the water motion's knobs (the gear menu's Water motion): the switch, the speed of everything that moves (the rivers' flow, the ponds'
@@ -108,7 +106,7 @@ export function motionMask(f: WaterField, ex: MotionExtras = {}): MotionMaskData
       for (let u = u0; u <= u1; u++) {
         const i = Math.floor((x0 + (u + 0.5) / res - bx) * br); if (i < 0 || i >= a.W) continue;
         const al = a.data[(j * a.W + i) * 4 + 3]! / 255; if (!(al > 0)) continue;
-        if (site[v * W + u]! & CREEK) continue; // (a creek's own water runs through its swamp band: it moves; the swamp round it does not)
+        if (site[v * W + u]!) continue; // (the water itself moves, a creek's through its band and a river's where its band starts under it; the swamp past it does not)
         const k = (v - v0) * w + (u - u0), X = exAt(); X[k] = Math.min(X[k]!, 1 - al);
       }
     }
