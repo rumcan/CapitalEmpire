@@ -61,16 +61,21 @@ export function TexturePicker({ label, value, options, onPick, none, edits = [],
     return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', esc, true); };
   }, [open]);
   const cur = options.find(o => o.id === value) ?? null, shown = edits.find(e => e.id === edit);
+  // the owner, 2026-11-01: "a left and right texture button i can click that will quickly swap in the next textures from the library": the
+  // texture before or after the one in use, round the list (from none: the first or the last)
+  const step = (d: 1 | -1) => { if (!options.length) return; const i = options.findIndex(o => o.id === value); onPick(options[i < 0 ? (d > 0 ? 0 : options.length - 1) : (i + d + options.length) % options.length]!.id); };
   return (
     <div className="mt-2" ref={box} data-texture-picker={testId}>
       <div className="text-[12px] text-slate-400">{label}</div>
       <div className="relative mt-1 flex items-center gap-1.5">
+        <button type="button" className="round-btn shrink-0" aria-label={`Previous ${label.toLowerCase()}`} title="The texture before this one" onClick={() => step(-1)} data-texture-step="prev">‹</button>
         <button type="button" className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-white/15 bg-slate-900/60 p-1 pr-2 text-left hover:border-white/30"
           aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)} data-texture-current>
           <TexPuck t={cur} css={56} />
           <span className="min-w-0 flex-1 truncate text-xs text-slate-100">{cur ? cur.name : none ?? 'Pick a texture'}</span>
           <span aria-hidden className="text-slate-400">▾</span>
         </button>
+        <button type="button" className="round-btn shrink-0" aria-label={`Next ${label.toLowerCase()}`} title="The texture after this one" onClick={() => step(1)} data-texture-step="next">›</button>
         {edits.map(e => (
           <button key={e.id} type="button" className={`chip shrink-0 ${edit === e.id ? 'chip-on' : ''}`} aria-pressed={edit === e.id} title={`Edit the ${e.id}`}
             onClick={() => setEdit(edit === e.id ? null : e.id)} data-texture-edit={e.id}>{e.label}</button>

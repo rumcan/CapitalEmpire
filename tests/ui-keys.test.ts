@@ -129,7 +129,7 @@ describe('Help › Keys (T202)', () => {
 
 describe('the number keys (T202)', () => {
   it('1. 1-6 open the rail\'s groups after Select, in the rail\'s order (the six with a driving range)', () => {
-    const order = (golf: boolean, range: boolean) => railEntries(null, golf, 'select', { range }).map(e => e.item.id).filter(id => id !== 'select');
+    const order = (golf: boolean, range: boolean) => railEntries(null, golf, 'select', { range }).map(e => e.item.id).filter(id => id !== 'select' && id !== 'ground');
     assert.deepEqual(numberedGroups(true, true).map(r => r.id), ['range', 'course', 'facilities', 'traffic', 'towndecor', 'bulldoze']);
     for (const g of GAMES) assert.deepEqual(numberedGroups(g.golf, g.range).map(r => r.id), order(g.golf, g.range).slice(0, 6), JSON.stringify(g));
     // T250: the sheet's drawer cards name them by number, as laid out: the course drawer's top to bottom, the town footer's left to right; the
