@@ -81,7 +81,7 @@ export function TexturePicker({ label, value, options, onPick, none, edits = [],
         <button type="button" className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-white/15 bg-slate-900/60 p-1 pr-2 text-left hover:border-white/30"
           aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)} data-texture-current>
           <TexPuck t={cur} css={56} />
-          <span className="min-w-0 flex-1 truncate text-xs text-slate-100">{cur ? cur.name : none ?? 'Pick a texture'}</span>
+          <span className="min-w-0 flex-1 truncate text-xs text-slate-100" title={cur ? cur.name : undefined}>{cur ? cur.name : none ?? 'Pick a texture'}</span>
           <span aria-hidden className="text-slate-400">▾</span>
         </button>
         <button type="button" className="round-btn shrink-0" aria-label={`Next ${label.toLowerCase()}`} title="The texture after this one" onClick={() => step(1)} data-texture-step="next">›</button>

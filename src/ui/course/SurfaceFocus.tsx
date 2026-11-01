@@ -22,15 +22,17 @@ export function SurfaceFocus({ game, kind, onBack, pickGrass }: { game: Game; ki
   const own = game.golfMode && !!game.courseGrid && !!p.grasses;
   return (
     <div className="mt-1" data-surface-focus={kind}>
-      <div className="flex items-center justify-between gap-2">
-        <button className="chip" onClick={onBack} title="Show every surface again" data-focus-back>‹ All surfaces</button>
-        <span className="sub-line">{lookWhat(kind, owner)}</span>
+      {/* (a fixed height, every name on one line: a long texture name never moves the ‹ › buttons under it while you click through; the
+          owner, 2026-11-01) */}
+      <div className="flex h-8 items-center justify-between gap-2">
+        <button className="chip shrink-0" onClick={onBack} title="Show every surface again" data-focus-back>‹ All surfaces</button>
+        <span className="sub-line min-w-0 truncate" title={lookWhat(kind, owner)}>{lookWhat(kind, owner)}</span>
       </div>
-      <div className="mt-2 flex items-center gap-3">
+      <div className="mt-2 flex h-[110px] items-center gap-3 overflow-hidden" data-focus-head>
         <LookDisc kind={kind} tex={s.tex} scale={s.scale} angle={s.angle} tone={s.tone} toneAmt={s.toneAmt} width={150} />
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 font-semibold"><SurfaceMark kind={kind} size={20} />{name}</div>
-          <div className="sub-line mt-0.5 leading-snug">{lookName(s.tex)}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 truncate font-semibold"><SurfaceMark kind={kind} size={20} /><span className="truncate">{name}</span></div>
+          <div className="sub-line mt-0.5 truncate" title={lookName(s.tex)}>{lookName(s.tex)}</div>
         </div>
       </div>
       <QuickTextures game={game} />
