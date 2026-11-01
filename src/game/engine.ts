@@ -68,6 +68,7 @@ import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, t
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
+import { roadRoute } from './road-route';
 import { PRESETS, surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
 import { ParkingTool } from './parking-tool';
@@ -624,20 +625,25 @@ export class Game {
   /** the range's car parks as the range's golfers park in them (T237: every car park that serves the range's door, golf/walkserve.ts: its nearest
    *  bay within WALK_SERVE_M; a car park further away adds no bays, so with none in reach the range's drivers turn away as at a full one): their
    *  bays nearest the door first (doorBays), each with its car park's entrance, cached while the serving parks stay the same */
-  private rangeCarPark(door: Pt): { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[] }[]; entrance: Pt; key: string } | null {
+  private rangeCarPark(door: Pt): { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[]; via?: Pt[] }[]; entrance: Pt; key: string } | null {
     const parks: CarPark[] = [];
     for (const pk of this.parkBuilt) if (pk && pk.entrances.length && pk.bays.length) parks.push(pk);
-    const serving = servingParks(parks, door, pk => pk.bays);
+    const serving = servingParks(parks, door, pk => pk.bays), J = this.range.scene?.J;
     if (!serving.length) { this.rangePk = null; return null; }
-    const key = `${Math.round(door.x * 4)},${Math.round(door.y * 4)}|${serving.map(s => `${s.park.id}:${s.park.bays.length}`).join(',')}`;
-    if (this.rangePk?.v.key !== key || serving.some(s => !this.rangePk!.pks.has(s.park))) {
+    const base = `${Math.round(door.x * 4)},${Math.round(door.y * 4)}|${serving.map(s => `${s.park.id}:${s.park.bays.length}`).join(',')}`;
+    // (worked out again after a road edit or a new drive turn; the key the range sees changes only when a car park's road route does, so a road
+    // edit elsewhere never re-lays the range)
+    const inner = `${base}|${this.net.version}|${J ? `${J.x},${J.y}` : ''}`;
+    if (this.rangePk?.inner !== inner || serving.some(s => !this.rangePk!.pks.has(s.park))) {
+      const vias = serving.map(s => (J ? roadRoute(this.net, J, s.park.entrances[0]!) : null)), key = `${base}|${vias.map(v => (v ? v.map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(';') : '')).join('/')}`;
       // (T237: each bay with its drive from its car park's mouth along the aisles, and the walk from the car park's footpath along them)
-      const all = serving.flatMap(s => { const f = this.footStart(s.park); return baysByDoor(s.park.bays, door).map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy, e: s.park.entrances[0]!, pid: s.park.id, drive: bayDrive(s.park, b), walk: f ? bayWalk(s.park, b, f) : [] })); });
-      this.rangePk = { pks: new Set(serving.map(s => s.park)), v: { bays: baysByDoor(all, door), entrance: serving[0]!.park.entrances[0]!, key } };
+      // (the owner, 2026-11-01: a car park off the range's drive is reached along the roads from the drive's turn, never straight over the course)
+      const all = serving.flatMap((s, i) => { const f = this.footStart(s.park), e = s.park.entrances[0]!, via = vias[i]; return baysByDoor(s.park.bays, door).map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy, e, pid: s.park.id, drive: bayDrive(s.park, b), walk: f ? bayWalk(s.park, b, f) : [], ...(via ? { via } : {}) })); });
+      this.rangePk = { pks: new Set(serving.map(s => s.park)), inner, v: { bays: baysByDoor(all, door), entrance: serving[0]!.park.entrances[0]!, key } };
     }
     return this.rangePk.v;
   }
-  private rangePk: { pks: Set<CarPark>; v: { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[] }[]; entrance: Pt; key: string } } | null = null;
+  private rangePk: { pks: Set<CarPark>; inner: string; v: { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[]; via?: Pt[] }[]; entrance: Pt; key: string } } | null = null;
   /** T237: the range's own car park (the one its upgrades gravel and pave, and the car park building trims): the save's lot rect (a new game's,
    *  in the frontage strip), else the car park on the range's plot (an old save's) */
   private rangeLotDef(): CarParkDef | undefined {
