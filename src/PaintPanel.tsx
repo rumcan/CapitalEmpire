@@ -164,6 +164,20 @@ function Section({ id, title, children, open: dflt = true }: { id: string; title
 /** the style editor: the fill's texture, scale, angle, corners, tone and border (and the border's own), the snap setting, and the area count and cost.
  *  gridOnly (Holes > My looks on a golf course's 1 m grid, P23 P1-E): what the grid's cells wear (T128: the texture, its size and angle, its tone
  *  and blend, and its collar band's width, shadow, texture, size, angle and tone), without the painted areas' layer, corners and cost */
+/** the surface in focus in a hole's panel (the owner, 2026-11-01: "a quick change button so you can quickly flip through textures for the main
+ *  and border texture"): its Main texture and, while it has a border, its Border texture, each picker with its ‹ › to step through the library;
+ *  wired as StyleEditor's (the course look of the surface in hand, for whoever owns the look now) */
+export function QuickTextures({ game }: { game: Game }) {
+  const p = game.paint, s = p.style, bunker = p.brushKind === 'bunker', band = !!BORDER_KINDS[p.brushKind] && (p.courseBorder() ?? 0) > 0;
+  return (
+    <div data-quick-textures>
+      <TexturePicker label="Main texture" testId="quick-fill" value={bunker && s.bunker?.sandTex ? undefined : s.tex} none={bunker && s.bunker?.sandTex ? 'Your own texture' : undefined}
+        options={withOwn(MENU_OPTIONS)} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ tex: id as PaintTex, ...(bunker && s.bunker?.sandTex ? { bunker: { ...s.bunker, sandTex: undefined } } : {}) })} />
+      {band && <TexturePicker label="Border texture" testId="quick-border" value={s.btex} options={withOwn(BORDER_MENU.filter(t => t.id !== 'kerb').map(t => ({ id: t.id, name: plainName(t.name), col: t.col })))} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ btex: id as typeof s.btex })} />}
+    </div>
+  );
+}
+
 export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?: boolean }) {
   const p = game.paint, s = p.style;
   // a course surface's border is its collar band on the course grid (the course look); any other is the painted area's. Every control shown

@@ -16,10 +16,10 @@ const picOf = texPic;
 /** the look's preview disc (P23 decision 3: "with the disc as its preview"): the surface's puck, as the cursor's chip draws it, its top face
  *  wearing the look's picture at the look's scale and angle, with its exposure (T261: the picture's own brightness, brightness(f)), and the
  *  surface's mark over it */
-function LookDisc({ kind, tex, scale, angle, tone, toneAmt }: { kind: string; tex: string; scale: number; angle: number; tone: number; toneAmt: number }) {
+export function LookDisc({ kind, tex, scale, angle, tone, toneAmt, width = 120 }: { kind: string; tex: string; scale: number; angle: number; tone: number; toneAmt: number; width?: number }) {
   const pic = picOf(tex), id = `look-${kind}`, tile = Math.max(8, 48 * scale), f = exposureOf(tone, toneAmt), lit = exposed(f) ? { filter: `brightness(${f})` } : undefined;
   return (
-    <svg viewBox="0 0 120 84" width={120} height={84} role="img" aria-label={`${kind} look preview`} className="shrink-0">
+    <svg viewBox="0 0 120 84" width={width} height={width * 0.7} role="img" aria-label={`${kind} look preview`} className="shrink-0">
       <defs>
         <clipPath id={`${id}-top`}><ellipse cx="60" cy="38" rx="56" ry="30" /></clipPath>
         {pic && <pattern id={`${id}-pic`} patternUnits="userSpaceOnUse" width={tile} height={tile} patternTransform={`translate(60 38) scale(1 0.536) rotate(${45 + angle})`}><image href={pic} width={tile} height={tile} preserveAspectRatio="none" /></pattern>}
