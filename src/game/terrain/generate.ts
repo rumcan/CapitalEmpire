@@ -333,6 +333,23 @@ function build(genSeed: number): Terrain {
     fin[fin.length - 1] = { x: bx, y: by, w: last.w };
     return fin;
   };
+  /** a creek that came down to the river runs on into it (the owner, 2026-11-01: "can these connect": the trace stops at the river's mask,
+   *  dilated two cells, so the creek ended short of the water): its end carried on to the nearest point of the river's line, in steps of about
+   *  6 tiles; a creek ending farther than the river's half width and 40 tiles from it (at the border) is left as it is */
+  const intoRiver = (fin: WaterPoint[]): WaterPoint[] => {
+    const last = fin[fin.length - 1];
+    let bx = 0, by = 0, bd = Infinity, bw = 0;
+    for (let k = 0; k + 1 < pts.length; k++) {
+      const a = pts[k], b = pts[k + 1], dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+      const t = L2 > 0 ? clamp(((last.x - a.x) * dx + (last.y - a.y) * dy) / L2, 0, 1) : 0;
+      const qx = a.x + dx * t, qy = a.y + dy * t, d = Math.hypot(qx - last.x, qy - last.y);
+      if (d < bd) { bd = d; bx = qx; by = qy; bw = a.w + (b.w - a.w) * t; }
+    }
+    if (bd > bw / 2 + 40 || bd < 1e-6) return fin;
+    const n = Math.max(1, Math.ceil(bd / 6)), out = fin.slice();
+    for (let i = 1; i <= n; i++) out.push({ x: last.x + (bx - last.x) * (i / n), y: last.y + (by - last.y) * (i / n), w: last.w });
+    return out;
+  };
   const nMeander = nk(12);
   const finals: (WaterPoint[] | null)[] = [];
   accepted.forEach((cr, idx) => {
@@ -371,6 +388,7 @@ function build(genSeed: number): Terrain {
     let fin = fin0 && cr.join >= 0 ? joinTo(fin0, finals[cr.join]) : fin0;
     // a creek that runs within 24 tiles of a border (more than 48 tiles of arc from its end) is dropped
     if (fin && hugsBorder(fin)) fin = null;
+    if (fin && cr.join < 0) fin = intoRiver(fin);
     finals.push(fin);
   });
   for (const fin of finals) {

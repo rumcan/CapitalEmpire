@@ -7,7 +7,7 @@ import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
 import { exposeClip, exposeDraw, exposed, exposureOf } from './exposure';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
-import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, riverStreams, swampStreams, type BandAlpha } from './swamp';
+import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, growBand, riverStreams, swampStreams, type BandAlpha } from './swamp';
 import { RIVER_CUT, drawRiverCut } from './river-cut';
 import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
 import { motionMask, pondLap, riverLap, type BandRef, type MotionMaskData } from './water-motion';
@@ -1620,6 +1620,10 @@ export class GroundPainter {
     //      course (riverCut), merged with the streams' into one band (swampBand): one layer, one gloss, one cover the living ground leaves alone
     const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, rres = Math.min(cres, RIVER_RES), rv = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, bw, bh, rres) : null;
     if (this.riverSwampOn()) this.riverNow = { a: rv, x0: tx0, y0: ty0, res: rres };
+    // the river's bank first, out past its swamp band by RIVER_SWAMP.border (growBand), the band laid over it below: water, swamp, then the
+    // dirt border (the owner, 2026-11-01: "the same swamp around the big river. in between the water and the dirt border")
+    const border = rv ? growBand(rv, Math.max(1, Math.round(RIVER_SWAMP.border * rres))) : null;
+    if (border) layer('bank', g => { if (rivers.length) shore(g, rivers, 3, 0.8); g.globalCompositeOperation = 'lighter'; overlay(g, border, rres); g.globalCompositeOperation = 'source-over'; });
     const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, rv.box, lite) : null, rres) : null;
     // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
     //  painted look composed and laid as before)
@@ -1635,7 +1639,7 @@ export class GroundPainter {
       // (the gloss off the streams' water and lip, and off the river's water and the bank's inner tile: the river keeps T230's own glint)
       if (tp) { const cut = new Path2D(); let any = false; for (const w of creeks) any = waterShape(cut, w.w.pts, SWAMP.lip, box, SWAMP.water) || any; if (rv) for (const w of rivers) any = waterShape(cut, w.w.pts, RIVER_SWAMP.inner[1], box) || any; this.glossMask = this.swampGloss(tp, sband.box, any ? cut : null); }
     }
-    if (rivers.length) layer('bank', g => shore(g, rivers, 3, 0.8));
+    if (rivers.length && !border) layer('bank', g => shore(g, rivers, 3, 0.8));
     // the creek bed (with the swamp: a thin muddy lip round the water), then the stream's narrow water
     if (creeks.length) { layer('creek', g => (creekSwamp ? shore(g, creeks, SWAMP.lip, SWAMP.lipFeather, SWAMP.water) : shore(g, creeks, 0.5, 0.5))); layer('water', g => shore(g, creeks, 0, SWAMP.waterFeather, SWAMP.water), water); }
     const sres = lite ? 0.25 : 0.5, hs = shadeRGBA(this.shade, tx0, ty0, bw, bh, sres); overlay(ctx, hs, sres); ctx.setTransform(M);

@@ -31,7 +31,8 @@ test('T265 the river\'s band: past its bank, never on its water, in stretches an
     if (rim > 0) { some++; rims.push(rim); } else none++;
   }
   const share = some / (some + none);
-  assert.ok(share > 0.25 && share < 0.8, `the swamp shows past the bank along ${(share * 100).toFixed(0)}% of the banks: stretches with and without`);
+  // (the owner, 2026-11-01: "the same swamp around the big river": no stretch without, a narrower one where the old had none)
+  assert.ok(share > 0.95, `the swamp runs along ${(share * 100).toFixed(0)}% of the banks: all the way`);
   const mean = rims.reduce((s, v) => s + v, 0) / rims.length, sd = Math.sqrt(rims.reduce((s, v) => s + (v - mean) ** 2, 0) / rims.length);
   assert.ok(mean > RIVER_SWAMP.bank + 2, `it reaches well past the bank: ${mean.toFixed(1)} tiles past the water`);
   assert.ok(sd > 1.5, `bays and stretches: the rim's distance varies (sd ${sd.toFixed(2)} tiles)`);
