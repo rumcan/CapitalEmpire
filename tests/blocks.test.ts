@@ -78,3 +78,12 @@ test('a street splitting one grid block gives drop 1, set 2', () => {
   assert.ok(drop.every(k => prev.has(k)));
   assert.ok(set.every(b => !prev.has(b.key)));
 });
+
+test('cart paths never close a block: a square of paved cart paths, and one cart path across a street block, leave the blocks as the streets make them', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs(SQUARE, CLASS.cart!, 0); e.commit(true);
+  assert.equal(enclosedBlocks(e.net).length, 0, 'four cart paths are no block');
+  const f = new NetEditor(new RoadNetwork());
+  f.addLegs(SQUARE, CLASS.street, 0); f.addLegs([leg(20, 0, 20, 40)], CLASS.cart!, 0); f.commit(true);
+  assert.equal(enclosedBlocks(f.net).length, 1, 'a cart path does not split a street block');
+});
