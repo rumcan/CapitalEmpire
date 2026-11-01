@@ -22,7 +22,7 @@ import type { HourStat } from './beforeafter';
 import { retime, jumpTo, townTimeOf } from './sim/townclock';
 import { EXIT_END, FIRST_TEE, GATES_OPEN, PLAY_END } from './golf/calendar';
 import { LATE_AFTER_MIN, minuteAt, simAt, travelEstimate, wantedLeaves } from './golf/daytimeline';
-import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, GROWN_SUCCESS0, GROWN_SUCCESS_K, GROWN_SUCCESS_MAX, GROWN_SUCCESS_MIN, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
+import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, GROWN_SUCCESS0, GROWN_SUCCESS_K, GROWN_SUCCESS_MAX, GROWN_SUCCESS_MIN, NO_ROOM_EVERY_D, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_BUILDS_ROADS, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
 import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
 import { Crowd, type FanCounts } from './event/crowd';
 import type { TollDef } from './event/toll';
@@ -316,6 +316,8 @@ export class City {
   /** the game hours' snapshots (see HourStat), newest last, at most HOURS_KEPT; the lots started (town 'build' events) since the terrain came */
   hours: HourStat[] = []; builds = 0;
   private planRnd = seededRnd(1); private planHour = -1; private pendingGrow = false; private growAt = -Infinity;
+  /** T292: the game clock of the last "no room left to grow" note (checkRoom); -Infinity: none yet */
+  private noRoomAt = -Infinity;
   /** the toll gates as the player placed them (setTolls' defs, the full list): their plazas are no-go ground for the town's roads (with towns) */
   private tollDefs: TollDef[] = [];
   /** the no-go zones of the town's roads (with towns, see RoadPlanCtx.blocked): the stadium site padded by 6 tiles, the other businesses padded by 2,
@@ -421,7 +423,7 @@ export class City {
   this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y }; this.endTourneyDay();
     // a new game starts at its own month (T135): the game clock at the season's first instant and the town day at day 1, not the last game's
     // (the season month is read from the clock, so it carried over); the clock-keyed timers with it. A load sets its own clock after (restore)
-    this.sim.restartClock(); this.growAt = -Infinity; this.courseHour = -1;
+    this.sim.restartClock(); this.growAt = -Infinity; this.noRoomAt = -Infinity; this.courseHour = -1;
     this.heightOf = height ? (x, y) => sampleField(height, x, y) : () => 0; this.segs = new WeakMap();
     this.centres = towns;
     this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
@@ -731,7 +733,7 @@ export class City {
    *  (the array is reused: read it before the next call), the gravel extension the town lays now, if any (legs in tiles), and the
    *  ledger of the game day that closed in these steps, if one did (else null). At a game hour's start the career is updated: the
    *  milestones newly reached (their grants paid then) and the win, if it came; milestones is the shared empty array most calls. */
-  step(n: number): { events: TownEvent[]; grow: Leg[] | null; ledger: Ledger | null; milestones: Milestone[]; won: boolean } {
+  step(n: number): { events: TownEvent[]; grow: Leg[] | null; noRoom: boolean; ledger: Ledger | null; milestones: Milestone[]; won: boolean } {
     const t0 = performance.now();
     this.calls++;
     // the parking fees of the cars parked since the last step (sim.parkedNow holds a pair per car, read before it is cleared): the books take them,
@@ -810,7 +812,8 @@ export class City {
       // the new day's visits are planned now, or when the round is free again (step)
       this.visitDay = -1; if (this.round.stage === 'free') this.planVisits();
     }
-    return { events, grow: this.planGrow(), ledger, milestones, won };
+    const grow = this.planGrow(), noRoom = !TOWN_BUILDS_ROADS && this.checkRoom();
+    return { events, grow, noRoom, ledger, milestones, won };
   }
 
   /** after each sim step (the incidents on): the link lanes' vehicles, summed over the second (metres, seconds, and the seconds slower than 1.5 m/s) */
@@ -1895,10 +1898,12 @@ export class City {
     to.length = 0;
   }
 
-  /** the town lays a gravel extension when it is short of land: at most once per game hour, and not while the last one is out
+  /** T292 (#877): the town lays no road of its own while TOWN_BUILDS_ROADS is off (the owner, 2026-11-01); see checkRoom for the note.
+   *  Otherwise the town lays a gravel extension when it is short of land: at most once per game hour, and not while the last one is out
    *  (no net ops back yet: the next net batch clears it, and so does an hour, in case the engine skipped it). With towns, at most one
    *  every GRAVEL_EVERY_H game hours (growAt: the last one laid) */
   private planGrow(): Leg[] | null {
+    if (!TOWN_BUILDS_ROADS) return null;
     const cls = this.cls;
     if (!cls) return null;
     // a range start's grown town plans every GROWN_PLAN_H game hours (T090: one leg an hour leaves its growth short of land from year 8)
@@ -1911,12 +1916,9 @@ export class City {
     const K = this.centres.length, k = K ? this.planHour % K : 0, grown = this.golf?.start === 'range';
     // with towns a leg every GRAVEL_EVERY_H game hours; a range start's grown town a leg every game hour (plan P22 2.3.3, T091)
     if (K && !grown && this.sim.clock - this.growAt < GRAVEL_EVERY_H * GAME_HOUR / this.growSpeed) return null;
-    const c: RoadPlanCtx = K
-      ? { net: this.net, lots: this.lots, town: this.town, cls, entry: this.centres[k]!, rnd: this.planRnd, centre: grown ? this.anchoredCentre(k) : this.townCentre(k), built: this.town.builtK[k], blocked: this.blocked, towns: true }
-      : { net: this.net, lots: this.lots, town: this.town, cls, entry: this.ctx.entry, rnd: this.planRnd };
-    // every golf game counts only the lots that can build (not on golf land: they stalled the growth); a range start's legs keep their room from
-    // the golf land (a leg's midpoint within GOLF_ROOM tiles of it scores GOLF_ROOM more: the town grows away from the land the player may buy)
-    if (this.golf && this.golfLand.length) c.canBuild = l => !this.reserved(l);
+    const c = this.growCtx(cls, k, grown);
+    // a range start's legs keep their room from the golf land (a leg's midpoint within GOLF_ROOM tiles of it scores GOLF_ROOM more: the town
+    // grows away from the land the player may buy)
     if (grown && this.golfLand.length) c.penalty = mid => (this.golfLand.some(([gx, gy, gw, gh]) => Math.hypot(Math.max(gx - mid.x, 0, mid.x - gx - gw), Math.max(gy - mid.y, 0, mid.y - gy - gh)) < GOLF_ROOM) ? GOLF_ROOM : 0);
     if (!needsLand(c)) { this.growStats.enough++; return null; }
     const legs = planExtension(c);
@@ -1924,5 +1926,34 @@ export class City {
     this.growStats.legs++;
     this.pendingGrow = true; this.growAt = this.sim.clock;
     return legs;
+  }
+
+  /** the planner's context: the k-th town centre (the entry with none); with a golf game, only the lots that can build count (not the golf
+   *  land: they stalled the growth). A range start's grown town anchors its centre (grown) */
+  private growCtx(cls: RoadPlanCtx['cls'], k: number, grown: boolean): RoadPlanCtx {
+    const K = this.centres.length;
+    const c: RoadPlanCtx = K
+      ? { net: this.net, lots: this.lots, town: this.town, cls, entry: this.centres[k]!, rnd: this.planRnd, centre: grown ? this.anchoredCentre(k) : this.townCentre(k), built: this.town.builtK[k], blocked: this.blocked, towns: true }
+      : { net: this.net, lots: this.lots, town: this.town, cls, entry: this.ctx.entry, rnd: this.planRnd };
+    if (this.golf && this.golfLand.length) c.canBuild = l => !this.reserved(l);
+    return c;
+  }
+
+  /** T292 (#877; the owner, 2026-11-01: "remove that the town builds roads. the player must build to expand the town."): with TOWN_BUILDS_ROADS
+   *  off, on each plan hour (planGrow's gating) asks whether the town wants land it has none of (needsLand, as planGrow would plan on). True
+   *  at most once every NO_ROOM_EVERY_D game days (noRoomAt: the last one), so the engine says "build a road" once in a while, not every hour */
+  private checkRoom(): boolean {
+    const cls = this.cls;
+    if (!cls) return false;
+    // a range start's first hour, and the grown town's plan hours, as planGrow
+    if (this.golf?.start === 'range' && this.sim.clock * this.growSpeed < GAME_HOUR) return false;
+    const period = (this.golf?.start === 'range' ? GROWN_PLAN_H : 1) * GAME_HOUR, h = Math.floor(this.sim.clock * this.growSpeed / period);
+    if (h === this.planHour) return false;
+    this.planHour = h;
+    if (this.sim.clock - this.noRoomAt < NO_ROOM_EVERY_D * GAME_DAY / this.growSpeed) return false;
+    const K = this.centres.length, k = K ? h % K : 0;
+    if (!needsLand(this.growCtx(cls, k, this.golf?.start === 'range'))) return false;
+    this.noRoomAt = this.sim.clock;
+    return true;
   }
 }

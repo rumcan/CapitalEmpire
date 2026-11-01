@@ -1,5 +1,5 @@
 // The city class (Phase 3 step 7), headless: a small street grid fed to a City as net ops grows built lots over 3 game days, and
-// the town lays gravel legs back when it is short of land (fed back as net ops, as the engine does).
+// the town lays no road of its own (T292, #877: TOWN_BUILDS_ROADS is off); when it is short of land it only says so, once in a while.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
@@ -28,7 +28,7 @@ function gridEditor(cls = CLASS.street): NetEditor {
   return e;
 }
 
-test('a city fed a street grid grows built lots over 3 game days and lays gravel when short of land', () => {
+test('a city fed a street grid grows built lots over 3 game days on the roads it has, and lays no gravel of its own (T292)', () => {
   const e = gridEditor();
   const city = new City(7);
   city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
@@ -36,21 +36,29 @@ test('a city fed a street grid grows built lots over 3 game days and lays gravel
   assert.ok(first.lotsAdded.length > 0, 'the grid has parcels');
   assert.equal(city.lanes > 0, true, 'the grid has lanes');
 
-  let builds = 0, grows = 0, gravelLegs = 0;
+  let builds = 0, grows = 0, notes = 0;
   for (let s = 0; s < 3 * 1440; s++) {
     const r = city.step(10);
     for (const ev of r.events) if (ev.kind === 'build') builds++;
-    if (r.grow) {
-      grows++; gravelLegs += r.grow.length;
-      e.addLegs(r.grow, CLASS.gravel, 2);
-      city.netOps(e.commit());
-    }
+    if (r.grow) grows++;
+    if (r.noRoom) notes++;
   }
   const built = builtLots(city.town, city.lots).length;
   assert.ok(builds > 0, `lots were started (${builds} builds)`);
   assert.ok(built > 0, `built lots after 3 game days (${built})`);
-  assert.ok(grows > 0 && gravelLegs > 0, `gravel legs laid when short of land (${grows} extensions)`);
+  assert.equal(grows, 0, 'the town lays no road of its own (TOWN_BUILDS_ROADS is off)');
+  assert.ok(notes <= 2, `the no-room note at most once every 3 game days (${notes})`);
   assert.ok(city.town.pop > 0, 'the town has residents');
+});
+
+test('T292: the town short of land says so once in 3 game days, and lays no leg: the note comes from checkRoom, not planGrow', () => {
+  const e = gridEditor();
+  const city = new City(7);
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
+  city.netOps(e.commit(true));
+  const at: number[] = [];
+  for (let s = 0; s < 4 * 1440; s++) { const r = city.step(10); if (r.grow) assert.fail('no leg'); if (r.noRoom) at.push(city.sim.clock); }
+  for (let i = 1; i < at.length; i++) assert.ok(at[i]! - at[i - 1]! >= 3 * 1440, `notes ${at[i - 1]} and ${at[i]} are 3 game days apart`);
 });
 
 test('a city books its first game day when the sim clock passes 1440 s: one ledger, with road upkeep', () => {

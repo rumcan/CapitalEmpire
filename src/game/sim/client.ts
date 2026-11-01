@@ -67,6 +67,8 @@ export class SimClient {
   onLotsMoved?: (keys: string[]) => void;
   /** called with the gravel extension the town plans (the engine builds it, or skips it); the worker waits for its net ops */
   onGrow?: (legs: Leg[]) => void;
+  /** T292 (#877): the town wants land and has none: the engine tells the player to build a road (City.checkRoom, once in a while) */
+  onNoRoom?: () => void;
   /** the city's books as the worker last sent them (the treasury is also moved on spend, before the worker's answer), the game day, and called with each day's ledger as it closes */
   budget: BudgetSave = new Budget().toJSON(); day = 1; onLedger?: (l: Ledger) => void;
   /** the career as the worker last sent it (reset with the books), and called with the milestones a step newly reached and whether the city won */
@@ -288,6 +290,7 @@ export class SimClient {
       for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });
       this.onGrow?.(legs); return;
     }
+    if (m.t === 'noRoom') { this.onNoRoom?.(); return; }
     if (m.t === 'townBoost') { this.onTownBoost?.(m.v); return; }
     if (m.t === 'town') {
       for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; v.seed = e.seed; v.since = e.since; } }

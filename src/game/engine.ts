@@ -2395,6 +2395,7 @@ export class Game {
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
     this.sandboxUnlock = q.has('unlock') ? q.get('unlock') === '1' : dev;
     this.traffic.onGrow = (legs) => this.townGrow(legs);
+    this.traffic.onNoRoom = () => this.toast('The town has no room left to grow: build a road to give it new lots'); // T292 (#877)
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); this.townFirsts(events); this.placesCheck(); this.roughCheck(); };
     // a lot whose road was widened (or narrowed) keeps its house but moves back to the new verge: composed again there, not left over the road
     this.traffic.onLotsMoved = (keys) => { for (const k of keys) this.lotQueue.add(k); };
@@ -5215,7 +5216,8 @@ export class Game {
   this.traffic.terrain(t.cls, near ? [near.x, near.y] : h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, this.townPts.flatMap(p => [p.x, p.y]), t.height, this.golfMode);
   this.traffic.disastersOn(this.disastersEnabled);
   }
-  /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it */
+  /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it.
+   *  T292 (#877): the worker plans none while TOWN_BUILDS_ROADS is off, so this is not called then */
   private townGrow(legs: Leg[]) {
     const cls = CLASS.gravel, near = this.propsNearLegs(legs, cls.h + cls.walk);
     if (near.some(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car')) return;

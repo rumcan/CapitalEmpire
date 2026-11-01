@@ -119,7 +119,13 @@ export const PAVED_RATE = 6;
  *  was just commercial lots"): past this many tiles from every town centre the town starts no lot of its own (the county road and its gravel),
  *  the roads there are the farms' (ext/farms/farmmap.ts TOWN_CLEAR: a farm's road lies past it); the player's own streets grow lots anywhere */
 export const FARM_LINE = 300 * MAP / 2048;
-/** with town centres: the town lays at most one gravel leg every this many game hours, times the speed */
+/** T292 (#877; the owner, 2026-11-01: "remove that the town builds roads. the player must build to expand the town."): off, the town lays no
+ *  road of its own (City.planGrow plans none, so GRAVEL_EVERY_H and GROWN_PLAN_H do nothing). The town still builds lots on the roads that
+ *  exist; when it wants land and has none it says so (City.checkRoom: a note every NO_ROOM_EVERY_D game days). Switch on to bring the gravel back */
+export const TOWN_BUILDS_ROADS = false;
+/** T292: the note "no room left to grow" comes at most once every this many game days, times the speed */
+export const NO_ROOM_EVERY_D = 3;
+/** with town centres: the town lays at most one gravel leg every this many game hours, times the speed (only with TOWN_BUILDS_ROADS) */
 export const GRAVEL_EVERY_H = 6;
 /** T090 (plan P22 2.3.3): a range start's grown town builds (GROWN_BASE + GROWN_PER_HOLE x min(holes, 18) + GROWN_PER_BUILT x built lots) x
  *  success lots a season (a town day of the Town's: 24 growth hours), on its own land (the county road and its streets, gravel); the player's
