@@ -1753,7 +1753,16 @@ export class PaintTool {
   cancel() { if (this.drag) this.dragEnd(); this.pts = []; this.lasso = false; this.down = null; this.dropRun(); if (this.stroke) { this.stroke = null; this.commit(); } if (this.planting) { this.planting = null; this.commit(); } if (this.heighting) { this.heighting = null; this.commit(); } }
 
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
+  /** the Pan texture tool (the owner, 2026-11-01: "a Pan texture button that makes your hand a fist and then wherever you click on the map it
+   *  grabs and you can pan the texture while everything else stays still"): the texture in hand ('tex' the fill, 'blend', 'border'; null: off)
+   *  and the drag (the pointer's start in tiles and the offset then). The look in hand takes the offset, for its owner as any edit */
+  panTex: 'tex' | 'blend' | 'border' | null = null;
+  private panning: { x: number; y: number; ox: number; oy: number } | null = null;
+  /** takes the Pan texture tool for texture k in hand, or puts it down (the same k again, or null) */
+  setPanTex(k: 'tex' | 'blend' | 'border' | null) { this.panTex = this.panTex === k ? null : k; this.panning = null; this.host.emit(); }
+  private panKeys(): ['ox', 'oy'] | ['mox', 'moy'] | ['box', 'boy'] { return this.panTex === 'blend' ? ['mox', 'moy'] : this.panTex === 'border' ? ['box', 'boy'] : ['ox', 'oy']; }
   get cursorStyle(): string {
+    if (this.panTex) return this.panning ? 'grabbing' : 'grab';
     if (this.mode === 'plan') { const w = this.wizard; return w.drag ? 'grabbing' : w.hover ? (w.hover.k === 'line' || w.hover.k === 'add' ? 'copy' : 'grab') : w.lineHole ? 'pointer' : 'crosshair'; }
     if (this.editInHand) { const w = this.wizard; if (w.drag) return 'grabbing'; if (w.hover && w.hover.k !== 'line') return w.hover.k === 'add' ? 'copy' : 'grab'; } // T238, T252
     if (this.drag) return 'grabbing';
@@ -1772,6 +1781,7 @@ export class PaintTool {
 
   /** a press on tile t (css px mx, my): a handle of the selected area starts a drag; else draw waits for the release (a click or a lasso) and deselects; pick selects the area under it; erase removes it */
   pointerDown(t: { x: number; y: number }, mx: number, my: number, alt = false) {
+    if (this.panTex) { const [kx, ky] = this.panKeys(); this.panning = { x: t.x, y: t.y, ox: this.style[kx] ?? 0, oy: this.style[ky] ?? 0 }; this.host.emit(); return; }
     if (this.mode === 'plan') { this.planDown(t, mx, my); return; }
     if (this.editInHand && this.planPress(mx, my)) { this.planDown(t, mx, my); return; } // T238: Edit hole's handles first (T252: under the height brush too)
     const sel = this.selectedArea();
@@ -1815,6 +1825,8 @@ export class PaintTool {
   /** a move over tile t (null off the map), with shift (rotate in 15° steps, scale uniform): a drag follows the pointer; else the handle under it is highlighted, and the lasso is drawn or the area under the pointer hovered */
   pointerMove(t: { x: number; y: number } | null, mx: number, my: number, shift = false) {
     this.cursor = t; this.mouse = { mx, my };
+    // the Pan texture tool: the texture follows the pointer (its offset, tiles), everything else stays still
+    if (this.panTex) { const g = this.panning; if (g && t) { const [kx, ky] = this.panKeys(); this.setStyle({ [kx]: g.ox + (t.x - g.x), [ky]: g.oy + (t.y - g.y) }); } return; }
     // T238: Edit hole with a brush in hand: a handle's drag is the plan's; otherwise the handles light up under the pointer as it paints
     if (this.editInHand && !this.wizard.drag && !this.stroke && !this.heighting) { const w = this.wizard, was = w.hover; w.move(t, mx, my, this.toCss()); if (was?.k !== w.hover?.k || was?.i !== w.hover?.i) this.host.emit(); }
     if (this.mode === 'plan' || (this.planOpen && this.wizard.drag)) {
@@ -1867,6 +1879,7 @@ export class PaintTool {
 
   /** the release: a handle drag ends; in draw, a lasso is simplified and closed, and a press without a drag is a click that adds a corner (tol: the close distance in tiles) */
   pointerUp(tol: number) {
+    if (this.panTex) { this.panning = null; this.host.emit(); return; }
     if (this.mode === 'plan' || (this.planOpen && this.wizard.drag)) { if (this.wizard.drag) { this.wizard.release(); this.host.emit(); } return; }
     if (this.drag) { this.dragEnd(); return; }
     if (this.mode === 'brush') { if (this.runRight) { this.finishRun(); return; } this.strokeEnd(); return; }
@@ -2098,6 +2111,7 @@ export class PaintTool {
   /** a key press: true when the tool used it (Enter closes, Backspace undoes a corner, Esc drops what is in hand (false with nothing in hand: the
    *  engine then puts the tool down for Select), R turns the hole (hole mode), [ and ] size the brush (brush mode), Delete removes the hovered corner of the selected area, else the selected area) */
   key(e: KeyboardEvent): boolean {
+    if (this.panTex && e.key === 'Escape') { this.setPanTex(null); return true; }
     if ((e.ctrlKey || e.metaKey) && !e.altKey) {
       const k = e.key.toLowerCase();
       // a Run's last corner first (T122), then New hole's own clicks and drags (T119), then the course's last step

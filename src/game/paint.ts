@@ -31,6 +31,10 @@ export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: nu
    *  it); smooth, the Smoothness slider (0..1; absent: SMOOTH_DEFAULT), kept while the box is off so ticking it again brings it back. Painted
    *  areas keep their Corners slider instead */
   round?: boolean; smooth?: number;
+  /** the textures' positions (the owner, 2026-11-01: "a Pan texture button ... you can pan the texture while everything else stays still"):
+   *  the fill's (ox, oy), the blend's (mox, moy) and the border's (box, boy) offsets, tiles; the blend's own scale and angle (mscale, mangle:
+   *  absent, the fill's). Absent: 0 (or the fill's), as every look before */
+  ox?: number; oy?: number; mox?: number; moy?: number; mscale?: number; mangle?: number; box?: number; boy?: number;
 }
 /** T253: the Smoothness a Round off starts at */
 export const SMOOTH_DEFAULT = 0.5;
@@ -289,9 +293,11 @@ function wrapAngle(a: number): number { return a >= -90 && a <= 90 ? a : ((((a +
 const fin = (v: number, d: number) => Number.isFinite(v) ? v : d;
 
 /** a copy of a style (or a whole area) with the scale, angle, border, radius and tone clamped and the textures and tint checked (unknown → paving, kerb; a bad tint → black, or white when lightening) */
+/** a texture offset field kept when set (finite, not 0; rounded to a hundredth of a tile), else left out */
+const offset = (k: string, v: number | undefined): Record<string, number> => (typeof v === 'number' && Number.isFinite(v) && Math.abs(v) >= 0.005 ? { [k]: Math.round(v * 100) / 100 } : {});
 export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
   // the blend's fields are kept only with a known texture (they are left out, not undefined, without one); the edge shade only above 0
-  const { mtex, mshare, msoft, mpatch, shadow, round, smooth, ...rest } = st, s = rest as T, sh = Math.round(Math.min(1, Math.max(0, fin(shadow ?? 0, 0))) * 1000) / 1000;
+  const { mtex, mshare, msoft, mpatch, mscale, mangle, mox, moy, ox, oy, box, boy, shadow, round, smooth, ...rest } = st, s = rest as T, sh = Math.round(Math.min(1, Math.max(0, fin(shadow ?? 0, 0))) * 1000) / 1000;
   const tone = Math.min(2, Math.max(0, Math.round(fin(s.tone, 0)))) as 0 | 1 | 2, btone = Math.min(2, Math.max(0, Math.round(fin(s.btone, 0)))) as 0 | 1 | 2;
   return {
     ...s,
@@ -310,8 +316,11 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
     btoneAmt: Math.min(1, Math.max(0, fin(s.btoneAmt, 0.35))),
     btint: TINT_RE.test(s.btint) ? s.btint.toLowerCase() : btone === 2 ? '#ffffff' : '#000000',
     ...(mtex && TEX_IDS.has(mtex)
-      ? { mtex, mshare: Math.min(1, Math.max(0, fin(mshare ?? 0.5, 0.5))), msoft: Math.min(0.5, Math.max(0.01, fin(msoft ?? 0.12, 0.12))), mpatch: Math.min(4, Math.max(0.25, fin(mpatch ?? 1, 1))) }
+      ? { mtex, mshare: Math.min(1, Math.max(0, fin(mshare ?? 0.5, 0.5))), msoft: Math.min(0.5, Math.max(0.01, fin(msoft ?? 0.12, 0.12))), mpatch: Math.min(4, Math.max(0.25, fin(mpatch ?? 1, 1))),
+        ...(typeof mscale === 'number' && Number.isFinite(mscale) ? { mscale: Math.min(SCALE_MAX, Math.max(SCALE_MIN, mscale)) } : {}),
+        ...(typeof mangle === 'number' && Number.isFinite(mangle) ? { mangle: wrapAngle(mangle) } : {}), ...offset('mox', mox), ...offset('moy', moy) }
       : {}),
+    ...offset('ox', ox), ...offset('oy', oy), ...offset('box', box), ...offset('boy', boy),
     ...(sh > 0 ? { shadow: sh } : {}),
     // T253: Round off when ticked, its Smoothness only when set (both left out otherwise, so an old look takes its kind's default); an unticked
     // box is kept as false, so a bunker (rounded by default since 2026-10-29) the player unticked stays square across a reload
@@ -323,6 +332,7 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
 export function assignStyle(a: PaintArea, st: Omit<PaintArea, 'id' | 'pts'>): PaintArea {
   Object.assign(a, st);
   if (!st.mtex) { delete a.mtex; delete a.mshare; delete a.msoft; delete a.mpatch; }
+  for (const k of ['mscale', 'mangle', 'mox', 'moy', 'ox', 'oy', 'box', 'boy'] as const) if (st[k] === undefined) delete a[k];
   if (!st.shadow) delete a.shadow;
   if (!st.round) delete a.round;
   if (st.smooth === undefined) delete a.smooth;

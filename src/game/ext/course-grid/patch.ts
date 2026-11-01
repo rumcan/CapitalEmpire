@@ -67,7 +67,7 @@ export interface CourseOwners {
   looks: readonly { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>; band: readonly (CourseTex | undefined)[]; lipGrass?: CourseTex; round?: readonly (number | undefined)[] }[];
   hole: readonly number[]; zones?: readonly number[] }
 /** a course texture's fields alone (a look may carry more) */
-const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(t.x !== undefined && t.x !== 1 ? { x: t.x } : {}), ...(t.m ? { m: { ...t.m } } : {}) });
+const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(t.x !== undefined && t.x !== 1 ? { x: t.x } : {}), ...(t.m ? { m: { ...t.m } } : {}), ...(t.o ? { o: [t.o[0], t.o[1]] as [number, number] } : {}) });
 
 /** BLOB_STYLE with the collars at the widths of `border` (metres = cells, by surface id; clamped to the Border slider's range; a missing or
  *  bad entry keeps the default width). T260: 0 (or less) is none: the collar entry stays, at width 0, so the draw order's layer codes stay

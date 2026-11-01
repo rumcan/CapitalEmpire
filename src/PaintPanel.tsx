@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import rockyDirt from './assets/ground/rocky-dirt.webp';
 import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
@@ -164,22 +164,59 @@ function Section({ id, title, children, open: dflt = true }: { id: string; title
 /** the style editor: the fill's texture, scale, angle, corners, tone and border (and the border's own), the snap setting, and the area count and cost.
  *  gridOnly (Holes > My looks on a golf course's 1 m grid, P23 P1-E): what the grid's cells wear (T128: the texture, its size and angle, its tone
  *  and blend, and its collar band's width, shadow, texture, size, angle and tone), without the painted areas' layer, corners and cost */
+/** the Pan texture tool is put down when the panel that took it closes (it would keep grabbing the map) */
+function usePanOff(game: Game) { useEffect(() => () => { if (game.paint.panTex) game.paint.setPanTex(null); }, [game]); }
+/** a texture's size: smaller, its percentage, bigger, back to 100% (a picker's Scale edit) */
+export function ScaleRow({ v, set }: { v: number; set: (v: number) => void }) {
+  return (
+    <div className="flex items-center gap-1">
+      <button className="btn" onClick={() => set(v / 1.25)}>−</button>
+      <span className="w-12 text-center text-xs text-slate-200">{`${Math.round(v * 100)}%`}</span>
+      <button className="btn" onClick={() => set(v * 1.25)}>+</button>
+      <button className="btn" onClick={() => set(1)}>Reset</button>
+    </div>
+  );
+}
+/** a texture's turn: the slider and its quick angles (a picker's Angle edit); on: whether the quick chips show as picked; edge: the area's first
+ *  edge, for Along first edge (none: no such chip) */
+export function AngleRow({ v, set, on = true, edge }: { v: number; set: (v: number) => void; on?: boolean; edge?: number[] }) {
+  return (<>
+    <div className="flex items-center gap-2">
+      <input type="range" min={-90} max={90} step={5} value={v} onChange={e => set(+e.target.value)} className="flex-1" />
+      <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(v)}°`}</span>
+    </div>
+    <div className="mt-1 flex flex-wrap gap-1">
+      <button className={`chip ${on && v === 0 ? 'chip-on' : ''}`} onClick={() => set(0)}>Grid 0°</button>
+      <button className={`chip ${on && v === 45 ? 'chip-on' : ''}`} onClick={() => set(45)}>45°</button>
+      {edge && <button className="chip disabled:opacity-40" disabled={edge.length < 4} onClick={() => set(edgeAngle(edge))}>Along first edge</button>}
+    </div>
+  </>);
+}
 /** the surface in focus in a hole's panel (the owner, 2026-11-01: "a quick change button so you can quickly flip through textures for the main
  *  and border texture"): its Main texture and, while it has a border, its Border texture, each picker with its ‹ › to step through the library;
  *  wired as StyleEditor's (the course look of the surface in hand, for whoever owns the look now) */
 export function QuickTextures({ game }: { game: Game }) {
   const p = game.paint, s = p.style, bunker = p.brushKind === 'bunker', band = !!BORDER_KINDS[p.brushKind] && (p.courseBorder() ?? 0) > 0;
+  // the border follows the fill's scale and angle until either is set
+  const bFollow = s.bscale === 1 && s.bangle === 0, bs = bFollow ? s.scale : s.bscale, ba = bFollow ? s.angle : s.bangle;
+  usePanOff(game);
   return (
     <div data-quick-textures>
       <TexturePicker label="Main texture" testId="quick-fill" value={bunker && s.bunker?.sandTex ? undefined : s.tex} none={bunker && s.bunker?.sandTex ? 'Your own texture' : undefined}
-        options={withOwn(MENU_OPTIONS)} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ tex: id as PaintTex, ...(bunker && s.bunker?.sandTex ? { bunker: { ...s.bunker, sandTex: undefined } } : {}) })} />
-      {band && <TexturePicker label="Border texture" testId="quick-border" value={s.btex} options={withOwn(BORDER_MENU.filter(t => t.id !== 'kerb').map(t => ({ id: t.id, name: plainName(t.name), col: t.col })))} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ btex: id as typeof s.btex })} />}
+        options={withOwn(MENU_OPTIONS)} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ tex: id as PaintTex, ...(bunker && s.bunker?.sandTex ? { bunker: { ...s.bunker, sandTex: undefined } } : {}) })}
+        edits={[{ id: 'scale', label: `Scale ${Math.round(s.scale * 100)}%`, panel: <ScaleRow v={s.scale} set={v => p.setStyle({ scale: v })} /> }, { id: 'angle', label: `Angle ${Math.round(s.angle)}°`, panel: <AngleRow v={s.angle} set={v => p.setStyle({ angle: v })} /> }]}
+        pan={{ on: p.panTex === 'tex', toggle: () => p.setPanTex('tex') }} />
+      {band && <TexturePicker label="Border texture" testId="quick-border" value={s.btex} options={withOwn(BORDER_MENU.filter(t => t.id !== 'kerb').map(t => ({ id: t.id, name: plainName(t.name), col: t.col })))} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ btex: id as typeof s.btex })}
+        edits={[{ id: 'scale', label: `Scale ${Math.round(bs * 100)}%`, panel: <ScaleRow v={bs} set={v => p.setStyle({ bscale: v, bangle: ba })} /> },
+          { id: 'angle', label: `Angle ${Math.round(ba)}°`, panel: <AngleRow v={ba} set={v => p.setStyle({ bangle: v, bscale: bs })} /> }]}
+        pan={{ on: p.panTex === 'border', toggle: () => p.setPanTex('border') }} />}
     </div>
   );
 }
 
 export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?: boolean }) {
   const p = game.paint, s = p.style;
+  usePanOff(game);
   // a course surface's border is its collar band on the course grid (the course look); any other is the painted area's. Every control shown
   // works on both (course-look.ts: the fill's texture, scale, angle, tone and blend, the band's texture, scale, angle and tone); the ones that
   // cannot (a grid surface's corners, the kerb as its band, a painted look's angle) are left out
@@ -192,27 +229,10 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
   // the border follows the fill's scale and angle until either is set (the renderer draws it that way), so show the fill's values then
   const bFollow = s.bscale === 1 && s.bangle === 0, bScale = bFollow ? s.scale : s.bscale, bAngle = bFollow ? s.angle : s.bangle;
   const bOwn = (c: { bscale?: number; bangle?: number }) => p.setStyle({ bscale: bScale, bangle: bAngle, ...c });
-  /** a texture's size: smaller, its percentage, bigger, back to 100% (the picker's Scale edit) */
-  const scaleRow = (v: number, set: (v: number) => void) => (
-    <div className="flex items-center gap-1">
-      <button className="btn" onClick={() => set(v / 1.25)}>−</button>
-      <span className="w-12 text-center text-xs text-slate-200">{`${Math.round(v * 100)}%`}</span>
-      <button className="btn" onClick={() => set(v * 1.25)}>+</button>
-      <button className="btn" onClick={() => set(1)}>Reset</button>
-    </div>
-  );
-  /** a texture's turn: the slider and its quick angles (the picker's Angle edit); on: whether the quick chips show as picked */
-  const angleRow = (v: number, set: (v: number) => void, on = true) => (<>
-    <div className="flex items-center gap-2">
-      <input type="range" min={-90} max={90} step={5} value={v} onChange={e => set(+e.target.value)} className="flex-1" />
-      <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(v)}°`}</span>
-    </div>
-    <div className="mt-1 flex flex-wrap gap-1">
-      <button className={`chip ${on && v === 0 ? 'chip-on' : ''}`} onClick={() => set(0)}>Grid 0°</button>
-      <button className={`chip ${on && v === 45 ? 'chip-on' : ''}`} onClick={() => set(45)}>45°</button>
-      <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => set(edgeAngle(pts))}>Along first edge</button>
-    </div>
-  </>);
+  const scaleRow = (v: number, set: (v: number) => void) => <ScaleRow v={v} set={set} />;
+  const angleRow = (v: number, set: (v: number) => void, on = true) => <AngleRow v={v} set={set} on={on} edge={pts} />;
+  /** the Pan texture button of texture k (a course surface's look on the grid: its textures are laid with their offsets there) */
+  const pan = (k: 'tex' | 'blend' | 'border') => (grid ? { on: p.panTex === k, toggle: () => p.setPanTex(k) } : undefined);
   return (
     <>
       {picked && !gridOnly && (<Section id="layer" title="Layer">
@@ -229,11 +249,16 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       <TexturePicker label="Texture" testId="fill" value={bunker && s.bunker?.sandTex ? undefined : s.tex} none={bunker && s.bunker?.sandTex ? 'Your own texture (Your textures, below)' : undefined}
         options={withOwn(MENU_OPTIONS)} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ tex: id as PaintTex, ...(bunker && s.bunker?.sandTex ? { bunker: { ...s.bunker, sandTex: undefined } } : {}) })}
         edits={[{ id: 'scale', label: `Scale ${Math.round(s.scale * 100)}%`, panel: scaleRow(s.scale, v => p.setStyle({ scale: v })) },
-          ...((!fillPainted || bunker) ? [{ id: 'angle', label: `Angle ${Math.round(s.angle)}°`, panel: angleRow(s.angle, v => p.setStyle({ angle: v })) }] : [])]}
+          ...((!fillPainted || bunker) ? [{ id: 'angle', label: `Angle ${Math.round(s.angle)}°`, panel: angleRow(s.angle, v => p.setStyle({ angle: v })) }] : [])]} pan={pan('tex')}
         note={<>{!MENU_TEXES.length && <div className="text-[12px] text-slate-400">No texture presets yet: make them in the studio (Ground → Texture presets), then Rebuild game sprites.</div>}
           {bunker && s.bunker?.sandTex && <div className="text-[11px] text-amber-300" data-sand-own>Your own texture is on the sand (Your textures, below); pick one here to go back.</div>}</>} />
       {!bunker && (<>
-      <TexturePicker label="Blend with" testId="blend" value={s.mtex} none="None" options={withOwn(MENU_OPTIONS)} onUpload={addOwnTexture} onPick={id => p.setStyle({ mtex: id as PaintTex | undefined })} />
+      {/* (never the main texture itself: blending a texture with itself does nothing, the owner 2026-11-01; on the course grid its own
+          Scale, Angle and Pan, else it takes the fill's) */}
+      <TexturePicker label="Blend with" testId="blend" value={s.mtex} none="None" options={withOwn(MENU_OPTIONS).filter(o => o.id !== s.tex)} onUpload={addOwnTexture} onPick={id => p.setStyle({ mtex: id as PaintTex | undefined })}
+        edits={grid && s.mtex ? [{ id: 'scale', label: `Scale ${Math.round((s.mscale ?? s.scale) * 100)}%`, panel: scaleRow(s.mscale ?? s.scale, v => p.setStyle({ mscale: v })) },
+          { id: 'angle', label: `Angle ${Math.round(s.mangle ?? s.angle)}°`, panel: angleRow(s.mangle ?? s.angle, v => p.setStyle({ mangle: v })) }] : []}
+        pan={s.mtex ? pan('blend') : undefined} />
       {s.mtex && (
         <>
           {([['Share', 'mshare', 0, 1, 0.01, (v: number) => `${Math.round(v * 100)}%`, 0.5], ['Softness', 'msoft', 0.01, 0.5, 0.01, (v: number) => v.toFixed(2), 0.12], ['Patch size', 'mpatch', 0.25, 4, 0.05, (v: number) => `${v.toFixed(2)}x`, 1]] as const).map(([label, key, lo, hi, step, fmt, def]) => (
@@ -253,7 +278,8 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       {/* the owner (2026-10-25): "should be a slider". One continuous Border, a hairline to huge: a course surface's collar band (its course look,
           with its Shadow right under it), or a painted area's border (the old None, Small, Medium and Large are points on it) with the area's
           own Shadow under it (T136) */}
-      <Section id="border" title="Border">
+      {/* Edges: the border band and everything about the surface's edge (round off, smoothness, shadow, grass length, height), one section */}
+      <Section id="border" title="Edges">
       {grid ? <CourseEdges game={game} /> : (<>
         <div className="flex items-center gap-2 text-[12px] text-slate-400" title="The border band inside the area's edge: none, a hairline, up to 8 m">
           <span className="w-12 shrink-0">Border</span>
@@ -272,7 +298,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
         <>
           <TexturePicker label="Border texture" testId="border" value={s.btex} options={withOwn(BORDER_MENU.filter(t => !grid || t.id !== 'kerb').map(t => ({ id: t.id, name: plainName(t.name), col: t.col })))} onUpload={addOwnTexture} onPick={id => id && p.setStyle({ btex: id as typeof s.btex })}
             edits={[{ id: 'scale', label: `Scale ${Math.round(bScale * 100)}%`, panel: <>{scaleRow(bScale, v => bOwn({ bscale: v }))}<button className={`chip mt-1.5 ${bFollow ? 'chip-on' : ''}`} title="The border uses the fill's scale and angle" onClick={() => p.setStyle({ bscale: 1, bangle: 0 })}>Follow the fill</button></> },
-              ...(!bandPainted ? [{ id: 'angle', label: `Angle ${Math.round(bAngle)}°`, panel: angleRow(bFollow ? s.angle : s.bangle, v => bOwn({ bangle: v }), !bFollow) }] : [])]} />
+              ...(!bandPainted ? [{ id: 'angle', label: `Angle ${Math.round(bAngle)}°`, panel: angleRow(bFollow ? s.angle : s.bangle, v => bOwn({ bangle: v }), !bFollow) }] : [])]} pan={pan('border')} />
           <ExposureRow label="Border exposure" f={exposureOf(s.btone, s.btoneAmt)} set={f => { const t = toneOfExposure(f); p.setStyle({ btone: t.tone, btoneAmt: t.toneAmt }); }} title="The border's texture itself made darker or lighter: the middle is none, the ends one stop darker or lighter (double-click: none)" />
         </>
       )}

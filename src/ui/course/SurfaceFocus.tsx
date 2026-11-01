@@ -35,7 +35,8 @@ export function SurfaceFocus({ game, kind, onBack, pickGrass }: { game: Game; ki
           <div className="sub-line mt-0.5 truncate" title={lookName(s.tex)}>{lookName(s.tex)}</div>
         </div>
       </div>
-      <QuickTextures game={game} />
+      {/* (hidden while the whole editor is open: it has the same pickers, so the border texture is never shown twice) */}
+      {!edit && <QuickTextures game={game} />}
       {/* whose look it is: this hole's (the default here), the course default new holes start from, or every hole's at once */}
       <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Use this look for" data-focus-scope>
         <button className={`chip ${owner !== 'default' ? 'chip-on' : ''}`} aria-pressed={owner !== 'default'} title="Only this hole wears it: the other holes, your property and the facilities keep their own" onClick={() => { if (owner === 'default') p.setLookDefault(false); setDone(''); }}>This hole</button>

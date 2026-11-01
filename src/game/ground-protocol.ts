@@ -45,7 +45,8 @@ export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w:
  *  and the rest of the course look (the brush's style, course-look.ts): its exposure (x: the texture's RGB times x, 0.5 to 2; absent 1, T261
  *  exposure.ts, from the look's saved tone) and its blend with a second texture in soft patches (m: the texture, share s, softness f, patch
  *  size p; the painted areas' Blend with) */
-export interface CourseTex { tex: string; sc: number; a: number; x?: number; m?: { t: string; s: number; f: number; p: number } }
+export interface CourseTex { tex: string; sc: number; a: number; x?: number; m?: { t: string; s: number; f: number; p: number; sc?: number; a?: number; o?: [number, number] };
+  /** the texture's offset, tiles (the Pan texture tool; absent: none) */ o?: [number, number] }
 /** one surface of a course chunk (plan P21 sections 3.2 to 3.4, T078), all coordinates flat x0 y0 x1 y1 ... in tiles:
  *  (rings and polylines are Float32Arrays, so a patch posts and clones as plain memory)
  *  - `fill`: closed rings clipped to the chunk box grown by 0.1 tile (filled even-odd; neighbouring chunks overlap, so no seam shows);

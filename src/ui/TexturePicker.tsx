@@ -54,11 +54,13 @@ export function TexPuck({ t, css }: { t: TextureOption | null; css: number }) {
 /** an Edit button and the controls it opens */
 export interface TextureEdit { id: string; label: string; panel: ReactNode }
 
-export function TexturePicker({ label, value, options, onPick, none, edits = [], note, testId, onUpload }: {
+export function TexturePicker({ label, value, options, onPick, none, edits = [], note, testId, onUpload, pan }: {
   label: string; value: string | undefined; options: readonly TextureOption[]; onPick(id: string | undefined): void;
   /** Upload your own texture (the first tile): keeps the picture and gives its texture id, which is then picked */ onUpload?(file: File): Promise<string>;
   /** a first entry that picks nothing (the blend's None) */ none?: string;
   edits?: readonly TextureEdit[]; note?: ReactNode; testId?: string;
+  /** the Pan texture button (the owner, 2026-11-01): on, the hand grabs this texture on the map and drags it; toggle puts it down */
+  pan?: { on: boolean; toggle: () => void };
 }) {
   const [open, setOpen] = useState(false), [edit, setEdit] = useState<string | null>(null), box = useRef<HTMLDivElement>(null);
   const file = useRef<HTMLInputElement>(null), [upNote, setUpNote] = useState('');
@@ -98,11 +100,20 @@ export function TexturePicker({ label, value, options, onPick, none, edits = [],
           <span aria-hidden className="text-slate-400">▾</span>
         </button>
         <button type="button" className="round-btn shrink-0" aria-label={`Next ${label.toLowerCase()}`} title="The texture after this one" onClick={() => step(1)} data-texture-step="next">›</button>
-        {edits.map(e => (
-          <button key={e.id} type="button" className={`chip shrink-0 ${edit === e.id ? 'chip-on' : ''}`} aria-pressed={edit === e.id} title={`Edit the ${e.id}`}
-            onClick={() => setEdit(edit === e.id ? null : e.id)} data-texture-edit={e.id}>{e.label}</button>
-        ))}
       </div>
+      {/* the edits under the picker, never beside it (the owner, 2026-11-01: beside it they squeezed the name to "D.."): Scale, Angle, Pan */}
+      {(edits.length > 0 || pan) && (
+        <div className="mt-1 flex flex-wrap items-center gap-1.5" data-texture-edits>
+          {edits.map(e => (
+            <button key={e.id} type="button" className={`chip ${edit === e.id ? 'chip-on' : ''}`} aria-pressed={edit === e.id} title={`Edit the ${e.id}`}
+              onClick={() => setEdit(edit === e.id ? null : e.id)} data-texture-edit={e.id}>{e.label}</button>
+          ))}
+          {pan && (
+            <button type="button" className={`chip ${pan.on ? 'chip-on' : ''}`} aria-pressed={pan.on} title={pan.on ? 'Drag on the map to move this texture (Esc or click again to stop)' : 'Pan texture: grab it on the map and drag it, everything else stays still (so a seam can be moved out of sight)'}
+              onClick={pan.toggle} data-texture-pan>{pan.on ? '✊ Panning' : '✋ Pan texture'}</button>
+          )}
+        </div>
+      )}
       {/* the window opens in place under the picker (in the card's flow, so the card's own scroll never clips it) */}
       {open && (
         <div role="listbox" aria-label={label} className="mt-1 max-h-[22rem] overflow-y-auto overflow-x-hidden rounded-lg border border-white/15 bg-slate-950/60 p-2" data-texture-window>

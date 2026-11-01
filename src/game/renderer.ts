@@ -2437,7 +2437,8 @@ export class GroundPainter {
     /** a course texture as a fill style on g: painted (its look, composed over the part `need` of the chunk), the photo or preset in tile space
      *  (turned and scaled about the origin), else the screen texture */
     const style = (g: C2D, t: CourseTex, need?: BBox) => {
-      const G = new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc);
+      // (the texture's offset first, in tile space: the Pan texture tool moves the picture, never the ground)
+      const G = new DOMMatrix().translateSelf(t.o?.[0] ?? 0, t.o?.[1] ?? 0).rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc);
       const painted = this.paintedFill(g, t.tex, need, t.sc); if (painted) return painted;
       return isPaintPhoto(t.tex) ? this.paintPhoto(g, t.tex, L, G, t.sc) : this.screenPattern(g, t.tex as TexName, L, X0, Y0, Minv, G);
     };
@@ -2463,7 +2464,8 @@ export class GroundPainter {
       const clip = ringsOf(rings), need = boxOf(rings);
       if (need[2] <= need[0] || need[3] <= need[1]) return;
       ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd'); ctx.fillStyle = style(ctx, t, need); ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1]); ctx.restore();
-      if (t.m && !lite) this.drawBlend(ctx, t.m, t.sc, new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc), clip, 'evenodd', need, L, X0, Y0, M, Minv);
+      // (the blend with its own scale, angle and offset when set, else the fill's)
+      if (t.m && !lite) { const ms = t.m.sc ?? t.sc, ma = t.m.a ?? t.a; this.drawBlend(ctx, t.m, ms, new DOMMatrix().translateSelf(t.m.o?.[0] ?? 0, t.m.o?.[1] ?? 0).rotateSelf(0, 0, ma).scaleSelf(ms, ms), clip, 'evenodd', need, L, X0, Y0, M, Minv); }
       if (exposed(t.x) || extra) {
         ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd');
         exposeClip(ctx, t.x, need[0], need[1], need[2], need[3]);
