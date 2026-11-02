@@ -45,6 +45,7 @@ import { lotPickup, parkedAs } from '../vehicles';
 import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
 import { presetTier, tierOf } from './tiers';
+import { buildGroups } from './groups';
 import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
 import { onStudioScales } from './scales-live';
@@ -258,6 +259,8 @@ export function fenceOnly(lot: LotGeom, seed: number, lines: FenceLines = ALL_LI
 /** the lot presets the built lots are drawn from (lot-presets.json, read once), and the file's header (its dated notes: a save writes it back) */
 const FILE = parsePresets(PRESET_JSON);
 let PRESETS: LotPreset[] = FILE.presets, META: PresetMeta | undefined = FILE.meta;
+// T297 (#882): the lot groups are learned from these presets (groups.ts), and again when they are replaced
+buildGroups(PRESETS);
 /** the frozen presets (no road): the pool a lot not on a lab road draws from (the lab's presets never reach it) */
 let LEGACY: LotPreset[] = PRESETS.filter(p => p.road === undefined);
 /** the presets the lots are drawn from now */
@@ -266,7 +269,7 @@ export const lotPresets = (): readonly LotPreset[] => PRESETS;
 export const lotPresetsMeta = (): PresetMeta | undefined => META;
 /** replaces the presets (the dev editor after a save, a hot reload of lot-presets.json), and the header when given; the caller composes the
  *  lots again */
-export function setLotPresets(list: LotPreset[], meta: PresetMeta | undefined = META) { PRESETS = list; LEGACY = list.filter(p => p.road === undefined); META = meta; BUCKETS.clear(); }
+export function setLotPresets(list: LotPreset[], meta: PresetMeta | undefined = META) { PRESETS = list; LEGACY = list.filter(p => p.road === undefined); META = meta; BUCKETS.clear(); buildGroups(list); }
 /** presetsFor's answer by use, state and size bucket for the frozen presets now (every compose asks; setLotPresets clears it) */
 const BUCKETS = new Map<string, LotPreset[]>();
 function presetsOf(use: PresetUse, state: PresetState, w: number, d: number): LotPreset[] {
