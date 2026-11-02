@@ -508,7 +508,7 @@ export class City {
     this.golf = g ? { tier: g.tier, rep: g.rep } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
     if (this.golf && g?.start === 'range') { this.golf.start = 'range'; if (g.exits) this.golf.exits = g.exits; if (g.invited) this.golf.invited = g.invited; }
     // T295 (#880; the owner, 2026-11-02): a range start's town starts with the starter buildings and climbs with the range's takings and the player's home
-    // (lots/tiers.ts townTier); the other games keep the top tier, as before
+    // (lots/tiers.ts townTier: the home allows one tier more than it is); the other games keep the top tier, as before
     this.town.tier = this.golf?.start === 'range' ? townTier(g?.townTakings ?? 0, g?.townHome ?? 0, TIER_TAKINGS) : 3;
     // a range start's grown town (T091): its industrial district toward the nearer exit, opening at GROWN_IND_FROM built lots
     this.town.grownInd = this.golf?.start === 'range' && this.centres.length ? { rect: this.grownIndustrial(), from: GROWN_IND_FROM } : null;

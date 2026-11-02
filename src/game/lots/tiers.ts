@@ -7,7 +7,7 @@
 /** the building tiers, by index: 0 starter (farms, trailer parks, junk yards, the run-down houses), 1 modest, 2 town (the default), 3 fine */
 export const TIER_NAMES: readonly string[] = ['starter', 'modest', 'town', 'fine'];
 /** the tier rules over a library id, in order: the first match wins; a building no rule names is town (2). Tier 3 is the large houses and the
- *  casino: the range's home never reaches the house tier's upgrade, so a range start's town tops out at 2 (townTier) */
+ *  casino: a range start's town reaches them only with a house (townTier: its home tier plus one) */
 export const TIER_RULES: readonly (readonly [RegExp, number])[] = [
   [/farmhouse-wrap|house-large|estate|villa|mansion|casino/, 3],
   [/(^|[:_-])farm/, 0],
@@ -25,6 +25,6 @@ export function presetTier(p: { props: readonly { id: string }[] }, isBuilding: 
 }
 /** the income tier of a takings figure ($): the highest index of the thresholds it reaches (0 below the second) */
 export function incomeTier(takings: number, at: readonly number[]): number { let t = 0; for (let i = 0; i < at.length; i++) if (takings >= at[i]!) t = i; return t; }
-/** the town's tier: the lower of its income tier (the range's takings against TIER_TAKINGS) and its home tier (the player's home stage: 0 caravan,
- *  1 cottage, 2 house; a higher home would be 3) */
-export function townTier(takings: number, homeStage: number, at: readonly number[]): number { return Math.min(incomeTier(takings, at), Math.max(0, Math.min(3, homeStage))); }
+/** the town's tier: the lower of its income tier (the range's takings against TIER_TAKINGS) and its home tier plus one (the player's home stage: 0 caravan,
+ *  1 cottage, 2 house: the home allows the town up to 1, 2, 3; the owner, 2026-11-02, so the large houses and the casino come once the range earns with a house) */
+export function townTier(takings: number, homeStage: number, at: readonly number[]): number { return Math.min(incomeTier(takings, at), Math.max(0, Math.min(3, homeStage + 1))); }

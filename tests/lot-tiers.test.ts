@@ -60,9 +60,11 @@ test('the town tier is the lower of the income tier and the home tier', () => {
   assert.equal(incomeTier(4000, TIER_TAKINGS), 1);
   assert.equal(incomeTier(39999, TIER_TAKINGS), 2);
   assert.equal(incomeTier(40000, TIER_TAKINGS), 3);
-  assert.equal(townTier(50000, 0, TIER_TAKINGS), 0, 'a caravan home holds the town at the starter tier');
+  assert.equal(townTier(50000, 0, TIER_TAKINGS), 1, 'a caravan home allows the modest tier');
+  assert.equal(townTier(0, 2, TIER_TAKINGS), 0, 'no takings: the starter tier, whatever the home');
   assert.equal(townTier(5000, 2, TIER_TAKINGS), 1, 'the range has not earned the house its town');
-  assert.equal(townTier(50000, 2, TIER_TAKINGS), 2, 'the home is a house: the top a range start reaches');
+  assert.equal(townTier(50000, 1, TIER_TAKINGS), 2, 'a cottage allows the town tier');
+  assert.equal(townTier(50000, 2, TIER_TAKINGS), 3, 'a house allows the fine tier once the range earns it (the large houses, the casino)');
 });
 
 test('a starter-tier lot never composes a tier-2 building', () => {

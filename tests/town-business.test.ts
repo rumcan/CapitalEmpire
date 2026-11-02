@@ -17,6 +17,7 @@ setGeneratedLots(false);
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
 const O = 40, STEP = 40, N = 10, at = (k: number) => O + k * STEP, last = at(N - 1);
+const ENTRY = { x: O, y: O };
 const leg = (ax: number, ay: number, bx: number, by: number): Leg => ({ a: { x: ax, y: ay }, b: { x: bx, y: by } });
 
 /** the lots of a 10 x 10 grid of streets (a LotMap over the network) */
@@ -70,6 +71,21 @@ test('clearing a commercial lot frees its business for the next one', () => {
   town.clear(k);
   assert.equal(s.biz, undefined, 'a cleared lot shows none');
   assert.equal(counts(town).get(first!) ?? 0, 0, 'its business is free again');
+});
+
+test('a tier-0 town zones no commercial or tourist lots; a tier-3 town does', () => {
+  const run = (tier: number) => {
+    const { lm, lots } = gridLots();
+    const town = new Town(21); town.onLots(lots, []); town.tier = tier;
+    const ctx = { lots: lm, entry: ENTRY, reachable: () => true, water: () => 200 };
+    for (let h = 1; h <= 24 * 6; h++) town.tick(h * 60, ctx);
+    const uses = new Set<number>(); for (const s of town.states.values()) if (s.level !== LV.EMPTY) uses.add(s.use);
+    return uses;
+  };
+  const starter = run(0);
+  assert.ok(!starter.has(LU.COM) && !starter.has(LU.TOUR), 'no shop or tourist lot at tier 0');
+  assert.ok(starter.has(LU.RES), 'the houses still grow');
+  assert.ok(run(3).has(LU.COM), 'a tier-3 town builds shops');
 });
 
 test('a residential lot shows no business; a restored lot with a business keeps it', () => {

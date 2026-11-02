@@ -349,7 +349,9 @@ export class Town {
     if (tc !== null) {
       const g = this.grownInd, indR = g ? (g.rect && this.built >= g.from ? g.rect : null) : industrialRect(tc, ctx.entry);
       if (indR && inIndustrial(l.c, indR)) return LU.IND;
-      if (inCommercial(l.c, cid, tc)) return LU.COM;
+      // T295 (#880; the owner, 2026-11-02: a tier-0 town starts with the starter buildings): no shop district at tier 0 (no starter-tier shop presets exist
+      // yet, so a shop lot would show a tier-2 shop): the lot scores as the rest does
+      if (inCommercial(l.c, cid, tc) && this.tier > 0) return LU.COM;
     }
     // the targets: the base shares times the option, renormalised over RES, COM, IND, TOUR
     let tot = 0; for (let u = 0; u < 4; u++) tot += TARGET[u + 1] * w[u];
@@ -382,6 +384,8 @@ export class Town {
       sc[2] = (0.2 + (de <= 120 ? 1.2 : 0)) * (nr > 4 ? 0.3 : 1) * mul[2];
       sc[3] = (0.1 + (wat <= 40 ? 1 : 0) + (cid === 'boulevard' ? 0.6 : 0)) * mul[3];
     }
+    // T295 (#880): at tier 0 a commercial or tourist lot scores 0 (as industry does outside its district): the starter town is houses, farms and run-down lots
+    if (this.tier === 0) { sc[1] = 0; sc[3] = 0; }
     let best = LU.RES, bv = -1;
     for (let u = 0; u < 4; u++) { const v = sc[u] * (1 + NOISE * (2 * this.rnd() - 1)); if (v > bv) { bv = v; best = u + 1; } }
     return best;
