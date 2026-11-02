@@ -1,0 +1,55 @@
+{
+ "id": "variation:gen-back-swingset-a10c81b7-plain:1",
+ "slug": "variation-gen-back-swingset-a10c81b7-plain-1",
+ "category": "buildings",
+ "version": "variation-gen-back-swingset-a10c81b7-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "70a4ea30434e90c7b854bf8c5b341ca139aa381e1b88cd8ee36d8de6d303bb5d",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "d7a77017e17d6cd545c30154026312c806884bb112760eddf2e41fe35340eb4c",
+   "trim": [
+    0,
+    0,
+    439,
+    487
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "bd43bd2d89f2af95425982a10f479a65d7fa6385eae25f90f78d4ecb6e9fb3df",
+   "trim": [
+    0,
+    0,
+    596,
+    502
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "a95d83b7eae3794f619f17c8f4baa03b5d204ceec181239e03da463f72255077",
+   "trim": [
+    0,
+    0,
+    386,
+    377
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "f8eaa949c092baa8147db7f1f48b22f25438f8da87349d4aae8eeda9cbd21547",
+   "trim": [
+    0,
+    0,
+    596,
+    524
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

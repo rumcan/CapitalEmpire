@@ -1,0 +1,55 @@
+{
+ "id": "variation:static-garage_timber-v2-22fab891-plain:1",
+ "slug": "variation-static-garage_timber-v2-22fab891-plain-1",
+ "category": "buildings",
+ "version": "variation-static-garage_timber-v2-22fab891-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "eba2e372115e7740646132e6b8518084ab2d568f9b7cd10d9768fe8a092ab80c",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "fbc9e9fe79d1fa877ea81df1a8bd3c01a55d6b89b5620ac908eee32bc19ff546",
+   "trim": [
+    0,
+    0,
+    224,
+    215
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "bb1374ad8cd57dd18ec0da4bc80db82374fddb38ccff6b0780334240f628eb1e",
+   "trim": [
+    0,
+    0,
+    170,
+    183
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "eb49cd7458eac3264b200b402312fb86c657d6833e4022e5b87a8f461cbcc5f9",
+   "trim": [
+    0,
+    0,
+    228,
+    227
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "17bd00246c8e0b8689bc91f14f015fb9efa25f2e86e5abb4cf9c24c85acc2d85",
+   "trim": [
+    0,
+    0,
+    172,
+    187
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

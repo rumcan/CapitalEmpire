@@ -1,0 +1,655 @@
+{
+ "source": "E:/Repos/CapitalEmpire/All Generated Images",
+ "cells": "top left, top right, bottom left, bottom right",
+ "sheets": [
+  {
+   "sheet": "exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+   "cat": "Stalls",
+   "hx": 2,
+   "names": [
+    "Green food kiosk",
+    "Drinks stand with canopy",
+    "Food pavilion",
+    "Ice cream cart"
+   ]
+  },
+  {
+   "sheet": "exec-07b7ef26-d1f1-44fd-a05d-4585acb9a2c6.png",
+   "cat": "Trees",
+   "hx": 1.5,
+   "names": [
+    "Dark fir tall",
+    "Dark fir wide",
+    "Dark fir medium",
+    "Dark fir small"
+   ]
+  },
+  {
+   "sheet": "exec-0847d8fc-5acd-4e03-9078-8be96f62a64d.png",
+   "cat": "Trees",
+   "hx": 1.5,
+   "names": [
+    "Red maple",
+    "Red maple bare",
+    "Red maple sparse",
+    "Red maple full"
+   ]
+  },
+  {
+   "sheet": "exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
+   "cat": "Buildings",
+   "hx": 5,
+   "names": [
+    "Neon storefront row",
+    "Neon diner front",
+    "Brick storefront",
+    "Lit shop corner"
+   ]
+  },
+  {
+   "sheet": "exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+   "cat": "Course props",
+   "hx": 0.6,
+   "names": [
+    "Leaderboard",
+    "Hole 12 sign",
+    "Clock post",
+    "Direction signpost"
+   ]
+  },
+  {
+   "sheet": "exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+   "cat": "Course props",
+   "hx": 0.4,
+   "names": [
+    "Ball washer",
+    "Gold tee markers",
+    "Yardage posts",
+    "Sprinkler"
+   ]
+  },
+  {
+   "sheet": "exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
+   "cat": "Stalls (shabby)",
+   "hx": 2,
+   "names": [
+    "Tarp market stall",
+    "Shack stall",
+    "Cooler drinks stall",
+    "Course worker"
+   ]
+  },
+  {
+   "sheet": "exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+   "cat": "Event structures",
+   "hx": 2,
+   "names": [
+    "Medical tent",
+    "Cart ambulance",
+    "First aid trailer",
+    "Weather station"
+   ]
+  },
+  {
+   "sheet": "exec-2a49c706-58a3-4fda-a7ad-d343d8215261.png",
+   "cat": "Trees",
+   "hx": 1.5,
+   "names": [
+    "Blue spruce wide",
+    "Blue spruce tall",
+    "Blue spruce medium",
+    "Blue spruce small"
+   ]
+  },
+  {
+   "sheet": "exec-2da5b0af-4f56-437d-a4bd-6cbc70d25af0.png",
+   "cat": "Trees",
+   "hx": 1.2,
+   "names": [
+    "Thin blue fir",
+    "Thin blue fir tall",
+    "Thin blue fir sparse",
+    "Thin blue fir small"
+   ]
+  },
+  {
+   "sheet": "exec-2f8aa47f-ad29-44ac-8466-2b9bcfdf7d16.png",
+   "cat": "Trees",
+   "hx": 1.5,
+   "names": [
+    "Red maple round",
+    "Red maple big",
+    "Red maple tall",
+    "Red maple small"
+   ]
+  },
+  {
+   "sheet": "exec-30e1019a-7d55-433e-ba87-f88eb1b591ae.png",
+   "cat": "Vehicles",
+   "hx": 1.2,
+   "names": [
+    "Ride mower",
+    "Gang mower",
+    "Spray rig",
+    "Greens mower"
+   ]
+  },
+  {
+   "sheet": "exec-3216fa1c-b738-4ab5-b02f-a87e541ea1f0.png",
+   "cat": "Vehicles",
+   "hx": 3,
+   "names": [
+    "Shuttle bus",
+    "Shuttle bus 2",
+    "Taxi",
+    "Taxi 2"
+   ]
+  },
+  {
+   "sheet": "exec-32d5be00-f00f-4804-a4a6-ab26d8c43344.png",
+   "cat": "People",
+   "hx": 0.3,
+   "names": [
+    "Golfer swinging",
+    "Golfer putting",
+    "Caddie with bag",
+    "Marshal with sign"
+   ]
+  },
+  {
+   "sheet": "exec-35e5631b-aa08-4e1c-9395-d0861c8a79a2.png",
+   "cat": "People",
+   "hx": 0.3,
+   "names": [
+    "Golfer swinging 2",
+    "Golfer putting 2",
+    "Caddie with bag 2",
+    "Marshal with sign 2"
+   ]
+  },
+  {
+   "sheet": "exec-367d7344-f858-412a-972f-9e8e10d854cb.png",
+   "cat": "Event structures",
+   "hx": 3,
+   "names": [
+    "Starter hut",
+    "Clubhouse cottage",
+    "Marquee",
+    "Stage"
+   ]
+  },
+  {
+   "sheet": "exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+   "cat": "Course props",
+   "hx": 1,
+   "names": [
+    "Wooden footbridge",
+    "Park bench",
+    "Course map stand",
+    "Ride mower 2"
+   ]
+  },
+  {
+   "sheet": "exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+   "cat": "Event structures",
+   "hx": 2,
+   "names": [
+    "Course map board",
+    "Pro shop kiosk",
+    "Portable toilets",
+    "Wash station"
+   ]
+  },
+  {
+   "sheet": "exec-41893bfe-08de-4c0a-b34b-5b5b14d33a2a.png",
+   "cat": "Trees",
+   "hx": 1.5,
+   "names": [
+    "Orange oak",
+    "Orange oak wide",
+    "Orange oak full",
+    "Orange oak small"
+   ]
+  },
+  {
+   "sheet": "exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+   "cat": "Stalls (shabby)",
+   "hx": 2,
+   "names": [
+    "Shack map board",
+    "Tool stall",
+    "Toilet booth",
+    "Water tank stall"
+   ]
+  },
+  {
+   "sheet": "exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
+   "cat": "Seating",
+   "hx": 1.5,
+   "names": [
+    "Tarp seating",
+    "Umbrella tables",
+    "Round table set",
+    "Picnic table"
+   ]
+  },
+  {
+   "sheet": "exec-4dc9e75d-5f96-4e95-92bf-0ddd5c3c8d8a.png",
+   "cat": "Trees",
+   "hx": 1.5,
+   "names": [
+    "Orange maple",
+    "Orange maple wide",
+    "Orange maple bare",
+    "Orange maple full"
+   ]
+  },
+  {
+   "sheet": "exec-58530340-09db-435d-afdf-59b51a4eac2c.png",
+   "cat": "Course props",
+   "hx": 1,
+   "names": [
+    "Golf cart",
+    "Golf cart 2",
+    "Flag pin",
+    "Golf bag trolley"
+   ]
+  },
+  {
+   "sheet": "exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
+   "cat": "Stalls (shabby)",
+   "hx": 2,
+   "names": [
+    "Shirt stall",
+    "Cap stall",
+    "Tarp counter",
+    "Club badge stall"
+   ]
+  },
+  {
+   "sheet": "exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+   "cat": "Course props",
+   "hx": 0.8,
+   "names": [
+    "Rope barrier",
+    "Rope barrier corner",
+    "Rope walkway",
+    "Marshal"
+   ]
+  },
+  {
+   "sheet": "exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+   "cat": "Stalls (shabby)",
+   "hx": 2.5,
+   "names": [
+    "Shanty hut",
+    "Gate arch",
+    "Shanty stall",
+    "Shanty counter"
+   ]
+  },
+  {
+   "sheet": "exec-640d3fb0-f055-49f5-8ed9-5ddd0a2a537e.png",
+   "cat": "Trees",
+   "hx": 1,
+   "names": [
+    "Small orange tree",
+    "Small orange tree 2",
+    "Small orange tree bare",
+    "Small orange tree full"
+   ]
+  },
+  {
+   "sheet": "exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+   "cat": "Range",
+   "hx": 2.5,
+   "names": [
+    "Shanty range bay",
+    "Practice net",
+    "Equipment stall",
+    "Ball bucket stand"
+   ]
+  },
+  {
+   "sheet": "exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+   "cat": "Vehicles",
+   "hx": 1.3,
+   "names": [
+    "Roofed cart",
+    "Utility cart",
+    "Supply cart",
+    "Wheelchair cart"
+   ]
+  },
+  {
+   "sheet": "exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
+   "cat": "Stalls",
+   "hx": 2,
+   "names": [
+    "Garden shed",
+    "Club rack stall",
+    "Club display",
+    "Bag stand stall"
+   ]
+  },
+  {
+   "sheet": "exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
+   "cat": "Buildings",
+   "hx": 6,
+   "names": [
+    "Clubhouse manor",
+    "Gate pillars",
+    "Pavilion",
+    "Gazebo"
+   ]
+  },
+  {
+   "sheet": "exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+   "cat": "Range",
+   "hx": 2.5,
+   "names": [
+    "Range bay",
+    "Practice cage",
+    "Tent bay",
+    "Ball dispenser"
+   ]
+  },
+  {
+   "sheet": "exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+   "cat": "Stalls (shabby)",
+   "hx": 1.8,
+   "names": [
+    "Snack shack",
+    "Drinks cart",
+    "Snack stall",
+    "Snack trolley"
+   ]
+  },
+  {
+   "sheet": "exec-73782e1d-bd5a-42c4-bbbc-13906dffd1ad.png",
+   "cat": "Event structures",
+   "hx": 5,
+   "names": [
+    "Grandstand small",
+    "Covered grandstand",
+    "Grandstand wide",
+    "TV tower"
+   ]
+  },
+  {
+   "sheet": "exec-804bdfb3-a402-4be0-9e3a-6c5aa4a399a4.png",
+   "cat": "Trees",
+   "hx": 1.5,
+   "names": [
+    "Bare oak",
+    "Bare oak wide",
+    "Bare oak tall",
+    "Bare oak small"
+   ]
+  },
+  {
+   "sheet": "exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+   "cat": "Media",
+   "hx": 2.5,
+   "names": [
+    "Camera tower",
+    "Broadcast truck",
+    "Satellite van",
+    "TV camera"
+   ]
+  },
+  {
+   "sheet": "exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
+   "cat": "Vehicles",
+   "hx": 2.5,
+   "names": [
+    "Delivery truck",
+    "Forklift with pallets",
+    "Water truck",
+    "Utility cart green"
+   ]
+  },
+  {
+   "sheet": "exec-991e1eb3-fe60-45ab-8a21-2ca5399511a2.png",
+   "cat": "Course props",
+   "hx": 1.5,
+   "names": [
+    "Stone bridge",
+    "White footbridge",
+    "Flower bed",
+    "Flowering tree"
+   ]
+  },
+  {
+   "sheet": "exec-9e6854dc-a046-457b-a771-df820116dab8.png",
+   "cat": "Event structures (shabby)",
+   "hx": 2.5,
+   "names": [
+    "Wooden bleacher",
+    "Small bleacher",
+    "Bleacher platform",
+    "Bleacher tower"
+   ]
+  },
+  {
+   "sheet": "exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
+   "cat": "Stalls (shabby)",
+   "hx": 2,
+   "names": [
+    "Shanty shed",
+    "Flag stall",
+    "Tarp shelter",
+    "Market tents"
+   ]
+  },
+  {
+   "sheet": "exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+   "cat": "Event structures (shabby)",
+   "hx": 2,
+   "names": [
+    "Shanty medical tent",
+    "Shanty cart ambulance",
+    "Shanty toilet",
+    "Shanty weather mast"
+   ]
+  },
+  {
+   "sheet": "exec-b13529b8-fe5a-4e9c-9e7e-5f3a97e46d70.png",
+   "cat": "Trees",
+   "hx": 1,
+   "names": [
+    "Small red maple",
+    "Small red maple 2",
+    "Small red maple 3",
+    "Small red maple 4"
+   ]
+  },
+  {
+   "sheet": "exec-c2432598-4e43-41a8-90c7-8bf85d8d9fd1.png",
+   "cat": "Course props",
+   "hx": 1.5,
+   "names": [
+    "Log footbridge",
+    "Plank bridge",
+    "Flower planter",
+    "Small tree"
+   ]
+  },
+  {
+   "sheet": "exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+   "cat": "Media",
+   "hx": 2.5,
+   "names": [
+    "Shanty camera tower",
+    "Shanty broadcast van",
+    "Shanty satellite van",
+    "Shanty camera"
+   ]
+  },
+  {
+   "sheet": "exec-d3daec12-8b23-48e4-90e6-8f920d802cc5.png",
+   "cat": "Seating",
+   "hx": 2.5,
+   "names": [
+    "Hospitality marquee",
+    "Umbrella table green",
+    "Dining pavilion",
+    "Long picnic table"
+   ]
+  },
+  {
+   "sheet": "exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+   "cat": "Event structures",
+   "hx": 2,
+   "names": [
+    "Ticket booth",
+    "White tent booth",
+    "Green booth",
+    "Green kiosk"
+   ]
+  },
+  {
+   "sheet": "exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+   "cat": "Event structures (shabby)",
+   "hx": 2.5,
+   "names": [
+    "Scaffold stand",
+    "Scaffold booth",
+    "Scaffold counter",
+    "Scaffold tower"
+   ]
+  },
+  {
+   "sheet": "exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
+   "cat": "Event structures (shabby)",
+   "hx": 3.5,
+   "names": [
+    "Wooden bleacher big",
+    "Covered bleacher",
+    "Bleacher deck",
+    "Bleacher stairs"
+   ]
+  },
+  {
+   "sheet": "exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+   "cat": "Vehicles",
+   "hx": 1.4,
+   "names": [
+    "Green golf cart",
+    "Shuttle cart",
+    "Drinks cart green",
+    "Shuttle cart white"
+   ]
+  },
+  {
+   "sheet": "exec-eaab8128-30ba-4510-ae57-63612e51ce30.png",
+   "cat": "Trees",
+   "hx": 1.5,
+   "names": [
+    "Orange tree",
+    "Orange tree wide",
+    "Orange tree sparse",
+    "Orange tree full"
+   ]
+  },
+  {
+   "sheet": "exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+   "cat": "Event structures (shabby)",
+   "hx": 2,
+   "names": [
+    "Shanty ticket hut",
+    "Shanty booth",
+    "Shanty turnstiles",
+    "Shanty counter 2"
+   ]
+  },
+  {
+   "sheet": "exec-eccec0c5-d292-46a7-a6cc-8f5e654012ed.png",
+   "cat": "Vehicles",
+   "hx": 1.2,
+   "names": [
+    "Green ride mower",
+    "Green gang mower",
+    "Green spray rig",
+    "Green greens mower"
+   ]
+  },
+  {
+   "sheet": "exec-ed0e4dc0-2938-4d26-bd38-3eab013ba3de.png",
+   "cat": "Lake props",
+   "hx": 1.5,
+   "names": [
+    "Wooden dock",
+    "Wooden dock 2",
+    "Rowboat",
+    "Bait shack"
+   ]
+  },
+  {
+   "sheet": "exec-ed8f1e79-9747-48ad-8115-31f97c8d9f6c.png",
+   "cat": "Event structures",
+   "hx": 2.5,
+   "names": [
+    "Catering tent",
+    "Catering trailer",
+    "Buffet tent",
+    "Catering staff"
+   ]
+  },
+  {
+   "sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
+   "cat": "Event structures",
+   "hx": 2.5,
+   "names": [
+    "Hospitality tent",
+    "Trophy pavilion",
+    "Club tent",
+    "Club arch sign"
+   ]
+  },
+  {
+   "sheet": "exec-f2adc440-c65f-40ce-9682-b92de02f35cc.png",
+   "cat": "Trees",
+   "hx": 1.5,
+   "names": [
+    "Orange tree round",
+    "Orange tree big",
+    "Orange tree tall",
+    "Orange tree small"
+   ]
+  },
+  {
+   "sheet": "exec-f5874056-b4b5-4ff8-a208-142ba4687539.png",
+   "cat": "Trees",
+   "hx": 1.2,
+   "names": [
+    "Birch",
+    "Birch wide",
+    "Birch bare",
+    "Birch full"
+   ]
+  },
+  {
+   "sheet": "exec-f5b3b50f-bf79-4835-b523-15b788be5dab.png",
+   "cat": "Trees",
+   "hx": 0.9,
+   "names": [
+    "Small birch",
+    "Small birch 2",
+    "Small birch 3",
+    "Small birch 4"
+   ]
+  },
+  {
+   "sheet": "exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
+   "cat": "Course props",
+   "hx": 0.6,
+   "names": [
+    "Shanty leaderboard",
+    "Shanty hole sign",
+    "Shanty clock",
+    "Shanty signpost"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,4084 @@
+{
+ "items": [
+  {
+   "id": "newprop:green-food-kiosk",
+   "name": "Green food kiosk",
+   "cat": "New: Stalls",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+   "cell": "top left",
+   "rect": [
+    14,
+    10,
+    632,
+    597
+   ],
+   "w": 256,
+   "h": 242.07
+  },
+  {
+   "id": "newprop:drinks-stand-with-canopy",
+   "name": "Drinks stand with canopy",
+   "cat": "New: Stalls",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+   "cell": "top right",
+   "rect": [
+    717,
+    34,
+    482,
+    584
+   ],
+   "w": 256,
+   "h": 310.97
+  },
+  {
+   "id": "newprop:food-pavilion",
+   "name": "Food pavilion",
+   "cat": "New: Stalls",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+   "cell": "bottom left",
+   "rect": [
+    28,
+    612,
+    630,
+    616
+   ],
+   "w": 256,
+   "h": 250.25
+  },
+  {
+   "id": "newprop:ice-cream-cart",
+   "name": "Ice cream cart",
+   "cat": "New: Stalls",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+   "cell": "bottom right",
+   "rect": [
+    763,
+    653,
+    443,
+    569
+   ],
+   "w": 256,
+   "h": 329.98
+  },
+  {
+   "id": "newprop:dark-fir-tall",
+   "name": "Dark fir tall",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-07b7ef26-d1f1-44fd-a05d-4585acb9a2c6.png",
+   "cell": "top left",
+   "rect": [
+    176,
+    21,
+    307,
+    609
+   ],
+   "w": 192,
+   "h": 385.93
+  },
+  {
+   "id": "newprop:dark-fir-wide",
+   "name": "Dark fir wide",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-07b7ef26-d1f1-44fd-a05d-4585acb9a2c6.png",
+   "cell": "top right",
+   "rect": [
+    711,
+    43,
+    493,
+    587
+   ],
+   "w": 192,
+   "h": 229.21
+  },
+  {
+   "id": "newprop:dark-fir-medium",
+   "name": "Dark fir medium",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-07b7ef26-d1f1-44fd-a05d-4585acb9a2c6.png",
+   "cell": "bottom left",
+   "rect": [
+    182,
+    651,
+    392,
+    555
+   ],
+   "w": 192,
+   "h": 272.79
+  },
+  {
+   "id": "newprop:dark-fir-small",
+   "name": "Dark fir small",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-07b7ef26-d1f1-44fd-a05d-4585acb9a2c6.png",
+   "cell": "bottom right",
+   "rect": [
+    786,
+    761,
+    348,
+    441
+   ],
+   "w": 192,
+   "h": 245.08
+  },
+  {
+   "id": "newprop:red-maple",
+   "name": "Red maple",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-0847d8fc-5acd-4e03-9078-8be96f62a64d.png",
+   "cell": "top left",
+   "rect": [
+    37,
+    37,
+    577,
+    562
+   ],
+   "w": 192,
+   "h": 186.94
+  },
+  {
+   "id": "newprop:red-maple-bare",
+   "name": "Red maple bare",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-0847d8fc-5acd-4e03-9078-8be96f62a64d.png",
+   "cell": "top right",
+   "rect": [
+    641,
+    71,
+    576,
+    531
+   ],
+   "w": 192,
+   "h": 177.15
+  },
+  {
+   "id": "newprop:red-maple-sparse",
+   "name": "Red maple sparse",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-0847d8fc-5acd-4e03-9078-8be96f62a64d.png",
+   "cell": "bottom left",
+   "rect": [
+    38,
+    671,
+    570,
+    527
+   ],
+   "w": 192,
+   "h": 178.7
+  },
+  {
+   "id": "newprop:red-maple-full",
+   "name": "Red maple full",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-0847d8fc-5acd-4e03-9078-8be96f62a64d.png",
+   "cell": "bottom right",
+   "rect": [
+    641,
+    659,
+    578,
+    537
+   ],
+   "w": 192,
+   "h": 178.21
+  },
+  {
+   "id": "newprop:neon-storefront-row",
+   "name": "Neon storefront row",
+   "cat": "New: Buildings",
+   "hx": 5,
+   "hy": 5,
+   "sheet": "exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 640,
+   "h": 568.3
+  },
+  {
+   "id": "newprop:neon-diner-front",
+   "name": "Neon diner front",
+   "cat": "New: Buildings",
+   "hx": 5,
+   "hy": 5,
+   "sheet": "exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 640,
+   "h": 470.44
+  },
+  {
+   "id": "newprop:brick-storefront",
+   "name": "Brick storefront",
+   "cat": "New: Buildings",
+   "hx": 5,
+   "hy": 5,
+   "sheet": "exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 640,
+   "h": 573.83
+  },
+  {
+   "id": "newprop:lit-shop-corner",
+   "name": "Lit shop corner",
+   "cat": "New: Buildings",
+   "hx": 5,
+   "hy": 5,
+   "sheet": "exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 640,
+   "h": 579.94
+  },
+  {
+   "id": "newprop:leaderboard",
+   "name": "Leaderboard",
+   "cat": "New: Course props",
+   "hx": 0.6,
+   "hy": 0.6,
+   "sheet": "exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 76.8,
+   "h": 82.27
+  },
+  {
+   "id": "newprop:hole-12-sign",
+   "name": "Hole 12 sign",
+   "cat": "New: Course props",
+   "hx": 0.6,
+   "hy": 0.6,
+   "sheet": "exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 76.8,
+   "h": 77.96
+  },
+  {
+   "id": "newprop:clock-post",
+   "name": "Clock post",
+   "cat": "New: Course props",
+   "hx": 0.6,
+   "hy": 0.6,
+   "sheet": "exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 76.8,
+   "h": 105.38
+  },
+  {
+   "id": "newprop:direction-signpost",
+   "name": "Direction signpost",
+   "cat": "New: Course props",
+   "hx": 0.6,
+   "hy": 0.6,
+   "sheet": "exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 76.8,
+   "h": 106.65
+  },
+  {
+   "id": "newprop:ball-washer",
+   "name": "Ball washer",
+   "cat": "New: Course props",
+   "hx": 0.4,
+   "hy": 0.4,
+   "sheet": "exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+   "cell": "top left",
+   "rect": [
+    95,
+    5,
+    448,
+    600
+   ],
+   "w": 51.2,
+   "h": 68.73
+  },
+  {
+   "id": "newprop:gold-tee-markers",
+   "name": "Gold tee markers",
+   "cat": "New: Course props",
+   "hx": 0.4,
+   "hy": 0.4,
+   "sheet": "exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+   "cell": "top right",
+   "rect": [
+    709,
+    199,
+    513,
+    395
+   ],
+   "w": 51.2,
+   "h": 39.26
+  },
+  {
+   "id": "newprop:yardage-posts",
+   "name": "Yardage posts",
+   "cat": "New: Course props",
+   "hx": 0.4,
+   "hy": 0.4,
+   "sheet": "exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+   "cell": "bottom left",
+   "rect": [
+    79,
+    745,
+    486,
+    465
+   ],
+   "w": 51.2,
+   "h": 48.85
+  },
+  {
+   "id": "newprop:sprinkler",
+   "name": "Sprinkler",
+   "cat": "New: Course props",
+   "hx": 0.4,
+   "hy": 0.4,
+   "sheet": "exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+   "cell": "bottom right",
+   "rect": [
+    700,
+    729,
+    494,
+    467
+   ],
+   "w": 51.2,
+   "h": 48.38
+  },
+  {
+   "id": "newprop:tarp-market-stall",
+   "name": "Tarp market stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 231.91
+  },
+  {
+   "id": "newprop:shack-stall",
+   "name": "Shack stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 257.69
+  },
+  {
+   "id": "newprop:cooler-drinks-stall",
+   "name": "Cooler drinks stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 249.79
+  },
+  {
+   "id": "newprop:course-worker",
+   "name": "Course worker",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 341.72
+  },
+  {
+   "id": "newprop:medical-tent",
+   "name": "Medical tent",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 245.86
+  },
+  {
+   "id": "newprop:cart-ambulance",
+   "name": "Cart ambulance",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 209.26
+  },
+  {
+   "id": "newprop:first-aid-trailer",
+   "name": "First aid trailer",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 235.43
+  },
+  {
+   "id": "newprop:weather-station",
+   "name": "Weather station",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 297.12
+  },
+  {
+   "id": "newprop:blue-spruce-wide",
+   "name": "Blue spruce wide",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-2a49c706-58a3-4fda-a7ad-d343d8215261.png",
+   "cell": "top left",
+   "rect": [
+    194,
+    8,
+    365,
+    655
+   ],
+   "w": 192,
+   "h": 348.5
+  },
+  {
+   "id": "newprop:blue-spruce-tall",
+   "name": "Blue spruce tall",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-2a49c706-58a3-4fda-a7ad-d343d8215261.png",
+   "cell": "top right",
+   "rect": [
+    650,
+    36,
+    585,
+    630
+   ],
+   "w": 192,
+   "h": 206.62
+  },
+  {
+   "id": "newprop:blue-spruce-medium",
+   "name": "Blue spruce medium",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-2a49c706-58a3-4fda-a7ad-d343d8215261.png",
+   "cell": "bottom left",
+   "rect": [
+    152,
+    668,
+    476,
+    574
+   ],
+   "w": 192,
+   "h": 232.12
+  },
+  {
+   "id": "newprop:blue-spruce-small",
+   "name": "Blue spruce small",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-2a49c706-58a3-4fda-a7ad-d343d8215261.png",
+   "cell": "bottom right",
+   "rect": [
+    734,
+    759,
+    442,
+    466
+   ],
+   "w": 192,
+   "h": 202.62
+  },
+  {
+   "id": "newprop:thin-blue-fir",
+   "name": "Thin blue fir",
+   "cat": "New: Trees",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-2da5b0af-4f56-437d-a4bd-6cbc70d25af0.png",
+   "cell": "top left",
+   "rect": [
+    131,
+    41,
+    430,
+    583
+   ],
+   "w": 153.6,
+   "h": 208.79
+  },
+  {
+   "id": "newprop:thin-blue-fir-tall",
+   "name": "Thin blue fir tall",
+   "cat": "New: Trees",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-2da5b0af-4f56-437d-a4bd-6cbc70d25af0.png",
+   "cell": "top right",
+   "rect": [
+    721,
+    71,
+    404,
+    552
+   ],
+   "w": 153.6,
+   "h": 211.01
+  },
+  {
+   "id": "newprop:thin-blue-fir-sparse",
+   "name": "Thin blue fir sparse",
+   "cat": "New: Trees",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-2da5b0af-4f56-437d-a4bd-6cbc70d25af0.png",
+   "cell": "bottom left",
+   "rect": [
+    191,
+    661,
+    302,
+    553
+   ],
+   "w": 153.6,
+   "h": 285.26
+  },
+  {
+   "id": "newprop:thin-blue-fir-small",
+   "name": "Thin blue fir small",
+   "cat": "New: Trees",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-2da5b0af-4f56-437d-a4bd-6cbc70d25af0.png",
+   "cell": "bottom right",
+   "rect": [
+    760,
+    734,
+    353,
+    477
+   ],
+   "w": 153.6,
+   "h": 208.65
+  },
+  {
+   "id": "newprop:red-maple-round",
+   "name": "Red maple round",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-2f8aa47f-ad29-44ac-8466-2b9bcfdf7d16.png",
+   "cell": "top left",
+   "rect": [
+    84,
+    13,
+    451,
+    618
+   ],
+   "w": 192,
+   "h": 263.19
+  },
+  {
+   "id": "newprop:red-maple-big",
+   "name": "Red maple big",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-2f8aa47f-ad29-44ac-8466-2b9bcfdf7d16.png",
+   "cell": "top right",
+   "rect": [
+    590,
+    60,
+    659,
+    561
+   ],
+   "w": 192,
+   "h": 163.14
+  },
+  {
+   "id": "newprop:red-maple-tall",
+   "name": "Red maple tall",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-2f8aa47f-ad29-44ac-8466-2b9bcfdf7d16.png",
+   "cell": "bottom left",
+   "rect": [
+    36,
+    650,
+    603,
+    571
+   ],
+   "w": 192,
+   "h": 181.37
+  },
+  {
+   "id": "newprop:red-maple-small",
+   "name": "Red maple small",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-2f8aa47f-ad29-44ac-8466-2b9bcfdf7d16.png",
+   "cell": "bottom right",
+   "rect": [
+    704,
+    740,
+    511,
+    489
+   ],
+   "w": 192,
+   "h": 183.62
+  },
+  {
+   "id": "newprop:ride-mower",
+   "name": "Ride mower",
+   "cat": "New: Vehicles",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-30e1019a-7d55-433e-ba87-f88eb1b591ae.png",
+   "cell": "top left",
+   "rect": [
+    69,
+    106,
+    505,
+    493
+   ],
+   "w": 153.6,
+   "h": 149.59
+  },
+  {
+   "id": "newprop:gang-mower",
+   "name": "Gang mower",
+   "cat": "New: Vehicles",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-30e1019a-7d55-433e-ba87-f88eb1b591ae.png",
+   "cell": "top right",
+   "rect": [
+    641,
+    148,
+    594,
+    449
+   ],
+   "w": 153.6,
+   "h": 115.4
+  },
+  {
+   "id": "newprop:spray-rig",
+   "name": "Spray rig",
+   "cat": "New: Vehicles",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-30e1019a-7d55-433e-ba87-f88eb1b591ae.png",
+   "cell": "bottom left",
+   "rect": [
+    40,
+    704,
+    573,
+    457
+   ],
+   "w": 153.6,
+   "h": 121.9
+  },
+  {
+   "id": "newprop:greens-mower",
+   "name": "Greens mower",
+   "cat": "New: Vehicles",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-30e1019a-7d55-433e-ba87-f88eb1b591ae.png",
+   "cell": "bottom right",
+   "rect": [
+    659,
+    663,
+    565,
+    498
+   ],
+   "w": 153.6,
+   "h": 134.88
+  },
+  {
+   "id": "newprop:shuttle-bus",
+   "name": "Shuttle bus",
+   "cat": "New: Vehicles",
+   "hx": 3,
+   "hy": 3,
+   "sheet": "exec-3216fa1c-b738-4ab5-b02f-a87e541ea1f0.png",
+   "cell": "top left",
+   "rect": [
+    21,
+    133,
+    601,
+    473
+   ],
+   "w": 384,
+   "h": 300.75
+  },
+  {
+   "id": "newprop:shuttle-bus-2",
+   "name": "Shuttle bus 2",
+   "cat": "New: Vehicles",
+   "hx": 3,
+   "hy": 3,
+   "sheet": "exec-3216fa1c-b738-4ab5-b02f-a87e541ea1f0.png",
+   "cell": "top right",
+   "rect": [
+    639,
+    133,
+    600,
+    497
+   ],
+   "w": 384,
+   "h": 316.65
+  },
+  {
+   "id": "newprop:taxi",
+   "name": "Taxi",
+   "cat": "New: Vehicles",
+   "hx": 3,
+   "hy": 3,
+   "sheet": "exec-3216fa1c-b738-4ab5-b02f-a87e541ea1f0.png",
+   "cell": "bottom left",
+   "rect": [
+    24,
+    819,
+    598,
+    332
+   ],
+   "w": 384,
+   "h": 210.52
+  },
+  {
+   "id": "newprop:taxi-2",
+   "name": "Taxi 2",
+   "cat": "New: Vehicles",
+   "hx": 3,
+   "hy": 3,
+   "sheet": "exec-3216fa1c-b738-4ab5-b02f-a87e541ea1f0.png",
+   "cell": "bottom right",
+   "rect": [
+    641,
+    811,
+    590,
+    342
+   ],
+   "w": 384,
+   "h": 220.65
+  },
+  {
+   "id": "newprop:golfer-swinging",
+   "name": "Golfer swinging",
+   "cat": "New: People",
+   "hx": 0.3,
+   "hy": 0.3,
+   "sheet": "exec-32d5be00-f00f-4804-a4a6-ab26d8c43344.png",
+   "cell": "top left",
+   "rect": [
+    116,
+    20,
+    351,
+    583
+   ],
+   "w": 38.4,
+   "h": 64.19
+  },
+  {
+   "id": "newprop:golfer-putting",
+   "name": "Golfer putting",
+   "cat": "New: People",
+   "hx": 0.3,
+   "hy": 0.3,
+   "sheet": "exec-32d5be00-f00f-4804-a4a6-ab26d8c43344.png",
+   "cell": "top right",
+   "rect": [
+    799,
+    39,
+    311,
+    564
+   ],
+   "w": 38.4,
+   "h": 70.84
+  },
+  {
+   "id": "newprop:caddie-with-bag",
+   "name": "Caddie with bag",
+   "cat": "New: People",
+   "hx": 0.3,
+   "hy": 0.3,
+   "sheet": "exec-32d5be00-f00f-4804-a4a6-ab26d8c43344.png",
+   "cell": "bottom left",
+   "rect": [
+    169,
+    659,
+    330,
+    552
+   ],
+   "w": 38.4,
+   "h": 64.91
+  },
+  {
+   "id": "newprop:marshal-with-sign",
+   "name": "Marshal with sign",
+   "cat": "New: People",
+   "hx": 0.3,
+   "hy": 0.3,
+   "sheet": "exec-32d5be00-f00f-4804-a4a6-ab26d8c43344.png",
+   "cell": "bottom right",
+   "rect": [
+    810,
+    630,
+    279,
+    594
+   ],
+   "w": 38.4,
+   "h": 82.87
+  },
+  {
+   "id": "newprop:golfer-swinging-2",
+   "name": "Golfer swinging 2",
+   "cat": "New: People",
+   "hx": 0.3,
+   "hy": 0.3,
+   "sheet": "exec-35e5631b-aa08-4e1c-9395-d0861c8a79a2.png",
+   "cell": "top left",
+   "rect": [
+    116,
+    26,
+    378,
+    610
+   ],
+   "w": 38.4,
+   "h": 62.31
+  },
+  {
+   "id": "newprop:golfer-putting-2",
+   "name": "Golfer putting 2",
+   "cat": "New: People",
+   "hx": 0.3,
+   "hy": 0.3,
+   "sheet": "exec-35e5631b-aa08-4e1c-9395-d0861c8a79a2.png",
+   "cell": "top right",
+   "rect": [
+    796,
+    40,
+    319,
+    589
+   ],
+   "w": 38.4,
+   "h": 71.4
+  },
+  {
+   "id": "newprop:caddie-with-bag-2",
+   "name": "Caddie with bag 2",
+   "cat": "New: People",
+   "hx": 0.3,
+   "hy": 0.3,
+   "sheet": "exec-35e5631b-aa08-4e1c-9395-d0861c8a79a2.png",
+   "cell": "bottom left",
+   "rect": [
+    169,
+    644,
+    376,
+    577
+   ],
+   "w": 38.4,
+   "h": 59.48
+  },
+  {
+   "id": "newprop:marshal-with-sign-2",
+   "name": "Marshal with sign 2",
+   "cat": "New: People",
+   "hx": 0.3,
+   "hy": 0.3,
+   "sheet": "exec-35e5631b-aa08-4e1c-9395-d0861c8a79a2.png",
+   "cell": "bottom right",
+   "rect": [
+    797,
+    634,
+    328,
+    604
+   ],
+   "w": 38.4,
+   "h": 71.64
+  },
+  {
+   "id": "newprop:starter-hut",
+   "name": "Starter hut",
+   "cat": "New: Event structures",
+   "hx": 3,
+   "hy": 3,
+   "sheet": "exec-367d7344-f858-412a-972f-9e8e10d854cb.png",
+   "cell": "top left",
+   "rect": [
+    68,
+    48,
+    546,
+    592
+   ],
+   "w": 384,
+   "h": 416.77
+  },
+  {
+   "id": "newprop:clubhouse-cottage",
+   "name": "Clubhouse cottage",
+   "cat": "New: Event structures",
+   "hx": 3,
+   "hy": 3,
+   "sheet": "exec-367d7344-f858-412a-972f-9e8e10d854cb.png",
+   "cell": "top right",
+   "rect": [
+    615,
+    124,
+    636,
+    509
+   ],
+   "w": 384,
+   "h": 305.37
+  },
+  {
+   "id": "newprop:marquee",
+   "name": "Marquee",
+   "cat": "New: Event structures",
+   "hx": 3,
+   "hy": 3,
+   "sheet": "exec-367d7344-f858-412a-972f-9e8e10d854cb.png",
+   "cell": "bottom left",
+   "rect": [
+    21,
+    669,
+    604,
+    563
+   ],
+   "w": 384,
+   "h": 357.58
+  },
+  {
+   "id": "newprop:stage",
+   "name": "Stage",
+   "cat": "New: Event structures",
+   "hx": 3,
+   "hy": 3,
+   "sheet": "exec-367d7344-f858-412a-972f-9e8e10d854cb.png",
+   "cell": "bottom right",
+   "rect": [
+    674,
+    658,
+    560,
+    554
+   ],
+   "w": 384,
+   "h": 380.53
+  },
+  {
+   "id": "newprop:wooden-footbridge",
+   "name": "Wooden footbridge",
+   "cat": "New: Course props",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+   "cell": "top left",
+   "rect": [
+    55,
+    112,
+    541,
+    440
+   ],
+   "w": 128,
+   "h": 103.79
+  },
+  {
+   "id": "newprop:park-bench",
+   "name": "Park bench",
+   "cat": "New: Course props",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+   "cell": "top right",
+   "rect": [
+    665,
+    96,
+    561,
+    493
+   ],
+   "w": 128,
+   "h": 112.29
+  },
+  {
+   "id": "newprop:course-map-stand",
+   "name": "Course map stand",
+   "cat": "New: Course props",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+   "cell": "bottom left",
+   "rect": [
+    60,
+    637,
+    507,
+    536
+   ],
+   "w": 128,
+   "h": 135.44
+  },
+  {
+   "id": "newprop:ride-mower-2",
+   "name": "Ride mower 2",
+   "cat": "New: Course props",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+   "cell": "bottom right",
+   "rect": [
+    631,
+    707,
+    580,
+    467
+   ],
+   "w": 128,
+   "h": 102.98
+  },
+  {
+   "id": "newprop:course-map-board",
+   "name": "Course map board",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+   "cell": "top left",
+   "rect": [
+    49,
+    18,
+    520,
+    624
+   ],
+   "w": 256,
+   "h": 310
+  },
+  {
+   "id": "newprop:pro-shop-kiosk",
+   "name": "Pro shop kiosk",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+   "cell": "top right",
+   "rect": [
+    650,
+    17,
+    589,
+    643
+   ],
+   "w": 256,
+   "h": 280.19
+  },
+  {
+   "id": "newprop:portable-toilets",
+   "name": "Portable toilets",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+   "cell": "bottom left",
+   "rect": [
+    28,
+    642,
+    613,
+    591
+   ],
+   "w": 256,
+   "h": 247.97
+  },
+  {
+   "id": "newprop:wash-station",
+   "name": "Wash station",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+   "cell": "bottom right",
+   "rect": [
+    657,
+    703,
+    574,
+    538
+   ],
+   "w": 256,
+   "h": 239.75
+  },
+  {
+   "id": "newprop:orange-oak",
+   "name": "Orange oak",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-41893bfe-08de-4c0a-b34b-5b5b14d33a2a.png",
+   "cell": "top left",
+   "rect": [
+    80,
+    31,
+    458,
+    593
+   ],
+   "w": 192,
+   "h": 249.47
+  },
+  {
+   "id": "newprop:orange-oak-wide",
+   "name": "Orange oak wide",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-41893bfe-08de-4c0a-b34b-5b5b14d33a2a.png",
+   "cell": "top right",
+   "rect": [
+    569,
+    88,
+    685,
+    531
+   ],
+   "w": 192,
+   "h": 148.39
+  },
+  {
+   "id": "newprop:orange-oak-full",
+   "name": "Orange oak full",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-41893bfe-08de-4c0a-b34b-5b5b14d33a2a.png",
+   "cell": "bottom left",
+   "rect": [
+    55,
+    637,
+    580,
+    583
+   ],
+   "w": 192,
+   "h": 193.01
+  },
+  {
+   "id": "newprop:orange-oak-small",
+   "name": "Orange oak small",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-41893bfe-08de-4c0a-b34b-5b5b14d33a2a.png",
+   "cell": "bottom right",
+   "rect": [
+    733,
+    726,
+    434,
+    480
+   ],
+   "w": 192,
+   "h": 213.13
+  },
+  {
+   "id": "newprop:shack-map-board",
+   "name": "Shack map board",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+   "cell": "top left",
+   "rect": [
+    50,
+    51,
+    541,
+    576
+   ],
+   "w": 256,
+   "h": 272.81
+  },
+  {
+   "id": "newprop:tool-stall",
+   "name": "Tool stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+   "cell": "top right",
+   "rect": [
+    637,
+    31,
+    604,
+    601
+   ],
+   "w": 256,
+   "h": 254.28
+  },
+  {
+   "id": "newprop:toilet-booth",
+   "name": "Toilet booth",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+   "cell": "bottom left",
+   "rect": [
+    50,
+    628,
+    561,
+    576
+   ],
+   "w": 256,
+   "h": 262.94
+  },
+  {
+   "id": "newprop:water-tank-stall",
+   "name": "Water tank stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+   "cell": "bottom right",
+   "rect": [
+    710,
+    683,
+    507,
+    516
+   ],
+   "w": 256,
+   "h": 260.62
+  },
+  {
+   "id": "newprop:tarp-seating",
+   "name": "Tarp seating",
+   "cat": "New: Seating",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
+   "cell": "top left",
+   "rect": [
+    34,
+    1,
+    651,
+    645
+   ],
+   "w": 192,
+   "h": 189.92
+  },
+  {
+   "id": "newprop:umbrella-tables",
+   "name": "Umbrella tables",
+   "cat": "New: Seating",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
+   "cell": "top right",
+   "rect": [
+    716,
+    81,
+    525,
+    584
+   ],
+   "w": 192,
+   "h": 214.28
+  },
+  {
+   "id": "newprop:round-table-set",
+   "name": "Round table set",
+   "cat": "New: Seating",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
+   "cell": "bottom left",
+   "rect": [
+    84,
+    649,
+    513,
+    568
+   ],
+   "w": 192,
+   "h": 212.49
+  },
+  {
+   "id": "newprop:picnic-table",
+   "name": "Picnic table",
+   "cat": "New: Seating",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
+   "cell": "bottom right",
+   "rect": [
+    654,
+    792,
+    590,
+    423
+   ],
+   "w": 192,
+   "h": 136.91
+  },
+  {
+   "id": "newprop:orange-maple",
+   "name": "Orange maple",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-4dc9e75d-5f96-4e95-92bf-0ddd5c3c8d8a.png",
+   "cell": "top left",
+   "rect": [
+    16,
+    13,
+    604,
+    587
+   ],
+   "w": 192,
+   "h": 186.21
+  },
+  {
+   "id": "newprop:orange-maple-wide",
+   "name": "Orange maple wide",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-4dc9e75d-5f96-4e95-92bf-0ddd5c3c8d8a.png",
+   "cell": "top right",
+   "rect": [
+    646,
+    24,
+    597,
+    576
+   ],
+   "w": 192,
+   "h": 185.17
+  },
+  {
+   "id": "newprop:orange-maple-bare",
+   "name": "Orange maple bare",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-4dc9e75d-5f96-4e95-92bf-0ddd5c3c8d8a.png",
+   "cell": "bottom left",
+   "rect": [
+    16,
+    648,
+    598,
+    571
+   ],
+   "w": 192,
+   "h": 182.92
+  },
+  {
+   "id": "newprop:orange-maple-full",
+   "name": "Orange maple full",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-4dc9e75d-5f96-4e95-92bf-0ddd5c3c8d8a.png",
+   "cell": "bottom right",
+   "rect": [
+    639,
+    620,
+    607,
+    606
+   ],
+   "w": 192,
+   "h": 191.68
+  },
+  {
+   "id": "newprop:golf-cart",
+   "name": "Golf cart",
+   "cat": "New: Course props",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-58530340-09db-435d-afdf-59b51a4eac2c.png",
+   "cell": "top left",
+   "rect": [
+    39,
+    85,
+    542,
+    548
+   ],
+   "w": 128,
+   "h": 129.2
+  },
+  {
+   "id": "newprop:golf-cart-2",
+   "name": "Golf cart 2",
+   "cat": "New: Course props",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-58530340-09db-435d-afdf-59b51a4eac2c.png",
+   "cell": "top right",
+   "rect": [
+    690,
+    112,
+    530,
+    531
+   ],
+   "w": 128,
+   "h": 128.74
+  },
+  {
+   "id": "newprop:flag-pin",
+   "name": "Flag pin",
+   "cat": "New: Course props",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-58530340-09db-435d-afdf-59b51a4eac2c.png",
+   "cell": "bottom left",
+   "rect": [
+    253,
+    715,
+    211,
+    427
+   ],
+   "w": 128,
+   "h": 265.46
+  },
+  {
+   "id": "newprop:golf-bag-trolley",
+   "name": "Golf bag trolley",
+   "cat": "New: Course props",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-58530340-09db-435d-afdf-59b51a4eac2c.png",
+   "cell": "bottom right",
+   "rect": [
+    769,
+    687,
+    361,
+    480
+   ],
+   "w": 128,
+   "h": 170.67
+  },
+  {
+   "id": "newprop:shirt-stall",
+   "name": "Shirt stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 233.98
+  },
+  {
+   "id": "newprop:cap-stall",
+   "name": "Cap stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 264.21
+  },
+  {
+   "id": "newprop:tarp-counter",
+   "name": "Tarp counter",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 234.74
+  },
+  {
+   "id": "newprop:club-badge-stall",
+   "name": "Club badge stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 235.08
+  },
+  {
+   "id": "newprop:rope-barrier",
+   "name": "Rope barrier",
+   "cat": "New: Course props",
+   "hx": 0.8,
+   "hy": 0.8,
+   "sheet": "exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+   "cell": "top left",
+   "rect": [
+    40,
+    219,
+    551,
+    218
+   ],
+   "w": 102.4,
+   "h": 39.72
+  },
+  {
+   "id": "newprop:rope-barrier-corner",
+   "name": "Rope barrier corner",
+   "cat": "New: Course props",
+   "hx": 0.8,
+   "hy": 0.8,
+   "sheet": "exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+   "cell": "top right",
+   "rect": [
+    675,
+    157,
+    536,
+    352
+   ],
+   "w": 102.4,
+   "h": 66.46
+  },
+  {
+   "id": "newprop:rope-walkway",
+   "name": "Rope walkway",
+   "cat": "New: Course props",
+   "hx": 0.8,
+   "hy": 0.8,
+   "sheet": "exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+   "cell": "bottom left",
+   "rect": [
+    25,
+    753,
+    661,
+    383
+   ],
+   "w": 102.4,
+   "h": 59.03
+  },
+  {
+   "id": "newprop:marshal",
+   "name": "Marshal",
+   "cat": "New: Course props",
+   "hx": 0.8,
+   "hy": 0.8,
+   "sheet": "exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+   "cell": "bottom right",
+   "rect": [
+    852,
+    616,
+    238,
+    578
+   ],
+   "w": 102.4,
+   "h": 253.12
+  },
+  {
+   "id": "newprop:shanty-hut",
+   "name": "Shanty hut",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    768,
+    512
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 227.65
+  },
+  {
+   "id": "newprop:gate-arch",
+   "name": "Gate arch",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+   "cell": "top right",
+   "rect": [
+    768,
+    0,
+    768,
+    512
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 209.06
+  },
+  {
+   "id": "newprop:shanty-stall",
+   "name": "Shanty stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    512,
+    768,
+    512
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 232.42
+  },
+  {
+   "id": "newprop:shanty-counter",
+   "name": "Shanty counter",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+   "cell": "bottom right",
+   "rect": [
+    768,
+    512,
+    768,
+    512
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 220.88
+  },
+  {
+   "id": "newprop:small-orange-tree",
+   "name": "Small orange tree",
+   "cat": "New: Trees",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-640d3fb0-f055-49f5-8ed9-5ddd0a2a537e.png",
+   "cell": "top left",
+   "rect": [
+    113,
+    93,
+    453,
+    439
+   ],
+   "w": 128,
+   "h": 124.27
+  },
+  {
+   "id": "newprop:small-orange-tree-2",
+   "name": "Small orange tree 2",
+   "cat": "New: Trees",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-640d3fb0-f055-49f5-8ed9-5ddd0a2a537e.png",
+   "cell": "top right",
+   "rect": [
+    686,
+    103,
+    443,
+    428
+   ],
+   "w": 128,
+   "h": 123.59
+  },
+  {
+   "id": "newprop:small-orange-tree-bare",
+   "name": "Small orange tree bare",
+   "cat": "New: Trees",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-640d3fb0-f055-49f5-8ed9-5ddd0a2a537e.png",
+   "cell": "bottom left",
+   "rect": [
+    95,
+    669,
+    500,
+    467
+   ],
+   "w": 128,
+   "h": 119.45
+  },
+  {
+   "id": "newprop:small-orange-tree-full",
+   "name": "Small orange tree full",
+   "cat": "New: Trees",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-640d3fb0-f055-49f5-8ed9-5ddd0a2a537e.png",
+   "cell": "bottom right",
+   "rect": [
+    677,
+    668,
+    495,
+    481
+   ],
+   "w": 128,
+   "h": 123.82
+  },
+  {
+   "id": "newprop:shanty-range-bay",
+   "name": "Shanty range bay",
+   "cat": "New: Range",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 313.18
+  },
+  {
+   "id": "newprop:practice-net",
+   "name": "Practice net",
+   "cat": "New: Range",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 307.08
+  },
+  {
+   "id": "newprop:equipment-stall",
+   "name": "Equipment stall",
+   "cat": "New: Range",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 313.07
+  },
+  {
+   "id": "newprop:ball-bucket-stand",
+   "name": "Ball bucket stand",
+   "cat": "New: Range",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 335.27
+  },
+  {
+   "id": "newprop:roofed-cart",
+   "name": "Roofed cart",
+   "cat": "New: Vehicles",
+   "hx": 1.3,
+   "hy": 1.3,
+   "sheet": "exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+   "cell": "top left",
+   "rect": [
+    67,
+    71,
+    561,
+    530
+   ],
+   "w": 166.4,
+   "h": 157.07
+  },
+  {
+   "id": "newprop:utility-cart",
+   "name": "Utility cart",
+   "cat": "New: Vehicles",
+   "hx": 1.3,
+   "hy": 1.3,
+   "sheet": "exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+   "cell": "top right",
+   "rect": [
+    639,
+    62,
+    610,
+    575
+   ],
+   "w": 166.4,
+   "h": 156.47
+  },
+  {
+   "id": "newprop:supply-cart",
+   "name": "Supply cart",
+   "cat": "New: Vehicles",
+   "hx": 1.3,
+   "hy": 1.3,
+   "sheet": "exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+   "cell": "bottom left",
+   "rect": [
+    23,
+    715,
+    630,
+    488
+   ],
+   "w": 166.4,
+   "h": 128
+  },
+  {
+   "id": "newprop:wheelchair-cart",
+   "name": "Wheelchair cart",
+   "cat": "New: Vehicles",
+   "hx": 1.3,
+   "hy": 1.3,
+   "sheet": "exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+   "cell": "bottom right",
+   "rect": [
+    649,
+    640,
+    600,
+    549
+   ],
+   "w": 166.4,
+   "h": 152.37
+  },
+  {
+   "id": "newprop:garden-shed",
+   "name": "Garden shed",
+   "cat": "New: Stalls",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
+   "cell": "top left",
+   "rect": [
+    17,
+    15,
+    606,
+    600
+   ],
+   "w": 256,
+   "h": 253.01
+  },
+  {
+   "id": "newprop:club-rack-stall",
+   "name": "Club rack stall",
+   "cat": "New: Stalls",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
+   "cell": "top right",
+   "rect": [
+    667,
+    47,
+    569,
+    617
+   ],
+   "w": 256,
+   "h": 277.86
+  },
+  {
+   "id": "newprop:club-display",
+   "name": "Club display",
+   "cat": "New: Stalls",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
+   "cell": "bottom left",
+   "rect": [
+    53,
+    644,
+    562,
+    569
+   ],
+   "w": 256,
+   "h": 259.23
+  },
+  {
+   "id": "newprop:bag-stand-stall",
+   "name": "Bag stand stall",
+   "cat": "New: Stalls",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
+   "cell": "bottom right",
+   "rect": [
+    662,
+    668,
+    573,
+    567
+   ],
+   "w": 256,
+   "h": 253.29
+  },
+  {
+   "id": "newprop:clubhouse-manor",
+   "name": "Clubhouse manor",
+   "cat": "New: Buildings",
+   "hx": 6,
+   "hy": 6,
+   "sheet": "exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    768,
+    512
+   ],
+   "cut": "cell",
+   "w": 768,
+   "h": 522.89
+  },
+  {
+   "id": "newprop:gate-pillars",
+   "name": "Gate pillars",
+   "cat": "New: Buildings",
+   "hx": 6,
+   "hy": 6,
+   "sheet": "exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
+   "cell": "top right",
+   "rect": [
+    768,
+    0,
+    768,
+    512
+   ],
+   "cut": "cell",
+   "w": 768,
+   "h": 430.41
+  },
+  {
+   "id": "newprop:pavilion",
+   "name": "Pavilion",
+   "cat": "New: Buildings",
+   "hx": 6,
+   "hy": 6,
+   "sheet": "exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    512,
+    768,
+    512
+   ],
+   "cut": "cell",
+   "w": 768,
+   "h": 522.45
+  },
+  {
+   "id": "newprop:gazebo",
+   "name": "Gazebo",
+   "cat": "New: Buildings",
+   "hx": 6,
+   "hy": 6,
+   "sheet": "exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
+   "cell": "bottom right",
+   "rect": [
+    768,
+    512,
+    768,
+    512
+   ],
+   "cut": "cell",
+   "w": 768,
+   "h": 510.29
+  },
+  {
+   "id": "newprop:range-bay",
+   "name": "Range bay",
+   "cat": "New: Range",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 318.38
+  },
+  {
+   "id": "newprop:practice-cage",
+   "name": "Practice cage",
+   "cat": "New: Range",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 286.83
+  },
+  {
+   "id": "newprop:tent-bay",
+   "name": "Tent bay",
+   "cat": "New: Range",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 321.09
+  },
+  {
+   "id": "newprop:ball-dispenser",
+   "name": "Ball dispenser",
+   "cat": "New: Range",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 335.21
+  },
+  {
+   "id": "newprop:snack-shack",
+   "name": "Snack shack",
+   "cat": "New: Stalls (shabby)",
+   "hx": 1.8,
+   "hy": 1.8,
+   "sheet": "exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+   "cell": "top left",
+   "rect": [
+    48,
+    29,
+    600,
+    613
+   ],
+   "w": 230.4,
+   "h": 237.02
+  },
+  {
+   "id": "newprop:drinks-cart",
+   "name": "Drinks cart",
+   "cat": "New: Stalls (shabby)",
+   "hx": 1.8,
+   "hy": 1.8,
+   "sheet": "exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+   "cell": "top right",
+   "rect": [
+    724,
+    44,
+    465,
+    614
+   ],
+   "w": 230.4,
+   "h": 305.52
+  },
+  {
+   "id": "newprop:snack-stall",
+   "name": "Snack stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 1.8,
+   "hy": 1.8,
+   "sheet": "exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+   "cell": "bottom left",
+   "rect": [
+    57,
+    642,
+    599,
+    578
+   ],
+   "w": 230.4,
+   "h": 223.77
+  },
+  {
+   "id": "newprop:snack-trolley",
+   "name": "Snack trolley",
+   "cat": "New: Stalls (shabby)",
+   "hx": 1.8,
+   "hy": 1.8,
+   "sheet": "exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+   "cell": "bottom right",
+   "rect": [
+    740,
+    657,
+    488,
+    565
+   ],
+   "w": 230.4,
+   "h": 267.28
+  },
+  {
+   "id": "newprop:grandstand-small",
+   "name": "Grandstand small",
+   "cat": "New: Event structures",
+   "hx": 5,
+   "hy": 5,
+   "sheet": "exec-73782e1d-bd5a-42c4-bbbc-13906dffd1ad.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 640,
+   "h": 607.1
+  },
+  {
+   "id": "newprop:covered-grandstand",
+   "name": "Covered grandstand",
+   "cat": "New: Event structures",
+   "hx": 5,
+   "hy": 5,
+   "sheet": "exec-73782e1d-bd5a-42c4-bbbc-13906dffd1ad.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 640,
+   "h": 630.71
+  },
+  {
+   "id": "newprop:grandstand-wide",
+   "name": "Grandstand wide",
+   "cat": "New: Event structures",
+   "hx": 5,
+   "hy": 5,
+   "sheet": "exec-73782e1d-bd5a-42c4-bbbc-13906dffd1ad.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 640,
+   "h": 583.9
+  },
+  {
+   "id": "newprop:tv-tower",
+   "name": "TV tower",
+   "cat": "New: Event structures",
+   "hx": 5,
+   "hy": 5,
+   "sheet": "exec-73782e1d-bd5a-42c4-bbbc-13906dffd1ad.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 640,
+   "h": 621.45
+  },
+  {
+   "id": "newprop:bare-oak",
+   "name": "Bare oak",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-804bdfb3-a402-4be0-9e3a-6c5aa4a399a4.png",
+   "cell": "top left",
+   "rect": [
+    6,
+    8,
+    623,
+    610
+   ],
+   "w": 192,
+   "h": 188.25
+  },
+  {
+   "id": "newprop:bare-oak-wide",
+   "name": "Bare oak wide",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-804bdfb3-a402-4be0-9e3a-6c5aa4a399a4.png",
+   "cell": "top right",
+   "rect": [
+    643,
+    13,
+    607,
+    610
+   ],
+   "w": 192,
+   "h": 192.32
+  },
+  {
+   "id": "newprop:bare-oak-tall",
+   "name": "Bare oak tall",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-804bdfb3-a402-4be0-9e3a-6c5aa4a399a4.png",
+   "cell": "bottom left",
+   "rect": [
+    5,
+    628,
+    617,
+    615
+   ],
+   "w": 192,
+   "h": 191.68
+  },
+  {
+   "id": "newprop:bare-oak-small",
+   "name": "Bare oak small",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-804bdfb3-a402-4be0-9e3a-6c5aa4a399a4.png",
+   "cell": "bottom right",
+   "rect": [
+    628,
+    628,
+    620,
+    615
+   ],
+   "w": 192,
+   "h": 190.12
+  },
+  {
+   "id": "newprop:camera-tower",
+   "name": "Camera tower",
+   "cat": "New: Media",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 359.56
+  },
+  {
+   "id": "newprop:broadcast-truck",
+   "name": "Broadcast truck",
+   "cat": "New: Media",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 298.56
+  },
+  {
+   "id": "newprop:satellite-van",
+   "name": "Satellite van",
+   "cat": "New: Media",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 341.79
+  },
+  {
+   "id": "newprop:tv-camera",
+   "name": "TV camera",
+   "cat": "New: Media",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 424.91
+  },
+  {
+   "id": "newprop:delivery-truck",
+   "name": "Delivery truck",
+   "cat": "New: Vehicles",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
+   "cell": "top left",
+   "rect": [
+    19,
+    46,
+    601,
+    567
+   ],
+   "w": 320,
+   "h": 300.13
+  },
+  {
+   "id": "newprop:forklift-with-pallets",
+   "name": "Forklift with pallets",
+   "cat": "New: Vehicles",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
+   "cell": "top right",
+   "rect": [
+    680,
+    90,
+    562,
+    531
+   ],
+   "w": 320,
+   "h": 302.09
+  },
+  {
+   "id": "newprop:water-truck",
+   "name": "Water truck",
+   "cat": "New: Vehicles",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
+   "cell": "bottom left",
+   "rect": [
+    19,
+    665,
+    599,
+    508
+   ],
+   "w": 320,
+   "h": 269.9
+  },
+  {
+   "id": "newprop:utility-cart-green",
+   "name": "Utility cart green",
+   "cat": "New: Vehicles",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
+   "cell": "bottom right",
+   "rect": [
+    659,
+    661,
+    581,
+    533
+   ],
+   "w": 320,
+   "h": 293.24
+  },
+  {
+   "id": "newprop:stone-bridge",
+   "name": "Stone bridge",
+   "cat": "New: Course props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-991e1eb3-fe60-45ab-8a21-2ca5399511a2.png",
+   "cell": "top left",
+   "rect": [
+    8,
+    104,
+    626,
+    466
+   ],
+   "w": 192,
+   "h": 142.37
+  },
+  {
+   "id": "newprop:white-footbridge",
+   "name": "White footbridge",
+   "cat": "New: Course props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-991e1eb3-fe60-45ab-8a21-2ca5399511a2.png",
+   "cell": "top right",
+   "rect": [
+    646,
+    97,
+    608,
+    476
+   ],
+   "w": 192,
+   "h": 148.52
+  },
+  {
+   "id": "newprop:flower-bed",
+   "name": "Flower bed",
+   "cat": "New: Course props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-991e1eb3-fe60-45ab-8a21-2ca5399511a2.png",
+   "cell": "bottom left",
+   "rect": [
+    12,
+    694,
+    635,
+    467
+   ],
+   "w": 192,
+   "h": 139.66
+  },
+  {
+   "id": "newprop:flowering-tree",
+   "name": "Flowering tree",
+   "cat": "New: Course props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-991e1eb3-fe60-45ab-8a21-2ca5399511a2.png",
+   "cell": "bottom right",
+   "rect": [
+    669,
+    590,
+    575,
+    621
+   ],
+   "w": 192,
+   "h": 206.82
+  },
+  {
+   "id": "newprop:wooden-bleacher",
+   "name": "Wooden bleacher",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-9e6854dc-a046-457b-a771-df820116dab8.png",
+   "cell": "top left",
+   "rect": [
+    101,
+    81,
+    524,
+    460
+   ],
+   "w": 320,
+   "h": 279.77
+  },
+  {
+   "id": "newprop:small-bleacher",
+   "name": "Small bleacher",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-9e6854dc-a046-457b-a771-df820116dab8.png",
+   "cell": "top right",
+   "rect": [
+    764,
+    81,
+    394,
+    485
+   ],
+   "w": 320,
+   "h": 395.44
+  },
+  {
+   "id": "newprop:bleacher-platform",
+   "name": "Bleacher platform",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-9e6854dc-a046-457b-a771-df820116dab8.png",
+   "cell": "bottom left",
+   "rect": [
+    75,
+    685,
+    526,
+    484
+   ],
+   "w": 320,
+   "h": 294.05
+  },
+  {
+   "id": "newprop:bleacher-tower",
+   "name": "Bleacher tower",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-9e6854dc-a046-457b-a771-df820116dab8.png",
+   "cell": "bottom right",
+   "rect": [
+    801,
+    664,
+    402,
+    493
+   ],
+   "w": 320,
+   "h": 393.72
+  },
+  {
+   "id": "newprop:shanty-shed",
+   "name": "Shanty shed",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 252.6
+  },
+  {
+   "id": "newprop:flag-stall",
+   "name": "Flag stall",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 238.79
+  },
+  {
+   "id": "newprop:tarp-shelter",
+   "name": "Tarp shelter",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 251.28
+  },
+  {
+   "id": "newprop:market-tents",
+   "name": "Market tents",
+   "cat": "New: Stalls (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 266.45
+  },
+  {
+   "id": "newprop:shanty-medical-tent",
+   "name": "Shanty medical tent",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 255.57
+  },
+  {
+   "id": "newprop:shanty-cart-ambulance",
+   "name": "Shanty cart ambulance",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 197.21
+  },
+  {
+   "id": "newprop:shanty-toilet",
+   "name": "Shanty toilet",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 253.73
+  },
+  {
+   "id": "newprop:shanty-weather-mast",
+   "name": "Shanty weather mast",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 256,
+   "h": 299
+  },
+  {
+   "id": "newprop:small-red-maple",
+   "name": "Small red maple",
+   "cat": "New: Trees",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-b13529b8-fe5a-4e9c-9e7e-5f3a97e46d70.png",
+   "cell": "top left",
+   "rect": [
+    168,
+    140,
+    367,
+    470
+   ],
+   "w": 128,
+   "h": 164.62
+  },
+  {
+   "id": "newprop:small-red-maple-2",
+   "name": "Small red maple 2",
+   "cat": "New: Trees",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-b13529b8-fe5a-4e9c-9e7e-5f3a97e46d70.png",
+   "cell": "top right",
+   "rect": [
+    645,
+    181,
+    536,
+    429
+   ],
+   "w": 128,
+   "h": 102.06
+  },
+  {
+   "id": "newprop:small-red-maple-3",
+   "name": "Small red maple 3",
+   "cat": "New: Trees",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-b13529b8-fe5a-4e9c-9e7e-5f3a97e46d70.png",
+   "cell": "bottom left",
+   "rect": [
+    124,
+    698,
+    489,
+    435
+   ],
+   "w": 128,
+   "h": 113.63
+  },
+  {
+   "id": "newprop:small-red-maple-4",
+   "name": "Small red maple 4",
+   "cat": "New: Trees",
+   "hx": 1,
+   "hy": 1,
+   "sheet": "exec-b13529b8-fe5a-4e9c-9e7e-5f3a97e46d70.png",
+   "cell": "bottom right",
+   "rect": [
+    709,
+    752,
+    404,
+    378
+   ],
+   "w": 128,
+   "h": 119.92
+  },
+  {
+   "id": "newprop:log-footbridge",
+   "name": "Log footbridge",
+   "cat": "New: Course props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-c2432598-4e43-41a8-90c7-8bf85d8d9fd1.png",
+   "cell": "top left",
+   "rect": [
+    12,
+    81,
+    614,
+    469
+   ],
+   "w": 192,
+   "h": 145.82
+  },
+  {
+   "id": "newprop:plank-bridge",
+   "name": "Plank bridge",
+   "cat": "New: Course props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-c2432598-4e43-41a8-90c7-8bf85d8d9fd1.png",
+   "cell": "top right",
+   "rect": [
+    628,
+    97,
+    618,
+    469
+   ],
+   "w": 192,
+   "h": 145.73
+  },
+  {
+   "id": "newprop:flower-planter",
+   "name": "Flower planter",
+   "cat": "New: Course props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-c2432598-4e43-41a8-90c7-8bf85d8d9fd1.png",
+   "cell": "bottom left",
+   "rect": [
+    23,
+    728,
+    592,
+    420
+   ],
+   "w": 192,
+   "h": 135.22
+  },
+  {
+   "id": "newprop:small-tree",
+   "name": "Small tree",
+   "cat": "New: Course props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-c2432598-4e43-41a8-90c7-8bf85d8d9fd1.png",
+   "cell": "bottom right",
+   "rect": [
+    701,
+    623,
+    525,
+    595
+   ],
+   "w": 192,
+   "h": 218
+  },
+  {
+   "id": "newprop:shanty-camera-tower",
+   "name": "Shanty camera tower",
+   "cat": "New: Media",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 335.32
+  },
+  {
+   "id": "newprop:shanty-broadcast-van",
+   "name": "Shanty broadcast van",
+   "cat": "New: Media",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 274.06
+  },
+  {
+   "id": "newprop:shanty-satellite-van",
+   "name": "Shanty satellite van",
+   "cat": "New: Media",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 337.34
+  },
+  {
+   "id": "newprop:shanty-camera",
+   "name": "Shanty camera",
+   "cat": "New: Media",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 344.03
+  },
+  {
+   "id": "newprop:hospitality-marquee",
+   "name": "Hospitality marquee",
+   "cat": "New: Seating",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-d3daec12-8b23-48e4-90e6-8f920d802cc5.png",
+   "cell": "top left",
+   "rect": [
+    14,
+    73,
+    656,
+    546
+   ],
+   "w": 320,
+   "h": 265.27
+  },
+  {
+   "id": "newprop:umbrella-table-green",
+   "name": "Umbrella table green",
+   "cat": "New: Seating",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-d3daec12-8b23-48e4-90e6-8f920d802cc5.png",
+   "cell": "top right",
+   "rect": [
+    678,
+    111,
+    567,
+    525
+   ],
+   "w": 320,
+   "h": 295.43
+  },
+  {
+   "id": "newprop:dining-pavilion",
+   "name": "Dining pavilion",
+   "cat": "New: Seating",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-d3daec12-8b23-48e4-90e6-8f920d802cc5.png",
+   "cell": "bottom left",
+   "rect": [
+    94,
+    652,
+    466,
+    530
+   ],
+   "w": 320,
+   "h": 363.92
+  },
+  {
+   "id": "newprop:long-picnic-table",
+   "name": "Long picnic table",
+   "cat": "New: Seating",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-d3daec12-8b23-48e4-90e6-8f920d802cc5.png",
+   "cell": "bottom right",
+   "rect": [
+    648,
+    760,
+    601,
+    402
+   ],
+   "w": 320,
+   "h": 212.61
+  },
+  {
+   "id": "newprop:ticket-booth",
+   "name": "Ticket booth",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+   "cell": "top left",
+   "rect": [
+    36,
+    45,
+    563,
+    605
+   ],
+   "w": 256,
+   "h": 275.37
+  },
+  {
+   "id": "newprop:white-tent-booth",
+   "name": "White tent booth",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+   "cell": "top right",
+   "rect": [
+    681,
+    56,
+    534,
+    587
+   ],
+   "w": 256,
+   "h": 282.28
+  },
+  {
+   "id": "newprop:green-booth",
+   "name": "Green booth",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+   "cell": "bottom left",
+   "rect": [
+    60,
+    704,
+    570,
+    492
+   ],
+   "w": 256,
+   "h": 220.08
+  },
+  {
+   "id": "newprop:green-kiosk",
+   "name": "Green kiosk",
+   "cat": "New: Event structures",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+   "cell": "bottom right",
+   "rect": [
+    729,
+    646,
+    467,
+    571
+   ],
+   "w": 256,
+   "h": 314.56
+  },
+  {
+   "id": "newprop:scaffold-stand",
+   "name": "Scaffold stand",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+   "cell": "top left",
+   "rect": [
+    82,
+    52,
+    522,
+    599
+   ],
+   "w": 320,
+   "h": 368.56
+  },
+  {
+   "id": "newprop:scaffold-booth",
+   "name": "Scaffold booth",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+   "cell": "top right",
+   "rect": [
+    669,
+    140,
+    554,
+    507
+   ],
+   "w": 320,
+   "h": 292.45
+  },
+  {
+   "id": "newprop:scaffold-counter",
+   "name": "Scaffold counter",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+   "cell": "bottom left",
+   "rect": [
+    69,
+    665,
+    566,
+    531
+   ],
+   "w": 320,
+   "h": 299.39
+  },
+  {
+   "id": "newprop:scaffold-tower",
+   "name": "Scaffold tower",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+   "cell": "bottom right",
+   "rect": [
+    708,
+    675,
+    487,
+    530
+   ],
+   "w": 320,
+   "h": 349.39
+  },
+  {
+   "id": "newprop:wooden-bleacher-big",
+   "name": "Wooden bleacher big",
+   "cat": "New: Event structures (shabby)",
+   "hx": 3.5,
+   "hy": 3.5,
+   "sheet": "exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 448,
+   "h": 468.98
+  },
+  {
+   "id": "newprop:covered-bleacher",
+   "name": "Covered bleacher",
+   "cat": "New: Event structures (shabby)",
+   "hx": 3.5,
+   "hy": 3.5,
+   "sheet": "exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 448,
+   "h": 463.52
+  },
+  {
+   "id": "newprop:bleacher-deck",
+   "name": "Bleacher deck",
+   "cat": "New: Event structures (shabby)",
+   "hx": 3.5,
+   "hy": 3.5,
+   "sheet": "exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 448,
+   "h": 427.3
+  },
+  {
+   "id": "newprop:bleacher-stairs",
+   "name": "Bleacher stairs",
+   "cat": "New: Event structures (shabby)",
+   "hx": 3.5,
+   "hy": 3.5,
+   "sheet": "exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 448,
+   "h": 406.88
+  },
+  {
+   "id": "newprop:green-golf-cart",
+   "name": "Green golf cart",
+   "cat": "New: Vehicles",
+   "hx": 1.4,
+   "hy": 1.4,
+   "sheet": "exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+   "cell": "top left",
+   "rect": [
+    91,
+    68,
+    528,
+    525
+   ],
+   "w": 179.2,
+   "h": 178.17
+  },
+  {
+   "id": "newprop:shuttle-cart",
+   "name": "Shuttle cart",
+   "cat": "New: Vehicles",
+   "hx": 1.4,
+   "hy": 1.4,
+   "sheet": "exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+   "cell": "top right",
+   "rect": [
+    647,
+    67,
+    597,
+    542
+   ],
+   "w": 179.2,
+   "h": 163.38
+  },
+  {
+   "id": "newprop:drinks-cart-green",
+   "name": "Drinks cart green",
+   "cat": "New: Vehicles",
+   "hx": 1.4,
+   "hy": 1.4,
+   "sheet": "exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+   "cell": "bottom left",
+   "rect": [
+    26,
+    723,
+    609,
+    468
+   ],
+   "w": 179.2,
+   "h": 137.16
+  },
+  {
+   "id": "newprop:shuttle-cart-white",
+   "name": "Shuttle cart white",
+   "cat": "New: Vehicles",
+   "hx": 1.4,
+   "hy": 1.4,
+   "sheet": "exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+   "cell": "bottom right",
+   "rect": [
+    654,
+    663,
+    588,
+    511
+   ],
+   "w": 179.2,
+   "h": 155.72
+  },
+  {
+   "id": "newprop:orange-tree",
+   "name": "Orange tree",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-eaab8128-30ba-4510-ae57-63612e51ce30.png",
+   "cell": "top left",
+   "rect": [
+    71,
+    40,
+    520,
+    516
+   ],
+   "w": 192,
+   "h": 190.5
+  },
+  {
+   "id": "newprop:orange-tree-wide",
+   "name": "Orange tree wide",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-eaab8128-30ba-4510-ae57-63612e51ce30.png",
+   "cell": "top right",
+   "rect": [
+    672,
+    67,
+    516,
+    489
+   ],
+   "w": 192,
+   "h": 181.8
+  },
+  {
+   "id": "newprop:orange-tree-sparse",
+   "name": "Orange tree sparse",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-eaab8128-30ba-4510-ae57-63612e51ce30.png",
+   "cell": "bottom left",
+   "rect": [
+    53,
+    629,
+    574,
+    538
+   ],
+   "w": 192,
+   "h": 180.13
+  },
+  {
+   "id": "newprop:orange-tree-full",
+   "name": "Orange tree full",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-eaab8128-30ba-4510-ae57-63612e51ce30.png",
+   "cell": "bottom right",
+   "rect": [
+    659,
+    630,
+    575,
+    555
+   ],
+   "w": 192,
+   "h": 184.91
+  },
+  {
+   "id": "newprop:shanty-ticket-hut",
+   "name": "Shanty ticket hut",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+   "cell": "top left",
+   "rect": [
+    25,
+    61,
+    602,
+    622
+   ],
+   "w": 256,
+   "h": 264.62
+  },
+  {
+   "id": "newprop:shanty-booth",
+   "name": "Shanty booth",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+   "cell": "top right",
+   "rect": [
+    706,
+    61,
+    534,
+    583
+   ],
+   "w": 256,
+   "h": 279.85
+  },
+  {
+   "id": "newprop:shanty-turnstiles",
+   "name": "Shanty turnstiles",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+   "cell": "bottom left",
+   "rect": [
+    33,
+    712,
+    641,
+    477
+   ],
+   "w": 256,
+   "h": 189.38
+  },
+  {
+   "id": "newprop:shanty-counter-2",
+   "name": "Shanty counter 2",
+   "cat": "New: Event structures (shabby)",
+   "hx": 2,
+   "hy": 2,
+   "sheet": "exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+   "cell": "bottom right",
+   "rect": [
+    716,
+    650,
+    507,
+    568
+   ],
+   "w": 256,
+   "h": 286.72
+  },
+  {
+   "id": "newprop:green-ride-mower",
+   "name": "Green ride mower",
+   "cat": "New: Vehicles",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-eccec0c5-d292-46a7-a6cc-8f5e654012ed.png",
+   "cell": "top left",
+   "rect": [
+    86,
+    82,
+    512,
+    509
+   ],
+   "w": 153.6,
+   "h": 153.6
+  },
+  {
+   "id": "newprop:green-gang-mower",
+   "name": "Green gang mower",
+   "cat": "New: Vehicles",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-eccec0c5-d292-46a7-a6cc-8f5e654012ed.png",
+   "cell": "top right",
+   "rect": [
+    658,
+    116,
+    573,
+    443
+   ],
+   "w": 153.6,
+   "h": 117.84
+  },
+  {
+   "id": "newprop:green-spray-rig",
+   "name": "Green spray rig",
+   "cat": "New: Vehicles",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-eccec0c5-d292-46a7-a6cc-8f5e654012ed.png",
+   "cell": "bottom left",
+   "rect": [
+    37,
+    728,
+    571,
+    433
+   ],
+   "w": 153.6,
+   "h": 115.74
+  },
+  {
+   "id": "newprop:green-greens-mower",
+   "name": "Green greens mower",
+   "cat": "New: Vehicles",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-eccec0c5-d292-46a7-a6cc-8f5e654012ed.png",
+   "cell": "bottom right",
+   "rect": [
+    643,
+    689,
+    598,
+    474
+   ],
+   "w": 153.6,
+   "h": 121.11
+  },
+  {
+   "id": "newprop:wooden-dock",
+   "name": "Wooden dock",
+   "cat": "New: Lake props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-ed0e4dc0-2938-4d26-bd38-3eab013ba3de.png",
+   "cell": "top left",
+   "rect": [
+    44,
+    109,
+    542,
+    442
+   ],
+   "w": 192,
+   "h": 156.04
+  },
+  {
+   "id": "newprop:wooden-dock-2",
+   "name": "Wooden dock 2",
+   "cat": "New: Lake props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-ed0e4dc0-2938-4d26-bd38-3eab013ba3de.png",
+   "cell": "top right",
+   "rect": [
+    678,
+    139,
+    527,
+    448
+   ],
+   "w": 192,
+   "h": 161.84
+  },
+  {
+   "id": "newprop:rowboat",
+   "name": "Rowboat",
+   "cat": "New: Lake props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-ed0e4dc0-2938-4d26-bd38-3eab013ba3de.png",
+   "cell": "bottom left",
+   "rect": [
+    35,
+    719,
+    606,
+    419
+   ],
+   "w": 192,
+   "h": 131.96
+  },
+  {
+   "id": "newprop:bait-shack",
+   "name": "Bait shack",
+   "cat": "New: Lake props",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-ed0e4dc0-2938-4d26-bd38-3eab013ba3de.png",
+   "cell": "bottom right",
+   "rect": [
+    672,
+    657,
+    548,
+    547
+   ],
+   "w": 192,
+   "h": 190.94
+  },
+  {
+   "id": "newprop:catering-tent",
+   "name": "Catering tent",
+   "cat": "New: Event structures",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-ed8f1e79-9747-48ad-8115-31f97c8d9f6c.png",
+   "cell": "top left",
+   "rect": [
+    12,
+    12,
+    596,
+    631
+   ],
+   "w": 320,
+   "h": 339.02
+  },
+  {
+   "id": "newprop:catering-trailer",
+   "name": "Catering trailer",
+   "cat": "New: Event structures",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-ed8f1e79-9747-48ad-8115-31f97c8d9f6c.png",
+   "cell": "top right",
+   "rect": [
+    639,
+    54,
+    599,
+    593
+   ],
+   "w": 320,
+   "h": 316.76
+  },
+  {
+   "id": "newprop:buffet-tent",
+   "name": "Buffet tent",
+   "cat": "New: Event structures",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-ed8f1e79-9747-48ad-8115-31f97c8d9f6c.png",
+   "cell": "bottom left",
+   "rect": [
+    58,
+    651,
+    599,
+    566
+   ],
+   "w": 320,
+   "h": 302.16
+  },
+  {
+   "id": "newprop:catering-staff",
+   "name": "Catering staff",
+   "cat": "New: Event structures",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-ed8f1e79-9747-48ad-8115-31f97c8d9f6c.png",
+   "cell": "bottom right",
+   "rect": [
+    855,
+    661,
+    226,
+    555
+   ],
+   "w": 320,
+   "h": 807.34
+  },
+  {
+   "id": "newprop:hospitality-tent",
+   "name": "Hospitality tent",
+   "cat": "New: Event structures",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 316.83
+  },
+  {
+   "id": "newprop:trophy-pavilion",
+   "name": "Trophy pavilion",
+   "cat": "New: Event structures",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 295.42
+  },
+  {
+   "id": "newprop:club-tent",
+   "name": "Club tent",
+   "cat": "New: Event structures",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 308.23
+  },
+  {
+   "id": "newprop:club-arch-sign",
+   "name": "Club arch sign",
+   "cat": "New: Event structures",
+   "hx": 2.5,
+   "hy": 2.5,
+   "sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 320,
+   "h": 303.6
+  },
+  {
+   "id": "newprop:orange-tree-round",
+   "name": "Orange tree round",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-f2adc440-c65f-40ce-9682-b92de02f35cc.png",
+   "cell": "top left",
+   "rect": [
+    129,
+    110,
+    394,
+    481
+   ],
+   "w": 192,
+   "h": 234.67
+  },
+  {
+   "id": "newprop:orange-tree-big",
+   "name": "Orange tree big",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-f2adc440-c65f-40ce-9682-b92de02f35cc.png",
+   "cell": "top right",
+   "rect": [
+    616,
+    157,
+    585,
+    435
+   ],
+   "w": 192,
+   "h": 141.84
+  },
+  {
+   "id": "newprop:orange-tree-tall",
+   "name": "Orange tree tall",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-f2adc440-c65f-40ce-9682-b92de02f35cc.png",
+   "cell": "bottom left",
+   "rect": [
+    111,
+    672,
+    489,
+    482
+   ],
+   "w": 192,
+   "h": 189.21
+  },
+  {
+   "id": "newprop:orange-tree-small",
+   "name": "Orange tree small",
+   "cat": "New: Trees",
+   "hx": 1.5,
+   "hy": 1.5,
+   "sheet": "exec-f2adc440-c65f-40ce-9682-b92de02f35cc.png",
+   "cell": "bottom right",
+   "rect": [
+    740,
+    731,
+    384,
+    416
+   ],
+   "w": 192,
+   "h": 207.79
+  },
+  {
+   "id": "newprop:birch",
+   "name": "Birch",
+   "cat": "New: Trees",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-f5874056-b4b5-4ff8-a208-142ba4687539.png",
+   "cell": "top left",
+   "rect": [
+    69,
+    0,
+    527,
+    606
+   ],
+   "w": 153.6,
+   "h": 177.48
+  },
+  {
+   "id": "newprop:birch-wide",
+   "name": "Birch wide",
+   "cat": "New: Trees",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-f5874056-b4b5-4ff8-a208-142ba4687539.png",
+   "cell": "top right",
+   "rect": [
+    687,
+    13,
+    543,
+    594
+   ],
+   "w": 153.6,
+   "h": 168.19
+  },
+  {
+   "id": "newprop:birch-bare",
+   "name": "Birch bare",
+   "cat": "New: Trees",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-f5874056-b4b5-4ff8-a208-142ba4687539.png",
+   "cell": "bottom left",
+   "rect": [
+    64,
+    635,
+    520,
+    602
+   ],
+   "w": 153.6,
+   "h": 179.1
+  },
+  {
+   "id": "newprop:birch-full",
+   "name": "Birch full",
+   "cat": "New: Trees",
+   "hx": 1.2,
+   "hy": 1.2,
+   "sheet": "exec-f5874056-b4b5-4ff8-a208-142ba4687539.png",
+   "cell": "bottom right",
+   "rect": [
+    672,
+    626,
+    546,
+    611
+   ],
+   "w": 153.6,
+   "h": 171.8
+  },
+  {
+   "id": "newprop:small-birch",
+   "name": "Small birch",
+   "cat": "New: Trees",
+   "hx": 0.9,
+   "hy": 0.9,
+   "sheet": "exec-f5b3b50f-bf79-4835-b523-15b788be5dab.png",
+   "cell": "top left",
+   "rect": [
+    215,
+    93,
+    254,
+    511
+   ],
+   "w": 115.2,
+   "h": 235.55
+  },
+  {
+   "id": "newprop:small-birch-2",
+   "name": "Small birch 2",
+   "cat": "New: Trees",
+   "hx": 0.9,
+   "hy": 0.9,
+   "sheet": "exec-f5b3b50f-bf79-4835-b523-15b788be5dab.png",
+   "cell": "top right",
+   "rect": [
+    703,
+    110,
+    437,
+    494
+   ],
+   "w": 115.2,
+   "h": 130.2
+  },
+  {
+   "id": "newprop:small-birch-3",
+   "name": "Small birch 3",
+   "cat": "New: Trees",
+   "hx": 0.9,
+   "hy": 0.9,
+   "sheet": "exec-f5b3b50f-bf79-4835-b523-15b788be5dab.png",
+   "cell": "bottom left",
+   "rect": [
+    158,
+    691,
+    365,
+    471
+   ],
+   "w": 115.2,
+   "h": 149.73
+  },
+  {
+   "id": "newprop:small-birch-4",
+   "name": "Small birch 4",
+   "cat": "New: Trees",
+   "hx": 0.9,
+   "hy": 0.9,
+   "sheet": "exec-f5b3b50f-bf79-4835-b523-15b788be5dab.png",
+   "cell": "bottom right",
+   "rect": [
+    822,
+    786,
+    230,
+    374
+   ],
+   "w": 115.2,
+   "h": 189.07
+  },
+  {
+   "id": "newprop:shanty-leaderboard",
+   "name": "Shanty leaderboard",
+   "cat": "New: Course props",
+   "hx": 0.6,
+   "hy": 0.6,
+   "sheet": "exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
+   "cell": "top left",
+   "rect": [
+    0,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 76.8,
+   "h": 79.92
+  },
+  {
+   "id": "newprop:shanty-hole-sign",
+   "name": "Shanty hole sign",
+   "cat": "New: Course props",
+   "hx": 0.6,
+   "hy": 0.6,
+   "sheet": "exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
+   "cell": "top right",
+   "rect": [
+    627,
+    0,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 76.8,
+   "h": 81.05
+  },
+  {
+   "id": "newprop:shanty-clock",
+   "name": "Shanty clock",
+   "cat": "New: Course props",
+   "hx": 0.6,
+   "hy": 0.6,
+   "sheet": "exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
+   "cell": "bottom left",
+   "rect": [
+    0,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 76.8,
+   "h": 127.57
+  },
+  {
+   "id": "newprop:shanty-signpost",
+   "name": "Shanty signpost",
+   "cat": "New: Course props",
+   "hx": 0.6,
+   "hy": 0.6,
+   "sheet": "exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
+   "cell": "bottom right",
+   "rect": [
+    627,
+    627,
+    627,
+    627
+   ],
+   "cut": "cell",
+   "w": 76.8,
+   "h": 80.67
+  }
+ ]
+}

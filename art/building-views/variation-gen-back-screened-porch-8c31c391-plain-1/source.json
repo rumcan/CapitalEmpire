@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-back-screened-porch-8c31c391-plain:1",
+ "version": "variation-gen-back-screened-porch-8c31c391-plain-1-4views-v4",
+ "files": {
+  "NE": "17c8623e9645c5ca318aba4704f4965140b42bc957bbbce9d5e33fab31be1915",
+  "SE": "b551d024b750384eaed32e8508bf07068d533f6cb818e499a05777d0a521d81b",
+  "SW": "397aaca3750c5810937beb1cd09ec565d2ba87f00d7a086e3ef48e5a7e7ad566",
+  "NW": "331d5deb8fd0d6cc720833e120da2130573dd9774183a5138822ec755eb3b653"
+ }
+}

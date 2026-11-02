@@ -1,0 +1,55 @@
+{
+ "id": "golf:clubhouse-shanty",
+ "slug": "golf-clubhouse-shanty",
+ "category": "buildings",
+ "version": "golf-clubhouse-shanty-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "1f5b09d453228f1ea89701e030e6abf3855b2cdf467bef9197f5cac8fb3ac1b2",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "173eb33a5dfeb19d2bbe7a8ef8f4ba60e5cd1a16cf559cbefecc29255a181fda",
+   "trim": [
+    0,
+    0,
+    352,
+    279
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "c44862c3798ecde459673203d493caf974feacb9da2763ee6e192c1be5ba940f",
+   "trim": [
+    0,
+    0,
+    257,
+    265
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "f9cf436042fdf5ab62992146367c9eb30671936ef1095ceb0200e1cd234b705f",
+   "trim": [
+    0,
+    0,
+    350,
+    263
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "9e1cdea9d5257b3c3425da27cee62230b7de0cc08411f0a080080bd72579990c",
+   "trim": [
+    0,
+    0,
+    257,
+    251
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

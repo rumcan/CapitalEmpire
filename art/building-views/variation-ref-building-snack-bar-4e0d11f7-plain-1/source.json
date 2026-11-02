@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+ "version": "variation-ref-building-snack-bar-4e0d11f7-plain-1-4views-v2",
+ "files": {
+  "NE": "40d755c9c47f8de353b080bf99f132d2df01d891391a7f2b7ff634cf8d5b1699",
+  "SE": "09f9d66b2a74c471651819d439f36ed3a24e274bc5f0f669255f60884074c1e2",
+  "SW": "4513bb0481e9172795d38eccfeeafd4c03a26650e213f6dc82bb321fb898c8c9",
+  "NW": "f1952388686ac0f89e2f4809ddd594369fbb4529d0afcf3118314df4cc7592bc"
+ }
+}

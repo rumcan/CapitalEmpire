@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+ "version": "variation-gen-back-patio-pool-3b943d52-plain-corner-1-4views-v5",
+ "files": {
+  "NE": "ad7dbaa147de13c26d99f1df8043b8b063032bf1705341054e2f507498c522d9",
+  "SE": "0304622192f3795b5f5ef279c4e8e87baf3cc3f8c758d4ac264c7beadaa37cfe",
+  "SW": "e18989bc28233c10398891574ac420e432a946ec6937eb668ec39fc7bad5ce3c",
+  "NW": "e059abc0b64793db6033d78ce35b22f3bc13859592fe097b8e2923840d8392f8"
+ }
+}

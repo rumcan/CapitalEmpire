@@ -1,0 +1,55 @@
+{
+ "id": "variation:expansion-boarded-store-rear-d09a309a:1",
+ "slug": "variation-expansion-boarded-store-rear-d09a309a-1",
+ "category": "buildings",
+ "version": "variation-expansion-boarded-store-rear-d09a309a-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "e26ab88cfa2df7728ab9c698f2e6dd3bf74ef56de6380e3d498576ada37dfb10",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "b4919e973c406831cabd1d3c9bc47f459baa5c6238f3d524ae7fc41b043d6a86",
+   "trim": [
+    0,
+    0,
+    403,
+    429
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "f105ef66f3d17777330354a6725ea26ca8675a327cdd45d8b50d380079b6ebf4",
+   "trim": [
+    0,
+    0,
+    306,
+    334
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "78f16c32b4849336a30655400622a13914c43bd730b7c7e5803217e86790389c",
+   "trim": [
+    0,
+    0,
+    403,
+    413
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "a21936ec9d79536dd6e6f6b6e8d6dd16ed7852f02a5e6b969d48402409163eee",
+   "trim": [
+    0,
+    0,
+    306,
+    391
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "variation:world-arcade-f5b7f5eb-plain:1",
+ "version": "variation-world-arcade-f5b7f5eb-plain-1-4views-v2",
+ "files": {
+  "NE": "2f47485c5f554bf39c8f30904cd777a91ebfb50a4bf77693effbe009e2b0d54c",
+  "SE": "c3e80abb0d442f65ebd34d8f452cc5bab17341571a824ee2a1af12709ae7dbce",
+  "SW": "5cc1fb20c66853e9537e81e8909bbc3fe0d1bfeda9756e9875ab416ebd77caf6",
+  "NW": "70e3a1b6fbd0ca1333bcd100b55df973a9cdaee7953ddd8716db95b99524338b"
+ }
+}

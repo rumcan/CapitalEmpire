@@ -1,0 +1,10 @@
+{
+ "id": "golf:clubhouse-shanty",
+ "version": "golf-clubhouse-shanty-4views-v3",
+ "files": {
+  "NE": "fbd77aaed5ea2a0c50c05f21161c17bf2e3e2c63b545e4f3e2f963c3497abfcc",
+  "SE": "ada37ea1a6baf3c88e052da94160e8b7b48af5af3d77d7a093c9ec4f952e43f0",
+  "SW": "bf15a229ecd2426db8d895a911881ce9d36899861ead7c7938651c18b4c1c8fc",
+  "NW": "4ce772b865eefb814feb4e7723ecc2d659ce91ceee75eabce2a67354ee2cfb6a"
+ }
+}

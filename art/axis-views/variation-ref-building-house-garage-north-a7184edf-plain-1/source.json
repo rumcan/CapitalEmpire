@@ -1,0 +1,55 @@
+{
+ "id": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+ "slug": "variation-ref-building-house-garage-north-a7184edf-plain-1",
+ "category": "buildings",
+ "version": "variation-ref-building-house-garage-north-a7184edf-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "c3f6bfeedc1be19f8e5ca74795ad9e202823e629d14321a683e0a6f241be60e6",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "54c740903fa872186578b826a7795ecf87d66b478cabb0258855af0101f542b9",
+   "trim": [
+    0,
+    0,
+    280,
+    303
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "9065af675a22d34a49f92c15cb18639a22119619a999511a01308fe04df288b9",
+   "trim": [
+    0,
+    0,
+    341,
+    272
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "162a782313b448d9576c21c2909b8e8f42960681d5563300e3a96eb50bcaa788",
+   "trim": [
+    0,
+    0,
+    278,
+    330
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "79eb46baa83565773cae6002f229cd4f98c70bdd5dc49daa613cb6683f093fee",
+   "trim": [
+    0,
+    0,
+    342,
+    319
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "id": "variation:gen-back-screened-porch-8c31c391-plain:1",
+ "slug": "variation-gen-back-screened-porch-8c31c391-plain-1",
+ "category": "buildings",
+ "version": "variation-gen-back-screened-porch-8c31c391-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "1049d52e34ed59fa71bb8aadf083ec7b2c3fa45d841e0f41d5f62a3aef094c51",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "48ae29678e86319a2691ed844d13c09b619f7910c90fc5bc084341fc26dd2e51",
+   "trim": [
+    0,
+    0,
+    271,
+    281
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "25ced556d3a9acead5f930717702d86497b6444015329d6a364244d7b1ee139d",
+   "trim": [
+    0,
+    0,
+    348,
+    341
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "30e203bdd641fb271412990c841505c0b02704b4372bb37f3a59a04debb07c47",
+   "trim": [
+    0,
+    0,
+    271,
+    262
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "e53a1a61a1a12489e4ac5bb442436abbdccee8a410b4b35444dc5d5e6f04f0bf",
+   "trim": [
+    0,
+    0,
+    346,
+    371
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

@@ -32,6 +32,9 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
 .pop .gr{display:flex;align-items:center;gap:4px;margin:2px 0}.pop .gr .d{width:30px;color:var(--gold);font-weight:700;font-size:12px}.pop .gr img{height:48px;cursor:pointer;border-radius:3px;background:#2b3120;border:2px solid transparent}.pop .gr img:hover{border-color:var(--sel)}
 .drop{border:2px dashed var(--line);border-radius:6px;padding:14px;text-align:center;color:var(--dim);margin-top:6px}.drop.over{border-color:var(--gold);color:var(--ink)}.msg{color:var(--dim);font-size:12px;min-height:14px;margin-top:6px}
 #needed{padding:6px 16px 0;align-items:center}#needed b{font-weight:600;margin-right:4px}.fr img{display:block;height:96px}.fr span{position:absolute;right:2px;bottom:0;font-size:10px;color:var(--dim)}.anim{margin-left:16px;border-left:1px solid var(--line);padding-left:12px}
+.views img{border:2px solid transparent;box-sizing:border-box;cursor:pointer}.views img.sel{outline:2px solid var(--sel);outline-offset:1px}.views img.f-more-angles{border-color:var(--gold)}.views img.f-angles-wrong{border-color:#e07a2a}.views img.f-redo-style{border-color:var(--red)}
+.stage img.f-more-angles{outline:3px solid var(--gold);outline-offset:-3px}.stage img.f-angles-wrong{outline:3px solid #e07a2a;outline-offset:-3px}.stage img.f-redo-style{outline:3px solid var(--red);outline-offset:-3px}
+.flags{display:flex;flex-wrap:wrap;gap:4px;padding:0 8px 6px;justify-content:center}.flags .chip{font-size:11px;font-weight:600}
 </style></head><body>
 <header><h1>Sprite studio</h1>
 <button class="tab on" data-v="lib">Library</button><button class="tab" data-v="lots" title="The lot lab: one road and one lot composed as the game composes it, at any type, size and road angle: edit it, paint its ground, save it and approve it for the game">Lots</button><button class="tab" data-v="people">People</button><button class="tab" data-v="holes">Holes</button><button class="tab" data-v="painted" title="Which hand-painted family each surface of the game wears">Painted</button><button class="tab" data-v="ground" title="The old photo mixes: the map grass and texture presets as photos (the game shows them only with ?grass=photo on the dev server)">Photo mixes (old)</button><a id="labopen" class="lotsonly" target="_blank" title="the lot lab in a tab of its own (the whole window)" style="color:var(--gold);font-size:12px;margin-left:4px">open the lot lab in its own tab</a>
@@ -68,8 +71,11 @@ async function loadLab(){const n=++labSeq;if($('#labframe'))return;const c=await
 function unloadLab(){labSeq++;const f=$('#labframe');if(!f)return;f.src='about:blank';f.remove();}
 
 // ---------------- library
-let all=[],removed={},walkers=[],me=null,cat='',q='',K=0.35,pointer=null;   // K: display px per native game px, the same for every sprite and the man
-async function loadLib(){const r=await (await fetch('/api/sprites')).json();all=r.sprites;removed=r.removed;walkers=r.walkers;
+// the review flags (2026-11-02): the flag kinds, their colours (the buttons, the picture's edge), and the cards with a flagged picture
+const FLAGS=[['more-angles','Needs more angles','var(--gold)'],['angles-wrong','Angles wrong: review','#e07a2a'],['redo-style','Redo from scratch: style wrong','var(--red)']];
+const flagged=s=>[s.id,...(s.views??[]).map(v=>v.id)].some(id=>flags[id]);
+let all=[],removed={},flags={},viewScales={},onlyFlagged=false,walkers=[],me=null,cat='',q='',K=0.35,pointer=null,sels=new Map();   // K: display px per native game px, the same for every sprite and the man; sels: card id -> the view clicked
+async function loadLib(){const r=await (await fetch('/api/sprites')).json();all=r.sprites;removed=r.removed;flags=r.flags||{};viewScales=r.viewScales||{};walkers=r.walkers;
  const w=$('#who'),previous=me?.id;w.innerHTML='';for(const p of walkers)w.append(el('option',{value:p.id,textContent:p.name}));me=walkers.find(p=>p.id===previous)||walkers.find(p=>/(^|[:_])man$/.test(p.id))||walkers.find(p=>!/kid/.test(p.id))||walkers[0]||null;if(me)w.value=me.id;man();cats();draw();}
 /** the man: his trimmed picture at K, his feet (the anchor) on the pointer */
 function man(){const m=$('#man');$('#v-lib').classList.toggle('person-cursor',!!me);if(!me){m.style.display='none';return;}m.src='/thumb/'+encodeURIComponent(me.id);const q=me.quad;m.style.width=(q[2]-q[0])*K+'px';m.style.height=(q[3]-q[1])*K+'px';placeMan();}
@@ -81,7 +87,9 @@ window.addEventListener('blur',()=>{pointer=null;placeMan();});
 document.addEventListener('scroll',placeMan,true);
 $('#zoom').oninput=e=>{K=+e.target.value;man();draw();};
 $('#who').onchange=e=>{me=walkers.find(p=>p.id===e.target.value)||null;man();};
-function cats(){const c=[...new Set(all.filter(s=>!removed[s.id]).map(s=>s.cat))].sort(),box=$('#cats');box.innerHTML='';for(const k of ['',...c]){const b=el('span',{className:'chip'+(k===cat?' on':''),textContent:k||'All'});b.onclick=()=>{cat=k;cats();draw();};box.append(b);}}
+function cats(){const c=[...new Set(all.filter(s=>!removed[s.id]).map(s=>s.cat))].sort(),box=$('#cats');box.innerHTML='';for(const k of ['',...c]){const b=el('span',{className:'chip'+(k===cat?' on':''),textContent:k||'All'});b.onclick=()=>{cat=k;cats();draw();};box.append(b);}
+ // the Flagged chip (2026-11-02): only the cards with a picture marked for review (their main picture or a view)
+ const fl=el('span',{className:'chip'+(onlyFlagged?' on':''),textContent:'Flagged',title:'Only the cards with a picture marked for review'});fl.onclick=()=>{onlyFlagged=!onlyFlagged;cats();draw();};box.append(fl);}
 /** the picture the game draws for a sprite (an old building's new-art stand-in) and its drawn scale: its scale times the stand-in's fill, never past
  *  its pixels (the game draws it at its cap there: newart.ts lookOf) */
 // a sprite drawn as itself past its sharp size is drawn at its pixels' limit (newart.ts lookOf: sharp / PIXEL_SLACK, src/game/sizes.ts), so its
@@ -94,11 +102,14 @@ const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.d
 // browser never decodes more pixels than the card shows. The picture is loaded only while its card is near the view (near, below): data-src holds the URL
 const thumbStep=px=>!(px>0)?128:([128,256,384,512].find(s=>s>=px)??512);
 const pic=(id,px,a)=>{const i=el('img',a);i.dataset.src='/thumb/'+encodeURIComponent(id)+'?s='+thumbStep(px*(devicePixelRatio||1));return i;};
-function stage(s){
-  // the trimmed picture at the size the game draws it: (quad) x drawn scale x K
-  const d=drawnOf(s),q=d.quad, w=(q[2]-q[0])*d.k*K, h=(q[3]-q[1])*d.k*K;
-  // a lot decal (a leaf drift, a stain) is drawn over grass, so its edges show as they do in the yard
-  return el('div',{className:'stage'+(s.kind==='decal'?' grass':'')},pic(d.id,Math.max(w,h),{loading:'lazy',style:`width:${w}px;height:${h}px`}));
+function stage(s,v){
+  // the trimmed picture at the size the game draws it: (quad) x drawn scale x K. A selected view (v) is drawn at the size the game draws that view: the
+  // card's size (ownK: the building's, or the model's) times the view's own size (view-scales.json), at the closest zoom as the main picture is (2026-11-02)
+  const d=v?{id:v.id,quad:v.quad??s.quad,k:ownK(s)*(s.carScale||1)*(viewScales[v.id]??1)}:drawnOf(s), q=d.quad, w=(q[2]-q[0])*d.k*K, h=(q[3]-q[1])*d.k*K;
+  // a lot decal (a leaf drift, a stain) is drawn over grass, so its edges show as they do in the yard; the shown picture's flag colours its edge
+  const f=flags[v?v.id:s.id]?.flag;
+  // (a view the server sent no shape for keeps its own proportions: its width only, never the main picture's box; the owner 2026-11-02: "the image is stretched")
+  return el('div',{className:'stage'+(s.kind==='decal'?' grass':'')},pic(d.id,Math.max(w,h),{loading:'lazy',className:f?'f-'+f:'',style:v&&!v.quad?`width:${w}px;height:auto`:`width:${w}px;height:${h}px`}));
 }
 /** past its own picture's pixels (the studio allows it, server.mjs /api/scale soft): a Rebuild packs a bigger picture from the source, a little softer. A stand-in's pixels are its stand-ins' (size-report.ts native) */
 const softOf=s=>s.native!=null&&s.scale>s.native*1.001;
@@ -120,26 +131,39 @@ const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))addBatch(
 // keeps its size with no src, so the layout and the scroll position hold, and the browser holds only the near cards' pictures decoded (a picture it
 // loads again is a 304 from the server, server.mjs /thumb). The root is the Library's own scroller, so the margin is measured in its screens
 const near=new IntersectionObserver(es=>{for(const e of es)for(const i of e.target.querySelectorAll('img[data-src]')){if(e.isIntersecting){if(!i.hasAttribute('src'))i.src=i.dataset.src;}else if(i.hasAttribute('src'))i.removeAttribute('src');}},{root:$('#v-lib'),rootMargin:'250% 0px'});
-function draw(){near.disconnect();$('#grid').innerHTML='';shown=all.filter(s=>!removed[s.id]&&(!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));shownAt=0;addBatch();}
+function draw(){near.disconnect();$('#grid').innerHTML='';shown=all.filter(s=>!removed[s.id]&&(!cat||s.cat===cat)&&(!onlyFlagged||flagged(s))&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));shownAt=0;addBatch();}
 function addBatch(){const g=$('#grid'),end=Math.min(shown.length,shownAt+200);for(;shownAt<end;shownAt++){const c=card(shown[shownAt]);g.append(c);near.observe(c);}
  io.disconnect();if(shownAt<shown.length){g.append(more);io.observe(more);}else more.remove();
  $('#count').textContent=`${shown.length} shown`;}
-function card(s){
+// a card: redo() rebuilds it in place, so a flag, a view's size or a view click keeps the list where it is
+function card(s){let c;const redo=()=>{const n=card(s);c.replaceWith(n);near.unobserve(c);near.observe(n);};c=build(s,redo);return c;}
+// a card's last message (the owner, 2026-11-02: "it has no way to tell you if clicking the button did anything"): what was saved, or why it was not
+const msgs=new Map();
+const tryPost=async(u,b)=>{const r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b||{})});if(!r.ok)throw Error(r.status===404?'the studio server is older than this page: it needs a restart':'the server said '+r.status);return r.json();};
+function build(s,redo){
+  // the picture the card shows: its main picture, or the view clicked (sels: the card's id -> the clicked view's id; the main picture's own thumb goes back)
+  const sel=sels.get(s.id), selV=sel&&sel!==s.id?s.views?.find(v=>v.id===sel)??null:null, pid=selV?selV.id:s.id;
   const rm=el('button',{className:'btn red',textContent:'Remove from game'});
   rm.onclick=async()=>{await post('/api/remove',{id:s.id});await loadLib();};
-  const sc=el('span',{className:'scale',textContent:'× '+s.scale.toFixed(2)+(Math.abs(s.scale-s.base)>1e-3?' *':'')});
+  const sc=el('span',{className:'scale',textContent:selV?'this view × '+(viewScales[selV.id]??1):'× '+s.scale.toFixed(2)+(Math.abs(s.scale-s.base)>1e-3?' *':'')});
   // the card's size goes to its copies too (each one's own id, so each scales from its own size); the copies are not cards, so only the card's scale shows
   const size=f=>async()=>{const rs=[];for(const id of [s.id,...(s.dupes??[])])rs.push(await post('/api/scale',f?{id,factor:f}:{id,reset:true}));for(const r of rs)for(const x of all)if((x.sizeId??x.id)===r.id)x.scale=r.scale;draw();};
+  // (2026-11-02, the owner: "i must be able to resize each image individually ... without doing the ones that are already correct"): a selected view's own size only
+  const vsize=f=>async()=>{try{const r=await tryPost('/api/viewscale',f?{id:selV.id,factor:f}:{id:selV.id,reset:true});if(r.factor===1)delete viewScales[r.id];else viewScales[r.id]=r.factor;msgs.set(s.id,{ok:true,t:`Saved: ${selV.dir} is now ×${r.factor} of the building size (the game shows it after a reload)`});}catch(e){msgs.set(s.id,{ok:false,t:'Not saved: '+e.message});}redo();};
   // the baked house lots (cat Lots) and the walkers keep their size; a decal has no report line (its size is packed into the decal strip)
   const fixed=s.cat==='Lots'||s.kind==='walker';
   // a four-view building: its four views in a row under the picture (the same /thumb route; sizing it sizes all four); a car (s.model): every picture
-  // of the model (its facings, their views, its eight headings), all sized together (T143)
-  const views=s.views?el('div',{className:'views'},...s.views.map(v=>pic(v.id,52,{title:`${v.dir} · ${v.id}`,loading:'lazy'}))):null;
-  return el('div',{className:'card'},stage(s),views,el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.model?`${s.model} · ${s.views.length} pictures, one size`:s.id}),s.dupes?.length?el('div',{className:'cat',textContent:`also: ${s.dupes.length} ${s.dupes.length===1?'copy':'copies'}`,title:s.dupes.join(', ')}):null),
+  // of the model (its facings, their views, its eight headings), all sized together (T143). A click selects a view: the stage shows it at the game size (2026-11-02)
+  const views=s.views?el('div',{className:'views'},...s.views.map(v=>{const im=pic(v.id,52,{title:`${v.dir} · ${v.id}`,loading:'lazy',className:(v.id===pid?'sel ':'')+(flags[v.id]?'f-'+flags[v.id].flag:'')});im.onclick=()=>{if(v.id===s.id||sel===v.id)sels.delete(s.id);else sels.set(s.id,v.id);redo();};return im;})):null;
+  // the review flags of the shown picture (2026-11-02: "a button i can click in the library to mark if an image needs more angles or a review"): a click sets it, the active one clears it
+  const flagRow=el('div',{className:'flags'},...FLAGS.map(([k,label,c])=>el('button',{className:'chip'+(flags[pid]?.flag===k?' on':''),textContent:(flags[pid]?.flag===k?'✓ ':'')+label,title:label+' (click again to clear)',style:flags[pid]?.flag===k?`background:${c};color:#11130b;border-color:${c}`:`color:${c}`,onclick:async()=>{const clear=flags[pid]?.flag===k;try{const r=await tryPost('/api/flag',{id:pid,flag:clear?null:k});flags=r.flags||flags;msgs.set(s.id,{ok:true,t:clear?`Cleared the mark on ${selV?selV.dir:'the main picture'}`:`Saved: ${selV?selV.dir:'the main picture'} marked "${label}"`});}catch(e){msgs.set(s.id,{ok:false,t:'Not saved: '+e.message});}redo();}})));
+  const m=msgs.get(s.id),msgLine=m?el('div',{className:'size'+(m.ok?'':' warn'),style:'text-align:center;padding:0 8px 6px',textContent:m.t}):null;
+  return el('div',{className:'card'},stage(s,selV),views,flagRow,msgLine,el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.model?`${s.model} · ${s.views.length} pictures, one size`:s.id}),s.dupes?.length?el('div',{className:'cat',textContent:`also: ${s.dupes.length} ${s.dupes.length===1?'copy':'copies'}`,title:s.dupes.join(', ')}):null),
    fixed||s.kind==='decal'?null:sizeLine(s),
-   fixed||s.kind==='decal'||!softOf(s)?null:el('div',{className:'size warn',textContent:'past its pixels: Rebuild upscales it (a little softer until higher-res art)'}),
-   fixed?null:el('div',{className:'row'},el('button',{className:'btn',textContent:'Smaller',onclick:size(1/1.08)}),sc,el('button',{className:'btn',textContent:'Bigger',onclick:size(1.08)})),
-   !fixed&&Math.abs(s.scale-s.base)>1e-3?el('div',{className:'row'},el('button',{className:'btn',textContent:'Reset size (×'+s.base.toFixed(2)+')',onclick:size(0)})):null,
+   fixed||s.kind==='decal'||!softOf(s)||selV?null:el('div',{className:'size warn',textContent:'past its pixels: Rebuild upscales it (a little softer until higher-res art)'}),
+   fixed?null:el('div',{className:'row'},el('button',{className:'btn',textContent:'Smaller',onclick:selV?vsize(1/1.08):size(1/1.08)}),sc,el('button',{className:'btn',textContent:'Bigger',onclick:selV?vsize(1.08):size(1.08)})),
+   !fixed&&!selV&&Math.abs(s.scale-s.base)>1e-3?el('div',{className:'row'},el('button',{className:'btn',textContent:'Reset size (×'+s.base.toFixed(2)+')',onclick:size(0)})):null,
+   !fixed&&selV&&(viewScales[selV.id]??1)!==1?el('div',{className:'row'},el('button',{className:'btn',textContent:'Reset this view',onclick:vsize(0)})):null,
    el('div',{className:'row'},rm));}
 $('#q').oninput=e=>{q=e.target.value.toLowerCase();draw();};
 
@@ -196,7 +220,7 @@ window.studioAsk=(text,yes='Yes',no='Cancel')=>new Promise(res=>{document.getEle
  box.append(p,row);document.body.append(box);row.lastChild.focus();});
 $('#rb').onclick=async()=>{const u=window.studioUnsaved?.();if(u&&!await studioAsk(`The Ground tab has unsaved changes to ${u}. Rebuild only puts what is saved into the game: Cancel, then Save first, or rebuild without them.`,'Rebuild anyway'))return;await post('/api/rebuild');poll();};
 async function poll(){const j=await (await fetch('/api/status')).json(),s=$('#status'),b=$('#rb');if(!j){s.textContent='';b.disabled=false;return;}
- b.disabled=!j.done;s.textContent=j.done?(j.code?'Rebuild failed: '+j.log.trim().split('\n').pop():'Rebuilt: reload the game'):`Rebuilding (${Math.round((Date.now()-j.started)/60000)} min): ${j.step.split('/').pop()}`;if(!j.done)setTimeout(poll,3000);}
+ b.disabled=!j.done;s.textContent=j.done?(j.code?'Rebuild failed: '+j.log.trim().split('\n').pop():'Rebuilt: reload the game'):`Rebuilding, running for ${Math.round((j.elapsed??(Date.now()-j.started))/60000)} min: ${j.step.split('/').pop()}`;if(!j.done)setTimeout(poll,3000);}
 loadLib();poll();
 </script>
 <script type="module" src="/holes.js"></script><script type="module" src="/ground.js"></script><script type="module" src="/painted.js"></script></body></html>

@@ -1,0 +1,55 @@
+{
+ "id": "variation:expansion-garage-rear-91bcbe45:1",
+ "slug": "variation-expansion-garage-rear-91bcbe45-1",
+ "category": "buildings",
+ "version": "variation-expansion-garage-rear-91bcbe45-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "d3aa26ab8178ccbac6d5a45b25905f6f3c6929405ad0a6ab859cdf8b138d33d6",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "8ab7d9ae78b9ae03ae7b04ebb56315b85af15b4f434df62ab3fe7269f913e8ab",
+   "trim": [
+    0,
+    0,
+    343,
+    362
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "0401b4deec24426eaafa5aaac1a51a822654c4226f11c09ac31158baa8151ccc",
+   "trim": [
+    0,
+    0,
+    356,
+    363
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "4bd7261f8934f60f68753e679b4da441188fe590fd4631ee8d3d34427c08d1fd",
+   "trim": [
+    0,
+    0,
+    343,
+    352
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "e268c32367061b2b9d5acd9902abe3939ce9f292efecae33a8ada4047f17dd3e",
+   "trim": [
+    0,
+    0,
+    356,
+    363
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

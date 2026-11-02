@@ -1,0 +1,10 @@
+{
+ "id": "variation:world-house_3-north-2638a034-plain:1",
+ "version": "variation-world-house_3-north-2638a034-plain-1-4views-v2",
+ "files": {
+  "NE": "8a8a21d837cfcd834e3ae46132c502d988b0739ff011ff129e9b0c08f8cc22e8",
+  "SE": "50f4f4cce93d30b6da00d500577e8d3cd568f19d9251d50f9b195c8d76f62591",
+  "SW": "108f93ee84288db19ff72145fc7fe170ebbaa62fe203070b092d0a26ad60042c",
+  "NW": "4feea52a9237e2c688724ccf740e6fec0d76a57987390a74ecf1935c7af12077"
+ }
+}

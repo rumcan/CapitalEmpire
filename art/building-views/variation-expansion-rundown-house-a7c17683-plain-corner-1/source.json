@@ -1,0 +1,10 @@
+{
+ "id": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+ "version": "variation-expansion-rundown-house-a7c17683-plain-corner-1-4views-v6",
+ "files": {
+  "NE": "964e200a51a2f2d990136aad445cc2ca75b40a561f7da71453d8e963ebd729b9",
+  "SE": "317b1d90fb615778a062dbb1d984692227e7c2c5f18d2434e5fb7716d85d5f69",
+  "SW": "524d032e5d76453177a34b431e7fd6476233f9624aea9718494e6fbdcfaf9a09",
+  "NW": "5e424160a2d5de3e79abf3684895f501552f8685903adc4312f6939219dc7e2d"
+ }
+}

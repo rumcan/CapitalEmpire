@@ -1,0 +1,55 @@
+{
+ "id": "variation:world-house_3-north-2638a034-plain:1",
+ "slug": "variation-world-house_3-north-2638a034-plain-1",
+ "category": "buildings",
+ "version": "variation-world-house_3-north-2638a034-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "2ac3118e3cedb870b8c7e75773602a5ac001bc2d2c679a41eb1805b4b5ff61a2",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "f6ac10675887f0c55c5655961daf8f1c8e39153f19367889edd507c1477ac39c",
+   "trim": [
+    0,
+    0,
+    341,
+    366
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "f1feba25fa8f8e07cdd14233f52753bd586ae8a1a5503d80e73f7c453b8424be",
+   "trim": [
+    0,
+    0,
+    297,
+    335
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "fd63095c77445d8cefe16f6174cf09956322279d68e39b5ee6612a1c3a1e1475",
+   "trim": [
+    0,
+    0,
+    340,
+    335
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "0df57647d334dcab13ef6bc8558dcf1eabfdf47aceb2a323dfd83a2a5a606021",
+   "trim": [
+    0,
+    0,
+    301,
+    278
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

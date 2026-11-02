@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+ "version": "variation-gen-house-l-ranch-18552ce5-plain-corner-1-4views-v4",
+ "files": {
+  "NE": "5e128d03cf29405bcd8168537909bf6b766133e7a3df04be99da3e8707234b70",
+  "SE": "d35a520d901d62cee2e473448efc5425a9577634d0d74961c8eb1262c6e5b85a",
+  "SW": "d7605570046fe57a9bfff9d4036cf340dc08f909405d1b9bfcd9772e55cff91d",
+  "NW": "517292f8298cbb383cd62e7428216e3bc35575fe1a8a13d0b83d79f5a1bc1e31"
+ }
+}

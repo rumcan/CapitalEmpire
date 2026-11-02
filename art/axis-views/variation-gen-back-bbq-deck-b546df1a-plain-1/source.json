@@ -1,0 +1,55 @@
+{
+ "id": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+ "slug": "variation-gen-back-bbq-deck-b546df1a-plain-1",
+ "category": "buildings",
+ "version": "variation-gen-back-bbq-deck-b546df1a-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "e2beafcbaa3a5e0ac37f2439402cf3cf0e075ba599b692134791d64db38e4a83",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "bd315c54912ac74775d0565fd5f1b0f65273fff4a778fc259e8be9413dbaebe4",
+   "trim": [
+    0,
+    0,
+    318,
+    383
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "a2bd40210ceedd658694263d721cbafcfe7921f5936b6e7ed26b5e066bdcc62f",
+   "trim": [
+    0,
+    0,
+    362,
+    397
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "a06260450dc96b46142b709283a9c7d42808f21c47003580b0e2925d0fa6935c",
+   "trim": [
+    0,
+    0,
+    318,
+    308
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "942d83fdf708c92206551634254d00018c3606fbe8e167fc92f3f178a41bda02",
+   "trim": [
+    0,
+    0,
+    360,
+    389
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

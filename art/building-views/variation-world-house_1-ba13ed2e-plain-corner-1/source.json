@@ -1,0 +1,10 @@
+{
+ "id": "variation:world-house_1-ba13ed2e-plain-corner:1",
+ "version": "variation-world-house_1-ba13ed2e-plain-corner-1-4views-v2",
+ "files": {
+  "NE": "cc1d09488968388c1e2f3c0bd86a0d9f170581e76958e7d2c5501f3f011f6e02",
+  "SE": "56cff622e33f8476cc4ec99836876f3e60330e2d652e7f5753429380eb37fb37",
+  "SW": "40a9d856c91068cfea5dfab0aff8dc3b79cef26f3b0cf047beb49f16e0aa30c1",
+  "NW": "7c82e7cf96f2bd530dac91110a17ad5e346afc8526ad9fb6c6c3618126680993"
+ }
+}

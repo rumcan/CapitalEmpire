@@ -1,0 +1,10 @@
+{
+ "id": "variation:world-snack_bar-04875b6f-plain:1",
+ "version": "variation-world-snack_bar-04875b6f-plain-1-4views-v2",
+ "files": {
+  "NE": "82e9da2a175e4e82a1d2fe0c26c6b12e7bfe11bae5afbe8601a87078e4bff3a2",
+  "SE": "8737590d81f13ed560fd2048b7436da0b2a45971c2488818601d9b70ff3d5107",
+  "SW": "6c79472c5775d3c96b8b437b028bacaad443e3c2c1015f7db9f87ca44f2fdc5c",
+  "NW": "7ad556a64ac336655191a03f3b01208712078ee81d77436a2265b56d79e65b87"
+ }
+}

@@ -15,6 +15,22 @@
   "ax": 282,
   "ay": 304
  },
+ "business:golf-driving-range": {
+  "at": "2026-10-29T12:19:08.144Z",
+  "name": "golf driving range",
+  "cat": "Business artwork",
+  "kind": "business",
+  "w": 682,
+  "h": 545.37,
+  "quad": [
+   0,
+   0,
+   682,
+   545.37
+  ],
+  "ax": 422.16,
+  "ay": 369.03
+ },
  "business:golf-fairway-curved": {
   "at": "2026-10-21T16:49:32.137Z",
   "name": "golf fairway curved",
@@ -94,6 +110,22 @@
   ],
   "ax": 290.5,
   "ay": 197.75
+ },
+ "business:stadium": {
+  "at": "2026-10-29T12:16:20.884Z",
+  "name": "stadium",
+  "cat": "Business artwork",
+  "kind": "business",
+  "w": 1533,
+  "h": 1178.43,
+  "quad": [
+   0,
+   0,
+   1533,
+   1178.43
+  ],
+  "ax": 840.8,
+  "ay": 782.14
  },
  "capital:grass-backyard-clover-flowers": {
   "at": "2026-10-21T17:35:05.862Z",
@@ -207,6 +239,22 @@
    511.67
   ]
  },
+ "capital:tree-maple-open": {
+  "at": "2026-11-02T15:43:02.214Z",
+  "name": "tree maple open",
+  "cat": "Capital vegetation",
+  "kind": "tree",
+  "w": 420,
+  "h": 409.0814558058925,
+  "quad": [
+   0,
+   1.67,
+   418.33,
+   408.33
+  ],
+  "ax": 235.84055459272096,
+  "ay": 406.1698440207972
+ },
  "decal:decal-01-lush-grass": {
   "at": "2026-10-21T16:42:27.920Z",
   "name": "decal:decal-01-lush-grass",
@@ -272,22 +320,6 @@
    448.11,
    344.32
   ]
- },
- "expansion:dormer-rear": {
-  "at": "2026-10-26T10:37:31.510Z",
-  "name": "Dormer home — rear and side",
-  "cat": "More houses",
-  "kind": "building",
-  "w": 519.8,
-  "h": 447.55,
-  "quad": [
-   0,
-   0,
-   519.8,
-   447.55
-  ],
-  "ax": 307.59,
-  "ay": 320.27
  },
  "expansion:garage-rear": {
   "at": "2026-10-20T16:12:32.838Z",
@@ -388,22 +420,6 @@
    511.75,
    440.63
   ]
- },
- "gen:back-bbq-deck": {
-  "at": "2026-10-26T06:26:08.081Z",
-  "name": "House back — deck & barbecue",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 596.85,
-  "h": 602.09,
-  "quad": [
-   0,
-   0,
-   596.85,
-   602.09
-  ],
-  "ax": 284.97,
-  "ay": 457.01
  },
  "gen:birdbath-gnome": {
   "at": "2026-10-21T16:47:19.469Z",
@@ -637,6 +653,22 @@
    845
   ]
  },
+ "lot:8x15-front-8": {
+  "at": "2026-10-29T12:15:21.688Z",
+  "name": "House lot 8x15 front 9 (neglected)",
+  "cat": "Lots",
+  "kind": "lot",
+  "w": 1583,
+  "h": 1167,
+  "quad": [
+   60,
+   3.33,
+   1565,
+   1121.67
+  ],
+  "ax": 845,
+  "ay": 797
+ },
  "lot:8x15-rear-1": {
   "at": "2026-10-21T16:29:51.496Z",
   "name": "House lot 8x15 rear 2 (party)",
@@ -650,6 +682,38 @@
    1453.33,
    996.67
   ]
+ },
+ "lot:8x15-rear-2": {
+  "at": "2026-10-29T12:15:39.655Z",
+  "name": "House lot 8x15 rear 3 (retired)",
+  "cat": "Lots",
+  "kind": "lot",
+  "w": 1601,
+  "h": 799,
+  "quad": [
+   110,
+   1.67,
+   1535,
+   785
+  ],
+  "ax": 791,
+  "ay": 429
+ },
+ "lot:8x15-rear-5": {
+  "at": "2026-10-29T12:15:49.439Z",
+  "name": "House lot 8x15 rear 6 (neglected)",
+  "cat": "Lots",
+  "kind": "lot",
+  "w": 1799,
+  "h": 860,
+  "quad": [
+   26.67,
+   5,
+   1748.33,
+   818.33
+  ],
+  "ax": 972,
+  "ay": 490
  },
  "ref:building-barn": {
   "at": "2026-10-20T16:23:19.486Z",
@@ -966,22 +1030,6 @@
   "kind": "decal",
   "w": 91,
   "h": 44
- },
- "town:firestation": {
-  "at": "2026-10-26T08:54:22.087Z",
-  "name": "Maple Falls Fire House",
-  "cat": "Shops & services",
-  "kind": "venue",
-  "w": 583.3,
-  "h": 500.2,
-  "quad": [
-   0,
-   0.97,
-   583.67,
-   499.87
-  ],
-  "ax": 290.4,
-  "ay": 307.4
  },
  "town:hardware": {
   "at": "2026-10-20T16:16:41.170Z",
@@ -1899,21 +1947,21 @@
    455
   ]
  },
- "variation:expansion-derelict-two-storey-012bed48:1": {
-  "at": "2026-10-26T10:36:00.741Z",
-  "name": "Dilapidated two-storey house — variation 1",
-  "cat": "Industry",
+ "variation:expansion-duplex-rear-730b425f-plain:1": {
+  "at": "2026-11-02T18:32:50.555Z",
+  "name": "Brick duplex — rear service doors — variation 1",
+  "cat": "More houses",
   "kind": "building",
-  "w": 576,
-  "h": 564.5436464088398,
+  "w": 512,
+  "h": 478.00829875518673,
   "quad": [
-   1.67,
-   1.67,
-   576.67,
-   565
+   1.18,
+   1.18,
+   510.29,
+   478.54
   ],
-  "ax": 288,
-  "ay": 420.5436464088398
+  "ax": 256,
+  "ay": 350.00829875518673
  },
  "variation:expansion-fence-privacy-x-dd8abdb9-ns:2": {
   "at": "2026-10-20T16:32:14.401Z",
@@ -2083,6 +2131,22 @@
    95
   ]
  },
+ "variation:expansion-junkyard-crane-3499f1e5:3": {
+  "at": "2026-11-02T18:31:02.561Z",
+  "name": "Rusty small scrapyard crane — rear view",
+  "cat": "Industry",
+  "kind": "decor",
+  "w": 105.68347826086955,
+  "h": 226.89391304347822,
+  "quad": [
+   1.47,
+   1.47,
+   105.82,
+   226.34
+  ],
+  "ax": 52.841739130434775,
+  "ay": 200.47304347826082
+ },
  "variation:expansion-mobile-home-c191731d-plain:1": {
   "at": "2026-10-20T16:35:23.850Z",
   "name": "Old aluminium mobile home — variation 1",
@@ -2167,38 +2231,6 @@
    458.33
   ]
  },
- "variation:expansion-rundown-house-a7c17683-plain-corner:1": {
-  "at": "2026-10-26T10:35:16.808Z",
-  "name": "Boarded-up timber house — variation 1",
-  "cat": "Industry",
-  "kind": "building",
-  "w": 512,
-  "h": 494.9699570815451,
-  "quad": [
-   1.38,
-   1.38,
-   512.08,
-   494.13
-  ],
-  "ax": 256,
-  "ay": 366.9699570815451
- },
- "variation:expansion-rundown-house-north-24ae3116-plain:1": {
-  "at": "2026-10-26T10:35:27.105Z",
-  "name": "Boarded-up timber house — variation 1",
-  "cat": "Industry",
-  "kind": "building",
-  "w": 511.99999999999994,
-  "h": 519.1775700934579,
-  "quad": [
-   1.61,
-   1.61,
-   511.93,
-   519.98
-  ],
-  "ax": 255.99999999999997,
-  "ay": 391.1775700934579
- },
  "variation:expansion-treehouse-2128dfc1-plain-corner:1": {
   "at": "2026-10-20T16:34:58.965Z",
   "name": "1980s backyard treehouse — variation 1",
@@ -2227,38 +2259,6 @@
    138.33
   ]
  },
- "variation:gen-back-bbq-deck-b546df1a-plain:1": {
-  "at": "2026-10-26T06:26:06.234Z",
-  "name": "House back — deck & barbecue — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 593.99,
-  "h": 599.21,
-  "quad": [
-   0,
-   0,
-   593.99,
-   599.21
-  ],
-  "ax": 221.67,
-  "ay": 449.99
- },
- "variation:gen-back-patio-pool-3b943d52-plain-corner:1": {
-  "at": "2026-10-26T06:26:10.337Z",
-  "name": "House back — patio & pool — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 577.9,
-  "h": 576.1902366863906,
-  "quad": [
-   1.94,
-   0.97,
-   578.35,
-   575.43
-  ],
-  "ax": 288.95,
-  "ay": 431.71523668639054
- },
  "variation:gen-back-patio-pool-3b943d52-plain:1": {
   "at": "2026-10-20T16:13:39.299Z",
   "name": "House back — patio & pool — variation 1",
@@ -2273,54 +2273,6 @@
    566.67
   ]
  },
- "variation:gen-back-screened-porch-8c31c391-plain:1": {
-  "at": "2026-10-26T06:26:14.239Z",
-  "name": "House back — screened porch — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 520.7,
-  "h": 527.6143003064352,
-  "quad": [
-   1.43,
-   1.43,
-   520.05,
-   527.2
-  ],
-  "ax": 260.35,
-  "ay": 397.4393003064352
- },
- "variation:gen-back-swingset-a10c81b7-plain-corner:1": {
-  "at": "2026-10-26T06:26:26.715Z",
-  "name": "House back — swing set & grill — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 594.43,
-  "h": 463.09,
-  "quad": [
-   0,
-   0,
-   594.43,
-   463.09
-  ],
-  "ax": 294.4,
-  "ay": 311.31
- },
- "variation:gen-back-swingset-a10c81b7-plain:1": {
-  "at": "2026-10-26T06:26:28.233Z",
-  "name": "House back — swing set & grill — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 595.9,
-  "h": 662.0383516483516,
-  "quad": [
-   1.35,
-   1.35,
-   593.89,
-   660.03
-  ],
-  "ax": 297.95,
-  "ay": 513.0633516483516
- },
  "variation:gen-house-duplex-c39d1a23-plain:1": {
   "at": "2026-10-20T16:11:43.610Z",
   "name": "Duplex — variation 1",
@@ -2334,38 +2286,6 @@
    600,
    570
   ]
- },
- "variation:gen-house-l-ranch-18552ce5-plain-corner:1": {
-  "at": "2026-10-26T08:52:58.261Z",
-  "name": "Ranch — L-shape, corner porch — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 610.8,
-  "h": 463.468359375,
-  "quad": [
-   1.42,
-   1.42,
-   610.72,
-   462.67
-  ],
-  "ax": 305.4,
-  "ay": 310.768359375
- },
- "variation:gen-house-l-ranch-north-2edc5f59-plain:1": {
-  "at": "2026-10-26T06:25:30.345Z",
-  "name": "Ranch — L-shape, corner porch — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 610.8,
-  "h": 596.1966735966736,
-  "quad": [
-   1.54,
-   1.54,
-   609.08,
-   595.24
-  ],
-  "ax": 305.4,
-  "ay": 443.4966735966736
  },
  "variation:gen-house-ranch-long-north-3fbd61ce-plain:1": {
   "at": "2026-10-21T09:47:34.950Z",
@@ -2480,54 +2400,6 @@
   "kind": "decal",
   "w": 29,
   "h": 20
- },
- "variation:ref-building-corner-store-a89c59c0-plain:1": {
-  "at": "2026-10-26T08:55:26.178Z",
-  "name": "Corner Store — variation 1",
-  "cat": "Shops & services",
-  "kind": "building",
-  "w": 405.5,
-  "h": 395.9212598425197,
-  "quad": [
-   1.05,
-   0,
-   405,
-   395.51
-  ],
-  "ax": 202.75,
-  "ay": 294.5462598425197
- },
- "variation:ref-building-farmhouse-north-408a9ca6-plain:1": {
-  "at": "2026-10-26T08:52:03.943Z",
-  "name": "Farmhouse — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 469.5,
-  "h": 408.9039634146341,
-  "quad": [
-   0.79,
-   0.79,
-   468.49,
-   408.14
-  ],
-  "ax": 234.75,
-  "ay": 291.5289634146341
- },
- "variation:ref-building-house-large-north-24d21776-plain:1": {
-  "at": "2026-10-26T08:52:56.197Z",
-  "name": "House Large — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 533.5,
-  "h": 480.48837209302326,
-  "quad": [
-   0.93,
-   1.85,
-   532.5,
-   479.71
-  ],
-  "ax": 266.75,
-  "ay": 347.11337209302326
  },
  "variation:ref-building-school-ce21bf67-plain:1": {
   "at": "2026-10-21T05:01:20.651Z",
@@ -2725,21 +2597,21 @@
    548.33
   ]
  },
- "variation:world-house_1-ba13ed2e-plain:1": {
-  "at": "2026-10-26T08:51:02.979Z",
-  "name": "House 1 — variation 1",
-  "cat": "Houses",
+ "variation:town-firestation-north-0ac85582-plain:1": {
+  "at": "2026-11-02T18:17:19.755Z",
+  "name": "Maple Falls Fire House — variation 1",
+  "cat": "Shops & services",
   "kind": "building",
-  "w": 494.79999999999995,
-  "h": 485.53215400624345,
+  "w": 580.81,
+  "h": 536.13,
   "quad": [
-   0.83,
-   0.83,
-   493.9,
-   484.75
+   0,
+   0,
+   580.81,
+   536.13
   ],
-  "ax": 247.39999999999998,
-  "ay": 361.83215400624346
+  "ax": 349.79,
+  "ay": 388.07
  },
  "variation:world-house_2-e2dddf71-plain:1": {
   "at": "2026-10-26T09:57:42.915Z",
@@ -2812,6 +2684,22 @@
    670,
    671.67
   ]
+ },
+ "variation:world-snack_bar-04875b6f-plain:1": {
+  "at": "2026-11-02T18:22:00.608Z",
+  "name": "Snack Bar — variation 1",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 413.1,
+  "h": 371.88,
+  "quad": [
+   0,
+   0,
+   413.1,
+   371.88
+  ],
+  "ax": 206.55,
+  "ay": 275
  },
  "variation:world-trashcan-76186b58-ns:2": {
   "at": "2026-10-20T16:28:59.485Z",
@@ -2911,21 +2799,21 @@
    30
   ]
  },
- "variation:world-video-bf85dfb9-plain:1": {
-  "at": "2026-10-26T10:18:19.739Z",
-  "name": "Video — variation 1",
+ "variation:world-video_rental-cc8c504f-plain:1": {
+  "at": "2026-11-02T18:22:07.335Z",
+  "name": "Video Rental — variation 1",
   "cat": "Landmarks",
   "kind": "building",
-  "w": 406,
-  "h": 391.4349775784753,
+  "w": 547.3,
+  "h": 385.7825902335456,
   "quad": [
-   1.01,
-   1.01,
-   405.44,
-   390.24
+   1.11,
+   1.11,
+   546.08,
+   384.36
   ],
-  "ax": 203,
-  "ay": 289.9349775784753
+  "ax": 273.65,
+  "ay": 248.9575902335456
  },
  "world:candy_stand": {
   "at": "2026-10-20T16:29:09.281Z",
@@ -3010,5 +2898,21 @@
    74.03,
    168.8
   ]
+ },
+ "world:watertower": {
+  "at": "2026-11-02T18:20:28.829Z",
+  "name": "Watertower",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 212.5,
+  "h": 355.5,
+  "quad": [
+   0,
+   0,
+   212.38,
+   355.39
+  ],
+  "ax": 105.5,
+  "ay": 307.8
  }
 }

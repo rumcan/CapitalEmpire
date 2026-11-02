@@ -1,0 +1,55 @@
+{
+ "id": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+ "slug": "variation-ref-building-farmhouse-north-408a9ca6-plain-1",
+ "category": "buildings",
+ "version": "variation-ref-building-farmhouse-north-408a9ca6-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "6be5ef101ed6107fcd2195546b22d78a824abf20d898b747f8e653ea37f4edd6",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "7a750e8dc24922f90c28c9f825cb6d363cee45bdc7400132c9964ae4d284ab19",
+   "trim": [
+    0,
+    0,
+    476,
+    457
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "393498fe93ece5868a1e7e52085db907f28946efd72a1cc3c488d8143734a038",
+   "trim": [
+    0,
+    0,
+    437,
+    378
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "fd77b8f3a9f2b6274303c44afa98d0160cfb1f89ea601ccf4d6ccabd46505b83",
+   "trim": [
+    0,
+    0,
+    480,
+    420
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "1174581669d2f704e5300d7a8342489a78cabf2111ed32188e37447f1c6815cc",
+   "trim": [
+    0,
+    0,
+    436,
+    398
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

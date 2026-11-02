@@ -1,0 +1,55 @@
+{
+ "id": "variation:ref-building-corner-store-a89c59c0-plain:1",
+ "slug": "variation-ref-building-corner-store-a89c59c0-plain-1",
+ "category": "buildings",
+ "version": "variation-ref-building-corner-store-a89c59c0-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "debde126eed7cc90ebcd26cbf3ebaf8fe331741432a890e15219bd27f80dacdf",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "e4162ba65effbe39bdf34be0faa1ebb6d339c073d5542e4593cac12a07d76a0b",
+   "trim": [
+    0,
+    0,
+    288,
+    353
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "ef97da1aa0009e337a4be39bae0687612c91d9cb1c7c3758f323981deddb40b3",
+   "trim": [
+    0,
+    0,
+    312,
+    376
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "6b6fc6a4b1a0027c1e8dd5a8761d4c1ae971050b3b873f67bcbebd5d8b53d1c0",
+   "trim": [
+    0,
+    0,
+    288,
+    349
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "2d26ed1cb9c92a510a837b2302d7dc8128bab03d735403796d0bf241ff2dc724",
+   "trim": [
+    0,
+    0,
+    310,
+    375
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-back-swingset-a10c81b7-plain:1",
+ "version": "variation-gen-back-swingset-a10c81b7-plain-1-4views-v5",
+ "files": {
+  "NE": "5488d6395bd5ec90b13443622a3abb7ed25d61725ca35264daee1fae169492d4",
+  "SE": "f381f452fd06d8bed26cf6e6539784ba7a0800f4e328b9c9b95d0993b735667d",
+  "SW": "a6871d8df86c2e4752e7ac49e9641c1bf3d789d1d8023a972df0e10be9fe5f1e",
+  "NW": "259248ce5fd40c030e2fec84235adb1f9adbde61d3b549ef4d0ca6caf4425953"
+ }
+}

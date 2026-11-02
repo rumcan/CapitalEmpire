@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+ "version": "variation-ref-building-house-garage-north-a7184edf-plain-1-4views-v2",
+ "files": {
+  "NE": "91fa2c3eb80eb297e47ade2d80d35def3e1a9ab9ae7797ee66667f5b0c6f0779",
+  "SE": "ffd7578c46889fe52a6eb1a3076557b29f723db86c15e3a7df6a9fee6aeba9ce",
+  "SW": "8163b5b52d1df12d73b6f2b35896814a1818d8b2266a88bdb0124ee7682a679f",
+  "NW": "27f2342818a1e0d198ee24e7fd8130625a0cf9c9df37837678653f77f1c8b03e"
+ }
+}

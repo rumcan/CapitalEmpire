@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+ "version": "variation-ref-building-farmhouse-north-408a9ca6-plain-1-4views-v3",
+ "files": {
+  "NE": "a6c4d433378374b742318f5c496611d31e77d442850923ea368b7a205bba22ca",
+  "SE": "b08c1e0b9d399eee427b70d95319f79ae7a17fe2e08a6a73d053d6537d2951e0",
+  "SW": "e403dc598255a4eb283b4ec90373d2455adba2e88c0de73b4fc1196185e6e37c",
+  "NW": "4786ed3ed9b8ea9d853b9de2f518ac54947c7e03a0b4efdd6d0120c500aff499"
+ }
+}

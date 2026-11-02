@@ -1,0 +1,10 @@
+{
+ "id": "variation:world-diner-c9878d46-plain:1",
+ "version": "variation-world-diner-c9878d46-plain-1-4views-v2",
+ "files": {
+  "NE": "b5f2061c26edc73e191315744cda5acd2b0ef1d904f6c1eb69f23502f2a30bb8",
+  "SE": "e300e9f44eb3d03e26fbff54a69d6c1abb88cc600ef9601d1222eb01c9c3f7bb",
+  "SW": "770283cdd2e1a6a64f9ba67218e30a3b4d56eaa30d19d3850521338ed9dc3512",
+  "NW": "8468cd746ada861764d7564037f2cf4b33be05d794a80298c0288d629e5b7f95"
+ }
+}

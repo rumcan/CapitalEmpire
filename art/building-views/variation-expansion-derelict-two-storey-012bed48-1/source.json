@@ -1,0 +1,10 @@
+{
+ "id": "variation:expansion-derelict-two-storey-012bed48:1",
+ "version": "variation-expansion-derelict-two-storey-012bed48-1-4views-v4",
+ "files": {
+  "NE": "0a2debd1269fe1db675d0594c39033f838b990072b5e3d47109c88f83956359d",
+  "SE": "5468cb1ad73d5ac5b8747fcba5f815e53798ba84b911dd1f2080dcae57e9ac77",
+  "SW": "dbcf41f7dca1aca2b6886f9eaa375f993c67cf8c71200eea65709f6c9c09164f",
+  "NW": "4b7da1e95213bfd4f2e766ac81afadf1e09ab9ef817c240ee5c82c45d53f1cea"
+ }
+}

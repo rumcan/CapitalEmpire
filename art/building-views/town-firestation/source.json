@@ -1,0 +1,10 @@
+{
+ "id": "town:firestation",
+ "version": "town-firestation-4views-v2",
+ "files": {
+  "NE": "a6c559cbbe8785fad0237a1d3e34a7d6cb4e7087c79c6c7883d746e8108ad77f",
+  "SE": "07924f6bd486f6ee9f39561cec35483d2f7d4f80624199b536535eaa16e8909a",
+  "SW": "726c843eac9ba714d85c57c65244df171fe48063d8e5da5984ae5df20d85c24a",
+  "NW": "274c602a7251eb3f98c288b595d601bedd61f8043e9af20e890e9bdcbf259ee0"
+ }
+}

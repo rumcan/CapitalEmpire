@@ -1,0 +1,10 @@
+{
+ "id": "variation:world-house_4-north-630f880a-plain:1",
+ "version": "variation-world-house_4-north-630f880a-plain-1-4views-v2",
+ "files": {
+  "NE": "e4f55b6e0e5a6d93ea88e502f0b9779b3a19e5e499f1ec3af81781b6f2febdcc",
+  "SE": "1b655097390de4ea673900dfb4744bb41aae6121f4d1396d3546e49c16d5c104",
+  "SW": "11e723ad33455a4d006cf2ff6df68748d36e1c230e32156f6abe8ac7ac10c5ac",
+  "NW": "597fceb6429c470c5f1a17c71cac7ddef364d4d44994d0aa88bafc794d4ff96f"
+ }
+}

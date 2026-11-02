@@ -1,0 +1,10 @@
+{
+ "id": "variation:static-garage_timber-v2-22fab891-plain:1",
+ "version": "variation-static-garage_timber-v2-22fab891-plain-1-4views-v2",
+ "files": {
+  "NE": "b5bf84d14c15cbdd15126c0331083d2243862cb74e8debf852546674b8b462b8",
+  "SE": "7a001f03b75e16b4e81678dfc6c16a99339a203d2957588053a224769a320e26",
+  "SW": "b14a12dda2dc93d8e9ce0a844446b3d4653bb3a6a74968b774e493bfde57c194",
+  "NW": "b1e2257111b7410630e9d7f235dc184f490fc98ea083abee8108971e3496cabd"
+ }
+}

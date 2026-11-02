@@ -1,0 +1,10 @@
+{
+ "id": "variation:expansion-dormer-rear-55d3cd77-plain:1",
+ "version": "variation-expansion-dormer-rear-55d3cd77-plain-1-4views-v5",
+ "files": {
+  "NE": "a54fdbd9089578baec4facb9f58438f04bee8770fda24ed0a8965f2c07860733",
+  "SE": "468c3a984fc71ceb5db3beef4c9f395330cf1e58d36bf57262ce76bb78723a89",
+  "SW": "96bec94de10af68c77a03a17c789849b39c13015da9425367855d3b25198622e",
+  "NW": "51377a9b23cda666c07812fea99e903c8456378d34367ff0710280d29f58a370"
+ }
+}

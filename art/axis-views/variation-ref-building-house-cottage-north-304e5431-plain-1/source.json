@@ -1,0 +1,55 @@
+{
+ "id": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+ "slug": "variation-ref-building-house-cottage-north-304e5431-plain-1",
+ "category": "buildings",
+ "version": "variation-ref-building-house-cottage-north-304e5431-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "8350c9c52495d4434a6035fcc034e1ac821b8160541b84330ec07f456c12e5ad",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "14263baba0fef69993680367904afc29ce462014687cfee90887171b128dbb46",
+   "trim": [
+    0,
+    0,
+    345,
+    345
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "4abe16d6801edaaf21c17edbed336145ba2e34feb4e8879525c2eb30f8f9c6e5",
+   "trim": [
+    0,
+    0,
+    331,
+    359
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "732034eb1251023abb03c4a879d96f5770247e9d7d3ef0ac5b0ddc27a2bd1b52",
+   "trim": [
+    0,
+    54,
+    346,
+    295
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "ca3f5ec739b5c9562f4a20aa1c3029f766852b3c9478f14baa5181b0abacfa29",
+   "trim": [
+    0,
+    0,
+    340,
+    356
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

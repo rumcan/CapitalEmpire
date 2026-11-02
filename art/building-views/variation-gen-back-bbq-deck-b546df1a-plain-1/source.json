@@ -1,10 +1,10 @@
 {
  "id": "variation:gen-back-bbq-deck-b546df1a-plain:1",
- "version": "variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1",
+ "version": "variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v2",
  "files": {
-  "NE": "a52a7021f8317f7445ca08e3c429843292b9e3f35267df5131180bc5370c6a71",
-  "SE": "43c0229feaaa14387bf36f0735c552d35e52fe5e6c10e06aba9699ca50a183fb",
-  "SW": "b589fcaba4845499a1336b73c5c7bc3ba7076d63eb97e3ee9021a6e4c96ae176",
-  "NW": "0483a865e0893fa7f27332e0de903e947d6757f42c4b128bb20851cf6bb9434a"
+  "NE": "458c207a5a3723ce59dd89a18d0d457eb8ef4f9859fb44778fd169ebd13c6342",
+  "SE": "7c7a45105d923e45c95ded39c4333f73930dc888adf654f2edc6abeb1ff0b7fd",
+  "SW": "15499160d240e76cc2b1b3bebb86fda7cef6bc374645761b94fcd3c43d48f198",
+  "NW": "b25593a35ebc5329bab682ca0602c0c18b3d72a25c57f8763963039709d1595c"
  }
 }

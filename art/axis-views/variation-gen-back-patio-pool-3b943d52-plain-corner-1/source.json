@@ -1,0 +1,55 @@
+{
+ "id": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+ "slug": "variation-gen-back-patio-pool-3b943d52-plain-corner-1",
+ "category": "buildings",
+ "version": "variation-gen-back-patio-pool-3b943d52-plain-corner-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "e1ebff170404cd6919aed8c1b4363d8181b3915f5c4d6e76021055cd4bc278b8",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "9d1ebd06b29b317a4b299d6e381eb2d8905243bc3fedf7b2df1753516caa159d",
+   "trim": [
+    0,
+    0,
+    592,
+    550
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "a82feb807cbb36f9a284fdae9946f10620e26c69dcde0ecf1e86b62647bfbf2e",
+   "trim": [
+    0,
+    0,
+    563,
+    549
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "6680d196839c16ee12ee704b75e71b62d0c86c99e4a0d3a1adff9c8ff59a28cb",
+   "trim": [
+    0,
+    0,
+    592,
+    487
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "38ae88778b7d8ce26c24539d29e900668debf0de922991ac1146534067e49bcc",
+   "trim": [
+    0,
+    0,
+    563,
+    527
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

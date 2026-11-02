@@ -1,0 +1,55 @@
+{
+ "id": "town:firestation",
+ "slug": "town-firestation",
+ "category": "buildings",
+ "version": "town-firestation-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "ad3b71701b18c0154d5a3bec91034d881d505036237188ae5a3eff200147c6a4",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "2398a2d229ea28a969d68055b5c763a979f76fd29fdd0107d8edbfe1e939d2ef",
+   "trim": [
+    0,
+    0,
+    641,
+    544
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "c8e63d3c4b783a964b3a8dad3646a3648972726d0f1060f3df1ccfe28cb53c05",
+   "trim": [
+    116,
+    0,
+    297,
+    404
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "7fa7419888d7cdc0f269248443329163c9539960ceae81fda28d84812a9164fc",
+   "trim": [
+    0,
+    0,
+    645,
+    522
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "caec24deb8ad9cca29768a8df3bac32569f76962c526f38259572bd9b189b1b2",
+   "trim": [
+    87,
+    0,
+    358,
+    387
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

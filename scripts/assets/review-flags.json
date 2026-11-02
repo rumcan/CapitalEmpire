@@ -1,0 +1,906 @@
+{
+ "east:town:laundromat": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:48:28.609Z"
+ },
+ "expansion:boarded-store-rear": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:31:25.792Z"
+ },
+ "expansion:duplex-rear": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:32:39.385Z"
+ },
+ "expansion:junkyard-crane": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:30:41.743Z"
+ },
+ "expansion:pop-up-caravan": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:30:06.486Z"
+ },
+ "expansion:rundown-house": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:31:28.944Z"
+ },
+ "gen:back-patio-pool": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:44:13.723Z"
+ },
+ "gen:back-screened-porch": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:45:48.198Z"
+ },
+ "gen:back-shed-garden": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:01.926Z"
+ },
+ "gen:house-duplex": {
+  "flag": "more-angles",
+  "at": "2026-11-02T16:56:15.670Z"
+ },
+ "ref:building-gas-canopy": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:16:36.040Z"
+ },
+ "static:garage_brick": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:02:38.254Z"
+ },
+ "static:garage_brick-v2": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:02:39.709Z"
+ },
+ "static:garage_timber": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:02:33.326Z"
+ },
+ "static:shop_brick_rear": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:16:37.424Z"
+ },
+ "static:shop_brick_rear-v2": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:16:39.776Z"
+ },
+ "static:shop_market_rear": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:16:41.744Z"
+ },
+ "town:barber": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:17:08.528Z"
+ },
+ "town:fish_tackle": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:16:30.032Z"
+ },
+ "town:postoffice": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:48:30.929Z"
+ },
+ "variation:expansion-abandoned-workshop-26852883:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:31:45.760Z"
+ },
+ "variation:expansion-camper-2399016c:1": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:29:47.142Z"
+ },
+ "variation:expansion-camper-2399016c:2": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:29:48.750Z"
+ },
+ "variation:expansion-camper-2399016c:3": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:29:44.070Z"
+ },
+ "variation:expansion-camper-2399016c:4": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:29:42.694Z"
+ },
+ "variation:expansion-junkyard-crane-3499f1e5:4": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:30:54.415Z"
+ },
+ "variation:expansion-pop-up-caravan-c457a2e2:1": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:30:15.894Z"
+ },
+ "variation:expansion-pop-up-caravan-c457a2e2:2": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:30:20.303Z"
+ },
+ "variation:expansion-pop-up-caravan-c457a2e2:3": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:30:18.006Z"
+ },
+ "variation:expansion-pop-up-caravan-c457a2e2:4": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:30:21.472Z"
+ },
+ "variation:expansion-rundown-house-a7c17683-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:31:39.680Z"
+ },
+ "variation:gen-back-shed-garden-ac94c81e-plain-corner:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:46:38.208Z"
+ },
+ "variation:gen-back-shed-garden-ac94c81e-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:33:58.511Z"
+ },
+ "variation:gen-house-duplex-c39d1a23-plain-corner:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:13.662Z"
+ },
+ "variation:gen-house-duplex-north-521714ac-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:32:42.327Z"
+ },
+ "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:42:39.811Z"
+ },
+ "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:32:54.231Z"
+ },
+ "variation:gen-house-l-ranch-18552ce5-plain-corner:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:24:48.719Z"
+ },
+ "variation:gen-house-l-ranch-18552ce5-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:23:45.717Z"
+ },
+ "variation:gen-house-l-ranch-north-2edc5f59-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:24:19.749Z"
+ },
+ "variation:gen-house-l-shape-north-79eba705-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:41:59.161Z"
+ },
+ "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:32:24.175Z"
+ },
+ "variation:gen-house-ranch-long-a4ddd58c-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:42:02.234Z"
+ },
+ "variation:gen-house-splitlevel-north-63bc759e-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:32:33.031Z"
+ },
+ "variation:industrial-bottling-plant-13e91e4e:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:31:53.864Z"
+ },
+ "variation:industrial-cold-storage-378b3489:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:32:00.224Z"
+ },
+ "variation:industrial-foundry-606f1084:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:32:12.984Z"
+ },
+ "variation:industrial-freight-depot-a030c919:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:32:11.385Z"
+ },
+ "variation:industrial-lumber-workshop-8a43a691:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:32:17.512Z"
+ },
+ "variation:industrial-printing-works-2be751ae:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:32:19.296Z"
+ },
+ "variation:industrial-rail-repair-shed-fbe2c8d9:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:32:22.337Z"
+ },
+ "variation:industrial-textile-mill-eedf9576:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:32:25.937Z"
+ },
+ "variation:ref-building-barn-74bee205-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:22:11.885Z"
+ },
+ "variation:ref-building-barn-v2-b96e34dc-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:22:52.063Z"
+ },
+ "variation:ref-building-corner-shop-2ffc6ab7-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:58.211Z"
+ },
+ "variation:ref-building-corner-store-a89c59c0-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:18:06.088Z"
+ },
+ "variation:ref-building-diner-1e19ec22-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:03.634Z"
+ },
+ "variation:ref-building-drive-in-screen-b0bccc2a-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:23:13.408Z"
+ },
+ "variation:ref-building-farmhouse-ef501a21-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:51.567Z"
+ },
+ "variation:ref-building-farmhouse-north-408a9ca6-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:13:37.234Z"
+ },
+ "variation:ref-building-garage-0f7895a1-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:16:19.221Z"
+ },
+ "variation:ref-building-gas-canopy-543306a0-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:18:38.171Z"
+ },
+ "variation:ref-building-gas-shop-3326e70f-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:09.675Z"
+ },
+ "variation:ref-building-grocery-79498713-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:19:22.794Z"
+ },
+ "variation:ref-building-house-cottage-fc52ce66-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:44.863Z"
+ },
+ "variation:ref-building-house-dormer-b4413f08-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:18:33.368Z"
+ },
+ "variation:ref-building-house-dormer-north-6952cea5-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:45.999Z"
+ },
+ "variation:ref-building-house-garage-a1d986d3-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:19:42.825Z"
+ },
+ "variation:ref-building-house-large-20cb9f9e-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:34.575Z"
+ },
+ "variation:ref-building-shop-blue-941779e4-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:20:22.771Z"
+ },
+ "variation:ref-building-snack-bar-4e0d11f7-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:23:27.951Z"
+ },
+ "variation:static-shop_brick_rear-04db4dfa-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:53.267Z"
+ },
+ "variation:static-shop_market_rear-f9272004-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:17:35.713Z"
+ },
+ "variation:town-grocery-46d5dc39-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:02.594Z"
+ },
+ "variation:town-hardware-bf36737f-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:16:59.968Z"
+ },
+ "variation:town-laundromat-43183f9e-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:22.643Z"
+ },
+ "variation:town-postoffice-1c7025b8-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:38.363Z"
+ },
+ "variation:world-car_0-cf8f927b:4": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:27:40.740Z"
+ },
+ "variation:world-church-44e76535-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:22:03.869Z"
+ },
+ "variation:world-house_0-51fa4b80-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:03:27.103Z"
+ },
+ "variation:world-house_0-north-1dde6f56-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:08:09.908Z"
+ },
+ "variation:world-house_2-north-332663ab-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:08:18.676Z"
+ },
+ "variation:world-house_4-north-630f880a-plain:1": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:10:08.326Z"
+ },
+ "variation:world-house_5-d6198cb0-plain:1": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:58.679Z"
+ },
+ "variation:world-house_5-north-bffd2c68-plain:1": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:11:58.208Z"
+ },
+ "variation:world-schoolbus-6df6411d:4": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:27:26.884Z"
+ },
+ "view:expansion:derelict-two-storey:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:31:26.768Z"
+ },
+ "view:expansion:derelict-two-storey:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:31:19.799Z"
+ },
+ "view:gen:back-patio-pool:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:43:50.803Z"
+ },
+ "view:gen:back-shed-garden:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:33:13.472Z"
+ },
+ "view:gen:back-swingset:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:44:41.989Z"
+ },
+ "view:gen:house-l-shape:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:02:05.565Z"
+ },
+ "view:gen:house-ranch-long:nw": {
+  "flag": "redo-style",
+  "at": "2026-11-02T16:56:41.614Z"
+ },
+ "view:gen:house-ranch-long:sw": {
+  "flag": "redo-style",
+  "at": "2026-11-02T16:56:38.558Z"
+ },
+ "view:gen:house-splitlevel:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:01:06.773Z"
+ },
+ "view:gen:house-splitlevel:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:01:23.261Z"
+ },
+ "view:variation:gen-back-shed-garden-ac94c81e-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:46:43.655Z"
+ },
+ "view:variation:gen-back-shed-garden-ac94c81e-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:34:09.818Z"
+ },
+ "view:variation:gen-back-shed-garden-ac94c81e-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:34:11.585Z"
+ },
+ "view:variation:gen-house-duplex-c39d1a23-plain-corner:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:43:40.515Z"
+ },
+ "view:variation:gen-house-duplex-c39d1a23-plain-corner:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:43:38.572Z"
+ },
+ "view:variation:gen-house-duplex-c39d1a23-plain-corner:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:43:44.035Z"
+ },
+ "view:variation:gen-house-duplex-north-521714ac-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:10.262Z"
+ },
+ "view:variation:gen-house-duplex-north-521714ac-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:32:44.871Z"
+ },
+ "view:variation:gen-house-duplex-north-521714ac-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:32:47.671Z"
+ },
+ "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:42:34.283Z"
+ },
+ "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:42:26.714Z"
+ },
+ "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:42:29.916Z"
+ },
+ "view:variation:gen-house-farmhouse-wrap-north-446969e5-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:06.446Z"
+ },
+ "view:variation:gen-house-farmhouse-wrap-north-446969e5-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:33:01.776Z"
+ },
+ "view:variation:gen-house-l-ranch-18552ce5-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:28.608Z"
+ },
+ "view:variation:gen-house-l-ranch-18552ce5-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:23:59.965Z"
+ },
+ "view:variation:gen-house-l-ranch-18552ce5-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:24:03.150Z"
+ },
+ "view:variation:gen-house-l-shape-north-79eba705-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:41:57.057Z"
+ },
+ "view:variation:gen-house-l-shape-north-79eba705-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:41:55.649Z"
+ },
+ "view:variation:gen-house-l-shape-north-79eba705-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:41:53.002Z"
+ },
+ "view:variation:gen-house-ranch-long-a4ddd58c-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:42:05.986Z"
+ },
+ "view:variation:gen-house-ranch-long-a4ddd58c-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:42:04.073Z"
+ },
+ "view:variation:gen-house-ranch-long-a4ddd58c-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:42:05.170Z"
+ },
+ "view:variation:gen-house-splitlevel-north-63bc759e-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:17.023Z"
+ },
+ "view:variation:gen-house-splitlevel-north-63bc759e-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:32:34.007Z"
+ },
+ "view:variation:gen-house-splitlevel-north-63bc759e-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:32:36.263Z"
+ },
+ "view:variation:ref-building-barn-74bee205-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:22:27.422Z"
+ },
+ "view:variation:ref-building-barn-74bee205-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:22:13.525Z"
+ },
+ "view:variation:ref-building-barn-74bee205-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:22:14.677Z"
+ },
+ "view:variation:ref-building-barn-v2-b96e34dc-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:22:50.551Z"
+ },
+ "view:variation:ref-building-barn-v2-b96e34dc-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:22:33.885Z"
+ },
+ "view:variation:ref-building-corner-shop-2ffc6ab7-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:17:47.656Z"
+ },
+ "view:variation:ref-building-corner-shop-2ffc6ab7-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:59.275Z"
+ },
+ "view:variation:ref-building-corner-shop-2ffc6ab7-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:00.139Z"
+ },
+ "view:variation:ref-building-diner-1e19ec22-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:06.899Z"
+ },
+ "view:variation:ref-building-diner-1e19ec22-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:04.587Z"
+ },
+ "view:variation:ref-building-diner-1e19ec22-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:06.083Z"
+ },
+ "view:variation:ref-building-drive-in-screen-b0bccc2a-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:23:20.287Z"
+ },
+ "view:variation:ref-building-drive-in-screen-b0bccc2a-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:23:15.775Z"
+ },
+ "view:variation:ref-building-drive-in-screen-b0bccc2a-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:23:17.935Z"
+ },
+ "view:variation:ref-building-farmhouse-ef501a21-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:16:10.692Z"
+ },
+ "view:variation:ref-building-farmhouse-ef501a21-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:16:12.844Z"
+ },
+ "view:variation:ref-building-farmhouse-ef501a21-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:16:11.933Z"
+ },
+ "view:variation:ref-building-garage-0f7895a1-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:48.879Z"
+ },
+ "view:variation:ref-building-garage-0f7895a1-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:16:20.197Z"
+ },
+ "view:variation:ref-building-garage-0f7895a1-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:16:20.973Z"
+ },
+ "view:variation:ref-building-gas-canopy-543306a0-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:19:15.258Z"
+ },
+ "view:variation:ref-building-gas-canopy-543306a0-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:18:56.690Z"
+ },
+ "view:variation:ref-building-gas-shop-3326e70f-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:19:19.026Z"
+ },
+ "view:variation:ref-building-gas-shop-3326e70f-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:11.971Z"
+ },
+ "view:variation:ref-building-gas-shop-3326e70f-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:13.027Z"
+ },
+ "view:variation:ref-building-grocery-79498713-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:19:35.715Z"
+ },
+ "view:variation:ref-building-grocery-79498713-plain:1:se": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:19:39.099Z"
+ },
+ "view:variation:ref-building-grocery-79498713-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:19:36.668Z"
+ },
+ "view:variation:ref-building-house-cottage-fc52ce66-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:17:59.342Z"
+ },
+ "view:variation:ref-building-house-cottage-fc52ce66-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:17:56.958Z"
+ },
+ "view:variation:ref-building-house-cottage-fc52ce66-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:17:58.318Z"
+ },
+ "view:variation:ref-building-house-dormer-b4413f08-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:41.279Z"
+ },
+ "view:variation:ref-building-house-dormer-b4413f08-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:18:35.888Z"
+ },
+ "view:variation:ref-building-house-dormer-b4413f08-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:18:34.743Z"
+ },
+ "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:18:27.695Z"
+ },
+ "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:18:15.831Z"
+ },
+ "view:variation:ref-building-house-garage-a1d986d3-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:20:44.266Z"
+ },
+ "view:variation:ref-building-house-garage-a1d986d3-plain:1:se": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:38.671Z"
+ },
+ "view:variation:ref-building-house-garage-a1d986d3-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:20:45.162Z"
+ },
+ "view:variation:ref-building-house-large-20cb9f9e-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:22:18.771Z"
+ },
+ "view:variation:ref-building-shop-blue-941779e4-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:18.635Z"
+ },
+ "view:variation:ref-building-shop-blue-941779e4-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:16.739Z"
+ },
+ "view:variation:ref-building-shop-blue-941779e4-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:36:17.547Z"
+ },
+ "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:23:35.519Z"
+ },
+ "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:23:30.135Z"
+ },
+ "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:sw": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:23:32.767Z"
+ },
+ "view:variation:static-shop_brick_rear-04db4dfa-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:17:45.337Z"
+ },
+ "view:variation:static-shop_brick_rear-04db4dfa-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:54.395Z"
+ },
+ "view:variation:static-shop_brick_rear-04db4dfa-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:55.314Z"
+ },
+ "view:variation:static-shop_market_rear-f9272004-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:17:44.473Z"
+ },
+ "view:variation:static-shop_market_rear-f9272004-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:17:37.360Z"
+ },
+ "view:variation:static-shop_market_rear-f9272004-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:17:38.736Z"
+ },
+ "view:variation:town-grocery-46d5dc39-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:16:56.104Z"
+ },
+ "view:variation:town-grocery-46d5dc39-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:12.635Z"
+ },
+ "view:variation:town-hardware-bf36737f-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:17:04.536Z"
+ },
+ "view:variation:town-hardware-bf36737f-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:17:02.136Z"
+ },
+ "view:variation:town-hardware-bf36737f-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:17:02.992Z"
+ },
+ "view:variation:town-laundromat-43183f9e-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:26.555Z"
+ },
+ "view:variation:town-laundromat-43183f9e-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:24.755Z"
+ },
+ "view:variation:town-laundromat-43183f9e-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:25.707Z"
+ },
+ "view:variation:town-postoffice-1c7025b8-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:51.235Z"
+ },
+ "view:variation:town-postoffice-1c7025b8-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:40.059Z"
+ },
+ "view:variation:town-postoffice-1c7025b8-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:35:49.788Z"
+ },
+ "view:variation:world-house_0-51fa4b80-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:03:41.991Z"
+ },
+ "view:variation:world-house_0-51fa4b80-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:03:35.655Z"
+ },
+ "view:variation:world-house_0-51fa4b80-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:03:37.927Z"
+ },
+ "view:variation:world-house_0-north-1dde6f56-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:04:20.760Z"
+ },
+ "view:variation:world-house_1-ba13ed2e-plain:1:s": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:07:46.148Z"
+ },
+ "view:variation:world-house_4-north-630f880a-plain:1:e": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:10:23.326Z"
+ },
+ "view:variation:world-house_4-north-630f880a-plain:1:n": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:10:18.910Z"
+ },
+ "view:variation:world-house_4-north-630f880a-plain:1:nw": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:10:13.958Z"
+ },
+ "view:variation:world-house_4-north-630f880a-plain:1:s": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:10:25.118Z"
+ },
+ "view:variation:world-house_4-north-630f880a-plain:1:se": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:10:15.854Z"
+ },
+ "view:variation:world-house_4-north-630f880a-plain:1:sw": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:09:45.981Z"
+ },
+ "view:variation:world-house_4-north-630f880a-plain:1:w": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:10:34.926Z"
+ },
+ "view:variation:world-house_5-d6198cb0-plain:1:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:11:06.839Z"
+ },
+ "view:variation:world-house_5-d6198cb0-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:11:13.471Z"
+ },
+ "view:variation:world-house_5-d6198cb0-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:11:09.559Z"
+ },
+ "view:variation:world-house_5-north-bffd2c68-plain:1:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:39:54.263Z"
+ },
+ "view:variation:world-house_5-north-bffd2c68-plain:1:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:11:59.608Z"
+ },
+ "view:variation:world-house_5-north-bffd2c68-plain:1:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T17:12:00.408Z"
+ },
+ "view:variation:world-video-bf85dfb9-plain:1:n": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:21:50.877Z"
+ },
+ "view:world:bleachers:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:21:12.708Z"
+ },
+ "view:world:bleachers:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:21:11.148Z"
+ },
+ "view:world:bleachers:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:21:10.148Z"
+ },
+ "view:world:drivein_marquee:nw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:21:20.813Z"
+ },
+ "view:world:drivein_marquee:se": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:21:17.996Z"
+ },
+ "view:world:drivein_marquee:sw": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:21:19.692Z"
+ },
+ "view:world:gazebo:e": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:20:17.771Z"
+ },
+ "view:world:gazebo:n": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:20:18.995Z"
+ },
+ "view:world:gazebo:s": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:20:16.275Z"
+ },
+ "view:world:gazebo:w": {
+  "flag": "redo-style",
+  "at": "2026-11-02T18:20:20.819Z"
+ },
+ "view:world:house_4:nw": {
+  "flag": "more-angles",
+  "at": "2026-11-02T16:56:08.374Z"
+ },
+ "world:arcade": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:16:32.784Z"
+ },
+ "world:bleachers": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:21:01.637Z"
+ },
+ "world:diner": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:16:31.048Z"
+ },
+ "world:drivein_marquee": {
+  "flag": "angles-wrong",
+  "at": "2026-11-02T18:21:16.540Z"
+ },
+ "world:house_2": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:08:00.500Z"
+ },
+ "world:house_5": {
+  "flag": "more-angles",
+  "at": "2026-11-02T17:11:19.359Z"
+ },
+ "world:school": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:21:24.428Z"
+ },
+ "world:snack_bar": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:21:55.397Z"
+ },
+ "world:video": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:21:44.885Z"
+ },
+ "world:video_rental": {
+  "flag": "more-angles",
+  "at": "2026-11-02T18:16:33.800Z"
+ },
+ "world:watertower": {
+  "flag": "redo-style",
+  "at": "2026-11-02T17:36:24.387Z"
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "id": "world:watertower",
+ "slug": "world-watertower",
+ "category": "buildings",
+ "version": "world-watertower-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "f4c36f76eae51e497c0a3c65be39f12d6261d03d49838898bda495e2a1d37793",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "131757cb0737f54b15c17942801d66bc6bdcb44c285c989ced39dab779c9c0a1",
+   "trim": [
+    0,
+    0,
+    213,
+    426
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "939e717fef945b7ec15153750f6a4f454393bbeffb16bfa769838dea737807f8",
+   "trim": [
+    0,
+    0,
+    205,
+    431
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "33687805751ee4261b9b829da0d998f52e777d0a67d46b0f0750186693f127a6",
+   "trim": [
+    0,
+    0,
+    213,
+    430
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "3ff8ec4d6bca6b8f060ad58692701916df07ef588d7516caf0fbf1306a46ebd1",
+   "trim": [
+    0,
+    0,
+    205,
+    412
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

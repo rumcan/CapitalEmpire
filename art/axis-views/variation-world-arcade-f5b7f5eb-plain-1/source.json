@@ -1,0 +1,55 @@
+{
+ "id": "variation:world-arcade-f5b7f5eb-plain:1",
+ "slug": "variation-world-arcade-f5b7f5eb-plain-1",
+ "category": "buildings",
+ "version": "variation-world-arcade-f5b7f5eb-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "cd6c9cad82c11149022a78a099eca5dbc56865a3bcd3b6befd6c58fed2c9aeea",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "2dfcce489994506a10ca2ca69e5d8769bd1f7235d19f9fe89c2777887b449c56",
+   "trim": [
+    0,
+    0,
+    302,
+    265
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "63271d1e392eb2a67062f04a8e3a14781212c482035d120c0ecbcd06aca3418e",
+   "trim": [
+    0,
+    0,
+    228,
+    306
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "fe8ead00c8aea0e93884963e553ee7b3a3a69494a0a8304f8b660f081beb5494",
+   "trim": [
+    0,
+    0,
+    302,
+    292
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "70f1d81927749ce36c8efa44ae632624944b2ab8b88675ba03ccf1a55479984b",
+   "trim": [
+    0,
+    0,
+    228,
+    292
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

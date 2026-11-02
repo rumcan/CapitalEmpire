@@ -1,0 +1,14 @@
+{
+  "id": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+  "generator": "chatgpt",
+  "status": "generated",
+  "generated": "2026-11-02",
+  "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-expansion-cottage-rear-e52a10bb-plain-1.native.png",
+  "method": "Idol (local) 3D model of the export, its views squared to the building's walls (D:/AI/idol-batch/snap_views.py, walls.py), repainted by ChatGPT as one 2x2 sheet in the style of the export (D:/AI/chatgpt-bridge), sized by the Idol renders' widths",
+  "views": {
+    "NE": "ChatGPT",
+    "SE": "ChatGPT",
+    "SW": "ChatGPT",
+    "NW": "ChatGPT"
+  }
+}

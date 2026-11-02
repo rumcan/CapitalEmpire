@@ -1,0 +1,10 @@
+{
+ "id": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+ "version": "variation-expansion-cottage-rear-e52a10bb-plain-1-4views-v5",
+ "files": {
+  "NE": "7bc699ec4e10d2046be7399de76c2e3834d904984acbefa444d160e2a2b8947c",
+  "SE": "bfe3b81f823e875aa745a5d60a25a933695c8bb0f2de1f0e169df199cd968a82",
+  "SW": "ad8b1624dbae49391266094cd91c0411ee64ca45f60aa933e2324e4a1e37d331",
+  "NW": "e621ba44aa335be64c51581c5264cf5a55133ebf6d2fc28482307d8c4d002cea"
+ }
+}

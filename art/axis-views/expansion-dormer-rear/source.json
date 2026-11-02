@@ -1,0 +1,55 @@
+{
+ "id": "expansion:dormer-rear",
+ "slug": "expansion-dormer-rear",
+ "category": "buildings",
+ "version": "expansion-dormer-rear-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "072f8842a0e1e4949f3c2c5beb324f917a79584d334f165bd35f5502b2445d50",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "1ad066278081f260f5a593740a2df42eb6766ab7c48f7f693484e5acc4c5ab4c",
+   "trim": [
+    0,
+    0,
+    389,
+    344
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "ae14ced432ea927f4e722594723eb88a7faf6e15819fd5e2755d2bfea5a97525",
+   "trim": [
+    63,
+    0,
+    239,
+    304
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "29921bcf95f3b8c1275e99e966ce30113613b86f00891d7dc24a234d7721f23d",
+   "trim": [
+    0,
+    0,
+    389,
+    339
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "e005e8809a48b8600c4b917db631b8ef5b21d854d6c41fa0a2811d3606858251",
+   "trim": [
+    0,
+    0,
+    300,
+    404
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

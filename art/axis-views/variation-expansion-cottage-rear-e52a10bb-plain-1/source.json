@@ -1,0 +1,55 @@
+{
+ "id": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+ "slug": "variation-expansion-cottage-rear-e52a10bb-plain-1",
+ "category": "buildings",
+ "version": "variation-expansion-cottage-rear-e52a10bb-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "96f868de6dffdde36e616fe9fedb761dbf7b9f2599e30e676f9c5ce764cd1356",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "306f7438959836dc8f42604e43081b9fe0d59bb79001dcb7f076912e22510665",
+   "trim": [
+    0,
+    0,
+    267,
+    281
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "90b575cc1e6c2e9a9e9f8670d59ae425e706eb91b14bc4194dabb1110fd39283",
+   "trim": [
+    0,
+    0,
+    220,
+    274
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "12f8dc1fbe9d92a3a9250987a93424b644acd06d083c29b39d456041a51603c8",
+   "trim": [
+    0,
+    0,
+    269,
+    259
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "d5dd44eed4ee5705a2f5e688a1bb984b0d8a023e7eac2e0c2168cf302e5f0035",
+   "trim": [
+    0,
+    0,
+    216,
+    248
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

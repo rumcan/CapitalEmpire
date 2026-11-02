@@ -31,6 +31,7 @@ import sharp from 'sharp';
 sharp.cache(false);
 import { ROOT, TOT } from '../source.mjs';
 import { readRemoved, writeRemoved } from '../removed.mjs';
+import { FLAG_KINDS, readFlags, writeFlags } from '../review-flags.mjs';
 import { readLotEdits, readScales, readWalkerFixes, writeLotEdits, writeScales, writeWalkerFixes } from '../overrides.mjs';
 import { LIB, drawOrder, rectOf, render } from '../lot-render.mjs';
 import { mapScale } from '../lot-layout.mjs';
@@ -55,7 +56,7 @@ const CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(pat
 // ---------------------------------------------------------------- sizes: every sprite as the game draws it (review/size-report.ts)
 const SIZE_SRC = path.join(ROOT, 'scripts/assets/review/size-report.ts'), SIZE_OUT = path.join(ROOT, 'output/review/size-report.mjs');
 const SIZE_INPUTS = [SIZE_SRC, path.join(ROOT, 'scripts/assets/scale-overrides.json'), ...['library', 'views-library', 'axis-library', 'extra-views-library', 'extra-views', 'trees-library', 'cars-library', 'east-library', 'business-library',
-  'construction-library', 'golf-library', 'newart', 'sizes', 'lots/scales', 'lots/studio-base'].map(f => path.join(ROOT, 'src/game', `${f}.ts`))];
+  'construction-library', 'golf-library', 'new-props-library', 'newart', 'sizes', 'lots/scales', 'lots/studio-base'].map(f => path.join(ROOT, 'src/game', `${f}.ts`))];
 let sizes = { stamp: '', data: {} }, sizing = null;
 /** the size report: id -> { scale, base, sizeId, drawn: { id, name, quad, scale, fill, cap } | null, sharp, native, and the picture's atlas rect and page },
  *  rebuilt when a library, the scales or the studio's sizes change (fresh: false takes the last one as it is) */
@@ -117,6 +118,7 @@ const APPENDED = [
   { file: 'src/game/business-library.ts', re: /items: LibItem\[\] = (\[[^\n]*\]);\n/, page: p => `src/assets/businesses/integrated/business-${p}-0.webp` },
   { file: 'src/game/construction-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/construction/construction-${p}.webp` },
   { file: 'src/game/golf-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/golf/golf-${p}.webp` },
+  { file: 'src/game/new-props-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/new-props/new-props-${p}-0.webp` },
 ];
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
 const DECAL_PAGE = path.join(ROOT, 'src/assets/ground/lot-decals.webp');
@@ -218,7 +220,7 @@ function rebuild() {
   // T154: the screen-axis sets are synced from the art model's folders before the cars (prep-cars.mjs takes the eight-way cars' cardinal headings
   // from them) and packed after the four-view buildings (prep-axis-views.mjs sizes a building's set by its NE view as prep-views drew it)
   const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/sync-axis-views.mjs', 'scripts/assets/prep-cars.mjs', 'scripts/assets/prep-business-art.mjs',
-    'scripts/assets/prep-construction.mjs', 'scripts/assets/prep-views.mjs', 'scripts/assets/prep-axis-views.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
+    'scripts/assets/prep-construction.mjs', 'scripts/assets/prep-new-props.mjs', 'scripts/assets/prep-views.mjs', 'scripts/assets/prep-axis-views.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
   job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
     if (i >= steps.length) return process.env.STUDIO_DEV_GAME ? devDone() : build();
@@ -385,6 +387,11 @@ function writeSurfaces(f) {
 /** every painting the registry names (the Painted tab may read only these) */
 const paintedFiles = () => new Set(PL.FAMILIES.flatMap(f => PL.LEVEL_NAMES.flatMap(l => Object.values(f.levels[l]).map(p => p.file))));
 
+// the per-view sizes (scripts/assets/view-scales.json: a view id -> the factor on its building's size, that one picture only; missing = 1), read by the
+// studio and by prep-scales.mjs (scales.ts) on every step, so a change shows in the game after a reload
+const VIEW_SCALES_FILE = path.join(ROOT, 'scripts/assets/view-scales.json');
+const readViewScales = () => { try { return JSON.parse(fs.readFileSync(VIEW_SCALES_FILE, 'utf8')); } catch { return {}; } };
+const writeViewScales = m => fs.writeFileSync(VIEW_SCALES_FILE, JSON.stringify(Object.fromEntries(Object.entries(m).sort()), null, 1) + '\n');
 const body = req => new Promise(res => { let s = ''; req.on('data', d => { s += d; }); req.on('end', () => { try { res(JSON.parse(s || '{}')); } catch { res({}); } }); });
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x'), json = o => { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
@@ -439,12 +446,17 @@ http.createServer(async (req, res) => {
       }
       const grid = list.filter(s => !(s.id.startsWith('east:') && viewsOf(s.id.slice(5))) && !(s.kind === 'car' && !rm[s.id] && !carCards.has(s.id)));
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
+      // each view's picture as the library has it (its quad, w, h): the studio draws a selected view at the game size, from these (T-review 2026-11-02: "show the angle i click on at the game size")
+      // (from the size report, which has every picture: the views are not cards of their own, so not in the list)
+      const byId = new Map([...Object.entries(sizes.data).map(([id, e]) => [id, e]), ...list.map(s => [s.id, s])]);
+      for (const s of list) for (const v of s.views ?? []) { const t = byId.get(v.id); if (t) Object.assign(v, { quad: t.quad, w: t.w, h: t.h }); }
       const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
       // the copies: a card whose picture is the same as another's in its category is folded into it (copies.mjs), so each picture is listed once;
       // walkers, removed sprites and the car model cards are never folded (two cars' average hashes are close: a small body on a plain ground; and a
       // model's pictures are already one card)
       const { cards: sprites } = await foldCopies(grid, s => (s.kind === 'walker' || s.kind === 'car' || rm[s.id] ? null : hashOf(s.id, pics.get(s.id) ?? sizes.data[s.id])));
-      return json({ sprites, removed: rm, walkers });
+      // the review flags (scripts/assets/review-flags.json, /api/flag) and the per-view sizes (view-scales.json, /api/viewscale)
+      return json({ sprites, removed: rm, walkers, flags: readFlags(), viewScales: readViewScales() });
     }
     // /thumb/<id>: the PNG; /thumb/<id>?s=<px>: the Library card's WebP at a size step (T144), with an ETag so a card loading its picture again
     // (the page drops the pictures of cards scrolled far away) is a 304, not a transfer
@@ -461,6 +473,21 @@ http.createServer(async (req, res) => {
       if (P === '/api/remove' && id) { await thumb(id).catch(() => null); rm[id] = { ...rm[id], at: new Date().toISOString(), ...Object.fromEntries(['name', 'cat', 'kind', 'w', 'h', 'quad', 'ax', 'ay'].filter(k => s?.[k] !== undefined).map(k => [k, s[k]])) }; }
       else delete rm[id];
       writeRemoved(rm); return json({ removed: rm });
+    }
+    // the owner's review flag on a picture (2026-11-02: "a button i can click in the library to mark if an image needs more angles or a review"): flag null clears it
+    if (req.method === 'POST' && P === '/api/flag') {
+      const { id, flag } = await body(req), flags = readFlags();
+      if (!id || (flag != null && !FLAG_KINDS.includes(flag))) { res.writeHead(400); return res.end('bad flag'); }
+      if (flag == null) delete flags[id]; else flags[id] = { flag, at: new Date().toISOString() };
+      writeFlags(flags); return json({ flags });
+    }
+    // one view's size (2026-11-02: "i must be able to resize each image individually ... without doing the ones that are already correct"): the factor on its
+    // building's size, multiplied, clamped 0.25..4, 3 decimals; reset deletes it. The game reads view-scales.json through scales.ts (prep-scales.mjs)
+    if (req.method === 'POST' && P === '/api/viewscale') {
+      const { id, factor, reset } = await body(req), vs = readViewScales();
+      if (!id) { res.writeHead(400); return res.end('no view'); }
+      if (reset) delete vs[id]; else vs[id] = Math.min(4, Math.max(0.25, +((vs[id] ?? 1) * factor).toFixed(3)));
+      writeViewScales(vs); return json({ id, factor: vs[id] ?? 1 });
     }
     if (req.method === 'POST' && P === '/api/scale') {
       const { id: asked, factor, reset } = await body(req), sc = readScales(), rep = await sizeReport(false), e = rep[asked];
@@ -529,8 +556,9 @@ http.createServer(async (req, res) => {
       if (row[f] !== 'new') { row[f] = 'new'; writeWalkerFixes(fx); }
       return json({ fixes: fx[id], has: true });
     }
+    // (the elapsed time from the server's own clock: a viewer's clock may differ, the owner 2026-11-02: "the mins remaining just keeps changing")
     if (req.method === 'POST' && P === '/api/rebuild') return json(rebuild());
-    if (P === '/api/status') return json(job && { ...job, log: job.log.slice(-600) });
+    if (P === '/api/status') return json(job && { ...job, log: job.log.slice(-600), elapsed: Date.now() - job.started });
     // golf hole presets
     if (req.method === 'GET' && P === '/api/holes') return json(readHoles());
     if (req.method === 'POST' && P === '/api/holes') {

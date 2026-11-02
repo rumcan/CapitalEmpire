@@ -1,0 +1,55 @@
+{
+ "id": "variation:expansion-derelict-two-storey-012bed48:1",
+ "slug": "variation-expansion-derelict-two-storey-012bed48-1",
+ "category": "buildings",
+ "version": "variation-expansion-derelict-two-storey-012bed48-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "2abe6a4d5b1855453c6aa7a92a5be93125299ce47946c73ed48f68e4de8aa916",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "37b80a7782cebf2afd392238c4dee18acf7277514b26cd239db5a9321b87df45",
+   "trim": [
+    0,
+    0,
+    297,
+    329
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "d8bcecf6ac9e7e03894ff4b8212cc9a527b44badc4794a33c4ff2a88228e205f",
+   "trim": [
+    0,
+    0,
+    261,
+    347
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "01641ae7e070c8acef4a764da6ffb1efb349503b27ec4c6bf0841d2b99d5f8ed",
+   "trim": [
+    0,
+    0,
+    297,
+    325
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "4ded562a1e69b498c8372c09eb0b7ff01040cbd12f179e01e1d981ad0f3de6f1",
+   "trim": [
+    0,
+    0,
+    261,
+    330
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

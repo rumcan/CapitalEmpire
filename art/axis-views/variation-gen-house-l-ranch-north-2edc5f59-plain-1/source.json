@@ -1,0 +1,55 @@
+{
+ "id": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+ "slug": "variation-gen-house-l-ranch-north-2edc5f59-plain-1",
+ "category": "buildings",
+ "version": "variation-gen-house-l-ranch-north-2edc5f59-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "c66d71e052513a742c362fa95685cb6cbb50c0d5ebc968af7e734249b91f6a7e",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "a85d8d00702647691f35aa01b9d48818ce2608d6de1d03886be013e106cf9564",
+   "trim": [
+    0,
+    0,
+    395,
+    386
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "f1c9ef54e560480428e3ca7ab2914c24013074c5af2261b4c1f685d3a45ae3b8",
+   "trim": [
+    0,
+    0,
+    307,
+    355
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "7a6db4e1f8dfda5a6108c0cc2ed61c45d3ee46903bb301ccd728e0173a16f8ce",
+   "trim": [
+    0,
+    0,
+    396,
+    399
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "04cf1dcdefd1951a400ed64fd0d08b78ac93c1155c16fb0295e66d4946105489",
+   "trim": [
+    0,
+    0,
+    324,
+    364
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

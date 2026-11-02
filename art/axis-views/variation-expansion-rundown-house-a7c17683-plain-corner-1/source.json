@@ -1,0 +1,55 @@
+{
+ "id": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+ "slug": "variation-expansion-rundown-house-a7c17683-plain-corner-1",
+ "category": "buildings",
+ "version": "variation-expansion-rundown-house-a7c17683-plain-corner-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "cf36ff50402d8cac1b9a6403862a8cb0473dbff1e8ad21525fc1c50cbd906bec",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "bfdfa55d0e7d58b390ce64cd69d16048a040be575bd60a37bcb7d1622a465f19",
+   "trim": [
+    0,
+    0,
+    361,
+    374
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "8644ab77e617231a81acf050c2b8b94f13c63f8f2f9eaf9b7472b052790100aa",
+   "trim": [
+    0,
+    0,
+    338,
+    410
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "a9a076592b19f42efbcede815f0de8568e055842cd67d3e1d8e86356df616e8e",
+   "trim": [
+    0,
+    0,
+    361,
+    368
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "9c2832aed102187159cbdaf3c1bf080d45c4246059efde1fd0d47e4db8b02180",
+   "trim": [
+    0,
+    0,
+    338,
+    427
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

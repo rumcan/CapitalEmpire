@@ -1,0 +1,55 @@
+{
+ "id": "variation:world-diner-c9878d46-plain:1",
+ "slug": "variation-world-diner-c9878d46-plain-1",
+ "category": "buildings",
+ "version": "variation-world-diner-c9878d46-plain-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "e501821b7a7ea4529dab172c836159c7763a03d5bbde3230c4e5b00b368f265e",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "ce7fe003b18f2cf820709f5684937e84f0ec81372c118b42d23bfba38c97f1e2",
+   "trim": [
+    0,
+    0,
+    406,
+    374
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "a537b48f21b94bf42328ebc74bdf0f43798990dd9c408ccdeef0bd8910b9201f",
+   "trim": [
+    0,
+    0,
+    309,
+    380
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "3126944734b78b7e018f0d03e5eee93ff93181b19424a70477dbc8f9bfdf9c63",
+   "trim": [
+    0,
+    0,
+    406,
+    387
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "8c250173e6a9267bf943c35049e6e008307c487e423602329578e207f70e294f",
+   "trim": [
+    0,
+    0,
+    309,
+    366
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

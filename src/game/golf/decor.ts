@@ -10,9 +10,11 @@ import { FRAME_TREE_KEY, FRAME_TREE_PRICE } from './holeframe';
 import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_GREY_GRANITE, KIT_HEDGE, KIT_LAMPS, KIT_PALMS, KIT_POND_EDGE, KIT_SHRUBS, KIT_WATER_EDGE_PLANTS, type RunKit } from '../kit';
 
 /** the panel's groups, in order (T187: Buildings, the few the player adds to the town: Town decoration's) */
-export type DecorGroup = 'plants' | 'water' | 'stone' | 'furniture' | 'buildings';
+export type DecorGroup = 'plants' | 'water' | 'stone' | 'furniture' | 'buildings' | `new:${string}`;
+/** the owner's new props: one group per library category 'New: <category>' (art/new-props, prep-new-props.mjs), after Furniture */
+const NEW_GROUPS: { id: DecorGroup; name: string }[] = [...new Set(LIBRARY.filter(i => i.cat.startsWith('New: ')).map(i => i.cat))].map(cat => ({ id: `new:${cat.slice(5)}` as DecorGroup, name: cat }));
 export const DECOR_GROUPS: readonly { id: DecorGroup; name: string }[] = [
-  { id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }, { id: 'buildings', name: 'Buildings' },
+  { id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }, ...NEW_GROUPS, { id: 'buildings', name: 'Buildings' },
 ];
 
 /** a catalogue item: its key (saved with the prop), plain name, group, library picture (the NE view of four-view art), price ($), appeal (a
@@ -74,7 +76,7 @@ const MIX_PALMS = [...KIT_PALMS.windmill.map(id => ({ key: 'kit-palm-windmill', 
 /** the catalogue: real library art (the Trees & plants, Landscaping, Street furniture, Yard and Landmarks categories, T113's golf props) and labelled
  *  stand-ins. T154: the art model's new shrubs, beds, bench, bin and lamp post are screen-axis sets (axis-library.ts: four genuine quarter turns, R
  *  turns them); their catalogue picture is the N view (the front facing screen down) */
-export const DECOR: readonly DecorItem[] = [
+const CATALOGUE: readonly DecorItem[] = [
   // ---- plants: +1% each, one kind (each more counts less)
   { key: 'pot-terracotta', name: 'Terracotta pot plant', group: 'plants', kind: 'plant', id: 'town:planter_terracotta', price: 120, appeal: APPEAL.plant, desc: 'A clipped shrub in a terracotta pot: line the shop front' },
   { key: 'pot-palm', name: 'Potted palm', group: 'plants', kind: 'plant', id: 'arcade:arcade_v2_clutter_plant', price: 90, appeal: APPEAL.plant, desc: 'A leafy palm in a pot, for doors and corners' },
@@ -149,6 +151,9 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'toilet-block', name: 'Public toilets', group: 'buildings', kind: 'stone', id: 'golf:toilet-block', price: 9000, appeal: 0, desc: 'A small toilet block for a park or a square' },
   { key: 'chapel', name: 'Small chapel', group: 'buildings', kind: 'stone', id: 'variation:world-church-44e76535-plain:1', price: 60000, appeal: 0, desc: 'A white clapboard chapel with its steeple' },
 ];
+/** the owner's new props (library cat 'New: <category>'): plain placeable props, each its category's group, priced by the library's cost; no appeal yet */
+const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ')).map((i): DecorItem => ({ key: `newprop-${i.id.slice('newprop:'.length)}`, name: i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, desc: `${i.cat.slice(5)}: a new prop to place (no appeal yet)` }));
+export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...NEW_PROP_ITEMS];
 export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d => [d.key, d]));
 
 // ---------------------------------------------------------------- T257: size, mirror, families and the mixed brushes

@@ -1,0 +1,55 @@
+{
+ "id": "world:gazebo",
+ "slug": "world-gazebo",
+ "category": "buildings",
+ "version": "world-gazebo-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "b93a92d9117f81630592ed59700ac3abfebe0d250d7b919d4b6ab44430ae7ac7",
+ "status": null,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "ee319d8450cbd9ab64d75c44b9e4dbd5656c508d327024c316f2f0bfd7edf0b8",
+   "trim": [
+    0,
+    0,
+    142,
+    215
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "1be6c2f302621231260e020c69a264367cab3ba43681e0f15a8bcba0a2a5761d",
+   "trim": [
+    0,
+    0,
+    168,
+    224
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "4f1a2e29fd4f1f1988204d99b04dc9a8565a66f359f2db02c9d5bba9b358a5d4",
+   "trim": [
+    0,
+    0,
+    143,
+    240
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "5177856d9c4a014958f31c9758b6154298e7ac9f59beed17ce02bffb41a1d5e3",
+   "trim": [
+    0,
+    0,
+    167,
+    223
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}
