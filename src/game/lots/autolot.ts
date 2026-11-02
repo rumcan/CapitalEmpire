@@ -79,6 +79,7 @@ function housesOf(road: Road): string[] {
 }
 const WHEEL_STOP = 'expansion:wheel-stop';
 const TRAILERS = ['expansion:mobile-home', 'expansion:camper', 'expansion:pop-up-caravan'];
+const YARD_THINGS = ['town:picnic_table', 'expansion:carseat-bench', 'expansion:backyard-tent', 'expansion:ham-radio-bench'];
 const JUNK_PILES = ['expansion:scrap-metal', 'expansion:tyre-stack', 'expansion:scrap-engine', 'expansion:crushed-car-stack'];
 const JUNK_CARS = ['expansion:junk-car', 'expansion:scrap-pickup-rear', 'expansion:crushed-car-stack'];
 
@@ -198,18 +199,25 @@ const seedBit = (L: Lay): boolean => L.r() < 0.5;
 
 /** a trailer park (starter tier): a gravel lane in from the street down the middle, mobile homes, campers and pop-up caravans in rows either side, a
  *  picnic table by the lane, junk at the back, the owned chain-link fence */
-function trailerLot(L: Lay, own: Own): boolean {
+function trailerLot(L: Lay): boolean {
   const { W, D } = L, lx0 = W / 2 - 1.5, lx1 = W / 2 + 1.5;
   L.patch('yard', 'gravel', lx0, 0, lx1, D);
   let homes = 0;
+  // each home has a small yard of its own on its outer side: a table or a chair set, a junk car or a bin, and the trees along the back
   for (let y = 4.6; y + 2.3 <= D - 0.5; y += 4.6) for (const side of [0, 1]) {
-    const x0 = side ? lx1 + 0.4 : 0.5, x1 = side ? W - 0.5 : lx0 - 0.4;
-    if (x1 - x0 >= 3 && L.pick(TRAILERS, 0, (x0 + x1) / 2, y, (x1 - x0) / 2, 2.3, 0.7)) homes++;
+    const x0 = side ? lx1 + 0.4 : 0.5, x1 = side ? W - 0.5 : lx0 - 0.4, ox = side ? W - 1.1 : 1.1;
+    if (x1 - x0 < 3 || !L.pick(TRAILERS, 0, (x0 + x1) / 2, y, (x1 - x0) / 2, 2.3, 1)) continue;
+    homes++;
+    L.pick(YARD_THINGS, 0, ox, y - 1.2, 0.8, 0.8, 0.5);
+    L.pick(['expansion:junk-car', 'world:trashcan'], 0, ox, y + 1.4, 0.9, 1.1, 0.5);
   }
   if (!homes) return false;
-  L.pick(['town:picnic_table'], 0, W / 2 + 2.6, 3.2, 1.2, 0.8);
-  if (D > 10) for (const x of [2.2, W - 2.2]) L.pick(JUNK_PILES, 0, x, D - 2.0, 1.3, 1.3);
-  ownFence(L, own, CHAIN);
+  for (let k = 0; k < 3; k++) L.group('tree', 'back', (k + 0.5) * W / 3, D - 1.6, 1.6, 1.6, 0.5);
+  // the fence on three sides (the lane is the open side)
+  const f = 0.12;
+  L.fence(CHAIN, f, D - f, W - f, D - f);
+  L.fence(CHAIN, f, 0, f, D - f);
+  L.fence(CHAIN, W - f, 0, W - f, D - f);
   return true;
 }
 
@@ -296,7 +304,7 @@ export function autoLot(lot: LotGeom, use: PresetUse, tier: number, seed: number
   for (const drive of modes) {
     const T = new Lay(f, lot.w, lot.d, use, state, road, tier, mulberry(mix(seed, SALT[template], 0x305)));
     const ok = template === 'house' ? houseLot(T, false, (seed >> 2) % 2 === 0, own, drive) : template === 'corner' ? houseLot(T, true, (seed >> 2) % 2 === 0, own, false)
-      : template === 'trailer' ? trailerLot(T, own) : template === 'junk' ? junkLot(T) : shopLot(T, own);
+      : template === 'trailer' ? trailerLot(T) : template === 'junk' ? junkLot(T) : shopLot(T, own);
     if (ok) { L = T; break; }
   }
   // (the template does not fit: the plot, so the lot is never left bare on a road it has to front)

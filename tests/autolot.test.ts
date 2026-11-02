@@ -121,3 +121,18 @@ test('the car park: every bay 1.1 to 1.5 times its car, each car centred in its 
   }
   assert.ok(bays >= 20, `only ${bays} cars checked`);
 });
+
+// T305 (owner's list): each template's props are spread over the lot, not bunched in one strip: on every heading, a template's pieces (not its fences)
+// stand in at least two of the three zones (front: y < 0.3 d; back: y > 0.65 d; side: x < 0.2 w or x > 0.8 w)
+test('spread: each template puts its pieces in at least two of the front, side and back zones, on every heading', () => {
+  for (const t of AUTO_TEMPLATES) for (const r of ROADS) {
+    const [w, d] = SIZE[t], lot = lotOn(r, w, d), p = autoLot(lot, t === 'shop' ? 'com' : t === 'junk' ? 'ind' : 'res', t === 'trailer' ? 0 : 2, 13 + r, 'built', t)!;
+    const zones = new Set<string>();
+    for (const q of p.props) {
+      if (FENCE.test(q.id)) continue;
+      if (q.y < 0.3 * d) zones.add('front'); else if (q.y > 0.65 * d) zones.add('back');
+      if (q.x < 0.2 * w || q.x > 0.8 * w) zones.add('side');
+    }
+    assert.ok(zones.size >= 2, `${t} on road ${r}: pieces in ${[...zones].join(', ') || 'no zone'} only`);
+  }
+});
