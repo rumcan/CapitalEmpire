@@ -24,7 +24,7 @@ import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor,
 import { AXIS_PROPS, drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
 import { fixedArt } from './art-fix';
 import { share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear)
-import { angledRoadsOnly, frameOf, listToWorld, quarterOfRoad, roadOf, screenStraight, toWorld, type PresetFrame } from './preset-frame';
+import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
 import { isFence, kindOfId, kindPools } from './item-kinds';
@@ -46,6 +46,7 @@ import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
 import { presetTier, tierOf } from './tiers';
 import { buildGroups, groupOf as cellMembers, roleOf, sizeOf, zoneOf, type Role } from './groups';
+import { autoLot, clearAutoLots, isBigLot, type AutoTemplate } from './autolot';
 import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
 import { onStudioScales } from './scales-live';
@@ -269,7 +270,7 @@ export const lotPresets = (): readonly LotPreset[] => PRESETS;
 export const lotPresetsMeta = (): PresetMeta | undefined => META;
 /** replaces the presets (the dev editor after a save, a hot reload of lot-presets.json), and the header when given; the caller composes the
  *  lots again */
-export function setLotPresets(list: LotPreset[], meta: PresetMeta | undefined = META) { PRESETS = list; LEGACY = list.filter(p => p.road === undefined); META = meta; BUCKETS.clear(); buildGroups(list); }
+export function setLotPresets(list: LotPreset[], meta: PresetMeta | undefined = META) { PRESETS = list; LEGACY = list.filter(p => p.road === undefined); META = meta; BUCKETS.clear(); buildGroups(list); clearAutoLots(); }
 /** presetsFor's answer by use, state and size bucket for the frozen presets now (every compose asks; setLotPresets clears it) */
 const BUCKETS = new Map<string, LotPreset[]>();
 function presetsOf(use: PresetUse, state: PresetState, w: number, d: number): LotPreset[] {
@@ -322,9 +323,9 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
   if (st.preset !== undefined) { const forced = PRESETS.find(p => p.id === st.preset); if (forced) return { preset: forced }; }
   const use = presetUse(st), state = stateOf(st.level, st.decline);
   if (!use || !state) return null;
+  // T305: the lot lab's forced template draws the generated lot (autolot.ts) on any lot of the use
+  if (st.autoTemplate !== undefined) { const a = autoPreset(lot, st, use, state); if (a) return { preset: a }; }
   const road = roadOf(lot.n), angled = isAngled(lot);
-  // (TEMPORARY, preset-frame.ts angledRoadsOnly: no house on a screen-straight road)
-  if (use === 'res' && angledRoadsOnly() && screenStraight(road)) return null;
   const ok = angled && road % 2 === 0 ? [] : approvedOf(use, state, lot.w, lot.d, road);
   // the frozen preset of the lot's slot, among those whose house fits the lot's band at today's sizes (houseFits: a list where every one fits,
   // nearly all, picks as before; neighbours still differ); none fits: among all, the house centred in its band
@@ -335,8 +336,15 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
   if (use === 'civic' && biz !== undefined && CIVIC_IDS.has(biz)) { const c = civicPlan(lot, biz, [...ok, ...LEGACY.filter(p => p.use === use && p.state === state)]); if (c) return c; }
   // (T270: a shop lot whose approved presets cannot show the shop its place calls for draws a frozen one that can, on a lot the map axes fit)
   if (ok.length) { const u = underTier(ok, cap); if (u.length) return shopPlan(u, lot, use, angled || use === 'res' ? undefined : frozenT, biz, cap); }
+  // T305 (#890): a big lot, or a screen-straight one no approved preset fits, is generated (autolot.ts): the owner's "BIG lots are generated, the way the farms are"
+  if (isBigLot(lot) || angled) { const a = autoPreset(lot, st, use, state); if (a) return { preset: a }; }
   if (angled) return ok.length ? shopPlan(tieredOf(ok, cap), lot, use, undefined, biz, cap) : null;
   return shopPlan(frozenT(), lot, use, undefined, biz, cap);
+}
+/** T305 (#890): the generated lot of a lot (autolot.ts autoLot) for its use and state, its tier (st.tier) and its place on its street, re-rolled by the lot
+ *  lab's remix offset (st.remix); the lab's template (st.autoTemplate) when it forces one; null when the use has no template or the lot does not fit it */
+function autoPreset(lot: LotGeom, st: ComposeState, use: PresetUse, state: PresetState): LotPreset | null {
+  return autoLot(lot, use, st.tier ?? 3, mix(fnv(`${streetKey(lot)}#${streetSlot(lot)}#auto`), st.remix ?? 0, 0x305), state, st.autoTemplate as AutoTemplate | undefined);
 }
 // ---------- T295 (#880): the building tiers (lots/tiers.ts): a lot draws the presets whose buildings are at or under its tier
 /** a preset's tier, cached by the preset (its building props: presetTier, the library's building test) */

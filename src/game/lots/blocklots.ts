@@ -6,6 +6,7 @@ import { mulberry } from '../iso';
 import { SK, dot, mul, perp, sub, vlen, type Pt, type RoadNetwork, type Seg } from '../network';
 import type { Block } from '../blocks';
 import { badShare, BAD_MAX, type Lot } from './lots';
+import { roadOf, screenStraight } from './preset-frame';
 
 /** a cell of the grid: the inner-rect side it faces (0 y=0, 1 x=W, 2 y=H, 3 x=0) and its box in the inner rect's frame, tiles */
 export interface Cell { front: 0 | 1 | 2 | 3; x0: number; y0: number; x1: number; y1: number }
@@ -25,12 +26,14 @@ const jit = (rnd: () => number, a: number) => (rnd() * 2 - 1) * a;
 const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
 
 /** a length cut into 12.5-17.5 tile widths (25% over the first 10-14, the owner 2026-10-22; a length of 17.5-25 stays one piece): the
- *  boundaries from 0 to L (0.5-rounded); no boundaries under 6 tiles (none at all) */
-function partition(L: number, rnd: () => number): number[] {
+ *  boundaries from 0 to L (0.5-rounded); no boundaries under 6 tiles (none at all). T305 (#890): a block on a screen-straight road (wide) cuts
+ *  its lots 1.5 times wider (18.75-26.25 tiles), so more of its lots are big enough to be generated (autolot.ts); the owner's 2026-11-02 "bigger lots" */
+function partition(L: number, rnd: () => number, wide = false): number[] {
   if (L < MIN_SIDE) return [];
-  let n = Math.max(1, Math.round(L / 15));
-  while (L / n > 17.5) n++;
-  while (n > 1 && L / n < 12.5) n--;
+  const lo = wide ? 18.75 : 12.5, hi = wide ? 26.25 : 17.5;
+  let n = Math.max(1, Math.round(L / (wide ? 22.5 : 15)));
+  while (L / n > hi) n++;
+  while (n > 1 && L / n < lo) n--;
   const wt: number[] = []; let sum = 0;
   for (let i = 0; i < n; i++) { const w = (L / n) * (1 + jit(rnd, 0.2)); wt.push(w); sum += w; }
   const b = [0]; let acc = 0;
@@ -40,16 +43,16 @@ function partition(L: number, rnd: () => number): number[] {
 }
 
 /** the cells of a block whose spine runs along x: rows on sides 0 and 2, end columns on sides 3 and 1 (L x D frame) */
-function spineCells(L: number, D: number, rnd: () => number): Cell[] {
+function spineCells(L: number, D: number, rnd: () => number, wide = false): Cell[] {
   const out: Cell[] = [];
   const push = (front: 0 | 1 | 2 | 3, x0: number, y0: number, x1: number, y1: number) => { if (x1 - x0 >= MIN_SIDE && y1 - y0 >= MIN_SIDE) out.push({ front, x0, y0, x1, y1 }); };
   // the spine: y clamped so both depths are at least SPINE_MIN (a short block sits at its middle)
   const spine = (v: number) => (D - SPINE_MIN >= SPINE_MIN ? h5(Math.min(D - SPINE_MIN, Math.max(SPINE_MIN, v))) : h5(D / 2));
   let eL = h5(9 + rnd() * 3), eR = h5(9 + rnd() * 3);
   if (L - eL - eR < SPINE_MIN) eL = eR = 0;
-  if (eL > 0) { const b = partition(D, rnd); for (let i = 0; i + 1 < b.length; i++) push(3, 0, b[i]!, eL, b[i + 1]!); }
-  if (eR > 0) { const b = partition(D, rnd); for (let i = 0; i + 1 < b.length; i++) push(1, L - eR, b[i]!, L, b[i + 1]!); }
-  const mx0 = eL, mx1 = L - eR, top = partition(mx1 - mx0, rnd).map(v => h5(v + mx0));
+  if (eL > 0) { const b = partition(D, rnd, wide); for (let i = 0; i + 1 < b.length; i++) push(3, 0, b[i]!, eL, b[i + 1]!); }
+  if (eR > 0) { const b = partition(D, rnd, wide); for (let i = 0; i + 1 < b.length; i++) push(1, L - eR, b[i]!, L, b[i + 1]!); }
+  const mx0 = eL, mx1 = L - eR, top = partition(mx1 - mx0, rnd, wide).map(v => h5(v + mx0));
   // the one jog: an inner boundary of the top row, with the spine stepping there (|s1 - s2| >= 2)
   let s1 = spine(D / 2 + jit(rnd, 3)), s2 = s1, jogX = -1;
   if (mx1 - mx0 >= 20 && top.length >= 4 && rnd() < 0.5) {
@@ -64,20 +67,20 @@ function spineCells(L: number, D: number, rnd: () => number): Cell[] {
   // the bottom row (side 2): each cell from the spine at that cell up to D; no cell crosses the jog
   const runs = jogX >= 0 ? [[mx0, jogX], [jogX, mx1]] : [[mx0, mx1]];
   for (const [ra, rb] of runs) {
-    const b = partition(rb! - ra!, rnd);
+    const b = partition(rb! - ra!, rnd, wide);
     for (let i = 0; i + 1 < b.length; i++) { const a = b[i]! + ra!, c = b[i + 1]! + ra!; push(2, a, (jogX >= 0 && (a + c) / 2 > jogX) ? s2 : s1, c, D); }
   }
   return out;
 }
 
 /** the cells of a W x H inner rectangle (local frame [0,W] x [0,H]): a spine along x when W > H + 4, along y when H > W + 4, else by rnd */
-export function subdivide(W: number, H: number, rnd: () => number): Cell[] {
+export function subdivide(W: number, H: number, rnd: () => number, wide = false): Cell[] {
   W = h5(W); H = h5(H);
   const alongX = W > H + 4 ? true : H > W + 4 ? false : rnd() < 0.5;
-  if (alongX) return spineCells(W, H, rnd);
+  if (alongX) return spineCells(W, H, rnd, wide);
   // the spine along y: cut the transposed rectangle, then turn it back (side 0 becomes 3, 1 becomes 2, 2 becomes 1, 3 becomes 0)
   const turn = [3, 2, 1, 0] as const;
-  return spineCells(H, W, rnd).map(c => ({ front: turn[c.front], x0: c.y0, y0: c.x0, x1: c.y1, y1: c.x1 }));
+  return spineCells(H, W, rnd, wide).map(c => ({ front: turn[c.front], x0: c.y0, y0: c.x0, x1: c.y1, y1: c.x1 }));
 }
 
 /** a cell's front edge in the inner frame: a and b the edge ends, u along it, n away from the road into the cell, d the cell's depth along n */
@@ -147,7 +150,9 @@ export function blockLots(net: RoadNetwork, b: Block, terr: Uint8Array | null, c
   let cut = cache.get(b.key);
   if (!cut || cut.sig !== sig) {
     const cells: Cut[] = [];
-    subdivide(W, H, mulberry(fnv(b.key))).forEach((c, idx) => {
+    // (T305: a block whose inward normal runs on a screen-straight road is wide: its lots' frontages up to 1.5x)
+    const wide = screenStraight(roadOf(Y));
+    subdivide(W, H, mulberry(fnv(b.key)), wide).forEach((c, idx) => {
       const e = edgeOf(c), u = wv(e.u.x, e.u.y), n = wv(e.n.x, e.n.y);
       const o = wp(ix0 + e.a.x, iy0 + e.a.y), front = wp(ix0 + (e.a.x + e.b.x) / 2, iy0 + (e.a.y + e.b.y) / 2);
       const w = Math.hypot(e.b.x - e.a.x, e.b.y - e.a.y), d = e.d;

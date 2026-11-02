@@ -329,14 +329,16 @@ test('RES houses of the frozen presets keep a side yard of 1.3 tiles or more fro
   assert.ok(houses >= 20, `${houses} houses`);
 });
 
-test('a lot whose frontage runs more than 20 degrees off both map axes composes a green, not a building; at 10 degrees it keeps its building', () => {
+test('a lot whose frontage runs more than 20 degrees off both map axes (a screen-straight road) gets a generated building (T305: a house, a shop), a tour or civic lot none; at 10 degrees it keeps its building', () => {
   const BUILDING = new Set(['building', 'venue', 'arcade', 'house']);
   const turnedLot = (deg: number): Lot => { const t = (deg * Math.PI) / 180, c = Math.cos(t), s = Math.sin(t); return { ...LOTS[0], w: 12, d: 15, o: { x: 100, y: 100 }, u: { x: c, y: s }, n: { x: -s, y: c } }; };
   const buildings = (lot: Lot, st: ComposeState) => compose(lot, st).props.filter(p => BUILDING.has(byId.get(p.id)?.kind ?? '')).map(p => p.id);
   for (let seed = 20; seed < 40; seed++) {
-    for (const use of [LU.COM, LU.TOUR, LU.RES, LU.GOV, LU.IND]) {
+    for (const use of [LU.TOUR, LU.GOV]) {
       assert.deepEqual(buildings(turnedLot(45), { use, level: LV.BUILT, decline: 0, seed }), [], `use ${use} seed ${seed}: a building on a 45-degree lot`);
     }
+    if (seed % 100 >= 15) assert.ok(buildings(turnedLot(45), { use: LU.COM, level: LV.BUILT, decline: 0, seed }).length >= 1, `seed ${seed}: no generated shop on a 45-degree lot`);
+    assert.ok(buildings(turnedLot(45), { use: LU.RES, level: LV.BUILT, decline: 0, seed }).length >= 1, `seed ${seed}: no generated house on a 45-degree lot`);
     if (seed % 100 >= 15) assert.ok(buildings(turnedLot(10), { use: LU.COM, level: LV.BUILT, decline: 0, seed }).length >= 1, `seed ${seed}: no shop at 10 degrees`);
   }
 });
