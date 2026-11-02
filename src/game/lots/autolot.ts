@@ -21,6 +21,7 @@ import { facingOf, frameOf, roadOf, type PresetFrame } from './preset-frame';
 import { axisSetOf, drawnView, ownerScaleOf, roadView, turned } from './preset-art';
 import { CHAIN, OVERLAP, PRIVACY, mix, share, type Box4, type LotGeom } from './compose-core';
 import { mulberry } from '../iso';
+import { carPark } from './carpark-lot';
 import type { LotPreset, PresetPatch, PresetProp, PresetState, PresetUse, Road, View } from './presets';
 
 /** the templates a lot draws (the lot lab's picker lists them all): a house, a corner house, a trailer park, a junk yard and a small shop */
@@ -215,21 +216,22 @@ function junkLot(L: Lay): boolean {
   return placed > 1;
 }
 
-/** a small shop at the street (a shop front of the palette its road and tier allow) with a car park beside it: parking bays painted across the car
- *  park, a car in each where one fits, a lamp at the kerb, planting by the front, the owned fence */
+/** a small shop at the street (a shop front of the palette its road and tier allow) with its car park beside it (carpark-lot.ts: one row of bays square to the
+ *  street, a 6 m aisle in front, a car nose out in each bay, the painted lines on the car park patch only), the yard grass round it, a lamp at each end of
+ *  the frontage, the owned fence. Everything sits on the lot's own frame: no piece at a free angle */
 function shopLot(L: Lay, own: Own): boolean {
-  const { W, D, road } = L, sw = W * 0.55, hb = D * 0.4;
+  const { W, D, road, f } = L, sw = Math.min(W * 0.45, W - 6), hb = D * 0.4;
+  L.patch('yard', 'grass', 0, 0, W, D);
   const shops = SHOP_PALETTE.filter(id => !gone(id) && faces(id, road));
-  const shopped = L.pick(shops, 0, sw / 2 + 0.3, 1.0 + hb, sw / 2 - 0.3, hb, 0.7);
-  if (!shopped) return false;
-  const sb = L.boxOf(L.props[L.props.length - 1]!), x0 = Math.min(W - 1, sb[2] + 0.6), x1 = W - 0.3, y0 = 0.5, y1 = Math.min(D - 0.3, 6.5);
-  if (x1 - x0 < 2.5) { ownFence(L, own, PRIVACY); return true; }
-  const n = Math.floor((x1 - x0) / 2.5), lines: number[] = [];
-  for (let i = 0; i <= n; i++) lines.push(x0 + i * 2.5, y0, x0 + i * 2.5, y1);
-  L.patch('lot', 'asphalt', x0, y0, x0 + n * 2.5, y1, lines);
-  for (let i = 0; i < n; i++) L.group('car', 'middle', x0 + i * 2.5 + 1.25, (y0 + y1) / 2, 1.2, (y1 - y0) / 2 - 0.2, 0.6);
+  if (!L.pick(shops, 0, sw / 2 + 0.3, 1.0 + hb, sw / 2 - 0.3, hb, 0.7)) return false;
+  const sb = L.boxOf(L.props[L.props.length - 1]!);
+  const park = carPark(f, Math.min(W - 1, sb[2] + 0.5), W - 0.3, Math.floor(L.r() * 4096));
+  if (park) {
+    L.patch('lot', 'asphalt', park.x0, 0, park.x1, park.y1, park.lines);
+    for (const c of park.cars) L.add(c);
+  }
+  L.pick(['world:streetlamp'], 0, 0.8, -0.4, 0.4, 0.4);
   L.pick(['world:streetlamp'], 0, W - 0.8, -0.4, 0.4, 0.4);
-  L.group('planter', 'front', sb[0] - 0.8, 2.0, 1.2, 1.2, 0.5);
   ownFence(L, own, PRIVACY);
   return true;
 }

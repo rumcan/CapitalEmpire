@@ -90,3 +90,34 @@ test('the lot is the same for the same seed and differs for another (the house a
   assert.equal(JSON.stringify(autoLot(lot, 'res', 2, 11, 'built', 'house')), JSON.stringify(a));
   assert.notEqual(JSON.stringify(a.props), JSON.stringify(b.props), 'two seeds laid the same house');
 });
+
+// T305 (#881, #890): the shop's car park: each bay 1.1 to 1.5 times the length and width of the car in it, the car centred in its bay and pointing along the
+// bay's axis (its heading within 22.5 degrees of the lot's away vector, nose out or in), the painted bay lines on the car park patch only.
+test('the car park: every bay 1.1 to 1.5 times its car, each car centred in its bay and along the bay axis (within 22.5 degrees)', async () => {
+  const { turned } = await import('../src/game/lots/preset-art');
+  const { CAR_DIRECTIONS, carHeading } = await import('../src/game/ext/car-art');
+  let bays = 0;
+  for (const r of ROADS) for (let s = 0; s < 6; s++) {
+    const lot = lotOn(r, 20, 16), p = autoLot(lot, 'com', 2, 31 + s * 7 + r, 'built', 'shop');
+    assert.ok(p, `shop on road ${r} seed ${s} is null`);
+    const f = frameOf(lot), lot2 = p.patches.find(a => a.kind === 'lot' && a.lines);
+    if (!lot2) continue;   // no car park here (the shop front alone)
+    const ln = lot2.lines!, bw = ln[4]! - ln[0]!, ye = ln[3]!;
+    for (const q of p.props.filter(x => x.id.startsWith('cars:'))) {
+      bays++;
+      const h = frameHalf(f)(q), bl = ye - 3;
+      assert.ok(bw / (2 * h.ha) >= 1.1 - 1e-6 && bw / (2 * h.ha) <= 1.5 + 1e-6, `r${r}: bay ${bw.toFixed(2)} vs car ${(2 * h.ha).toFixed(2)} wide`);
+      assert.ok(bl / (2 * h.hb) >= 1.1 - 1e-6 && bl / (2 * h.hb) <= 1.5 + 1e-6, `r${r}: bay ${bl.toFixed(2)} vs car ${(2 * h.hb).toFixed(2)} long`);
+      // centred: its centre lies on the bay's middle line (a bay of ln[0] + k * bw), at the bay's middle depth
+      const k = Math.round((q.x - ln[0]!) / bw - 0.5);
+      assert.ok(Math.abs(q.x - (ln[0]! + (k + 0.5) * bw)) < 0.15 && Math.abs(q.y - (3 + bl / 2)) < 0.15, `r${r}: car at ${q.x.toFixed(2)},${q.y.toFixed(2)} not centred in its bay`);
+      // along the bay's axis: its world heading is the away vector's heading or the opposite (within a heading's half-step, 22.5 degrees)
+      const world = turned(q.id, f.q).id, m = /:(SE|S|SW|W|NW|N|NE|E)$/.exec(world);
+      assert.ok(m, `${q.id} is not a car picture`);
+      const wi = CAR_DIRECTIONS.indexOf(m![1] as never), ni = carHeading(Math.atan2(lot.n.y, lot.n.x));
+      const d = Math.min((wi - ni + 8) % 8, (ni - wi + 8) % 8, (wi - ni - 4 + 16) % 8, (ni + 4 - wi + 16) % 8);
+      assert.ok(d === 0, `r${r}: car heading ${CAR_DIRECTIONS[wi]} is ${d} steps off the bay axis`);
+    }
+  }
+  assert.ok(bays >= 20, `only ${bays} cars checked`);
+});
