@@ -2402,7 +2402,7 @@ export class Game {
     this.traffic.onLedger = (l) => {
       this.foundingSeasonEnd(l);
       // the range business's season closes with the books (P24, T129): the season card read it, the next season counts from zero
-      if (this.golf?.range) rangeNewSeason(this.golf.range);
+      if (this.golf?.range) { rangeNewSeason(this.golf.range); this.sendGolf(); } // T295: the town's tier reads the closed count period (its takings) each day
       if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: the town is out of money', 'warn'); }
       else if (this.bankrupt) { /* already bankrupt: the player keeps watching */ }
       else if (l.money < 0 && !this.traffic.unlimited) this.toast(`In the red: bankrupt in ${DEBT_DAYS - this.traffic.budget.debtDays} days unless the books recover`, 'warn');
@@ -3293,7 +3293,7 @@ export class Game {
   lotOf(key: string): { g: LotGeom; st: ComposeState } | null {
     const s = this.staged.get(key); if (s) return s;
     const v = this.traffic.lots.get(key); if (!v) return null;
-    return { g: { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d }, st: { use: v.use, level: v.level, decline: v.decline, seed: v.seed } };
+    return { g: { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d }, st: { use: v.use, level: v.level, decline: v.decline, seed: v.seed, tier: v.tier, biz: v.biz } };
   }
   /** the props a lot has now */
   propsOfLot(key: string): readonly Prop[] { return this.lotProps.get(key) ?? []; }
@@ -5205,7 +5205,7 @@ export class Game {
     }
   }
   /** the golf state for the city worker: on or off, the tier, the reputation, the golf land, and a range start's start and exits */
-  private sendGolf() { const g = this.golf; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start === 'range' ? { start: 'range', exits: g.exits, invited: g.invited, holes: this.holesBuilt(), townBoost: g.townBoost } : undefined); }
+  private sendGolf() { const g = this.golf, b = g?.range; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start === 'range' ? { start: 'range', exits: g.exits, invited: g.invited, holes: this.holesBuilt(), townBoost: g.townBoost, townTakings: b ? Math.max(b.season.takings, b.last ?? 0) : 0, townHome: b ? homeStage(b) : 0 } : undefined); }
   /** T090: the holes the player has built (a pin each): a range start's town grows faster with them (plan P22 2.3.3) */
   private holesBuilt(): number { return new Set((this.golf?.pins ?? []).map(p => p.hole)).size; }
   /** the terrain of the valley for the city worker: its classes, the highway entry (a range start's: its map exit nearer the town; the start
@@ -6520,7 +6520,7 @@ export class Game {
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => propTuple(LIBRARY[p.item].id, p)),
       money: this.traffic.budget.money, day: this.day, cam: { ...this.cam, ...(this.tileBand !== null ? { tb: this.tileBand } : {}) },
-      lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
+      lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => { const t: LotTuple = [l.key, l.use, l.level, l.decline, l.seed, l.since]; if (l.tier !== undefined || l.biz !== undefined) t.push(l.tier ?? 3); if (l.biz !== undefined) t.push(l.biz); return t; }),
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, townClock: this.traffic.town, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
       places: placeTuples(this.places),

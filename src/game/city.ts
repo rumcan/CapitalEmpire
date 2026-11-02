@@ -10,6 +10,8 @@ import { LotMap, type Lot } from './lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
 import { needsLand, planExtension, reachableFrom, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
 import { GROWN_IND_FROM, grownIndustrialRect } from './lots/districts';
+import { townTier } from './lots/tiers';
+import { TIER_TAKINGS } from './event/config';
 import { LK, LaneGraph, MPT, laneAt, type DSeg, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
@@ -500,11 +502,14 @@ export class City {
     return true;
   }
   /** golf mode on (with the tournament's tier and its reputation) or off (null): a new valley keeps it (terrain does not touch it) */
-  setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][]; start?: 'range'; exits?: Pt[]; invited?: { at: number }; holes?: number; townBoost?: number } | null): TownEvent[] {
+  setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][]; start?: 'range'; exits?: Pt[]; invited?: { at: number }; holes?: number; townBoost?: number; townTakings?: number; townHome?: number } | null): TownEvent[] {
     // a range start's start, exits and invitation (plan P22) are kept for the range-start rules that read them (T088-T094); an old start's golf
     // state has none of these keys, exactly as before
     this.golf = g ? { tier: g.tier, rep: g.rep } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
     if (this.golf && g?.start === 'range') { this.golf.start = 'range'; if (g.exits) this.golf.exits = g.exits; if (g.invited) this.golf.invited = g.invited; }
+    // T295 (#880; the owner, 2026-11-02): a range start's town starts with the starter buildings and climbs with the range's takings and the player's home
+    // (lots/tiers.ts townTier); the other games keep the top tier, as before
+    this.town.tier = this.golf?.start === 'range' ? townTier(g?.townTakings ?? 0, g?.townHome ?? 0, TIER_TAKINGS) : 3;
     // a range start's grown town (T091): its industrial district toward the nearer exit, opening at GROWN_IND_FROM built lots
     this.town.grownInd = this.golf?.start === 'range' && this.centres.length ? { rect: this.grownIndustrial(), from: GROWN_IND_FROM } : null;
     // and its lot growth (T090, plan P22 2.3.2-2.3.3): the holes built and the tournaments' success (1 until the first tournament)

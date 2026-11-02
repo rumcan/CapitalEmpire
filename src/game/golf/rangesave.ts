@@ -30,6 +30,8 @@ export interface PracticeFacSave { open: boolean; season: PracticeCounts; total:
  *  counts, paths (true: the game has laid the old start's cement walkway; false: to lay on the next load, an old save's; absent: none, T239's guided start), tee (T130: the game has laid the tee box into the
  *  course grid: an old save's first load lays it) and the practice facilities (T130; a save without them: none built) */
 export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; season: RangeCounts; total: RangeCounts; paths?: boolean; tee?: boolean; practice: Record<PracticeId, PracticeFacSave>;
+  /** T295 (#880): the takings ($) of the count period closed last (rangeNewSeason); the town's tier reads it (lots/tiers.ts); absent in an old save: 0 */
+  last?: number;
   /** the extras' own counts (T133): the coffee kiosk's buyers and takings, the academy's lessons and fees (a save without them: zero) */
   extras: Record<ExtraId, ExtraSave>;
   /** T146: the game has laid the car park building's cart path (from the path's end at the car park round the building); an old save's first
@@ -138,6 +140,7 @@ function normalizeExtras(x: unknown): Record<ExtraId, ExtraSave> {
 }
 /** the season closes with the books: the range's and its practice facilities' season counts start again from zero */
 export function rangeNewSeason(s: RangeBizSave): void {
+  s.last = s.season.takings;
   s.season = zero();
   for (const id of PRACTICE_IDS) s.practice[id].season = { golfers: 0, takings: 0 };
   for (const id of EXTRA_IDS) s.extras[id].season = { golfers: 0, takings: 0 };
@@ -155,6 +158,7 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   // the walkway (T239): laid (true); an old save's the game never laid, to lay on its first load (false); a guided start's: none (absent)
   if (o.paths === true) out.paths = true; else if (o.paths === false || o.guided !== true) out.paths = false;
   if (o.tee === true) out.tee = true;
+  if (typeof o.last === 'number' && Number.isFinite(o.last) && o.last > 0) out.last = Math.round(o.last);
   if (o.garage === true && owned.includes('parking')) out.garage = true;
   // T237: the set-back and the range's own lot (a save from before T237 has neither: its plot on the road, its lot on the plot)
   if (typeof o.setback === 'number' && Number.isFinite(o.setback) && o.setback > 0) out.setback = Math.round(o.setback);

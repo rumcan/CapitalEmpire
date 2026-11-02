@@ -145,6 +145,10 @@ export const GROWN_SUCCESS0 = 0.7, GROWN_SUCCESS_K = 8, GROWN_SUCCESS_MIN = 0.7,
  *  made being the club's running income (Budget.earned). It grows toward that at the pace above and stops there; a concave curve, so the first
  *  $50k matter most (about 300 residents) and every later dollar a little less (seasons 1-20 of a careful and a careless player: range-gate) */
 export const GROWN_EARN_P0 = 60, GROWN_EARN_K = 23.5, GROWN_EARN_P = 0.6;
+/** T295 (#880; the owner, 2026-11-02: the town starts poor and earns its nicer buildings as the driving range makes money): the range takings ($,
+ *  its count period's, or the last closed one's) at which the town's income tier is 1, 2 and 3 (lots/tiers.ts townTier: the lower of this and the home
+ *  tier). First guesses, to tune */
+export const TIER_TAKINGS: readonly number[] = [0, 4000, 15000, 40000];
 /** with town centres: a lot's price, $ (times its frontage class value: CLASS_VALUE in budget.ts), paid to the player when the town builds on a lot on a paved road */
 export const LOT_PRICE = 2000;
 /** with town centres: the share of a lot's price the player is paid for it (see LOT_PRICE) */

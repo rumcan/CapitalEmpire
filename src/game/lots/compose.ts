@@ -44,6 +44,7 @@ import { LATEST, LOT_MODELS } from './lot-models';
 import { lotPickup, parkedAs } from '../vehicles';
 import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
+import { presetTier, tierOf } from './tiers';
 import { FRONTAL } from './frontal';
 import { onStudioScales } from './scales-live';
 import { KIT_FLOWERS, KIT_HEDGE, KIT_SHRUBS } from '../kit';
@@ -321,10 +322,22 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
   // the frozen preset of the lot's slot, among those whose house fits the lot's band at today's sizes (houseFits: a list where every one fits,
   // nearly all, picks as before; neighbours still differ); none fits: among all, the house centred in its band
   const frozen = () => { const list = presetsOf(use, state, lot.w, lot.d), fits = list.filter(q => houseFits(q, lot)); return fits.length ? fits : list; };
+  // T295 (#880): the presets at or under the lot's building tier (its LotState.tier; 3 when absent: every preset, as before)
+  const cap = st.tier ?? 3, frozenT = () => tieredOf(frozen(), cap), biz = st.biz;
   // (T270: a shop lot whose approved presets cannot show the shop its place calls for draws a frozen one that can, on a lot the map axes fit)
-  if (ok.length) return shopPlan(ok, lot, use, angled || use === 'res' ? undefined : frozen);
-  if (angled) return null;
-  return shopPlan(frozen(), lot, use);
+  if (ok.length) { const u = underTier(ok, cap); if (u.length) return shopPlan(u, lot, use, angled || use === 'res' ? undefined : frozenT, biz, cap); }
+  if (angled) return ok.length ? shopPlan(tieredOf(ok, cap), lot, use, undefined, biz, cap) : null;
+  return shopPlan(frozenT(), lot, use, undefined, biz, cap);
+}
+// ---------- T295 (#880): the building tiers (lots/tiers.ts): a lot draws the presets whose buildings are at or under its tier
+/** a preset's tier, cached by the preset (its building props: presetTier, the library's building test) */
+const TIER_OF = new WeakMap<LotPreset, number>();
+const presetTierOf = (p: LotPreset): number => { let t = TIER_OF.get(p); if (t === undefined) TIER_OF.set(p, t = presetTier(p, id => { const i = LIB_AT.get(id); return i !== undefined && isBuilding(LIBRARY[i]!); })); return t; };
+/** the presets at or under tier cap; none of them: the lowest-tier ones of the list (a lot is never left empty for its tier) */
+function underTier(list: readonly LotPreset[], cap: number): LotPreset[] { return list.filter(p => presetTierOf(p) <= cap); }
+function tieredOf(list: readonly LotPreset[], cap: number): LotPreset[] {
+  const a = underTier(list, cap); if (a.length || !list.length) return a;
+  const low = Math.min(...list.map(presetTierOf)); return list.filter(p => presetTierOf(p) === low);
 }
 /** the frame a preset is drawn in on a lot: frameOf, a lab preset of a diagonal road turned by its quarter (quarterOfRoad) */
 const presetFrame = (lot: LotGeom, preset: LotPreset): PresetFrame => { const f = frameOf(lot); return preset.road !== undefined && preset.road % 2 ? { ...f, q: quarterOfRoad(preset.road) } : f; };
@@ -394,7 +407,7 @@ export function swapScale(q: PresetProp, id: string, f: PresetFrame, R: SwapRule
  *  preset whose spot takes it at the largest scale (the slot's pick on a tie) with the shop swapped in; else, before the next colour, the same in
  *  the fallback list (the frozen presets of a lot whose approved ones cannot show it). A use without a palette, and a lot whose slot picks a preset
  *  with no shop spot (a tour lot's gas station), draw the slot's pick as before */
-function shopPlan(list: readonly LotPreset[], lot: LotGeom, use: PresetUse, fallback?: () => readonly LotPreset[]): ShopPlan | null {
+function shopPlan(list: readonly LotPreset[], lot: LotGeom, use: PresetUse, fallback?: () => readonly LotPreset[], biz?: string, cap = 3): ShopPlan | null {
   const slot = streetSlot(lot), key = streetKey(lot), old = pickPreset(list, slot, key);
   if (!VARIETY) return old ? { preset: old } : null;
   // (a house lot whose preset shows a house from the back shows another house's back)
@@ -404,7 +417,7 @@ function shopPlan(list: readonly LotPreset[], lot: LotGeom, use: PresetUse, fall
   // preset from the next); only a spot whose picture stands for a venue (SPOT_OF) is given the venue of the lot's colour
   if (use === 'tour') {
     const at = spotOf(old, pal); if (pal.includes(old.props[at]!.id)) return { preset: old };
-    for (const c of tryOrder(colourOf(lot, pal.length), pal.length)) { const k = swapScale(old.props[at]!, pal[c]!, presetFrame(lot, old)); if (k) return { preset: old, swap: { id: pal[c]!, scale: k, spot: at } }; }
+    for (const c of tryOrder(colourOf(lot, pal.length), pal.length)) { if (tierOf(pal[c]!) > cap) continue; const k = swapScale(old.props[at]!, pal[c]!, presetFrame(lot, old)); if (k) return { preset: old, swap: { id: pal[c]!, scale: k, spot: at } }; }
     return { preset: old };
   }
   // the shop presets of a list, the slot's pick first
@@ -412,8 +425,11 @@ function shopPlan(list: readonly LotPreset[], lot: LotGeom, use: PresetUse, fall
   // a house swapped in suits the lot's road and state (the house allocations, T155), as a stand-in house does
   const R = rulesOf(use), road = roadOf(lot.n), suits = (id: string) => use !== 'res' || allows(ALLOC, id, road, old.state);
   const lists = [shopsOf(list, old)];
-  for (const c of tryOrder(colourOf(lot, pal.length), pal.length)) {
+  // (T295 #2: a lot whose business the town picked (LotState.biz) shows that one, the lot's colour otherwise)
+  const first = use === 'com' && biz !== undefined && pal.includes(biz) ? pal.indexOf(biz) : colourOf(lot, pal.length);
+  for (const c of tryOrder(first, pal.length)) {
     const id = pal[c]!;
+    if (tierOf(id) > cap) continue; // T295: a shop above the lot's tier is not swapped in
     for (let li = 0; li < 2; li++) {
       if (li === 1 && lists.length < 2) { if (!fallback) break; lists.push(shopsOf(fallback())); }
       const shops = lists[li]!, own = shops.filter(p => p.props[spotOf(p, pal)]!.id === id);

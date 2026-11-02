@@ -6,16 +6,20 @@ import { zoneOf } from '../sim/routing';
 import type { Built } from '../sim/trips';
 import { FARM_LINE, GROWN_BASE, GROWN_BUILD_S, GROWN_PER_BUILT, GROWN_PER_HOLE, GROWN_RING0, GROWN_RING_K, PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT } from '../event/config';
 import { inCommercial, inIndustrial, industrialRect } from './districts';
+import { tierOf } from './tiers';
+import { SHOP_PALETTE, colourOf, tryOrder } from './variety';
 
 export const LU = { NONE: 0, RES: 1, COM: 2, IND: 3, TOUR: 4, GOV: 5 } as const;
 /** shops gather in rows: a lot's shop neighbours (within COM_ROW tiles, on the same side of the street) raise its shop score by COM_PULL each
  *  (up to two) and lower its house score to COM_PUSH times (see useFor) */
 const COM_ROW = 14, COM_PULL = 0.9, COM_PUSH = 0.55;
 export const LV = { EMPTY: 0, BUILDING: 1, BUILT: 2, UPGRADED: 3 } as const;
-export interface LotState { key: string; use: number; level: number; decline: number /* 0 ok, 1 shabby, 2 boarded, 3 derelict */; since: number /* sim s of the last change */; seed: number; pop: number; jobs: number }
-/** a saved lot: key, use, level, decline, seed, since (sim s of the last change) */
-export type LotTuple = [string, number, number, number, number, number];
-export interface TownEvent { key: string; kind: 'build' | 'complete' | 'upgrade' | 'decline' | 'recover' | 'clear' | 'gone'; use: number; level: number; decline: number; seed: number; since: number }
+/** tier (T295, lots/tiers.ts): the building tier the lot's building is drawn from (set when it is built or upgraded from the town's tier; absent in an old
+ *  save: the top tier, as before); biz (T295 #2): the shop business a commercial lot shows (variety.ts SHOP_PALETTE), absent: its lattice colour */
+export interface LotState { key: string; use: number; level: number; decline: number /* 0 ok, 1 shabby, 2 boarded, 3 derelict */; since: number /* sim s of the last change */; seed: number; pop: number; jobs: number; tier?: number; biz?: string }
+/** a saved lot: key, use, level, decline, seed, since (sim s of the last change), then the tier and the business when the lot has them (T295) */
+export type LotTuple = [string, number, number, number, number, number, number?, string?];
+export interface TownEvent { key: string; kind: 'build' | 'complete' | 'upgrade' | 'decline' | 'recover' | 'clear' | 'gone'; use: number; level: number; decline: number; seed: number; since: number; tier?: number; biz?: string }
 export interface GrowthOption { id: string; name: string; w: [number, number, number, number, number] /* RES COM IND TOUR GOV multipliers */ }
 /** the growth options: the multipliers shift the land use scores (and GOV's quota); the player picks one, nothing is placed */
 export const GROWTH_OPTIONS: GrowthOption[] = [
@@ -106,6 +110,11 @@ export class Town {
   }
   /** T221: the residents the grown town's lots building now will bring (Town.step counts them each game hour: a lot building as a home) */
   pending = 0;
+  /** T295 (#880; lots/tiers.ts): the town's building tier now (0 starter .. 3 fine; city.ts sets it from the range's takings and the home); a new or
+   *  upgraded lot takes it. 3 until a range start sets it, so the other games and old saves build as before */
+  tier = 3;
+  /** T295 #2: the lots standing per shop business (the commercial lots' biz), and whether a restore is loading the saved lots (no new picks then) */
+  private bizN = new Map<string, number>(); private loading = false;
   popK: number[] = []; builtK: number[] = []; govK: number[] = [];
 
   constructor(seed: number) { this.seed = seed >>> 0; this.rs = this.seed; }
@@ -135,11 +144,15 @@ export class Town {
    *  no hours are replayed). Returns a 'complete' event per restored lot, so the main thread composes it. */
   restore(saved: LotTuple[], t: number): TownEvent[] {
     const ev: TownEvent[] = [];
-    for (const [key, use, level, decline, seed, since] of saved) {
+    this.loading = true;
+    for (const [key, use, level, decline, seed, since, tier, biz] of saved) {
       const s = this.states.get(key); if (!s || level === LV.EMPTY) continue;
       s.seed = seed; this.set(s, use, level, decline, since);
-      ev.push({ key, kind: 'complete', use, level, decline, seed, since });
+      // (an old save's lot has no tier or business: it stays as it was drawn, the top tier and the lattice colour)
+      s.tier = tier; this.bizSet(s, biz);
+      ev.push({ key, kind: 'complete', use, level, decline, seed, since, tier: s.tier, biz: s.biz });
     }
+    this.loading = false;
     this.t = t; this.hour = Math.floor(t / HOUR);
     return ev;
   }
@@ -425,12 +438,18 @@ export class Town {
   /** a state change: keeps the totals, the candidates and the distances to the lots not EMPTY */
   private set(s: LotState, use: number, level: number, decline: number, T: number) {
     const was = s.use !== LU.NONE, k = this.townOf(s.key);
+    // T295: a lot built or upgraded takes the town's tier; a lot cleared gives its business back (before its level changes: the count is of a standing lot)
+    const fresh = s.level === LV.EMPTY && level !== LV.EMPTY, upg = s.level === LV.BUILT && level === LV.UPGRADED;
+    if (level === LV.EMPTY) this.bizSet(s, undefined);
     if (s.level !== LV.EMPTY) { this.cnt[s.use]--; this.occ--; }
     this.pop -= s.pop; this.jobs -= s.jobs;
     if (k >= 0) this.popK[k] -= s.pop;
     if (was) this.nAct--; if (s.level >= LV.BUILT) this.built--; if (s.use === LU.GOV) this.govN--;
     if (k >= 0) { if (s.level >= LV.BUILT) this.builtK[k]--; if (s.use === LU.GOV) this.govK[k]--; }
     s.use = use; s.level = level; s.decline = decline; s.since = T;
+    if (fresh || upg) s.tier = this.tier;
+    // T295 #2: a new commercial lot shows a business the town can take (pickBiz); none for the other uses
+    if (fresh && !this.loading) this.bizSet(s, use === LU.COM ? this.pickBiz(this.geo.get(s.key)!) : undefined);
     s.pop = yieldOf(POP, s); s.jobs = yieldOf(JOBS, s);
     this.pop += s.pop; this.jobs += s.jobs;
     if (k >= 0) this.popK[k] += s.pop;
@@ -442,6 +461,25 @@ export class Town {
     if (!is && level === LV.EMPTY) this.candAdd(l); else this.candDel(s.key);
     if (is && !was) for (let i = 0; i < this.cand.length; i++) { const d = dist(this.cand[i].c, l.c); if (d < this.candDn[i]) this.candDn[i] = d; }
     if (was && !is) this.dirty = true;
+  }
+
+  /** T295 #2 (#880; the owner, 2026-11-02: "never reuse a commercial building with a name more than twice"): the business a new commercial lot shows:
+   *  its lattice colour (variety.ts colourOf) among the businesses the town's tier allows (tierOf <= tier; all of them when none is allowed), unless that
+   *  business has two lots in the town, or one while an allowed one has none: then the allowed business with the fewest lots (ties: the lattice order) */
+  private pickBiz(l: Lot): string {
+    const pal = SHOP_PALETTE, n = pal.length;
+    const order = tryOrder(colourOf(l, n), n).map(i => pal[i]!);
+    let pool = order.filter(id => tierOf(id) <= this.tier); if (!pool.length) pool = order;
+    const cnt = (id: string) => this.bizN.get(id) ?? 0, first = pool[0]!;
+    if (cnt(first) < 2 && !(cnt(first) === 1 && pool.some(id => cnt(id) === 0))) return first;
+    let best = first; for (const id of pool) if (cnt(id) < cnt(best)) best = id;
+    return best;
+  }
+  /** T295 #2: a lot's business (undefined: none), its count moving with it while the lot stands (BUILDING or more); call it before a lot's level changes to EMPTY */
+  private bizSet(s: LotState, b: string | undefined) {
+    if (s.biz !== undefined && s.level !== LV.EMPTY) this.bizN.set(s.biz, (this.bizN.get(s.biz) ?? 1) - 1);
+    s.biz = b;
+    if (b !== undefined && s.level !== LV.EMPTY) this.bizN.set(b, (this.bizN.get(b) ?? 0) + 1);
   }
 
   /** the distance of every candidate to the nearest lot not EMPTY (none: Infinity) */
@@ -468,7 +506,7 @@ export class Town {
     this.cand.pop(); this.candDn.pop(); this.candAt.delete(key);
   }
 
-  private evt(s: LotState, kind: TownEvent['kind']): TownEvent { return { key: s.key, kind, use: s.use, level: s.level, decline: s.decline, seed: s.seed, since: s.since }; }
+  private evt(s: LotState, kind: TownEvent['kind']): TownEvent { return { key: s.key, kind, use: s.use, level: s.level, decline: s.decline, seed: s.seed, since: s.since, tier: s.tier, biz: s.biz }; }
 
   /** the seeded stream (mulberry32): [0, 1) */
   private rnd(): number {
