@@ -1,0 +1,161 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "id": "batch:sw-street-repairs-05",
+  "output": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+  "references": [
+    "art/theme-consistency/references/sw-street-batch05-architecture-guide-v1.png"
+  ],
+  "cells": [
+    {
+      "index": 7,
+      "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "version": "variation-expansion-rundown-house-a7c17683-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-expansion-rundown-house-a7c17683-plain-1/NE.png",
+      "sha256": "3d40f6e920bc57bd32ec2b7413ad27acb1c100fdffb0ce28af44ad42ba18dd7b",
+      "width": 488,
+      "height": 456,
+      "dir": "variation-expansion-rundown-house-a7c17683-plain-1",
+      "family": "house",
+      "status": "measured-fail-repair",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "fit": {
+        "threshold": 128,
+        "slope": 0.30017533606078317,
+        "angleErrorDegrees": 9.856590859135615,
+        "rmsPx": 0.3944708948044402,
+        "samples": 59,
+        "endpoints": [
+          [
+            27,
+            339.9728813559322
+          ],
+          [
+            85,
+            357.3830508474576
+          ]
+        ]
+      },
+      "measurementKind": "Exposed front stone foundation left of entry porch",
+      "measurementSource": "E:/ClaudeTemp/SW-road-audit/previously-uncertain-house-base-fits.json",
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-7-base.png",
+      "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-07.png",
+      "notes": "",
+      "cell": 1,
+      "row": 0,
+      "column": 0
+    },
+    {
+      "index": 16,
+      "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
+      "version": "variation-gen-house-l-shape-north-79eba705-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-shape-north-79eba705-plain-1/NE.png",
+      "sha256": "48d669649ddad9ef18c54f5955601b39f1284125c0c2dd985f7d1486f41f484f",
+      "width": 562,
+      "height": 470,
+      "dir": "variation-gen-house-l-shape-north-79eba705-plain-1",
+      "family": "house",
+      "status": "measured-fail-repair",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "fit": {
+        "threshold": 128,
+        "slope": 0.3905432868175044,
+        "angleErrorDegrees": 5.232254005035692,
+        "rmsPx": 0.9723381906527956,
+        "samples": 121,
+        "endpoints": [
+          [
+            220,
+            401.29467551822245
+          ],
+          [
+            340,
+            448.159869936323
+          ]
+        ]
+      },
+      "measurementKind": "Garage front ground-contact foundation / lower door sills",
+      "measurementSource": "E:/ClaudeTemp/SW-road-audit/previously-uncertain-house-base-fits.json",
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-16-base.png",
+      "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-16.png",
+      "notes": "",
+      "cell": 2,
+      "row": 0,
+      "column": 1
+    },
+    {
+      "index": 24,
+      "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+      "version": "variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-dormer-north-6952cea5-plain-1/NE.png",
+      "sha256": "d21a0a06b4911ce4c5abd8daaa72f4bca6c1b149eea4721b1cf7f21397533b50",
+      "width": 575,
+      "height": 499,
+      "dir": "variation-ref-building-house-dormer-north-6952cea5-plain-1",
+      "family": "house",
+      "status": "measured-fail-repair",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "fit": {
+        "slope": 0.2873035926820597,
+        "angleErrorDegrees": 10.53550258046145,
+        "rmsPx": 0.6293122896090934,
+        "samples": 72
+      },
+      "measurementKind": "Elevated entry porch STRUCTURAL FLOOR-BEAM lower face, not foundation/ground, no top railing/roof/stairs/bbox",
+      "measurementSource": "E:/ClaudeTemp/SW-road-audit/house24-native-floor-beam-fit.json",
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-24-beam.png",
+      "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-24.png",
+      "notes": "",
+      "cell": 3,
+      "row": 1,
+      "column": 0
+    },
+    {
+      "index": 29,
+      "id": "variation:world-house_2-north-332663ab-plain:1",
+      "version": "variation-world-house_2-north-332663ab-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-world-house_2-north-332663ab-plain-1/NE.png",
+      "sha256": "4003b054ceb6c8a9182a4e53e310f0c87c9e16ef4a6d337a2b17de82d8a21a0e",
+      "width": 557,
+      "height": 533,
+      "dir": "variation-world-house_2-north-332663ab-plain-1",
+      "family": "house",
+      "status": "measured-fail-repair",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "fit": {
+        "threshold": 128,
+        "slope": 0.2904081632653061,
+        "angleErrorDegrees": 10.37132267664325,
+        "rmsPx": 0.45148650770416326,
+        "samples": 49,
+        "endpoints": [
+          [
+            30,
+            392.9281632653061
+          ],
+          [
+            78,
+            406.8677551020408
+          ]
+        ]
+      },
+      "measurementKind": "Exposed front stone foundation left of entry porch",
+      "measurementSource": "E:/ClaudeTemp/SW-road-audit/house29-native-base-fit.json",
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-29-base.png",
+      "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-29.png",
+      "notes": "",
+      "cell": 4,
+      "row": 1,
+      "column": 1
+    }
+  ],
+  "transparent": true,
+  "prompt": "Paint over this exact architectural drawing into four different hand-painted town-game building sprites on one transparent 2×2 sheet. Keep the drawing's structural outlines, camera and placement of doors. Add painted materials without rotating the geometry.\n\nFront wall bases, front doors, window rows and porch floor beams descend one pixel per two pixels right. Right side wall bases rise one pixel per two pixels right. Both axes equally steep. Vertical edges upright. Preserve these exact drawn edges; do not flatten fronts or steepen sides. Paint out all coloured guides after retaining their alignment.\n\nTOP LEFT: abandoned two-storey grey-blue timber house. Dark blue slate gable roof with broken patches and visible wooden battens, a small boarded front dormer and old brick chimney. Boarded windows, boarded front door, peeling boards, sagging timber front porch roof with posts, worn steps, broken balusters and lattice below the deck. Grey stone foundation. Keep the actual structure upright and road-aligned despite wear.\nTOP RIGHT: two-storey grey clapboard L-shaped family house. Dark slate roof with a small front dormer. Lower projecting garage wing at physical RIGHT has two separate warm-topped brown garage doors and its own gabled roof/dormer. Main house front door at physical LEFT has a small raised timber landing, railings, steps and two brass lanterns. Warm windows and cream trim. Both garage openings and the main front door face the same front plane drawn in red.\nBOTTOM LEFT: tan-grey clapboard dormer house. Steep dark slate roof with THREE front dormers, larger broad central dormer, brick chimney at rear right, dark trim and warm windows. Broad lower front window left, central cream door, small right window. Short timber entry deck with balusters and steps, one grey bin, small hose reel and low planted box close to the foundation. Front deck beam stays on the exact drawn axis.\nBOTTOM RIGHT: two-storey olive-green clapboard house with cream trim, dark green shutters, dark slate gable roof and brick chimney. Three evenly spaced upper front windows, two lower windows around central green front door. Long raised front timber deck with railing and steps at physical RIGHT end, small meters and hose reels on wall. Grey stone foundation. Front door header and deck floor beam parallel to the red guide.\n\nRich hand-painted stylized game environment art in the spirit of World of Warcraft/Hearthstone, confident painted shapes, readable board and slate detail, warm glowing windows, restrained wear except the abandoned house. One sun upper right, shade lower left for all four. Complete isolated sprites with clear transparent gutters and margins. No floor planes, ground islands, lawns, roads, scenery, background, detached shadows, labels or guide colours. Genuine alpha PNG.",
+  "generator": "built-in imagegen",
+  "originalSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-254c84af-409a-47a0-8911-c0ecf46c0d36.png",
+  "review": "pending"
+}

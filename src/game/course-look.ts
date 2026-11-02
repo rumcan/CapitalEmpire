@@ -17,7 +17,9 @@ export function courseTexOf(st: LookStyle): CourseTex {
   return {
     tex: st.tex, sc: st.scale, a: st.angle,
     ...(exposed(x) ? { x } : {}),
-    ...(st.mtex ? { m: { t: st.mtex, s: st.mshare ?? 0.5, f: st.msoft ?? 0.12, p: st.mpatch ?? 1 } } : {}),
+    ...(st.ox || st.oy ? { o: [st.ox ?? 0, st.oy ?? 0] as [number, number] } : {}),
+    ...(st.mtex ? { m: { t: st.mtex, s: st.mshare ?? 0.5, f: st.msoft ?? 0.12, p: st.mpatch ?? 1,
+      ...(st.mscale !== undefined ? { sc: st.mscale } : {}), ...(st.mangle !== undefined ? { a: st.mangle } : {}), ...(st.mox || st.moy ? { o: [st.mox ?? 0, st.moy ?? 0] as [number, number] } : {}) } } : {}),
   };
 }
 /** whether a brush's Border texture is its own pick (not the kerb, which a course band cannot be, and not the brush's default) */
@@ -30,11 +32,12 @@ export function courseBandOf(kind: BrushKind, st: LookStyle, dflt: CourseTex): C
   return {
     tex: ownBorder(kind, st) ? st.btex : dflt.tex, sc: follow ? dflt.sc : st.bscale, a: follow ? dflt.a : st.bangle,
     ...(exposed(x) ? { x } : {}),
+    ...(st.box || st.boy ? { o: [st.box ?? 0, st.boy ?? 0] as [number, number] } : {}),
   };
 }
 /** the style fields the course grid's look reads: a change to any of them draws the course again (the tints ride along: T261 no longer draws
  *  them, but a look that differs only in one is still another look) */
-export const LOOK_FIELDS = ['tex', 'scale', 'angle', 'tone', 'toneAmt', 'tint', 'mtex', 'mshare', 'msoft', 'mpatch', 'btex', 'bscale', 'bangle', 'btone', 'btoneAmt', 'btint', 'round', 'smooth'] as const;
+export const LOOK_FIELDS = ['tex', 'scale', 'angle', 'tone', 'toneAmt', 'tint', 'mtex', 'mshare', 'msoft', 'mpatch', 'mscale', 'mangle', 'mox', 'moy', 'ox', 'oy', 'btex', 'bscale', 'bangle', 'btone', 'btoneAmt', 'btint', 'box', 'boy', 'round', 'smooth', 'bunker'] as const;
 export const lookChanged = (a: Partial<LookStyle>, b: Partial<LookStyle>) => LOOK_FIELDS.some(k => a[k] !== b[k]);
 
 /** a course collar band's name (course-blobs BLOB_STYLE): the green's fringe, the fairway's and the tee's first cut, a bunker's lip, a pond's bank */

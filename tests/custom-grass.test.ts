@@ -18,7 +18,7 @@ import type { Game } from '../src/game/engine';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { SurfaceSwatches } from '../src/ui/course/BrushControls';
-import { GrassCard } from '../src/ui/course/GrassEditor';
+import { GrassCard, grassTextureOptions } from '../src/ui/course/GrassEditor';
 
 const LOOKS: CourseLooks = {
   surf: [undefined, { tex: 'golfRough', sc: 1, a: 0 }, { tex: 'golfFescue', sc: 1, a: 0 }, { tex: 'waterDark', sc: 1, a: 0 }, { tex: 'golfFairway', sc: 1, a: 0 }, { tex: 'golfTee', sc: 1, a: 0 }, { tex: 'bunkerSand', sc: 1, a: 0 }, { tex: 'wasteSand', sc: 1, a: 0 }, { tex: 'golfGreen', sc: 1, a: 0 }, { tex: 'golfLongGrass', sc: 1, a: 0 }],
@@ -214,8 +214,24 @@ test('Shape by hand and Edit hole show the grasses as swatches with their keys, 
   p.openGrass(1);
   const card = renderToStaticMarkup(createElement(GrassCard, { game, onClose: () => {} }));
   for (const w of ['Plays as', 'Fairway', 'First cut', 'Rough', 'Long grass', 'Fescue', 'Texture', 'Scale', 'Exposure', 'Mowing stripes', 'Border', 'Round off', 'Smoothness', 'Shadow', 'Delete']) assert.ok(card.includes(w), `the editor has ${w}`);
-  assert.equal((card.match(/data-family=/g) ?? []).length, GRASS_FAMILIES.length, 'every painted grass family');
+  // the texture picker offers every painted grass family first, then the texture presets (My looks merged into Create your own)
+  const opts = grassTextureOptions();
+  assert.deepEqual(opts.slice(0, GRASS_FAMILIES.length).map(o => o.id), GRASS_FAMILIES.map(f => f.id), 'every painted grass family');
+  assert.ok(opts.some(o => o.id.startsWith('preset:')), 'and the texture presets');
+  assert.match(card, /data-texture-picker="grass"/); assert.doesNotMatch(card, /data-create-bunker/, 'a grass card only: the bunker look has its own card');
   // a classic game (no course grid) shows none of it
   const classic = renderToStaticMarkup(createElement(SurfaceSwatches, { game: { ...game, golfMode: false } as unknown as Game, on: null, pick: () => {} }));
   assert.ok(!classic.includes('grass-new'));
+});
+
+test('a grass of your own has its own Border texture: kept through a save, laid as its band, the first cut without one', async () => {
+  const { clampGrass, grassBandTex, newGrass } = await import('../src/game/golf/grasses');
+  const fc = { tex: 'preset:first-cut', sc: 1, a: 0 };
+  const plain = newGrass(1, 'emerald-medium');
+  assert.equal(grassBandTex(plain, fc), fc, 'no Border texture: the course’s first cut');
+  const own = clampGrass(JSON.parse(JSON.stringify({ ...plain, btex: 'preset:sand', bscale: 2, bangle: 30, btone: 1, btoneAmt: 0.4 })))!;
+  assert.equal(own.btex, 'preset:sand'); assert.equal(own.bscale, 2); assert.equal(own.bangle, 30);
+  const band = grassBandTex(own, fc); assert.equal(band.tex, 'preset:sand'); assert.equal(band.sc, 2); assert.equal(band.a, 30); assert.ok(band.x !== undefined && band.x < 1);
+  assert.equal(grassBandTex(clampGrass({ ...plain, btex: 'emerald-long' })!, fc).tex, 'own:fairway:emerald-long', 'a painted grass as the band');
+  assert.equal(clampGrass({ ...plain, btex: 'no such thing' })!.btex, undefined, 'an unknown one is dropped');
 });

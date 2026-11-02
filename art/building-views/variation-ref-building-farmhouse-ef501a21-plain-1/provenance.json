@@ -1,151 +1,56 @@
 {
   "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
   "generator": "image_gen",
-  "generated": "2026-10-24",
-  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-701e3de5-e228-4243-b3d4-8b89c8803f7f.png",
-  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:ref-building-farmhouse-ef501a21-plain:1. Preserve this specific reference architecture, number of floors, roof shape, business function and attached structural features. Front signage/entrances belong only on physical front facades and must disappear in the two actual rear views. For gas stations retain pumps/canopy attached arrangement but no forecourt pavement. Drive-in screen has blank structural steel back, never a second movie screen. No parking surface, rectangular slab, grey floor, yard or landscaping.",
-  "references": [
-    {
-      "role": "authoritative-theme",
-      "file": "art/theme-consistency/references/theme-authoritative.png",
-      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
-    },
-    {
-      "role": "existing-subject-identity",
-      "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
-      "direction": null,
-      "file": "art/theme-consistency/exports/buildings/variation-ref-building-farmhouse-ef501a21-plain-1.configured@2x.png",
-      "sha256": "f0353e189786dad273d1714442a5e1d93bb217a76ead13d022c53f81df0a63c9"
-    }
-  ],
   "integrationStatus": "ready",
-  "integrationReason": "Porch-front gable changes slant NE/NW; rear gable windows SE/SW and lower side annexes coherent. Requires repack inspection. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
-  "sourceVisualReview": {
-    "reviewedAt": "2026-10-24T10:27:17.706Z",
-    "reviewer": "building_variation_review",
-    "alphaCompositeBackground": "#b91b91",
-    "allFourViewsInspected": true,
-    "themeReference": "art/theme-consistency/references/theme-authoritative.png",
-    "result": "ready",
-    "reason": "Porch-front gable changes slant NE/NW; rear gable windows SE/SW and lower side annexes coherent. Requires repack inspection. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
-    "postRepackContact": "output/building-priority/variation-post-repack-2.png"
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-04-v1.png",
+    "sheetSha256": "953af11836ccc03015200a5a8019e779fb79f1e41656b6cb0a5526c0220d97a1",
+    "cell": 2,
+    "sourceRect": {
+      "left": 638,
+      "top": 1,
+      "width": 616,
+      "height": 654
+    },
+    "coreBounds": {
+      "left": 680,
+      "top": 78,
+      "width": 561,
+      "height": 529
+    },
+    "nonzeroPixels": 207557,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-04-v1.review.json",
+      "sha256": "112e8ce0726e215a3b6ffc35c7c452d89c0eaa0886dbf09d36f32e14a7137e1c"
+    }
   },
-  "layoutCorrection": {
-    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining faint pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
-    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-farmhouse-ef501a21-plain-1-4views-v1.png",
-    "originalSheetSha256": "605974a3d34bfcfa23ae2542eed7a18b65f9e8442febb9eed65da59a4e9943fb",
-    "outputSheetSha256": "1e3a48103c6e0730e7cc2d461246ef602bf44b9cef72a1220eb2a736be484928",
-    "originalDimensions": [
-      1774,
-      887
-    ],
-    "outputDimensions": [
-      2816,
-      2816
-    ],
-    "cellSize": 1408,
-    "nonzeroAlphaPixels": 623991,
-    "nonzeroAndVisiblePixelConservation": true,
-    "exactVisibleRgbaConservation": true,
-    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign faint fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
-    "views": [
-      {
-        "direction": "NE",
-        "dominantComponent": {
-          "label": 1,
-          "pixels": 166585,
-          "bounds": [
-            290,
-            10,
-            866,
-            449
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 0,
-          "y0": 0,
-          "x1": 951,
-          "y1": 491,
-          "count": 173102
-        },
-        "translation": {
-          "x": 228,
-          "y": 458
-        }
-      },
-      {
-        "direction": "SE",
-        "dominantComponent": {
-          "label": 2,
-          "pixels": 138063,
-          "bounds": [
-            1029,
-            24,
-            1540,
-            433
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 944,
-          "y0": 0,
-          "x1": 1737,
-          "y1": 467,
-          "count": 144032
-        },
-        "translation": {
-          "x": 771,
-          "y": 470
-        }
-      },
-      {
-        "direction": "SW",
-        "dominantComponent": {
-          "label": 12,
-          "pixels": 141119,
-          "bounds": [
-            317,
-            449,
-            843,
-            830
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 23,
-          "y0": 445,
-          "x1": 846,
-          "y1": 863,
-          "count": 146910
-        },
-        "translation": {
-          "x": 269,
-          "y": 1457
-        }
-      },
-      {
-        "direction": "NW",
-        "dominantComponent": {
-          "label": 11,
-          "pixels": 153757,
-          "bounds": [
-            987,
-            442,
-            1542,
-            861
-          ]
-        },
-        "allAssignedPixelsBounds": {
-          "x0": 918,
-          "y0": 440,
-          "x1": 1719,
-          "y1": 870,
-          "count": 159947
-        },
-        "translation": {
-          "x": 793,
-          "y": 1456
-        }
-      }
-    ],
-    "visualReviewRequired": true
-  }
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
+  },
+  "original": {
+    "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+    "version": "variation-ref-building-farmhouse-ef501a21-plain-1-4views-v2",
+    "files": {
+      "NE": "9b85720a8e154b1578d85c38fe73239e3a62e38c1b8e8140c8c4bd4d6e9a5579",
+      "SE": "a7b183aef8d13b68b45baada38c7c4f42f74d1c5ff0b579987d83d4ab5dd46d9",
+      "SW": "374d38e03eb0ea9fdd273fde92288e8ef71cc28dff0188e2f016fc086502941d",
+      "NW": "cc8d813fa764852224cb7493e054e9d8eb788c6388a5ac7823acfa94207802a3"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "6b43ac198f69538393b2f2ff736e978beb9eb2e6a86c47ad68cf68c08d74e403",
+    "SE": "a7b183aef8d13b68b45baada38c7c4f42f74d1c5ff0b579987d83d4ab5dd46d9",
+    "SW": "374d38e03eb0ea9fdd273fde92288e8ef71cc28dff0188e2f016fc086502941d",
+    "NW": "cc8d813fa764852224cb7493e054e9d8eb788c6388a5ac7823acfa94207802a3"
+  },
+  "authorityMetadata": "v3 corrects the occluded rundown-door observation; selected native artwork and approved geometry unchanged, no owner baseline change."
 }

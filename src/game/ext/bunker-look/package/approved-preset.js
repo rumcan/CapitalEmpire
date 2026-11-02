@@ -1,0 +1,41 @@
+export const APPROVED_APPEARANCE=Object.freeze({
+  "depth": 1.5,
+  "settings": {
+    "collar": 2.647123893805,
+    "firstCut": 1.79192477876,
+    "wall": 1.93929756637,
+    "textureScale": 1.1642699115000001,
+    "roughScale": 1.55646929825,
+    "firstScale": 1.49396929825,
+    "sandScale": 3,
+    "earthScale": 3,
+    "fairwayScale": 1.17434210526,
+    "roundness": 0.7406664823,
+    "rim": 0.843030973451,
+    "slope": 3.512859513275,
+    "shadow": 1.25218473451
+  },
+  "materialRevision": "sha256:7519ef4166909696025569d2df4083d018612ed3fa2e4bb20817eea7b55ae431",
+  "rendererRevision": "sha256:cb1f6fb1a0d65c681cd0ce0c3873fa1ba01456bfca3604569334cc9d21d01bcf",
+  "sourceControls": {
+    "shape": "concave",
+    "depth": "04_deep",
+    "size": 242,
+    "zoom": 10.3162755217,
+    "collar": 5.29424778761,
+    "first-width": 3.58384955752,
+    "wall-height": 1.93929756637,
+    "texture-scale": 116.42699115,
+    "rough-scale": 155.646929825,
+    "first-scale": 149.396929825,
+    "sand-scale": 300,
+    "earth-scale": 300,
+    "fairway-scale": 117.434210526,
+    "rim": 0.843030973451,
+    "slope": 7.02571902655,
+    "roundness": 74.06664823,
+    "shadow": 1.25218473451,
+    "erase": false,
+    "grid": false
+  }
+});

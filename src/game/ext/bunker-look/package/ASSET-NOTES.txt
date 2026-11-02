@@ -1,0 +1,1 @@
+Art: user-supplied rough, first-cut, brown earth and fairway; additional sand/material atlas generated with the built-in image tool. The selected look is approved-look.json. Native authoring masters are deliberately excluded. The supplied game-native shape is an example, not a replacement for every existing outline.

@@ -1,0 +1,200 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "source": {
+    "file": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-04-v1.png",
+    "sha256": "953af11836ccc03015200a5a8019e779fb79f1e41656b6cb0a5526c0220d97a1",
+    "width": 1254,
+    "height": 1254
+  },
+  "status": "partial-ready",
+  "toleranceDegrees": 2.25,
+  "cells": [
+    {
+      "cell": 1,
+      "status": "held",
+      "reason": "Front.462deg good,right2.352deg exceeds2.25."
+    },
+    {
+      "cell": 2,
+      "status": "ready-for-integration-review",
+      "reason": "Front.175deg/right2.041deg within2.25; frontentryplane correct. Primaryidentityreviewaccepted."
+    },
+    {
+      "cell": 3,
+      "status": "held",
+      "reason": "Front.096deg good,right2.355deg exceeds2.25."
+    },
+    {
+      "cell": 4,
+      "status": "held",
+      "reason": "Front.593deg good,right4.790deg exceeds2.25."
+    }
+  ],
+  "measurements": [
+    {
+      "name": "farmnorth-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.5101274312541914,
+      "target": 0.5,
+      "angleErrorDegrees": 0.462324316545653,
+      "rmsPx": 0.31989125404010865,
+      "samples": 71,
+      "endpoints": [
+        [
+          280,
+          577.5680751173709
+        ],
+        [
+          350,
+          613.2769953051643
+        ]
+      ]
+    },
+    {
+      "name": "farmnorth-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.5524164408310749,
+      "target": -0.5,
+      "angleErrorDegrees": 2.35193110598269,
+      "rmsPx": 0.34405631198800773,
+      "samples": 81,
+      "endpoints": [
+        [
+          485,
+          566.5904847937369
+        ],
+        [
+          565,
+          522.3971695272509
+        ]
+      ]
+    },
+    {
+      "name": "farmref-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.49619249074563704,
+      "target": 0.5,
+      "angleErrorDegrees": 0.17478903153083997,
+      "rmsPx": 0.3342724732347734,
+      "samples": 61,
+      "endpoints": [
+        [
+          990,
+          563.0322580645161
+        ],
+        [
+          1050,
+          592.8038075092543
+        ]
+      ]
+    },
+    {
+      "name": "farmref-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.5453477868112013,
+      "target": -0.5,
+      "angleErrorDegrees": 2.0406940404848415,
+      "rmsPx": 0.31578721059183823,
+      "samples": 81,
+      "endpoints": [
+        [
+          1120,
+          580.4311954230654
+        ],
+        [
+          1200,
+          536.8033724781693
+        ]
+      ]
+    },
+    {
+      "name": "world0-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.5020864381520117,
+      "target": 0.5,
+      "angleErrorDegrees": 0.0955554433840839,
+      "rmsPx": 0.3159190359931431,
+      "samples": 121,
+      "endpoints": [
+        [
+          235,
+          1104.2301856117056
+        ],
+        [
+          355,
+          1164.480558189947
+        ]
+      ]
+    },
+    {
+      "name": "world0-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.5524823657080846,
+      "target": -0.5,
+      "angleErrorDegrees": 2.354825081024355,
+      "rmsPx": 0.34717201361231237,
+      "samples": 96,
+      "endpoints": [
+        [
+          455,
+          1165.305412371134
+        ],
+        [
+          550,
+          1112.819587628866
+        ]
+      ]
+    },
+    {
+      "name": "world5-front",
+      "kind": "actual structural base alpha boundary",
+      "slope": 0.487133749321758,
+      "target": 0.5,
+      "angleErrorDegrees": 0.5927751654476655,
+      "rmsPx": 0.306797038043549,
+      "samples": 96,
+      "endpoints": [
+        [
+          900,
+          1128.8090635738831
+        ],
+        [
+          995,
+          1175.0867697594504
+        ]
+      ]
+    },
+    {
+      "name": "world5-side",
+      "kind": "actual structural base alpha boundary",
+      "slope": -0.6093326962892183,
+      "target": -0.5,
+      "angleErrorDegrees": 4.790266525108204,
+      "rmsPx": 0.3231450622772107,
+      "samples": 91,
+      "endpoints": [
+        [
+          1090,
+          1174.1342570473007
+        ],
+        [
+          1180,
+          1119.2943143812709
+        ]
+      ]
+    }
+  ],
+  "doorCalibration": {
+    "cell": 2,
+    "kind": "front single leaf under porch, shadowedhead",
+    "nativeFullSheet": {
+      "x": 810,
+      "headY": 425,
+      "thresholdY": 485,
+      "heightPx": 60
+    },
+    "uncertaintyPx": 4,
+    "note": "Checkphysicalscale usingpreservedowner/donorcalibration; porchdoorlooks smallrelativehouse."
+  }
+}

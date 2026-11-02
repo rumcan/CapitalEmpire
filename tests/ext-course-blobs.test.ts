@@ -472,3 +472,13 @@ test('debug picture: tests 1-6, painted strokes and a sample hole go to output/c
   writeFileSync('output/course-blobs/debug.svg', svg);
   assert.ok(svg.length > 1000);
 });
+
+test('a bunker meets a green’s fringe: never under it, and one painted just short of it reaches it', () => {
+  // a green (cells 10..19) with a 1-cell fringe; bunkers: one painted into the fringe (cells 20..27), one stopping a cell short (22..29)
+  const fill = (g: Grid) => { const o = chunkOutlines(g, 0, 0, 64, BLOB_STYLE).find(q => q.surf === BUNKER)!; let x0 = Infinity; for (const r of o.fill) for (let i = 0; i < r.length; i += 2) x0 = Math.min(x0, r[i]!); return x0 / LATTICE / 2; };
+  const into = grid(64, 40); put(into, 10, 10, 19, 29, GREEN); put(into, 20, 14, 27, 25, BUNKER);
+  const short = grid(64, 40); put(short, 10, 10, 19, 29, GREEN); put(short, 22, 14, 29, 25, BUNKER);
+  const a = fill(into), b = fill(short);
+  assert.ok(a >= 20.6 && a <= 21.6, `the sand starts past the fringe cell, at ${a}`);
+  assert.ok(Math.abs(b - a) < 0.35, `the bunker short of the fringe reaches it too (${b} vs ${a})`);
+});

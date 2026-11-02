@@ -47,7 +47,7 @@ const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, 
 const HALF = VTYPES.map(v => v.len / 4);
 
 /** a parcel as the worker sent it, with the town's use, level, decline, the lot's seed and the sim s of its last change (0, 0, 0, 0, 0 = EMPTY) */
-export interface LotView extends LotRec { use: number; level: number; decline: number; seed: number; since: number }
+export interface LotView extends LotRec { use: number; level: number; decline: number; seed: number; since: number; /** T295: the building tier and the shop business (town.ts LotState) */ tier?: number; biz?: string }
 
 
 /** The city worker's side: the cars of the sim, as typed arrays indexed by slot (n = the sim's slot count, 0 before the first frame), the parcels and the town. */
@@ -67,6 +67,8 @@ export class SimClient {
   onLotsMoved?: (keys: string[]) => void;
   /** called with the gravel extension the town plans (the engine builds it, or skips it); the worker waits for its net ops */
   onGrow?: (legs: Leg[]) => void;
+  /** T292 (#877): the town wants land and has none: the engine tells the player to build a road (City.checkRoom, once in a while) */
+  onNoRoom?: () => void;
   /** the city's books as the worker last sent them (the treasury is also moved on spend, before the worker's answer), the game day, and called with each day's ledger as it closes */
   budget: BudgetSave = new Budget().toJSON(); day = 1; onLedger?: (l: Ledger) => void;
   /** the career as the worker last sent it (reset with the books), and called with the milestones a step newly reached and whether the city won */
@@ -176,7 +178,7 @@ export class SimClient {
   /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
   setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** golf mode on (with the tournament's tier and its reputation: the season ends with it) or off (see City.setGolf) */
-  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][], range?: { start?: 'range'; exits?: Pt[]; invited?: { at: number }; holes?: number; townBoost?: number }) { this.post({ t: 'golf', on, tier, rep, land, start: range?.start, exits: range?.exits, invited: range?.invited, holes: range?.holes, townBoost: range?.townBoost }); this.golfOn = on; this.sendTownDay(); }
+  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][], range?: { start?: 'range'; exits?: Pt[]; invited?: { at: number }; holes?: number; townBoost?: number; townTakings?: number; townHome?: number }) { this.post({ t: 'golf', on, tier, rep, land, start: range?.start, exits: range?.exits, invited: range?.invited, holes: range?.holes, townBoost: range?.townBoost, townTakings: range?.townTakings, townHome: range?.townHome }); this.golfOn = on; this.sendTownDay(); }
   /** T090: told a range start's new town success after a tournament (the engine keeps it in the save) */
   onTownBoost: ((v: number) => void) | null = null;
   /** the town day (LEAD.md M1): in a golf game the town lives a day of townMinutes (real minutes at 1x; one sim second is one game minute)
@@ -288,9 +290,10 @@ export class SimClient {
       for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });
       this.onGrow?.(legs); return;
     }
+    if (m.t === 'noRoom') { this.onNoRoom?.(); return; }
     if (m.t === 'townBoost') { this.onTownBoost?.(m.v); return; }
     if (m.t === 'town') {
-      for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; v.seed = e.seed; v.since = e.since; } }
+      for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; v.seed = e.seed; v.since = e.since; v.tier = e.tier; v.biz = e.biz; } }
       this.pop = m.pop; this.jobs = m.jobs; this.built = m.built; this.access = m.access; this.room = m.room ?? null;
       this.builtZone.fill(0);
       for (const v of this.lots.values()) if (v.level >= LV.BUILT && v.use) this.builtZone[zoneOf(v.o[0] + v.u[0] * v.w / 2 + v.n[0] * v.d / 2, v.o[1] + v.u[1] * v.w / 2 + v.n[1] * v.d / 2)] = 1;
@@ -313,7 +316,7 @@ export class SimClient {
     const moved: string[] = [];
     // every lot that came, moved or went is handed on (an empty lot is composed too: its share of the fence grid)
     for (const k of removed) if (!keep.has(k)) moved.push(k);
-    for (const r of added) { const old = this.lots.get(r.key); moved.push(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0, seed: old?.seed ?? 0, since: old?.since ?? 0 }); }
+    for (const r of added) { const old = this.lots.get(r.key); moved.push(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0, seed: old?.seed ?? 0, since: old?.since ?? 0, tier: old?.tier, biz: old?.biz }); }
     if (moved.length) this.onLotsMoved?.(moved);
   }
   private resize(cap: number) {

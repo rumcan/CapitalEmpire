@@ -14,6 +14,7 @@ import { plainName } from '../../PaintPanel';
 import { lookWhat } from '../../game/golf/looks';
 import { SurfaceMark } from './SurfaceMark';
 import { grassPuckImage, swatchPuckOf, useSwatchPucks } from './swatch-puck';
+import { SurfaceFocus } from './SurfaceFocus';
 
 /** a k x k grid of dots, the size pills' glyph */
 export function SizeGlyph({ k }: { k: number }) {
@@ -53,7 +54,11 @@ export function SurfaceSwatches({ game, on, pick, pickGrass }: { game: Game; on:
   // T271 (#812): the course's own grasses after the eight, each its puck and Shift + its place as its key, then 9, Create your own (a golf
   // course's grid only: a classic game paints areas). A grass in hand lights its own swatch, not its carrier surface's
   const own = game.golfMode && !!game.courseGrid && !!p.grasses, gk = on ? p.grassInHand ?? 0 : 0;
+  // the owner, 2026-11-01: a click on a surface shows it alone, in focus (SurfaceFocus: its look large, quick textures, saved grasses, edit,
+  // whose look); the keys still switch surfaces, and the focus follows the one in hand
+  const [focus, setFocus] = useState(false);
   useSwatchPucks();
+  if (own && focus && on && !gk) return <SurfaceFocus game={game} kind={on} onBack={() => setFocus(false)} pickGrass={k => { setFocus(false); (pickGrass ?? (q => p.setGrass(q)))(k); }} />;
   return (
     <>
       <div className="swatches" role="group" aria-label="Surface">
@@ -61,7 +66,7 @@ export function SurfaceSwatches({ game, on, pick, pickGrass }: { game: Game; on:
           if (!ok(b.kind)) return null;
           const lit = on === b.kind && !gk, puck = swatchPuckOf(game, b.kind);
           return (
-            <button key={b.kind} data-swatch={b.kind} aria-pressed={lit} title={`${b.name} (key ${i + 1})`} className={`swatch ${lit ? 'swatch-on' : ''}`} data-puck={puck ? 'texture' : 'mark'} onClick={() => pick(b.kind)}>
+            <button key={b.kind} data-swatch={b.kind} aria-pressed={lit} title={`${b.name} (key ${i + 1})`} className={`swatch ${lit ? 'swatch-on' : ''}`} data-puck={puck ? 'texture' : 'mark'} onClick={() => { pick(b.kind); setFocus(true); }}>
               <span className="swatch-puck">{puck ? <img src={puck.url} width={puck.w} height={puck.h} alt="" draggable={false} /> : <SurfaceMark kind={b.kind} size={40} />}</span>
               <span className="swatch-key" aria-hidden>{i + 1}</span>
               <span className="swatch-name">{b.name}</span>

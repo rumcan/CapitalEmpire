@@ -1,0 +1,921 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "scope": "SWstreet-facing repairs only; canonical cameraNE. Other3existing views must remain byte-identical.",
+  "status": "art-approved; gameintegrationandroad-overlaypending",
+  "toleranceDegrees": 2.25,
+  "selected": [
+    {
+      "id": "variation:town-laundromat-43183f9e-plain:1",
+      "version": "variation-town-laundromat-43183f9e-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-laundromat-43183f9e-plain-1/NE.png",
+      "dir": "variation-town-laundromat-43183f9e-plain-1",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/01.native.png",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v2.png",
+      "sheetSha256": "5e56c735bef22172c420df0afa10bfd0b802369cc0093e723ab850cbaa4e13a6",
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v2.review.json",
+      "cropStrategy": "native component isolation; do not include other cells",
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-laundromat-43183f9e-plain-1/NE.png",
+        "version": "variation-town-laundromat-43183f9e-plain-1-4views-v1"
+      }
+    },
+    {
+      "index": 23,
+      "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-dormer-b4413f08-plain-1/NE.png",
+      "sha256": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
+      "width": 558,
+      "height": 507,
+      "dir": "variation-ref-building-house-dormer-b4413f08-plain-1",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/03.native.png",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+      "sheetSha256": "056e2dcb69a6f82193c55c24ed8a40875fe8eabd749eee1036320a6c23dd4caf",
+      "alpha16ComponentRect": {
+        "left": 17,
+        "top": 643,
+        "width": 605,
+        "height": 547
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v3.review.json",
+      "cropStrategy": "connected-component partition; rectangular bbox overlaps foreign pixels",
+      "doorCalibration": {
+        "cell": 3,
+        "kind": "single front leaf",
+        "nativeFullSheet": {
+          "x": 145,
+          "headY": 949,
+          "thresholdY": 1030,
+          "heightPx": 81
+        },
+        "uncertaintyPx": 3
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-dormer-b4413f08-plain-1/NE.png",
+        "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+        "sha256": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f"
+      }
+    },
+    {
+      "index": 17,
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-ranch-long-a4ddd58c-plain-1/NE.png",
+      "sha256": "728b436a3b05653381f7f55e784a77e75005bae353df1cbc1865985cb299af8a",
+      "width": 693,
+      "height": 412,
+      "dir": "variation-gen-house-ranch-long-a4ddd58c-plain-1",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "reference": "art/theme-consistency/references/sw-road-batch-01-identities/04.native.png",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-01-v3.png",
+      "sheetSha256": "056e2dcb69a6f82193c55c24ed8a40875fe8eabd749eee1036320a6c23dd4caf",
+      "alpha16ComponentRect": {
+        "left": 617,
+        "top": 749,
+        "width": 633,
+        "height": 426
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-01-v3.review.json",
+      "cropStrategy": "connected-component partition; rectangular bbox overlaps foreign pixels",
+      "doorCalibration": {
+        "cell": 4,
+        "kind": "single front leaf, unoccluded left part",
+        "nativeFullSheet": {
+          "x": 900,
+          "headY": 1003,
+          "thresholdY": 1090,
+          "heightPx": 87
+        },
+        "uncertaintyPx": 3
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-ranch-long-a4ddd58c-plain-1/NE.png",
+        "version": "variation-gen-house-ranch-long-a4ddd58c-plain-1-4views-v1",
+        "sha256": "728b436a3b05653381f7f55e784a77e75005bae353df1cbc1865985cb299af8a"
+      }
+    },
+    {
+      "index": 10,
+      "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+      "version": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-farmhouse-wrap-2b0eea83-plain-1/NE.png",
+      "sha256": "c30b889b6265094fda96f82729884c11512f5a2ab406bdfc1d1d723285b1a5d6",
+      "width": 569,
+      "height": 434,
+      "dir": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-02-v2.png",
+      "sheetSha256": "e714c295ca48c3afcc9a530780f0ab180cb28154bf1b2bd1d84c51fe29e2b903",
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-02-v2.review.json",
+      "alpha16ComponentRect": {
+        "left": 39,
+        "top": 51,
+        "width": 557,
+        "height": 552
+      },
+      "cropStrategy": "native component isolation; majorrectdoesnotcontainothermajorsubject",
+      "doorCalibration": {
+        "cell": 1,
+        "kind": "visible doorleaf only; head partly hidden by porchawning",
+        "nativeFullSheet": {
+          "x": 241,
+          "visibleLeafTopY": 417,
+          "thresholdY": 465,
+          "visibleHeightPx": 48
+        },
+        "uncertaintyPx": 3,
+        "usableAsCompleteDoorGauge": false,
+        "recommendation": "Preserve existing calibrated physicalscale/footprint or obtain unoccluded singleleaf gauge. Do not infer2.1m standarddoor fromvisible48px."
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-farmhouse-wrap-2b0eea83-plain-1/NE.png",
+        "version": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-1-4views-v2",
+        "sha256": "c30b889b6265094fda96f82729884c11512f5a2ab406bdfc1d1d723285b1a5d6"
+      }
+    },
+    {
+      "index": 17,
+      "id": "variation:town-grocery-46d5dc39-plain:1",
+      "version": "variation-town-grocery-46d5dc39-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-grocery-46d5dc39-plain-1/NE.png",
+      "sha256": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+      "width": 567,
+      "height": 566,
+      "dir": "variation-town-grocery-46d5dc39-plain-1",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+      "sheetSha256": "ae36723d1455e098a6e6a33ec22a2ea8b9285067f0e47f2f86eb4964eee974ce",
+      "alpha16ComponentRect": {
+        "left": 33,
+        "top": 69,
+        "width": 540,
+        "height": 560
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-03-v2.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 1,
+        "kind": "front shop double door, measure ONE vertical leaf; not combinedwidth",
+        "nativeFullSheet": {
+          "x": 210,
+          "headY": 443,
+          "thresholdY": 536,
+          "heightPx": 93
+        },
+        "uncertaintyPx": 4,
+        "note": "Awning shadows topedge; confirmvisualphysicalscale in game."
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-grocery-46d5dc39-plain-1/NE.png",
+        "version": "variation-town-grocery-46d5dc39-plain-1-4views-v1",
+        "sha256": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa"
+      }
+    },
+    {
+      "index": 18,
+      "id": "variation:town-hardware-bf36737f-plain:1",
+      "version": "variation-town-hardware-bf36737f-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-hardware-bf36737f-plain-1/NE.png",
+      "sha256": "49c4af45ca781a7e3d186e04ae2b86defae956ae050760311f03bff434a2e115",
+      "width": 552,
+      "height": 540,
+      "dir": "variation-town-hardware-bf36737f-plain-1",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v2.png",
+      "sheetSha256": "ae36723d1455e098a6e6a33ec22a2ea8b9285067f0e47f2f86eb4964eee974ce",
+      "alpha16ComponentRect": {
+        "left": 712,
+        "top": 79,
+        "width": 509,
+        "height": 564
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-03-v2.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 2,
+        "kind": "single front pedestrian leaf",
+        "nativeFullSheet": {
+          "x": 880,
+          "headY": 447,
+          "thresholdY": 547,
+          "heightPx": 100
+        },
+        "uncertaintyPx": 3
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-hardware-bf36737f-plain-1/NE.png",
+        "version": "variation-town-hardware-bf36737f-plain-1-4views-v1",
+        "sha256": "49c4af45ca781a7e3d186e04ae2b86defae956ae050760311f03bff434a2e115"
+      }
+    },
+    {
+      "index": 21,
+      "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+      "version": "variation-ref-building-farmhouse-ef501a21-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-farmhouse-ef501a21-plain-1/NE.png",
+      "sha256": "9b85720a8e154b1578d85c38fe73239e3a62e38c1b8e8140c8c4bd4d6e9a5579",
+      "width": 585,
+      "height": 448,
+      "dir": "variation-ref-building-farmhouse-ef501a21-plain-1",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-04-v1.png",
+      "sheetSha256": "953af11836ccc03015200a5a8019e779fb79f1e41656b6cb0a5526c0220d97a1",
+      "alpha16ComponentRect": {
+        "left": 680,
+        "top": 78,
+        "width": 561,
+        "height": 529
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-04-v1.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 2,
+        "kind": "front single leaf under porch, shadowedhead",
+        "nativeFullSheet": {
+          "x": 810,
+          "headY": 425,
+          "thresholdY": 485,
+          "heightPx": 60
+        },
+        "uncertaintyPx": 4,
+        "note": "Checkphysicalscale usingpreservedowner/donorcalibration; porchdoorlooks smallrelativehouse."
+      },
+      "replacedSourceAudit": {
+        "fits": [
+          {
+            "threshold": 32,
+            "slope": 0.1780995475113122,
+            "angleErrorDegrees": 16.466582952330477,
+            "rmsPx": 0.3283974904294219,
+            "samples": 51,
+            "endpoints": [
+              [
+                70,
+                402.5475113122172
+              ],
+              [
+                120,
+                411.45248868778276
+              ]
+            ]
+          },
+          {
+            "threshold": 128,
+            "slope": 0.17773755656108597,
+            "angleErrorDegrees": 16.486687108519288,
+            "rmsPx": 0.3156164729890757,
+            "samples": 51,
+            "endpoints": [
+              [
+                70,
+                401.8310708898944
+              ],
+              [
+                120,
+                410.7179487179487
+              ]
+            ]
+          },
+          {
+            "threshold": 230,
+            "slope": 0.1760180995475112,
+            "angleErrorDegrees": 16.582216022516135,
+            "rmsPx": 0.3124266098425728,
+            "samples": 51,
+            "endpoints": [
+              [
+                70,
+                401.26621417797895
+              ],
+              [
+                120,
+                410.0671191553545
+              ]
+            ]
+          }
+        ],
+        "measurementKind": "Elevated front porch structural floor-beam lower edge left of entry steps",
+        "proof": "E:/ClaudeTemp/SW-road-audit/next-21-base.png",
+        "segments": [
+          [
+            70,
+            120
+          ]
+        ]
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-farmhouse-ef501a21-plain-1/NE.png",
+        "version": "variation-ref-building-farmhouse-ef501a21-plain-1-4views-v2",
+        "sha256": "9b85720a8e154b1578d85c38fe73239e3a62e38c1b8e8140c8c4bd4d6e9a5579"
+      }
+    },
+    {
+      "index": 7,
+      "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "version": "variation-expansion-rundown-house-a7c17683-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-expansion-rundown-house-a7c17683-plain-1/NE.png",
+      "sha256": "3d40f6e920bc57bd32ec2b7413ad27acb1c100fdffb0ce28af44ad42ba18dd7b",
+      "width": 488,
+      "height": 456,
+      "dir": "variation-expansion-rundown-house-a7c17683-plain-1",
+      "family": "house",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+      "alpha16ComponentRect": {
+        "left": 82,
+        "top": 59,
+        "width": 498,
+        "height": 545
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 1,
+        "kind": "front boarded singleleaf, upperedgepartlyshadowed",
+        "nativeFullSheet": {
+          "x": 225,
+          "headY": 419,
+          "thresholdY": 476,
+          "heightPx": 57
+        },
+        "uncertaintyPx": 4
+      },
+      "replacedSourceAudit": {
+        "fit": {
+          "threshold": 128,
+          "slope": 0.30017533606078317,
+          "angleErrorDegrees": 9.856590859135615,
+          "rmsPx": 0.3944708948044402,
+          "samples": 59,
+          "endpoints": [
+            [
+              27,
+              339.9728813559322
+            ],
+            [
+              85,
+              357.3830508474576
+            ]
+          ]
+        },
+        "measurementKind": "Exposed front stone foundation left of entry porch",
+        "measurementSource": "E:/ClaudeTemp/SW-road-audit/previously-uncertain-house-base-fits.json",
+        "proof": "E:/ClaudeTemp/SW-road-audit/next-7-base.png",
+        "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-07.png",
+        "notes": "",
+        "status": "measured-fail-repair"
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-expansion-rundown-house-a7c17683-plain-1/NE.png",
+        "version": "variation-expansion-rundown-house-a7c17683-plain-1-4views-v2",
+        "sha256": "3d40f6e920bc57bd32ec2b7413ad27acb1c100fdffb0ce28af44ad42ba18dd7b"
+      }
+    },
+    {
+      "index": 16,
+      "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
+      "version": "variation-gen-house-l-shape-north-79eba705-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-shape-north-79eba705-plain-1/NE.png",
+      "sha256": "48d669649ddad9ef18c54f5955601b39f1284125c0c2dd985f7d1486f41f484f",
+      "width": 562,
+      "height": 470,
+      "dir": "variation-gen-house-l-shape-north-79eba705-plain-1",
+      "family": "house",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+      "alpha16ComponentRect": {
+        "left": 677,
+        "top": 74,
+        "width": 518,
+        "height": 528
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 2,
+        "kind": "mainhousefront singlepedestrianleaf, notgarageopening",
+        "nativeFullSheet": {
+          "x": 785,
+          "headY": 342,
+          "thresholdY": 430,
+          "heightPx": 88
+        },
+        "uncertaintyPx": 3
+      },
+      "identityDifferences": [
+        "Two dormers ongaragewing andnoneonmainroof ratherthanoneeach; sametwo-storeymass, twofrontgarageopenings, SWpedestrianentry andfootprint retained."
+      ],
+      "replacedSourceAudit": {
+        "fit": {
+          "threshold": 128,
+          "slope": 0.3905432868175044,
+          "angleErrorDegrees": 5.232254005035692,
+          "rmsPx": 0.9723381906527956,
+          "samples": 121,
+          "endpoints": [
+            [
+              220,
+              401.29467551822245
+            ],
+            [
+              340,
+              448.159869936323
+            ]
+          ]
+        },
+        "measurementKind": "Garage front ground-contact foundation / lower door sills",
+        "measurementSource": "E:/ClaudeTemp/SW-road-audit/previously-uncertain-house-base-fits.json",
+        "proof": "E:/ClaudeTemp/SW-road-audit/next-16-base.png",
+        "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-16.png",
+        "notes": "",
+        "status": "measured-fail-repair"
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-shape-north-79eba705-plain-1/NE.png",
+        "version": "variation-gen-house-l-shape-north-79eba705-plain-1-4views-v2",
+        "sha256": "48d669649ddad9ef18c54f5955601b39f1284125c0c2dd985f7d1486f41f484f"
+      }
+    },
+    {
+      "index": 24,
+      "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+      "version": "variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-dormer-north-6952cea5-plain-1/NE.png",
+      "sha256": "d21a0a06b4911ce4c5abd8daaa72f4bca6c1b149eea4721b1cf7f21397533b50",
+      "width": 575,
+      "height": 499,
+      "dir": "variation-ref-building-house-dormer-north-6952cea5-plain-1",
+      "family": "house",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+      "alpha16ComponentRect": {
+        "left": 74,
+        "top": 648,
+        "width": 510,
+        "height": 529
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 3,
+        "kind": "frontleaf threshold occluded bybalustrade",
+        "usableAsCompleteDoorGauge": false,
+        "recommendation": "Preserveexistingcalibratedphysicalsize; do not treatvisibleleafsectionasfullheight."
+      },
+      "replacedSourceAudit": {
+        "fit": {
+          "slope": 0.2873035926820597,
+          "angleErrorDegrees": 10.53550258046145,
+          "rmsPx": 0.6293122896090934,
+          "samples": 72
+        },
+        "measurementKind": "Elevated entry porch STRUCTURAL FLOOR-BEAM lower face, not foundation/ground, no top railing/roof/stairs/bbox",
+        "measurementSource": "E:/ClaudeTemp/SW-road-audit/house24-native-floor-beam-fit.json",
+        "proof": "E:/ClaudeTemp/SW-road-audit/next-24-beam.png",
+        "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-24.png",
+        "notes": "",
+        "status": "measured-fail-repair"
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-dormer-north-6952cea5-plain-1/NE.png",
+        "version": "variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v2",
+        "sha256": "d21a0a06b4911ce4c5abd8daaa72f4bca6c1b149eea4721b1cf7f21397533b50"
+      }
+    },
+    {
+      "index": 29,
+      "id": "variation:world-house_2-north-332663ab-plain:1",
+      "version": "variation-world-house_2-north-332663ab-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-world-house_2-north-332663ab-plain-1/NE.png",
+      "sha256": "4003b054ceb6c8a9182a4e53e310f0c87c9e16ef4a6d337a2b17de82d8a21a0e",
+      "width": 557,
+      "height": 533,
+      "dir": "variation-world-house_2-north-332663ab-plain-1",
+      "family": "house",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+      "alpha16ComponentRect": {
+        "left": 699,
+        "top": 636,
+        "width": 497,
+        "height": 569
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 4,
+        "kind": "frontleaf threshold occluded bybalustrade",
+        "usableAsCompleteDoorGauge": false,
+        "recommendation": "Preserveexistingcalibratedphysicalsize; do not treatvisibleleafsectionasfullheight."
+      },
+      "replacedSourceAudit": {
+        "fit": {
+          "threshold": 128,
+          "slope": 0.2904081632653061,
+          "angleErrorDegrees": 10.37132267664325,
+          "rmsPx": 0.45148650770416326,
+          "samples": 49,
+          "endpoints": [
+            [
+              30,
+              392.9281632653061
+            ],
+            [
+              78,
+              406.8677551020408
+            ]
+          ]
+        },
+        "measurementKind": "Exposed front stone foundation left of entry porch",
+        "measurementSource": "E:/ClaudeTemp/SW-road-audit/house29-native-base-fit.json",
+        "proof": "E:/ClaudeTemp/SW-road-audit/next-29-base.png",
+        "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-29.png",
+        "notes": "",
+        "status": "measured-fail-repair"
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-world-house_2-north-332663ab-plain-1/NE.png",
+        "version": "variation-world-house_2-north-332663ab-plain-1-4views-v1",
+        "sha256": "4003b054ceb6c8a9182a4e53e310f0c87c9e16ef4a6d337a2b17de82d8a21a0e"
+      }
+    },
+    {
+      "index": 22,
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-cottage-fc52ce66-plain-1/NE.png",
+      "sha256": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302",
+      "width": 594,
+      "height": 456,
+      "dir": "variation-ref-building-house-cottage-fc52ce66-plain-1",
+      "family": "house",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "guideIsInputCompensation": true,
+      "frontInputSlope": 0.5,
+      "rightInputSlope": -0.4,
+      "finalTargetFrontSlope": 0.5,
+      "finalTargetRightSlope": -0.5,
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+      "alpha16ComponentRect": {
+        "left": 63,
+        "top": 95,
+        "width": 538,
+        "height": 501
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 1,
+        "kind": "front singlepedestrianleaf underporch",
+        "nativeFullSheet": {
+          "x": 375,
+          "headY": 458,
+          "thresholdY": 531,
+          "heightPx": 73
+        },
+        "uncertaintyPx": 4
+      },
+      "replacedSourceAudit": {
+        "fit": {
+          "threshold": 128,
+          "slope": 0.12976031601985796,
+          "angleErrorDegrees": 19.171644113927066,
+          "rmsPx": 0.3007282114927807,
+          "samples": 131,
+          "endpoints": [
+            [
+              200,
+              411.1380985426787
+            ],
+            [
+              330,
+              428.0069396252602
+            ]
+          ]
+        },
+        "measurementSource": "E:/ClaudeTemp/SW-road-audit/first-three-native-base-fits.json",
+        "proof": "E:/ClaudeTemp/SW-road-audit/first-22-base.png",
+        "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-22.png",
+        "notes": "",
+        "status": "measured-fail-repair"
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-cottage-fc52ce66-plain-1/NE.png",
+        "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2",
+        "sha256": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302"
+      }
+    },
+    {
+      "index": 9,
+      "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-duplex-north-521714ac-plain-1/NE.png",
+      "sha256": "55c38d4e300c4db913319ada4764c9d41ba9f2b9015b7a73b51526b21fe26dd5",
+      "width": 625,
+      "height": 448,
+      "dir": "variation-gen-house-duplex-north-521714ac-plain-1",
+      "family": "house",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "guideIsInputCompensation": true,
+      "frontInputSlope": 0.5,
+      "rightInputSlope": -0.4,
+      "finalTargetFrontSlope": 0.5,
+      "finalTargetRightSlope": -0.5,
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+      "alpha16ComponentRect": {
+        "left": 651,
+        "top": 86,
+        "width": 557,
+        "height": 525
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 2,
+        "kind": "groundfloorleft frontsinglepedestrianleaf",
+        "nativeFullSheet": {
+          "x": 800,
+          "headY": 398,
+          "thresholdY": 473,
+          "heightPx": 75
+        },
+        "uncertaintyPx": 4
+      },
+      "replacedSourceAudit": {
+        "fit": {
+          "slope": 0.18800982908024688,
+          "angleErrorDegrees": 15.917179527786887,
+          "rmsPx": 0.31806454388676564,
+          "samples": 337
+        },
+        "measurementKind": "Elevated upper balcony STRUCTURAL FLOOR-BEAM lower face, not foundation/ground, no top railing/roof/stairs/bbox",
+        "measurementSource": "E:/ClaudeTemp/SW-road-audit/duplex-native-floor-beam-fit.json",
+        "proof": "E:/ClaudeTemp/SW-road-audit/next-9-beam.png",
+        "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-09.png",
+        "notes": "",
+        "status": "measured-fail-repair"
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-duplex-north-521714ac-plain-1/NE.png",
+        "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v2",
+        "sha256": "55c38d4e300c4db913319ada4764c9d41ba9f2b9015b7a73b51526b21fe26dd5"
+      }
+    },
+    {
+      "index": 20,
+      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-splitlevel-north-63bc759e-plain-1/NE.png",
+      "sha256": "0069bb8658c8d91647c4e77d7092363e831f11c4dbdd39e3c1f411bc8ccb4b74",
+      "width": 634,
+      "height": 454,
+      "dir": "variation-gen-house-splitlevel-north-63bc759e-plain-1",
+      "family": "house",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "guideIsInputCompensation": true,
+      "frontInputSlope": 0.5,
+      "rightInputSlope": -0.4,
+      "finalTargetFrontSlope": 0.5,
+      "finalTargetRightSlope": -0.5,
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+      "alpha16ComponentRect": {
+        "left": 34,
+        "top": 647,
+        "width": 571,
+        "height": 526
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 3,
+        "kind": "one frontsliding-glassentrypanel; verticalleafheight",
+        "nativeFullSheet": {
+          "x": 190,
+          "headY": 919,
+          "thresholdY": 995,
+          "heightPx": 76
+        },
+        "uncertaintyPx": 4
+      },
+      "replacedSourceAudit": {
+        "fit": {
+          "threshold": 128,
+          "slope": 0.14784201305940436,
+          "angleErrorDegrees": 18.15524646196745,
+          "rmsPx": 0.2911602576245114,
+          "samples": 91,
+          "endpoints": [
+            [
+              40,
+              367.7646918299092
+            ],
+            [
+              130,
+              381.0704730052556
+            ]
+          ]
+        },
+        "measurementKind": "elevated left porch/deck floor-beam lower edge; not ground wall base",
+        "measurementSource": "E:/ClaudeTemp/SW-road-audit/next-native-base-fits.json",
+        "proof": "E:/ClaudeTemp/SW-road-audit/next-20-base.png",
+        "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-20.png",
+        "notes": "",
+        "status": "measured-fail-repair"
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-splitlevel-north-63bc759e-plain-1/NE.png",
+        "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2",
+        "sha256": "0069bb8658c8d91647c4e77d7092363e831f11c4dbdd39e3c1f411bc8ccb4b74"
+      }
+    },
+    {
+      "index": 13,
+      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-ranch-18552ce5-plain-1/NE.png",
+      "sha256": "9e548e9c08dace47d3daba8af439879bd9a0b5eaccc487a66248027659d0980e",
+      "width": 628,
+      "height": 548,
+      "dir": "variation-gen-house-l-ranch-18552ce5-plain-1",
+      "family": "house",
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "guideIsInputCompensation": true,
+      "frontInputSlope": 0.5,
+      "rightInputSlope": -0.4,
+      "finalTargetFrontSlope": 0.5,
+      "finalTargetRightSlope": -0.5,
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+      "alpha16ComponentRect": {
+        "left": 666,
+        "top": 661,
+        "width": 556,
+        "height": 492
+      },
+      "geometryApproval": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+      "cropStrategy": "native component isolation; preserveallvisiblecorepixels",
+      "doorCalibration": {
+        "cell": 4,
+        "kind": "front singlepedestrianleaf underporch",
+        "nativeFullSheet": {
+          "x": 900,
+          "headY": 990,
+          "thresholdY": 1061,
+          "heightPx": 71
+        },
+        "uncertaintyPx": 4
+      },
+      "replacedSourceAudit": {
+        "fit": {
+          "threshold": 128,
+          "slope": 0.1960082023239918,
+          "angleErrorDegrees": 15.475203069407673,
+          "rmsPx": 0.2924805001511469,
+          "samples": 76,
+          "endpoints": [
+            [
+              420,
+              501.28127136021874
+            ],
+            [
+              495,
+              515.9818865345181
+            ]
+          ]
+        },
+        "measurementKind": "exposed main-front foundation/plinth boundary to right of porch",
+        "measurementSource": "E:/ClaudeTemp/SW-road-audit/next-native-base-fits.json",
+        "proof": "E:/ClaudeTemp/SW-road-audit/next-13-base.png",
+        "immutableSnapshot": "E:/ClaudeTemp/SW-road-audit/selected-native-snapshot/house-13.png",
+        "notes": "",
+        "status": "measured-fail-repair"
+      },
+      "status": "art-approved-pending-game-validation",
+      "replacedSourceFields": {
+        "note": "Top-level file/version/sha256 describe the old selected view being replaced; sheet/sheetSha256 plus geometryApproval describe the NEW approved artwork.",
+        "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-ranch-18552ce5-plain-1/NE.png",
+        "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2",
+        "sha256": "9e548e9c08dace47d3daba8af439879bd9a0b5eaccc487a66248027659d0980e"
+      }
+    }
+  ],
+  "held": [
+    "batch01v1all",
+    "batch01v2cottage/dormer/ranch notselected",
+    "batch01v3cottage",
+    "batch02v1all"
+  ],
+  "note": "Raw2x2sheets contain fourdistinctsubjects. Never interpret these4cells as4directions ofonebuilding.",
+  "lastReviewedDate": "2026-10-30",
+  "ownerRejectedSources": [
+    {
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-03-v1.png",
+      "sheetSha256": "ed3772b08d89ef65a4ffe1f8c4ce1c4470df85e1d67bbc91cadc273c064c24de",
+      "cells": [
+        3,
+        4
+      ],
+      "date": "2026-10-30",
+      "status": "rejected",
+      "reason": "Owner rejected old bottom-two postoffice/garage; these remain blocked."
+    }
+  ]
+}

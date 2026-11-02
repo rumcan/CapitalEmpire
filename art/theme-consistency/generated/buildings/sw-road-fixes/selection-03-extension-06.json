@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
+  },
+  "repairs": [
+    {
+      "status": "ready",
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "slug": "variation-ref-building-house-cottage-fc52ce66-plain-1",
+      "originalVersion": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2",
+      "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+      "cell": 1,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+        "sha256": "431770806b5430bf91ac77fa06f1370d14178bbbb291001417b85e03ca6aab76"
+      },
+      "door": 73,
+      "doorNote": {
+        "cell": 1,
+        "kind": "front singlepedestrianleaf underporch",
+        "nativeFullSheet": {
+          "x": 375,
+          "headY": 458,
+          "thresholdY": 531,
+          "heightPx": 73
+        },
+        "uncertaintyPx": 4
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "slug": "variation-gen-house-duplex-north-521714ac-plain-1",
+      "originalVersion": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v2",
+      "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+      "cell": 2,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+        "sha256": "431770806b5430bf91ac77fa06f1370d14178bbbb291001417b85e03ca6aab76"
+      },
+      "door": 75,
+      "doorNote": {
+        "cell": 2,
+        "kind": "groundfloorleft frontsinglepedestrianleaf",
+        "nativeFullSheet": {
+          "x": 800,
+          "headY": 398,
+          "thresholdY": 473,
+          "heightPx": 75
+        },
+        "uncertaintyPx": 4
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "slug": "variation-gen-house-splitlevel-north-63bc759e-plain-1",
+      "originalVersion": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2",
+      "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+      "cell": 3,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+        "sha256": "431770806b5430bf91ac77fa06f1370d14178bbbb291001417b85e03ca6aab76"
+      },
+      "door": 76,
+      "doorNote": {
+        "cell": 3,
+        "kind": "one frontsliding-glassentrypanel; verticalleafheight",
+        "nativeFullSheet": {
+          "x": 190,
+          "headY": 919,
+          "thresholdY": 995,
+          "heightPx": 76
+        },
+        "uncertaintyPx": 4
+      }
+    },
+    {
+      "status": "ready",
+      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "slug": "variation-gen-house-l-ranch-18552ce5-plain-1",
+      "originalVersion": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2",
+      "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v3",
+      "canonicalView": "NE",
+      "streetFacing": "SW",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "sheetSha256": "eb44bce32eb68e8597c0d90ad4fdb3b179ed409754a7397064058703ab17329c",
+      "cell": 4,
+      "partition": "nearest-alpha-core",
+      "geometryReview": {
+        "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-06-v1.review.json",
+        "sha256": "431770806b5430bf91ac77fa06f1370d14178bbbb291001417b85e03ca6aab76"
+      },
+      "door": 71,
+      "doorNote": {
+        "cell": 4,
+        "kind": "front singlepedestrianleaf underporch",
+        "nativeFullSheet": {
+          "x": 900,
+          "headY": 990,
+          "thresholdY": 1061,
+          "heightPx": 71
+        },
+        "uncertaintyPx": 4
+      }
+    }
+  ]
+}

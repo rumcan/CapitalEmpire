@@ -18,6 +18,7 @@ export interface ShineMaskData { w: number; h: number; data: Uint8Array }
 import type { RoughMix } from './rough-yards';
 import type { SurfacesFile } from './painted-surfaces';
 import type { TileCacheStats } from './textures';
+import type { BunkerStageReady, BunkerStageRef } from './ext/bunker-look/stage-types';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone of the fill: t 1 darker or 2 lighter at strength ta (0..1), drawn
@@ -44,7 +45,8 @@ export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w:
  *  and the rest of the course look (the brush's style, course-look.ts): its exposure (x: the texture's RGB times x, 0.5 to 2; absent 1, T261
  *  exposure.ts, from the look's saved tone) and its blend with a second texture in soft patches (m: the texture, share s, softness f, patch
  *  size p; the painted areas' Blend with) */
-export interface CourseTex { tex: string; sc: number; a: number; x?: number; m?: { t: string; s: number; f: number; p: number } }
+export interface CourseTex { tex: string; sc: number; a: number; x?: number; m?: { t: string; s: number; f: number; p: number; sc?: number; a?: number; o?: [number, number] };
+  /** the texture's offset, tiles (the Pan texture tool; absent: none) */ o?: [number, number] }
 /** one surface of a course chunk (plan P21 sections 3.2 to 3.4, T078), all coordinates flat x0 y0 x1 y1 ... in tiles:
  *  (rings and polylines are Float32Arrays, so a patch posts and clones as plain memory)
  *  - `fill`: closed rings clipped to the chunk box grown by 0.1 tile (filled even-odd; neighbouring chunks overlap, so no seam shows);
@@ -107,10 +109,13 @@ export interface CoursePatch { cx: number; cy: number; size: number; layers: Cou
   /** T204: where tall grass meets the flat short turf (the fairway and its first cut): runs along that turf's outer edges, each with the tall side
    *  on its (dy, -dx) side and o, the layer code of the tall grass there (0 the map grass, 2 the rough, 4 the fescue); the renderer lays the tall
    *  grass's ragged spill over the turf along them (rugged-edges spillBlades) */
-  spill?: { p: Float32Array; o: number }[]; z: number }
+  spill?: { p: Float32Array; o: number }[];
+  /** T285: where a longer grass lies just outside a grass layer's edge: the run (x y pairs, tiles, the longer grass on each piece's (dy, -dx)
+   *  side), d how much longer (1..4), c the layer's code (its shade is laid right after that layer, onto it) */
+  shade?: { p: Float32Array; d: number; c: number }[]; z: number }
 
 /** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
-export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}` | `pic:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
+export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}` | `pic:${string}` | `upload:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
   /** tex 'marks' (nothing filled; pts only bound it): flat decals (lot-decals.ts), five numbers each: index, x, y (tiles, the decal's centre), scale (negative: mirrored), alpha */
   marks?: number[]; paint?: PatchPaint; /** a lawn (lawns.ts): the texture (a preset) laid under the lots' own ground, turned by a (degrees), over share of the
    *  patch in soft patches (1: all of it; soft: the patches' edge, patch: their size, 1 = 24 tiles a period); z: blocks 0 under lots 1; st: a lot's
@@ -179,6 +184,8 @@ export interface WorkerLimits { tiles: number | null; painted: number | null; ea
   /** T166: a cached pack is read (absent: yes; the game's: no, it builds its own and the old cache is deleted) */
   readCache?: boolean }
 export type ToWorker =
+  | { t: 'bunkerExpected'; set: BunkerStageRef[]; drop: string[] }
+  | { t: 'bunker'; set: BunkerStageReady[]; drop: { id: string; key: string }[] }
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
   | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits;
       /** T272: the bytes this worker's tile cache may hold (tile-cache.ts tileCacheBudget: its share of the ground's GPU budget) */
@@ -188,6 +195,8 @@ export type ToWorker =
   | { t: 'grassArt'; art: GrassArt }
   /** which painted family each surface wears (painted-surfaces.ts): after init, and again whenever the studio saves the file */
   | { t: 'surfaces'; file: SurfacesFile }
+  /** the player's own uploaded pictures (upload:<hash>, blob URLs), laid as tile-space photos like the presets */
+  | { t: 'photos'; add: PhotoTexEntry[] }
   | { t: 'net'; ops: NetOp[] }
   | { t: 'lamps'; pts: Float32Array }
   | { t: 'terrain'; cls: Uint8Array; height: Float32Array; waters: Waterway[] }

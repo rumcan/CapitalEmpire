@@ -124,6 +124,14 @@ test("the card's Edit hole: enabled for a planned hole; \"Editing hole 1\" (disa
   assert.match(h, /data-testid="hole-edit-why"[^>]*>Painted by hand: shape it with the brush/, 'the reason is on the card, not only in a tooltip');
 });
 
+test("the card's Build at its top right, for a planned hole and one painted by hand, takes you to building on that hole", () => {
+  for (const g of [fakeGame({ open: 1 }).game, fakeGame({ open: 2, hand: [2] }).game]) {
+    const h = cardHtml(g), m = /<button([^>]*data-testid="hole-build"[^>]*)>([\s\S]*?)<\/button>/.exec(h);
+    assert.ok(m, 'the card has Build'); assert.equal(m[2]!.replace(/<[^>]+>/g, ''), 'Build'); assert.doesNotMatch(m[1]!, / disabled=""/);
+    assert.ok(h.indexOf('data-testid="hole-build"') < h.indexOf('aria-label="Close the hole card"'), 'beside the close button, at the top');
+  }
+});
+
 test('the badges read "Hole 1" with their status icon; the status line ends in ✎ Edit hole 1 (straight into the editor), "Editing hole 1" while it is open', () => {
   let h = stripHtml(fakeGame({ cur: 1 }).game);
   assert.match(h, /<button data-hole="1"[^>]*><span class="hole-icon" aria-hidden="true">✓<\/span>Hole 1<\/button>/);

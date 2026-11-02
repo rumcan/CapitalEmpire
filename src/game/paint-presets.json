@@ -553,7 +553,7 @@
     "scale": 4,
     "tint": "#808080",
     "tintAmt": 0,
-    "bright": 1.0,
+    "bright": 1,
     "contrast": 1,
     "sat": 1,
     "hue": 0
@@ -603,7 +603,7 @@
     "scale": 4,
     "tint": "#808080",
     "tintAmt": 0,
-    "bright": 1.0,
+    "bright": 1,
     "contrast": 1,
     "sat": 1,
     "hue": 0
@@ -703,7 +703,7 @@
     "scale": 4,
     "tint": "#808080",
     "tintAmt": 0,
-    "bright": 1.0,
+    "bright": 1,
     "contrast": 1,
     "sat": 1,
     "hue": 0
@@ -741,6 +741,1525 @@
    "lawn": false,
    "painted": null,
    "pic": "sand"
+  },
+  {
+   "id": "new-dark-green-rough-grass",
+   "name": "Dark green rough",
+   "surface": null,
+   "size": 16,
+   "col": "#294110",
+   "a": {
+    "src": "src/assets/ground/preset-new-dark-green-rough-grass.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-dark-green-rough-grass.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-dark-green-rough-grass-2",
+   "name": "Dark green rough 2",
+   "surface": null,
+   "size": 16,
+   "col": "#2c490e",
+   "a": {
+    "src": "src/assets/ground/preset-new-dark-green-rough-grass-2.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-dark-green-rough-grass-2.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-dark-green-fairway",
+   "name": "Dark green fairway",
+   "surface": null,
+   "size": 16,
+   "col": "#336116",
+   "a": {
+    "src": "src/assets/ground/preset-new-dark-green-fairway.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-dark-green-fairway.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-fairway",
+   "name": "Desert fairway",
+   "surface": null,
+   "size": 16,
+   "col": "#8c7e1f",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-fairway.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-fairway.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-fairway-patchy",
+   "name": "Desert fairway, patchy",
+   "surface": null,
+   "size": 16,
+   "col": "#6e7515",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-fairway-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-fairway-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-fairway-tileable",
+   "name": "Desert fairway 2",
+   "surface": null,
+   "size": 16,
+   "col": "#8f8712",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-fairway-tileable.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-fairway-tileable.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-fringe-2",
+   "name": "Desert fringe 2",
+   "surface": null,
+   "size": 16,
+   "col": "#335110",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-fringe-2.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-fringe-2.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-fringe-3",
+   "name": "Desert fringe 3",
+   "surface": null,
+   "size": 16,
+   "col": "#335110",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-fringe-3.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-fringe-3.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-fringe-checker",
+   "name": "Desert fringe, checker",
+   "surface": null,
+   "size": 16,
+   "col": "#5d6f14",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-fringe-checker.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-fringe-checker.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-green",
+   "name": "Desert green",
+   "surface": null,
+   "size": 16,
+   "col": "#738b19",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-green.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-green.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-rough",
+   "name": "Desert rough",
+   "surface": null,
+   "size": 16,
+   "col": "#6a5b11",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-rough.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-rough.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-rough-patchy",
+   "name": "Desert rough, patchy",
+   "surface": null,
+   "size": 16,
+   "col": "#765f1c",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-rough-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-rough-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-bunker-sand",
+   "name": "Desert bunker sand",
+   "surface": null,
+   "size": 16,
+   "col": "#e5b784",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-bunker-sand.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-bunker-sand.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-center",
+   "name": "Desert ground",
+   "surface": null,
+   "size": 16,
+   "col": "#a26630",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-center.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-center.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-right",
+   "name": "Desert ground 2",
+   "surface": null,
+   "size": 16,
+   "col": "#9f6029",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-right.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-right.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-grass-desert-rough",
+   "name": "Desert rough, tiled",
+   "surface": null,
+   "size": 16,
+   "col": "#6a5b13",
+   "a": {
+    "src": "src/assets/ground/preset-new-grass-desert-rough.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-grass-desert-rough.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-light-green-fairway",
+   "name": "Light green fairway",
+   "surface": null,
+   "size": 16,
+   "col": "#609826",
+   "a": {
+    "src": "src/assets/ground/preset-new-light-green-fairway.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-light-green-fairway.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-light-green-fairway-patchy",
+   "name": "Light green fairway, patchy",
+   "surface": null,
+   "size": 16,
+   "col": "#5b871c",
+   "a": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-light-green-fairway-first-cut",
+   "name": "Light green first cut",
+   "surface": null,
+   "size": 16,
+   "col": "#3c550b",
+   "a": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-first-cut.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-first-cut.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-light-green-fairway-first-cut-2",
+   "name": "Light green first cut 2",
+   "surface": null,
+   "size": 16,
+   "col": "#3f610c",
+   "a": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-first-cut-2.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-first-cut-2.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-light-green-fairway-first-cut-3",
+   "name": "Light green first cut 3",
+   "surface": null,
+   "size": 16,
+   "col": "#2a470c",
+   "a": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-first-cut-3.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-first-cut-3.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-light-green-fairway-first-cut-mowed-",
+   "name": "Light green first cut, mowed short",
+   "surface": null,
+   "size": 16,
+   "col": "#436809",
+   "a": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-first-cut-mowed-.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-light-green-fairway-first-cut-mowed-.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-light-green-fairwayextreme-patchy",
+   "name": "Light green fairway, very patchy",
+   "surface": null,
+   "size": 16,
+   "col": "#516718",
+   "a": {
+    "src": "src/assets/ground/preset-new-light-green-fairwayextreme-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-light-green-fairwayextreme-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-fringe-grass",
+   "name": "Desert fringe grass",
+   "surface": null,
+   "size": 16,
+   "col": "#5e660c",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-fringe-grass.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-fringe-grass.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-fringe-grass-2",
+   "name": "Desert fringe grass 2",
+   "surface": null,
+   "size": 16,
+   "col": "#58670a",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-fringe-grass-2.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-fringe-grass-2.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-fringe-grass-3",
+   "name": "Desert fringe grass 3",
+   "surface": null,
+   "size": 16,
+   "col": "#4b511a",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-fringe-grass-3.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-fringe-grass-3.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-rough-grass",
+   "name": "Desert rough grass",
+   "surface": null,
+   "size": 16,
+   "col": "#6c5d13",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-rough-grass-far",
+   "name": "Desert rough, far",
+   "surface": null,
+   "size": 16,
+   "col": "#6b590d",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass-far.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass-far.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-rough-grass-far-patchy",
+   "name": "Desert rough, far patchy",
+   "surface": null,
+   "size": 16,
+   "col": "#7b611a",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass-far-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass-far-patchy.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-rough-grass-far-deadgrass",
+   "name": "Desert rough, dead grass",
+   "surface": null,
+   "size": 16,
+   "col": "#9a6d3b",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass-far-deadgrass.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass-far-deadgrass.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
+  },
+  {
+   "id": "new-desert-rough-grass-far-lushgreen",
+   "name": "Desert rough, lush green",
+   "surface": null,
+   "size": 16,
+   "col": "#565c0f",
+   "a": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass-far-lushgreen.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/preset-new-desert-rough-grass-far-lushgreen.webp",
+    "scale": 1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 1,
+    "tone": 0,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null
   }
  ],
  "blocks": null,

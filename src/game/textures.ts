@@ -440,10 +440,20 @@ export class Textures {
   /** a procedural texture made in steps: its base picture, then its levels (T168) */
   private *procSteps(name: TexName): Steps { const base = yield* genSteps(name); yield* this.storeSteps(name, base); }
 
+  /** the player's own uploaded pictures (the 'photos' message), kept through a later configure */
+  private own: PhotoTexEntry[] = [];
+  /** adds (or replaces) the player's own pictures as photo textures; one replaced is built again on its next use */
+  addPhotos(add: readonly PhotoTexEntry[]) {
+    for (const p of add) {
+      const had = this.own.findIndex(q => q.tex === p.tex); if (had >= 0) this.own[had] = p; else this.own.push(p);
+      const at = this.photos.findIndex(q => q.tex === p.tex); if (at >= 0) this.photos[at] = p; else this.photos.push(p);
+      this.periods.set(p.tex, photoPeriod(p, MOSAIC_TILES));
+    }
+  }
   /** what every worker takes from the art, whether it builds the textures or restores them from a snapshot or the browser cache: the
    *  owner's texture presets and how the base grass lies (its angle and tilt) */
   configure(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }) {
-    if (art.presets?.length) { this.photos = [...PHOTO_TEX, ...RANGE_PICS, ...art.presets]; for (const p of art.presets) this.periods.set(p.tex, photoPeriod(p, MOSAIC_TILES)); }
+    if (art.presets?.length) { this.photos = [...PHOTO_TEX, ...RANGE_PICS, ...art.presets, ...this.own]; for (const p of art.presets) this.periods.set(p.tex, photoPeriod(p, MOSAIC_TILES)); }
     this.presetRefs = (art.presets ?? []).filter(p => p.tex.startsWith('preset:')).map(p => ({ id: p.tex.slice(7), surface: p.surface ?? null, painted: p.painted ?? null }));
     this.paintedOn = art.grassArt !== 'photo'; this.picks.clear();
     this.grassLay = { angle: art.grassMix?.mix.angle ?? DEFAULT_MIX.angle, tilt: art.grassMix?.mix.tilt ?? DEFAULT_MIX.tilt };

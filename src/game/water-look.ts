@@ -151,8 +151,9 @@ const TILE_ACROSS = 64 * Math.SQRT2; // 90.5
 export const fieldRes = (L: number, lite: boolean) => (lite ? 1 : L >= 0.45 ? 4 : 2);
 /** how far (tiles) the field reaches past the chunk's box: the reach plus a tile (the distance past it is capped alike everywhere) */
 export const fieldPad = (l: Pick<WaterLook, 'reach'>) => Math.ceil(l.reach) + 1;
-/** the sites a sample of water belongs to (bits): a river, the course's water, a painted water area */
-export const SITE = { river: 1, course: 2, paint: 4 } as const;
+/** the sites a sample of water belongs to (bits): a river, the course's water, a painted water area, a creek (only with the water's motion:
+ *  the owner, 2026-11-01, "the map rivers and creeks has nothing"; no look of its own, its motion only) */
+export const SITE = { river: 1, course: 2, paint: 4, creek: 8 } as const;
 
 /** the water over a chunk's tile box: which samples are water (by site) and how far each lies from its shore. Sample (u, v) is the tile
  *  point (x0 + (u + 0.5) / res, y0 + (v + 0.5) / res); x0 y0 are whole tiles, so every chunk samples the same world lattice */

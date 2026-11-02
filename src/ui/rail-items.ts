@@ -56,6 +56,9 @@ export const RAIL: readonly RailItem[] = [
     { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'course' }, sub: 'Decoration' },
   ] },
   // TOWN
+  // the owner, 2026-11-01: "move ground height to its own button in bottom right menu next to traffic": the height brush (the Course tool's
+  // Ground height: Raise, Lower, Smooth, Flatten) as a group of its own in the town footer; a click takes it in hand, no flyout
+  { id: 'ground', label: 'Ground height', icon: 'up', key: '', section: 'town', group: 'paint', only: 'golf', tools: [{ id: 'course', label: 'Ground height', key: '', icon: 'up', only: 'golf', alt: true }] },
   { id: 'traffic', label: 'Traffic', icon: 'road', key: 'R', section: 'town', group: 'roads', tools: [
     { id: 'road', label: 'Build', key: 'R', icon: 'road', sub: 'Roads' },
     { id: 'lane', label: 'Upgrade', key: 'N', icon: 'up', sub: 'Roads' },

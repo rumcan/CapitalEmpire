@@ -1,0 +1,93 @@
+BunkerCache: draw-only runtime sprite cache
+
+Files
+bunker-cache.js: ES module, no DOM/renderer/shader imports.
+bunker-cache.d.ts: TypeScript declarations.
+test-bunker-cache.mjs: Node tests with fake images and drawing contexts.
+
+Constructor
+new BunkerCache({
+  maxBytes:32*1024*1024,
+  maxConcurrentBakes:1,
+  bake:async request=>sprite,             // optional; normally worker-backed
+  onEvict:(id,sprite,reason)=>{}          // optional
+})
+
+Sprite contract
+{image:ImageBitmap,width,height,anchor:{x,y},worldBounds?,key?}
+width/height are native pixel dimensions of this LOD. anchor is in those same
+pixel coordinates. The game adapter owns world projection and physical size.
+worldBounds is retained as metadata; conservative screen culling uses the full
+image rectangle. Returned sprite metadata is frozen, not the ImageBitmap itself.
+
+Static production use (no baker)
+import {BunkerCache} from './bunker-cache.js';
+const cache=new BunkerCache({maxBytes:32*1024*1024});
+cache.load('approved',{
+  image:bitmap,width:512,height:331,anchor:lodAnchor,key:'approved-v1:lod512'
+});
+
+Each game frame
+cache.draw(ctx,'approved',screenAnchorX,screenAnchorY,displayScale,{
+  x:0,y:0,width:viewportWidth,height:viewportHeight
+});
+
+draw() culls before drawing. A visible sprite issues exactly one drawImage and
+returns true. A missing/offscreen sprite issues none and returns false. It never
+starts a bake or invokes terrain/shadow logic. Positive uniform scales only.
+
+Custom cached-ground compositors
+const sprite=cache.get('approved'); // ready sprite or undefined; makes it MRU
+cache.delete('approved');          // closes owned pixels and invalidates pending work
+Use get() when drawing through the CapitalEmpire chunk adapter, so active
+composited sprites remain in the LRU. delete() returns whether pixels or work
+existed and notifies onEvict with reason 'delete'.
+
+Asynchronous edits
+await cache.request('hole-7',{
+  ...immutableBakeSnapshot,
+  key:'immutable-guide-hash:preset-hash:renderer-version:lod512'
+});
+
+Use a fresh immutable snapshot for request data. The caller supplies its version
+hash through key. Same id/key shares a pending promise or ready image. A new key
+supersedes pending versions for that id and rejects them with StaleBakeError.
+Previously ready pixels remain drawable until the replacement is ready. Baking
+is FIFO, with configurable concurrency. In-flight stale work cannot be forcibly
+aborted by this generic cache; its eventual ImageBitmap is closed and discarded.
+Handle real bake failures, and ignore StaleBakeError when an edit was superseded.
+
+Ownership and budget
+load() transfers image ownership only when successful. Failed loads leave the
+image with the caller. Bake results are cache-owned and closed if stale, invalid
+or oversized. Owned images are closed on replacement, final LRU eviction or
+dispose(). Reused image objects are reference-counted within the cache.
+Do not manually close or mutate a sprite image still registered in the cache.
+
+Ready entry accounting is exactly width*height*4 and remains <=maxBytes.
+Oversized replacements are rejected while the old sprite stays ready. In-flight
+baking, compressed blobs, driver copies and optional engine mipmaps are outside
+this number. Eviction count refers to budget/LRU removals; onEvict also receives
+replace/delete/dispose reasons. onEvict errors are counted in evictionHookErrors.
+
+LRU and metrics
+Visible draws, ready request hits and load() make entries most recently used.
+Culled draws do not keep a sprite resident. A metrics snapshot exposes:
+draws,hits,misses,bytes,entries,evictions,bakes,culled,staleResults,
+evictionHookErrors,activeBakes,pendingRequests,queuedBakes.
+
+cache.dispose() closes ready images, invalidates queued jobs and rejects pending
+requests. Later active completions are closed. Calling dispose twice is safe.
+Drawing/loading after disposal throws; a new request returns a rejected promise.
+
+Typed worker integration
+new BunkerCache<AdapterBakeRequest,BunkerBakeResult>({bake:r=>worker.bake(r)})
+keeps boundsWorldPx and projection metadata typed on request(), get(), and load().
+The cache generic request constraint requires only key; typed adapter interfaces
+do not need an artificial index signature.
+
+Run tests
+node integration/runtime/test-bunker-cache.mjs
+
+The module is a standalone integration artifact. It does not install into or
+change the CapitalEmpire game, and it makes no in-game FPS guarantee.

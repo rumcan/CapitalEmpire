@@ -44,32 +44,20 @@ function run(city: City, editor: NetEditor, n: number): Leg[] {
   for (let s = 0; s < n; s++) { const r = city.step(10); if (r.grow) { out.push(...r.grow); editor.addLegs(r.grow, CLASS.gravel, 2, undefined, true); city.netOps(editor.commit()); } }
   return out;
 }
-/** the distance from a seg (its centre line) to a rect */
-function segRect(s: { a: Pt; b: Pt }, [x, y, w, h]: [number, number, number, number]): number {
-  let m = Infinity;
-  for (let i = 0; i <= 40; i++) {
-    const t = i / 40, px = s.a.x + (s.b.x - s.a.x) * t, py = s.a.y + (s.b.y - s.a.y) * t;
-    m = Math.min(m, Math.hypot(Math.max(x - px, 0, px - x - w), Math.max(y - py, 0, py - y - h)));
-  }
-  return m;
-}
 
-test('50 planner hours: the town lays its streets, never nearer the golf land than 6 tiles (the county road itself is that far)', () => {
+// T292 (#877; the owner, 2026-11-01: "remove that the town builds roads"): TOWN_BUILDS_ROADS is off, so the planner lays no leg. These tests
+// now hold that: no leg in 50 game hours, so no town street comes near the golf land, and the county road is the only road.
+test('50 planner hours: the town lays no street of its own (T292), so none comes near the golf land: the county road is the only road', () => {
   const { city, editor } = rangeCity(), legs = run(city, editor, 50 * 60);
-  assert.ok(legs.length >= 5, `the town laid ${legs.length} legs`);
-  const near = Math.min(...legs.map(l => segRect(l, PARCEL)));
-  assert.ok(near >= 6 - 1e-6, `the nearest leg is ${near.toFixed(1)} tiles from the parcel`);
-  // and every town street the network holds (the county road aside) keeps that room too
-  const segs = [...(city as unknown as Inside).net.segs].filter((s: Seg) => s.cls.id === 'gravel');
-  assert.ok(segs.length > 0 && segs.every(s => segRect(s, PARCEL) >= 6 - 1e-6));
+  assert.equal(legs.length, 0, `the town laid ${legs.length} legs`);
+  const segs = [...(city as unknown as Inside).net.segs].filter((s: Seg) => s.cls.id !== 'road');
+  assert.equal(segs.length, 0, 'no street besides the county road');
 });
 
-test('the first leg branches off the county road at J, on the seed\'s side (the first growth hour)', () => {
+test('the first game hour: the town lays no leg at J, on the seed\'s side (T292: the planner is off, the county road stays the only road)', () => {
   const { city, editor } = rangeCity(), legs = run(city, editor, 60);
-  assert.ok(legs.length >= 1, 'a leg in the first game hour');
-  const l = legs[0]!, a = Math.abs(l.a.y - Y) < 1 ? l.a : l.b, b = a === l.a ? l.b : l.a;
-  assert.ok(Math.abs(a.y - Y) < 1 && Math.abs(a.x - J.x) <= 1, `it starts on the road at J (${a.x}, ${a.y})`);
-  assert.ok(b.y < Y - 5, `it heads to the seed's side (to ${b.x}, ${b.y})`);
+  assert.equal(legs.length, 0, `${legs.length} legs in the first game hour`);
+  assert.ok(city.growStats.legs === 0, 'the planner proposed no leg');
 });
 
 test('short(): true when the only EMPTY lots in reach are on golf land (canBuild); an old golf start keeps the course off the roads too', () => {

@@ -24,14 +24,15 @@ test('T265 the river\'s band: past its bank, never on its water, in stretches an
   assert.deepEqual(riverStreams([R, creek(10, 10, 10)]), [R]);
   let some = 0, none = 0; const rims: number[] = [];
   for (let x = 100; x < 1100; x += 2) for (const side of [-1, 1]) {
-    for (let d = 0; d < hw + 0.5; d += 0.5) assert.equal(f.cover(x, 300 + side * d), 0, `the water at ${x}, ${300 + side * d}`);
+    for (let d = 0; d < hw - 1; d += 0.5) assert.equal(f.cover(x, 300 + side * d), 0, `(2026-11-01: from under the water's edge, the water drawn over it) the water at ${x}, ${300 + side * d}`);
     // past the farthest reach (on the plain distance, less the soft union's most), nothing
     for (let d = hw + RIVER_SWAMP_OUT + RIVER_SWAMP.soft * Math.log(8); d < hw + RIVER_SWAMP_OUT + 12; d += 1.5) assert.equal(f.cover(x, 300 + side * d), 0, `past the reach at ${x}, ${d}`);
     let rim = 0; for (let d = hw + RIVER_SWAMP.bank + 0.5; d < hw + RIVER_SWAMP_OUT + 3; d += 0.25) if (f.cover(x, 300 + side * d) > 0.5) rim = d - hw; else break;
     if (rim > 0) { some++; rims.push(rim); } else none++;
   }
   const share = some / (some + none);
-  assert.ok(share > 0.25 && share < 0.8, `the swamp shows past the bank along ${(share * 100).toFixed(0)}% of the banks: stretches with and without`);
+  // (the owner, 2026-11-01: "the same swamp around the big river": no stretch without, a narrower one where the old had none)
+  assert.ok(share > 0.95, `the swamp runs along ${(share * 100).toFixed(0)}% of the banks: all the way`);
   const mean = rims.reduce((s, v) => s + v, 0) / rims.length, sd = Math.sqrt(rims.reduce((s, v) => s + (v - mean) ** 2, 0) / rims.length);
   assert.ok(mean > RIVER_SWAMP.bank + 2, `it reaches well past the bank: ${mean.toFixed(1)} tiles past the water`);
   assert.ok(sd > 1.5, `bays and stretches: the rim's distance varies (sd ${sd.toFixed(2)} tiles)`);

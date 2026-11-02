@@ -27,7 +27,8 @@ export const KEY_PARTS: readonly { part: KeyPart; heading: string }[] = [
  *  groups, the Town groups, Bulldoze. T250 split the rail into the course drawer and the town footer and kept the numbers as they were (the
  *  course drawer's 1-3 and Bulldoze's 6, the footer's 4 and 5 with a driving range) */
 export function numberedGroups(golf: boolean, range: boolean): RailItem[] {
-  return railEntries(null, golf, 'select', { range }).map(e => e.item).filter(r => r.id !== 'select').slice(0, 6);
+  // (the footer's Ground height, 2026-11-01, has no number: the groups keep the numbers they had)
+  return railEntries(null, golf, 'select', { range }).map(e => e.item).filter(r => r.id !== 'select' && r.id !== 'ground').slice(0, 6);
 }
 /** a group with one tool and no card (Bulldoze): its number picks the tool, no flyout */
 const menuless = (r: RailItem): boolean => !r.action && r.tools.length === 1;

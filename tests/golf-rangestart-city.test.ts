@@ -63,7 +63,8 @@ test('reserved refuses a lot on the parcel and leaves the lots across the road f
   for (const l of off) assert.equal((city as unknown as Inside).reserved(l), false, `lot ${l.key} across the road is free`);
 });
 
-for (const grow of [1, 20]) test(`a season (one game day) at growth x${grow} passes without errors: the books close, the town lays streets off the golf land, nothing rises on the parcel, no tournament`, () => {
+// T292 (#877): the town lays no street of its own (TOWN_BUILDS_ROADS off), so the legs and the street-off-the-land check hold trivially
+for (const grow of [1, 20]) test(`a season (one game day) at growth x${grow} passes without errors: the books close, the town lays no street of its own, nothing rises on the parcel, no tournament`, () => {
   const { city, editor } = build();
   city.setGrowth(grow); // x20: the dev server's sandbox growth, where the town reaches the parcel within the season
   let ledgers = 0, onParcel = 0, legs = 0;
@@ -76,7 +77,7 @@ for (const grow of [1, 20]) test(`a season (one game day) at growth x${grow} pas
     if (r.grow) { legs += r.grow.length; editor.addLegs(r.grow, CLASS.gravel!, 2, undefined, true); city.netOps(editor.commit()); }
   }
   assert.equal(ledgers, 1, 'the season closed once');
-  assert.ok(legs >= 1, 'the town laid its first street');
+  assert.equal(legs, 0, 'the town laid no street of its own (T292)');
   for (const sg of editor.net.segs) if (sg.cls.id === 'gravel') for (let k = 0; k <= 10; k++) {
     const q = { x: sg.a.x + (sg.b.x - sg.a.x) * k / 10, y: sg.a.y + (sg.b.y - sg.a.y) * k / 10 };
     assert.ok(!(q.x > pad[0] && q.x < pad[0] + pad[2] && q.y > pad[1] && q.y < pad[1] + pad[3]), `the street ${sg.a.x},${sg.a.y} - ${sg.b.x},${sg.b.y} keeps 6 tiles off the golf land`);

@@ -43,6 +43,8 @@ export function enclosedBlocks(net: RoadNetwork, maxArea = BLOCK_MAX_AREA, box?:
   const segs: Seg[] = [];
   for (const s of net.segs) {
     if (s.kind !== SK.GROUND || (s.a.x === s.b.x && s.a.y === s.b.y)) continue;
+    // a cart path never closes a town block (the owner, 2026-11-01: crossing paved cart paths laid the town's block soil between them)
+    if (s.cls.family === 'cart') continue;
     if (box && (Math.max(s.a.x, s.b.x) < box[0] || Math.min(s.a.x, s.b.x) > box[2] || Math.max(s.a.y, s.b.y) < box[1] || Math.min(s.a.y, s.b.y) > box[3])) continue;
     segs.push(s);
   }

@@ -24,7 +24,11 @@ import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
 import { borderDefault, finishBorders, finishOf, finishStripeLook } from './course-finish';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
-import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
+import { lotBatch, type CoursePatch, type CourseTex, type LotPatch } from './ground-protocol';
+import { BunkerController } from './ext/bunker-look/controller';
+import { buildBunkerGeometry } from './ext/bunker-look/geometry';
+import { bunkerSettingsOfLook } from './ext/bunker-look/look-settings';
+import type { BunkerSettings } from './ext/bunker-look/settings';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { LAND_WHY, PaintTool } from './paint-tool';
@@ -64,6 +68,7 @@ import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, t
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
+import { roadRoute } from './road-route';
 import { PRESETS, surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
 import { ParkingTool } from './parking-tool';
@@ -620,20 +625,25 @@ export class Game {
   /** the range's car parks as the range's golfers park in them (T237: every car park that serves the range's door, golf/walkserve.ts: its nearest
    *  bay within WALK_SERVE_M; a car park further away adds no bays, so with none in reach the range's drivers turn away as at a full one): their
    *  bays nearest the door first (doorBays), each with its car park's entrance, cached while the serving parks stay the same */
-  private rangeCarPark(door: Pt): { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[] }[]; entrance: Pt; key: string } | null {
+  private rangeCarPark(door: Pt): { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[]; via?: Pt[] }[]; entrance: Pt; key: string } | null {
     const parks: CarPark[] = [];
     for (const pk of this.parkBuilt) if (pk && pk.entrances.length && pk.bays.length) parks.push(pk);
-    const serving = servingParks(parks, door, pk => pk.bays);
+    const serving = servingParks(parks, door, pk => pk.bays), J = this.range.scene?.J;
     if (!serving.length) { this.rangePk = null; return null; }
-    const key = `${Math.round(door.x * 4)},${Math.round(door.y * 4)}|${serving.map(s => `${s.park.id}:${s.park.bays.length}`).join(',')}`;
-    if (this.rangePk?.v.key !== key || serving.some(s => !this.rangePk!.pks.has(s.park))) {
+    const base = `${Math.round(door.x * 4)},${Math.round(door.y * 4)}|${serving.map(s => `${s.park.id}:${s.park.bays.length}`).join(',')}`;
+    // (worked out again after a road edit or a new drive turn; the key the range sees changes only when a car park's road route does, so a road
+    // edit elsewhere never re-lays the range)
+    const inner = `${base}|${this.net.version}|${J ? `${J.x},${J.y}` : ''}`;
+    if (this.rangePk?.inner !== inner || serving.some(s => !this.rangePk!.pks.has(s.park))) {
+      const vias = serving.map(s => (J ? roadRoute(this.net, J, s.park.entrances[0]!) : null)), key = `${base}|${vias.map(v => (v ? v.map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(';') : '')).join('/')}`;
       // (T237: each bay with its drive from its car park's mouth along the aisles, and the walk from the car park's footpath along them)
-      const all = serving.flatMap(s => { const f = this.footStart(s.park); return baysByDoor(s.park.bays, door).map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy, e: s.park.entrances[0]!, pid: s.park.id, drive: bayDrive(s.park, b), walk: f ? bayWalk(s.park, b, f) : [] })); });
-      this.rangePk = { pks: new Set(serving.map(s => s.park)), v: { bays: baysByDoor(all, door), entrance: serving[0]!.park.entrances[0]!, key } };
+      // (the owner, 2026-11-01: a car park off the range's drive is reached along the roads from the drive's turn, never straight over the course)
+      const all = serving.flatMap((s, i) => { const f = this.footStart(s.park), e = s.park.entrances[0]!, via = vias[i]; return baysByDoor(s.park.bays, door).map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy, e, pid: s.park.id, drive: bayDrive(s.park, b), walk: f ? bayWalk(s.park, b, f) : [], ...(via ? { via } : {}) })); });
+      this.rangePk = { pks: new Set(serving.map(s => s.park)), inner, v: { bays: baysByDoor(all, door), entrance: serving[0]!.park.entrances[0]!, key } };
     }
     return this.rangePk.v;
   }
-  private rangePk: { pks: Set<CarPark>; v: { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[] }[]; entrance: Pt; key: string } } | null = null;
+  private rangePk: { pks: Set<CarPark>; inner: string; v: { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[]; via?: Pt[] }[]; entrance: Pt; key: string } } | null = null;
   /** T237: the range's own car park (the one its upgrades gravel and pave, and the car park building trims): the save's lot rect (a new game's,
    *  in the frontage strip), else the car park on the range's plot (an old save's) */
   private rangeLotDef(): CarParkDef | undefined {
@@ -844,6 +854,7 @@ export class Game {
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
+    bunkerState: () => this.bunkers.serialize(), setBunkerState: state => this.bunkers.load(state, this.courseGrid),
     // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
     // the course's; the brush's footprint and the wizard say which refusal it is
     practiceAt: (x, y) => this.golf?.start === 'range' && !!this.range.scene && inPractice(this.range.scene.practice, x, y), // T206
@@ -917,6 +928,19 @@ export class Game {
     const g = this.golf, areas = this.courseAreaList(), mine = TEE_KINDS.flatMap(k => g?.tees.find(t => t.hole === n && t.kind === k) ?? []);
     const tee = mine.find(t => surfaceAt(areas, t.x, t.y) !== 'tee') ?? mine[0];
     this.selectGolfMarker(n, f.marker === 'pin' ? 'pin' : tee?.kind ?? 'middle');
+  }
+  /** Build (the hole card's top right; the owner, 2026-10-31: "a build button that takes you straight to building on this hole"): the
+   *  Course tool with hole n in hand, its brushes ready, the hole framed by its pin and tees; the card closes. Any hole, planned or painted by
+   *  hand */
+  buildHole(n: number): boolean {
+    const shown = this.uiTool === 'course';
+    this.setTool('course'); if (this.tool !== 'course') return false;
+    // New hole's planner or another paint mode left open: the brushes (Shape by hand), as New hole's Done
+    this.closeHoleCard(); if (this.paint.planOpen || this.paint.mode !== 'draw') this.paint.leavePlan(); this.paint.setHole(n);
+    const marks = this.golf ? [...this.golf.pins.filter(p => p.hole === n), ...this.golf.tees.filter(t => t.hole === n)] : [];
+    // the Holes panel opens with this press (from Select): frame the hole once it is laid out, so it is not under the panel
+    if (marks.length) { if (shown || typeof requestAnimationFrame !== 'function') this.fitView(marks, true); else requestAnimationFrame(() => this.fitView(marks, true)); }
+    this.emit(); return true;
   }
   /** Edit hole (the hole card, the Holes panel's status line): New hole's editor on hole n's plan, framed by the camera, with a toast
    *  (PaintTool.editHole; T205: when it is already open it stays, drags and all); the card closes. False with a toast for a hole painted by
@@ -1382,6 +1406,56 @@ export class Game {
   /** the golf game's course grid: one surface, hole and planting month per 1 m cell over the owned land plus COURSE_GRID_PAD tiles (null in
    *  a classic game); the Course tool paints into it and each 64-tile chunk of it is one lot-ground patch (cg:cx:cy) */
   courseGrid: CourseGrid | null = null;
+  /** Connected native grid bunkers; profiles never alter their cells, ball lie, physics or hole ownership. */
+  readonly bunkers = new BunkerController({ changed: () => this.syncBunkerBakes(), emit: () => this.emit(), save: () => this.scheduleSave(), transaction: (label, mutate) => this.paint.recordBunkerEdit(label, mutate) });
+  bunkerSelectionSerial = 0;
+  bunkerGeometryMs = 0;
+  bunkerGeometryIssues: string[] = [];
+  private readonly bunkerPatches = new Map<string, CoursePatch>();
+  private bunkerContourGrid: CourseGrid | null = null;
+  private bunkerContourRev = -1;
+  private bunkerGeneration = 0;
+  private bunkerJoinedGeneration = -1;
+  private syncingBunkers = false;
+  /** Select/reselect a bunker by its real 1 m cells; serial reopens a card even for the same existing owner. */
+  selectBunkerAt(tile: Pt): boolean {
+    this.bunkers.reconcile(this.courseGrid);
+    if (!this.bunkers.selectAt(tile)) return false;
+    // its look opens (App: My looks with the bunker in hand): the Holes tool with its hole in hand, or your property's paint for a bunker of
+    // no hole (a facility's bunker: its own looks, edited from Facilities ▸ Practice)
+    const g = this.courseGrid, c = g ? cellAt(g, tile.x, tile.y) : -1, n = g && c >= 0 ? g.hole[c] ?? 0 : 0;
+    this.setTool('course');
+    if (this.tool === 'course') { this.paint.setLookDefault?.(false); if (n > 0) { this.paint.setProperty(false); this.paint.setHole(n); this.paint.setBrush('bunker'); } else this.paint.setProperty(true, 'bunker'); }
+    this.bunkerSelectionSerial++; this.emit(); return true;
+  }
+  /** The normal Select tool inspects bunkers; no building brush click is intercepted. */
+  armBunkerPick(): void { this.landMode = false; this.holesTool = false; this.eventTool = false; this.grassPanel = false; this.setTool('select'); this.toast('Click a bunker to edit its whole connected shape'); this.emit(); }
+  /** The bake settings of a bunker anchored at a cell (global cell coordinates): the bunker look of whoever owns it (its hole, a practice
+   *  facility's footprint, else the property), My looks' Bunker look */
+  private bunkerLookAt(grid: CourseGrid, cell: readonly [number, number]): BunkerSettings {
+    const i = Math.round(cell[1] - grid.y0 / CELL_T) * grid.w + Math.round(cell[0] - grid.x0 / CELL_T), n = grid.hole[i] ?? 0;
+    const x = (cell[0] + 0.5) * CELL_T, y = (cell[1] + 0.5) * CELL_T;
+    const owner = n > 0 ? holeOwner(n) : FACILITY_OWNERS.find(f => { const b = this.facilityBox(f); return !!b && x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]; }) ?? 'property';
+    return bunkerSettingsOfLook(this.paint.lookOf(owner, 'bunker'));
+  }
+  /** Only complete contour generations feed immutable worker requests. View frames never call this path. */
+  private syncBunkerBakes(): void {
+    if (this.syncingBunkers || !this.ground) return;
+    this.syncingBunkers = true; const started = performance.now();
+    try {
+      const grid = this.courseGrid; this.bunkers.reconcile(grid);
+      if (!grid) { this.ground.bunkers.sync([]); return; }
+      if (this.bunkerContourGrid !== grid || this.bunkerContourRev !== grid.rev || this.cgJob || this.cgWait) { this.ground.bunkers.suspend(); return; }
+      if (this.bunkerJoinedGeneration !== this.bunkerGeneration) { this.bunkerJoinedGeneration = this.bunkerGeneration; this.bunkers.setRenderedJoins([], grid.rev); }
+      const patches = [...this.bunkerPatches.values()], options = { geometryRevision: this.bunkerGeneration, ready: true, rugged: this.ground.rugged, settingsAt: (cell: readonly [number, number]) => this.bunkerLookAt(grid, cell) };
+      let batch = buildBunkerGeometry(patches, this.bunkers.components, options);
+      if (batch.complete && batch.joins.length) { this.bunkers.setRenderedJoins(batch.joins, grid.rev); batch = buildBunkerGeometry(patches, this.bunkers.components, options); }
+      this.bunkerGeometryIssues = batch.issues;
+      if (!batch.complete || batch.joins.length) { this.ground.bunkers.suspend(); return; }
+      // Source CoursePatches always precede expected keys/pixels in each ground worker's serial queue.
+      this.flushLotGround(); this.ground.bunkers.sync(batch.inputs);
+    } finally { this.bunkerGeometryMs = performance.now() - started; this.syncingBunkers = false; }
+  }
   /** the course chunks on the ground, by key, with their grow key ('static': nothing grows; the month tick skips it) */
   private cgSent = new Map<string, string>();
   /** per course chunk key, the grow month it was last baked whole at (an edit in a later month re-bakes it whole: applyChunks) */
@@ -1473,7 +1547,7 @@ export class Game {
     // T256: the course default's looks are the base; each hole, the property and each facility wear their own (courseOwners)
     // T253: each surface's Round off rides along (the course default's; an owner's in its own looks)
     const { surf, collar, band, lipGrass, round } = courseLookSet(this.paint.brush, pre), own = this.courseOwners(pre);
-    const looks: CourseLooks = { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
+    const looks: CourseLooks = { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), length: this.paint.courseLengths(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
     return this.withGrasses(looks);
   }
   /** T271 (#812): the course's own grasses (golf/grasses.ts) into the looks, at their draw ids: each one's fill, its band (the course's first
@@ -1482,7 +1556,7 @@ export class Game {
     const list = this.golf?.grasses; if (!list?.length) return looks;
     const gl = grassLooks(list, looks.collar['first-cut'], this.grassArt === 'photo');
     const put = <T,>(a: readonly (T | undefined)[] | undefined, b: readonly (T | undefined)[]): (T | undefined)[] => { const o = a ? a.slice() : []; b.forEach((v, s) => { if (v !== undefined) o[s] = v; }); return o; };
-    return { ...looks, surf: put(looks.surf, gl.surf), band: put(looks.band, gl.band), border: put(looks.border, gl.border), shadow: put(looks.shadow, gl.shadow), round: put(looks.round, gl.round), base: gl.base, ...(gl.stripes ? { stripes: gl.stripes } : {}) };
+    return { ...looks, surf: put(looks.surf, gl.surf), band: put(looks.band, gl.band), border: put(looks.border, gl.border), shadow: put(looks.shadow, gl.shadow), length: put(looks.length, gl.length), round: put(looks.round, gl.round), base: gl.base, ...(gl.stripes ? { stripes: gl.stripes } : {}) };
   }
   /** T271: the course's own grasses (the game save's; [] outside a golf game) */
   grasses(): readonly CustomGrass[] { return this.golf?.grasses ?? []; }
@@ -1653,6 +1727,7 @@ export class Game {
    *  The work is the contour worker's: the patches land a few ms later, all of one job in the same frame */
   sendCourseChunks(box: readonly number[], stale = false, at = performance.now()) {
     const g = this.contourGrid(); if (!g) return;
+    this.ground.bunkers.suspend();
     // a wide Border reaches further, and so does Round off's wider kernel (T253)
     const lk = this.courseLooks(), reach = courseEditReach(widestCollar(courseStyles(lk.border, lk.base))) + roundReach(lk), R = reach + COURSE_PATCH_REACH; // (T271: a custom grass's Border too)
     this.queueChunks(courseChunksIn(g, box, reach), stale ? [box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R] : null, at);
@@ -1671,12 +1746,15 @@ export class Game {
     const w = this.cgWait, g = this.contourGrid(); if (!w || !g) return;
     this.cgWait = null; this.cgJob = true;
     const chunks: number[] = []; for (const k of w.chunks) chunks.push(Math.floor(k / 4096), k % 4096);
-    const now = this.growMonth();
+    const now = this.growMonth(), bunkerRevision = g.rev;
     this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()], paths: this.coursePaths(), flips: [...this.mowFlips()] }, (out, ms) => {
       this.perf.courseJobMs = ms; this.perf.courseJobChunks = chunks.length / 2;
       const t0 = performance.now();
       this.cgJob = false;
       if (this.courseGrid) this.applyChunks(out, w.stale, w.at, now); // a reset forgets the job (drop), a grown grid keeps its results
+      if (this.courseGrid === g && g.rev === bunkerRevision && !this.cgWait) {
+        this.bunkerContourGrid = g; this.bunkerContourRev = bunkerRevision; this.bunkerGeneration++; this.syncBunkerBakes();
+      }
       if (this.cgWait) this.runChunks();
       this.cMs += performance.now() - t0;
     });
@@ -1686,6 +1764,7 @@ export class Game {
   private applyChunks(out: readonly CourseChunkOut[], stale: number[] | null, at: number, now: number) {
     for (const o of out) {
       const key = courseKey(o.cx, o.cy);
+      if (o.patch?.course) this.bunkerPatches.set(key, o.patch.course); else this.bunkerPatches.delete(key);
       if (o.patch) {
         // an edit re-bakes only its box, unless the chunk's grow-in moved on since it was last baked whole: then all of it, or the cells
         // outside the box kept the old month's look while the grow key (now this month's) told the month tick there was nothing to redo
@@ -1710,6 +1789,7 @@ export class Game {
   private courseGridChanged(d: GridDiff | null, flush: boolean) {
     const t0 = performance.now(), b = d ? diffBox(d) : null, g = this.courseGrid;
     if (b && d && g) {
+      this.bunkerContourRev = -1; this.ground.bunkers.suspend();
       if (this.contourOf === g) { this.contour.cells(g, d); this.areaWorker.cells(g, d); }
       if (!this.cgDirty) this.cgDirtyAt = t0;
       this.cgDirty = this.cgDirty ? [Math.min(this.cgDirty[0]!, b.x0), Math.min(this.cgDirty[1]!, b.y0), Math.max(this.cgDirty[2]!, b.x1), Math.max(this.cgDirty[3]!, b.y1)] : [b.x0, b.y0, b.x1, b.y1];
@@ -1723,6 +1803,7 @@ export class Game {
   private flushCourse() {
     const b = this.cgDirty; if (!b) return; this.cgDirty = null;
     this.sendCourseChunks(b, true, this.cgDirtyAt);
+    this.syncBunkerBakes();
     this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!);
     this.clearTreesOnGrid(b);
     this.scheduleSave();
@@ -2008,6 +2089,7 @@ export class Game {
     this.contour.drop(); this.areaWorker.drop(); this.cgJob = false; this.cgWait = null; this.gaJob = false; this.gaAgain = false; this.gaMarkers = null;
     this.cgSent.clear(); this.cgBaked.clear(); this.cgDirty = null; this.courseGrid = null; this.gaByHole.clear(); this.gaDirty = null; this.gaRev++; this.gaList = []; this.gaVer++; this.caCache = null; this.gridSaveCache = null;
     this.contourGrid();
+    this.bunkerPatches.clear(); this.bunkerContourGrid = null; this.bunkerContourRev = -1; this.bunkerJoinedGeneration = -1; this.ground.bunkers.sync([]); this.bunkers.load(undefined, null); this.bunkerSelectionSerial = 0;
   }
   /** the month tick: the chunks whose grow key changed (a seeded cell reached its next quarter) are sent again (whole chunks re-bake) */
   private courseMonth() {
@@ -2254,6 +2336,7 @@ export class Game {
     this.paint.puckCursor = true;
     this.net.paintData = false;
     this.ground = new GroundCache(this.gl, boot.groundWorkers ?? undefined);
+    this.ground.bunkerGeometryChanged = () => this.syncBunkerBakes();
     this.ground.budgetPx = boot.groundPx;
     if (boot.tileMB != null) this.ground.tileBytes = Math.round(boot.tileMB * 1e6); // (T272: a dev build's ?boot=tileMB:N, MB as groundPx's)
     // the ground workers' limits and levers (T157 the lab's; T166 the game's too: its workers make their textures on first use)
@@ -2312,13 +2395,14 @@ export class Game {
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
     this.sandboxUnlock = q.has('unlock') ? q.get('unlock') === '1' : dev;
     this.traffic.onGrow = (legs) => this.townGrow(legs);
+    this.traffic.onNoRoom = () => this.toast('The town has no room left to grow: build a road to give it new lots'); // T292 (#877)
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); this.townFirsts(events); this.placesCheck(); this.roughCheck(); };
     // a lot whose road was widened (or narrowed) keeps its house but moves back to the new verge: composed again there, not left over the road
     this.traffic.onLotsMoved = (keys) => { for (const k of keys) this.lotQueue.add(k); };
     this.traffic.onLedger = (l) => {
       this.foundingSeasonEnd(l);
       // the range business's season closes with the books (P24, T129): the season card read it, the next season counts from zero
-      if (this.golf?.range) rangeNewSeason(this.golf.range);
+      if (this.golf?.range) { rangeNewSeason(this.golf.range); this.sendGolf(); } // T295: the town's tier reads the closed count period (its takings) each day
       if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: the town is out of money', 'warn'); }
       else if (this.bankrupt) { /* already bankrupt: the player keeps watching */ }
       else if (l.money < 0 && !this.traffic.unlimited) this.toast(`In the red: bankrupt in ${DEBT_DAYS - this.traffic.budget.debtDays} days unless the books recover`, 'warn');
@@ -3209,7 +3293,7 @@ export class Game {
   lotOf(key: string): { g: LotGeom; st: ComposeState } | null {
     const s = this.staged.get(key); if (s) return s;
     const v = this.traffic.lots.get(key); if (!v) return null;
-    return { g: { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d }, st: { use: v.use, level: v.level, decline: v.decline, seed: v.seed } };
+    return { g: { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d }, st: { use: v.use, level: v.level, decline: v.decline, seed: v.seed, tier: v.tier, biz: v.biz } };
   }
   /** the props a lot has now */
   propsOfLot(key: string): readonly Prop[] { return this.lotProps.get(key) ?? []; }
@@ -4778,6 +4862,7 @@ export class Game {
         if (p?.auto?.startsWith('place:')) { this.selected = null; this.selectedPlace = p.auto.slice(6); this.inspectScene(p); this.emit(); return; }
         this.selectedPlace = null;
         if (p) { this.selected = p; this.inspectScene(p); this.emit(); return; } // (T242: a business's building or a farmhouse opens its picture)
+        if (this.selectBunkerAt(tl)) { this.selected = null; return; }
         this.selected = null; this.emit();
         if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
       }
@@ -5120,7 +5205,7 @@ export class Game {
     }
   }
   /** the golf state for the city worker: on or off, the tier, the reputation, the golf land, and a range start's start and exits */
-  private sendGolf() { const g = this.golf; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start === 'range' ? { start: 'range', exits: g.exits, invited: g.invited, holes: this.holesBuilt(), townBoost: g.townBoost } : undefined); }
+  private sendGolf() { const g = this.golf, b = g?.range; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start === 'range' ? { start: 'range', exits: g.exits, invited: g.invited, holes: this.holesBuilt(), townBoost: g.townBoost, townTakings: b ? Math.max(b.season.takings, b.last ?? 0) : 0, townHome: b ? homeStage(b) : 0 } : undefined); }
   /** T090: the holes the player has built (a pin each): a range start's town grows faster with them (plan P22 2.3.3) */
   private holesBuilt(): number { return new Set((this.golf?.pins ?? []).map(p => p.hole)).size; }
   /** the terrain of the valley for the city worker: its classes, the highway entry (a range start's: its map exit nearer the town; the start
@@ -5131,7 +5216,8 @@ export class Game {
   this.traffic.terrain(t.cls, near ? [near.x, near.y] : h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, this.townPts.flatMap(p => [p.x, p.y]), t.height, this.golfMode);
   this.traffic.disastersOn(this.disastersEnabled);
   }
-  /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it */
+  /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it.
+   *  T292 (#877): the worker plans none while TOWN_BUILDS_ROADS is off, so this is not called then */
   private townGrow(legs: Leg[]) {
     const cls = CLASS.gravel, near = this.propsNearLegs(legs, cls.h + cls.walk);
     if (near.some(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car')) return;
@@ -6434,7 +6520,7 @@ export class Game {
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => propTuple(LIBRARY[p.item].id, p)),
       money: this.traffic.budget.money, day: this.day, cam: { ...this.cam, ...(this.tileBand !== null ? { tb: this.tileBand } : {}) },
-      lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
+      lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => { const t: LotTuple = [l.key, l.use, l.level, l.decline, l.seed, l.since]; if (l.tier !== undefined || l.biz !== undefined) t.push(l.tier ?? 3); if (l.biz !== undefined) t.push(l.biz); return t; }),
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, townClock: this.traffic.town, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
       places: placeTuples(this.places),
@@ -6449,7 +6535,7 @@ export class Game {
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
       speed: this.net.speedTier,
-      golf: this.golf ? { ...this.golf, teeSets: 1 as const, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday } : undefined,
+      golf: this.golf ? { ...this.golf, bunkers: this.bunkers.serialize(), teeSets: 1 as const, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday } : undefined,
     };
     try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
   }
@@ -6495,6 +6581,7 @@ export class Game {
       // the course grid (T078): decoded here; a save without one (or a bad one) migrates its golf areas in afterLoad
       this.dropCourseGrid();
       if (this.golf) { this.courseGrid = lg === 'migrate' ? null : lg; delete this.golf.grid; this.golf.plans = Array.isArray(this.golf.plans) ? this.golf.plans.filter(Array.isArray) : undefined; }
+      this.bunkers.load(this.golf?.bunkers, this.courseGrid);
       this.grass.load(d.grass); this.grassSim = -1;
       if (!GREENKEEPING) this.grass.configure({ enabled: false }); // greenkeeping hidden for now (features.ts): no condition layer, no drift
       // the bay rows and on-street runs (their ground and lists go to the City now: the network is built above; afterLoad syncs their gates)

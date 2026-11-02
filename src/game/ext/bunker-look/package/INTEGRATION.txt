@@ -1,0 +1,211 @@
+CAPITAL EMPIRE BUNKER LOOK: FUTURE OWNER BINDING
+Target verified on 2026-10-30: GitHub main
+4676a0184aebcdb0b1e27af649607cf759e4143e
+
+1. PURPOSE AND STATUS
+
+This package supplies the approved COMPLETE APPEARANCE for bunkers the game
+already has: sand/raking, slope, brown cut face and roots, rim, rough/first-cut
+grass bands, soft outer blend, upper-right sun and shadows. It does not create a
+new bunker entity or add a decoration beside the old one. Existing entity/owner
+IDs, ball classification, physics, navigation, course data and saves stay intact.
+All unrelated golf materials continue through their native painters.
+
+The package and standalone tests are prepared. The game repository was not
+modified or installed into. Its private ground-painter/protocol hooks still need
+an explicit future owner-approved binding; importing this package alone does
+not replace anything in the game.
+
+Compatibility: the inspected local checkout was main at ffbd0b6a, while current
+GitHub main was 4676a018. The old checkout has generic PaintArea borders; current
+main has CoursePatch/CourseLayer/CourseWall/CourseRim and additional course look
+fields. These are different interfaces, not one hook valid for every version.
+See repo-inspection.txt for exact types and current-main symbol locations.
+
+2. USE THE GAME PROJECTION AND APPROVED SETTINGS
+
+GAME_PROJECTION is {halfWidth:64,halfHeight:32,verticalPixelsPerMetre:80}.
+World x/y are tiles of 2m:
+  X=(x-y)*64; Y=(x+y)*32-zMetres*80.
+Chunk X0/Y0 and boundsWorldPx are projected pixels at zoom 1. L/rasterScale is
+raster pixels per projected world pixel. Use the result's ACTUAL rasterScale
+after maxEdge limiting, not just the requested 0.6.
+
+approved-preset.js exports APPROVED_APPEARANCE, including the approved depth,
+widths, rim, wall, slope, roundness, shadow, material revision and all texture
+scales. approved-look.json records the preview snapshot. Use that preset as the
+look; replace its preview outline with the existing game's exact bunker outline.
+Editor Size and View zoom must not rescale the game's entity or change its camera.
+
+assets/game-native/ contains 64/32/80 worker exports and manifest metadata.
+assets/baked/, approved previews and perf reference/LOD pictures use the separate
+preview/reference projection where their manifests identify it. Do not place a
+preview PNG as though it were game-native, or squash a finished PNG to fix its
+projection: that also distorts vertical walls.
+
+3. GEOMETRY: COMPLETE FEATURES, THEN ONE BAKE PER COMPONENT
+
+Read SURF.bunker=6 from the existing course path. CourseLayer.fill is clipped to
+course chunks with an overlap; it is not a complete bunker outline. Never bake
+each clipped fill ring independently or connect an open edge with an invented
+closing line. Use existing whole-feature rings, or gather neighbouring true
+CourseLayer.edges until assembleBoundaryRings/extractBunkerGeometry closes them.
+The helper throws if the boundary is incomplete or ambiguous.
+
+  import {
+    extractBunkerGeometry, splitBunkerComponents, buildBakeRequest
+  } from './runtime/index.js';
+  import {APPROVED_APPEARANCE} from './approved-preset.js';
+
+  const geometry = extractBunkerGeometry(existingNeighbourPatches);
+  const components = geometry ? splitBunkerComponents(geometry.ringsTiles) : [];
+  const request = buildBakeRequest({
+    id: existingBunkerId, revision: existingEditRevision,
+    ringsTiles: component.ringsTiles,
+    appearance: APPROVED_APPEARANCE, rasterScale:0.6, maxEdge:1024,
+    previousDirtyBounds: previousBake?.dirtyBoundsTiles
+  });
+
+The caller loops over components and resolves existingBunkerId through its
+existing-owner/component registry. Each outer keeps its holes; an island inside
+a hole gets its own component. Baking separate logical bunkers avoids losing
+detail by shrinking a whole 64-tile course bitmap to 1024px. componentKey is a
+geometry/cache identity and changes with edits: it is NOT a stable gameplay ID.
+
+request.ringsTiles contains independent Float64 copies of authoritative points.
+The worker's exact-ring path uses those rings for its distance field, bypassing
+coarse guide contouring/re-rounding. This keeps the rendered boundary aligned to
+the game's existing ball classification without changing gameplay data.
+Roundness applies to guide-authored fallback shapes, not to exact game rings.
+Guide vertices/originTiles remain useful for authoring and conservative bounds.
+The request key includes exact ring floats, so sub-tile edits invalidate a bake
+even when the coarse guide happens to remain identical.
+
+4. PRIMARY ROUTE: EDIT-TIME WORKER, CACHED GROUND AT RUNTIME
+
+Create one WorkerBunkerBaker and use one concurrent bake. Request work only after
+course shape, height/profile, approved texture or relevant appearance changes.
+Panning, zooming and the animation loop must not rebuild SDFs/meshes/materials.
+
+  import {WorkerBunkerBaker} from './baker/bake-client.js';
+  import {BunkerLookBridge} from './examples/bunker-look-bridge.js';
+
+  const worker = new WorkerBunkerBaker();
+  const bridge = new BunkerLookBridge({
+    bake: request => worker.bake(request),
+    invalidate: invalidateExistingGround, // future host binding described below
+    maxBytes:32*1024*1024
+  });
+  await bridge.upsert({
+    id:existingBunkerId, revision:existingEditRevision,
+    ringsTiles:component.ringsTiles
+  });
+
+The example bridge is a binding aid, not an installed game hook. Its default
+appearance is APPROVED_APPEARANCE. On removal call bridge.remove(existingId);
+on shutdown dispose the bridge/cache and the worker.
+
+The future host must deliver ready bake metadata and owned/cloned ImageBitmaps
+to its existing ground-painter workers. postMessage transfer moves ownership:
+do not transfer the cache's only bitmap and then try to draw it again. Clone
+per consumer with createImageBitmap, or give one worker clear ownership. Close
+replaced, stale and evicted copies. Add the required protocol case deliberately;
+the current game protocol does not already accept this package's bunker bake.
+
+Composite the prepared raster during GroundPainter chunk baking, then keep the
+existing ImageBitmap -> GroundCache -> GLRenderer texture upload/draw path.
+The animation loop remains cached GL chunk draws, not another live 3D scene.
+
+5. REPLACE ONLY OWNED NATIVE BUNKER PASSES, ONLY WHEN READY
+
+On current main the relevant identities are:
+  surface 6; sand fill layer 12; grass lip/collar layer 13;
+  WallMat.Sand=1 with lo=12; rims on the selected bunker boundary.
+
+Only getReplacementOwnership(bake,currentExpectedKey).active may activate the
+replacement. Pending, failed, missing, evicted or wrong-key bakes keep native
+fallback. Activate the complete look atomically, never just its sand floor.
+getReplacementOwnership returns scoped suppression metadata for sandFill,
+floorLighting, grassLip, wallSand and ownedRims.
+
+  import {
+    getReplacementOwnership, drawBunkerIntoChunk
+  } from './runtime/index.js';
+
+  const bake = cache.get(existingBunkerId); // also marks it recently used
+  const ownership = getReplacementOwnership(bake,currentExpectedKey);
+  // In the future host's existing painter, through this stage's ownership clip:
+  if (!ownership.active) drawExistingNativePass();
+  else drawBunkerIntoChunk(ctx,bake,{
+    worldX0:X0, worldY0:Y0, rasterScale:L
+  });
+
+The host installs semantic masks at the correct native stages: floor/slope at
+fill12, cut face/shadow at walls(12), grass/lip/rim at code13's real DRAW_ORDER
+position. A cached image can be reused through these precomputed masks. Pasting
+the whole image after all layers can cover a green; painting it only at fill12
+can lose the lip under later native layers. Do not disable every native bunker
+globally while substituting a single component.
+
+Suppress its duplicate native sand fill, sunken-floor lighting, bunkerGrassLip,
+sand-wall face and associated rim spans ONLY inside that active feature's
+ownership. Rim.hi belongs to the higher neighbour and is not necessarily 13.
+Preserve other rims, shared neighbours, non-bunker walls and all other surfaces.
+Current DRAW_ORDER follows SURF_ORDER, including long/custom grass; do not sort
+surface IDs numerically.
+
+drawBunkerIntoChunk saves/restores context state, resets the tile transform to
+draw an already projected image in chunk raster pixels, and culls outside the
+canvas. It performs no geometry or distance-field work. The caller owns semantic
+clipping and expected-key gating; the helper does not patch private game methods.
+
+6. INVALIDATION, MEMORY AND DISTANT VIEWS
+
+Use immutable request snapshots and a key covering exact geometry, approved
+profile/material revisions, scales, projection, raster level and renderer version.
+A newer key supersedes older queued work. Ignore StaleBakeError for replaced
+edits; report real failures and keep native/old cached pictures until ready.
+
+invalidateExistingGround must invalidate the UNION of previous and new
+dirtyBoundsTiles, including grass bands, wall projection and shadow reach.
+Use the game's GroundCache.invalidate(...,keepPrev=true,existingRevealDeadline,
+'gmp') / precise existing stale-map facilities as appropriate for that revision.
+Keep the old chunk until its replacement arrives; remove invalidates old reach.
+Do not add a manual rebuild-ground action.
+
+BunkerCache defaults to 32MiB decoded ready pixels and one concurrent bake.
+This excludes in-flight buffers, browser/driver copies and the game's own GL
+ground textures. Keep only the depth/profile currently used by each feature;
+do not decode all four heights, every LOD or large master/reference bunker renders.
+The worker owns its reusable material set. Evict/release unused baked components.
+At far/planner views keep the game's existing simplified fill/LOD behavior.
+
+7. VITE ASSETS AND THE STATIC ALTERNATIVE
+
+Keep the package's relative layout. baker/material-urls.js uses explicit static
+new URL('../textures/<literal-file>',import.meta.url) expressions so Vite can
+discover and emit material assets. Use that module, or supply materialURLs with
+equivalent literal URLs in the owner's built module; do not construct untracked
+runtime filesystem paths or refer to scratch/generated_images locations.
+
+For fixed shapes, load the selected assets/game-native image and its matching
+manifest bounds/anchor/rasterScale into BunkerCache without constructing a baker.
+Import ONLY @capital-empire/bunker-look/runtime (or the copied local
+folder/runtime/index.js) for this static route; that entry excludes the baker,
+worker and shader modules. The root package entry also exports the worker API.
+A fixed exported outline is not a universal corner kit: different game geometry
+requires its own bake, not arbitrary rearrangement of these pieces.
+
+8. VERIFICATION AND HONEST LIMITS
+
+Run the packaged adapter/cache tests, strict public API checks and standalone
+worker proof/benchmark before binding. Those cover geometry/holes, exact keys,
+culling, context restoration, ownership, resource lifecycle and worker behavior.
+perf/benchmark-results.txt explicitly describes its isolated headless-browser
+measurements; it is not an in-game FPS promise or a benchmark on the user's GPU.
+
+After a future authorized game binding, verify its actual ordering, seams,
+fallback, edit invalidation, bitmap ownership and performance on target hardware.
+No such game installation, code change or in-game performance result is claimed
+by this delivered package. repo-inspection.txt contains the fuller evidence.
+

@@ -106,6 +106,7 @@ export function motionMask(f: WaterField, ex: MotionExtras = {}): MotionMaskData
       for (let u = u0; u <= u1; u++) {
         const i = Math.floor((x0 + (u + 0.5) / res - bx) * br); if (i < 0 || i >= a.W) continue;
         const al = a.data[(j * a.W + i) * 4 + 3]! / 255; if (!(al > 0)) continue;
+        if (site[v * W + u]!) continue; // (the water itself moves, a creek's through its band and a river's where its band starts under it; the swamp past it does not)
         const k = (v - v0) * w + (u - u0), X = exAt(); X[k] = Math.min(X[k]!, 1 - al);
       }
     }
@@ -137,9 +138,10 @@ function segDist(x: number, y: number, a: { x: number; y: number }, b: { x: numb
 }
 
 // ---------- the look ----------
-/** the zoom (CSS) the motion fades out over: whole from the second up, gone by the first (the district chunks, iso.ts MID_BELOW 10%, carry no
- *  mask: the fade keeps that switch from showing) */
-export const ZOOM = [0.1, 0.125] as const;
+/** the zoom (CSS) the motion fades out over: whole from the second up, gone by the first (the owner, 2026-11-01: "its not on the zoomed out
+ *  version": the district chunks, iso.ts MID_BELOW 10%, carry a mask too; the planner's, below iso.ts PLANNER_Z 3.5%, none: the fade keeps that
+ *  switch from showing) */
+export const ZOOM = [0.035, 0.045] as const;
 /** the two ripple layers: their frequencies (a tile: the first about 1.4 tiles a ripple, the second finer), their slopes' shares, how much
  *  the sun-facing slope lights or shades the water (a share of its colour) and how far in from the shore they rise to whole (tiles); the
  *  ponds' wind drift of each (tiles a second at speed 1) */

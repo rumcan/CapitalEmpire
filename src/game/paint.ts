@@ -2,9 +2,10 @@
 import { MAP } from './iso';
 import { isPhotoTex, type GrassTex } from './grass-art';
 import { PRESETS, presetTex, surfacePreset } from './paint-presets';
+import type { BunkerLookFields } from './ext/bunker-look/look-settings';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the photo textures of grass-art.ts PHOTO_TEX) */
-export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}`;
+export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}` | `upload:${string}`;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
 /** the border width as a step on a continuous scale (the owner, 2026-10-25: "should be a slider"): 0 none, 1 small, 2 medium, 3 large (the
@@ -16,6 +17,8 @@ export type BorderSize = number;
  *  the border band has its own scale, angle, tone, strength and tint (bscale, bangle, btone, btoneAmt, btint), by default the fill's scale and angle with no tone;
  *  plantKind / plantedMonth: a golf area sown from seed (grows in) or laid as sod, and the month it was planted */
 export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string; bscale: number; bangle: number; btone: 0 | 1 | 2; btoneAmt: number; btint: string; hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number;
+  /** a bunker's look only: its depth, walls and bake pictures (ext/bunker-look/look-settings.ts; absent: the defaults) */
+  bunker?: BunkerLookFields;
   /** a second texture blended over the fill in soft patches (the map grass's mix): mtex the texture, mshare how much of the area it covers (0..1),
    *  msoft how soft its edge is, mpatch the patches' size (1 = about 5 tiles); absent = no blend */
   mtex?: PaintTex; mshare?: number; msoft?: number; mpatch?: number;
@@ -28,6 +31,10 @@ export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: nu
    *  it); smooth, the Smoothness slider (0..1; absent: SMOOTH_DEFAULT), kept while the box is off so ticking it again brings it back. Painted
    *  areas keep their Corners slider instead */
   round?: boolean; smooth?: number;
+  /** the textures' positions (the owner, 2026-11-01: "a Pan texture button ... you can pan the texture while everything else stays still"):
+   *  the fill's (ox, oy), the blend's (mox, moy) and the border's (box, boy) offsets, tiles; the blend's own scale and angle (mscale, mangle:
+   *  absent, the fill's). Absent: 0 (or the fill's), as every look before */
+  ox?: number; oy?: number; mox?: number; moy?: number; mscale?: number; mangle?: number; box?: number; boy?: number;
 }
 /** T253: the Smoothness a Round off starts at */
 export const SMOOTH_DEFAULT = 0.5;
@@ -105,7 +112,9 @@ export const MENU_TEXES = PAINT_TEXES.filter(t => t.id.startsWith('preset:'));
 export const BORDER_MENU: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...MENU_TEXES];
 /** true for a texture laid in tile space (a photo of grass-art.ts PHOTO_TEX, an owner's preset, or T258's range pictures 'pic:<name>',
  *  golf/range-pics.ts), not a screen-space painting */
-export const isPaintPhoto = (t: string) => t.startsWith('preset:') || t.startsWith('pic:') || isPhotoTex(t);
+export const isPaintPhoto = (t: string) => t.startsWith('preset:') || t.startsWith('pic:') || isOwnTex(t) || isPhotoTex(t);
+/** a picture the player uploaded (ext/bunker-look/uploads.ts: kept in this browser), laid as a tile-space photo like a preset */
+export const isOwnTex = (t: string) => /^upload:[0-9a-f]{12}$/.test(t);
 /** the border width in tiles at the old whole steps (none, small, medium, large) */
 export const BORDER_W = [0, 0.25, 0.5, 1];
 /** the largest border step: a band 4 tiles (8 m) wide */
@@ -284,17 +293,19 @@ function wrapAngle(a: number): number { return a >= -90 && a <= 90 ? a : ((((a +
 const fin = (v: number, d: number) => Number.isFinite(v) ? v : d;
 
 /** a copy of a style (or a whole area) with the scale, angle, border, radius and tone clamped and the textures and tint checked (unknown → paving, kerb; a bad tint → black, or white when lightening) */
+/** a texture offset field kept when set (finite, not 0; rounded to a hundredth of a tile), else left out */
+const offset = (k: string, v: number | undefined): Record<string, number> => (typeof v === 'number' && Number.isFinite(v) && Math.abs(v) >= 0.005 ? { [k]: Math.round(v * 100) / 100 } : {});
 export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
   // the blend's fields are kept only with a known texture (they are left out, not undefined, without one); the edge shade only above 0
-  const { mtex, mshare, msoft, mpatch, shadow, round, smooth, ...rest } = st, s = rest as T, sh = Math.round(Math.min(1, Math.max(0, fin(shadow ?? 0, 0))) * 1000) / 1000;
+  const { mtex, mshare, msoft, mpatch, mscale, mangle, mox, moy, ox, oy, box, boy, shadow, round, smooth, ...rest } = st, s = rest as T, sh = Math.round(Math.min(1, Math.max(0, fin(shadow ?? 0, 0))) * 1000) / 1000;
   const tone = Math.min(2, Math.max(0, Math.round(fin(s.tone, 0)))) as 0 | 1 | 2, btone = Math.min(2, Math.max(0, Math.round(fin(s.btone, 0)))) as 0 | 1 | 2;
   return {
     ...s,
-    tex: TEX_IDS.has(s.tex) ? s.tex : 'paving',
+    tex: TEX_IDS.has(s.tex) || isOwnTex(s.tex) ? s.tex : 'paving',
     scale: Math.min(SCALE_MAX, Math.max(SCALE_MIN, fin(s.scale, 1))),
     angle: wrapAngle(fin(s.angle, 0)),
     border: Math.round(Math.min(BORDER_STEP_MAX, Math.max(0, fin(s.border, 0))) * 1000) / 1000,
-    btex: BTEX_IDS.has(s.btex) ? s.btex : 'kerb',
+    btex: BTEX_IDS.has(s.btex) || isOwnTex(s.btex) ? s.btex : 'kerb',
     radius: Math.min(RADIUS_MAX, Math.max(0, fin(s.radius, 0))),
     tone,
     toneAmt: Math.min(1, Math.max(0, fin(s.toneAmt, 0.35))),
@@ -305,8 +316,11 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
     btoneAmt: Math.min(1, Math.max(0, fin(s.btoneAmt, 0.35))),
     btint: TINT_RE.test(s.btint) ? s.btint.toLowerCase() : btone === 2 ? '#ffffff' : '#000000',
     ...(mtex && TEX_IDS.has(mtex)
-      ? { mtex, mshare: Math.min(1, Math.max(0, fin(mshare ?? 0.5, 0.5))), msoft: Math.min(0.5, Math.max(0.01, fin(msoft ?? 0.12, 0.12))), mpatch: Math.min(4, Math.max(0.25, fin(mpatch ?? 1, 1))) }
+      ? { mtex, mshare: Math.min(1, Math.max(0, fin(mshare ?? 0.5, 0.5))), msoft: Math.min(0.5, Math.max(0.01, fin(msoft ?? 0.12, 0.12))), mpatch: Math.min(4, Math.max(0.25, fin(mpatch ?? 1, 1))),
+        ...(typeof mscale === 'number' && Number.isFinite(mscale) ? { mscale: Math.min(SCALE_MAX, Math.max(SCALE_MIN, mscale)) } : {}),
+        ...(typeof mangle === 'number' && Number.isFinite(mangle) ? { mangle: wrapAngle(mangle) } : {}), ...offset('mox', mox), ...offset('moy', moy) }
       : {}),
+    ...offset('ox', ox), ...offset('oy', oy), ...offset('box', box), ...offset('boy', boy),
     ...(sh > 0 ? { shadow: sh } : {}),
     // T253: Round off when ticked, its Smoothness only when set (both left out otherwise, so an old look takes its kind's default); an unticked
     // box is kept as false, so a bunker (rounded by default since 2026-10-29) the player unticked stays square across a reload
@@ -318,6 +332,7 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
 export function assignStyle(a: PaintArea, st: Omit<PaintArea, 'id' | 'pts'>): PaintArea {
   Object.assign(a, st);
   if (!st.mtex) { delete a.mtex; delete a.mshare; delete a.msoft; delete a.mpatch; }
+  for (const k of ['mscale', 'mangle', 'mox', 'moy', 'ox', 'oy', 'box', 'boy'] as const) if (st[k] === undefined) delete a[k];
   if (!st.shadow) delete a.shadow;
   if (!st.round) delete a.round;
   if (st.smooth === undefined) delete a.smooth;
@@ -336,26 +351,27 @@ const COURSE_SURFACE_OF: Record<string, [string, PaintTex]> = {
 /** a course texture as the brushes lay it: the owner's preset for its golf surface, else the brushes' photo, so a placed piece and a brush stroke
  *  of the same surface always match (the owner, 2026-10-24: the pieces laid a blocky old fairway photo the brushes never use) */
 export function courseTex(tex: PaintTex): PaintTex { const s = COURSE_SURFACE_OF[tex]; return s ? S(s[0], s[1]) : tex; }
+// every course surface is rounded off at full Smoothness by default (the owner, 2026-10-29 for the bunker: "the default for edges on bunker
+// should be round ticked and smoothness 100%"; 2026-10-31: "make round off checked by default and 100% by default on all the presets"); a look
+// saved without Round off (an old save's hole, the course default in storage) takes it too, as its missing fields come from its preset
+// (golf/looks.ts normalizeBook, paint-tool loadBrush)
 export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> }[] = [
-  { kind: 'fairway', name: 'Fairway', r: 5, style: clampStyle({ ...DEFAULT_STYLE, tex: S('fairway', 'golfFairway'), border: 3, btex: S('firstCut', 'golfFirstCut'), radius: 0 }) },
-  { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('green', 'golfGreen'), border: 2, btex: S('fringe', 'golfFringe') }) },
-  { kind: 'tee', name: 'Tee', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('tee', 'golfTee'), border: 1, btex: S('firstCut', 'golfFirstCut') }) },
-  { kind: 'rough', name: 'Rough', r: 8, style: clampStyle({ ...DEFAULT_STYLE, tex: S('rough', 'golfRough'), border: 0 }) },
-  // a bunker is rounded off at full Smoothness by default (the owner, 2026-10-29: "the default for edges on bunker should be round ticked and
-  // smoothness 100%"); a look saved without Round off (an old save's hole, the course default in storage) takes it too, as its missing fields
-  // come from this preset (golf/looks.ts normalizeBook, paint-tool loadBrush)
+  { kind: 'fairway', name: 'Fairway', r: 5, style: clampStyle({ ...DEFAULT_STYLE, tex: S('fairway', 'golfFairway'), border: 3, btex: S('firstCut', 'golfFirstCut'), radius: 0, round: true, smooth: 1 }) },
+  { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('green', 'golfGreen'), border: 2, btex: S('fringe', 'golfFringe'), round: true, smooth: 1 }) },
+  { kind: 'tee', name: 'Tee', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('tee', 'golfTee'), border: 1, btex: S('firstCut', 'golfFirstCut'), round: true, smooth: 1 }) },
+  { kind: 'rough', name: 'Rough', r: 8, style: clampStyle({ ...DEFAULT_STYLE, tex: S('rough', 'golfRough'), border: 0, round: true, smooth: 1 }) },
   { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('bunker', 'bunkerSand'), border: 2, btex: S('rough', 'golfRough'), round: true, smooth: 1 }) },
-  { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('water', 'waterDark'), border: 2, btex: 'dirt' }) },
+  { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('water', 'waterDark'), border: 2, btex: 'dirt', round: true, smooth: 1 }) },
   // T222 (the owner, 2026-10-27: "add desert as a waste bunker in the course"): the Waste area, the course grid's waste surface (the desert, Painted ›
   // Waste area sand). Key 7 (T252: the cart path brush is gone, SURFACE_BRUSHES), so the keys 1-6 stay as they were and the stage 2 keys run 1-7 with no gap;
   // priced like a bunker (golf/costs.ts) and played as sand (golf/play)
-  { kind: 'waste', name: 'Waste area', r: 3, style: clampStyle({ ...DEFAULT_STYLE, tex: S('waste', 'wasteSand'), border: 0 }) },
+  { kind: 'waste', name: 'Waste area', r: 3, style: clampStyle({ ...DEFAULT_STYLE, tex: S('waste', 'wasteSand'), border: 0, round: true, smooth: 1 }) },
   { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: S('path', 'asphalt'), border: 0 }) },
   // T238 (the owner, 2026-10-28: "the current course rough being a long grass option the player can add"): Long grass, the course grid's
   // long grass surface, wearing the owner's rough paintings (Painted › Long grass: rough-owner) now the rough wears the town lawns' grass
   // (#696). Key 8 (T252: was 9, after the cart path brush that went); drawn between the rough and the fescue, priced like the rough (golf/costs.ts) and
   // played as heavy rough, the deep grass lie (golf/play)
-  { kind: 'longGrass', name: 'Long grass', r: 6, style: clampStyle({ ...DEFAULT_STYLE, tex: S('longGrass', 'golfLongGrass'), border: 0 }) },
+  { kind: 'longGrass', name: 'Long grass', r: 6, style: clampStyle({ ...DEFAULT_STYLE, tex: S('longGrass', 'golfLongGrass'), border: 0, round: true, smooth: 1 }) },
 ];
 /** T252 (the owner, 2026-10-28: "remove cart path from that menu. cart paths are part of the paths section"): the surfaces the course brush
  *  paints, in their keys' order (Shape by hand's and Edit hole's swatches, the keys 1-8, the Holes flyout, Help › Keys): every brush but the

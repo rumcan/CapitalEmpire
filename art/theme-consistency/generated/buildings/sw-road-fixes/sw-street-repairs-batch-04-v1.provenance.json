@@ -1,0 +1,320 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "id": "batch:sw-street-repairs-04",
+  "output": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-04-v1.png",
+  "references": [
+    "art/theme-consistency/references/sw-street-batch04-architecture-guide-v1.png"
+  ],
+  "cells": [
+    {
+      "index": 12,
+      "id": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+      "version": "variation-gen-house-farmhouse-wrap-north-446969e5-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-farmhouse-wrap-north-446969e5-plain-1/NE.png",
+      "sha256": "9c93144486a53ef622385712edc2fcd7e4899621645b4ad2d46ec771bef3ae85",
+      "width": 681,
+      "height": 476,
+      "dir": "variation-gen-house-farmhouse-wrap-north-446969e5-plain-1",
+      "measurementKind": "Elevated front porch structural floor-beam lower edge left of entry steps",
+      "segments": [
+        [
+          45,
+          160
+        ]
+      ],
+      "fits": [
+        {
+          "threshold": 32,
+          "slope": 0.199227309422212,
+          "angleErrorDegrees": 15.29769416486428,
+          "rmsPx": 0.3486418328589023,
+          "samples": 116,
+          "endpoints": [
+            [
+              45,
+              382.48408488063654
+            ],
+            [
+              160,
+              405.39522546419096
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "slope": 0.19861992080882634,
+          "angleErrorDegrees": 15.33117029726274,
+          "rmsPx": 0.34064968954924635,
+          "samples": 116,
+          "endpoints": [
+            [
+              45,
+              381.93280282935456
+            ],
+            [
+              160,
+              404.77409372236957
+            ]
+          ]
+        },
+        {
+          "threshold": 230,
+          "slope": 0.19781647637719602,
+          "angleErrorDegrees": 15.375463952414583,
+          "rmsPx": 0.3491183474467581,
+          "samples": 116,
+          "endpoints": [
+            [
+              45,
+              381.2290008841733
+            ],
+            [
+              160,
+              403.97789566755085
+            ]
+          ]
+        }
+      ],
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-12-base.png",
+      "cell": 1,
+      "row": 0,
+      "column": 0,
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW"
+    },
+    {
+      "index": 21,
+      "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+      "version": "variation-ref-building-farmhouse-ef501a21-plain-1-4views-v2",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-farmhouse-ef501a21-plain-1/NE.png",
+      "sha256": "9b85720a8e154b1578d85c38fe73239e3a62e38c1b8e8140c8c4bd4d6e9a5579",
+      "width": 585,
+      "height": 448,
+      "dir": "variation-ref-building-farmhouse-ef501a21-plain-1",
+      "measurementKind": "Elevated front porch structural floor-beam lower edge left of entry steps",
+      "segments": [
+        [
+          70,
+          120
+        ]
+      ],
+      "fits": [
+        {
+          "threshold": 32,
+          "slope": 0.1780995475113122,
+          "angleErrorDegrees": 16.466582952330477,
+          "rmsPx": 0.3283974904294219,
+          "samples": 51,
+          "endpoints": [
+            [
+              70,
+              402.5475113122172
+            ],
+            [
+              120,
+              411.45248868778276
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "slope": 0.17773755656108597,
+          "angleErrorDegrees": 16.486687108519288,
+          "rmsPx": 0.3156164729890757,
+          "samples": 51,
+          "endpoints": [
+            [
+              70,
+              401.8310708898944
+            ],
+            [
+              120,
+              410.7179487179487
+            ]
+          ]
+        },
+        {
+          "threshold": 230,
+          "slope": 0.1760180995475112,
+          "angleErrorDegrees": 16.582216022516135,
+          "rmsPx": 0.3124266098425728,
+          "samples": 51,
+          "endpoints": [
+            [
+              70,
+              401.26621417797895
+            ],
+            [
+              120,
+              410.0671191553545
+            ]
+          ]
+        }
+      ],
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-21-base.png",
+      "cell": 2,
+      "row": 0,
+      "column": 1,
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW"
+    },
+    {
+      "index": 27,
+      "id": "variation:world-house_0-51fa4b80-plain:1",
+      "version": "variation-world-house_0-51fa4b80-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-world-house_0-51fa4b80-plain-1/NE.png",
+      "sha256": "8124205951228354a9e8e5697bd5b55dba4ec113df58b1ecc5394632e71a9ef8",
+      "width": 579,
+      "height": 463,
+      "dir": "variation-world-house_0-51fa4b80-plain-1",
+      "measurementKind": "Exposed front foundation right of entry porch",
+      "segments": [
+        [
+          210,
+          380
+        ]
+      ],
+      "fits": [
+        {
+          "threshold": 32,
+          "slope": 0.2791009671922624,
+          "angleErrorDegrees": 10.970581797381167,
+          "rmsPx": 0.3167312691630402,
+          "samples": 171,
+          "endpoints": [
+            [
+              210,
+              405.6214470284238
+            ],
+            [
+              380,
+              453.0686114511084
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "slope": 0.278920968632251,
+          "angleErrorDegrees": 10.98015009106149,
+          "rmsPx": 0.309336844893295,
+          "samples": 171,
+          "endpoints": [
+            [
+              210,
+              404.9583843329254
+            ],
+            [
+              380,
+              452.37494900040804
+            ]
+          ]
+        },
+        {
+          "threshold": 230,
+          "slope": 0.2788033695730434,
+          "angleErrorDegrees": 10.986401857754856,
+          "rmsPx": 0.30973305202649,
+          "samples": 171,
+          "endpoints": [
+            [
+              210,
+              404.26077791377674
+            ],
+            [
+              380,
+              451.6573507411941
+            ]
+          ]
+        }
+      ],
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-27-base.png",
+      "cell": 3,
+      "row": 1,
+      "column": 0,
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW"
+    },
+    {
+      "index": 30,
+      "id": "variation:world-house_5-d6198cb0-plain:1",
+      "version": "variation-world-house_5-d6198cb0-plain-1-4views-v1",
+      "file": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-world-house_5-d6198cb0-plain-1/NE.png",
+      "sha256": "a1abdc52763b52e9676b7d1fbfffa644333470e362f091fcc1da5c4a9a81ff9b",
+      "width": 568,
+      "height": 522,
+      "dir": "variation-world-house_5-d6198cb0-plain-1",
+      "measurementKind": "Exposed front foundation right of entry porch",
+      "segments": [
+        [
+          270,
+          390
+        ]
+      ],
+      "fits": [
+        {
+          "threshold": 32,
+          "slope": 0.22031567538273947,
+          "angleErrorDegrees": 14.140381916537798,
+          "rmsPx": 0.308062552445618,
+          "samples": 121,
+          "endpoints": [
+            [
+              270,
+              487.6818859233166
+            ],
+            [
+              390,
+              514.1197669692453
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "slope": 0.2210811543151334,
+          "angleErrorDegrees": 14.098560247170441,
+          "rmsPx": 0.31364144643883735,
+          "samples": 121,
+          "endpoints": [
+            [
+              270,
+              487.0739737162986
+            ],
+            [
+              390,
+              513.6037122341146
+            ]
+          ]
+        },
+        {
+          "threshold": 230,
+          "slope": 0.22124373391139407,
+          "angleErrorDegrees": 14.08967950470284,
+          "rmsPx": 0.3159725495471857,
+          "samples": 121,
+          "endpoints": [
+            [
+              270,
+              486.2790949735808
+            ],
+            [
+              390,
+              512.8283430429481
+            ]
+          ]
+        }
+      ],
+      "proof": "E:/ClaudeTemp/SW-road-audit/next-30-base.png",
+      "cell": 4,
+      "row": 1,
+      "column": 1,
+      "canonicalView": "NE",
+      "physicalStreetFacing": "SW"
+    }
+  ],
+  "transparent": true,
+  "prompt": "Paint over this exact architectural drawing to create four different hand-painted town-game building sprites on one transparent 2×2 sheet. Preserve its structural outlines, projected proportions and camera. Add surface painting without rotating the geometry. FRONT foundations, front doors, window rows and porch beams descend one pixel for every two pixels right. RIGHT wall bases rise one pixel for every two pixels right. These two ground axes are equally steep. Keep verticals upright. Do not steepen right walls or flatten fronts.\n\nTOP LEFT: broad two-storey grey-cream clapboard farmhouse. Dark blue slate hipped roof with a central front gable and round louvre. Five warm upper front windows. Full-width wraparound timber veranda with turned cream posts and balusters, central brown door and front steps. Brick chimney.\nTOP RIGHT: cream clapboard traditional farmhouse, tall two-storey front gable with a small attic window and two shuttered upper windows. Dark slate roofs and brick chimney. Lower right side wing with warm window and small metal flue. Front covered timber porch with small gabled canopy, cream posts, railings, brown front door, lantern and a bench. Hose reel close to the wall. Keep the entrance on the drawn front plane.\nBOTTOM LEFT: compact one-storey cream clapboard cottage, dark blue slate gabled roof and rear brick chimney. Front entry porch at physical LEFT with two cream columns, small gabled canopy, burgundy-red door and brass lantern. Large three-pane front window at centre/right with dark green shutters, plus a narrow warm window beside it. Grey stone foundation and entry steps.\nBOTTOM RIGHT: two-storey forest-green clapboard family house, cream trim and dark green shutters. Dark slate gabled roof with projecting front gable over the physical RIGHT upper mass, brick chimney at rear right. Two upper left windows and a wide upper right window, wide lower right window. Covered entry porch at physical LEFT with cream posts, railings, steps, green front door and brass lantern. Keep porch door header parallel to the front red guide.\n\nRich stylized game art in the spirit of World of Warcraft/Hearthstone: confident hand-painted shapes, readable timber and slate detail, warm glowing windows, restrained wear. One sun from upper right, soft shade lower left. Preserve the exact guide's foundations and floor beams. Four complete isolated building sprites, clear transparent gutters and outer margins. No ground islands, floors, lawns, roads, scenery, detached shadows, background, labels or visible guide colours. True alpha PNG.",
+  "generator": "built-in imagegen",
+  "originalSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-692ef03f-331c-4b01-bc98-1a56807a0c96.png",
+  "review": "pending"
+}

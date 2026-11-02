@@ -161,7 +161,7 @@ test('100 seeded farms: a farmhouse and barn by the road, fields with crop rows,
     assert.equal(c.props.filter(q => isHouse(q.id)).length, 1, `${p.key}: farmhouses ${c.props.filter(q => isHouse(q.id)).map(q => q.id)}`);
     assert.equal(c.props.filter(q => q.id === 'world:barn').length, 1, `${p.key}: barns`);
     if (c.props.some(q => q.id === 'ref:landmark-silo')) silos++;
-    assert.ok(c.props.filter(q => isFence(q.id)).length >= 5, `${p.key}: fences`);
+    assert.ok(!c.props.some(q => /fence-privacy|fence_picket/.test(q.id)), `${p.key}: a town wood fence on a farm`);
     assert.ok(c.props.some(q => byId.get(q.id)?.kind === 'tree'), `${p.key}: a tree`);
     assert.ok(c.ground.some(g => g.tex === 'field' && !!g.lines && g.lines.length >= 8), `${p.key}: a crop field with rows`);
     assert.ok(c.ground.some(g => g.tex === 'gravel'), `${p.key}: a drive or yard`);

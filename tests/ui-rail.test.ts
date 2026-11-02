@@ -18,7 +18,7 @@ import { TownFooter } from '../src/ui/TownFooter';
 import type { Tool } from '../src/game/types';
 import { GREENKEEPING } from '../src/game/features';
 
-const GOLF_RAIL = ['select', 'course', 'facilities', 'traffic', 'towndecor', 'bulldoze'];
+const GOLF_RAIL = ['select', 'course', 'facilities', 'ground', 'traffic', 'towndecor', 'bulldoze'];
 /** the classic town game: Facilities holds golf tools only, so it is not on its rail */
 const TOWN_RAIL = ['select', 'course', 'traffic', 'towndecor', 'bulldoze'];
 const course = (holes: number): CourseProgress => ({ holes, seasons: 0, invited: false });
@@ -46,7 +46,7 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
       assert.deepEqual(ids(railEntries(uiOf(p, holes), true, 'select')), GOLF_RAIL, `holes ${holes}, every tool ${adv}`);
       const es = railEntries(uiOf(p, holes), true, 'select', { range: true });
       assert.deepEqual(ids(es), ['select', 'range', ...GOLF_RAIL.slice(1)], 'a range start: the Driving range first under Course');
-      assert.deepEqual(es.filter(e => e.heading).map(e => [e.item.id, e.heading]), [['range', 'course'], ['traffic', 'town']]);
+      assert.deepEqual(es.filter(e => e.heading).map(e => [e.item.id, e.heading]), [['range', 'course'], ['ground', 'town']]);
     }
   });
   it('the classic town game: no range, no golf-only tools; its Business tool under Town decoration; nothing locked', () => {
@@ -62,7 +62,7 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
   it('every tool is reachable from exactly one group (Props from Facilities and Town decoration, Paint from Town decoration and Facilities\' Plants), and the groups hold what the owner asked', () => {
     for (const t of ALL_TOOLS) {
       const n = railItemsOf(t).length;
-      assert.equal(n, t === 'props' || t === 'paint' ? 2 : 1, t);
+      assert.equal(n, t === 'props' || t === 'paint' || t === 'course' ? 2 : 1, t); // Course: Holes, and the footer's Ground height (its height brush)
     }
     const tools = (id: string) => RAIL.find(r => r.id === id)!.tools.map(t => t.id);
     assert.deepEqual(tools('course'), GREENKEEPING ? ['course', 'buildings', 'path', 'greenkeeping'] : ['course', 'buildings', 'path'], 'T206: Cart paths & roads directly below Buildings');
@@ -133,7 +133,7 @@ describe('no key letters on the rail; the keys stay in the tooltip (T182)', () =
     const es = railEntries(uiOf(played(3), 3), true, 'select', { range: true }), h = html(es);
     assert.doesNotMatch(h, /rail-key/);
     for (const e of es) assert.equal(railTip(e).key, e.item.key || undefined, e.item.id);
-    assert.deepEqual(es.map(e => [e.item.id, e.item.key]), [['select', 'V'], ['range', ''], ['course', 'C'], ['facilities', 'Z'], ['traffic', 'R'], ['towndecor', 'A'], ['bulldoze', 'X']]);
+    assert.deepEqual(es.map(e => [e.item.id, e.item.key]), [['select', 'V'], ['range', ''], ['course', 'C'], ['facilities', 'Z'], ['ground', ''], ['traffic', 'R'], ['towndecor', 'A'], ['bulldoze', 'X']]);
     // the tools keep their keys (the engine's keys open them, as before)
     const keyOf = (t: Tool) => RAIL.flatMap(r => r.tools).find(x => x.id === t && !x.alt)!.key;
     assert.deepEqual(['course', 'props', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze', 'select'].map(t => keyOf(t as Tool)), ['C', 'Z', 'R', 'N', 'Y', 'J', 'U', 'P', 'T', 'A', 'X', 'V']);
@@ -177,7 +177,7 @@ describe('the rail keeps its icons; the tiles are the flyouts\' (T233)', () => {
     // the rail's groups and their tools are as they were: the tiles add no tool and move none
     assert.deepEqual(RAIL.map(r => [r.id, r.tools.map(t => t.id).join(' ')]), [
       ['select', 'select'], ['range', 'select'], ['course', `course buildings path${GREENKEEPING ? ' greenkeeping' : ''}`], ['facilities', 'practice paint props'],
-      ['traffic', 'road lane downgrade junction bus park toll'], ['towndecor', 'paint props props business'], ['bulldoze', 'bulldoze'],
+      ['ground', 'course'], ['traffic', 'road lane downgrade junction bus park toll'], ['towndecor', 'paint props props business'], ['bulldoze', 'bulldoze'],
     ]);
   });
 });
@@ -191,7 +191,7 @@ describe('the two drawers: the course drawer on the left, the town footer along 
   it('golf: Select · Course: Driving range, Course, Facilities · Bulldoze on the left; Town: Traffic, Town decoration in the footer; the classic game alike', () => {
     const es = railEntries(null, true, 'select', { range: true });
     assert.deepEqual(side(es), ['select', 'range', 'course', 'facilities', 'bulldoze']);
-    assert.deepEqual(foot(es), ['traffic', 'towndecor']);
+    assert.deepEqual(foot(es), ['ground', 'traffic', 'towndecor'], 'the owner, 2026-11-01: Ground height next to Traffic');
     assert.deepEqual(side(railEntries(null, true, 'select')), ['select', 'course', 'facilities', 'bulldoze'], 'no range: the Course group first under Course');
     const town = railEntries(null, false, 'road');
     assert.deepEqual(side(town), ['select', 'course', 'bulldoze'], 'the classic town game: its Course group on the left');
@@ -202,7 +202,7 @@ describe('the two drawers: the course drawer on the left, the town footer along 
     for (const g of [es, town]) assert.deepEqual([...side(g), ...foot(g)].sort(), ids(g).sort());
     // each drawer's first item under a heading carries it
     assert.deepEqual(drawerEntries(es, 'side').filter(e => e.heading).map(e => [e.item.id, e.heading]), [['range', 'course']]);
-    assert.deepEqual(drawerEntries(es, 'footer').filter(e => e.heading).map(e => [e.item.id, e.heading]), [['traffic', 'town']]);
+    assert.deepEqual(drawerEntries(es, 'footer').filter(e => e.heading).map(e => [e.item.id, e.heading]), [['ground', 'town']]);
   });
   it('drawn: the course drawer (no heading words: a rule after Select, Bulldoze set off by a rule) and the footer (no heading; icon and name side by side; compact: the icons alone)', () => {
     const es = railEntries(null, true, 'select', { range: true }), s = draw(es, 'side'), f = draw(es, 'footer'), c = draw(es, 'footer', true);

@@ -1,0 +1,407 @@
+{
+  "name": "CapitalEmpire Bunker Appearance Integration",
+  "version": "1.0.0",
+  "targetRepository": "https://github.com/rumcan/CapitalEmpire",
+  "targetCommit": "4676a0184aebcdb0b1e27af649607cf759e4143e",
+  "installed": false,
+  "gameFilesModified": false,
+  "runtime": "Cached bitmaps composited into existing worker ground chunks; expensive generation only on edits",
+  "approvedLook": "approved-look.json",
+  "entryPoints": {
+    "runtime": "runtime/index.js",
+    "optionalWorkerBaker": "baker/bake-client.js"
+  },
+  "gameProjection": {
+    "halfWidth": 64,
+    "halfHeight": 32,
+    "verticalPixelsPerMetre": 80
+  },
+  "files": [
+    {
+      "path": "approved-look.json",
+      "bytes": 4934,
+      "sha256": "345f5d3b384eaa7dfb902e136eb74fba72db02da54d6744f99fe420b1c122bd7"
+    },
+    {
+      "path": "approved-preset.d.ts",
+      "bytes": 125,
+      "sha256": "01b87c22a8bc3278e320b7b99a3372525971fb094e271314a5e697e0cc2f483d"
+    },
+    {
+      "path": "approved-preset.js",
+      "bytes": 1222,
+      "sha256": "d76d64a39a80807c117c368ae6d9646853fd47bd6f41d0668fa01ddcf1be7cf8"
+    },
+    {
+      "path": "ASSET-NOTES.txt",
+      "bytes": 318,
+      "sha256": "3c8f413f413b52d54a2e7f21a0936f3309845e313675b41f9840674b5567d933"
+    },
+    {
+      "path": "assets/approved-preview-1024.webp",
+      "bytes": 351004,
+      "sha256": "45b348b7c88d36fe8b1145152d04ccc597c50b116f8b9210720667c0bdf6f9f8"
+    },
+    {
+      "path": "assets/approved-profile.json",
+      "bytes": 4934,
+      "sha256": "345f5d3b384eaa7dfb902e136eb74fba72db02da54d6744f99fe420b1c122bd7"
+    },
+    {
+      "path": "assets/game-native/1024.png",
+      "bytes": 985447,
+      "sha256": "f6cbfde144738e5fc7cf4fc9428be8440c185cce76de30170444a124758f20a5"
+    },
+    {
+      "path": "assets/game-native/1024.webp",
+      "bytes": 213652,
+      "sha256": "251e5613c1f408bd3b8eee25933215808d657540cd9feaa1028332279065b109"
+    },
+    {
+      "path": "assets/game-native/2048.png",
+      "bytes": 1446317,
+      "sha256": "57b9ecd943081290429f099b14847373442895eb87e33427e0bf5296cb8dc77c"
+    },
+    {
+      "path": "assets/game-native/2048.webp",
+      "bytes": 318120,
+      "sha256": "cc43f4f93c23eb5351d12f6da671c2227d9527e534b598be906759ab1b2017ac"
+    },
+    {
+      "path": "assets/game-native/512.png",
+      "bytes": 240715,
+      "sha256": "e5134136bdaad441012db2600df630a605c500362c88ec7de10ae68f4df8ac82"
+    },
+    {
+      "path": "assets/game-native/512.webp",
+      "bytes": 50352,
+      "sha256": "259048c46997b0a436507aae9b94ae5231800d5a3c2d23a821e94c456a2dbb18"
+    },
+    {
+      "path": "assets/game-native/depths/01_shallow.png",
+      "bytes": 987498,
+      "sha256": "264c6321ff64bd66ea5df259f6bd90da1abe8592be1cc6c256c4e49aec42c06a"
+    },
+    {
+      "path": "assets/game-native/depths/01_shallow.webp",
+      "bytes": 214198,
+      "sha256": "1440b8f24e20de703a26cb5b4d67a285bcbd69e16220a4cf683764b3761d3dfb"
+    },
+    {
+      "path": "assets/game-native/depths/02_medium.png",
+      "bytes": 987657,
+      "sha256": "afcf830d4f584d809a4c7321c5c8d351764cfd95d63fe93d00dac038ffb0c9a5"
+    },
+    {
+      "path": "assets/game-native/depths/02_medium.webp",
+      "bytes": 214680,
+      "sha256": "cb60f038211163a2c757a9ad45e8dfdc7b743dde82850210fc633f15857593fe"
+    },
+    {
+      "path": "assets/game-native/depths/03_high.png",
+      "bytes": 963183,
+      "sha256": "a0e20bb4ae78ef5997db35650d51cb5a1efc776ef2928dc05638bf04951b5b4c"
+    },
+    {
+      "path": "assets/game-native/depths/03_high.webp",
+      "bytes": 210750,
+      "sha256": "29141bc4324cb6b87b9ce996b24e35e1d61ebe0adc56455f6ea550c5ce316b65"
+    },
+    {
+      "path": "assets/game-native/depths/04_deep.png",
+      "bytes": 985447,
+      "sha256": "f6cbfde144738e5fc7cf4fc9428be8440c185cce76de30170444a124758f20a5"
+    },
+    {
+      "path": "assets/game-native/depths/04_deep.webp",
+      "bytes": 213652,
+      "sha256": "251e5613c1f408bd3b8eee25933215808d657540cd9feaa1028332279065b109"
+    },
+    {
+      "path": "assets/game-native/four-depths.png",
+      "bytes": 3955002,
+      "sha256": "b7f98c1549212cd6937e6e27a50a9106318633ad6c4ade8468bd4eac420fa9b2"
+    },
+    {
+      "path": "assets/game-native/four-depths.webp",
+      "bytes": 838720,
+      "sha256": "074323e59f95c4620e02123cb30fd19b44d60092520f4b6c7078d3b5f172a222"
+    },
+    {
+      "path": "assets/game-native/manifest.json",
+      "bytes": 46481,
+      "sha256": "c747aeda0ae4476b8d628661bdb3b66db5908dafb0f6ec2997e86e7a1bf640f5"
+    },
+    {
+      "path": "baker/bake-client.d.ts",
+      "bytes": 1234,
+      "sha256": "4cdaa9a71f5390d1346529814ac1444f13b5dc1160191c0a4d747c68ff219670"
+    },
+    {
+      "path": "baker/bake-client.js",
+      "bytes": 1614,
+      "sha256": "5ea74be803cc59c3c448ec5ca8e50b1ecd0e7a52cf5d0cb49d5674b9605bea80"
+    },
+    {
+      "path": "baker/bake.js",
+      "bytes": 7825,
+      "sha256": "19a0d162f676ef2e7f3de39b94e2924fa240dcfe8eaf600ab06b62f0fee98316"
+    },
+    {
+      "path": "baker/bake.worker.js",
+      "bytes": 476,
+      "sha256": "40e5da4ff8b9ea8705d0793f6ba8ef54ba66e16ca71cd1698e7910e81c06abf6"
+    },
+    {
+      "path": "baker/core/renderer-world.js",
+      "bytes": 18582,
+      "sha256": "e729d915c3f43b678952761f9ef0a07cd41e9dc4d0844c5c9996a864460671f1"
+    },
+    {
+      "path": "baker/core/terrain-field.js",
+      "bytes": 13673,
+      "sha256": "a2f003498feff0febef59f855e74cbba26429f0b6f02c3eb407c193fe50a0bf0"
+    },
+    {
+      "path": "baker/core/wall-renderer.js",
+      "bytes": 7430,
+      "sha256": "3e892ad4dc92ef3b3e34ec125d19f0836d6ac063b6207b1fc95a6401d1ffeaaa"
+    },
+    {
+      "path": "baker/material-urls.js",
+      "bytes": 333,
+      "sha256": "6ceaa815a9d888bea29608f2a4d7a268570534c607a13b56021308afb30b91ea"
+    },
+    {
+      "path": "examples/bunker-look-bridge.js",
+      "bytes": 1705,
+      "sha256": "78109d2af0d54a801ac7be42cf2e10734b25374b7104adeeb91d08f5a7bcc116"
+    },
+    {
+      "path": "index.d.ts",
+      "bytes": 187,
+      "sha256": "54af060b99f3d87fc83bb50b5a4b229c30070433a78ef5832ae000a63e4db80e"
+    },
+    {
+      "path": "index.html",
+      "bytes": 289,
+      "sha256": "71b5b5d5874b4fd576e27439f4ba94ae9c4269dc9e86f879376c8a5d6dce8ce0"
+    },
+    {
+      "path": "index.js",
+      "bytes": 94,
+      "sha256": "c70587412e13714d9f63e4484b9cc256106ed32044fca1037f9e99ed5e2eb51b"
+    },
+    {
+      "path": "INTEGRATION.txt",
+      "bytes": 11477,
+      "sha256": "55e97b0b7deb11c9905f20ff183e516535d764b3027b89a8fc7d0d2be46fcc92"
+    },
+    {
+      "path": "material-manifest.json",
+      "bytes": 1029,
+      "sha256": "f22f37e9bbb226aa5b5093f618c28a0b12d1a0972a2d61041c0b352606bfe42b"
+    },
+    {
+      "path": "package.json",
+      "bytes": 370,
+      "sha256": "a4f3aa73698d23dac0a2f9d6f5cf61585c23810195119a6a7a7f862bdeb10f60"
+    },
+    {
+      "path": "perf/benchmark-results.json",
+      "bytes": 13250,
+      "sha256": "c759018fe130b559c24deee0eb88ca104ff26f4ae13f024aded965522e97494e"
+    },
+    {
+      "path": "perf/benchmark-results.txt",
+      "bytes": 1811,
+      "sha256": "24d26ab3530e08f65118f14079da2dbaffd63628b5a3249c79dc03e84d978852"
+    },
+    {
+      "path": "perf/comparison.png",
+      "bytes": 778268,
+      "sha256": "4e641c3f3f08d8d8cfa7be1ee94876fc258c728e869f758b9561d7f941d14d11"
+    },
+    {
+      "path": "perf/design-notes.txt",
+      "bytes": 6306,
+      "sha256": "c08a6334bc1f09044c35d27a91ab10352932d6f4e2bfee5ed7223646194f85f0"
+    },
+    {
+      "path": "perf/lod1024.png",
+      "bytes": 269880,
+      "sha256": "169ea0ea7201e4504dc2575bc45d747f77c94790ec35969a075b735b71229581"
+    },
+    {
+      "path": "perf/lod512.png",
+      "bytes": 255625,
+      "sha256": "b222d25d39b45d460bc197498655239624a9253beb39f3046e62efbb361678be"
+    },
+    {
+      "path": "perf/reference.png",
+      "bytes": 269393,
+      "sha256": "d6b57b3491533e0d250cdd7cf35e4a26d2ab63366e50032e210620d97ce7902b"
+    },
+    {
+      "path": "performance-defaults.json",
+      "bytes": 473,
+      "sha256": "9c0a2be24b973ca9b8e855939f3a4b6a895d7c65e03623f313d68f08e79930cc"
+    },
+    {
+      "path": "preview.html",
+      "bytes": 2205,
+      "sha256": "c3830eae96b4f10dd708f394087ceda8c83aaca6cbc1d5622f7cee83de9baa23"
+    },
+    {
+      "path": "repo-inspection.txt",
+      "bytes": 33675,
+      "sha256": "c57c75fe855861bcb41e1e73cd2bb91b0b9d06a5cf89229dd97d261ddcc43bbd"
+    },
+    {
+      "path": "runtime/API.txt",
+      "bytes": 4433,
+      "sha256": "f3c9941376e168b304f7a20072d9309048847e8a2209ad72b65fb3e958ec7286"
+    },
+    {
+      "path": "runtime/bunker-cache.d.ts",
+      "bytes": 2458,
+      "sha256": "0ee60d9ec5703f203d2a673384c7e20f67f5c586d480eb3bb383d489bf2c4412"
+    },
+    {
+      "path": "runtime/bunker-cache.js",
+      "bytes": 9691,
+      "sha256": "4f4a933b7ff8e390d663170586670c14f3afedbdfb472c967b4a92879a540c35"
+    },
+    {
+      "path": "runtime/capital-empire-adapter.d.ts",
+      "bytes": 4364,
+      "sha256": "52a99f233d271c66e2c80271214e5cfacb8854f64c509dd66d3352bb2dc82a04"
+    },
+    {
+      "path": "runtime/capital-empire-adapter.js",
+      "bytes": 14331,
+      "sha256": "d52d6550eb2ab7fca2c95e78d837c8f931b225f701c8572c55162796e897b724"
+    },
+    {
+      "path": "runtime/index.d.ts",
+      "bytes": 266,
+      "sha256": "6ba67d09b15269d57b8b7f673d420e8ada0cb76ab35476aae4c3a777de62aad6"
+    },
+    {
+      "path": "runtime/index.js",
+      "bytes": 111,
+      "sha256": "d9e5329d5d4888ccf97ca812c83d542b752fcecef0aa403e4728f282ee4c12f9"
+    },
+    {
+      "path": "runtime/package.json",
+      "bytes": 33,
+      "sha256": "a90fc33418afa2b9cbf4768524b021135b965ecdf993457505bfae3ac44a8428"
+    },
+    {
+      "path": "runtime/prebaked.d.ts",
+      "bytes": 398,
+      "sha256": "8c1204c6857cfc4f7ece6a43f056ce9c32f8823fdc76956840be2ab89d3f1f6f"
+    },
+    {
+      "path": "runtime/prebaked.js",
+      "bytes": 988,
+      "sha256": "a9170b675bdbd06d0678cfb19c3c4eac293e500d14d0fb89aefaa43d59e68da8"
+    },
+    {
+      "path": "runtime/test-bunker-cache.mjs",
+      "bytes": 7008,
+      "sha256": "421dd8dcad3779ff5d4acecdc35ff1e845c159edee68d092fc078ef90de1c568"
+    },
+    {
+      "path": "runtime/test-capital-empire-adapter.mjs",
+      "bytes": 4411,
+      "sha256": "e1d8c010724f76cf0eccfae85933358ff1667b876ccea66cf922c564788f946d"
+    },
+    {
+      "path": "server.mjs",
+      "bytes": 4628,
+      "sha256": "e208209064dbd10143b78c82cee5234121433b289144b7fc3216d9b964b0b813"
+    },
+    {
+      "path": "START-HERE.txt",
+      "bytes": 2095,
+      "sha256": "3eb92696960eb7752684c42466c5cd4b8f6e6ba8701b0d812c27920641be8955"
+    },
+    {
+      "path": "start.ps1",
+      "bytes": 1729,
+      "sha256": "a28578d4b785b5a5fe47f7c86f8ced03110f1decd63cdcb5e086910c6afd0d5d"
+    },
+    {
+      "path": "tests/authoritative-worker.json",
+      "bytes": 651,
+      "sha256": "35482b672b7f2d494caf9fdf711513cbf6f761f5d2c9141105956aa421784f31"
+    },
+    {
+      "path": "tests/authoritative-worker.png",
+      "bytes": 225604,
+      "sha256": "f31069b2c6a19a9d4a78196d91f4aa72f064ab314c8ed05025bcbc5f791dc331"
+    },
+    {
+      "path": "tests/sdk-review.txt",
+      "bytes": 2864,
+      "sha256": "e046922b696e467397d1eca4da93a6ec70011b3bc4ec625f6332d7f816f61712"
+    },
+    {
+      "path": "tests/test-worker-lifecycle.mjs",
+      "bytes": 4635,
+      "sha256": "24636166016ad760c3588b7796c0e0eb64024e1b6dac4fc2119238ffd14ab23e"
+    },
+    {
+      "path": "tests/typecheck/sdk-contract.test.ts",
+      "bytes": 2867,
+      "sha256": "bdfcb4a179a9c0838d3492e885a07ef966d6e42410ee688fc407617216c08f8b"
+    },
+    {
+      "path": "tests/typecheck/tsconfig.json",
+      "bytes": 361,
+      "sha256": "aebea15f7b445118600d5b705f6bd99c4b1c6c02d50c827356a027393646068c"
+    },
+    {
+      "path": "tests/wide-authoritative-worker.json",
+      "bytes": 969,
+      "sha256": "348dd18cfebdfaca1db5aeea9a21b06cc9603ce31cca94926306c4a19d1d1073"
+    },
+    {
+      "path": "tests/wide-authoritative-worker.png",
+      "bytes": 86444,
+      "sha256": "978ae303ec5874ff51253f75ef11febc2fcd1d4a474bab7052542984c33a65fa"
+    },
+    {
+      "path": "textures/border-grass.png",
+      "bytes": 2877145,
+      "sha256": "010140b06ad9cfd4970cdd586a3450d4069d43ec70aeb2a533fec2be7281f114"
+    },
+    {
+      "path": "textures/fairway-seamless.png",
+      "bytes": 2645895,
+      "sha256": "828323188dcb4ad8e7a9e6f263ebca89b68879f17cde9f093c52920b617a7476"
+    },
+    {
+      "path": "textures/first-cut.png",
+      "bytes": 2927418,
+      "sha256": "5a0d6400fb2e7a100e4a88eb2bd07d5fb642fbdba93f285d6bcaafe1f51e44f7"
+    },
+    {
+      "path": "textures/material-atlas.png",
+      "bytes": 4544420,
+      "sha256": "aa40b8c933f3574cfb4caf191b123ea381999e65c9627d1b9d5309cdc5dba149"
+    },
+    {
+      "path": "textures/material-prompt.txt",
+      "bytes": 2381,
+      "sha256": "c993147c8f530da281971c6ff210807b7210b0639b0875b33c64f4becadc9872"
+    },
+    {
+      "path": "textures/wall-earth.png",
+      "bytes": 2683323,
+      "sha256": "ae7957b0edf293be40e0b415c2392cd71f757bb41992a44fad0f49238aeddaed"
+    }
+  ],
+  "uncompressedBytes": 30993533
+}

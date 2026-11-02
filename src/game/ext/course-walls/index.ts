@@ -118,8 +118,8 @@ export function drawOrder(styles: readonly BlobStyle[] = BLOB_STYLE): number[] {
   }
   return out;
 }
-/** the default draw order (BLOB_STYLE): rough, long grass, fescue, bank, water, first cut, fairway, first cut, tee, bunker, waste, fringe,
- *  green, lip */
+/** the default draw order (BLOB_STYLE): rough, long grass, fescue, bank, water, first cut, fairway, first cut, tee, bunker, waste, lip,
+ *  fringe, green */
 export const DRAW_ORDER: readonly number[] = drawOrder();
 
 /** a wall's material, from the ground it drops to: turf (a raised green's or tee's grassy bank), sand (a bunker's cut face), water (a pond's
@@ -472,6 +472,8 @@ export function chunkWalls(g: Grid, layers: readonly { code: number; edges: read
 
 /** the least width a step in a wall's drop is eased over, tiles (T137) */
 export const RAMP_MIN = 0.2;
+/** the steepest an eased step's drop changes along the wall, metres a tile (T286) */
+export const RAMP_SLOPE = 1.4;
 /** the points a step's easing is drawn with */
 const RAMP_N = 6;
 const smooth = (u: number) => { const t = Math.min(1, Math.max(0, u)); return t * t * (3 - 2 * t); };
@@ -487,13 +489,17 @@ function easedRun(len: number, X: (q: number) => number, Y: (q: number) => numbe
   for (let q = 1; q <= len; q++) s[q] = s[q - 1]! + Math.hypot(X(q) - X(q - 1), Y(q) - Y(q - 1));
   // the steps: at point q, the jump dd from the piece before (at q 0: the drop it starts from) to the piece after, eased over [a, b]
   const steps: { q: number; dd: number; a: number; b: number }[] = [];
-  const width = (high: number, dd: number) => Math.max(RAMP_MIN, bankWidth(faceForm(high, WallMat.Turf, heights).r, Math.abs(dd)));
+  // (T286, #871: never steeper than RAMP_SLOPE m a tile at the smoothstep's steepest, 1.5 x its mean: a big jump over a short bank stepped)
+  const width = (high: number, dd: number) => Math.max(RAMP_MIN, 1.5 * Math.abs(dd) / RAMP_SLOPE, bankWidth(faceForm(high, WallMat.Turf, heights).r, Math.abs(dd)));
   if (from && Math.abs(d0(0) - from.d) >= FLAT_DH) { const dd = d0(0) - from.d; steps.push({ q: 0, dd, a: 0, b: Math.min(s[len]!, width(dd < 0 ? from.hs : hs(0), dd)) }); }
   for (let q = 1; q < len; q++) {
     const L = d1(q - 1), R = d0(q), dd = R - L;
     if (Math.abs(dd) < FLAT_DH) continue;
     const w = width(L > R ? hs(q - 1) : hs(q), dd);
-    if (dd < 0) steps.push({ q, dd, a: s[q]!, b: Math.min(s[len]!, s[q]! + w) }); else steps.push({ q, dd, a: Math.max(0, s[q]! - w), b: s[q]! });
+    // on the lower ground's side; where the run ends before the bank's width there (a junction just past it: T286, #871), on the other side
+    // when that has more room, so the easing is never squeezed into a step
+    const ahead = s[len]! - s[q]!, behind = s[q]!, fwd = dd < 0 ? ahead >= w || ahead >= behind : !(behind >= w || behind >= ahead);
+    if (fwd) steps.push({ q, dd, a: s[q]!, b: Math.min(s[len]!, s[q]! + w) }); else steps.push({ q, dd, a: Math.max(0, s[q]! - w), b: s[q]! });
   }
   const out: number[] = [];
   /** the eased drop on piece j at arc position at, its own drop there being base: each step's jump taken out ([q <= j]: the piece is past
@@ -515,6 +521,21 @@ function easedRun(len: number, X: (q: number) => number, Y: (q: number) => numbe
     }
   }
   out.push(X(len), Y(len), at(len - 1, s[len]!, d1(len - 1)));
+  // T286 (#871): where three grounds meet within a few cm two easings overlap and their slopes add up: the drop is limited to RAMP_SLOPE m a
+  // tile along the run (each too steep piece's ends moved toward each other, the run's own ends held: a chunk border keeps its drop)
+  const n = out.length / 3;
+  if (steps.length > 1 && n > 2) for (let it = 0; it < 24; it++) {
+    let moved = false;
+    for (let i = 1; i < n; i++) {
+      const ds = Math.hypot(out[3 * i]! - out[3 * i - 3]!, out[3 * i + 1]! - out[3 * i - 2]!), lim = RAMP_SLOPE * ds, dd = out[3 * i + 2]! - out[3 * i - 1]!;
+      if (Math.abs(dd) <= lim + 1e-9) continue;
+      const fix = (Math.abs(dd) - lim) * Math.sign(dd), a = i - 1 > 0, b = i < n - 1;
+      if (!a && !b) continue;
+      if (a && b) { out[3 * i - 1]! += fix / 2; out[3 * i + 2]! -= fix / 2; } else if (a) out[3 * i - 1]! += fix; else out[3 * i + 2]! -= fix;
+      moved = true;
+    }
+    if (!moved) break;
+  }
   return out;
 }
 

@@ -1,0 +1,327 @@
+{
+  "libraryItems": 7423,
+  "stableIdOrder": true,
+  "unchangedLogicalRecords": 7414,
+  "unchangedGeometryFields": [
+    "w",
+    "h",
+    "ax",
+    "ay",
+    "boxes",
+    "quad",
+    "glows",
+    "kind",
+    "solid",
+    "big",
+    "door",
+    "cost"
+  ],
+  "retainedOtherViewFiles": [
+    {
+      "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+      "dir": "SE",
+      "sha256": "a7b183aef8d13b68b45baada38c7c4f42f74d1c5ff0b579987d83d4ab5dd46d9"
+    },
+    {
+      "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+      "dir": "SW",
+      "sha256": "374d38e03eb0ea9fdd273fde92288e8ef71cc28dff0188e2f016fc086502941d"
+    },
+    {
+      "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+      "dir": "NW",
+      "sha256": "cc8d813fa764852224cb7493e054e9d8eb788c6388a5ac7823acfa94207802a3"
+    },
+    {
+      "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "dir": "SE",
+      "sha256": "64b7013c97e47de7de107124b2b8a6dd8dc4c740345afd083b9476860f78640c"
+    },
+    {
+      "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "dir": "SW",
+      "sha256": "0889df868a621167b624add5ed864ac91843a4e8422352498647bf6b09238862"
+    },
+    {
+      "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "dir": "NW",
+      "sha256": "1725d492e81eba8ebd060d1ef51c087434fd6f9b371972658aa55f3909374481"
+    },
+    {
+      "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
+      "dir": "SE",
+      "sha256": "0061202601307757cdd73d511e1c24e6f504ef56de71219b4a37c61ab9c35d8e"
+    },
+    {
+      "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
+      "dir": "SW",
+      "sha256": "fd94ecdebaca1af95047bf7ee8cc99c884a833ba6ad6abd10b67870f99273b8e"
+    },
+    {
+      "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
+      "dir": "NW",
+      "sha256": "56b4f5d0bb72b320e51e6129debaa4734ea81e7c5a70027a85316157ba588fbc"
+    },
+    {
+      "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+      "dir": "SE",
+      "sha256": "386ac3c76e0b67d43ccb470944369693ac44fdea7c500574f2b456fe03858892"
+    },
+    {
+      "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+      "dir": "SW",
+      "sha256": "b73448e6bbb469cf7e5b2ad6594f1588269659bc2247669e7ce9f64afc2bdb30"
+    },
+    {
+      "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+      "dir": "NW",
+      "sha256": "14d9bb87af966587f18df519a39c40ea8d9b69df9015f8a68bbe5dd91a955709"
+    },
+    {
+      "id": "variation:world-house_2-north-332663ab-plain:1",
+      "dir": "SE",
+      "sha256": "84422fb880b118456d550af15e0e3674ba1665f2a4b3a42165f0c061f35adf10"
+    },
+    {
+      "id": "variation:world-house_2-north-332663ab-plain:1",
+      "dir": "SW",
+      "sha256": "bc1fd3b1b9b98794d6b8c53ea39b36f6c66badcfd64b2a9bbefe3f4c4039e1b1"
+    },
+    {
+      "id": "variation:world-house_2-north-332663ab-plain:1",
+      "dir": "NW",
+      "sha256": "2904f786841ac69e453ecbd52576ea2578a0b766215130106ba0dd1f464b5c37"
+    },
+    {
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "dir": "SE",
+      "sha256": "3f07932bc260d5d1659e88351c6aeb31144b0fbe5f15c0866a2de8e5ddc67866"
+    },
+    {
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "dir": "SW",
+      "sha256": "290d36c80106547ad46ccebc50f881109936194a55fccf27e0de68ca973d2238"
+    },
+    {
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "dir": "NW",
+      "sha256": "2481a7fd786e66c21a8728800db91425f2a697d9d0fb2cdeb5894510de2a2a67"
+    },
+    {
+      "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "dir": "SE",
+      "sha256": "87149c48deeea86c05dbe9b651dc635cbd55262a36c62c62448a0588751d0429"
+    },
+    {
+      "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "dir": "SW",
+      "sha256": "c823252aaab7658fc8e0e976dbc6cfa8ab0f5da9fad4e2fc10b48c90a6fddd5f"
+    },
+    {
+      "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "dir": "NW",
+      "sha256": "9b95c00ffa2bc3587d1cdffc47dbbf216094f4cdeab39386ca964b8502043509"
+    },
+    {
+      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "dir": "SE",
+      "sha256": "9e74a81221a04bc0be095082ea30f523eedbcfc5265f3adda636c4a0ce8c5f30"
+    },
+    {
+      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "dir": "SW",
+      "sha256": "0c121a407e241da955b06b0a59c9ac991f60c299d7c799bb0ae50854c28df415"
+    },
+    {
+      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "dir": "NW",
+      "sha256": "7920b3b36cba560ef0dad2d2ba643040b6212ad17ba4da633ae9ce67ebf79c84"
+    },
+    {
+      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "dir": "SE",
+      "sha256": "ed2cdda7412ae32d338bb79b31085ee318f4f1f76c1e4c08a6f904836762c204"
+    },
+    {
+      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "dir": "SW",
+      "sha256": "fda9129c8c1a9b2c163d751858b9d17fd18d0d1e7d036d3f407a898d9eb60dbf"
+    },
+    {
+      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "dir": "NW",
+      "sha256": "7ea3c0bc6147847ea06f3ce7f39acd6c9e53b26712a629ab73803e26709d10e9"
+    }
+  ],
+  "pixelProofs": [
+    {
+      "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-04-v1.png",
+      "cell": 2,
+      "sourceRect": {
+        "left": 638,
+        "top": 1,
+        "width": 616,
+        "height": 654
+      },
+      "nonzeroPixels": 207557,
+      "nativeRgbaExact": true,
+      "sha256": "6b43ac198f69538393b2f2ff736e978beb9eb2e6a86c47ad68cf68c08d74e403"
+    },
+    {
+      "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "cell": 1,
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 637,
+        "height": 657
+      },
+      "nonzeroPixels": 207517,
+      "nativeRgbaExact": true,
+      "sha256": "bd79441c80eda925c0717345ce4e8edd89ba24ecc9e8f6b2afd3cf6eaf9e35bd"
+    },
+    {
+      "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "cell": 2,
+      "sourceRect": {
+        "left": 594,
+        "top": 17,
+        "width": 638,
+        "height": 622
+      },
+      "nonzeroPixels": 205376,
+      "nativeRgbaExact": true,
+      "sha256": "111976f2ee2f63428ef5ac343b4d75e4b54613c6a97ba2a472a598e8bb32773d"
+    },
+    {
+      "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "cell": 3,
+      "sourceRect": {
+        "left": 0,
+        "top": 600,
+        "width": 657,
+        "height": 654
+      },
+      "nonzeroPixels": 195533,
+      "nativeRgbaExact": true,
+      "sha256": "203e5f2f998c2aecabef51c0f17cd6bf94ad1f13f8c26165b3720240e9bea125"
+    },
+    {
+      "id": "variation:world-house_2-north-332663ab-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+      "cell": 4,
+      "sourceRect": {
+        "left": 626,
+        "top": 610,
+        "width": 598,
+        "height": 644
+      },
+      "nonzeroPixels": 208640,
+      "nativeRgbaExact": true,
+      "sha256": "0b83dfd8221c9c7a1102981233bb5e8239f2cb55c60209704cfaae587b50e450"
+    },
+    {
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "cell": 1,
+      "sourceRect": {
+        "left": 0,
+        "top": 21,
+        "width": 659,
+        "height": 622
+      },
+      "nonzeroPixels": 183619,
+      "nativeRgbaExact": true,
+      "sha256": "29276b5b4bd767b63b6659e205261643aef7e13f163cdd1221416641141d5a92"
+    },
+    {
+      "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "cell": 2,
+      "sourceRect": {
+        "left": 612,
+        "top": 19,
+        "width": 604,
+        "height": 632
+      },
+      "nonzeroPixels": 215997,
+      "nativeRgbaExact": true,
+      "sha256": "95c53d46e6849b2011d992d3fa4aeb35da7be2fa3088c034f372504d232eb501"
+    },
+    {
+      "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "cell": 3,
+      "sourceRect": {
+        "left": 0,
+        "top": 576,
+        "width": 697,
+        "height": 678
+      },
+      "nonzeroPixels": 215098,
+      "nativeRgbaExact": true,
+      "sha256": "ba6c546f77b85b191d4fbc35496ce515a7d010acea3d215af8efd28175755ec4"
+    },
+    {
+      "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-06-v1.png",
+      "cell": 4,
+      "sourceRect": {
+        "left": 656,
+        "top": 639,
+        "width": 570,
+        "height": 587
+      },
+      "nonzeroPixels": 186395,
+      "nativeRgbaExact": true,
+      "sha256": "3f43dd0b9c0adab715abdee2d9cdb44dc356eaccd9379f681be2a98b10719a6a"
+    }
+  ],
+  "pageErrors": [],
+  "unchangedPropertyCheck": "All serialized library-item properties except repacked tex; full-object equality passed.",
+  "originalHouse2PinPreserved": true,
+  "rundownCalibrationCorrection": {
+    "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+    "oldSourceSha256": "3d40f6e920bc57bd32ec2b7413ad27acb1c100fdffb0ce28af44ad42ba18dd7b",
+    "oldNativeHeight": 456,
+    "oldVisibleRows": [
+      5,
+      451
+    ],
+    "oldRenderedHeight": 476.73,
+    "oldVisibleRenderedHeight": 467.3208552631579,
+    "newVisibleHeight": 545,
+    "nativeScale": 0.8574694591984549,
+    "doorObservation": {
+      "cell": 1,
+      "kind": "visible boardedleaf belowporchroof; actualdoorheadOCCLUDED",
+      "nativeFullSheet": {
+        "x": 225,
+        "visibleLeafTopY": 419,
+        "thresholdY": 476,
+        "visibleHeightPx": 57
+      },
+      "uncertaintyPx": 4,
+      "usableAsCompleteDoorGauge": false,
+      "correctionDate": "2026-10-30",
+      "correction": "Earlier57pxstandarddoorlabelwaswrong. Upperobservededgeisporchroofocclusion, notdoorhead. Noactualcompleteheightcanberead.",
+      "recommendation": "Preservepre-repaircalibratedphysicalheight; doNOTinfer2.1mstandardheightfrom57pxvisiblepart.",
+      "heightPreservationReference": {
+        "oldNative": {
+          "width": 488,
+          "height": 456
+        },
+        "newAlpha16Component": {
+          "width": 498,
+          "height": 545
+        },
+        "newWidthRelativeToOldWidthForEqualHeight": 0.8538426831102421,
+        "note": "Dimensionratioonly, notmeasuredworldsize. Integrationmustreadpre-repairworldheightandpreserveitinfinalpack."
+      }
+    }
+  }
+}

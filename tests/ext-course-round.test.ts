@@ -117,7 +117,9 @@ test('old looks are not rounded: no round field, no Round off; the outlines are 
   const off = normalizeBook({ h1: { bunker: clampStyle({ ...old, round: false }) } })!;
   assert.equal(off.h1!.bunker!.round, false);
   assert.equal(roundOfStyle(off.h1!.bunker!), undefined);
-  const set = courseLookSet({ bunker: { style: clampStyle({ ...old }) } }, (_s, o) => ({ tex: o, sc: 1, a: 0 }));
+  // (every preset is rounded since 2026-10-31: a set of old looks is every surface's without the two fields)
+  const oldSet = Object.fromEntries(BRUSH_PRESETS.map(b => { const st = { ...b.style }; delete st.round; delete st.smooth; return [b.kind, { style: clampStyle(st) }]; }));
+  const set = courseLookSet(oldSet, (_s, o) => ({ tex: o, sc: 1, a: 0 }));
   assert.equal(set.round, undefined, 'a look set with no Round off carries no round');
   assert.equal(roundOfLooks(g, { round: set.round }), null);
   assert.equal(roundReach({}), 0);
@@ -138,7 +140,7 @@ test('Round off is saved with the look: ticked and its Smoothness kept, unticked
   const saved = normalizeBook(JSON.parse(JSON.stringify({ h3: { bunker: on } })))!;
   assert.equal(saved.h3!.bunker!.round, true); assert.equal(saved.h3!.bunker!.smooth, 0.73);
   const set = courseLookSet({ bunker: { style: on }, green: { style: clampStyle({ ...BRUSH_PRESETS.find(p => p.kind === 'green')!.style, round: true }) } }, (_s, o) => ({ tex: o, sc: 1, a: 0 }));
-  assert.equal(set.round?.[BUNKER], 0.73); assert.equal(set.round?.[GREEN], 0.5, 'the default Smoothness'); assert.equal(set.round?.[FAIRWAY], undefined);
+  assert.equal(set.round?.[BUNKER], 0.73); assert.equal(set.round?.[GREEN], 1, 'the preset’s Smoothness, 100%'); assert.equal(set.round?.[FAIRWAY], 1, 'every preset is rounded off');
 });
 
 test('each owner\'s look rounds its own cells: hole 1\'s bunkers rounded, hole 2\'s not', () => {

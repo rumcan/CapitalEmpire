@@ -1,4 +1,5 @@
 import REGISTRY from './painted-families.json';
+import { MAP } from './iso';
 import { grassDetailWeights, type GrassDetail, type GrassDetailWeight } from './painted-grass-lod';
 import { TILED_FAMILIES, TILE_BANDS, tileMetres, type TiledFamily } from './painted-tiles';
 
@@ -114,8 +115,8 @@ export function familyWeights(r: LevelsLike, L: number): GrassDetailWeight[] {
   const kept = pair.filter(x => x.weight >= 0.02), sum = kept.reduce((s, x) => s + x.weight, 0);
   return kept.map(x => ({ detail: x.detail, weight: x.weight / sum }));
 }
-/** the map's side in metres: a level covering at least this is laid once, aligned to the map (it cannot repeat on it) */
-export const MAP_METRES = 4096;
+/** the map's side in metres (MAP tiles of 2 m): a level covering at least this is laid once, aligned to the map (it cannot repeat on it) */
+export const MAP_METRES = MAP * 2;
 export const coversMap = (a: Pick<LevelArt, 'metres'>) => a.metres >= MAP_METRES - 1e-6;
 
 const rgb = (h: string) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];

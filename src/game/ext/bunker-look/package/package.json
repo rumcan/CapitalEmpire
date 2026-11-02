@@ -1,0 +1,1 @@
+{"name":"@capital-empire/bunker-look","version":"1.0.0","private":true,"type":"module","main":"./index.js","types":"./index.d.ts","exports":{".":{"types":"./index.d.ts","import":"./index.js"},"./runtime":{"types":"./runtime/index.d.ts","import":"./runtime/index.js"},"./baker":{"types":"./baker/bake-client.d.ts","import":"./baker/bake-client.js"}},"sideEffects":false}

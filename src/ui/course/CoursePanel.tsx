@@ -6,11 +6,12 @@ import { PIECE_BUTTONS } from '../../game/ext/course-pieces';
 import { PlantControls } from '../../PaintPanel';
 import { LockMark } from '../Rail';
 import { ToolHead } from '../ToolHead';
-import { BrushShape, GrassEdgesEntry, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
+import { BrushShape, GrassEdgesEntry, GroundHeight, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
 import { HoleStrip, newHole } from './HoleStrip';
 import { HoleWizardPanel } from './HoleWizard';
 import { CourseEdges } from './CourseEdges';
 import { GRID_KINDS } from '../../game/paint-tool';
+import { BunkerPickEntry } from '../BunkerSettings';
 
 /** the paint modes that live under More options (the brush is Shape by hand's; plan is New hole's) */
 const MORE_MODES = new Set(['draw', 'piece', 'height', 'plant', 'hole']);
@@ -40,7 +41,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
         <button className="round-btn" disabled={!un} aria-label={un ? `Undo ${un}` : 'Nothing to undo'} title={un ? `Undo: ${un} (Ctrl+Z)` : 'Nothing to undo'} onClick={() => p.undoTop()}>↶</button>
         <button className="round-btn" disabled={!re} aria-label={re ? `Redo ${re}` : 'Nothing to redo'} title={re ? `Redo: ${re} (Ctrl+Y)` : 'Nothing to redo'} onClick={() => p.redoTop()}>↷</button>
       </ToolHead>
-      {p.mode === 'myhole' && p.myHole ? <MyHolePlace game={game} /> : plan ? <HoleWizardPanel game={game} looks={looks} onLooks={onLooks} /> : (
+      {p.mode === 'myhole' && p.myHole ? <MyHolePlace game={game} /> : plan ? <HoleWizardPanel game={game} /> : (
         <button className={`pill-gold ${lock ? 'opacity-50' : ''}`} data-primary="new-hole" data-guide="new-hole" aria-disabled={!!lock} title={lock ? `New hole: ${lock}` : 'Click the tee, then the green: the whole hole is planned, ready to shape and build'} onClick={() => newHole(game)}>
           <span className="pill-plus" aria-hidden>{lock ? <LockMark size={12} /> : '+'}</span>
           <span className="min-w-0"><span className="block">New hole</span>{lock ? <small data-testid="new-hole-lock">{lock}</small> : !shape && <small>Click a tee, then a green</small>}</span>
@@ -55,7 +56,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
       {shape && (
         <>
           <HoleStrip game={game} />
-          {!plan && <ShapeByHand game={game} />}
+          {!plan && <ShapeByHand game={game} looks={looks} onLooks={onLooks} />}
           {!plan && <MoreOptions game={game} looks={looks} onLooks={onLooks} />}
         </>
       )}
@@ -65,7 +66,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
 
 /** Shape by hand (P23 4.3, 4.5): the surfaces as swatches (keys 1–8; T252: each the surface's puck, no cart path), the brush's shape (T238:
  *  Square or Round) and size ([ ]), Brush and Erase */
-function ShapeByHand({ game }: { game: Game }) {
+function ShapeByHand({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, keys = surfaceKeysOf(game);
   const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece', run = brush && !!p.brushRun && cells > 0;
   // T271: a custom grass in hand goes by its own name; the keys: 1–8 the surfaces, 9 Create your own (golf), Shift + n your own grasses
@@ -76,6 +77,7 @@ function ShapeByHand({ game }: { game: Game }) {
       {/* T256: whose paint the brush lays: this hole's (Range › Build paints your property) */}
       {game.golfMode && armed && <div className="paint-owner" data-testid="paint-owner">{`Painting hole ${p.brushHole}`}</div>}
       <SurfaceSwatches game={game} on={armed ? p.brushKind : null} pick={k => (p.mode === 'draw' ? p.setShape(k, 0) : p.setBrush(k, 0))} />
+      {p.brushKind === 'bunker' && <BunkerPickEntry game={game} looks={looks} onLooks={onLooks} />}
       <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {/* Brush | Run (T122, P23 4.5): the brush paints where you click and drag; Run lays a strip like a road, from click to click */}
@@ -108,6 +110,7 @@ function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; o
       <section data-section="shape" className="mt-3">
         <div className="sec-head"><h3 className="label-caps">Surfaces</h3><span className="sec-note">{`1 m cells · keys 1–${keys}`}</span></div>
         <SurfaceSwatches game={game} on={brush ? p.brushKind : null} pick={k => p.setBrush(k, 0)} />
+        {p.brushKind === 'bunker' && <BunkerPickEntry game={game} looks={looks} onLooks={onLooks} />}
         <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <div className="flex items-center gap-1.5" role="group" aria-label="Brush or Run" data-method={run ? 'run' : 'brush'}>
@@ -115,11 +118,9 @@ function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; o
             <button className={`chip ${run ? 'chip-on' : ''}`} aria-pressed={run} title={`Run: lay a strip of ${name} as wide as the size, like a road`} onClick={() => p.setBrushRun(true)}>Run</button>
           </div>
           <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title="Erase takes your property's top surface under the brush (never a hole's); no refund" onClick={() => { const v = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
-          <button className={`chip ${height ? 'chip-on' : ''}`} data-ground-height aria-pressed={height} aria-expanded={height} title="Ground height: raise, lower, smooth or flatten your land (earthworks are paid for)" onClick={() => (height ? p.setBrush(p.brushKind) : p.setHeight())}>Ground height <span aria-hidden>{height ? '▾' : '▸'}</span></button>
         </div>
         {height && <GroundHeight game={game} on arm={() => p.setHeight()} />}
       </section>
-      <div className="mt-2.5"><h4 className="sub-head">Look</h4><LooksEntry game={game} looks={looks} onLooks={onLooks} arm={() => { if (p.mode !== 'brush') p.setBrush(p.brushKind); }} /></div>
       <div className="mt-3 flex flex-wrap gap-1.5">
         <button className="chip" title="Back to the Holes panel: its brush paints the hole in hand" onClick={() => p.setProperty(false)} data-testid="property-done">Done · back to Holes</button>
       </div>
@@ -167,7 +168,6 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
   const help = p.mode === 'piece' ? `Click to stamp a ${PIECE_BUTTONS.find(b => b.arch === p.pieceArch)?.name ?? 'piece'} for hole ${n} on the mini grid. R turns it, [ ] sizes it.`
     : p.mode === 'draw' ? `Click corners (or press and drag) to lay ${name} for hole ${n}; double-click or Enter closes.`
     : '';
-  const lookArm = () => { if (p.mode !== 'brush' && p.mode !== 'draw') p.setBrush(p.brushKind); };
   return (
     <section data-section="more" className="more">
       <button className="more-head" aria-expanded={shown} onClick={() => setOpen(!shown)}>
@@ -203,9 +203,6 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
               {p.grass && (p.mode === 'brush' || p.mode === 'draw') ? <GrassEdgesEntry game={game} /> : <CourseEdges game={game} />}
             </Sub>
           )}
-          <Sub title="Look">
-            <LooksEntry game={game} looks={looks} onLooks={onLooks} arm={lookArm} />
-          </Sub>
           {game.golfMode && (
             <Sub title="Planting">
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Planting">
@@ -219,7 +216,6 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
               <button className={`chip ${p.mode === 'hole' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'hole'} onClick={() => p.setMode('hole')}>Saved holes <span aria-hidden>▸</span></button>
               {game.golfMode && p.hasPlan(n) && <button className="chip" title={`Hole ${n}'s layout: move the tee, the green and the bends; the tee markers and the flag follow, no grass is laid`} onClick={() => p.editPlan(n)}>{`Edit Hole Layout ${n}`}</button>}
               <button className={`chip ${p.mode === 'plant' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'plant'} onClick={() => p.setPlant(p.plantBrush)}>Plants <span aria-hidden>▸</span></button>
-              <button className={`chip ${p.mode === 'height' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'height'} onClick={() => p.setHeight()}>Ground height <span aria-hidden>▸</span></button>
             </div>
             {p.mode === 'hole' && (
               <>

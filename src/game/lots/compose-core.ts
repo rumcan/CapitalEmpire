@@ -29,7 +29,7 @@ export interface Composition { props: Placed[]; ground: LotPatch[] }
  *  NN%, the fit, the decline) */
 export interface PresetDrop { preset: string; prop: number; id: string; why: string }
 /** the lot state a composition depends on (the seed is the lot's own) */
-export interface ComposeState { use: number; level: number; decline: number; seed: number; /** the lot lab's forced preset id (dev only): the lot draws that preset, approved or not */ preset?: string }
+export interface ComposeState { use: number; level: number; decline: number; seed: number; /** the lot lab's forced preset id (dev only): the lot draws that preset, approved or not */ preset?: string; /** T295: the building tier the lot draws from (lots/tiers.ts; absent: the top tier) and the shop business a commercial lot shows (variety.ts; absent: its colour) */ tier?: number; biz?: string; /** T297 (#882): the lot lab's re-roll, an offset to the lot's seed for the remix only (absent: 0, the game's own fill) */ remix?: number }
 
 export type Pt = { x: number; y: number };
 export type Box4 = [number, number, number, number];

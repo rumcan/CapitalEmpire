@@ -11,10 +11,12 @@ import { RANGE_FRONT, RANGE_PLOT } from './range';
 import { GOLF_REP_START } from './start';
 import type { GolfSave, Rect } from './mode';
 
+/** T280 (#859): the distances below are the 4 km map's, scaled with the map (MAP / 2048: half on the 2 km map); the course's own sizes stay */
+const MS = MAP / 2048;
 /** the county road's straight run each side of the range's junction J, tiles: the town's 40-tile lattice meets it square */
-export const STRAIGHT = 600;
+export const STRAIGHT = 600 * MS;
 /** where a half of the county road may take its one 45° bend: from STRAIGHT out, every BEND_STEP tiles */
-const BEND_STEP = 80;
+const BEND_STEP = 80 * MS;
 /** the most bridge runs the county road may have, and the cost (in tiles of ground road) of an end on a mountain edge */
 const MAX_BRIDGES = 2, MOUNTAIN_END = 4000;
 /** the range plot's gap to the drive's centre line, tiles (the plot and its front: golf/range.ts RANGE_PLOT, RANGE_FRONT) */
@@ -33,14 +35,14 @@ const DRIVE_IN = 16;
 /** the town seed's distance across the road from J, tiles */
 export const SEED_ACROSS = 40;
 /** the town window across the road: [along the road, deep] tiles, and the share of it that must be buildable */
-export const TOWN_WINDOW: [number, number] = [600, 400];
+export const TOWN_WINDOW: [number, number] = [600 * MS, 400 * MS];
 const TOWN_BUILD = 0.75;
 /** the parcel's playable share (open land or woodland, as the old course's COURSE_BUILD) */
 const PARCEL_BUILD = 0.98;
 /** the camera's zoom on a new range start: the street tier (plan 2.1.4) */
 export const RANGE_CAM_ZOOM = 0.17;
 /** the second J candidates: lattice points within this many tiles of the map centre, nearest first */
-const SCAN_REACH = 640;
+const SCAN_REACH = 640 * MS;
 
 /** the road's half width plus its walk, tiles: its verge */
 const VERGE = CLASS.road!.h + CLASS.road!.walk;

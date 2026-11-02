@@ -119,6 +119,9 @@ export const BEND_FULL_DEG = 45;
 const BEND_REACH = 35;
 /** the rough corridor reaches this far (m) from the centre line (P21: the 60 m corridor) */
 export const CORRIDOR_M = 30;
+/** the long grass round the rough corridor (tiles: 8 m; the owner, 2026-11-01: "auto draw long grass on the outside of the new auto build
+ *  holes ... long grass outside followed by rough followed by fairway") */
+export const LONG_RING = 4;
 /** the fairway's rounded nose at its start and its taper under the green, in metres along the line */
 const NOSE_M = 8;
 /** the tee box: 28 x 10 m, a rounded strip along the line (P21 3.3) */
@@ -601,8 +604,8 @@ class Spans {
 }
 
 /**
- * the plan's footprint on a local box of g (see PlanRaster): the rough corridor (every cell within 30 m of the line, more where
- * the fairway is wider), the fairway (union of quads between line samples, with a rounded nose), the tee and the green, each
+ * the plan's footprint on a local box of g (see PlanRaster): a ring of long grass LONG_RING round the rough corridor (every cell within
+ * 30 m of the line, more where the fairway is wider), the fairway (union of quads between line samples, with a rounded nose), the tee and the green, each
  * over the one before; cells allow refuses are left out. Units: tiles in, cells out.
  */
 export function rasterPlanBox(
@@ -635,7 +638,7 @@ export function rasterPlanBox(
   // the box: the line grown by the corridor, plus the green and the tee
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (let i = 0; i < n; i++) {
-    const p = line[i]!, r = cr[i]!;
+    const p = line[i]!, r = cr[i]! + LONG_RING;
     if (p.x - r < x0) x0 = p.x - r; if (p.x + r > x1) x1 = p.x + r;
     if (p.y - r < y0) y0 = p.y - r; if (p.y + r > y1) y1 = p.y + r;
   }
@@ -646,6 +649,12 @@ export function rasterPlanBox(
   const w = Math.max(0, cx1 - cx0 + 1), h = Math.max(0, cy1 - cy0 + 1);
   const out: PlanRaster = { cx0, cy0, w, h, s: new Uint8Array(w * h) };
   if (!w || !h) return out;
+
+  // 0. the long grass round it: the same discs, LONG_RING wider
+  const long = new Spans(g, cx0, cy0, w, h);
+  for (let i = 0; i < n; i += 2) long.disc(line[i]!.x, line[i]!.y, Math.max(cr[i]!, cr[Math.min(n - 1, i + 1)]!) + LONG_RING);
+  if ((n - 1) % 2) long.disc(line[n - 1]!.x, line[n - 1]!.y, cr[n - 1]! + LONG_RING);
+  long.write(out, SURF.longGrass, allow);
 
   // 1. the rough corridor: discs along the line (no folds on a hairpin; round ends behind the tee and past the green)
   const rough = new Spans(g, cx0, cy0, w, h);

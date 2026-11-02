@@ -549,9 +549,10 @@ export class HoleWizard {
     }
     const refused: number[] = [];
     const allow = this.host.allow ? (i: number) => this.host.allow!(i) : undefined;
-    // a cell another hole keeps is only worth a red mark when the plan wanted a playing surface there (rough corridors overlap freely).
+    // a cell another hole keeps is only worth a red mark when the plan wanted a playing surface there (rough corridors overlap freely); the
+    // long grass ring round it never (it stops at your land and at the other holes)
     // T254: Edit Hole Layout (a built hole's plan) lays nothing: the Build moves the markers and the line only
-    const diff = this.base ? noDiff(g) : planChanges(g, this.base, pl, pl.hole, month, allow, { old, next }, (i, why, s) => { if (why === 'land' || s > SURF.rough) refused.push(i); });
+    const diff = this.base ? noDiff(g) : planChanges(g, this.base, pl, pl.hole, month, allow, { old, next }, (i, why, s) => { if (s !== SURF.longGrass && (why === 'land' || s > SURF.rough)) refused.push(i); });
     const cost = Math.round(diffCost(diff, s => this.host.price(s)));
     // row runs: the diff's cells (by their new surface) and the refused cells, both in index order, merged
     const runs: number[] = [], rows = new Map<number, Map<number, number[]>>();

@@ -54,6 +54,8 @@ let lazyTex = false;
 const handle = async (m: ToWorker) => {
   try {
     switch (m.t) {
+      case 'bunkerExpected': painter.bunkerStages.expect(m.set, m.drop); break;
+      case 'bunker': painter.bunkerStages.install(m.set, m.drop); break;
       case 'grass': {
         painter.grassStrength = Math.min(1, Math.max(0, m.strength)); painter.grassHeat = m.heat; painter.grassMowing = m.mowing;
         for (const c of m.cells) { if (c.active) painter.grassCells.set(c.id, c); else painter.grassCells.delete(c.id); }
@@ -94,6 +96,7 @@ const handle = async (m: ToWorker) => {
       case 'textures': restore(tex, m.snap); if (lazyTex) tex.lazyMissing(); texReady(); gotTextures?.(); break;
       case 'grassArt': tex.setPaintedOn(m.art !== 'photo'); painter.resetPlanColours(); break;
       case 'surfaces': tex.setSurfaces(m.file); painter.resetPainted(); break;
+      case 'photos': tex.addPhotos(m.add); break;
       case 'net': { const t0 = performance.now(); applyOps(net, m.ops); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `net ops ${m.ops.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'tilesAhead': tex.tilesAhead = m.bands; break;
       case 'lamps': { const t0 = performance.now(), pts = []; for (let i = 0; i + 1 < m.pts.length; i += 2) pts.push({ x: m.pts[i], y: m.pts[i + 1] }); net.setLamps(pts); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `lamps ${pts.length} in ${ms.toFixed(0)} ms` }); break; }
@@ -145,7 +148,7 @@ const handle = async (m: ToWorker) => {
       case 'tileStats': tileStats = m.on; tex.resetDrawn(); break;
       case 'tileBudget': tex.tiles.budget = m.bytes; tex.tiles.trim(); break; // (T272: the chunk pictures grew or shrank)
       case 'memProbe': {
-        post({ t: 'log', message: 'mem ' + JSON.stringify(memProbe()) });
+        post({ t: 'log', message: 'mem ' + JSON.stringify({ ...memProbe(), bunkerAtlases: painter.bunkerStages.stats }) });
         break;
       }
       case 'prewarm': {

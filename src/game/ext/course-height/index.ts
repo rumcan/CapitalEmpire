@@ -1,13 +1,14 @@
 // Subtle golf course height field (UIX revamp T026, Owner choice 2A).
-// Fine 2-tile (4 m) grid on the 2048x2048 tile map (1024x1024 samples), clamped to [-3.0, +3.0] m.
+// Fine 2-tile (4 m) grid on the MAP x MAP tile map (MAP / 2 samples a side), clamped to [-3.0, +3.0] m.
 // Lighting is strictly from the sun at the upper right of the isometric screen (cast shadows fall at 145°, the sun lies opposite).
 // Supports raise/lower/smooth brushes, automatic road-corridor flattening, sun-upper-right hillshade/slope, and course quality evaluation.
 // Pure TypeScript, no DOM globals, deterministic. Units: world coordinates in tiles (2 m); heights in metres (m).
-/** map width/height in 2 m tiles (matches MAP in src/game/iso.ts) */
-export const COURSE_MAP_TILES = 2048;
+import { MAP } from '../../iso';
+/** map width/height in 2 m tiles (MAP in src/game/iso.ts) */
+export const COURSE_MAP_TILES = MAP;
 /** tiles per course height sample (2 tiles = 4 m resolution) */
 export const CH_STEP = 2;
-/** course height samples per side (2048 / 2 = 1024) */
+/** course height samples per side (MAP / 2) */
 export const CH_SIZE = COURSE_MAP_TILES / CH_STEP;
 /** minimum and maximum course height offset in metres (±3.0 m) */
 export const CH_MIN_M = -3.0;

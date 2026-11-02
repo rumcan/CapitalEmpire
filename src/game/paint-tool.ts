@@ -1,5 +1,6 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
+import type { BunkerState } from './ext/bunker-look/controller';
 import { lookChanged, type BrushLooks, type LookStyle } from './course-look';
 import { LOOK_KINDS, copyLook, copySet, defaultSet as defaultSetOf, holeOwner, lookOf as bookLook, ownerHole, seedOwner, type FacilityOwner, type LookBook, type LookSet } from './golf/looks';
 import { placeMyHole, type MyHole, type Placed } from './golf/myholes';
@@ -29,6 +30,7 @@ import type { PuckBand } from './course-look';
 import type { PuckStyle } from './ext/course-cursor';
 import { borderBase, clampBorder } from './ext/course-grid/patch';
 import { HEIGHT_RANGE, SURF_HEIGHT, defaultShadow } from './ext/course-walls';
+import { DEFAULT_LENGTH } from './ext/course-walls/spill';
 import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
 import { runCells, runPoint, straightTo } from './ext/course-cursor/run';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
@@ -113,7 +115,10 @@ const UNDO_CELLS = 2_000_000;
  *  grid, the collar band's width in metres (bw: the Border slider), its walls' shadow (sh: the Shadow slider, 0 none .. 1 strong) and, for a
  *  raised surface, its height in metres (ht: the Height slider, T127); absent: the defaults (the host's collarDefault band, course-walls defaultShadow
  *  and SURF_HEIGHT) */
-type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>; bw?: number; sh?: number; ht?: number };
+type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>; bw?: number; sh?: number; ht?: number;
+  /** T285: the grass's length (1 the green's cut .. 5 the fescue; absent: course-walls DEFAULT_LENGTH) */ len?: number };
+/** T285: the brush kinds that paint grass, with their surface ids (the Length slider's surfaces) */
+export const LENGTH_KINDS: Partial<Record<BrushKind, number>> = { fairway: SURF.fairway, green: SURF.green, tee: SURF.tee, rough: SURF.rough, longGrass: SURF.longGrass };
 /** the brush kinds whose course-grid surface has a collar band (the Border slider's surfaces), with their surface ids and the band's name */
 export const BORDER_KINDS: Partial<Record<BrushKind, { s: number; band: string }>> = {
   fairway: { s: SURF.fairway, band: 'first cut' }, tee: { s: SURF.tee, band: 'first cut' }, green: { s: SURF.green, band: 'fringe' },
@@ -146,10 +151,11 @@ function loadBrush(): Record<BrushKind, BrushSet> {
     const saved = JSON.parse(localStorage.getItem(BRUSH_KEY) ?? 'null') as Partial<Record<BrushKind, { r?: number; style?: Partial<BrushSet['style']> }>> | null;
     if (saved && typeof saved === 'object') for (const p of BRUSH_PRESETS) {
       const s = saved[p.kind]; if (!s || typeof s !== 'object') continue;
-      const { bw, sh, ht } = s as { bw?: unknown; sh?: unknown; ht?: unknown }, hr = HEIGHT_RANGE[BORDER_KINDS[p.kind]?.s ?? 0];
+      const { bw, sh, ht, len } = s as { bw?: unknown; sh?: unknown; ht?: unknown; len?: unknown }, hr = HEIGHT_RANGE[BORDER_KINDS[p.kind]?.s ?? 0];
       out[p.kind] = { r: Number.isFinite(s.r) ? Math.min(BR_MAX, Math.max(BR_MIN, s.r!)) : p.r, style: clampStyle({ ...p.style, ...s.style }),
         ...(typeof bw === 'number' && Number.isFinite(bw) ? { bw: clampBorder(bw) } : {}), ...(typeof sh === 'number' && Number.isFinite(sh) ? { sh: Math.min(1, Math.max(0, sh)) } : {}),
-        ...(hr && typeof ht === 'number' && Number.isFinite(ht) ? { ht: Math.min(hr[1], Math.max(hr[0], ht)) } : {}) };
+        ...(hr && typeof ht === 'number' && Number.isFinite(ht) ? { ht: Math.min(hr[1], Math.max(hr[0], ht)) } : {}),
+        ...(LENGTH_KINDS[p.kind] !== undefined && typeof len === 'number' && Number.isFinite(len) ? { len: Math.min(5, Math.max(1, Math.round(len))) } : {}) };
     }
   } catch { /* no storage or a bad save: the defaults */ }
   return out;
@@ -203,6 +209,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** T231: the ponds' edge marks (GolfSave.ponds: a pond with a mark in it is edged with stones) and their setter: undo and redo carry them */
   pondMarks?(): number[];
   setPondMarks?(m: number[]): void;
+  /** Connected native-grid bunker profile metadata travels with the existing course undo journal. */
+  bunkerState?(): BunkerState;
+  setBunkerState?(state: unknown): void;
   /** hole n's pin (the New hole wizard's walk label), if it has one */
   pinOf?(hole: number): { x: number; y: number } | null;
   /** New hole (P23 4.4, T119): the camera frames tiles pts beside the panel (after the tee and the green clicks, and Show me); zoomIn false
@@ -655,6 +664,24 @@ export class PaintTool {
     const s = Math.min(1, Math.max(0, v)); if (s === this.courseShadow(kind)) return;
     this.brush[kind] = { ...this.brush[kind], sh: s }; this.saveBrush();
     this.lookSoon(); this.host.emit();
+  }
+  /** T285: a grass kind's length (1 the green's cut .. 5 the fescue), or null for a kind that is not grass */
+  courseLength(kind: BrushKind = this.brushKind): number | null {
+    const s = LENGTH_KINDS[kind]; if (s === undefined) return null;
+    return this.brush[kind].len ?? DEFAULT_LENGTH[s] ?? 3;
+  }
+  /** sets a grass kind's length (1..5), remembered with its brush look; the course is drawn again (its shades) */
+  setCourseLength(v: number, kind: BrushKind = this.brushKind) {
+    if (LENGTH_KINDS[kind] === undefined || !Number.isFinite(v)) return;
+    const n = Math.min(5, Math.max(1, Math.round(v))); if (n === this.courseLength(kind)) return;
+    this.brush[kind] = { ...this.brush[kind], len: n }; this.saveBrush();
+    this.lookSoon(); this.host.emit();
+  }
+  /** the lengths set with the slider, by surface id (the engine's CourseLooks.length; unset ones are left out: their defaults) */
+  courseLengths(): (number | undefined)[] {
+    const out: (number | undefined)[] = [];
+    for (const [k, s] of Object.entries(LENGTH_KINDS) as [BrushKind, number][]) { const n = this.brush[k].len; if (n !== undefined) out[s] = n; }
+    return out;
   }
   /** the Shadows set with the slider, by surface id (the engine's CourseLooks.shadow; unset ones are left out: their defaults) */
   courseShadows(): (number | undefined)[] {
@@ -1338,7 +1365,13 @@ export class PaintTool {
   private begin(label: string, looks = false) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey(), ...(looks ? { looks } : {}) }; this.host.journal?.begin(); this.hj.begin(); }
   /** the hole plans, the ponds' edge marks (T231) and the custom grasses (T271: a grass made or deleted is an undo step, with its cells) as text
    *  (undo compares and restores them) */
-  private plansKey(): string { return JSON.stringify([this.host.plans?.() ?? [], this.host.pondMarks?.() ?? [], this.host.grasses?.() ?? []]); }
+  private plansKey(): string { return JSON.stringify([this.host.plans?.() ?? [], this.host.pondMarks?.() ?? [], this.host.grasses?.() ?? [], this.host.bunkerState?.() ?? null]); }
+  /** Record a profile-only edit in the course's existing undo stack without rebuilding geometry or refitting markers. */
+  recordBunkerEdit(label: string, mutate: () => void): void {
+    this.cancel(); this.begin(label, true);
+    try { mutate(); } finally { this.commit(); }
+    this.host.save(); this.host.emit();
+  }
   /** ends an undoable action: it becomes an undo step when it changed the areas or the props, or spent money (the redo steps are dropped) */
   private commit() {
     const t = this.tx; if (!t || --t.depth > 0) return;
@@ -1385,11 +1418,12 @@ export class PaintTool {
     if (u.plans) {
       try {
         // [plans, pond marks]: each part goes back only when it changed (T231)
-        const [p0, m0, g0] = JSON.parse(u.plans.before) as [unknown[], number[], CustomGrass[]?], [p1, m1, g1] = JSON.parse(u.plans.after) as [unknown[], number[], CustomGrass[]?];
+        const [p0, m0, g0, b0] = JSON.parse(u.plans.before) as [unknown[], number[], CustomGrass[]?, BunkerState?], [p1, m1, g1, b1] = JSON.parse(u.plans.after) as [unknown[], number[], CustomGrass[]?, BunkerState?];
         if (JSON.stringify(p0) !== JSON.stringify(p1)) this.host.setPlans?.(undo ? p0 : p1);
         if (JSON.stringify(m0) !== JSON.stringify(m1)) this.host.setPondMarks?.(undo ? m0 : m1);
         // T271: the custom grasses (a step from before them has none on either side)
         if (g0 && g1 && JSON.stringify(g0) !== JSON.stringify(g1)) { const v = undo ? g0 : g1; this.host.setGrasses?.(v); if (this.grassInHand && !v.some(g => g.k === this.grassInHand)) this.grassInHand = 0; if (this.grassDraft?.k && !v.some(g => g.k === this.grassDraft!.k)) this.grassDraft = null; }
+        if (JSON.stringify(b0) !== JSON.stringify(b1)) this.host.setBunkerState?.(undo ? b0 : b1);
       } catch { /* the text is our own JSON */ }
     }
     // T256: the looks owners the step gave, took or changed go back (or forward), and their cells are drawn again
@@ -1719,7 +1753,16 @@ export class PaintTool {
   cancel() { if (this.drag) this.dragEnd(); this.pts = []; this.lasso = false; this.down = null; this.dropRun(); if (this.stroke) { this.stroke = null; this.commit(); } if (this.planting) { this.planting = null; this.commit(); } if (this.heighting) { this.heighting = null; this.commit(); } }
 
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
+  /** the Pan texture tool (the owner, 2026-11-01: "a Pan texture button that makes your hand a fist and then wherever you click on the map it
+   *  grabs and you can pan the texture while everything else stays still"): the texture in hand ('tex' the fill, 'blend', 'border'; null: off)
+   *  and the drag (the pointer's start in tiles and the offset then). The look in hand takes the offset, for its owner as any edit */
+  panTex: 'tex' | 'blend' | 'border' | null = null;
+  private panning: { x: number; y: number; ox: number; oy: number } | null = null;
+  /** takes the Pan texture tool for texture k in hand, or puts it down (the same k again, or null) */
+  setPanTex(k: 'tex' | 'blend' | 'border' | null) { this.panTex = this.panTex === k ? null : k; this.panning = null; this.host.emit(); }
+  private panKeys(): ['ox', 'oy'] | ['mox', 'moy'] | ['box', 'boy'] { return this.panTex === 'blend' ? ['mox', 'moy'] : this.panTex === 'border' ? ['box', 'boy'] : ['ox', 'oy']; }
   get cursorStyle(): string {
+    if (this.panTex) return this.panning ? 'grabbing' : 'grab';
     if (this.mode === 'plan') { const w = this.wizard; return w.drag ? 'grabbing' : w.hover ? (w.hover.k === 'line' || w.hover.k === 'add' ? 'copy' : 'grab') : w.lineHole ? 'pointer' : 'crosshair'; }
     if (this.editInHand) { const w = this.wizard; if (w.drag) return 'grabbing'; if (w.hover && w.hover.k !== 'line') return w.hover.k === 'add' ? 'copy' : 'grab'; } // T238, T252
     if (this.drag) return 'grabbing';
@@ -1738,6 +1781,7 @@ export class PaintTool {
 
   /** a press on tile t (css px mx, my): a handle of the selected area starts a drag; else draw waits for the release (a click or a lasso) and deselects; pick selects the area under it; erase removes it */
   pointerDown(t: { x: number; y: number }, mx: number, my: number, alt = false) {
+    if (this.panTex) { const [kx, ky] = this.panKeys(); this.panning = { x: t.x, y: t.y, ox: this.style[kx] ?? 0, oy: this.style[ky] ?? 0 }; this.host.emit(); return; }
     if (this.mode === 'plan') { this.planDown(t, mx, my); return; }
     if (this.editInHand && this.planPress(mx, my)) { this.planDown(t, mx, my); return; } // T238: Edit hole's handles first (T252: under the height brush too)
     const sel = this.selectedArea();
@@ -1781,6 +1825,8 @@ export class PaintTool {
   /** a move over tile t (null off the map), with shift (rotate in 15° steps, scale uniform): a drag follows the pointer; else the handle under it is highlighted, and the lasso is drawn or the area under the pointer hovered */
   pointerMove(t: { x: number; y: number } | null, mx: number, my: number, shift = false) {
     this.cursor = t; this.mouse = { mx, my };
+    // the Pan texture tool: the texture follows the pointer (its offset, tiles), everything else stays still
+    if (this.panTex) { const g = this.panning; if (g && t) { const [kx, ky] = this.panKeys(); this.setStyle({ [kx]: g.ox + (t.x - g.x), [ky]: g.oy + (t.y - g.y) }); } return; }
     // T238: Edit hole with a brush in hand: a handle's drag is the plan's; otherwise the handles light up under the pointer as it paints
     if (this.editInHand && !this.wizard.drag && !this.stroke && !this.heighting) { const w = this.wizard, was = w.hover; w.move(t, mx, my, this.toCss()); if (was?.k !== w.hover?.k || was?.i !== w.hover?.i) this.host.emit(); }
     if (this.mode === 'plan' || (this.planOpen && this.wizard.drag)) {
@@ -1833,6 +1879,7 @@ export class PaintTool {
 
   /** the release: a handle drag ends; in draw, a lasso is simplified and closed, and a press without a drag is a click that adds a corner (tol: the close distance in tiles) */
   pointerUp(tol: number) {
+    if (this.panTex) { this.panning = null; this.host.emit(); return; }
     if (this.mode === 'plan' || (this.planOpen && this.wizard.drag)) { if (this.wizard.drag) { this.wizard.release(); this.host.emit(); } return; }
     if (this.drag) { this.dragEnd(); return; }
     if (this.mode === 'brush') { if (this.runRight) { this.finishRun(); return; } this.strokeEnd(); return; }
@@ -2064,6 +2111,7 @@ export class PaintTool {
   /** a key press: true when the tool used it (Enter closes, Backspace undoes a corner, Esc drops what is in hand (false with nothing in hand: the
    *  engine then puts the tool down for Select), R turns the hole (hole mode), [ and ] size the brush (brush mode), Delete removes the hovered corner of the selected area, else the selected area) */
   key(e: KeyboardEvent): boolean {
+    if (this.panTex && e.key === 'Escape') { this.setPanTex(null); return true; }
     if ((e.ctrlKey || e.metaKey) && !e.altKey) {
       const k = e.key.toLowerCase();
       // a Run's last corner first (T122), then New hole's own clicks and drags (T119), then the course's last step

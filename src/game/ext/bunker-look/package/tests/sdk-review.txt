@@ -1,0 +1,48 @@
+Standalone SDK contract review
+
+Scope: canonical integration package only. No game repository files changed,
+no installation, no game project build. The game's existing TypeScript compiler
+was used read-only with cwd=integration and tests/typecheck/tsconfig.json.
+
+Passed checks
+- Strict TypeScript public API test with exactOptionalPropertyTypes and
+  noUncheckedIndexedAccess; noEmit and skipLibCheck=false.
+- Cache Node tests:11 groups, including custom compositor get()/delete().
+- Fake worker/material lifecycle tests:8 groups; no GPU needed.
+- Adapter component/exact-ring/sub-tile-key/culling/fallback regressions.
+- Real module-worker rectangle+hole request at fractional tile coordinates:
+  authoritative-rings mode,512x348 transferred ImageBitmap,64/32/80 projection,
+  premultiplied alpha, correct version key, unchanged caller guide/rings.
+  Successful bake passed the baker's GL checks, no browser exceptions.
+
+Fixed integration/resource issues
+- Cache get(id) marks ready chunk-composited sprites MRU. delete(id) immediately
+  closes owned pixels and invalidates queued/in-flight versions. Late results close.
+- Example bridge now uses cache.get for paint and cache.delete for remove.
+- Cache type generics preserve richer BunkerBakeResult bounds/projection metadata;
+  request constraints no longer require adapter interfaces to have an index signature.
+- Worker-client postMessage failures remove their pending entry; fatal worker and
+  message-decode errors reject pending/future requests and terminate the worker.
+- Partial texture initialization closes all successfully decoded images on failure;
+  disposal during initialization closes late materials before renderer creation.
+- Baker disposal clears its resolved renderer promise and releases its owned GL
+  context. A bitmap finishing after disposal is closed before returning an error.
+- Rounded SSAA dimensions now remain strictly within maxRenderPixels. Output edges
+  remain within the configured integer cap. Invalid pixel limits are rejected early.
+- Valid one-cell guides work, guide origins are validated, adapter/baker agree on
+  minimum output edge32.
+- Public declarations include authoritative Float64 rings, geometryMode and component
+  identities. Exact production rings bypass authoring roundness; guides remain intact.
+
+Evidence files
+tests/authoritative-worker.json and authoritative-worker.png
+tests/typecheck/sdk-contract.test.ts and tsconfig.json
+runtime/test-bunker-cache.mjs
+runtime/test-capital-empire-adapter.mjs
+tests/test-worker-lifecycle.mjs
+
+Benchmark correction
+perf/benchmark-results.json now explicitly records approved depthMetres1.5;
+the current JSON/TXT/comparison PNGs all come from that corrected run.
+Measured bake3183.50ms on ANGLE Microsoft Basic Render Driver; cached draw
+submission metrics are not game FPS claims. No shader simplification was used.

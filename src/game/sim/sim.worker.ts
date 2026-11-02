@@ -105,6 +105,7 @@ function frame() {
       const r = city.step(20);
       postTown(r.events, false);
       if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
+      if (r.noRoom) post({ t: 'noRoom' });
       if (r.ledger) { postBudget(r.ledger); postBiz(); }
       postCareer(r);
     }
@@ -113,6 +114,7 @@ function frame() {
     const r = city.step(speed);
     postTown(r.events, false);
     if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
+    if (r.noRoom) post({ t: 'noRoom' });
     if (r.ledger) { postBudget(r.ledger); postBiz(); }
     postCareer(r);
   }
@@ -176,7 +178,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'parks': city.setParks(m.defs); forcePost = true; break;
       case 'places': { const ev = city.setPlaces(m.rects); if (ev.length) postTown(ev, true); break; }
       case 'businesses': city.setBusinesses(m.defs); post({ t: 'site', site: city.site }); postBiz(); break;
-      case 'golf': { const ev = city.setGolf(m.on ? { tier: m.tier, rep: m.rep, land: m.land, start: m.start, exits: m.exits, invited: m.invited, holes: m.holes, townBoost: m.townBoost } : null); if (ev.length) postTown(ev, true); break; }
+      case 'golf': { const ev = city.setGolf(m.on ? { tier: m.tier, rep: m.rep, land: m.land, start: m.start, exits: m.exits, invited: m.invited, holes: m.holes, townBoost: m.townBoost, townTakings: m.townTakings, townHome: m.townHome } : null); if (ev.length) postTown(ev, true); break; }
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'tolls': city.setTolls(m.defs); forcePost = true; break;
       case 'parking': city.setParking(m.rows, m.curbs, m.fee); forcePost = true; break;

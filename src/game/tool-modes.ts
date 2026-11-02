@@ -34,8 +34,8 @@ export function switchSideMode(m: SideModes, k: SideMode): boolean {
 
 /** the menus and cards Esc closes, topmost first: the Help card, the gear menu, Holes > My looks (P23 P1-E), the Event catalogue, the Grass
  *  panel, Course stats, and the Budget or Bottlenecks card (the engine's panel) */
-export type EscCard = 'help' | 'menu' | 'looks' | 'event' | 'grass' | 'stats' | 'panel';
-export const ESC_CARDS: readonly EscCard[] = ['help', 'menu', 'looks', 'event', 'grass', 'stats', 'panel'];
+export type EscCard = 'help' | 'menu' | 'looks' | 'bunkers' | 'event' | 'grass' | 'stats' | 'panel';
+export const ESC_CARDS: readonly EscCard[] = ['help', 'menu', 'looks', 'bunkers', 'event', 'grass', 'stats', 'panel'];
 
 /** the topmost open menu or card (the one Esc closes first), or null when none is open */
 export function topCard(open: Partial<Record<EscCard, boolean>>): EscCard | null {

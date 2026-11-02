@@ -26,6 +26,7 @@ import { BUILD } from './game/save';
 import { bootFor } from './game/dev/lab-boot';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
+import { GroundHeight } from './ui/course/BrushControls';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
 import { PropsPanel } from './ui/course/PropsPanel';
 import { PracticePanel } from './ui/course/PracticePanel';
@@ -169,7 +170,7 @@ export default function App() {
   const [seasonOpen, setSeasonOpen] = useState(false);
   // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
   // (T271: the grass editor's card is a looks card too: Esc closes it first)
-  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen || grassOpen, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? (setLooks(false), game.paint.closeGrass()) : (setCourseStats(null), setSeasonOpen(false))) }; });
+  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen || grassOpen, bunkers: false, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? (setLooks(false), game.paint.closeGrass()) : (setCourseStats(null), setSeasonOpen(false))) }; });
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
@@ -194,10 +195,14 @@ export default function App() {
   const footRef = useRef<HTMLElement | null>(null), footBox = useRef<HTMLDivElement | null>(null);
   /** Holes > More options > My looks (P23 decision 3): the surface style editor's card beside the Holes panel; Esc closes it first */
   const [looks, setLooks] = useState(false);
-  const looksOpen = looks && (game?.uiTool === 'course' || (game?.tool === 'practice' && !!game.practice.kind)); // T256: a facility's looks too
+  // the Bunker look (the bunker in hand in the Holes tool; My looks itself merged into Create your own, 2026-10-31), or a facility's looks (T256)
+  const looksOpen = looks && ((game?.uiTool === 'course' && game.paint.brushKind === 'bunker') || (game?.tool === 'practice' && !!game.practice.kind));
   useEffect(() => { if (!looksOpen && looks) setLooks(false); }, [looksOpen, looks]);
   /** T271 (#812): the grass editor (Create your own, a grass's Edit): its card in My looks' place while the Holes tool is in hand */
   const grassOpen = !!game?.paint.grassDraft && game.uiTool === 'course';
+  /** a picked bunker (Pick bunker, or a click on one with Select) opens its look: My looks with the bunker in hand (the engine put the Holes
+   *  tool and its hole in hand); every valid pick, not just a changed id */
+  useEffect(() => { if (game?.bunkers?.selection) { game.paint.closeGrass(); setLooks(true); } }, [game, game?.bunkerSelectionSerial]);
   // another tool put in hand closes it (read live: a grass opened just after one closed is never shut by the older render)
   useEffect(() => { if (game && game.uiTool !== 'course' && game.paint.grassDraft) game.paint.closeGrass(); }, [game?.uiTool]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (grassOpen && looks) setLooks(false); }, [grassOpen]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -253,6 +258,7 @@ export default function App() {
     activeRail.current = itemId; lastEntry.current[itemId] = entryKey(t);
     if (t.view) game.decor.setView(t.view.where, t.view.group ?? null);
     game.setTool(t.id);
+    if (itemId === 'ground') game.paint.setHeight(); // the footer's Ground height: the height brush in hand
   };
   if (game && item) last.current[item.id] = game.uiTool;
   /** T193: a rail item's flyout rows (none: Select and Bulldoze, a click picks their tool) */
@@ -650,7 +656,12 @@ export default function App() {
               </Panel>
             )}
             {game.tool === 'paint' && <PaintPanel game={game} />}
-            {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
+            {game.uiTool === 'course' && activeRail.current !== 'ground' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
+            {game.uiTool === 'course' && activeRail.current === 'ground' && (
+              <Panel title="Ground height" icon="up" desc="Raise, lower, smooth or flatten your land. Earthworks are paid for.">
+                <GroundHeight game={game} on={game.paint.mode === 'height'} arm={() => game.paint.setHeight()} />
+              </Panel>
+            )}
             {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
             {GREENKEEPING && game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
             {game.tool === 'props' && <PropsPanel game={game} />}

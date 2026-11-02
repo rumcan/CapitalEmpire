@@ -1,0 +1,56 @@
+{
+  "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
+  "generator": "image_gen",
+  "integrationStatus": "ready",
+  "repair": {
+    "physicalStreetFacing": "SW",
+    "canonicalView": "NE",
+    "sheet": "art/theme-consistency/generated/buildings/sw-road-fixes/sw-street-repairs-batch-05-v1.png",
+    "sheetSha256": "ae54942c47f646a07a36064656575ab7e269882bb77d3f642f6fddafafe71a15",
+    "cell": 2,
+    "sourceRect": {
+      "left": 594,
+      "top": 17,
+      "width": 638,
+      "height": 622
+    },
+    "coreBounds": {
+      "left": 677,
+      "top": 74,
+      "width": 519,
+      "height": 528
+    },
+    "nonzeroPixels": 205376,
+    "processing": "Existing lossless nearest-alpha-core partition; native RGBA copied once, neighboring subjects excluded; no resample/repaint/warp",
+    "geometryReview": {
+      "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/sw-street-repairs-batch-05-v1.review.json",
+      "sha256": "93df03926706f07330420e69d781f0682767901e70a55b168b166f9a6fe82ae7"
+    }
+  },
+  "authority": {
+    "file": "art/theme-consistency/reviews/sw-road-repairs-20261029/accepted-selection-03-delivery-v3.json",
+    "sha256": "97ea9d057e900431d8b4091e9f328a9acf777f162d63d67bd569de224f61a85b"
+  },
+  "original": {
+    "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
+    "version": "variation-gen-house-l-shape-north-79eba705-plain-1-4views-v2",
+    "files": {
+      "NE": "48d669649ddad9ef18c54f5955601b39f1284125c0c2dd985f7d1486f41f484f",
+      "SE": "0061202601307757cdd73d511e1c24e6f504ef56de71219b4a37c61ab9c35d8e",
+      "SW": "fd94ecdebaca1af95047bf7ee8cc99c884a833ba6ad6abd10b67870f99273b8e",
+      "NW": "56b4f5d0bb72b320e51e6129debaa4734ea81e7c5a70027a85316157ba588fbc"
+    }
+  },
+  "retainedDirections": [
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "files": {
+    "NE": "111976f2ee2f63428ef5ac343b4d75e4b54613c6a97ba2a472a598e8bb32773d",
+    "SE": "0061202601307757cdd73d511e1c24e6f504ef56de71219b4a37c61ab9c35d8e",
+    "SW": "fd94ecdebaca1af95047bf7ee8cc99c884a833ba6ad6abd10b67870f99273b8e",
+    "NW": "56b4f5d0bb72b320e51e6129debaa4734ea81e7c5a70027a85316157ba588fbc"
+  },
+  "authorityMetadata": "v3 corrects the occluded rundown-door observation; selected native artwork and approved geometry unchanged, no owner baseline change."
+}

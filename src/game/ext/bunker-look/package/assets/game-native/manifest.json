@@ -1,0 +1,2113 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-30T21:19:03.541Z",
+  "completed": true,
+  "assetRole": "production game-native Worker bake",
+  "gameProjectionCompatible": true,
+  "referenceProjection": false,
+  "projection": {
+    "halfWidth": 64,
+    "halfHeight": 32,
+    "verticalPixelsPerMetre": 80
+  },
+  "requestedRasterScale": 0.6,
+  "approvedSource": "approved-look.json",
+  "approvedSha256": "345f5d3b384eaa7dfb902e136eb74fba72db02da54d6744f99fe420b1c122bd7",
+  "appearanceSettings": {
+    "width": 4869,
+    "height": 3143,
+    "collar": 2.647123893805,
+    "firstCut": 1.79192477876,
+    "wall": 1.93929756637,
+    "textureScale": 1.1642699115000001,
+    "roughScale": 1.55646929825,
+    "firstScale": 1.49396929825,
+    "sandScale": 3,
+    "earthScale": 3,
+    "fairwayScale": 1.17434210526,
+    "roundness": 0.7406664823,
+    "rim": 0.843030973451,
+    "slope": 3.512859513275,
+    "shadow": 1.25218473451
+  },
+  "guide": {
+    "width": 20,
+    "height": 14,
+    "vertices": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "assets": [
+    {
+      "name": "1024.png",
+      "mime": "image/png",
+      "encodedBytes": 985447,
+      "width": 1024,
+      "height": 667,
+      "rgba8Bytes": 2732032,
+      "alpha": {
+        "transparent": 314967,
+        "semitransparent": 4732,
+        "opaque": 363309,
+        "bounds": {
+          "x": 5,
+          "y": 36,
+          "width": 1014,
+          "height": 493
+        }
+      },
+      "worker": {
+        "width": 1024,
+        "height": 667,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1273
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:1.5:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2732032,
+        "bakeMs": 1773,
+        "premultipliedAlpha": true
+      },
+      "heightId": "04_deep",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "1024.webp",
+      "mime": "image/webp",
+      "encodedBytes": 213652,
+      "width": 1024,
+      "height": 667,
+      "rgba8Bytes": 2732032,
+      "alpha": {
+        "transparent": 314967,
+        "semitransparent": 4732,
+        "opaque": 363309,
+        "bounds": {
+          "x": 5,
+          "y": 36,
+          "width": 1014,
+          "height": 493
+        }
+      },
+      "webpQuality": 0.96,
+      "worker": {
+        "width": 1024,
+        "height": 667,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1273
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:1.5:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2732032,
+        "bakeMs": 1773,
+        "premultipliedAlpha": true
+      },
+      "heightId": "04_deep",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "depths/04_deep.png",
+      "mime": "image/png",
+      "encodedBytes": 985447,
+      "width": 1024,
+      "height": 667,
+      "rgba8Bytes": 2732032,
+      "alpha": {
+        "transparent": 314967,
+        "semitransparent": 4732,
+        "opaque": 363309,
+        "bounds": {
+          "x": 5,
+          "y": 36,
+          "width": 1014,
+          "height": 493
+        }
+      },
+      "worker": {
+        "width": 1024,
+        "height": 667,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1273
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:1.5:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2732032,
+        "bakeMs": 1773,
+        "premultipliedAlpha": true
+      },
+      "heightId": "04_deep",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false,
+      "aliasOf": "1024.png"
+    },
+    {
+      "name": "depths/04_deep.webp",
+      "mime": "image/webp",
+      "encodedBytes": 213652,
+      "width": 1024,
+      "height": 667,
+      "rgba8Bytes": 2732032,
+      "alpha": {
+        "transparent": 314967,
+        "semitransparent": 4732,
+        "opaque": 363309,
+        "bounds": {
+          "x": 5,
+          "y": 36,
+          "width": 1014,
+          "height": 493
+        }
+      },
+      "webpQuality": 0.96,
+      "worker": {
+        "width": 1024,
+        "height": 667,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1273
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:1.5:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2732032,
+        "bakeMs": 1773,
+        "premultipliedAlpha": true
+      },
+      "heightId": "04_deep",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false,
+      "aliasOf": "1024.webp"
+    },
+    {
+      "name": "512.png",
+      "mime": "image/png",
+      "encodedBytes": 240715,
+      "width": 512,
+      "height": 334,
+      "rgba8Bytes": 684032,
+      "alpha": {
+        "transparent": 77986,
+        "semitransparent": 3139,
+        "opaque": 89883,
+        "bounds": {
+          "x": 3,
+          "y": 17,
+          "width": 507,
+          "height": 248
+        }
+      },
+      "worker": {
+        "width": 512,
+        "height": 334,
+        "anchor": {
+          "x": 214.57565632458235,
+          "y": 22.23961813842482
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1273
+        ],
+        "rasterScale": 0.24439140811455848,
+        "key": "approved-game-native-v1:1.5:512",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 684032,
+        "bakeMs": 304.3999999985099,
+        "premultipliedAlpha": true
+      },
+      "heightId": "04_deep",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "512.webp",
+      "mime": "image/webp",
+      "encodedBytes": 50352,
+      "width": 512,
+      "height": 334,
+      "rgba8Bytes": 684032,
+      "alpha": {
+        "transparent": 77986,
+        "semitransparent": 3139,
+        "opaque": 89883,
+        "bounds": {
+          "x": 3,
+          "y": 17,
+          "width": 507,
+          "height": 248
+        }
+      },
+      "webpQuality": 0.96,
+      "worker": {
+        "width": 512,
+        "height": 334,
+        "anchor": {
+          "x": 214.57565632458235,
+          "y": 22.23961813842482
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1273
+        ],
+        "rasterScale": 0.24439140811455848,
+        "key": "approved-game-native-v1:1.5:512",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 684032,
+        "bakeMs": 304.3999999985099,
+        "premultipliedAlpha": true
+      },
+      "heightId": "04_deep",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "depths/01_shallow.png",
+      "mime": "image/png",
+      "encodedBytes": 987498,
+      "width": 1024,
+      "height": 614,
+      "rgba8Bytes": 2514944,
+      "alpha": {
+        "transparent": 260695,
+        "semitransparent": 4732,
+        "opaque": 363309,
+        "bounds": {
+          "x": 5,
+          "y": 36,
+          "width": 1014,
+          "height": 493
+        }
+      },
+      "worker": {
+        "width": 1024,
+        "height": 614,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1165
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:0.15:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2514944,
+        "bakeMs": 632.9000000003725,
+        "premultipliedAlpha": true
+      },
+      "heightId": "01_shallow",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "depths/01_shallow.webp",
+      "mime": "image/webp",
+      "encodedBytes": 214198,
+      "width": 1024,
+      "height": 614,
+      "rgba8Bytes": 2514944,
+      "alpha": {
+        "transparent": 260695,
+        "semitransparent": 4732,
+        "opaque": 363309,
+        "bounds": {
+          "x": 5,
+          "y": 36,
+          "width": 1014,
+          "height": 493
+        }
+      },
+      "webpQuality": 0.96,
+      "worker": {
+        "width": 1024,
+        "height": 614,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1165
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:0.15:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2514944,
+        "bakeMs": 632.9000000003725,
+        "premultipliedAlpha": true
+      },
+      "heightId": "01_shallow",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "depths/02_medium.png",
+      "mime": "image/png",
+      "encodedBytes": 987657,
+      "width": 1024,
+      "height": 626,
+      "rgba8Bytes": 2564096,
+      "alpha": {
+        "transparent": 272984,
+        "semitransparent": 4731,
+        "opaque": 363309,
+        "bounds": {
+          "x": 5,
+          "y": 36,
+          "width": 1014,
+          "height": 493
+        }
+      },
+      "worker": {
+        "width": 1024,
+        "height": 626,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1189
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:0.45:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2564096,
+        "bakeMs": 577.2000000011176,
+        "premultipliedAlpha": true
+      },
+      "heightId": "02_medium",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "depths/02_medium.webp",
+      "mime": "image/webp",
+      "encodedBytes": 214680,
+      "width": 1024,
+      "height": 626,
+      "rgba8Bytes": 2564096,
+      "alpha": {
+        "transparent": 272984,
+        "semitransparent": 4731,
+        "opaque": 363309,
+        "bounds": {
+          "x": 5,
+          "y": 36,
+          "width": 1014,
+          "height": 493
+        }
+      },
+      "webpQuality": 0.96,
+      "worker": {
+        "width": 1024,
+        "height": 626,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1189
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:0.45:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2564096,
+        "bakeMs": 577.2000000011176,
+        "premultipliedAlpha": true
+      },
+      "heightId": "02_medium",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "depths/03_high.png",
+      "mime": "image/png",
+      "encodedBytes": 963183,
+      "width": 1024,
+      "height": 644,
+      "rgba8Bytes": 2637824,
+      "alpha": {
+        "transparent": 289574,
+        "semitransparent": 8219,
+        "opaque": 361663,
+        "bounds": {
+          "x": 5,
+          "y": 35,
+          "width": 1014,
+          "height": 495
+        }
+      },
+      "worker": {
+        "width": 1024,
+        "height": 644,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1225
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:0.9:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2637824,
+        "bakeMs": 654.9000000003725,
+        "premultipliedAlpha": true
+      },
+      "heightId": "03_high",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "depths/03_high.webp",
+      "mime": "image/webp",
+      "encodedBytes": 210750,
+      "width": 1024,
+      "height": 644,
+      "rgba8Bytes": 2637824,
+      "alpha": {
+        "transparent": 289574,
+        "semitransparent": 8219,
+        "opaque": 361663,
+        "bounds": {
+          "x": 5,
+          "y": 35,
+          "width": 1014,
+          "height": 495
+        }
+      },
+      "webpQuality": 0.96,
+      "worker": {
+        "width": 1024,
+        "height": 644,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1225
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:0.9:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2637824,
+        "bakeMs": 654.9000000003725,
+        "premultipliedAlpha": true
+      },
+      "heightId": "03_high",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "2048.png",
+      "mime": "image/png",
+      "encodedBytes": 1446317,
+      "width": 1257,
+      "height": 819,
+      "rgba8Bytes": 4117932,
+      "alpha": {
+        "transparent": 472770,
+        "semitransparent": 11123,
+        "opaque": 545590,
+        "bounds": {
+          "x": 6,
+          "y": 43,
+          "width": 1245,
+          "height": 607
+        }
+      },
+      "worker": {
+        "width": 1257,
+        "height": 819,
+        "anchor": {
+          "x": 526.8,
+          "y": 54.6
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1273
+        ],
+        "rasterScale": 0.6,
+        "key": "approved-game-native-v1:1.5:2048",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 4117932,
+        "bakeMs": 841.5,
+        "premultipliedAlpha": true
+      },
+      "heightId": "04_deep",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "2048.webp",
+      "mime": "image/webp",
+      "encodedBytes": 318120,
+      "width": 1257,
+      "height": 819,
+      "rgba8Bytes": 4117932,
+      "alpha": {
+        "transparent": 472770,
+        "semitransparent": 11123,
+        "opaque": 545590,
+        "bounds": {
+          "x": 6,
+          "y": 43,
+          "width": 1245,
+          "height": 607
+        }
+      },
+      "webpQuality": 0.96,
+      "worker": {
+        "width": 1257,
+        "height": 819,
+        "anchor": {
+          "x": 526.8,
+          "y": 54.6
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1273
+        ],
+        "rasterScale": 0.6,
+        "key": "approved-game-native-v1:1.5:2048",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 4117932,
+        "bakeMs": 841.5,
+        "premultipliedAlpha": true
+      },
+      "heightId": "04_deep",
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "four-depths.png",
+      "mime": "image/png",
+      "encodedBytes": 3955002,
+      "width": 2048,
+      "height": 2048,
+      "rgba8Bytes": 16777216,
+      "alpha": {
+        "transparent": 2720300,
+        "semitransparent": 22414,
+        "opaque": 1451590,
+        "bounds": {
+          "x": 5,
+          "y": 235,
+          "width": 2038,
+          "height": 1509
+        }
+      },
+      "spritesPerSheet": 4,
+      "frames": [
+        {
+          "index": 0,
+          "heightId": "01_shallow",
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "contentRect": {
+            "x": 0,
+            "y": 205,
+            "width": 1024,
+            "height": 614
+          },
+          "anchor": {
+            "x": 429.1513126491647,
+            "y": 249.47923627684963
+          },
+          "atlasAnchor": {
+            "x": 429.1513126491647,
+            "y": 249.47923627684963
+          },
+          "spriteAnchor": {
+            "x": 429.1513126491647,
+            "y": 44.47923627684964
+          },
+          "boundsWorldPx": [
+            -878,
+            -91,
+            1217,
+            1165
+          ],
+          "rasterScale": 0.48878281622911696,
+          "key": "approved-game-native-v1:0.15:1024",
+          "projection": {
+            "halfWidth": 64,
+            "halfHeight": 32,
+            "verticalPixelsPerMetre": 80
+          },
+          "worker": {
+            "width": 1024,
+            "height": 614,
+            "anchor": {
+              "x": 429.1513126491647,
+              "y": 44.47923627684964
+            },
+            "boundsWorldPx": [
+              -878,
+              -91,
+              1217,
+              1165
+            ],
+            "rasterScale": 0.48878281622911696,
+            "key": "approved-game-native-v1:0.15:1024",
+            "projection": {
+              "halfWidth": 64,
+              "halfHeight": 32,
+              "verticalPixelsPerMetre": 80
+            },
+            "worldOriginTiles": {
+              "x": 0,
+              "y": 0
+            },
+            "decodedBytes": 2514944,
+            "bakeMs": 632.9000000003725,
+            "premultipliedAlpha": true
+          }
+        },
+        {
+          "index": 1,
+          "heightId": "02_medium",
+          "frame": {
+            "x": 1024,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "contentRect": {
+            "x": 1024,
+            "y": 199,
+            "width": 1024,
+            "height": 626
+          },
+          "anchor": {
+            "x": 429.1513126491647,
+            "y": 243.47923627684963
+          },
+          "atlasAnchor": {
+            "x": 1453.1513126491648,
+            "y": 243.47923627684963
+          },
+          "spriteAnchor": {
+            "x": 429.1513126491647,
+            "y": 44.47923627684964
+          },
+          "boundsWorldPx": [
+            -878,
+            -91,
+            1217,
+            1189
+          ],
+          "rasterScale": 0.48878281622911696,
+          "key": "approved-game-native-v1:0.45:1024",
+          "projection": {
+            "halfWidth": 64,
+            "halfHeight": 32,
+            "verticalPixelsPerMetre": 80
+          },
+          "worker": {
+            "width": 1024,
+            "height": 626,
+            "anchor": {
+              "x": 429.1513126491647,
+              "y": 44.47923627684964
+            },
+            "boundsWorldPx": [
+              -878,
+              -91,
+              1217,
+              1189
+            ],
+            "rasterScale": 0.48878281622911696,
+            "key": "approved-game-native-v1:0.45:1024",
+            "projection": {
+              "halfWidth": 64,
+              "halfHeight": 32,
+              "verticalPixelsPerMetre": 80
+            },
+            "worldOriginTiles": {
+              "x": 0,
+              "y": 0
+            },
+            "decodedBytes": 2564096,
+            "bakeMs": 577.2000000011176,
+            "premultipliedAlpha": true
+          }
+        },
+        {
+          "index": 2,
+          "heightId": "03_high",
+          "frame": {
+            "x": 0,
+            "y": 1024,
+            "width": 1024,
+            "height": 1024
+          },
+          "contentRect": {
+            "x": 0,
+            "y": 1214,
+            "width": 1024,
+            "height": 644
+          },
+          "anchor": {
+            "x": 429.1513126491647,
+            "y": 234.47923627684963
+          },
+          "atlasAnchor": {
+            "x": 429.1513126491647,
+            "y": 1258.4792362768496
+          },
+          "spriteAnchor": {
+            "x": 429.1513126491647,
+            "y": 44.47923627684964
+          },
+          "boundsWorldPx": [
+            -878,
+            -91,
+            1217,
+            1225
+          ],
+          "rasterScale": 0.48878281622911696,
+          "key": "approved-game-native-v1:0.9:1024",
+          "projection": {
+            "halfWidth": 64,
+            "halfHeight": 32,
+            "verticalPixelsPerMetre": 80
+          },
+          "worker": {
+            "width": 1024,
+            "height": 644,
+            "anchor": {
+              "x": 429.1513126491647,
+              "y": 44.47923627684964
+            },
+            "boundsWorldPx": [
+              -878,
+              -91,
+              1217,
+              1225
+            ],
+            "rasterScale": 0.48878281622911696,
+            "key": "approved-game-native-v1:0.9:1024",
+            "projection": {
+              "halfWidth": 64,
+              "halfHeight": 32,
+              "verticalPixelsPerMetre": 80
+            },
+            "worldOriginTiles": {
+              "x": 0,
+              "y": 0
+            },
+            "decodedBytes": 2637824,
+            "bakeMs": 654.9000000003725,
+            "premultipliedAlpha": true
+          }
+        },
+        {
+          "index": 3,
+          "heightId": "04_deep",
+          "frame": {
+            "x": 1024,
+            "y": 1024,
+            "width": 1024,
+            "height": 1024
+          },
+          "contentRect": {
+            "x": 1024,
+            "y": 1202,
+            "width": 1024,
+            "height": 667
+          },
+          "anchor": {
+            "x": 429.1513126491647,
+            "y": 222.47923627684963
+          },
+          "atlasAnchor": {
+            "x": 1453.1513126491648,
+            "y": 1246.4792362768496
+          },
+          "spriteAnchor": {
+            "x": 429.1513126491647,
+            "y": 44.47923627684964
+          },
+          "boundsWorldPx": [
+            -878,
+            -91,
+            1217,
+            1273
+          ],
+          "rasterScale": 0.48878281622911696,
+          "key": "approved-game-native-v1:1.5:1024",
+          "projection": {
+            "halfWidth": 64,
+            "halfHeight": 32,
+            "verticalPixelsPerMetre": 80
+          },
+          "worker": {
+            "width": 1024,
+            "height": 667,
+            "anchor": {
+              "x": 429.1513126491647,
+              "y": 44.47923627684964
+            },
+            "boundsWorldPx": [
+              -878,
+              -91,
+              1217,
+              1273
+            ],
+            "rasterScale": 0.48878281622911696,
+            "key": "approved-game-native-v1:1.5:1024",
+            "projection": {
+              "halfWidth": 64,
+              "halfHeight": 32,
+              "verticalPixelsPerMetre": 80
+            },
+            "worldOriginTiles": {
+              "x": 0,
+              "y": 0
+            },
+            "decodedBytes": 2732032,
+            "bakeMs": 1773,
+            "premultipliedAlpha": true
+          }
+        }
+      ],
+      "frameExtractionRequired": true,
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    },
+    {
+      "name": "four-depths.webp",
+      "mime": "image/webp",
+      "encodedBytes": 838720,
+      "width": 2048,
+      "height": 2048,
+      "rgba8Bytes": 16777216,
+      "alpha": {
+        "transparent": 2720300,
+        "semitransparent": 22414,
+        "opaque": 1451590,
+        "bounds": {
+          "x": 5,
+          "y": 235,
+          "width": 2038,
+          "height": 1509
+        }
+      },
+      "webpQuality": 0.96,
+      "spritesPerSheet": 4,
+      "frames": [
+        {
+          "index": 0,
+          "heightId": "01_shallow",
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "contentRect": {
+            "x": 0,
+            "y": 205,
+            "width": 1024,
+            "height": 614
+          },
+          "anchor": {
+            "x": 429.1513126491647,
+            "y": 249.47923627684963
+          },
+          "atlasAnchor": {
+            "x": 429.1513126491647,
+            "y": 249.47923627684963
+          },
+          "spriteAnchor": {
+            "x": 429.1513126491647,
+            "y": 44.47923627684964
+          },
+          "boundsWorldPx": [
+            -878,
+            -91,
+            1217,
+            1165
+          ],
+          "rasterScale": 0.48878281622911696,
+          "key": "approved-game-native-v1:0.15:1024",
+          "projection": {
+            "halfWidth": 64,
+            "halfHeight": 32,
+            "verticalPixelsPerMetre": 80
+          },
+          "worker": {
+            "width": 1024,
+            "height": 614,
+            "anchor": {
+              "x": 429.1513126491647,
+              "y": 44.47923627684964
+            },
+            "boundsWorldPx": [
+              -878,
+              -91,
+              1217,
+              1165
+            ],
+            "rasterScale": 0.48878281622911696,
+            "key": "approved-game-native-v1:0.15:1024",
+            "projection": {
+              "halfWidth": 64,
+              "halfHeight": 32,
+              "verticalPixelsPerMetre": 80
+            },
+            "worldOriginTiles": {
+              "x": 0,
+              "y": 0
+            },
+            "decodedBytes": 2514944,
+            "bakeMs": 632.9000000003725,
+            "premultipliedAlpha": true
+          }
+        },
+        {
+          "index": 1,
+          "heightId": "02_medium",
+          "frame": {
+            "x": 1024,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "contentRect": {
+            "x": 1024,
+            "y": 199,
+            "width": 1024,
+            "height": 626
+          },
+          "anchor": {
+            "x": 429.1513126491647,
+            "y": 243.47923627684963
+          },
+          "atlasAnchor": {
+            "x": 1453.1513126491648,
+            "y": 243.47923627684963
+          },
+          "spriteAnchor": {
+            "x": 429.1513126491647,
+            "y": 44.47923627684964
+          },
+          "boundsWorldPx": [
+            -878,
+            -91,
+            1217,
+            1189
+          ],
+          "rasterScale": 0.48878281622911696,
+          "key": "approved-game-native-v1:0.45:1024",
+          "projection": {
+            "halfWidth": 64,
+            "halfHeight": 32,
+            "verticalPixelsPerMetre": 80
+          },
+          "worker": {
+            "width": 1024,
+            "height": 626,
+            "anchor": {
+              "x": 429.1513126491647,
+              "y": 44.47923627684964
+            },
+            "boundsWorldPx": [
+              -878,
+              -91,
+              1217,
+              1189
+            ],
+            "rasterScale": 0.48878281622911696,
+            "key": "approved-game-native-v1:0.45:1024",
+            "projection": {
+              "halfWidth": 64,
+              "halfHeight": 32,
+              "verticalPixelsPerMetre": 80
+            },
+            "worldOriginTiles": {
+              "x": 0,
+              "y": 0
+            },
+            "decodedBytes": 2564096,
+            "bakeMs": 577.2000000011176,
+            "premultipliedAlpha": true
+          }
+        },
+        {
+          "index": 2,
+          "heightId": "03_high",
+          "frame": {
+            "x": 0,
+            "y": 1024,
+            "width": 1024,
+            "height": 1024
+          },
+          "contentRect": {
+            "x": 0,
+            "y": 1214,
+            "width": 1024,
+            "height": 644
+          },
+          "anchor": {
+            "x": 429.1513126491647,
+            "y": 234.47923627684963
+          },
+          "atlasAnchor": {
+            "x": 429.1513126491647,
+            "y": 1258.4792362768496
+          },
+          "spriteAnchor": {
+            "x": 429.1513126491647,
+            "y": 44.47923627684964
+          },
+          "boundsWorldPx": [
+            -878,
+            -91,
+            1217,
+            1225
+          ],
+          "rasterScale": 0.48878281622911696,
+          "key": "approved-game-native-v1:0.9:1024",
+          "projection": {
+            "halfWidth": 64,
+            "halfHeight": 32,
+            "verticalPixelsPerMetre": 80
+          },
+          "worker": {
+            "width": 1024,
+            "height": 644,
+            "anchor": {
+              "x": 429.1513126491647,
+              "y": 44.47923627684964
+            },
+            "boundsWorldPx": [
+              -878,
+              -91,
+              1217,
+              1225
+            ],
+            "rasterScale": 0.48878281622911696,
+            "key": "approved-game-native-v1:0.9:1024",
+            "projection": {
+              "halfWidth": 64,
+              "halfHeight": 32,
+              "verticalPixelsPerMetre": 80
+            },
+            "worldOriginTiles": {
+              "x": 0,
+              "y": 0
+            },
+            "decodedBytes": 2637824,
+            "bakeMs": 654.9000000003725,
+            "premultipliedAlpha": true
+          }
+        },
+        {
+          "index": 3,
+          "heightId": "04_deep",
+          "frame": {
+            "x": 1024,
+            "y": 1024,
+            "width": 1024,
+            "height": 1024
+          },
+          "contentRect": {
+            "x": 1024,
+            "y": 1202,
+            "width": 1024,
+            "height": 667
+          },
+          "anchor": {
+            "x": 429.1513126491647,
+            "y": 222.47923627684963
+          },
+          "atlasAnchor": {
+            "x": 1453.1513126491648,
+            "y": 1246.4792362768496
+          },
+          "spriteAnchor": {
+            "x": 429.1513126491647,
+            "y": 44.47923627684964
+          },
+          "boundsWorldPx": [
+            -878,
+            -91,
+            1217,
+            1273
+          ],
+          "rasterScale": 0.48878281622911696,
+          "key": "approved-game-native-v1:1.5:1024",
+          "projection": {
+            "halfWidth": 64,
+            "halfHeight": 32,
+            "verticalPixelsPerMetre": 80
+          },
+          "worker": {
+            "width": 1024,
+            "height": 667,
+            "anchor": {
+              "x": 429.1513126491647,
+              "y": 44.47923627684964
+            },
+            "boundsWorldPx": [
+              -878,
+              -91,
+              1217,
+              1273
+            ],
+            "rasterScale": 0.48878281622911696,
+            "key": "approved-game-native-v1:1.5:1024",
+            "projection": {
+              "halfWidth": 64,
+              "halfHeight": 32,
+              "verticalPixelsPerMetre": 80
+            },
+            "worldOriginTiles": {
+              "x": 0,
+              "y": 0
+            },
+            "decodedBytes": 2732032,
+            "bakeMs": 1773,
+            "premultipliedAlpha": true
+          }
+        }
+      ],
+      "frameExtractionRequired": true,
+      "gameProjectionCompatible": true,
+      "referenceProjection": false,
+      "resampledAfterWorker": false
+    }
+  ],
+  "diagnostics": [],
+  "workerProof": {
+    "url": "http://127.0.0.1:8768/integration/baker/bake.worker.js",
+    "targetType": "worker",
+    "scope": "DedicatedWorkerGlobalScope",
+    "workerURL": "http://127.0.0.1:8768/integration/baker/bake.worker.js",
+    "documentType": "undefined",
+    "offscreenType": "function",
+    "probe": {
+      "width": 1024,
+      "height": 667,
+      "anchor": {
+        "x": 429.1513126491647,
+        "y": 44.47923627684964
+      },
+      "boundsWorldPx": [
+        -878,
+        -91,
+        1217,
+        1273
+      ],
+      "rasterScale": 0.48878281622911696,
+      "key": "approved-game-native-v1:1.5:1024",
+      "projection": {
+        "halfWidth": 64,
+        "halfHeight": 32,
+        "verticalPixelsPerMetre": 80
+      },
+      "worldOriginTiles": {
+        "x": 0,
+        "y": 0
+      },
+      "decodedBytes": 2732032,
+      "bakeMs": 1773,
+      "premultipliedAlpha": true
+    }
+  },
+  "atlasFrames": [
+    {
+      "index": 0,
+      "heightId": "01_shallow",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 1024
+      },
+      "contentRect": {
+        "x": 0,
+        "y": 205,
+        "width": 1024,
+        "height": 614
+      },
+      "anchor": {
+        "x": 429.1513126491647,
+        "y": 249.47923627684963
+      },
+      "atlasAnchor": {
+        "x": 429.1513126491647,
+        "y": 249.47923627684963
+      },
+      "spriteAnchor": {
+        "x": 429.1513126491647,
+        "y": 44.47923627684964
+      },
+      "boundsWorldPx": [
+        -878,
+        -91,
+        1217,
+        1165
+      ],
+      "rasterScale": 0.48878281622911696,
+      "key": "approved-game-native-v1:0.15:1024",
+      "projection": {
+        "halfWidth": 64,
+        "halfHeight": 32,
+        "verticalPixelsPerMetre": 80
+      },
+      "worker": {
+        "width": 1024,
+        "height": 614,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1165
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:0.15:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2514944,
+        "bakeMs": 632.9000000003725,
+        "premultipliedAlpha": true
+      }
+    },
+    {
+      "index": 1,
+      "heightId": "02_medium",
+      "frame": {
+        "x": 1024,
+        "y": 0,
+        "width": 1024,
+        "height": 1024
+      },
+      "contentRect": {
+        "x": 1024,
+        "y": 199,
+        "width": 1024,
+        "height": 626
+      },
+      "anchor": {
+        "x": 429.1513126491647,
+        "y": 243.47923627684963
+      },
+      "atlasAnchor": {
+        "x": 1453.1513126491648,
+        "y": 243.47923627684963
+      },
+      "spriteAnchor": {
+        "x": 429.1513126491647,
+        "y": 44.47923627684964
+      },
+      "boundsWorldPx": [
+        -878,
+        -91,
+        1217,
+        1189
+      ],
+      "rasterScale": 0.48878281622911696,
+      "key": "approved-game-native-v1:0.45:1024",
+      "projection": {
+        "halfWidth": 64,
+        "halfHeight": 32,
+        "verticalPixelsPerMetre": 80
+      },
+      "worker": {
+        "width": 1024,
+        "height": 626,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1189
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:0.45:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2564096,
+        "bakeMs": 577.2000000011176,
+        "premultipliedAlpha": true
+      }
+    },
+    {
+      "index": 2,
+      "heightId": "03_high",
+      "frame": {
+        "x": 0,
+        "y": 1024,
+        "width": 1024,
+        "height": 1024
+      },
+      "contentRect": {
+        "x": 0,
+        "y": 1214,
+        "width": 1024,
+        "height": 644
+      },
+      "anchor": {
+        "x": 429.1513126491647,
+        "y": 234.47923627684963
+      },
+      "atlasAnchor": {
+        "x": 429.1513126491647,
+        "y": 1258.4792362768496
+      },
+      "spriteAnchor": {
+        "x": 429.1513126491647,
+        "y": 44.47923627684964
+      },
+      "boundsWorldPx": [
+        -878,
+        -91,
+        1217,
+        1225
+      ],
+      "rasterScale": 0.48878281622911696,
+      "key": "approved-game-native-v1:0.9:1024",
+      "projection": {
+        "halfWidth": 64,
+        "halfHeight": 32,
+        "verticalPixelsPerMetre": 80
+      },
+      "worker": {
+        "width": 1024,
+        "height": 644,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1225
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:0.9:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2637824,
+        "bakeMs": 654.9000000003725,
+        "premultipliedAlpha": true
+      }
+    },
+    {
+      "index": 3,
+      "heightId": "04_deep",
+      "frame": {
+        "x": 1024,
+        "y": 1024,
+        "width": 1024,
+        "height": 1024
+      },
+      "contentRect": {
+        "x": 1024,
+        "y": 1202,
+        "width": 1024,
+        "height": 667
+      },
+      "anchor": {
+        "x": 429.1513126491647,
+        "y": 222.47923627684963
+      },
+      "atlasAnchor": {
+        "x": 1453.1513126491648,
+        "y": 1246.4792362768496
+      },
+      "spriteAnchor": {
+        "x": 429.1513126491647,
+        "y": 44.47923627684964
+      },
+      "boundsWorldPx": [
+        -878,
+        -91,
+        1217,
+        1273
+      ],
+      "rasterScale": 0.48878281622911696,
+      "key": "approved-game-native-v1:1.5:1024",
+      "projection": {
+        "halfWidth": 64,
+        "halfHeight": 32,
+        "verticalPixelsPerMetre": 80
+      },
+      "worker": {
+        "width": 1024,
+        "height": 667,
+        "anchor": {
+          "x": 429.1513126491647,
+          "y": 44.47923627684964
+        },
+        "boundsWorldPx": [
+          -878,
+          -91,
+          1217,
+          1273
+        ],
+        "rasterScale": 0.48878281622911696,
+        "key": "approved-game-native-v1:1.5:1024",
+        "projection": {
+          "halfWidth": 64,
+          "halfHeight": 32,
+          "verticalPixelsPerMetre": 80
+        },
+        "worldOriginTiles": {
+          "x": 0,
+          "y": 0
+        },
+        "decodedBytes": 2732032,
+        "bakeMs": 1773,
+        "premultipliedAlpha": true
+      }
+    }
+  ],
+  "summary": {
+    "images": 16,
+    "encodedBytes": 12825390,
+    "maxAtlasEdge": 2048,
+    "atlasSprites": 4,
+    "workerBakes": 6
+  },
+  "integrity": {
+    "atlasPNGExact": true,
+    "atlasComparedFrames": 4,
+    "atlasMismatchedBytes": 0,
+    "frames": [
+      {
+        "heightId": "01_shallow",
+        "bytesCompared": 2514944,
+        "differences": 0
+      },
+      {
+        "heightId": "02_medium",
+        "bytesCompared": 2564096,
+        "differences": 0
+      },
+      {
+        "heightId": "03_high",
+        "bytesCompared": 2637824,
+        "differences": 0
+      },
+      {
+        "heightId": "04_deep",
+        "bytesCompared": 2732032,
+        "differences": 0
+      }
+    ],
+    "webp": [
+      {
+        "name": "1024.webp",
+        "width": 1024,
+        "height": 667,
+        "alpha": true
+      },
+      {
+        "name": "depths/04_deep.webp",
+        "width": 1024,
+        "height": 667,
+        "alpha": true
+      },
+      {
+        "name": "512.webp",
+        "width": 512,
+        "height": 334,
+        "alpha": true
+      },
+      {
+        "name": "depths/01_shallow.webp",
+        "width": 1024,
+        "height": 614,
+        "alpha": true
+      },
+      {
+        "name": "depths/02_medium.webp",
+        "width": 1024,
+        "height": 626,
+        "alpha": true
+      },
+      {
+        "name": "depths/03_high.webp",
+        "width": 1024,
+        "height": 644,
+        "alpha": true
+      },
+      {
+        "name": "2048.webp",
+        "width": 1257,
+        "height": 819,
+        "alpha": true
+      },
+      {
+        "name": "four-depths.webp",
+        "width": 2048,
+        "height": 2048,
+        "alpha": true
+      }
+    ]
+  }
+}

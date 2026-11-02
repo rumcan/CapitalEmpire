@@ -11,7 +11,7 @@ import { CLASS, RoadNetwork, type Leg, type Pt } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { MAP } from '../src/game/iso';
 import { NEAR } from '../src/game/golf/rangestart';
-import { GROWN_BASE, GROWN_BUILD_S, GROWN_PER_HOLE, PAVED_RATE } from '../src/game/event/config';
+import { FARM_LINE, GROWN_BASE, GROWN_BUILD_S, GROWN_PER_HOLE, PAVED_RATE } from '../src/game/event/config';
 import { grownRing, LV, type Town, type TownEvent } from '../src/game/lots/town';
 import type { LotMap } from '../src/game/lots/lots';
 import type { Budget } from '../src/game/budget';
@@ -52,10 +52,11 @@ function run(city: City, editor: NetEditor, n: number, events: TownEvent[] = [],
 }
 const builds = (ev: TownEvent[]) => ev.filter(e => e.kind === 'build');
 
-test('24 growth hours start GROWN_BASE lots with no holes (30 +- 2), and with 9 holes GROWN_BASE + 9 x GROWN_PER_HOLE (57 +- 2)', () => {
+// T292 (#877): the town lays no road of its own, so its lots stop when the county road runs out of land: the rate is an upper bound now
+test('24 growth hours start at most the GROWN_BASE rate of lots with no holes (30 +- 2), and with 9 holes GROWN_BASE + 9 x GROWN_PER_HOLE (57 +- 2); the county road\'s land is the limit', () => {
   for (const [holes, want] of [[0, GROWN_BASE], [9, GROWN_BASE + 9 * GROWN_PER_HOLE]] as const) {
     const { city, editor } = grownCity('range', holes), n = builds(run(city, editor, 24 * HOUR)).length;
-    assert.ok(Math.abs(n - want) <= 2, `holes ${holes}: ${n} lots started in a season (${want} +- 2)`);
+    assert.ok(n > 0 && n <= want + 2, `holes ${holes}: ${n} lots started in a season (at most ${want} + 2)`);
   }
 });
 
@@ -87,11 +88,12 @@ test('the compact rings: a lot 400 tiles out weighs at most a tenth of one 50 ti
   assert.ok(grownRing(400, 100) / grownRing(50, 100) > grownRing(400, 0) / grownRing(50, 0));
 });
 
-test('a tournament sets the success (clamped 0.7-1.8), no stamp; the town grows faster with it', () => {
+// T292 (#877): with no town roads the success can only add lots while the county road has land, so this checks it never slows the town
+test('a tournament sets the success (clamped 0.7-1.8), no stamp; the success never starts fewer lots (the county road\'s land caps both)', () => {
   assert.equal(grownSuccess(0), 0.7); assert.equal(grownSuccess(1), 1.8); assert.ok(Math.abs(grownSuccess(0.0625) - 1.2) < 1e-9);
   const slow = builds(run(...Object.values(grownCity('range', 0, 1)) as [City, NetEditor], 24 * HOUR)).length;
   const fast = builds(run(...Object.values(grownCity('range', 0, 1.6)) as [City, NetEditor], 24 * HOUR)).length;
-  assert.ok(fast > slow * 1.4, `success 1.6 starts ${fast} lots a season against ${slow} at 1`);
+  assert.ok(slow > 0 && fast >= slow, `success 1.6 starts ${fast} lots a season against ${slow} at 1`);
 });
 
 test('the career milestones pay their grants in range starts (Village at 250 residents) and not in an old golf game; a town-road lot sells nothing', () => {
@@ -108,4 +110,13 @@ test('the career milestones pay their grants in range starts (Village at 250 res
   const done = [...I.town.states.values()].filter(s => s.level >= LV.BUILT);
   assert.ok(done.length > 0, 'lots completed');
   assert.equal(I.feeKeys.size, 0, 'no lot on a town road paid the player');
+});
+
+test('T276 (#855): the town starts no lot of its own past the farm line (FARM_LINE from its centre): the county road out there is the farms’', () => {
+  const { city, editor } = grownCity('range', 9, 1.8);
+  const I = city as unknown as Inside, cen = (I.town as unknown as { centres: Pt[] }).centres;
+  assert.ok(cen.length > 0, 'a grown town has its centre');
+  const built = builds(run(city, editor, 72 * HOUR)).map(e => I.lots.lots.get(e.key)!).filter(Boolean);
+  assert.ok(built.length > 0, 'the town grows');
+  for (const l of built) assert.ok(cen.some(c => Math.hypot(l.c.x - c.x, l.c.y - c.y) <= FARM_LINE), `a lot at (${l.c.x.toFixed(0)}, ${l.c.y.toFixed(0)}) past the farm line`);
 });

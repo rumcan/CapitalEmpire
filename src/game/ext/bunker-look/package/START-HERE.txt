@@ -1,0 +1,18 @@
+START HERE — CAPITAL EMPIRE BUNKER LOOK
+
+Status: packaged and tested outside the game. Nothing was installed into CapitalEmpire.
+Target contract: GitHub main 4676a0184aebcdb0b1e27af649607cf759e4143e.
+
+1. Read INTEGRATION.txt. It identifies the existing bunker passes to replace and the future worker/protocol hooks. The package is not an automatic installer.
+2. approved-preset.js and approved-look.json preserve the selected look, including every individual texture scale.
+3. runtime/ is the small cached-bitmap path. It does not import the terrain mesh, SDF or shaders. Use its runtime-only entry when loading pre-baked assets.
+4. baker/ is optional edit-time work in one DedicatedWorker with OffscreenCanvas. Bake on geometry/style edits, then composite into the game's existing cached ground chunks. Never call it from the animation frame.
+5. assets/game-native/ uses the game's 64/32/80 projection. Existing bunker rings remain authoritative, including holes; authoring roundness is not imposed on already-authoritative game boundaries.
+6. The provided pre-baked shape is an approved-look example. Bake the actual existing bunker outlines; do not stamp this example over every bunker.
+
+Performance defaults: one concurrent bake; 32 MiB ready-image LRU; 4,194,304 bake pixels maximum; 512px at ordinary DPR1 and 1024px at DPR2, with a close-up option up to 2048px. Load only the active depth/LOD. Native masters are deliberately not in the game payload.
+
+The package preserves the rough and first-cut bands, broken grass transitions, earth face, rim, gradual concave sand, perimeter and parallel rake passes, fixed upper-right sun, cut shadows and highlights. Native fallback stays active until a matching bake is ready. Unrelated terrain, entity IDs, physics, navigation and saves remain the game's responsibility and are not changed by this package.
+
+Read perf/benchmark-results.txt and tests/sdk-review.txt for actual measurements and limitations. Standalone tests and worker tests passed; the package has not been run inside an integrated game build, so no in-game FPS claim is made.
+
