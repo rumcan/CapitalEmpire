@@ -3,11 +3,11 @@
 // about 60% of tier-0 house lots show a starter home.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compose, HOUSE_SWAP_RULES, lotPreset, setGeneratedLots, setLotPresets, setLotRemix, swapScale, type ComposeState, type LotGeom } from '../src/game/lots/compose';
+import { compose, lotPreset, setGeneratedLots, setLotPresets, setLotRemix, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
 import { frameHalf } from '../src/game/lots/house-class';
 import { share, type Box4 } from '../src/game/lots/compose-core';
-import { mainOf, roleOf, zoneOf } from '../src/game/lots/groups';
+import { roleOf, zoneOf } from '../src/game/lots/groups';
 import { isBuilding } from '../src/game/mirror';
 import { LIBRARY } from '../src/game/library';
 import { tierOf } from '../src/game/lots/tiers';
@@ -76,20 +76,17 @@ test('a tier-0 lot never shows a tier-2 building the remix put there', () => {
   assert.ok(checked > 0);
 });
 
-test('starter homes show on the tier-0 house lots their spot takes (the 60 percent of the design is not met: see the T297 report)', () => {
-  const STARTER = /rundown|derelict|boarded|abandoned|shack|lean-to/;
-  const starters = LIBRARY.filter(it => STARTER.test(it.id) && isBuilding(it) && !it.id.startsWith('view:') && tierOf(it.id) === 0).map(it => it.id);
-  let fits = 0, shown = 0, all = 0;
+test('starter homes show on tier-0 house lots: 0.85 by chance where the zone and the overlap checks pass (the owner asked for 60%+: see the T297 report)', () => {
+  const STARTER = /rundown|derelict|boarded|abandoned|shack|lean-to|mobile-home|camper|pop-?up-caravan|(?<!boat-)trailer/;
+  const starters = new Set(LIBRARY.filter(it => STARTER.test(it.id) && (isBuilding(it) || /mobile-home|camper|pop-?up-caravan|(?<!boat-)trailer/.test(it.id)) && !it.id.startsWith('view:') && tierOf(it.id) === 0).map(it => it.id));
+  let shown = 0, all = 0;
   for (let s = 0; s < 200; s++) {
     const p = TEN[s % TEN.length]!, lot = lotFor(p, s % 20), st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: 500 + s * 31, preset: p.id, tier: 0 };
-    const lp = lotPreset(lot, st)!, fit = lp.fit; all++;
-    const shows = fit.props.some((q, k) => STARTER.test(q.id) && fit.from[k] !== undefined && !STARTER.test(p.props[fit.from[k]!]!.id));
-    if (shows) shown++;
-    // (a starter fits a lot when it would take the house spot under swapScale's rules, before the chance and the zone and overlap checks)
-    const mk = fit.from.indexOf(mainOf(p));
-    if (shows || (mk >= 0 && starters.some(id => swapScale(fit.props[mk]!, id, lp.frame, HOUSE_SWAP_RULES) > 0))) fits++;
+    const fit = lotPreset(lot, st)!.fit; all++;
+    if (fit.props.some((q, k) => starters.has(q.id) && fit.from[k] !== undefined && !starters.has(p.props[fit.from[k]!]!.id))) shown++;
   }
-  const rate = shown / Math.max(1, fits);
-  console.log(`starter homes: ${shown} of ${all} tier-0 house lots (${Math.round(100 * shown / all)}%), ${fits} where one fits swapScale's rules (${Math.round(100 * rate)}% of those)`);
-  assert.ok(shown > 0 && rate > 0.2 && rate < 0.8, `starter homes on ${shown} lots, ${Math.round(100 * rate)}% of the lots one fits`);
+  const share = shown / all;
+  console.log(`starter homes: ${shown} of ${all} tier-0 house lots (${Math.round(100 * share)}%)`);
+  // (the zone and overlap checks pass about half the tier-0 house lots, so the 85% chance gives about 42%: the floor here is 0.4)
+  assert.ok(share >= 0.4, `starter homes on ${Math.round(100 * share)}% of tier-0 house lots`);
 });

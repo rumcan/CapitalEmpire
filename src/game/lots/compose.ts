@@ -424,7 +424,7 @@ const SWAP_K = new Map<string, number>();
 // (a size saved in the studio or the lab moves the footprints: measured again)
 onStudioScales(() => SWAP_K.clear());
 export function swapScale(q: PresetProp, id: string, f: PresetFrame, R: SwapRules = SWAP_RULES): number {
-  const key = `${q.id}|${q.scale}|${q.view}|${id}|${f.q}|${roadOf(f.n)}|${R.side}`;
+  const key = `${q.id}|${q.scale}|${q.view}|${id}|${f.q}|${roadOf(f.n)}|${R.side}|${R.area}|${R.least}`;
   let k = SWAP_K.get(key); if (k !== undefined) return k;
   if (SWAP_K.size > 1 << 16) SWAP_K.clear();
   const half = frameHalf(f), h0 = half(q), h1 = half({ ...q, id, scale: 1 }), view = drawnView(id, f, q.view).id, lim = PIXEL_LIMIT[LIB_AT.get(view) ?? -1] ?? 0;
@@ -499,18 +499,23 @@ export const lotRemix = (): boolean => REMIX;
  *  garages 0.35; cars always; a house, a sign and a mailbox keep their own) */
 const REMIX_CHANCE: Partial<Record<Role, number>> = { planter: 0.7, tree: 0.7, decor: 0.7, patio: 0.5, play: 0.5, junk: 0.5, bin: 0.5, shed: 0.35, garage: 0.35, car: 1 };
 /** the chance a tier-0 house lot shows a starter home in its house's place (#882: the trailer park and junk yard lots of the starter tier) */
-const STARTER_CHANCE = 0.6;
+const STARTER_CHANCE = 0.85;
+/** a starter home's size rule (#882, the owner: a starting town of farms and trailer parks): swapScale's house rules with the area at 0.3 of the spot (a
+ *  smaller home than the house it takes the place of); the pixel limit, the lot and the overlap checks stay */
+const STARTER_RULES = { ...HOUSE_SWAP_RULES, area: 0.3 } as const;
 /** a lot's remix seed: its seed and the lot lab's re-roll (ComposeState.remix; absent: the game's own fill) */
 const remixSeed = (st: ComposeState): number => mix(st.seed, st.remix ?? 0, 0x297);
 /** a seeded draw in [0, 1) from a seed, a prop's index and a salt */
 const unitOf = (seed: number, k: number, salt: number): number => mix(seed, k, salt) / 4294967296;
 /** a footprint box (lot frame, tiles) from a prop's centre and half extents */
 const boxAt = (q: { x: number; y: number }, h: { ha: number; hb: number }): Box4 => [q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb];
-/** the starter homes (tier-0 buildings: the run-down, derelict and boarded houses; the trailers and mobile homes are decor-kind props, which the house
- *  logic (houseBase) cannot take in a house's place), by id; made once */
-const STARTER_RE = /rundown|derelict|boarded|abandoned|shack|lean-to/;
+/** the starter homes, by id, made once: the tier-0 buildings (the run-down, derelict and boarded houses) and the trailers and mobile homes (decor-kind
+ *  props: houseBase keeps only buildings, so one in a house's place is drawn as a preset prop and is not a house for the generator) */
+const STARTER_RE = /rundown|derelict|boarded|abandoned|shack|lean-to|mobile-home|camper|pop-?up-caravan|(?<!boat-)trailer/;
+/** the trailers and mobile homes: decor-kind props that stand as a starter home in a house's place for this swap only (the owner, 2026-11-02) */
+const HOME_DECOR = /mobile-home|camper|pop-?up-caravan|(?<!boat-)trailer/;
 let STARTERS: string[] | null = null;
-const starterPalette = (): readonly string[] => (STARTERS ??= LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && isBuilding(it) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:')
+const starterPalette = (): readonly string[] => (STARTERS ??= LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && (isBuilding(it) || HOME_DECOR.test(it.id)) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:')
   && !REAR.test(it.id) && !drawnAsStandIn(i) && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort());
 /** a fitted preset's main building (the house or the shop): the index of its widest building (its half extents' area), -1 for none */
 function mainIndex(fit: Fitted, f: PresetFrame): number {
@@ -537,8 +542,8 @@ function remixOf(fit: Fitted, preset: LotPreset, lot: LotGeom, st: ComposeState,
   const box0 = fit.props.map(q => boxAt(q, half(q))), props = fit.props.slice(), boxes = box0.slice();
   // (a remixed prop overlaps each other prop no more than the preset's own pair did)
   const clear = (k: number, b: Box4) => { for (let j = 0; j < props.length; j++) if (j !== k && share(b, boxes[j]!) > share(box0[k]!, box0[j]!) + 1e-9) return false; return true; };
-  const place = (k: number, id: string): boolean => {
-    const q = fit.props[k]!, zone = zoneOf(q.x, q.y, lot.w, lot.d), p = placeMember(q, id, lot, f, R);
+  const place = (k: number, id: string, rules: SwapRules = R): boolean => {
+    const q = fit.props[k]!, zone = zoneOf(q.x, q.y, lot.w, lot.d), p = placeMember(q, id, lot, f, rules);
     if (!p || zoneOf(p.prop.x, p.prop.y, lot.w, lot.d) !== zone) return false;
     const b = boxAt(p.prop, p.h); if (!clear(k, b)) return false;
     props[k] = p.prop; boxes[k] = b; return true;
@@ -546,7 +551,7 @@ function remixOf(fit: Fitted, preset: LotPreset, lot: LotGeom, st: ComposeState,
   // the starter home: a tier-0 res lot's house spot (a removed house's stand-in keeps its own place: the owner's picture is the one removed)
   if (preset.use === 'res' && cap === 0 && mainK >= 0 && fit.from[mainK] !== undefined && !removedOf(preset.props[fit.from[mainK]!]?.id ?? '') && unitOf(seed, mainK, 0x57) < STARTER_CHANCE) {
     const list = starterPalette(), n = list.length;
-    if (n) { const at = mix(seed, mainK, 0x58) % n; for (let t = 0; t < n; t++) { const id = list[(at + t) % n]!; if (allows(ALLOC, id, road, state) && place(mainK, id)) break; } }
+    if (n) { const at = mix(seed, mainK, 0x58) % n; for (let t = 0; t < n; t++) { const id = list[(at + t) % n]!; if (allows(ALLOC, id, road, state) && place(mainK, id, STARTER_RULES)) break; } }
   }
   for (let k = 0; k < fit.props.length; k++) {
     if (k === mainK || fit.standIn?.[k] !== undefined) continue;
