@@ -4,7 +4,7 @@ import type { Lot, LotMap } from './lots';
 import type { Pt } from '../network';
 import { zoneOf } from '../sim/routing';
 import type { Built } from '../sim/trips';
-import { FARM_LINE, GROWN_BASE, GROWN_BUILD_S, GROWN_PER_BUILT, GROWN_PER_HOLE, GROWN_RING0, GROWN_RING_K, PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT } from '../event/config';
+import { FARM_LINE, GROWN_BASE, GROWN_BUILD_S, GROWN_PER_BUILT, GROWN_PER_HOLE, GROWN_RING0, GROWN_RING_K, PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT, CIVIC } from '../event/config';
 import { inCommercial, inIndustrial, industrialRect } from './districts';
 import { tierOf } from './tiers';
 import { SHOP_PALETTE, colourOf, tryOrder } from './variety';
@@ -33,6 +33,9 @@ export interface TownCtx { lots: LotMap; entry: Pt /* the highway entry point, t
 
 /** a game hour and a game day, sim s */
 const HOUR = 60, DAY = 1440;
+/** T295 #3 (#880): a civic place's lot holds its building at least: its frontage x depth in tiles (the civic presets are laid for lots of 13 x 15 and up:
+ *  a smaller lot cannot take the fire house or the school in its place, compose.ts civicPlan) */
+const CIVIC_AREA = 200;
 /** residents and jobs by use (index = LU) and level (BUILT, UPGRADED) */
 const POP: number[][] = [[0, 0], [3, 5], [0, 0], [0, 0], [0, 0], [0, 0]];
 const JOBS: number[][] = [[0, 0], [0, 0], [3, 5], [6, 10], [3, 6], [8, 12]];
@@ -384,8 +387,16 @@ export class Town {
     return best;
   }
 
-  /** the civic lots wanted: one per 400 residents, the first at 200 (scaled by the option's GOV multiplier) */
-  private govTarget(): number { return this.pop < 200 ? 0 : Math.round((1 + Math.floor((this.pop - 200) / 400)) * this.option.w[4]); }
+  /** the civic lots wanted: one per 400 residents, the first at 200 (scaled by the option's GOV multiplier), and one more for each civic place the town
+   *  has passed and not got (civicNext, T295 #3) */
+  private govTarget(): number {
+    let n = this.pop < 200 ? 0 : Math.round((1 + Math.floor((this.pop - 200) / 400)) * this.option.w[4]);
+    for (const c of CIVIC) if (this.pop >= c.pop && !this.bizN.get(c.id)) n++;
+    return n;
+  }
+  /** T295 #3 (#880; the owner, 2026-11-02): the next civic place the town has grown to (the first of config.ts CIVIC past its population and not
+   *  standing: a cleared one comes back), or undefined */
+  private civicNext(): { id: string; pop: number } | undefined { return CIVIC.find(c => this.pop >= c.pop && !this.bizN.get(c.id)); }
 
   /** the centre of town k: the mean of its lots not NONE (the centre while it has none) */
   private townCentre(k: number): Pt {
@@ -411,10 +422,16 @@ export class Town {
     if (!ok.length) return;
     const dc = (i: number) => dist(this.cand[i].c, cen);
     ok.sort((i, j) => dc(i) - dc(j));
-    let best = ok[0];
-    for (const i of ok.slice(0, 40)) if (this.cand[i].seg.cls.order > this.cand[best].seg.cls.order) best = i;
+    // T295 #3: a civic place's lot is one its building fits (CIVIC_AREA tiles at least) when one of the nearest 40 is; else the nearest, as before
+    const due = this.civicNext();
+    const pool = due && ok.slice(0, 40).some(i => this.cand[i].w * this.cand[i].d >= CIVIC_AREA) ? ok.slice(0, 40).filter(i => this.cand[i].w * this.cand[i].d >= CIVIC_AREA) : ok;
+    let best = pool[0]!;
+    for (const i of pool.slice(0, 40)) if (this.cand[i].seg.cls.order > this.cand[best].seg.cls.order) best = i;
     const s = this.states.get(this.cand[best].key)!;
-    this.set(s, LU.GOV, level, 0, T); ev.push(this.evt(s, level >= LV.BUILT ? 'complete' : 'build'));
+    this.set(s, LU.GOV, level, 0, T);
+    // T295 #3: the civic place due takes this lot (its business: the building the lot shows, compose.ts civicPlan); the quota's other GOV lots take none
+    if (due) this.bizSet(s, due.id);
+    ev.push(this.evt(s, level >= LV.BUILT ? 'complete' : 'build'));
   }
 
   /** a lot's town index from its centre (-1 with no centres); its totals move when the town changes (s: its state, null if new) */

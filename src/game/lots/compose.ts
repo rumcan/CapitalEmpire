@@ -45,6 +45,7 @@ import { lotPickup, parkedAs } from '../vehicles';
 import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
 import { presetTier, tierOf } from './tiers';
+import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
 import { onStudioScales } from './scales-live';
 import { KIT_FLOWERS, KIT_HEDGE, KIT_SHRUBS } from '../kit';
@@ -324,6 +325,8 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
   const frozen = () => { const list = presetsOf(use, state, lot.w, lot.d), fits = list.filter(q => houseFits(q, lot)); return fits.length ? fits : list; };
   // T295 (#880): the presets at or under the lot's building tier (its LotState.tier; 3 when absent: every preset, as before)
   const cap = st.tier ?? 3, frozenT = () => tieredOf(frozen(), cap), biz = st.biz;
+  // T295 #3 (#880): a GOV lot with a civic place (LotState.biz, town.ts civicNext) shows that building; the tier does not hold a civic place back
+  if (use === 'civic' && biz !== undefined && CIVIC_IDS.has(biz)) { const c = civicPlan(lot, biz, [...ok, ...LEGACY.filter(p => p.use === use && p.state === state)]); if (c) return c; }
   // (T270: a shop lot whose approved presets cannot show the shop its place calls for draws a frozen one that can, on a lot the map axes fit)
   if (ok.length) { const u = underTier(ok, cap); if (u.length) return shopPlan(u, lot, use, angled || use === 'res' ? undefined : frozenT, biz, cap); }
   if (angled) return ok.length ? shopPlan(tieredOf(ok, cap), lot, use, undefined, biz, cap) : null;
@@ -332,12 +335,33 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
 // ---------- T295 (#880): the building tiers (lots/tiers.ts): a lot draws the presets whose buildings are at or under its tier
 /** a preset's tier, cached by the preset (its building props: presetTier, the library's building test) */
 const TIER_OF = new WeakMap<LotPreset, number>();
-const presetTierOf = (p: LotPreset): number => { let t = TIER_OF.get(p); if (t === undefined) TIER_OF.set(p, t = presetTier(p, id => { const i = LIB_AT.get(id); return i !== undefined && isBuilding(LIBRARY[i]!); })); return t; };
 /** the presets at or under tier cap; none of them: the lowest-tier ones of the list (a lot is never left empty for its tier) */
 function underTier(list: readonly LotPreset[], cap: number): LotPreset[] { return list.filter(p => presetTierOf(p) <= cap); }
 function tieredOf(list: readonly LotPreset[], cap: number): LotPreset[] {
   const a = underTier(list, cap); if (a.length || !list.length) return a;
   const low = Math.min(...list.map(presetTierOf)); return list.filter(p => presetTierOf(p) === low);
+}
+/** whether a library id is a building (its picture is drawn from building art: mirror.ts isBuilding) */
+const isBuildingId = (id: string): boolean => { const i = LIB_AT.get(id); return i !== undefined && isBuilding(LIBRARY[i]!); };
+const presetTierOf = (p: LotPreset): number => { let t = TIER_OF.get(p); if (t === undefined) TIER_OF.set(p, t = presetTier(p, isBuildingId)); return t; };
+/** the civic places (config.ts CIVIC), by id */
+const CIVIC_IDS: ReadonlySet<string> = new Set(CIVIC.map(c => c.id));
+/** the index of a preset's biggest building prop (its footprint), -1 for none */
+function bigBuildingOf(p: LotPreset): number {
+  let k = -1, area = 0;
+  p.props.forEach((q, i) => { if (!isBuildingId(q.id)) return; const fp = footprintOf(q.id, q.scale * ownerScaleOf(q.id), false), a = (fp[2] - fp[0]) * (fp[3] - fp[1]); if (a > area) { area = a; k = i; } });
+  return k;
+}
+/** a civic lot's plan (T295 #3): the preset that holds the civic place's building, drawn as it is (the slot's pick among them); else the preset whose
+ *  biggest building takes it at the largest scale (swapScale, as a shop swap, SWAP_RULES); null when none can show it */
+function civicPlan(lot: LotGeom, biz: string, list: readonly LotPreset[]): ShopPlan | null {
+  const slot = streetSlot(lot), key = streetKey(lot);
+  // (the presets of the lot's size first: the nearest size holding it, then the slot's pick among those)
+  const own = list.filter(p => p.props.some(q => q.id === biz)), gap = (p: LotPreset) => Math.abs(p.w - lot.w) + Math.abs(p.d - lot.d);
+  if (own.length) { const g = Math.min(...own.map(gap)); return { preset: pickPreset(own.filter(p => gap(p) === g), slot, key)! }; }
+  let best: LotPreset | null = null, bk = 0, at = -1;
+  for (const p of list) { const i = bigBuildingOf(p); if (i < 0) continue; const k = swapScale(p.props[i]!, biz, presetFrame(lot, p), SWAP_RULES); if (k > bk + 1e-9) { best = p; bk = k; at = i; } }
+  return best ? { preset: best, swap: { id: biz, scale: bk, spot: at } } : null;
 }
 /** the frame a preset is drawn in on a lot: frameOf, a lab preset of a diagonal road turned by its quarter (quarterOfRoad) */
 const presetFrame = (lot: LotGeom, preset: LotPreset): PresetFrame => { const f = frameOf(lot); return preset.road !== undefined && preset.road % 2 ? { ...f, q: quarterOfRoad(preset.road) } : f; };
