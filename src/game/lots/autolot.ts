@@ -22,7 +22,8 @@ import { axisSetOf, drawnView, ownerScaleOf, roadView, turned } from './preset-a
 import { CHAIN, OVERLAP, PRIVACY, mix, share, type Box4, type LotGeom } from './compose-core';
 import { mulberry } from '../iso';
 import { carPark } from './carpark-lot';
-import type { LotPreset, PresetPatch, PresetProp, PresetState, PresetUse, Road, View } from './presets';
+import { parsePresets, type LotPreset, type PresetPatch, type PresetProp, type PresetState, type PresetUse, type Road, type View } from './presets';
+import PRESET_JSON from './lot-presets.json';
 
 /** the templates a lot draws (the lot lab's picker lists them all): a house, a corner house, a trailer park, a junk yard and a small shop */
 export type AutoTemplate = 'house' | 'corner' | 'trailer' | 'junk' | 'shop';
@@ -44,6 +45,20 @@ const ALLOC = parseAllocations(ALLOC_JSON);
 const EPS = 1e-6;
 /** the main building's front set-back from the street, its back yard, the fence the lot's side runs to (tiles; compose's FENCE_FRONT), the verge */
 const FRONT = 4.5, BACK = 3.5, FENCE_FRONT = 3.65, VERGE = -1.5;
+let TEX: Map<string, string> | null = null;
+/** the texture a patch kind takes for a use and state (T305 owner's list: the patches the presets use): the most common tex of that kind in the shipped
+ *  presets (lot-presets.json, read once); the fallback when no preset has the pair */
+export function texOf(use: PresetUse, state: PresetState, kind: PresetPatch['kind'], fallback: string): string {
+  if (!TEX) {
+    const n = new Map<string, Map<string, number>>();
+    for (const p of parsePresets(PRESET_JSON).presets) for (const a of p.patches) {
+      const k = `${p.use}|${p.state}|${a.kind}`, m = n.get(k) ?? new Map<string, number>();
+      m.set(a.tex, (m.get(a.tex) ?? 0) + 1); n.set(k, m);
+    }
+    TEX = new Map([...n].map(([k, m]) => [k, [...m].sort((x, y) => y[1] - x[1])[0]![0]] as const));
+  }
+  return TEX.get(`${use}|${state}|${kind}`) ?? fallback;
+}
 /** the owned boundary: the preset x of the side line the lot owns and whether it owns its back (compose's boundaryFence rule) */
 interface Own { side: number; back: boolean }
 /** a template's seed salts (the lot's draws differ by template) */
@@ -62,6 +77,7 @@ function housesOf(road: Road): string[] {
     && !it.id.startsWith('view:') && !it.id.startsWith('east:') && axisSetOf(it.id) !== null && !gone(it.id) && !BACK_PIECE.test(it.id)).map(it => it.id).sort();
   return HOUSE_EVEN ??= (houseFamilies().get('dwelling')?.ids ?? []).filter(id => !FRONTAL.has(id) && !gone(id)).sort();
 }
+const WHEEL_STOP = 'expansion:wheel-stop';
 const TRAILERS = ['expansion:mobile-home', 'expansion:camper', 'expansion:pop-up-caravan'];
 const JUNK_PILES = ['expansion:scrap-metal', 'expansion:tyre-stack', 'expansion:scrap-engine', 'expansion:crushed-car-stack'];
 const JUNK_CARS = ['expansion:junk-car', 'expansion:scrap-pickup-rear', 'expansion:crushed-car-stack'];
@@ -157,18 +173,20 @@ function houseLot(L: Lay, corner: boolean, left: boolean, own: Own, drive: boole
     let g: Box4 | null = null;
     if (gh >= 1.2 && edge - 0.4 >= 1.2 && L.group('garage', 'side', dx, fr + gh, Math.min(2.6, edge - 0.4), gh)) g = L.boxOf(L.props[L.props.length - 1]!);
     driveEnd = g ? g[1] + 0.3 : fr;
-    L.patch('drive', 'paving', dx - 1.3, 0, dx + 1.3, driveEnd);
+    L.patch('drive', texOf(L.use, state, 'drive', 'paving'), dx - 1.3, 0, dx + 1.3, driveEnd);
     L.group('car', 'side', dx, driveEnd / 2, 1.4, Math.max(1.2, driveEnd / 2 - 0.1), 0.6);
     L.group('shed', 'back', dx, D - 1.8, 1.6, 1.6, 0.5);
   }
-  L.patch('walk', 'paving', cx - 0.7, 0, cx + 0.7, fy + 0.2);
+  L.patch('walk', texOf(L.use, state, 'walk', 'paving'), cx - 0.7, 0, cx + 0.7, fy + 0.2);
   L.group('bin', 'front', left && drive ? W - 0.8 : 0.8, -0.4, 0.8, 0.6, 0.5);
   L.pick(['world:mailbox'], 0, cx + (cx < W / 2 ? 1.4 : -1.4), -0.4, 0.45, 0.45);
   for (let k = 0; k < 3; k++) { const x = hx0 + (k + 0.5) * (hx1 - hx0) / 3; if (Math.abs(x - cx) > 1.4) L.group('planter', 'front', x, 2.4, 1.2, 1.2, 0.5); }
-  if (hx1 - hx0 > 3 && fy - 0.4 > 1.4) L.patch('bed', 'field', hx0, 1.0, hx1, fy - 0.4);
-  if (corner) L.patch('bed', 'field', left ? hx1 + 0.3 : 0.2, 0.5, left ? W - 0.2 : hx0 - 0.3, D - 0.5);
+  if (hx1 - hx0 > 3 && fy - 0.4 > 1.4) L.patch('bed', texOf(L.use, state, 'bed', 'field'), hx0, 1.0, hx1, fy - 0.4);
+  // T305 (owner's list): one or two trees in the front yard
+  L.group('tree', 'front', hx0 + 0.9, 2.2, 1.6, 1.6, 0.5); if (hx1 - hx0 > 8) L.group('tree', 'front', hx1 - 0.9, 2.2, 1.6, 1.6, 0.5);
+  if (corner) L.patch('bed', texOf(L.use, state, 'bed', 'field'), left ? hx1 + 0.3 : 0.2, 0.5, left ? W - 0.2 : hx0 - 0.3, D - 0.5);
   if (D - by > 3) {
-    L.patch('yard', 'paving', hx0, by + 0.2, hx1, D);
+    L.patch('yard', texOf(L.use, state, 'yard', 'paving'), hx0, by + 0.2, hx1, D);
     const zh = (D - by) / 2 - 0.3, zc = (by + D) / 2;
     if (!L.group(seedBit(L) ? 'play' : 'patio', 'back', cx, zc, ha - 0.6, zh)) L.group('patio', 'back', cx, zc, ha - 0.6, zh);
   }
@@ -199,7 +217,7 @@ function trailerLot(L: Lay, own: Own): boolean {
  *  junk cars and scrap piles in a grid on the gravel */
 function junkLot(L: Lay): boolean {
   const { W, D } = L;
-  L.patch('yard', 'gravel', 0, 0, W, D);
+  L.patch('yard', texOf(L.use, L.state, 'yard', 'gravel'), 0, 0, W, D);
   const g0 = (W / 2 - 2 - 0.3) / (W - 0.6), g1 = (W / 2 + 2 - 0.3) / (W - 0.6);
   L.fence(CHAIN, 0.3, 0.3, W - 0.3, 0.3, [g0, g1]);
   L.fence(CHAIN, 0.3, 0.3, 0.3, D - 0.3);
@@ -208,7 +226,8 @@ function junkLot(L: Lay): boolean {
   const crane = L.pick(['expansion:junkyard-crane'], 0, W / 2, D - 3.2, 2.2, 2.2, 0.6);
   L.group('shed', 'front', 2.2, 2.4, 1.6, 1.6) || L.group('junk', 'front', 2.2, 2.4, 1.2, 1.2);
   let placed = crane ? 1 : 0;
-  for (let y = 5.5; y < D - 6; y += 4.2) for (let x = 1.5; x < W - 1.5; x += 3.2) {
+  // (T305 owner's list: 10 to 16 junk pieces in rough rows; the rows stop at 16)
+  for (let y = 5.5; y < D - 6 && placed < 16; y += 4.2) for (let x = 1.5; x < W - 1.5 && placed < 16; x += 3.2) {
     // (the learned industrial cells hold few cars and no scrap in the middle: a fixed junk piece then, so a yard always has its junk)
     if (L.group('car', 'middle', x, y, 1.4, 2.4, 0.6) || L.pick(JUNK_CARS, 0, x, y, 1.4, 2.4, 0.6)) placed++;
     else if (L.group('junk', 'middle', x, y, 1.4, 1.4, 0.5) || L.pick(JUNK_PILES, 0, x, y, 1.4, 1.4, 0.5)) placed++;
@@ -221,15 +240,20 @@ function junkLot(L: Lay): boolean {
  *  the frontage, the owned fence. Everything sits on the lot's own frame: no piece at a free angle */
 function shopLot(L: Lay, own: Own): boolean {
   const { W, D, road, f } = L, sw = Math.min(W * 0.45, W - 6), hb = D * 0.4;
-  L.patch('yard', 'grass', 0, 0, W, D);
+  L.patch('yard', texOf('park', L.state, 'yard', 'grass'), 0, 0, W, D);
   const shops = SHOP_PALETTE.filter(id => !gone(id) && faces(id, road));
   if (!L.pick(shops, 0, sw / 2 + 0.3, 1.0 + hb, sw / 2 - 0.3, hb, 0.7)) return false;
   const sb = L.boxOf(L.props[L.props.length - 1]!);
   const park = carPark(f, Math.min(W - 1, sb[2] + 0.5), W - 0.3, Math.floor(L.r() * 4096));
   if (park) {
-    L.patch('lot', 'asphalt', park.x0, 0, park.x1, park.y1, park.lines);
+    L.patch('lot', texOf(L.use, L.state, 'lot', 'asphalt'), park.x0, 0, park.x1, park.y1, park.lines);
     for (const c of park.cars) L.add(c);
+    // a wheel stop at each bay's far end, only where the bays run along the preset's y (frame turn 0: the stop's picture lies across the bay) and
+    // the picture fits the bay's width (L.fit: the largest scale that fits, never past its pixels; none when it does not fit)
+    if (f.q === 0) { const bw = (park.x1 - park.x0) / park.bays; for (let k = 0; k < park.bays; k++) { const q = L.fit(WHEEL_STOP, 0, park.x0 + (k + 0.5) * bw, park.y1 - 0.4, bw / 2 - 0.02, 0.2, 0.7); if (q) L.add(q); } }
   }
+  // street furniture in an evenly spaced row on the grass in front of the shop, inside the lot (the aisle is over the car park, never here): view 0 faces the street
+  ['world:bench', 'world:trashcan', 'world:bench', 'world:trashcan'].forEach((id, k) => L.pick([id], 0, (k + 0.5) * sw / 4, 0.5, 0.6, 0.4, 0.5));
   L.pick(['world:streetlamp'], 0, 0.8, -0.4, 0.4, 0.4);
   L.pick(['world:streetlamp'], 0, W - 0.8, -0.4, 0.4, 0.4);
   ownFence(L, own, PRIVACY);
