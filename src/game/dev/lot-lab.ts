@@ -34,7 +34,7 @@ import { footprintOf, ownerScaleOf } from '../lots/preset-art';
 import { worldX, worldY, ZOOM_MAX, ZOOM_MIN } from '../iso';
 import { composeFarm, type FarmParcel } from '../ext/farms/farms';
 import type { ComposeState, LotGeom } from '../lots/compose-core';
-import { compose, lotPresets, setLotPresets } from '../lots/compose';
+import { compose, lotPresets, lotRemix, setLotPresets, setLotRemix } from '../lots/compose';
 import { approvedFor, bucketOf, fitPreset, presetsFor, WHOLE_FRONT, type LotPreset, type PresetDecal, type PresetPatch, type PresetState, type PresetUse, type Road } from '../lots/presets';
 import { frameOf, quarterOfRoad, toFrame, toWorld, type Pt, type PresetFrame } from '../lots/preset-frame';
 import { presetFromComposition } from '../lots/preset-from';
@@ -167,6 +167,9 @@ export function installLotLab(game: Game): () => void {
   let personOn = false, pointer: { x: number; y: number } | null = null;
   /** the Lot grid (L) and the Neighbours (N) toggles; the neighbours staged now (for the grid); the last Generate's seed number (planInPlace) */
   let gridOn = false, neighOn = false, neighs: Neighbour[] = [], seedNum = 0;
+  /** T297 (#882): the remix the shown lot draws: the re-roll count (0 = the game's own fill: the remix seed is the lot's seed plus this) and Original (the
+   *  preset as it is, no remix); both reset by a new variant */
+  let remixOffset = 0, remixOff = false;
   /** what the staged neighbours were made for (type, state, lot size, road, place; '' none): neighbours() stages them again only when it changed */
   let neighKey = '';
   /** the exam holds the camera (T161, ?exam: dev/lot-exam.ts) */
@@ -429,7 +432,7 @@ export function installLotLab(game: Game): () => void {
     size = s.key;
     const n = c.list.length;
     variant = n ? (((variant + step) % n) + n) % n : Math.max(0, variant + step);
-    seedNum = variant;
+    seedNum = variant; remixOffset = 0; remixOff = false;
     compose1(s.w, s.d, c, seedOf(use, variant), false);
   }
   /** composes the lot w x d (tiles) from its candidates' variant `variant` (an approved farm or the game's farm for a farm) with the seed, as a new
@@ -449,10 +452,14 @@ export function installLotLab(game: Game): () => void {
         obj = { id, use, state, w, d, props: f.props, patches: f.patches, decals: f.decals, road, whole: true };
       } else {
         // the lot as the game draws it from the source (forced to it), captured whole: its fences, street items and decals become the draft's own
-        const sst: ComposeState = { use: luOf(use), ...levelOf(state), seed, preset: src.id };
+        const sst: ComposeState = { use: luOf(use), ...levelOf(state), seed, preset: src.id, remix: remixOffset };
         stage(w, d, sst);
-        const g = geo!;
-        const { props, patches, decals } = presetFromComposition(compose(g, sst), labFrame(g), w, d, { whole: true });
+        const g = geo!, keep = lotRemix();
+        // (the capture is the lot as the game draws it: Original turns the remix off for it, then the game's switch is put back)
+        setLotRemix(!remixOff);
+        let cap: ReturnType<typeof presetFromComposition>;
+        try { cap = presetFromComposition(compose(g, sst), labFrame(g), w, d, { whole: true }); } finally { setLotRemix(keep); }
+        const { props, patches, decals } = cap;
         obj = { id, use, state, w, d, props, patches, decals, road, whole: true };
       }
       const words = c.kind === 'approved' ? 'the approved' : c.kind === 'frozen' ? 'the frozen' : '(the game draws a green on a diagonal road today) the frozen';
@@ -489,6 +496,17 @@ export function installLotLab(game: Game): () => void {
     if (!next && !houseOk(was)) return { obj, note: `\nno ${classWords(was)} suits ${lotWords()} (the house allocations): kept ${was}` };
     return { obj, note: !next && reroll ? `\nno other ${classWords(was)} suits ${lotWords()}: kept ${was}` : '' };
   }
+  /** T297 (#882): the shown lot again with a new remix (Re-roll: the remix offset up one; the seed, fences, street items and house kept, so only the
+   *  props swapped within their groups change) or the preset as it is (Original: no remix). A farm has none */
+  async function reroll(original: boolean): Promise<void> {
+    const p = curPreset(), s = sizeNow(), w = p?.w ?? s?.w, d = p?.d ?? s?.d;
+    if (use === 'farm' || w === undefined || d === undefined) { message = 'a farm has no remix'; return; }
+    const c = candidates(w, d);
+    if (!c.list.length) { message = 'no preset of this type and state near this size'; return; }
+    if (original) { remixOff = true; remixOffset = 0; } else { remixOff = false; remixOffset += 1; }
+    compose1(w, d, c, seedOf(use, seedNum), false);
+    source += original ? ' · Original: the preset as it is, no remix' : ` · re-roll ${remixOffset}: the remix seed moved on`;
+  }
   /** Generate (in place): this lot again, its type, state, size (the current preset's own, steppers included) and road angle kept: another
    *  variant of its cell when it has more than one, a new seed (fences, street items, decals), a new building of the same size class */
   async function generateHere(): Promise<void> {
@@ -498,7 +516,7 @@ export function installLotLab(game: Game): () => void {
     const c = candidates(w, d), own = use === 'farm' && !c.list.length;
     if (!c.list.length && !own) { message = 'no preset of this type and state near this size'; return; }
     const plan = planInPlace({ use, state, w, d, road }, c.list.length, Math.max(0, variant), seedNum, Math.random);
-    variant = plan.variant; seedNum = plan.seed;
+    variant = plan.variant; seedNum = plan.seed; remixOffset = 0; remixOff = false;
     compose1(w, d, c, seedOf(use, plan.seed), true);
   }
   /** New lot (the old Generate): a random cell (its size and its road angle, each unless locked), then its first variant; both locked: the next variant of this cell */
@@ -821,6 +839,7 @@ export function installLotLab(game: Game): () => void {
       btn('◀ Variant', BTN, () => act(() => generate(-1)), 'the previous variant (Shift+G)'),
       btn('Generate ▶', ON, () => act(generateHere), 'this lot again (its type, size and road angle): a new layout, seed and building that suits its road and state'),
       btn('New lot ▶', BTN, () => act(newLot), 'a random size and road angle, as the drawer\'s locks allow; both locked: the next variant'),
+      ...(use === 'farm' ? [] : [btn('Re-roll', BTN, () => act(() => reroll(false)), 'this lot again with a new remix: its props swapped within their groups (the fences, street items and house kept)'), btn('Original', BTN, () => act(() => reroll(true)), 'the preset as it is: no remix')]),
       bar(),
       el('span', `border-radius:999px;padding:2px 10px;font-size:12px;background:${bg};color:${fg};white-space:nowrap`, chipT),
       btn('Save draft', BTN, () => act(save), 'Ctrl+S'),
