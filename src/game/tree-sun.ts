@@ -6,30 +6,93 @@
 /** the side the light comes from in each library tree's picture, as drawn unmirrored: every tree sprite, by id. The readings (crown /
  *  half / trunk, > 0 when the right is brighter) are in the comment after each */
 export const TREE_LIGHT: Readonly<Record<string, 'left' | 'right'>> = {
-  "capital:tree-birch-moderate": 'right', // 8.5 / 15.6 / 13.1
-  "capital:tree-birch-near-bare": 'right', // 3.8 / 11.8 / 22.7
-  "capital:tree-birch-open": 'right', // 9.9 / 19.6 / 13.9
-  "capital:tree-birch-patchy": 'right', // 4.5 / 3.1 / 11.4
-  "capital:tree-maple-moderate": 'right', // 16.0 / 30.2 / 54.4
-  "capital:tree-maple-near-bare": 'right', // 11.3 / 28.5 / 57.0
-  "capital:tree-maple-open": 'right', // 14.7 / 26.6 / 42.5
+  "capital:tree-birch-moderate": 'right', // 8.5 / 15.6 / 13.0
+  "capital:tree-birch-near-bare": 'right', // 3.9 / 11.9 / 22.8
+  "capital:tree-birch-open": 'right', // 9.9 / 19.5 / 13.7
+  "capital:tree-birch-patchy": 'right', // 4.5 / 3.2 / 11.6
+  "capital:tree-maple-moderate": 'right', // 16.0 / 30.1 / 54.2
+  "capital:tree-maple-near-bare": 'right', // 11.4 / 28.4 / 56.8
   "capital:tree-maple-patchy": 'right', // 13.7 / 28.7 / 61.7
-  "capital:tree-oak-moderate": 'right', // 7.5 / 19.4 / 62.8
-  "capital:tree-oak-near-bare": 'right', // 4.0 / 23.9 / 54.4
-  "capital:tree-oak-open": 'right', // 8.0 / 20.1 / 60.6
-  "capital:tree-oak-patchy": 'right', // 2.4 / 3.1 / 66.9
-  "capital:tree-pine-moderate": 'right', // 23.6 / 40.0 / 39.1
-  "capital:tree-pine-near-bare": 'right', // 18.5 / 30.0 / 71.0
-  "capital:tree-pine-open": 'right', // 25.3 / 59.0 / 40.1
-  "capital:tree-pine-patchy": 'right', // 19.2 / 35.5 / 52.7
-  "capital:tree-spruce-moderate": 'right', // 10.8 / 21.9 / 34.9
-  "capital:tree-spruce-near-bare": 'right', // 7.6 / 30.3 / 53.0
-  "capital:tree-spruce-open": 'right', // 4.5 / 10.0 / 8.3
-  "capital:tree-spruce-patchy": 'right', // 6.8 / 22.5 / 19.2
+  "capital:tree-oak-moderate": 'right', // 7.5 / 19.3 / 62.9
+  "capital:tree-oak-near-bare": 'right', // 4.0 / 24.2 / 55.9
+  "capital:tree-oak-open": 'right', // 8.0 / 20.2 / 60.3
+  "capital:tree-oak-patchy": 'right', // 2.4 / 3.2 / 66.9
+  "capital:tree-pine-moderate": 'right', // 23.6 / 40.1 / 39.4
+  "capital:tree-pine-near-bare": 'right', // 18.5 / 29.7 / 71.7
+  "capital:tree-pine-open": 'right', // 25.3 / 58.9 / 40.3
+  "capital:tree-pine-patchy": 'right', // 19.2 / 35.6 / 52.8
+  "capital:tree-spruce-moderate": 'right', // 10.7 / 21.9 / 35.0
+  "capital:tree-spruce-near-bare": 'right', // 7.6 / 30.6 / 52.6
+  "capital:tree-spruce-open": 'right', // 4.5 / 9.9 / 8.2
+  "capital:tree-spruce-patchy": 'right', // 6.9 / 22.5 / 19.0
   "gen:tree-aspen-young:ne": 'right', // 11.3 / 20.7 / 82.6
   "gen:tree-aspen-young:nw": 'right', // 13.0 / 28.2 / 74.6
   "gen:tree-aspen-young:se": 'right', // 12.1 / 26.5 / 53.4
   "gen:tree-aspen-young:sw": 'right', // 10.7 / 15.8 / 57.1
+  "gen:tree-bare-oak-small:ne": 'right', // 10.7 / 20.6 / 51.7
+  "gen:tree-bare-oak-small:nw": 'right', // 10.7 / 20.6 / 51.7
+  "gen:tree-bare-oak-small:se": 'right', // 10.7 / 20.6 / 51.7
+  "gen:tree-bare-oak-small:sw": 'right', // 10.7 / 20.6 / 51.7
+  "gen:tree-bare-oak-tall:ne": 'right', // 6.2 / 25.3 / 65.9
+  "gen:tree-bare-oak-tall:nw": 'right', // 6.2 / 25.3 / 65.9
+  "gen:tree-bare-oak-tall:se": 'right', // 6.2 / 25.3 / 65.9
+  "gen:tree-bare-oak-tall:sw": 'right', // 6.2 / 25.3 / 65.9
+  "gen:tree-bare-oak-wide:ne": 'right', // 24.8 / 45.8 / 48.2
+  "gen:tree-bare-oak-wide:nw": 'right', // 24.8 / 45.8 / 48.2
+  "gen:tree-bare-oak-wide:se": 'right', // 24.8 / 45.8 / 48.2
+  "gen:tree-bare-oak-wide:sw": 'right', // 24.8 / 45.8 / 48.2
+  "gen:tree-bare-oak:ne": 'right', // 10.2 / 24.5 / 46.0
+  "gen:tree-bare-oak:nw": 'right', // 10.2 / 24.5 / 46.0
+  "gen:tree-bare-oak:se": 'right', // 10.2 / 24.5 / 46.0
+  "gen:tree-bare-oak:sw": 'right', // 10.2 / 24.5 / 46.0
+  "gen:tree-birch-bare:ne": 'right', // 2.8 / 19.0 / 31.2
+  "gen:tree-birch-bare:nw": 'right', // 2.8 / 19.0 / 31.2
+  "gen:tree-birch-bare:se": 'right', // 2.8 / 19.0 / 31.2
+  "gen:tree-birch-bare:sw": 'right', // 2.8 / 19.0 / 31.2
+  "gen:tree-birch-full:ne": 'right', // 10.0 / 16.1 / 12.7
+  "gen:tree-birch-full:nw": 'right', // 10.0 / 16.1 / 12.7
+  "gen:tree-birch-full:se": 'right', // 10.0 / 16.1 / 12.7
+  "gen:tree-birch-full:sw": 'right', // 10.0 / 16.1 / 12.7
+  "gen:tree-birch-wide:ne": 'right', // 7.4 / 6.3 / 23.2
+  "gen:tree-birch-wide:nw": 'right', // 7.4 / 6.3 / 23.2
+  "gen:tree-birch-wide:se": 'right', // 7.4 / 6.3 / 23.2
+  "gen:tree-birch-wide:sw": 'right', // 7.4 / 6.3 / 23.2
+  "gen:tree-birch:ne": 'right', // 11.0 / 22.6 / 20.3
+  "gen:tree-birch:nw": 'right', // 11.0 / 22.6 / 20.3
+  "gen:tree-birch:se": 'right', // 11.0 / 22.6 / 20.3
+  "gen:tree-birch:sw": 'right', // 11.0 / 22.6 / 20.3
+  "gen:tree-blue-spruce-medium:ne": 'right', // -3.2 / 6.4 / 43.1 (by hand)
+  "gen:tree-blue-spruce-medium:nw": 'right', // -3.2 / 6.4 / 43.1 (by hand)
+  "gen:tree-blue-spruce-medium:se": 'right', // -3.2 / 6.4 / 43.1 (by hand)
+  "gen:tree-blue-spruce-medium:sw": 'right', // -3.2 / 6.4 / 43.1 (by hand)
+  "gen:tree-blue-spruce-small:ne": 'right', // -0.4 / 7.9 / 28.3 (by hand)
+  "gen:tree-blue-spruce-small:nw": 'right', // -0.4 / 7.9 / 28.3 (by hand)
+  "gen:tree-blue-spruce-small:se": 'right', // -0.4 / 7.9 / 28.3 (by hand)
+  "gen:tree-blue-spruce-small:sw": 'right', // -0.4 / 7.9 / 28.3 (by hand)
+  "gen:tree-blue-spruce-tall:ne": 'right', // -6.0 / -3.4 / 28.2 (by hand)
+  "gen:tree-blue-spruce-tall:nw": 'right', // -6.0 / -3.4 / 28.2 (by hand)
+  "gen:tree-blue-spruce-tall:se": 'right', // -6.0 / -3.4 / 28.2 (by hand)
+  "gen:tree-blue-spruce-tall:sw": 'right', // -6.0 / -3.4 / 28.2 (by hand)
+  "gen:tree-blue-spruce-wide:ne": 'right', // -7.2 / -5.5 / 14.1 (by hand)
+  "gen:tree-blue-spruce-wide:nw": 'right', // -7.2 / -5.5 / 14.1 (by hand)
+  "gen:tree-blue-spruce-wide:se": 'right', // -7.2 / -5.5 / 14.1 (by hand)
+  "gen:tree-blue-spruce-wide:sw": 'right', // -7.2 / -5.5 / 14.1 (by hand)
+  "gen:tree-dark-fir-medium:ne": 'left', // -31.4 / -59.2 / -45.2
+  "gen:tree-dark-fir-medium:nw": 'left', // -31.4 / -59.2 / -45.2
+  "gen:tree-dark-fir-medium:se": 'left', // -31.4 / -59.2 / -45.2
+  "gen:tree-dark-fir-medium:sw": 'left', // -31.4 / -59.2 / -45.2
+  "gen:tree-dark-fir-small:ne": 'left', // -27.3 / -56.9 / -34.5
+  "gen:tree-dark-fir-small:nw": 'left', // -27.3 / -56.9 / -34.5
+  "gen:tree-dark-fir-small:se": 'left', // -27.3 / -56.9 / -34.5
+  "gen:tree-dark-fir-small:sw": 'left', // -27.3 / -56.9 / -34.5
+  "gen:tree-dark-fir-tall:ne": 'left', // -35.5 / -67.1 / -49.2
+  "gen:tree-dark-fir-tall:nw": 'left', // -35.5 / -67.1 / -49.2
+  "gen:tree-dark-fir-tall:se": 'left', // -35.5 / -67.1 / -49.2
+  "gen:tree-dark-fir-tall:sw": 'left', // -35.5 / -67.1 / -49.2
+  "gen:tree-dark-fir-wide:ne": 'left', // -30.1 / -56.5 / -35.4
+  "gen:tree-dark-fir-wide:nw": 'left', // -30.1 / -56.5 / -35.4
+  "gen:tree-dark-fir-wide:se": 'left', // -30.1 / -56.5 / -35.4
+  "gen:tree-dark-fir-wide:sw": 'left', // -30.1 / -56.5 / -35.4
   "gen:tree-fir-tall:ne": 'right', // 42.5 / 71.8 / 55.6
   "gen:tree-fir-tall:nw": 'right', // 36.5 / 60.0 / 44.2
   "gen:tree-fir-tall:se": 'right', // 36.7 / 60.9 / 54.8
@@ -50,22 +113,182 @@ export const TREE_LIGHT: Readonly<Record<string, 'left' | 'right'>> = {
   "gen:tree-oak-crimson:nw": 'right', // 30.7 / 49.5 / 45.4
   "gen:tree-oak-crimson:se": 'right', // 33.1 / 52.1 / 18.6
   "gen:tree-oak-crimson:sw": 'right', // 30.5 / 47.0 / 18.4
+  "gen:tree-orange-maple-bare:ne": 'right', // 6.9 / 28.8 / 52.4
+  "gen:tree-orange-maple-bare:nw": 'right', // 6.9 / 28.8 / 52.4
+  "gen:tree-orange-maple-bare:se": 'right', // 6.9 / 28.8 / 52.4
+  "gen:tree-orange-maple-bare:sw": 'right', // 6.9 / 28.8 / 52.4
+  "gen:tree-orange-maple-full:ne": 'right', // 13.2 / 28.7 / 64.7
+  "gen:tree-orange-maple-full:nw": 'right', // 13.2 / 28.7 / 64.7
+  "gen:tree-orange-maple-full:se": 'right', // 13.2 / 28.7 / 64.7
+  "gen:tree-orange-maple-full:sw": 'right', // 13.2 / 28.7 / 64.7
+  "gen:tree-orange-maple-wide:ne": 'right', // 5.7 / 7.1 / 55.7
+  "gen:tree-orange-maple-wide:nw": 'right', // 5.7 / 7.1 / 55.7
+  "gen:tree-orange-maple-wide:se": 'right', // 5.7 / 7.1 / 55.7
+  "gen:tree-orange-maple-wide:sw": 'right', // 5.7 / 7.1 / 55.7
+  "gen:tree-orange-maple:ne": 'right', // 9.9 / 22.6 / 52.7
+  "gen:tree-orange-maple:nw": 'right', // 9.9 / 22.6 / 52.7
+  "gen:tree-orange-maple:se": 'right', // 9.9 / 22.6 / 52.7
+  "gen:tree-orange-maple:sw": 'right', // 9.9 / 22.6 / 52.7
+  "gen:tree-orange-oak-full:ne": 'right', // 26.9 / 48.4 / 76.8
+  "gen:tree-orange-oak-full:nw": 'right', // 26.9 / 48.4 / 76.8
+  "gen:tree-orange-oak-full:se": 'right', // 26.9 / 48.4 / 76.8
+  "gen:tree-orange-oak-full:sw": 'right', // 26.9 / 48.4 / 76.8
+  "gen:tree-orange-oak-small:ne": 'right', // 24.5 / 39.1 / 81.7
+  "gen:tree-orange-oak-small:nw": 'right', // 24.5 / 39.1 / 81.7
+  "gen:tree-orange-oak-small:se": 'right', // 24.5 / 39.1 / 81.7
+  "gen:tree-orange-oak-small:sw": 'right', // 24.5 / 39.1 / 81.7
+  "gen:tree-orange-oak-wide:ne": 'right', // 26.3 / 48.2 / 61.9
+  "gen:tree-orange-oak-wide:nw": 'right', // 26.3 / 48.2 / 61.9
+  "gen:tree-orange-oak-wide:se": 'right', // 26.3 / 48.2 / 61.9
+  "gen:tree-orange-oak-wide:sw": 'right', // 26.3 / 48.2 / 61.9
+  "gen:tree-orange-oak:ne": 'right', // 29.8 / 54.9 / 67.6
+  "gen:tree-orange-oak:nw": 'right', // 29.8 / 54.9 / 67.6
+  "gen:tree-orange-oak:se": 'right', // 29.8 / 54.9 / 67.6
+  "gen:tree-orange-oak:sw": 'right', // 29.8 / 54.9 / 67.6
+  "gen:tree-orange-tree-big:ne": 'right', // 19.3 / 35.8 / 50.9
+  "gen:tree-orange-tree-big:nw": 'right', // 19.3 / 35.8 / 50.9
+  "gen:tree-orange-tree-big:se": 'right', // 19.3 / 35.8 / 50.9
+  "gen:tree-orange-tree-big:sw": 'right', // 19.3 / 35.8 / 50.9
+  "gen:tree-orange-tree-full:ne": 'right', // 7.0 / 18.5 / 62.6
+  "gen:tree-orange-tree-full:nw": 'right', // 7.0 / 18.5 / 62.6
+  "gen:tree-orange-tree-full:se": 'right', // 7.0 / 18.5 / 62.6
+  "gen:tree-orange-tree-full:sw": 'right', // 7.0 / 18.5 / 62.6
+  "gen:tree-orange-tree-round:ne": 'right', // 21.6 / 41.8 / 58.1
+  "gen:tree-orange-tree-round:nw": 'right', // 21.6 / 41.8 / 58.1
+  "gen:tree-orange-tree-round:se": 'right', // 21.6 / 41.8 / 58.1
+  "gen:tree-orange-tree-round:sw": 'right', // 21.6 / 41.8 / 58.1
+  "gen:tree-orange-tree-small:ne": 'right', // 18.3 / 32.2 / 71.5
+  "gen:tree-orange-tree-small:nw": 'right', // 18.3 / 32.2 / 71.5
+  "gen:tree-orange-tree-small:se": 'right', // 18.3 / 32.2 / 71.5
+  "gen:tree-orange-tree-small:sw": 'right', // 18.3 / 32.2 / 71.5
+  "gen:tree-orange-tree-sparse:ne": 'right', // 3.8 / 23.6 / 56.3
+  "gen:tree-orange-tree-sparse:nw": 'right', // 3.8 / 23.6 / 56.3
+  "gen:tree-orange-tree-sparse:se": 'right', // 3.8 / 23.6 / 56.3
+  "gen:tree-orange-tree-sparse:sw": 'right', // 3.8 / 23.6 / 56.3
+  "gen:tree-orange-tree-tall:ne": 'right', // 18.0 / 32.2 / 66.6
+  "gen:tree-orange-tree-tall:nw": 'right', // 18.0 / 32.2 / 66.6
+  "gen:tree-orange-tree-tall:se": 'right', // 18.0 / 32.2 / 66.6
+  "gen:tree-orange-tree-tall:sw": 'right', // 18.0 / 32.2 / 66.6
+  "gen:tree-orange-tree-wide:ne": 'right', // 2.7 / 2.6 / 66.3
+  "gen:tree-orange-tree-wide:nw": 'right', // 2.7 / 2.6 / 66.3
+  "gen:tree-orange-tree-wide:se": 'right', // 2.7 / 2.6 / 66.3
+  "gen:tree-orange-tree-wide:sw": 'right', // 2.7 / 2.6 / 66.3
+  "gen:tree-orange-tree:ne": 'right', // 7.7 / 19.2 / 60.4
+  "gen:tree-orange-tree:nw": 'right', // 7.7 / 19.2 / 60.4
+  "gen:tree-orange-tree:se": 'right', // 7.7 / 19.2 / 60.4
+  "gen:tree-orange-tree:sw": 'right', // 7.7 / 19.2 / 60.4
+  "gen:tree-red-maple-bare:ne": 'right', // 14.4 / 28.7 / 61.4
+  "gen:tree-red-maple-bare:nw": 'right', // 14.4 / 28.7 / 61.4
+  "gen:tree-red-maple-bare:se": 'right', // 14.4 / 28.7 / 61.4
+  "gen:tree-red-maple-bare:sw": 'right', // 14.4 / 28.7 / 61.4
+  "gen:tree-red-maple-big:ne": 'right', // 18.3 / 34.1 / 58.8
+  "gen:tree-red-maple-big:nw": 'right', // 18.3 / 34.1 / 58.8
+  "gen:tree-red-maple-big:se": 'right', // 18.3 / 34.1 / 58.8
+  "gen:tree-red-maple-big:sw": 'right', // 18.3 / 34.1 / 58.8
+  "gen:tree-red-maple-full:ne": 'right', // 15.4 / 29.6 / 54.3
+  "gen:tree-red-maple-full:nw": 'right', // 15.4 / 29.6 / 54.3
+  "gen:tree-red-maple-full:se": 'right', // 15.4 / 29.6 / 54.3
+  "gen:tree-red-maple-full:sw": 'right', // 15.4 / 29.6 / 54.3
+  "gen:tree-red-maple-round:ne": 'right', // 18.8 / 33.2 / 52.6
+  "gen:tree-red-maple-round:nw": 'right', // 18.8 / 33.2 / 52.6
+  "gen:tree-red-maple-round:se": 'right', // 18.8 / 33.2 / 52.6
+  "gen:tree-red-maple-round:sw": 'right', // 18.8 / 33.2 / 52.6
+  "gen:tree-red-maple-small:ne": 'right', // 20.2 / 38.9 / 74.7
+  "gen:tree-red-maple-small:nw": 'right', // 20.2 / 38.9 / 74.7
+  "gen:tree-red-maple-small:se": 'right', // 20.2 / 38.9 / 74.7
+  "gen:tree-red-maple-small:sw": 'right', // 20.2 / 38.9 / 74.7
+  "gen:tree-red-maple-sparse:ne": 'right', // 11.7 / 28.3 / 56.1
+  "gen:tree-red-maple-sparse:nw": 'right', // 11.7 / 28.3 / 56.1
+  "gen:tree-red-maple-sparse:se": 'right', // 11.7 / 28.3 / 56.1
+  "gen:tree-red-maple-sparse:sw": 'right', // 11.7 / 28.3 / 56.1
+  "gen:tree-red-maple-tall:ne": 'right', // 19.3 / 31.1 / 52.1
+  "gen:tree-red-maple-tall:nw": 'right', // 19.3 / 31.1 / 52.1
+  "gen:tree-red-maple-tall:se": 'right', // 19.3 / 31.1 / 52.1
+  "gen:tree-red-maple-tall:sw": 'right', // 19.3 / 31.1 / 52.1
+  "gen:tree-red-maple:ne": 'right', // 14.3 / 25.8 / 41.7
+  "gen:tree-red-maple:nw": 'right', // 14.3 / 25.8 / 41.7
+  "gen:tree-red-maple:se": 'right', // 14.3 / 25.8 / 41.7
+  "gen:tree-red-maple:sw": 'right', // 14.3 / 25.8 / 41.7
+  "gen:tree-small-birch-2:ne": 'right', // 17.6 / 27.4 / 14.5
+  "gen:tree-small-birch-2:nw": 'right', // 17.6 / 27.4 / 14.5
+  "gen:tree-small-birch-2:se": 'right', // 17.6 / 27.4 / 14.5
+  "gen:tree-small-birch-2:sw": 'right', // 17.6 / 27.4 / 14.5
+  "gen:tree-small-birch-3:ne": 'right', // 15.5 / 23.0 / 43.3
+  "gen:tree-small-birch-3:nw": 'right', // 15.5 / 23.0 / 43.3
+  "gen:tree-small-birch-3:se": 'right', // 15.5 / 23.0 / 43.3
+  "gen:tree-small-birch-3:sw": 'right', // 15.5 / 23.0 / 43.3
+  "gen:tree-small-birch-4:ne": 'right', // 15.3 / 27.8 / 87.6
+  "gen:tree-small-birch-4:nw": 'right', // 15.3 / 27.8 / 87.6
+  "gen:tree-small-birch-4:se": 'right', // 15.3 / 27.8 / 87.6
+  "gen:tree-small-birch-4:sw": 'right', // 15.3 / 27.8 / 87.6
+  "gen:tree-small-birch:ne": 'right', // 17.6 / 34.2 / 45.8
+  "gen:tree-small-birch:nw": 'right', // 17.6 / 34.2 / 45.8
+  "gen:tree-small-birch:se": 'right', // 17.6 / 34.2 / 45.8
+  "gen:tree-small-birch:sw": 'right', // 17.6 / 34.2 / 45.8
+  "gen:tree-small-orange-tree-2:ne": 'right', // 4.7 / 9.1 / 51.4
+  "gen:tree-small-orange-tree-2:nw": 'right', // 4.7 / 9.1 / 51.4
+  "gen:tree-small-orange-tree-2:se": 'right', // 4.7 / 9.1 / 51.4
+  "gen:tree-small-orange-tree-2:sw": 'right', // 4.7 / 9.1 / 51.4
+  "gen:tree-small-orange-tree-bare:ne": 'right', // 4.5 / 19.5 / 51.2
+  "gen:tree-small-orange-tree-bare:nw": 'right', // 4.5 / 19.5 / 51.2
+  "gen:tree-small-orange-tree-bare:se": 'right', // 4.5 / 19.5 / 51.2
+  "gen:tree-small-orange-tree-bare:sw": 'right', // 4.5 / 19.5 / 51.2
+  "gen:tree-small-orange-tree-full:ne": 'right', // 7.8 / 18.8 / 61.7
+  "gen:tree-small-orange-tree-full:nw": 'right', // 7.8 / 18.8 / 61.7
+  "gen:tree-small-orange-tree-full:se": 'right', // 7.8 / 18.8 / 61.7
+  "gen:tree-small-orange-tree-full:sw": 'right', // 7.8 / 18.8 / 61.7
+  "gen:tree-small-orange-tree:ne": 'right', // 8.0 / 19.2 / 62.6
+  "gen:tree-small-orange-tree:nw": 'right', // 8.0 / 19.2 / 62.6
+  "gen:tree-small-orange-tree:se": 'right', // 8.0 / 19.2 / 62.6
+  "gen:tree-small-orange-tree:sw": 'right', // 8.0 / 19.2 / 62.6
+  "gen:tree-small-red-maple-2:ne": 'right', // 13.8 / 24.3 / 56.2
+  "gen:tree-small-red-maple-2:nw": 'right', // 13.8 / 24.3 / 56.2
+  "gen:tree-small-red-maple-2:se": 'right', // 13.8 / 24.3 / 56.2
+  "gen:tree-small-red-maple-2:sw": 'right', // 13.8 / 24.3 / 56.2
+  "gen:tree-small-red-maple-3:ne": 'right', // 14.3 / 22.4 / 45.9
+  "gen:tree-small-red-maple-3:nw": 'right', // 14.3 / 22.4 / 45.9
+  "gen:tree-small-red-maple-3:se": 'right', // 14.3 / 22.4 / 45.9
+  "gen:tree-small-red-maple-3:sw": 'right', // 14.3 / 22.4 / 45.9
+  "gen:tree-small-red-maple-4:ne": 'right', // 16.1 / 31.3 / 50.7
+  "gen:tree-small-red-maple-4:nw": 'right', // 16.1 / 31.3 / 50.7
+  "gen:tree-small-red-maple-4:se": 'right', // 16.1 / 31.3 / 50.7
+  "gen:tree-small-red-maple-4:sw": 'right', // 16.1 / 31.3 / 50.7
+  "gen:tree-small-red-maple:ne": 'right', // 15.2 / 24.4 / 48.4
+  "gen:tree-small-red-maple:nw": 'right', // 15.2 / 24.4 / 48.4
+  "gen:tree-small-red-maple:se": 'right', // 15.2 / 24.4 / 48.4
+  "gen:tree-small-red-maple:sw": 'right', // 15.2 / 24.4 / 48.4
   "gen:tree-spruce-young:ne": 'right', // 35.1 / 61.2 / 51.7
   "gen:tree-spruce-young:nw": 'right', // 32.4 / 55.7 / 43.5
   "gen:tree-spruce-young:se": 'right', // 34.2 / 51.0 / 41.7
   "gen:tree-spruce-young:sw": 'right', // 33.6 / 60.5 / 44.0
-  "ref:tree-birch-gold": 'right', // 17.9 / 29.2 / 19.9
-  "ref:tree-maple-crimson": 'right', // 19.9 / 38.2 / 53.4
-  "ref:tree-spruce-blue": 'right', // -18.8 / -19.6 / 20.6 (by hand)
-  "world:tree_dead_0": 'right', // 8.6 / 19.6 / 30.7
-  "world:tree_dead_1": 'right', // 3.8 / 16.6 / 25.5
-  "world:tree_dead_2": 'right', // 5.7 / 13.5 / 20.7
-  "world:tree_oak_0": 'right', // 27.8 / 51.3 / 77.3
-  "world:tree_oak_1": 'right', // 26.4 / 49.9 / 69.8
-  "world:tree_oak_2": 'right', // 23.8 / 48.5 / 91.4
-  "world:tree_pine_0": 'left', // -42.0 / -78.4 / -55.6
-  "world:tree_pine_1": 'left', // -34.9 / -53.3 / -29.7
-  "world:tree_pine_2": 'left', // -39.1 / -70.3 / -69.8
+  "gen:tree-thin-blue-fir-small:ne": 'right', // 10.1 / 21.0 / 35.5
+  "gen:tree-thin-blue-fir-small:nw": 'right', // 10.1 / 21.0 / 35.5
+  "gen:tree-thin-blue-fir-small:se": 'right', // 10.1 / 21.0 / 35.5
+  "gen:tree-thin-blue-fir-small:sw": 'right', // 10.1 / 21.0 / 35.5
+  "gen:tree-thin-blue-fir-sparse:ne": 'right', // 7.4 / 30.9 / 52.9
+  "gen:tree-thin-blue-fir-sparse:nw": 'right', // 7.4 / 30.9 / 52.9
+  "gen:tree-thin-blue-fir-sparse:se": 'right', // 7.4 / 30.9 / 52.9
+  "gen:tree-thin-blue-fir-sparse:sw": 'right', // 7.4 / 30.9 / 52.9
+  "gen:tree-thin-blue-fir-tall:ne": 'right', // 5.8 / 22.2 / 18.9
+  "gen:tree-thin-blue-fir-tall:nw": 'right', // 5.8 / 22.2 / 18.9
+  "gen:tree-thin-blue-fir-tall:se": 'right', // 5.8 / 22.2 / 18.9
+  "gen:tree-thin-blue-fir-tall:sw": 'right', // 5.8 / 22.2 / 18.9
+  "gen:tree-thin-blue-fir:ne": 'right', // 4.3 / 10.0 / 8.6
+  "gen:tree-thin-blue-fir:nw": 'right', // 4.3 / 10.0 / 8.6
+  "gen:tree-thin-blue-fir:se": 'right', // 4.3 / 10.0 / 8.6
+  "gen:tree-thin-blue-fir:sw": 'right', // 4.3 / 10.0 / 8.6
+  "ref:tree-birch-gold": 'right', // 17.8 / 29.1 / 21.6
+  "ref:tree-maple-crimson": 'right', // 19.8 / 38.2 / 53.2
+  "ref:tree-spruce-blue": 'right', // -18.5 / -19.1 / 20.7 (by hand)
+  "world:tree_dead_0": 'right', // 8.8 / 20.2 / 32.7
+  "world:tree_dead_1": 'right', // 3.9 / 16.3 / 24.9
+  "world:tree_dead_2": 'right', // 5.7 / 13.6 / 21.6
+  "world:tree_oak_0": 'right', // 27.8 / 51.3 / 77.0
+  "world:tree_oak_1": 'right', // 26.3 / 49.9 / 69.5
+  "world:tree_oak_2": 'right', // 23.8 / 48.6 / 92.4
+  "world:tree_pine_0": 'left', // -42.0 / -78.4 / -55.5
+  "world:tree_pine_1": 'left', // -34.9 / -53.7 / -29.6
+  "world:tree_pine_2": 'left', // -39.1 / -69.8 / -69.7
 };
 /** the trees drawn mirrored: their art is lit from the left (TREE_LIGHT), so the mirror puts the light on the right, where the sun is */
 export const TREE_MIRROR: ReadonlySet<string> = new Set(Object.keys(TREE_LIGHT).filter(id => TREE_LIGHT[id] === 'left'));

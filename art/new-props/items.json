@@ -2,76 +2,94 @@
  "items": [
   {
    "id": "newprop:green-food-kiosk",
+   "slug": "green-food-kiosk",
    "name": "Green food kiosk",
    "cat": "New: Stalls",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
    "cell": "top left",
    "rect": [
-    14,
-    10,
-    632,
-    597
+    13,
+    9,
+    633,
+    599
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 242.07
+   "h": 242.25,
+   "cost": 500
   },
   {
    "id": "newprop:drinks-stand-with-canopy",
+   "slug": "drinks-stand-with-canopy",
    "name": "Drinks stand with canopy",
    "cat": "New: Stalls",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
    "cell": "top right",
    "rect": [
-    717,
-    34,
-    482,
-    584
+    716,
+    33,
+    483,
+    585
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 310.97
+   "h": 310.06,
+   "cost": 500
   },
   {
    "id": "newprop:food-pavilion",
+   "slug": "food-pavilion",
    "name": "Food pavilion",
    "cat": "New: Stalls",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
    "cell": "bottom left",
    "rect": [
-    28,
-    612,
-    630,
-    616
+    27,
+    611,
+    631,
+    617
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 250.25
+   "h": 250.32,
+   "cost": 500
   },
   {
    "id": "newprop:ice-cream-cart",
+   "slug": "ice-cream-cart",
    "name": "Ice cream cart",
    "cat": "New: Stalls",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
    "cell": "bottom right",
    "rect": [
     763,
-    653,
-    443,
-    569
+    652,
+    444,
+    570
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 329.98
+   "h": 328.65,
+   "cost": 500
   },
   {
    "id": "newprop:dark-fir-tall",
+   "slug": "dark-fir-tall",
    "name": "Dark fir tall",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-07b7ef26-d1f1-44fd-a05d-4585acb9a2c6.png",
@@ -82,13 +100,37 @@
     307,
     609
    ],
-   "w": 192,
-   "h": 385.93
+   "cutOff": false,
+   "w": 286.39,
+   "h": 568.12,
+   "ax": 143.2,
+   "ay": 565.12,
+   "factor": 1,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-dark-fir-tall:ne",
+    "gen:tree-dark-fir-tall:se",
+    "gen:tree-dark-fir-tall:sw",
+    "gen:tree-dark-fir-tall:nw"
+   ]
   },
   {
    "id": "newprop:dark-fir-wide",
+   "slug": "dark-fir-wide",
    "name": "Dark fir wide",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-07b7ef26-d1f1-44fd-a05d-4585acb9a2c6.png",
@@ -99,13 +141,37 @@
     493,
     587
    ],
-   "w": 192,
-   "h": 229.21
+   "cutOff": false,
+   "w": 459.91,
+   "h": 547.6,
+   "ax": 229.95,
+   "ay": 544.6,
+   "factor": 1,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-dark-fir-wide:ne",
+    "gen:tree-dark-fir-wide:se",
+    "gen:tree-dark-fir-wide:sw",
+    "gen:tree-dark-fir-wide:nw"
+   ]
   },
   {
    "id": "newprop:dark-fir-medium",
+   "slug": "dark-fir-medium",
    "name": "Dark fir medium",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-07b7ef26-d1f1-44fd-a05d-4585acb9a2c6.png",
@@ -113,33 +179,81 @@
    "rect": [
     182,
     651,
-    392,
+    393,
     555
    ],
-   "w": 192,
-   "h": 272.79
+   "cutOff": false,
+   "w": 366.62,
+   "h": 517.75,
+   "ax": 183.31,
+   "ay": 514.75,
+   "factor": 1,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-dark-fir-medium:ne",
+    "gen:tree-dark-fir-medium:se",
+    "gen:tree-dark-fir-medium:sw",
+    "gen:tree-dark-fir-medium:nw"
+   ]
   },
   {
    "id": "newprop:dark-fir-small",
+   "slug": "dark-fir-small",
    "name": "Dark fir small",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-07b7ef26-d1f1-44fd-a05d-4585acb9a2c6.png",
    "cell": "bottom right",
    "rect": [
     786,
-    761,
+    760,
     348,
-    441
+    442
    ],
-   "w": 192,
-   "h": 245.08
+   "cutOff": false,
+   "w": 324.64,
+   "h": 412.33,
+   "ax": 162.32,
+   "ay": 409.33,
+   "factor": 1,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-dark-fir-small:ne",
+    "gen:tree-dark-fir-small:se",
+    "gen:tree-dark-fir-small:sw",
+    "gen:tree-dark-fir-small:nw"
+   ]
   },
   {
    "id": "newprop:red-maple",
+   "slug": "red-maple",
    "name": "Red maple",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-0847d8fc-5acd-4e03-9078-8be96f62a64d.png",
@@ -150,208 +264,328 @@
     577,
     562
    ],
-   "w": 192,
-   "h": 186.94
+   "cutOff": false,
+   "w": 400.68,
+   "h": 390.26,
+   "ax": 200.34,
+   "ay": 387.26,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-red-maple:ne",
+    "gen:tree-red-maple:se",
+    "gen:tree-red-maple:sw",
+    "gen:tree-red-maple:nw"
+   ]
   },
   {
    "id": "newprop:red-maple-bare",
+   "slug": "red-maple-bare",
    "name": "Red maple bare",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-0847d8fc-5acd-4e03-9078-8be96f62a64d.png",
    "cell": "top right",
    "rect": [
     641,
-    71,
-    576,
-    531
+    69,
+    577,
+    533
    ],
-   "w": 192,
-   "h": 177.15
+   "cutOff": false,
+   "w": 400.68,
+   "h": 370.12,
+   "ax": 200.34,
+   "ay": 367.12,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-red-maple-bare:ne",
+    "gen:tree-red-maple-bare:se",
+    "gen:tree-red-maple-bare:sw",
+    "gen:tree-red-maple-bare:nw"
+   ]
   },
   {
    "id": "newprop:red-maple-sparse",
+   "slug": "red-maple-sparse",
    "name": "Red maple sparse",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-0847d8fc-5acd-4e03-9078-8be96f62a64d.png",
    "cell": "bottom left",
    "rect": [
     38,
-    671,
-    570,
-    527
+    666,
+    571,
+    533
    ],
-   "w": 192,
-   "h": 178.7
+   "cutOff": false,
+   "w": 396.51,
+   "h": 370.12,
+   "ax": 198.25,
+   "ay": 367.12,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-red-maple-sparse:ne",
+    "gen:tree-red-maple-sparse:se",
+    "gen:tree-red-maple-sparse:sw",
+    "gen:tree-red-maple-sparse:nw"
+   ]
   },
   {
    "id": "newprop:red-maple-full",
+   "slug": "red-maple-full",
    "name": "Red maple full",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-0847d8fc-5acd-4e03-9078-8be96f62a64d.png",
    "cell": "bottom right",
    "rect": [
-    641,
-    659,
-    578,
-    537
+    640,
+    658,
+    579,
+    538
    ],
-   "w": 192,
-   "h": 178.21
+   "cutOff": false,
+   "w": 402.06,
+   "h": 373.59,
+   "ax": 201.03,
+   "ay": 370.59,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-red-maple-full:ne",
+    "gen:tree-red-maple-full:se",
+    "gen:tree-red-maple-full:sw",
+    "gen:tree-red-maple-full:nw"
+   ]
   },
   {
    "id": "newprop:neon-storefront-row",
+   "slug": "neon-storefront-row",
    "name": "Neon storefront row",
    "cat": "New: Buildings",
+   "kind": "decor",
    "hx": 5,
    "hy": 5,
    "sheet": "exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    16,
+    84,
+    663,
+    589
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 640,
-   "h": 568.3
+   "h": 568.57,
+   "cost": 1500
   },
   {
    "id": "newprop:neon-diner-front",
+   "slug": "neon-diner-front",
    "name": "Neon diner front",
    "cat": "New: Buildings",
+   "kind": "decor",
    "hx": 5,
    "hy": 5,
    "sheet": "exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    648,
+    168,
+    602,
+    472
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 640,
-   "h": 470.44
+   "h": 501.79,
+   "cost": 1500
   },
   {
    "id": "newprop:brick-storefront",
+   "slug": "brick-storefront",
    "name": "Brick storefront",
    "cat": "New: Buildings",
+   "kind": "decor",
    "hx": 5,
    "hy": 5,
    "sheet": "exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    4,
+    705,
+    701,
+    481
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 640,
-   "h": 573.83
+   "h": 439.14,
+   "cost": 1500
   },
   {
    "id": "newprop:lit-shop-corner",
+   "slug": "lit-shop-corner",
    "name": "Lit shop corner",
    "cat": "New: Buildings",
+   "kind": "decor",
    "hx": 5,
    "hy": 5,
    "sheet": "exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    706,
+    765,
+    543,
+    426
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 640,
-   "h": 579.94
+   "h": 502.1,
+   "cost": 1500
   },
   {
    "id": "newprop:leaderboard",
+   "slug": "leaderboard",
    "name": "Leaderboard",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.6,
    "hy": 0.6,
    "sheet": "exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    47,
+    6,
+    656,
+    642
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 76.8,
-   "h": 82.27
+   "h": 75.16,
+   "cost": 50
   },
   {
    "id": "newprop:hole-12-sign",
+   "slug": "hole-12-sign",
    "name": "Hole 12 sign",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.6,
    "hy": 0.6,
    "sheet": "exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
+    749,
+    20,
+    476,
     627
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 76.8,
-   "h": 77.96
+   "h": 101.16,
+   "cost": 50
   },
   {
    "id": "newprop:clock-post",
+   "slug": "clock-post",
    "name": "Clock post",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.6,
    "hy": 0.6,
    "sheet": "exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    177,
+    602,
+    317,
+    641
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 76.8,
-   "h": 105.38
+   "h": 155.3,
+   "cost": 50
   },
   {
    "id": "newprop:direction-signpost",
+   "slug": "direction-signpost",
    "name": "Direction signpost",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.6,
    "hy": 0.6,
    "sheet": "exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    733,
+    623,
+    448,
+    619
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 76.8,
-   "h": 106.65
+   "h": 106.11,
+   "cost": 50
   },
   {
    "id": "newprop:ball-washer",
+   "slug": "ball-washer",
    "name": "Ball washer",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.4,
    "hy": 0.4,
    "sheet": "exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
@@ -359,211 +593,251 @@
    "rect": [
     95,
     5,
-    448,
+    449,
     600
    ],
+   "cutOff": false,
    "w": 51.2,
-   "h": 68.73
+   "h": 68.42,
+   "cost": 50
   },
   {
    "id": "newprop:gold-tee-markers",
+   "slug": "gold-tee-markers",
    "name": "Gold tee markers",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.4,
    "hy": 0.4,
    "sheet": "exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
    "cell": "top right",
    "rect": [
     709,
-    199,
-    513,
-    395
+    198,
+    514,
+    396
    ],
+   "cutOff": false,
    "w": 51.2,
-   "h": 39.26
+   "h": 39.45,
+   "cost": 50
   },
   {
    "id": "newprop:yardage-posts",
+   "slug": "yardage-posts",
    "name": "Yardage posts",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.4,
    "hy": 0.4,
    "sheet": "exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
    "cell": "bottom left",
    "rect": [
-    79,
+    78,
     745,
-    486,
-    465
+    488,
+    466
    ],
+   "cutOff": false,
    "w": 51.2,
-   "h": 48.85
+   "h": 48.89,
+   "cost": 50
   },
   {
    "id": "newprop:sprinkler",
+   "slug": "sprinkler",
    "name": "Sprinkler",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.4,
    "hy": 0.4,
    "sheet": "exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
    "cell": "bottom right",
    "rect": [
     700,
-    729,
-    494,
-    467
+    712,
+    519,
+    484
    ],
+   "cutOff": false,
    "w": 51.2,
-   "h": 48.38
+   "h": 47.75,
+   "cost": 50
   },
   {
    "id": "newprop:tarp-market-stall",
+   "slug": "tarp-market-stall",
    "name": "Tarp market stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    28,
+    84,
+    640,
+    574
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 231.91
+   "h": 229.6,
+   "cost": 500
   },
   {
    "id": "newprop:shack-stall",
+   "slug": "shack-stall",
    "name": "Shack stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    657,
+    12,
+    581,
+    690
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 257.69
+   "h": 304.03,
+   "cost": 500
   },
   {
    "id": "newprop:cooler-drinks-stall",
+   "slug": "cooler-drinks-stall",
    "name": "Cooler drinks stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    46,
+    683,
+    608,
+    511
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 249.79
+   "h": 215.16,
+   "cost": 500
   },
   {
    "id": "newprop:course-worker",
+   "slug": "course-worker",
    "name": "Course worker",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    856,
+    693,
+    217,
+    528
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 341.72
+   "h": 622.89,
+   "cost": 500
   },
   {
    "id": "newprop:medical-tent",
+   "slug": "medical-tent",
    "name": "Medical tent",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    17,
+    41,
+    642,
+    591
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 245.86
+   "h": 235.66,
+   "cost": 500
   },
   {
    "id": "newprop:cart-ambulance",
+   "slug": "cart-ambulance",
    "name": "Cart ambulance",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    659,
+    126,
+    580,
+    510
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 209.26
+   "h": 225.1,
+   "cost": 500
   },
   {
    "id": "newprop:first-aid-trailer",
+   "slug": "first-aid-trailer",
    "name": "First aid trailer",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    38,
+    654,
+    642,
+    546
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 235.43
+   "h": 217.72,
+   "cost": 500
   },
   {
    "id": "newprop:weather-station",
+   "slug": "weather-station",
    "name": "Weather station",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    806,
+    621,
+    323,
+    588
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 297.12
+   "h": 466.03,
+   "cost": 500
   },
   {
    "id": "newprop:blue-spruce-wide",
+   "slug": "blue-spruce-wide",
    "name": "Blue spruce wide",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-2a49c706-58a3-4fda-a7ad-d343d8215261.png",
@@ -572,49 +846,121 @@
     194,
     8,
     365,
-    655
+    656
    ],
-   "w": 192,
-   "h": 348.5
+   "cutOff": false,
+   "w": 316.1,
+   "h": 568.12,
+   "ax": 158.05,
+   "ay": 565.12,
+   "factor": 1,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-blue-spruce-wide:ne",
+    "gen:tree-blue-spruce-wide:se",
+    "gen:tree-blue-spruce-wide:sw",
+    "gen:tree-blue-spruce-wide:nw"
+   ]
   },
   {
    "id": "newprop:blue-spruce-tall",
+   "slug": "blue-spruce-tall",
    "name": "Blue spruce tall",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-2a49c706-58a3-4fda-a7ad-d343d8215261.png",
    "cell": "top right",
    "rect": [
-    650,
+    649,
     36,
-    585,
+    586,
     630
    ],
-   "w": 192,
-   "h": 206.62
+   "cutOff": false,
+   "w": 507.5,
+   "h": 545.6,
+   "ax": 253.75,
+   "ay": 542.6,
+   "factor": 1,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-blue-spruce-tall:ne",
+    "gen:tree-blue-spruce-tall:se",
+    "gen:tree-blue-spruce-tall:sw",
+    "gen:tree-blue-spruce-tall:nw"
+   ]
   },
   {
    "id": "newprop:blue-spruce-medium",
+   "slug": "blue-spruce-medium",
    "name": "Blue spruce medium",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-2a49c706-58a3-4fda-a7ad-d343d8215261.png",
    "cell": "bottom left",
    "rect": [
-    152,
-    668,
-    476,
-    574
+    151,
+    667,
+    477,
+    575
    ],
-   "w": 192,
-   "h": 232.12
+   "cutOff": false,
+   "w": 413.1,
+   "h": 497.97,
+   "ax": 206.55,
+   "ay": 494.97,
+   "factor": 1,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-blue-spruce-medium:ne",
+    "gen:tree-blue-spruce-medium:se",
+    "gen:tree-blue-spruce-medium:sw",
+    "gen:tree-blue-spruce-medium:nw"
+   ]
   },
   {
    "id": "newprop:blue-spruce-small",
+   "slug": "blue-spruce-small",
    "name": "Blue spruce small",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-2a49c706-58a3-4fda-a7ad-d343d8215261.png",
@@ -625,30 +971,78 @@
     442,
     466
    ],
-   "w": 192,
-   "h": 202.62
+   "cutOff": false,
+   "w": 382.79,
+   "h": 403.57,
+   "ax": 191.39,
+   "ay": 400.57,
+   "factor": 1,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-blue-spruce-small:ne",
+    "gen:tree-blue-spruce-small:se",
+    "gen:tree-blue-spruce-small:sw",
+    "gen:tree-blue-spruce-small:nw"
+   ]
   },
   {
    "id": "newprop:thin-blue-fir",
+   "slug": "thin-blue-fir",
    "name": "Thin blue fir",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-2da5b0af-4f56-437d-a4bd-6cbc70d25af0.png",
    "cell": "top left",
    "rect": [
-    131,
+    130,
     41,
-    430,
+    431,
     583
    ],
-   "w": 153.6,
-   "h": 208.79
+   "cutOff": false,
+   "w": 336,
+   "h": 454.5,
+   "ax": 168,
+   "ay": 452.1,
+   "factor": 0.8,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.64,
+     "hy": 0.48,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-thin-blue-fir:ne",
+    "gen:tree-thin-blue-fir:se",
+    "gen:tree-thin-blue-fir:sw",
+    "gen:tree-thin-blue-fir:nw"
+   ]
   },
   {
    "id": "newprop:thin-blue-fir-tall",
+   "slug": "thin-blue-fir-tall",
    "name": "Thin blue fir tall",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-2da5b0af-4f56-437d-a4bd-6cbc70d25af0.png",
@@ -659,81 +1053,201 @@
     404,
     552
    ],
-   "w": 153.6,
-   "h": 211.01
+   "cutOff": false,
+   "w": 314.95,
+   "h": 430.33,
+   "ax": 157.48,
+   "ay": 427.93,
+   "factor": 0.8,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.64,
+     "hy": 0.48,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-thin-blue-fir-tall:ne",
+    "gen:tree-thin-blue-fir-tall:se",
+    "gen:tree-thin-blue-fir-tall:sw",
+    "gen:tree-thin-blue-fir-tall:nw"
+   ]
   },
   {
    "id": "newprop:thin-blue-fir-sparse",
+   "slug": "thin-blue-fir-sparse",
    "name": "Thin blue fir sparse",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-2da5b0af-4f56-437d-a4bd-6cbc70d25af0.png",
    "cell": "bottom left",
    "rect": [
     191,
-    661,
+    660,
     302,
-    553
+    554
    ],
-   "w": 153.6,
-   "h": 285.26
+   "cutOff": false,
+   "w": 235.43,
+   "h": 431.89,
+   "ax": 117.72,
+   "ay": 429.49,
+   "factor": 0.8,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.64,
+     "hy": 0.48,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-thin-blue-fir-sparse:ne",
+    "gen:tree-thin-blue-fir-sparse:se",
+    "gen:tree-thin-blue-fir-sparse:sw",
+    "gen:tree-thin-blue-fir-sparse:nw"
+   ]
   },
   {
    "id": "newprop:thin-blue-fir-small",
+   "slug": "thin-blue-fir-small",
    "name": "Thin blue fir small",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-2da5b0af-4f56-437d-a4bd-6cbc70d25af0.png",
    "cell": "bottom right",
    "rect": [
-    760,
+    759,
     734,
-    353,
-    477
+    354,
+    478
    ],
-   "w": 153.6,
-   "h": 208.65
+   "cutOff": false,
+   "w": 275.97,
+   "h": 372.64,
+   "ax": 137.99,
+   "ay": 370.24,
+   "factor": 0.8,
+   "ref": "conifer",
+   "boxes": [
+    {
+     "hx": 0.64,
+     "hy": 0.48,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-thin-blue-fir-small:ne",
+    "gen:tree-thin-blue-fir-small:se",
+    "gen:tree-thin-blue-fir-small:sw",
+    "gen:tree-thin-blue-fir-small:nw"
+   ]
   },
   {
    "id": "newprop:red-maple-round",
+   "slug": "red-maple-round",
    "name": "Red maple round",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-2f8aa47f-ad29-44ac-8466-2b9bcfdf7d16.png",
    "cell": "top left",
    "rect": [
-    84,
+    83,
     13,
-    451,
+    453,
     618
    ],
-   "w": 192,
-   "h": 263.19
+   "cutOff": false,
+   "w": 286.06,
+   "h": 390.26,
+   "ax": 143.03,
+   "ay": 387.26,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-red-maple-round:ne",
+    "gen:tree-red-maple-round:se",
+    "gen:tree-red-maple-round:sw",
+    "gen:tree-red-maple-round:nw"
+   ]
   },
   {
    "id": "newprop:red-maple-big",
+   "slug": "red-maple-big",
    "name": "Red maple big",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-2f8aa47f-ad29-44ac-8466-2b9bcfdf7d16.png",
    "cell": "top right",
    "rect": [
     590,
-    60,
-    659,
-    561
+    59,
+    660,
+    562
    ],
-   "w": 192,
-   "h": 163.14
+   "cutOff": false,
+   "w": 416.78,
+   "h": 354.9,
+   "ax": 208.39,
+   "ay": 351.9,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-red-maple-big:ne",
+    "gen:tree-red-maple-big:se",
+    "gen:tree-red-maple-big:sw",
+    "gen:tree-red-maple-big:nw"
+   ]
   },
   {
    "id": "newprop:red-maple-tall",
+   "slug": "red-maple-tall",
    "name": "Red maple tall",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-2f8aa47f-ad29-44ac-8466-2b9bcfdf7d16.png",
@@ -741,33 +1255,81 @@
    "rect": [
     36,
     650,
-    603,
+    604,
     571
    ],
-   "w": 192,
-   "h": 181.37
+   "cutOff": false,
+   "w": 381.42,
+   "h": 360.58,
+   "ax": 190.71,
+   "ay": 357.58,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-red-maple-tall:ne",
+    "gen:tree-red-maple-tall:se",
+    "gen:tree-red-maple-tall:sw",
+    "gen:tree-red-maple-tall:nw"
+   ]
   },
   {
    "id": "newprop:red-maple-small",
+   "slug": "red-maple-small",
    "name": "Red maple small",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-2f8aa47f-ad29-44ac-8466-2b9bcfdf7d16.png",
    "cell": "bottom right",
    "rect": [
-    704,
-    740,
-    511,
-    489
+    703,
+    739,
+    512,
+    490
    ],
-   "w": 192,
-   "h": 183.62
+   "cutOff": false,
+   "w": 323.32,
+   "h": 309.43,
+   "ax": 161.66,
+   "ay": 306.43,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-red-maple-small:ne",
+    "gen:tree-red-maple-small:se",
+    "gen:tree-red-maple-small:sw",
+    "gen:tree-red-maple-small:nw"
+   ]
   },
   {
    "id": "newprop:ride-mower",
+   "slug": "ride-mower",
    "name": "Ride mower",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-30e1019a-7d55-433e-ba87-f88eb1b591ae.png",
@@ -775,16 +1337,20 @@
    "rect": [
     69,
     106,
-    505,
+    506,
     493
    ],
+   "cutOff": false,
    "w": 153.6,
-   "h": 149.59
+   "h": 149.65,
+   "cost": 800
   },
   {
    "id": "newprop:gang-mower",
+   "slug": "gang-mower",
    "name": "Gang mower",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-30e1019a-7d55-433e-ba87-f88eb1b591ae.png",
@@ -792,33 +1358,41 @@
    "rect": [
     641,
     148,
-    594,
+    595,
     449
    ],
+   "cutOff": false,
    "w": 153.6,
-   "h": 115.4
+   "h": 115.91,
+   "cost": 800
   },
   {
    "id": "newprop:spray-rig",
+   "slug": "spray-rig",
    "name": "Spray rig",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-30e1019a-7d55-433e-ba87-f88eb1b591ae.png",
    "cell": "bottom left",
    "rect": [
-    40,
-    704,
-    573,
-    457
+    38,
+    703,
+    575,
+    458
    ],
+   "cutOff": false,
    "w": 153.6,
-   "h": 121.9
+   "h": 122.35,
+   "cost": 800
   },
   {
    "id": "newprop:greens-mower",
+   "slug": "greens-mower",
    "name": "Greens mower",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-30e1019a-7d55-433e-ba87-f88eb1b591ae.png",
@@ -826,33 +1400,41 @@
    "rect": [
     659,
     663,
-    565,
+    566,
     498
    ],
+   "cutOff": false,
    "w": 153.6,
-   "h": 134.88
+   "h": 135.15,
+   "cost": 800
   },
   {
    "id": "newprop:shuttle-bus",
+   "slug": "shuttle-bus",
    "name": "Shuttle bus",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 3,
    "hy": 3,
    "sheet": "exec-3216fa1c-b738-4ab5-b02f-a87e541ea1f0.png",
    "cell": "top left",
    "rect": [
-    21,
+    20,
     133,
-    601,
-    473
+    603,
+    474
    ],
+   "cutOff": false,
    "w": 384,
-   "h": 300.75
+   "h": 301.85,
+   "cost": 800
   },
   {
    "id": "newprop:shuttle-bus-2",
+   "slug": "shuttle-bus-2",
    "name": "Shuttle bus 2",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 3,
    "hy": 3,
    "sheet": "exec-3216fa1c-b738-4ab5-b02f-a87e541ea1f0.png",
@@ -860,16 +1442,20 @@
    "rect": [
     639,
     133,
-    600,
+    601,
     497
    ],
+   "cutOff": false,
    "w": 384,
-   "h": 316.65
+   "h": 317.55,
+   "cost": 800
   },
   {
    "id": "newprop:taxi",
+   "slug": "taxi",
    "name": "Taxi",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 3,
    "hy": 3,
    "sheet": "exec-3216fa1c-b738-4ab5-b02f-a87e541ea1f0.png",
@@ -877,101 +1463,125 @@
    "rect": [
     24,
     819,
-    598,
+    599,
     332
    ],
+   "cutOff": false,
    "w": 384,
-   "h": 210.52
+   "h": 212.83,
+   "cost": 800
   },
   {
    "id": "newprop:taxi-2",
+   "slug": "taxi-2",
    "name": "Taxi 2",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 3,
    "hy": 3,
    "sheet": "exec-3216fa1c-b738-4ab5-b02f-a87e541ea1f0.png",
    "cell": "bottom right",
    "rect": [
-    641,
-    811,
-    590,
-    342
+    640,
+    810,
+    591,
+    343
    ],
+   "cutOff": false,
    "w": 384,
-   "h": 220.65
+   "h": 222.86,
+   "cost": 800
   },
   {
    "id": "newprop:golfer-swinging",
+   "slug": "golfer-swinging",
    "name": "Golfer swinging",
    "cat": "New: People",
+   "kind": "decor",
    "hx": 0.3,
    "hy": 0.3,
    "sheet": "exec-32d5be00-f00f-4804-a4a6-ab26d8c43344.png",
    "cell": "top left",
    "rect": [
-    116,
+    115,
     20,
-    351,
+    352,
     583
    ],
+   "cutOff": false,
    "w": 38.4,
-   "h": 64.19
+   "h": 63.6,
+   "cost": 50
   },
   {
    "id": "newprop:golfer-putting",
+   "slug": "golfer-putting",
    "name": "Golfer putting",
    "cat": "New: People",
+   "kind": "decor",
    "hx": 0.3,
    "hy": 0.3,
    "sheet": "exec-32d5be00-f00f-4804-a4a6-ab26d8c43344.png",
    "cell": "top right",
    "rect": [
     799,
-    39,
+    36,
     311,
-    564
+    567
    ],
+   "cutOff": false,
    "w": 38.4,
-   "h": 70.84
+   "h": 70.01,
+   "cost": 50
   },
   {
    "id": "newprop:caddie-with-bag",
+   "slug": "caddie-with-bag",
    "name": "Caddie with bag",
    "cat": "New: People",
+   "kind": "decor",
    "hx": 0.3,
    "hy": 0.3,
    "sheet": "exec-32d5be00-f00f-4804-a4a6-ab26d8c43344.png",
    "cell": "bottom left",
    "rect": [
-    169,
-    659,
-    330,
-    552
+    168,
+    657,
+    331,
+    554
    ],
+   "cutOff": false,
    "w": 38.4,
-   "h": 64.91
+   "h": 64.27,
+   "cost": 50
   },
   {
    "id": "newprop:marshal-with-sign",
+   "slug": "marshal-with-sign",
    "name": "Marshal with sign",
    "cat": "New: People",
+   "kind": "decor",
    "hx": 0.3,
    "hy": 0.3,
    "sheet": "exec-32d5be00-f00f-4804-a4a6-ab26d8c43344.png",
    "cell": "bottom right",
    "rect": [
     810,
-    630,
-    279,
-    594
+    629,
+    280,
+    595
    ],
+   "cutOff": false,
    "w": 38.4,
-   "h": 82.87
+   "h": 81.6,
+   "cost": 50
   },
   {
    "id": "newprop:golfer-swinging-2",
+   "slug": "golfer-swinging-2",
    "name": "Golfer swinging 2",
    "cat": "New: People",
+   "kind": "decor",
    "hx": 0.3,
    "hy": 0.3,
    "sheet": "exec-35e5631b-aa08-4e1c-9395-d0861c8a79a2.png",
@@ -979,50 +1589,62 @@
    "rect": [
     116,
     26,
-    378,
+    379,
     610
    ],
+   "cutOff": false,
    "w": 38.4,
-   "h": 62.31
+   "h": 61.8,
+   "cost": 50
   },
   {
    "id": "newprop:golfer-putting-2",
+   "slug": "golfer-putting-2",
    "name": "Golfer putting 2",
    "cat": "New: People",
+   "kind": "decor",
    "hx": 0.3,
    "hy": 0.3,
    "sheet": "exec-35e5631b-aa08-4e1c-9395-d0861c8a79a2.png",
    "cell": "top right",
    "rect": [
-    796,
-    40,
-    319,
-    589
+    795,
+    39,
+    321,
+    590
    ],
+   "cutOff": false,
    "w": 38.4,
-   "h": 71.4
+   "h": 70.58,
+   "cost": 50
   },
   {
    "id": "newprop:caddie-with-bag-2",
+   "slug": "caddie-with-bag-2",
    "name": "Caddie with bag 2",
    "cat": "New: People",
+   "kind": "decor",
    "hx": 0.3,
    "hy": 0.3,
    "sheet": "exec-35e5631b-aa08-4e1c-9395-d0861c8a79a2.png",
    "cell": "bottom left",
    "rect": [
     169,
-    644,
+    643,
     376,
-    577
+    578
    ],
+   "cutOff": false,
    "w": 38.4,
-   "h": 59.48
+   "h": 59.03,
+   "cost": 50
   },
   {
    "id": "newprop:marshal-with-sign-2",
+   "slug": "marshal-with-sign-2",
    "name": "Marshal with sign 2",
    "cat": "New: People",
+   "kind": "decor",
    "hx": 0.3,
    "hy": 0.3,
    "sheet": "exec-35e5631b-aa08-4e1c-9395-d0861c8a79a2.png",
@@ -1031,49 +1653,61 @@
     797,
     634,
     328,
-    604
+    605
    ],
+   "cutOff": false,
    "w": 38.4,
-   "h": 71.64
+   "h": 70.83,
+   "cost": 50
   },
   {
    "id": "newprop:starter-hut",
+   "slug": "starter-hut",
    "name": "Starter hut",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 3,
    "hy": 3,
    "sheet": "exec-367d7344-f858-412a-972f-9e8e10d854cb.png",
    "cell": "top left",
    "rect": [
-    68,
-    48,
-    546,
-    592
+    67,
+    47,
+    547,
+    593
    ],
+   "cutOff": false,
    "w": 384,
-   "h": 416.77
+   "h": 416.29,
+   "cost": 500
   },
   {
    "id": "newprop:clubhouse-cottage",
+   "slug": "clubhouse-cottage",
    "name": "Clubhouse cottage",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 3,
    "hy": 3,
    "sheet": "exec-367d7344-f858-412a-972f-9e8e10d854cb.png",
    "cell": "top right",
    "rect": [
-    615,
+    614,
     124,
-    636,
+    638,
     509
    ],
+   "cutOff": false,
    "w": 384,
-   "h": 305.37
+   "h": 306.36,
+   "cost": 500
   },
   {
    "id": "newprop:marquee",
+   "slug": "marquee",
    "name": "Marquee",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 3,
    "hy": 3,
    "sheet": "exec-367d7344-f858-412a-972f-9e8e10d854cb.png",
@@ -1084,47 +1718,59 @@
     604,
     563
    ],
+   "cutOff": false,
    "w": 384,
-   "h": 357.58
+   "h": 357.93,
+   "cost": 500
   },
   {
    "id": "newprop:stage",
+   "slug": "stage",
    "name": "Stage",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 3,
    "hy": 3,
    "sheet": "exec-367d7344-f858-412a-972f-9e8e10d854cb.png",
    "cell": "bottom right",
    "rect": [
-    674,
-    658,
-    560,
-    554
+    673,
+    657,
+    561,
+    556
    ],
+   "cutOff": false,
    "w": 384,
-   "h": 380.53
+   "h": 380.58,
+   "cost": 500
   },
   {
    "id": "newprop:wooden-footbridge",
+   "slug": "wooden-footbridge",
    "name": "Wooden footbridge",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
    "cell": "top left",
    "rect": [
     55,
-    112,
-    541,
-    440
+    111,
+    542,
+    441
    ],
+   "cutOff": false,
    "w": 128,
-   "h": 103.79
+   "h": 104.15,
+   "cost": 50
   },
   {
    "id": "newprop:park-bench",
+   "slug": "park-bench",
    "name": "Park bench",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
@@ -1132,16 +1778,20 @@
    "rect": [
     665,
     96,
-    561,
-    493
+    562,
+    494
    ],
+   "cutOff": false,
    "w": 128,
-   "h": 112.29
+   "h": 112.51,
+   "cost": 50
   },
   {
    "id": "newprop:course-map-stand",
+   "slug": "course-map-stand",
    "name": "Course map stand",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
@@ -1152,30 +1802,38 @@
     507,
     536
    ],
+   "cutOff": false,
    "w": 128,
-   "h": 135.44
+   "h": 135.32,
+   "cost": 50
   },
   {
    "id": "newprop:ride-mower-2",
+   "slug": "ride-mower-2",
    "name": "Ride mower 2",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
    "cell": "bottom right",
    "rect": [
-    631,
-    707,
-    580,
-    467
+    630,
+    706,
+    581,
+    469
    ],
+   "cutOff": false,
    "w": 128,
-   "h": 102.98
+   "h": 103.33,
+   "cost": 50
   },
   {
    "id": "newprop:course-map-board",
+   "slug": "course-map-board",
    "name": "Course map board",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
@@ -1184,100 +1842,164 @@
     49,
     18,
     520,
-    624
+    629
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 310
+   "h": 309.66,
+   "cost": 500
   },
   {
    "id": "newprop:pro-shop-kiosk",
+   "slug": "pro-shop-kiosk",
    "name": "Pro shop kiosk",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
    "cell": "top right",
    "rect": [
     650,
-    17,
-    589,
-    643
+    16,
+    590,
+    645
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 280.19
+   "h": 279.86,
+   "cost": 500
   },
   {
    "id": "newprop:portable-toilets",
+   "slug": "portable-toilets",
    "name": "Portable toilets",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
    "cell": "bottom left",
    "rect": [
     28,
-    642,
-    613,
-    591
+    639,
+    614,
+    595
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 247.97
+   "h": 248.08,
+   "cost": 500
   },
   {
    "id": "newprop:wash-station",
+   "slug": "wash-station",
    "name": "Wash station",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
    "cell": "bottom right",
    "rect": [
-    657,
-    703,
-    574,
-    538
+    656,
+    702,
+    575,
+    539
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 239.75
+   "h": 239.97,
+   "cost": 500
   },
   {
    "id": "newprop:orange-oak",
+   "slug": "orange-oak",
    "name": "Orange oak",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-41893bfe-08de-4c0a-b34b-5b5b14d33a2a.png",
    "cell": "top left",
    "rect": [
-    80,
+    79,
     31,
-    458,
-    593
+    459,
+    594
    ],
-   "w": 192,
-   "h": 249.47
+   "cutOff": false,
+   "w": 322.05,
+   "h": 416.77,
+   "ax": 161.02,
+   "ay": 413.77,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-oak:ne",
+    "gen:tree-orange-oak:se",
+    "gen:tree-orange-oak:sw",
+    "gen:tree-orange-oak:nw"
+   ]
   },
   {
    "id": "newprop:orange-oak-wide",
+   "slug": "orange-oak-wide",
    "name": "Orange oak wide",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-41893bfe-08de-4c0a-b34b-5b5b14d33a2a.png",
    "cell": "top right",
    "rect": [
     569,
-    88,
+    87,
     685,
-    531
+    532
    ],
-   "w": 192,
-   "h": 148.39
+   "cutOff": false,
+   "w": 480.62,
+   "h": 373.27,
+   "ax": 240.31,
+   "ay": 370.27,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-oak-wide:ne",
+    "gen:tree-orange-oak-wide:se",
+    "gen:tree-orange-oak-wide:sw",
+    "gen:tree-orange-oak-wide:nw"
+   ]
   },
   {
    "id": "newprop:orange-oak-full",
+   "slug": "orange-oak-full",
    "name": "Orange oak full",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-41893bfe-08de-4c0a-b34b-5b5b14d33a2a.png",
@@ -1288,30 +2010,78 @@
     580,
     583
    ],
-   "w": 192,
-   "h": 193.01
+   "cutOff": false,
+   "w": 406.95,
+   "h": 409.05,
+   "ax": 203.47,
+   "ay": 406.05,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-oak-full:ne",
+    "gen:tree-orange-oak-full:se",
+    "gen:tree-orange-oak-full:sw",
+    "gen:tree-orange-oak-full:nw"
+   ]
   },
   {
    "id": "newprop:orange-oak-small",
+   "slug": "orange-oak-small",
    "name": "Orange oak small",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-41893bfe-08de-4c0a-b34b-5b5b14d33a2a.png",
    "cell": "bottom right",
    "rect": [
-    733,
-    726,
-    434,
-    480
+    732,
+    725,
+    435,
+    482
    ],
-   "w": 192,
-   "h": 213.13
+   "cutOff": false,
+   "w": 305.21,
+   "h": 338.19,
+   "ax": 152.6,
+   "ay": 335.19,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-oak-small:ne",
+    "gen:tree-orange-oak-small:se",
+    "gen:tree-orange-oak-small:sw",
+    "gen:tree-orange-oak-small:nw"
+   ]
   },
   {
    "id": "newprop:shack-map-board",
+   "slug": "shack-map-board",
    "name": "Shack map board",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
@@ -1322,13 +2092,17 @@
     541,
     576
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 272.81
+   "h": 272.56,
+   "cost": 500
   },
   {
    "id": "newprop:tool-stall",
+   "slug": "tool-stall",
    "name": "Tool stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
@@ -1336,16 +2110,20 @@
    "rect": [
     637,
     31,
-    604,
+    605,
     601
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 254.28
+   "h": 254.31,
+   "cost": 500
   },
   {
    "id": "newprop:toilet-booth",
+   "slug": "toilet-booth",
    "name": "Toilet booth",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
@@ -1356,13 +2134,17 @@
     561,
     576
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 262.94
+   "h": 262.84,
+   "cost": 500
   },
   {
    "id": "newprop:water-tank-stall",
+   "slug": "water-tank-stall",
    "name": "Water tank stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
@@ -1373,64 +2155,80 @@
     507,
     516
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 260.62
+   "h": 260.54,
+   "cost": 500
   },
   {
    "id": "newprop:tarp-seating",
+   "slug": "tarp-seating",
    "name": "Tarp seating",
    "cat": "New: Seating",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
    "cell": "top left",
    "rect": [
-    34,
+    32,
     1,
-    651,
-    645
+    653,
+    646
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 189.92
+   "h": 189.94,
+   "cost": 50
   },
   {
    "id": "newprop:umbrella-tables",
+   "slug": "umbrella-tables",
    "name": "Umbrella tables",
    "cat": "New: Seating",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
    "cell": "top right",
    "rect": [
     716,
-    81,
+    80,
     525,
-    584
+    585
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 214.28
+   "h": 213.94,
+   "cost": 50
   },
   {
    "id": "newprop:round-table-set",
+   "slug": "round-table-set",
    "name": "Round table set",
    "cat": "New: Seating",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
    "cell": "bottom left",
    "rect": [
-    84,
+    83,
     649,
-    513,
+    514,
     568
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 212.49
+   "h": 212.17,
+   "cost": 50
   },
   {
    "id": "newprop:picnic-table",
+   "slug": "picnic-table",
    "name": "Picnic table",
    "cat": "New: Seating",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
@@ -1441,64 +2239,140 @@
     590,
     423
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 136.91
+   "h": 137.65,
+   "cost": 50
   },
   {
    "id": "newprop:orange-maple",
+   "slug": "orange-maple",
    "name": "Orange maple",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-4dc9e75d-5f96-4e95-92bf-0ddd5c3c8d8a.png",
    "cell": "top left",
    "rect": [
-    16,
+    15,
     13,
-    604,
+    605,
     587
    ],
-   "w": 192,
-   "h": 186.21
+   "cutOff": false,
+   "w": 389.62,
+   "h": 378.02,
+   "ax": 194.81,
+   "ay": 375.02,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-maple:ne",
+    "gen:tree-orange-maple:se",
+    "gen:tree-orange-maple:sw",
+    "gen:tree-orange-maple:nw"
+   ]
   },
   {
    "id": "newprop:orange-maple-wide",
+   "slug": "orange-maple-wide",
    "name": "Orange maple wide",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-4dc9e75d-5f96-4e95-92bf-0ddd5c3c8d8a.png",
    "cell": "top right",
    "rect": [
     646,
-    24,
-    597,
-    576
+    23,
+    598,
+    577
    ],
-   "w": 192,
-   "h": 185.17
+   "cutOff": false,
+   "w": 385.11,
+   "h": 371.58,
+   "ax": 192.55,
+   "ay": 368.58,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-maple-wide:ne",
+    "gen:tree-orange-maple-wide:se",
+    "gen:tree-orange-maple-wide:sw",
+    "gen:tree-orange-maple-wide:nw"
+   ]
   },
   {
    "id": "newprop:orange-maple-bare",
+   "slug": "orange-maple-bare",
    "name": "Orange maple bare",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-4dc9e75d-5f96-4e95-92bf-0ddd5c3c8d8a.png",
    "cell": "bottom left",
    "rect": [
-    16,
+    15,
     648,
-    598,
-    571
+    600,
+    572
    ],
-   "w": 192,
-   "h": 182.92
+   "cutOff": false,
+   "w": 386.4,
+   "h": 368.36,
+   "ax": 193.2,
+   "ay": 365.36,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-maple-bare:ne",
+    "gen:tree-orange-maple-bare:se",
+    "gen:tree-orange-maple-bare:sw",
+    "gen:tree-orange-maple-bare:nw"
+   ]
   },
   {
    "id": "newprop:orange-maple-full",
+   "slug": "orange-maple-full",
    "name": "Orange maple full",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-4dc9e75d-5f96-4e95-92bf-0ddd5c3c8d8a.png",
@@ -1509,153 +2383,205 @@
     607,
     606
    ],
-   "w": 192,
-   "h": 191.68
+   "cutOff": false,
+   "w": 390.9,
+   "h": 390.26,
+   "ax": 195.45,
+   "ay": 387.26,
+   "factor": 1,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-maple-full:ne",
+    "gen:tree-orange-maple-full:se",
+    "gen:tree-orange-maple-full:sw",
+    "gen:tree-orange-maple-full:nw"
+   ]
   },
   {
    "id": "newprop:golf-cart",
+   "slug": "golf-cart",
    "name": "Golf cart",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-58530340-09db-435d-afdf-59b51a4eac2c.png",
    "cell": "top left",
    "rect": [
-    39,
+    38,
     85,
-    542,
+    543,
     548
    ],
+   "cutOff": false,
    "w": 128,
-   "h": 129.2
+   "h": 129.18,
+   "cost": 50
   },
   {
    "id": "newprop:golf-cart-2",
+   "slug": "golf-cart-2",
    "name": "Golf cart 2",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-58530340-09db-435d-afdf-59b51a4eac2c.png",
    "cell": "top right",
    "rect": [
     690,
-    112,
+    111,
     530,
-    531
+    533
    ],
+   "cutOff": false,
    "w": 128,
-   "h": 128.74
+   "h": 128.72,
+   "cost": 50
   },
   {
    "id": "newprop:flag-pin",
+   "slug": "flag-pin",
    "name": "Flag pin",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-58530340-09db-435d-afdf-59b51a4eac2c.png",
    "cell": "bottom left",
    "rect": [
     253,
-    715,
+    714,
     211,
-    427
+    429
    ],
+   "cutOff": false,
    "w": 128,
-   "h": 265.46
+   "h": 260.25,
+   "cost": 50
   },
   {
    "id": "newprop:golf-bag-trolley",
+   "slug": "golf-bag-trolley",
    "name": "Golf bag trolley",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-58530340-09db-435d-afdf-59b51a4eac2c.png",
    "cell": "bottom right",
    "rect": [
-    769,
+    768,
     687,
-    361,
+    362,
     480
    ],
+   "cutOff": false,
    "w": 128,
-   "h": 170.67
+   "h": 169.72,
+   "cost": 50
   },
   {
    "id": "newprop:shirt-stall",
+   "slug": "shirt-stall",
    "name": "Shirt stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    30,
+    79,
+    602,
+    550
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 233.98
+   "h": 233.89,
+   "cost": 500
   },
   {
    "id": "newprop:cap-stall",
+   "slug": "cap-stall",
    "name": "Cap stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    664,
+    44,
+    569,
+    636
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 264.21
+   "h": 286.14,
+   "cost": 500
   },
   {
    "id": "newprop:tarp-counter",
+   "slug": "tarp-counter",
    "name": "Tarp counter",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    33,
+    640,
+    619,
+    549
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 234.74
+   "h": 227.05,
+   "cost": 500
   },
   {
    "id": "newprop:club-badge-stall",
+   "slug": "club-badge-stall",
    "name": "Club badge stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    688,
+    641,
+    555,
+    552
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 235.08
+   "h": 254.62,
+   "cost": 500
   },
   {
    "id": "newprop:rope-barrier",
+   "slug": "rope-barrier",
    "name": "Rope barrier",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.8,
    "hy": 0.8,
    "sheet": "exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
@@ -1663,156 +2589,208 @@
    "rect": [
     40,
     219,
-    551,
-    218
+    552,
+    219
    ],
+   "cutOff": false,
    "w": 102.4,
-   "h": 39.72
+   "h": 40.63,
+   "cost": 50
   },
   {
    "id": "newprop:rope-barrier-corner",
+   "slug": "rope-barrier-corner",
    "name": "Rope barrier corner",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.8,
    "hy": 0.8,
    "sheet": "exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
    "cell": "top right",
    "rect": [
-    675,
+    674,
     157,
-    536,
+    538,
     352
    ],
+   "cutOff": false,
    "w": 102.4,
-   "h": 66.46
+   "h": 67,
+   "cost": 50
   },
   {
    "id": "newprop:rope-walkway",
+   "slug": "rope-walkway",
    "name": "Rope walkway",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.8,
    "hy": 0.8,
    "sheet": "exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
    "cell": "bottom left",
    "rect": [
-    25,
-    753,
-    661,
-    383
+    24,
+    752,
+    662,
+    385
    ],
+   "cutOff": false,
    "w": 102.4,
-   "h": 59.03
+   "h": 59.55,
+   "cost": 50
   },
   {
    "id": "newprop:marshal",
+   "slug": "marshal",
    "name": "Marshal",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.8,
    "hy": 0.8,
    "sheet": "exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
    "cell": "bottom right",
    "rect": [
-    852,
+    851,
     616,
-    238,
-    578
+    239,
+    579
    ],
+   "cutOff": false,
    "w": 102.4,
-   "h": 253.12
+   "h": 248.07,
+   "cost": 50
   },
   {
    "id": "newprop:shanty-hut",
+   "slug": "shanty-hut",
    "name": "Shanty hut",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    768,
-    512
+    71,
+    15,
+    793,
+    510
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 227.65
+   "h": 205.8,
+   "cost": 500
   },
   {
    "id": "newprop:gate-arch",
+   "slug": "gate-arch",
    "name": "Gate arch",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
    "cell": "top right",
    "rect": [
-    768,
-    0,
-    768,
-    512
+    888,
+    35,
+    608,
+    504
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 209.06
+   "h": 265.26,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-stall",
+   "slug": "shanty-stall",
    "name": "Shanty stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    512,
-    768,
-    512
+    99,
+    515,
+    739,
+    484
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 232.42
+   "h": 209.58,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-counter",
+   "slug": "shanty-counter",
    "name": "Shanty counter",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
    "cell": "bottom right",
    "rect": [
-    768,
-    512,
-    768,
-    512
+    932,
+    538,
+    535,
+    466
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 220.88
+   "h": 278.73,
+   "cost": 500
   },
   {
    "id": "newprop:small-orange-tree",
+   "slug": "small-orange-tree",
    "name": "Small orange tree",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-640d3fb0-f055-49f5-8ed9-5ddd0a2a537e.png",
    "cell": "top left",
    "rect": [
-    113,
-    93,
-    453,
-    439
+    112,
+    92,
+    454,
+    441
    ],
-   "w": 128,
-   "h": 124.27
+   "cutOff": false,
+   "w": 261.71,
+   "h": 254.21,
+   "ax": 130.85,
+   "ay": 252.21,
+   "factor": 0.67,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.53,
+     "hy": 0.4,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-orange-tree:ne",
+    "gen:tree-small-orange-tree:se",
+    "gen:tree-small-orange-tree:sw",
+    "gen:tree-small-orange-tree:nw"
+   ]
   },
   {
    "id": "newprop:small-orange-tree-2",
+   "slug": "small-orange-tree-2",
    "name": "Small orange tree 2",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-640d3fb0-f055-49f5-8ed9-5ddd0a2a537e.png",
@@ -1823,119 +2801,203 @@
     443,
     428
    ],
-   "w": 128,
-   "h": 123.59
+   "cutOff": false,
+   "w": 255.36,
+   "h": 246.72,
+   "ax": 127.68,
+   "ay": 244.72,
+   "factor": 0.67,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.53,
+     "hy": 0.4,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-orange-tree-2:ne",
+    "gen:tree-small-orange-tree-2:se",
+    "gen:tree-small-orange-tree-2:sw",
+    "gen:tree-small-orange-tree-2:nw"
+   ]
   },
   {
    "id": "newprop:small-orange-tree-bare",
+   "slug": "small-orange-tree-bare",
    "name": "Small orange tree bare",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-640d3fb0-f055-49f5-8ed9-5ddd0a2a537e.png",
    "cell": "bottom left",
    "rect": [
-    95,
-    669,
-    500,
-    467
+    94,
+    667,
+    502,
+    469
    ],
-   "w": 128,
-   "h": 119.45
+   "cutOff": false,
+   "w": 289.38,
+   "h": 270.35,
+   "ax": 144.69,
+   "ay": 268.35,
+   "factor": 0.67,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.53,
+     "hy": 0.4,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-orange-tree-bare:ne",
+    "gen:tree-small-orange-tree-bare:se",
+    "gen:tree-small-orange-tree-bare:sw",
+    "gen:tree-small-orange-tree-bare:nw"
+   ]
   },
   {
    "id": "newprop:small-orange-tree-full",
+   "slug": "small-orange-tree-full",
    "name": "Small orange tree full",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-640d3fb0-f055-49f5-8ed9-5ddd0a2a537e.png",
    "cell": "bottom right",
    "rect": [
-    677,
-    668,
-    495,
-    481
+    675,
+    667,
+    498,
+    482
    ],
-   "w": 128,
-   "h": 123.82
+   "cutOff": false,
+   "w": 287.07,
+   "h": 277.85,
+   "ax": 143.53,
+   "ay": 275.85,
+   "factor": 0.67,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.53,
+     "hy": 0.4,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-orange-tree-full:ne",
+    "gen:tree-small-orange-tree-full:se",
+    "gen:tree-small-orange-tree-full:sw",
+    "gen:tree-small-orange-tree-full:nw"
+   ]
   },
   {
    "id": "newprop:shanty-range-bay",
+   "slug": "shanty-range-bay",
    "name": "Shanty range bay",
    "cat": "New: Range",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    13,
+    26,
+    668,
+    568
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 313.18
+   "h": 272.1,
+   "cost": 1500
   },
   {
    "id": "newprop:practice-net",
+   "slug": "practice-net",
    "name": "Practice net",
    "cat": "New: Range",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    684,
+    18,
+    566,
+    602
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 307.08
+   "h": 340.35,
+   "cost": 1500
   },
   {
    "id": "newprop:equipment-stall",
+   "slug": "equipment-stall",
    "name": "Equipment stall",
    "cat": "New: Range",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    23,
+    582,
+    623,
+    636
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 313.07
+   "h": 326.68,
+   "cost": 1500
   },
   {
    "id": "newprop:ball-bucket-stand",
+   "slug": "ball-bucket-stand",
    "name": "Ball bucket stand",
    "cat": "New: Range",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    768,
+    626,
+    408,
+    579
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 335.27
+   "h": 454.12,
+   "cost": 1500
   },
   {
    "id": "newprop:roofed-cart",
+   "slug": "roofed-cart",
    "name": "Roofed cart",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.3,
    "hy": 1.3,
    "sheet": "exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
@@ -1946,13 +3008,17 @@
     561,
     530
    ],
+   "cutOff": false,
    "w": 166.4,
-   "h": 157.07
+   "h": 157.2,
+   "cost": 800
   },
   {
    "id": "newprop:utility-cart",
+   "slug": "utility-cart",
    "name": "Utility cart",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.3,
    "hy": 1.3,
    "sheet": "exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
@@ -1960,84 +3026,104 @@
    "rect": [
     639,
     62,
-    610,
+    611,
     575
    ],
+   "cutOff": false,
    "w": 166.4,
-   "h": 156.47
+   "h": 156.6,
+   "cost": 800
   },
   {
    "id": "newprop:supply-cart",
+   "slug": "supply-cart",
    "name": "Supply cart",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.3,
    "hy": 1.3,
    "sheet": "exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
    "cell": "bottom left",
    "rect": [
-    23,
+    22,
     715,
-    630,
+    632,
     488
    ],
+   "cutOff": false,
    "w": 166.4,
-   "h": 128
+   "h": 128.49,
+   "cost": 800
   },
   {
    "id": "newprop:wheelchair-cart",
+   "slug": "wheelchair-cart",
    "name": "Wheelchair cart",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.3,
    "hy": 1.3,
    "sheet": "exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
    "cell": "bottom right",
    "rect": [
     649,
-    640,
-    600,
-    549
+    639,
+    601,
+    551
    ],
+   "cutOff": false,
    "w": 166.4,
-   "h": 152.37
+   "h": 152.56,
+   "cost": 800
   },
   {
    "id": "newprop:garden-shed",
+   "slug": "garden-shed",
    "name": "Garden shed",
    "cat": "New: Stalls",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
    "cell": "top left",
    "rect": [
-    17,
     15,
-    606,
-    600
+    14,
+    608,
+    601
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 253.01
+   "h": 253.05,
+   "cost": 500
   },
   {
    "id": "newprop:club-rack-stall",
+   "slug": "club-rack-stall",
    "name": "Club rack stall",
    "cat": "New: Stalls",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
    "cell": "top right",
    "rect": [
     667,
-    47,
-    569,
-    617
+    46,
+    570,
+    618
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 277.86
+   "h": 277.56,
+   "cost": 500
   },
   {
    "id": "newprop:club-display",
+   "slug": "club-display",
    "name": "Club display",
    "cat": "New: Stalls",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
@@ -2048,13 +3134,17 @@
     562,
     569
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 259.23
+   "h": 259.19,
+   "cost": 500
   },
   {
    "id": "newprop:bag-stand-stall",
+   "slug": "bag-stand-stall",
    "name": "Bag stand stall",
    "cat": "New: Stalls",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
@@ -2062,160 +3152,188 @@
    "rect": [
     662,
     668,
-    573,
-    567
+    575,
+    569
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 253.29
+   "h": 253.33,
+   "cost": 500
   },
   {
    "id": "newprop:clubhouse-manor",
+   "slug": "clubhouse-manor",
    "name": "Clubhouse manor",
    "cat": "New: Buildings",
+   "kind": "decor",
    "hx": 6,
    "hy": 6,
    "sheet": "exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
    "cell": "top left",
    "rect": [
+    12,
     0,
-    0,
-    768,
-    512
+    877,
+    582
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 768,
-   "h": 522.89
+   "h": 509.66,
+   "cost": 1500
   },
   {
    "id": "newprop:gate-pillars",
+   "slug": "gate-pillars",
    "name": "Gate pillars",
    "cat": "New: Buildings",
+   "kind": "decor",
    "hx": 6,
    "hy": 6,
    "sheet": "exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
    "cell": "top right",
    "rect": [
-    768,
-    0,
-    768,
-    512
+    886,
+    86,
+    639,
+    469
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 768,
-   "h": 430.41
+   "h": 563.68,
+   "cost": 1500
   },
   {
    "id": "newprop:pavilion",
+   "slug": "pavilion",
    "name": "Pavilion",
    "cat": "New: Buildings",
+   "kind": "decor",
    "hx": 6,
    "hy": 6,
    "sheet": "exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    512,
-    768,
-    512
+    29,
+    536,
+    814,
+    480
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 768,
-   "h": 522.45
+   "h": 452.87,
+   "cost": 1500
   },
   {
    "id": "newprop:gazebo",
+   "slug": "gazebo",
    "name": "Gazebo",
    "cat": "New: Buildings",
+   "kind": "decor",
    "hx": 6,
    "hy": 6,
    "sheet": "exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
    "cell": "bottom right",
    "rect": [
-    768,
-    512,
-    768,
-    512
+    858,
+    475,
+    633,
+    538
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 768,
-   "h": 510.29
+   "h": 652.74,
+   "cost": 1500
   },
   {
    "id": "newprop:range-bay",
+   "slug": "range-bay",
    "name": "Range bay",
    "cat": "New: Range",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    29,
+    32,
+    642,
+    593
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 318.38
+   "h": 295.58,
+   "cost": 1500
   },
   {
    "id": "newprop:practice-cage",
+   "slug": "practice-cage",
    "name": "Practice cage",
    "cat": "New: Range",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    675,
+    61,
+    579,
+    573
    ],
-   "cut": "cell",
+   "cutOff": true,
    "w": 320,
-   "h": 286.83
+   "h": 316.68,
+   "cost": 1500
   },
   {
    "id": "newprop:tent-bay",
+   "slug": "tent-bay",
    "name": "Tent bay",
    "cat": "New: Range",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    36,
+    599,
+    656,
+    621
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 321.09
+   "h": 302.93,
+   "cost": 1500
   },
   {
    "id": "newprop:ball-dispenser",
+   "slug": "ball-dispenser",
    "name": "Ball dispenser",
    "cat": "New: Range",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    781,
+    655,
+    376,
+    559
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 335.21
+   "h": 475.74,
+   "cost": 1500
   },
   {
    "id": "newprop:snack-shack",
+   "slug": "snack-shack",
    "name": "Snack shack",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 1.8,
    "hy": 1.8,
    "sheet": "exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
@@ -2224,15 +3342,19 @@
     48,
     29,
     600,
-    613
+    617
    ],
+   "cutOff": false,
    "w": 230.4,
-   "h": 237.02
+   "h": 236.93,
+   "cost": 500
   },
   {
    "id": "newprop:drinks-cart",
+   "slug": "drinks-cart",
    "name": "Drinks cart",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 1.8,
    "hy": 1.8,
    "sheet": "exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
@@ -2243,170 +3365,266 @@
     465,
     614
    ],
+   "cutOff": false,
    "w": 230.4,
-   "h": 305.52
+   "h": 304.23,
+   "cost": 500
   },
   {
    "id": "newprop:snack-stall",
+   "slug": "snack-stall",
    "name": "Snack stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 1.8,
    "hy": 1.8,
    "sheet": "exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
    "cell": "bottom left",
    "rect": [
     57,
-    642,
+    638,
     599,
-    578
+    582
    ],
+   "cutOff": false,
    "w": 230.4,
-   "h": 223.77
+   "h": 223.86,
+   "cost": 500
   },
   {
    "id": "newprop:snack-trolley",
+   "slug": "snack-trolley",
    "name": "Snack trolley",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 1.8,
    "hy": 1.8,
    "sheet": "exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
    "cell": "bottom right",
    "rect": [
-    740,
-    657,
-    488,
-    565
+    739,
+    656,
+    489,
+    566
    ],
+   "cutOff": false,
    "w": 230.4,
-   "h": 267.28
+   "h": 266.68,
+   "cost": 500
   },
   {
    "id": "newprop:grandstand-small",
+   "slug": "grandstand-small",
    "name": "Grandstand small",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 5,
    "hy": 5,
    "sheet": "exec-73782e1d-bd5a-42c4-bbbc-13906dffd1ad.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    20,
+    7,
+    644,
+    580
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 640,
-   "h": 607.1
+   "h": 576.4,
+   "cost": 500
   },
   {
    "id": "newprop:covered-grandstand",
+   "slug": "covered-grandstand",
    "name": "Covered grandstand",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 5,
    "hy": 5,
    "sheet": "exec-73782e1d-bd5a-42c4-bbbc-13906dffd1ad.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    674,
+    12,
+    577,
+    619
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 640,
-   "h": 630.71
+   "h": 686.59,
+   "cost": 500
   },
   {
    "id": "newprop:grandstand-wide",
+   "slug": "grandstand-wide",
    "name": "Grandstand wide",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 5,
    "hy": 5,
    "sheet": "exec-73782e1d-bd5a-42c4-bbbc-13906dffd1ad.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    7,
+    621,
+    690,
+    572
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 640,
-   "h": 583.9
+   "h": 530.55,
+   "cost": 500
   },
   {
    "id": "newprop:tv-tower",
+   "slug": "tv-tower",
    "name": "TV tower",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 5,
    "hy": 5,
    "sheet": "exec-73782e1d-bd5a-42c4-bbbc-13906dffd1ad.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    791,
+    593,
+    461,
+    641
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 640,
-   "h": 621.45
+   "h": 889.89,
+   "cost": 500
   },
   {
    "id": "newprop:bare-oak",
+   "slug": "bare-oak",
    "name": "Bare oak",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-804bdfb3-a402-4be0-9e3a-6c5aa4a399a4.png",
    "cell": "top left",
    "rect": [
     6,
-    8,
+    7,
     623,
-    610
+    611
    ],
-   "w": 192,
-   "h": 188.25
+   "cutOff": false,
+   "w": 421.51,
+   "h": 413.39,
+   "ax": 210.75,
+   "ay": 410.39,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-bare-oak:ne",
+    "gen:tree-bare-oak:se",
+    "gen:tree-bare-oak:sw",
+    "gen:tree-bare-oak:nw"
+   ]
   },
   {
    "id": "newprop:bare-oak-wide",
+   "slug": "bare-oak-wide",
    "name": "Bare oak wide",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-804bdfb3-a402-4be0-9e3a-6c5aa4a399a4.png",
    "cell": "top right",
    "rect": [
-    643,
-    13,
-    607,
-    610
+    640,
+    12,
+    610,
+    611
    ],
-   "w": 192,
-   "h": 192.32
+   "cutOff": false,
+   "w": 412.71,
+   "h": 413.39,
+   "ax": 206.35,
+   "ay": 410.39,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-bare-oak-wide:ne",
+    "gen:tree-bare-oak-wide:se",
+    "gen:tree-bare-oak-wide:sw",
+    "gen:tree-bare-oak-wide:nw"
+   ]
   },
   {
    "id": "newprop:bare-oak-tall",
+   "slug": "bare-oak-tall",
    "name": "Bare oak tall",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-804bdfb3-a402-4be0-9e3a-6c5aa4a399a4.png",
    "cell": "bottom left",
    "rect": [
     5,
-    628,
+    627,
     617,
-    615
+    616
    ],
-   "w": 192,
-   "h": 191.68
+   "cutOff": false,
+   "w": 417.45,
+   "h": 416.77,
+   "ax": 208.72,
+   "ay": 413.77,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-bare-oak-tall:ne",
+    "gen:tree-bare-oak-tall:se",
+    "gen:tree-bare-oak-tall:sw",
+    "gen:tree-bare-oak-tall:nw"
+   ]
   },
   {
    "id": "newprop:bare-oak-small",
+   "slug": "bare-oak-small",
    "name": "Bare oak small",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-804bdfb3-a402-4be0-9e3a-6c5aa4a399a4.png",
@@ -2414,105 +3632,145 @@
    "rect": [
     628,
     628,
-    620,
+    621,
     615
    ],
-   "w": 192,
-   "h": 190.12
+   "cutOff": false,
+   "w": 420.15,
+   "h": 416.09,
+   "ax": 210.08,
+   "ay": 413.09,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-bare-oak-small:ne",
+    "gen:tree-bare-oak-small:se",
+    "gen:tree-bare-oak-small:sw",
+    "gen:tree-bare-oak-small:nw"
+   ]
   },
   {
    "id": "newprop:camera-tower",
+   "slug": "camera-tower",
    "name": "Camera tower",
    "cat": "New: Media",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    81,
+    14,
+    456,
+    604
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 359.56
+   "h": 423.86,
+   "cost": 1500
   },
   {
    "id": "newprop:broadcast-truck",
+   "slug": "broadcast-truck",
    "name": "Broadcast truck",
    "cat": "New: Media",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    573,
+    55,
+    655,
+    565
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 298.56
+   "h": 276.03,
+   "cost": 1500
   },
   {
    "id": "newprop:satellite-van",
+   "slug": "satellite-van",
    "name": "Satellite van",
    "cat": "New: Media",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    44,
+    598,
+    566,
+    629
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 341.79
+   "h": 355.62,
+   "cost": 1500
   },
   {
    "id": "newprop:tv-camera",
+   "slug": "tv-camera",
    "name": "TV camera",
    "cat": "New: Media",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    756,
+    626,
+    432,
+    571
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 424.91
+   "h": 422.96,
+   "cost": 1500
   },
   {
    "id": "newprop:delivery-truck",
+   "slug": "delivery-truck",
    "name": "Delivery truck",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
    "cell": "top left",
    "rect": [
-    19,
+    17,
     46,
-    601,
+    604,
     567
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 300.13
+   "h": 300.4,
+   "cost": 800
   },
   {
    "id": "newprop:forklift-with-pallets",
+   "slug": "forklift-with-pallets",
    "name": "Forklift with pallets",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
@@ -2523,115 +3781,143 @@
     562,
     531
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 302.09
+   "h": 302.35,
+   "cost": 800
   },
   {
    "id": "newprop:water-truck",
+   "slug": "water-truck",
    "name": "Water truck",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
    "cell": "bottom left",
    "rect": [
-    19,
-    665,
-    599,
-    508
+    17,
+    664,
+    602,
+    509
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 269.9
+   "h": 270.56,
+   "cost": 800
   },
   {
    "id": "newprop:utility-cart-green",
+   "slug": "utility-cart-green",
    "name": "Utility cart green",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
    "cell": "bottom right",
    "rect": [
-    659,
-    661,
-    581,
-    533
+    658,
+    660,
+    582,
+    534
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 293.24
+   "h": 293.61,
+   "cost": 800
   },
   {
    "id": "newprop:stone-bridge",
+   "slug": "stone-bridge",
    "name": "Stone bridge",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-991e1eb3-fe60-45ab-8a21-2ca5399511a2.png",
    "cell": "top left",
    "rect": [
     8,
-    104,
-    626,
-    466
+    103,
+    627,
+    467
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 142.37
+   "h": 143,
+   "cost": 50
   },
   {
    "id": "newprop:white-footbridge",
+   "slug": "white-footbridge",
    "name": "White footbridge",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-991e1eb3-fe60-45ab-8a21-2ca5399511a2.png",
    "cell": "top right",
    "rect": [
-    646,
+    645,
     97,
-    608,
+    609,
     476
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 148.52
+   "h": 150.07,
+   "cost": 50
   },
   {
    "id": "newprop:flower-bed",
+   "slug": "flower-bed",
    "name": "Flower bed",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-991e1eb3-fe60-45ab-8a21-2ca5399511a2.png",
    "cell": "bottom left",
    "rect": [
-    12,
+    9,
     694,
-    635,
+    639,
     467
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 139.66
+   "h": 140.32,
+   "cost": 50
   },
   {
    "id": "newprop:flowering-tree",
+   "slug": "flowering-tree",
    "name": "Flowering tree",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-991e1eb3-fe60-45ab-8a21-2ca5399511a2.png",
    "cell": "bottom right",
    "rect": [
-    669,
+    668,
     590,
-    575,
-    621
+    578,
+    622
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 206.82
+   "h": 206.62,
+   "cost": 50
   },
   {
    "id": "newprop:wooden-bleacher",
+   "slug": "wooden-bleacher",
    "name": "Wooden bleacher",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-9e6854dc-a046-457b-a771-df820116dab8.png",
@@ -2639,16 +3925,20 @@
    "rect": [
     101,
     81,
-    524,
+    525,
     460
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 279.77
+   "h": 280.38,
+   "cost": 500
   },
   {
    "id": "newprop:small-bleacher",
+   "slug": "small-bleacher",
    "name": "Small bleacher",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-9e6854dc-a046-457b-a771-df820116dab8.png",
@@ -2659,13 +3949,17 @@
     394,
     485
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 395.44
+   "h": 393.91,
+   "cost": 500
   },
   {
    "id": "newprop:bleacher-platform",
+   "slug": "bleacher-platform",
    "name": "Bleacher platform",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-9e6854dc-a046-457b-a771-df820116dab8.png",
@@ -2676,191 +3970,247 @@
     526,
     484
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 294.05
+   "h": 294.45,
+   "cost": 500
   },
   {
    "id": "newprop:bleacher-tower",
+   "slug": "bleacher-tower",
    "name": "Bleacher tower",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-9e6854dc-a046-457b-a771-df820116dab8.png",
    "cell": "bottom right",
    "rect": [
     801,
-    664,
-    402,
-    493
+    663,
+    403,
+    494
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 393.72
+   "h": 392.26,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-shed",
+   "slug": "shanty-shed",
    "name": "Shanty shed",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    21,
+    29,
+    619,
+    598
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 252.6
+   "h": 247.32,
+   "cost": 500
   },
   {
    "id": "newprop:flag-stall",
+   "slug": "flag-stall",
    "name": "Flag stall",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    672,
+    54,
+    569,
+    652
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 238.79
+   "h": 293.34,
+   "cost": 500
   },
   {
    "id": "newprop:tarp-shelter",
+   "slug": "tarp-shelter",
    "name": "Tarp shelter",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    26,
+    609,
+    604,
+    607
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 251.28
+   "h": 257.27,
+   "cost": 500
   },
   {
    "id": "newprop:market-tents",
+   "slug": "market-tents",
    "name": "Market tents",
    "cat": "New: Stalls (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    642,
+    709,
+    596,
+    534
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 266.45
+   "h": 229.37,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-medical-tent",
+   "slug": "shanty-medical-tent",
    "name": "Shanty medical tent",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    27,
+    28,
+    652,
+    609
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 255.57
+   "h": 239.12,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-cart-ambulance",
+   "slug": "shanty-cart-ambulance",
    "name": "Shanty cart ambulance",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    663,
+    150,
+    582,
+    513
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 197.21
+   "h": 225.65,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-toilet",
+   "slug": "shanty-toilet",
    "name": "Shanty toilet",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    60,
+    643,
+    647,
+    566
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 253.73
+   "h": 223.95,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-weather-mast",
+   "slug": "shanty-weather-mast",
    "name": "Shanty weather mast",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    789,
+    629,
+    348,
+    593
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 256,
-   "h": 299
+   "h": 436.23,
+   "cost": 500
   },
   {
    "id": "newprop:small-red-maple",
+   "slug": "small-red-maple",
    "name": "Small red maple",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-b13529b8-fe5a-4e9c-9e7e-5f3a97e46d70.png",
    "cell": "top left",
    "rect": [
-    168,
-    140,
-    367,
-    470
+    167,
+    139,
+    368,
+    471
    ],
-   "w": 128,
-   "h": 164.62
+   "cutOff": false,
+   "w": 203.28,
+   "h": 260.17,
+   "ax": 101.64,
+   "ay": 258.17,
+   "factor": 0.67,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.53,
+     "hy": 0.4,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-red-maple:ne",
+    "gen:tree-small-red-maple:se",
+    "gen:tree-small-red-maple:sw",
+    "gen:tree-small-red-maple:nw"
+   ]
   },
   {
    "id": "newprop:small-red-maple-2",
+   "slug": "small-red-maple-2",
    "name": "Small red maple 2",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-b13529b8-fe5a-4e9c-9e7e-5f3a97e46d70.png",
@@ -2871,13 +4221,37 @@
     536,
     429
    ],
-   "w": 128,
-   "h": 102.06
+   "cutOff": false,
+   "w": 296.08,
+   "h": 236.97,
+   "ax": 148.04,
+   "ay": 234.97,
+   "factor": 0.67,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.53,
+     "hy": 0.4,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-red-maple-2:ne",
+    "gen:tree-small-red-maple-2:se",
+    "gen:tree-small-red-maple-2:sw",
+    "gen:tree-small-red-maple-2:nw"
+   ]
   },
   {
    "id": "newprop:small-red-maple-3",
+   "slug": "small-red-maple-3",
    "name": "Small red maple 3",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-b13529b8-fe5a-4e9c-9e7e-5f3a97e46d70.png",
@@ -2888,13 +4262,37 @@
     489,
     435
    ],
-   "w": 128,
-   "h": 113.63
+   "cutOff": false,
+   "w": 270.12,
+   "h": 240.29,
+   "ax": 135.06,
+   "ay": 238.29,
+   "factor": 0.67,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.53,
+     "hy": 0.4,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-red-maple-3:ne",
+    "gen:tree-small-red-maple-3:se",
+    "gen:tree-small-red-maple-3:sw",
+    "gen:tree-small-red-maple-3:nw"
+   ]
   },
   {
    "id": "newprop:small-red-maple-4",
+   "slug": "small-red-maple-4",
    "name": "Small red maple 4",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1,
    "hy": 1,
    "sheet": "exec-b13529b8-fe5a-4e9c-9e7e-5f3a97e46d70.png",
@@ -2903,15 +4301,39 @@
     709,
     752,
     404,
-    378
+    379
    ],
-   "w": 128,
-   "h": 119.92
+   "cutOff": false,
+   "w": 223.16,
+   "h": 209.35,
+   "ax": 111.58,
+   "ay": 207.35,
+   "factor": 0.67,
+   "ref": "maple",
+   "boxes": [
+    {
+     "hx": 0.53,
+     "hy": 0.4,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-red-maple-4:ne",
+    "gen:tree-small-red-maple-4:se",
+    "gen:tree-small-red-maple-4:sw",
+    "gen:tree-small-red-maple-4:nw"
+   ]
   },
   {
    "id": "newprop:log-footbridge",
+   "slug": "log-footbridge",
    "name": "Log footbridge",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-c2432598-4e43-41a8-90c7-8bf85d8d9fd1.png",
@@ -2919,50 +4341,62 @@
    "rect": [
     12,
     81,
-    614,
+    615,
     469
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 145.82
+   "h": 146.42,
+   "cost": 50
   },
   {
    "id": "newprop:plank-bridge",
+   "slug": "plank-bridge",
    "name": "Plank bridge",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-c2432598-4e43-41a8-90c7-8bf85d8d9fd1.png",
    "cell": "top right",
    "rect": [
     628,
-    97,
+    96,
     618,
-    469
+    471
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 145.73
+   "h": 146.33,
+   "cost": 50
   },
   {
    "id": "newprop:flower-planter",
+   "slug": "flower-planter",
    "name": "Flower planter",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-c2432598-4e43-41a8-90c7-8bf85d8d9fd1.png",
    "cell": "bottom left",
    "rect": [
-    23,
+    22,
     728,
-    592,
+    593,
     420
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 135.22
+   "h": 135.99,
+   "cost": 50
   },
   {
    "id": "newprop:small-tree",
+   "slug": "small-tree",
    "name": "Small tree",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-c2432598-4e43-41a8-90c7-8bf85d8d9fd1.png",
@@ -2973,85 +4407,101 @@
     525,
     595
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 218
+   "h": 217.6,
+   "cost": 50
   },
   {
    "id": "newprop:shanty-camera-tower",
+   "slug": "shanty-camera-tower",
    "name": "Shanty camera tower",
    "cat": "New: Media",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    59,
+    32,
+    495,
+    616
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 335.32
+   "h": 398.22,
+   "cost": 1500
   },
   {
    "id": "newprop:shanty-broadcast-van",
+   "slug": "shanty-broadcast-van",
    "name": "Shanty broadcast van",
    "cat": "New: Media",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    604,
+    104,
+    633,
+    550
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 274.06
+   "h": 278.04,
+   "cost": 1500
   },
   {
    "id": "newprop:shanty-satellite-van",
+   "slug": "shanty-satellite-van",
    "name": "Shanty satellite van",
    "cat": "New: Media",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    51,
+    608,
+    638,
+    626
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 337.34
+   "h": 313.98,
+   "cost": 1500
   },
   {
    "id": "newprop:shanty-camera",
+   "slug": "shanty-camera",
    "name": "Shanty camera",
    "cat": "New: Media",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    782,
+    657,
+    395,
+    561
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 320,
-   "h": 344.03
+   "h": 454.48,
+   "cost": 1500
   },
   {
    "id": "newprop:hospitality-marquee",
+   "slug": "hospitality-marquee",
    "name": "Hospitality marquee",
    "cat": "New: Seating",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-d3daec12-8b23-48e4-90e6-8f920d802cc5.png",
@@ -3059,50 +4509,62 @@
    "rect": [
     14,
     73,
-    656,
+    657,
     546
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 265.27
+   "h": 265.94,
+   "cost": 50
   },
   {
    "id": "newprop:umbrella-table-green",
+   "slug": "umbrella-table-green",
    "name": "Umbrella table green",
    "cat": "New: Seating",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-d3daec12-8b23-48e4-90e6-8f920d802cc5.png",
    "cell": "top right",
    "rect": [
-    678,
+    677,
     111,
-    567,
+    568,
     525
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 295.43
+   "h": 295.77,
+   "cost": 50
   },
   {
    "id": "newprop:dining-pavilion",
+   "slug": "dining-pavilion",
    "name": "Dining pavilion",
    "cat": "New: Seating",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-d3daec12-8b23-48e4-90e6-8f920d802cc5.png",
    "cell": "bottom left",
    "rect": [
-    94,
+    93,
     652,
-    466,
+    467,
     530
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 363.92
+   "h": 363.17,
+   "cost": 50
   },
   {
    "id": "newprop:long-picnic-table",
+   "slug": "long-picnic-table",
    "name": "Long picnic table",
    "cat": "New: Seating",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-d3daec12-8b23-48e4-90e6-8f920d802cc5.png",
@@ -3113,13 +4575,17 @@
     601,
     402
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 212.61
+   "h": 214.04,
+   "cost": 50
   },
   {
    "id": "newprop:ticket-booth",
+   "slug": "ticket-booth",
    "name": "Ticket booth",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
@@ -3130,13 +4596,17 @@
     563,
     605
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 275.37
+   "h": 275.1,
+   "cost": 500
   },
   {
    "id": "newprop:white-tent-booth",
+   "slug": "white-tent-booth",
    "name": "White tent booth",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
@@ -3145,32 +4615,40 @@
     681,
     56,
     534,
-    587
+    588
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 282.28
+   "h": 281.89,
+   "cost": 500
   },
   {
    "id": "newprop:green-booth",
+   "slug": "green-booth",
    "name": "Green booth",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
    "cell": "bottom left",
    "rect": [
-    60,
+    59,
     704,
-    570,
+    571,
     492
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 220.08
+   "h": 220.58,
+   "cost": 500
   },
   {
    "id": "newprop:green-kiosk",
+   "slug": "green-kiosk",
    "name": "Green kiosk",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
@@ -3179,15 +4657,19 @@
     729,
     646,
     467,
-    571
+    572
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 314.56
+   "h": 313.56,
+   "cost": 500
   },
   {
    "id": "newprop:scaffold-stand",
+   "slug": "scaffold-stand",
    "name": "Scaffold stand",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
@@ -3196,15 +4678,19 @@
     82,
     52,
     522,
-    599
+    600
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 368.56
+   "h": 367.82,
+   "cost": 500
   },
   {
    "id": "newprop:scaffold-booth",
+   "slug": "scaffold-booth",
    "name": "Scaffold booth",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
@@ -3215,30 +4701,38 @@
     554,
     507
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 292.45
+   "h": 292.85,
+   "cost": 500
   },
   {
    "id": "newprop:scaffold-counter",
+   "slug": "scaffold-counter",
    "name": "Scaffold counter",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
    "cell": "bottom left",
    "rect": [
-    69,
+    68,
     665,
-    566,
+    567,
     531
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 299.39
+   "h": 299.68,
+   "cost": 500
   },
   {
    "id": "newprop:scaffold-tower",
+   "slug": "scaffold-tower",
    "name": "Scaffold tower",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
@@ -3247,121 +4741,145 @@
     708,
     675,
     487,
-    530
+    531
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 349.39
+   "h": 348.91,
+   "cost": 500
   },
   {
    "id": "newprop:wooden-bleacher-big",
+   "slug": "wooden-bleacher-big",
    "name": "Wooden bleacher big",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 3.5,
    "hy": 3.5,
    "sheet": "exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
    "cell": "top left",
    "rect": [
+    25,
     0,
-    0,
-    627,
-    627
+    650,
+    551
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 448,
-   "h": 468.98
+   "h": 379.77,
+   "cost": 500
   },
   {
    "id": "newprop:covered-bleacher",
+   "slug": "covered-bleacher",
    "name": "Covered bleacher",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 3.5,
    "hy": 3.5,
    "sheet": "exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
    "cell": "top right",
    "rect": [
-    627,
+    712,
     0,
-    627,
-    627
+    525,
+    605
    ],
-   "cut": "cell",
+   "cutOff": true,
    "w": 448,
-   "h": 463.52
+   "h": 516.27,
+   "cost": 500
   },
   {
    "id": "newprop:bleacher-deck",
+   "slug": "bleacher-deck",
    "name": "Bleacher deck",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 3.5,
    "hy": 3.5,
    "sheet": "exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    17,
+    576,
+    682,
+    633
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 448,
-   "h": 427.3
+   "h": 415.81,
+   "cost": 500
   },
   {
    "id": "newprop:bleacher-stairs",
+   "slug": "bleacher-stairs",
    "name": "Bleacher stairs",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 3.5,
    "hy": 3.5,
    "sheet": "exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    742,
+    559,
+    510,
+    636
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 448,
-   "h": 406.88
+   "h": 558.68,
+   "cost": 500
   },
   {
    "id": "newprop:green-golf-cart",
+   "slug": "green-golf-cart",
    "name": "Green golf cart",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.4,
    "hy": 1.4,
    "sheet": "exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
    "cell": "top left",
    "rect": [
     91,
-    68,
-    528,
-    525
+    67,
+    529,
+    526
    ],
+   "cutOff": false,
    "w": 179.2,
-   "h": 178.17
+   "h": 178.18,
+   "cost": 800
   },
   {
    "id": "newprop:shuttle-cart",
+   "slug": "shuttle-cart",
    "name": "Shuttle cart",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.4,
    "hy": 1.4,
    "sheet": "exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
    "cell": "top right",
    "rect": [
     647,
-    67,
+    66,
     597,
-    542
+    545
    ],
+   "cutOff": false,
    "w": 179.2,
-   "h": 163.38
+   "h": 163.59,
+   "cost": 800
   },
   {
    "id": "newprop:drinks-cart-green",
+   "slug": "drinks-cart-green",
    "name": "Drinks cart green",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.4,
    "hy": 1.4,
    "sheet": "exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
@@ -3372,30 +4890,38 @@
     609,
     468
    ],
+   "cutOff": false,
    "w": 179.2,
-   "h": 137.16
+   "h": 137.71,
+   "cost": 800
   },
   {
    "id": "newprop:shuttle-cart-white",
+   "slug": "shuttle-cart-white",
    "name": "Shuttle cart white",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.4,
    "hy": 1.4,
    "sheet": "exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
    "cell": "bottom right",
    "rect": [
     654,
-    663,
+    662,
     588,
-    511
+    512
    ],
+   "cutOff": false,
    "w": 179.2,
-   "h": 155.72
+   "h": 156.04,
+   "cost": 800
   },
   {
    "id": "newprop:orange-tree",
+   "slug": "orange-tree",
    "name": "Orange tree",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-eaab8128-30ba-4510-ae57-63612e51ce30.png",
@@ -3406,13 +4932,37 @@
     520,
     516
    ],
-   "w": 192,
-   "h": 190.5
+   "cutOff": false,
+   "w": 389.78,
+   "h": 386.79,
+   "ax": 194.89,
+   "ay": 383.79,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-tree:ne",
+    "gen:tree-orange-tree:se",
+    "gen:tree-orange-tree:sw",
+    "gen:tree-orange-tree:nw"
+   ]
   },
   {
    "id": "newprop:orange-tree-wide",
+   "slug": "orange-tree-wide",
    "name": "Orange tree wide",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-eaab8128-30ba-4510-ae57-63612e51ce30.png",
@@ -3423,47 +4973,119 @@
     516,
     489
    ],
-   "w": 192,
-   "h": 181.8
+   "cutOff": false,
+   "w": 386.79,
+   "h": 366.55,
+   "ax": 193.39,
+   "ay": 363.55,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-tree-wide:ne",
+    "gen:tree-orange-tree-wide:se",
+    "gen:tree-orange-tree-wide:sw",
+    "gen:tree-orange-tree-wide:nw"
+   ]
   },
   {
    "id": "newprop:orange-tree-sparse",
+   "slug": "orange-tree-sparse",
    "name": "Orange tree sparse",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-eaab8128-30ba-4510-ae57-63612e51ce30.png",
    "cell": "bottom left",
    "rect": [
     53,
-    629,
+    628,
     574,
-    538
+    539
    ],
-   "w": 192,
-   "h": 180.13
+   "cutOff": false,
+   "w": 430.26,
+   "h": 404.03,
+   "ax": 215.13,
+   "ay": 401.03,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-tree-sparse:ne",
+    "gen:tree-orange-tree-sparse:se",
+    "gen:tree-orange-tree-sparse:sw",
+    "gen:tree-orange-tree-sparse:nw"
+   ]
   },
   {
    "id": "newprop:orange-tree-full",
+   "slug": "orange-tree-full",
    "name": "Orange tree full",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-eaab8128-30ba-4510-ae57-63612e51ce30.png",
    "cell": "bottom right",
    "rect": [
-    659,
+    658,
     630,
-    575,
-    555
+    577,
+    556
    ],
-   "w": 192,
-   "h": 184.91
+   "cutOff": false,
+   "w": 432.51,
+   "h": 416.77,
+   "ax": 216.26,
+   "ay": 413.77,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-tree-full:ne",
+    "gen:tree-orange-tree-full:se",
+    "gen:tree-orange-tree-full:sw",
+    "gen:tree-orange-tree-full:nw"
+   ]
   },
   {
    "id": "newprop:shanty-ticket-hut",
+   "slug": "shanty-ticket-hut",
    "name": "Shanty ticket hut",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
@@ -3474,13 +5096,17 @@
     602,
     622
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 264.62
+   "h": 264.5,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-booth",
+   "slug": "shanty-booth",
    "name": "Shanty booth",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
@@ -3491,13 +5117,17 @@
     534,
     583
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 279.85
+   "h": 279.49,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-turnstiles",
+   "slug": "shanty-turnstiles",
    "name": "Shanty turnstiles",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
@@ -3505,16 +5135,20 @@
    "rect": [
     33,
     712,
-    641,
+    642,
     477
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 189.38
+   "h": 190.21,
+   "cost": 500
   },
   {
    "id": "newprop:shanty-counter-2",
+   "slug": "shanty-counter-2",
    "name": "Shanty counter 2",
    "cat": "New: Event structures (shabby)",
+   "kind": "decor",
    "hx": 2,
    "hy": 2,
    "sheet": "exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
@@ -3522,67 +5156,83 @@
    "rect": [
     716,
     650,
-    507,
+    508,
     568
    ],
+   "cutOff": false,
    "w": 256,
-   "h": 286.72
+   "h": 286.24,
+   "cost": 500
   },
   {
    "id": "newprop:green-ride-mower",
+   "slug": "green-ride-mower",
    "name": "Green ride mower",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-eccec0c5-d292-46a7-a6cc-8f5e654012ed.png",
    "cell": "top left",
    "rect": [
     86,
-    82,
+    80,
     512,
-    509
+    512
    ],
+   "cutOff": false,
    "w": 153.6,
-   "h": 153.6
+   "h": 153.6,
+   "cost": 800
   },
   {
    "id": "newprop:green-gang-mower",
+   "slug": "green-gang-mower",
    "name": "Green gang mower",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-eccec0c5-d292-46a7-a6cc-8f5e654012ed.png",
    "cell": "top right",
    "rect": [
-    658,
+    657,
     116,
-    573,
+    575,
     443
    ],
+   "cutOff": false,
    "w": 153.6,
-   "h": 117.84
+   "h": 118.34,
+   "cost": 800
   },
   {
    "id": "newprop:green-spray-rig",
+   "slug": "green-spray-rig",
    "name": "Green spray rig",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-eccec0c5-d292-46a7-a6cc-8f5e654012ed.png",
    "cell": "bottom left",
    "rect": [
-    37,
+    36,
     728,
-    571,
+    572,
     433
    ],
+   "cutOff": false,
    "w": 153.6,
-   "h": 115.74
+   "h": 116.27,
+   "cost": 800
   },
   {
    "id": "newprop:green-greens-mower",
+   "slug": "green-greens-mower",
    "name": "Green greens mower",
    "cat": "New: Vehicles",
+   "kind": "decor",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-eccec0c5-d292-46a7-a6cc-8f5e654012ed.png",
@@ -3590,16 +5240,20 @@
    "rect": [
     643,
     689,
-    598,
+    599,
     474
    ],
+   "cutOff": false,
    "w": 153.6,
-   "h": 121.11
+   "h": 121.55,
+   "cost": 800
   },
   {
    "id": "newprop:wooden-dock",
+   "slug": "wooden-dock",
    "name": "Wooden dock",
    "cat": "New: Lake props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-ed0e4dc0-2938-4d26-bd38-3eab013ba3de.png",
@@ -3610,30 +5264,38 @@
     542,
     442
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 156.04
+   "h": 156.58,
+   "cost": 500
   },
   {
    "id": "newprop:wooden-dock-2",
+   "slug": "wooden-dock-2",
    "name": "Wooden dock 2",
    "cat": "New: Lake props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-ed0e4dc0-2938-4d26-bd38-3eab013ba3de.png",
    "cell": "top right",
    "rect": [
-    678,
+    677,
     139,
-    527,
+    530,
     448
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 161.84
+   "h": 162.29,
+   "cost": 500
   },
   {
    "id": "newprop:rowboat",
+   "slug": "rowboat",
    "name": "Rowboat",
    "cat": "New: Lake props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-ed0e4dc0-2938-4d26-bd38-3eab013ba3de.png",
@@ -3644,13 +5306,17 @@
     606,
     419
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 131.96
+   "h": 132.75,
+   "cost": 500
   },
   {
    "id": "newprop:bait-shack",
+   "slug": "bait-shack",
    "name": "Bait shack",
    "cat": "New: Lake props",
+   "kind": "decor",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-ed0e4dc0-2938-4d26-bd38-3eab013ba3de.png",
@@ -3658,16 +5324,20 @@
    "rect": [
     672,
     657,
-    548,
+    550,
     547
    ],
+   "cutOff": false,
    "w": 192,
-   "h": 190.94
+   "h": 190.95,
+   "cost": 500
   },
   {
    "id": "newprop:catering-tent",
+   "slug": "catering-tent",
    "name": "Catering tent",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-ed8f1e79-9747-48ad-8115-31f97c8d9f6c.png",
@@ -3675,16 +5345,20 @@
    "rect": [
     12,
     12,
-    596,
-    631
+    597,
+    632
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 339.02
+   "h": 338.76,
+   "cost": 500
   },
   {
    "id": "newprop:catering-trailer",
+   "slug": "catering-trailer",
    "name": "Catering trailer",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-ed8f1e79-9747-48ad-8115-31f97c8d9f6c.png",
@@ -3692,156 +5366,144 @@
    "rect": [
     639,
     54,
-    599,
-    593
+    600,
+    594
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 316.76
+   "h": 316.8,
+   "cost": 500
   },
   {
    "id": "newprop:buffet-tent",
+   "slug": "buffet-tent",
    "name": "Buffet tent",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-ed8f1e79-9747-48ad-8115-31f97c8d9f6c.png",
    "cell": "bottom left",
    "rect": [
     58,
-    651,
-    599,
-    566
+    650,
+    600,
+    567
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 302.16
+   "h": 302.4,
+   "cost": 500
   },
   {
    "id": "newprop:catering-staff",
+   "slug": "catering-staff",
    "name": "Catering staff",
    "cat": "New: Event structures",
+   "kind": "decor",
    "hx": 2.5,
    "hy": 2.5,
    "sheet": "exec-ed8f1e79-9747-48ad-8115-31f97c8d9f6c.png",
    "cell": "bottom right",
    "rect": [
     855,
-    661,
+    659,
     226,
-    555
+    558
    ],
+   "cutOff": false,
    "w": 320,
-   "h": 807.34
-  },
-  {
-   "id": "newprop:hospitality-tent",
-   "name": "Hospitality tent",
-   "cat": "New: Event structures",
-   "hx": 2.5,
-   "hy": 2.5,
-   "sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
-   "cell": "top left",
-   "rect": [
-    0,
-    0,
-    627,
-    627
-   ],
-   "cut": "cell",
-   "w": 320,
-   "h": 316.83
-  },
-  {
-   "id": "newprop:trophy-pavilion",
-   "name": "Trophy pavilion",
-   "cat": "New: Event structures",
-   "hx": 2.5,
-   "hy": 2.5,
-   "sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
-   "cell": "top right",
-   "rect": [
-    627,
-    0,
-    627,
-    627
-   ],
-   "cut": "cell",
-   "w": 320,
-   "h": 295.42
-  },
-  {
-   "id": "newprop:club-tent",
-   "name": "Club tent",
-   "cat": "New: Event structures",
-   "hx": 2.5,
-   "hy": 2.5,
-   "sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
-   "cell": "bottom left",
-   "rect": [
-    0,
-    627,
-    627,
-    627
-   ],
-   "cut": "cell",
-   "w": 320,
-   "h": 308.23
-  },
-  {
-   "id": "newprop:club-arch-sign",
-   "name": "Club arch sign",
-   "cat": "New: Event structures",
-   "hx": 2.5,
-   "hy": 2.5,
-   "sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
-   "cell": "bottom right",
-   "rect": [
-    627,
-    627,
-    627,
-    627
-   ],
-   "cut": "cell",
-   "w": 320,
-   "h": 303.6
+   "h": 790.09,
+   "cost": 500
   },
   {
    "id": "newprop:orange-tree-round",
+   "slug": "orange-tree-round",
    "name": "Orange tree round",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-f2adc440-c65f-40ce-9682-b92de02f35cc.png",
    "cell": "top left",
    "rect": [
-    129,
+    128,
     110,
-    394,
+    395,
     481
    ],
-   "w": 192,
-   "h": 234.67
+   "cutOff": false,
+   "w": 341.54,
+   "h": 415.9,
+   "ax": 170.77,
+   "ay": 412.9,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-tree-round:ne",
+    "gen:tree-orange-tree-round:se",
+    "gen:tree-orange-tree-round:sw",
+    "gen:tree-orange-tree-round:nw"
+   ]
   },
   {
    "id": "newprop:orange-tree-big",
+   "slug": "orange-tree-big",
    "name": "Orange tree big",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-f2adc440-c65f-40ce-9682-b92de02f35cc.png",
    "cell": "top right",
    "rect": [
-    616,
+    615,
     157,
-    585,
+    586,
     435
    ],
-   "w": 192,
-   "h": 141.84
+   "cutOff": false,
+   "w": 506.69,
+   "h": 376.13,
+   "ax": 253.35,
+   "ay": 373.13,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-tree-big:ne",
+    "gen:tree-orange-tree-big:se",
+    "gen:tree-orange-tree-big:sw",
+    "gen:tree-orange-tree-big:nw"
+   ]
   },
   {
    "id": "newprop:orange-tree-tall",
+   "slug": "orange-tree-tall",
    "name": "Orange tree tall",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-f2adc440-c65f-40ce-9682-b92de02f35cc.png",
@@ -3852,98 +5514,242 @@
     489,
     482
    ],
-   "w": 192,
-   "h": 189.21
+   "cutOff": false,
+   "w": 422.82,
+   "h": 416.77,
+   "ax": 211.41,
+   "ay": 413.77,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-tree-tall:ne",
+    "gen:tree-orange-tree-tall:se",
+    "gen:tree-orange-tree-tall:sw",
+    "gen:tree-orange-tree-tall:nw"
+   ]
   },
   {
    "id": "newprop:orange-tree-small",
+   "slug": "orange-tree-small",
    "name": "Orange tree small",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.5,
    "hy": 1.5,
    "sheet": "exec-f2adc440-c65f-40ce-9682-b92de02f35cc.png",
    "cell": "bottom right",
    "rect": [
-    740,
+    739,
     731,
-    384,
+    385,
     416
    ],
-   "w": 192,
-   "h": 207.79
+   "cutOff": false,
+   "w": 332.9,
+   "h": 359.7,
+   "ax": 166.45,
+   "ay": 356.7,
+   "factor": 1,
+   "ref": "oak",
+   "boxes": [
+    {
+     "hx": 0.8,
+     "hy": 0.6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-orange-tree-small:ne",
+    "gen:tree-orange-tree-small:se",
+    "gen:tree-orange-tree-small:sw",
+    "gen:tree-orange-tree-small:nw"
+   ]
   },
   {
    "id": "newprop:birch",
+   "slug": "birch",
    "name": "Birch",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-f5874056-b4b5-4ff8-a208-142ba4687539.png",
    "cell": "top left",
    "rect": [
-    69,
+    68,
     0,
-    527,
+    529,
     606
    ],
-   "w": 153.6,
-   "h": 177.48
+   "cutOff": false,
+   "w": 242.1,
+   "h": 277.34,
+   "ax": 121.05,
+   "ay": 274.94,
+   "factor": 0.8,
+   "ref": "birch",
+   "boxes": [
+    {
+     "hx": 0.64,
+     "hy": 0.48,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-birch:ne",
+    "gen:tree-birch:se",
+    "gen:tree-birch:sw",
+    "gen:tree-birch:nw"
+   ]
   },
   {
    "id": "newprop:birch-wide",
+   "slug": "birch-wide",
    "name": "Birch wide",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-f5874056-b4b5-4ff8-a208-142ba4687539.png",
    "cell": "top right",
    "rect": [
     687,
-    13,
-    543,
-    594
+    11,
+    545,
+    596
    ],
-   "w": 153.6,
-   "h": 168.19
+   "cutOff": false,
+   "w": 249.42,
+   "h": 272.76,
+   "ax": 124.71,
+   "ay": 270.36,
+   "factor": 0.8,
+   "ref": "birch",
+   "boxes": [
+    {
+     "hx": 0.64,
+     "hy": 0.48,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-birch-wide:ne",
+    "gen:tree-birch-wide:se",
+    "gen:tree-birch-wide:sw",
+    "gen:tree-birch-wide:nw"
+   ]
   },
   {
    "id": "newprop:birch-bare",
+   "slug": "birch-bare",
    "name": "Birch bare",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-f5874056-b4b5-4ff8-a208-142ba4687539.png",
    "cell": "bottom left",
    "rect": [
     64,
-    635,
+    632,
     520,
-    602
+    605
    ],
-   "w": 153.6,
-   "h": 179.1
+   "cutOff": false,
+   "w": 237.98,
+   "h": 276.88,
+   "ax": 118.99,
+   "ay": 274.48,
+   "factor": 0.8,
+   "ref": "birch",
+   "boxes": [
+    {
+     "hx": 0.64,
+     "hy": 0.48,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-birch-bare:ne",
+    "gen:tree-birch-bare:se",
+    "gen:tree-birch-bare:sw",
+    "gen:tree-birch-bare:nw"
+   ]
   },
   {
    "id": "newprop:birch-full",
+   "slug": "birch-full",
    "name": "Birch full",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 1.2,
    "hy": 1.2,
    "sheet": "exec-f5874056-b4b5-4ff8-a208-142ba4687539.png",
    "cell": "bottom right",
    "rect": [
     672,
-    626,
-    546,
-    611
+    625,
+    548,
+    612
    ],
-   "w": 153.6,
-   "h": 171.8
+   "cutOff": false,
+   "w": 250.8,
+   "h": 280.09,
+   "ax": 125.4,
+   "ay": 277.69,
+   "factor": 0.8,
+   "ref": "birch",
+   "boxes": [
+    {
+     "hx": 0.64,
+     "hy": 0.48,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-birch-full:ne",
+    "gen:tree-birch-full:se",
+    "gen:tree-birch-full:sw",
+    "gen:tree-birch-full:nw"
+   ]
   },
   {
    "id": "newprop:small-birch",
+   "slug": "small-birch",
    "name": "Small birch",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 0.9,
    "hy": 0.9,
    "sheet": "exec-f5b3b50f-bf79-4835-b523-15b788be5dab.png",
@@ -3954,13 +5760,37 @@
     254,
     511
    ],
-   "w": 115.2,
-   "h": 235.55
+   "cutOff": false,
+   "w": 104.42,
+   "h": 210.07,
+   "ax": 52.21,
+   "ay": 208.27,
+   "factor": 0.6,
+   "ref": "birch",
+   "boxes": [
+    {
+     "hx": 0.48,
+     "hy": 0.36,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-birch:ne",
+    "gen:tree-small-birch:se",
+    "gen:tree-small-birch:sw",
+    "gen:tree-small-birch:nw"
+   ]
   },
   {
    "id": "newprop:small-birch-2",
+   "slug": "small-birch-2",
    "name": "Small birch 2",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 0.9,
    "hy": 0.9,
    "sheet": "exec-f5b3b50f-bf79-4835-b523-15b788be5dab.png",
@@ -3968,33 +5798,81 @@
    "rect": [
     703,
     110,
-    437,
+    438,
     494
    ],
-   "w": 115.2,
-   "h": 130.2
+   "cutOff": false,
+   "w": 180.06,
+   "h": 203.08,
+   "ax": 90.03,
+   "ay": 201.28,
+   "factor": 0.6,
+   "ref": "birch",
+   "boxes": [
+    {
+     "hx": 0.48,
+     "hy": 0.36,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-birch-2:ne",
+    "gen:tree-small-birch-2:se",
+    "gen:tree-small-birch-2:sw",
+    "gen:tree-small-birch-2:nw"
+   ]
   },
   {
    "id": "newprop:small-birch-3",
+   "slug": "small-birch-3",
    "name": "Small birch 3",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 0.9,
    "hy": 0.9,
    "sheet": "exec-f5b3b50f-bf79-4835-b523-15b788be5dab.png",
    "cell": "bottom left",
    "rect": [
     158,
-    691,
+    690,
     365,
-    471
+    472
    ],
-   "w": 115.2,
-   "h": 149.73
+   "cutOff": false,
+   "w": 150.05,
+   "h": 194.03,
+   "ax": 75.02,
+   "ay": 192.23,
+   "factor": 0.6,
+   "ref": "birch",
+   "boxes": [
+    {
+     "hx": 0.48,
+     "hy": 0.36,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-birch-3:ne",
+    "gen:tree-small-birch-3:se",
+    "gen:tree-small-birch-3:sw",
+    "gen:tree-small-birch-3:nw"
+   ]
   },
   {
    "id": "newprop:small-birch-4",
+   "slug": "small-birch-4",
    "name": "Small birch 4",
    "cat": "New: Trees",
+   "kind": "tree",
    "hx": 0.9,
    "hy": 0.9,
    "sheet": "exec-f5b3b50f-bf79-4835-b523-15b788be5dab.png",
@@ -4002,83 +5880,117 @@
    "rect": [
     822,
     786,
-    230,
+    231,
     374
    ],
-   "w": 115.2,
-   "h": 189.07
+   "cutOff": false,
+   "w": 94.96,
+   "h": 153.75,
+   "ax": 47.48,
+   "ay": 151.95,
+   "factor": 0.6,
+   "ref": "birch",
+   "boxes": [
+    {
+     "hx": 0.48,
+     "hy": 0.36,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 2,
+   "big": false,
+   "cost": 340,
+   "views": [
+    "gen:tree-small-birch-4:ne",
+    "gen:tree-small-birch-4:se",
+    "gen:tree-small-birch-4:sw",
+    "gen:tree-small-birch-4:nw"
+   ]
   },
   {
    "id": "newprop:shanty-leaderboard",
+   "slug": "shanty-leaderboard",
    "name": "Shanty leaderboard",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.6,
    "hy": 0.6,
    "sheet": "exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
    "cell": "top left",
    "rect": [
-    0,
-    0,
-    627,
-    627
+    57,
+    34,
+    684,
+    612
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 76.8,
-   "h": 79.92
+   "h": 68.72,
+   "cost": 50
   },
   {
    "id": "newprop:shanty-hole-sign",
+   "slug": "shanty-hole-sign",
    "name": "Shanty hole sign",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.6,
    "hy": 0.6,
    "sheet": "exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
    "cell": "top right",
    "rect": [
-    627,
-    0,
-    627,
-    627
+    800,
+    13,
+    409,
+    646
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 76.8,
-   "h": 81.05
+   "h": 121.3,
+   "cost": 50
   },
   {
    "id": "newprop:shanty-clock",
+   "slug": "shanty-clock",
    "name": "Shanty clock",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.6,
    "hy": 0.6,
    "sheet": "exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
    "cell": "bottom left",
    "rect": [
-    0,
-    627,
-    627,
-    627
+    194,
+    628,
+    362,
+    596
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 76.8,
-   "h": 127.57
+   "h": 126.44,
+   "cost": 50
   },
   {
    "id": "newprop:shanty-signpost",
+   "slug": "shanty-signpost",
    "name": "Shanty signpost",
    "cat": "New: Course props",
+   "kind": "decor",
    "hx": 0.6,
    "hy": 0.6,
    "sheet": "exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
    "cell": "bottom right",
    "rect": [
-    627,
-    627,
-    627,
-    627
+    752,
+    640,
+    448,
+    595
    ],
-   "cut": "cell",
+   "cutOff": false,
    "w": 76.8,
-   "h": 80.67
+   "h": 102,
+   "cost": 50
   }
  ]
 }

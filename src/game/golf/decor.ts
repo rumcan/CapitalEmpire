@@ -152,7 +152,10 @@ const CATALOGUE: readonly DecorItem[] = [
   { key: 'chapel', name: 'Small chapel', group: 'buildings', kind: 'stone', id: 'variation:world-church-44e76535-plain:1', price: 60000, appeal: 0, desc: 'A white clapboard chapel with its steeple' },
 ];
 /** the owner's new props (library cat 'New: <category>'): plain placeable props, each its category's group, priced by the library's cost; no appeal yet */
-const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ')).map((i): DecorItem => ({ key: `newprop-${i.id.slice('newprop:'.length)}`, name: i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, desc: `${i.cat.slice(5)}: a new prop to place (no appeal yet)` }));
+// the new trees (kind tree, four library views on one picture) are one card each: their north-east view (the engine's tree sun decides a mirror)
+const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
+  ? { key: `newprop-${i.id.slice('gen:tree-'.length, -':ne'.length)}`, name: i.name.replace(/ \(NE\)$/, ''), group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'plant', id: i.id, price: i.cost, appeal: 0, desc: 'A tree: plant it in the grounds (no appeal yet)' }
+  : { key: `newprop-${i.id.slice('newprop:'.length)}`, name: i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, desc: `${i.cat.slice(5)}: a new prop to place (no appeal yet)` });
 export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...NEW_PROP_ITEMS];
 export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d => [d.key, d]));
 

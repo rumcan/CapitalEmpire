@@ -21,10 +21,12 @@ const TREE_SIDE = {
   // the brightness of the crown (crown and half read left, the trunk reads right)
   'ref:tree-spruce-blue': 'right',
 };
+// the owner's blue spruces (art/new-props): the same picture style as ref:tree-spruce-blue, read by eye (warm sunlit tips on the right)
+for (const size of ['wide', 'tall', 'medium', 'small']) for (const d of ['ne', 'se', 'sw', 'nw']) TREE_SIDE[`gen:tree-blue-spruce-${size}:${d}`] = 'right';
 
 // every tree in a generated library: its atlas page (mip 0) and rectangle
 const trees = [];
-for (const f of ['library', 'east-library', 'business-library', 'construction-library', 'golf-library', 'cars-library', 'views-library', 'trees-library']) {
+for (const f of ['library', 'east-library', 'business-library', 'construction-library', 'golf-library', 'new-props-library', 'cars-library', 'views-library', 'trees-library']) {
   const text = fs.readFileSync(path.join(root, `src/game/${f}.ts`), 'utf8');
   const imports = new Map([...text.matchAll(/import\s+(\w+)\s+from\s+'([^']+\.webp)'/g)].map(m => [m[1], path.join(root, 'src/game', m[2])]));
   const pagesLiteral = /ATLAS_PAGES: string\[\]\[\] = (\[.*?\]);/.exec(text)?.[1] ?? /const PAGES: string\[\]\[\] = (\[.*?\]);/.exec(text)?.[1];

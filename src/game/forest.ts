@@ -3,6 +3,7 @@ import { MAP, mulberry, tileOf } from './iso';
 import { fbm, hash2, smoothstep, type Noise } from './terrain/noise';
 import { TC, sampleField } from './terrain/types';
 import { OWNER_SCALE } from './lots/scales';
+import { NEW_BROADLEAF_SPECIES, NEW_CONIFER_SPECIES } from './new-props-library';
 
 /** tiles per forest cell: the engine plants the trees of one cell at a time, as the camera reaches it */
 export const FOREST_CELL = 64;
@@ -20,7 +21,7 @@ export interface TreeSpecies { name: string; ids: readonly string[]; w: number; 
 const views = (s: string) => ['ne', 'se', 'sw', 'nw'].map(d => `gen:tree-${s}:${d}`);
 const stages = (s: string) => ['open', 'moderate', 'patchy', 'near-bare'].map(k => `capital:tree-${s}-${k}`);
 /** the conifers: every pine, spruce and fir of the library (the owner, 2026-10-24: "it's not using all the trees in the generating") */
-export const FOREST_CONIFERS: readonly TreeSpecies[] = [
+const WORLD_CONIFERS: readonly TreeSpecies[] = [
   { name: 'pine', ids: stages('pine'), w: 1 },
   { name: 'spruce', ids: stages('spruce'), w: 1 },
   { name: 'old pine', ids: ['world:tree_pine_0', 'world:tree_pine_1', 'world:tree_pine_2'], w: 1 },
@@ -28,8 +29,10 @@ export const FOREST_CONIFERS: readonly TreeSpecies[] = [
   { name: 'young spruce', ids: views('spruce-young'), w: 1 },
   { name: 'tall fir', ids: views('fir-tall'), w: 1 },
 ];
+/** the conifers: the world's and the owner's new ones (art/new-props, one species per sheet: its trees' four views each) */
+export const FOREST_CONIFERS: readonly TreeSpecies[] = [...WORLD_CONIFERS, ...NEW_CONIFER_SPECIES];
 /** the broadleaf trees: every maple, oak, birch and aspen of the library, and the dead snags (rare, the woods only) */
-export const FOREST_BROADLEAF: readonly TreeSpecies[] = [
+const WORLD_BROADLEAF: readonly TreeSpecies[] = [
   { name: 'maple', ids: stages('maple'), w: 1 },
   { name: 'birch', ids: stages('birch'), w: 1 },
   { name: 'oak', ids: stages('oak'), w: 1 },
@@ -43,6 +46,8 @@ export const FOREST_BROADLEAF: readonly TreeSpecies[] = [
   { name: 'ember maple', ids: views('maple-ember'), w: 1 },
   { name: 'dead snag', ids: ['world:tree_dead_0', 'world:tree_dead_1', 'world:tree_dead_2'], w: 0.25, dead: true },
 ];
+/** the broadleaves: the world's and the owner's new ones (art/new-props, one species per sheet: its trees' four views each) */
+export const FOREST_BROADLEAF: readonly TreeSpecies[] = [...WORLD_BROADLEAF, ...NEW_BROADLEAF_SPECIES];
 /** every library id the pools can deal (the tests hold it to the library's trees) */
 export const TREE_POOL_IDS: readonly string[] = [...FOREST_CONIFERS, ...FOREST_BROADLEAF].flatMap(s => s.ids);
 /** the conifer ids (the conifer share of a stand counts these) */
