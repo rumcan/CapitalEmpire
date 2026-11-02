@@ -45,7 +45,7 @@ import { lotPickup, parkedAs } from '../vehicles';
 import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
 import { presetTier, tierOf } from './tiers';
-import { buildGroups } from './groups';
+import { buildGroups, groupOf as cellMembers, roleOf, sizeOf, zoneOf, type Role } from './groups';
 import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
 import { onStudioScales } from './scales-live';
@@ -375,7 +375,10 @@ export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; 
   if (!plan) return null;
   const { preset } = plan, frame = presetFrame(lot, preset);
   // T167: a picture the owner removed is never drawn: a stand-in takes its place (or it is left out), before the house finds its yards
-  const fit = swapShop(standIns(fitPreset(preset, lot.w, lot.d), preset, lot, frame), plan, lot, frame);
+  // T297 (#882): the remix comes last, on the props as drawn (the stand-ins and the shop in place); its main building is the shop's spot
+  const fit0 = swapShop(standIns(fitPreset(preset, lot.w, lot.d), preset, lot, frame), plan, lot, frame);
+  const sw = plan.swap ? fit0.from.indexOf(plan.swap.spot) : -1;
+  const fit = remixOf(fit0, preset, lot, st, frame, sw >= 0 ? sw : mainIndex(fit0, frame));
   return { preset, fit: frozenHouse(preset) ? houseYards(fit, frame) : fit, frame };
 }
 
@@ -481,6 +484,89 @@ function swapShop(fit: Fitted, plan: ShopPlan, lot: LotGeom, f: PresetFrame): Fi
   const standIn = fit.standIn ? fit.standIn.slice() : fit.props.map(() => undefined as string | undefined);
   standIn[k] ??= q.id;
   return { ...fit, props, standIn };
+}
+
+// ---------- T297 (#882): the remix: a lot's props swapped within their groups (groups.ts, learned from the presets)
+// The owner's words (lead, 2026-11-02): a group holds only pictures the owner has already used in that kind of place on that kind of lot, so a
+// shabby back yard's junk stays shabby and a tidy front yard's planting stays tidy. The layout keeps its logic (the drive, the garage, the play set).
+/** the remix on (?oldremix, or setLotRemix(false): the presets' own pictures, as before T297) */
+let REMIX = !(typeof location !== 'undefined' && /[?&]oldremix(&|=|$)/.test(location.search ?? ''));
+/** turns the remix on or off (the lot lab's Original shows a preset as it is; the tests) */
+export function setLotRemix(on: boolean): void { REMIX = on; }
+/** whether the remix is on */
+export const lotRemix = (): boolean => REMIX;
+/** the chance a prop of a role is remixed (the owner's design, #882: planting, trees and decor 0.7; patios, play sets, junk and bins 0.5; sheds and
+ *  garages 0.35; cars always; a house, a sign and a mailbox keep their own) */
+const REMIX_CHANCE: Partial<Record<Role, number>> = { planter: 0.7, tree: 0.7, decor: 0.7, patio: 0.5, play: 0.5, junk: 0.5, bin: 0.5, shed: 0.35, garage: 0.35, car: 1 };
+/** the chance a tier-0 house lot shows a starter home in its house's place (#882: the trailer park and junk yard lots of the starter tier) */
+const STARTER_CHANCE = 0.6;
+/** a lot's remix seed: its seed and the lot lab's re-roll (ComposeState.remix; absent: the game's own fill) */
+const remixSeed = (st: ComposeState): number => mix(st.seed, st.remix ?? 0, 0x297);
+/** a seeded draw in [0, 1) from a seed, a prop's index and a salt */
+const unitOf = (seed: number, k: number, salt: number): number => mix(seed, k, salt) / 4294967296;
+/** a footprint box (lot frame, tiles) from a prop's centre and half extents */
+const boxAt = (q: { x: number; y: number }, h: { ha: number; hb: number }): Box4 => [q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb];
+/** the starter homes (tier-0 buildings: the run-down, derelict and boarded houses; the trailers and mobile homes are decor-kind props, which the house
+ *  logic (houseBase) cannot take in a house's place), by id; made once */
+const STARTER_RE = /rundown|derelict|boarded|abandoned|shack|lean-to/;
+let STARTERS: string[] | null = null;
+const starterPalette = (): readonly string[] => (STARTERS ??= LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && isBuilding(it) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:')
+  && !REAR.test(it.id) && !drawnAsStandIn(i) && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort());
+/** a fitted preset's main building (the house or the shop): the index of its widest building (its half extents' area), -1 for none */
+function mainIndex(fit: Fitted, f: PresetFrame): number {
+  const half = frameHalf(f); let k = -1, a = 0;
+  fit.props.forEach((q, i) => { const it = BY.get(q.id); if (!it || !isBuilding(it)) return; const h = half(q), v = h.ha * h.hb; if (v > a) { a = v; k = i; } });
+  return k;
+}
+/** a member placed in a fitted prop's spot (T297): swapScale's size for the spot (the rules a shop swap uses), its front edge kept and its centre
+ *  along the lot as swapShop places a shop; null when the member does not fit the spot or the lot */
+function placeMember(q: PresetProp, id: string, lot: LotGeom, f: PresetFrame, R: SwapRules): { prop: PresetProp; h: { ha: number; hb: number } } | null {
+  const k = swapScale(q, id, f, R); if (!k) return null;
+  const half = frameHalf(f), h0 = half(q), n = { ...q, id, scale: k }, h1 = half(n);
+  if (2 * h1.ha > lot.w || 2 * h1.hb > lot.d) return null;
+  return { prop: { ...n, x: clamp(q.x, h1.ha, lot.w - h1.ha), y: clamp(q.y - h0.hb + h1.hb, h1.hb, lot.d - h1.hb) }, h: h1 };
+}
+/** a fitted preset with its props remixed (T297, #882): each prop that is not the main building (mainK), a stand-in, a fence, a gate, a patch or a
+ *  removed picture takes, by a draw of the lot's remix seed, another member of its cell (groups.ts) when one fits its spot: the lot's tier (no building
+ *  above it), a house the allocations allow on the lot's road and state, the size (placeMember), the zone (the same as the prop's own in the lot), and
+ *  no overlap with another prop beyond what the preset already had (share). A tier-0 res lot may show a starter home in its house's place
+ *  (STARTER_CHANCE). Positions and facings stay the preset's; the same lot and seed remix the same on every compose. */
+function remixOf(fit: Fitted, preset: LotPreset, lot: LotGeom, st: ComposeState, f: PresetFrame, mainK: number): Fitted {
+  if (!REMIX || preset.whole || preset.use === 'farm' || !fit.props.length) return fit;
+  const seed = remixSeed(st), half = frameHalf(f), road = roadOf(lot.n), state = preset.state, cap = st.tier ?? 3, R = rulesOf(preset.use);
+  const box0 = fit.props.map(q => boxAt(q, half(q))), props = fit.props.slice(), boxes = box0.slice();
+  // (a remixed prop overlaps each other prop no more than the preset's own pair did)
+  const clear = (k: number, b: Box4) => { for (let j = 0; j < props.length; j++) if (j !== k && share(b, boxes[j]!) > share(box0[k]!, box0[j]!) + 1e-9) return false; return true; };
+  const place = (k: number, id: string): boolean => {
+    const q = fit.props[k]!, zone = zoneOf(q.x, q.y, lot.w, lot.d), p = placeMember(q, id, lot, f, R);
+    if (!p || zoneOf(p.prop.x, p.prop.y, lot.w, lot.d) !== zone) return false;
+    const b = boxAt(p.prop, p.h); if (!clear(k, b)) return false;
+    props[k] = p.prop; boxes[k] = b; return true;
+  };
+  // the starter home: a tier-0 res lot's house spot (a removed house's stand-in keeps its own place: the owner's picture is the one removed)
+  if (preset.use === 'res' && cap === 0 && mainK >= 0 && fit.from[mainK] !== undefined && !removedOf(preset.props[fit.from[mainK]!]?.id ?? '') && unitOf(seed, mainK, 0x57) < STARTER_CHANCE) {
+    const list = starterPalette(), n = list.length;
+    if (n) { const at = mix(seed, mainK, 0x58) % n; for (let t = 0; t < n; t++) { const id = list[(at + t) % n]!; if (allows(ALLOC, id, road, state) && place(mainK, id)) break; } }
+  }
+  for (let k = 0; k < fit.props.length; k++) {
+    if (k === mainK || fit.standIn?.[k] !== undefined) continue;
+    const q = fit.props[k]!, src = preset.props[fit.from[k]!];
+    if (!src || removedOf(q.id)) continue;
+    const role = roleOf(q.id); if (!role) continue;
+    const chance = REMIX_CHANCE[role]; if (!chance || unitOf(seed, k, 0x51) >= chance) continue;
+    const cell = cellMembers(preset.use, state, zoneOf(src.x, src.y, preset.w, preset.d), role, sizeOf(src)), n = cell.length;
+    if (n < 2) continue;
+    const at = mix(seed, k, 0x52) % n;
+    for (let t = 0, tried = 0; t < n && tried < 4; t++) {
+      const id = cell[(at + t) % n]!;
+      if (id === q.id || removedOf(id)) continue;
+      if (isBuildingId(id) && tierOf(id) > cap) continue;
+      if (role === 'house' && !allows(ALLOC, id, road, state)) continue;
+      tried++;
+      if (place(k, id)) break;
+    }
+  }
+  return props.every((p, k) => p === fit.props[k]) ? fit : { ...fit, props };
 }
 
 // ---------- T167: stand-ins for the pictures the owner removed
