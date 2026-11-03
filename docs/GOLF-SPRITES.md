@@ -392,3 +392,9 @@ drops it, its turned box leaving the lot). Until these exist, those lots plant a
 - **Board fence, screen-horizontal run** and **screen-vertical run** (2 pictures; 4 m of fence each, the sun at the upper right, shadows at 145°).
 - **Picket fence**, the same two runs.
 - **A gate** for each (the drive's gap).
+
+## The swing meter (T316, #902: an art request)
+The owner's 3-click swing meter (the shot panel, `src/ui/ShotPanel.tsx` drawMeter) is drawn on a plain canvas, labelled "Stand In for swing meter art".
+- **A half-circle meter face** (about 300 x 180 px, transparent): the arc from the snap line at the right end over the top to the left end, a gold 100%
+  mark at 5/6 of the way (150 degrees), the overswing (the last sixth) in red, a short tail below the snap line on the right, a polished 1985 golf-game
+  look (brass and enamel). The marker, the ticks, the sweet spot and the numbers stay drawn by the code on top.

@@ -147,34 +147,36 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
   }, [phase, result, i.club, i.aim.x, i.aim.y, game]);
 
   return (
-    <div className="pointer-events-auto absolute bottom-[calc(var(--foot-stack,0px)+0.75rem)] left-1/2 z-20 w-[26rem] max-w-[calc(100vw-1.5rem)] -translate-x-1/2 glass p-3 text-slate-200" data-testid="shot-panel">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-display text-sm font-bold tracking-wide text-[var(--gold-hi)] uppercase">Your shot</span>
-        <span className="text-xs tabular-nums text-slate-300">Hole {t.hole} · Par {t.par} · Stroke {t.stroke}</span>
-      </div>
-      <p className="mt-1 text-xs tabular-nums text-slate-300">
-        To the pin {putting ? t.distM.toFixed(1) : Math.round(t.distM)} m ({Math.round(t.distM * YARDS)} yd) · to the aim {putting ? aimM.toFixed(1) : Math.round(aimM)} m · {LIE_NAME[t.lie]}
-      </p>
-      <div className="mt-2 flex flex-wrap gap-1" onWheel={e => { if (e.deltaY) cycle(e.deltaY > 0 ? 1 : -1); }} title="Q / E or the mouse wheel change the club">
-        {clubs.map(c => (
-          <button key={c} disabled={busy} className={`chip ${c === i.club ? 'chip-on' : ''} ${c === t.suggested.club ? 'ring-1 ring-amber-300/70' : ''}`}
-            title={c === t.suggested.club ? 'The suggested club' : undefined} onClick={() => game.setShotClub(c)}>{CLUB_NAME[c]}</button>
-        ))}
-      </div>
-      <p className="mt-1 text-xs tabular-nums text-slate-300">
-        {CLUB_NAME[i.club]}{i.club === t.suggested.club ? ' (suggested)' : ''}: {putting ? `putting scale, 100% is the hole (${t.distM.toFixed(1)} m)` : `full carry ${Math.round(fullM)} m (${Math.round(fullM * YARDS)} yd)`}
-      </p>
-      <div className="mt-2 flex justify-center">
-        <canvas ref={canvas} className="cursor-pointer select-none" style={{ width: CW, height: CH, maxWidth: '100%' }} aria-label="Swing meter"
+    <div className="pointer-events-auto absolute bottom-[calc(var(--foot-stack,0px)+0.75rem)] left-1/2 z-20 w-[42rem] max-w-[calc(100vw-1.5rem)] -translate-x-1/2 glass p-3 text-slate-200" data-testid="shot-panel">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="min-w-[15rem] flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="font-display text-sm font-bold tracking-wide text-[var(--gold-hi)] uppercase">Your shot</span>
+            <span className="text-xs tabular-nums text-slate-300">Hole {t.hole} · Par {t.par} · Stroke {t.stroke}</span>
+          </div>
+          <p className="mt-1 text-xs tabular-nums text-slate-300">
+            To the pin {putting ? t.distM.toFixed(1) : Math.round(t.distM)} m ({Math.round(t.distM * YARDS)} yd) · to the aim {putting ? aimM.toFixed(1) : Math.round(aimM)} m · {LIE_NAME[t.lie]}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1" onWheel={e => { if (e.deltaY) cycle(e.deltaY > 0 ? 1 : -1); }} title="Q / E or the mouse wheel change the club">
+            {clubs.map(c => (
+              <button key={c} disabled={busy} className={`chip ${c === i.club ? 'chip-on' : ''} ${c === t.suggested.club ? 'ring-1 ring-amber-300/70' : ''}`}
+                title={c === t.suggested.club ? 'The suggested club' : undefined} onClick={() => game.setShotClub(c)}>{CLUB_NAME[c]}</button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs tabular-nums text-slate-300">
+            {CLUB_NAME[i.club]}{i.club === t.suggested.club ? ' (suggested)' : ''}: {putting ? `putting scale, 100% is the hole (${t.distM.toFixed(1)} m)` : `full carry ${Math.round(fullM)} m (${Math.round(fullM * YARDS)} yd)`}
+          </p>
+          <p className="mt-1 min-h-[4.5em] text-[12px] text-slate-400">
+            {phase === 'ready' ? 'Enter or click the meter to swing, again for the power, once more at the snap line. Tap Space during the swing for more power (riskier). Q / E or the wheel: club. Click the course to aim.'
+              : phase === 'up' ? 'Click (or Enter) to set the power…' : phase === 'back' ? 'Click (or Enter) at the snap line…' : ''}
+          </p>
+          {last && <p className="mt-1 text-[12px] tabular-nums text-slate-300">Last shot: {last.text}</p>}
+          <div className="mt-2 flex justify-end gap-2">
+            <button className="btn" disabled={swinging || phase === 'done'} onClick={() => game.ownerCaddie()}>Let the caddie finish</button>
+          </div>
+        </div>
+        <canvas ref={canvas} width={CW} height={CH} className="mx-auto shrink-0 cursor-pointer select-none" style={{ width: CW, height: CH }} aria-label="Swing meter"
           onPointerDown={e => { if (e.button === 0 && !meter.current) { e.preventDefault(); click(); } }} />
-      </div>
-      <p className="mt-1 min-h-[1.2em] text-[12px] text-slate-400">
-        {phase === 'ready' ? 'Enter or click the meter to swing, again for the power, once more at the snap line. Tap Space during the swing for more power (riskier). Q / E or the wheel: club. Click the course to aim.'
-          : phase === 'up' ? 'Click (or Enter) to set the power…' : phase === 'back' ? 'Click (or Enter) at the snap line…' : ''}
-      </p>
-      {last && <p className="mt-1 text-[12px] tabular-nums text-slate-300">Last shot: {last.text}</p>}
-      <div className="mt-2 flex justify-end gap-2">
-        <button className="btn" disabled={swinging || phase === 'done'} onClick={() => game.ownerCaddie()}>Let the caddie finish</button>
       </div>
     </div>
   );
