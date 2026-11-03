@@ -7415,6 +7415,12 @@ export class Game {
         const name = personName(v.person * 7919 + Math.floor(v.x) * 31 + Math.floor(v.y)), at = talkSpot(v, from), pt = { x: v.x, y: v.y };
         return { kind: 'person', name, at, face: pt, key: 'p' + v.person, act: () => this.youTalkTo(name, 'a townsperson', pt) };
       }
+      // the range's golfers (walking to a mat, queueing, hitting): a name of their own until T243's people
+      if (this.range.scene) { const rd = this.range.sim.view(); for (let k = 0; k < rd.nPeople; k++) {
+        const q = rd.people[k]!; if (q.lift || !hit(q.x, q.y)) continue;
+        const name = personName(q.person * 7919 + k * 131 + 17), pt = { x: q.x, y: q.y };
+        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: 'r' + k, act: () => this.youTalkTo(name, 'a golfer at your range', pt) };
+      } }
       const d = this.dayPlay; if (d && !this.dayOff) for (const p of d.view.people) {
         if (!hit(p.x, p.y)) continue;
         const gf = d.base.golfers[p.golfer], name = gf?.name ?? 'a golfer', pt = { x: p.x, y: p.y };
@@ -7428,12 +7434,12 @@ export class Game {
     }
     const p = this.propAt(mx, my), sc = this.range.scene;
     // the range: its practice greens (use them), its pieces and its front (buy a bucket, hit at a mat)
-    if (sc && (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y)))) {
-      if (inPractice(sc.practice, tl.x, tl.y)) {
+    if (sc && (p?.auto?.startsWith('range:') || (!p && inPractice(sc.practice, tl.x, tl.y)))) {
+      if (!p && inPractice(sc.practice, tl.x, tl.y)) {
         const f = this.range.practiceFacts(), kind: PracticeKind | null = f?.putting === 'open' && f.chipping === 'open' ? null : f?.putting === 'open' ? 'putting' : f?.chipping === 'open' ? 'chipping' : null;
         return { kind: 'practice', name: 'the practice area', at: { ...sc.practice.entry }, face: { ...sc.practice.label }, key: 'practice', act: () => { this.openRangeCard(true); if (kind) this.youPractise(kind); } };
       }
-      return { kind: 'range', name: 'the range', at: { x: sc.queueAt.x, y: sc.queueAt.y }, face: { ...sc.counter }, key: 'range', act: () => { this.openRangeCard(true); this.inspectScene(p); } };
+      return { kind: 'range', name: 'the range', at: { x: sc.queueAt.x, y: sc.queueAt.y }, face: { ...sc.counter }, key: 'range', act: () => this.openRangeCard(true) };
     }
     const club = g && !p ? this.bizDefs.find(d => d.type === 'clubhouse') : undefined;
     if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) {
