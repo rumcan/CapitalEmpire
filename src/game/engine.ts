@@ -1,7 +1,7 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clamp, clampZoom, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
-import { ATLAS_PAGES, GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
+import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
-import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
+import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GREENKEEPING } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
@@ -165,7 +165,7 @@ import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex, unitBuildCost } from './golf/costs';
-import { inSentence, inTheWay, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
+import { bizName, inSentence, inTheWay, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
@@ -175,7 +175,9 @@ import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin,
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, swingEffect, type ShotReport, type SwingOutcome, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
-import { BOOK_LEAD, PRESSURE, bookRound, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
+import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
+import { GOLFER_NAMES } from './golf/play/field';
+import { BOOK_LEAD, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -267,6 +269,29 @@ function busStop(ctx: CanvasRenderingContext2D, x: number, y: number, dpr: numbe
 }
 /** the distance, tiles, from point p to the rect (x, y, w, h): 0 inside it */
 function rectDist(p: Pt, x: number, y: number, w: number, h: number): number { return Math.hypot(Math.max(x - p.x, 0, p.x - x - w), Math.max(y - p.y, 0, p.y - y - h)); }
+/** T240: the props your character walks round (golf/you.ts): buildings, houses, lots, venues, fences, parked cars and the play pieces */
+const YOU_BLOCKS: ReadonlySet<string> = new Set(['building', 'house', 'lot', 'venue', 'fencex', 'fencey', 'car', 'gazebo', 'arcade', 'vending', 'junglegym']);
+/** T240: the props a click looks at (walk to the door, then its card) */
+const YOU_LOOKS_AT: ReadonlySet<string> = new Set(['building', 'house', 'lot', 'venue']);
+/** T240: what each course surface costs you to walk over (1 open grass): water never, a bunker dear, a green and the long grass a little */
+const YOU_SURF: Readonly<Record<number, number>> = { [SURF.water]: Infinity, [SURF.bunker]: 4, [SURF.green]: 1.6, [SURF.tee]: 1.1, [SURF.fescue]: 1.5, [SURF.longGrass]: 1.5, [SURF.waste]: 1.3, [SURF.rough]: 1.1 };
+/** T240: the keys that walk your character in Walk mode (they pan the camera otherwise) */
+/** T240: the hover label's rim by verb (none: you cannot walk there) */
+const YOU_VERB_COLOR: Readonly<Record<YouVerb | 'none', string>> = { walk: '#facc15', talk: '#38bdf8', look: '#c084fc', use: '#4ade80', none: '#f87171' };
+const YOU_KEYS: ReadonlySet<string> = new Set(['w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+/** T240: a person's name from a seed (the field's name lists) until T243 gives the town's people their own */
+function personName(seed: number): string {
+  const r = (k: number) => hash(seed, k), w = r(1) < 0.5, first = w ? GOLFER_NAMES.w : GOLFER_NAMES.m;
+  return `${first[Math.floor(r(2) * first.length)]} ${GOLFER_NAMES.last[Math.floor(r(3) * GOLFER_NAMES.last.length)]}`;
+}
+/** T240: what a person says when you walk up (the stand-in talk until T243's cards) */
+const TALK_LINES: readonly string[] = ['Nice day for it.', 'You run the range, right? My brother-in-law swears by it.', 'Hit any good ones today?', 'They say a course is coming. About time.', 'I shot a 92 last week. Personal best.', 'Is the bucket still three dollars?', 'Watch out for the ditch on the left.', 'My wife thinks I golf too much. She is right.'];
+/** T240: whether (x, y) lies in polygon z (x y pairs; the even-odd rule) */
+function inPolygon(z: readonly number[], x: number, y: number): boolean {
+  let c = false;
+  for (let i = 0, n = z.length / 2, j = n - 1; i < n; j = i++) { const xi = z[i * 2]!, yi = z[i * 2 + 1]!, xj = z[j * 2]!, yj = z[j * 2 + 1]!; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; }
+  return c;
+}
 /** a crowd person (crowdview.ts) as the mover out[k], made on first use and then reused: its 3D frame in the library (group 0 the spectators, 1 the
  *  golfers), at its point, unflipped, with the townspeople's 0.24-tile footprint */
 function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
@@ -897,7 +922,7 @@ export class Game {
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
-  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T207: a road tool right-click: on release without a drag it takes back the last point */ back?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T207: a road tool right-click: on release without a drag it takes back the last point */ back?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt; /** T240: a Walk mode click (your character walks there on release) */ you?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
   paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
@@ -4624,11 +4649,17 @@ export class Game {
     else if (!this.refuseLocked('buildings')) this.placeClubhouse(true);
     this.pulseAnchor(id === 'holes' ? 'new-hole' : id === 'carpark' ? 'tool-park' : 'clubhouse-card');
   }
+  /** whether this is a new range game (loaded with under WELCOME_PLAY_S of play, the ramp's): the welcome and "Who are you?" cards show */
+  private welcomeFreshNow(): boolean {
+    const g = this.golf, p = g?.progress;
+    if (g !== this.welcomeFor) { this.welcomeFor = g; this.welcomeFresh = !!p && p.playS < WELCOME_PLAY_S; }
+    return g?.start === 'range' && !!p && p.ramp !== undefined && this.welcomeFresh;
+  }
   welcomeView(): { road: string; newHole: boolean } | null {
     if (!welcomeReady(this.firstViewBaked, performance.now() - this.readyAt)) return null; // T188: the card waits for the ground
     const g = this.golf, p = g?.progress;
-    if (g !== this.welcomeFor) { this.welcomeFor = g; this.welcomeFresh = !!p && p.playS < WELCOME_PLAY_S; }
-    if (g?.start !== 'range' || !p || p.ramp === undefined || !this.welcomeFresh || p.seen.includes('welcome') || this.playableHoles > 0) return null;
+    if (!this.welcomeFreshNow() || !p || p.seen.includes('welcome') || this.playableHoles > 0) return null;
+    if (!p.seen.includes('who')) return null; // T240: the "Who are you?" card first
     const ui = this.toolUi();
     return { road: this.rangeRoad() || 'the county road', newHole: !ui?.newHoleLock && !this.toolLock('course') };
   }
@@ -4909,6 +4940,8 @@ export class Game {
     if (this.tool === 'junction' && e.button === 2 && this.junctionRight(mx, my)) return;
     if (this.paintOn && e.button === 2 && this.paint.secondary(this.tileAt(mx, my), mx, my)) return;
     if ((this.tool === 'lane' || this.tool === 'downgrade') && e.button === 2) { this.laneReverse(mx, my); return; }
+    // T240: Walk mode: a click walks your character there (on release, so a drag still pans); Ctrl+click is Select's instant look
+    if (!pan && e.button === 0 && !e.ctrlKey && !e.metaKey && this.youControls()) { this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, you: true }; return; }
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
         // a car under the pointer (street tier) is inspected; else a prop is selected; else, with the flow on, the junction there is watched
@@ -4966,6 +4999,8 @@ export class Game {
       else if (d.kind === 'bulldoze') this.bulldozeAt(mx, my, false);
       else if (d.kind === 'park') this.parkUpdate(mx, my);
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
+    if (!d && this.youControls()) this.youHoverAt(mx, my); else if (this.youHover && !d) { this.youHover = null; this.emit(); }
+    if (d?.you && d.moved) this.youFollow = false; // (T240: you dragged the map: the camera stays where you put it)
     if (this.tool === 'props') this.decor.move(mx, my);
     if (this.tool === 'practice') this.practice.move(mx, my);
     if (this.tool === 'select' && !d) this.hoverRoad = this.hoverProp ? '' : this.roadNameAt(this.hover);
@@ -4992,6 +5027,7 @@ export class Game {
     if (d?.kind === 'park') this.parkRelease();
     // a click (no drag) on the course aims the owner's open shot (P4b)
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
+    if (d?.kind === 'pan' && d.you && !d.moved) this.youClick(d.sx, d.sy); // T240
     if (d?.kind === 'pan' && d.land && !d.moved && this.landMode) { this.land.click(d.land.x, d.land.y); this.emit(); }
     // a right click (no drag) in the road tool takes back the last point, as Backspace does (the owner, 2026-10-27, T207); a right drag still pans
     if (d?.kind === 'pan' && d.back && !d.moved) this.routeInput('right');
@@ -5000,7 +5036,7 @@ export class Game {
     if (this.tool === 'props') this.decor.up();
     this.dragging = null;
   }
-  pointerLeave() { this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.ghostMouse = null; this.busHover = null; this.laneHover = null; this.decor.ghost = null; this.practice.leave(); }
+  pointerLeave() { this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.ghostMouse = null; this.busHover = null; this.laneHover = null; this.decor.ghost = null; this.practice.leave(); this.youHover = null; }
   /** the name of the road under tile t (the piece under it, then its route), or '' */
   roadNameAt(t: Pt | null): string {
     const piece = t ? this.net.pieceNear(t) : null;
@@ -5012,7 +5048,7 @@ export class Game {
   junctionName(n: Node): string { const names: string[] = []; for (const a of n.arms) { const s = this.roadNameOfSeg(a.seg); if (s) names.push(s); } return this.names.junction(names); }
   /** the name of the junction at tile position (x, y) (a node's position), or '' when there is no junction there */
   junctionNameAt(x: number, y: number): string { const n = this.net.nodeAt({ x, y }); return n ? this.junctionName(n) : ''; }
-  doubleClick() { this.routeInput('double'); if (this.paintOn) this.paint.doubleClick(); }
+  doubleClick() { this.routeInput('double'); if (this.paintOn) this.paint.doubleClick(); if (this.youControls()) this.youRun(); }
   wheel(e: WheelEvent) {
     e.preventDefault();
     const f = Math.exp(-e.deltaY * 0.0014);
@@ -5082,9 +5118,11 @@ export class Game {
     // Esc (P23 4.10): the topmost menu or card first (even from a checkbox or slider in it), then the tool's own step, then out to Select; a
     // focused text box keeps Esc from the tool
     if (e.key === 'Escape' && this.sceneRef) { this.closeScene(); return; } // T242: the picture card, over everything, goes first
+    if (e.key === 'Escape' && (this.youTalk || this.youTeeOpen)) { this.youTalk = null; this.youTeeOpen = false; this.emit(); return; } // T240
     if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
     if (typing) return;
     this.keys.add(e.key);
+    if (YOU_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youControls()) { e.preventDefault(); return; } // T240: they walk you (the frame reads them)
     // T268: the tee set in hand: R turns it (Shift+R back), [ ] size it
     if (this.teePlace && !e.ctrlKey && !e.metaKey && !e.altKey) {
       if (e.key === 'r' || e.key === 'R') { this.turnTeePlace(e.shiftKey); return; }
@@ -7044,6 +7082,7 @@ export class Game {
     m = this.playMovers(out, m, X0, Y0, X1, Y1);
     m = this.dayMovers(out, m, X0, Y0, X1, Y1, now); // T208: everyday golf
     m = this.crewMovers(out, m, X0, Y0, X1, Y1, now); // T269: the grounds crew
+    m = this.youMovers(out, m, X0, Y0, X1, Y1); // T240: your character
     out.length = m;
     return out;
   }
@@ -7156,7 +7195,7 @@ export class Game {
       const base = this.dayBook.rosterOf()!, roster = bk && me ? withYou(base, bookedGolfer(me, bk), bk.tee) : base, plan = dayPlan(course.view, roster);
       const youId = bk ? roster.golfers.length - 1 : -1;
       this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight), day: s.day, key: course.key, base, you: bk, youId };
-      this.dayArt = roster.golfers.map((p, i) => i === youId ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
+      this.dayArt = roster.golfers.map((p, i) => i === youId ? this.youArt() : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
       // (the whole day is played now: your score is known, and shown once your round is done)
       if (bk) bk.result = { strokes: plan.strokes[youId]!.reduce((a, b) => a + b, 0), par: course.view.holes.reduce((a, h) => a + h.par, 0), holes: course.view.holes.length, done: plan.done[youId] ?? Infinity };
       this.buildCrew(g, plan, course.view, s.day); // T269: the grounds crew works round the day's groups
@@ -7229,6 +7268,316 @@ export class Game {
   /** the profile card ("Your golf", golf/player.ts playerCardView); null while closed */
   playerCard(): PlayerCardView | null { const p = this.playerCardOpen ? this.playerNow() : null; return p ? playerCardView(p, this.youRoundState()) : null; }
   openPlayerCard(open = !this.playerCardOpen) { this.playerCardOpen = open && !!this.golf; this.emit(); }
+
+  // ---------- T240 (#704): your character: point-and-click and the keys (golf/you.ts) ----------
+  /** your character in the world (null: none yet, or not a golf game); the golf save it was placed for (a load or a new game starts again) */
+  you: YouChar | null = null; private youFor: GolfSave | null = null;
+  /** Walk mode (on by default in a golf game): with Select in hand and no side mode open, a click walks you there or to a thing and uses it, and
+   *  WASD / the arrows walk you (the camera follows). Off: Select is the old instant inspector and the keys pan. Ctrl+click is always instant */
+  youWalkMode = true;
+  /** the camera follows you while you walk (on by default; a drag of the map lets go, the Me button takes it back) */
+  youFollow = true;
+  /** what a click does under the pointer (the cursor's verb and the hover label), the pointer (css px) */
+  youHover: { verb: YouVerb | null; text: string; mx: number; my: number } | null = null;
+  /** the talk card (a person you walked up to), the first tee's card (Start a round) */
+  youTalk: { name: string; line: string; what: string } | null = null; youTeeOpen = false;
+  /** what you do on arriving (the thing's use) and the point you face then */
+  private youThen: { act: (() => void) | null; face: Pt | null; key: string } | null = null;
+  /** the blocked tiles round the last route or round you (1: may not be crossed): a box of the map, its buffer reused */
+  private youR: { x0: number; y0: number; w: number; h: number; a: Uint8Array } = { x0: 0, y0: 0, w: 0, h: 0, a: new Uint8Array(0) };
+  private youRSet = new Set<Prop>(); private youRBox: BBox = [0, 0, 0, 0]; private youPedV: WalkerView[] = [];
+  private youSaveDue = false;
+  /** whether your character takes the clicks and the keys now: a golf game, Walk mode, Select in hand, no side mode, no shot or tee set in hand */
+  youControls(): boolean {
+    return !!this.you && this.youWalkMode && this.tool === 'select' && !this.landMode && !this.holesTool && !this.eventTool && !this.grassPanel && !this.shot && !this.teePlace;
+  }
+  /** your look (an index into GOLFER_PEOPLE): the saved one, else the owner's art for your sex */
+  youArt(): number { const p = this.golf?.player; const l = p?.you?.look; return l !== undefined && l < GOLFER_PEOPLE.length ? l : ownerArt(p?.sex ?? 'm'); }
+  /** where you first stand: beside the shack (the path at the shop) in a range game, else by the clubhouse, else the middle of the view */
+  private youStart(): Pt | null {
+    const sc = this.golf?.start === 'range' ? this.range.scene : null;
+    if (this.golf?.start === 'range' && !sc) return null; // (the range's scene comes a frame or two after the load)
+    if (sc) return { x: sc.shopJoin.x + 1.5, y: sc.shopJoin.y + 0.5 };
+    const club = this.bizDefs.find(d => d.type === 'clubhouse');
+    if (club) return { x: club.x + club.w / 2, y: club.y + club.h + 1.5 };
+    const t = tileOf(this.cam.X, this.cam.Y); return { x: t.x, y: t.y };
+  }
+  /** one frame of your character (real seconds: you walk at a person's pace whatever the sim's speed): placed once, the keys or the route, the
+   *  use on arriving, the camera following, the save when you stop. No allocation */
+  private youStep(dt: number) {
+    if (this.youFor !== this.golf) { this.youFor = this.golf; this.you = null; this.youThen = null; this.youTalk = null; this.youTeeOpen = false; }
+    const g = this.golf; if (!g) return;
+    if (!this.you) {
+      const sv = g.player?.you, at = sv ? { x: sv.x, y: sv.y } : this.youStart(); if (!at) return;
+      this.you = makeYou(at.x, at.y, sv?.f ?? 0);
+    }
+    const y = this.you, wasMoving = y.moving || y.keys;
+    let kx = 0, ky = 0;
+    if (this.youControls()) {
+      if (this.keys.has('ArrowLeft') || this.keys.has('a') || this.keys.has('A')) kx -= 1; if (this.keys.has('ArrowRight') || this.keys.has('d') || this.keys.has('D')) kx += 1;
+      if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
+    }
+    if (kx || ky) {
+      if (y.moving) this.youThen = null;
+      this.youRaster(y.x, y.y, 24, false);
+      keyStep(y, kx, ky, this.keys.has('Shift'), dt, this.youOk);
+      this.youFollow = true;
+    } else {
+      keyStep(y, 0, 0, false, dt, this.youOk);
+      if (stepYou(y, dt)) this.youArrive();
+    }
+    if ((y.moving || y.keys) && this.youFollow) {
+      const tx = worldX(y.x, y.y), ty = worldY(y.x, y.y), k = Math.min(1, dt * 5);
+      this.camEase = null; this.cam.X += (tx - this.cam.X) * k; this.cam.Y += (ty - this.cam.Y) * k; this.clampCam();
+    }
+    if (wasMoving && !y.moving && !y.keys) { this.youSaveDue = true; this.emit(); }
+    if (this.youSaveDue) { this.youSaveDue = false; this.youKeep(); }
+  }
+  /** your place into the profile (saved with the game): on stopping, never per frame */
+  private youKeep() {
+    const p = this.golf?.player ?? this.playerNow(), y = this.you; if (!p || !y) return;
+    const look = p.you?.look ?? this.youArt();
+    this.setPlayer({ ...p, you: { x: Math.round(y.x * 100) / 100, y: Math.round(y.y * 100) / 100, f: y.face, look } });
+  }
+  /** arrived: face the thing and use it */
+  private youArrive() {
+    const t = this.youThen, y = this.you; this.youThen = null; if (!y) return;
+    y.tx = NaN; y.ty = NaN;
+    if (!t) return;
+    if (t.face) y.face = facingOf(t.face.x - y.x, t.face.y - y.y);
+    t.act?.();
+  }
+  /** whether you may stand at (x, y) (the keys' check): no water, no building, fence or wall (the raster round you) */
+  private youOk = (x: number, y: number): boolean => {
+    const tx = Math.floor(x), ty = Math.floor(y); if (tx < 1 || ty < 1 || tx >= MAP - 1 || ty >= MAP - 1) return false;
+    const c = this.terrain.cls[ty * MAP + tx]; if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return false;
+    const R = this.youR, i = tx - R.x0, j = ty - R.y0; if (i >= 0 && j >= 0 && i < R.w && j < R.h && R.a[j * R.w + i]) return false;
+    const g = this.courseGrid; if (g) { const k = cellAt(g, x, y); if (k >= 0 && g.surf[k] === SURF.water) return false; }
+    return true;
+  };
+  /** the blocked tiles of the box round (cx, cy) reaching r tiles (1: a building, the range's structures, an iconic place, a house's lot, a fence,
+   *  a wall, a parked car): only when the box is not already covered (or always: force, a click's route). Its buffer grows and is reused */
+  private youRaster(cx: number, cy: number, r: number, force: boolean, bx?: number, by?: number) {
+    const R = this.youR;
+    const x0 = Math.max(0, Math.floor(Math.min(cx, bx ?? cx) - r)), y0 = Math.max(0, Math.floor(Math.min(cy, by ?? cy) - r));
+    const x1 = Math.min(MAP, Math.ceil(Math.max(cx, bx ?? cx) + r)), y1 = Math.min(MAP, Math.ceil(Math.max(cy, by ?? cy) + r));
+    if (!force && R.w && x0 >= R.x0 && y0 >= R.y0 && x1 <= R.x0 + R.w && y1 <= R.y0 + R.h) return;
+    // (a key walk's box is grown so it is not built again for a while)
+    const gx0 = force ? x0 : Math.max(0, x0 - 24), gy0 = force ? y0 : Math.max(0, y0 - 24), gx1 = force ? x1 : Math.min(MAP, x1 + 24), gy1 = force ? y1 : Math.min(MAP, y1 + 24);
+    const w = Math.min(1600, gx1 - gx0), h = Math.min(1600, gy1 - gy0); if (w <= 0 || h <= 0) return;
+    if (R.a.length < w * h) R.a = new Uint8Array(w * h); else R.a.fill(0, 0, w * h);
+    R.x0 = gx0; R.y0 = gy0; R.w = w; R.h = h;
+    const A = R.a, fill = (bx0: number, by0: number, bx1: number, by1: number, inside: ((x: number, y: number) => boolean) | null) => {
+      const i0 = Math.max(0, Math.floor(bx0) - gx0), j0 = Math.max(0, Math.floor(by0) - gy0), i1 = Math.min(w - 1, Math.ceil(bx1) - gx0), j1 = Math.min(h - 1, Math.ceil(by1) - gy0);
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const x = gx0 + i + 0.5, y = gy0 + j + 0.5; if (x >= bx0 && x <= bx1 && y >= by0 && y <= by1 && (!inside || inside(x, y))) A[j * w + i] = 1; }
+    };
+    for (const o of routeObstacles({ course: true, biz: this.bizDefs, parks: [], structures: this.rangeStructs(), places: this.placeStructures() })) {
+      const z = o.zone; let ax = Infinity, ay = Infinity, cx1 = -Infinity, cy1 = -Infinity;
+      for (let i = 0; i < z.length; i += 2) { ax = Math.min(ax, z[i]!); cx1 = Math.max(cx1, z[i]!); ay = Math.min(ay, z[i + 1]!); cy1 = Math.max(cy1, z[i + 1]!); }
+      if (cx1 < gx0 || ax > gx0 + w || cy1 < gy0 || ay > gy0 + h) continue;
+      fill(ax, ay, cx1, cy1, z.length === 8 ? null : (x, y) => inPolygon(z, x, y));
+    }
+    for (const v of this.traffic.lots.values()) {
+      if (!this.houseLots.has(v.key)) continue;
+      const c0x = v.o[0], c0y = v.o[1], ux = v.u[0], uy = v.u[1], nx = v.n[0], ny = v.n[1];
+      const xs = [c0x, c0x + ux * v.w, c0x + nx * v.d, c0x + ux * v.w + nx * v.d], ys = [c0y, c0y + uy * v.w, c0y + ny * v.d, c0y + uy * v.w + ny * v.d];
+      const lx0 = Math.min(...xs), lx1 = Math.max(...xs), ly0 = Math.min(...ys), ly1 = Math.max(...ys);
+      if (lx1 < gx0 || lx0 > gx0 + w || ly1 < gy0 || ly0 > gy0 + h) continue;
+      fill(lx0, ly0, lx1, ly1, (x, y) => { const rx = x - c0x, ry = y - c0y, a = rx * ux + ry * uy, b = rx * nx + ry * ny; return a >= 0 && a <= v.w && b >= 0 && b <= v.d; });
+    }
+    const S = this.youRSet, B = this.youRBox; S.clear(); B[0] = gx0; B[1] = gy0; B[2] = gx0 + w; B[3] = gy0 + h; this.propGrid.query(B, S);
+    for (const p of S) { if (YOU_BLOCKS.has(LIBRARY[p.item]!.kind) || (LIBRARY[p.item]!.big && !p.auto?.startsWith('range:'))) fill(p.x0, p.y0, p.x1, p.y1, null); }
+  }
+  /** the cost (per tile, 1 open grass) of you walking over (x, y): Infinity through water and what the raster blocks; the pavements and the
+   *  walking and cart paths cheapest, the roads dear (you cross them, never walk down them), the medians dearer; a bunker dear, the greens a little */
+  private youCost = (x: number, y: number): number => {
+    const tx = Math.floor(x), ty = Math.floor(y); if (tx < 1 || ty < 1 || tx >= MAP - 1 || ty >= MAP - 1) return Infinity;
+    const c = this.terrain.cls[ty * MAP + tx]; if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return Infinity;
+    const R = this.youR, i = tx - R.x0, j = ty - R.y0; if (i >= 0 && j >= 0 && i < R.w && j < R.h && R.a[j * R.w + i]) return Infinity;
+    const o = this.net.occ[ty * MAP + tx]!;
+    if (o === 1) return 0.6;
+    if (o === 2) { const pc = this.net.pieceNear({ x: tx + 0.5, y: ty + 0.5 }); return pc?.seg.cls.noCars ? 0.6 : 3; }
+    if (o === 3) return 5;
+    const g = this.courseGrid; if (g) { const k = cellAt(g, x, y); if (k >= 0) return YOU_SURF[g.surf[k]!] ?? 1; }
+    return 1;
+  };
+  /** what is under the pointer (css px) for your character: a person, the first tee, the range's practice greens or its pieces, the clubhouse, an
+   *  iconic place, a building; else open ground; null where you cannot go. Each with its name, where you walk to and what you do there */
+  youThingAt(mx: number, my: number): { kind: ThingKind; name: string; at: Pt; face: Pt | null; act: (() => void) | null; key: string } | null {
+    const y = this.you; if (!y) return null;
+    const tl = this.tileAt(mx, my), from = { x: y.x, y: y.y }, dpr = this.dpr, ze = this.cam.z * dpr, px = mx * dpr, py = my * dpr;
+    // a person: a townsperson on the pavement or an everyday golfer, by his picture's box on the screen (feet to head)
+    if (this.cam.z >= DISTRICT_Z) {
+      const hit = (x: number, yy: number): boolean => { const sx = (worldX(x, yy) - this.cam.X) * ze + this.cw / 2, sy = (worldY(x, yy) - this.cam.Y) * ze + this.ch / 2; return Math.abs(px - sx) < Math.max(6 * dpr, 0.35 * HW * ze) && py <= sy + 4 * dpr && py >= sy - Math.max(14 * dpr, 1.9 * HH * 2 * ze); };
+      const V = this.youPedV, n = this.peds.inBox(tl.x - 4, tl.y - 2, tl.x + 4, tl.y + 6, V);
+      for (let k = 0; k < n; k++) {
+        const v = V[k]!; if (!hit(v.x, v.y)) continue;
+        const name = personName(v.person * 7919 + Math.floor(v.x) * 31 + Math.floor(v.y)), at = talkSpot(v, from), pt = { x: v.x, y: v.y };
+        return { kind: 'person', name, at, face: pt, key: 'p' + v.person, act: () => this.youTalkTo(name, 'a townsperson', pt) };
+      }
+      const d = this.dayPlay; if (d && !this.dayOff) for (const p of d.view.people) {
+        if (!hit(p.x, p.y)) continue;
+        const gf = d.base.golfers[p.golfer], name = gf?.name ?? 'a golfer', pt = { x: p.x, y: p.y };
+        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: 'g' + p.golfer, act: () => this.youTalkTo(name, 'out on the course', pt) };
+      }
+    }
+    // the first tee (T317 builds the round on it)
+    const g = this.golf;
+    if (g) for (const t of g.tees) if (t.hole === 1 && Math.hypot(tl.x - t.x, tl.y - t.y) <= 3) {
+      const pt = { x: t.x, y: t.y }; return { kind: 'tee', name: 'the first tee', at: { x: t.x + 1.5, y: t.y + 1.5 }, face: pt, key: 'tee', act: () => { this.youTeeOpen = true; this.emit(); } };
+    }
+    const p = this.propAt(mx, my), sc = this.range.scene;
+    // the range: its practice greens (use them), its pieces and its front (buy a bucket, hit at a mat)
+    if (sc && (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y)))) {
+      if (inPractice(sc.practice, tl.x, tl.y)) {
+        const f = this.range.practiceFacts(), kind: PracticeKind | null = f?.putting === 'open' && f.chipping === 'open' ? null : f?.putting === 'open' ? 'putting' : f?.chipping === 'open' ? 'chipping' : null;
+        return { kind: 'practice', name: 'the practice area', at: { ...sc.practice.entry }, face: { ...sc.practice.label }, key: 'practice', act: () => { this.openRangeCard(true); if (kind) this.youPractise(kind); } };
+      }
+      return { kind: 'range', name: 'the range', at: { x: sc.queueAt.x, y: sc.queueAt.y }, face: { ...sc.counter }, key: 'range', act: () => { this.openRangeCard(true); this.inspectScene(p); } };
+    }
+    const club = g && !p ? this.bizDefs.find(d => d.type === 'clubhouse') : undefined;
+    if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) {
+      const box: [number, number, number, number] = [club.x - 1, club.y - 1, club.x + club.w + 1, club.y + club.h + 1], door = this.youDoor(box, from);
+      return door && { kind: 'building', name: 'the clubhouse', at: door, face: { x: club.x + club.w / 2, y: club.y + club.h / 2 }, key: 'club', act: () => { this.openClubCard(true); this.inspectScene(null, true); } };
+    }
+    if (p && (p.auto?.startsWith('place:') || YOU_LOOKS_AT.has(LIBRARY[p.item]!.kind) || LIBRARY[p.item]!.big)) {
+      const place = p.auto?.startsWith('place:') ? p.auto.slice(6) : null, d = place ? placeDef(place) : null;
+      const box: [number, number, number, number] = [p.x0, p.y0, p.x1, p.y1], door = this.youDoor(box, from);
+      const name = d ? inSentence(placeName(d, this.townName(0))) : this.youPropName(p);
+      return door && { kind: 'building', name, at: door, face: { x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }, key: 'b' + p.uid, act: () => { if (place) { this.selected = null; this.selectedPlace = place; } else this.selected = p; this.inspectScene(p); this.emit(); } };
+    }
+    const b = this.bizDefs.find(d => d.type !== 'range' && tl.x >= d.x && tl.x < d.x + d.w && tl.y >= d.y && tl.y < d.y + d.h);
+    if (b) { const door = this.youDoor([b.x - 1, b.y - 1, b.x + b.w + 1, b.y + b.h + 1], from); return door && { kind: 'building', name: inSentence(bizName(b.type)), at: door, face: { x: b.x + b.w / 2, y: b.y + b.h / 2 }, key: 'z' + b.id, act: null }; }
+    // open ground: where the route can end (not water, a building or a fence)
+    this.youRaster(tl.x, tl.y, 2, false);
+    if (!this.youOk(tl.x, tl.y)) return null;
+    return { kind: 'ground', name: '', at: { x: tl.x, y: tl.y }, face: null, key: `t${Math.floor(tl.x)},${Math.floor(tl.y)}`, act: null };
+  }
+  /** a building's door for you (golf/you.ts doorOf): the side toward the nearest road, one you can stand on */
+  private youDoor(box: [number, number, number, number], from: Pt): Pt | null {
+    this.youRaster((box[0] + box[2]) / 2, (box[1] + box[3]) / 2, Math.max(box[2] - box[0], box[3] - box[1]) / 2 + 4, false);
+    return doorOf(box, from, this.youOk, (x, y, ux, uy) => { for (let k = 0; k < 40; k++) { const o = this.net.occAt(x + ux * k, y + uy * k); if (o === 1 || o === 2) return k; } return Infinity; })
+      ?? { x: (box[0] + box[2]) / 2, y: box[3] + 1.2 };
+  }
+  /** a building's name for the hover label: its picture's name, as a sentence ("the diner") */
+  private youPropName(p: Prop): string { const n = LIBRARY[p.item]!.name.replace(/[-_]/g, ' ').replace(/\s+\d+$/, ''); return n ? `the ${n}` : 'the building'; }
+  /** the hover (Select, Walk mode): the verb the cursor shows and the label naming the thing; emits only when it changes */
+  private youHoverAt(mx: number, my: number) {
+    const t = this.youThingAt(mx, my), verb = verbOf(t?.kind ?? null), text = hoverText(t?.kind ?? null, t?.name);
+    const h = this.youHover; if (h && h.text === text && h.verb === verb) { h.mx = mx; h.my = my; return; }
+    this.youHover = { verb, text, mx, my }; this.emit();
+  }
+  /** a click in Walk mode (no drag): walk to the thing or the spot (a route found now, once), then use it; the same target again (or a
+   *  double-click) runs. Nowhere to go: a toast says so */
+  youClick(mx: number, my: number, run = false) {
+    const y = this.you; if (!y) return;
+    const t = this.youThingAt(mx, my);
+    if (!t) { this.toast('You cannot walk there', 'warn'); return; }
+    this.youTalk = null; this.youTeeOpen = false; this.youFollow = true;
+    if (y.moving && this.youThen?.key === t.key) { y.run = true; return; } // (a second click on the same place: run)
+    const d = Math.hypot(t.at.x - y.x, t.at.y - y.y);
+    if (d < 0.3) { this.youThen = { act: t.act, face: t.face, key: t.key }; this.youArrive(); return; }
+    this.youRaster(y.x, y.y, 64, true, t.at.x, t.at.y);
+    const route = routeOf({ x: y.x, y: y.y }, t.at, this.youCost);
+    startWalk(y, route, run); this.youThen = { act: t.act, face: t.face, key: t.key };
+    this.emit();
+  }
+  /** a double-click: you run the rest of the way */
+  youRun() { if (this.you?.moving) this.you.run = true; }
+  /** Skip: you arrive at once (a long trip; golf/you.ts SKIP_TILES) */
+  youSkip() { const y = this.you; if (!y?.moving) return; skipAhead(y, 2); this.emit(); }
+  /** the Me button: the camera on you (the street zoom at least), following again, Walk mode on */
+  youMe() { const y = this.you; if (!y) return; this.youWalkMode = true; this.youFollow = true; if (this.tool !== 'select') this.setTool('select'); this.lookAt(y.x, y.y, Math.max(this.cam.z, 0.2)); }
+  setYouWalk(on: boolean) { this.youWalkMode = on; if (!on) this.youHover = null; this.emit(); }
+  /** you walk up to a person: you face each other and the talk card opens (T243 brings the portraits and their skills) */
+  private youTalkTo(name: string, what: string, at: Pt) {
+    const y = this.you; if (y) y.face = facingOf(at.x - y.x, at.y - y.y);
+    const lines = TALK_LINES, k = Math.floor(hash(name.length * 131 + name.charCodeAt(0), Math.floor(this.townNow().dayMin / 30)) * lines.length);
+    this.youTalk = { name, what, line: lines[k]! }; this.emit();
+  }
+  closeYouTalk() { this.youTalk = null; this.emit(); }
+  closeYouTee() { this.youTeeOpen = false; this.emit(); }
+  /** the first tee's card (Start a round): play in today's tournament when you can still join it; else your everyday round (book the next free
+   *  tee time); T317 (#903) builds the round you play yourself on this */
+  youTeeView(): { join: boolean; round: RoundState; name: string } | null {
+    if (!this.youTeeOpen || !this.golf) return null;
+    return { join: this.canJoinTournament(), round: this.youRoundState(), name: this.playerNow()?.name ?? 'You' };
+  }
+  youTeeJoin() { const p = this.playerNow(); this.joinTournament(p?.sex ?? 'm', 'middle'); this.youTeeOpen = false; this.emit(); }
+  /** a practice session from your character: the session (practise), then you walk to a mat (a bucket) or the practice area and swing */
+  youPractise(kind: PracticeKind) {
+    const p0 = this.golf?.player; this.practise(kind);
+    if (!this.golf?.player || this.golf.player === p0) return; // (refused: a toast said why)
+    this.youAtPractice(kind);
+  }
+  /** after a session (from the range card too): you walk to a free mat (a bucket) or the practice green and swing there while it lasts */
+  private youAtPractice(kind: PracticeKind) {
+    const y = this.you, sc = this.range.scene; if (!y || !sc) return;
+    const bay = kind === 'bucket' ? sc.bays[sc.bays.length - 1] : null, at = bay ? bay.stand : sc.practice.label;
+    if (Math.hypot(at.x - y.x, at.y - y.y) > 80) return; // (far away: the session is booked, you stay where you are)
+    this.youRaster(y.x, y.y, 32, true, at.x, at.y);
+    const aim = bay ? { x: at.x + sc.aim.x * 10, y: at.y + sc.aim.y * 10 } : null;
+    startWalk(y, routeOf({ x: y.x, y: y.y }, at, this.youCost), false);
+    this.youThen = { face: aim, key: 'swing', act: () => { if (this.you && kind !== 'putting') this.you.swing = 0; } };
+  }
+  /** the "Who are you?" card (a new range game, before the welcome card): your name, your look (the golfer art) and your starting handicap */
+  whoView(): { name: string; look: number; looks: { id: string; sex: Sex; item: number }[]; hcp: string } | null {
+    if (!welcomeReady(this.firstViewBaked, performance.now() - this.readyAt) || !this.welcomeFreshNow() || this.golf?.progress?.seen.includes('who')) return null;
+    const p = this.playerNow(); if (!p) return null;
+    const looks = GOLFER_PEOPLE.map((q, i) => ({ id: q.id, sex: lookSex(q.id), item: GOLFER_BASE + (i * WALK_DIRS.length) * GOLFER_FRAMES + GOLFER_CLIPS.idle.start }));
+    return { name: p.name === 'You' ? '' : p.name, look: this.youArt(), looks, hcp: hcpText(handicapOf(p.skills)) };
+  }
+  /** the card done: your name and look (and the sex the look has) into the profile, saved; the welcome card follows */
+  closeWho(name: string, look: number) {
+    const p = this.playerNow(), gp = this.golf?.progress; if (!p) return;
+    const id = GOLFER_PEOPLE[look]?.id ?? GOLFER_PEOPLE[0]!.id, y = this.you;
+    this.setPlayer({ ...p, name: name.trim().slice(0, 40) || p.name, sex: lookSex(id), you: { x: y?.x ?? p.you?.x ?? 0, y: y?.y ?? p.you?.y ?? 0, f: y?.face ?? 0, look: Math.max(0, Math.min(GOLFER_PEOPLE.length - 1, look)) } });
+    if (gp && !gp.seen.includes('who')) { gp.seen.push('who'); this.scheduleSave(); }
+    if (y) this.lookAt(y.x, y.y, Math.max(this.cam.z, 0.2));
+    this.emit();
+  }
+  /** your character as a mover (the street tier): your look's frame for your facing (walk, swing or idle), labelled "Stand In for <name>"
+   *  until the player looks (art 232-234) land */
+  private youMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number): number {
+    const y = this.you; if (!y || y.x < X0 || y.x > X1 || y.y < Y0 || y.y > Y1) return m;
+    const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
+    t.group = 1; t.x = y.x; t.y = y.y; t.person = this.youArt(); t.row = y.face; t.frame = youFrame(y, GOLFER_CLIPS.walk, GOLFER_CLIPS.idle.start, GOLFER_CLIPS.golf_drive);
+    crowdDrawable(out, m, t);
+    this.caddieLabels.push({ p: out[m]!, text: this.youLabel() });
+    return m + 1;
+  }
+  private youLabelName = ''; private youLabelText = ''; private youHoverW = { text: '', w: 0 };
+  /** "Stand In for <name>" (cached: no string per frame) */
+  private youLabel(): string { const n = this.golf?.player?.name ?? 'You'; if (n !== this.youLabelName) { this.youLabelName = n; this.youLabelText = standInText(n === 'You' ? 'you' : n); } return this.youLabelText; }
+  /** the target marker (a ring at the walk's end, pulsing), and far out (no movers drawn) your dot with your name */
+  private drawYou(ctx: CanvasRenderingContext2D) {
+    const y = this.you; if (!y) return;
+    const dpr = this.dpr, ze = this.cam.z * dpr, cw = this.cw, ch = this.ch;
+    if (y.moving && Number.isFinite(y.tx)) {
+      const sx = (worldX(y.tx, y.ty) - this.cam.X) * ze + cw / 2, sy = (worldY(y.tx, y.ty) - this.cam.Y) * ze + ch / 2, k = 0.5 + 0.5 * Math.sin(y.mark * 5);
+      const rx = Math.max(7 * dpr, 0.6 * HW * ze), ry = rx / 2;
+      ctx.lineWidth = 2 * dpr; ctx.strokeStyle = `rgba(250,204,21,${0.55 + 0.4 * k})`;
+      ctx.beginPath(); ctx.ellipse(sx, sy, rx * (0.8 + 0.2 * k), ry * (0.8 + 0.2 * k), 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(sx, sy, rx * 0.25, ry * 0.25, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(250,204,21,0.9)'; ctx.fill();
+    }
+    // the hover label by the pointer: what a click does, naming the thing (its width measured once per text)
+    const h = this.youHover, gm = this.ghostMouse;
+    if (h && gm && !this.dragging && this.youControls()) {
+      ctx.font = `600 ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`;
+      if (this.youHoverW.text !== h.text) { this.youHoverW.text = h.text; this.youHoverW.w = ctx.measureText(h.text).width; }
+      const lx = gm.mx * dpr + 18 * dpr, ly = gm.my * dpr + 22 * dpr, w = this.youHoverW.w + 14 * dpr, hh = 20 * dpr;
+      ctx.beginPath(); ctx.roundRect(lx, ly - hh / 2, w, hh, 6 * dpr); ctx.fillStyle = 'rgba(2,6,23,0.85)'; ctx.fill();
+      ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = YOU_VERB_COLOR[h.verb ?? 'none']; ctx.stroke();
+      ctx.fillStyle = '#f8fafc'; ctx.textBaseline = 'middle'; ctx.fillText(h.text, lx + 7 * dpr, ly + 0.5 * dpr); ctx.textBaseline = 'alphabetic';
+    }
+    if (this.cam.z < DISTRICT_Z) {
+      const sx = (worldX(y.x, y.y) - this.cam.X) * ze + cw / 2, sy = (worldY(y.x, y.y) - this.cam.Y) * ze + ch / 2;
+      if (sx < -20 * dpr || sy < -20 * dpr || sx > cw + 20 * dpr || sy > ch + 20 * dpr) return;
+      ctx.beginPath(); ctx.arc(sx, sy, 4 * dpr, 0, Math.PI * 2); ctx.fillStyle = '#facc15'; ctx.fill(); ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = '#1e293b'; ctx.stroke();
+      ctx.font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.85)';
+      const n = this.golf?.player?.name ?? 'You'; ctx.strokeText(n, sx, sy - 8 * dpr); ctx.fillStyle = '#fef9c3'; ctx.fillText(n, sx, sy - 8 * dpr); ctx.textAlign = 'start';
+    }
+  }
   /** books your everyday round at the next free tee time on today's sheet (golf/player.ts freeTee: BOOK_LEAD ahead at least, clear of the groups' tee
    *  times); the day's playback is played again with you in it */
   bookYourRound() {
@@ -7720,7 +8069,7 @@ export class Game {
     if (!view.holes.length) return null;
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
-    const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
+    const art = golfers.map(p => p.owner ? (this.golf?.player?.you ? this.youArt() : ownerArt(p.sex)) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
     const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace(), height: this.ballHeight }), key, art, finish: new DayFinish(), own: null, waves: -1 };
     if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: owner.skills ?? OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}), ...(owner.skills ? { skills: owner.skills } : {}) };
     return pl;
@@ -7894,8 +8243,10 @@ export class Game {
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();
     const sp = 900 / this.cam.z * dt; let kx = 0, ky = 0;
+    if (!this.youControls()) {
     if (this.keys.has('ArrowLeft') || this.keys.has('a') || this.keys.has('A')) kx -= 1; if (this.keys.has('ArrowRight') || this.keys.has('d') || this.keys.has('D')) kx += 1;
     if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
+    }
     if (kx || ky) { this.camEase = null; this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
     else this.stepCamEase(now);
     this.onFrame?.(now, dt);
@@ -7918,6 +8269,7 @@ export class Game {
     if (this.golf) this.halfwayStep();
     if (this.golf) { this.decor.frame(); this.pondsFrame(now); } // T231: the ponds' stone edges and the jets
     this.updatePeds(dt);
+    this.youStep(pdt); // T240: your character, in real time
     this.updateGrass();
     // the followed car: the camera centres on its interpolated place (the info itself comes at 10 Hz)
     if (this.followCar && this.traffic.car) {
@@ -8537,6 +8889,7 @@ export class Game {
     this.drawDecorGhost(ctx);
     this.drawPracticeGhost(ctx);
     this.drawBusPreview(ctx);
+    this.drawYou(ctx); // T240
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
       this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);

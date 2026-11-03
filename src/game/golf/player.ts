@@ -13,6 +13,7 @@
 import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, type DayRoster } from './everyday';
 import type { GameSkills, Golfer, Sex } from './play/types';
 import type { TeeKind } from './types';
+import { normalizeYou, type YouSave } from './you';
 
 /** the five skills, in the order the cards show them */
 export const SKILL_IDS = ['driving', 'irons', 'short', 'putting', 'nerve'] as const;
@@ -104,6 +105,8 @@ export interface Booking { day: number; tee: number; skills: GameSkills; result?
 export interface PlayerProfile {
   v: 1; name: string; sex: Sex; skills: Skills; log: PracticeEntry[]; rounds: RoundEntry[];
   today: { day: number; n: Record<PracticeKind, number> }; busy: { day: number; until: number } | null; booked: Booking | null;
+  /** T240: your character in the world (golf/you.ts): where you stand, your facing and your look; absent until you first stand somewhere */
+  you?: YouSave;
 }
 /** the practice log and the rounds keep this many (newest last) */
 export const LOG_MAX = 30, ROUNDS_MAX = 20;
@@ -150,6 +153,7 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     today: { day: num(t.day), n: { bucket: Math.max(0, Math.floor(num(tn.bucket))), putting: Math.max(0, Math.floor(num(tn.putting))), chipping: Math.max(0, Math.floor(num(tn.chipping))) } },
     busy: b && Number.isFinite(b.day) && Number.isFinite(b.until) ? { day: b.day, until: b.until } : null,
     booked,
+    ...(normalizeYou(p.you) ? { you: normalizeYou(p.you) } : {}),
   };
 }
 
