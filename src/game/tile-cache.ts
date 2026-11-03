@@ -113,13 +113,14 @@ export class TileCache<P extends Pic> {
   }
   /** the smallest picture of url at least px wide, made by halving if need be (a bake draws it: used now); its source when none is and the
    *  source is kept (px past the source: drawn as main drew it); null when url is not decoded, or its source is gone and px is past its mips */
-  image(url: string, px = Infinity): P | null {
+  image(url: string, px = Infinity, widest = false): P | null {
     const e = this.map.get(url); if (!e) return null;
     for (let last = e.pics[e.pics.length - 1]!; last.width > 96 && last.width / 2 >= px; last = e.pics[e.pics.length - 1]!) {
       const t0 = performance.now(), m = this.ops.halve(last); this.on.scale?.(performance.now() - t0);
       e.pics.push(m); e.stamps.push(0); this.add(picBytes(m));
     }
-    const k = this.pick(e, px); if (k < 0) return null;
+    // (widest, T311: a tile set laid larger than its decode was kept for, Scale over 1 on a course look: its widest kept picture, enlarged)
+    let k = this.pick(e, px); if (k < 0) { if (!widest || !e.pics.length) return null; k = 0; }
     e.stamps[k] = ++this.clock;
     return e.pics[k]!;
   }
