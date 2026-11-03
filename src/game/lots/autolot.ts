@@ -348,7 +348,7 @@ function yardTrees(L: Lay, keep: readonly Keep[], have = 0): number {
 /** the clipped hedge's shrubs (round ones: they read as a hedge along any line), drawn in turn by the lot's draws */
 const HEDGE = ['landscape:bush-deep-green', 'landscape:bush-sage-round', 'world:bush_0', 'landscape:bush-deep-green'];
 /** a hedge's shrubs: about HEDGE_STEP tiles apart, each fitted to HEDGE_HALF (tiles) */
-const HEDGE_STEP = 1.6, HEDGE_HALF = 0.9;
+const HEDGE_STEP = 1.4, HEDGE_HALF = 1.0;
 /** a hedge from (x0, y0) to (x1, y1): its shrubs laid where they are clear (a tree's trunk or a shed leaves a gap; open: the drive, never planted over).
  *  Returns how many were laid */
 function hedge(L: Lay, x0: number, y0: number, x1: number, y1: number, open: readonly Box4[]): number {
