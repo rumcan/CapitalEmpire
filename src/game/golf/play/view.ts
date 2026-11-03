@@ -4,7 +4,7 @@
 import { clipFrame, golferRow, rowToward } from '../../crowdview';
 import { GOLFER_CLIPS, SPECTATOR_CLIPS } from '../../library';
 import { TILE_M } from '../types';
-import { FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, WALK_M, offOf, stateAt, stateOne, walkMin } from './round';
+import { ADDRESS_TIME, FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, WALK_M, offOf, stateAt, stateOne, walkMin } from './round';
 import { OWNER_ADDRESS } from './owner';
 import { CartPlay, RIDE, STATE, WALK, type CartPaths, type PlayCart } from './carts';
 import { CELEBRATE_S, celebrated } from './celebrate';
@@ -174,29 +174,45 @@ export class PlayView {
         const w = carts!.walk; x = w.x; y = w.y; frame = clipFrame(GOLFER_CLIPS.walk, now + id * STEP_S);
         if (w.hx * w.hx + w.hy * w.hy > AIM2) row = rowToward(w.hx, w.hy);
       }
-      // T266: the watchable golfers: shown where his pacer has him (a brisk walk after the schedule at most, still through his swing's natural
-      // length, faded out and back at the walk's end when the schedule has run ahead); a shot struck away from where he is shown cuts to it
+      // T213: a birdie or better: once the ball drops, the celebration (turned to the camera, hopping) and the gallery's cheer at the cup: the
+      // seconds into it (-1: none now)
+      let cel = -1;
+      if (newest && this.celebrate.has(newest)) {
+        const c = dt - (newest.club === 'putter' ? Math.max(PUTT_S, PUTT_FLIGHT_S) : Math.max(SWING_S, flightS(newest)));
+        if (c >= 0 && c < CELEBRATE_S) cel = c;
+      }
+      // T266: the watchable golfers: shown where his pacer has him (a brisk walk after the schedule, faster only when he must to be at his walk's
+      // end in time (T294: never faded and cut there), still through his swing's natural length and his celebration); a shot struck away from
+      // where he is shown cuts to it
       let alpha = 1;
       const W = this.pace?.walkers;
+      if (W && !show) W.drop(id); // (T294: a rider gets out of his cart where the schedule has him, not where he got in)
       if (W && show) {
-        const swinging = !!newest && dt < (putting ? PUTT_S : SWING_S), d = mode === WALK ? null : s.dest;
+        const swinging = (mode !== WALK && !!newest && dt < (putting ? PUTT_S : SWING_S)) || cel >= 0, d = mode === WALK ? null : s.dest; // (T294: a rider out of his cart has finished his swing: not held at the stop)
         if (newest && this.swingAt[id] === now && !W.near(id, newest.from.x, newest.from.y)) W.snap(id, newest.from.x, newest.from.y);
         // (his walk's end, or where the schedule has him standing: he walks there, never faded, when he can make it by his deadline)
-        W.step(id, x, y, d ? d.x : mode === WALK ? NaN : x, d ? d.y : mode === WALK ? NaN : y, swinging, now, simT, d && s.by !== undefined ? (s.by - minute) / this.rate : NaN);
+        // (T294: a rider's walk between his cart and his ball has its end and its minute too)
+        const cw = mode === WALK ? carts!.walk : null;
+        if (cw) W.step(id, x, y, cw.ex, cw.ey, swinging, now, simT, (cw.by - minute) / this.rate);
+        else {
+          // (his deadline: his address; once that is gone with his walk to his ball not over (the schedule walks him up to it), his strike)
+          // (a cart's golfer swings out a full swing when his cart takes him on after it (in it, or walking to or from it, halfway to his next
+          // address): he walks back to it then, not on as the round has it)
+          let by = d && s.by !== undefined ? s.by : NaN;
+          if (swinging && !putting && carts && this.rides[id] && by > minute && carts.rider(id, (minute + by) / 2) !== STATE) by = NaN;
+          if (by <= minute && d && s.ball && d.x === s.ball.x && d.y === s.ball.y) by += ADDRESS_TIME;
+          const to = Number.isNaN(by) ? null : d; W.step(id, x, y, to ? to.x : NaN, to ? to.y : NaN, swinging, now, simT, (by - minute) / this.rate);
+        }
         x = W.x; y = W.y; alpha = W.alpha;
-        if (!swinging) {
+        if (!swinging || W.walked) { // (T294: a swing cut short to make his next address: he walks)
           if (W.walked) { frame = clipFrame(GOLFER_CLIPS.walk, now + id * STEP_S); if (W.hx * W.hx + W.hy * W.hy > AIM2) row = rowToward(W.hx, W.hy); }
           else if (s.action === 'walk' || mode === WALK) { frame = GOLFER_CLIPS.idle.start; const pin = this.view.holes[s.hole]?.pin; if (pin && (pin.x - x) ** 2 + (pin.y - y) ** 2 > AIM2) row = rowToward(pin.x - x, pin.y - y); }
         }
       }
-      // T213: a birdie or better: once the ball drops, the celebration (at the cup, turned to the camera, hopping) and the gallery's cheer there
-      if (newest && this.celebrate.has(newest)) {
-        const c = dt - (newest.club === 'putter' ? Math.max(PUTT_S, PUTT_FLIGHT_S) : Math.max(SWING_S, flightS(newest)));
-        if (c >= 0 && c < CELEBRATE_S) {
-          x = newest.to.x; y = newest.to.y; frame = clipFrame(drive, POSE_T); row = FACE_ROW; show = true;
-          lift = c < CELEBRATE_S / 2 ? HOP * Math.abs(Math.sin(c * 4 * Math.PI / CELEBRATE_S)) : 0;
-          const ch = this.cheers[nh] ?? (this.cheers[nh] = { x: 0, y: 0, t: 0 }); ch.x = x; ch.y = y; ch.t = c; nh++;
-        }
+      // (T294: where he is shown, held there: no cut to the cup and back; a rider in his cart celebrates unseen)
+      if (newest && cel >= 0) {
+        if (show) { frame = clipFrame(drive, POSE_T); row = FACE_ROW; lift = cel < CELEBRATE_S / 2 ? HOP * Math.abs(Math.sin(cel * 4 * Math.PI / CELEBRATE_S)) : 0; }
+        const ch = this.cheers[nh] ?? (this.cheers[nh] = { x: 0, y: 0, t: 0 }); ch.x = newest.to.x; ch.y = newest.to.y; ch.t = cel; nh++;
       }
       this.rows[id] = row;
       if (show) {

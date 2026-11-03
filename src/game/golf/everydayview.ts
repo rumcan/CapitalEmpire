@@ -189,7 +189,7 @@ export class DayView {
       for (let s = 0; s < gr.players.length; s++) {
         const id = gr.players[s]!, L = this.legs[id]!, side = (s - (gr.players.length - 1) / 2) * SPREAD;
         if (minute >= L.first - ADDRESS_TIME && minute < L.done) { if (onScreen) only[id] = 1; continue; }
-        let px: number, py: number, hx = 0, hy = 0, walking = true, ex = NaN, ey = NaN, by = NaN;
+        let px: number, py: number, hx = 0, hy = 0, walking = true, ex = NaN, ey = NaN, by = NaN, toTee = false; // (toTee: stepping up to his address)
         if (minute < L.first) {
           // before the round: the car to the door, the desk, the door to his place behind the first tee, waiting there, stepping up to the tee
           const h0 = this.view.holes[0], tee = h0 ? holeFrom(h0, this.plan.golfers[id]?.tees).tee : L.spot, stepMin = Math.max(STEP_IN, walkMin(L.spot, tee));
@@ -198,20 +198,22 @@ export class DayView {
           else if (minute < t2) { px = door.x; py = door.y; walking = false; hx = L.spot.x - door.x; hy = L.spot.y - door.y; ex = door.x; ey = door.y; by = t2; }
           else if (minute < t3) { const u = L.w2 > 0 ? (minute - t2) / L.w2 : 1; px = door.x + (L.spot.x - door.x) * u; py = door.y + (L.spot.y - door.y) * u; hx = L.spot.x - door.x; hy = L.spot.y - door.y; ex = L.spot.x; ey = L.spot.y; by = step; }
           else if (minute < step) { px = L.spot.x; py = L.spot.y; walking = false; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; ex = L.spot.x; ey = L.spot.y; by = step; }
-          else { const u = Math.min(1, (minute - step) / stepMin); px = L.spot.x + (tee.x - L.spot.x) * u; py = L.spot.y + (tee.y - L.spot.y) * u; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; ex = tee.x; ey = tee.y; by = L.first - ADDRESS_TIME; }
+          else { toTee = true; const u = Math.min(1, (minute - step) / stepMin); px = L.spot.x + (tee.x - L.spot.x) * u; py = L.spot.y + (tee.y - L.spot.y) * u; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; ex = tee.x; ey = tee.y; by = L.first - ADDRESS_TIME; }
         } else {
           // after the round: from where he walked off the last green back to the car; in it once he is there
           const t = minute - L.done; if (t >= L.w3) continue;
           const q = polyAt(this.wayBack(tr, L.end), L.w3 > 0 ? t / L.w3 : 1), c0 = this.carAt(tr, 0); px = q.x; py = q.y; hx = q.hx; hy = q.hy; ex = c0.x; ey = c0.y; by = tr.leave;
         }
-        // (T266: a watchable golfer walks there at a brisk walk at most, faded out and back at the walk's end when he is behind)
+        // side by side across the way they walk (T294: the way of his leg, walking or standing, laid on the schedule's point and his walk's end, so
+        // his pacer walks him there: no pop sideways at each start and stop)
+        const Ls = Math.hypot(hx, hy);
+        if (Ls > 0 && !toTee) { const ox = -hy / Ls * side, oy = hx / Ls * side; px += ox; py += oy; ex += ox; ey += oy; }
+        // (T266: a watchable golfer walks there at a brisk walk, faster only when he must to be there by his deadline: T294, never faded and cut)
         let alpha = 1;
         const W = this.walkers;
         if (W) { W.step(id, px, py, ex, ey, false, now, simT, (by - minute) / R); px = W.x; py = W.y; alpha = W.alpha; walking = W.walked; if (walking) { hx = W.hx; hy = W.hy; } }
-        // side by side across the way they walk
-        const Lh = Math.hypot(hx, hy); if (Lh > 0 && walking) { px += -hy / Lh * side; py += hx / Lh * side; }
         if (!inBox(px, py)) continue;
-        const row = Lh > 0 ? rowToward(hx, hy) : 0, frame = walking ? clipFrame(GOLFER_CLIPS.walk, now + id * STEP_S) : GOLFER_CLIPS.idle.start;
+        const Lh = Math.hypot(hx, hy), row = Lh > 0 ? rowToward(hx, hy) : 0, frame = walking ? clipFrame(GOLFER_CLIPS.walk, now + id * STEP_S) : GOLFER_CLIPS.idle.start;
         person(px, py, id, row, frame, 0, alpha);
       }
     }
