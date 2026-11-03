@@ -384,3 +384,11 @@ The prompts are in `docs/art/CHATGPT-IMAGE-QUEUE.md` "Farms". The sun at the upp
   spacing whatever the picture.
 - **Old saves:** a save made before T259 keeps its farms as they were (model 1) until a farm is rebuilt (a road edit that changes its parcel,
   a new farm on a new road); new games get model 2. The dev switch `window.__game.setFarmModel(1 | 2)` changes a game's farms at once.
+
+## Fences along screen-straight streets (T314, #899: art requests)
+The town's fence pictures (picket, board/privacy, chain-link, iron, the hedge pieces) all run along the map axes, which are the screen's diagonals. A lot on
+a screen-straight street (a map diagonal) has its boundary lines along the screen's vertical and horizontal, where an iso panel saws (and the composer
+drops it, its turned box leaving the lot). Until these exist, those lots plant a clipped hedge of round shrubs on their owned lines (`autolot.ts` boundary).
+- **Board fence, screen-horizontal run** and **screen-vertical run** (2 pictures; 4 m of fence each, the sun at the upper right, shadows at 145°).
+- **Picket fence**, the same two runs.
+- **A gate** for each (the drive's gap).
