@@ -619,6 +619,7 @@ export class Game {
     // the range's tee box in the course grid (T130): tee cells of no hole, laid past the brush rules (the plot is the range's), so T127's banks raise it
     grid: () => this.courseGrid,
     layTee: pts => { const g = this.courseGrid; if (!g) return false; const q: Pt[] = []; for (let i = 0; i < pts.length; i += 2) q.push({ x: pts[i]!, y: pts[i + 1]! }); this.courseGridChanged(fillPolygon(g, q, SURF.tee, 0, 0), true); return true; },
+    layApron: pts => { const g = this.courseGrid; if (!g) return false; const q: Pt[] = []; for (let i = 0; i < pts.length; i += 2) q.push({ x: pts[i]!, y: pts[i + 1]! }); this.courseGridChanged(fillPolygon(g, q, SURF.fairway, 0, 0, { allow: i => g.surf[i] === SURF.none }), true); return true; },
   }, 0x7a29);
   /** the hint's Show me (T130): the camera on the practice area at 30% with the brush that builds its next facility */
   showPracticeArea() { const t = this.range.practiceTarget(); if (!t) return; this.lookAt(t.x, t.y, 0.3); this.armPractice(t.kind, true); this.emit(); } // T206: the facility's own tool, not the brush
