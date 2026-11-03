@@ -372,7 +372,7 @@ export class Textures {
   }
   /** a tile set picture's mip with at least `px` pixels across (made on first use, kept: tile-cache.ts), or null when it is not decoded (or
    *  only its smaller mips are kept) */
-  tileImage(src: string, px = Infinity): Cnv | ImageBitmap | null { return this.tiles.image(src, px); }
+  tileImage(src: string, px = Infinity, widest = false): Cnv | ImageBitmap | null { return this.tiles.image(src, px, widest); }
   /** T272: a tile set picture at its full decoded size (the swamp's gloss is made from it), or null when it was dropped (the next preparation
    *  decodes it again: the bake asking is provisional) */
   tileSource(src: string): Cnv | ImageBitmap | null { return this.tiles.source(src); }

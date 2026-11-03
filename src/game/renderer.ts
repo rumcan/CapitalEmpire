@@ -50,6 +50,9 @@ import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
 import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
 import { LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
+import { courseBlendG, courseTexG, paintedLay, type Aff } from './painted-turn';
+/** a DOMMatrix as painted-turn's plain affine */
+const affOf = (m: DOMMatrix): Aff => [m.a, m.b, m.c, m.d, m.e, m.f];
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
 const COMPOSED_BYTES = 64 << 20;
 /** a painted composition is made and kept in squares of this many chunk px (only the part of a chunk a surface uses is composed) */
@@ -417,7 +420,7 @@ export class GroundPainter {
   /** the painted grass (painted-ground.ts): its patch pictures, the chunk being baked (its level, tile box and matrix) and the painted
    *  textures composed for it so far (one picture per family, a copy per tint) */
   private painted = new PaintedGround();
-  private chunkNow: { key: string; L: number; box: BBox; M: DOMMatrix; Minv: DOMMatrix; W: number; H: number } | null = null;
+  private chunkNow: { key: string; L: number; box: BBox; M: DOMMatrix; Minv: DOMMatrix; W: number; H: number; /** T311: a virtual chunk (painted-turn.ts paintedLay) */ turned?: boolean } | null = null;
   /** the tinted and toned copies the bake in progress made (by composition, tint and tone), and the compositions it uses (kept in the LRU) */
   private toned = new Map<string, PaintedEntry>(); private bakeKeys = new Set<string>();
   /** the bake in progress laid a tile set family (T145): its chunk then depends on the tile spec (GroundCache re-bakes it on a band or DPR change) */
@@ -1377,8 +1380,20 @@ export class GroundPainter {
    *  per chunk (painted-ground.ts; never turned with an area, which would turn its painted light; an area's scale scales the look), over the
    *  part of the chunk asked for (need: a tile box; absent: all of it), then its tint and tone over a copy; null when the texture is not
    *  painted (the Grass setting 'photo', or its pictures missing: then it is laid as its photo) */
-  private paintedFill(g: C2D, t: string, need?: BBox, scale = 1): CanvasPattern | null {
-    const c = this.chunkNow, buf = c && this.paintedBuf(t, need, scale); if (!c || !buf) return null;
+  private paintedFill(g: C2D, t: string, need?: BBox, scale = 1, G?: DOMMatrix): CanvasPattern | null {
+    const c = this.chunkNow; if (!c) return null;
+    // T311 (#896, T290 #875, T301 #886): G (the course look's Pan, Angle and Scale): the look composed over a virtual chunk in the texture's own
+    // space (painted-turn.ts paintedLay) and laid through G, as a preset is; none (or the identity) keeps the chunk's own composition
+    const pick = G && this.tex.paintedOf(t, scale), lay = pick ? paintedLay({ key: c.key, L: c.L, M: affOf(c.M), W: c.W, H: c.H }, affOf(G), scale, !!pick.tiled, need) : null;
+    if (lay) {
+      const M = new DOMMatrix([...lay.M]);
+      this.chunkNow = { key: lay.key, L: lay.L, box: c.box, M, Minv: M.inverse(), W: lay.W, H: lay.H, turned: true };
+      let buf: Cnv | null;
+      try { buf = this.paintedBuf(t, lay.need, scale); } finally { this.chunkNow = c; }
+      if (!buf) return null;
+      const p = g.createPattern(buf, 'no-repeat')!; p.setTransform(new DOMMatrix([...lay.pattern])); return p;
+    }
+    const buf = this.paintedBuf(t, need, scale); if (!buf) return null;
     const p = g.createPattern(buf, 'no-repeat')!; p.setTransform(c.Minv); return p;
   }
   /** the cells (PAINT_CELL device px squares of the chunk being baked) a tile box covers, as cell indices [i0, j0, i1, j1) */
@@ -1458,7 +1473,7 @@ export class GroundPainter {
     // the mip drawn is at most twice the size it lands at (Textures.tileImage), so plain bilinear filtering keeps it sharp and cheap
     g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
     for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
-      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, pic = exact ? this.exactTile(url, a2 - a, b2 - b) : this.tex.tileImage(url, a2 - a);
+      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, pic = exact ? this.exactTile(url, a2 - a, b2 - b) : this.tex.tileImage(url, a2 - a, !!c.turned);
       if (!pic) return false;
       this.tex.noteDrawn(url, pic); g.drawImage(pic, a - ox, b - oy, a2 - a, b2 - b);
     }
@@ -2285,7 +2300,7 @@ export class GroundPainter {
   /** a second texture laid over a surface in soft patches (a painted area's Blend with, PatchPaint m; a course look's; a road block's lawn): the
    *  texture (painted, a photo or preset in tile space at scale sx turned by G, else the screen texture) through the blend noise's mask
    *  (painted-grass-lod.ts blendNoise: world space, never periodic; share, softness and patch size from m), inside clip */
-  private drawBlend(ctx: C2D, m: { t: string; s: number; f: number; p: number; g?: (x: number, y: number) => number }, sx: number, G: DOMMatrix, clip: Path2D, rule: CanvasFillRule, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, px?: readonly [number, number, number, number]) {
+  private drawBlend(ctx: C2D, m: { t: string; s: number; f: number; p: number; g?: (x: number, y: number) => number }, sx: number, G: DOMMatrix, clip: Path2D, rule: CanvasFillRule, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, px?: readonly [number, number, number, number], turnPainted = false) {
     if (m.s <= 0) return;
     // px (T222): the device box [x, y, w, h] the blend lies in (a yard's), so only that box of the scratch layer is cleared and laid over the chunk,
     // not the whole chunk-sized canvas; m.g weights the share by tile position
@@ -2295,7 +2310,8 @@ export class GroundPainter {
     // the scratch layer's context is reused chunk after chunk: its clip is saved and restored, or the clips would add up
     g.save(); g.setTransform(M); g.clip(clip, rule);
     let style: CanvasPattern | string = PAINT_COL.get(t) ?? '#808080';
-    const painted = this.paintedFill(g, t, r as BBox, sx);
+    // (turnPainted, T301: a course look's blend lays a painted texture through G too, as its fill does; an area's and a lawn's keep it unturned)
+    const painted = this.paintedFill(g, t, r as BBox, sx, turnPainted ? G : undefined);
     if (painted) style = painted;
     else if (isPaintPhoto(t)) { if (this.tex.has(t)) { const src = this.tex.sourceFor(t, L * sx); style = src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * sx), G, this.tex.periodOf(t)); } }
     else if (t === 'asphaltDark' || t === 'lotAsphalt') style = this.groundPattern(g, this.tex.mosaicFor(t === 'lotAsphalt' ? 'lot' : 'base', L * sx), G);
@@ -2438,8 +2454,8 @@ export class GroundPainter {
      *  (turned and scaled about the origin), else the screen texture */
     const style = (g: C2D, t: CourseTex, need?: BBox) => {
       // (the texture's offset first, in tile space: the Pan texture tool moves the picture, never the ground)
-      const G = new DOMMatrix().translateSelf(t.o?.[0] ?? 0, t.o?.[1] ?? 0).rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc);
-      const painted = this.paintedFill(g, t.tex, need, t.sc); if (painted) return painted;
+      const G = new DOMMatrix([...courseTexG(t)]);
+      const painted = this.paintedFill(g, t.tex, need, t.sc, G); if (painted) return painted;
       return isPaintPhoto(t.tex) ? this.paintPhoto(g, t.tex, L, G, t.sc) : this.screenPattern(g, t.tex as TexName, L, X0, Y0, Minv, G);
     };
     const ringsOf = (rings: readonly ArrayLike<number>[]) => { const p = new Path2D(); for (const q of rings) ringPath(p, q); return p; };
@@ -2465,7 +2481,8 @@ export class GroundPainter {
       if (need[2] <= need[0] || need[3] <= need[1]) return;
       ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd'); ctx.fillStyle = style(ctx, t, need); ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1]); ctx.restore();
       // (the blend with its own scale, angle and offset when set, else the fill's)
-      if (t.m && !lite) { const ms = t.m.sc ?? t.sc, ma = t.m.a ?? t.a; this.drawBlend(ctx, t.m, ms, new DOMMatrix().translateSelf(t.m.o?.[0] ?? 0, t.m.o?.[1] ?? 0).rotateSelf(0, 0, ma).scaleSelf(ms, ms), clip, 'evenodd', need, L, X0, Y0, M, Minv); }
+      const bl = lite ? null : courseBlendG(t);
+      if (t.m && bl) this.drawBlend(ctx, t.m, bl.sc, new DOMMatrix([...bl.G]), clip, 'evenodd', need, L, X0, Y0, M, Minv, undefined, true);
       if (exposed(t.x) || extra) {
         ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd');
         exposeClip(ctx, t.x, need[0], need[1], need[2], need[3]);
