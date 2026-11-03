@@ -155,8 +155,8 @@ export interface PlayCart { x: number; y: number; hx: number; hy: number; cart: 
 
 /** the carts of a round plan on a course, played back: the golfers' stops, walks and rides, and the carts' points (see the file's head) */
 export class CartPlay {
-  /** the scratch of rider(): the walk's point and heading */
-  readonly walk = { x: 0, y: 0, hx: 0, hy: 0 };
+  /** the scratch of rider(): the walk's point and heading, and (T294) its end and the minute he is there */
+  readonly walk = { x: 0, y: 0, hx: 0, hy: 0, ex: 0, ey: 0, by: 0 };
   private plan: RoundPlan; private view: CourseView; private paths: CartPaths | null; private homeAt: Pt;
   private carts: Cart[] = []; private cartOf: Int32Array; private shots: Shot[][] = [];
   /** per hole: the stop by its tee and the stop beside its green (worked out once) */
@@ -286,15 +286,16 @@ export class CartPlay {
       if (first && m < l.out) return h === 0 ? STATE : RIDE;
       first = false;
       if (m < l.out) return RIDE;
-      if (m < l.at) return this.walkTo(v.stop, l.ball, (m - l.out) / (l.at - l.out));
+      if (m < l.at) return this.walkTo(v.stop, l.ball, (m - l.out) / (l.at - l.out), l.at);
       if (m < l.end) return STATE;
-      if (m < l.back) return this.walkTo(l.rest, v.stop, (m - l.end) / (l.back - l.end));
+      if (m < l.back) return this.walkTo(l.rest, v.stop, (m - l.end) / (l.back - l.end), l.back);
     }
     return first && h === 0 ? STATE : RIDE;
   }
-  /** a walk from a to b at u (0..1) into `walk`: WALK */
-  private walkTo(a: Pt, b: Pt, u: number): number {
+  /** a walk from a to b at u (0..1), over by minute `by`, into `walk`: WALK */
+  private walkTo(a: Pt, b: Pt, u: number, by: number): number {
     const w = this.walk, k = Math.min(1, Math.max(0, u)); w.x = a.x + (b.x - a.x) * k; w.y = a.y + (b.y - a.y) * k; w.hx = b.x - a.x; w.hy = b.y - a.y;
+    w.ex = b.x; w.ey = b.y; w.by = by;
     return WALK;
   }
 
