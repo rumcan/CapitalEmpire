@@ -58,12 +58,24 @@ try {
     g.commitNetwork(); return n;
   }, [sp.J, sp.d, cut]);
   console.log('removed pieces', removed);
+  // the cost of working the car parks' ways out again (a network edit's: the main roads, the off-road legs), ms
+  const ms = await page.evaluate(() => { const g = window.__game, door = g.range.scene.counter, t = []; for (let i = 0; i < 5; i++) { g.rangePk = null; const t0 = performance.now(); g.rangeCarPark(door); t.push(performance.now() - t0); } return t.map(x => x.toFixed(2)); });
+  console.log('rangeCarPark recompute ms', ms.join(' '));
   await page.evaluate(() => { window.__game.range.sync(true); window.__game.setSpeed(3); });
   await page.waitForFunction(() => window.__game.range.sim.visits.filter(v => v.stage === 0 || v.stage === 10).length >= 3, null, { timeout: 120000, polling: 250 }).catch(() => console.log('  (no cars on the move)'));
   await page.evaluate(() => window.__game.setSpeed(1));
   const rs = await trace(page);
   writeFileSync(join(out, `${tag}-trace.json`), JSON.stringify({ J: sp.J, routes: rs }, null, 1));
   console.log('routes', rs.map(r => `${r.out ? 'out' : 'in'} ${r.offRoad}/${r.len}`).join(', '));
+  // a car on its way in, off the roads: the camera on it (the range's cars are drawn at their RangeCar point)
+  const car = await page.waitForFunction(() => {
+    const g = window.__game;
+    for (const v of g.range.sim.visits) { const c = v.rc; if (v.stage !== 0 || !c) continue; let near = false; for (const s of g.net.segsNear(c, 4)) if (!s.cls.noCars) near = true; if (!near) return { x: c.x, y: c.y }; }
+    return null;
+  }, null, { timeout: 60000, polling: 100 }).then(h => h.jsonValue()).catch(() => null);
+  await page.evaluate(() => window.__game.setSpeed(0));
+  console.log('car off the roads at', JSON.stringify(car));
+  if (car) { await look(page, car.x, car.y, 0.15); await settle(page, 600); await shot(page, 'car-15pct'); }
   await look(page, sp.J.x + sp.n.x * 10, sp.J.y + sp.n.y * 10, 0.15); await settle(page, 600); await shot(page, 'range-15pct');
   await look(page, sp.J.x, sp.J.y, 0.3); await settle(page, 600); await shot(page, 'drive-30pct');
 } finally { await browser.close(); }

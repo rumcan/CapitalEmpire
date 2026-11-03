@@ -53,7 +53,7 @@ import { RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLi
 import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
-import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
+import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, rangeCarLines, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type BrushKind, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, grassSlot, landGridBox, lookCellsDiff, looksUsed, makeGrid, paintDisc, paintStroke, setLook, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { PLAY_SURF, golfSurfaceOf, grassLooks, normalizeGrasses, type CustomGrass, type GrassPlay } from './golf/grasses';
@@ -69,6 +69,7 @@ import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/mi
 import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
 import { roadRoute } from './road-route';
+import { linesOnRoads, mainRoads, offRoadTo, type OffRoad } from './offroad';
 import { PRESETS, surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
 import { ParkingTool } from './parking-tool';
@@ -636,15 +637,60 @@ export class Game {
     // edit elsewhere never re-lays the range)
     const inner = `${base}|${this.net.version}|${J ? `${J.x},${J.y}` : ''}`;
     if (this.rangePk?.inner !== inner || serving.some(s => !this.rangePk!.pks.has(s.park))) {
-      const vias = serving.map(s => (J ? roadRoute(this.net, J, s.park.entrances[0]!) : null)), key = `${base}|${vias.map(v => (v ? v.map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(';') : '')).join('/')}`;
+      const vias = serving.map(s => (J ? roadRoute(this.net, J, s.park.entrances[0]!) : null));
+      // T321 (#912): a car park the range's own ways reach off the roads (the county road or the drive deleted) is reached along the main roads
+      // to their point nearest its entrance, then over the grass (offroad.ts); the key changes with that way, so the range's cars take it at once
+      const offs = this.rangeOffRoads(serving.map(s => s.park.entrances[0]!), vias);
+      const pts = (v: readonly Pt[]) => v.map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(';');
+      const key = `${base}|${vias.map(v => (v ? pts(v) : '')).join('/')}|${offs.map(o => (o ? `${pts(o.road.slice(-1))}>${pts(o.grass)}` : '')).join('/')}`;
       // (T237: each bay with its drive from its car park's mouth along the aisles, and the walk from the car park's footpath along them)
       // (the owner, 2026-11-01: a car park off the range's drive is reached along the roads from the drive's turn, never straight over the course)
-      const all = serving.flatMap((s, i) => { const f = this.footStart(s.park), e = s.park.entrances[0]!, via = vias[i]; return baysByDoor(s.park.bays, door).map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy, e, pid: s.park.id, drive: bayDrive(s.park, b), walk: f ? bayWalk(s.park, b, f) : [], ...(via ? { via } : {}) })); });
-      this.rangePk = { pks: new Set(serving.map(s => s.park)), inner, v: { bays: baysByDoor(all, door), entrance: serving[0]!.park.entrances[0]!, key } };
+      const all = serving.flatMap((s, i) => { const f = this.footStart(s.park), e = s.park.entrances[0]!, via = vias[i], off = offs[i]; return baysByDoor(s.park.bays, door).map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy, e, pid: s.park.id, drive: bayDrive(s.park, b), walk: f ? bayWalk(s.park, b, f) : [], ...(via ? { via } : {}), ...(off ? { off } : {}) })); });
+      this.rangePk = { pks: new Set(serving.map(s => s.park)), inner, v: { bays: baysByDoor(all, door), entrance: serving[0]!.park.entrances[0]!, key, ...(offs[0] ? { off: offs[0] } : {}) } };
     }
     return this.rangePk.v;
   }
-  private rangePk: { pks: Set<CarPark>; inner: string; v: { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[]; via?: Pt[] }[]; entrance: Pt; key: string } } | null = null;
+  private rangePk: { pks: Set<CarPark>; inner: string; v: { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[]; via?: Pt[]; off?: OffRoad }[]; entrance: Pt; key: string; off?: OffRoad } } | null = null;
+  /** T321 (#912): for each car park entrance (with its road route from the drive's turn, vias), the off-road way to it (offroad.ts), or null where
+   *  the range's own ways to it run on the roads (rangeCarLines) or there are no roads at all. Run on a network edit only (rangeCarPark's cache) */
+  private rangeOffRoads(es: readonly Pt[], vias: readonly (Pt[] | null)[]): (OffRoad | null)[] {
+    const sc = this.range.scene; if (!sc) return es.map(() => null);
+    let main: ReturnType<typeof mainRoads> | null = null, cost: ((x: number, y: number) => number) | null = null;
+    return es.map((e, i) => {
+      if (linesOnRoads(this.net, rangeCarLines(sc, e, vias[i]))) return null;
+      main ??= mainRoads(this.net); cost ??= this.offroadCost();
+      return offRoadTo(this.net, main, e, cost);
+    });
+  }
+  /** T321: the cost (per tile, 1 the cheapest) of a car driving over the ground at (x, y) where no road goes: never through a building (the range's,
+   *  the golf buildings, other businesses, the iconic places, a lot's house), water, a green, a tee or a bunker; the rough, the fescue and the
+   *  map's grass cheapest, a fairway dearer */
+  private offroadCost(): (x: number, y: number) => number {
+    const g = this.courseGrid, cls = this.terrain.cls;
+    const inPoly = (z: readonly number[], x: number, y: number) => {
+      let sgn = 0;
+      for (let i = 0, n = z.length / 2; i < n; i++) {
+        const j = (i + 1) % n, c = (z[j * 2]! - z[i * 2]!) * (y - z[i * 2 + 1]!) - (z[j * 2 + 1]! - z[i * 2 + 1]!) * (x - z[i * 2]!);
+        if (c === 0) continue; const s1 = c > 0 ? 1 : -1; if (sgn && s1 !== sgn) return false; sgn = s1;
+      }
+      return true;
+    };
+    const polys = routeObstacles({ course: true, biz: this.bizDefs, parks: [], structures: this.rangeStructs(), places: this.placeStructures() }).map(o => {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (let i = 0; i < o.zone.length; i += 2) { x0 = Math.min(x0, o.zone[i]!); x1 = Math.max(x1, o.zone[i]!); y0 = Math.min(y0, o.zone[i + 1]!); y1 = Math.max(y1, o.zone[i + 1]!); }
+      return { z: o.zone, x0, y0, x1, y1 };
+    });
+    const houses = [...this.traffic.lots.values()].filter(v => this.houseLots.has(v.key));
+    const SURF_COST: Record<number, number> = { [SURF.water]: Infinity, [SURF.green]: Infinity, [SURF.tee]: Infinity, [SURF.bunker]: Infinity, [SURF.fairway]: 3, [SURF.waste]: 1.5 };
+    return (x, y) => {
+      const tx = Math.floor(x), ty = Math.floor(y);
+      if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) return Infinity;
+      const c = cls[ty * MAP + tx]; if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return Infinity;
+      for (const o of polys) if (x >= o.x0 && x <= o.x1 && y >= o.y0 && y <= o.y1 && inPoly(o.z, x, y)) return Infinity;
+      for (const v of houses) { const rx = x - v.o[0], ry = y - v.o[1], a = rx * v.u[0] + ry * v.u[1], b = rx * v.n[0] + ry * v.n[1]; if (a >= 0 && a <= v.w && b >= 0 && b <= v.d) return Infinity; }
+      if (g) { const i = cellAt(g, x, y); if (i >= 0) return SURF_COST[g.surf[i]!] ?? 1; }
+      return 1;
+    };
+  }
   /** T237: the range's own car park (the one its upgrades gravel and pave, and the car park building trims): the save's lot rect (a new game's,
    *  in the frontage strip), else the car park on the range's plot (an old save's) */
   private rangeLotDef(): CarParkDef | undefined {
