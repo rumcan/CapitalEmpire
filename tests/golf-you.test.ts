@@ -21,7 +21,7 @@ test('the route goes round a wall, never through it, and ends on the target', ()
 });
 
 test('the route keeps to a cheap path where it costs little more distance', () => {
-  const pathy = (x: number, y: number) => (y >= 19 && y <= 21 ? 0.4 : 1);
+  const pathy = (_x: number, y: number) => (y >= 19 && y <= 21 ? 0.4 : 1);
   const r = routeOf({ x: 0, y: 18 }, { x: 60, y: 18 }, pathy);
   const mid = r.filter(p => p.x > 10 && p.x < 50);
   assert.ok(mid.length === 0 || mid.every(p => p.y >= 18.5), 'the route walks the path rather than the grass beside it');
@@ -74,7 +74,7 @@ test('a click resolves to the adventure verbs, with a label naming the thing', (
 
 test('a building\'s door is on the side toward the road, one you can stand on; you stop short of a person to talk', () => {
   // a road runs along y 20 below a building at 0..10, 0..10: the door is on its south side
-  const road = (x: number, y: number, ux: number, uy: number) => { for (let k = 0; k < 40; k++) if (Math.abs(y + uy * k - 20) < 0.5) return k; return Infinity; };
+  const road = (_x: number, y: number, _ux: number, uy: number) => { for (let k = 0; k < 40; k++) if (Math.abs(y + uy * k - 20) < 0.5) return k; return Infinity; };
   const d = doorOf([0, 0, 10, 10], { x: -20, y: 5 }, () => true, road)!;
   assert.ok(d.y > 10 && Math.abs(d.x - 5) < 1e-9);
   // that side blocked: another
