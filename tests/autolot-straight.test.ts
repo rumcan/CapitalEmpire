@@ -42,7 +42,8 @@ test('a straight-street house lot: 3 to 8 trees, its owned side (and back) hedge
     // the hedge on the owned side line: the shrubs within 1.5 tiles of one side line, behind the front set-back
     const hedge = p.props.filter(q => HEDGE.test(q.id));
     const onSide = (x: number) => hedge.filter(q => Math.abs(q.x - x) < 1.5 && q.y > 3).length;
-    assert.ok(Math.max(onSide(0), onSide(w)) >= 2, `${tag}: no side hedge (${hedge.length} shrubs)`);
+    // (the drive may run along the owned side: the hedge then grows behind it only, so a shallow lot can hold just one shrub there)
+    assert.ok(hedge.length >= 2 && Math.max(onSide(0), onSide(w)) >= 1, `${tag}: no side hedge (${hedge.length} shrubs)`);
     assert.ok(!p.props.some(q => FENCE.test(q.id)), `${tag}: an iso fence panel on a screen-straight line`);
     // never over the drive
     for (const dr of p.patches.filter(a => a.kind === 'drive')) {
@@ -63,7 +64,8 @@ test('a straight-street house lot: 3 to 8 trees, its owned side (and back) hedge
 
 test('two straight-street lots back to back (roads 3 and 7, and 1 and 5) plant their shared back line once', () => {
   for (const [a, b] of [[3, 7], [1, 5]]) for (let s = 0; s < 6; s++) {
-    const backHedge = (r: number) => autoLot(lotOn(r, 16, 20), 'res', 2, 7 + s, 'built', 'house')!.props.filter(q => HEDGE.test(q.id) && q.y > 18).length;
+    // (the back line's shrubs: along the back, away from the side lines' own runs)
+    const backHedge = (r: number) => autoLot(lotOn(r, 16, 20), 'res', 2, 7 + s, 'built', 'house')!.props.filter(q => HEDGE.test(q.id) && q.y > 18.5 && q.x > 2.5 && q.x < 13.5).length;
     const na = backHedge(a), nb = backHedge(b);
     assert.ok((na > 0) !== (nb > 0), `roads ${a} and ${b} seed ${s}: back hedges ${na} and ${nb} (exactly one should own it)`);
   }
