@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
-import { BEND, BallRoll, FX_NONE, FX_SAND, FX_SPLASH, PUFF_S, PlayView, ROLL_DONE_S, SPLASH_S, ballRoll, chooseShot, crossSlope, hitShot, makeField, playRound, rng, teeTimes } from '../src/game/golf/play';
+import { BEND, BallRoll, FX_NONE, IMPACT_S, FX_SAND, FX_SPLASH, PUFF_S, PlayView, ROLL_DONE_S, SPLASH_S, ballRoll, chooseShot, crossSlope, hitShot, makeField, playRound, rng, teeTimes } from '../src/game/golf/play';
 import { RangeSim, defaultRangeBiz, rangeScene, rollOut, withUpgrade, type CarSlot, type RangeBizSave, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import type { CourseView, HeightAt, Lie, PlayHole, Pt } from '../src/game/golf/play';
 
@@ -173,8 +173,8 @@ test('the playback: a round\'s full shots land, bounce and roll to their ends by
   for (const s of shots) {
     const pv = new PlayView(plan, view, { height: tilt }), lg = s.landing!, at = s.penalty ? s.to : lg.rest;
     pv.update(s.t - 0.02, 50); pv.update(s.t, 51);
-    pv.update(s.t, 51.5); assert.ok(pv.balls.some(b => b.h > 0), 'a ball in the air in its flight');
-    pv.update(s.t, 51 + ROLL_DONE_S);
+    pv.update(s.t, 51 + IMPACT_S + 0.5); assert.ok(pv.balls.some(b => b.h > 0), 'a ball in the air in its flight');
+    pv.update(s.t, 51 + IMPACT_S + ROLL_DONE_S);
     assert.ok(pv.balls.some(b => b.h === 0 && Math.abs(b.x - at.x) < 1e-9 && Math.abs(b.y - at.y) < 1e-9 && !b.fx), `at rest at its end by ${ROLL_DONE_S} s (${s.club}, ${lg.lie} to ${lg.restLie})`);
   }
 });

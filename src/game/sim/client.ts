@@ -34,6 +34,8 @@ import type { DaySave } from '../event/daysave';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
+/** T320: a step back of the sim time shown smaller than this (s) is held (simTime): a pause, a frame behind the extrapolation */
+const HOLD_BACK = 2.5;
 /** how long the engine's save waits for the worker's tournament day (T209, daySave), ms */
 const DAY_WAIT_MS = 1500;
 /** a car that moved this far (tiles) between two frames was respawned or re-planned: drawn at its new place, not lerped */
@@ -327,7 +329,16 @@ export class SimClient {
   }
 
   /** the sim's time now, s: the time of the last frame, moved on at the sim speed since it arrived (0 before the first frame) */
-  simTime(now: number): number { if (!this.cur) return 0; return this.stats.skipping ? this.stats.simT : this.stats.simT + Math.max(0, now - this.tCur) / 1000 * this.speed; }
+  simTime(now: number): number {
+    if (!this.cur) return 0;
+    const t = this.stats.skipping ? this.stats.simT : this.stats.simT + Math.max(0, now - this.tCur) / 1000 * this.speed;
+    // T320: never a little back: a pause (or a frame of the worker's, which steps once every 1/k frames below 1x) can fall behind what was shown by
+    // up to a step; the time shown holds until the sim reaches it (a real jump back, a load or a new game, is more than HOLD_BACK and goes through)
+    if (t < this.tShown && this.tShown - t < HOLD_BACK) return this.tShown;
+    this.tShown = t; return t;
+  }
+  /** T320: the most sim time shown (simTime) */
+  private tShown = 0;
   /** the game clock now, s (the time of day and the game day): the clock of the last frame, moved on at the sim speed like simTime, but
    *  not while it is frozen or the sim is skipping (0 before the first frame) */
   clockTime(now: number): number { if (!this.cur) return 0; const s = this.stats; return s.clock + (s.frozen || s.skipping ? 0 : Math.max(0, now - this.tCur) / 1000 * this.speed); }

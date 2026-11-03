@@ -7862,7 +7862,7 @@ export class Game {
     // T320: the swing plays at once (the address's game minutes before the strike are skipped: at the watching speed they would be many real
     // seconds), and the camera holds on his ball until it is at rest (ownHoldFrame)
     { const T = this.traffic, st = T.simTime(performance.now()), m = this.playMinute(pl, townTimeOf(T.town, st).dayMin), r = localRate(T.town, st);
-      if (shot.t > m && r > 0) T.skip(st + (shot.t - m) / r + 0.05); }
+      if (shot.t > m && r > 0) T.skip(st + (shot.t - m) / r + 0.01); }
     this.ownHold = { at: performance.now(), moved: false, still: 0 };
     if (!own.turn) this.ownerDone(pl);
     this.emit();

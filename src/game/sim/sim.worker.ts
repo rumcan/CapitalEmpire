@@ -12,6 +12,7 @@ import type { Milestone } from '../career';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 import { retime } from './townclock';
 import { StepClock } from '../golf/watch';
+import { DT } from './sim';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 /** wall-clock frame period, ms; the sim is stepped once per DT of its speed. A skip (fast-forward) runs for SKIP_MS of each frame */
@@ -105,7 +106,7 @@ function frame() {
   if (skipping) {
     const t0 = performance.now();
     while (city.sim.t < skipUntil && performance.now() - t0 < SKIP_MS) {
-      const r = city.step(20);
+      const r = city.step(Math.max(1, Math.min(20, Math.ceil((skipUntil - city.sim.t) / DT - 1e-6)))); // (T320: no further than the skip's end: a short skip, the owner's address, is exact)
       postTown(r.events, false);
       if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
       if (r.noRoom) post({ t: 'noRoom' });
@@ -173,7 +174,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       }
       // the saved clock (after townState, so sim.t is the saved time): it runs at the normal rate again, the tournament day never carries over
       case 'townClock': city.sim.town = retime(m.clock, city.sim.t, 1440 / city.sim.dayLen, city.sim.prof); city.tourneyDay = false; forcePost = true; break;
-      case 'speed': speed = m.k; break;
+      case 'speed': speed = m.k; forcePost = true; break; // (T320: a frame at once, so a pause shows the sim's time as it is: below 1x the last frame can be many steps old)
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
       case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); city.restoreBiz(m.biz); postBudget(null); postBiz(); break;

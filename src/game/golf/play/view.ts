@@ -46,9 +46,11 @@ const PUTT_FRAMES = [0, 1, 0];
 const FLIGHT_S = 1.4, CHIP_S = 0.9, PUTT_FLIGHT_S = 0.8;
 /** the apex of a full shot's arc: metres of height per metre of its length (a putt rolls: no arc) */
 const APEX = 0.12;
-/** T251: a full shot's bounce and roll after its landing are over by the swing's end (real seconds from the swing), so the ball is at rest before a
- *  golfer faded out on his walk (pacer.ts: FADE_OUT_S after the swing) comes back at it */
+/** T251: a full shot's flight, bounce and roll are over this many real seconds after it leaves the club (T320: from its impact, IMPACT_S) */
 export const ROLL_DONE_S = SWING_S;
+/** T320 (#908): the ball leaves the club at the drive clip's impact, this many real seconds into the swing (the range's IMPACT, rangebiz.ts); a putt
+ *  at the end of its takeaway's return (two thirds of PUTT_S). Before T320 it left at the swing's first frame, ahead of the backswing */
+export const IMPACT_S = 1.22, PUTT_HIT_S = PUTT_S * 2 / 3;
 /** a golfer stands on the first tee this many game minutes before his tee time (he is not drawn before that) */
 const LEAD_MIN = 10;
 /** the walk cycle's offset per golfer, real seconds, so the golfers' walks are not in step */
@@ -181,7 +183,7 @@ export class PlayView {
       // seconds into it (-1: none now)
       let cel = -1;
       if (newest && this.celebrate.has(newest)) {
-        const c = dt - (newest.club === 'putter' ? Math.max(PUTT_S, PUTT_FLIGHT_S) : Math.max(SWING_S, flightS(newest)));
+        const c = dt - (newest.club === 'putter' ? Math.max(PUTT_S, PUTT_HIT_S + PUTT_FLIGHT_S) : Math.max(SWING_S, IMPACT_S + flightS(newest))); // (T320: from the impact)
         if (c >= 0 && c < CELEBRATE_S) cel = c;
       }
       // T266: the watchable golfers: shown where his pacer has him (a brisk walk after the schedule, faster only when he must to be at his walk's
@@ -227,18 +229,21 @@ export class PlayView {
       // the ball: the newest shot's while it flies (its arc, in real seconds from its swing), else where it rests, unless it went in the hole. T251: a
       // full shot flies to its landing, then bounces and rolls to where the model has it stop (a splash in water, a puff of sand in a bunker), all by
       // ROLL_DONE_S; a putt rolls on its line as before, breaking on a sloped green
-      const fs = newest ? flightS(newest) : 0, lg = newest && ballRoll.on ? newest.landing : undefined;
-      if (newest && dt < fs) {
+      // (T320: the times from its impact, bt; before it, the ball waits at the golfer's feet through his backswing)
+      const fs = newest ? flightS(newest) : 0, lg = newest && ballRoll.on ? newest.landing : undefined, bt = dt - (putting ? PUTT_HIT_S : IMPACT_S);
+      if (newest && bt < 0) {
+        this.bi[id] = nb; const b = this.slot(nb++); b.x = newest.from.x; b.y = newest.from.y; b.h = 0;
+      } else if (newest && bt < fs) {
         this.bi[id] = nb; this.bm[id] = 1;
-        const u = dt / fs, b = this.slot(nb++);
+        const u = bt / fs, b = this.slot(nb++);
         if (newest.club === 'putter') { if (ballRoll.on) this.rollOf(id, newest).along(u, b); else { b.x = newest.from.x + (newest.to.x - newest.from.x) * u; b.y = newest.from.y + (newest.to.y - newest.from.y) * u; b.h = 0; } }
         else {
           const to = lg ? lg.at : newest.to, H = APEX * Math.hypot(to.x - newest.from.x, to.y - newest.from.y) * TILE_M;
           b.x = newest.from.x + (to.x - newest.from.x) * u; b.y = newest.from.y + (to.y - newest.from.y) * u; b.h = 4 * H * u * (1 - u);
         }
-      } else if (newest && lg && dt < fs + this.rollOf(id, newest).end) {
+      } else if (newest && lg && bt < fs + this.rollOf(id, newest).end) {
         this.bi[id] = nb; this.bm[id] = 1;
-        const r = this.rolls[id]!, b = this.slot(nb++); b.fx = r.at(dt - fs, b); b.fu = r.fu;
+        const r = this.rolls[id]!, b = this.slot(nb++); b.fx = r.at(bt - fs, b); b.fu = r.fu;
       } else if (s.ball && !(newest?.holed && s.ball.x === newest.to.x && s.ball.y === newest.to.y)) {
         this.bi[id] = nb; const b = this.slot(nb++); b.x = s.ball.x; b.y = s.ball.y; b.h = 0;
       }
@@ -316,10 +321,10 @@ export class PlayView {
     s.hole = turn.holeIdx;
     if (minute < ws + window) {
       const u = window > 0 ? (minute - ws) / window : 1;
-      s.x = st.at.x + (ball.x - st.at.x) * u; s.y = st.at.y + (ball.y - st.at.y) * u; s.action = 'walk';
+      s.x = st.at.x + (ball.x - st.at.x) * u; s.y = st.at.y + (ball.y - st.at.y) * u; s.action = 'walk'; s.dest = ball; s.by = A; // (T320: the pacer has him at his ball by the address)
       return;
     }
-    s.x = ball.x; s.y = ball.y; s.action = 'address';
+    s.x = ball.x; s.y = ball.y; s.action = 'address'; s.dest = ball; s.by = A;
   }
   /** where golfer id stands before his next stroke, and the minute he is free there: his tee before any stroke; after his last stroke on a hole that
    *  ended it (holed out or picked up), his step-off (round.ts offOf, free once his walk to it is over); else the ball he last struck to, free once its

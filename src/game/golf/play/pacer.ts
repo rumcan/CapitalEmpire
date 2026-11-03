@@ -14,6 +14,8 @@ export const GAP = 3;
 export const FADE_IN_S = 0.24;
 /** the time (sim seconds) a mover takes to close most of what is left of his walk once its deadline has gone */
 export const CATCH_S = 0.25;
+/** T320: below 1x, the real seconds a mover takes to close most of a lag over GAP (no deadline) */
+const CATCH_REAL_S = 0.6;
 /** a mover not stepped for this many real seconds (off the screen, a jump of the clock) starts again where the schedule has it */
 const STALE_S = 0.75;
 /** close enough (tiles): near(), and the slack of a hold */
@@ -68,7 +70,10 @@ export class Pacer {
         let v = cap;
         if (due) v = Math.max(v, rem / (left > 0 ? left : CATCH_S)); // (in time: at his walk's end right at the deadline; a deadline gone: within about CATCH_S)
         // (no deadline: never more than GAP behind the schedule)
-        const k = Math.min(1, Math.max(v * dS, due ? 0 : d - GAP) / d); x += dx * k; y += dy * k; this.walked = true; this.hx = dx; this.hy = dy;
+        // (T320: below 1x a mover that fell more than GAP behind closes it over about CATCH_REAL_S real seconds, not in one frame: at a slow speed a
+        // one-frame cut is a visible pop)
+        const back = due ? 0 : below1 < 1 ? (d - GAP) * Math.min(1, dR / CATCH_REAL_S) : d - GAP;
+        const k = Math.min(1, Math.max(v * dS, back) / d); x += dx * k; y += dy * k; this.walked = true; this.hx = dx; this.hy = dy;
       }
       // (a mover snapped to a shot struck away from where he was shown fades in from there)
       if (a < 1) a = Math.min(1, a + (dR > 0 ? dR / FADE_IN_S : 0));
