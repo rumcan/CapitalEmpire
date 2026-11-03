@@ -37,3 +37,16 @@ test('a longer grass beside a shorter one: a shade run on the shorter one\'s edg
   const tall = coursePatch(g, 0, 0, noBand(looks(Object.assign([], { [SURF.rough]: 5, [SURF.fairway]: 1 }))), 0)!.course!.shade ?? [];
   assert.ok(tall.filter(r => r.c === layerCode(SURF.fairway, false)).every(r => r.d === 4), 'the difference 5 - 1');
 });
+
+test('T300 (#885): a tee is a raised box, length 5 by default: it shades the long grass (4) and rough (3) round it, not they it', () => {
+  assert.equal(DEFAULT_LENGTH[SURF.tee], 5);
+  const g = makeGrid(0, 0, 64, 64), long: number[] = [], tee: number[] = [];
+  for (let y = 4; y < 60; y++) for (let x = 4; x < 60; x++) (x >= 24 && x < 40 && y >= 24 && y < 40 ? tee : long).push(y * g.w + x);
+  paintCells(g, long, long.length, SURF.longGrass, 1, 0); paintCells(g, tee, tee.length, SURF.tee, 1, 0);
+  const shade = coursePatch(g, 0, 0, noBand(looks()), 0)!.course!.shade ?? [];
+  assert.equal(shade.filter(r => r.c === layerCode(SURF.tee, false)).length, 0, 'nothing shades the tee');
+  const on = shade.filter(r => r.c === layerCode(SURF.longGrass, false));
+  assert.ok(on.length > 0 && on.every(r => r.d === 1), 'the tee (5) shades the long grass (4)');
+  // a tee whose Length the player set keeps it
+  assert.equal(lengthOfCode(layerCode(SURF.tee, false), Object.assign([], { [SURF.tee]: 2 })), 2);
+});
