@@ -85,7 +85,10 @@ function ShapeByHand({ game, looks, onLooks }: { game: Game; looks: boolean; onL
           <button className={`chip ${brush && !run ? 'chip-on' : ''}`} aria-pressed={brush && !run} title={`Paint ${name} for hole ${p.brushHole}: click a cell, drag a run`} onClick={() => p.setBrushRun(false)}>Brush</button>
           {game.golfMode && <button className={`chip ${run ? 'chip-on' : ''}`} aria-pressed={run} title={`Run: lay a strip of ${name} as wide as the size, like a road: click a start, click each bend, then double-click, Enter or right-click. Shift keeps a leg straight`} onClick={() => p.setBrushRun(true)}>Run</button>}
         </div>
-        <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title={`Erase takes the top surface under the ${run ? 'run' : 'brush'} (hold Alt for a moment while brushing); no refund`} onClick={() => { const v = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
+        {/* T303 (#888): with a plant brush in hand Erase is its Rub out (plants only); it never arms the surface brush and its texture and blend */}
+        {p.mode === 'plant'
+          ? <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} aria-pressed={p.rubOut} title="Erase rubs out the plants these brushes planted (hold Alt while brushing)" onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Erase</button>
+          : <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title={`Erase takes the top surface under the ${run ? 'run' : 'brush'} (hold Alt for a moment while brushing); no refund`} onClick={() => { const v = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>}
       </div>
       {!game.golfMode && brush && <div className="sub-line mt-1.5">{`Click paints ${name} for hole ${p.brushHole}; drag paints a run. Alt-drag or Erase rubs out. [ ] size.`}</div>}
     </section>
