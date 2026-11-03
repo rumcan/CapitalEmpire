@@ -13,6 +13,7 @@ import { hash3, paintOf } from '../car-paint';
 import { PRESETS, presetTex, surfacePreset, type Stripes } from '../paint-presets';
 import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
+import type { OffRoad } from '../offroad';
 import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
@@ -30,7 +31,7 @@ export interface RangeHostCtx {
   biz(): RangeBizSave | null; plot(): { rect: Rect; facing: 0 | 1 | 2 | 3 } | null;
   /** the range's car parks (T237: those within walking distance of door, the shop's counter: golf/walkserve.ts): their bays (point, heading
    *  and each one's entrance), the first one's entrance and a key that changes with them; null while none is built in reach */
-  carPark(door: Pt): { bays: CarSlot[]; entrance: Pt; key?: string } | null;
+  carPark(door: Pt): { bays: CarSlot[]; entrance: Pt; key?: string; /** T321: the off-road way to the entrance (its garage's cars) */ off?: OffRoad } | null;
   /** the range's car park (the lot on the plot) laid on rect (world) instead (T146: it keeps its near half beside the car park building); missing:
    *  the lot stays as it is */
   fitPark?(rect: Rect): void;
@@ -161,7 +162,7 @@ export class RangeHost {
       if (!b.garage) { this.ctx.layPaths([sc.garage.path]); b.garage = true; this.ctx.save(); }
     }
     this.scene = sc; this.walkVer = -1; this.walkKey = ''; this.syncWalk();
-    this.sim.setScene(sc, [...(cp?.bays ?? []), ...(cp && sc.garage ? garageSlots(sc.garage, GARAGE_CARS) : [])], cp?.entrance ?? null);
+    this.sim.setScene(sc, [...(cp?.bays ?? []), ...(cp && sc.garage ? garageSlots(sc.garage, GARAGE_CARS).map(g => (cp.off ? { ...g, off: cp.off } : g)) : [])], cp?.entrance ?? null);
   }
   /** T239: the network's version and the paths' signature the walkway was read for */
   private walkVer = -1; private walkKey = '';
