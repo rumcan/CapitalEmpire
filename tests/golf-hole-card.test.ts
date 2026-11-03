@@ -126,3 +126,18 @@ test('renumbering: two holes trade numbers everywhere a number lives, and the ro
   const moved = swapHoleNumbers(4, 9, { grid: g, pins: [], tees: [], aims: [], plans, areas: [] });
   assert.equal(g.hole[c0], 9); assert.deepEqual(moved.plans.map(p => p.hole), [1, 2, 9]);
 });
+
+test('T302 (#887): a hole painted by hand with no pin or tees yet: the Fix places them ("Place the pin"), and a first click adds the marker', () => {
+  const v = view(3, { ok: false, checks: [{ label: 'Green painted', ok: true }, { label: 'Pin on the green', ok: false }, { label: 'Tee markers on the tee', ok: false }] });
+  const c = holeCard(v, { pins: PINS, tees: TEES, aims: AIMS, areas: [], ready: null, planned: false });
+  const fix = (t: string) => c.checks.find(k => k.text === t)?.fix;
+  assert.deepEqual(fix('Pin on the green'), { kind: 'marker', marker: 'pin', place: true }, 'no pin yet: Place the pin');
+  assert.deepEqual(fix('Tee markers on the tee'), { kind: 'marker', marker: 'back', place: true }, 'no tees yet: Place the tees');
+  // a hole that has its pin and tees (off their turf): Move, not Place
+  const moved = holeCard(view(1, { ok: false, checks: [{ label: 'Pin on the green', ok: false }] }), { pins: PINS, tees: TEES, aims: AIMS, areas: [], ready: null, planned: false });
+  assert.deepEqual(moved.checks[0]!.fix, { kind: 'marker', marker: 'pin' });
+  // the first click on hole 3's green places its pin (markerMove adds one when the hole has none)
+  const green: CourseArea[] = [...AREAS, { id: 7, surface: 'green', pts: rect(200, 200, 212, 212) }];
+  const r = markerMove({ pins: PINS, tees: TEES }, green, 3, 'pin', 206, 206);
+  assert.ok(r.ok); assert.deepEqual(r.ok && r.pins.find(p => p.hole === 3), { hole: 3, x: 206, y: 206 });
+});
