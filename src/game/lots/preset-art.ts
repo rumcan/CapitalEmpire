@@ -38,6 +38,8 @@ export function fourViews(id: string): Views | null {
   return out;
 }
 
+/** a vehicle prop: an eight-way car or a library vehicle (ownerScaleOf sizes it by its model; a car on a lot is drawn at the road cars' size, T308) */
+export const isVehicle = (id: string): boolean => CAR8.test(id) || BY.get(id)?.cat === 'Vehicles';
 /** the screen-axis pictures (axis-library.ts, T154): each one's set [N, E, S, W] (the front facing screen down, right, up, left: one quarter turn
  *  each, the same way round as NE, SE, SW, NW) and its place in it */
 const AXIS = new Map<string, Views>();
@@ -81,6 +83,9 @@ export function roadView(id: string, road: number, view: number): string | null 
   const it = BY.get(baseView(id).id) ?? BY.get(id), set = it && isBuilding(it) ? axisSetOf(id) : null;
   return set ? set[((((road - 1) / 2 + view) % 4) + 4) % 4]! : null;
 }
+/** whether a picture faces the street of a road (T305 autolot's rule, shared with the composer's facing, T308): on a screen-straight road (odd) it has a
+ *  screen-axis set (roadView, view 0 faces the street), on any other road it has four views to turn (turned) */
+export const faces = (id: string, road: number): boolean => (road % 2 ? roadView(id, road, 0) !== null : turned(id, 1).id !== id);
 /** the picture a lot's prop is drawn with: on a road at 45 degrees a building with a screen-axis set faces its street (roadView; diag: its footing
  *  runs along the lot's own axes, its footprint the turned square inside its world box), else its view turned by the frame's quarter (turned) */
 export function drawnView(id: string, f: { q: number; n: { x: number; y: number } }, view: number): { id: string; flip: boolean; diag: boolean } {

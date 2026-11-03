@@ -210,6 +210,8 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   let box: { x0: number; y0: number; x1: number; y1: number; add: boolean } | null = null;
   /** the props the selected lot leaves out (compose's drops), for the panel's list */
   let drops: PresetDrop[] = [], dropsLot: string | null = null;
+  /** T308 (#893): the lot's buildings kept on their preset's view for an overlap or the lot's edge (compose's facing: "kept facing") */
+  let keptFacing = 0;
   const undo: Undo[] = [];
   /** a player prop removed and put back by an undo is a new Prop: the old one maps to it, so the steps before still find it */
   const alias = new Map<Prop, Prop>();
@@ -293,9 +295,9 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   }
   /** the props a lot leaves out now, with why (compose's drops) */
   function refreshDrops(lot: string | null) {
-    dropsLot = lot; drops = [];
+    dropsLot = lot; drops = []; keptFacing = 0;
     const at = lot ? game.lotOf(lot) : null;
-    if (at) compose(at.g, at.st, drops);
+    if (at) { compose(at.g, at.st, drops); keptFacing = lotPreset(at.g, at.st)?.fit.facing ?? 0; }
   }
 
   function render() {
@@ -323,14 +325,16 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     const box = $('drops');
     box.innerHTML = '';
     const lot = selLot();
-    if (lot && lot === dropsLot && drops.length) {
-      const h = document.createElement('div'); h.textContent = `props this lot leaves out (${drops.length}):`; h.style.color = '#fdba74'; box.appendChild(h);
+    if (lot && lot === dropsLot && (drops.length || keptFacing)) {
+      const k = document.createElement('div'); k.textContent = `kept facing: ${keptFacing}`; k.style.color = '#fdba74'; box.appendChild(k);
+      if (drops.length) { const h = document.createElement('div'); h.textContent = `props this lot leaves out (${drops.length}):`; h.style.color = '#fdba74'; box.appendChild(h);
       for (const d of drops) {
         const b = document.createElement('button');
         b.textContent = `${d.id.replace(/^variation:/, 'v:')}: ${d.why}`;
         b.style.cssText = `display:block;width:100%;text-align:left;margin-top:2px;padding:1px 4px;border-radius:4px;background:${ghost && ghost.preset === d.preset && ghost.index === d.prop ? '#7c2d12' : '#1e293b'};color:#fde68a;font:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap`;
         b.addEventListener('click', () => { sel = null; group = { lot, preset: d.preset, sel: selOf([d.prop]) }; ghost = { lot, preset: d.preset, index: d.prop, why: d.why }; render(); });
         box.appendChild(b);
+      }
       }
     }
     $('msg').textContent = text.msg = (placing ? `placing ${placing}: click the map (Shift+click: more, Esc stops)\n` : '') + message;
