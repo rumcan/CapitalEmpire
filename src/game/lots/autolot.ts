@@ -18,7 +18,7 @@ import { allows, parseAllocations } from './house-alloc';
 import { tierOf } from './tiers';
 import { membersOf, roleOf, type Role, type Zone } from './groups';
 import { facingOf, frameOf, roadOf, type PresetFrame } from './preset-frame';
-import { axisSetOf, drawnView, ownerScaleOf, roadView, turned } from './preset-art';
+import { axisSetOf, drawnView, faces, isVehicle, ownerScaleOf } from './preset-art';
 import { CHAIN, OVERLAP, PRIVACY, mix, share, type Box4, type LotGeom } from './compose-core';
 import { mulberry } from '../iso';
 import { carPark } from './carpark-lot';
@@ -64,9 +64,6 @@ interface Own { side: number; back: boolean }
 /** a template's seed salts (the lot's draws differ by template) */
 const SALT: Record<AutoTemplate, number> = { house: 0x51, corner: 0x52, trailer: 0x53, junk: 0x54, shop: 0x55 };
 
-/** whether a picture faces the street of a road: on a screen-straight road (odd) it has a screen-axis set (roadView, view 0 faces the street), on any
- *  other road it has four views to turn (turned) */
-const faces = (id: string, road: Road): boolean => (road % 2 ? roadView(id, road, 0) !== null : turned(id, 1).id !== id);
 let HOUSE_ODD: string[] | null = null, HOUSE_EVEN: string[] | null = null;
 /** the pieces with a screen-axis set that are not houses: a back yard's set or deck, a pool, a shop of the industry, a warehouse (the house pick skips them) */
 const BACK_PIECE = /back|swing|deck|porch|pool|screen|bbq|patio|rear|gazebo|tent|bench|shed|garden|industrial|auto-body|warehouse|corrugated/i;
@@ -105,6 +102,8 @@ class Lay {
    *  picture's pixel limit kept, null below least (a piece is skipped, never shrunk past it) */
   fit(id: string, view: View, cx: number, cy: number, ha: number, hb: number, least = 0.7): PresetProp | null {
     const one = this.half({ id, x: cx, y: cy, scale: 1, view }), lim = PIXEL_LIMIT[LIB_AT.get(drawnView(id, this.f, view).id) ?? -1] ?? 0;
+    // T308 (#893): a car is drawn at the road cars' size (scale 1) or not at all: a car shrunk to a spot was the tiny car in the drive
+    if (isVehicle(id)) return ha >= one.ha - 1e-9 && hb >= one.hb - 1e-9 ? { id, x: cx, y: cy, scale: 1, view } : null;
     const k = Math.floor(Math.min(1, ha / one.ha, hb / one.hb, lim / ownerScaleOf(id)) * 100) / 100;
     return k >= least ? { id, x: cx, y: cy, scale: k, view } : null;
   }

@@ -129,8 +129,8 @@ test('every built lot draws its preset: each preset prop is the picked preset\'s
     fitted += p.fit.props.filter(q => decline < 3 || !isCar(q.id)).length; kept += from.length;
     for (const q of from) {
       assert.equal(q.from!.preset, p.preset.id, `${lot.key}: a prop of another preset`);
-      // a stand-in for a removed picture (T167) is the fitted prop's own (its id replaced), else the preset's
-      const src: PresetProp = q.standIn ? p.fit.props[p.fit.from.indexOf(q.from!.prop)]! : p.preset.props[q.from!.prop]!, t = turned(src.id, p.frame.q + src.view);
+      // the fitted prop's own view (T308: a building faces its street, so its view may differ from the preset's; a stand-in's id is its own, T167)
+      const src: PresetProp = p.fit.props[p.fit.from.indexOf(q.from!.prop)]!, t = turned(src.id, p.frame.q + src.view);
       // (T236: a parked wagon may be drawn as another vehicle of the mix with a picture at its heading, vehicles.ts parkedAs; a farm's or junk
       // yard's yellow pickup as the rusty one, lotPickup)
       const mixed = /^cars:/.test(t.id) && vehicleHeading(q.id) >= 0 && vehicleHeading(q.id) === vehicleHeading(t.id), rusty = t.id === 'static:pickup_n' && q.id === 'expansion:scrap-pickup-rear';

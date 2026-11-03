@@ -20,10 +20,10 @@ import {
   boxOf, names, patchTex, pick, specFit, withVariations,
   type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
-import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
-import { AXIS_PROPS, drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
+import { WHOLE_FRONT, approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
+import { AXIS_PROPS, drawnView, faces, footprintOf, isVehicle, ownerScaleOf, roadView, turned } from './preset-art';
 import { fixedArt } from './art-fix';
-import { share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear)
+import { EPS, OVERLAP, share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear); T308: the facing's tolerance
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
@@ -377,6 +377,29 @@ function civicPlan(lot: LotGeom, biz: string, list: readonly LotPreset[]): ShopP
   for (const p of list) { const i = bigBuildingOf(p); if (i < 0) continue; const k = swapScale(p.props[i]!, biz, presetFrame(lot, p), SWAP_RULES); if (k > bk + 1e-9) { best = p; bk = k; at = i; } }
   return best ? { preset: best, swap: { id: biz, scale: bk, spot: at } } : null;
 }
+// ---------- T308 (#893): every building faces its road
+/** T308 (#893, the owner: "the parking spot car is tiny"): a car on a lot is drawn at the road cars' size, its model's owner size at scale 1 (CAR_SCALE
+ *  times it, as traffic.ts draws them), so a preset's own car scale is not used */
+const atRoadSize = (fit: Fitted): Fitted => { const props = fit.props.map(q => isVehicle(q.id) && q.scale !== 1 ? { ...q, scale: 1 } : q); return props.some((p, k) => p !== fit.props[k]) ? { ...fit, props } : fit; };
+/** a building that faces its street when it has the view for it: a house, building or venue, a garage or a shed (its views are checked by faces) */
+const facingBuilding = (id: string): boolean => { const it = BY.get(id); return !!it && isBuilding(it) && (it.kind === 'house' || it.kind === 'building' || it.kind === 'venue' || roleOf(id) === 'garage' || roleOf(id) === 'shed'); };
+/** T308 (#893): a fitted preset's buildings face their street: a building whose picture faces the lot's road (faces, autolot's rule) is drawn in view 0,
+ *  the view whose front the street meets (drawnView turns every view by the lot's facing), its centre kept. A building whose turned footprint overlaps
+ *  another prop beyond OVERLAP, or leaves the lot, keeps the preset's view and is counted (Fitted.facing: the lot lab's "kept facing"). Farms are untouched */
+function faceStreet(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): Fitted {
+  if (preset.use === 'farm' || !fit.props.length) return fit;
+  const road = roadOf(lot.n), half = frameHalf(f), lo = preset.whole ? -WHOLE_FRONT : 0;
+  const props = fit.props.slice(), boxes = fit.props.map(q => boxAt(q, half(q)));
+  let kept = 0;
+  props.forEach((q, k) => {
+    if (q.view === 0 || !facingBuilding(q.id) || !faces(q.id, road)) return;
+    const nq: PresetProp = { ...q, view: 0 }, b = boxAt(nq, half(nq));
+    const out = b[0] < -EPS || b[1] < lo - EPS || b[2] > lot.w + EPS || b[3] > lot.d + EPS;
+    if (!out && boxes.every((o, j) => j === k || share(b, o) <= OVERLAP)) { props[k] = nq; boxes[k] = b; }
+    else kept++;
+  });
+  return props.some((p, k) => p !== fit.props[k]) || kept ? { ...fit, props, facing: kept } : fit;
+}
 /** the frame a preset is drawn in on a lot: frameOf, a lab preset of a diagonal road turned by its quarter (quarterOfRoad) */
 const presetFrame = (lot: LotGeom, preset: LotPreset): PresetFrame => { const f = frameOf(lot); return preset.road !== undefined && preset.road % 2 ? { ...f, q: quarterOfRoad(preset.road) } : f; };
 /** the preset a built lot draws (pickedPreset), fitted to the lot, and the lot's preset frame (presetFrame); a shop lot's shop swapped for the one
@@ -387,7 +410,7 @@ export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; 
   const { preset } = plan, frame = presetFrame(lot, preset);
   // T167: a picture the owner removed is never drawn: a stand-in takes its place (or it is left out), before the house finds its yards
   // T297 (#882): the remix comes last, on the props as drawn (the stand-ins and the shop in place); its main building is the shop's spot
-  const fit0 = swapShop(standIns(fitPreset(preset, lot.w, lot.d), preset, lot, frame), plan, lot, frame);
+  const fit0 = faceStreet(swapShop(standIns(atRoadSize(fitPreset(preset, lot.w, lot.d)), preset, lot, frame), plan, lot, frame), preset, lot, frame);
   const sw = plan.swap ? fit0.from.indexOf(plan.swap.spot) : -1;
   const fit = remixOf(fit0, preset, lot, st, frame, sw >= 0 ? sw : mainIndex(fit0, frame));
   return { preset, fit: frozenHouse(preset) ? houseYards(fit, frame) : fit, frame };
@@ -537,8 +560,10 @@ function mainIndex(fit: Fitted, f: PresetFrame): number {
 /** a member placed in a fitted prop's spot (T297): swapScale's size for the spot (the rules a shop swap uses), its front edge kept and its centre
  *  along the lot as swapShop places a shop; null when the member does not fit the spot or the lot */
 function placeMember(q: PresetProp, id: string, lot: LotGeom, f: PresetFrame, R: SwapRules): { prop: PresetProp; h: { ha: number; hb: number } } | null {
-  const k = swapScale(q, id, f, R); if (!k) return null;
+  // (T308: a car is drawn at the road cars' size, scale 1, and must fit the spot it takes at that size)
+  const k = isVehicle(id) ? 1 : swapScale(q, id, f, R); if (!k) return null;
   const half = frameHalf(f), h0 = half(q), n = { ...q, id, scale: k }, h1 = half(n);
+  if (isVehicle(id) && (h1.ha > h0.ha + 0.05 || h1.hb > h0.hb + 0.05)) return null;
   if (2 * h1.ha > lot.w || 2 * h1.hb > lot.d) return null;
   return { prop: { ...n, x: clamp(q.x, h1.ha, lot.w - h1.ha), y: clamp(q.y - h0.hb + h1.hb, h1.hb, lot.d - h1.hb) }, h: h1 };
 }
