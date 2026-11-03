@@ -1,3 +1,5 @@
+> **2026-11-03: read `docs/HANDOVER-2026-11-03.md` first.** The previous lead's account ran out mid-work: the state, the art pipeline and the next steps are there.
+
 # NOW: the live work log
 
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
