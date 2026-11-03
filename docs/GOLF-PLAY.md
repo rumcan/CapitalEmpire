@@ -175,3 +175,27 @@ waits come from a slow group, most often the owner's. `tests/golf-play-pace.test
 
 **Open (tickets since 2026-10-27: T212 #557 the putt and chip clips, and T214 #559 pros and memberships):** putts use the drive clip's address frames
 (no putt clip in Meshy's library); the caddie, the eight-facing cart and the celebration clips are art requests (GOLF-ART-LIST 176, 173, 177).
+
+**The 3-click swing (T316 #902, 2026-11-03):** the owner: *"you have the classic 3 click swing to start with, you know the half circle one. ... pick
+his club on shots. get the distance for each shot. mis left and right based on how the second click lands on the click swing ... also add spamming a
+keyboard button while doing the 3click swing to add power."* His shots are now swung on a half-circle meter in the shot panel (it replaces the power
+slider and Hit); `src/game/golf/play/swing.ts`, `tests/golf-play-swing.test.ts`, captures by `scripts/dev/swing-shots.mjs`.
+- **The clicks** (Enter, or a click: on the meter to start, anywhere during the swing): 1 starts the marker up the arc from the snap line; 2 sets the
+  power where it is (100% at the gold mark, the club's full carry; the last sixth is the overswing: half of it as distance, and more spread) and the
+  marker turns back at once; 3, on the way back, sets the accuracy against the snap line. The owner's "second click" for the miss is read as this
+  accuracy click. Early (above the line) misses left, late right: inside the sweet spot straight; then a pull or push; from 5° a hook (runs on, roll
+  x1.5) or a slice (carries 4% short); 90° a meter unit, at most 18° (a putt 30°, at most 8°, pulls and pushes only). No click 2: the marker turns
+  at the arc's top (the most overswing); no click 3: the swing ends past the snap line (the worst late miss).
+- **Space taps** during the swing (taps, not a held key): +1% power each, at most +6%; the boost narrows the sweet spot (up to 40%) and widens the
+  spread (up to 30%).
+- **Skill** (T241: the club's part of the game): the marker takes 0.7 s (skill 0) to 1.3 s (skill 1) to 100%, and the sweet spot is 0.025 to 0.07
+  meter units either side.
+- **The shot:** the aim is turned by the miss; the carry may pass the club's full carry; a meter shot keeps half of the model's random direction
+  spread (the meter's miss takes the rest); the lie's effects, mishits, roll, water and out of bounds as before. **Putts** use the same meter on a
+  putting scale: 100% is the putt's length to the hole.
+- **The panel:** the clubs his lie allows (the suggested one ringed; Q / E or the wheel cycle them), the club's full carry, the distance to the pin and
+  to the aim, the aim's mark on the arc (where to stop the power for the aimed distance); after the shot a toast and the "Last shot" line: the club,
+  the miss, the carry and the total.
+- **The save:** `OwnerInput.swing` keeps the meter's outcome (power, accuracy, boost), never the click times; the replay plays it through the same
+  model. An input without it (a save from before T316) plays as before.
+- Left for T317-T319: the spin (a field next to `swing`), the cart and first tee, the break grid, tracers and holing.

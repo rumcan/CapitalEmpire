@@ -173,7 +173,7 @@ import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
-import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
+import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, swingEffect, type ShotReport, type SwingOutcome, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
 import { BOOK_LEAD, PRESSURE, bookRound, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
@@ -831,6 +831,8 @@ export class Game {
   private dayHold: { speed: number; at: number } | null = null;
   /** the owner's open shot (P4b: the shot panel; null when none is open) and the speed the sim had when it opened (it resumes at least at 1x) */
   private shot: ShotState | null = null; private shotSpeed = 1;
+  /** T316: the owner's last played shot as the shot panel reports it (the club, the miss, the carry and total); null before his first */
+  private lastShot: ShotReport | null = null;
   /** the featured holes last sent to the city (featuredHoles; the City's set mirrors it) and the real ms they were last worked out at */
   private featured: number[] = []; private featuredAt = -Infinity;
   /** T210: the real ms the end of the round (GolfPlay.finish) was last stepped at, and whether the player asked for the results before the last group is
@@ -7726,6 +7728,15 @@ export class Game {
   }
   /** the owner's open shot for the shot panel, or null */
   shotState(): ShotState | null { return this.shot; }
+  /** T316: the skill (0..1) the open shot's club is played at (your part of the game for it, T241): the swing meter's speed and sweet spot; 0 with no shot */
+  shotSkill(): number { const s = this.shot, own = this.play?.own; return s && own ? skillFor(own.skill, s.input.club) : 0; }
+  /** T316: the owner's last played shot (the shot panel's "Last shot" line), or null */
+  lastShotReport(): ShotReport | null { return this.lastShot; }
+  /** T316: the owner's swing on the 3-click meter (swing.ts): plays the open shot with the club and aim of the panel and the meter's outcome (its power,
+   *  miss and spread), as ownerHit does; the outcome is saved with the input (the replay plays the same shot), and the shot's carry and total are toasted */
+  ownerSwing(o: SwingOutcome) {
+    const sw = readSwing(o); if (sw) this.ownerHit(sw);
+  }
   /** the owner's club for the open shot: one his lie allows (allowedClubs; the driver only from the tee). The power resets to what carries the distance to
    *  the aim (powerFor) */
   setShotClub(c: Club) {
@@ -7749,10 +7760,13 @@ export class Game {
   }
   /** the owner's hit (P4b): plays his shot from the panel's input, plays the day on to his next turn, closes the shot (the sim resumes) and saves. When his
    *  group is done, his score is toasted */
-  ownerHit() {
+  ownerHit(swing?: SwingOutcome) {
     const s = this.shot, pl = this.play, own = pl?.own; if (!s || !pl || !own) return;
     const i = s.input;
-    own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power });
+    const shot = own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}) });
+    // T316: what the shot did (its miss, carry and total), toasted and kept for the panel's "Last shot" line
+    this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(own.skill, i.club), i.club === 'putter') : null);
+    this.toast(this.lastShot.text, 'info');
     own.turn = own.live.advance();
     this.closeShot(); this.saveOwner();
     if (!own.turn) this.ownerDone(pl);

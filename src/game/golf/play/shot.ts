@@ -95,23 +95,28 @@ export function chooseShot(lie: Lie, from: Pt, hole: PlayHole, skill: ShotSkill,
   return { club, aim: arcPoint(hole.line, nearestArc(hole.line, from) + W / TILE_M) };
 }
 
+/** T316: what the owner's swing meter changes in a hit (all absent: the model's shot exactly as before, the same draws): maxF lets the carry pass the
+ *  club's full carry (an overswing, a key-spam boost), spread scales the distance and direction spread, angF the direction spread alone (the meter's
+ *  miss takes over the direction), roll the roll (a hook runs on) */
+export interface HitMod { maxF?: number; spread?: number; angF?: number; roll?: number }
+
 /** a full shot or chip (not the putt) from a lie at an aim with a club: where the ball comes to rest and its lie. Water at the final point
  *  is a penalty and the ball drops where it last was out of the water (on the way back from the water to the stroke). Out of bounds is a
  *  penalty too, and the ball goes back to where it was struck from, the same lie (stroke and distance). T251: also where it landed and where
  *  its roll stopped, with their lies (landing: the bounce and the roll are drawn from them; the same draws and lies as before). T241: the skill is the
  *  club's part of the game's (skillFor) */
-export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim: Pt, club: Club, view: CourseView): { to: Pt; lie: Lie; penalty: 0 | 1; holed: false; landing: Landing } {
+export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim: Pt, club: Club, view: CourseView, mod?: HitMod): { to: Pt; lie: Lie; penalty: 0 | 1; holed: false; landing: Landing } {
   const skill = skillFor(sk, club), dM = Math.hypot(aim.x - from.x, aim.y - from.y) * TILE_M;
   const sand = lie === 'bunker' && club === 'sw' && dM < SAND_M;
   // a mishit carries a share of the shot and is also off line (the amateurs' topped and sliced shots)
   const mis = r() < MISHIT.base + MISHIT.skillK * (1 - skill) ** 2, mf = mis ? MISHIT.carry[0] + (MISHIT.carry[1] - MISHIT.carry[0]) * r() : 1;
-  const carry = (sand ? dM : Math.min(dM, carryM(club, skill)) * CARRY_F[lie]) * mf;
-  const spread = sand ? 1.6 : SPREAD_F[lie];
-  const sD = (0.03 + 0.07 * (1 - skill)) * carry * spread, sA = (1.5 + 5 * (1 - skill)) * spread * Math.PI / 180;
+  const carry = (sand ? dM : Math.min(dM, carryM(club, skill) * (mod?.maxF ?? 1)) * CARRY_F[lie]) * mf;
+  const spread = (sand ? 1.6 : SPREAD_F[lie]) * (mod?.spread ?? 1);
+  const sD = (0.03 + 0.07 * (1 - skill)) * carry * spread, sA = (1.5 + 5 * (1 - skill)) * spread * (mod?.angF ?? 1) * Math.PI / 180;
   const ang = Math.atan2(aim.y - from.y, aim.x - from.x) + gauss(r) * sA + (mis ? gauss(r) * MISHIT.deg * Math.PI / 180 : 0);
   const flown = Math.max(0, carry + gauss(r) * sD), cs = Math.cos(ang), sn = Math.sin(ang);
   const land = { x: from.x + cs * flown / TILE_M, y: from.y + sn * flown / TILE_M };
-  const landLie = view.lieAt(land.x, land.y), roll = flown * ROLL[landLie] / TILE_M;
+  const landLie = view.lieAt(land.x, land.y), roll = flown * ROLL[landLie] * (mod?.roll ?? 1) / TILE_M;
   const end = { x: land.x + cs * roll, y: land.y + sn * roll }, endLie = view.lieAt(end.x, end.y), landing: Landing = { at: land, lie: landLie, rest: end, restLie: endLie };
   if (endLie === 'out') return { to: { x: from.x, y: from.y }, lie, penalty: 1, holed: false, landing };
   if (endLie === 'water') {
