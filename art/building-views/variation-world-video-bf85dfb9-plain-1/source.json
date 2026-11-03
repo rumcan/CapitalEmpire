@@ -1,0 +1,10 @@
+{
+ "id": "variation:world-video-bf85dfb9-plain:1",
+ "version": "variation-world-video-bf85dfb9-plain-1-4views-v2",
+ "files": {
+  "NE": "71abae55f1333a57b50403d6e00f44ee33f53dc3d78f57f9aaffa85d1dee3571",
+  "SE": "16f8d78c2a27170b8f8162c983b75bdca212e4b96f066ce13da035b80e4f4db7",
+  "SW": "ee1348fc3ce4796e36eb500b0e8833364a83b5445cd1b681280ee93226ccc1eb",
+  "NW": "2cf593469c125edb4abcca8dfa618be4175def216d72916cf38d2859545022cd"
+ }
+}

@@ -2,7 +2,7 @@
  "id": "world:watertower",
  "slug": "world-watertower",
  "category": "buildings",
- "version": "world-watertower-screen-axis-4views-v1",
+ "version": "world-watertower-screen-axis-4views-v2",
  "crops": "half-cells",
  "sheetSha256": "f4c36f76eae51e497c0a3c65be39f12d6261d03d49838898bda495e2a1d37793",
  "status": null,

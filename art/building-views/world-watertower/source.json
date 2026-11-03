@@ -1,0 +1,10 @@
+{
+ "id": "world:watertower",
+ "version": "world-watertower-4views-v2",
+ "files": {
+  "NE": "12b3a24be958a92441c23684160f8486c6f1a90e991996c4534df83ec50e9888",
+  "SE": "ac0f6a6e153a64154327a7f4ae4823eeb0e77c59c53bcf2db7fc8052c7145e37",
+  "SW": "62426568e2902b44186bb4b18b6fb3ff3f03360fdaeeb9794f6e879a40769c77",
+  "NW": "1245a82a8779e15f6f21e3ade1375c853c3b9ed87746c19fa0b82ba1100323d4"
+ }
+}

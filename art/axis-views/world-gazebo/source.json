@@ -2,7 +2,7 @@
  "id": "world:gazebo",
  "slug": "world-gazebo",
  "category": "buildings",
- "version": "world-gazebo-screen-axis-4views-v1",
+ "version": "world-gazebo-screen-axis-4views-v2",
  "crops": "half-cells",
  "sheetSha256": "b93a92d9117f81630592ed59700ac3abfebe0d250d7b919d4b6ab44430ae7ac7",
  "status": null,

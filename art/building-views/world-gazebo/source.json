@@ -1,0 +1,10 @@
+{
+ "id": "world:gazebo",
+ "version": "world-gazebo-4views-v2",
+ "files": {
+  "NE": "ab45762590d894cdf5fea80a2a2e8e2abe1425756ee7c02affa9be7799b70aa4",
+  "SE": "cc58f500269aec32b690fb4eb2384dafb8b6385511e00a9ea3fc1383f6cb40e9",
+  "SW": "1cbc5f8780847c91b01e5775fb261d8ebb2d83253ecce75ff52dca6d26227844",
+  "NW": "22a3dea553f351936be4b3ca7989eab483ee89167d31b47f273f5c78272139b9"
+ }
+}
