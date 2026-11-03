@@ -85,8 +85,9 @@ export function skipAhead(y: You, keep = 3): void {
   if (!y.moving) return;
   const P = y.path, n = P.length / 2; let left = keep;
   // walk back from the end until `keep` tiles remain, and stand there
-  for (let i = n - 1; i > y.seg; i--) {
-    const ax = P[(i - 1) * 2]!, ay = P[(i - 1) * 2 + 1]!, bx = P[i * 2]!, by = P[i * 2 + 1]!, L = Math.hypot(bx - ax, by - ay);
+  for (let i = n - 1; i >= y.seg; i--) {
+    // (the leg toward point i starts at the point before it, or where you stand for the leg under way)
+    const ax = i === y.seg ? y.x : P[(i - 1) * 2]!, ay = i === y.seg ? y.y : P[(i - 1) * 2 + 1]!, bx = P[i * 2]!, by = P[i * 2 + 1]!, L = Math.hypot(bx - ax, by - ay);
     if (L >= left) { const f = L > 0 ? left / L : 0; y.x = bx + (ax - bx) * f; y.y = by + (ay - by) * f; y.seg = i; y.skip = false; return; }
     left -= L;
   }
