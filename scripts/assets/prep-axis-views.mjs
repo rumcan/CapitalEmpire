@@ -14,6 +14,13 @@
 //    4.5 x 1.8 m body (the eight-way cars' rule, prep-cars.mjs), a new subject by its size in SIZE below. The studio's size multiplies it.
 // 3. Ground point: the footprint's centre, half its depth above the subject's lowest row, at the mean x of that row's strong pixels. Footprint:
 //    the world box round the turned rectangle, (W + D) / sqrt 2 tiles a side.
+// 3a. A turned set (T315, #900: the owner, 2026-11-03, "it needs a slight turn of 5 to 10 degrees ... we also have to account for that in
+//    the lots"): art/axis-views/<slug>/turned/{N,E,S,W}.png with turned/turned.json { "yaw": -7 } (the finished repaints of the turned renders;
+//    negative yaw: the right-hand, sun-side wall shows). The square views still size the subject (W, D, its boxes: the lots' footprint stays square
+//    to the street); a turned picture is drawn in its view's place, sized by its height (axis-turn.mjs turnedHeight) and anchored at its footprint's
+//    centre, found on its own base (fitTurnedFoot: its lowest point is the near corner, off to one side, not the footprint's middle). Every view's
+//    footprint [front, depth, yaw] goes to AXIS_FOOT (axis-foot.ts: the shadow draft's ground), the turned ones as read off their pictures; a
+//    review of each turned picture with its footprint drawn on it: output/axis-review/turned-<slug>.png.
 // 4. Pack: every view at 0.6 x display size times its studio size (at least 1), up to 3x its picture's pixels, like prep-views.mjs; five mips.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,6 +31,7 @@ import { readScales } from './overrides.mjs';
 import { measure, trimmed } from './axis-cells.mjs';
 import { AXIS_DIRS, AXIS_HEADING, AXIS_STORE, axisSources, syncAxisViews } from './sync-axis-views.mjs';
 import { carModel, carModelSize } from '../../src/game/ext/car-art/model.mjs';
+import { bottomProfile, fitTurnedFoot, footRing, turnedHeight } from './axis-turn.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const OUT = path.join(root, 'src/assets/axis'), REVIEW = path.join(root, 'output/axis-review');
@@ -90,13 +98,41 @@ for (const src of axisSources()) {
     for (const x of views) x.s = s;
     W = s * wide / K; D = s * deep / K;
   }
+  // 3a. the turned pictures in place of the square ones (sized and anchored as above)
+  const turnDir = path.join(dir, 'turned'), turnCfg = fs.existsSync(path.join(turnDir, 'turned.json')) ? JSON.parse(fs.readFileSync(path.join(turnDir, 'turned.json'), 'utf8')) : null;
+  for (const x of views) {
+    const front = x.dir === 'N' || x.dir === 'S' ? W : D, depth = x.dir === 'N' || x.dir === 'S' ? D : W;
+    x.foot = [+front.toFixed(3), +depth.toFixed(3), 0];
+    const file = path.join(turnDir, `${x.dir}.png`);
+    if (car || !turnCfg?.yaw || !fs.existsSync(file)) continue;
+    const t = await trimmed(fs.readFileSync(file)), m = await measure(t.png), prof = await bottomProfile(sharp, t.png);
+    const f = fitTurnedFoot(prof.bot, turnCfg.yaw, depth / front);
+    if (!f) { console.log(`  ${id} ${x.dir}: turned picture has no base, the square one kept`); continue; }
+    const st = turnedHeight(x.H * x.s, front, depth, turnCfg.yaw) / m.H;
+    Object.assign(x, { png: t.png, trim: t.rect, ...m, s: st, turned: { yaw: turnCfg.yaw, cx: f.cx, cy: f.cy, ring: footRing(f.front * st / K, f.depth * st / K, turnCfg.yaw) } });
+    x.foot = [+(f.front * st / K).toFixed(3), +(f.depth * st / K).toFixed(3), turnCfg.yaw];
+    console.log(`  ${id} ${x.dir}: turned ${turnCfg.yaw} deg, scale ${st.toFixed(3)}, footprint ${x.foot[0].toFixed(2)} x ${x.foot[1].toFixed(2)} tiles (square ${front.toFixed(2)} x ${depth.toFixed(2)}), ${f.inliers} base columns`);
+  }
+  if (views.some(x => x.turned)) {
+    // the review: each turned picture with its footprint (red) and its anchor (yellow) drawn on it
+    const ims = await Promise.all(views.filter(x => x.turned).map(async x => {
+      const pts = x.turned.ring.map(([px, py]) => `${(x.turned.cx + px / x.s).toFixed(1)},${(x.turned.cy + py / x.s).toFixed(1)}`).join(' ');
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${x.W}" height="${x.H}"><polygon points="${pts}" fill="rgba(255,0,0,0.25)" stroke="red" stroke-width="2"/><circle cx="${x.turned.cx}" cy="${x.turned.cy}" r="4" fill="yellow"/></svg>`;
+      return { input: await sharp(x.png).flatten({ background: '#888' }).composite([{ input: Buffer.from(svg) }]).png().toBuffer(), w: x.W, h: x.H };
+    }));
+    fs.mkdirSync(REVIEW, { recursive: true });
+    let cx = 0; const comp = ims.map(im => { const c = { input: im.input, left: cx, top: 0 }; cx += im.w + 8; return c; });
+    await sharp({ create: { width: cx, height: Math.max(...ims.map(im => im.h)), channels: 3, background: '#444' } }).composite(comp).png().toFile(path.join(REVIEW, `turned-${slug}.png`));
+  }
   const side = +((W + D) / R2).toFixed(2), name = base ? (car ? `${base.name.replace(/\s+[NESW]$/, '')}` : base.name) : rule.r.name(rule.m);
   const cat = base?.cat ?? rule.r.cat, kind = base?.kind ?? rule.r.kind;
   for (const x of views) {
     const depth = x.dir === 'N' || x.dir === 'S' ? D : W;
     x.id = base ? `view:${id}:${x.dir.toLowerCase()}` : x.dir === 'N' ? id : `view:${id}:${x.dir.toLowerCase()}`;
     x.name = car ? `${name} (${x.dir} view, nose ${NOSE[x.dir]})` : base || x.dir !== 'N' ? `${name} (${x.dir} view)` : name;
-    x.w = x.W * x.s; x.h = x.H * x.s; x.ax = x.bx * x.s; x.ay = x.by * x.s - K / 4 * depth;
+    x.w = x.W * x.s; x.h = x.H * x.s;
+    // (a turned picture: the footprint's centre as fitted on its base; a square one: the middle of its lowest row, half its depth above it)
+    if (x.turned) { x.ax = x.turned.cx * x.s; x.ay = x.turned.cy * x.s; } else { x.ax = x.bx * x.s; x.ay = x.by * x.s - K / 4 * depth; }
     x.glows = (base?.glows?.length || rule?.r.glows || kind === 'lamp') ? (await findGlows(x.png, { id, w: x.w, cat })).map(g => ({ x: +g.x.toFixed(1), y: +g.y.toFixed(1), r: +g.r.toFixed(1) })) : undefined;
     if (x.glows && !x.glows.length) x.glows = undefined;
   }
@@ -154,6 +190,8 @@ fs.writeFileSync(path.join(root, 'src/game/axis-library.ts'), [
   `export const AXIS_HEADING: Readonly<Record<string, 'N' | 'E' | 'S' | 'W'>> = ${JSON.stringify(heading)};`,
   '/** a flip (the world axes swapped: the screen mirrored left to right) is drawn turned, never mirrored: E <-> W; N and S face the same way */',
   `export const AXIS_TURN: Readonly<Record<string, string>> = ${JSON.stringify(turn)};`,
+  '/** each view footprint (T315): [front width, depth] in tiles (the front faces the street) and its yaw in degrees (0: a dead-square picture; negative: turned so the right-hand, sun-side wall shows). The anchor is the footprint centre. A view missing here (packed before T315) is dead square, its footprint read from the set anchors (axis-foot.ts) */',
+  `export const AXIS_FOOT: Readonly<Record<string, readonly [number, number, number]>> = ${JSON.stringify(Object.fromEntries(subjects.flatMap(sub => sub.views.map(x => [x.id, x.foot]))))};`,
   '/** the subjects new with the screen-axis art (drawn from these views until their diagonal views exist): their ids */',
   `export const AXIS_NEW: ReadonlySet<string> = new Set(${JSON.stringify(subjects.filter(s => !s.base).map(s => s.id))});`,
   '/** Appended last: the screen-axis pictures on their own pages; a view takes its subject\'s studio size (a removed subject is left out) */',

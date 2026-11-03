@@ -2,6 +2,7 @@
 // the flip the game places it with. Pure over the library (no DOM): the audit page (shadow-audit.ts) lays them out, the shadow test counts them.
 import { GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from '../library';
 import type { LibItem } from '../types';
+import { AXIS_HEADING } from '../axis-library';
 import { lookOf } from '../newart';
 import { BUILDING_IDS, VIEW_ART } from '../views-library';
 import { OWNER_SCALE, STUDIO_SCALE } from '../lots/scales';
@@ -16,7 +17,7 @@ import { rangeScene } from '../golf/rangebiz';
 import { RANGE_UPGRADES, defaultRangeBiz, HOME_AT, type RangeBizSave } from '../golf/rangesave';
 
 /** the audit's categories, in the order of the sheets */
-export const AUDIT_CATS = ['trees', 'poles', 'props', 'golf', 'range', 'vehicles', 'walkers', 'buildings', 'fences', 'kit'] as const;
+export const AUDIT_CATS = ['trees', 'poles', 'props', 'golf', 'range', 'vehicles', 'walkers', 'buildings', 'fences', 'kit', 'axis'] as const;
 export type AuditCat = typeof AUDIT_CATS[number];
 /** one sprite to show: its library index, the scale and flip it is placed with, a footprint (tiles, x0 y0 x1 y1 about its anchor) in place of its
  *  boxes' (the range's roofs), and its family (the views of one thing share it, so they sit side by side) */
@@ -104,6 +105,8 @@ export function auditEntries(cat: AuditCat): AuditEntry[] {
   else if (cat === 'golf') out = golf();
   else if (cat === 'range') out = range();
   // T257: the concept kit (kit.ts) and T232's building-site kit, every picture at its size as placed
+  // T315: the straight-on (screen-axis) views alone, every set's N, E, S, W side by side (they are in their own categories too)
+  else if (cat === 'axis') { out = []; LIBRARY.forEach((it, i) => { if (AXIS_HEADING[it.id] && it.kind !== 'lot' && drawnAsItself(i)) out.push(entry(i, placeScale(it.id))); }); }
   else if (cat === 'kit') { out = []; LIBRARY.forEach((it, i) => { if (/^kit:|^construction:(site-|timber-frame)/.test(it.id) && drawnAsItself(i)) out.push(entry(i, placeScale(it.id))); }); }
   else {
     out = [];
