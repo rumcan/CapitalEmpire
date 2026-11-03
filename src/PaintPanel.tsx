@@ -91,10 +91,20 @@ export function PaintPanel({ game }: { game: Game }) {
           </div>
         </>
       )}
-      <div className="mt-2 text-[12px] text-slate-400">Mode</div>
-      <div className="flex flex-wrap gap-1">
-        {MODES.map(m => <button key={m.id} className={`chip ${p.mode === m.id ? 'chip-on' : ''}`} onClick={() => p.setMode(m.id)}>{m.label}</button>)}
-      </div>
+      {/* T303 (#888): a plant brush has only its own controls (PlantControls: its Rub out is its erase): no Draw / Pick / Erase, which arm the
+          surface painter and bring its texture and blend; one chip goes back to painting ground */}
+      {p.mode === 'plant' ? (
+        <div className="mt-2 flex flex-wrap gap-1" data-testid="plant-leave">
+          <button className="chip" title="Put the plants down and paint the ground" onClick={() => p.setMode('draw')}>Paint ground</button>
+        </div>
+      ) : (
+        <>
+          <div className="mt-2 text-[12px] text-slate-400">Mode</div>
+          <div className="flex flex-wrap gap-1" data-testid="paint-modes">
+            {MODES.map(m => <button key={m.id} className={`chip ${p.mode === m.id ? 'chip-on' : ''}`} onClick={() => p.setMode(m.id)}>{m.label}</button>)}
+          </div>
+        </>
+      )}
       <div className="mt-1 text-xs text-slate-300">{help}</div>
       {p.mode === 'plant' && <PlantControls game={game} />}
       {p.mode !== 'plant' && <StyleEditor game={game} />}
