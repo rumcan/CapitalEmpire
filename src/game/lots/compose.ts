@@ -46,7 +46,7 @@ import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
 import { presetTier, tierOf } from './tiers';
 import { buildGroups, groupOf as cellMembers, roleOf, sizeOf, zoneOf, type Role } from './groups';
-import { autoLot, clearAutoLots, isBigLot, type AutoTemplate } from './autolot';
+import { autoLot, clearAutoLots, dressStraight, isBigLot, type AutoTemplate } from './autolot';
 import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
 import { onStudioScales } from './scales-live';
@@ -412,7 +412,10 @@ export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; 
   // T297 (#882): the remix comes last, on the props as drawn (the stand-ins and the shop in place); its main building is the shop's spot
   const fit0 = faceStreet(swapShop(standIns(atRoadSize(fitPreset(preset, lot.w, lot.d)), preset, lot, frame), plan, lot, frame), preset, lot, frame);
   const sw = plan.swap ? fit0.from.indexOf(plan.swap.spot) : -1;
-  const fit = remixOf(fit0, preset, lot, st, frame, sw >= 0 ? sw : mainIndex(fit0, frame));
+  const fit1 = remixOf(fit0, preset, lot, st, frame, sw >= 0 ? sw : mainIndex(fit0, frame));
+  // T314 (#899): an approved house preset on a screen-straight road gets the generated lots' yard trees, owned hedge and soft ground (autolot.ts
+  // dressStraight; never the lot lab's forced preset, which the owner edits as it is)
+  const fit = preset.whole && preset.road !== undefined && st.preset === undefined ? dressStraight(fit1, frame, lot, preset.use, preset.state, st.seed) : fit1;
   return { preset, fit: frozenHouse(preset) ? houseYards(fit, frame) : fit, frame };
 }
 

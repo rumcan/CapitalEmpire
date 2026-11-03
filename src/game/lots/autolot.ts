@@ -22,7 +22,7 @@ import { axisSetOf, drawnView, faces, isVehicle, ownerScaleOf } from './preset-a
 import { CHAIN, OVERLAP, PRIVACY, mix, share, type Box4, type LotGeom } from './compose-core';
 import { mulberry } from '../iso';
 import { carPark } from './carpark-lot';
-import { parsePresets, type LotPreset, type PresetPatch, type PresetProp, type PresetState, type PresetUse, type Road, type View } from './presets';
+import { parsePresets, type Fitted, type LotPreset, type PresetPatch, type PresetProp, type PresetState, type PresetUse, type Road, type View } from './presets';
 import PRESET_JSON from './lot-presets.json';
 
 /** the templates a lot draws (the lot lab's picker lists them all): a house, a corner house, a trailer park, a junk yard and a small shop */
@@ -132,6 +132,17 @@ class Lay {
     if (c - a < 0.5 || d - b < 0.5) return;
     this.patches.push({ kind, tex, pts: [a, b, c, b, c, d, a, d], ...(lines ? { lines } : {}) });
   }
+  /** T314 (#899): a small worn patch of bare ground (a soft, irregular blob of dirt: the ground's soft dirt edge feathers it), centred at (cx, cy) with
+   *  half extents ra along x and rb along y (tiles), kept inside the lot. Dirt only ever lies in these: under a play set, by a shed, at a drive's end */
+  worn(cx: number, cy: number, ra: number, rb: number) {
+    if (ra < 0.3 || rb < 0.3) return;
+    const n = 11, ph = this.r() * 2 * Math.PI, pts: number[] = [];
+    for (let k = 0; k < n; k++) {
+      const a = ph + (k / n) * 2 * Math.PI, s = 0.72 + 0.36 * this.r();
+      pts.push(Math.min(this.W - 0.1, Math.max(0.1, cx + Math.cos(a) * ra * s)), Math.min(this.D - 0.1, Math.max(0.1, cy + Math.sin(a) * rb * s)));
+    }
+    this.patches.push({ kind: 'yard', tex: 'dirt', pts });
+  }
   /** a run of fence pieces end to end from (x0, y0) to (x1, y1), kind.x along x and kind.y along y; gap: the fraction [t0, t1] of the run left open (a gate) */
   fence(kind: { x: string; y: string }, x0: number, y0: number, x1: number, y1: number, gap?: [number, number]) {
     const ax = Math.abs(x1 - x0) >= Math.abs(y1 - y0), id = ax ? kind.x : kind.y, L = Math.hypot(x1 - x0, y1 - y0);
@@ -156,8 +167,9 @@ function ownFence(L: Lay, own: Own, kind: { x: string; y: string }) {
 
 /** a house lot: the main house at its front set-back facing the street, on the side away from the drive; with a drive (a lot 14 tiles or more) a
  *  drive from the street to a garage or carport on the other side (its front to the street), a parked car on the drive, a shed behind; a front walk,
- *  planters and a front bed; the back yard with a patio or a play set; the bins at the kerb and the mailbox; the owned fences. A corner house (no
- *  drive) keeps a side bed on its narrow side. False when the house does not fit (the caller tries another layout) */
+ *  planters on the front lawn; the back yard with a patio or a play set; the bins at the kerb and the mailbox; T314 (#899): the yard trees (yardTrees)
+ *  and the owned boundary (boundary). The yards are lawn: no bed or yard rectangle, bare ground only in small worn patches (Lay.worn) under the play
+ *  set or patio, by the shed and at an open drive's end. A corner house has no drive. False when the house does not fit (the caller tries another layout) */
 function houseLot(L: Lay, corner: boolean, left: boolean, own: Own, drive: boolean): boolean {
   const { W, D, road, state } = L, fr = Math.min(FRONT, 0.25 * D), bk = Math.min(BACK, 0.2 * D);
   const hx0 = drive ? (left ? 4.2 : 0.8) : corner ? (left ? 0.8 : 3.2) : 0.8, hx1 = drive ? (left ? W - 0.8 : W - 4.2) : corner ? (left ? W - 3.2 : W - 0.8) : W - 0.8;
@@ -167,6 +179,8 @@ function houseLot(L: Lay, corner: boolean, left: boolean, own: Own, drive: boole
   if (!L.pick(housesOf(road).filter(id => allows(ALLOC, id, road, state)), 0, cx, cy, ha, maxHb, 0.75)) return false;
   const hb = L.boxOf(L.props[L.props.length - 1]!), fy = hb[1], by = hb[3];
   const dx = left ? 2.3 : W - 2.3, edge = left ? dx : W - dx;
+  // (what the trees keep clear of: the house, the drive and garage, the walk; what the boundary keeps clear of: the drive)
+  const keep: Keep[] = [{ b: hb, m: 1.6 }], open: Box4[] = [];
   let driveEnd = 0;
   if (drive) {
     const gh = Math.min(3.2, (D - fr - 3) / 2);
@@ -174,23 +188,28 @@ function houseLot(L: Lay, corner: boolean, left: boolean, own: Own, drive: boole
     if (gh >= 1.2 && edge - 0.4 >= 1.2 && L.group('garage', 'side', dx, fr + gh, Math.min(2.6, edge - 0.4), gh)) g = L.boxOf(L.props[L.props.length - 1]!);
     driveEnd = g ? g[1] + 0.3 : fr;
     L.patch('drive', texOf(L.use, state, 'drive', 'paving'), dx - 1.3, 0, dx + 1.3, driveEnd);
+    const db: Box4 = [dx - 1.3, 0, dx + 1.3, driveEnd];
+    keep.push({ b: db, m: 1.1 }); open.push(db);
+    if (g) keep.push({ b: g, m: 1.2 });
+    else L.worn(dx, driveEnd + 0.6, 1.1, 0.6);
     L.group('car', 'side', dx, driveEnd / 2, 1.4, Math.max(1.2, driveEnd / 2 - 0.1), 0.6);
-    L.group('shed', 'back', dx, D - 1.8, 1.6, 1.6, 0.5);
+    if (L.group('shed', 'back', dx, D - 1.8, 1.6, 1.6, 0.5)) { const s = L.boxOf(L.props[L.props.length - 1]!); keep.push({ b: s, m: 1.0 }); L.worn((s[0] + s[2]) / 2, s[1] - 0.5, Math.min(1.1, (s[2] - s[0]) / 2 + 0.2), 0.55); }
   }
   L.patch('walk', texOf(L.use, state, 'walk', 'paving'), cx - 0.7, 0, cx + 0.7, fy + 0.2);
+  keep.push({ b: [cx - 0.7, 0, cx + 0.7, fy + 0.2], m: 1.0 });
   L.group('bin', 'front', left && drive ? W - 0.8 : 0.8, -0.4, 0.8, 0.6, 0.5);
   L.pick(['world:mailbox'], 0, cx + (cx < W / 2 ? 1.4 : -1.4), -0.4, 0.45, 0.45);
   for (let k = 0; k < 3; k++) { const x = hx0 + (k + 0.5) * (hx1 - hx0) / 3; if (Math.abs(x - cx) > 1.4) L.group('planter', 'front', x, 2.4, 1.2, 1.2, 0.5); }
-  if (hx1 - hx0 > 3 && fy - 0.4 > 1.4) L.patch('bed', texOf(L.use, state, 'bed', 'field'), hx0, 1.0, hx1, fy - 0.4);
-  // T305 (owner's list): one or two trees in the front yard
-  L.group('tree', 'front', hx0 + 0.9, 2.2, 1.6, 1.6, 0.5); if (hx1 - hx0 > 8) L.group('tree', 'front', hx1 - 0.9, 2.2, 1.6, 1.6, 0.5);
-  if (corner) L.patch('bed', texOf(L.use, state, 'bed', 'field'), left ? hx1 + 0.3 : 0.2, 0.5, left ? W - 0.2 : hx0 - 0.3, D - 0.5);
   if (D - by > 3) {
-    L.patch('yard', texOf(L.use, state, 'yard', 'paving'), hx0, by + 0.2, hx1, D);
     const zh = (D - by) / 2 - 0.3, zc = (by + D) / 2;
-    if (!L.group(seedBit(L) ? 'play' : 'patio', 'back', cx, zc, ha - 0.6, zh)) L.group('patio', 'back', cx, zc, ha - 0.6, zh);
+    if (L.group(seedBit(L) ? 'play' : 'patio', 'back', cx, zc, ha - 0.6, zh) || L.group('patio', 'back', cx, zc, ha - 0.6, zh)) {
+      const s = L.boxOf(L.props[L.props.length - 1]!);
+      keep.push({ b: s, m: 0.8 });
+      L.worn((s[0] + s[2]) / 2, (s[1] + s[3]) / 2, Math.min(1.8, (s[2] - s[0]) / 2 + 0.4), Math.min(1.5, (s[3] - s[1]) / 2 + 0.4));
+    }
   }
-  ownFence(L, own, PRIVACY);
+  yardTrees(L, keep);
+  boundary(L, own, open);
   return true;
 }
 /** a seeded bit of the lot's draws (the same lot lays the same): one draw from the lot's stream, once per call site */
@@ -267,20 +286,142 @@ function shopLot(L: Lay, own: Own): boolean {
   return true;
 }
 
-/** a plot no template fits (a lot too shallow for a house, say): the owned fence, a tree and planting by the street, so the lot is never bare */
+/** a plot no template fits (a lot too shallow for a house, say): planters by the street, the yard trees and the owned boundary, so the lot is never bare */
 function plotLot(L: Lay, own: Own): boolean {
-  const { W, D } = L;
-  L.group('tree', 'front', W / 2, Math.min(D / 2, 3), 2, 2, 0.5);
+  const { W } = L;
   L.group('planter', 'front', 1.5, 2, 1.2, 1.2, 0.5);
   L.group('planter', 'front', W - 1.5, 2, 1.2, 1.2, 0.5);
-  ownFence(L, own, PRIVACY);
+  yardTrees(L, []);
+  boundary(L, own, []);
   return true;
+}
+
+// ---------- T314 (#899; the owner, 2026-11-03: "these lots have no trees for some reason and no fences and the yards have a lot of hard cutoff ground dirt
+// textures that look unnatural. i want to have a lot of trees on the vertical lots to hide any weird unnatural issues")
+/** a tree's least scale; the fewest and most trees a house lot takes (yardTrees: by its area, TREE_AREA tiles² a tree) */
+const TREE_LEAST = 0.55, TREES_MIN = 3, TREES_MAX = 8, TREE_AREA = 45;
+/** a box in the preset frame and the gap (tiles) a tree's trunk keeps from it */
+interface Keep { b: Box4; m: number }
+/** the distance (tiles) from a point to a box, 0 inside it */
+const gapTo = (b: Box4, x: number, y: number): number => Math.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - y, 0, y - b[3]));
+let REAL_TREES: string[] | null = null;
+/** the owner's 56 real trees (library cat 'New: Trees'; their NE view, as the decor menu offers them), the leafed ones (no bare or dead tree in a yard) */
+function realTrees(): string[] {
+  return REAL_TREES ??= LIBRARY.filter(it => it.kind === 'tree' && it.cat === 'New: Trees' && it.id.endsWith(':ne') && !/bare|dead|stump/.test(it.id) && !gone(it.id)).map(it => it.id).sort();
+}
+/** one yard tree at (x, y) clear of the kept boxes (each gap times slack): from the lot groups' trees of the zone (the owner's own picks) or the real
+ *  trees, by a draw; the largest scale that fits, then drawn down a little (0.72..1 of it, never under TREE_LEAST) so a row mixes sizes. False when
+ *  none fits or the spot is not clear */
+function treeAt(L: Lay, zone: Zone, x: number, y: number, keep: readonly Keep[], slack = 1): boolean {
+  if (keep.some(k => gapTo(k.b, x, y) < k.m * slack)) return false;
+  const own = membersOf(L.use, L.state, zone, 'tree'), real = realTrees();
+  const list = own.length && (!real.length || L.r() < 0.4) ? own : real;
+  if (!L.pick(list, 0, x, y, 1.4, 1.4, TREE_LEAST)) return false;
+  const i = L.props.length - 1, q = L.props[i]!;
+  L.props[i] = { ...q, scale: Math.max(Math.min(q.scale, TREE_LEAST), Math.floor(q.scale * (0.72 + 0.28 * L.r()) * 100) / 100) };
+  return true;
+}
+/** the yard trees of a house lot (TREES_MIN to TREES_MAX, about one for each TREE_AREA tiles², counting the have it holds already): one or two in the
+ *  front yard by its corners, then a row along the back (a fixed depth, so a street's back rows line up and hide the lots' back seams) and columns down
+ *  the sides, in turn; each clear of the kept boxes (the house, the drive, the walk, the back set) and of the street. When too few fit, the spots are
+ *  tried again with the gaps cut to 60%. Returns the trees the lot holds */
+function yardTrees(L: Lay, keep: readonly Keep[], have = 0): number {
+  const { W, D } = L, want = Math.min(TREES_MAX, Math.max(TREES_MIN, Math.round(W * D / TREE_AREA)));
+  const front: [number, number][] = W >= 12 ? [[1.5, 1.7], [W - 1.5, 1.7]] : [[L.r() < 0.5 ? 1.5 : W - 1.5, 1.7]];
+  const back: [number, number][] = [], side: [number, number][] = [];
+  for (let x = 1.5 + L.r() * 1.2; x <= W - 1.5; x += 3.4 + L.r() * 1.6) back.push([x, D - 1.4]);
+  for (let y = FENCE_FRONT + 1.4 + L.r(); y <= D - 3.4; y += 3.6 + L.r() * 1.4) side.push([1.4, y], [W - 1.4, y]);
+  const spots: [Zone, number, number][] = front.map(([x, y]): [Zone, number, number] => ['front', x, y]);
+  for (let k = 0; k < Math.max(back.length, side.length); k++) {
+    const b = back[k], s = side[k];
+    if (b) spots.push(['back', b[0], b[1]]);
+    if (s) spots.push(['side', s[0], s[1]]);
+  }
+  const used = new Set<number>();
+  let n = have;
+  for (const slack of [1, 0.6]) {
+    spots.forEach((s, k) => { if (n < want && !used.has(k) && treeAt(L, s[0], s[1], s[2], keep, slack)) { n++; used.add(k); } });
+    if (n >= TREES_MIN) break;
+  }
+  return n;
+}
+/** the clipped hedge's shrubs (round ones: they read as a hedge along any line), drawn in turn by the lot's draws */
+const HEDGE = ['landscape:bush-deep-green', 'landscape:bush-sage-round', 'world:bush_0', 'landscape:bush-deep-green'];
+/** a hedge's shrubs: about HEDGE_STEP tiles apart, each fitted to HEDGE_HALF (tiles) */
+const HEDGE_STEP = 1.6, HEDGE_HALF = 0.9;
+/** a hedge from (x0, y0) to (x1, y1): its shrubs laid where they are clear (a tree's trunk or a shed leaves a gap; open: the drive, never planted over).
+ *  Returns how many were laid */
+function hedge(L: Lay, x0: number, y0: number, x1: number, y1: number, open: readonly Box4[]): number {
+  const len = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.round(len / HEDGE_STEP));
+  let laid = 0;
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+    if (open.some(b => gapTo(b, x, y) < HEDGE_HALF + 0.2)) continue;
+    const q = L.fit(HEDGE[Math.floor(L.r() * HEDGE.length)]!, 0, x, y, HEDGE_HALF, HEDGE_HALF, 0.35);
+    if (q && L.add(q)) laid++;
+  }
+  return laid;
+}
+/** the boundary a house lot owns (ownedOf: one side line, and the back line when it owns it, so a line between two lots is planted or fenced once and a
+ *  street's runs meet): on a screen-straight road (odd) a clipped hedge just inside the line, from the back to FENCE_FRONT from the street (no fence
+ *  picture runs along a screen axis: an iso panel on a 45-degree line saws, and the composer drops a panel whose turned box leaves the lot); on any other
+ *  road compose's board fence on the line. The drive is left open */
+function boundary(L: Lay, own: Own, open: readonly Box4[]) {
+  if (L.road % 2 === 0) { ownFence(L, own, PRIVACY); return; }
+  const e = HEDGE_HALF + 0.05, sx = own.side === 0 ? e : L.W - e;
+  hedge(L, sx, Math.min(L.D - e, FENCE_FRONT + 0.4), sx, L.D - e, open);
+  if (own.back) hedge(L, e, L.D - e, L.W - e, L.D - e, open);
+}
+/** a ground patch's bare looks (laid again as worn dirt) and its paved ones */
+const BARE_TEX = /dirt|field|gravel|rocky|sand|waste/i, PAVED_TEX = /paving|concrete|slabs|pad/i;
+/** a patch's box in the preset frame */
+function ptsBox(pts: readonly number[]): Box4 {
+  const b: Box4 = [Infinity, Infinity, -Infinity, -Infinity];
+  for (let i = 0; i + 1 < pts.length; i += 2) { b[0] = Math.min(b[0], pts[i]!); b[2] = Math.max(b[2], pts[i]!); b[1] = Math.min(b[1], pts[i + 1]!); b[3] = Math.max(b[3], pts[i + 1]!); }
+  return b;
+}
+/** the most a bare patch and a paved yard of a dressed preset may cover (tiles², by its box): a bigger one is laid again smaller and soft */
+const BARE_MAX = 3, PAVED_MAX = 8;
+/** T314 (#899): an approved lab house preset drawn on a screen-straight road, dressed as a generated house lot is: its bare yard or bed rectangles
+ *  bigger than BARE_MAX become a small worn patch at their middle and its paved yards bigger than PAVED_MAX a rounded patio inside them (drives, walks
+ *  and car parks kept); trees added up to the yard's count (yardTrees: the preset's own trees counted; the buildings, drive and walk kept clear); the
+ *  owned hedge. The preset's own props stay as they are (from kept); the added ones come last, from -1. Deterministic from seed; the fit itself on
+ *  any other road or use */
+export function dressStraight(fit: Fitted, f: PresetFrame, lot: LotGeom, use: PresetUse, state: PresetState, seed: number): Fitted {
+  const road = roadOf(lot.n);
+  if (use !== 'res' || road % 2 === 0) return fit;
+  const L = new Lay(f, lot.w, lot.d, use, state, road, 3, mulberry(mix(seed, 0x314)));
+  for (const q of fit.props) { L.props.push(q); L.boxes.push(L.boxOf(q)); }
+  const n0 = L.props.length, keep: Keep[] = [], open: Box4[] = [];
+  let trees = 0, changed = false;
+  for (const q of fit.props) { const it = BYID.get(q.id); if (!it) continue; if (it.kind === 'tree') trees++; else if (isBuilding(it)) keep.push({ b: L.boxOf(q), m: 1.6 }); }
+  for (const a of fit.patches) {
+    const b = ptsBox(a.pts), w = b[2] - b[0], h = b[3] - b[1], cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+    if (a.kind === 'drive' || a.kind === 'walk' || a.kind === 'lot') { L.patches.push(a); keep.push({ b, m: 1.0 }); if (a.kind === 'drive') open.push(b); continue; }
+    if ((a.kind === 'bed' || BARE_TEX.test(a.tex)) && w * h > BARE_MAX) { L.worn(cx, cy, Math.min(1.1, w / 2), Math.min(0.9, h / 2)); changed = true; continue; }
+    if (PAVED_TEX.test(a.tex) && w * h > PAVED_MAX) {
+      // a rounded patio within the rectangle (an ellipse of about PAVED_MAX, its edge a little uneven), its paving kept
+      const k = Math.min(1, Math.sqrt(PAVED_MAX / (Math.PI * (w / 2) * (h / 2)))), ra = Math.max(0.6, (w / 2) * k), rb = Math.max(0.6, (h / 2) * k), pts: number[] = [];
+      for (let j = 0; j < 14; j++) { const t = (j / 14) * 2 * Math.PI, s = 0.9 + 0.1 * L.r(); pts.push(cx + Math.cos(t) * ra * s, cy + Math.sin(t) * rb * s); }
+      L.patches.push({ ...a, pts }); changed = true; continue;
+    }
+    L.patches.push(a);
+  }
+  yardTrees(L, keep, trees);
+  boundary(L, ownedOf(lot), open);
+  const added = L.props.length - n0;
+  if (!added && !changed) return fit;
+  const from = fit.from.concat(Array.from({ length: added }, () => -1));
+  return { ...fit, props: L.props, from, patches: L.patches, ...(fit.standIn ? { standIn: fit.standIn.concat(Array.from({ length: added }, () => undefined)) } : {}) };
 }
 
 /** the lot's owned boundary: the preset x of its side line (0 or W) and whether it owns its back (the composer's rule, read in the preset frame) */
 function ownedOf(lot: LotGeom): Own {
   const sa = lot.u.x + lot.u.y > 0 ? lot.w : 0, same = lot.u.x * -lot.n.y + lot.u.y * lot.n.x > 0;
-  return { side: same ? sa : lot.w - sa, back: lot.n.x + lot.n.y > 0 };
+  // T314 (#899): on a screen-straight road n is a map diagonal and n.x + n.y is zero (roads 3 and 7: two lots back to back): the one whose n points to +x
+  // owns the back, so exactly one of the two plants or fences it (the sum alone left it to rounding: neither, or both)
+  const s = lot.n.x + lot.n.y;
+  return { side: same ? sa : lot.w - sa, back: Math.abs(s) > 1e-6 ? s > 0 : lot.n.x > 0 };
 }
 
 /** the owner's direction (2026-11-02: "you can make lots bigger if that makes it easier for you ... bigger ones auto gen"): a lot at least this wide and
