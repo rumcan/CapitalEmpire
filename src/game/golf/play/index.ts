@@ -14,3 +14,4 @@ export * from './entourage';
 export * from './carts';
 export * from './celebrate';
 export * from './roll';
+export * from './swing';
