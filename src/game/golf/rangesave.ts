@@ -29,7 +29,7 @@ export interface PracticeFacSave { open: boolean; season: PracticeCounts; total:
 /** the range business in the save (golf.range): v 1, the upgrades owned (in buying order), the bucket price ($), the season's and the lifetime
  *  counts, paths (true: the game has laid the old start's cement walkway; false: to lay on the next load, an old save's; absent: none, T239's guided start), tee (T130: the game has laid the tee box into the
  *  course grid: an old save's first load lays it) and the practice facilities (T130; a save without them: none built) */
-export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; season: RangeCounts; total: RangeCounts; paths?: boolean; tee?: boolean; practice: Record<PracticeId, PracticeFacSave>;
+export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; season: RangeCounts; total: RangeCounts; paths?: boolean; tee?: boolean; /** T306: the turfed tee's apron laid into the grid */ apron?: boolean; practice: Record<PracticeId, PracticeFacSave>;
   /** T295 (#880): the takings ($) of the count period closed last (rangeNewSeason); the town's tier reads it (lots/tiers.ts); absent in an old save: 0 */
   last?: number;
   /** the extras' own counts (T133): the coffee kiosk's buyers and takings, the academy's lessons and fees (a save without them: zero) */
@@ -158,6 +158,7 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   // the walkway (T239): laid (true); an old save's the game never laid, to lay on its first load (false); a guided start's: none (absent)
   if (o.paths === true) out.paths = true; else if (o.paths === false || o.guided !== true) out.paths = false;
   if (o.tee === true) out.tee = true;
+  if (o.apron === true) out.apron = true; // T306
   if (typeof o.last === 'number' && Number.isFinite(o.last) && o.last > 0) out.last = Math.round(o.last);
   if (o.garage === true && owned.includes('parking')) out.garage = true;
   // T237: the set-back and the range's own lot (a save from before T237 has neither: its plot on the road, its lot on the plot)

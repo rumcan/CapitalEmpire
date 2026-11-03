@@ -57,7 +57,7 @@ export interface RangeHostCtx {
   pace?(): number;
   save(): void; toast(text: string, kind: 'good' | 'info' | 'warn'): void; emit(): void;
   /** the course grid (null: none yet), and the tee box laid into it as tee cells of no hole (world polygon; T130): false while there is no grid */
-  grid(): Grid | null; layTee(pts: number[]): boolean;
+  grid(): Grid | null; layTee(pts: number[]): boolean; /** T306: the turfed tee's apron (fairway on the land's own cells) */ layApron?(pts: number[]): boolean;
 }
 
 /** the texture a scene patch is laid with: a golf surface takes the course's own preset (the brush's, the owner's studio presets), else its
@@ -190,6 +190,8 @@ export class RangeHost {
     const b = this.ctx.biz(); if (!b || !this.scene) return;
     // the tee box into the course grid once (a new game, an old save's first load: T130), then the practice area read as it changes
     if (!b.tee && this.ctx.layTee(this.scene.teeBox)) { b.tee = true; this.ctx.save(); }
+    // T306 (#891): turfed, the land between the tee box and the outfield is turf too (once; an old save's first load after the turf too)
+    if (b.tee && !b.apron && this.scene.apron && this.ctx.layApron?.(this.scene.apron)) { b.apron = true; this.ctx.save(); }
     this.scanPractice(b);
     this.upkeep(b);
     // (T266: the range's own time: the sim's, on the day/night clock run at its rate now over the day's mean; see pace)

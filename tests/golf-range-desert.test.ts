@@ -118,3 +118,13 @@ test('the range\'s presets: each has its painted look; the mown outfield, its st
   assert.equal(S.surfaces.tee!.family, S.surfaces.fairway!.family);
   assert.equal(PRESET_FAMILY[RANGE_PRESET.teeTurf], 'golf-tee'); assert.equal(PRESET_FAMILY[RANGE_PRESET.desert], undefined); assert.equal(PRESET_FAMILY[RANGE_PRESET.teeDirt], undefined);
 });
+
+test('T306 (#891): a turfed tee box gets its apron (the land between it and the outfield laid as turf), a dirt one none', () => {
+  const box = (pts: number[]) => { const c = frame(pts), us = c.map(q => q.u), vs = c.map(q => q.v); return [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)].map(x => Math.round(x * 1e6) / 1e6); };
+  assert.equal(rangeScene(plot, 2, defaultRangeBiz()).apron, null, 'a dirt tee: no green ring');
+  for (const ids of [['teeturf'], ['teeturf', 'grass']] as RangeUpgradeId[][]) {
+    const sc = rangeScene(plot, 2, buy(ids)), a = box(sc.apron!), out = box(sc.patches.find(p => p.surf === 'firstCut' || p.surf === 'desert')!.pts);
+    assert.equal(a[2], 24, 'from the tee box\'s edge'); assert.equal(a[3], out[2], 'to the outfield\'s edge: no land between');
+    assert.deepEqual([a[0], a[1]], [out[0], out[1]], 'as wide as the outfield');
+  }
+});
