@@ -35,6 +35,10 @@ export interface DraftHint {
   box?: number;
   /** false: no box depth (the whole picture's height casts, as a frontal board or a tower does) */
   depth?: false;
+  /** (T315) the footprint on the ground, a convex ring [x, y, x, y, ...] (display px about the anchor): a straight-on view's screen-aligned
+   *  rectangle, or that rectangle turned by its picture's yaw (axis-foot.ts). Its near edge under each column is the ground line, its far edge
+   *  the back of the box (a pixel higher above the near edge than the walls stand is roof, further back), and it is the contact shape */
+  foot?: number[];
   /** passed through to the entry: feather, penumbra, contact feather, contact darkness, contact lean, cast darkness, fade */
   f?: number; p?: number; fc?: number; kc?: number; cl?: number; ks?: number; fade?: number;
   /** why (copied to the entry's note) */
@@ -82,7 +86,37 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   let tc = -1; for (const x of cols) if (bot[x]! >= lowest - Math.max(2, 3 / ry) && (tc < 0 || Math.abs(x - ax) < Math.abs(tc - ax))) tc = x;
   let ta = tc, tb = tc; while (ta > 0 && bot[ta - 1]! >= lowest - Math.max(2, 3 / ry)) ta--; while (tb < w - 1 && bot[tb + 1]! >= lowest - Math.max(2, 3 / ry)) tb++;
   tc = Math.round((ta + tb) / 2);
-  let mode = hint.ground ?? (kind === 'tree' || kind === 'plant' || kind === 'pole' || kind === 'walker' ? 'flat' : 'iso');
+  let mode: DraftHint['ground'] | 'foot' = hint.foot && hint.foot.length >= 6 ? 'foot' : hint.ground ?? (kind === 'tree' || kind === 'plant' || kind === 'pole' || kind === 'walker' ? 'flat' : 'iso');
+  // (T315) the footprint's near and far edge under each column (texel rows; past its ends, its end's)
+  const footNear = new Float64Array(w), footFar = new Float64Array(w);
+  let foot = hint.foot ?? [];
+  if (mode === 'foot') {
+    const edges = (F: number[]) => {
+      const n = F.length >> 1; let fx0 = Infinity, fx1 = -Infinity;
+      for (let i = 0; i < n; i++) { fx0 = Math.min(fx0, F[2 * i]!); fx1 = Math.max(fx1, F[2 * i]!); }
+      for (let x = 0; x < w; x++) {
+        const X0 = clamp(X(x), fx0 + 1e-6, fx1 - 1e-6); let lo = Infinity, hi = -Infinity;
+        for (let i = 0; i < n; i++) {
+          const ax = F[2 * i]!, ay = F[2 * i + 1]!, bx = F[2 * ((i + 1) % n)]!, by = F[2 * ((i + 1) % n) + 1]!;
+          if ((ax <= X0) === (bx <= X0)) continue;
+          const yy = ay + (by - ay) * (X0 - ax) / (bx - ax); lo = Math.min(lo, yy); hi = Math.max(hi, yy);
+        }
+        footNear[x] = (hi - y0) / ry; footFar[x] = (lo - y0) / ry;
+      }
+      return [fx0, fx1] as const;
+    };
+    // the footprint's width and place across are read from the set's anchors (axis-foot.ts), a few px out: fitted across to the picture's own
+    // base, the columns standing on its near edge (so the contact never pokes out past the walls)
+    const [fx0, fx1] = edges(foot), near = Math.max(tol, 0.04 * H);
+    // (a dead-square view's anchor is the middle of its lowest row, off its middle when that row is a side feature: a base too narrow or too
+    // wide for the footprint takes the picture's whole width instead, the width the packing sized its footprint by)
+    const base = cols.filter(x => Math.abs(bot[x]! - footNear[x]!) <= near), fw = fx1 - fx0;
+    let b0 = base.length ? X(base[0]!) - 0.5 * rx : 0, b1 = base.length ? X(base[base.length - 1]!) + 0.5 * rx : 0;
+    const square = new Set(foot.filter((_, i) => i % 2)).size === 2;
+    if (!(b1 - b0 > 0.5 * fw && b1 - b0 < 1.5 * fw) && square) { b0 = X(cols[0]!) - 0.5 * rx; b1 = X(cols[cols.length - 1]!) + 0.5 * rx; }
+    if (b1 - b0 > 0.5 * fw && b1 - b0 < 1.5 * fw) { foot = foot.map((v, i) => (i % 2 ? v : b0 + (v - fx0) * (b1 - b0) / fw)); edges(foot); }
+    for (let x = 0; x < w; x++) g[x] = footNear[x]!;
+  } else
   if (Array.isArray(mode)) {
     const pts: [number, number][] = []; for (let i = 0; i + 1 < mode.length; i += 2) pts.push([(mode[i]! - x0) / rx, (mode[i + 1]! - y0) / ry]);
     pts.sort((a, b) => a[0] - b[0]);
@@ -118,6 +152,8 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   // height above the near edge is its roof, standing further back: its height is held to the box's (hcap) and its foot moves back with it,
   // so the roof's shadow is the walls' height long, not the picture's whole height (the old silhouette shadows' fault at the back)
   const gb = Float64Array.from(g); let hcap = Infinity;
+  /** (T315) a column's own cap (the footprint mode), else hcap */
+  const colCap = new Float64Array(w).fill(NaN);
   // (T185: not a vehicle seen end on, below: its feet on one flat line, no V; a bus's mirrors out at the picture's ends made a diamond of its
   // rear, and its whole length cast as its height)
   const tf = cols.filter(x => touch[x]), endOn = kind === 'vehicle' && H * ry > 0.9 * Wd && tf.length > 0
@@ -126,6 +162,16 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
     // a long thing seen end on (a camper, a tractor from the front): its picture's height is mostly its length running back; it stands this
     // share of its picture's height tall, the rest is depth
     for (const x of cols) gb[x] = top[x]!; hcap = hint.box * H;
+  } else
+  if (mode === 'foot') {
+    // (T315) a straight-on view: its box stands on the footprint, from its near edge back to its far edge; the walls stand as tall as most
+    // columns' tops are above the far edge (a pixel higher above the near edge is its roof, further back), as the diamond below
+    for (let x = 0; x < w; x++) gb[x] = Math.min(g[x]!, footFar[x]!);
+    const hs: number[] = []; for (const x of cols) if (top[x]! >= 0) hs.push(gb[x]! - top[x]!);
+    hs.sort((a, b) => a - b); hcap = Math.max(hs.length ? hs[Math.floor(hs.length * 0.7)]! : 0, 0.15 * H);
+    // a column standing taller than that (a gable, a ridge running back, a chimney) casts half the extra: the roof's shape shows in the shadow
+    // (its top is somewhere between the front and the back, so half its rise over the walls' back edge)
+    for (const x of cols) if (top[x]! >= 0) colCap[x] = hcap + 0.5 * Math.max(0, gb[x]! - top[x]! - hcap);
   } else
   if (mode === 'iso' && hint.depth !== false && !endOn) {
     // the diamond from the tent over the picture's whole width (a box's walls, a car's or a wagon's wheels near its corners): the near corner
@@ -153,7 +199,7 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       // the pixel's foot (texel rows): its column's near ground, or further back for a box's roof (2b)
       // (T185: above a wall's base standing back (2a), on that base)
       const near = back[x]! < g[x]! && y < back[x]! ? back[x]! : g[x]!;
-      const foot = gb[x]! < near ? Math.min(near, Math.max(gb[x]!, y + hcap)) : near;
+      const cap = Number.isNaN(colCap[x]!) ? hcap : colCap[x]!, foot = gb[x]! < near ? Math.min(near, Math.max(gb[x]!, y + cap)) : near;
       let hh = (foot - y) * ry; if ((near - y) * ry < minH) continue; hh = Math.max(0, hh) * hk;
       const gx = X(x), gy = Y(foot), px = gx + hh * sx, py = gy + hh * sy;
       pts.push(px, py, hh); L = Math.min(L, px); R = Math.max(R, px); T = Math.min(T, py); B = Math.max(B, py);
@@ -166,7 +212,7 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
         if (Math.abs(gn - near) <= 1.5 || y >= Math.min(gn, near)) continue;
         const n = Math.min(64, Math.ceil(Math.abs(gn - near)));
         for (let k = 1; k < n; k++) {
-          const f2 = near + (gn - near) * k / n, ft = gb[x]! < f2 ? Math.min(f2, Math.max(gb[x]!, y + hcap)) : f2, h2 = Math.max(0, (ft - y) * ry) * hk;
+          const f2 = near + (gn - near) * k / n, ft = gb[x]! < f2 ? Math.min(f2, Math.max(gb[x]!, y + cap)) : f2, h2 = Math.max(0, (ft - y) * ry) * hk;
           const qx = gx + h2 * sx, qy = Y(ft) + h2 * sy;
           pts.push(qx, qy, h2); L = Math.min(L, qx); R = Math.max(R, qx); T = Math.min(T, qy); B = Math.max(B, qy);
         }
@@ -243,6 +289,8 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   }
   // 4. the contact: runs of touching columns
   if (hint.contact !== false && Array.isArray(hint.contact)) out.c = hint.contact;
+  // (T315) a straight-on view's contact is its footprint (a screen-aligned box, or the turned one)
+  else if (hint.contact !== false && mode === 'foot') out.c = [foot.map(r1)];
   else if (hint.contact !== false) {
     const tx = cols.filter(x => (touch[x] || setback[x]) && (below === undefined || Y(bot[x]!) <= below + 2));
     const runs: [number, number][] = [];

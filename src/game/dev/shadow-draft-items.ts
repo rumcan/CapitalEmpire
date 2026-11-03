@@ -9,6 +9,7 @@ import { kindOf } from '../shadow-shape';
 import { vectorFallback } from '../shadow-vector';
 import type { DraftHint, DraftKind } from './shadow-draft';
 import HINTS from './shadow-hints.json';
+import { axisFoot, axisFootRing } from '../axis-foot';
 
 /** the hand hints, by library id, `variation:<group>` (every picture of the set) or a four-view family's NE id with `"all": true` */
 export const SHADOW_HINTS = HINTS as Record<string, DraftHint & { all?: boolean }>;
@@ -40,8 +41,16 @@ export function draftKindOf(it: LibItem): DraftKind {
     default: return 'prop';
   }
 }
-/** a picture's hints: its own, its variation set's, its four-view family's (when marked for all its views) */
+const BY = new Map(LIBRARY.map(it => [it.id, it] as const));
+/** a picture's hints: its own, its variation set's, its four-view family's (when marked for all its views); a straight-on building view (T315)
+ *  also takes its footprint (axis-foot.ts: the screen-aligned rectangle, or the turned one) unless its hints set its ground */
 export function hintOf(id: string): DraftHint {
+  const h = handHintOf(id), it = BY.get(id);
+  if (h.foot || h.ground !== undefined || h.box || !it || (h.kind ?? draftKindOf(it)) !== 'building') return h;
+  const f = axisFoot(id);
+  return f ? { ...h, foot: axisFootRing(f).map(v => Math.round(v * 10) / 10) } : h;
+}
+function handHintOf(id: string): DraftHint {
   const own = SHADOW_HINTS[id]; if (own) return strip(own);
   const g = /^(variation:.+):\d+$/.exec(id); if (g && SHADOW_HINTS[g[1]!]) return strip(SHADOW_HINTS[g[1]!]!);
   const v = fourViews(id); if (v) { const f = SHADOW_HINTS[v.views[0]]; if (f?.all) return strip(f); }
