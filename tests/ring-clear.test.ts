@@ -17,7 +17,7 @@ import { plotOfFront } from '../src/game/golf/range';
 import { defaultRangeBiz, rangeScene, rangeStructures, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import { placeBox, placeDef, placeName } from '../src/game/lots/iconic';
 import { discOverlaps, inSentence, inTheWay, inTheWayOfDisc, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle } from '../src/game/route-obstacles';
-import { judgeRing, lotsInRing, rangePieceName, ringGrows, ringDisc, type RingLot, type RingProp } from '../src/game/ring-clear';
+import { inRingClear, judgeRing, lotsInRing, rangePieceName, ringGrows, ringDisc, type RingLot, type RingProp } from '../src/game/ring-clear';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -201,4 +201,15 @@ test('one price: a ring that clears houses is dearer by exactly their compensati
   // a derelict lot is paid a tenth
   const d = judgeRing({ x: C.x, y: C.y, rb: ringRadius(hs, 3), walk, kind: 'roundabout', name: 'A roundabout', props: [], obstacles: [], lots: [...lm.lots.values()].map(l => asRing(l, LV.BUILT, LU.RES, 3)) });
   assert.equal(d.comp, d.lots.length * 200);
+});
+
+test('T304 (#889): a built roundabout keeps the town trees and the forest off its whole disc (the ring road, its walk and the island)', () => {
+  const e = crossing('street'), n0 = e.net.nodeAt(C)!;
+  // a tree between two arms, just clear of both arms' carriageway and walk (the trees' rule was the arms' segs alone, engine treeClearance)
+  const s0 = [...e.net.segs][0]!, r = 1, off = s0.cls.h + s0.cls.walk + r + 0.6, tx = C.x + off, ty = C.y + off;
+  assert.equal(inRingClear([{ x: n0.x, y: n0.y, R: ringClear(n0) }], tx, ty, r), false, 'a plain junction keeps nothing more');
+  e.setNodeType(n0, 'roundabout'); e.setNodeFlags(n0, false, false, 1); e.commit();
+  const n = e.net.nodeAt(C)!; assert.ok(n.rb > 0);
+  assert.equal(inRingClear([{ x: n.x, y: n.y, R: ringClear(n) }], tx, ty, r), true, 'the ring takes it: the tree goes');
+  assert.equal(inRingClear([{ x: n.x, y: n.y, R: ringClear(n) }], C.x + 40, C.y + 40, r), false, 'a tree well off the ring stays');
 });

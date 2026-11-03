@@ -94,8 +94,9 @@ export function edgeRuns(g: Grid, st: LayerStack, code: number, edges: readonly 
 // where 1 is green grass and 5 is fescue") ----
 
 /** each surface's grass length by surface id (1 the green's cut .. 5 the fescue), its Length slider's start; undefined: not grass (water,
- *  bunker, waste). The map grass round the course (id 0) stands as tall as the long grass */
-export const DEFAULT_LENGTH: readonly (number | undefined)[] = [4, 3, 5, undefined, 2, 1, undefined, undefined, 1, 4];
+ *  bunker, waste). The map grass round the course (id 0) stands as tall as the long grass. T300 (#885; the owner: "make tee grass long by default
+ *  since it is raised it is higher than long grass"): the tee (id 5) is a raised box, 5, so its shade falls on the long grass and rough round it */
+export const DEFAULT_LENGTH: readonly (number | undefined)[] = [4, 3, 5, undefined, 2, 5, undefined, undefined, 1, 4];
 /** a collar band's grass length by its name: the first cut a step above the fairway, the fringe a step above the green; the lip and the bank
  *  are no grass of their own */
 export const BAND_LENGTH: Readonly<Record<string, number>> = { 'first-cut': 3, fringe: 2 };

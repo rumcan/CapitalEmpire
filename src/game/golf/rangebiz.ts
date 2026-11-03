@@ -139,6 +139,9 @@ export interface RangeScene {
   pieces: ScenePiece[]; patches: ScenePatch[];
   /** the tee box (a world polygon, x y pairs): the game lays it into the course grid as tee cells of no hole, so T127's tee banks raise it (T130) */
   teeBox: number[];
+  /** T306 (#891): once the tee box is turfed, the strip of land between it and the outfield (TEE_GAP, left for the raised tee's face): the game
+   *  lays it into the course grid as fairway of no hole on the land's own cells, so the turf runs to the outfield under the face (null: a dirt tee) */
+  apron: number[] | null;
   /** the practice area beside the range (T130, golf/practice.ts) */
   practice: PracticeArea;
   /** the range's cart paths (cement slab), world legs: laid once (golf.range.paths) */
@@ -388,7 +391,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   const aims = targets.length ? targets : AIM_D.map(d => { const c = P(U_MID, STAND_V + d); return { x: c.x, y: c.y, r: 4, m: d * 2 }; });
   const q0 = P(COUNTER.u, COUNTER.v), q1 = P(COUNTER.u + 0.8, COUNTER.v);
   return {
-    facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), practice: practiceArea(plot, facing), paths, bays, academy, kiosk, picker, home, aim: { x: dv.x - o.x, y: dv.y - o.y }, targets, aims,
+    facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), apron: st.teeTurf ? quad(0.3, 69.7, TEE[3], TEE[3] + TEE_GAP) : null, practice: practiceArea(plot, facing), paths, bays, academy, kiosk, picker, home, aim: { x: dv.x - o.x, y: dv.y - o.y }, targets, aims,
     counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V),
     // the counters side by side along the shop's front about its middle, the nearest to the line's head first (it calls the next golfer first)
     counters: Array.from({ length: st.counters }, (_, i) => COUNTER.u + (i - (st.counters - 1) / 2) * COUNTER_STEP).sort((a, b) => Math.abs(a - COUNTER.u - 0.8) - Math.abs(b - COUNTER.u - 0.8)).map(u => P(u, COUNTER.v)), garage,

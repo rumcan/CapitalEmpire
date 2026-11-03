@@ -14,7 +14,7 @@ import type { Grid } from '../ext/course-grid';
 export interface HoleCardArea { surface: GolfSurface; m2: number; ready: number | null }
 /** what a Fix does: paint a missing surface with the brush; put a marker back on its green or tee (the marker in hand); open the hole in New
  *  hole's editor; or nothing to arm (the warning says what to do) */
-export type HoleFix = { kind: 'brush'; surface: 'green' | 'tee' | 'fairway' } | { kind: 'marker'; marker: 'pin' | 'back' } | { kind: 'edit' };
+export type HoleFix = { kind: 'brush'; surface: 'green' | 'tee' | 'fairway' } | { kind: 'marker'; marker: 'pin' | 'back'; /** T302: the hole has none yet (painted by hand): the Fix places one ("Place the pin") */ place?: boolean } | { kind: 'edit' };
 /** one line of the card's checks: a check (ok or not) or a warning (never ok); its Fix when it is not ok and something mends it */
 export interface HoleCardCheck { id: string; text: string; ok: boolean; warn: boolean; fix: HoleFix | null }
 /** the hole card's facts */
@@ -86,7 +86,9 @@ const fixOf = (label: string): HoleFix | null => CHECK_FIX[label] ?? (/ tee is o
  *  warnings are deriveHoles' (holes.ts), said with their numbers: the long walk with its metres, too close with the hole's number; the ones a
  *  new line mends carry Edit hole as their Fix when the hole has a plan */
 export function holeCard(v: HoleView, o: { pins: readonly Pin[]; tees: readonly TeeMark[]; aims: readonly AimPoint[]; areas: HoleCardArea[]; ready: number | null; planned: boolean }): HoleCardView {
-  const checks: HoleCardCheck[] = v.checks.map((c, i) => ({ id: `check-${i}`, text: c.label, ok: c.ok, warn: false, fix: c.ok ? null : fixOf(c.label) }));
+  // T302: a marker Fix on a hole with none yet places one (a hole painted by hand, before its markers are fitted)
+  const none = (f: HoleFix | null): HoleFix | null => f?.kind !== 'marker' ? f : (f.marker === 'pin' ? !o.pins.some(p => p.hole === v.n) : !o.tees.some(t => t.hole === v.n)) ? { ...f, place: true } : f;
+  const checks: HoleCardCheck[] = v.checks.map((c, i) => ({ id: `check-${i}`, text: c.label, ok: c.ok, warn: false, fix: c.ok ? null : none(fixOf(c.label)) }));
   v.warnings.forEach((w, i) => {
     let text = w, fix: HoleFix | null = o.planned ? { kind: 'edit' } : null;
     if (w === 'Long walk to the next tee') { const m = walkToNext(v.n, o.pins, o.tees); text = m === null ? w : `A ${m} m walk to hole ${v.n + 1}'s tee`; fix = null; }
