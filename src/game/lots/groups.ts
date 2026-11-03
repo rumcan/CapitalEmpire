@@ -93,11 +93,23 @@ export function learnGroups(presets: readonly LotPreset[]): Map<string, string[]
 }
 
 /** the cells of the presets the groups are learned from (buildGroups sets them; the first groupOf after that learns them) */
-let SOURCE: readonly LotPreset[] = [], CELLS: Map<string, string[]> | null = null;
+let SOURCE: readonly LotPreset[] = [], CELLS: Map<string, string[]> | null = null, MEMBERS: Map<string, string[]> | null = null;
 /** the presets the groups are learned from: replaces the cells (compose.ts calls it with the presets it draws from, and again on a reload) */
-export function buildGroups(presets: readonly LotPreset[]): void { SOURCE = presets; CELLS = null; }
+export function buildGroups(presets: readonly LotPreset[]): void { SOURCE = presets; CELLS = null; MEMBERS = null; }
 /** the members of a cell (the ids seen in it, sorted), or [] for a cell no preset has */
 export function groupOf(use: PresetUse, state: PresetState, zone: Zone, role: Role, size: string): readonly string[] {
   if (!CELLS) CELLS = learnGroups(SOURCE);
   return CELLS.get(cellOf(use, state, zone, role, size)) ?? [];
+}
+
+/** T305 (#890): the members of every size of one use, state, zone and role (a cell's key without its size), sorted and without repeats: an auto
+ *  lot (autolot.ts) fills a slot from these and fits each to its spot, so the size is the spot's, not the preset's */
+export function membersOf(use: PresetUse, state: PresetState, zone: Zone, role: Role): readonly string[] {
+  if (!CELLS) CELLS = learnGroups(SOURCE);
+  if (!MEMBERS) {
+    const sets = new Map<string, Set<string>>();
+    for (const [k, m] of CELLS) { const p = k.slice(0, k.lastIndexOf('|')); let s = sets.get(p); if (!s) sets.set(p, s = new Set()); for (const id of m) s.add(id); }
+    MEMBERS = new Map([...sets].map(([p, s]) => [p, [...s].sort()] as const));
+  }
+  return MEMBERS.get(`${use}|${state}|${zone}|${role}`) ?? [];
 }

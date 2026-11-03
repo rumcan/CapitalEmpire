@@ -90,7 +90,7 @@ describe('the lot lab presets (road set, approved)', () => {
     assert.ok(!formatPresets(off.presets).includes('approved'), 'approved: false is not written');
   });
 
-  it('5. compose: an approved lab preset on its road is drawn, a draft is not (only forced); a diagonal lot is a green until an approved preset of its road exists', () => {
+  it('5. compose: an approved lab preset on its road is drawn, a draft is not (only forced); a diagonal lot is a generated lot (T305) until an approved preset of its road exists', () => {
     setAngledRoadsOnly(false); // (the owner's temporary rule, 2026-11-01, off: this checks the diagonal roads' presets as they work without it)
     try {
       const labAxis: LotPreset = { id: 'lab-res-built-10x16-r0-test', use: 'res', state: 'built', w: 10, d: 16, props: [HOUSE], patches: [], road: 0, approved: true };
@@ -110,14 +110,14 @@ describe('the lot lab presets (road set, approved)', () => {
       assert.equal(pickedPreset(LOT_AXIS, { ...RES, preset: draft.id })?.id, draft.id, 'forced: the draft is drawn');
       assert.equal(pickedPreset(LOT_DIAG, { ...RES, preset: draft.id })?.id, draft.id, 'forced: on any lot, a diagonal one too');
 
-      // a diagonal lot: no preset and no props until an approved preset of road 1 is made; an axis preset does not reach it
+      // a diagonal lot: no approved preset until one of road 1 is made, so it is a generated lot (T305, autolot.ts); an axis preset does not reach it
       const diag: LotPreset = { id: 'lab-res-built-10x16-r1-test', use: 'res', state: 'built', w: 10, d: 16, props: [HOUSE], patches: [], road: 1, approved: true };
       const near = { o: { x: 100, y: 100 }, u: { x: Math.cos(47 * Math.PI / 180), y: -Math.sin(47 * Math.PI / 180) }, n: away(47), w: 10, d: 16 };
       setLotPresets(FIXTURE.presets, FIXTURE.meta);
-      assert.equal(pickedPreset(LOT_DIAG, RES), null);
-      assert.ok(!compose(LOT_DIAG, RES).props.some(q => q.from), 'a green: no preset prop');
+      assert.ok(pickedPreset(LOT_DIAG, RES)?.id.startsWith('auto:'), 'a generated lot');
+      assert.ok(compose(LOT_DIAG, RES).props.every(q => !q.from || q.from.preset.startsWith('auto:')), 'only its own generated props');
       setLotPresets([...FIXTURE.presets, labAxis], FIXTURE.meta);
-      assert.equal(pickedPreset(LOT_DIAG, RES), null, 'an axis preset is not turned to a diagonal');
+      assert.ok(pickedPreset(LOT_DIAG, RES)?.id.startsWith('auto:'), 'an axis preset is not turned to a diagonal (the lot is generated)');
       setLotPresets([...FIXTURE.presets, diag], FIXTURE.meta);
       assert.equal(pickedPreset(LOT_DIAG, RES)?.id, diag.id);
       assert.equal(lotPreset(LOT_DIAG, RES)?.frame.q, 0);

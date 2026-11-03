@@ -38,6 +38,7 @@ import { compose, lotPresets, lotRemix, setLotPresets, setLotRemix } from '../lo
 import { approvedFor, bucketOf, fitPreset, presetsFor, WHOLE_FRONT, type LotPreset, type PresetDecal, type PresetPatch, type PresetState, type PresetUse, type Road } from '../lots/presets';
 import { angledRoadsOnly, frameOf, quarterOfRoad, screenStraight, toFrame, toWorld, type Pt, type PresetFrame } from '../lots/preset-frame';
 import { presetFromComposition } from '../lots/preset-from';
+import { AUTO_TEMPLATES, templateOf, type AutoTemplate } from '../lots/autolot';
 import { LU, LV } from '../lots/town';
 import { allocOf, allows, STATE_WORDS, toggled, type HouseAlloc } from '../lots/house-alloc';
 import type { LotDecal } from '../lot-decals';
@@ -170,6 +171,9 @@ export function installLotLab(game: Game): () => void {
   /** T297 (#882): the remix the shown lot draws: the re-roll count (0 = the game's own fill: the remix seed is the lot's seed plus this) and Original (the
    *  preset as it is, no remix); both reset by a new variant */
   let remixOffset = 0, remixOff = false;
+  /** T305 (#890): the Auto choice: the shown lot as its generated layout (autolot.ts), its template (autoTpl; the use's own until one is picked) */
+  let autoOn = false, autoTpl: AutoTemplate | null = null;
+  const AUTO_NAMES: Record<AutoTemplate, string> = { house: 'House', corner: 'Corner house', trailer: 'Trailer park', junk: 'Junkyard', shop: 'Small shop' };
   /** what the staged neighbours were made for (type, state, lot size, road, place; '' none): neighbours() stages them again only when it changed */
   let neighKey = '';
   /** the exam holds the camera (T161, ?exam: dev/lot-exam.ts) */
@@ -441,6 +445,7 @@ export function installLotLab(game: Game): () => void {
    *  otherHouse); otherwise (New lot, a variant) it stays when it suits them, else it is changed for one that does (allowedHouse); a farm keeps its
    *  buildings. The source line says where it came from */
   function compose1(w: number, d: number, c: { list: LotPreset[]; kind: 'approved' | 'frozen' | 'diagonal' }, seed: number, reroll: boolean): void {
+    if (autoOn && use !== 'farm') { composeAuto(w, d, seed); return; }
     const n = c.list.length, key = bkey(w, d), id = `lab-${use}-${state}-${key}-r${road}-${Date.now().toString(36)}`;
     dropDraft();
     let obj: LotPreset;
@@ -479,6 +484,38 @@ export function installLotLab(game: Game): () => void {
     stage(w, d, { use: luOf(use), ...levelOf(state), seed, preset: id });
     message = '';
   }
+  /** T305 (#890): the shown lot as its generated layout (autolot.ts), composed through the forced template (ComposeState.autoTemplate: planOf draws the
+   *  generated lot on any lot of the use) and captured as a whole draft, as a preset is: Re-roll moves the remix (a new seed), Original is the first roll. A
+   *  park, a tour venue and a civic lot have no template (the lab says so) */
+  function composeAuto(w: number, d: number, seed: number): void {
+    const tpl = autoTpl ?? templateOf(use, 3, seed), id = `lab-${use}-${state}-${bkey(w, d)}-r${road}-${Date.now().toString(36)}`;
+    dropDraft();
+    if (!tpl) { message = `no generated lot for ${use}: a park, a tour venue and a civic lot keep their presets`; return; }
+    const sst: ComposeState = { use: luOf(use), ...levelOf(state), seed, autoTemplate: tpl, remix: remixOffset };
+    stage(w, d, sst);
+    const g = geo!, cap = presetFromComposition(compose(g, sst), labFrame(g), w, d, { whole: true });
+    const obj: LotPreset = { id, use, state, w, d, props: cap.props, patches: cap.patches, decals: cap.decals, road, whole: true };
+    setLotPresets([...lotPresets(), obj]);
+    draft = { id, obj, saved: false }; current = id;
+    stage(w, d, { use: luOf(use), ...levelOf(state), seed, preset: id });
+    source = `generated: ${AUTO_NAMES[tpl]} (roll ${remixOffset + 1})`;
+    message = '';
+  }
+  /** the shown lot's size (its preset's, else the size picked), or undefined */
+  const shownSize = (): { w: number; d: number } | undefined => { const p = curPreset(), s = sizeNow(), w = p?.w ?? s?.w, d = p?.d ?? s?.d; return w !== undefined && d !== undefined ? { w, d } : undefined; };
+  /** T305: the Auto choice on or off: on, the shown lot as its generated layout with the use's own template; off, the presets again (regen) */
+  async function toggleAuto(): Promise<void> {
+    autoOn = !autoOn; remixOffset = 0; remixOff = false;
+    if (!autoOn) return regen();
+    const sz = shownSize(); if (!sz) { message = 'no lot size to generate'; return; }
+    composeAuto(sz.w, sz.d, seedOf(use, seedNum));
+  }
+  /** T305: a template picked for the Auto choice: this lot again as that template, a new roll */
+  async function pickAuto(t: AutoTemplate): Promise<void> {
+    autoTpl = t; remixOffset = 0; remixOff = false;
+    const sz = shownSize(); if (!sz) { message = 'no lot size to generate'; return; }
+    composeAuto(sz.w, sz.d, seedOf(use, seedNum));
+  }
   /** the main building of a new lot, as the house allocations deal it, on its spot (as Change house does): reroll (Generate) a random other of its
    *  family and size class that suits this road and state; otherwise it stays when it suits them, else one that does (a farm keeps its buildings).
    *  The note says what changed */
@@ -501,6 +538,7 @@ export function installLotLab(game: Game): () => void {
   async function reroll(original: boolean): Promise<void> {
     const p = curPreset(), s = sizeNow(), w = p?.w ?? s?.w, d = p?.d ?? s?.d;
     if (use === 'farm' || w === undefined || d === undefined) { message = 'a farm has no remix'; return; }
+    if (autoOn) { remixOffset = original ? 0 : remixOffset + 1; composeAuto(w, d, seedOf(use, seedNum)); return; }
     const c = candidates(w, d);
     if (!c.list.length) { message = 'no preset of this type and state near this size'; return; }
     if (original) { remixOff = true; remixOffset = 0; } else { remixOff = false; remixOffset += 1; }
@@ -840,6 +878,8 @@ export function installLotLab(game: Game): () => void {
       btn('Generate ▶', ON, () => act(generateHere), 'this lot again (its type, size and road angle): a new layout, seed and building that suits its road and state'),
       btn('New lot ▶', BTN, () => act(newLot), 'a random size and road angle, as the drawer\'s locks allow; both locked: the next variant'),
       ...(use === 'farm' ? [] : [btn('Re-roll', BTN, () => act(() => reroll(false)), 'this lot again with a new remix: its props swapped within their groups (the fences, street items and house kept)'), btn('Original', BTN, () => act(() => reroll(true)), 'the preset as it is: no remix')]),
+      ...(use === 'farm' ? [] : [btn('Auto', autoOn ? ON : BTN, () => act(toggleAuto), 'this lot as a generated layout (autolot.ts): the template on the next buttons; Re-roll gives it a new seed; off: the presets again')]),
+      ...(autoOn ? AUTO_TEMPLATES.map(t => btn(AUTO_NAMES[t], autoTpl === t ? ON : BTN, () => act(() => pickAuto(t)), `the generated layout as a ${AUTO_NAMES[t].toLowerCase()}`)) : []),
       bar(),
       el('span', `border-radius:999px;padding:2px 10px;font-size:12px;background:${bg};color:${fg};white-space:nowrap`, chipT),
       btn('Save draft', BTN, () => act(save), 'Ctrl+S'),
