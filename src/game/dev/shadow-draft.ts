@@ -108,11 +108,13 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
     // the footprint's width and place across are read from the set's anchors (axis-foot.ts), a few px out: fitted across to the picture's own
     // base, the columns standing on its near edge (so the contact never pokes out past the walls)
     const [fx0, fx1] = edges(foot), near = Math.max(tol, 0.04 * H);
-    const base = cols.filter(x => Math.abs(bot[x]! - footNear[x]!) <= near);
-    if (base.length) {
-      const b0 = X(base[0]!) - 0.5 * rx, b1 = X(base[base.length - 1]!) + 0.5 * rx;
-      if (b1 - b0 > 0.5 * (fx1 - fx0) && b1 - b0 < 1.5 * (fx1 - fx0)) { foot = foot.map((v, i) => (i % 2 ? v : b0 + (v - fx0) * (b1 - b0) / (fx1 - fx0))); edges(foot); }
-    }
+    // (a dead-square view's anchor is the middle of its lowest row, off its middle when that row is a side feature: a base too narrow or too
+    // wide for the footprint takes the picture's whole width instead, the width the packing sized its footprint by)
+    const base = cols.filter(x => Math.abs(bot[x]! - footNear[x]!) <= near), fw = fx1 - fx0;
+    let b0 = base.length ? X(base[0]!) - 0.5 * rx : 0, b1 = base.length ? X(base[base.length - 1]!) + 0.5 * rx : 0;
+    const square = new Set(foot.filter((_, i) => i % 2)).size === 2;
+    if (!(b1 - b0 > 0.5 * fw && b1 - b0 < 1.5 * fw) && square) { b0 = X(cols[0]!) - 0.5 * rx; b1 = X(cols[cols.length - 1]!) + 0.5 * rx; }
+    if (b1 - b0 > 0.5 * fw && b1 - b0 < 1.5 * fw) { foot = foot.map((v, i) => (i % 2 ? v : b0 + (v - fx0) * (b1 - b0) / fw)); edges(foot); }
     for (let x = 0; x < w; x++) g[x] = footNear[x]!;
   } else
   if (Array.isArray(mode)) {
