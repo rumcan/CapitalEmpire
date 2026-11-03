@@ -1,12 +1,12 @@
 // T266 (#800): golf's watchable pace. The day/night town clock (sim/townclock.ts DayProfile): the night keeps its 40 s and the golf hours take the
 // rest of the town day, the day keeps its length, townMinute and simTimeAt stay inverses across the day's pieces, and retime and jumpTo keep the
 // profile (null drops it, the tournament day's). The watchable golfers' pacer (golf/play/pacer.ts): a brisk walk at most, still while held, a walk
-// he can make in time never faded, and a short fade to the walk's end when he cannot. The pace's setting (golf/pace.ts). npm test (bundled by
+// he can make in time never faded, and (T294) one he cannot walked faster, never faded or cut. The pace's setting (golf/pace.ts). npm test (bundled by
 // esbuild, run by node --test; no DOM).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { jumpTo, localRate, profileFor, retime, simTimeAt, townMinute, townTimeOf, type TownClock } from '../src/game/sim/townclock';
-import { FADE_IN_S, FADE_OUT_S, Pacer } from '../src/game/golf/play/pacer';
+import { GAP, Pacer } from '../src/game/golf/play/pacer';
 import { NIGHT_S, capped, dayNight, paceOf, paceOfSetting, settingOf } from '../src/game/golf/pace';
 import { RangeSim, defaultRangeBiz, rangeScene } from '../src/game/golf/rangebiz';
 
@@ -81,22 +81,35 @@ test('the pacer never fades a walk he can make at the cap by his deadline: he wa
   assert.equal(minA, 1, 'never faded'); assert.ok(Math.abs(P.x - 5) < 1e-6, 'he got there');
 });
 
-test('the pacer fades out at once when the walk cannot be made in time, comes back at the walk end and waits there for the schedule', () => {
+test('T294: a walk he cannot make at the cap is walked faster, never faded or cut: he is at its end right at the deadline', () => {
   const P = new Pacer(1, 1.4);
   P.step(0, 0, 0, NaN, NaN, false, 0, 0);
   // a sprint of 40 tiles a sim second toward (100, 0), needed there by sim second 2.5 (100 tiles at 1.4 take 71 s)
-  let t = 1 / 60;
-  for (; t < 1 && P.x !== 100; t += 1 / 60) P.step(0, Math.min(100, 40 * t), 0, 100, 0, false, t, t, 2.5 - t);
-  assert.equal(P.x, 100, 'back at the walk end'); assert.ok(t < FADE_OUT_S + 0.05, 'right after a short fade out'); assert.ok(P.alpha < 0.5, 'fading in');
-  for (; t < 2.4; t += 1 / 60) P.step(0, Math.min(100, 40 * t), 0, 100, 0, false, t, t, 2.5 - t);
-  assert.equal(P.x, 100); assert.equal(P.alpha, 1, 'faded in within FADE_IN_S, waiting'); assert.ok(FADE_IN_S < 0.5);
-  // the schedule arrives and walks on slowly: followed again
-  P.step(0, 100.5, 0, 101, 0, false, 2.5, 2.5, 5); assert.ok(P.x > 100 && P.walked);
+  let t = 1 / 60, lx = 0, maxStep = 0, minA = 1;
+  for (; t <= 2.5 + 1e-9; t += 1 / 60) {
+    P.step(0, Math.min(100, 40 * t), 0, 100, 0, false, t, t, 2.5 - t);
+    maxStep = Math.max(maxStep, P.x - lx); lx = P.x; minA = Math.min(minA, P.alpha);
+  }
+  assert.equal(minA, 1, 'never faded'); assert.ok(Math.abs(P.x - 100) < 1e-6, `at the end by the deadline (${P.x})`);
+  assert.ok(maxStep <= 40 / 60 + 1e-9, `no step longer than the schedule's own (${maxStep})`);
 });
 
-test('a mover new on the screen on a walk it cannot make starts at the walk end, fading in (no blink where the schedule is)', () => {
+test('T294: a mover new on the screen starts where the schedule has him, seen; a hold gives way to a deadline he could no longer make', () => {
   const P = new Pacer(1, 4.5);
-  P.step(0, 0, 0, 60, 0, false, 10, 10, 0.8); assert.equal(P.x, 60); assert.equal(P.alpha, 0);
+  P.step(0, 0, 0, 60, 0, false, 10, 10, 0.8); assert.equal(P.x, 0); assert.equal(P.alpha, 1);
+  // held (a swing) with a walk of 30 tiles due in 2 sim seconds: the cap (4.5 a second) cannot make it after the hold, so he walks now
+  const Q = new Pacer(1, 4.5);
+  Q.step(0, 0, 0, NaN, NaN, false, 0, 0);
+  Q.step(0, 5, 0, 30, 0, true, 0.1, 0.1, 2); assert.ok(Q.walked && Q.x > 0, 'walks');
+  // held with plenty of time: still
+  Q.step(0, 0, 0, NaN, NaN, false, 0.2, 0.2); const x0 = Q.x;
+  Q.step(0, x0 + 1, 0, x0 + 1, 0, true, 0.3, 0.3, 50); assert.equal(Q.x, x0); assert.ok(!Q.walked);
+});
+
+test('T294: with no deadline he never trails the schedule by more than GAP, and is never faded', () => {
+  const P = new Pacer(1, 1.4);
+  P.step(0, 0, 0, NaN, NaN, false, 0, 0);
+  for (let t = 1 / 60; t < 3; t += 1 / 60) { P.step(0, 30 * t, 0, NaN, NaN, false, t, t); assert.ok(30 * t - P.x <= GAP + 1e-9, `${30 * t - P.x} behind`); assert.equal(P.alpha, 1); }
 });
 
 // the range on the day/night clock: rangehost.ts runs its time at the clock's rate over the day's mean (Game's range pace), so over whole town days it
