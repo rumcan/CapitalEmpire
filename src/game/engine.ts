@@ -94,7 +94,8 @@ import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
 import { localRate, townClockFor, townTimeOf } from './sim/townclock';
 import { CADDIE_CAP, CART_CAP, LONG_DAY_MIN, NIGHT_S, PACE_KEY, WALK_CAP, capped, dayNight, paceOf, paceOfSetting, settingOf, type GolfPace, type PaceSetting } from './golf/pace';
-import { Pacer } from './golf/play/pacer';
+import { Pacer, setPaceSpeed } from './golf/play/pacer';
+import { SPEEDS, WatchSpeed, type WatchWhy } from './golf/watch';
 import type { PlayBall } from './golf/play/view';
 import { ballPuff, ballSplash } from './golf/ballfx';
 import { zoneOf } from './sim/routing';
@@ -226,8 +227,8 @@ const RATING_MS = 2000;
 export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean; /** the range business's season (P24, T129) */ range?: RangeCounts; /** T221: the residents the club's earnings make room for (City.townRoom) */ room?: number; /** T214: the club's members at the season's end and the season's dues as booked ($, month by month: in takings already) */ club?: { members: number; dues: number } }
 /** the most townspeople walking at once */
 const PED_MAX = 3000;
-/** the sim speeds the time controls offer (sim s per s); 0 is paused */
-export const SPEEDS = [1, 2, 4, 8, 20] as const;
+/** the sim speeds the time controls offer (sim s per s; T320: below 1x down to the watching speed, golf/watch.ts); 0 is paused */
+export { SPEEDS };
 /** the flow colours by v/c (below 0.5, below 0.8, below 1, and 1 or more; the Bottlenecks legend) and the junction LOS badge colours, A to F */
 export const FLOW_COLS = ['#3ddc84', '#ffd23f', '#ff8c1a', '#ff3b3b'];
 /** the heat map's bands by speed against the limit: Flowing (75%+), Slow (50-75%), Heavy (25-50%), Stopped (under 25%); see Game.drawFlow */
@@ -310,6 +311,11 @@ export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string 
 const BOARD_ROWS = 8;
 /** T209: the longest a resumed tournament day waits for its play after the first frame (holdDay), ms */
 const DAY_HOLD_MS = 3000;
+/** T320: the owner's own round goes to the watching speed this many game minutes before his tee time (his walk onto the first tee) */
+const OWN_WATCH_LEAD = 2;
+/** T320: after the owner's shot the camera stays on his ball until it is at rest, then this many real ms more before his next shot may open; and
+ *  never longer than OWN_HOLD_MAX_MS */
+const OWN_BEAT_MS = 900, OWN_HOLD_MAX_MS = 12000;
 /** T210: the end of the round (the last group's moment, the round over) is stepped at most this often, ms (at 20x about 4 game minutes) */
 const FINISH_EVERY_MS = 200;
 /** a closed path over a flat x y list, in the current transform's units */
@@ -833,6 +839,9 @@ export class Game {
   private shot: ShotState | null = null; private shotSpeed = 1;
   /** T316: the owner's last played shot as the shot panel reports it (the club, the miss, the carry and total); null before his first */
   private lastShot: ShotReport | null = null;
+  /** T320: the camera's hold on the owner's ball after his shot: since when (performance.now ms), whether the ball has moved yet, and when it last
+   *  moved (0: not yet); null when none */
+  private ownHold: { at: number; moved: boolean; still: number } | null = null;
   /** the featured holes last sent to the city (featuredHoles; the City's set mirrors it) and the real ms they were last worked out at */
   private featured: number[] = []; private featuredAt = -Infinity;
   /** T210: the real ms the end of the round (GolfPlay.finish) was last stepped at, and whether the player asked for the results before the last group is
@@ -4916,6 +4925,7 @@ export class Game {
   const d = this.dragging;
     if (d) {
       if (Math.abs(mx - d.sx) + Math.abs(my - d.sy) > 3) d.moved = true;
+      if (d.kind === 'pan' && d.moved && this.golfWatch) this.stopWatching(); // T320: a pan leaves the golfers followed
       if (d.kind === 'pan') { this.cam.X = d.camX - (mx - d.sx) / this.cam.z; this.cam.Y = d.camY - (my - d.sy) / this.cam.z; this.clampCam(); }
       else if (d.kind === 'bulldoze') this.bulldozeAt(mx, my, false);
       else if (d.kind === 'park') this.parkUpdate(mx, my);
@@ -5142,6 +5152,7 @@ export class Game {
     if (this.tool === 'practice' && this.practice.cancel()) { this.emit(); return true; } // T206: the facility in hand goes down first
     if (this.tool === 'junction' && (this.selectedJunction || this.brush !== 'select')) { if (this.selectedJunction) this.selectedJunction = null; else this.brush = 'select'; this.emit(); return true; }
     if (this.traffic.car || this.traffic.watch) { this.closeInspect(); this.closeWatch(); return true; }
+    if (this.golfWatch) { this.stopWatching(); return true; } // T320
     if (this.busPick) { this.busPick = null; this.busHover = null; this.emit(); return true; }
     if (this.route.length) { this.cancelRoute(); return true; }
     if (this.selected) { this.selected = null; this.emit(); return true; }
@@ -5164,7 +5175,82 @@ export class Game {
   setSpeed(k: number) {
     // while the owner's shot is open the clock waits for it: only a pause goes through (closeShot clears the shot before it resumes)
     if (k > 0 && this.shot) { this.toast(SHOT_HOLD, 'warn'); return; }
-    if (k > 0) this.lastSpeed = k; this.speed = k; this.traffic.setSpeed(k); this.emit();
+    if (k > 0) this.lastSpeed = k; this.speed = k; this.traffic.setSpeed(k); setPaceSpeed(k); this.emit();
+  }
+  // ---------- T320 (#908): watching golf at the watching speed (golf/watch.ts) ----------
+  /** the watch mode's speed: on while following golfers or playing the owner's own live round */
+  readonly watchSpeed = new WatchSpeed();
+  /** the golfers followed (T320): the tournament's play or the everyday day's, their ids, and the label the chip shows; null: none */
+  golfWatch: { src: 'play' | 'day'; ids: number[]; label: string } | null = null;
+  /** turns a reason to watch on or off: the speed switches to the watching speed, and back to the one before when no reason is left (a shot open
+   *  or a pause keeps its hold: the speed it will resume at changes) */
+  private watchFor(why: WatchWhy, on: boolean) {
+    if (this.watchSpeed.has(why) === on) return;
+    const cur = this.shot ? this.shotSpeed : this.speed || this.lastSpeed, k = this.watchSpeed.set(why, on, cur);
+    if (k !== null) { if (this.shot) this.shotSpeed = k; else if (!this.speed) this.lastSpeed = k; else this.setSpeed(k); }
+    this.emit();
+  }
+  /** follows golfers (T320): the camera stays on them and the game runs at the watching speed until stopWatching (Stop, Esc, a pan) */
+  watchGolfers(src: 'play' | 'day', ids: number[], label: string) {
+    if (!ids.length) return;
+    this.golfWatch = { src, ids: ids.slice(), label }; this.watchFor('follow', true);
+    const c = this.watchCentre(true); if (c) this.lookAt(c.x, c.y);
+    this.emit();
+  }
+  /** stops following golfers: the speed goes back to the one before (unless the player chose another while watching) */
+  stopWatching() { if (!this.golfWatch) return; this.golfWatch = null; this.watchFor('follow', false); this.emit(); }
+  /** the group nearest the middle of the screen followed (the tournament's play first, else the everyday day's); a toast when no golfer is out */
+  watchNearest() {
+    const c = tileOf(this.cam.X, this.cam.Y), pl = this.play;
+    if (pl) {
+      const m = this.playMinute(pl, this.townNow().dayMin), st = stateAt(pl.plan, pl.view, m).filter(s => s.action !== 'done' && s.action !== 'waiting');
+      let best = -1, bd = Infinity; for (const s of st) { const d = Math.hypot(s.x - c.x, s.y - c.y); if (d < bd) { bd = d; best = s.golfer; } }
+      const gr = best >= 0 ? pl.plan.groups.find(g => g.players.includes(best)) : undefined;
+      if (gr) { this.watchGolfers('play', gr.players.slice(), `${golferShort(pl.plan.golfers[best]!.name)}'s group`); return; }
+    }
+    const dp = this.dayPlay;
+    if (dp) {
+      const v = dp.view, T = this.traffic, st0 = T.simTime(performance.now());
+      v.update(this.dayMinute, performance.now() / 1000, -1e6, -1e6, 1e6, 1e6, st0, localRate(T.town, st0));
+      let best = -1, bd = Infinity; for (const p of v.people) { const d = Math.hypot(p.x - c.x, p.y - c.y); if (d < bd) { bd = d; best = p.golfer; } }
+      const gr = best >= 0 ? v.plan.groups.find(g => g.players.includes(best)) : undefined;
+      if (gr) { this.watchGolfers('day', gr.players.slice(), `${golferShort(v.plan.golfers[best]!.name)}'s group`); return; }
+    }
+    this.toast('No golfers out to watch', 'info');
+  }
+  /** the middle of the followed golfers as drawn (with full: where the whole course has them first), or null when none is shown */
+  private watchCentre(full = false): { x: number; y: number } | null {
+    const w = this.golfWatch; if (!w) return null;
+    let people: readonly { x: number; y: number; golfer: number }[] = [];
+    if (w.src === 'play') {
+      const pl = this.play; if (!pl) return null;
+      people = full ? stateAt(pl.plan, pl.view, this.playMinute(pl, this.townNow().dayMin)).filter(s => s.action !== 'done') : pl.pv.people;
+    } else {
+      const dp = this.dayPlay; if (!dp) return null;
+      if (full) { const T = this.traffic, st0 = T.simTime(performance.now()); dp.view.update(this.dayMinute, performance.now() / 1000, -1e6, -1e6, 1e6, 1e6, st0, localRate(T.town, st0)); }
+      people = dp.view.people;
+    }
+    let x = 0, y = 0, n = 0; for (const p of people) if (w.ids.includes(p.golfer)) { x += p.x; y += p.y; n++; }
+    return n ? { x: x / n, y: y / n } : null;
+  }
+  /** T320: each frame after the owner's shot: the camera on his ball while it flies, bounces and rolls; OWN_BEAT_MS after it comes to rest the hold ends */
+  private ownHoldFrame(now: number) {
+    const h = this.ownHold, pl = this.play, own = pl?.own; if (!h) return;
+    if (!pl || !own || now - h.at > OWN_HOLD_MAX_MS) { this.ownHold = null; return; }
+    const b = pl.pv.ballOf(own.id);
+    if (b?.moving) { h.moved = true; h.still = 0; } else if (h.moved && !h.still) h.still = now;
+    if (b) { this.camEase = null; this.cam.X = worldX(b.ball.x, b.ball.y); this.cam.Y = worldY(b.ball.x, b.ball.y); this.clampCam(); }
+    if (h.still && now - h.still >= OWN_BEAT_MS) this.ownHold = null;
+    if (!b && h.moved && !h.still) h.still = now; // (holed: no ball left)
+  }
+  /** each frame while following: the camera on the golfers; their round over (or its play gone), the watching stops */
+  private watchFrame() {
+    const w = this.golfWatch; if (!w) return;
+    const pl = w.src === 'play' ? this.play : null, dp = w.src === 'day' ? this.dayPlay : null, plan = pl?.plan ?? dp?.view.plan;
+    if (!plan) { this.stopWatching(); return; }
+    const m = pl ? this.playMinute(pl, this.townNow().dayMin) : this.dayMinute;
+    if (w.ids.every(id => (plan.done[id] ?? Infinity) <= m)) { this.toast(`${w.label} is in`, 'info'); this.stopWatching(); return; }
+    const c = this.watchCentre(); if (c) { this.camEase = null; this.cam.X = worldX(c.x, c.y); this.cam.Y = worldY(c.x, c.y); this.clampCam(); }
   }
   /** pauses, or resumes at the last speed */
   togglePause() { this.setSpeed(this.speed ? 0 : this.lastSpeed); }
@@ -7054,9 +7140,9 @@ export class Game {
    *  when the round is free, or when there is no golf */
   private updatePlay(now: number) {
     const tr = this.traffic, r = tr?.round;
-    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval' && !this.devTourney)) { this.play = null; this.playTried = -1; this.playSavedHr = -1; this.resultsEarly = false; this.clearFeatured(); if (this.shot) this.closeShot(); this.holdDay(now, false); return; }
+    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval' && !this.devTourney)) { this.watchFor('own', false); this.play = null; this.playTried = -1; this.playSavedHr = -1; this.resultsEarly = false; this.clearFeatured(); if (this.shot) this.closeShot(); this.holdDay(now, false); return; }
     if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlaySaved(r.runs); }
-    if (!this.play) { this.clearFeatured(); this.holdDay(now, true); return; }
+    if (!this.play) { this.watchFor('own', false); this.clearFeatured(); this.holdDay(now, true); return; }
     const minute = this.playMinute(this.play, townTimeOf(tr.town, tr.simTime(now)).dayMin);
     // the day saves itself each game hour (T209: the save keeps the day, SaveV5.tourney), so a reload resumes near where it was; the owner's shots save as he plays
     const hr = Math.floor(minute / 60); if (hr !== this.playSavedHr) { if (this.playSavedHr >= 0) this.scheduleSave(); this.playSavedHr = hr; }
@@ -7064,6 +7150,9 @@ export class Game {
     const own = this.play.own, shotAim = this.shot && own && this.shot.turn === own.turn ? this.shot.input.aim : null;
     { const T = this.traffic, st = T.simTime(now); this.play.pv.update(minute, now / 1000, own?.turn ?? null, shotAim, null, st, localRate(T.town, st)); } // (T266: its pacers)
     this.ownerFrame(minute); this.holdDay(now, true);
+    // T320: the owner's own live round plays at the watching speed, from his first address until his group is done
+    this.watchFor('own', !!own?.turn && (this.watchSpeed.has('own') || minute >= own.tee - OWN_WATCH_LEAD));
+    this.ownHoldFrame(now);
     // the crowd follows the play (docs/GOLF-PLAY.md decision 6): the featured holes are worked out at most every FEATURED_EVERY_MS and sent when they change
     if (now - this.featuredAt >= FEATURED_EVERY_MS) { this.featuredAt = now; this.sendFeatured(this.featuredHoles(this.play, minute)); }
     // T211: a marshal's wave-through is toasted as the minute passes it (those before the first frame, a reload mid-day, are not)
@@ -7605,12 +7694,13 @@ export class Game {
   }
   /** the results now, before the last group is in (T210: today's early leave kept; the screen says who leads, and Back to the valley ends the day) */
   showResultsNow() { if (this.traffic.round.stage !== 'eval') return; this.resultsEarly = true; this.emit(); }
-  /** the camera to the last group on the 18th (T210, the board's Watch): the middle of its golfers still out, at the current zoom */
+  /** the camera to the last group on the 18th (T210, the board's Watch): the middle of its golfers still out, at the current zoom; T320: followed */
   watchLastGroup() {
     const pl = this.play, lg = pl?.finish.last; if (!pl || !lg || pl.finish.over) return;
     const tr = this.traffic, m = this.playMinute(pl, townTimeOf(tr.town, tr.simTime(performance.now())).dayMin), st = stateAt(pl.plan, pl.view, m);
     const at = st.filter(s => lg.golfers.includes(s.golfer)); if (!at.length) return;
     this.lookAt(at.reduce((a, s) => a + s.x, 0) / at.length, at.reduce((a, s) => a + s.y, 0) / at.length);
+    this.watchGolfers('play', lg.golfers.slice(), 'the last group'); // T320: followed, at the watching speed
   }
   /** T211: toasts the wave-throughs (plan.pace.waves, in time order) the minute has passed since the last frame; at the first frame only counts them */
   private toastWaves(pl: GolfPlay, minute: number) {
@@ -7769,6 +7859,11 @@ export class Game {
     this.toast(this.lastShot.text, 'info');
     own.turn = own.live.advance();
     this.closeShot(); this.saveOwner();
+    // T320: the swing plays at once (the address's game minutes before the strike are skipped: at the watching speed they would be many real
+    // seconds), and the camera holds on his ball until it is at rest (ownHoldFrame)
+    { const T = this.traffic, st = T.simTime(performance.now()), m = this.playMinute(pl, townTimeOf(T.town, st).dayMin), r = localRate(T.town, st);
+      if (shot.t > m && r > 0) T.skip(st + (shot.t - m) / r + 0.05); }
+    this.ownHold = { at: performance.now(), moved: false, still: 0 };
     if (!own.turn) this.ownerDone(pl);
     this.emit();
   }
@@ -7785,12 +7880,14 @@ export class Game {
    *  pauses (its speed remembered), the camera goes to his ball at the closest zoom, and the shot opens on the suggested club, aim and power */
   private ownerFrame(minute: number) {
     const own = this.play?.own, t = own?.turn; if (!own || !t || this.shot || minute < t.t - OWNER_ADDRESS) return;
+    if (this.ownHold && minute < t.t - OWNER_ADDRESS / 2) return; // (T320: not while the camera holds on his last ball, unless his turn is pressing)
+    this.ownHold = null;
     this.shotSpeed = this.speed || this.lastSpeed; this.setSpeed(0);
     this.shot = { turn: t, input: { club: t.suggested.club, aim: { x: t.suggested.aim.x, y: t.suggested.aim.y }, power: t.suggested.power } };
     this.lookAt(t.ball.x, t.ball.y, ZOOM_MAX);
   }
-  /** closes the open shot and resumes the sim at the speed it had (at least 1x) */
-  private closeShot() { this.shot = null; this.setSpeed(Math.max(1, this.shotSpeed)); }
+  /** closes the open shot and resumes the sim at the speed it had (1x when it had none) */
+  private closeShot() { this.shot = null; this.setSpeed(this.shotSpeed > 0 ? this.shotSpeed : 1); } // (T320: a speed below 1x, the watching speed, resumes as it was)
   /** writes the owner's play to the save (GolfSave.play): his tournament key, sex, the inputs he has played and his caddie count */
   private saveOwner() {
     const pl = this.play, o = pl?.own; if (!pl || !o || !this.golf) return;
@@ -7850,6 +7947,7 @@ export class Game {
     const sp = 900 / this.cam.z * dt; let kx = 0, ky = 0;
     if (this.keys.has('ArrowLeft') || this.keys.has('a') || this.keys.has('A')) kx -= 1; if (this.keys.has('ArrowRight') || this.keys.has('d') || this.keys.has('D')) kx += 1;
     if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
+    if ((kx || ky) && this.golfWatch) this.stopWatching(); // T320: a pan leaves the golfers followed
     if (kx || ky) { this.camEase = null; this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
     else this.stepCamEase(now);
     this.onFrame?.(now, dt);
@@ -8024,6 +8122,7 @@ export class Game {
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
     this.updateDayPins(now); this.updatePlay(now); this.updateEveryday(now); // T269: the day's cups first, so the day's play reads them
+    this.watchFrame(); // T320: the camera on the golfers followed
     if (this.golf) this.monthMoney.note(this.golfMonthAt(now), this.money); // T233: the money chip's change a month
     // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)
     gl.grade = this.boot.kind === 'game' ? gradeFrame(this.grade, this.nightAmount()) : null;

@@ -19,6 +19,13 @@ const STALE_S = 0.75;
 /** close enough (tiles): near(), and the slack of a hold */
 const NEAR = 0.3;
 const FOLLOW = 1;
+/** T320 (#908, the owner: "Slow speed for watching"): the game speed when below 1x (1 otherwise). Below 1x the caps hold in real seconds, not sim
+ *  seconds, so a walker is shown at his natural pace however slowly the clock runs (at 1x and faster nothing changes: T294) */
+let below1 = 1;
+/** T320: the game speed (sim seconds a real second; 0 paused) for every pacer: below 1x their caps are a real second's */
+export function setPaceSpeed(k: number): void { below1 = k > 0 && k < 1 ? k : 1; }
+/** T320: the factor the caps (tiles a sim second) are multiplied by at the game speed now: 1 at 1x and faster, 1/k below */
+export const capScale = (): number => 1 / below1;
 
 export class Pacer {
   /** the mover's point, how visible it is (0..1) and whether it walked, as of its last step */
@@ -47,6 +54,7 @@ export class Pacer {
     if (id >= this.px.length) this.grow(Math.max(id + 1, this.px.length * 2));
     const dR = now - this.lastR[id]!, dS = simT - this.lastS[id]!, end = Number.isFinite(ex);
     let x = this.px[id]!, y = this.py[id]!, a = this.pa[id]!;
+    const cap = this.cap / below1; // (T320: below 1x the cap is a real second's)
     this.walked = false;
     if (this.st[id] === 0 || dR > STALE_S || dR < 0 || dS < 0) { x = tx; y = ty; a = 1; } // (new on the screen, or back after a while: where the schedule has him)
     else {
@@ -55,9 +63,9 @@ export class Pacer {
       let rem = 0;
       if (due) { const toEnd = Math.hypot(ex - x, ey - y), tEnd = Math.hypot(ex - tx, ey - ty); rem = toEnd > tEnd ? d + tEnd : toEnd; }
       // (held only while he can still make his walk at the cap after it: a swing's natural length gives way to his next address)
-      if (hold && due && rem > this.cap * Math.max(0, left) + NEAR) hold = false;
+      if (hold && due && rem > cap * Math.max(0, left) + NEAR) hold = false;
       if (!hold && d > 1e-9 && dS > 0) {
-        let v = this.cap;
+        let v = cap;
         if (due) v = Math.max(v, rem / (left > 0 ? left : CATCH_S)); // (in time: at his walk's end right at the deadline; a deadline gone: within about CATCH_S)
         // (no deadline: never more than GAP behind the schedule)
         const k = Math.min(1, Math.max(v * dS, due ? 0 : d - GAP) / d); x += dx * k; y += dy * k; this.walked = true; this.hx = dx; this.hy = dy;

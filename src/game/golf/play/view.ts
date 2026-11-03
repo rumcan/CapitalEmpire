@@ -105,13 +105,15 @@ export class PlayView {
   /** T251: the ground's height (null: flat), and per golfer id the bounce and roll (or the putt's line) of a shot of his (made on first use, then
    *  reused) and the shot it was set for */
   private height: HeightAt; private rolls: (BallRoll | undefined)[] = []; private rollFor: (Shot | null)[] = [];
+  /** T320: each golfer's ball as of the last update: its index in balls (-1: none drawn) and whether it is in the air or rolling */
+  private bi: Int32Array; private bm: Uint8Array;
 
   constructor(plan: RoundPlan, view: CourseView, opts: PlayOpts = {}) {
     this.plan = plan; this.view = view; this.pace = opts.pace ?? null; this.height = opts.height ?? null;
     const size = Math.max(0, ...plan.golfers.map(g => g.id)) + 1;
     this.k = new Int32Array(size); this.swingAt = new Float64Array(size).fill(-Infinity); this.tee = new Float64Array(size);
     this.lx = new Float64Array(size); this.ly = new Float64Array(size); this.rows = new Uint8Array(size); this.seen = new Uint8Array(size);
-    this.rides = new Uint8Array(size); this.caddie = new Uint8Array(size);
+    this.rides = new Uint8Array(size); this.caddie = new Uint8Array(size); this.bi = new Int32Array(size).fill(-1); this.bm = new Uint8Array(size);
     this.cx = new Float64Array(size); this.cy = new Float64Array(size); this.cm = new Float64Array(size).fill(NaN); this.crow = new Uint8Array(size);
     for (const g of plan.golfers) { if (g.cart !== undefined && !g.owner) this.rides[g.id] = 1; if (g.caddie) this.caddie[g.id] = 1; }
     this.cartPlay = this.rides.some(r => r === 1) ? new CartPlay(plan, view, opts.paths ?? null, opts.home ?? view.holes[0]?.tee ?? { x: 0, y: 0 }) : null;
@@ -132,6 +134,7 @@ export class PlayView {
     const G = this.plan.golfers, states = only ? this.states : stateAt(this.plan, this.view, minute, this.states), drive = GOLFER_CLIPS.golf_drive;
     const pa = pending ? (aim ?? pending.suggested.aim) : null, carts = this.cartPlay;
     let np = 0, nb = 0, nc = 0, nh = 0;
+    this.bi.fill(-1); this.bm.fill(0);
     for (let i = 0; i < G.length; i++) {
       if (only) { const gid = G[i]!.id; if (!only[gid]) { this.seen[gid] = 0; continue; } states[i] = stateOne(this.plan, this.view, gid, minute, states[i] ?? { golfer: gid, hole: 0, x: 0, y: 0, action: 'waiting', ball: null, flight: null, strokes: 0, toPar: 0, thru: 0 }); }
       const s = states[i]!, id = s.golfer, list = this.shots[id]!, mine = pending !== null && pa !== null && id === pending.golfer, fresh = this.started && (!only || this.seen[id] === 1);
@@ -226,6 +229,7 @@ export class PlayView {
       // ROLL_DONE_S; a putt rolls on its line as before, breaking on a sloped green
       const fs = newest ? flightS(newest) : 0, lg = newest && ballRoll.on ? newest.landing : undefined;
       if (newest && dt < fs) {
+        this.bi[id] = nb; this.bm[id] = 1;
         const u = dt / fs, b = this.slot(nb++);
         if (newest.club === 'putter') { if (ballRoll.on) this.rollOf(id, newest).along(u, b); else { b.x = newest.from.x + (newest.to.x - newest.from.x) * u; b.y = newest.from.y + (newest.to.y - newest.from.y) * u; b.h = 0; } }
         else {
@@ -233,9 +237,10 @@ export class PlayView {
           b.x = newest.from.x + (to.x - newest.from.x) * u; b.y = newest.from.y + (to.y - newest.from.y) * u; b.h = 4 * H * u * (1 - u);
         }
       } else if (newest && lg && dt < fs + this.rollOf(id, newest).end) {
+        this.bi[id] = nb; this.bm[id] = 1;
         const r = this.rolls[id]!, b = this.slot(nb++); b.fx = r.at(dt - fs, b); b.fu = r.fu;
       } else if (s.ball && !(newest?.holed && s.ball.x === newest.to.x && s.ball.y === newest.to.y)) {
-        const b = this.slot(nb++); b.x = s.ball.x; b.y = s.ball.y; b.h = 0;
+        this.bi[id] = nb; const b = this.slot(nb++); b.x = s.ball.x; b.y = s.ball.y; b.h = 0;
       }
     }
     this.people.length = np; this.balls.length = nb; this.caddies.length = nc; this.cheers.length = nh; this.started = true;
@@ -337,6 +342,8 @@ export class PlayView {
     for (const s of this.plan.shots) { const hole = this.view.holes[s.hole]; if (s.holed && hole && celebrated(s.stroke + s.penalty, hole.par)) this.celebrate.add(s); }
   }
 
+  /** T320: golfer id's ball as of the last update (null: none drawn) and whether it is moving (in the air, bouncing or rolling) */
+  ballOf(id: number): { ball: PlayBall; moving: boolean } | null { const i = id < this.bi.length ? this.bi[id]! : -1; return i >= 0 && this.balls[i] ? { ball: this.balls[i]!, moving: this.bm[id] === 1 } : null; }
   /** the ball object at index i of balls (made on first use, then reused), its effect cleared */
   private slot(i: number): PlayBall { const b = this.balls[i] ?? (this.balls[i] = { x: 0, y: 0, h: 0, fx: FX_NONE, fu: 0 }); b.fx = FX_NONE; b.fu = 0; return b; }
   /** T251: golfer id's roll for shot s, set once for it: a full shot's bounce and roll from its landing (within what is left of ROLL_DONE_S after its

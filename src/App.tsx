@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FLOW_COLS, Game, HEAT_COLS, HIST_RAMP, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
+import { WATCH_SPEED, speedLabel } from './game/golf/watch';
 import { ROW_BAY_COST, rowLots } from './game/event/rows';
 import { LIBRARY } from './game/library';
 import { type Tool } from './game/types';
@@ -465,7 +466,10 @@ export default function App() {
             <div className="pointer-events-auto ml-auto flex items-center gap-2">
               <div className="glass flex items-center gap-1 px-2 py-1.5">
                 <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
-                {SPEEDS.map(k => <button key={k} className={`chip ${game.speed === k ? 'chip-on' : ''}`} onClick={() => game.setSpeed(k)} data-tip="Speed (, and .)">{k}×</button>)}
+                {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''}`} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
+                {game.golfMode && (game.golfWatch
+                  ? <button className="chip chip-on" onClick={() => game.stopWatching()} data-tip="Stop watching: back to the speed before (Esc)" data-testid="watch-stop">Watching {game.golfWatch.label} ✕</button>
+                  : <button className="chip" onClick={() => game.watchNearest()} data-tip="Follow the golf group nearest the middle of the screen at the watching speed" data-testid="watch-golf">Watch golf</button>)}
                 <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} data-tip="Skip to the next rush hour (H)"><Icon name="skip" size={16} />{game.traffic.skipping ? 'Skipping…' : ''}</button>
                 {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} data-tip="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
               </div>

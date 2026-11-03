@@ -244,7 +244,7 @@ export class SimClient {
   buyLot(key: string) { this.post({ t: 'buyLot', key }); }
   /** sets the number of cars the sim keeps on the network */
   setTarget(n: number) { this.target = n; this.post({ t: 'target', n }); }
-  /** the sim speed: 0 pauses, 1 is real time, 2, 4, 8 and 20 are faster */
+  /** the sim speed: 0 pauses, 1 is real time, 2, 4, 8 and 20 are faster; below 1 slower (T320: the worker steps every 1/k frames) */
   setSpeed(k: number) { this.speed = k; this.post({ t: 'speed', k }); }
   /** fast-forwards the sim as fast as the worker can until the sim time until (s); the cars are not drawn between frames meanwhile */
   skip(until: number) { this.post({ t: 'skip', until }); }
@@ -337,7 +337,7 @@ export class SimClient {
     const cur = this.cur;
     if (!cur) return;
     // performance.now(), not the rAF time: a frame that arrived after the rAF timestamp would get a negative alpha
-    const prev = this.prev, alpha = Math.min(1, Math.max(0, (performance.now() - this.tCur) / FRAME_MS));
+    const prev = this.prev, alpha = Math.min(1, Math.max(0, (performance.now() - this.tCur) / (this.speed > 0 && this.speed < 1 ? FRAME_MS / this.speed : FRAME_MS))); // (T320: below 1x a frame comes every 1/speed periods)
     for (let i = 0; i < this.n; i++) {
       const k = 4 * i, flags = cur[k + 3] | 0;
       if (!(flags & 1)) { this.alive[i] = 0; continue; }

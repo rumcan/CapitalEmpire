@@ -11,12 +11,15 @@ import type { Ledger } from '../budget';
 import type { Milestone } from '../career';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 import { retime } from './townclock';
+import { StepClock } from '../golf/watch';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 /** wall-clock frame period, ms; the sim is stepped once per DT of its speed. A skip (fast-forward) runs for SKIP_MS of each frame */
 const FRAME_MS = 100, SKIP_MS = 70, TOWN_EVERY = 10;
 const city = new City(1); city.autoStadium = false; // the player places the stadium (see City.autoStadium)
 let speed = 1, forcePost = false, wasAlive = false, townPosted = 0;
+/** T320: below 1x the sim steps once every 1/speed frames (the fraction carried), and the frames between post nothing */
+const steps = new StepClock();
 /** the event round's stage as the books were last posted for it (the build and the surge move on the clock: a change posts the books) */
 let roundStage = city.round.stage;
 /** the sim time a fast-forward runs to, s; -1 when none */
@@ -111,7 +114,9 @@ function frame() {
     }
     if (city.sim.t >= skipUntil) { skipUntil = -1; forcePost = true; }
   } else {
-    const r = city.step(speed);
+    const n = steps.take(speed);
+    if (n === 0 && speed > 0) return; // (T320: below 1x, a frame with no step: nothing moved)
+    const r = city.step(n);
     postTown(r.events, false);
     if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
     if (r.noRoom) post({ t: 'noRoom' });
