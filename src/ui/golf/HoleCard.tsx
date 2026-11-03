@@ -158,7 +158,7 @@ function FrameRow({ game, n }: { game: Game; n: number }) {
 /** one check: its mark (✓ ok, ✗ a check that fails, ! a warning) beside its colour, its words, and its Fix */
 function CheckRow({ game, k }: { game: Game; k: HoleCardCheck }) {
   const cls = k.ok ? 'wiz-ok' : k.warn ? 'wiz-warn' : 'wiz-block', mark = k.ok ? '✓' : k.warn ? '!' : '✗';
-  const fix = k.fix, label = !fix ? '' : fix.kind === 'edit' ? 'Edit Hole Layout' : fix.kind === 'brush' ? `Paint ${NAME[fix.surface]!.toLowerCase()}` : fix.marker === 'pin' ? 'Move the pin' : 'Move the tees';
+  const fix = k.fix, label = !fix ? '' : fix.kind === 'edit' ? 'Edit Hole Layout' : fix.kind === 'brush' ? `Paint ${NAME[fix.surface]!.toLowerCase()}` : fix.marker === 'pin' ? (fix.place ? 'Place the pin' : 'Move the pin') : fix.place ? 'Place the tees' : 'Move the tees';
   return (
     <li className={cls}>
       <span className="wiz-mark" aria-hidden>{mark}</span>

@@ -924,6 +924,8 @@ export class Game {
     if (f.kind === 'edit') { this.editHole(n); return; }
     if (f.kind === 'brush') { this.setTool('course'); if (this.tool !== 'course') return; this.paint.setHole(n); this.paint.setBrush(f.surface, 0); this.emit(); return; }
     if (!this.holesTool) this.toggleHolesTool();
+    // T302: the markers fitted to the painted green and tee now, as a load fits them (setupCourseGrid), so a fit a stroke missed is made up
+    this.syncCourseMarkers(undefined, true);
     // T254: the tees' Fix picks up the hole's first set (blue, white, yellow, red: the one off its tee first)
     const g = this.golf, areas = this.courseAreaList(), mine = TEE_KINDS.flatMap(k => g?.tees.find(t => t.hole === n && t.kind === k) ?? []);
     const tee = mine.find(t => surfaceAt(areas, t.x, t.y) !== 'tee') ?? mine[0];
@@ -3764,6 +3766,13 @@ export class Game {
     this.jumpTo(pt.x, pt.y);
     this.toast(`Selected Hole ${hole} ${kind === 'pin' ? 'pin' : TEE_SET[kind].colour + ' tee'}. Click a new position on the course to move it.`);
     this.emit();
+    } else {
+    // T302 (#887): the hole has none yet (painted by hand): the next click on its green (its tee) places one (moveGolfMarker: markerMove adds it)
+    const surface = kind === 'pin' ? 'green' : 'tee', on = this.courseAreaList().filter(a => a.hole === hole && a.surface === surface);
+    this.selectedGolfMarker = { hole, kind, x: NaN, y: NaN };
+    if (on.length) { const b = ptsBox(on.flatMap(a => a.pts)); this.jumpTo((b[0]! + b[2]!) / 2, (b[1]! + b[3]!) / 2); }
+    this.toast(kind === 'pin' ? `Click on Hole ${hole}'s green to place its pin` : `Click on Hole ${hole}'s tee to place its ${TEE_SET[kind].colour} tee marker`);
+    this.emit();
     }
     }
     /** the course's gates to the sim (LEAD.md M2.1): every placed structure of kind 'gate', at its rectangle's middle, its capacity as lanes */
@@ -3832,6 +3841,7 @@ export class Game {
     if (!this.golf) return false;
     const areas: CourseArea[] = this.courseAreaList();
     // the move itself is golf/holecard.ts markerMove (T174): the markers only, never a re-plan or a charge; refused off its surface
+    const had = kind === 'pin' ? this.golf.pins.some(p => p.hole === hole) : this.golf.tees.some(t => t.hole === hole && t.kind === kind); // T302: else it is placed
     const r = markerMove(this.golf, areas, hole, kind, x, y);
     if (!r.ok) {
     this.toast(r.reason, 'warn');
@@ -3853,7 +3863,7 @@ export class Game {
     this.selectedGolfMarker = null;
     this.scheduleSave();
     this.emit();
-    this.toast(`Hole ${hole}'s ${kind === 'pin' ? 'pin' : TEE_SET[kind].colour + ' tee marker'} moved: no re-plan, no charge`); // T174: the player's words (P23 4.9)
+    this.toast(`Hole ${hole}'s ${kind === 'pin' ? 'pin' : TEE_SET[kind].colour + ' tee marker'} ${had ? 'moved' : 'placed'}: no re-plan, no charge`); // T174: the player's words (P23 4.9)
     return true;
     }
 
