@@ -87,3 +87,11 @@ export function judgeRing<P>(r: RingInput<P>): RingVerdict<P> {
   const lots = lotsInRing(r.lots, r.x, r.y, r.rb, r.walk, r.kind);
   return { why: '', outline: [], props: reached.map(q => q.p), lots, comp: lots.reduce((s, l) => s + compensation(l), 0), lotOutlines: lots.map(lotPoly) };
 }
+
+/** T304 (#889; the owner: "roundabout doesnt move trees"): whether a tree of clearance r at (x, y) stands in a built ring's clearance (rings: each
+ *  ring's centre and R, lots.ts ringClear: its radius, the widest arm's walk and the lots' margin). The town trees and the forest keep out of the
+ *  whole disc (the ring road, its kerbs and the island, which has its own planting), as they keep r off a road's carriageway and walk */
+export function inRingClear(rings: readonly { x: number; y: number; R: number }[], x: number, y: number, r: number): boolean {
+  for (const q of rings) if (q.R > 0 && (x - q.x) ** 2 + (y - q.y) ** 2 < (q.R + r) ** 2) return true;
+  return false;
+}

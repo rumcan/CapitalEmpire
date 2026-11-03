@@ -129,7 +129,7 @@ const LAND_SURVEY_INSET = 0.6;
 import { acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf, type PresetState } from './lots/presets';
-import { LotMap } from './lots/lots';
+import { LotMap, ringClear } from './lots/lots';
 import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
@@ -165,7 +165,7 @@ import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, 
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { inSentence, inTheWay, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
-import { judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
+import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
@@ -2821,6 +2821,9 @@ export class Game {
     const farms: FarmParcel[] = []; for (const [k, f] of this.farmMap.farms) if (this.farmModelOf(k) === 2 && boxNear(parcelBox(f.p), x0, y0, x1, y1, g)) farms.push(f.p);
     // T229: a hole's frame trees (props): a planted tree keeps 2 tiles off them, so the woods never grow through a frame
     const frames: number[] = []; if (grid) for (const p of this.propGrid.query([x0 - g, y0 - g, x1 + g, y1 + g])) if (p.frame) frames.push(p.x, p.y);
+    // T304 (#889): the built rings near the cell (a roundabout's or a mini's centre and clearance): a tree keeps off the whole disc, not only its arms
+    const rings: { x: number; y: number; R: number }[] = [], seen = new Set<Node>();
+    for (const s of this.net.segsNear({ x: (x0 + x1) / 2, y: (y0 + y1) / 2 }, FOREST_CELL / 2 + g)) for (const n of [s.a, s.b]) if (n.rb > 0 && !seen.has(n)) { seen.add(n); rings.push({ x: n.x, y: n.y, R: ringClear(n) }); }
     const free = (x: number, y: number, r: number) => {
       for (let k = 0; k < frames.length; k += 2) if ((frames[k]! - x) ** 2 + (frames[k + 1]! - y) ** 2 < (r + 2) ** 2) return false;
       for (const b of places) if (x > b[0]! - r && x < b[2]! + r && y > b[1]! - r && y < b[3]! + r) return false;
@@ -2831,6 +2834,7 @@ export class Game {
       for (const f of farms) if (parcelGap(f, x, y) < r) return false;
       const p = { x, y };
       for (const s of this.net.segsNear(p, r + 16)) if (segDist(p, s) < s.cls.h + s.cls.walk + r + 0.5) return false;
+      if (rings.length && inRingClear(rings, x, y, r)) return false;
       for (const d of bizs) if (x > d.x - r && x < d.x + d.w + r && y > d.y - r && y < d.y + d.h + r) return false;
       for (const d of parks) if (x > d.x - r - 1 && x < d.x + d.w + r + 1 && y > d.y - r - 1 && y < d.y + d.h + r + 1) return false;
       for (const [d, s] of tolls) { const f = plazaLocal(d, x, y); if (f.t >= -r && f.t <= PLAZA_LEN + r && f.o >= -s.cls.h - r && f.o <= plazaEdge(d.booths, laneOff(s, 0)) + r) return false; }
