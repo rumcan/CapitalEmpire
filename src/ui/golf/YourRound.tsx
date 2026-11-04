@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { DEFAULT_RULES, GIMME_RULES, MULL_RULES, gimmiesOf, mulligansOf, noHandicapWhy, type CardRow, type HoleChoice, type RoundRules, type YourRoundView } from '../../game/golf/play/yours';
 import { Icon } from '../Icon';
+import { MatchRows, MatchStrip } from './MatchCards';
 
 const toPar = (d: number): string => d === 0 ? 'E' : d > 0 ? `+${d}` : `${d}`;
 const LIE: Record<string, string> = { tee: 'on the tee', fairway: 'in the fairway', rough: 'in the rough', fescue: 'in the deep grass', bunker: 'in a bunker', green: 'on the green', water: 'in the water', out: 'out of bounds' };
@@ -53,11 +54,12 @@ export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: 
 }
 
 /** the round's bar (top centre): where you are in the round, the score so far, and the buttons */
-export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCard, onQuit }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCallCart: () => void; onMull: () => void; onGimme: () => void; onCard: () => void; onQuit: () => void }) {
+export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCard, onQuit, onSkip }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCallCart: () => void; onMull: () => void; onGimme: () => void; onCard: () => void; onQuit: () => void; /** T244: Skip to result (a money match) */ onSkip?: () => void }) {
   const t = v.totals, r = v.round;
   return (
     <div className="pointer-events-none absolute inset-x-0 top-[calc(var(--hud-top,6rem)+2.75rem)] z-20 flex justify-center px-3">
       <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-slate-950/85 px-3 py-1.5 text-xs text-slate-200 shadow-xl backdrop-blur" data-testid="round-bar">
+        {v.match && onSkip && <MatchStrip m={v.match} onSkip={onSkip} />}
         <span className="font-display font-bold text-[var(--gold-hi)]">Hole {v.hole}</span>
         <span className="tabular-nums text-slate-300">Par {v.par} · {r.holed ? 'holed' : `stroke ${v.stroke}`}{!r.holed && !r.over ? ` · ${v.distM < 3 ? v.distM.toFixed(1) : Math.round(v.distM)} m to the pin, ${LIE[v.lie] ?? v.lie}` : ''}</span>
         <span className="rounded bg-white/10 px-1.5 py-0.5 font-semibold tabular-nums text-white" data-testid="round-score">{t.thru ? `${toPar(t.toPar)} thru ${t.thru}` : 'E'}</span>
@@ -67,14 +69,14 @@ export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCar
         {v.canMull && <button className="chip" onClick={onMull} data-testid="you-mulligan" data-tip="Take your last shot back and hit it again: no stroke counted (M). A round with mulligans does not count toward your handicap">Mulligan (M){v.mullLeft !== Infinity ? ` · ${v.mullLeft} left` : ''}</button>}
         {v.canGimme && <button className="btn-gold px-2 py-0.5 text-xs" onClick={onGimme} data-testid="you-gimme" data-tip="Inside the gimme ring: the putt is conceded, holed for one stroke (G)">Gimme (G)</button>}
         <button className="chip" onClick={onCard} data-testid="round-card-btn">Scorecard</button>
-        <button className="chip" onClick={onQuit} title="Stop your round here: the holes done go into your rounds" data-testid="round-quit">Quit</button>
+        <button className="chip" onClick={onQuit} title={v.match ? 'Concede the match: you lose the stake' : 'Stop your round here: the holes done go into your rounds'} data-testid="round-quit">{v.match ? 'Concede' : 'Quit'}</button>
       </div>
     </div>
   );
 }
 
 /** a block of the scorecard: up to nine holes across (hole, par, score, putts), with its total */
-function CardBlock({ rows, label, at }: { rows: CardRow[]; label: string; at: number }) {
+function CardBlock({ rows, label, at, match, from = 0 }: { rows: CardRow[]; label: string; at: number; /** T244: a money match's rows */ match?: YourRoundView['match']; from?: number }) {
   const done = rows.filter(r => r.done), sum = (f: (r: CardRow) => number) => done.reduce((a, r) => a + f(r), 0);
   const cell = 'w-8 px-0.5 py-0.5 text-center tabular-nums';
   const mark = (r: CardRow) => { const d = r.strokes - r.par; return !r.done ? '' : d <= -2 ? 'rounded-full ring-2 ring-amber-300' : d === -1 ? 'rounded-full ring-1 ring-amber-300' : d === 1 ? 'ring-1 ring-sky-300' : d >= 2 ? 'ring-2 ring-sky-300' : ''; };
@@ -85,6 +87,7 @@ function CardBlock({ rows, label, at }: { rows: CardRow[]; label: string; at: nu
         <tr className="text-slate-400"><th className="pr-2 text-left font-medium">Par</th>{rows.map((r, k) => <td key={k} className={cell}>{r.par}</td>)}<td className={`${cell} w-10`}>{rows.reduce((a, r) => a + r.par, 0)}</td></tr>
         <tr className="text-white"><th className="pr-2 text-left font-medium text-slate-300">Score</th>{rows.map((r, k) => <td key={k} className={cell}><span className={`inline-block min-w-[1.4rem] ${mark(r)}`}>{r.done ? r.strokes : ''}{r.up ? '*' : ''}</span>{r.mull ? <sup className="ml-px text-[9px] font-semibold text-sky-300" title={`${r.mull} mulligan${r.mull > 1 ? 's' : ''}`} data-testid="card-mull">m</sup> : null}{r.gim ? <sup className="ml-px text-[9px] font-semibold text-emerald-300" title="Finished with a gimme" data-testid="card-gim">g</sup> : null}</td>)}<td className={`${cell} w-10 font-semibold`}>{done.length ? sum(r => r.strokes) : ''}</td></tr>
         <tr className="text-slate-300"><th className="pr-2 text-left font-medium">Putts</th>{rows.map((r, k) => <td key={k} className={cell}>{r.done || r.putts ? r.putts : ''}</td>)}<td className={`${cell} w-10`}>{done.length ? sum(r => r.putts) : ''}</td></tr>
+        {match && <MatchRows rows={rows} from={from} m={match} cell={cell} />}
       </tbody>
     </table>
   );
@@ -100,12 +103,12 @@ export function ScoreCard({ v, onNext, onDone, onClose }: { v: YourRoundView; on
       <div className="pointer-events-auto max-w-full space-y-3 rounded-2xl border border-white/10 bg-slate-950/92 p-4 text-slate-200 shadow-2xl backdrop-blur" data-testid="scorecard">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">Your round · scorecard</div>
-            <div className="font-display text-xl font-bold text-[var(--gold-hi)]">{r.over ? 'Round over' : r.holed ? `Hole ${v.hole} done` : `Hole ${v.hole}, stroke ${v.stroke}`}</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{v.match ? `Money match vs ${v.match.name} · ${v.match.score.text}` : 'Your round · scorecard'}</div>
+            <div className="font-display text-xl font-bold text-[var(--gold-hi)]">{r.over ? (v.match ? 'Match over' : 'Round over') : r.holed ? `Hole ${v.hole} done` : `Hole ${v.hole}, stroke ${v.stroke}`}</div>
           </div>
           {!r.holed && !r.over && <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>}
         </div>
-        <div className="space-y-2">{blocks.map((b, k) => <CardBlock key={k} rows={b} label={blocks.length > 1 ? (k === 0 ? 'Out' : 'In') : 'Tot'} at={r.at - k * 9} />)}</div>
+        <div className="space-y-2">{blocks.map((b, k) => <CardBlock key={k} rows={b} label={blocks.length > 1 ? (k === 0 ? 'Out' : 'In') : 'Tot'} at={r.at - k * 9} match={v.match} from={k * 9} />)}</div>
         <div className="flex flex-wrap items-baseline justify-between gap-3 border-t border-white/10 pt-2 text-sm" data-testid="scorecard-total">
           <span>Total <b className="text-white tabular-nums">{t.strokes}</b> · par {t.par} · <b className="text-white">{toPar(t.toPar)}</b> · {t.putts} putts · thru {t.thru} of {t.holes}{mulls ? <span className="text-sky-300" data-testid="card-mulls"> · {mulls} mulligan{mulls > 1 ? 's' : ''}</span> : null}{gims ? <span className="text-emerald-300" data-testid="card-gims"> · {gims} {gims > 1 ? 'gimmies' : 'gimme'}</span> : null}</span>
           <span className="text-[11px] text-slate-500">◯ birdie or better · ▢ bogey or worse · * picked up{mulls ? ' · m mulligan' : ''}{gims ? ' · g gimme' : ''}</span>
@@ -113,7 +116,7 @@ export function ScoreCard({ v, onNext, onDone, onClose }: { v: YourRoundView; on
         {noHcp && <div className="text-[11px] text-amber-200/80" data-testid="card-no-hcp">Counts in your rounds, not toward your handicap ({noHcp}).</div>}
         <div className="flex justify-end gap-2">
           {next && <button className="btn-gold px-3 py-1.5 text-sm" onClick={onNext} data-testid="round-next"><Icon name="play" size={16} />Next hole: {next.n} (par {next.par})</button>}
-          {r.over && <button className="btn-gold px-3 py-1.5 text-sm" onClick={onDone} data-testid="round-done">Done: into your rounds</button>}
+          {r.over && <button className="btn-gold px-3 py-1.5 text-sm" onClick={onDone} data-testid="round-done">{v.match ? 'Done: settle the match' : 'Done: into your rounds'}</button>}
         </div>
       </div>
     </div>
