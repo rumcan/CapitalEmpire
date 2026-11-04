@@ -36,7 +36,7 @@ test('folded: the current step alone', () => {
 
 test('the engine: a new range game starts the guide; its check ticks and pays; Show me for every step; the welcome card shows its first step', () => {
   const eng = readFileSync('src/game/engine.ts', 'utf8'), app = readFileSync('src/App.tsx', 'utf8');
-  assert.match(eng, /this\.golf\.progress = \{ \.\.\.emptyProgress\(\), ramp: 0, guide: newRangeGuide\(\) \}/);
+  assert.match(eng, /this\.golf\.progress = \{ \.\.\.emptyProgress\(\), ramp: 0, guide: newRangeGuide\(\), tour: newTour\(\) \}/); // (T293: and the start tutorial)
   assert.match(eng, /this\.rangeGuideCheck\(\); \/\/ T239/);
   assert.match(eng, /const r = s\.reward \?\? 0; if \(r > 0\) this\.traffic\.spend\('construction', -r\)/);
   const show = eng.slice(eng.indexOf('  guideShowMe(id: string)'), eng.indexOf('  guideShowMe(id: string)') + 2600);

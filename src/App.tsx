@@ -381,7 +381,7 @@ export default function App() {
   /** T202: Help (the Keys sheet and How it works); in the lot lab the lab's keys alone, drawn on the page over the lab's panels (the lab hides
    *  the App's layer under them: lot-lab.ts) */
   const helpCard = game && game.ready && help
-    ? <Help tab={lab ? 'keys' : helpTab} onTab={setHelpTab} onClose={() => setHelp(false)} lab={lab} keys={keySheet({ golf: game.golfMode, ui: game.toolUi(), range: !!game.range.scene, lab: lab ? labKeys ?? [] : null })} />
+    ? <Help tab={lab ? 'keys' : helpTab} onTab={setHelpTab} onClose={() => setHelp(false)} lab={lab} onTour={!lab && game.golf?.progress ? () => { setHelp(false); game.replayTour(); } : undefined} keys={keySheet({ golf: game.golfMode, ui: game.toolUi(), range: !!game.range.scene, lab: lab ? labKeys ?? [] : null })} />
     : null;
 
   return (
@@ -842,6 +842,10 @@ export default function App() {
             {rv.card && <ScoreCard v={rv} onNext={() => game.yourNextHole()} onDone={() => game.yourRoundEnd()} onClose={() => game.toggleYourCard(false)} />}</>; })()}
           {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
+          {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
+            const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen ? game.tourView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
+            return tv && <RangeGuideCard view={tv} heading="Tutorial · your town" tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
+          })()}
           {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
             const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen ? game.rangeGuideView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return gv && <RangeGuideCard view={gv} right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
@@ -1989,7 +1993,7 @@ function hintFor(g: Game) {
 }
 
 /** Help (T202: two tabs: Keys, the Keys sheet, and How it works) */
-function Help({ onClose, tab, onTab, keys, lab }: { onClose: () => void; tab: 'keys' | 'how'; onTab: (t: 'keys' | 'how') => void; keys: ReturnType<typeof keySheet>; lab: boolean }) {
+function Help({ onClose, tab, onTab, keys, lab, onTour }: { onClose: () => void; tab: 'keys' | 'how'; onTab: (t: 'keys' | 'how') => void; keys: ReturnType<typeof keySheet>; lab: boolean; /** T293: replays the start tutorial (a golf game) */ onTour?: () => void }) {
   return (
     <div className={`${lab ? 'fixed' : 'absolute'} inset-0 z-40 flex items-center justify-center bg-black/60 p-4`} style={lab ? { zIndex: 75 } : undefined} onClick={onClose}>
       <div className={`help-card rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl ${tab === 'keys' ? 'help-card-wide' : 'max-w-xl'}`} onClick={e => e.stopPropagation()} role="dialog" aria-label="Help" data-testid="help">
@@ -1998,6 +2002,7 @@ function Help({ onClose, tab, onTab, keys, lab }: { onClose: () => void; tab: 'k
             <button role="tab" aria-selected={tab === 'keys'} className={`px-4 ${tab === 'keys' ? 'on' : ''}`} onClick={() => onTab('keys')} data-testid="help-keys">Keys</button>
             <button role="tab" aria-selected={tab === 'how'} className={`px-4 whitespace-nowrap ${tab === 'how' ? 'on' : ''}`} onClick={() => onTab('how')}>How it works</button>
           </div>}
+          {onTour && <button className="chip px-3" onClick={onTour} data-testid="help-tour" title="The short tutorial from the start: your town, and the roads it grows along"><Icon name="play" size={16} />Replay the start tutorial</button>}
           <span className="ml-auto text-[12px] text-slate-400"><span className="keycap">?</span> or <span className="keycap">F1</span> opens this · <span className="keycap">Esc</span> closes</span>
         </div>
         {tab === 'keys' ? <KeysSheet sections={keys} /> : <>

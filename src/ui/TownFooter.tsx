@@ -20,8 +20,8 @@ import { currentUiScale } from './uiScale';
 import { Icon } from './Icon';
 
 /** the cards the footer keeps clear of: the bottom-right ones (the guide card, the leaderboard) and the tall right-hand ones that may reach
- *  down to its band (the range, clubhouse, hole and place cards); one counts only while it is on screen and reaches the footer's band */
-export const FOOT_CARDS = ['range-guide', 'leaderboard', 'range-card', 'club-card', 'hole-card', 'place-card'].map(id => `[data-testid="${id}"]`).join(', ');
+ *  down to its band (the range, clubhouse, hole and place cards; T293: the start tutorial's card, where the guide's stands); one counts only while it is on screen and reaches the footer's band */
+export const FOOT_CARDS = ['range-guide', 'tour', 'leaderboard', 'range-card', 'club-card', 'hole-card', 'place-card'].map(id => `[data-testid="${id}"]`).join(', ');
 
 /** T255: a town tool's panel: the tool in hand (data-tool) and the panel's body (App.tsx: the crumb and the tool's panel) */
 export interface FootPanel { tool: string; body: ReactNode }

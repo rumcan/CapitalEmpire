@@ -50,6 +50,7 @@ import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } fro
 import { CELL as POND_CELL, discOutline, lilyPads, normalizePondMarks, pieceKey, pondAt, pondId, shorePieces, type Pond, type PondPiece } from './golf/ponds';
 import { fountainAt, fountainFrame } from './kit';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
+import { newTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourSkip, tourTick, type TourFacts } from './ext/progressive-ui/tour';
 import { RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLines, rangeGuideOff, rangeGuideSkip, rangeGuideTick, type GuideEvent, type GuideLine } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
@@ -2681,7 +2682,8 @@ export class Game {
       this.setBizDefs([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph, ground: 'dirt' }]; // T239: the car park starts as packed dirt
       // the ramp from the range to the first hole starts at the range card (P24 Phase 4a, T132)
-      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0, guide: newRangeGuide() }; this.clubLegacy = false; // T239: the guided build's card (T214: a new club)
+      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0, guide: newRangeGuide(), tour: newTour() }; // T293: the start tutorial first
+      this.clubLegacy = false; // T239: the guided build's card (T214: a new club)
       // the range business (P24, T129): the starting range (T239: the guided build: no walkway laid, the player lays its path; the practice area
       // beside the car park is land for sale until bought)
       // (T237: its plot set back from the road, its car park in the frontage strip that leaves)
@@ -2722,7 +2724,8 @@ export class Game {
       this.setBizDefs([{ id: 1, type: 'clubhouse', x: vx, y: vy, w: vw, h: vh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
       this.paint.load(s.paints.map((a, i) => toTuple({ id: i + 1, ...a })));
-      this.golf = s.save; this.golf.progress = emptyProgress(); this.clubLegacy = false; // (T214: a new club, its founding drive at the first frame)
+      this.golf = s.save; this.golf.progress = { ...emptyProgress(), tour: newTour() }; this.clubLegacy = false; // (T293: the start tutorial)
+      // (T214: a new club, its founding drive at the first frame)
       for (const p of dressCourse(s.layout, seed)) {
       const i = LIB_INDEX.get(p.id);
       if (i !== undefined) {
@@ -4314,6 +4317,7 @@ export class Game {
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
     this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} ${paid < 0 ? `(refund $${(-paid).toLocaleString()})` : `for $${paid.toLocaleString()}`}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}${cuts.length ? `, replaced ${cuts.length} road piece${cuts.length > 1 ? 's' : ''} worth $${Math.round(removed).toLocaleString()}` : ''}`, 'good');
     this.clubDriveBuilt(cls); // T175: the clubhouse stopgap's drive
+    { const t = this.golf?.progress?.tour; if (t && !isCourseClass(cls.id) && tourRunning(t)) { t.roads++; this.scheduleSave(); } } // T293: the tutorial's road step
     // a one-way road that ends in a dead end traps cars: warned, not refused
     if (cls.oneway && parts.length && [parts[0]!.a, parts[parts.length - 1]!.b].some(p => this.net.nodeAt(p)?.segs.length === 1)) this.toast('A one-way road that ends in a dead end traps cars', 'warn');
   }
@@ -4784,6 +4788,7 @@ export class Game {
     const g = this.golf, p = g?.progress;
     if (!this.welcomeFreshNow() || !p || p.seen.includes('welcome') || this.playableHoles > 0) return null;
     if (!p.seen.includes('who')) return null; // T240: the "Who are you?" card first
+    if (tourRunning(p.tour)) return null; // T293: then the start tutorial
     const ui = this.toolUi();
     return { road: this.rangeRoad() || 'the county road', newHole: !ui?.newHoleLock && !this.toolLock('course') };
   }
@@ -4823,6 +4828,7 @@ export class Game {
   }
   /** the guide's card: its lines (null: no guide running) and whether it is folded */
   rangeGuideView(): { lines: GuideLine[]; folded: boolean } | null {
+    if (tourRunning(this.golf?.progress?.tour)) return null; // T293: the start tutorial goes first
     const lines = rangeGuideLines(this.golf?.progress?.guide); return lines ? { lines, folded: this.guideFolded } : null;
   }
   /** the guide's card folded to its current line (the player's; not saved) */
@@ -4846,7 +4852,7 @@ export class Game {
     this.scheduleSave(); this.emit();
   }
   /** the rings the walking path step points at (T239: the car park's edge, the shack's counter, the tee's back), until a time */
-  private guideRings: { pts: Pt[]; until: number } | null = null;
+  private guideRings: { pts: Pt[]; until: number; /** the walking path's (gone once the path is laid) */ walk?: boolean } | null = null;
   /** Show me on a guide line: the tool or card it needs, the camera on its spot and its control pulsed */
   guideShowMe(id: string) {
     const st = RANGE_GUIDE.find(s => s.id === id), sc = this.range.scene; if (!st || !sc) return;
@@ -4860,7 +4866,7 @@ export class Game {
         const c = sc.carEdge, s = sc.counter, t = P(30, 17); this.lookAt((c.x + t.x) / 2, (c.y + t.y) / 2, 0.3);
         if (this.range.cardOpen) this.openRangeCard(false);
         this.setTool('path'); this.roadClass = 'cart-walk'; // Course › Cart paths & roads, its Walking path
-        this.guideRings = { pts: [c, s, t], until: performance.now() + 20000 };
+        this.guideRings = { pts: [c, s, t], until: performance.now() + 20000, walk: true };
         queueMicrotask(() => this.pulseAnchor('rail-course')); this.emit(); return;
       }
       case 4: card(b?.owned.includes('gravel') ? 'range-buy-pave' : 'range-buy-gravel', P(59, 10), 0.3); return;
@@ -4871,6 +4877,64 @@ export class Game {
         return;
       default: this.startFirstHole(); queueMicrotask(() => this.pulseAnchor('new-hole')); return;
     }
+  }
+  // ---------- T293 (#878): the start tutorial (tour.ts TOWN_TOUR; the RangeGuideCard's look): the town grows only along the roads you build
+  /** what the tutorial's steps read: the road tool's lock and the start */
+  private tourFacts(): TourFacts { return { roadLock: this.toolLock('road'), start: this.golf?.start === 'range' ? 'range' : 'town' }; }
+  /** the tutorial's card (null: none running, or not yet: it waits for the ground and, in a new range game, the "Who are you?" card) */
+  tourView(): { lines: GuideLine[]; folded: boolean } | null {
+    const g = this.golf, p = g?.progress; if (!g || !p || !tourRunning(p.tour)) return null;
+    if (!welcomeReady(this.firstViewBaked, performance.now() - this.readyAt)) return null;
+    if (g.start === 'range' && this.welcomeFreshNow() && !p.seen.includes('who')) return null; // T240: "Who are you?" first
+    const lines = tourLines(p.tour, this.tourFacts()); return lines ? { lines, folded: this.tourFolded } : null;
+  }
+  /** the tutorial's card folded to its current line (the player's; not saved) */
+  tourFolded = false;
+  /** the step whose ring was last shown (each new current step points at its thing once by itself) */
+  private tourShown: string | null = null;
+  /** the done-check (with the progress, a few times a second): the current step ticks when met; a new current step points at its thing */
+  private tourCheck() {
+    const t = this.golf?.progress?.tour; if (!t || !tourRunning(t)) return;
+    const f = this.tourFacts(), s = tourTick(t, f);
+    if (s) { this.toast(`Tutorial: ${s.title} ✓`, 'good'); this.scheduleSave(); this.emit(); if (!tourRunning(t)) this.tourEnded(); }
+    if (!this.tourView()) return;
+    const cur = tourCurrent(t, f); if (cur && cur.id !== this.tourShown) { this.tourShown = cur.id; this.tourShowMe(cur.id); }
+  }
+  /** Show me on a tutorial line: its control ringed (T328: never opened), and step 1 the camera on the town with rings on its first houses */
+  tourShowMe(id: string) {
+    const st = tourLines(this.golf?.progress?.tour, this.tourFacts())?.find(l => l.step.id === id)?.step; if (!st) return;
+    if (this.guideRings && !this.guideRings.walk) this.guideRings = null;
+    if (st.n === 1) {
+      const c = this.townPts[0] ?? this.townCentreOfLots(); if (!c) return;
+      const all = [...this.traffic.lots.values()], built = all.filter(v => this.houseLots.has(v.key)); // its houses first, else its first lots
+      const near = (built.length ? built : all).map(v => { const b = lotBoxOf(v.o, v.u, v.n, v.w, v.d); return { x: (b[0]! + b[2]!) / 2, y: (b[1]! + b[3]!) / 2 }; })
+        .sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y)).slice(0, 3);
+      this.lookAt(c.x, c.y, 0.12); this.guideRings = { pts: near.length ? near : [c], until: performance.now() + 20000 };
+    }
+    if (st.target.ui) this.pulseAnchor(st.target.ui, 15000);
+    this.emit();
+  }
+  /** Next on the tutorial's current step */
+  tourNextStep() {
+    const t = this.golf?.progress?.tour; if (!t || !tourNext(t, this.tourFacts())) return;
+    this.scheduleSave(); if (!tourRunning(t)) this.tourEnded(); this.emit();
+  }
+  /** Skip on a tutorial line, or Skip tutorial (id null) */
+  tourSkipStep(id: string | null) {
+    const t = this.golf?.progress?.tour; if (!t) return;
+    if (id === null) tourOff(t); else if (!tourSkip(t, id)) return;
+    this.scheduleSave(); if (!tourRunning(t)) this.tourEnded(); this.emit();
+  }
+  /** the tutorial is over: its rings and ring go; a new range game's welcome card and guided build follow */
+  private tourEnded() {
+    if (this.guideRings && !this.guideRings.walk) this.guideRings = null;
+    if (this.guideAnchor && /^rail-(traffic|range|course)$/.test(this.guideAnchor.id)) this.guideAnchor = null;
+    this.tourShown = null;
+  }
+  /** Help › Replay the start tutorial (a golf game only): it runs again from step 1 */
+  replayTour(): boolean {
+    const p = this.golf?.progress; if (!p) return false;
+    p.tour = newTour(); this.tourShown = null; this.scheduleSave(); this.emit(); return true;
   }
   private foundTick = 0;
   /** the tour's invitation (range starts, about twice a second): the moment the checklist is met, golf.invited is the clock's time, the worker
@@ -6623,6 +6687,7 @@ export class Game {
   private progressCheck() {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
     this.rangeGuideCheck(); // T239: the guided build's steps tick
+    this.tourCheck(); // T293: the start tutorial's steps
     this.sceneNewsCheck(); // T242: a range view's picture turned: a toast offers its card (about once a second)
     const f = this.playerProgressFacts(), was = p.ramp;
     if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
@@ -9909,7 +9974,7 @@ export class Game {
     }
     // the tee ring (P22 2.8, T095): a gold ring pulsing out from the suggested tee while a range start's first New hole is in hand
     // (T239: and the guide's rings, the walking path's ends while its Show me holds them)
-    const gr = this.guideRings && now < this.guideRings.until && !this.range.hasWalkway() ? this.guideRings.pts : [];
+    const gr = this.guideRings && now < this.guideRings.until && !(this.guideRings.walk && this.range.hasWalkway()) ? this.guideRings.pts : [];
     const ts = this.teeRingOn ? this.teeSpot() : null;
     for (const at of ts ? [ts, ...gr] : gr) {
       const s = this.screen(at.x, at.y), ph = (now % 1600) / 1600, d = this.dpr, R = 16 * d;
