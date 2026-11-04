@@ -178,7 +178,7 @@ import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/pl
 import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
 import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
 import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
-import { AltTap, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
+import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
@@ -2326,7 +2326,10 @@ export class Game {
   /** the taken cards applied so far (saved: a card is never applied twice; see applyCards), the buses a new route gets and the seats of a bus */
   cardsApplied = 0; busFleet = START_BUSES; busSeats = BUS_SEATS;
   private busHover: null | { mx: number; my: number; x: number; y: number; park: number; why: string; town?: number } = null;
-  keys = new Set<string>();
+  /** the keys held (T330: by e.code, cleared when the page loses the keyboard: releaseKeys) */
+  keys = new HeldKeys();
+  /** T330 (#941): lets go of every held key (the App calls it on blur, a hidden tab, a context menu, a text field taking the focus; Esc too) */
+  releaseKeys() { this.keys.clear(); this.youAlt.other(); }
   private listeners = new Set<() => void>();
   private saveTimer = 0; private blocksTimer = 0;
   /** set when the slot holds a save we could neither read nor back up: never write over it (T042) */
@@ -4939,6 +4942,7 @@ export class Game {
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
+  this.keys.clearMoves(); this.keys.syncMods(e); // T330: a map click lets go of a stuck movement key (a held one comes back with its repeat)
   this.moneyAt(this.tileAt(mx, my)); // T147: a spend this click makes floats up here
   this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
   if (this.sceneRef) this.closeScene(); // T242: a press on the map puts the picture away (Select's click on a place opens its own below)
@@ -5167,12 +5171,13 @@ export class Game {
     const el = e.target as HTMLInputElement | null, tag = el?.tagName, typing = tag === 'INPUT' || tag === 'TEXTAREA';
     // Esc (P23 4.10): the topmost menu or card first (even from a checkbox or slider in it), then the tool's own step, then out to Select; a
     // focused text box keeps Esc from the tool
+    if (e.key === 'Escape') this.releaseKeys(); // T330: Esc always lets go of a stuck key
     if (e.key === 'Escape' && this.sceneRef) { this.closeScene(); return; } // T242: the picture card, over everything, goes first
     if (e.key === 'Escape' && (this.youTalk || this.youTeeOpen)) { this.youTalk = null; this.youTeeOpen = false; this.emit(); return; } // T240
     if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
     if (!e.repeat) this.youAlt.down(e.key, typing); // T323: a lone tap of Alt swaps Walk and Select (keyUp)
     if (typing) return;
-    this.keys.add(e.key);
+    this.keys.down(e); // T330: by e.code (Shift turns 's' into 'S' between the down and the up)
     if (WALK_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youKeysOn()) { e.preventDefault(); return; } // T240, T323: WASD walk you in either cursor (the frame reads them)
     // T327: G concedes your short putt in your round (on the green; outside the ring it says so); elsewhere G stays the grid's key
     if ((e.key === 'g' || e.key === 'G') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.yourRound() && this.yourRound()!.lie === 'green' && !this.yourRound()!.holed && gimmeM(this.yourRound()!) > 0) { e.preventDefault(); this.yourGimme(); return; }
@@ -5297,9 +5302,9 @@ export class Game {
   keyUp(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement)?.tagName;
     // T323: Alt tapped alone swaps the cursors; its default (the browser's menu bar taking the focus) is prevented in a golf game
-    if (this.youAlt.up(e.key) && this.you) { e.preventDefault(); this.toggleYouWalk(); }
+    if (this.youAlt.up(e.key)) { e.preventDefault(); if (this.you) this.toggleYouWalk(); } // T330: always prevented (the menu bar would take the keyups)
     if (e.key === ' ' && !this.spacePanned && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && tag !== 'BUTTON') this.togglePause();
-    this.keys.delete(e.key);
+    this.keys.up(e);
   }
   /** traffic: n cars driving the network (0 = none); the sim worker starts on first use */
   setTraffic(n: number) { this.traffic.setTarget(n); this.emit(); }
