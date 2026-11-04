@@ -13,8 +13,9 @@ import type { GolfSave, Rect } from './mode';
 
 /** T280 (#859): the distances below are the 4 km map's, scaled with the map (MAP / 2048: half on the 2 km map); the course's own sizes stay */
 const MS = MAP / 2048;
-/** the county road's straight run each side of the range's junction J, tiles: the town's 40-tile lattice meets it square */
-export const STRAIGHT = 600 * MS;
+/** the county road's straight run each side of the range's junction J, tiles: the town's 40-tile lattice meets it square. T329: a whole number of
+ *  lattice blocks (600 on the 4 km map; 300 on the 2 km map is 7.5 blocks, which put the bend and every ground join after it off the lattice: 320) */
+export const STRAIGHT = Math.ceil((600 * MS) / BLOCK) * BLOCK;
 /** where a half of the county road may take its one 45° bend: from STRAIGHT out, every BEND_STEP tiles */
 const BEND_STEP = 80 * MS;
 /** the most bridge runs the county road may have, and the cost (in tiles of ground road) of an end on a mountain edge */
