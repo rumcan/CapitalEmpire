@@ -47,6 +47,7 @@ import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './vari
 import { presetTier, tierOf } from './tiers';
 import { buildGroups, groupOf as cellMembers, roleOf, sizeOf, zoneOf, type Role } from './groups';
 import { autoLot, clearAutoLots, dressStraight, isBigLot, type AutoTemplate } from './autolot';
+import { centreOf, isCentre, partOf, widen } from './centre-biz';
 import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
 import { onStudioScales } from './scales-live';
@@ -334,6 +335,8 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
   const cap = st.tier ?? 3, frozenT = () => tieredOf(frozen(), cap), biz = st.biz;
   // T295 #3 (#880): a GOV lot with a civic place (LotState.biz, town.ts civicNext) shows that building; the tier does not hold a civic place back
   if (use === 'civic' && biz !== undefined && CIVIC_IDS.has(biz)) { const c = civicPlan(lot, biz, [...ok, ...LEGACY.filter(p => p.use === use && p.state === state)]); if (c) return c; }
+  // T298 (#883): a shopping centre (its lot already widened over its parts: compose) is generated, whatever presets the anchor's own size has
+  if (use === 'com' && isCentre(biz)) { const a = autoPreset(lot, st, use, state, 'centre'); if (a) return { preset: a }; }
   // (T270: a shop lot whose approved presets cannot show the shop its place calls for draws a frozen one that can, on a lot the map axes fit)
   if (ok.length) { const u = underTier(ok, cap); if (u.length) return shopPlan(u, lot, use, angled || use === 'res' ? undefined : frozenT, biz, cap); }
   // T305 (#890): a big lot, or a screen-straight one no approved preset fits, is generated (autolot.ts): the owner's "BIG lots are generated, the way the farms are"
@@ -343,8 +346,8 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
 }
 /** T305 (#890): the generated lot of a lot (autolot.ts autoLot) for its use and state, its tier (st.tier) and its place on its street, re-rolled by the lot
  *  lab's remix offset (st.remix); the lab's template (st.autoTemplate) when it forces one; null when the use has no template or the lot does not fit it */
-function autoPreset(lot: LotGeom, st: ComposeState, use: PresetUse, state: PresetState): LotPreset | null {
-  return autoLot(lot, use, st.tier ?? 3, mix(fnv(`${streetKey(lot)}#${streetSlot(lot)}#auto`), st.remix ?? 0, 0x305), state, st.autoTemplate as AutoTemplate | undefined, use === 'com' ? st.biz : undefined);
+function autoPreset(lot: LotGeom, st: ComposeState, use: PresetUse, state: PresetState, template = st.autoTemplate as AutoTemplate | undefined): LotPreset | null {
+  return autoLot(lot, use, st.tier ?? 3, mix(fnv(`${streetKey(lot)}#${streetSlot(lot)}#auto`), st.remix ?? 0, 0x305), state, template, use === 'com' ? st.biz : undefined);
 }
 // ---------- T295 (#880): the building tiers (lots/tiers.ts): a lot draws the presets whose buildings are at or under its tier
 /** a preset's tier, cached by the preset (its building props: presetTier, the library's building test) */
@@ -387,7 +390,8 @@ const facingBuilding = (id: string): boolean => { const it = BY.get(id); return 
  *  the view whose front the street meets (drawnView turns every view by the lot's facing), its centre kept. A building whose turned footprint overlaps
  *  another prop beyond OVERLAP, or leaves the lot, keeps the preset's view and is counted (Fitted.facing: the lot lab's "kept facing"). Farms are untouched */
 function faceStreet(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): Fitted {
-  if (preset.use === 'farm' || !fit.props.length) return fit;
+  // (T298: a shopping centre's wings face across its car park, not the street)
+  if (preset.use === 'farm' || !fit.props.length || preset.id === 'auto:centre') return fit;
   const road = roadOf(lot.n), half = frameHalf(f), lo = preset.whole ? -WHOLE_FRONT : 0;
   const props = fit.props.slice(), boxes = fit.props.map(q => boxAt(q, half(q)));
   let kept = 0;
@@ -1028,6 +1032,9 @@ export function composeWhole(lot: LotGeom, preset: LotPreset, seed: number): Com
 
 /** The composition of a lot in a given state: deterministic from the lot, its use, level, decline and seed (and the presets). */
 export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): Composition {
+  // T298 (#883): a shopping centre's part (an empty lot it covers) draws nothing; the centre composes on its anchor lot widened over its parts (centre-biz.ts)
+  if (st.level === LV.EMPTY && partOf(st.biz) !== null) return new Build(lot, mulberry(st.seed)).done();
+  const cen = centreOf(st.biz); if (cen) lot = widen(lot, cen);
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
   B.drops = drops ?? null;
   B.noCars = st.decline >= 3;

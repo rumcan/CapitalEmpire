@@ -28,7 +28,7 @@ function lotOn(r: number, w: number, d: number): LotGeom {
 /** the headings under test: the four screen-straight roads (1, 3, 5, 7) and two diagonals (0, 2) */
 const ROADS: Road[] = [1, 3, 5, 7, 0, 2];
 /** each template's lot size (tiles): a house and a shop a 16-tile frontage, the yards 20 to 30 deep */
-const SIZE: Record<AutoTemplate, [number, number]> = { house: [16, 20], corner: [16, 20], trailer: [20, 30], junk: [20, 20], shop: [20, 16] };
+const SIZE: Record<AutoTemplate, [number, number]> = { house: [16, 20], corner: [16, 20], trailer: [20, 30], junk: [20, 20], shop: [20, 16], centre: [36, 20] };
 const FENCE = /fence|chainlink/;
 /** a piece's box in the preset frame (x along the street, y away from it) */
 const boxes = (f: PresetFrame, props: { id: string; x: number; y: number; scale: number; view: number }[]): (Box4 & { id: string })[] => props.map(q => {

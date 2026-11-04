@@ -39,6 +39,9 @@ import { approvedFor, bucketOf, fitPreset, presetsFor, WHOLE_FRONT, type LotPres
 import { angledRoadsOnly, frameOf, quarterOfRoad, screenStraight, toFrame, toWorld, type Pt, type PresetFrame } from '../lots/preset-frame';
 import { presetFromComposition } from '../lots/preset-from';
 import { AUTO_TEMPLATES, templateOf, type AutoTemplate } from '../lots/autolot';
+import { U_W } from '../lots/centre-biz';
+/** T298: the lot the lab shows a shopping centre on (tiles: a U's frontage, two rows of bays) */
+const CENTRE_LAB = { w: U_W + 2, d: 20 };
 import { LU, LV } from '../lots/town';
 import { allocOf, allows, STATE_WORDS, toggled, type HouseAlloc } from '../lots/house-alloc';
 import type { LotDecal } from '../lot-decals';
@@ -173,7 +176,7 @@ export function installLotLab(game: Game): () => void {
   let remixOffset = 0, remixOff = false;
   /** T305 (#890): the Auto choice: the shown lot as its generated layout (autolot.ts), its template (autoTpl; the use's own until one is picked) */
   let autoOn = false, autoTpl: AutoTemplate | null = null;
-  const AUTO_NAMES: Record<AutoTemplate, string> = { house: 'House', corner: 'Corner house', trailer: 'Trailer park', junk: 'Junkyard', shop: 'Small shop' };
+  const AUTO_NAMES: Record<AutoTemplate, string> = { house: 'House', corner: 'Corner house', trailer: 'Trailer park', junk: 'Junkyard', shop: 'Small shop', centre: 'Shopping centre' };
   /** what the staged neighbours were made for (type, state, lot size, road, place; '' none): neighbours() stages them again only when it changed */
   let neighKey = '';
   /** the exam holds the camera (T161, ?exam: dev/lot-exam.ts) */
@@ -488,7 +491,11 @@ export function installLotLab(game: Game): () => void {
    *  generated lot on any lot of the use) and captured as a whole draft, as a preset is: Re-roll moves the remix (a new seed), Original is the first roll. A
    *  park, a tour venue and a civic lot have no template (the lab says so) */
   function composeAuto(w: number, d: number, seed: number): void {
-    const tpl = autoTpl ?? templateOf(use, 3, seed), id = `lab-${use}-${state}-${bkey(w, d)}-r${road}-${Date.now().toString(36)}`;
+    const tpl = autoTpl ?? templateOf(use, 3, seed);
+    // T298 (#883): a shopping centre needs a lot wider and deeper than the town cuts one (the town widens a lot over its neighbours: centre-biz.ts); the lab
+    // shows it on a lot of a U's size
+    if (tpl === 'centre' && (w < CENTRE_LAB.w || d < CENTRE_LAB.d)) { w = Math.max(w, CENTRE_LAB.w); d = Math.max(d, CENTRE_LAB.d); }
+    const id = `lab-${use}-${state}-${bkey(w, d)}-r${road}-${Date.now().toString(36)}`;
     dropDraft();
     if (!tpl) { message = `no generated lot for ${use}: a park, a tour venue and a civic lot keep their presets`; return; }
     const sst: ComposeState = { use: luOf(use), ...levelOf(state), seed, autoTemplate: tpl, remix: remixOffset };
