@@ -174,10 +174,11 @@ import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
-import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
+import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
+import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
 import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, swingEffect, type ShotReport, type SwingOutcome, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
 import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
-import { CART_REACH, CART_TILES, addressOf, cardTotals, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
+import { CART_REACH, CART_TILES, addressOf, cardTotals, cupTime, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { BOOK_LEAD, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
@@ -7786,7 +7787,8 @@ export class Game {
     const r = this.yourRound(), y = this.you; if (!r || !y) { this.yrFlight = null; return; }
     const f = this.yrFlight;
     if (f) {
-      f.t += dt;
+      const t0 = f.t; f.t += dt;
+      const tc = cupTime(f); if (tc !== null && t0 < tc && f.t >= tc) this.yourCupEvent(f.putt!.fate);
       const b = yourBallAt(f);
       if (this.youFollow) { const k = Math.min(1, dt * 4); this.camEase = null; this.cam.X += (worldX(b.x, b.y) - this.cam.X) * k; this.cam.Y += (worldY(b.x, b.y) - this.cam.Y) * k; this.clampCam(); }
       if (f.t >= f.dur) { this.yrFlight = null; if (f.done) this.youHoledOut(f.row, f.up); this.emit(); }
@@ -7826,8 +7828,13 @@ export class Game {
     this.toast(this.lastShot.text, 'info');
     this.shot = null; this.setYourRound(round);
     if (this.you) this.you.swing = 0; // (the drive clip plays once)
-    this.yrFlight = flightOf(shot.from, shot.landing?.at ?? null, shot.to, round.holed, up, rowOf(round), shot.penalty > 0);
+    // T319: a putt rolls with the green's break and ends at the cup as the model says (in, lipped out, or shaving the rim); a full shot bends from
+    // its aim to where it lands, and leaves a tracer
+    const land = shot.landing?.at ?? null, pin = s.turn.pin;
+    const putt = !land && shot.club === 'putter' && !shot.penalty ? new PuttRoll().set(shot.from, shot.to, pin, shot.holed, this.ballHeight) : undefined;
+    this.yrFlight = flightOf(shot.from, land, shot.to, round.holed, up, rowOf(round), shot.penalty > 0, { aim: i.aim, ...(putt ? { putt } : {}) });
     this.yrFlight.t = -IMPACT_S; // (T320: the ball leaves at the drive clip's impact, as the field's do: play/view.ts)
+    if (land) this.yourTracer(this.yrFlight);
     this.youFollow = true;
     this.emit();
   }
@@ -7946,17 +7953,158 @@ export class Game {
     for (let d = 0; d <= Math.min(40, L); d += 0.5) { const x = t.x + ux * d, y = t.y + uy * d; if (this.cartOk(x, y)) return { x, y }; }
     return null;
   }
-  /** your ball on the course (the 2D overlay): at rest a white ball, in the air higher with its shadow below; none in the cup or at the address (the
-   *  open shot draws it there) */
+  /** your ball on the course (the 2D overlay): at rest a white ball with a small shadow toward 145 degrees (the sun at the upper right), in the air higher
+   *  with its shadow below, dropping into the cup (smaller and darker); none in the cup after or at the address (the open shot draws it there) */
   private drawYourBall(ctx: CanvasRenderingContext2D) {
     const r = this.yourRound(); if (!r || r.over || this.cam.z < DISTRICT_Z) return;
     const f = this.yrFlight; if (!f && (r.holed || this.shot?.mine)) return;
-    const b = f ? yourBallAt(f) : { x: r.ball.x, y: r.ball.y, h: 0 }, dpr = this.dpr, p = this.screen(b.x, b.y), lift = b.h * HH * this.cam.z * dpr;
+    const b = f ? yourBallAt(f) : { x: r.ball.x, y: r.ball.y, h: 0, sink: 0 }; if (b.sink >= 1) return;
+    const dpr = this.dpr, p = this.screen(b.x, b.y), lift = b.h * HH * this.cam.z * dpr, rad = Math.max(3 * dpr, 0.14 * HW * this.cam.z * dpr) * (1 - 0.6 * b.sink);
     ctx.save();
     if (lift > 0.5) { ctx.beginPath(); ctx.ellipse(p.x, p.y, 3 * dpr, 1.5 * dpr, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(15,23,42,0.35)'; ctx.fill(); }
-    ctx.beginPath(); ctx.arc(p.x, p.y - lift, Math.max(2.5 * dpr, 0.12 * HW * this.cam.z * dpr), 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill();
+    else if (b.sink <= 0) { ctx.beginPath(); ctx.ellipse(p.x - 0.55 * rad, p.y + 0.45 * rad, rad * 1.05, rad * 0.55, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(15,23,42,0.3)'; ctx.fill(); }
+    const g = 248 - 150 * b.sink | 0;
+    ctx.beginPath(); ctx.arc(p.x, p.y - lift + b.sink * rad, rad, 0, Math.PI * 2); ctx.fillStyle = b.sink > 0 ? `rgb(${g},${g + 2},${g + 4})` : '#f8fafc'; ctx.fill();
     ctx.lineWidth = 1.2 * dpr; ctx.strokeStyle = '#0f172a'; ctx.stroke();
     ctx.restore();
+  }
+  // ---------- T319 (#905): the break grid on the green, shot tracers, the ball into the cup (golf/play/green.ts) ----------
+  /** the break grid (Settings): off, when you putt (the default), or on every green near the camera; shot tracers on or off. Kept in this browser */
+  breakMode: BreakMode = loadBreakMode(storageOf());
+  tracersOn = loadTracers(storageOf());
+  setBreakMode(m: BreakMode) { this.breakMode = m; saveBreakMode(storageOf(), m); this.emit(); }
+  setTracers(on: boolean) { this.tracersOn = on; saveTracers(storageOf(), on); if (!on) this.yrTracers.length = 0; this.emit(); }
+  /** your shots' tracers: each flight (the same object the ball flies on) and when it was struck (performance.now ms); the newest last, at most 3 */
+  private yrTracers: { f: YourFlight; at: number }[] = [];
+  /** the break grids built (by the pin's place, the height field's and the course grid's revisions), at most 6 */
+  private breakGrids = new Map<string, BreakGrid>();
+  /** the break grid's fade (0..1), the last frame's time (ms), and the greens it shows (kept while it fades out) */
+  private breakFade = 0; private breakLast = 0; private breakShown: Pt[] = [];
+  private yourTracer(f: YourFlight) {
+    if (!this.tracersOn) return;
+    this.yrTracers.push({ f, at: performance.now() }); if (this.yrTracers.length > 3) this.yrTracers.shift();
+  }
+  /** a putt reached the cup: dropped (a plop) or lipped out (a rattle and a word) */
+  private yourCupEvent(fate: number) {
+    if (fate === CUP_DROP) this.cupSound(false);
+    else if (fate === CUP_LIP) { this.cupSound(true); this.toast('Lipped out!', 'warn'); }
+  }
+  private sfx: AudioContext | null = null;
+  /** a small synthesised sound at the cup (the game has no sound files): the ball dropping in (a low plop), or rattling round the rim (two clicks) */
+  private cupSound(lip: boolean) {
+    try {
+      const AC = (globalThis as { AudioContext?: typeof AudioContext }).AudioContext; if (!AC) return;
+      const c = this.sfx ??= new AC(), t = c.currentTime;
+      for (let k = 0; k < (lip ? 2 : 1); k++) {
+        const o = c.createOscillator(), g = c.createGain(), t0 = t + k * 0.09;
+        o.type = 'sine'; o.frequency.setValueAtTime(lip ? 1400 : 520, t0); o.frequency.exponentialRampToValueAtTime(lip ? 900 : 180, t0 + 0.12);
+        g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
+        o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + 0.18);
+      }
+    } catch { /* no audio: silent */ }
+  }
+  /** the greens whose break shows now: the hole you putt on (your shot open with the putter, your putt rolling, or your ball at rest on its green), or
+   *  in "always" every pin near the camera (at most 4); [] when none */
+  private breakPins(): Pt[] {
+    if (this.breakMode === 'off' || this.cam.z < DISTRICT_Z) return [];
+    const r = this.yourRound(), v = r && !r.over ? this.yrView() : null, h = v && r ? holeOf(v, r.card[r.at]!.i) : null;
+    if (h && r && !r.holed && (this.shot?.mine ? this.shot.input.club === 'putter' : this.yrFlight ? !!this.yrFlight.putt : r.lie === 'green')) return [h.pin];
+    if (h && this.yrFlight?.putt) return [h.pin]; // (the putt that holed: the grid holds while it drops)
+    if (this.breakMode !== 'always') return [];
+    const c = tileOf(this.cam.X, this.cam.Y), R = 0.75 * Math.hypot(this.cssW, this.cssH) / (this.cam.z * HW);
+    return (this.golf?.pins ?? []).filter(p => Math.hypot(p.x - c.x, p.y - c.y) < R + 15).slice(0, 4);
+  }
+  /** a green's break grid (cached; built once per pin, height edit and course grid change: a few hundred points) */
+  private breakGridOf(pin: Pt): BreakGrid | null {
+    const g = this.courseGrid; if (!g) return null;
+    const key = `${pin.x.toFixed(2)},${pin.y.toFixed(2)}|${this.courseHeight.rev}|${g.rev}`;
+    let bg = this.breakGrids.get(key);
+    if (!bg) {
+      bg = buildBreakGrid(this.ballHeight, (x, y) => { const k = cellAt(g, x, y); return k >= 0 && g.surf[k] === SURF.green; }, pin.x, pin.y, 22);
+      if (this.breakGrids.size >= 6) this.breakGrids.delete(this.breakGrids.keys().next().value!);
+      this.breakGrids.set(key, bg);
+    }
+    return bg;
+  }
+  /** the break grid over the green(s) (the 2D overlay): the 1 m mesh's lines, faint, and every 2 m a short arrow downhill whose dot runs down it,
+   *  longer, faster and warmer (white, cyan, yellow, orange) where steeper; flat ground a still dot. It fades in when you putt and out after. Only
+   *  the points on screen; one path per colour */
+  private drawBreakGrid(ctx: CanvasRenderingContext2D, now: number) {
+    const dt = this.breakLast ? Math.min(0.1, (now - this.breakLast) / 1000) : 0; this.breakLast = now;
+    const pins = this.breakPins(); this.breakFade = Math.max(0, Math.min(1, this.breakFade + (pins.length ? 3 : -3) * dt));
+    if (pins.length) this.breakShown = pins;
+    if (this.breakFade <= 0 || !this.breakShown.length) return;
+    const ze = this.cam.z * this.dpr, cx = this.cw / 2 - this.cam.X * ze, cy = this.ch / 2 - this.cam.Y * ze, ax = HW * ze, ay = HH * ze, W = this.cw, H = this.ch, m = 40 * this.dpr;
+    const sx = (x: number, y: number) => (x - y) * ax + cx, sy = (x: number, y: number) => (x + y) * ay + cy, t = now / 1000, A = this.breakFade;
+    ctx.save(); ctx.lineCap = 'round';
+    for (const pin of this.breakShown) {
+      const bg = this.breakGridOf(pin); if (!bg || !bg.n) continue;
+      const P = bg.pts, IJ = bg.ij;
+      if (sx(bg.x1, bg.y0) < -m || sx(bg.x0, bg.y1) > W + m || sy(bg.x0, bg.y0) > H + m || sy(bg.x1, bg.y1) < -m) continue; // (off screen)
+      // the mesh: a line to the next point along x and along y from each point on the green (one path)
+      const on = new Set<number>(); for (let k = 0; k < bg.n; k++) on.add(IJ[2 * k]! * 65536 + IJ[2 * k + 1]!);
+      ctx.beginPath();
+      for (let k = 0; k < bg.n; k++) {
+        const x = P[5 * k]!, y = P[5 * k + 1]!, X = sx(x, y), Y = sy(x, y); if (X < -m || Y < -m || X > W + m || Y > H + m) continue;
+        const i = IJ[2 * k]!, j = IJ[2 * k + 1]!;
+        if (on.has((i + 1) * 65536 + j)) { ctx.moveTo(X, Y); ctx.lineTo(sx(x + BREAK_STEP, y), sy(x + BREAK_STEP, y)); }
+        if (on.has(i * 65536 + j + 1)) { ctx.moveTo(X, Y); ctx.lineTo(sx(x, y + BREAK_STEP), sy(x, y + BREAK_STEP)); }
+      }
+      ctx.strokeStyle = `rgba(255,255,255,${0.16 * A})`; ctx.lineWidth = this.dpr; ctx.stroke();
+      // the arrows (every second point: 2 m) and their running dots, by colour
+      for (let c = 0; c < 4; c++) {
+        ctx.beginPath(); const dots: number[] = [];
+        for (let k = 0; k < bg.n; k++) {
+          const i = IJ[2 * k]!, j = IJ[2 * k + 1]!; if ((i & 1) || (j & 1)) continue;
+          const s = P[5 * k + 4]!; if (breakBucket(s) !== c) continue;
+          const x = P[5 * k]!, y = P[5 * k + 1]!, X = sx(x, y), Y = sy(x, y); if (X < -m || Y < -m || X > W + m || Y > H + m) continue;
+          if (c === 0) { dots.push(X, Y); continue; }
+          const L = 0.3 + 0.4 * steepShare(s), dx = P[5 * k + 2]! * L, dy = P[5 * k + 3]! * L;
+          const X0 = sx(x - dx, y - dy), Y0 = sy(x - dx, y - dy), X2 = sx(x + dx, y + dy), Y2 = sy(x + dx, y + dy);
+          ctx.moveTo(X0, Y0); ctx.lineTo(X2, Y2);
+          const hx = X2 - (X2 - X0) * 0.3, hy = Y2 - (Y2 - Y0) * 0.3, nx = -(Y2 - hy) * 0.6, ny = (X2 - hx) * 0.6;
+          ctx.moveTo(hx + nx, hy + ny); ctx.lineTo(X2, Y2); ctx.lineTo(hx - nx, hy - ny);
+          const u = (t * dotSpeed(s) + ((i * 7 + j * 13) & 15) / 16) % 1;
+          dots.push(X0 + (X2 - X0) * u, Y0 + (Y2 - Y0) * u);
+        }
+        const col = BREAK_COLOURS[c]!;
+        if (c > 0) { ctx.strokeStyle = `rgba(${col},${0.75 * A})`; ctx.lineWidth = 1.4 * this.dpr; ctx.stroke(); }
+        ctx.beginPath(); const rd = (c === 0 ? 1.2 : 2) * this.dpr;
+        for (let d = 0; d < dots.length; d += 2) { ctx.moveTo(dots[d]! + rd, dots[d + 1]!); ctx.arc(dots[d]!, dots[d + 1]!, rd, 0, Math.PI * 2); }
+        ctx.fillStyle = `rgba(${col},${(c === 0 ? 0.45 : 0.95) * A})`; ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+  /** your shots' tracers (the 2D overlay): the flight's curve from the ball, at its height, up to the ball while it flies, the whole after it lands,
+   *  fading out (green.ts tracerAlpha); a dark under-stroke so it reads on the grass */
+  private drawYourTracers(ctx: CanvasRenderingContext2D, now: number) {
+    const T = this.yrTracers; if (!T.length || this.cam.z < DISTRICT_Z) return;
+    const ze = this.cam.z * this.dpr, cx = this.cw / 2 - this.cam.X * ze, cy = this.ch / 2 - this.cam.Y * ze, ax = HW * ze, ay = HH * ze, pt = { x: 0, y: 0 };
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (let n = T.length - 1; n >= 0; n--) {
+      const tr = T[n]!, f = tr.f, land = f.land!, el = (now - tr.at) / 1000 - IMPACT_S, age = el - f.air;
+      if (tracerGone(age)) { T.splice(n, 1); continue; }
+      if (el <= 0) continue;
+      const A = tracerAlpha(age), uMax = Math.min(1, el / f.air), H = Math.min(12, Math.hypot(land.x - f.from.x, land.y - f.from.y) / 8), N = 40;
+      ctx.beginPath();
+      for (let k = 0; k <= N; k++) {
+        const u = uMax * k / N; shotPoint(f.from, f.aim, land, u, pt);
+        const X = (pt.x - pt.y) * ax + cx, Y = (pt.x + pt.y) * ay + cy - 4 * u * (1 - u) * H * HH * ze;
+        if (k) ctx.lineTo(X, Y); else ctx.moveTo(X, Y);
+      }
+      ctx.strokeStyle = `rgba(15,23,42,${0.35 * A})`; ctx.lineWidth = 4 * this.dpr; ctx.stroke();
+      ctx.strokeStyle = `rgba(250,204,21,${0.95 * A})`; ctx.lineWidth = 2 * this.dpr; ctx.stroke();
+    }
+    ctx.restore();
+  }
+  /** the putter's line at the address: the way the putt rolls to the aim with the green's break (roll.ts BallRoll.line), dashed */
+  private puttLine = new BallRoll(); private puttPt = { x: 0, y: 0, h: 0 };
+  private drawPuttLine(ctx: CanvasRenderingContext2D, from: Pt, to: Pt) {
+    const L = this.puttLine.line(from, to, this.ballHeight), p = this.puttPt;
+    ctx.beginPath();
+    for (let k = 0; k <= 24; k++) { L.along(k / 24, p); const q = this.screen(p.x, p.y); if (k) ctx.lineTo(q.x, q.y); else ctx.moveTo(q.x, q.y); }
+    ctx.setLineDash([5 * this.dpr, 4 * this.dpr]); ctx.stroke(); ctx.setLineDash([]);
   }
   // ---------- T269 (#810) part 3: the grounds staff (golf/staff.ts) ----------
   /** the course needs a crew and has none: said once a session */
@@ -8584,7 +8732,8 @@ export class Game {
       ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fill();
     }
     ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = '#fff';
-    ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(a.x, a.y); ctx.stroke();
+    if (i.club === 'putter') this.drawPuttLine(ctx, t.ball, i.aim); // T319: the putt's line bends with the break
+    else { ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(a.x, a.y); ctx.stroke(); }
     ctx.beginPath(); ctx.arc(a.x, a.y, 6 * dpr, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(b.x, b.y, 3 * dpr, 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill(); ctx.stroke();
     ctx.restore();
@@ -9234,6 +9383,7 @@ export class Game {
     this.drawBuses(ctx);
     this.drawGalleries(ctx);
     this.drawWalkers(ctx);
+    this.drawBreakGrid(ctx, performance.now()); // T319
     this.drawBalls(ctx);
     this.drawShot(ctx);
     if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch, this.labels); }
@@ -9258,6 +9408,7 @@ export class Game {
     this.drawPracticeGhost(ctx);
     this.drawBusPreview(ctx);
     this.drawYou(ctx); // T240
+    this.drawYourTracers(ctx, performance.now()); // T319
     this.drawYourBall(ctx); // T317
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
