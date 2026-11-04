@@ -164,12 +164,12 @@ const DESERT_CARDS: { t: DesertType; name: string; kind: DecorKind; price: numbe
   { t: 'tree', name: 'Desert tree', kind: 'plant', price: 300, appeal: APPEAL.plant, desc: 'An acacia or a Joshua tree among boulders, 4.5 to 5.5 m' },
   { t: 'cactus', name: 'Cactus', kind: 'plant', price: 120, appeal: APPEAL.plant, desc: 'Saguaro, barrel, cholla, prickly pear, hedgehog or ocotillo' },
   { t: 'shrub', name: 'Desert shrub', kind: 'plant', price: 70, appeal: APPEAL.plant, desc: 'Brittlebush, broom, agave, yucca, sage or creosote on its stones' },
-  { t: 'grass', name: 'Desert grass', kind: 'plant', price: 40, appeal: APPEAL.plant, desc: 'A tuft of dry or green desert grass, or a tumbleweed' },
+  { t: 'grass', name: 'Desert grass', kind: 'plant', price: 50, appeal: APPEAL.plant, desc: 'A tuft of dry or green desert grass, or a tumbleweed' },
   { t: 'reed', name: 'Oasis reeds', kind: 'plant', price: 60, appeal: APPEAL.plant, desc: 'Cattails and sedge for a pool edge' },
   { t: 'rock', name: 'Sandstone rocks', kind: 'stone', price: 150, appeal: APPEAL.boulder, desc: 'Red sandstone boulders, ledges and outcrops, 0.9 to 3.5 m' },
   { t: 'wood', name: 'Driftwood', kind: 'stone', price: 60, appeal: APPEAL.small, desc: 'A sun-bleached log, root, branch or dead trunk' },
   { t: 'water', name: 'Oasis pool', kind: 'water', price: 800, appeal: APPEAL.well, desc: 'A shallow oasis pool with its stones and reeds, 3 to 12 m (the waterfall pool among them)' },
-  { t: 'lily', name: 'Water lilies', kind: 'water', price: 40, appeal: APPEAL.small, desc: 'Lily pads to float on a pool' },
+  { t: 'lily', name: 'Water lilies', kind: 'water', price: 50, appeal: APPEAL.small, desc: 'Lily pads to float on a pool' },
 ];
 const DESERT_ITEMS: DecorItem[] = DESERT_CARDS.filter(c => DESERT[c.t].length).map((c): DecorItem => ({ key: `desert-${c.t}`, name: c.name, group: 'desert', kind: c.kind, id: DESERT[c.t][0]!,
   variants: DESERT[c.t], natural: true, price: c.price, appeal: c.appeal, desc: `${c.desc} (R: the next of ${DESERT[c.t].length})` }));
