@@ -10,8 +10,8 @@ import { surfaceOfTex } from '../src/game/golf/costs';
 /** the texture the course paints a surface with: the owner's preset for it when there is one (paint-presets surfacePreset), else its own */
 const texOf = (s: keyof typeof SURFACE_TEX) => surfacePreset(s) ?? SURFACE_TEX[s].tex;
 
-/** a 300 x 450 tile site (600 x 900 m), away from the origin */
-const SITE = { x0: 1000, y0: 1000, x1: 1300, y1: 1450 };
+/** a 300 x 450 tile site (600 x 900 m), away from the origin (T329: at (400, 400), inside the 2 km map since T280; it was at (1000, 1000)) */
+const SITE = { x0: 400, y0: 400, x1: 700, y1: 850 };
 /** a 240 x 360 tile site, offset to (500, 500) */
 const SMALL = { x0: 500, y0: 500, x1: 740, y1: 860 };
 
@@ -55,8 +55,8 @@ test('courseAreas on the old nine: all valid and at most CELL, the rough tiles t
   const rough = areas.filter(a => a.tex === texOf('rough'));
   assert.equal(rough.length, 6);
   assert.ok(Math.abs(areaSum(rough) - 300 * 450) <= 0.01 * 300 * 450, `rough ${areaSum(rough)}`);
-  assert.deepEqual(polyBox(rough[0].pts), [1000, 1000, 1200, 1200]);
-  assert.deepEqual(polyBox(rough[1].pts), [1200, 1000, 1300, 1200]);
+  assert.deepEqual(polyBox(rough[0].pts), [400, 400, 600, 600]);
+  assert.deepEqual(polyBox(rough[1].pts), [600, 400, 700, 600]);
   // all rough pieces come first
   assert.ok(areas.slice(0, rough.length).every(a => a.tex === texOf('rough')));
   // the same surfaces, in the same order, with the same textures and radii as the layout
