@@ -1156,18 +1156,17 @@ export class RoadNetwork {
       for (let i = 0; i < steps; i++) { const t0 = (Math.PI * 2 * i) / steps, t1 = (Math.PI * 2 * (i + 1)) / steps, P = { x: n.x + Math.cos(t0) * ri, y: n.y + Math.sin(t0) * ri }, Q = { x: n.x + Math.cos(t1) * ri, y: n.y + Math.sin(t1) * ri }, d = sub(Q, P), L = vlen(d), u = mul(d, 1 / L), nIn = norm(sub(P, n)); this.litterRun(fx, P, u, nIn, L, 0, rng, g, false, RB_LANE); }
     }
   }
-  /** Street lamps (world positions, tiles) snap to the nearest curb within 2.5 tiles; the pool sits on the curb point.
-   *  Returns the boxes whose ground changed. */
+  /** Street lamps (the ground points below their heads, tiles: engine.ts lampHeads) light the road when a curb is within 2.5 tiles; the pool
+   *  sits right below the head (T324: no longer moved onto the curb point, off its lamp). Returns the boxes whose ground changed. */
   setLamps(lamps: Pt[]): BBox[] {
     const pools: Pool[] = [];
     for (const l of lamps) {
-      let best: { d: number; p: Pt } | null = null;
+      let near = false;
       for (const s of this.segsNear(l, 12)) {
-        const d = sub(s.b, s.a), L = vlen(d), u = mul(d, 1 / L), t = clamp(dot(sub(l, s.a), u), 0, L), q = add(s.a, mul(u, t)), off = sub(l, q), dist = vlen(off);
-        const side = dist > 1e-6 ? mul(off, 1 / dist) : perp(u), curb = add(q, mul(side, s.cls.h)), dc = Math.abs(dist - s.cls.h);
-        if (dc < 2.5 && (!best || dc < best.d)) best = { d: dc, p: curb };
+        const d = sub(s.b, s.a), L = vlen(d), u = mul(d, 1 / L), t = clamp(dot(sub(l, s.a), u), 0, L), q = add(s.a, mul(u, t));
+        if (Math.abs(vlen(sub(l, q)) - s.cls.h) < 2.5) { near = true; break; }
       }
-      if (best) pools.push({ x: best.p.x, y: best.p.y, strength: 1 });
+      if (near) pools.push({ x: l.x, y: l.y, strength: 1 });
     }
     const key = (p: Pool) => p.x.toFixed(3) + ',' + p.y.toFixed(3), before = new Set(this.pools.map(key)), after = new Set(pools.map(key)), changed: BBox[] = [];
     for (const p of this.pools) if (!after.has(key(p))) changed.push([p.x - 9, p.y - 9, p.x + 9, p.y + 9]);
