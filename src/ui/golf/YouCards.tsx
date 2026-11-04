@@ -1,0 +1,97 @@
+// Your character's cards (T240, #704; docs/plans/P28.md section 1): the "Who are you?" card at a new game (your name, your look, your starting
+// handicap), the talk card when you walk up to a person (T243 brings the portraits), the first tee's "Start a round" card (T317 builds the round you
+// play yourself on it), and the cursors that say what a click does (walk / talk / look / use), as the point-and-click adventure games do.
+import { useState } from 'react';
+import { LIBRARY } from '../../game/library';
+import type { RoundState } from '../../game/golf/player';
+import type { Verb } from '../../game/golf/you';
+import { Icon } from '../Icon';
+import { Thumb } from '../Thumb';
+
+const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
+
+/** a 24 px cursor from an SVG drawing (its hot spot at hx, hy), with a fallback keyword */
+const svgCursor = (body: string, hx: number, hy: number, or: string) =>
+  `url("data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'>${body}</svg>`)}") ${hx} ${hy}, ${or}`;
+const RIM = "stroke='#0f172a' stroke-width='1.5' stroke-linejoin='round'";
+/** the cursor of each verb: walk (two footprints), talk (a speech bubble), look (an eye), use (a pointing hand); none: you cannot go there */
+export const VERB_CURSOR: Readonly<Record<Verb | 'none', string>> = {
+  walk: svgCursor(`<ellipse cx='8' cy='14' rx='3.2' ry='5' fill='#facc15' ${RIM}/><ellipse cx='16' cy='9' rx='3.2' ry='5' fill='#facc15' ${RIM}/>`, 12, 20, 'pointer'),
+  talk: svgCursor(`<path d='M3 4h18v11H11l-5 5v-5H3z' fill='#38bdf8' ${RIM}/><circle cx='8' cy='9.5' r='1.3' fill='#0f172a'/><circle cx='12' cy='9.5' r='1.3' fill='#0f172a'/><circle cx='16' cy='9.5' r='1.3' fill='#0f172a'/>`, 4, 4, 'pointer'),
+  look: svgCursor(`<path d='M1.5 12C5 6 19 6 22.5 12C19 18 5 18 1.5 12z' fill='#f5f3ff' ${RIM}/><circle cx='12' cy='12' r='3.6' fill='#7c3aed' ${RIM}/>`, 12, 12, 'zoom-in'),
+  use: svgCursor(`<path d='M9 2.5a1.8 1.8 0 0 1 3.6 0V10h1.2a1.6 1.6 0 0 1 3.2.4V11a1.6 1.6 0 0 1 3.2.6v4.8c0 3.6-2.6 6.1-6.2 6.1h-1.6c-2 0-3.4-.8-4.6-2.4L3.6 14.6a1.7 1.7 0 0 1 2.6-2.2L9 15z' fill='#4ade80' ${RIM}/>`, 10, 2, 'pointer'),
+  none: 'not-allowed',
+};
+
+/** "Who are you?" (a new range game, before the welcome card): your name, your look and your starting handicap. Short: one card, one button */
+export function WhoCard({ name, look, looks, hcp, onDone }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void }) {
+  const [n, setN] = useState(name), [l, setL] = useState(look);
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
+      <div className="pointer-events-auto w-[460px] max-w-full space-y-3 rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur" data-testid="who-card">
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">A new game · You</div>
+        <div className="font-display text-xl font-bold leading-tight text-[var(--gold-hi)]">Who are you?</div>
+        <label className="block text-xs text-slate-400">Your name
+          <input className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-white" value={n} maxLength={40} placeholder="Your name" autoFocus onChange={e => setN(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') onDone(n, l); }} data-testid="who-name" />
+        </label>
+        <div>
+          <div className="mb-1 text-xs text-slate-400">Your look <span className="text-slate-500">(stand-ins until the player looks are made)</span></div>
+          <div className="grid grid-cols-5 gap-1.5" data-testid="who-looks">
+            {looks.map((o, i) => (
+              <button key={o.id} className={`flex h-[72px] items-end justify-center rounded-lg border ${i === l ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => setL(i)} title={o.sex === 'w' ? 'A woman' : 'A man'} data-testid={`who-look-${i}`}>
+                {LIBRARY[o.item] && <Thumb it={LIBRARY[o.item]!} size={64} />}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-baseline justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5" title="Your skills as a mid-handicap amateur: practise at the range to lower it">
+          <span className="text-xs uppercase text-slate-400">Starting handicap</span>
+          <span className="text-lg font-bold text-white" data-testid="who-hcp">{hcp}</span>
+        </div>
+        <p className="text-xs text-slate-400">You stand beside the shack. Click the ground to walk, a person to talk, a building to look, the range to hit a bucket. WASD or the arrows walk too.</p>
+        <button className="btn-gold w-full py-2 text-sm" onClick={() => onDone(n, l)} data-testid="who-go"><Icon name="people" size={18} />That's me</button>
+      </div>
+    </div>
+  );
+}
+
+/** the talk card: you walked up to a person; their name, what they do and a line (T243 gives them portraits, jobs and skills) */
+export function TalkCard({ talk, right, onClose }: { talk: { name: string; line: string; what: string }; right: string; onClose: () => void }) {
+  return (
+    <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 w-[300px] space-y-2 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="talk-card">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div>
+          <div className="font-semibold text-sky-200">{talk.name}</div>
+          <div className="text-[12px] text-slate-400">{talk.what} · Stand In card (portraits come with T243)</div>
+        </div>
+        <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
+      </div>
+      <p className="rounded-lg bg-white/5 px-2 py-1.5 text-sm italic text-slate-200">"{talk.line}"</p>
+    </div>
+  );
+}
+
+/** the first tee: start a round. Play in today's tournament while you can join it, else your everyday round on the tee sheet */
+export function TeeCard({ view, right, onJoin, onBook, onClose }: { view: { join: boolean; round: RoundState; name: string }; right: string; onJoin: () => void; onBook: () => void; onClose: () => void }) {
+  const r = view.round;
+  return (
+    <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 w-[300px] space-y-2 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="tee-card">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div>
+          <div className="font-semibold text-emerald-200">The first tee</div>
+          <div className="text-[12px] text-slate-400">Start a round, {view.name}</div>
+        </div>
+        <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
+      </div>
+      {view.join && <button className="chip chip-on w-full justify-center" onClick={onJoin} data-testid="tee-join">Play in today's tournament</button>}
+      <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs">
+        {r.k === 'none' && <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-300">{r.why ?? (r.next !== null ? `Next free tee time ${clock(r.next)}` : 'No tee times left today')}</span>
+          <button className="chip chip-on disabled:opacity-40" disabled={!!r.why || r.next === null} onClick={onBook} data-testid="tee-book">Book {r.next !== null && !r.why ? clock(r.next) : ''}</button></div>}
+        {r.k === 'booked' && <div className="text-slate-300">Your tee time: <span className="font-semibold text-white">{clock(r.tee)}</span></div>}
+        {r.k === 'out' && <div className="text-sky-200">You are out on the course (teed off {clock(r.tee)})</div>}
+        {r.k === 'done' && <div className="text-slate-300">You shot <span className="font-semibold text-white">{r.strokes}</span> today</div>}
+      </div>
+      <p className="text-[11px] text-slate-500">Teeing off yourself (the cart, the swing, the scorecard) comes next.</p>
+    </div>
+  );
+}
