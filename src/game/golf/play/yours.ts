@@ -224,4 +224,6 @@ export function cupTime(f: YourFlight): number | null {
 
 /** the HUD of your round (the engine's yourRoundView) */
 export interface YourRoundView { round: YourRound; hole: number; par: number; stroke: number; distM: number; lie: Lie; totals: ReturnType<typeof cardTotals>;
-  canJump: boolean; inCart: boolean; nearCart: boolean; card: boolean; flying: boolean; addressing: boolean }
+  canJump: boolean; inCart: boolean; nearCart: boolean;
+  /** T326: your cart is out of reach (the Cart button calls it) */
+  cartFar: boolean; card: boolean; flying: boolean; addressing: boolean }
