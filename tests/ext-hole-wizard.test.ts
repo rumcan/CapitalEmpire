@@ -210,17 +210,31 @@ test('9. speed: a drag step (re-plan and ghost) of a 3-bend hole stays within a 
   w.ghost();
   const gr = w.handles().find(h => h.k === 'green')!;
   press(w, gr.x, gr.y);
-  // the best of 3 rounds of 20 steps: the full suite runs files in parallel, and one loaded round reached 15.4 ms (about 2 ms alone)
-  let ms = Infinity;
+  // T331 (#945): the step is timed against a fixed reference workload (refWork, a plain loop over a grid of points) run step by step between the
+  // drag steps, so a machine loaded by the parallel suite slows both alike: the check is the ratio (the work a step does), not its wall time. The
+  // wall time alone was about 13 ms on the 16 GB PC (10.9 ms at 3e6650f, when the test was written; the long-grass ring, 3819a2d, added cells) and
+  // went past its 30 ms bound only under the full parallel run. The best of 3 rounds of 20 steps.
+  let ms = Infinity, rel = Infinity, sink = 0;
   for (let round = 0; round < 3; round++) {
-    const t0 = performance.now();
-    for (let k = 0; k < 20; k++) { w.move({ x: gr.x + k * 0.5, y: gr.y + k * 0.25 }, 0, 0, toScreen); w.ghost(); }
-    ms = Math.min(ms, (performance.now() - t0) / 20);
+    let tStep = 0, tRef = 0;
+    for (let k = 0; k < 20; k++) {
+      const t0 = performance.now(); w.move({ x: gr.x + k * 0.5, y: gr.y + k * 0.25 }, 0, 0, toScreen); w.ghost();
+      const t1 = performance.now(); sink += refWork();
+      tStep += t1 - t0; tRef += performance.now() - t1;
+    }
+    ms = Math.min(ms, tStep / 20); rel = Math.min(rel, tStep / tRef);
   }
-  console.log(`hole-wizard drag step: ${ms.toFixed(2)} ms (re-plan + ghost, 3 bends, ${w.ghost()!.info.lengthM} m, ${w.ghost()!.diff.n} cells)`);
-  // the target is 4 ms (the bench); the suite only catches a real slowdown
-  assert.ok(ms < 30, `drag step ${ms} ms`);
+  console.log(`hole-wizard drag step: ${ms.toFixed(2)} ms, ${rel.toFixed(2)} x the reference work (re-plan + ghost, 3 bends, ${w.ghost()!.info.lengthM} m, ${w.ghost()!.diff.n} cells; ${sink})`);
+  // the target is 4 ms (the bench) on a fast PC; the suite only catches a real slowdown (REF_LIMIT)
+  assert.ok(rel < REF_LIMIT, `drag step ${rel.toFixed(2)} x the reference work (${ms.toFixed(2)} ms)`);
+  // and the work itself: the cells a step's diff covers (an unbounded re-plan would grow them)
+  assert.ok(w.ghost()!.diff.n < 80000, `${w.ghost()!.diff.n} cells in a step's diff`);
 });
+/** the speed test's reference work: a fixed loop over a 800 x 500 grid of points (about the drag step's cell walk), counted so it is not optimised out */
+function refWork(): number { let n = 0; for (let i = 0; i < 400000; i++) { const x = (i % 800) * 0.5 - 200, y = Math.floor(i / 800) * 0.5 - 125; if (Math.sqrt(x * x + y * y) < 150) n++; } return n; }
+/** the ratio of a drag step to refWork the suite fails past: about 16 alone on the 16 GB PC, 20-24 with ten copies of the test at once (the step's
+ *  allocations feel the load more than the loop), so 40 is a real slowdown of about 2.5 times */
+const REF_LIMIT = 40;
 
 // ---------- T119: New hole, finished (P23 4.4) ----------
 
