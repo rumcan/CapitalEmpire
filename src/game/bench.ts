@@ -190,6 +190,8 @@ export function benchGame(g: Game, scene: BenchScene) {
     const info = { scene, ...(scene === 'golf' ? { golfersOut: g.dayOutNow() } : {}), heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0), clock, carsAtStart: g.perf.simActive };
     console.log('[bench] scene', info);
     // T251: ?ballRoll=ab (bench.mjs --ballRoll ab), the balls' bounce and roll on and off by turns over the action (rollStage)
+    // T312: ?spacing=ab (bench.mjs --spacing ab), the people stepping round each other on and off by turns over the action (spaceStage)
+    if (new URLSearchParams(location.search).get('spacing') === 'ab') { spaceStage(g, scene, r => { const out = { ...info, spacing: 'ab', stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     if (new URLSearchParams(location.search).get('ballRoll') === 'ab') { rollStage(g, scene, r => { const out = { ...info, ballRoll: 'ab', rangeBalls: g.range.sim.benchBalls, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     // T265: ?river=1, the river through the town (its point nearest the first town's centre)
     const town = g.townPts[0], follow = scene === 'fixture' && new URLSearchParams(location.search).get('river') === '1' && town ? riverFollow(g, town.x, town.y) : null;
@@ -246,6 +248,46 @@ function rollStage(g: Game, scene: BenchScene, done: (r: Record<string, unknown>
     g.onFrame = (_now, dt) => {
       t += dt; if (t < 1) return;
       const v = frames.get(tag) ?? { cpu: [], balls: [] }; frames.set(tag, v); v.cpu.push(g.perf.cpuMs); v.balls.push(balls());
+      if (t >= 5) { k++; next(); }
+    };
+  };
+  next();
+}
+
+/** T312 (#897): the people spacing A/B on one page (as rollStage): at 30% and 15%, on and off by turns, three times each, the camera over the action
+ *  (the tournament's golfers and galleries with ?tourney=1, the everyday golfers, or the range's bays). Each run settles 1 s, then 4 s of frames:
+ *  the cpu ms (average, p95), the spacer's own ms (average, max) and the people spaced. Pooled per zoom and switch, with on less off */
+function spaceStage(g: Game, scene: BenchScene, done: (r: Record<string, unknown>[]) => void) {
+  const zooms = [0.3, 0.15], runs: { z: number; on: boolean }[] = [];
+  for (const z of zooms) for (let r = 0; r < 3; r++) runs.push({ z, on: r % 2 === 0 }, { z, on: r % 2 !== 0 });
+  const frames = new Map<string, { cpu: number[]; sp: number[]; n: number[] }>();
+  const q = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; };
+  const avg = (a: number[]) => a.reduce((p, v) => p + v, 0) / Math.max(1, a.length);
+  const focus = (): { x: number; y: number } | null => {
+    if (scene !== 'range') return g.playFocus() ?? g.dayFocus();
+    const sc = g.range.scene; if (!sc) return null;
+    const b = sc.bays[Math.floor(sc.bays.length / 2)]?.stand ?? sc.mowFrom; return { x: b.x, y: b.y };
+  };
+  let k = 0, t = 0;
+  const next = () => {
+    if (k >= runs.length) {
+      g.onFrame = null; g.setSpacing(true);
+      const out: Record<string, unknown>[] = [];
+      for (const z of zooms) {
+        const tag = `${Math.round(z * 100)}%`, r: Record<string, unknown> = { stage: `spacing ${tag}` };
+        for (const on of [false, true]) { const f = frames.get(`${tag} ${on ? 'on' : 'off'}`) ?? { cpu: [], sp: [], n: [] }; r[on ? 'on' : 'off'] = { frames: f.cpu.length, cpuAvgMs: +avg(f.cpu).toFixed(3), cpuP95Ms: +q(f.cpu, 0.95).toFixed(3), spaceAvgMs: +avg(f.sp).toFixed(3), spaceMaxMs: +q(f.sp, 1).toFixed(3), peopleAvg: Math.round(avg(f.n)), peopleMax: q(f.n, 1) }; }
+        const a = r.off as Record<string, number>, b = r.on as Record<string, number>;
+        r.delta = { cpuAvgMs: +(b.cpuAvgMs! - a.cpuAvgMs!).toFixed(3), cpuP95Ms: +(b.cpuP95Ms! - a.cpuP95Ms!).toFixed(3) };
+        out.push(r);
+      }
+      done(out); return;
+    }
+    const r = runs[k]!, tag = `${Math.round(r.z * 100)}% ${r.on ? 'on' : 'off'}`, f = focus();
+    g.setSpacing(r.on); t = 0;
+    if (f) g.lookAt(f.x, f.y, r.z); else g.cam.z = r.z;
+    g.onFrame = (_now, dt) => {
+      t += dt; if (t < 1) return;
+      const v = frames.get(tag) ?? { cpu: [], sp: [], n: [] }; frames.set(tag, v); v.cpu.push(g.perf.cpuMs); v.sp.push(g.perf.spaceMs); v.n.push(g.perf.spaced);
       if (t >= 5) { k++; next(); }
     };
   };
