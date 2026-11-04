@@ -21,22 +21,23 @@ import { facingOf, frameOf, roadOf, type PresetFrame } from './preset-frame';
 import { axisSetOf, drawnView, faces, isVehicle, ownerScaleOf } from './preset-art';
 import { CHAIN, OVERLAP, PRIVACY, mix, share, type Box4, type LotGeom } from './compose-core';
 import { mulberry } from '../iso';
-import { carPark } from './carpark-lot';
+import { PARK_AISLE, STOP, bayDims, bayRow, layCarPark, rowInto, type BayDims, type ParkKit } from './carpark-lot';
 import { centreLot, type CentreKit } from './centre';
 import { centreOf } from './centre-biz';
 import { parsePresets, type Fitted, type LotPreset, type PresetPatch, type PresetProp, type PresetState, type PresetUse, type Road, type View } from './presets';
 import PRESET_JSON from './lot-presets.json';
 
-/** the templates a lot draws (the lot lab's picker lists them all): a house, a corner house, a trailer park, a junk yard, a small shop and (T298) a small
- *  shopping centre (the town gives it to a commercial lot it widens over its neighbours: centre-biz.ts; the lab to any lot) */
-export type AutoTemplate = 'house' | 'corner' | 'trailer' | 'junk' | 'shop' | 'centre';
-export const AUTO_TEMPLATES: readonly AutoTemplate[] = ['house', 'corner', 'trailer', 'junk', 'shop', 'centre'];
+/** the templates a lot draws (the lot lab's picker lists them all): a house, a corner house, a trailer park, a junk yard, a small shop, (T298) a small
+ *  shopping centre (the town gives it to a commercial lot it widens over its neighbours: centre-biz.ts; the lab to any lot) and (T296) a public car park */
+export type AutoTemplate = 'house' | 'corner' | 'trailer' | 'junk' | 'shop' | 'centre' | 'park';
+export const AUTO_TEMPLATES: readonly AutoTemplate[] = ['house', 'corner', 'trailer', 'junk', 'shop', 'centre', 'park'];
 /** the template a lot of a use, tier and seed draws: res splits by the seed (a house, a corner house, and on a starter lot a quarter trailer parks);
- *  ind is a junk yard, com a small shop; a park, a tour venue and a civic lot have none (null) */
+ *  ind is a junk yard, com a small shop, a park (T296) a car park; a tour venue and a civic lot have none (null) */
 export function templateOf(use: PresetUse, tier: number, seed: number): AutoTemplate | null {
   if (use === 'res') return tier === 0 && seed % 4 === 0 ? 'trailer' : seed % 3 === 0 ? 'corner' : 'house';
   if (use === 'ind') return 'junk';
   if (use === 'com') return 'shop';
+  if (use === 'park') return 'park';
   return null;
 }
 
@@ -65,7 +66,7 @@ export function texOf(use: PresetUse, state: PresetState, kind: PresetPatch['kin
 /** the owned boundary: the preset x of the side line the lot owns and whether it owns its back (compose's boundaryFence rule) */
 interface Own { side: number; back: boolean }
 /** a template's seed salts (the lot's draws differ by template) */
-const SALT: Record<AutoTemplate, number> = { house: 0x51, corner: 0x52, trailer: 0x53, junk: 0x54, shop: 0x55, centre: 0x56 };
+const SALT: Record<AutoTemplate, number> = { house: 0x51, corner: 0x52, trailer: 0x53, junk: 0x54, shop: 0x55, centre: 0x56, park: 0x57 };
 
 let HOUSE_ODD: string[] | null = null, HOUSE_EVEN: string[] | null = null;
 /** the pieces with a screen-axis set that are not houses: a back yard's set or deck, a pool, a shop of the industry, a warehouse (the house pick skips them) */
@@ -77,7 +78,6 @@ function housesOf(road: Road): string[] {
     && !it.id.startsWith('view:') && !it.id.startsWith('east:') && axisSetOf(it.id) !== null && !gone(it.id) && !BACK_PIECE.test(it.id)).map(it => it.id).sort();
   return HOUSE_EVEN ??= (houseFamilies().get('dwelling')?.ids ?? []).filter(id => !FRONTAL.has(id) && !gone(id)).sort();
 }
-const WHEEL_STOP = 'expansion:wheel-stop';
 const TRAILERS = ['expansion:mobile-home', 'expansion:camper', 'expansion:pop-up-caravan'];
 const YARD_THINGS = ['town:picnic_table', 'expansion:carseat-bench', 'expansion:backyard-tent', 'expansion:ham-radio-bench'];
 const JUNK_PILES = ['expansion:scrap-metal', 'expansion:tyre-stack', 'expansion:scrap-engine', 'expansion:crushed-car-stack'];
@@ -265,30 +265,48 @@ function junkLot(L: Lay): boolean {
   return placed > 1;
 }
 
-/** a small shop at the street (a shop front of the palette its road and tier allow) with its car park beside it (carpark-lot.ts: one row of bays square to the
- *  street, a 6 m aisle in front, a car nose out in each bay, the painted lines on the car park patch only), the yard grass round it, a lamp at each end of
- *  the frontage, the owned fence. Everything sits on the lot's own frame: no piece at a free angle */
+/** a small shop at the street (a shop front of the palette its road and tier allow) with its car park beside it (T296, carpark-lot.ts layCarPark: rows of bays
+ *  square to the street on an aisle entered from it, sized from the car, cars in some, the painted lines and wheel stops in the street's heading, islands
+ *  where the room allows), the yard grass round it, a lamp at each end of the frontage, the owned fence. Everything sits on the lot's own frame: no piece
+ *  at a free angle */
 function shopLot(L: Lay, own: Own, first: number): boolean {
-  const { W, D, road, f } = L, sw = Math.min(W * 0.45, W - 6), hb = D * 0.4;
+  const { W, D, road } = L, sw = Math.min(W * 0.45, W - 6), hb = D * 0.4;
   L.patch('yard', texOf('park', L.state, 'yard', 'grass'), 0, 0, W, D);
   // T331 (#945): the shop of the lot's business or colour on the street lattice first (as a preset shop lot: compose.ts shopPlan), then the next
   // colours; a seeded place in the list showed the same few shops side by side and across the street (and a named one twice to a block)
   const shops = tryOrder(first, SHOP_PALETTE.length).map(c => SHOP_PALETTE[c]!).filter(id => !gone(id) && faces(id, road));
   if (!L.pick(shops, 0, sw / 2 + 0.3, 1.0 + hb, sw / 2 - 0.3, hb, 0.7, 0)) return false;
   const sb = L.boxOf(L.props[L.props.length - 1]!);
-  const park = carPark(f, Math.min(W - 1, sb[2] + 0.5), W - 0.3, Math.floor(L.r() * 4096));
-  if (park) {
-    L.patch('lot', texOf(L.use, L.state, 'lot', 'asphalt'), park.x0, 0, park.x1, park.y1, park.lines);
-    for (const c of park.cars) L.add(c);
-    // a wheel stop at each bay's far end, only where the bays run along the preset's y (frame turn 0: the stop's picture lies across the bay) and
-    // the picture fits the bay's width (L.fit: the largest scale that fits, never past its pixels; none when it does not fit)
-    if (f.q === 0) { const bw = (park.x1 - park.x0) / park.bays; for (let k = 0; k < park.bays; k++) { const q = L.fit(WHEEL_STOP, 0, park.x0 + (k + 0.5) * bw, park.y1 - 0.4, bw / 2 - 0.02, 0.2, 0.7); if (q) L.add(q); } }
-  }
+  layCarPark(L, [Math.min(W - 1, sb[2] + 0.5), 0, W - 0.3, D - 0.3], Math.floor(L.r() * 4096), parkKit(L, false));
   // street furniture in an evenly spaced row on the grass in front of the shop, inside the lot (the aisle is over the car park, never here): view 0 faces the street
   ['world:bench', 'world:trashcan', 'world:bench', 'world:trashcan'].forEach((id, k) => L.pick([id], 0, (k + 0.5) * sw / 4, 0.5, 0.6, 0.4, 0.5));
   L.pick(['world:streetlamp'], 0, 0.8, -0.4, 0.4, 0.4);
   L.pick(['world:streetlamp'], 0, W - 0.8, -0.4, 0.4, 0.4);
   ownFence(L, own, PRIVACY);
+  return true;
+}
+
+/** T296 (#881): the car park kit of a lot: its asphalt (the use's car park texture), the owner's real trees and the hedge shrubs for its islands */
+const parkKit = (L: Lay, lamps: boolean): ParkKit => ({ tex: texOf(L.use, L.state, 'lot', 'asphalt'), trees: realTrees(), shrubs: HEDGE, lamps });
+const LAMP = 'world:streetlamp', PARK_SIGN = 'ce:parking-sign';
+/** T296 (#881; the owner, 2026-11-02: "parking lots like the one now at the driving range needs to be all over town and they need to adapt to the street
+ *  angle"): a public car park (a commercial lot the town makes one: compose-core isCarPark), laid along its street at any angle (carpark-lot.ts
+ *  layCarPark: rows square to the street, aisles, a side drive on a deep lot, kerbed planted islands, lamp posts, wheel stops in the street's heading,
+ *  cars in some bays). A planted strip along the street (the hedge, broken by the entrance), a street lamp either side of the mouth and the P sign beside
+ *  it, trees on the grass left behind the rows. False when no row and aisle fit (the caller lays the plot) */
+function parkLot(L: Lay, seed: number): boolean {
+  const { W, D } = L, strip = D >= 12 ? 1.2 : 0.6;
+  L.patch('yard', texOf('park', L.state, 'yard', 'grass'), 0, 0, W, D);
+  const plan = layCarPark(L, [0.4, strip, W - 0.4, D - 0.3], seed, parkKit(L, true));
+  if (!plan) return false;
+  const [e0, , e1] = plan.entrance;
+  for (let sx = 1.0; sx < W - 0.8; sx += 1.4) if (sx < e0 - 0.6 || sx > e1 + 0.6) L.pick(HEDGE, 0, sx, strip / 2, 0.5, strip / 2, 0.3);
+  L.pick([LAMP], 0, e0 - 0.6, -0.4, 0.4, 0.4);
+  L.pick([LAMP], 0, e1 + 0.6, -0.4, 0.4, 0.4);
+  L.pick([PARK_SIGN], 0, e1 + 1.5, -0.45, 0.6, 0.4, 0.5);
+  // (the grass left behind the rows: a row of trees)
+  const back = D - plan.park[3];
+  if (back >= 1.6) for (let tx = 1.6; tx <= W - 1.6; tx += 3.2) L.pick(realTrees(), 0, tx, (plan.park[3] + D) / 2, 1.3, back / 2 - 0.2, 0.45);
   return true;
 }
 
@@ -433,6 +451,59 @@ export function dressStraight(fit: Fitted, f: PresetFrame, lot: LotGeom, use: Pr
   return { ...fit, props: L.props, from, patches: L.patches, ...(fit.standIn ? { standIn: fit.standIn.concat(Array.from({ length: added }, () => undefined)) } : {}) };
 }
 
+// ---------- T296 (#881; T305's leftover: "re-lay commercial presets' own car parks (crooked stoppers)")
+/** a preset car park's re-lay: its patch, the bays' axis and the rows laid in its box (or null: it keeps its own) */
+interface Relay { a: PresetPatch; b: Box4; axis: 'x' | 'y'; rows: { x0: number; k: number; ya: number; dir: 1 | -1 }[]; dims: BayDims }
+/** a preset's car parks (its lot patches with painted lines) laid again in the lot's frame, so they follow the street at any angle as the generated ones do:
+ *  the bays sized from the car (bayDims), along the axis the preset's own lines run (square to the street, or along it), cars in some at the road cars'
+ *  size and heading, the wheel stops in the bays' heading (rowInto: the stop's picture where the rows run along a world axis, else painted on the ground).
+ *  Each keeps its own asphalt outline. By depth: two rows on an aisle, an aisle and a row, or one row opening onto the street (or onto the lot's middle when
+ *  its bays run along the street). The preset's cars and wheel stops standing in a re-laid car park go; a new car keeps clear of every other piece. A car
+ *  park too small for one bay, or not near a rectangle, keeps its own layout */
+export function relayParks(fit: Fitted, f: PresetFrame, lot: LotGeom, use: PresetUse, state: PresetState, seed: number): Fitted {
+  const plans: Relay[] = [];
+  fit.patches.forEach((a, i) => {
+    if (a.kind !== 'lot' || !a.lines || a.lines.length < 8 || a.stops || a.tex === 'field' || a.tex === 'dirt') return;
+    const b = ptsBox(a.pts), w = b[2] - b[0], h = b[3] - b[1];
+    if (polyArea(a.pts) < 0.85 * w * h) return;
+    let sx = 0, sy = 0; for (let k = 0; k + 3 < a.lines.length; k += 4) { sx += Math.abs(a.lines[k + 2]! - a.lines[k]!); sy += Math.abs(a.lines[k + 3]! - a.lines[k + 1]!); }
+    const axis: 'x' | 'y' = sy >= sx ? 'y' : 'x', dims0 = bayDims(f, (seed + 31 * i) >>> 0);
+    if (!dims0) return;
+    // (s along the rows, t along the bays: the box's extents; open: the side the bays open on, the street's for bays square to it, else the lot's middle)
+    const [s0, s1, t0, t1] = axis === 'y' ? [b[0], b[2], b[1], b[3]] : [b[1], b[3], b[0], b[2]], T = t1 - t0, open = axis === 'y' ? -1 : (b[0] + b[2]) / 2 < lot.w / 2 ? 1 : -1;
+    const k = Math.floor((s1 - s0 - 0.1) / dims0.bw + 1e-9), x0 = (s0 + s1 - k * dims0.bw) / 2;
+    if (k < 1) return;
+    const dims = T < dims0.bl ? { ...dims0, bl: T - 0.05 } : dims0, rows: Relay['rows'] = [];
+    if (dims.bl < 0.85 * dims0.bl) return;
+    if (T >= 2 * dims.bl + PARK_AISLE) { const m = (t0 + t1) / 2; rows.push({ x0, k, ya: m - PARK_AISLE / 2, dir: -1 }, { x0, k, ya: m + PARK_AISLE / 2, dir: 1 }); }
+    else if (T >= dims.bl + PARK_AISLE) rows.push(open < 0 ? { x0, k, ya: t1 - dims.bl, dir: 1 } : { x0, k, ya: t0 + dims.bl, dir: -1 });
+    else rows.push(open < 0 ? { x0, k, ya: t0 + (T - dims.bl) / 2, dir: 1 } : { x0, k, ya: t1 - (T - dims.bl) / 2, dir: -1 });
+    plans.push({ a, b, axis, rows, dims });
+  });
+  if (!plans.length) return fit;
+  const L = new Lay(f, lot.w, lot.d, use, state, roadOf(lot.n), 3, mulberry(mix(seed, 0x296)));
+  const gone = (q: PresetProp) => (isVehicle(q.id) || q.id === STOP) && plans.some(p => q.x >= p.b[0] - 0.05 && q.x <= p.b[2] + 0.05 && q.y >= p.b[1] - 0.05 && q.y <= p.b[3] + 0.05);
+  const from: number[] = [], standIn: (string | undefined)[] = [];
+  fit.props.forEach((q, i) => { if (gone(q)) return; L.props.push(q); L.boxes.push(L.boxOf(q)); from.push(fit.from[i]!); standIn.push(fit.standIn?.[i]); });
+  const n0 = L.props.length, fill = 0.45 + 0.35 * L.r();
+  for (const a of fit.patches) {
+    const p = plans.find(q => q.a === a);
+    if (!p) { L.patches.push(a); continue; }
+    const lines: number[] = [], bars: number[] = [];
+    p.rows.forEach((r, j) => { const row = bayRow(f, p.dims, r.x0, r.k, r.ya, r.dir, fill, seed + 41 * j, p.axis); lines.push(...row.lines); rowInto(L, row, p.dims, bars); });
+    const { stops: _old, ...rest } = a;
+    L.patches.push({ ...rest, lines: lines.map(v => +v.toFixed(3)), ...(bars.length ? { stops: bars } : {}) });
+  }
+  const added = L.props.length - n0;
+  return { ...fit, props: L.props, patches: L.patches, from: from.concat(Array.from({ length: added }, () => -1)), ...(fit.standIn ? { standIn: standIn.concat(Array.from({ length: added }, () => undefined)) } : {}) };
+}
+/** a polygon's area (x, y pairs; tiles squared) */
+function polyArea(pts: readonly number[]): number {
+  let s = 0; const n = pts.length / 2;
+  for (let i = 0; i < n; i++) { const j = (i + 1) % n; s += pts[2 * i]! * pts[2 * j + 1]! - pts[2 * j]! * pts[2 * i + 1]!; }
+  return Math.abs(s) / 2;
+}
+
 /** the lot's owned boundary: the preset x of its side line (0 or W) and whether it owns its back (the composer's rule, read in the preset frame) */
 function ownedOf(lot: LotGeom): Own {
   const sa = lot.u.x + lot.u.y > 0 ? lot.w : 0, same = lot.u.x * -lot.n.y + lot.u.y * lot.n.x > 0;
@@ -457,7 +528,8 @@ export function autoLot(lot: LotGeom, use: PresetUse, tier: number, seed: number
   const first = template !== 'shop' && template !== 'centre' ? 0 : biz !== undefined && SHOP_PALETTE.includes(biz) ? SHOP_PALETTE.indexOf(biz) : colourOf(lot, SHOP_PALETTE.length);
   // (T298: a centre's shops: its business's, else the palette from the lot's colour)
   const shops = template === 'centre' ? centreOf(biz)?.shops ?? tryOrder(first, SHOP_PALETTE.length).map(c => SHOP_PALETTE[c]!) : [];
-  const road = roadOf(lot.n), key = `${lot.w}|${lot.d}|${road}|${facingOf(lot.n)}|${use}|${state}|${tier}|${seed}|${template}|${first}|${shops.join('+')}`;
+  // (T296: the street's own angle, to a tenth of a degree: the car pictures and the wheel stops are picked by it, not by its road's eighth)
+  const road = roadOf(lot.n), key = `${lot.w}|${lot.d}|${road}|${facingOf(lot.n)}|${Math.round(Math.atan2(lot.n.y, lot.n.x) * 1800 / Math.PI)}|${use}|${state}|${tier}|${seed}|${template}|${first}|${shops.join('+')}`;
   const hit = CACHE.get(key); if (hit !== undefined) return hit;
   const f = frameOf(lot), own = ownedOf(lot);
   let L: Lay | null = null;
@@ -466,7 +538,8 @@ export function autoLot(lot: LotGeom, use: PresetUse, tier: number, seed: number
   for (const drive of modes) {
     const T = new Lay(f, lot.w, lot.d, use, state, road, tier, mulberry(mix(seed, SALT[template], 0x305)));
     const ok = template === 'house' ? houseLot(T, false, (seed >> 2) % 2 === 0, own, drive) : template === 'corner' ? houseLot(T, true, (seed >> 2) % 2 === 0, own, false)
-      : template === 'trailer' ? trailerLot(T) : template === 'junk' ? junkLot(T) : template === 'centre' ? centreTpl(T, shops, seed) : shopLot(T, own, first);
+      : template === 'trailer' ? trailerLot(T) : template === 'junk' ? junkLot(T) : template === 'centre' ? centreTpl(T, shops, seed)
+      : template === 'park' ? parkLot(T, seed) : shopLot(T, own, first);
     if (ok) { L = T; break; }
   }
   // (T298: a lot too small for a centre is a small shop)

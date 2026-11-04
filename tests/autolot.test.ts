@@ -28,7 +28,7 @@ function lotOn(r: number, w: number, d: number): LotGeom {
 /** the headings under test: the four screen-straight roads (1, 3, 5, 7) and two diagonals (0, 2) */
 const ROADS: Road[] = [1, 3, 5, 7, 0, 2];
 /** each template's lot size (tiles): a house and a shop a 16-tile frontage, the yards 20 to 30 deep */
-const SIZE: Record<AutoTemplate, [number, number]> = { house: [16, 20], corner: [16, 20], trailer: [20, 30], junk: [20, 20], shop: [20, 16], centre: [36, 20] };
+const SIZE: Record<AutoTemplate, [number, number]> = { house: [16, 20], corner: [16, 20], trailer: [20, 30], junk: [20, 20], shop: [20, 16], centre: [36, 20], park: [20, 16] };
 const FENCE = /fence|chainlink/, CAR_OR_STOP = /^cars:|wheel-stop/;
 /** a piece's box in the preset frame (x along the street, y away from it) */
 const boxes = (f: PresetFrame, props: { id: string; x: number; y: number; scale: number; view: number }[]): (Box4 & { id: string })[] => props.map(q => {
@@ -38,7 +38,7 @@ const boxes = (f: PresetFrame, props: { id: string; x: number; y: number; scale:
 test('every template on the four screen-straight headings and two diagonals: inside the lot, no overlap beyond OVERLAP, the main building faces the street', () => {
   let made = 0;
   for (const t of AUTO_TEMPLATES) for (const r of ROADS) {
-    const [w, d] = SIZE[t], lot = lotOn(r, w, d), p = autoLot(lot, t === 'shop' ? 'com' : t === 'junk' ? 'ind' : 'res', t === 'trailer' ? 0 : 2, 7 + r, 'built', t);
+    const [w, d] = SIZE[t], lot = lotOn(r, w, d), p = autoLot(lot, t === 'shop' ? 'com' : t === 'park' ? 'park' : t === 'junk' ? 'ind' : 'res', t === 'trailer' ? 0 : 2, 7 + r, 'built', t);
     assert.ok(p, `${t} on road ${r} is null`);
     made++;
     assert.equal(roadOf(lot.n), r, 'the test lot is on its road');
@@ -51,7 +51,8 @@ test('every template on the four screen-straight headings and two diagonals: ins
         if (FENCE.test(o.id)) continue;
         // (T298: a centre's cars stand in bays sized from their bodies, a wheel stop under a car's nose; the world box of a car on a screen-straight street
         // is its bounding square, two bays wide: shopping-centre.test.ts checks them by their bodies)
-        if (t === 'centre' && (CAR_OR_STOP.test(b.id) || CAR_OR_STOP.test(o.id))) continue;
+        // (T296: so are the car parks' of the shop and the public car park)
+        if ((t === 'centre' || t === 'shop' || t === 'park') && (CAR_OR_STOP.test(b.id) || CAR_OR_STOP.test(o.id))) continue;
         assert.ok(share(b, o) <= OVERLAP + 1e-9, `${t} r${r}: ${b.id} overlaps ${o.id} (${share(b, o).toFixed(2)})`);
       }
     });
@@ -63,7 +64,7 @@ test('every template on the four screen-straight headings and two diagonals: ins
       else assert.notEqual(turned(q.id, 1).id, q.id, `${q.id} on road ${r} is not turned to the street`);
     }
     // the same inputs give the same lot (the cache aside, the generator is seeded from the lot's own draws)
-    assert.deepEqual(autoLot(lot, t === 'shop' ? 'com' : t === 'junk' ? 'ind' : 'res', t === 'trailer' ? 0 : 2, 7 + r, 'built', t), p);
+    assert.deepEqual(autoLot(lot, t === 'shop' ? 'com' : t === 'park' ? 'park' : t === 'junk' ? 'ind' : 'res', t === 'trailer' ? 0 : 2, 7 + r, 'built', t), p);
   }
   assert.equal(made, AUTO_TEMPLATES.length * ROADS.length);
 });
@@ -129,7 +130,7 @@ test('the car park: every bay 1.1 to 1.5 times its car, each car centred in its 
 // stand in at least two of the three zones (front: y < 0.3 d; back: y > 0.65 d; side: x < 0.2 w or x > 0.8 w)
 test('spread: each template puts its pieces in at least two of the front, side and back zones, on every heading', () => {
   for (const t of AUTO_TEMPLATES) for (const r of ROADS) {
-    const [w, d] = SIZE[t], lot = lotOn(r, w, d), p = autoLot(lot, t === 'shop' ? 'com' : t === 'junk' ? 'ind' : 'res', t === 'trailer' ? 0 : 2, 13 + r, 'built', t)!;
+    const [w, d] = SIZE[t], lot = lotOn(r, w, d), p = autoLot(lot, t === 'shop' ? 'com' : t === 'park' ? 'park' : t === 'junk' ? 'ind' : 'res', t === 'trailer' ? 0 : 2, 13 + r, 'built', t)!;
     const zones = new Set<string>();
     for (const q of p.props) {
       if (FENCE.test(q.id)) continue;

@@ -46,7 +46,7 @@ import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
 import { presetTier, tierOf } from './tiers';
 import { buildGroups, groupOf as cellMembers, roleOf, sizeOf, zoneOf, type Role } from './groups';
-import { autoLot, clearAutoLots, dressStraight, isBigLot, type AutoTemplate } from './autolot';
+import { autoLot, clearAutoLots, dressStraight, isBigLot, relayParks, type AutoTemplate } from './autolot';
 import { centreOf, isCentre, partOf, widen } from './centre-biz';
 import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
@@ -335,6 +335,8 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
   const cap = st.tier ?? 3, frozenT = () => tieredOf(frozen(), cap), biz = st.biz;
   // T295 #3 (#880): a GOV lot with a civic place (LotState.biz, town.ts civicNext) shows that building; the tier does not hold a civic place back
   if (use === 'civic' && biz !== undefined && CIVIC_IDS.has(biz)) { const c = civicPlan(lot, biz, [...ok, ...LEGACY.filter(p => p.use === use && p.state === state)]); if (c) return c; }
+  // T296 (#881): a public car park is generated (autolot.ts parkLot: laid along its street at any angle), whatever presets its size has
+  if (use === 'park' && TOWN_PARKS) { const a = autoPreset(lot, st, use, state, 'park'); if (a) return { preset: a }; }
   // T298 (#883): a shopping centre (its lot already widened over its parts: compose) is generated, whatever presets the anchor's own size has
   if (use === 'com' && isCentre(biz)) { const a = autoPreset(lot, st, use, state, 'centre'); if (a) return { preset: a }; }
   // (T270: a shop lot whose approved presets cannot show the shop its place calls for draws a frozen one that can, on a lot the map axes fit)
@@ -344,6 +346,12 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
   if (angled) return ok.length ? shopPlan(tieredOf(ok, cap), lot, use, undefined, biz, cap) : null;
   return shopPlan(frozenT(), lot, use, undefined, biz, cap);
 }
+/** T296 (#881): the town's car parks laid along their street (on: the public car parks generated, the presets' own car parks re-laid); off
+ *  (setTownCarParks(false), the old look kept as an option): the public car parks drawn from their presets and every car park as its preset has it */
+let TOWN_PARKS = true;
+export function setTownCarParks(on: boolean): void { TOWN_PARKS = on; }
+/** the preset uses whose car parks are re-laid (the shops, the public car parks, the tour shops and the civic buildings: school, churches, ...) */
+const RELAY_USES: ReadonlySet<PresetUse> = new Set(['com', 'park', 'tour', 'civic']);
 /** T305 (#890): the generated lot of a lot (autolot.ts autoLot) for its use and state, its tier (st.tier) and its place on its street, re-rolled by the lot
  *  lab's remix offset (st.remix); the lab's template (st.autoTemplate) when it forces one; null when the use has no template or the lot does not fit it */
 function autoPreset(lot: LotGeom, st: ComposeState, use: PresetUse, state: PresetState, template = st.autoTemplate as AutoTemplate | undefined): LotPreset | null {
@@ -419,7 +427,9 @@ export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; 
   const fit1 = remixOf(fit0, preset, lot, st, frame, sw >= 0 ? sw : mainIndex(fit0, frame));
   // T314 (#899): an approved house preset on a screen-straight road gets the generated lots' yard trees, owned hedge and soft ground (autolot.ts
   // dressStraight; never the lot lab's forced preset, which the owner edits as it is)
-  const fit = preset.whole && preset.road !== undefined && st.preset === undefined ? dressStraight(fit1, frame, lot, preset.use, preset.state, st.seed) : fit1;
+  // T296 (#881): a preset's own car parks laid again along its street (autolot.ts relayParks; never the lot lab's forced preset, nor a generated lot)
+  const fit2 = TOWN_PARKS && st.preset === undefined && !preset.id.startsWith('auto:') && RELAY_USES.has(preset.use) ? relayParks(fit1, frame, lot, preset.use, preset.state, st.seed) : fit1;
+  const fit = preset.whole && preset.road !== undefined && st.preset === undefined ? dressStraight(fit2, frame, lot, preset.use, preset.state, st.seed) : fit2;
   return { preset, fit: frozenHouse(preset) ? houseYards(fit, frame) : fit, frame };
 }
 
@@ -711,7 +721,7 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
   const range = (pts: readonly number[]): [number, number] => { let a = Infinity, b = -Infinity; for (let i = 0; i < pts.length; i += 2) { a = Math.min(a, pts[i]!); b = Math.max(b, pts[i]!); } return [a, b]; };
   let drive: [number, number] | null = null, main: [number, number] | null = null, big = 0, ups = 0;
   for (const a of fit.patches) {
-    B.patches.push({ kind: a.kind, tex: patchTex(a.kind, a.tex as LotPatch['tex']), quad: listToWorld(f, a.pts), ...(a.lines ? { lines: listToWorld(f, a.lines) } : {}) });
+    B.patches.push({ kind: a.kind, tex: patchTex(a.kind, a.tex as LotPatch['tex']), quad: listToWorld(f, a.pts), ...(a.lines ? { lines: listToWorld(f, a.lines) } : {}), ...(a.stops ? { stops: listToWorld(f, a.stops) } : {}), ...(a.park ? { park: true as const } : {}) });
     if (a.kind === 'drive' && !drive) drive = range(a.pts);
   }
   if (B.drops) { const kept = new Set(fit.from); preset.props.forEach((q, i) => { if (!kept.has(i)) B.drops!.push({ preset: preset.id, prop: i, id: q.id, why: 'outside the lot at this size (the fit)' }); }); }

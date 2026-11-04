@@ -15,7 +15,7 @@ import type { Box4 } from './compose-core';
 import type { Half } from './house-class';
 import type { PresetFrame } from './preset-frame';
 import type { PresetPatch, PresetProp, Road, View } from './presets';
-import { bayDims, bayRow, carBody, type BayDims } from './carpark-lot';
+import { bayDims, bayRow, bayRuns, rowInto, type BayDims } from './carpark-lot';
 import { roadView, turned } from './preset-art';
 import { wingsOf } from './centre-biz';
 
@@ -47,7 +47,7 @@ const ISL = 1.5, MAXRUN = 7, ENTRY = 3.4, KERB = 0.2;
 const SHOP_D = 4.6, SHOP_MIN = 3.0, SHOP_ROWS2 = 4.0, LEAST = 0.65, WING_D = 4.8;
 /** the gap between two shops of the back row: at least, at most */
 const GAP0 = 0.2, GAP1 = 1.2;
-const LAMP = 'world:streetlamp', STOP = 'expansion:wheel-stop', BENCH = 'world:bench', BIN = 'world:trashcan', DUMPSTER = 'town:dumpster';
+const LAMP = 'world:streetlamp', BENCH = 'world:bench', BIN = 'world:trashcan', DUMPSTER = 'town:dumpster';
 
 /** whether a shop's picture faces a frame direction on the road: view 0 the street, 1 +x, 3 -x (a screen-straight road: its screen-axis set has that
  *  view; any other road: its four views turn) */
@@ -55,26 +55,8 @@ function facesView(id: string, road: Road, view: View): boolean {
   return road % 2 ? roadView(id, road, view) !== null : turned(id, 1).id !== id;
 }
 
-/** a row's run from a to b cut into islands and bays: islands at both ends and between runs of MAXRUN bays at most, the slack shared by the end
- *  islands; the whole run an island when fewer than two bays fit */
-function runs(a: number, b: number, bw: number): { isl: [number, number][]; bays: [number, number][] } {
-  const len = b - a;
-  let k = Math.floor((len - 2 * ISL) / bw + 1e-9);
-  if (k < 2) return { isl: len > 0.4 ? [[a, b]] : [], bays: [] };
-  const m = Math.ceil(k / MAXRUN);
-  k = Math.floor((len - (m + 1) * ISL) / bw + 1e-9);
-  if (k < 2) return { isl: [[a, b]], bays: [] };
-  const extra = len - (m + 1) * ISL - k * bw, isl: [number, number][] = [], bays: [number, number][] = [];
-  let x = a + ISL + extra / 2;
-  isl.push([a, x]);
-  for (let j = 0; j < m; j++) {
-    const n = Math.floor(k / m) + (j < k % m ? 1 : 0);
-    bays.push([x, n]); x += n * bw;
-    const e = j === m - 1 ? b : x + ISL;
-    isl.push([x, e]); x = e;
-  }
-  return { isl, bays };
-}
+/** a row's run from a to b cut into islands and bays (carpark-lot bayRuns: islands at both ends and between runs of MAXRUN bays at most) */
+const runs = (a: number, b: number, bw: number) => bayRuns(a, b, bw, ISL, MAXRUN);
 
 /** a polygon with its collinear points (straight-through or doubling back) and repeats taken out, so a notch at a corner leaves no spike */
 function clean(p: number[]): number[] {
@@ -163,14 +145,13 @@ export function centreLot(L: CentreLay, shops: readonly string[], kit: CentreKit
   plan.entrance = [ex0, 0, ex1, ya]; plan.park = [cx0, pa, cx1, yP];
   const rear = runs(cx0, cx1, dims.bw);
   const front = rows === 2 ? [runs(cx0, ex0, dims.bw), runs(ex1, cx1, dims.bw)] : [];
-  const fill = 0.5 + 0.3 * L.r(), lines: number[] = [], isles: { b: Box4; aisle: number; lit: boolean }[] = [];
-  /** a run's bays into the plan: its cars (the bodies' boxes in the overlap rule) and its wheel stops (on the map-axis streets only: the stop's picture
-   *  lies along a world axis, T296 adds the other headings) */
+  const fill = 0.5 + 0.3 * L.r(), lines: number[] = [], bars: number[] = [], isles: { b: Box4; aisle: number; lit: boolean }[] = [];
+  /** a run's bays into the plan: its cars (the bodies' boxes in the overlap rule) and its wheel stops (T296, carpark-lot rowInto: the stop's picture where
+   *  the rows run along a world axis, else painted on the ground in the rows' heading) */
   const lay = (x0: number, k: number, yA: number, dir: 1 | -1, s: number) => {
     const r = bayRow(f, dims, x0, k, yA, dir, fill, s);
     lines.push(...r.lines); plan.bays.push(...r.bays);
-    if (road % 2 === 0) for (const p of r.stops) { const q = L.fit(STOP, 0, p.x, p.y, dims.bw / 2 - 0.02, 0.2, 0.7); if (q) { L.props.push(q); L.boxes.push(L.boxOf(q)); } }
-    for (const c of r.cars) { const b = carBody(c.id); L.props.push(c); L.boxes.push([c.x - b.wid / 2, c.y - b.len / 2, c.x + b.wid / 2, c.y + b.len / 2]); plan.cars.push(L.props.length - 1); }
+    plan.cars.push(...rowInto(L, r, dims, bars).cars);
   };
   rear.bays.forEach(([x0, k], j) => lay(x0, k, yb, 1, seed + 17 * j));
   rear.isl.forEach(([a, b], j) => isles.push({ b: [a, yb, b, yP], aisle: yb, lit: j === 0 || j === rear.isl.length - 1 }));
@@ -188,7 +169,7 @@ export function centreLot(L: CentreLay, shops: readonly string[], kit: CentreKit
   pt(cx1, pa); pt(cx1, yP);
   for (const b of isles.filter(i => i.b[3] === yP).map(i => i.b).sort((a, b) => b[0] - a[0])) { pt(b[2], yP); pt(b[2], yb); pt(b[0], yb); pt(b[0], yP); }
   pt(cx0, yP);
-  L.patches.push({ kind: 'lot', tex: 'asphalt', pts: clean(P), lines: lines.map(v => +v.toFixed(3)) });
+  L.patches.push({ kind: 'lot', tex: 'asphalt', pts: clean(P), lines: lines.map(v => +v.toFixed(3)), ...(bars.length ? { stops: bars } : {}) });
   // ---- the islands: a kerb of slabs round grass; a tree, shrubs, and on the lit ones a lamp post at the aisle end
   for (const is of isles) {
     const [a, b, c, d] = is.b;

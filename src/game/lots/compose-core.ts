@@ -39,7 +39,7 @@ export interface Item { id: string; x: number; y: number; flip: boolean; s: numb
 /** a sprite at a size and orientation: its footprint relative to the anchor */
 export interface Spec { id: string; s: number; flip: boolean; h: Box4 }
 export interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean; paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; diag?: boolean; foot?: boolean }
-export interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
+export interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: LotPatch['tex']; quad: number[]; lines?: number[]; stops?: number[]; park?: true }
 export interface Pair { x: string; y: string }
 /** T222 (the owner, 2026-10-27: "dirt on farms and backyard veg gardens"): a vegetable bed lays the Dirt surface's ground (painted-surfaces.json
  *  `dirt`, dirt-run) under its rows */
@@ -396,7 +396,7 @@ export class Build {
       acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; if (it.standIn) p.standIn = it.standIn; if (it.foot) p.foot = it.car ? grown(it.fp, 1 / CAR_SCALE) : it.fp; props.push(p);
     }
     // (T228: a driveway says so: the engine cuts the road's edge lines at its mouth, street-marks.ts driveCuts)
-    const ground: LotPatch[] = this.patches.map(p => ({ ...(p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }), ...(p.kind === 'drive' ? { drive: true as const } : {}) }));
+    const ground: LotPatch[] = this.patches.map(p => ({ ...(p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }), ...(p.stops ? { stops: p.stops } : {}), ...(p.park ? { park: true as const } : {}), ...(p.kind === 'drive' ? { drive: true as const } : {}) }));
     // (T232: a building site's survey line, over its ground)
     if (this.surveyed) { const s = surveyPatch({ o: this.o, u: this.u, n: this.n, w: this.W, d: this.D }); if (s) ground.push(s); }
     // the decals last, bounded by the lot grown 2 tiles (a decal is up to 4 m across)

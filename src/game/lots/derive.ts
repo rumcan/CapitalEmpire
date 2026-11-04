@@ -99,7 +99,7 @@ export function derivePreset(m: LotPreset, w: number, d: number, info: DeriveInf
   const props = kept.sort((a, b) => a.i - b.i).map(k => k.q);
   // the ground patches and lines mapped and kept in the lot; the decals mapped, dropped only when they leave it
   const fit = (a: readonly number[]) => { const o: number[] = []; for (let i = 0; i + 1 < a.length; i += 2) o.push(r3(clamp(X(a[i]!), 0, w)), r3(clamp(Y(a[i + 1]!), 0, d))); return o; };
-  const patches: PresetPatch[] = m.patches.map(a => ({ ...a, pts: fit(a.pts), ...(a.lines ? { lines: fit(a.lines) } : {}) }));
+  const patches: PresetPatch[] = m.patches.map(a => ({ ...a, pts: fit(a.pts), ...(a.lines ? { lines: fit(a.lines) } : {}), ...(a.stops ? { stops: fit(a.stops) } : {}) }));
   let decals: PresetDecal[] | undefined;
   if (m.decals) {
     decals = [];

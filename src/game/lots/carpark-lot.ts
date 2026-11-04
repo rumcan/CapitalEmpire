@@ -8,7 +8,8 @@ import { LIBRARY } from '../library';
 import { CAR_DIRECTIONS, CAR_SCALE, carDrawnLength, carHeading, carOwnerScale } from '../ext/car-art';
 import { frameHalf } from './house-class';
 import type { PresetFrame } from './preset-frame';
-import type { PresetProp } from './presets';
+import type { PresetPatch, PresetProp, View } from './presets';
+import { OVERLAP, share, type Box4 } from './compose-core';
 
 /** a bay's margins (tiles): 0.35 m across the car (0.175 each side), 0.5 m along it (0.25 each end), and the aisle in front of the bays (6 m) */
 export const BAY_SIDE = 0.175, BAY_END = 0.25, AISLE = 3;
@@ -75,23 +76,175 @@ export function carToward(f: PresetFrame, model: string, vx: number, vy: number)
   const id = `cars:${model}:${CAR_DIRECTIONS[p]}`;
   return carsByHeading().get(p)?.includes(id) ? id : (carsByHeading().get(p)?.[0] ?? null);
 }
-/** a row of k bays from x0 along the street, their open ends on the aisle's edge at y = ya and their backs at ya + dir x bl (dir 1: away from the street,
- *  -1: toward it): the bays (x0, y0, x1, y1 boxes), the painted lines (each bay's sides), the wheel stops' spots (in from each back end) and a car in a
- *  share `fill` of the bays (seeded; nosed in, now and then backed in, along the bays' axis: the picture turned nearest to it) */
-export interface BayRow { bays: [number, number, number, number][]; lines: number[]; stops: { x: number; y: number }[]; cars: PresetProp[] }
-export function bayRow(f: PresetFrame, dims: BayDims, x0: number, k: number, ya: number, dir: 1 | -1, fill: number, seed: number): BayRow {
+/** a row of k bays from x0 along the row, their open ends on the aisle's edge at ya and their backs at ya + dir x bl (dir 1: away from the street,
+ *  -1: toward it): the bays (x0, y0, x1, y1 boxes), the painted lines (each bay's sides), the wheel stops' spots (STOP_IN in from each back end) and a car
+ *  in a share `fill` of the bays (seeded; nosed in, now and then backed in, along the bays' axis: the picture turned nearest to it). T296 (#881): axis 'y'
+ *  (the default) lays the row along the frame's x, its bays along y (square to the street); axis 'x' lays it along y, its bays along x (x0 and k along y,
+ *  ya and dir along x), for a car park whose bays run along the street */
+export interface BayRow { axis: 'x' | 'y'; bays: [number, number, number, number][]; lines: number[]; stops: { x: number; y: number }[]; cars: PresetProp[] }
+export function bayRow(f: PresetFrame, dims: BayDims, x0: number, k: number, ya: number, dir: 1 | -1, fill: number, seed: number, axis: 'x' | 'y' = 'y'): BayRow {
   const { bw, bl } = dims, yb = ya + dir * bl, lo = Math.min(ya, yb), hi = Math.max(ya, yb);
-  const out: BayRow = { bays: [], lines: [], stops: [], cars: [] };
+  // (s along the row, t along the bay: the frame point)
+  const P = axis === 'y' ? (s: number, t: number): [number, number] => [s, t] : (s: number, t: number): [number, number] => [t, s];
+  const out: BayRow = { axis, bays: [], lines: [], stops: [], cars: [] };
   let r = (seed ^ 0x298) >>> 0; const rnd = () => { r = (Math.imul(r ^ (r >>> 15), 2246822507) + 0x9e3779b9) >>> 0; return r / 4294967296; };
-  const nose = carToward(f, dims.model, 0, dir), tail = carToward(f, dims.model, 0, -dir);
-  for (let i = 0; i <= k; i++) out.lines.push(x0 + i * bw, ya, x0 + i * bw, yb);
+  const nose = carToward(f, dims.model, ...P(0, dir)), tail = carToward(f, dims.model, ...P(0, -dir));
+  for (let i = 0; i <= k; i++) out.lines.push(...P(x0 + i * bw, ya), ...P(x0 + i * bw, yb));
   for (let i = 0; i < k; i++) {
-    const cx = x0 + (i + 0.5) * bw;
-    out.bays.push([x0 + i * bw, lo, x0 + (i + 1) * bw, hi]);
-    out.stops.push({ x: cx, y: yb - dir * 0.35 });
+    const cx = x0 + (i + 0.5) * bw, [a, b] = P(x0 + i * bw, lo), [c, d] = P(x0 + (i + 1) * bw, hi);
+    out.bays.push([a, b, c, d]);
+    const [sx, sy] = P(cx, yb - dir * STOP_IN); out.stops.push({ x: sx, y: sy });
     if (rnd() >= fill) continue;
-    const id = rnd() < 0.2 ? tail ?? nose : nose ?? tail;
-    if (id) out.cars.push({ id, x: cx, y: (ya + yb) / 2 + dir * 0.1, scale: 1, view: 0 });
+    const id = rnd() < 0.2 ? tail ?? nose : nose ?? tail, [px, py] = P(cx, (ya + yb) / 2 + dir * 0.1);
+    if (id) out.cars.push({ id, x: px, y: py, scale: 1, view: 0 });
   }
   return out;
+}
+
+// ---------- T296 (#881; the owner, 2026-11-02: "parking lots like the one now at the driving range needs to be all over town and they need to adapt to the
+// street angle. also need different angles of the parking lot cement stoppers and parking lines that are at different angle based on the road"): a whole
+// car park in any rectangle of a lot's frame, so it lies along its street at any angle, with its wheel stops in every heading.
+/** the wheel stop: its picture, its inset from a bay's back end (tiles), the half length of the stop painted on the ground (0.84 m: a 1.7 m kerb stone) */
+export const STOP = 'expansion:wheel-stop', STOP_IN = 0.35, STOP_HALF = 0.42;
+/** the stop's picture lies along one world axis (turned and mirrored onto the other: preset-art AXIS_PROPS), so it is drawn only where the bays' rows run
+ *  within 2 degrees of a world axis; every other heading (the screen-straight streets, a free angle) paints the stop on the ground (a concrete bar with its
+ *  shadow: LotPatch.stops, renderer.ts drawLots), across the bay at any angle */
+const STOP_SNAP = Math.cos(2 * Math.PI / 180);
+/** whether frame f's rows run along a world axis (the stop's picture fits them) */
+export const stopArt = (f: PresetFrame): boolean => Math.max(Math.abs(f.u.x), Math.abs(f.u.y)) > STOP_SNAP;
+/** what a car park needs of a lot's layout (autolot's Lay; compose's re-lay of a preset's car park, relayParks) */
+export interface ParkLay {
+  readonly f: PresetFrame; readonly props: PresetProp[]; readonly boxes: Box4[]; readonly patches: PresetPatch[];
+  r(): number;
+  boxOf(q: PresetProp): Box4;
+  add(q: PresetProp): boolean;
+  fit(id: string, view: View, cx: number, cy: number, ha: number, hb: number, least?: number): PresetProp | null;
+}
+/** a row's wheel stops and cars into a layout: the stops as the picture (stopArt, fitted to the bay's width) or painted bars (pushed on bars: x0 y0 x1 y1,
+ *  across the bay); the cars where their body is clear of the layout's other pieces (a car's box is its body, not its picture's square); the counts */
+export function rowInto(L: ParkLay, row: BayRow, dims: BayDims, bars: number[]): { art: number; bars: number; cars: number[] } {
+  const out = { art: 0, bars: 0, cars: [] as number[] }, art = stopArt(L.f), along = row.axis === 'y';
+  // (the cars first: a stop lies under a car's nose, never in the overlap rule)
+  for (const c of row.cars) {
+    const b = carBody(c.id), box: Box4 = along ? [c.x - b.wid / 2, c.y - b.len / 2, c.x + b.wid / 2, c.y + b.len / 2] : [c.x - b.len / 2, c.y - b.wid / 2, c.x + b.len / 2, c.y + b.wid / 2];
+    if (L.boxes.some(o => share(box, o) > OVERLAP)) continue;
+    L.props.push(c); L.boxes.push(box); out.cars.push(L.props.length - 1);
+  }
+  for (const p of row.stops) {
+    const q = art ? (along ? L.fit(STOP, 0, p.x, p.y, dims.bw / 2 - 0.02, 0.2, 0.7) : L.fit(STOP, 1, p.x, p.y, 0.2, dims.bw / 2 - 0.02, 0.7)) : null;
+    if (q) { L.props.push(q); L.boxes.push(L.boxOf(q)); out.art++; continue; }
+    const h = Math.min(STOP_HALF, dims.bw / 2 - 0.12);
+    bars.push(...(along ? [p.x - h, p.y, p.x + h, p.y] : [p.x, p.y - h, p.x, p.y + h]).map(v => +v.toFixed(3))); out.bars++;
+  }
+  return out;
+}
+
+/** a row's run from a to b cut into bays and kerbed islands: islands at both ends and between runs of maxRun bays at most, the slack shared by the end
+ *  islands; the whole run an island when fewer than two bays fit. bare: a run too short for two islands and three bays is all bays (centred), no island */
+export function bayRuns(a: number, b: number, bw: number, isl: number, maxRun: number, bare = false): { isl: [number, number][]; bays: [number, number][] } {
+  const len = b - a;
+  if (bare && len < 2 * isl + 3 * bw) { const k = Math.floor(len / bw + 1e-9); return { isl: [], bays: k < 1 ? [] : [[a + (len - k * bw) / 2, k]] }; }
+  let k = Math.floor((len - 2 * isl) / bw + 1e-9);
+  if (k < 2) return { isl: len > 0.4 ? [[a, b]] : [], bays: [] };
+  const m = Math.ceil(k / maxRun);
+  k = Math.floor((len - (m + 1) * isl) / bw + 1e-9);
+  if (k < 2) return { isl: [[a, b]], bays: [] };
+  const extra = len - (m + 1) * isl - k * bw, isles: [number, number][] = [], bays: [number, number][] = [];
+  let x = a + isl + extra / 2;
+  isles.push([a, x]);
+  for (let j = 0; j < m; j++) {
+    const n = Math.floor(k / m) + (j < k % m ? 1 : 0);
+    bays.push([x, n]); x += n * bw;
+    const e = j === m - 1 ? b : x + isl;
+    isles.push([x, e]); x = e;
+  }
+  return { isl: isles, bays };
+}
+const quad = (x0: number, y0: number, x1: number, y1: number): number[] => [x0, y0, x1, y0, x1, y1, x0, y1].map(v => +v.toFixed(3));
+
+/** a car park's ground and furniture: its asphalt's texture, the trees and shrubs its islands are planted from, whether its islands are lit (lamp posts) */
+export interface ParkKit { tex: string; trees: readonly string[]; shrubs: readonly string[]; lamps: boolean }
+/** a laid car park (frame tiles): its asphalt's box, the entrance (its mouth from the street, y = 0, to the first aisle), whether it is at the middle or a
+ *  side drive, the aisles, the bays, the islands, and the props it added (lamp posts, cars: indices), its wheel stops (art: pictures, bars: painted) */
+export interface ParkPlan {
+  park: Box4; entrance: Box4; mouth: 'mid' | 'side'; aisles: Box4[]; bays: Box4[]; islands: Box4[]; lamps: number[]; cars: number[]; art: number; bars: number;
+}
+/** the car park's aisle (5.6 m, two-way), the entrance's width at the middle, an island's least width, the most bays between two islands, an island's kerb */
+export const PARK_AISLE = 2.8, PARK_ENTRY = 3.2, PARK_ISL = 1.5, PARK_RUN = 8, PARK_KERB = 0.2;
+const LAMP = 'world:streetlamp';
+
+/** a car park laid in box (x0, y0, x1, y1 in the lot's frame; the street before y0, the lot's front at y = 0), square to its street at any angle. From the
+ *  street back, modules of [a row facing the street, an aisle, a row] where both rows fit, else [an aisle, a row], as many as the depth takes; one module is
+ *  entered at its middle (through the front row), several by a drive at one side (seeded) that joins their aisles. Each row is cut into runs of bays and
+ *  kerbed, planted islands (bayRuns: none on a short row), the end islands of the back rows lit by a lamp post. Bays sized from the car (bayDims), painted
+ *  lines, a wheel stop at each bay's back (rowInto: the picture or a painted bar), cars in some bays. The asphalt is one patch (the lines and the bars on it)
+ *  with its mouth to the street; the islands are drawn over it (park). Null when no row and aisle fit */
+export function layCarPark(L: ParkLay, box: Box4, seed: number, kit: ParkKit): ParkPlan | null {
+  const [x0, y0, x1, y1] = box, f = L.f, dims = bayDims(f, seed);
+  if (!dims) return null;
+  const { bw, bl } = dims, CA = PARK_AISLE;
+  // the modules from the street back (the aisle from ya to yb; a front row before it when front)
+  const mods: { front: boolean; ya: number; yb: number }[] = [];
+  for (let y = y0; ;) {
+    const room = y1 - y;
+    if (room >= 2 * bl + CA - 1e-9) { mods.push({ front: true, ya: y + bl, yb: y + bl + CA }); y += 2 * bl + CA; }
+    else if (room >= bl + CA - 1e-9) { mods.push({ front: false, ya: y, yb: y + CA }); y += bl + CA; }
+    else break;
+  }
+  if (!mods.length) return null;
+  const last = mods[mods.length - 1]!, yE = last.yb + bl, side = mods.length > 1, left = ((seed >>> 3) & 1) === 0;
+  let rx0 = x0, rx1 = x1, ent: Box4;
+  if (side) {
+    const dx0 = left ? x0 : x1 - CA;
+    ent = [dx0, 0, dx0 + CA, last.yb];
+    if (left) rx0 = dx0 + CA; else rx1 = dx0;
+  } else { const ex0 = (x0 + x1) / 2 - PARK_ENTRY / 2; ent = [ex0, 0, ex0 + PARK_ENTRY, mods[0]!.ya]; }
+  if (rx1 - rx0 < 2 * bw) return null;
+  const plan: ParkPlan = { park: [x0, y0, x1, yE], entrance: ent, mouth: side ? 'side' : 'mid', aisles: [], bays: [], islands: [], lamps: [], cars: [], art: 0, bars: 0 };
+  const fill = 0.45 + 0.35 * L.r(), lines: number[] = [], bars: number[] = [], isles: { b: Box4; aisle: number; lit: boolean }[] = [];
+  const row = (a: number, b: number, ya: number, dir: 1 | -1, s: number, lit: boolean) => {
+    const R = bayRuns(a, b, bw, PARK_ISL, PARK_RUN, true), lo = Math.min(ya, ya + dir * bl), hi = Math.max(ya, ya + dir * bl);
+    R.bays.forEach(([bx, k], j) => {
+      const r = bayRow(f, dims, bx, k, ya, dir, fill, s + 17 * j);
+      lines.push(...r.lines); plan.bays.push(...r.bays);
+      const n = rowInto(L, r, dims, bars); plan.art += n.art; plan.bars += n.bars; plan.cars.push(...n.cars);
+    });
+    R.isl.forEach(([ia, ib], j) => isles.push({ b: [ia, lo, ib, hi], aisle: ya, lit: lit && (j === 0 || j === R.isl.length - 1) }));
+  };
+  mods.forEach((m, j) => {
+    plan.aisles.push([side ? rx0 : x0, m.ya, side ? rx1 : x1, m.yb]);
+    if (m.front) {
+      if (side) row(rx0, rx1, m.ya, -1, seed + 101 * j + 7, false);
+      else { row(rx0, ent[0], m.ya, -1, seed + 101 * j + 7, false); row(ent[2], rx1, m.ya, -1, seed + 101 * j + 9, false); }
+    }
+    row(rx0, rx1, m.yb, 1, seed + 101 * j + 11, kit.lamps);
+  });
+  // (the side drive's end beside the last back row: an island)
+  if (side) isles.push({ b: [ent[0], last.yb, ent[2], yE], aisle: last.yb, lit: kit.lamps });
+  // the asphalt: the box to the back of the last row, its mouth out to the street (y = 0)
+  const P: number[] = [x0, y0];
+  if (y0 > 0.05) P.push(ent[0], y0, ent[0], 0, ent[2], 0, ent[2], y0);
+  P.push(x1, y0, x1, yE, x0, yE);
+  L.patches.push({ kind: 'lot', tex: kit.tex, pts: P.map(v => +v.toFixed(3)), lines: lines.map(v => +v.toFixed(3)), ...(bars.length ? { stops: bars } : {}) });
+  // the islands: a kerb of slabs round grass, drawn over the asphalt (park); a tree or a shrub, and on the lit ones a lamp post at the aisle end
+  for (const is of isles) {
+    const [a, b, c, d] = is.b;
+    if (c - a < 0.6 || d - b < 0.6) continue;
+    plan.islands.push(is.b);
+    const K = PARK_KERB;
+    L.patches.push({ kind: 'walk', tex: 'slabs', pts: quad(a, b, c, b + K), park: true }, { kind: 'walk', tex: 'slabs', pts: quad(a, d - K, c, d), park: true },
+      { kind: 'walk', tex: 'slabs', pts: quad(a, b + K, a + K, d - K), park: true }, { kind: 'walk', tex: 'slabs', pts: quad(c - K, b + K, c, d - K), park: true },
+      { kind: 'yard', tex: 'grass', pts: quad(a + K, b + K, c - K, d - K), park: true });
+    const mx = (a + c) / 2, toward = is.aisle <= b + 1e-6 ? 1 : -1, near = is.aisle + toward * 0.45, far = is.aisle + toward * (d - b - 0.75);
+    if (is.lit) { const q = L.fit(LAMP, 0, mx, near, 0.4, 0.4); if (q && L.add(q)) plan.lamps.push(L.props.length - 1); }
+    plant(L, kit, mx, is.lit ? far : (b + d) / 2, (c - a) / 2 - K, (d - b) / 2 - K);
+  }
+  return plan;
+}
+/** an island's planting: a tree (the kit's, the largest that fits, at most 0.75) or, on a small island, a shrub */
+function plant(L: ParkLay, kit: ParkKit, x: number, y: number, ha: number, hb: number): void {
+  const n = kit.trees.length, at = Math.floor(L.r() * Math.max(1, n));
+  if (n && ha >= 0.45 && hb >= 0.45) for (let t = 0; t < Math.min(n, 6); t++) { const q = L.fit(kit.trees[(at + t) % n]!, 0, x, y, ha, hb, 0.4); if (q && L.add({ ...q, scale: Math.min(q.scale, 0.75) })) return; }
+  const m = kit.shrubs.length; if (!m) return;
+  const q = L.fit(kit.shrubs[at % m]!, 0, x, y, Math.min(0.5, ha), Math.min(0.5, hb), 0.3); if (q) L.add(q);
 }

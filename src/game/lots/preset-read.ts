@@ -24,10 +24,12 @@ function readProp(v: unknown): PresetProp | undefined {
 /** one ground patch read from JSON, or undefined when it is not valid (lines, when present, must be finite numbers) */
 function readPatch(v: unknown): PresetPatch | undefined {
   if (!isObj(v)) return undefined;
-  const { kind, tex, pts, lines } = v;
+  const { kind, tex, pts, lines, stops, park } = v;
   if (typeof kind !== 'string' || !KINDS.includes(kind) || typeof tex !== 'string' || !nums(pts) || pts.length % 2) return undefined;
   const out: PresetPatch = { kind: kind as PresetPatch['kind'], tex, pts: pts.slice() };
   if (lines !== undefined) { if (!nums(lines)) return undefined; out.lines = lines.slice(); }
+  if (stops !== undefined) { if (!nums(stops)) return undefined; out.stops = stops.slice(); }
+  if (park === true) out.park = true;
   return out;
 }
 
@@ -95,7 +97,7 @@ export function formatPresets(list: readonly LotPreset[], meta?: PresetMeta): st
   const out = list.map(p => {
     const head = `{"id":${JSON.stringify(p.id)},"use":"${p.use}","state":"${p.state}","w":${num(p.w)},"d":${num(p.d)}${p.curated ? ',"curated":true' : ''}${p.road !== undefined ? `,"road":${p.road}` : ''}${p.approved ? ',"approved":true' : ''}${p.whole ? ',"whole":true' : ''}${p.derived !== undefined ? `,"derived":${JSON.stringify(p.derived)}` : ''}${p.detached !== undefined ? `,"detached":${JSON.stringify(p.detached)}` : ''}`;
     const props = p.props.map(q => `{"id":${JSON.stringify(q.id)},"x":${num(q.x)},"y":${num(q.y)},"scale":${num(q.scale)},"view":${q.view}}`);
-    const patches = p.patches.map(a => `{"kind":"${a.kind}","tex":${JSON.stringify(a.tex)},"pts":${nlist(a.pts)}${a.lines ? `,"lines":${nlist(a.lines)}` : ''}}`);
+    const patches = p.patches.map(a => `{"kind":"${a.kind}","tex":${JSON.stringify(a.tex)},"pts":${nlist(a.pts)}${a.lines ? `,"lines":${nlist(a.lines)}` : ''}${a.stops ? `,"stops":${nlist(a.stops)}` : ''}${a.park ? ',"park":true' : ''}}`);
     const decals = p.decals?.map(q => `{"id":${JSON.stringify(q.id)},"x":${num(q.x)},"y":${num(q.y)},"scale":${num(q.scale)},"alpha":${num(q.alpha)}}`);
     const block = (rows: string[]) => (rows.length ? `\n${rows.join(',\n')}\n` : '');
     return `${head},"props":[${block(props)}],"patches":[${block(patches)}]${decals ? `,"decals":[${block(decals)}]` : ''}}`;

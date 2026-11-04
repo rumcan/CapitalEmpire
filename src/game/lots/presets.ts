@@ -12,8 +12,9 @@ export type View = 0 | 1 | 2 | 3;
 export type Road = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 /** a prop in a preset, in the lot's own frame (tiles): x, y the centre of its footprint, x along the street (0 at the left as seen from the street), y away from the street (0 at the street edge); scale: a multiplier of the sprite's owner scale (scales.ts OWNER_SCALE; vehicles: of their studio size, ext/car-art carOwnerScale), 1 = the prop's stored size */
 export interface PresetProp { id: string; x: number; y: number; scale: number; view: View }
-/** a ground patch in the lot's frame: pts as x, y pairs (tiles); lines: its painted lines (parking bays, furrows) as segment end points x0, y0, x1, y1 in the same frame (tiles) */
-export interface PresetPatch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: string; pts: number[]; lines?: number[] }
+/** a ground patch in the lot's frame: pts as x, y pairs (tiles); lines: its painted lines (parking bays, furrows) as segment end points x0, y0, x1, y1 in the same frame (tiles);
+ *  T296 (#881): stops, wheel stops painted on the ground (x0, y0, x1, y1 bars, as lines); park, drawn with the car parks over their asphalt (an island) */
+export interface PresetPatch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: string; pts: number[]; lines?: number[]; stops?: number[]; park?: true }
 /** a flat ground decal (lot-decals.ts) in a lot's preset frame: x, y its centre (tiles); scale a multiplier (negative: mirrored); alpha 0..1 */
 export interface PresetDecal { id: string; x: number; y: number; scale: number; alpha: number }
 /** one preset: its id, use, state, the size it was laid out for (tiles), its props and ground patches; curated: the owner has edited it; road: set on a
@@ -105,7 +106,7 @@ export function fitPreset(p: LotPreset, w: number, d: number): Fitted {
   const decals: PresetDecal[] = [];
   for (const q of p.decals ?? []) { const x = fx(q.x), y = fy(q.y); if (!out(x, y)) decals.push({ ...q, x, y }); }
   const fit = (a: readonly number[]) => { const o: number[] = []; for (let i = 0; i + 1 < a.length; i += 2) o.push(Math.min(w, Math.max(0, fx(a[i]!))), Math.min(d, Math.max(0, fy(a[i + 1]!)))); return o; };
-  const patches = p.patches.map(a => ({ ...a, pts: fit(a.pts), ...(a.lines ? { lines: fit(a.lines) } : {}) }));
+  const patches = p.patches.map(a => ({ ...a, pts: fit(a.pts), ...(a.lines ? { lines: fit(a.lines) } : {}), ...(a.stops ? { stops: fit(a.stops) } : {}) }));
   return { props, patches, from, dropped, decals };
 }
 
