@@ -14,6 +14,7 @@ import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, type DayRoster } from './ever
 import type { GameSkills, Golfer, Sex } from './play/types';
 import type { TeeKind } from './types';
 import { normalizeYou, type YouSave } from './you';
+import { normalizeYourRound, type YourRound } from './play/yours';
 
 /** the five skills, in the order the cards show them */
 export const SKILL_IDS = ['driving', 'irons', 'short', 'putting', 'nerve'] as const;
@@ -107,6 +108,8 @@ export interface PlayerProfile {
   today: { day: number; n: Record<PracticeKind, number> }; busy: { day: number; until: number } | null; booked: Booking | null;
   /** T240: your character in the world (golf/you.ts): where you stand, your facing and your look; absent until you first stand somewhere */
   you?: YouSave;
+  /** T317: the round you are playing by hand (play/yours.ts: the holes, the card, your ball); absent: none under way */
+  round?: YourRound;
 }
 /** the practice log and the rounds keep this many (newest last) */
 export const LOG_MAX = 30, ROUNDS_MAX = 20;
@@ -154,6 +157,7 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     busy: b && Number.isFinite(b.day) && Number.isFinite(b.until) ? { day: b.day, until: b.until } : null,
     booked,
     ...(normalizeYou(p.you) ? { you: normalizeYou(p.you) } : {}),
+    ...(normalizeYourRound(p.round) ? { round: normalizeYourRound(p.round) } : {}),
   };
 }
 

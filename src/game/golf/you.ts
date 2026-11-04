@@ -28,8 +28,8 @@ export const TALK_REACH = 1.2;
 export type Verb = 'walk' | 'talk' | 'look' | 'use';
 /** what is under the pointer: open ground, a person, a building (a business, a house, an iconic place, the clubhouse), the range (its front and
  *  pieces), the practice area's greens, the first tee */
-export type ThingKind = 'ground' | 'person' | 'building' | 'range' | 'practice' | 'tee';
-export const VERB_OF: Readonly<Record<ThingKind, Verb>> = { ground: 'walk', person: 'talk', building: 'look', range: 'use', practice: 'use', tee: 'use' };
+export type ThingKind = 'ground' | 'person' | 'building' | 'range' | 'practice' | 'tee' | 'cart' | 'ball';
+export const VERB_OF: Readonly<Record<ThingKind, Verb>> = { ground: 'walk', person: 'talk', building: 'look', range: 'use', practice: 'use', tee: 'use', cart: 'use', ball: 'use' };
 /** the verb of a thing; null where you cannot go (water, a fence, a wall with nothing to look at) */
 export function verbOf(kind: ThingKind | null): Verb | null { return kind ? VERB_OF[kind] : null; }
 /** the hover label: what a click there does, naming the thing */
@@ -41,6 +41,8 @@ export function hoverText(kind: ThingKind | null, name = ''): string {
     case 'range': return 'Use the range: buy a bucket, hit at a mat';
     case 'practice': return name ? `Use ${name}` : 'Use the practice area';
     case 'tee': return 'The first tee: start a round';
+    case 'cart': return name || 'Get in your golf cart';
+    case 'ball': return 'Your ball: address it';
     default: return 'You cannot walk there';
   }
 }
@@ -53,15 +55,22 @@ export interface You {
   phase: number; swing: number; skip: boolean;
   /** the target marker's point (NaN: none) and its age (s) */
   tx: number; ty: number; mark: number;
+  /** T317: the pace (tiles per second; a run is RUN_K faster): 0 is a person's (YOU_WALK, YOU_RUN); your golf cart drives at CART_TILES */
+  speed: number;
 }
 export function makeYou(x: number, y: number, face = 0): You {
-  return { x, y, face, path: [], seg: 0, run: false, moving: false, keys: false, phase: 0, swing: -1, skip: false, tx: NaN, ty: NaN, mark: 0 };
+  return { x, y, face, path: [], seg: 0, run: false, moving: false, keys: false, phase: 0, swing: -1, skip: false, tx: NaN, ty: NaN, mark: 0, speed: 0 };
 }
 
 /** the route from a to b (tiles) round what cost(x, y) makes Infinity (paths cheapest), its points a first and b last. Found once per click */
 export function routeOf(a: Pt, b: Pt, cost: (x: number, y: number) => number): Pt[] {
   return gridPath(a, b, cost, 256, 16);
 }
+
+/** T317: a cart's run (Shift, a second click) is this much faster than its drive */
+export const RUN_K = 1.4;
+/** the pace (tiles per second) of a mover: a person's walk or jog, or its own speed (your cart) */
+export const paceOf = (y: You, run: boolean): number => y.speed > 0 ? y.speed * (run ? RUN_K : 1) : run ? YOU_RUN : YOU_WALK;
 
 /** sets you walking a route (its points, the first where you stand), running or not; the target marker goes on its last point */
 export function startWalk(y: You, pts: readonly Pt[], run: boolean): void {
@@ -100,7 +109,7 @@ export function stepYou(y: You, dt: number): boolean {
   if (y.swing >= 0) y.swing += dt;
   if (!y.moving) return false;
   const P = y.path, n = P.length / 2;
-  let left = (y.run ? YOU_RUN : YOU_WALK) * dt;
+  let left = paceOf(y, y.run) * dt;
   y.phase += left * FRAMES_PER_TILE * (y.run ? 0.75 : 1); // (a jog's longer stride)
   while (left > 0 && y.seg < n) {
     const bx = P[y.seg * 2]!, by = P[y.seg * 2 + 1]!, dx = bx - y.x, dy = by - y.y, L = Math.hypot(dx, dy);
@@ -126,7 +135,7 @@ export function keyStep(y: You, kx: number, ky: number, run: boolean, dt: number
   if (y.moving) stopWalk(y);
   y.keys = true; y.swing = -1;
   keyDir(kx, ky, KD);
-  const s = (run ? YOU_RUN : YOU_WALK) * dt, dx = KD[0] * s, dy = KD[1] * s;
+  const s = paceOf(y, run) * dt, dx = KD[0] * s, dy = KD[1] * s;
   y.face = facing(KD[0], KD[1]);
   let moved = false;
   if (ok(y.x + dx, y.y + dy)) { y.x += dx; y.y += dy; moved = true; }
@@ -169,12 +178,16 @@ export function talkSpot(p: Pt, from: Pt): Pt {
 }
 
 /** the saved character (golf/player.ts PlayerProfile.you): where you stand, your facing, and your look (an index into the golfer art) */
-export interface YouSave { x: number; y: number; f: number; look: number }
+export interface YouSave { x: number; y: number; f: number; look: number;
+  /** T317: your golf cart: where it is parked (or driven), its facing, and whether you sit in it; absent: it waits at its home by the clubhouse */
+  cart?: { x: number; y: number; f: number; in: boolean } }
 export function normalizeYou(x: unknown): YouSave | undefined {
   if (!x || typeof x !== 'object') return undefined;
   const o = x as Partial<YouSave>, n = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
   if (!n(o.x) || !n(o.y)) return undefined;
-  return { x: o.x!, y: o.y!, f: n(o.f) ? ((Math.round(o.f!) % 8) + 8) % 8 : 0, look: n(o.look) ? Math.max(0, Math.round(o.look!)) : 0 };
+  const c = o.cart as Partial<NonNullable<YouSave['cart']>> | undefined, f8 = (v: unknown) => n(v) ? ((Math.round(v as number) % 8) + 8) % 8 : 0;
+  const cart = c && typeof c === 'object' && n(c.x) && n(c.y) ? { x: c.x!, y: c.y!, f: f8(c.f), in: c.in === true } : undefined;
+  return { x: o.x!, y: o.y!, f: f8(o.f), look: n(o.look) ? Math.max(0, Math.round(o.look!)) : 0, ...(cart ? { cart } : {}) };
 }
 /** the looks the "Who are you?" card offers: the golfer art (ids), each a man's or a woman's (the ids carry _w for the women) */
 export const lookSex = (id: string): 'm' | 'w' => /_w\d/.test(id) ? 'w' : 'm';

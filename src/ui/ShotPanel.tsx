@@ -172,7 +172,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
           </p>
           {last && <p className="mt-1 text-[12px] tabular-nums text-slate-300">Last shot: {last.text}</p>}
           <div className="mt-2 flex justify-end gap-2">
-            <button className="btn" disabled={swinging || phase === 'done'} onClick={() => game.ownerCaddie()}>Let the caddie finish</button>
+            <button className="btn" disabled={swinging || phase === 'done'} onClick={() => game.ownerCaddie()}>{s.mine ? 'Let the caddie finish the hole' : 'Let the caddie finish'}</button>
           </div>
         </div>
         <canvas ref={canvas} width={CW} height={CH} className="mx-auto shrink-0 cursor-pointer select-none" style={{ width: CW, height: CH }} aria-label="Swing meter"
