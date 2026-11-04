@@ -13,7 +13,7 @@ import { NEAR, RANGE_LOT } from './rangestart';
 import { GOLFER_CLIPS } from '../library';
 import { PUTT_IMPACT_S, clipFrame, golferRow, hash, rowToward, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
-import { practiceArea, type PracticeArea, type PracticeScan } from './practice';
+import { NO_PRACTICE, practiceArea, practiceAreaAt, type PracticeArea, type PracticeScan } from './practice';
 import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
 import { DEFAULT_RANGE_LOOK, type RangeLook } from './range-look';
 import { PIC_TILES } from './range-pics';
@@ -160,6 +160,8 @@ export interface RangeScene {
   picker: { home: Pt; ang: number; lanes: Pt[] } | null;
   /** the player's home now (T133): 0 the caravan, 1 the cottage, 2 the house */
   home: HomeStage;
+  /** T288: the home yard's gate (world, just outside it): where you first stand */
+  homeGate: Pt;
   /** the way the golfers hit (unit, world) and the target greens; aims (T239): what the golfers aim at, the greens, or with none built the
    *  distance markers' line down the middle (50, 100 and 150 m) */
   aim: Pt; targets: SceneTarget[]; aims: SceneTarget[];
@@ -266,9 +268,11 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     }
     targets.push({ x: c.x, y: c.y, r, m: TARGET_D[i]! * 2 });
   }
-  const home = homeStage(s), Y = YARDS[home]!;
-  // the caravan's and the cottage's yard is the desert (T223: the range's 'yard' preset); the house's a mown lawn (T133)
-  patches.push({ pts: quad(28, 41, 3, 15.4), surf: 'dirt' }, { pts: quad(Y[0], Y[1], Y[2], Y[3]), surf: home === 2 ? 'firstCut' : 'yard' });
+  const home = homeStage(s);
+  // the shop's packed dirt, then the home's yard (T288: in the home's own frame, s.home, wherever the range was placed)
+  patches.push({ pts: quad(28, 41, 3, 15.4), surf: 'dirt' });
+  const homeAt = s.home ?? plot, PH = (u: number, v: number) => plotPoint(homeAt, facing, u, v);
+  homePart(PH, pieces, patches, home, toRoad);
   if (st.kiosk) patches.push({ pts: quad(PATIO[0], PATIO[1], PATIO[2], PATIO[3]), surf: 'concrete' });
   if (st.parking) patches.push({ pts: quad(GARAGE[0], GARAGE[1], GARAGE[2], GARAGE[3]), surf: 'concrete' });
 
@@ -285,13 +289,6 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   // the tin-and-tarp shack (golf:clubhouse-shanty) has no four views yet, and a building without them is drawn as the grand clubhouse (newart.ts):
   // the rusty lean-to shed stands in for it, turned to face the golfers (T258: until the owner's two views land)
   else { const a = art('golf-clubhouse-shanty', toRange); if (a) put('shop', a, SHOP.u, SHOP.v); else put('shop', 'expansion:lean-to-shed', SHOP.u, SHOP.v, toRange, { label: 'Stand In for the tin-and-tarp pro shop' }); }
-  homeYard(put, home, toRoad);
-  // T289: the caravan's and the cottage's desert yard keeps a barrel cactus and an agave by its fence (the house's lawn has none)
-  if (home < 2) for (const [k, id, u, v] of [['yard-cactus', 'newprop:desert-golden-barrel-cactus', 5, 7.6], ['yard-agave', 'newprop:desert-agave', 21.3, 12.5]] as const) if (DESERT_IDS.includes(id)) put(k, id, u, v);
-  fenceRun(pieces, P, 'yard-n', Y[0], Y[2], Y[1], Y[2], 'picket');
-  fenceRun(pieces, P, 'yard-w', Y[0], Y[2], Y[0], Y[3], 'picket');
-  fenceRun(pieces, P, 'yard-e', Y[1], Y[2], Y[1], Y[3], 'picket');
-  fenceRun(pieces, P, 'yard-s1', Y[0], Y[3], 12, Y[3], 'picket'); fenceRun(pieces, P, 'yard-s2', 14, Y[3], Y[1], Y[3], 'picket');
   // ---- the boundary: chain-link down both sides and across the far end
   fenceRun(pieces, P, 'side-a', SIDE_U[0], 17, SIDE_U[0], FAR_V, 'chain'); fenceRun(pieces, P, 'side-b', SIDE_U[1], 19, SIDE_U[1], FAR_V, 'chain');
   fenceRun(pieces, P, 'far', SIDE_U[0], FAR_V, SIDE_U[1], FAR_V, 'chain');
@@ -407,7 +404,10 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   const aims = targets.length ? targets : AIM_D.map(d => { const c = P(U_MID, STAND_V + d); return { x: c.x, y: c.y, r: 4, m: d * 2 }; });
   const q0 = P(COUNTER.u, COUNTER.v), q1 = P(COUNTER.u + 0.8, COUNTER.v);
   return {
-    facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), apron: st.teeTurf ? quad(0.3, 69.7, TEE[3], TEE[3] + TEE_GAP) : null, practice: practiceArea(plot, facing), paths, bays, academy, kiosk, picker, home, aim: { x: dv.x - o.x, y: dv.y - o.y }, targets, aims,
+    facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), apron: st.teeTurf ? quad(0.3, 69.7, TEE[3], TEE[3] + TEE_GAP) : null,
+    // T288: the practice area where the player placed it (none yet: an empty box), else the plot's own spot (a save from before T288)
+    practice: s.practiceAt === null ? NO_PRACTICE : s.practiceAt ? practiceAreaAt(s.practiceAt, P(CAR_EDGE_U, PATH_V)) : practiceArea(plot, facing),
+    paths, bays, academy, kiosk, picker, home, homeGate: PH(13, YARDS[home]![3] + 1.6), aim: { x: dv.x - o.x, y: dv.y - o.y }, targets, aims,
     counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V),
     // the counters side by side along the shop's front about its middle, the nearest to the line's head first (it calls the next golfer first)
     counters: Array.from({ length: st.counters }, (_, i) => COUNTER.u + (i - (st.counters - 1) / 2) * COUNTER_STEP).sort((a, b) => Math.abs(a - COUNTER.u - 0.8) - Math.abs(b - COUNTER.u - 0.8)).map(u => P(u, COUNTER.v)), garage,
@@ -511,7 +511,8 @@ export function rangeStructures(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSa
   const st = rangeStats(s), P = (u: number, v: number) => plotPoint(plot, facing, u, v);
   const box = ([u0, u1, v0, v1]: readonly [number, number, number, number]): [number, number, number, number] => { const a = P(u0, v0), b = P(u1, v1); return [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)]; };
   const out: { name: string; box: [number, number, number, number] }[] = [{ name: 'the pro shop', box: box(st.proShop ? SHOP_FOOT : SHACK_FOOT) }];
-  const home = homeStage(s); out.push({ name: HOME_WORDS[home]!, box: box(HOME_FOOT[home]!) });
+  // (T288: the home in its own frame, wherever the range was placed)
+  const home = homeStage(s), H = s.home ?? plot; { const [u0, u1, v0, v1] = HOME_FOOT[home]!, a = plotPoint(H, facing, u0, v0), b = plotPoint(H, facing, u1, v1); out.push({ name: HOME_WORDS[home]!, box: [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)] }); }
   const open = openSlots(st.lowerBays);
   if (st.covered || st.tier2) for (let g = 0; g < open.length; g += 4) {
     const k0 = open[g]!, k1 = open[Math.min(open.length, g + 4) - 1]!;
@@ -521,6 +522,74 @@ export function rangeStructures(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSa
   if (st.kiosk) out.push({ name: 'the coffee kiosk', box: box(KIOSK_FOOT) });
   if (st.parking) out.push({ name: 'the car park building', box: box(GARAGE) });
   return out;
+}
+
+/** T288: the player's home with its yard in the home's frame P (its ground patch, the home and its props, the desert plants, the picket fence) */
+function homePart(P: (u: number, v: number) => Pt, pieces: ScenePiece[], patches: ScenePatch[], home: HomeStage, toRoad: number): void {
+  const Y = YARDS[home]!, quad = (u0: number, u1: number, v0: number, v1: number): number[] => { const a = P(u0, v0), b = P(u1, v0), c = P(u1, v1), d = P(u0, v1); return [a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y]; };
+  const put = (key: string, id: string, u: number, v: number, q = 0, o: Partial<ScenePiece> = {}) => { const p = P(u, v); pieces.push({ key, id, x: p.x, y: p.y, q, ...o }); };
+  // the caravan's and the cottage's yard is the desert (T223: the range's 'yard' preset); the house's a mown lawn (T133)
+  patches.push({ pts: quad(Y[0], Y[1], Y[2], Y[3]), surf: home === 2 ? 'firstCut' : 'yard' });
+  homeYard(put, home, toRoad);
+  // T289: the caravan's and the cottage's desert yard keeps a barrel cactus and an agave by its fence (the house's lawn has none)
+  if (home < 2) for (const [k, id, u, v] of [['yard-cactus', 'newprop:desert-golden-barrel-cactus', 5, 7.6], ['yard-agave', 'newprop:desert-agave', 21.3, 12.5]] as const) if (DESERT_IDS.includes(id)) put(k, id, u, v);
+  fenceRun(pieces, P, 'yard-n', Y[0], Y[2], Y[1], Y[2], 'picket');
+  fenceRun(pieces, P, 'yard-w', Y[0], Y[2], Y[0], Y[3], 'picket');
+  fenceRun(pieces, P, 'yard-e', Y[1], Y[2], Y[1], Y[3], 'picket');
+  fenceRun(pieces, P, 'yard-s1', Y[0], Y[3], 12, Y[3], 'picket'); fenceRun(pieces, P, 'yard-s2', 14, Y[3], Y[1], Y[3], 'picket');
+}
+/** T288 (#873, the owner: "only his trailer and plot is there"): a bare start's scene before the range is placed: the player's home and its yard
+ *  in the home's frame (home: the plot rect it was laid in), the yard's world box (x0 y0 x1 y1, the largest home's: the range keeps off it) and
+ *  its gate (where you first stand) */
+export function homeScene(home: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): { pieces: ScenePiece[]; patches: ScenePatch[]; box: [number, number, number, number]; gate: Pt } {
+  const P = (u: number, v: number) => plotPoint(home, facing, u, v), st = homeStage(s), pieces: ScenePiece[] = [], patches: ScenePatch[] = [];
+  homePart(P, pieces, patches, st, roadView(facing));
+  return { pieces, patches, box: homeYardBox(home, facing), gate: P(13, YARDS[st]![3] + 1.6) };
+}
+/** T288: the home yard's world box (x0 y0 x1 y1) in its frame: the largest home's yard (the house's) with a tile round it */
+export function homeYardBox(home: Rect, facing: 0 | 1 | 2 | 3): [number, number, number, number] {
+  const Y = YARDS[2]!, a = plotPoint(home, facing, Y[0] - 1, Y[2] - 1), b = plotPoint(home, facing, Y[1] + 1, Y[3] + 1);
+  return [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)];
+}
+/** T288: what the driving range takes on its plot (world rects x y w h) for the placement's checks: the tee box, the outfield and the path
+ *  behind the mats (the plot's whole width from the path back), and the front beside the home's corner (the shop, the kiosk's patio, the car
+ *  park building) out to the drive. The home's corner (u under 27, v under 16) is left: a range placed on its start spot keeps the home there */
+export function rangeTakes(plot: Rect, facing: 0 | 1 | 2 | 3): Rect[] {
+  const R = (u0: number, u1: number, v0: number, v1: number): Rect => { const a = plotPoint(plot, facing, u0, v0), b = plotPoint(plot, facing, u1, v1); return [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)]; };
+  return [R(0, RANGE_PLOT[0], PATH_V - 1, RANGE_PLOT[1]), R(27, RANGE_PLOT[0] + 4, 0, PATH_V - 1)];
+}
+/** T288: an upgrade's footprint on the range (world polygons, x y pairs): what its placement ghost shows on the plot. The ground upgrades their
+ *  ground (the tee box, the outfield, the car park), the target greens their discs, the bays their mats, the roofs and the deck their stand, the
+ *  floodlights their masts, the buildings their footprints */
+export function upgradeFoot(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, id: RangeBizSave['owned'][number]): number[][] {
+  const P = (u: number, v: number) => plotPoint(plot, facing, u, v), sb = s.setback ?? 0;
+  const quad = (u0: number, u1: number, v0: number, v1: number): number[] => { const a = P(u0, v0), b = P(u1, v0), c = P(u1, v1), d = P(u0, v1); return [a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y]; };
+  const disc = (u: number, v: number, r: number, n = 20): number[] => { const out: number[] = []; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, p = P(u + Math.cos(a) * r, v + Math.sin(a) * r); out.push(p.x, p.y); } return out; };
+  const sq = (u: number, v: number, r: number) => quad(u - r, u + r, v - r, v + r);
+  const st = rangeStats(s), lot = rangeLot(sb);
+  const bays = (n: number) => { const o = openSlots(n); return [quad(slotU(o[0]!) - 1.5, slotU(o[o.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2)]; };
+  switch (id) {
+    case 'teeturf': return [quad(TEE[0], TEE[1], TEE[2], TEE[3])];
+    case 'grass': return [quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7)];
+    case 'greens': return [0, 1, 2].map(i => disc(TARGET_U[i]!, STAND_V + TARGET_D[i]!, TARGET_R[i]!));
+    case 'targets': return [3, 4].map(i => disc(TARGET_U[i]!, STAND_V + TARGET_D[i]!, TARGET_R[i]!));
+    case 'gravel': case 'pave': {
+      if (s.lot) { const [x, y, w, h] = s.lot; return [[x, y, x + w, y, x + w, y + h, x, y + h]]; }
+      return [quad(lot[0], lot[1], lot[2], lot[3])];
+    }
+    case 'bays8': return bays(8);
+    case 'bays12': return bays(12);
+    case 'bays24': return bays(24);
+    case 'covered': case 'tier2': { const o = openSlots(st.lowerBays); return [quad(slotU(o[0]!) - 1.2, slotU(o[o.length - 1]!) + 1.2, ROOF_V[0], ROOF_V[1])]; }
+    case 'lights': return [[1.6, 26], [68.4, 26], [1.6, 60], [68.4, 60], [1.6, 100], [68.4, 100], [1.6, 140], [68.4, 140]].map(([u, v]) => sq(u!, v!, 1.2));
+    case 'dispenser': return [sq(39.6, 12.6, 1.2)];
+    case 'proshop': return [quad(SHOP_FOOT[0], SHOP_FOOT[1], SHOP_FOOT[2], SHOP_FOOT[3])];
+    case 'kiosk': return [quad(PATIO[0], PATIO[1], PATIO[2], PATIO[3])];
+    case 'picker': return [sq(PICK_HOME.u, PICK_HOME.v, 1.6)];
+    case 'academy': { const o = openSlots(st.lowerBays); return o.length >= 2 ? [quad(slotU(o[0]!) - 1.3, slotU(o[1]!) + 1.3, STAND_V - 2, STAND_V + 3.5)] : bays(4); }
+    case 'parking': return [quad(GARAGE[0], GARAGE[1], GARAGE[2], GARAGE[3])];
+    default: return [quad(0, RANGE_PLOT[0], 0, 26)];
+  }
 }
 
 /** the player's home and its yard's props by stage (T133): the caravan with its washing line, braai, camp chairs and cooler; the cottage (a small

@@ -13,7 +13,9 @@ import { statusIcon } from '../status-icon';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
-export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onProfile, profileOpen = false }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
+/** T288: a placement the card offers (the range, its car park, the practice area): its name, price, whether placed and why not yet */
+export interface RangePlace { id: 'range' | 'carpark' | 'practice'; name: string; cost: number; done: boolean; why: string }
+export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onProfile, profileOpen = false }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
   /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void; onProfile?: () => void; profileOpen?: boolean }) {
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
@@ -30,6 +32,19 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>
       </div>
+      {/* T288 (#873): what the player places himself: each comes into his hand as a ghost, a click on the map builds it */}
+      {places.some(p => !p.done) && (
+        <div className="space-y-1.5 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs" data-testid="range-places">
+          <div className="text-[12px] uppercase text-amber-200">Place on your land</div>
+          {places.map(p => (
+            <div key={p.id} className="flex items-center justify-between gap-2" data-testid={`range-place-${p.id}`} data-guide={`range-place-${p.id}`}>
+              <span className={p.done ? 'text-emerald-300' : 'text-white'}>{p.name}{p.why && !p.done ? <span className="block text-[12px] text-amber-300/80">{p.why}</span> : null}</span>
+              {p.done ? <span className="text-emerald-300">Placed</span>
+                : <button className="chip chip-on disabled:opacity-40" disabled={!!p.why || !onPlace} title={p.why || `In hand as a ghost: click the map to build it (${money(p.cost)})`} onClick={() => onPlace?.(p.id)} data-testid={`range-place-${p.id}-go`}>Place {money(p.cost)}</button>}
+            </div>
+          ))}
+        </div>
+      )}
       <div className="grid grid-cols-3 gap-1.5 text-center">
         <Tile label="Today" value={`${Math.round(today.golfers)}`} sub="golfers" />
         <Tile label="Hitting" value={`${today.playing}/${st.bays}`} sub={st.tier2 ? `${view.upstairs} upstairs · ${today.queue} queued` : `${today.queue} queued`} />
@@ -124,7 +139,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium text-white">{u.name}</span>
               {u.owned ? <span className="text-emerald-300">Built</span> : (
-                <button className="chip chip-on disabled:opacity-40" disabled={!!u.why} title={u.why || `Build for ${money(u.cost)}`} onClick={() => onBuy(u.id)} data-testid={`range-buy-${u.id}`}>Build {money(u.cost)}</button>
+                <button className="chip chip-on disabled:opacity-40" disabled={!!u.why} title={u.why || `In hand as a ghost: click it onto your range to build it (${money(u.cost)})`} onClick={() => onBuy(u.id)} data-testid={`range-buy-${u.id}`}>Place {money(u.cost)}</button>
               )}
             </div>
             <div className="text-[12px] text-slate-400">{u.effect}</div>

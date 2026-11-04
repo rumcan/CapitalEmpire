@@ -59,7 +59,7 @@ export interface PlayerProgressFacts {
   practice?: { putting: 'none' | 'small' | 'nobunker' | 'open'; chipping: 'none' | 'small' | 'nobunker' | 'open' };
   /** T239: a guided range start's practice area is still land for sale (its hint says buy it first); missing = no */
   practiceForSale?: boolean;
-  /** T239: a range start's guided build is on step n (1..7, guide.ts RANGE_GUIDE): the tools open along its steps, and its card replaces the
+  /** T239: a range start's guided build is on step n (1..9, guide.ts RANGE_GUIDE): the tools open along its steps, and its card replaces the
    *  ramp's hints; missing: no guide running (skipped, finished, an old save's, not a range start) */
   guideStep?: number;
   /** a range start's ramp from the range to the first hole (plan P24 Phase 4a, T132); missing outside range starts */
@@ -281,11 +281,11 @@ export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = Obj
 /** T239: the guided build's step from which a ramp tool is open whatever the ramp (a skipped step still opens the next one's tools): the paths
  *  with the walking path, Holes and Facilities › Practice with the practice area, Buildings with the first hole. New hole and the rest of
  *  ramp step 3 open at the first hole's step (rampEarned), Land for sale at the practice area's (computeProgressiveUiState) */
-export const GUIDE_TOOL_STEP: Readonly<Partial<Record<UiToolId, number>>> = Object.freeze({ path: 3, course: 6, practice: 6, buildings: 7 });
+export const GUIDE_TOOL_STEP: Readonly<Partial<Record<UiToolId, number>>> = Object.freeze({ path: 5, course: 8, practice: 8, buildings: 9 }); // (T288: two placement steps first)
 /** T239: the guided build's steps that open Land for sale and New hole */
-export const GUIDE_LAND_STEP = 6, GUIDE_HOLE_STEP = 7;
+export const GUIDE_LAND_STEP = 8, GUIDE_HOLE_STEP = 9;
 /** T239: Land for sale's lock while the guide holds it */
-export const GUIDE_LAND_WHY = "Opens at the guide's practice area step (step 6)";
+export const GUIDE_LAND_WHY = "Opens at the guide's practice area step (step 8)";
 /** what opens each ramp step, as a locked tool's tooltip says it */
 export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
   0: '',
@@ -295,7 +295,7 @@ export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
 });
 /** the toast as each ramp step opens */
 export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = Object.freeze({
-  1: 'The Practice area opens: buy the land beside the car park (Course ▸ Land for sale), then build a putting green on it (Facilities ▸ Practice)',
+  1: 'The Practice area opens: place it on your land (Range ▸ Place the practice area), then build a putting green on it (Facilities ▸ Practice)',
   2: 'Props are open (Z): dress the range to draw more golfers',
   3: 'New hole is open: build your first hole, a par-3',
 });

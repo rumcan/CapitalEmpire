@@ -14,6 +14,7 @@ import { PRESETS, presetTex, surfacePreset, type Stripes } from '../paint-preset
 import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
 import type { OffRoad } from '../offroad';
+import { homeScene } from './rangebiz';
 import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
@@ -29,6 +30,8 @@ import { paintedSurfaces } from '../painted-surfaces-live';
 export interface RangeHostCtx {
   /** the range state in the save (null: not a range start), the plot and its facing (null: no range business) */
   biz(): RangeBizSave | null; plot(): { rect: Rect; facing: 0 | 1 | 2 | 3 } | null;
+  /** T288: a bare start's home frame while the range is not placed (the save's home rect and golf.dir; null: the range is placed, or none) */
+  bare?(): { rect: Rect; facing: 0 | 1 | 2 | 3 } | null;
   /** the range's car parks (T237: those within walking distance of door, the shop's counter: golf/walkserve.ts): their bays (point, heading
    *  and each one's entrance), the first one's entrance and a key that changes with them; null while none is built in reach */
   carPark(door: Pt): { bays: CarSlot[]; entrance: Pt; key?: string; /** T321: the off-road way to the entrance (its garage's cars) */ off?: OffRoad } | null;
@@ -134,9 +137,13 @@ export class RangeHost {
     // the home's stage (T133) re-lays the yard as the lifetime takings grow; T258: the studio's range art (the mats and greens as pictures or
     // stand-ins, the bullseye) re-lays the ground when the owner saves it
     const home = b ? homeStage(b) : 0, look = this.look();
-    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.key ?? cp.bays.length : -1}:${home}:${look.mats}:${look.greens}:${look.bullseye}` : '';
+    // T288: a bare start's home alone while the range is not placed (the trailer and its yard: no range, no golfers)
+    const bare = b && !pl ? this.ctx.bare?.() ?? null : null;
+    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.key ?? cp.bays.length : -1}:${home}:${look.mats}:${look.greens}:${look.bullseye}:${b.practiceAt ? b.practiceAt.join(',') : b.practiceAt === null ? 'none' : ''}`
+      : bare ? `bare:${bare.rect.join(',')}:${bare.facing}:${home}` : '';
     if (!force && key === this.key) { this.syncWalk(); return; }
-    this.key = key;
+    if (bare && b) { this.layBare(bare, b, home); this.key = key; return; }
+    this.key = key; this.bareKey = ''; this.bareGate = null;
     if (!b || !pl) { this.drop(); return; }
     // the player moved house (T133): toasted once, never on a load
     if (this.home >= 0 && home > this.home) this.ctx.toast(`You moved into the ${HOME_NAME[home].toLowerCase()}: the range has taken $${HOME_AT[home - 1]!.toLocaleString()}`, 'good');
@@ -164,6 +171,20 @@ export class RangeHost {
     this.scene = sc; this.walkVer = -1; this.walkKey = ''; this.syncWalk();
     this.sim.setScene(sc, [...(cp?.bays ?? []), ...(cp && sc.garage ? garageSlots(sc.garage, GARAGE_CARS).map(g => (cp.off ? { ...g, off: cp.off } : g)) : [])], cp?.entrance ?? null);
   }
+  /** T288: the bare start's home laid now (its frame and stage; '' none) and its gate (where you first stand; null: none) */
+  private bareKey = ''; bareGate: Pt | null = null;
+  /** T288: lays a bare start's home alone (golf/rangebiz.ts homeScene): its props and its yard's ground, the trees cleared off its yard once */
+  private layBare(h: { rect: Rect; facing: 0 | 1 | 2 | 3 }, b: RangeBizSave, home: HomeStage): void {
+    if (this.scene) this.drop();
+    const first = !this.bareKey; this.bareKey = 'laid'; this.home = home;
+    const hs = homeScene(h.rect, h.facing, b), want = new Map(hs.pieces.map(p => [p.key, p]));
+    for (const [key, p] of this.props) if (!want.has(key)) { this.ctx.removeProp(p); this.props.delete(key); }
+    for (const [key, w] of want) { const old = this.props.get(key); if (old) { this.ctx.removeProp(old); this.props.delete(key); } const p = this.ctx.addPiece(w, 'range:' + key); if (p) this.props.set(key, p); }
+    this.labels = hs.pieces.filter(p => p.label && this.props.has(p.key)).map(p => ({ p: this.props.get(p.key)!, text: p.label! }));
+    this.ctx.setGround('range:ground', hs.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: 1, a: 0, b: 0, bt: 'kerb', z: -1e6 + i } })));
+    if (first) this.ctx.clearTrees(hs.box);
+    this.bareGate = hs.gate;
+  }
   /** T239: the network's version and the paths' signature the walkway was read for */
   private walkVer = -1; private walkKey = '';
   /** T239: the walkway the walkers use (rangebiz walkwayOf), read again when the paths near the range front change: the scene the sim holds
@@ -181,7 +202,7 @@ export class RangeHost {
   drop(): void {
     for (const p of this.props.values()) this.ctx.removeProp(p);
     for (const p of this.cups.values()) this.ctx.removeProp(p);
-    this.props.clear(); this.cups.clear(); this.cupKey = ''; this.labels = []; this.scene = null; this.key = ''; this.lastT = -1; this.paidMonth = -1; this.home = -1; this.sim.clear(); this.sim.newDay();
+    this.props.clear(); this.cups.clear(); this.cupKey = ''; this.labels = []; this.bareKey = ''; this.bareGate = null; this.scene = null; this.key = ''; this.lastT = -1; this.paidMonth = -1; this.home = -1; this.sim.clear(); this.sim.newDay();
     this.practice = null; this.scanG = null; this.scanRev = -1; this.sim.setPractice(null);
     this.ctx.setGround('range:ground', null);
   }

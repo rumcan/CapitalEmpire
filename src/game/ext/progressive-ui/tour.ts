@@ -36,7 +36,7 @@ export const TOWN_TOUR: readonly GuideStep[] = Object.freeze([
     id: 'tour-golf',
     n: 4,
     title: 'Now your golf',
-    body: 'Your driving range is next: the guide in the corner walks you through building it, step by step.',
+    body: 'Your land is bare: only your trailer. Place your driving range next (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.',
     done: 'next',
     target: { ui: 'rail-range' },
   },
