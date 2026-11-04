@@ -16,5 +16,20 @@
   "kit:lily-pads-a": {"none": true, "n": "T257: lily pads lie flat on the water: no shadow"},
   "kit:lily-pads-b": {"none": true, "n": "T257: lily pads lie flat on the water: no shadow"},
   "kit:lily-pads-c": {"none": true, "n": "T257: lily pads lie flat on the water: no shadow"},
-  "kit:lily-pads-d": {"none": true, "n": "T257: lily pads lie flat on the water: no shadow"}
+  "kit:lily-pads-d": {"none": true, "n": "T257: lily pads lie flat on the water: no shadow"},
+  "newprop:desert-small-reed-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-rock-pool-with-grass": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-reed-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-rocky-oasis-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-grassy-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-lily-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-small-reed-pool-long": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-oasis-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-shallow-oasis-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-pool-edge-with-grass": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-stony-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-rock-waterfall-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-reedy-oasis-creek": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-long-oasis-pool": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"},
+  "newprop:desert-pool-with-a-boulder": {"none": true, "n": "T289: an oasis pool lies flat on the ground (its reeds and stones are painted low): no shadow, as the golf pond"}
 }

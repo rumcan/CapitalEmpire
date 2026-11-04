@@ -43,6 +43,7 @@ export function auditCatOf(it: LibItem): AuditCat | null {
   if (it.kind === 'lot') return null;
   if (it.kind === 'walker') return 'walkers';
   if (it.kind === 'fencex' || it.kind === 'fencey') return 'fences';
+  if (it.id.startsWith('newprop:desert-')) return 'kit'; // T289: the desert props audit with the kit's organic art
   if (it.kind === 'car' || it.cat === 'Vehicles') return 'vehicles';
   if (it.kind === 'tree' || it.kind === 'bush' || it.cat === 'Trees & plants' || it.cat === 'Capital vegetation' || (it.kind === 'decor' && ROUNDISH.test(`${it.id} ${it.name}`))) return 'trees';
   if (isBuildingArt(it)) return 'buildings';
@@ -107,7 +108,7 @@ export function auditEntries(cat: AuditCat): AuditEntry[] {
   // T257: the concept kit (kit.ts) and T232's building-site kit, every picture at its size as placed
   // T315: the straight-on (screen-axis) views alone, every set's N, E, S, W side by side (they are in their own categories too)
   else if (cat === 'axis') { out = []; LIBRARY.forEach((it, i) => { if (AXIS_HEADING[it.id] && it.kind !== 'lot' && drawnAsItself(i)) out.push(entry(i, placeScale(it.id))); }); }
-  else if (cat === 'kit') { out = []; LIBRARY.forEach((it, i) => { if (/^kit:|^construction:(site-|timber-frame)/.test(it.id) && drawnAsItself(i)) out.push(entry(i, placeScale(it.id))); }); }
+  else if (cat === 'kit') { out = []; LIBRARY.forEach((it, i) => { if (/^kit:|^newprop:desert-|^construction:(site-|timber-frame)/.test(it.id) && drawnAsItself(i)) out.push(entry(i, placeScale(it.id))); }); }
   else {
     out = [];
     LIBRARY.forEach((it, i) => {
