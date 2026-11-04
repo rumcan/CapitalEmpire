@@ -284,6 +284,8 @@ const YOU_SURF: Readonly<Record<number, number>> = { [SURF.water]: Infinity, [SU
 /** T240: the hover label's rim by verb (none: you cannot walk there) */
 const YOU_VERB_COLOR: Readonly<Record<YouVerb | 'none', string>> = { walk: '#facc15', talk: '#38bdf8', look: '#c084fc', use: '#4ade80', none: '#f87171' };
 /** T317: where your golf cart first waits: beside where you first stand (tile offsets, the first open one) */
+/** T326: a parked cart keeps this far (tiles, either axis) from a tee marker: off the tee pad */
+const TEE_PAD = 7;
 const CART_HOME: readonly (readonly [number, number])[] = [[2.5, 0], [0, 2.5], [-2.5, 0], [0, -2.5], [3.5, 1.5]];
 /** T240: a person's name from a seed (the field's name lists) until T243 gives the town's people their own */
 function personName(seed: number): string {
@@ -8016,6 +8018,7 @@ export class Game {
   }
   /** the course's surface under (x, y) for the parking: a tee, a green, rough or off the course (a path: 'good'), else the fairway or deep grass */
   private parkSurf = (x: number, y: number): ParkSurf => {
+    const gs = this.golf; if (gs) for (const t of gs.tees) if (Math.abs(t.x - x) < TEE_PAD && Math.abs(t.y - y) < TEE_PAD) return 'tee'; // (the tee pads: the markers' boxes)
     const g = this.courseGrid; if (!g) return 'good';
     const k = cellAt(g, x, y); if (k < 0) return 'good';
     const sf = g.surf[k]!; return sf === SURF.tee ? 'tee' : sf === SURF.green ? 'green' : sf === SURF.rough || sf === SURF.none ? 'good' : 'other';
@@ -8046,10 +8049,10 @@ export class Game {
   }
   /** whether the Cart button shows: you have a cart, are not in it nor within reach of it */
   youCartFar(): boolean { return !!this.youCart && !!this.you && !this.youInCart && !this.youNearCart(); }
-  /** T326: your cart found: off screen an edge marker points to it with how far it is; far out (no movers drawn) a dot with "Your cart". With Select
-   *  in hand (the tools' own previews are left alone), not while you ride it */
+  /** T326: your cart found: off screen an edge marker points to it with how far it is; far out (no movers drawn) a dot with "Your cart". In your round,
+   *  or with Select in hand (the tools' own previews are left alone); not while you ride it */
   private drawYourCart(ctx: CanvasRenderingContext2D) {
-    const c = this.youCart, y = this.you; if (!c || !y || this.youInCart || this.tool !== 'select') return;
+    const c = this.youCart, y = this.you; if (!c || !y || this.youInCart || (this.tool !== 'select' && !this.yourRound())) return;
     const dpr = this.dpr, p = this.screen(c.x, c.y), w = this.cw / dpr, h = this.ch / dpr;
     const m = edgeMarker(p.x / dpr, p.y / dpr, w, h);
     ctx.save();
@@ -8062,7 +8065,9 @@ export class Game {
       ctx.beginPath(); ctx.moveTo(r * 0.75, 0); ctx.lineTo(-r * 0.4, -r * 0.5); ctx.lineTo(-r * 0.4, r * 0.5); ctx.closePath(); ctx.fillStyle = '#facc15'; ctx.fill();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       // the label on the screen's side of the arrow
-      const tw = ctx.measureText(text).width, lx = Math.min(this.cw - tw - 8 * dpr, Math.max(8 * dpr, x - tw / 2)), ly = yy + (m.y > h / 2 ? -r - 12 * dpr : r + 12 * dpr);
+      const tw = ctx.measureText(text).width, side = Math.abs(Math.cos(m.a)) > 0.7; // (a side edge: the label beside the arrow, else above or below it)
+      const lx = side ? (Math.cos(m.a) < 0 ? x + r + 10 * dpr : x - r - 10 * dpr - tw) : Math.min(this.cw - tw - 8 * dpr, Math.max(8 * dpr, x - tw / 2));
+      const ly = side ? yy : yy + (m.y > h / 2 ? -r - 12 * dpr : r + 12 * dpr);
       ctx.beginPath(); ctx.roundRect(lx - 6 * dpr, ly - 9 * dpr, tw + 12 * dpr, 18 * dpr, 6 * dpr); ctx.fillStyle = 'rgba(2,6,23,0.85)'; ctx.fill();
       ctx.fillStyle = '#fef9c3'; ctx.fillText(text, lx, ly);
     } else if (this.cam.z < DISTRICT_Z) {

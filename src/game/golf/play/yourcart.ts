@@ -20,8 +20,10 @@ export const BRING_TILES = 15;
 export const GREEN_CLEAR = 3;
 /** how far round a spot the parking looks (tiles) */
 export const PARK_SEARCH = 10;
-/** the edge marker sits this far (CSS px) inside the screen's edge */
-export const EDGE_MARGIN = 28;
+/** the edge marker sits this far (CSS px) inside the screen's edges: clear of the left rail, the top bars and the bottom cards */
+export const EDGE_INSET: Readonly<Inset> = { l: 130, t: 150, r: 40, b: 120 };
+/** a screen's insets (CSS px) */
+export interface Inset { l: number; t: number; r: number; b: number }
 
 /** what a call does: the cart is already within reach, drives to you, or appears nearer first */
 export type CallMode = 'here' | 'drive' | 'appear';
@@ -75,11 +77,13 @@ export function parkSpot(at: Pt, ok: (x: number, y: number) => boolean, surf: (x
   return null;
 }
 
-/** the edge marker for a point at screen (sx, sy) (CSS px) on a w x h screen: null when it is on screen (inside the margin), else the marker's spot
- *  on the edge (EDGE_MARGIN inside it, on the line from the screen's centre to the point) and the angle (radians) it points */
-export function edgeMarker(sx: number, sy: number, w: number, h: number, margin = EDGE_MARGIN): { x: number; y: number; a: number } | null {
+/** the edge marker for a point at screen (sx, sy) (CSS px) on a w x h screen: null when it is on screen, else the marker's spot on the edge of the
+ *  screen less its insets (on the line from that box's centre to the point) and the angle (radians) it points */
+export function edgeMarker(sx: number, sy: number, w: number, h: number, inset: Readonly<Inset> = EDGE_INSET): { x: number; y: number; a: number } | null {
   if (sx >= 0 && sy >= 0 && sx <= w && sy <= h) return null;
-  const cx = w / 2, cy = h / 2, dx = sx - cx, dy = sy - cy, hx = Math.max(1, cx - margin), hy = Math.max(1, cy - margin);
+  // (a small screen keeps at least a third of each side)
+  const l = Math.min(inset.l, w / 3), r = Math.min(inset.r, w / 3), t = Math.min(inset.t, h / 3), b = Math.min(inset.b, h / 3);
+  const cx = (l + w - r) / 2, cy = (t + h - b) / 2, dx = sx - cx, dy = sy - cy, hx = Math.max(1, (w - r - l) / 2), hy = Math.max(1, (h - b - t) / 2);
   const k = Math.min(dx ? hx / Math.abs(dx) : Infinity, dy ? hy / Math.abs(dy) : Infinity);
   return { x: cx + dx * k, y: cy + dy * k, a: Math.atan2(dy, dx) };
 }

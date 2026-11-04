@@ -51,11 +51,13 @@ test('the call spot skips ground the cart may not stand on (a green beside you)'
 
 test('the edge marker shows only off screen, on the edge, pointing at the cart', () => {
   assert.equal(edgeMarker(500, 300, 1000, 600), null, 'on screen: none');
-  const r = edgeMarker(2000, 300, 1000, 600, 20)!;
+  const I = { l: 20, t: 20, r: 20, b: 20 }, r = edgeMarker(2000, 300, 1000, 600, I)!;
   assert.ok(Math.abs(r.x - 980) < 1e-9 && Math.abs(r.y - 300) < 1e-9 && Math.abs(r.a) < 1e-9, 'right of the screen: on the right edge, pointing right');
-  const l = edgeMarker(-500, -900, 1000, 600, 20)!;
+  const l = edgeMarker(-500, -900, 1000, 600, I)!;
   assert.ok(l.x >= 20 && l.x <= 980 && Math.abs(l.y - 20) < 1e-9, 'far up: on the top edge');
   assert.ok(l.a < 0, 'pointing up');
+  const d = edgeMarker(-300, 400, 1366, 860)!;
+  assert.ok(d.x >= 130 && d.y >= 150 && d.y <= 860 - 120, 'by default clear of the left rail and the bars');
   assert.equal(distText(118), '120 m'); assert.equal(distText(1260), '1.3 km');
 });
 
