@@ -16,6 +16,7 @@ import type { TeeKind } from './types';
 import { normalizeYou, type YouSave } from './you';
 import { normalizeYourRound, type YourRound } from './play/yours';
 import { normalizeChallenge, normalizeRivals, type Challenge, type Rival } from './play/match';
+import { normalizeTitles, titleText, type Title } from './clubevents';
 
 /** the five skills, in the order the cards show them */
 export const SKILL_IDS = ['driving', 'irons', 'short', 'putting', 'nerve'] as const;
@@ -117,6 +118,8 @@ export interface PlayerProfile {
   rivals?: Rival[];
   /** T244: a rival's return challenge waiting for your answer (a card); absent: none. chDay: the last town day a return challenge was drawn */
   challenge?: Challenge; chDay?: number;
+  /** T246: the titles you won (golf/clubevents.ts: the Club Championship, the Mayor's Cup), oldest first; absent: none */
+  titles?: Title[];
 }
 /** the practice log and the rounds keep this many (newest last) */
 export const LOG_MAX = 30, ROUNDS_MAX = 20;
@@ -168,6 +171,7 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     ...(normalizeRivals(p.rivals) ? { rivals: normalizeRivals(p.rivals) } : {}),
     ...(normalizeChallenge(p.challenge) ? { challenge: normalizeChallenge(p.challenge) } : {}),
     ...(typeof p.chDay === 'number' && Number.isFinite(p.chDay) ? { chDay: Math.round(p.chDay) } : {}),
+    ...(normalizeTitles(p.titles) ? { titles: normalizeTitles(p.titles) } : {}),
   };
 }
 
@@ -306,6 +310,8 @@ export interface PlayerCardView {
   round: RoundState;
   log: { text: string; day: number; cost: number; hcp: [number, number] }[];
   rounds: { day: number; kind: RoundKind; strokes: number; par: number; text: string }[];
+  /** T246: the titles you won, newest first ("Club Champion 1986 · 74 (+2)") */
+  titles: string[];
 }
 export function playerCardView(p: PlayerProfile, round: RoundState): PlayerCardView {
   const h = handicapOf(p.skills);
@@ -314,6 +320,7 @@ export function playerCardView(p: PlayerProfile, round: RoundState): PlayerCardV
     skills: SKILL_IDS.map(id => ({ id, name: SKILL_NAME[id], value: p.skills[id], what: SKILL_WHAT[id] })),
     round,
     log: p.log.slice(-8).reverse().map(e => ({ text: entryText(e), day: e.day, cost: e.cost, hcp: e.hcp })),
+    titles: (p.titles ?? []).slice().reverse().map(titleText),
     rounds: p.rounds.slice(-6).reverse().map(r => ({ day: r.day, kind: r.kind, strokes: r.strokes, par: r.par, text: `${r.strokes} (${toParWord(r.strokes - r.par)})${r.holes !== 18 ? ` over ${r.holes}` : ''}${r.noHcp ? ` · ${r.noHcp}, not for the handicap` : ''}` })),
   };
 }

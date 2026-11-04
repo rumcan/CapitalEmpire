@@ -181,8 +181,9 @@ import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, stand
 import { AltTap, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
-import { CART_REACH, CART_TILES, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
+import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
+import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
 import { BOOK_LEAD, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
@@ -348,6 +349,10 @@ export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string 
   last: string[] | null;
   /** T210: the eval is in (the 15:00 kick-off) and its results wait for the last group (the board says so and offers them early) */
   waiting: boolean }
+/** T246: the event card's view (golf/clubevents.ts): the event, when, the phase (announced, today, the result), your handicap and whether it enters, entered,
+ *  today's field and holes, why you cannot play it now, whether you play it, the result and its line, your name */
+export interface EventCardView { id: EventId; name: string; when: string; phase: 'soon' | 'today' | 'result'; hcp: number; hcpText: string; maxHcp: number | null;
+  why: string | null; entered: boolean; field: number | null; holes: number | null; playWhy: string | null; playing: boolean; result: EventResult | null; line: string | null; you: string }
 /** the leaderboard's rows shown (the top 8, and the owner's row below them) */
 const BOARD_ROWS = 8;
 /** T209: the longest a resumed tournament day waits for its play after the first frame (holdDay), ms */
@@ -900,6 +905,8 @@ export class Game {
   private dayBusy: number | undefined; private devSeed = 0; private dayOff = false;
   /** T251 (dev, ?tourney=1: the bench's tournament day and the ball captures): today plays the tournament's round as if its day had come */
   private devTourney = false;
+  /** T246 dev: ?clubevent=club|mayor makes the first town day of play the event's day */
+  private devEvent: EventId | null = null;
   /** T266: golf's pace (golf/pace.ts): watchable (mix) by default, or the old fast pace (main), as the gear menu's Golf pace has it (remembered);
    *  the dev server's ?golfPace plays any of the prototype's options for the session */
   golfPace: GolfPace = 'mix';
@@ -2497,7 +2504,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
@@ -7315,6 +7322,7 @@ export class Game {
     if (b.members + b.visitors > 0) this.scheduleSave();
     // the card follows the day (the golfers out, the waits): once a second while it is open
     if (this.clubCardOpen && (b.members + b.visitors > 0 || now - this.clubEmitAt > 1000)) { this.clubEmitAt = now; this.emit(); }
+    this.stepEvents(at.day, now); // T246: the club's events (announced, a day over without you)
     const s = this.dayBook.save;
     if (!free || !s || s.closed || s.day !== at.day) { this.dayPlay = null; this.dropCrew(); return; }
     const course = this.dayCourseOf(now);
@@ -7329,6 +7337,7 @@ export class Game {
       // (the whole day is played now: your score is known, and shown once your round is done)
       if (bk) bk.result = { strokes: plan.strokes[youId]!.reduce((a, b) => a + b, 0), par: course.view.holes.reduce((a, h) => a + h.par, 0), holes: course.view.holes.length, done: plan.done[youId] ?? Infinity };
       this.buildCrew(g, plan, course.view, s.day); // T269: the grounds crew works round the day's groups
+      this.eventDayBuilt(s.day, course.view, now); // T246: today may be the Club Championship's or the Mayor's Cup's day
     }
     this.crewFlags(); // T269: a flag moves when the greenkeeper sets it
   }
@@ -7799,7 +7808,11 @@ export class Game {
     this.setPlayer(r ? { ...rest, round: r } : rest);
   }
   /** your game in your round: your skills under an everyday round's pressure (golf/player.ts gameSkills), as a booked round plays */
-  private yourSkills(): ShotSkill { const p = this.playerNow(); return p ? gameSkills(p.skills, this.yourRound()?.mode === 'match' ? PRESSURE.match : PRESSURE.everyday) : OWNER_SKILL; } // (T244: a money match's pressure)
+  private yourSkills(): ShotSkill {
+    // T246: a competition round (your Club Championship, the Mayor's Cup; T244's money match) plays at its pressure
+    const p = this.playerNow(), r = p?.round, pr = r?.mode === 'match' ? PRESSURE.match : isCompetition(r) ? PRESSURE.tournament : PRESSURE.everyday;
+    return p ? gameSkills(p.skills, pr) : OWNER_SKILL;
+  }
   /** the course your round is played on: the everyday course (each hole once), null with none */
   private yrView(): CourseView | null { const c = this.dayCourseOf(performance.now()); return c && c.view.holes.length ? c.view : null; }
   /** the first tee's hole choices (play/yours.ts holeOptions) for the everyday course's holes, and why you cannot start (null: you can) */
@@ -7992,11 +8005,140 @@ export class Game {
     const { round: _r, ...rest } = p; void _r;
     if (t.thru > 0) {
       const noHcp = noHandicapWhy(r); // (T325: mulligans: in your rounds, not toward your handicap)
-      const next = playedRound(rest, { day: r.day, kind: 'everyday', strokes: t.strokes, par: t.par, holes: t.thru, noHcp });
+      const kind = r.mode === 'match' ? 'match' : isCompetition(r) ? 'tournament' : 'everyday'; // (T246: a competition is a tournament round: more nerve)
+      const next = playedRound(rest, { day: r.day, kind, strokes: t.strokes, par: t.par, holes: t.thru, noHcp });
       this.setPlayer(next);
       this.toast(`${why ? why + '. ' : ''}You shot ${t.strokes} (${toParWord(t.toPar)}) over ${t.thru} hole${t.thru > 1 ? 's' : ''} · ${noHcp ? `${noHcp}: not for your handicap` : `handicap ${hcpText(next.rounds[next.rounds.length - 1]!.hcp)}`}`, 'good');
     } else { this.setPlayer(rest); this.toast(why ?? 'Your round is called off', 'info'); }
+    // T246: your round in today's event: its result (a round short of every hole is no return)
+    const eid = eventOfMode(r.mode), d = this.golf?.clubEvents?.today;
+    if (eid && d && d.id === eid && d.day === r.day && !d.done) this.finishEvent({ name: p.name, strokes: t.strokes, thru: t.thru });
     this.emit();
+  }
+  // ---------- T246 (#708): your Club Championship and the Mayor's Cup (golf/clubevents.ts) ----------
+  /** the event card open (the announcement, the day's entry, the result and the presentation); null: closed */
+  eventCardOpen: EventId | null = null;
+  /** the town day the event was looked for (once a day) */
+  private evDayChecked = -1;
+  private evBoardCache: { at: number; board: PlayBoard | null } | null = null;
+  /** the events' save (an older save starts a fresh one) */
+  private clubEv(): ClubEventsSave { const g = this.golf!; if (!g.clubEvents) g.clubEvents = freshEvents(); return g.clubEvents; }
+  /** the month of the season now (0..12) */
+  private seasonMonthNow(now: number): number { return this.golfMonthAt(now) - this.seasonsDone() * 12; }
+  /** each frame: an event's announcement (a month before its date; the card opens), and a day over that you did not play (its result) */
+  private stepEvents(day: number, now: number) {
+    const g = this.golf; if (!g || !this.hasClubhouse) return;
+    const ev = this.clubEv(), season = this.seasonsDone();
+    const d = ev.today, r = g.player?.round;
+    if (d && !d.done && day > d.day && !(r && eventOfMode(r.mode) === d.id && r.day === d.day)) this.finishEvent(null);
+    if (this.traffic.round.stage !== 'free' || !this.dayPlay) return; // (announced once the course has a day of play)
+    const id = announceDue(ev, season, this.seasonMonthNow(now));
+    if (id) {
+      ev.announced[id] = season; if (!this.eventCardOpen) this.eventCardOpen = id; this.scheduleSave(); // (a card already open stays: the toast names it)
+      this.toast(`${CLUB_EVENTS[id].name}: ${eventWhen(id, season)} at your club`, 'info'); this.emit();
+    }
+  }
+  /** the day's round is built: is today an event's day? (once a town day; the field's scores again when the course changed) */
+  private eventDayBuilt(day: number, view: CourseView, now: number) {
+    const dp = this.dayPlay; if (!dp || !this.golf) return;
+    const ev = this.clubEv(), season = this.seasonsDone();
+    if (ev.today && ev.today.day === day) { if (!ev.today.done) ev.today = eventDay(ev.today.id, ev.today.season, day, dp.view.plan, view, dp.base); return; }
+    if (this.evDayChecked === day) return;
+    this.evDayChecked = day;
+    // (an event's day waits while your round in the last one goes on: its result comes with your card)
+    const r = this.golf.player?.round; if (ev.today && !ev.today.done && r && eventOfMode(r.mode) === ev.today.id && r.day === ev.today.day) return;
+    const id = this.devEvent ?? eventDue(ev, season, this.seasonMonthNow(now)); if (!id) return;
+    this.devEvent = null;
+    if (ev.today && !ev.today.done) this.finishEvent(null);
+    ev.today = eventDay(id, season, day, dp.view.plan, view, dp.base); ev.held[id] = season; ev.announced[id] = season;
+    this.eventCardOpen = id; this.evBoardCache = null; this.scheduleSave();
+    this.toast(`Today: the ${CLUB_EVENTS[id].name} at your club (${ev.today.field.length} in the field)`, 'good'); this.emit();
+  }
+  /** the event day's result (you: your round's score, null when you did not play): the champion, your place, the prize to a winner (the club's
+   *  reputation, the money) and the title into your profile; the card opens on it (the Mayor's Cup's presentation) */
+  private finishEvent(you: { name: string; strokes: number; thru: number } | null) {
+    const g = this.golf; if (!g) return;
+    const ev = this.clubEv(), d = ev.today; if (!d || d.done) return;
+    const res: EventResult = eventResult(d, you);
+    d.done = true; ev.last = res;
+    if (res.won) {
+      g.rep = Math.min(100, Math.max(0, g.rep + res.rep));
+      if (res.money > 0) { this.traffic.spend('business', -res.money); const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: res.money, kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
+      const p = this.playerNow(); if (p) this.setPlayer(withTitle(p, res, d.holes));
+    }
+    this.eventCardOpen = d.id; this.evBoardCache = null; this.scheduleSave();
+    this.toast(`${CLUB_EVENTS[d.id].name}: ${resultLine(res)}`, res.won ? 'good' : 'info'); this.emit();
+  }
+  /** today's event, not over yet (null: none) */
+  private eventToday(): ClubEventsSave['today'] | null {
+    const d = this.golf?.clubEvents?.today; return d && !d.done && d.day === this.townNow().day ? d : null;
+  }
+  /** why you cannot play today's event now (null: you can) */
+  private eventPlayWhy(id: EventId): string | null {
+    const p = this.playerNow(); if (!p) return 'No player';
+    const d = this.eventToday(); if (!d || d.id !== id) return `The ${CLUB_EVENTS[id].name} is not on today`;
+    const w = entryWhy(id, handicapOf(p.skills)); if (w) return w;
+    if (p.round) return eventOfMode(p.round.mode) === id ? 'You are playing it' : 'Finish the round you are playing first';
+    return this.yourChoices().why;
+  }
+  /** the event card's view (null: closed) */
+  eventCard(): EventCardView | null {
+    const id = this.eventCardOpen, g = this.golf; if (!id || !g) return null;
+    const ev = this.clubEv(), p = this.playerNow()!, hcp = handicapOf(p.skills), season = this.seasonsDone(), def = CLUB_EVENTS[id];
+    const d = ev.today, today = this.eventToday(), res = d && d.id === id && d.done && ev.last && ev.last.id === id && ev.last.season === d.season ? ev.last : null;
+    const phase: EventCardView['phase'] = res ? 'result' : today && today.id === id ? 'today' : 'soon';
+    const evSeason = phase === 'soon' ? (ev.held[id] === season ? season + 1 : season) : d!.season;
+    return {
+      id, name: def.name, when: eventWhen(id, evSeason), phase, hcp, hcpText: hcpText(hcp), maxHcp: def.maxHcp, why: entryWhy(id, hcp), entered: isEntered(ev, id, evSeason),
+      field: today && today.id === id ? today.field.length : null, holes: today && today.id === id ? today.holes : null,
+      playWhy: phase === 'today' ? this.eventPlayWhy(id) : null, playing: eventOfMode(p.round?.mode) === id, result: res, line: res ? resultLine(res) : null, you: p.name,
+    };
+  }
+  openEventCard(id: EventId | null) { this.eventCardOpen = id && this.golf ? id : null; this.emit(); }
+  /** enter the event (the season it is next held; refused with a toast when your handicap does not qualify) */
+  enterEvent(id: EventId) {
+    const c = this.eventCard(); if (!c || c.id !== id) return;
+    if (c.why) { this.toast(c.why, 'warn'); return; }
+    const ev = this.clubEv(), season = this.seasonsDone(), s = c.phase === 'soon' ? (ev.held[id] === season ? season + 1 : season) : ev.today!.season;
+    ev.entered[id] = s; this.scheduleSave();
+    this.toast(`Entered: the ${CLUB_EVENTS[id].name}, ${eventWhen(id, s)}`, 'good'); this.emit();
+  }
+  /** play today's event: your round on every hole of the course, in the competition's mode (no mulligans, no gimmies, the tournament's pressure) */
+  playEvent(id: EventId) {
+    const why = this.eventPlayWhy(id); if (why) { this.toast(why, 'warn'); return; }
+    const ev = this.clubEv(), d = this.eventToday()!;
+    ev.entered[id] = d.season;
+    this.yourRoundStart('all', [], { ...COMPETITION_RULES });
+    const r = this.yourRound(); if (!r || r.mode) return;
+    this.setYourRound({ ...r, mode: MODE_OF[id], rules: { ...COMPETITION_RULES } });
+    this.eventCardOpen = null; this.evBoardCache = null;
+    this.toast(`The ${CLUB_EVENTS[id].name}: competition rules (no mulligans, no gimmies). Good luck!`, 'good'); this.emit();
+  }
+  /** the first tee's offer of today's event (null: none today, or you play it already) */
+  eventTee(): { id: EventId; name: string; why: string | null } | null {
+    const d = this.eventToday(); if (!d || eventOfMode(this.golf?.player?.round?.mode) === d.id) return null;
+    return { id: d.id, name: CLUB_EVENTS[d.id].name, why: this.eventPlayWhy(d.id) };
+  }
+  /** the leaderboard of today's event (the field live from the day's round, your row from your card), and while your round in it goes on; the final
+   *  board on the day once it is over. Null with none */
+  private eventBoardNow(): PlayBoard | null {
+    const ev = this.golf?.clubEvents, d = ev?.today; if (!d) return null;
+    const now = performance.now(), c = this.evBoardCache; if (c && now - c.at < 250) return c.board;
+    const day = this.townNow().day, r = this.golf?.player?.round, mine = r && eventOfMode(r.mode) === d.id && r.day === d.day ? r : null;
+    let board: PlayBoard | null = null;
+    if (d.day === day || mine) {
+      const dp = this.dayPlay, live = d.day === day && !d.done && !!dp && dp.day === d.day, cv = live ? this.dayCourseOf(now)?.view : null;
+      let entries: BoardEntry[];
+      if (live && dp && cv) entries = fieldEntries(standings(dp.view.plan, cv, this.dayMinute), dp.view.plan, fieldIds(dp.base, d.id));
+      else entries = d.field.map((f, k) => ({ key: k, name: f.name, toPar: f.strokes - d.par, thru: d.holes, you: false }));
+      const name = this.golf?.player?.name ?? 'You', last = ev!.last;
+      if (mine) { const t = cardTotals(mine.card); entries.push({ key: -1, name, toPar: t.toPar, thru: t.thru, you: true }); }
+      else if (d.done && last && last.id === d.id && last.toPar !== null) entries.push({ key: -1, name, toPar: last.toPar, thru: d.holes, you: true });
+      board = { minute: this.dayMinute, rows: eventBoard(entries, d.holes), champion: d.done && last ? resultLine(last) : null,
+        done: !!d.done, event: CLUB_EVENTS[d.id].name, ownerTee: null, last: null, waiting: false };
+    }
+    this.evBoardCache = { at: now, board };
+    return board;
   }
   /** opens or closes the scorecard (the HUD's Scorecard) */
   toggleYourCard(open = !this.yrCard) { this.yrCard = open && !!this.yourRound(); this.emit(); }
@@ -8925,7 +9067,7 @@ export class Game {
    *  top 8 and the owner's row below them, the owner the one golfer marked owner), the champion's line once everyone is done, done, and the tournament's
    *  name. Recomputed at most every 250 ms */
   playBoard(): PlayBoard | null {
-    const pl = this.play; if (!pl) return null;
+    const pl = this.play; if (!pl) return this.eventBoardNow();
     const now = performance.now(), c = this.boardCache;
     if (c && c.play === pl && now - c.at < 250) return c.board;
     const tr = this.traffic, plan = pl.plan, minute = this.playMinute(pl, townTimeOf(tr.town, tr.simTime(now)).dayMin), ownerId = plan.golfers.find(g => g.owner)?.id ?? null;

@@ -77,7 +77,8 @@ export function TalkCard({ talk, right, onClose, offer, onChallenge }: { talk: {
 }
 
 /** the first tee: start a round. Play in today's tournament while you can join it, else your everyday round on the tee sheet */
-export function TeeCard({ view, right, onJoin, onBook, onClose, play, onPlay }: { view: { join: boolean; round: RoundState; name: string }; right: string; onJoin: () => void; onBook: () => void; onClose: () => void;
+export function TeeCard({ view, right, onJoin, onBook, onClose, play, onPlay, event, onEvent }: { view: { join: boolean; round: RoundState; name: string }; right: string; onJoin: () => void; onBook: () => void; onClose: () => void;
+  /** T246: today's club event (the Club Championship, the Mayor's Cup) and its card */ event?: { id: 'club' | 'mayor'; name: string; why: string | null } | null; onEvent?: (id: 'club' | 'mayor') => void;
   /** T317: the holes you may play yourself now (play/yours.ts holeOptions) and the start */ play?: Parameters<typeof HoleChoiceBox>[0]['choices']; onPlay?: (c: HoleChoice, picked: number[], rules: RoundRules) => void }) {
   const r = view.round;
   return (
@@ -90,6 +91,7 @@ export function TeeCard({ view, right, onJoin, onBook, onClose, play, onPlay }: 
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
       </div>
       {view.join && <button className="chip chip-on w-full justify-center" onClick={onJoin} data-testid="tee-join">Play in today's tournament</button>}
+      {event && onEvent && <button className="chip chip-on w-full justify-center" onClick={() => onEvent(event.id)} title={event.why ?? ''} data-testid="tee-event">Today: the {event.name}{event.why ? ' (see why)' : ''}</button>}
       <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs">
         {r.k === 'none' && <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-300">{r.why ?? (r.next !== null ? `Next free tee time ${clock(r.next)}` : 'No tee times left today')}</span>
           <button className="chip chip-on disabled:opacity-40" disabled={!!r.why || r.next === null} onClick={onBook} data-testid="tee-book">Book {r.next !== null && !r.why ? clock(r.next) : ''}</button></div>}
