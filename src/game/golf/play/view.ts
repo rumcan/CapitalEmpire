@@ -1,7 +1,7 @@
 // What the golf round looks like at a game minute (docs/GOLF-PLAY.md P2): each golfer as a golfer sprite (the drive clip through a swing, the walk while
 // he moves, the address and idle poses otherwise) and each ball in the air (an arc, in real seconds from its swing) or at rest. Pure TS, no DOM: the
 // engine packs the sprites and draws the balls. The minute is a game minute of the day (stateAt); the swings, flights and walk cycles run in real seconds.
-import { clipFrame, golferRow, rowToward } from '../../crowdview';
+import { PUTT_IMPACT_S, clipFrame, golferRow, rowToward } from '../../crowdview';
 import { GOLFER_CLIPS, SPECTATOR_CLIPS } from '../../library';
 import { TILE_M } from '../types';
 import { ADDRESS_TIME, FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, WALK_M, offOf, stateAt, stateOne, walkMin } from './round';
@@ -38,10 +38,9 @@ export interface PlayPace { walkers: Pacer; carts: Pacer; caddies?: Pacer }
 
 /** a swing's drive clip plays for this many real seconds, then holds its finish until the golfer moves on */
 const SWING_S = 2.2;
-/** a putt's address and takeaway play for this many real seconds, in three equal parts */
-const PUTT_S = 1.2;
-/** a putt's frames (offsets from the drive clip's start): the address, the takeaway, the address again */
-const PUTT_FRAMES = [0, 1, 0];
+/** T212 (#557): a putt plays the putt clip (GOLFER_CLIPS.golf_putt: a pendulum stroke, head still) for this many real seconds: the stroke, then its
+ *  finish held a moment */
+const PUTT_S = 1.6;
 /** the flights in real seconds: a full shot, a chip (pitching or sand wedge), a putt */
 const FLIGHT_S = 1.4, CHIP_S = 0.9, PUTT_FLIGHT_S = 0.8;
 /** the apex of a full shot's arc: metres of height per metre of its length (a putt rolls: no arc) */
@@ -49,8 +48,8 @@ const APEX = 0.12;
 /** T251: a full shot's flight, bounce and roll are over this many real seconds after it leaves the club (T320: from its impact, IMPACT_S) */
 export const ROLL_DONE_S = SWING_S;
 /** T320 (#908): the ball leaves the club at the drive clip's impact, this many real seconds into the swing (the range's IMPACT, rangebiz.ts); a putt
- *  at the end of its takeaway's return (two thirds of PUTT_S). Before T320 it left at the swing's first frame, ahead of the backswing */
-export const IMPACT_S = 1.22, PUTT_HIT_S = PUTT_S * 2 / 3;
+ *  at the putt clip's impact (T212: PUTT_IMPACT_S). Before T320 it left at the swing's first frame, ahead of the backswing */
+export const IMPACT_S = 1.22, PUTT_HIT_S = PUTT_IMPACT_S;
 /** a golfer stands on the first tee this many game minutes before his tee time (he is not drawn before that) */
 const LEAD_MIN = 10;
 /** the walk cycle's offset per golfer, real seconds, so the golfers' walks are not in step */
@@ -133,7 +132,7 @@ export class PlayView {
   update(minute: number, now: number, pending: OwnerTurn | null = null, aim: Pt | null = null, only: Uint8Array | null = null, simT = 0, rate = 1): void {
     this.simT = simT; this.rate = rate > 0 ? rate : 1;
     if (this.count !== this.plan.shots.length) this.index();
-    const G = this.plan.golfers, states = only ? this.states : stateAt(this.plan, this.view, minute, this.states), drive = GOLFER_CLIPS.golf_drive;
+    const G = this.plan.golfers, states = only ? this.states : stateAt(this.plan, this.view, minute, this.states), drive = GOLFER_CLIPS.golf_drive, putt = GOLFER_CLIPS.golf_putt;
     const pa = pending ? (aim ?? pending.suggested.aim) : null, carts = this.cartPlay;
     let np = 0, nb = 0, nc = 0, nh = 0;
     this.bi.fill(-1); this.bm.fill(0);
@@ -155,13 +154,14 @@ export class PlayView {
       // T213: a cart's golfer walks between the cart and his ball (WALK), rides in it (RIDE: not drawn, his ball still is), else as the round has him
       const mode = carts && this.rides[id] ? carts.rider(id, minute) : STATE;
       if (mode !== WALK && (s.action === 'done' || (s.action === 'waiting' && minute < this.tee[id]! - LEAD_MIN))) { this.cm[id] = NaN; continue; }
-      // the frame: the swing (the drive clip, or a putt's first frames) in its real seconds, else walking while he moves, the address, else idle
+      // the frame: the swing (the drive clip, or T212's putt clip) in its real seconds, else walking while he moves, the address (the putt clip's
+      // over a putt), else idle
       const putting = !!newest && newest.club === 'putter';
       let frame: number;
       if (newest && !putting && dt < SWING_S) frame = clipFrame(drive, drive.times[0]! + dt);
-      else if (newest && putting && dt < PUTT_S) frame = drive.start + PUTT_FRAMES[Math.min(2, Math.floor(3 * dt / PUTT_S))]!;
+      else if (newest && putting && dt < PUTT_S) frame = clipFrame(putt, putt.times[0]! + dt);
       else if (s.action === 'walk' && moved) frame = clipFrame(GOLFER_CLIPS.walk, now + id * STEP_S);
-      else frame = s.action === 'address' || s.action === 'putt' ? drive.start : GOLFER_CLIPS.idle.start;
+      else frame = s.action === 'putt' ? putt.start : s.action === 'address' ? drive.start : GOLFER_CLIPS.idle.start;
       // the row: at the ball, turned to the shot he plays (the one in flight, else the next, else the pin); walking, to his heading (kept while he
       // stands); otherwise (waiting, holed out), turned to the pin
       let row = this.rows[id]!, tg: Pt | null | undefined = null;

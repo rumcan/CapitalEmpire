@@ -88,6 +88,11 @@ test('the walk clip while walking, the drive while swinging at a mat, else idle'
   const y = makeYou(0, 0); assert.equal(youFrame(y, walk, 0, drive), 0);
   startWalk(y, [{ x: 0, y: 0 }, { x: 4, y: 0 }], false); stepYou(y, 0.5); const f = youFrame(y, walk, 0, drive); assert.ok(f >= 1 && f <= 8);
   const z = makeYou(0, 0); z.swing = 0.6; assert.equal(youFrame(z, walk, 0, drive), 10);
+  // T212: a putt plays the putt clip (when given), a full shot the drive
+  const putt = { start: 21, n: 3, times: [0, 0.5, 0.8] };
+  assert.equal(youFrame(z, walk, 0, drive, putt), 10, 'a full shot: the drive');
+  z.putt = true; assert.equal(youFrame(z, walk, 0, drive, putt), 22, 'a putt: the putt clip');
+  assert.equal(youFrame(z, walk, 0, drive), 10, 'no putt clip given: the drive');
 });
 
 test('saved with the game: your place, facing and look come back; an old save has none (a default character)', () => {

@@ -162,7 +162,7 @@ if (!WALK_FRAMES) { console.warn('no 3D people in art/people3d (run render-perso
 // sheets). They pack onto the walker pages with the townspeople, at the same scale. A person's frames per facing: the template's 9 (idle,
 // walk1..8), then its clips in the order given. Each clip sheet has its own frame size and anchor: a frame is cut at its own size and moved
 // so its feet land on the template's feet (the anchors differ by (template - own) x k), so every clip of a person stands on one point.
-const TEMPLATE_FRAMES = 9, SPEC_CLIPS = [['clap', 4], ['cheer', 6], ['sit', 2], ['sit_clap', 4]], GOLF_CLIPS = [['golf_drive', 12]];
+const TEMPLATE_FRAMES = 9, SPEC_CLIPS = [['clap', 4], ['cheer', 6], ['sit', 2], ['sit_clap', 4]], GOLF_CLIPS = [['golf_drive', 12], ['golf_putt', 8]];
 /** a sheet cut into trimmed frames: for each facing (WALK_DIRS) its frames in order; tmpl is the template json (the reference feet) */
 async function cutSheet(sheet, json, tmpl) {
   const k = 0.5, fw = json.frameWidth, fh = json.frameHeight, W = Math.round(fw * k * MIP0), H = Math.round(fh * k * MIP0);
@@ -257,6 +257,7 @@ pack(sprites, GUT, ALIGN);
 // the walker pages hold the townspeople, the spectators and the golfers together
 const walkerList = [...walkers, ...spec.frames, ...golf.frames];
 if (walkerList.length) pack(walkerList, 4, 4);
+console.log(`atlas: ${pages.length} pages; the last is ${Math.round(100 * pages[pages.length - 1].shelves.reduce((m, sh) => Math.max(m, sh.y + sh.h), 0) / PAGE)}% full (shelf height)`);
 
 // ---- 3. pages and their mips
 const files = [];
@@ -351,7 +352,7 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   '/** a clip: its first frame in the row of its person, its frame count, the seconds of each frame in the source clip, and whether it loops */',
   'export interface PeopleClip { start: number; n: number; times: number[]; loop: boolean }',
   ...crowdLines('SPECTATOR', 'Spectators', spec, "'idle' | 'walk' | 'clap' | 'cheer' | 'sit' | 'sit_clap'", true),
-  ...crowdLines('GOLFER', 'Golfers', golf, "'idle' | 'walk' | 'golf_drive'", false),
+  ...crowdLines('GOLFER', 'Golfers', golf, "'idle' | 'walk' | 'golf_drive' | 'golf_putt'", false),
   'appendCars(LIBRARY, ATLAS_PAGES);',
   'appendEast(LIBRARY, ATLAS_PAGES);',
   'appendBusinesses(LIBRARY, ATLAS_PAGES);',

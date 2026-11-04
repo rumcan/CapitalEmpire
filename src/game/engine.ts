@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clamp, clampZoom, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
-import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
+import { PUTT_IMPACT_S, galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GREENKEEPING } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
@@ -7665,7 +7665,7 @@ export class Game {
     this.youRaster(y.x, y.y, 32, true, at.x, at.y);
     const aim = bay ? { x: at.x + sc.aim.x * 10, y: at.y + sc.aim.y * 10 } : null;
     startWalk(y, routeOf({ x: y.x, y: y.y }, at, this.youCost), false);
-    this.youThen = { face: aim, key: 'swing', act: () => { if (this.you && kind !== 'putting') this.you.swing = 0; } };
+    this.youThen = { face: aim, key: 'swing', act: () => { if (this.you && kind !== 'putting') { this.you.swing = 0; this.you.putt = false; } } };
   }
   /** the "Who are you?" card (a new range game, before the welcome card): your name, your look (the golfer art) and your starting handicap */
   whoView(): { name: string; look: number; looks: { id: string; sex: Sex; item: number }[]; hcp: string } | null {
@@ -7694,7 +7694,7 @@ export class Game {
     }
     const y = this.you; if (!y || this.youInCart || y.x < X0 || y.x > X1 || y.y < Y0 || y.y > Y1) return m;
     const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
-    t.group = 1; t.x = y.x; t.y = y.y; t.person = this.youArt(); t.row = y.face; t.frame = youFrame(y, GOLFER_CLIPS.walk, GOLFER_CLIPS.idle.start, GOLFER_CLIPS.golf_drive);
+    t.group = 1; t.x = y.x; t.y = y.y; t.person = this.youArt(); t.row = y.face; t.frame = youFrame(y, GOLFER_CLIPS.walk, GOLFER_CLIPS.idle.start, GOLFER_CLIPS.golf_drive, GOLFER_CLIPS.golf_putt);
     crowdDrawable(out, m, t);
     this.caddieLabels.push({ p: out[m]!, text: this.youLabel() });
     return m + 1;
@@ -7860,13 +7860,13 @@ export class Game {
     this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(sk, i.club), i.club === 'putter') : null);
     this.toast(this.lastShot.text, 'info');
     this.shot = null; this.setYourRound(round);
-    if (this.you) this.you.swing = 0; // (the drive clip plays once)
+    if (this.you) { this.you.swing = 0; this.you.putt = shot.club === 'putter'; } // (the drive clip plays once; T212: a putt, the putt clip)
     // T319: a putt rolls with the green's break and ends at the cup as the model says (in, lipped out, or shaving the rim); a full shot bends from
     // its aim to where it lands, and leaves a tracer; T318's spin: a spin back's check, topspin's run-out
     const land = shot.landing?.at ?? null, pin = s.turn.pin;
     const putt = !land && shot.club === 'putter' && !shot.penalty ? new PuttRoll().set(shot.from, shot.to, pin, shot.holed, this.ballHeight) : undefined;
     this.yrFlight = flightOf(shot.from, land, shot.to, round.holed, up, rowOf(round), shot.penalty > 0, { aim: i.aim, ...(putt ? { putt } : {}), ...flightSpin(shot.landing) });
-    this.yrFlight.t = -IMPACT_S; // (T320: the ball leaves at the drive clip's impact, as the field's do: play/view.ts)
+    this.yrFlight.t = -(shot.club === 'putter' ? PUTT_IMPACT_S : IMPACT_S); // (T320: the ball leaves at the clip's impact, as the field's do: play/view.ts)
     if (land) this.yourTracer(this.yrFlight);
     this.youFollow = true;
     this.emit();

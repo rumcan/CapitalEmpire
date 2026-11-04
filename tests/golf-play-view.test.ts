@@ -1,11 +1,11 @@
 // The playback view (docs/GOLF-PLAY.md P2a, src/game/golf/play/view.ts): on a three-hole course with two golfers, a swing starts when its shot is crossed,
-// a putt uses the address and takeaway frames, walking frames change with the time, a ball arcs and lands at the shot's end, nobody is drawn outside
+// a putt plays the putt clip (T212), walking frames change with the time, a ball arcs and lands at the shot's end, nobody is drawn outside
 // the tee window or after done, and update refills its arrays.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GOLFER_CLIPS } from '../src/game/library';
 import { TILE_M } from '../src/game/golf/types';
-import { golferRow } from '../src/game/crowdview';
+import { PUTT_IMPACT_S, golferRow } from '../src/game/crowdview';
 import { IMPACT_S, LiveGroup, PUTT_HIT_S, OWNER_ADDRESS, PUTT_FLIGHT, PlayView, ROLL_DONE_S, offOf, playRound, stateAt, walkMin } from '../src/game/golf/play';
 import type { CourseView, Golfer, Group, Lie, OwnerTurn, PlayHole, RoundPlan, Shot } from '../src/game/golf/play';
 
@@ -75,18 +75,21 @@ test('swing: a shot already struck when the view starts (a page load mid-round) 
   assert.ok(pv.balls.some(b => b.x === s.to.x && b.y === s.to.y), 'the ball rests where the shot ended');
 });
 
-test('putt: the address and the takeaway frames for 1.2 s after the putt is crossed, then the address; the ball rolls without an arc', () => {
-  const { view, plan } = playOf(1234), pv = new PlayView(plan, view), p = shotOf(plan, 0, x => x.club === 'putter'), d = GOLFER_CLIPS.golf_drive;
+test('putt (T212): the putt clip plays for 1.6 s after the putt is crossed (the ball leaving at its impact), then its address; the ball rolls without an arc', () => {
+  const { view, plan } = playOf(1234), pv = new PlayView(plan, view), p = shotOf(plan, 0, x => x.club === 'putter'), d = GOLFER_CLIPS.golf_putt;
+  assert.equal(PUTT_HIT_S, PUTT_IMPACT_S, "the ball leaves at the putt clip's impact");
+  assert.ok(d.times.includes(PUTT_IMPACT_S), 'the putt clip has a frame at its impact');
   frameOf(pv, p.t - 0.05, 200);
-  assert.equal(frameOf(pv, p.t + 0.01, 201), d.start, 'the address at the putt');
-  pv.update(p.t + 0.01, 201 + PUTT_HIT_S + 0.4); // half of the 0.8 s roll (T320: from the stroke's return)
+  assert.equal(frameOf(pv, p.t + 0.01, 201), d.start, "the putt clip's address at the putt");
+  pv.update(p.t + 0.01, 201 + PUTT_HIT_S + 0.4); // half of the 0.8 s roll (T320: from the impact)
   const mx = (p.from.x + p.to.x) / 2, my = (p.from.y + p.to.y) / 2;
   const b = pv.balls.find(q => Math.abs(q.x - mx) < 1e-9 && Math.abs(q.y - my) < 1e-9);
   assert.ok(b, 'the putt is in the middle of its roll');
   assert.equal(b.h, 0, 'a putt has no arc');
-  assert.equal(frameOf(pv, p.t + 0.01, 201.5), d.start + 1, 'the takeaway (floor(3 * 0.5 / 1.2) = 1)');
-  assert.equal(frameOf(pv, p.t + 0.01, 201.95), d.start, 'back to the address by 1.2 s');
-  assert.equal(frameOf(pv, p.t + 0.01, 203), d.start, 'after the window he stands at the address (the putt action)');
+  assert.equal(frameOf(pv, p.t + 0.01, 201.5), d.start + d.times.indexOf(0.5), 'the top of the backstroke at 0.5 s');
+  assert.equal(frameOf(pv, p.t + 0.01, 201 + PUTT_IMPACT_S), d.start + d.times.indexOf(PUTT_IMPACT_S), 'the impact frame at the impact');
+  assert.equal(frameOf(pv, p.t + 0.01, 202.5), d.start + d.n - 1, 'the finish held');
+  assert.equal(frameOf(pv, p.t + 0.01, 203), d.start, "after the window he stands at the putt clip's address (the putt action)");
 });
 
 test('ball: a full shot arcs to its landing (h = 0.12 of its metres at the top of the flight), bounces and rolls on, and rests at the end of the shot by the swing\'s end (T251)', () => {

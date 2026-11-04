@@ -5,6 +5,10 @@
 import { SPECTATOR_CLIPS, type PeopleClip } from './library';
 import { facing } from './ext/pedestrians';
 
+/** T212 (#557): the putt clip's impact, seconds into GOLFER_CLIPS.golf_putt (its sheet's impactSecs: render-person-3d.mjs --putt, a hand-keyed
+ *  pendulum: the top of the backstroke at 0.5 s, the putter back at the address and the ball struck at 0.8 s, the finish held from 1.05 s) */
+export const PUTT_IMPACT_S = 0.8;
+
 /** a person to draw: its tile position, group (0 spectator, 1 golfer), person (its index in the group's people), sheet row (0-7, the rows
  *  S SW W NW N NE E SE) and frame (absolute in that row: the clip's start + k) */
 export interface CrowdPerson { x: number; y: number; group: 0 | 1; person: number; row: number; frame: number }
