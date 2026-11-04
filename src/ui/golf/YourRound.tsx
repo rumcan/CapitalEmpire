@@ -46,7 +46,7 @@ export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: 
 export function RoundBar({ v, onJump, onCart, onCard, onQuit }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCard: () => void; onQuit: () => void }) {
   const t = v.totals, r = v.round;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-[var(--hud-top,6rem)] z-20 flex justify-center px-3">
+    <div className="pointer-events-none absolute inset-x-0 top-[calc(var(--hud-top,6rem)+2.75rem)] z-20 flex justify-center px-3">
       <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-slate-950/85 px-3 py-1.5 text-xs text-slate-200 shadow-xl backdrop-blur" data-testid="round-bar">
         <span className="font-display font-bold text-[var(--gold-hi)]">Hole {v.hole}</span>
         <span className="tabular-nums text-slate-300">Par {v.par} · {r.holed ? 'holed' : `stroke ${v.stroke}`}{!r.holed && !r.over ? ` · ${Math.round(v.distM)} m to the pin, ${LIE[v.lie] ?? v.lie}` : ''}</span>

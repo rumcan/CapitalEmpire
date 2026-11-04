@@ -7861,7 +7861,7 @@ export class Game {
   private drawYourBall(ctx: CanvasRenderingContext2D) {
     const r = this.yourRound(); if (!r || r.over || this.cam.z < DISTRICT_Z) return;
     const f = this.yrFlight; if (!f && (r.holed || this.shot?.mine)) return;
-    const b = f ? yourBallAt(f) : { x: r.ball.x, y: r.ball.y, h: 0 }, dpr = this.dpr, p = this.screen(b.x, b.y), lift = b.h * HH * 2 * this.cam.z * dpr;
+    const b = f ? yourBallAt(f) : { x: r.ball.x, y: r.ball.y, h: 0 }, dpr = this.dpr, p = this.screen(b.x, b.y), lift = b.h * HH * this.cam.z * dpr;
     ctx.save();
     if (lift > 0.5) { ctx.beginPath(); ctx.ellipse(p.x, p.y, 3 * dpr, 1.5 * dpr, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(15,23,42,0.35)'; ctx.fill(); }
     ctx.beginPath(); ctx.arc(p.x, p.y - lift, Math.max(2.5 * dpr, 0.12 * HW * this.cam.z * dpr), 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill();

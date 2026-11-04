@@ -112,7 +112,7 @@ test('the cart drives at its pace on the keys, up to a green or a bunker and nev
 test('the flight lands, rolls and comes to rest where the shot did; a penalty shows its drop at the end', () => {
   const row = { i: 0, n: 1, par: 4, strokes: 1, putts: 0, pen: 0, done: false };
   const f = flightOf({ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 110, y: 0 }, false, false, row, false);
-  f.t = f.air / 2; const mid = yourBallAt(f); assert.ok(mid.h > 10 && Math.abs(mid.x - 50) < 1e-9, 'high in the middle');
+  f.t = f.air / 2; const mid = yourBallAt(f); assert.ok(mid.h > 5 && Math.abs(mid.x - 50) < 1e-9, 'high in the middle');
   f.t = f.dur; assert.deepEqual(yourBallAt(f), { x: 110, y: 0, h: 0 });
   const pf = flightOf({ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 40, y: 0 }, false, false, row, true);
   pf.t = pf.air + 0.01; assert.equal(yourBallAt(pf).x, 100); pf.t = pf.dur; assert.equal(yourBallAt(pf).x, 40);

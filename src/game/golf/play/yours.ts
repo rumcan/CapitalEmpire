@@ -165,11 +165,11 @@ export function flightOf(from: Pt, land: Pt | null, to: Pt, done: boolean, up: b
   const roll = land ? (pen ? 0.2 : Math.min(1.5, 0.25 + 0.04 * Math.hypot(to.x - land.x, to.y - land.y))) : Math.min(3, 0.4 + 0.25 * Math.hypot(to.x - from.x, to.y - from.y));
   return { from: { x: from.x, y: from.y }, land: land ? { x: land.x, y: land.y } : null, to: { x: to.x, y: to.y }, t: 0, dur: air + roll, air, done, up, row, pen };
 }
-/** the ball of a flight at its time (tiles; h its height in tiles: a third of the carry at most 30, on an arc): in the air, rolling (slowing), or a
+/** the ball of a flight at its time (tiles; h its height in tiles: an eighth of the carry, at most 12 (24 m), on an arc): in the air, rolling (slowing), or a
  *  putt rolling; a penalty's ball stays where it landed and shows at its drop at the end */
 export function yourBallAt(f: YourFlight): { x: number; y: number; h: number } {
   if (f.land && f.t < f.air) {
-    const u = f.t / f.air, H = Math.min(30, Math.hypot(f.land.x - f.from.x, f.land.y - f.from.y) / 3);
+    const u = f.t / f.air, H = Math.min(12, Math.hypot(f.land.x - f.from.x, f.land.y - f.from.y) / 8);
     return { x: f.from.x + (f.land.x - f.from.x) * u, y: f.from.y + (f.land.y - f.from.y) * u, h: 4 * u * (1 - u) * H };
   }
   const a = f.land ?? f.from, u = Math.min(1, Math.max(0, (f.t - f.air) / Math.max(1e-3, f.dur - f.air))), e = 1 - (1 - u) * (1 - u);
