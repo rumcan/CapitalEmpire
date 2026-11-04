@@ -180,6 +180,7 @@ import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, 
 import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
+import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
@@ -7421,7 +7422,7 @@ export class Game {
   /** what a click does under the pointer (the cursor's verb and the hover label), the pointer (css px) */
   youHover: { verb: YouVerb | null; text: string; mx: number; my: number } | null = null;
   /** the talk card (a person you walked up to), the first tee's card (Start a round) */
-  youTalk: { name: string; line: string; what: string } | null = null; youTeeOpen = false;
+  youTalk: { name: string; line: string; what: string; /** T244: their handicap when they golf (a money match can be offered); null: they do not */ hcp: number | null; answer?: { yes: boolean; line: string } } | null = null; youTeeOpen = false;
   /** what you do on arriving (the thing's use) and the point you face then */
   private youThen: { act: (() => void) | null; face: Pt | null; key: string } | null = null;
   /** the blocked tiles round the last route or round you (1: may not be crossed): a box of the map, its buffer reused */
@@ -7472,6 +7473,7 @@ export class Game {
     // (T323, the owner: the camera no longer follows you walking or driving: Me centres it once)
     if (wasMoving && !mv.moving && !mv.keys) { this.youSaveDue = true; this.emit(); }
     this.yourFrame(dt); // T317: your round: the ball's flight, the snap to the address
+    this.matchDaily(performance.now()); // T244: a rival's return challenge
     if (this.youSaveDue) { this.youSaveDue = false; this.youKeep(); }
   }
   /** your place into the profile (saved with the game): on stopping, never per frame */
@@ -7554,18 +7556,18 @@ export class Game {
       for (let k = 0; k < n; k++) {
         const v = V[k]!; if (!hit(v.x, v.y)) continue;
         const name = personName(v.person * 7919 + Math.floor(v.x) * 31 + Math.floor(v.y)), at = talkSpot(v, from), pt = { x: v.x, y: v.y };
-        return { kind: 'person', name, at, face: pt, key: 'p' + v.person, act: () => this.youTalkTo(name, 'a townsperson', pt) };
+        return { kind: 'person', name, at, face: pt, key: 'p' + v.person, act: () => this.youTalkTo(name, 'a townsperson', pt, golfs(name) ? hcpOfName(name) : null) };
       }
       // the range's golfers (walking to a mat, queueing, hitting): a name of their own until T243's people
       if (this.range.scene) { const rd = this.range.sim.view(); for (let k = 0; k < rd.nPeople; k++) {
         const q = rd.people[k]!; if (q.lift || !hit(q.x, q.y)) continue;
         const name = personName(q.person * 7919 + k * 131 + 17), pt = { x: q.x, y: q.y };
-        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: 'r' + k, act: () => this.youTalkTo(name, 'a golfer at your range', pt) };
+        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: 'r' + k, act: () => this.youTalkTo(name, 'a golfer at your range', pt, hcpOfName(name)) };
       } }
       const d = this.dayPlay; if (d && !this.dayOff) for (const p of d.view.people) {
         if (!hit(p.x, p.y)) continue;
         const gf = d.base.golfers[p.golfer], name = gf?.name ?? 'a golfer', pt = { x: p.x, y: p.y };
-        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: 'g' + p.golfer, act: () => this.youTalkTo(name, 'out on the course', pt) };
+        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: 'g' + p.golfer, act: () => this.youTalkTo(name, 'out on the course', pt, gf ? hcpOfSkill(gf.skills ?? gf.skill) : hcpOfName(name)) };
       }
     }
     // T317: your golf cart (get in; get out when you sit in it) and your ball in your round (walk up to it: you snap to the address when near)
@@ -7656,10 +7658,10 @@ export class Game {
   /** T323: Alt (a lone tap) swaps the cursors */
   toggleYouWalk() { this.setYouWalk(!this.youWalkMode); this.toast(this.youWalkMode ? 'Walk: a click walks you there (Alt: Select)' : 'Select: a click inspects (Alt: Walk)', 'info'); }
   /** you walk up to a person: you face each other and the talk card opens (T243 brings the portraits and their skills) */
-  private youTalkTo(name: string, what: string, at: Pt) {
+  private youTalkTo(name: string, what: string, at: Pt, hcp: number | null = null) {
     const y = this.you; if (y) y.face = facingOf(at.x - y.x, at.y - y.y);
     const lines = TALK_LINES, k = Math.floor(hash(name.length * 131 + name.charCodeAt(0), Math.floor(this.townNow().dayMin / 30)) * lines.length);
-    this.youTalk = { name, what, line: lines[k]! }; this.emit();
+    this.youTalk = { name, what, line: lines[k]!, hcp }; this.emit();
   }
   closeYouTalk() { this.youTalk = null; this.emit(); }
   closeYouTee() { this.youTeeOpen = false; this.emit(); }
@@ -7710,6 +7712,12 @@ export class Game {
       const f = c.face; this.youCartSide = f >= 1 && f <= 3 ? 0 : f >= 5 ? 1 : this.youCartSide;
       const item = CART_ART[this.youCartSide]!;
       if (item >= 0) { const d = this.propDrawable(this.youCartDraw, 0, item, c.x, c.y, 0.6); this.golfCartOut.push(d); this.caddieLabels.push({ p: d, text: this.youInCart ? this.golf?.player?.name ?? 'You' : 'Your cart' }); } // (T326: "Your cart" when it waits)
+    }
+    const mq = this.mYou, mm = this.yourRound()?.match;
+    if (mq && mm && mq.x >= X0 && mq.x <= X1 && mq.y >= Y0 && mq.y <= Y1) { // T244: your opponent (a golfer's art by their name; labelled)
+      const o = this.crowdGolfers[5] ?? (this.crowdGolfers[5] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
+      o.group = 1; o.x = mq.x; o.y = mq.y; o.person = mm.look % GOLFER_PEOPLE.length; o.row = mq.face; o.frame = youFrame(mq, GOLFER_CLIPS.walk, GOLFER_CLIPS.idle.start, GOLFER_CLIPS.golf_drive, GOLFER_CLIPS.golf_putt);
+      crowdDrawable(out, m, o); this.caddieLabels.push({ p: out[m]!, text: mm.name }); m++;
     }
     const y = this.you; if (!y || this.youInCart || y.x < X0 || y.x > X1 || y.y < Y0 || y.y > Y1) return m;
     const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
@@ -7835,7 +7843,8 @@ export class Game {
   /** each frame (real seconds): your ball's flight (the camera follows it), then the snap: near your ball (SNAP_TILES), on foot or in the cart, you
    *  stand at the address and the shot opens */
   private yourFrame(dt: number) {
-    const r = this.yourRound(), y = this.you; if (!r || !y) { this.yrFlight = null; if (this.spinAir?.mine) this.spinAir = null; return; }
+    const r = this.yourRound(), y = this.you; if (!r || !y) { this.yrFlight = null; this.mFlight = null; this.mYou = null; if (this.spinAir?.mine) this.spinAir = null; return; }
+    if (r.match) this.matchFigure(dt, r); // T244: the opponent's figure (its swing clip)
     let f = this.yrFlight;
     if (!f && this.spinAir?.mine) this.spinAir = null;
     if (f) {
@@ -7848,6 +7857,7 @@ export class Game {
       if (f.t >= f.dur) { this.yrFlight = null; if (f.done) this.youHoledOut(f.row, f.up); this.emit(); }
       return;
     }
+    if (r.match && this.matchFrame(dt, r)) return; // T244: the opponent's turn and their ball in the air
     if (r.holed || r.over || this.shot) return;
     const mv = this.youInCart && this.youCart ? this.youCart : y;
     if (nearBall(mv.x, mv.y, r.ball)) this.yourAddress();
@@ -7878,7 +7888,7 @@ export class Game {
     const s = this.shot, r = this.yourRound(), v = this.yrView(); if (!s?.mine || !r || !v) return;
     const sk = this.yourSkills(), i = s.input;
     const spin = this.shotSpin(), input = { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}) };
-    const { round, shot, up } = playYours(v, r, sk, input, this.seed);
+    const { round, shot, up } = r.match ? playMatchYours(v, r, sk, input, this.seed) : playYours(v, r, sk, input, this.seed); // (T244: a match's hole is decided as it goes)
     this.yrLastInput = { club: i.club, aim: { x: i.aim.x, y: i.aim.y }, power: i.power }; // (T325: a mulligan opens the shot again on it)
     this.spinAir = spin ? { mine: true, input: { ...input, spin }, lie: r.lie, prev: r, seen: false, at: performance.now() } : null;
     this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(sk, i.club), i.club === 'putter') : null);
@@ -7899,16 +7909,21 @@ export class Game {
   /** T317: a hole is done (holed, or picked up at par + 5): the score is toasted and the scorecard opens ("Next hole" goes on). T319 hangs the ball's
    *  visible drop into the cup (and the break grid's end) here */
   private youHoledOut(row: CardRow, up: boolean) {
+    const mr = this.yourRound();
+    if (mr?.match) { // T244: in a match the card opens once the hole is decided (they may still have to putt)
+      if (holeDecided(mr)) { this.matchHoleDone(mr); return; }
+      this.toast(`${up ? `Picked up on the ${ordinal(row.n)}` : `Down in ${row.strokes} on the ${ordinal(row.n)}`}: ${firstName(mr.match.name)} to play`, 'info'); return;
+    }
     this.toast(up ? `Picked up on the ${ordinal(row.n)}: ${row.strokes}` : `${scoreName(row.strokes, row.par)} on the ${ordinal(row.n)} (${row.strokes})`, up ? 'warn' : 'good');
     this.yrCard = true;
   }
   /** "Let the caddie finish the hole": the model plays the rest of this hole (its suggested club, aim and power, no meter); the hole is done */
   private yourCaddie() {
-    let r = this.yourRound(); const v = this.yrView(), s = this.shot; if (!s?.mine || !r || !v) return;
-    const sk = this.yourSkills(); let up = false;
-    for (let k = 0; k < 20 && !r.holed && !r.over; k++) {
+    const r0 = this.yourRound(), v = this.yrView(), s = this.shot; if (!s?.mine || !r0 || !v) return;
+    const sk = this.yourSkills(); let up = false, r: YourRound = r0;
+    for (let k = 0; k < 20 && !r.holed && !r.over && (!r.match || matchTurn(v, r) === 'you'); k++) { // (T244: in a match, until it is their turn)
       const t = yourTurn(v, r, sk); if (!t) break;
-      const o = playYours(v, r, sk, { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power }, this.seed);
+      const go = { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power }, o: ReturnType<typeof playYours> = r.match ? playMatchYours(v, r, sk, go, this.seed) : playYours(v, r, sk, go, this.seed);
       r = o.round; up = o.up;
     }
     this.shot = null; this.setYourRound(r);
@@ -7919,7 +7934,8 @@ export class Game {
   yourNextHole() {
     const r = this.yourRound(), v = this.yrView(); if (!r || !v) return;
     if (r.over) { this.yourRoundEnd(); return; }
-    const n = nextHole(v, r); if (n === r) { this.yrCard = false; this.emit(); return; }
+    const n = r.match ? matchNextHole(v, r) : nextHole(v, r); if (n === r) { this.yrCard = false; this.emit(); return; }
+    this.mWait = 0;
     this.setYourRound(n); this.yrCard = false;
     const h = holeOf(v, n.holes[n.at]!); if (h) this.toast(`Hole ${h.n}, par ${h.par}: to the tee (walk, drive, or Jump to ball)`, 'info');
     this.emit();
@@ -7982,6 +7998,7 @@ export class Game {
    *  closes and the round is cleared */
   yourRoundEnd(why?: string) {
     const r = this.yourRound(), p = this.playerNow(); if (!r || !p) return;
+    if (r.match) { this.matchSettle(r, !r.over); return; } // T244: a match ends settled (quitting one concedes it)
     if (this.shot?.mine) this.shot = null;
     this.yrFlight = null; this.yrCard = false;
     const t = cardTotals(r.card);
@@ -8129,6 +8146,7 @@ export class Game {
    *  parked at the nearest spot it may stand), at the address with the shot open */
   yourJump() {
     const r = this.yourRound(), y = this.you, v = this.yrView(); if (!r || !y || !v || r.holed || r.over || this.shot || this.yrFlight) return;
+    if (r.match && (this.mFlight || matchTurn(v, r) !== 'you')) { this.toast(`${firstName(r.match.name)} is away: they play first`, 'info'); return; } // (T244)
     const c = this.youCart;
     if (this.youInCart && c) { stopWalk(c); const p = this.cartNear(r.ball, c); if (p) { c.x = p.x; c.y = p.y; } this.youInCart = false; }
     stopWalk(y); this.youThen = null; y.x = r.ball.x; y.y = r.ball.y;
@@ -8142,7 +8160,156 @@ export class Game {
     const r = this.yourRound(); if (!r || !this.you) return null;
     const row = r.card[r.at]!, v = this.yrView(), h = v ? holeOf(v, row.i) : null, flying = !!this.yrFlight, addressing = !!this.shot?.mine;
     return { round: r, hole: row.n, par: row.par, stroke: row.strokes + 1, distM: h ? Math.hypot(h.pin.x - r.ball.x, h.pin.y - r.ball.y) * TILE_M : 0, lie: r.lie,
-      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing, inCart: this.youInCart, nearCart: this.youNearCart(), cartFar: this.youCartFar(), canMull: canMulligan(r), mullLeft: mulligansLeft(r), canGimme: !flying && !!v && canGimme(v, r), card: this.yrCard, flying, addressing };
+      match: r.match ? matchView(v, r) : null, // T244
+      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing && !(r.match && (this.mFlight || (v && matchTurn(v, r) !== 'you'))), inCart: this.youInCart, nearCart: this.youNearCart(), cartFar: this.youCartFar(), canMull: canMulligan(r), mullLeft: mulligansLeft(r), canGimme: !flying && !!v && canGimme(v, r), card: this.yrCard, flying, addressing };
+  }
+  // ---------- T244 (#706): money matches (golf/play/match.ts) ----------
+  /** the opponent's ball in the air (as yours: a YourFlight), their figure (a You: its swing clip; it stands at their ball), the pause before their shot */
+  private mFlight: YourFlight | null = null; private mYou: YouChar | null = null; private mWait = 0; private mDayCheck = 0;
+  /** the last match's result card (null: none) */
+  matchResult: { name: string; text: string; result: 'w' | 'l' | 'h'; stake: number; money: number; rep: number; res: HoleWin[]; card: CardRow[]; ocard: number[]; rival: string } | null = null;
+  closeMatchResult() { this.matchResult = null; this.emit(); }
+  /** the talk card's challenge box (null: they do not golf): their handicap and yours, what they carry, what you have, the most you can stake, the
+   *  lengths the course offers, your record against them, why you cannot challenge now (null: you can), and their last answer */
+  matchOffer(): { name: string; hcp: number; yourHcp: number; purse: number; money: number; max: number; lengths: number[]; rival: string | null; why: string | null; answer: { yes: boolean; line: string } | null } | null {
+    const t = this.youTalk, p = this.playerNow(); if (!t || t.hcp === null || !p) return null;
+    const rival = p.rivals?.find(x => x.name === t.name) ?? null, o = opponentOf(t.name, rival?.hcp ?? t.hcp, rival, this.townNow().day), v = this.yrView();
+    const lengths = matchLengths(v?.holes.length ?? 0), max = maxStake(this.money, o.purse);
+    const cur = this.yourRound(), why = cur?.match?.name === t.name ? 'Your match is on: see you on the tee' : cur ? 'Finish your round first' : !v || !lengths.length ? 'The course has no holes to play yet' : this.yourChoices().why ?? (max ? null : o.purse < 10 ? `${firstName(t.name)} is cleaned out` : 'You cannot cover the least stake ($10)');
+    return { name: t.name, hcp: o.hcp, yourHcp: handicapOf(p.skills), purse: o.purse, money: Math.floor(this.money), max, lengths, rival: rival ? rivalText(rival) : null, why, answer: t.answer ?? null };
+  }
+  /** you challenge the person you are talking to: n holes for the stake. They answer (golf/play/match.ts answerOf); a yes starts the match on the first tee */
+  challengeMatch(stake: number, n: number) {
+    const t = this.youTalk, p = this.playerNow(), off = this.matchOffer(); if (!t || !p || !off) return;
+    if (off.why) { this.toast(off.why, 'warn'); return; }
+    const rival = p.rivals?.find(x => x.name === t.name) ?? null, day = this.townNow().day, o = opponentOf(t.name, rival?.hcp ?? t.hcp!, rival, day);
+    const why = stakeWhy(stake, this.money, o.purse, o.name); if (why) { this.toast(why, 'warn'); return; }
+    const a = answerOf(o, off.yourHcp, stake, n, rival, day);
+    t.answer = { yes: a.yes, line: a.line };
+    if (a.yes) this.matchBegin(o, stake, n, false); else this.emit();
+  }
+  /** a match begins: your round in mode 'match' on the course's first n holes with the opponent beside you on the first tee (your cart brought there) */
+  private matchBegin(o: Opponent, stake: number, n: number, back: boolean): boolean {
+    const v = this.yrView(), p = this.playerNow(); if (!v || !p) return false;
+    const hs = matchHoles(v.holes.length, n); if (!hs.length) { this.toast('The course is too short for that match', 'warn'); return false; }
+    const N = GOLFER_PEOPLE.length, mine = this.youArt(); let look = nameSeed(o.name) % N; if (look === mine) look = (look + 1) % N;
+    const at = this.townNow(), r = startMatch(v, hs, at.day, o, stake, look, back); if (!r) return false;
+    const b = p.booked; if (b && b.day === at.day && !b.result) this.setPlayer({ ...p, booked: null });
+    this.setYourRound(r); this.yrCard = false; this.yrFlight = null; this.mFlight = null; this.mYou = null; this.mWait = 0; this.matchResult = null;
+    const h = holeOf(v, hs[0]!)!, brought = this.youCartBring(h.tee);
+    this.toast(`${firstName(o.name)} is on: ${hs.length} holes of match play for $${stake.toLocaleString('en-US')}. Meet at the ${ordinal(h.n)} tee${brought ? ' (your cart is by the tee)' : ''}`, 'good');
+    this.emit(); return true;
+  }
+  /** the opponent's figure: placed beside their ball (at its address, facing the pin; on the green by the cup once holed), its swing clip running */
+  private matchFigure(dt: number, r: YourRound) {
+    const m = r.match!, v = this.yrView(), h = v ? holeOf(v, rowOf(r).i) : null; if (!h) return;
+    const q = this.mYou ??= makeYou(m.ball.x, m.ball.y, 0);
+    stepYou(q, dt);
+    if (q.swing > 2.2) q.swing = -1;
+    if (this.mFlight || q.swing >= 0) return;
+    const a = m.holed ? { x: h.pin.x + 1.2, y: h.pin.y + 1.2 } : addressOf(m.ball, h.pin); q.x = a.x; q.y = a.y; q.face = facingOf(h.pin.x - q.x, h.pin.y - q.y);
+  }
+  /** each frame of a match (true: the opponent has the turn, you wait): their ball's flight (the camera follows it as yours); on their turn, after a
+   *  short pause, their shot (golf/play/match.ts oppShot: the round model) */
+  private matchFrame(dt: number, r: YourRound): boolean {
+    const f = this.mFlight, v = this.yrView(); if (!v) return false;
+    if (f) {
+      f.t += dt;
+      const b = yourBallAt(f), ch = cameraChase(b, this.youFollow);
+      if (ch) { const k = Math.min(1, dt * 4); this.camEase = null; this.cam.X += (worldX(ch.x, ch.y) - this.cam.X) * k; this.cam.Y += (worldY(ch.x, ch.y) - this.cam.Y) * k; this.clampCam(); }
+      if (f.t >= f.dur) { this.mFlight = null; const n = this.yourRound(); if (n?.match && holeDecided(n) && !this.yrCard) this.matchHoleDone(n); this.emit(); }
+      return true;
+    }
+    if (r.over || holeDecided(r) || this.shot?.mine) return false;
+    if (matchTurn(v, r) !== 'opp') { this.mWait = 0; return false; }
+    this.mWait += dt; if (this.mWait < 1.2) return true;
+    this.mWait = 0; this.matchOppHit(); return true;
+  }
+  /** the opponent plays their shot: the round after it saved, their figure swings, the ball flies (and rolls or putts) as yours does, a toast says it */
+  private matchOppHit() {
+    const r = this.yourRound(), v = this.yrView(); if (!r?.match || !v) return;
+    const { round, shot } = oppShot(v, r, this.seed), h = holeOf(v, rowOf(r).i)!;
+    this.setYourRound(round);
+    const q = this.mYou ??= makeYou(shot.from.x, shot.from.y, 0), a = addressOf(shot.from, h.pin);
+    stopWalk(q); q.x = a.x; q.y = a.y; q.face = facingOf(h.pin.x - a.x, h.pin.y - a.y); q.swing = 0; q.putt = shot.club === 'putter';
+    const land = shot.landing?.at ?? null;
+    const putt = !land && shot.club === 'putter' && !shot.penalty ? new PuttRoll().set(shot.from, shot.to, h.pin, shot.holed, this.ballHeight) : undefined;
+    this.mFlight = flightOf(shot.from, land, shot.to, round.match!.holed, false, rowOf(round), shot.penalty > 0, { ...(putt ? { putt } : {}), ...flightSpin(shot.landing) });
+    this.mFlight.t = -(shot.club === 'putter' ? PUTT_IMPACT_S : IMPACT_S);
+    const m = round.match!, f = firstName(m.name);
+    this.toast(`${f}: ${shotReport(shot, null).text}${m.holed && shot.holed ? ` · holed in ${m.strokes}` : m.holed ? ' · picks up' : ''}`, 'info');
+    this.emit();
+  }
+  /** a hole decided: the result toasted with the match's state, the scorecard opens (Next hole, or Done when the match is over) */
+  private matchHoleDone(r: YourRound) {
+    const m = r.match!, w = m.res[m.res.length - 1], row = r.card[r.at]!, os = m.ocard[m.ocard.length - 1], f = firstName(m.name), sc = scoreOf(r);
+    const head = w === 1 ? `You win the ${ordinal(row.n)}` : w === -1 ? `${f} wins the ${ordinal(row.n)}` : `The ${ordinal(row.n)} is halved`;
+    this.toast(`${head} (you ${row.up ? 'picked up' : row.strokes}, ${f} ${m.holed ? os : 'picked up'}) · ${sc.text}`, w === 1 ? 'good' : w === -1 ? 'warn' : 'info');
+    this.yrCard = true; this.emit();
+  }
+  /** "Skip to result": the rest of the match played by the model for both (golf/play/match.ts skipMatch), then settled */
+  matchSkip() {
+    const r = this.yourRound(), v = this.yrView(); if (!r?.match || !v) return;
+    if (this.shot?.mine) this.shot = null;
+    this.yrFlight = null; this.mFlight = null;
+    this.matchSettle(skipMatch(v, r, this.yourSkills(), this.seed), false);
+  }
+  /** a match settled (golf/play/match.ts settleMatch): the stake moves (the club's money), a win lifts the reputation a little, the opponent remembers
+   *  you (rivals), the round is in your rounds; the result card opens */
+  private matchSettle(r: YourRound, conceded: boolean) {
+    const p = this.playerNow(), m = r.match; if (!p || !m) return;
+    if (this.shot?.mine) this.shot = null;
+    const s = settleMatch({ ...p, round: r }, r, conceded);
+    this.setPlayer(s.profile);
+    if (s.money) this.traffic.spend('business', -s.money);
+    if (s.rep && this.golf) this.golf.rep = Math.min(100, (this.golf.rep ?? 0) + s.rep);
+    const rv = s.profile.rivals?.find(x => x.name === m.name);
+    this.matchResult = { name: m.name, text: s.text, result: s.result, stake: m.stake, money: s.money, rep: s.rep, res: m.res, card: r.card, ocard: m.ocard, rival: rv ? rivalText(rv) : '' };
+    this.yrFlight = null; this.mFlight = null; this.mYou = null; this.yrCard = false;
+    this.toast(s.text, s.result === 'w' ? 'good' : s.result === 'l' ? 'warn' : 'info');
+    this.scheduleSave(); this.emit();
+  }
+  /** once a town day (checked every few seconds): a rival may challenge you back (golf/play/match.ts returnChallenge); a challenge waits two days */
+  private matchDaily(now: number) {
+    if (now < this.mDayCheck) return; this.mDayCheck = now + 3000;
+    const p = this.golf?.player; if (!p?.rivals?.length) return;
+    const day = this.townNow().day; if (p.chDay === day) return;
+    const old = p.challenge && day - p.challenge.day <= 2 ? p.challenge : undefined;
+    const c = old || p.round ? null : returnChallenge(p.rivals, day, this.seed, this.money);
+    const { challenge: _c, ...rest } = p; void _c;
+    this.setPlayer({ ...rest, chDay: day, ...(old ? { challenge: old } : c ? { challenge: c } : {}) });
+    if (c) this.toast(`${c.name} wants a rematch: ${c.holes} holes for $${c.stake.toLocaleString('en-US')}`, 'info');
+    this.emit();
+  }
+  /** a rival's return challenge waiting (the card): who, the stake, the holes, your record against them, why you cannot take it now (null: you can) */
+  challengeView(): { name: string; stake: number; holes: number; rival: string; why: string | null } | null {
+    const p = this.playerNow(), c = p?.challenge; if (!p || !c) return null;
+    const rv = p.rivals?.find(x => x.name === c.name), v = this.yrView();
+    const why = p.round ? 'Finish your round first' : !v || !matchLengths(v.holes.length).length ? 'The course has no holes to play yet' : c.stake > this.money ? `You have $${Math.floor(this.money).toLocaleString('en-US')}` : this.yourChoices().why;
+    return { name: c.name, stake: c.stake, holes: c.holes, rival: rv ? rivalText(rv) : '', why };
+  }
+  /** you answer a rival's challenge: yes starts the match (their stake, within what both can afford; the holes the course has), no lets it go */
+  answerChallenge(yes: boolean) {
+    const p = this.playerNow(), c = p?.challenge; if (!p || !c) return;
+    const { challenge: _c, ...rest } = p; void _c;
+    if (!yes) { this.setPlayer(rest); this.toast(`You turn ${firstName(c.name)} down`, 'info'); this.emit(); return; }
+    const cv = this.challengeView(); if (cv?.why) { this.toast(cv.why, 'warn'); return; }
+    const rv = p.rivals?.find(x => x.name === c.name), day = this.townNow().day, o = opponentOf(c.name, rv?.hcp, rv, day), v = this.yrView()!;
+    const L = matchLengths(v.holes.length), n = L.includes(c.holes) ? c.holes : L[L.length - 1]!, stake = clampStake(c.stake, this.money, Math.max(o.purse, c.stake));
+    this.setPlayer(rest);
+    if (!stake || !this.matchBegin(o, stake, n, true)) this.emit();
+  }
+  /** the opponent's ball (as yours, with an orange rim and their first name at rest) */
+  private drawMatchBall(ctx: CanvasRenderingContext2D) {
+    const r = this.yourRound(), m = r?.match; if (!r || !m || r.over || this.cam.z < DISTRICT_Z) return;
+    const f = this.mFlight; if (!f && (m.holed || holeDecided(r))) return;
+    const b = f ? yourBallAt(f) : { x: m.ball.x, y: m.ball.y, h: 0, sink: 0 };
+    this.drawBall(ctx, b, '#ea580c');
+    if (!f) {
+      const dpr = this.dpr, p = this.screen(b.x, b.y), n = firstName(m.name);
+      ctx.font = `600 ${10 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.8)';
+      ctx.strokeText(n, p.x, p.y - 7 * dpr); ctx.fillStyle = '#fed7aa'; ctx.fillText(n, p.x, p.y - 7 * dpr); ctx.textAlign = 'start';
+    }
   }
   /** whether you stand within CART_REACH of your cart (and are not in it) */
   youNearCart(): boolean { const c = this.youCart, y = this.you; return !!c && !!y && !this.youInCart && Math.hypot(c.x - y.x, c.y - y.y) <= CART_REACH; }
@@ -8294,7 +8461,10 @@ export class Game {
   private drawYourBall(ctx: CanvasRenderingContext2D) {
     const r = this.yourRound(); if (!r || r.over || this.cam.z < DISTRICT_Z) return;
     const f = this.yrFlight; if (!f && (r.holed || this.shot?.mine)) return;
-    const b = f ? yourBallAt(f) : { x: r.ball.x, y: r.ball.y, h: 0, sink: 0 };
+    this.drawBall(ctx, f ? yourBallAt(f) : { x: r.ball.x, y: r.ball.y, h: 0, sink: 0 }, '#0f172a');
+  }
+  /** a ball on the course (yours; T244: the opponent's with its own rim) */
+  private drawBall(ctx: CanvasRenderingContext2D, b: { x: number; y: number; h: number; sink: number }, rim: string) {
     const dpr = this.dpr, p = this.screen(b.x, b.y), lift = b.h * HH * this.cam.z * dpr, r0 = Math.max(3 * dpr, 0.14 * HW * this.cam.z * dpr), rad = r0 * (1 - 0.5 * b.sink);
     ctx.save();
     if (b.sink > 0) {
@@ -8306,7 +8476,7 @@ export class Game {
     else if (b.sink <= 0) { ctx.beginPath(); ctx.ellipse(p.x - 0.55 * rad, p.y + 0.45 * rad, rad * 1.05, rad * 0.55, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(15,23,42,0.3)'; ctx.fill(); }
     const g = 248 - 150 * b.sink | 0;
     ctx.beginPath(); ctx.arc(p.x, p.y - lift + b.sink * rad, rad, 0, Math.PI * 2); ctx.fillStyle = b.sink > 0 ? `rgb(${g},${g + 2},${g + 4})` : '#f8fafc'; ctx.fill();
-    ctx.lineWidth = 1.2 * dpr; ctx.strokeStyle = '#0f172a'; ctx.stroke();
+    ctx.lineWidth = 1.2 * dpr; ctx.strokeStyle = rim; ctx.stroke();
     ctx.restore();
   }
   // ---------- T319 (#905): the break grid on the green, shot tracers, the ball into the cup (golf/play/green.ts) ----------
@@ -9835,6 +10005,7 @@ export class Game {
     this.drawYourTracers(ctx, performance.now()); // T319
     this.drawGimmeRing(ctx); // T327
     this.drawYourBall(ctx); // T317
+    this.drawMatchBall(ctx); // T244
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
       this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
