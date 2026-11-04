@@ -220,7 +220,7 @@ void main() {
   // (T176: a tint's 2 + alpha; T228: a painted car's 2 + 2 code + alpha)
   vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 - 2.0 * floor((aMisc.y - 2.0) * 0.5) : aMisc.y; vW = vec2(x, y); vClip = aClip;
   // T310: none of it in the overcast (sun-patches.ts), by the sun at its foot's near corner
-  vAlpha *= sunCast(${tileGlsl('aFoot', HW, HH)}));
+  vAlpha *= sunCast(${tileGlsl('aFoot', HW, HH)});
 }`;
 const FS_CAST = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;
