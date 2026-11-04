@@ -23,6 +23,7 @@ import type { Lie } from './play/types';
 import RANGE_PICS_FILE from '../../assets/ground/range-pics.json';
 import RANGE_ART_FILE from './range-art.json';
 import type { OffRoad } from '../offroad';
+import { DESERT, DESERT_IDS, desertScatter, type DesertType } from '../desert-props';
 
 // ---------------------------------------------------------------- the scene
 
@@ -285,6 +286,8 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   // the rusty lean-to shed stands in for it, turned to face the golfers (T258: until the owner's two views land)
   else { const a = art('golf-clubhouse-shanty', toRange); if (a) put('shop', a, SHOP.u, SHOP.v); else put('shop', 'expansion:lean-to-shed', SHOP.u, SHOP.v, toRange, { label: 'Stand In for the tin-and-tarp pro shop' }); }
   homeYard(put, home, toRoad);
+  // T289: the caravan's and the cottage's desert yard keeps a barrel cactus and an agave by its fence (the house's lawn has none)
+  if (home < 2) for (const [k, id, u, v] of [['yard-cactus', 'newprop:desert-golden-barrel-cactus', 5, 7.6], ['yard-agave', 'newprop:desert-agave', 21.3, 12.5]] as const) if (DESERT_IDS.includes(id)) put(k, id, u, v);
   fenceRun(pieces, P, 'yard-n', Y[0], Y[2], Y[1], Y[2], 'picket');
   fenceRun(pieces, P, 'yard-w', Y[0], Y[2], Y[0], Y[3], 'picket');
   fenceRun(pieces, P, 'yard-e', Y[1], Y[2], Y[1], Y[3], 'picket');
@@ -292,6 +295,18 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   // ---- the boundary: chain-link down both sides and across the far end
   fenceRun(pieces, P, 'side-a', SIDE_U[0], 17, SIDE_U[0], FAR_V, 'chain'); fenceRun(pieces, P, 'side-b', SIDE_U[1], 19, SIDE_U[1], FAR_V, 'chain');
   fenceRun(pieces, P, 'far', SIDE_U[0], FAR_V, SIDE_U[1], FAR_V, 'chain');
+  // ---- T289: the desert start's outfield wears the desert's scrub, cacti, rocks and dead wood (the owner's desert sheets), thin near the bays
+  // and thicker down the range, never on a target green's ground (every green the range can buy, with room round it), the side markers' and
+  // floodlights' strip or the tee's apron; a small oasis (a pool, two date palms, reeds) in the far corner. Grassing the outfield clears them
+  if (!st.grass) {
+    const clear = (u: number, v: number) => u > 4.5 && u < 65.5 && v > TEE[3] + TEE_GAP + 5 && v < FAR_V - 2
+      && TARGET_U.every((tu, i) => Math.hypot(u - tu, v - STAND_V - TARGET_D[i]!) > TARGET_R[i]! + 5)
+      && !(u < 22 && v > FAR_V - 18);
+    desertScatter(223289, [3, 67, TEE[3] + TEE_GAP + 4, FAR_V - 1], 7, 0.62, (u, v) => clear(u, v) && (v > 60 || (u * 7 + v * 13) % 10 < 5))
+      .forEach((d, i) => put(`desert${i}`, d.id, d.u, d.v));
+    const oasis: [DesertType, number, number, number][] = [['water', 0, 12, FAR_V - 9], ['palm', 1, 7.5, FAR_V - 12.5], ['palm', 4, 15.5, FAR_V - 14], ['reed', 0, 18, FAR_V - 9.5], ['reed', 3, 6, FAR_V - 7], ['rock', 7, 19.5, FAR_V - 13]];
+    oasis.forEach(([t, k, u, v], i) => { const pool = DESERT[t]; if (pool.length) put(`oasis${i}`, pool[k % pool.length]!, u, v); });
+  }
   // ---- the sign at the drive, the bench and bins at the tee, a bag trolley by the shop
   // (T258: each drawn as the owner's ChatGPT picture once it lands, its label gone)
   // (T237: a set-back range's sign stands by the road at the drive's mouth, across the drive from its car park in the frontage strip)

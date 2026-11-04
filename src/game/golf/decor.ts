@@ -7,14 +7,15 @@ import type { Pt } from '../network';
 import { PROPS_APPEAL_CAP } from './rangesave';
 import { LIBRARY } from '../library';
 import { FRAME_TREE_KEY, FRAME_TREE_PRICE } from './holeframe';
+import { DESERT, type DesertType } from '../desert-props';
 import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_GREY_GRANITE, KIT_HEDGE, KIT_LAMPS, KIT_PALMS, KIT_POND_EDGE, KIT_SHRUBS, KIT_WATER_EDGE_PLANTS, type RunKit } from '../kit';
 
 /** the panel's groups, in order (T187: Buildings, the few the player adds to the town: Town decoration's) */
-export type DecorGroup = 'plants' | 'water' | 'stone' | 'furniture' | 'buildings' | `new:${string}`;
+export type DecorGroup = 'plants' | 'water' | 'stone' | 'desert' | 'furniture' | 'buildings' | `new:${string}`;
 /** the owner's new props: one group per library category 'New: <category>' (art/new-props, prep-new-props.mjs), after Furniture */
 const NEW_GROUPS: { id: DecorGroup; name: string }[] = [...new Set(LIBRARY.filter(i => i.cat.startsWith('New: ')).map(i => i.cat))].map(cat => ({ id: `new:${cat.slice(5)}` as DecorGroup, name: cat }));
 export const DECOR_GROUPS: readonly { id: DecorGroup; name: string }[] = [
-  { id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }, ...NEW_GROUPS, { id: 'buildings', name: 'Buildings' },
+  { id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'desert', name: 'Desert & oasis' }, { id: 'furniture', name: 'Furniture' }, ...NEW_GROUPS, { id: 'buildings', name: 'Buildings' },
 ];
 
 /** a catalogue item: its key (saved with the prop), plain name, group, library picture (the NE view of four-view art), price ($), appeal (a
@@ -156,7 +157,26 @@ const CATALOGUE: readonly DecorItem[] = [
 const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
   ? { key: `newprop-${i.id.slice('gen:tree-'.length, -':ne'.length)}`, name: i.name.replace(/ \(NE\)$/, ''), group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'plant', id: i.id, price: i.cost, appeal: 0, desc: 'A tree: plant it in the grounds (no appeal yet)' }
   : { key: `newprop-${i.id.slice('newprop:'.length)}`, name: i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, desc: `${i.cat.slice(5)}: a new prop to place (no appeal yet)` });
-export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...NEW_PROP_ITEMS];
+/** T289: the desert and oasis props (desert-props.ts, the owner's desert sheets): a card a type, R stepping through its pictures (never mirrored),
+ *  and a mixed brush of the dry desert's scrub, cacti and rocks. Each one picture, its own size */
+const DESERT_CARDS: { t: DesertType; name: string; kind: DecorKind; price: number; appeal: number; desc: string }[] = [
+  { t: 'palm', name: 'Date palm', kind: 'plant', price: 400, appeal: APPEAL.plant, desc: 'A date palm on its own sandy base, 6.5 to 9 m' },
+  { t: 'tree', name: 'Desert tree', kind: 'plant', price: 300, appeal: APPEAL.plant, desc: 'An acacia or a Joshua tree among boulders, 4.5 to 5.5 m' },
+  { t: 'cactus', name: 'Cactus', kind: 'plant', price: 120, appeal: APPEAL.plant, desc: 'Saguaro, barrel, cholla, prickly pear, hedgehog or ocotillo' },
+  { t: 'shrub', name: 'Desert shrub', kind: 'plant', price: 70, appeal: APPEAL.plant, desc: 'Brittlebush, broom, agave, yucca, sage or creosote on its stones' },
+  { t: 'grass', name: 'Desert grass', kind: 'plant', price: 40, appeal: APPEAL.plant, desc: 'A tuft of dry or green desert grass, or a tumbleweed' },
+  { t: 'reed', name: 'Oasis reeds', kind: 'plant', price: 60, appeal: APPEAL.plant, desc: 'Cattails and sedge for a pool edge' },
+  { t: 'rock', name: 'Sandstone rocks', kind: 'stone', price: 150, appeal: APPEAL.boulder, desc: 'Red sandstone boulders, ledges and outcrops, 0.9 to 3.5 m' },
+  { t: 'wood', name: 'Driftwood', kind: 'stone', price: 60, appeal: APPEAL.small, desc: 'A sun-bleached log, root, branch or dead trunk' },
+  { t: 'water', name: 'Oasis pool', kind: 'water', price: 800, appeal: APPEAL.well, desc: 'A shallow oasis pool with its stones and reeds, 3 to 12 m (the waterfall pool among them)' },
+  { t: 'lily', name: 'Water lilies', kind: 'water', price: 40, appeal: APPEAL.small, desc: 'Lily pads to float on a pool' },
+];
+const DESERT_ITEMS: DecorItem[] = DESERT_CARDS.filter(c => DESERT[c.t].length).map((c): DecorItem => ({ key: `desert-${c.t}`, name: c.name, group: 'desert', kind: c.kind, id: DESERT[c.t][0]!,
+  variants: DESERT[c.t], natural: true, price: c.price, appeal: c.appeal, desc: `${c.desc} (R: the next of ${DESERT[c.t].length})` }));
+const DESERT_MIX = (['cactus', 'shrub', 'grass', 'rock'] as const).flatMap(t => DESERT[t].map(id => ({ key: `desert-${t}`, id })));
+if (DESERT_MIX.length) DESERT_ITEMS.push({ key: 'desert-mixed', name: 'Desert scrub, mixed', group: 'desert', kind: 'plant', id: DESERT_MIX[0]!.id, mix: DESERT_MIX, natural: true, price: 70, per: 'to $150', appeal: APPEAL.plant,
+  desc: 'A different cactus, shrub, grass tuft or rock at every spot: click, or drag' });
+export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...DESERT_ITEMS, ...NEW_PROP_ITEMS];
 export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d => [d.key, d]));
 
 // ---------------------------------------------------------------- T257: size, mirror, families and the mixed brushes
