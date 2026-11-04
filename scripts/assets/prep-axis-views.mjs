@@ -106,9 +106,10 @@ for (const src of axisSources()) {
     const file = path.join(turnDir, `${x.dir}.png`);
     if (car || !turnCfg?.yaw || !fs.existsSync(file)) continue;
     const t = await trimmed(fs.readFileSync(file)), m = await measure(t.png), prof = await bottomProfile(sharp, t.png);
-    const f = fitTurnedFoot(prof.bot, turnCfg.yaw, depth / front);
-    if (!f) { console.log(`  ${id} ${x.dir}: turned picture has no base, the square one kept`); continue; }
+    // sized by its height first, so its front is known in its own px: the fit only places the footprint (the building's size is the square views')
     const st = turnedHeight(x.H * x.s, front, depth, turnCfg.yaw) / m.H;
+    const f = fitTurnedFoot(prof.bot, turnCfg.yaw, depth / front, 2, front * K / st);
+    if (!f) { console.log(`  ${id} ${x.dir}: turned picture has no base, the square one kept`); continue; }
     Object.assign(x, { png: t.png, trim: t.rect, ...m, s: st, turned: { yaw: turnCfg.yaw, cx: f.cx, cy: f.cy, ring: footRing(f.front * st / K, f.depth * st / K, turnCfg.yaw) } });
     x.foot = [+(f.front * st / K).toFixed(3), +(f.depth * st / K).toFixed(3), turnCfg.yaw];
     console.log(`  ${id} ${x.dir}: turned ${turnCfg.yaw} deg, scale ${st.toFixed(3)}, footprint ${x.foot[0].toFixed(2)} x ${x.foot[1].toFixed(2)} tiles (square ${front.toFixed(2)} x ${depth.toFixed(2)}), ${f.inliers} base columns`);
@@ -146,14 +147,18 @@ for (const src of axisSources()) {
 // pack: shelf-pack every view onto as many 2048 pages as it takes, each at 0.6 x its drawn size (at least its display size), up to 3x its pixels
 const packAt = (sub, x) => Math.min(3 * x.W / x.w, MIP0 * Math.max(1, sub.k));
 const all = subjects.flatMap(sub => sub.views.map(x => ({ sub, x, width: Math.max(1, Math.round(x.w * packAt(sub, x))), height: Math.max(1, Math.round(x.h * packAt(sub, x))) }))).sort((a, b) => b.height - a.height);
-const pages = [[]];
-let px = GUT, py = GUT, rowH = 0;
+// first fit (T315: the turned pictures take more room): each picture, tallest first, goes on the first shelf of any page with room left on it,
+// else on a new shelf on the first page with room below its shelves, else on a new page (a shelf is as tall as its first, tallest picture)
+const pages = [[]], shelves = [], floor = [GUT];
 for (const p of all) {
   if (p.width + 2 * GUT > PAGE || p.height + 2 * GUT > PAGE) throw new Error(`${p.x.id} is larger than an atlas page`);
-  if (px + p.width + GUT > PAGE) { px = GUT; py += rowH + GUT; rowH = 0; }
-  if (py + p.height + GUT > PAGE) { pages.push([]); px = GUT; py = GUT; rowH = 0; }
-  p.page = pages.length - 1; p.left = px; p.top = py; pages.at(-1).push(p);
-  px += p.width + GUT; rowH = Math.max(rowH, p.height);
+  let sh = shelves.find(s => s.x + p.width + GUT <= PAGE && p.height <= s.h);
+  if (!sh) {
+    let pg = floor.findIndex(y => y + p.height + GUT <= PAGE);
+    if (pg < 0) { pages.push([]); floor.push(GUT); pg = pages.length - 1; }
+    sh = { page: pg, y: floor[pg], h: p.height, x: GUT }; shelves.push(sh); floor[pg] += p.height + GUT;
+  }
+  p.page = sh.page; p.left = sh.x; p.top = sh.y; pages[sh.page].push(p); sh.x += p.width + GUT;
 }
 fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true }); fs.mkdirSync(REVIEW, { recursive: true });
 for (const [i, page] of pages.entries()) {

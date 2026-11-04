@@ -115,6 +115,10 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
     const square = new Set(foot.filter((_, i) => i % 2)).size === 2;
     if (!(b1 - b0 > 0.5 * fw && b1 - b0 < 1.5 * fw) && square) { b0 = X(cols[0]!) - 0.5 * rx; b1 = X(cols[cols.length - 1]!) + 0.5 * rx; }
     if (b1 - b0 > 0.5 * fw && b1 - b0 < 1.5 * fw) { foot = foot.map((v, i) => (i % 2 ? v : b0 + (v - fx0) * (b1 - b0) / fw)); edges(foot); }
+    // (a turned footprint: its near and far edges meet at its side corners, so the columns over its ends (and the eaves, a porch past them,
+    // clamped to a corner) would have no depth and cast their whole height. Each column takes the footprint's full depth back from its near
+    // edge: the front wall's line pushed straight back, as a square view's rectangle has all across)
+    if (!square) { let d = 0; for (let x = 0; x < w; x++) d = Math.max(d, footNear[x]! - footFar[x]!); for (let x = 0; x < w; x++) footFar[x] = footNear[x]! - d; }
     for (let x = 0; x < w; x++) g[x] = footNear[x]!;
   } else
   if (Array.isArray(mode)) {
