@@ -161,51 +161,55 @@ describe("a range start's guided build (T239: the guide's card)", () => {
   /** a new range game's facts: nothing built */
   const range = (over: Partial<GuideFacts> = {}): GuideFacts => facts({ start: 'range', step: 1, holes: 0, golfers: 0, owned: [], walkway: false, practiceForSale: true, putting: 'none', ...over });
 
-  it('10. start range picks RANGE_GUIDE: 7 steps in the build\'s order, unique ids, each with a reward; any other start keeps GUIDE', () => {
+  // T288 (#873, the owner: "only his trailer and plot is there"): two placement steps first (the range, its car park): nine steps
+  it('10. start range picks RANGE_GUIDE: 9 steps in the build\'s order (T288: place the range and its car park first), unique ids, each with a reward; any other start keeps GUIDE', () => {
     assert.equal(guideTable({ start: 'range' }), RANGE_GUIDE);
     assert.equal(guideTable({ start: 'town' }), GUIDE);
     assert.equal(guideTable({}), GUIDE);
-    assert.equal(RANGE_GUIDE.length, GUIDE_STEPS);
-    assert.deepEqual(RANGE_GUIDE.map(g => g.n), [1, 2, 3, 4, 5, 6, 7]);
-    assert.deepEqual(RANGE_GUIDE.map(g => g.id), ['guide-range-buckets', 'guide-range-greens', 'guide-range-path', 'guide-range-carpark', 'guide-range-turf', 'guide-range-practice', 'guide-range-hole']);
+    assert.equal(GUIDE.length, GUIDE_STEPS); assert.equal(RANGE_GUIDE.length, 9);
+    assert.deepEqual(RANGE_GUIDE.map(g => g.n), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    assert.deepEqual(RANGE_GUIDE.map(g => g.id), ['guide-range-place', 'guide-range-lot', 'guide-range-buckets', 'guide-range-greens', 'guide-range-path', 'guide-range-carpark', 'guide-range-turf', 'guide-range-practice', 'guide-range-hole']);
     for (const g of RANGE_GUIDE) assert.ok(g.title.length > 0 && g.body.length > 0 && g.done === 'auto' && (g.reward ?? 0) > 0 && g.target.ui, g.id);
-    assert.equal(RANGE_GUIDE.reduce((a, g) => a + g.reward!, 0), 8000, 'the rewards: $8,000 in all, about the first builds\' price');
-    assert.equal(RANGE_GUIDE[2]!.target.map, 'walkway');
+    assert.equal(RANGE_GUIDE.reduce((a, g) => a + g.reward!, 0), 9500, 'the rewards: $9,500 in all, about the first builds\' price');
+    assert.equal(RANGE_GUIDE[4]!.target.map, 'walkway');
   });
 
-  it('11. each step is met by its own build: buckets sold, greens, a walkway, the paved lot, the turf, the practice area bought with its putting green, a hole', () => {
-    assert.equal(stepMet(1, range({ golfers: FIRST_BUCKETS - 1 })), false); assert.equal(stepMet(1, range({ golfers: FIRST_BUCKETS })), true);
-    assert.equal(stepMet(2, range({ owned: ['gravel'] })), false); assert.equal(stepMet(2, range({ owned: ['greens'] })), true);
-    assert.equal(stepMet(3, range()), false); assert.equal(stepMet(3, range({ walkway: true })), true);
-    assert.equal(stepMet(4, range({ owned: ['gravel'] })), false, 'gravel alone: not yet'); assert.equal(stepMet(4, range({ owned: ['gravel', 'pave'] })), true);
-    assert.equal(stepMet(5, range({ owned: ['grass'] })), false); assert.equal(stepMet(5, range({ owned: ['teeturf'] })), true);
-    assert.equal(stepMet(6, range({ practiceForSale: false })), false, 'bought, no green yet');
-    assert.equal(stepMet(6, range({ practiceForSale: true, putting: 'open' })), false);
-    assert.equal(stepMet(6, range({ practiceForSale: false, putting: 'open' })), true);
-    assert.equal(stepMet(7, range({ holes: 0 })), false); assert.equal(stepMet(7, range({ holes: 1 })), true);
+  it('11. each step is met by its own build (T288: the range placed, its car park placed): buckets sold, greens, a walkway, the paved lot, the turf, the practice area bought with its putting green, a hole', () => {
+    assert.equal(stepMet(1, range({ rangePlaced: false })), false); assert.equal(stepMet(1, range({ rangePlaced: true })), true);
+    assert.equal(stepMet(2, range({ lotPlaced: false })), false); assert.equal(stepMet(2, range({ lotPlaced: true })), true);
+    assert.equal(stepMet(3, range({ golfers: FIRST_BUCKETS - 1 })), false); assert.equal(stepMet(3, range({ golfers: FIRST_BUCKETS })), true);
+    assert.equal(stepMet(4, range({ owned: ['gravel'] })), false); assert.equal(stepMet(4, range({ owned: ['greens'] })), true);
+    assert.equal(stepMet(5, range()), false); assert.equal(stepMet(5, range({ walkway: true })), true);
+    assert.equal(stepMet(6, range({ owned: ['gravel'] })), false, 'gravel alone: not yet'); assert.equal(stepMet(6, range({ owned: ['gravel', 'pave'] })), true);
+    assert.equal(stepMet(7, range({ owned: ['grass'] })), false); assert.equal(stepMet(7, range({ owned: ['teeturf'] })), true);
+    assert.equal(stepMet(8, range({ practiceForSale: false })), false, 'bought, no green yet');
+    assert.equal(stepMet(8, range({ practiceForSale: true, putting: 'open' })), false);
+    assert.equal(stepMet(8, range({ practiceForSale: false, practicePlaced: false, putting: 'open' })), false, 'T288: not placed yet');
+    assert.equal(stepMet(8, range({ practiceForSale: false, putting: 'open' })), true);
+    assert.equal(stepMet(9, range({ holes: 0 })), false); assert.equal(stepMet(9, range({ holes: 1 })), true);
     // the old start's triggers do not count
-    assert.equal(stepMet(7, range({ kinds: { tee: 1, fairway: 1, green: 1 }, clubhouse: true })), false);
+    assert.equal(stepMet(9, range({ kinds: { tee: 1, fairway: 1, green: 1 }, clubhouse: true })), false);
   });
 
   it('12. the card: steps tick when done (in any order) and pay once; Skip leaves one out unpaid; Skip guide puts the card away; done, it goes', () => {
-    const g = newRangeGuide();
+    const g = newRangeGuide(), P = { rangePlaced: false, lotPlaced: false }; // (T288: a bare start's facts)
     let lines = rangeGuideLines(g)!;
-    assert.equal(lines.length, 7); assert.ok(lines.every(l => l.state === 'todo')); assert.deepEqual(lines.filter(l => l.current).map(l => l.step.n), [1]);
+    assert.equal(lines.length, 9); assert.ok(lines.every(l => l.state === 'todo')); assert.deepEqual(lines.filter(l => l.current).map(l => l.step.n), [1]);
     assert.equal(rangeGuideCurrent(g), 1);
-    // the player paves before anything else: step 4 ticks out of order, the current step stays 1
-    assert.deepEqual(rangeGuideTick(g, range({ owned: ['gravel', 'pave'] })).map(s => s.n), [4]);
-    assert.deepEqual(rangeGuideTick(g, range({ owned: ['gravel', 'pave'] })), [], 'ticked once');
-    assert.equal(rangeGuideCurrent(g), 1); assert.equal(rangeGuideLines(g)![3]!.state, 'done');
-    // buckets sold and the greens: 1 and 2 tick, the current step is the walking path
-    assert.deepEqual(rangeGuideTick(g, range({ golfers: 9, owned: ['greens', 'gravel', 'pave'] })).map(s => s.n), [1, 2]);
-    assert.equal(rangeGuideCurrent(g), 3);
+    // the player paves before anything else: step 6 ticks out of order, the current step stays 1
+    assert.deepEqual(rangeGuideTick(g, range({ ...P, owned: ['gravel', 'pave'] })).map(s => s.n), [6]);
+    assert.deepEqual(rangeGuideTick(g, range({ ...P, owned: ['gravel', 'pave'] })), [], 'ticked once');
+    assert.equal(rangeGuideCurrent(g), 1); assert.equal(rangeGuideLines(g)![5]!.state, 'done');
+    // the range and its car park placed, buckets sold and the greens: 1 to 4 tick, the current step is the walking path
+    assert.deepEqual(rangeGuideTick(g, range({ golfers: 9, owned: ['greens', 'gravel', 'pave'] })).map(s => s.n), [1, 2, 3, 4]);
+    assert.equal(rangeGuideCurrent(g), 5);
     // Skip the walking path: no reward, and it is not ticked later when the path is laid
     assert.equal(rangeGuideSkip(g, 'guide-range-path'), true); assert.equal(rangeGuideSkip(g, 'guide-range-path'), false); assert.equal(rangeGuideSkip(g, 'guide-range-greens'), false, 'a done step stays done');
-    assert.equal(rangeGuideCurrent(g), 5);
+    assert.equal(rangeGuideCurrent(g), 7);
     assert.deepEqual(rangeGuideTick(g, range({ golfers: 9, owned: ['greens', 'gravel', 'pave'], walkway: true })), []);
-    lines = rangeGuideLines(g)!; assert.equal(lines[2]!.state, 'skipped');
+    lines = rangeGuideLines(g)!; assert.equal(lines[4]!.state, 'skipped');
     // the rest: done, the card goes
-    assert.deepEqual(rangeGuideTick(g, range({ golfers: 9, owned: ['greens', 'gravel', 'pave', 'teeturf'], practiceForSale: false, putting: 'open', holes: 1 })).map(s => s.n), [5, 6, 7]);
+    assert.deepEqual(rangeGuideTick(g, range({ golfers: 9, owned: ['greens', 'gravel', 'pave', 'teeturf'], practiceForSale: false, putting: 'open', holes: 1 })).map(s => s.n), [7, 8, 9]);
     assert.equal(rangeGuideLines(g), null); assert.equal(rangeGuideCurrent(g), undefined);
     // Skip guide
     const h = newRangeGuide(); rangeGuideOff(h); assert.equal(rangeGuideLines(h), null); assert.deepEqual(rangeGuideTick(h, range({ owned: ['greens'] })), [], 'nothing ticks or pays once skipped');
@@ -230,14 +234,15 @@ describe("a range start's guided build (T239: the guide's card)", () => {
       return { ...progressFacts(p, { holes: 0, seasons: 0, invited: false, range: { upgrades: 0, seasonTakings: 0, propsPlaced: false } }), ...extra };
     };
     assert.equal(at(1).guideStep, 1); assert.equal(at(null).guideStep, undefined, 'skipped: no step');
-    assert.ok(rampLock(at(2), 'path'), 'the paths wait for the walking path step (no upgrade yet)');
-    assert.equal(rampLock(at(3), 'path'), null, 'open at the walking path step, even with no upgrade bought');
-    assert.ok(rampLock(at(5), 'practice')); assert.equal(rampLock(at(6), 'practice'), null);
-    const u5 = computeProgressiveUiState(at(5)), u6 = computeProgressiveUiState(at(6));
+    // (T288: two placement steps first: the steps below are two later than T239's)
+    assert.ok(rampLock(at(4), 'path'), 'the paths wait for the walking path step (no upgrade yet)');
+    assert.equal(rampLock(at(5), 'path'), null, 'open at the walking path step, even with no upgrade bought');
+    assert.ok(rampLock(at(7), 'practice')); assert.equal(rampLock(at(8), 'practice'), null);
+    const u5 = computeProgressiveUiState(at(7)), u6 = computeProgressiveUiState(at(8));
     assert.ok(!u5.visibleGolfChips.includes('land')); assert.equal(u5.chipLocks?.land, GUIDE_LAND_WHY);
     assert.ok(u6.visibleGolfChips.includes('land')); assert.equal(u6.chipLocks, undefined);
-    assert.ok(computeProgressiveUiState(at(6)).newHoleLock, 'New hole waits'); assert.equal(computeProgressiveUiState(at(7)).newHoleLock, null, 'open at the first hole step');
-    assert.equal(rampEarned(at(7)), 3);
+    assert.ok(computeProgressiveUiState(at(8)).newHoleLock, 'New hole waits'); assert.equal(computeProgressiveUiState(at(9)).newHoleLock, null, 'open at the first hole step');
+    assert.equal(rampEarned(at(9)), 3);
     // the card replaces the ramp's hints while it runs; skipped, they come back
     assert.equal(computeProgressiveUiState(at(1)).activeHint, null);
     assert.equal(computeProgressiveUiState(at(null)).activeHint?.id, 'hint-range-open');

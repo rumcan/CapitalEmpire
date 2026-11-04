@@ -29,6 +29,22 @@ export function practiceArea(plot: Rect, facing: 0 | 1 | 2 | 3): PracticeArea {
   const xs = c.map(p => p.x), ys = c.map(p => p.y);
   return { pts: c.flatMap(p => [p.x, p.y]), box: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], label: P((u0 + u1) / 2, (v0 + v1) / 2), entry: P(ENTRY.u, ENTRY.v), behind: P(BEHIND_PARK.u, BEHIND_PARK.v) };
 }
+/** T288: the practice area's size, [along the road, deep] tiles (PRACTICE_UV's), and its world rect's (w, h) for a facing */
+export const PRACTICE_SIZE_T: readonly [number, number] = [PRACTICE_UV[1] - PRACTICE_UV[0], PRACTICE_UV[3] - PRACTICE_UV[2]];
+export const practiceDims = (facing: 0 | 1 | 2 | 3): [number, number] => (facing === 0 || facing === 2 ? [PRACTICE_SIZE_T[0], PRACTICE_SIZE_T[1]] : [PRACTICE_SIZE_T[1], PRACTICE_SIZE_T[0]]);
+/** T288: the practice area where the player placed it (a world rect): its corners, box and label; the walk in at the edge point nearest door (the
+ *  range's car park edge), behind it a step outside the area */
+export function practiceAreaAt(r: Rect, door: Pt): PracticeArea {
+  const [x, y, w, h] = r, cl = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
+  const e = { x: cl(door.x, x + 1, x + w - 1), y: cl(door.y, y + 1, y + h - 1) };
+  // the entry on the edge nearest the door
+  const dl = e.x - x, dr = x + w - e.x, dt = e.y - y, db = y + h - e.y, m = Math.min(dl, dr, dt, db);
+  const entry = m === dl ? { x: x + 0.5, y: e.y } : m === dr ? { x: x + w - 0.5, y: e.y } : m === dt ? { x: e.x, y: y + 0.5 } : { x: e.x, y: y + h - 0.5 };
+  const behind = m === dl ? { x: x - 1.5, y: e.y } : m === dr ? { x: x + w + 1.5, y: e.y } : m === dt ? { x: e.x, y: y - 1.5 } : { x: e.x, y: y + h + 1.5 };
+  return { pts: [x, y, x + w, y, x + w, y + h, x, y + h], box: [x, y, x + w, y + h], label: { x: x + w / 2, y: y + h / 2 }, entry, behind };
+}
+/** T288: no practice area yet (a bare start's, until placed): an empty box nothing lies in */
+export const NO_PRACTICE: PracticeArea = { pts: [], box: [0, 0, 0, 0], label: { x: 0, y: 0 }, entry: { x: 0, y: 0 }, behind: { x: 0, y: 0 } };
 /** whether tile (x, y) lies in the practice area (its box: the area is a rectangle on the world axes) */
 export const inPractice = (a: { box: readonly [number, number, number, number] }, x: number, y: number) => x >= a.box[0] && x < a.box[2] && y >= a.box[1] && y < a.box[3];
 

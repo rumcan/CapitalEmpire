@@ -120,7 +120,11 @@ function menuCtx(game: Game): MenuCtx {
     // T206: Facilities ▸ Practice: the range's practice area's facilities (no range: locked with why)
     practice: [{ id: 'putting', name: 'Putting green' }, { id: 'chipping', name: 'Chipping green and bunker' }].map(f => ({ ...f, why: game.range.scene ? null : 'Comes with a driving range (its practice area)' })),
     newHoleWhy: ui?.newHoleLock ?? null,
-    range: game.range.scene ? [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-extras', name: 'Kiosk and academy' }, { id: 'range-upgrades', name: 'Upgrades' }] : [],
+    // T288: the placements still to make first (the range, its car park, the practice area: a click takes it in hand), then the card's sections
+    range: [
+      ...game.rangePlaces().filter(q => !q.done).map(q => ({ id: q.id, name: `Place ${q.name.replace(/^The /, 'the ')}`, place: true, why: q.why || null })),
+      ...(game.range.scene ? [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-extras', name: 'Kiosk and academy' }, { id: 'range-upgrades', name: 'Upgrades' }] : []),
+    ],
   };
 }
 /** the game clock as HH:MM */
@@ -297,7 +301,7 @@ export default function App() {
    *  leading in it (the same key again closes it); Bulldoze, with no flyout, picks its tool; a locked group says why. The lab has no rail */
   if (game) game.railKey = lab ? null : n => {
     const r = numberedGroups(game.golfMode, !!game.range.scene)[n - 1]; if (!r) return;
-    const e = railEntries(game.toolUi(), game.golfMode, game.uiTool, { range: !!game.range.scene }).find(x => x.item.id === r.id);
+    const e = railEntries(game.toolUi(), game.golfMode, game.uiTool, { range: !!game.range.scene || game.rangePlaces().length > 0 }).find(x => x.item.id === r.id);
     if (e?.locked) { game.toast(`${r.label}: ${e.locked}`); return; }
     const el = railButton(r.id);
     if (menuFor(r).length) { if (fly?.item === r.id) setFly(null); else openFly(r, el, true); return; }
@@ -316,6 +320,7 @@ export default function App() {
     // T256: Range › Build (and Facilities › Build on your property): the holes' painting tools on your property
     if (act?.k === 'build') { activeRail.current = itemId; game.openPropertyPaint(); return; }
     if (act?.k === 'newHole' || act?.k === 'holes' || act?.k === 'surface') game.paint.setProperty(false); // the Holes panel's tools paint holes
+    if (act?.k === 'place') { activeRail.current = itemId; game.placeRangePart(act.id as Parameters<Game['placeRangePart']>[0]); return; } // T288
     if (act?.k === 'range') {
       activeRail.current = itemId; game.setTool('select'); game.openRangeCard(true); game.emit();
       // the section scrolled to the card's top (inside the card: scrollIntoView would scroll the page too)
@@ -643,7 +648,7 @@ export default function App() {
           {(() => {
             // T250 (#721): the rail split in two: the course drawer on the left (Select, the COURSE groups, Bulldoze) and the town footer along
             // the bottom (the TOWN groups); the same groups, states and keys, one handler for both
-            const entries = railEntries(ui, game.golfMode, game.uiTool, { active: item?.id, range: !!game.range.scene, rangeOpen: game.range.cardOpen });
+            const entries = railEntries(ui, game.golfMode, game.uiTool, { active: item?.id, range: !!game.range.scene || game.rangePlaces().length > 0, rangeOpen: game.range.cardOpen });
             const rail = {
               open: fly?.item ?? null,
               onPick: (r: RailItem, keyboard?: boolean, el?: HTMLElement) => {
@@ -857,7 +862,7 @@ export default function App() {
             const sv = game.staffCard(); if (!sv) return null;
             return <StaffCard view={sv} right={game.clubCardOpen ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openStaffCard(false)} onHire={(r, at) => game.hireClubStaff(r, at)} onLetGo={k => game.letGoClubStaff(k)} />;
           })()}
-          {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} />; })()}
+          {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} places={game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} />; })()}
           {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
             const pv = game.playerCard(); if (!pv) return null;
             const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace || game.holeCardHole !== null;

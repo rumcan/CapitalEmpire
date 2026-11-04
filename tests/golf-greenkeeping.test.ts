@@ -47,7 +47,7 @@ test('on the rail (T182): a tool of the Course group, golf games only; locked in
     // hidden for now (features.ts): no tool on the rail and no rail item for it; Course keeps its other tools
     assert.equal(course.tools.some(t => t.id === 'greenkeeping'), false, 'not on the rail');
     assert.equal(railItemOf('greenkeeping'), undefined, 'no rail item holds it');
-    assert.deepEqual(toolsIn(course, true).map(t => t.id), ['course', 'buildings', 'path']);
+    assert.deepEqual(toolsIn(course, true).map(t => t.id), ['course', 'buildings'], 'T288: Cart paths & roads on its own button');
   }
 });
 

@@ -72,8 +72,8 @@ test('the pulse finds the first visible element of an anchor, else of its fallba
 });
 
 test('engine events move the range guide on at once: a hole built, the clubhouse placed, a car park built', () => {
-  // T239: the guided build's last step is the first hole: a hole built meets it at once
-  const f: GuideFacts = { pieces: 0, roads: 0, parks: 0, structures: 0, kinds: {}, runs: 0, holes: 0, tutorial: 'on', step: 7, start: 'range', clubhouse: false, invited: false, golfers: 9, owned: ['greens', 'gravel', 'pave', 'teeturf'], walkway: true, practiceForSale: false, putting: 'open' };
+  // T239: the guided build's last step is the first hole (T288: step 9, after the two placement steps): a hole built meets it at once
+  const f: GuideFacts = { pieces: 0, roads: 0, parks: 0, structures: 0, kinds: {}, runs: 0, holes: 0, tutorial: 'on', step: 9, start: 'range', clubhouse: false, invited: false, golfers: 9, owned: ['greens', 'gravel', 'pave', 'teeturf'], walkway: true, practiceForSale: false, putting: 'open' };
   assert.equal(guideStep(f)?.id, 'guide-range-hole');
   const a = applyGuideEvent(f, 'hole'); assert.equal(a.holes, 1); assert.equal(guideStep(a), null);
   const b = applyGuideEvent(a, 'clubhouse'); assert.equal(b.clubhouse, true);
