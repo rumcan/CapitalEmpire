@@ -1476,7 +1476,7 @@ export class Game {
         if (b.built === false) return 'Place your driving range first';
         if (b.lot) return 'Your range has its car park: more come from Traffic ▸ Car park';
         const r: Rect = [d.x, d.y, d.w, d.h], inner: Rect = [d.x + 3, d.y + 3, d.w - 6, d.h - 6]; // (its edge on the road's verge lies past the parcel's)
-        return parkValid(d, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(d) ? 'buildings stand there' : '') || this.parkSpotWhy(d)
+        return this.parkSpotWhy(d) || parkValid(d, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(d) ? 'buildings stand there' : '')
           || landWhy(inner, land) || ((() => { const y = this.homeRect(); return y && rectsMeet(r, y) ? 'Your home is there' : ''; })())
           || (b.practiceAt && rectsMeet(r, b.practiceAt) ? 'The practice area is there' : '') || (buildPark(this.net, d) ? '' : 'Place it beside a road: its entrance goes on the road');
       },
@@ -2891,7 +2891,7 @@ export class Game {
       // (T288: the camera on your home, the trailer)
       const hb = homeYardBox(site.rangePlot, site.dir), cx = (hb[0] + hb[2]) / 2, cy = (hb[1] + hb[3]) / 2;
       this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.cam.z = RANGE_CAM_ZOOM;
-      this.setTool(this.toolLock('course') ? 'select' : 'course'); // the range card first: Holes opens with the first upgrade (T132)
+      this.setTool('select'); // T288: a bare start opens on Select (no panel): the guide's first step is placing the range
       return true;
     }
     console.warn('golf: none of 8 seeds has a range start; the old start instead');
@@ -7808,7 +7808,7 @@ export class Game {
   youControls(): boolean { return this.youWalkMode && this.youKeysOn(); }
   /** whether WASD (and E, the cart) move your character: Select in hand in either cursor, no side mode, no shot or tee set in hand (T323) */
   youKeysOn(): boolean {
-    return !!this.you && this.tool === 'select' && !this.landMode && !this.holesTool && !this.eventTool && !this.grassPanel && !this.shot && !this.teePlace;
+    return !!this.you && this.tool === 'select' && !this.landMode && !this.holesTool && !this.eventTool && !this.grassPanel && !this.shot && !this.teePlace && !this.placing; // (T288: nor a build in hand)
   }
   /** your look (an index into GOLFER_PEOPLE): the saved one, else the owner's art for your sex */
   youArt(): number { const p = this.golf?.player; const l = p?.you?.look; return l !== undefined && l < GOLFER_PEOPLE.length ? l : ownerArt(p?.sex ?? 'm'); }
