@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { LIBRARY } from '../src/game/library';
-import { KIT_BOULDERS, KIT_FLOWERS, KIT_PALM_IDS, KIT_SHRUBS } from '../src/game/kit';
+import { KIT_BOULDERS, KIT_FLOWERS, KIT_GREY_GRANITE, KIT_PALM_IDS, KIT_SHRUBS, KIT_WATER_EDGE_PLANTS } from '../src/game/kit';
 import { DECOR, DECOR_BY_KEY, SIZE_MAX, SIZE_MIN, clampSize, familyKey, mixPick, propTuple, sellBack, sizedPrice, tupleMarks } from '../src/game/golf/decor';
 import { PropsTool, type PropsHostCtx } from '../src/game/golf/propstool';
 import { VECTOR_SHADOWS, vectorFallback } from '../src/game/shadow-vector';
@@ -17,6 +17,7 @@ import { masterPath, thumbBox, thumbSource } from '../src/ui/thumb-source';
 import type { Prop } from '../src/game/types';
 
 const LIB = new Map(LIBRARY.map((it, i) => [it.id, i]));
+const ORGANIC = new Set<string>([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
 const KIT = LIBRARY.filter(it => /^kit:|^construction:(site-|timber-frame)/.test(it.id));
 
 test('the shadows: every kit and site-kit picture has its own vector shadow at its foot (no silhouette hinged below the picture)', () => {
@@ -30,6 +31,9 @@ test('the shadows: every kit and site-kit picture has its own vector shadow at i
     const e = e0!.same ? VECTOR_SHADOWS[e0!.same]! : e0!;
     if (it.kind === 'fountain' || it.kind === 'decal') { assert.ok(!e.c && !e.s, `${it.id}: water and flat pads cast nothing`); continue; }
     assert.ok(e.c?.length && e.s?.length, `${it.id}: a contact under its foot and a cast`);
+    // T329: T274's organic kit (grey granite, water-edge plants) stands on an anchor inside its picture (its foot 10-20 px below the anchor: the
+    // painted ground under it), so the concept kit's foot-line geometry below is not its rule: its shadow is drafted from its pixels (2026-11-04)
+    if (ORGANIC.has(it.id)) continue;
     // the picture's foot (display px below the anchor) and its height
     const foot = it.quad[3] - it.ay, H = it.quad[3] - it.quad[1], s = e.s!.flat();
     let lowest = -Infinity, minH = Infinity, maxH = 0;
