@@ -1756,6 +1756,19 @@ export class GroundPainter {
         lg.stroke(); lg.setTransform(M); lg.globalCompositeOperation = 'destination-in'; lg.fillStyle = this.screenPattern(lg, 'wear', L, X0, Y0, Minv); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
         composite(lb);
       }
+      // T296 (#881): the wheel stops painted on the ground (every heading the stop's picture has no view for: LotPatch.stops), over the bay lines: a
+      // concrete bar across each bay's back, its shadow cast down-left (the sun at the upper right), its top lit on the sun's side
+      const stopSet = list.filter(p => p.stops?.length);
+      if (stopSet.length) {
+        const bars = new Path2D(); for (const p of stopSet) for (let k = 0, s = p.stops!; k + 3 < s.length; k += 4) { bars.moveTo(s[k]!, s[k + 1]!); bars.lineTo(s[k + 2]!, s[k + 3]!); }
+        const px = 1 / minW, sh = Math.max(1, 0.08 * px);
+        ctx.save(); ctx.setTransform(M); ctx.lineCap = 'round';
+        ctx.shadowColor = 'rgba(22,26,44,0.55)'; ctx.shadowOffsetX = -0.8 * sh; ctx.shadowOffsetY = 0.6 * sh; ctx.shadowBlur = 0.5 * sh;
+        ctx.lineWidth = Math.max(0.17, 2 * minW); ctx.strokeStyle = '#8e8b83'; ctx.stroke(bars);
+        ctx.shadowColor = 'rgba(0,0,0,0)'; ctx.setTransform(new DOMMatrix().translate(0.35 * sh, -0.3 * sh).multiply(M));
+        ctx.lineWidth = Math.max(0.05, minW); ctx.strokeStyle = 'rgba(214,211,200,0.7)'; ctx.stroke(bars);
+        ctx.restore(); ctx.setTransform(M);
+      }
       // T259: the crop fields' stand-in rows (those whose state has no art yet)
       const crops = list.filter(p => p.crop && !this.cropArt(p));
       if (crops.length) this.drawCrops(ctx, crops, M, L, W, H, box, lite, g => this.photoFill(g, 'grass', L) ?? this.screenPattern(g, 'grass', L, X0, Y0, Minv), g => this.screenPattern(g, 'wear', L, X0, Y0, Minv), composite);

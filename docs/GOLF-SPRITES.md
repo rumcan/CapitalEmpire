@@ -262,7 +262,10 @@ variation (39 + 32), `ref:building-gas-canopy` (39), `world:house_5` (38), `worl
 T298 (#883, the shopping centre, `lots/centre.ts`): on a road at 45 degrees a centre shows only the three shops with a set (bakery, grocery,
 pharmacy). **Wanted next, P1:** the N, E, S, W views of `world:video`, `world:video_rental`, `town:laundromat`, `town:fish_tackle` and
 `town:barber`, so a centre (and a shop lot) on those roads shows the whole palette; and the wheel stop (`expansion:wheel-stop`) at the screen
-headings (T296), which the centre's bays on those roads leave out until it lands.
+headings. T296 (#881): until it lands, every car park whose rows are not along a world axis (the screen-straight streets and any free angle) paints its
+stops on the ground (a concrete bar with its shadow, `LotPatch.stops`, renderer.ts drawLots); the picture stays on the map-axis streets. **Wanted, P2:**
+`expansion:wheel-stop` in the two screen headings (lying across the screen and up it), a 1.7 m precast concrete kerb stone with two bolt holes, sun at
+the upper right, so the painted stand-in can give way on the screen-straight streets (any other angle keeps the painted stop).
 
 ## Props kit (plan P24 Phase 3, T131: art requests)
 The Props tool (`golf/decor.ts DECOR`) shows these as labelled stand-ins ("Stand In for ..." on the card and once per kind on the map); each

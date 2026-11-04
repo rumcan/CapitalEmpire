@@ -15,7 +15,7 @@ import { LOT_DECALS } from '../src/game/lot-decals';
 import { mulberry } from '../src/game/iso';
 import { CAR_SCALE } from '../src/game/ext/car-art';
 import { isBuilding } from '../src/game/mirror';
-import { footprintOf, turned } from '../src/game/lots/preset-art';
+import { drawnView, footprintOf } from '../src/game/lots/preset-art';
 import { vehicleHeading } from '../src/game/vehicles';
 import { toWorld } from '../src/game/lots/preset-frame';
 import { parsePresets, type PresetProp } from '../src/game/lots/presets';
@@ -40,8 +40,10 @@ const isWheel = (id: string) => id === 'expansion:wheel-stop';
 const isUpright = (id: string) => !isFence(id) && !isWheel(id);
 const isCar = (id: string) => byId.get(id)?.cat === 'Vehicles';
 
-/** the footprint of a placed prop in world tiles (the engine's footprint: the union of its boxes) */
+/** the footprint of a placed prop in world tiles (the engine's footprint: the union of its boxes; T296: a car standing in for a wagon, T236 parkedAs, on
+ *  the wagon's body footprint, Placed.foot, which the engine draws it on: in a car park's bays sized from the car's body its picture's box is wider) */
 function fpOf(p: Placed): [number, number, number, number] {
+  if (p.foot) return [p.foot[0], p.foot[1], p.foot[2], p.foot[3]];
   const it = byId.get(p.id)!;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const b of it.boxes) {
@@ -126,11 +128,14 @@ test('every built lot draws its preset: each preset prop is the picked preset\'s
     const st: ComposeState = { use, level, decline, seed: (lot.id * 100 + seed) >>> 0 }, found = lotPreset(lot, st);
     assert.ok(found, `${lot.key} ${JSON.stringify(st)}: no preset`);
     const p = found, c = compose(lot, st), from = c.props.filter(q => q.from);
-    fitted += p.fit.props.filter(q => decline < 3 || !isCar(q.id)).length; kept += from.length;
+    // (T296: a car the composer adds to a preset's re-laid car park is not the preset's: from -1)
+    fitted += p.fit.props.filter((q, k) => p.fit.from[k]! >= 0 && (decline < 3 || !isCar(q.id))).length; kept += from.length;
     for (const q of from) {
       assert.equal(q.from!.preset, p.preset.id, `${lot.key}: a prop of another preset`);
       // the fitted prop's own view (T308: a building faces its street, so its view may differ from the preset's; a stand-in's id is its own, T167)
-      const src: PresetProp = p.fit.props[p.fit.from.indexOf(q.from!.prop)]!, t = turned(src.id, p.frame.q + src.view);
+      // (T296: as the composer draws it, drawnView: on a screen-straight street a picture with a screen-axis set takes that set's view, as a generated
+      // car park's hedge does; on any other street its four views turned)
+      const src: PresetProp = p.fit.props[p.fit.from.indexOf(q.from!.prop)]!, t = drawnView(src.id, p.frame, src.view);
       // (T236: a parked wagon may be drawn as another vehicle of the mix with a picture at its heading, vehicles.ts parkedAs; a farm's or junk
       // yard's yellow pickup as the rusty one, lotPickup)
       const mixed = /^cars:/.test(t.id) && vehicleHeading(q.id) >= 0 && vehicleHeading(q.id) === vehicleHeading(t.id), rusty = t.id === 'static:pickup_n' && q.id === 'expansion:scrap-pickup-rear';

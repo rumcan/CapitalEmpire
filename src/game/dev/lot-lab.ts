@@ -176,7 +176,7 @@ export function installLotLab(game: Game): () => void {
   let remixOffset = 0, remixOff = false;
   /** T305 (#890): the Auto choice: the shown lot as its generated layout (autolot.ts), its template (autoTpl; the use's own until one is picked) */
   let autoOn = false, autoTpl: AutoTemplate | null = null;
-  const AUTO_NAMES: Record<AutoTemplate, string> = { house: 'House', corner: 'Corner house', trailer: 'Trailer park', junk: 'Junkyard', shop: 'Small shop', centre: 'Shopping centre' };
+  const AUTO_NAMES: Record<AutoTemplate, string> = { house: 'House', corner: 'Corner house', trailer: 'Trailer park', junk: 'Junkyard', shop: 'Small shop', centre: 'Shopping centre', park: 'Car park' };
   /** what the staged neighbours were made for (type, state, lot size, road, place; '' none): neighbours() stages them again only when it changed */
   let neighKey = '';
   /** the exam holds the camera (T161, ?exam: dev/lot-exam.ts) */
