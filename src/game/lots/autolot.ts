@@ -300,10 +300,10 @@ function parkLot(L: Lay, seed: number): boolean {
   const plan = layCarPark(L, [0.4, strip, W - 0.4, D - 0.3], seed, parkKit(L, true));
   if (!plan) return false;
   const [e0, , e1] = plan.entrance;
-  for (let sx = 1.0; sx < W - 0.8; sx += 1.4) if (sx < e0 - 0.6 || sx > e1 + 0.6) L.pick(HEDGE, 0, sx, strip / 2, 0.5, strip / 2, 0.3);
   L.pick([LAMP], 0, e0 - 0.6, -0.4, 0.4, 0.4);
   L.pick([LAMP], 0, e1 + 0.6, -0.4, 0.4, 0.4);
-  L.pick([PARK_SIGN], 0, e1 + 1.5, -0.45, 0.6, 0.4, 0.5);
+  L.pick([PARK_SIGN], 0, e1 + 1.0, 0.4, 0.5, 0.35, 0.4);
+  for (let sx = 1.0; sx < W - 0.8; sx += 1.4) if (sx < e0 - 0.6 || sx > e1 + 0.6) L.pick(HEDGE, 0, sx, strip / 2, 0.5, strip / 2, 0.3);
   // (the grass left behind the rows: a row of trees)
   const back = D - plan.park[3];
   if (back >= 1.6) for (let tx = 1.6; tx <= W - 1.6; tx += 3.2) L.pick(realTrees(), 0, tx, (plan.park[3] + D) / 2, 1.3, back / 2 - 0.2, 0.45);
