@@ -43,7 +43,7 @@ export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: 
 }
 
 /** the round's bar (top centre): where you are in the round, the score so far, and the buttons */
-export function RoundBar({ v, onJump, onCart, onCard, onQuit }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCard: () => void; onQuit: () => void }) {
+export function RoundBar({ v, onJump, onCart, onCallCart, onCard, onQuit }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCallCart: () => void; onCard: () => void; onQuit: () => void }) {
   const t = v.totals, r = v.round;
   return (
     <div className="pointer-events-none absolute inset-x-0 top-[calc(var(--hud-top,6rem)+2.75rem)] z-20 flex justify-center px-3">
@@ -53,6 +53,7 @@ export function RoundBar({ v, onJump, onCart, onCard, onQuit }: { v: YourRoundVi
         <span className="rounded bg-white/10 px-1.5 py-0.5 font-semibold tabular-nums text-white" data-testid="round-score">{t.thru ? `${toPar(t.toPar)} thru ${t.thru}` : 'E'}</span>
         {v.canJump && <button className="btn-gold px-2 py-0.5 text-xs" onClick={onJump} data-testid="you-jump" data-tip="Skip the trip: you are at your ball, addressing it"><Icon name="forward2" size={14} />Jump to ball</button>}
         {(v.inCart || v.nearCart) && !v.addressing && <button className="chip" onClick={onCart} data-testid="you-cart">{v.inCart ? 'Get out (E)' : 'Get in the cart (E)'}</button>}
+        {v.cartFar && <button className="chip" onClick={onCallCart} data-testid="you-cart-call" data-tip="Your cart drives to you (C); then E gets in"><Icon name="compass" size={14} />Cart (C)</button>}
         <button className="chip" onClick={onCard} data-testid="round-card-btn">Scorecard</button>
         <button className="chip" onClick={onQuit} title="Stop your round here: the holes done go into your rounds" data-testid="round-quit">Quit</button>
       </div>

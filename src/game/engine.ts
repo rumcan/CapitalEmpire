@@ -179,6 +179,7 @@ import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, bu
 import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
 import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
+import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
 import { CART_REACH, CART_TILES, addressOf, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { BOOK_LEAD, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
@@ -5154,6 +5155,8 @@ export class Game {
     if (typing) return;
     this.keys.add(e.key);
     if (WALK_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youKeysOn()) { e.preventDefault(); return; } // T240, T323: WASD walk you in either cursor (the frame reads them)
+    // T326: C calls your cart, in your round (at your ball's address too) or in the Walk cursor (elsewhere C stays the course tool's key)
+    if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.youCart && ((this.youKeysOn() && (this.youWalkMode || this.yourRound())) || this.shot?.mine)) { e.preventDefault(); this.youCartCall(); return; }
     if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.youKeysOn() && this.youCart && (this.youInCart || this.youNearCart())) { e.preventDefault(); this.youCartToggle(); return; } // T317
     // T268: the tee set in hand: R turns it (Shift+R back), [ ] size it
     if (this.teePlace && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -7443,6 +7446,7 @@ export class Game {
       if (stepYou(mv, dt)) this.youArrive();
     }
     if (mv !== y) { y.x = mv.x; y.y = mv.y; y.face = mv.face; y.moving = false; y.keys = false; }
+    else if (c?.moving && stepYou(c, dt)) this.youCartArrived(); // T326: your cart drives itself (called, or off to park)
     // (T323, the owner: the camera no longer follows you walking or driving: Me centres it once)
     if (wasMoving && !mv.moving && !mv.keys) { this.youSaveDue = true; this.emit(); }
     this.yourFrame(dt); // T317: your round: the ball's flight, the snap to the address
@@ -7683,7 +7687,7 @@ export class Game {
     if (c && c.x >= X0 && c.x <= X1 && c.y >= Y0 && c.y <= Y1) { // T317: your golf cart (the hire cart's art: its side by your heading)
       const f = c.face; this.youCartSide = f >= 1 && f <= 3 ? 0 : f >= 5 ? 1 : this.youCartSide;
       const item = CART_ART[this.youCartSide]!;
-      if (item >= 0) { const d = this.propDrawable(this.youCartDraw, 0, item, c.x, c.y, 0.6); this.golfCartOut.push(d); if (this.youInCart) this.caddieLabels.push({ p: d, text: this.golf?.player?.name ?? 'You' }); }
+      if (item >= 0) { const d = this.propDrawable(this.youCartDraw, 0, item, c.x, c.y, 0.6); this.golfCartOut.push(d); this.caddieLabels.push({ p: d, text: this.youInCart ? this.golf?.player?.name ?? 'You' : 'Your cart' }); } // (T326: "Your cart" when it waits)
     }
     const y = this.you; if (!y || this.youInCart || y.x < X0 || y.x > X1 || y.y < Y0 || y.y > Y1) return m;
     const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
@@ -7798,8 +7802,8 @@ export class Game {
     const r = startRound(v, holes, at.day); if (!r) return;
     if (b && b.day === at.day && !b.result) this.setPlayer({ ...this.playerNow()!, booked: null });
     this.setYourRound(r); this.youTeeOpen = false; this.yrCard = false; this.yrFlight = null;
-    const h = holeOf(v, holes[0]!)!;
-    this.toast(`Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: walk up to the tee to address the ball`, 'good');
+    const h = holeOf(v, holes[0]!)!, brought = this.youCartBring(h.tee);
+    this.toast(`Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: walk up to the tee to address the ball${brought ? ' (your cart is by the tee)' : ''}`, 'good');
     this.emit();
   }
   /** each frame (real seconds): your ball's flight (the camera follows it), then the snap: near your ball (SNAP_TILES), on foot or in the cart, you
@@ -7829,7 +7833,7 @@ export class Game {
     const r = this.yourRound(), v = this.yrView(), y = this.you; if (!r || !y) return;
     if (!v || !v.holes[r.card[r.at]!.i]) { this.yourRoundEnd('The course changed: your round ends here'); return; }
     const turn = yourTurn(v, r, this.yourSkills()); if (!turn) return;
-    if (this.youInCart && this.youCart) { stopWalk(this.youCart); this.youInCart = false; }
+    if (this.youInCart && this.youCart) { stopWalk(this.youCart); this.youInCart = false; this.youCartPark(); } // (T326: it parks off a tee or green)
     stopWalk(y); this.youThen = null; this.youTalk = null; this.youTeeOpen = false; this.yrCard = false;
     this.shot = { turn, input: { club: turn.suggested.club, aim: { x: turn.suggested.aim.x, y: turn.suggested.aim.y }, power: turn.suggested.power }, mine: true };
     this.yourFace();
@@ -7926,7 +7930,7 @@ export class Game {
     const r = this.yourRound(); if (!r || !this.you) return null;
     const row = r.card[r.at]!, v = this.yrView(), h = v ? holeOf(v, row.i) : null, flying = !!this.yrFlight, addressing = !!this.shot?.mine;
     return { round: r, hole: row.n, par: row.par, stroke: row.strokes + 1, distM: h ? Math.hypot(h.pin.x - r.ball.x, h.pin.y - r.ball.y) * TILE_M : 0, lie: r.lie,
-      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing, inCart: this.youInCart, nearCart: this.youNearCart(), card: this.yrCard, flying, addressing };
+      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing, inCart: this.youInCart, nearCart: this.youNearCart(), cartFar: this.youCartFar(), card: this.yrCard, flying, addressing };
   }
   /** whether you stand within CART_REACH of your cart (and are not in it) */
   youNearCart(): boolean { const c = this.youCart, y = this.you; return !!c && !!y && !this.youInCart && Math.hypot(c.x - y.x, c.y - y.y) <= CART_REACH; }
@@ -7935,10 +7939,11 @@ export class Game {
     const c = this.youCart, y = this.you; if (!c || !y) return;
     if (this.youInCart) {
       stopWalk(c); this.youInCart = false; const p = this.cartSide(c, { x: c.x + 1, y: c.y + 1 }); y.x = p.x; y.y = p.y;
+      this.youCartPark(); // T326: off a tee, clear of a green
       this.youSaveDue = true; this.emit(); return;
     }
     if (Math.hypot(c.x - y.x, c.y - y.y) > CART_REACH) { this.toast('Walk to your cart first', 'warn'); return; }
-    stopWalk(y); this.youThen = null; this.youInCart = true; y.x = c.x; y.y = c.y;
+    stopWalk(y); stopWalk(c); this.cartCalled = false; this.youThen = null; this.youInCart = true; y.x = c.x; y.y = c.y;
     this.youSaveDue = true; this.toast('In your cart: WASD drive (Shift: faster), a click drives there, E gets out', 'info'); this.emit();
   }
   /** where you stand beside the cart: 1.2 tiles off it toward `from` first, then the other sides; the cart's own spot when none is open */
@@ -7979,6 +7984,96 @@ export class Game {
     for (let d = 0; d <= Math.min(40, L); d += 0.5) { const x = t.x + ux * d, y = t.y + uy * d; if (this.cartOk(x, y)) return { x, y }; }
     return null;
   }
+  // ---------- T326 (#926): your cart, easy to call and to find; it waits beside the tees and greens (play/yourcart.ts) ----------
+  /** the cart is on its way to you after a call (its arrival is toasted) */
+  private cartCalled = false;
+  /** the Cart button and key C: your cart comes to you (play/yourcart.ts callMode: within reach it waits; near it drives itself along a route; far it
+   *  appears APPEAR_TILES off, on its way, and drives the rest), then E gets you in */
+  youCartCall() {
+    const c = this.youCart, y = this.you; if (!c || !y) return;
+    if (this.youInCart) { this.toast('You are in your cart: E gets out', 'info'); return; }
+    const d = Math.hypot(c.x - y.x, c.y - y.y), mode = callMode(d, CART_REACH);
+    if (mode === 'here') { this.toast('Your cart is here: E gets in', 'info'); return; }
+    this.youRaster(y.x, y.y, 24, true);
+    const spot = callSpot(y, c, this.cartOk) ?? this.cartNear(y, c); // (on a green: the nearest spot back toward it, at the green's edge)
+    if (!spot) { this.toast('Your cart cannot get to you here: walk out to open ground and call again', 'warn'); return; }
+    stopWalk(c);
+    if (mode === 'appear') { const a = appearSpot(y, c, this.cartOk); if (a) { c.x = a.x; c.y = a.y; c.face = facingOf(spot.x - a.x, spot.y - a.y); } }
+    this.youRaster(c.x, c.y, 16, true, spot.x, spot.y);
+    startWalk(c, routeOf({ x: c.x, y: c.y }, spot, this.cartCost), true); c.tx = NaN; c.ty = NaN; c.skip = false;
+    this.cartCalled = true;
+    this.toast(mode === 'appear' ? 'Your cart is coming' : `Your cart is coming (${distText(d * TILE_M)} off)`, 'info'); this.emit();
+  }
+  /** the cart has driven itself to its spot: called, it turns to you and says so; the place is saved */
+  private youCartArrived() {
+    const c = this.youCart, y = this.you; if (!c) return;
+    c.tx = NaN; c.ty = NaN;
+    if (this.cartCalled && y) {
+      this.cartCalled = false; c.face = facingOf(y.x - c.x, y.y - c.y);
+      this.toast(Math.hypot(c.x - y.x, c.y - y.y) <= CART_REACH ? 'Your cart is here: E gets in' : 'Your cart waits as near as it may go', 'good');
+    }
+    this.youSaveDue = true; this.emit();
+  }
+  /** the course's surface under (x, y) for the parking: a tee, a green, rough or off the course (a path: 'good'), else the fairway or deep grass */
+  private parkSurf = (x: number, y: number): ParkSurf => {
+    const g = this.courseGrid; if (!g) return 'good';
+    const k = cellAt(g, x, y); if (k < 0) return 'good';
+    const sf = g.surf[k]!; return sf === SURF.tee ? 'tee' : sf === SURF.green ? 'green' : sf === SURF.rough || sf === SURF.none ? 'good' : 'other';
+  };
+  /** how far (tiles) the nearest green's edge is from (x, y), looked for out to GREEN_CLEAR + 1 (Infinity: none so near) */
+  private greenNear = (x: number, y: number): number => {
+    const g = this.courseGrid; if (!g) return Infinity;
+    for (let r = 0; r <= GREEN_CLEAR + 1; r += 0.5) {
+      const n = r ? 12 : 1;
+      for (let j = 0; j < n; j++) { const a = j / n * Math.PI * 2, k = cellAt(g, x + Math.cos(a) * r, y + Math.sin(a) * r); if (k >= 0 && g.surf[k] === SURF.green) return r; }
+    }
+    return Infinity;
+  };
+  /** you got out of the cart: on a tee or by a green it drives off to wait on the nearest rough or path beside (play/yourcart.ts parkSpot) */
+  private youCartPark() {
+    const c = this.youCart; if (!c || this.youInCart || !shouldPark(c, this.parkSurf, this.greenNear)) return;
+    this.youRaster(c.x, c.y, 14, true);
+    const p = parkSpot(c, this.cartOk, this.parkSurf, this.greenNear); if (!p) return;
+    startWalk(c, routeOf({ x: c.x, y: c.y }, p, this.cartCost), false); c.tx = NaN; c.ty = NaN; c.skip = false;
+  }
+  /** at the start of your round: the cart is brought to the first tee (parked beside it) when it is not already near (BRING_TILES); true when it was */
+  private youCartBring(tee: Pt): boolean {
+    const c = this.youCart; if (!c || this.youInCart || Math.hypot(c.x - tee.x, c.y - tee.y) <= BRING_TILES) return false;
+    this.youRaster(tee.x, tee.y, 14, true);
+    const p = parkSpot(tee, this.cartOk, this.parkSurf, this.greenNear) ?? callSpot(tee, c, this.cartOk); if (!p) return false;
+    stopWalk(c); this.cartCalled = false; c.x = p.x; c.y = p.y; c.face = facingOf(tee.x - p.x, tee.y - p.y);
+    this.youSaveDue = true; return true;
+  }
+  /** whether the Cart button shows: you have a cart, are not in it nor within reach of it */
+  youCartFar(): boolean { return !!this.youCart && !!this.you && !this.youInCart && !this.youNearCart(); }
+  /** T326: your cart found: off screen an edge marker points to it with how far it is; far out (no movers drawn) a dot with "Your cart". With Select
+   *  in hand (the tools' own previews are left alone), not while you ride it */
+  private drawYourCart(ctx: CanvasRenderingContext2D) {
+    const c = this.youCart, y = this.you; if (!c || !y || this.youInCart || this.tool !== 'select') return;
+    const dpr = this.dpr, p = this.screen(c.x, c.y), w = this.cw / dpr, h = this.ch / dpr;
+    const m = edgeMarker(p.x / dpr, p.y / dpr, w, h);
+    ctx.save();
+    ctx.font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textBaseline = 'middle';
+    if (m) {
+      const x = m.x * dpr, yy = m.y * dpr, r = 13 * dpr, text = this.cartMarkText(Math.hypot(c.x - y.x, c.y - y.y) * TILE_M);
+      // the arrow: a gold triangle on a dark disc, pointing to the cart
+      ctx.beginPath(); ctx.arc(x, yy, r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(2,6,23,0.85)'; ctx.fill(); ctx.lineWidth = 2 * dpr; ctx.strokeStyle = '#facc15'; ctx.stroke();
+      ctx.translate(x, yy); ctx.rotate(m.a);
+      ctx.beginPath(); ctx.moveTo(r * 0.75, 0); ctx.lineTo(-r * 0.4, -r * 0.5); ctx.lineTo(-r * 0.4, r * 0.5); ctx.closePath(); ctx.fillStyle = '#facc15'; ctx.fill();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      // the label on the screen's side of the arrow
+      const tw = ctx.measureText(text).width, lx = Math.min(this.cw - tw - 8 * dpr, Math.max(8 * dpr, x - tw / 2)), ly = yy + (m.y > h / 2 ? -r - 12 * dpr : r + 12 * dpr);
+      ctx.beginPath(); ctx.roundRect(lx - 6 * dpr, ly - 9 * dpr, tw + 12 * dpr, 18 * dpr, 6 * dpr); ctx.fillStyle = 'rgba(2,6,23,0.85)'; ctx.fill();
+      ctx.fillStyle = '#fef9c3'; ctx.fillText(text, lx, ly);
+    } else if (this.cam.z < DISTRICT_Z) {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3.5 * dpr, 0, Math.PI * 2); ctx.fillStyle = '#38bdf8'; ctx.fill(); ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = '#1e293b'; ctx.stroke();
+      ctx.textAlign = 'center'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.85)'; ctx.strokeText('Your cart', p.x, p.y - 8 * dpr); ctx.fillStyle = '#e0f2fe'; ctx.fillText('Your cart', p.x, p.y - 8 * dpr);
+    }
+    ctx.restore();
+  }
+  /** the marker's text, rebuilt only when the distance's words change (no string per frame) */
+  private cartMarkS = '';
+  private cartMarkText(m: number): string { const t = distText(m); if (t !== this.cartMarkS.slice(12)) this.cartMarkS = `Your cart · ${t}`; return this.cartMarkS; }
   /** your ball on the course (the 2D overlay): at rest a white ball with a small shadow toward 145 degrees (the sun at the upper right), in the air higher
    *  with its shadow below, dropping into the cup (smaller and darker); none in the cup after or at the address (the open shot draws it there) */
   private drawYourBall(ctx: CanvasRenderingContext2D) {
@@ -9520,6 +9615,7 @@ export class Game {
     this.drawDecorGhost(ctx);
     this.drawPracticeGhost(ctx);
     this.drawBusPreview(ctx);
+    this.drawYourCart(ctx); // T326
     this.drawYou(ctx); // T240
     this.drawYourTracers(ctx, performance.now()); // T319
     this.drawYourBall(ctx); // T317
