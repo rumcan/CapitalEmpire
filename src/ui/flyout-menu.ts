@@ -116,7 +116,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       const pt = byId('practice');
       // T214: the teaching hut, after the greens (placed with the Buildings tool's ghost)
       if (pt) rows.push(tiled(group('practice', 'Practice', 'pin', [...(c.practice ?? []).map(f => tiled({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why }, PRACTICE_TILE[f.id])),
-        ...(c.practice?.length ? [tiled({ ...leaf(pt, 'Teaching hut', { k: 'pro', id: 'teachhut' }, 'house')!, why: toolLock(c.ui, pt.id) }, ROW_TILE.teachHut)] : [])], pt), ROW_TILE.practice));
+        ...(c.practice?.length ? [tiled({ ...leaf(pt, 'Teaching hut', { k: 'pro', id: 'teachhut' }, 'house')!, why: toolLock(c.ui, pt.id) ?? (c.practice.every(f => f.why) ? c.practice[0]!.why : null) }, ROW_TILE.teachHut)] : [])], pt), ROW_TILE.practice));
       const pa = byId('paint');
       if (pa) rows.push(tiled(group('plants', 'Plants', 'trees', c.plants.map(m => tiled({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) }, PLANT_TILE[m.id])), pa), ROW_TILE.plants));
       const pr = byId('props');
