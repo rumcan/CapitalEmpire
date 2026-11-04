@@ -34,7 +34,7 @@ export function ChallengeBox({ o, onChallenge }: { o: MatchOffer; onChallenge: (
           <input type="range" min={MIN_STAKE} max={o.max} step={STAKE_STEP} value={Math.min(stake, o.max)} onChange={e => setStake(Number(e.target.value))} className="flex-1 accent-amber-300" data-testid="match-stake" />
           <b className="w-14 text-right tabular-nums text-white" data-testid="match-stake-val">{money(Math.min(stake, o.max))}</b>
         </div>
-        <div className="text-[11px] text-slate-500">Up to {money(o.max)}: you have {money(o.money)}, {f} carries {money(o.purse)}.</div>
+        <div className="text-[11px] text-slate-500">Up to {money(o.max)}: {Number.isFinite(o.money) ? `you have ${money(o.money)}, ` : ''}{f} carries {money(o.purse)}.</div>
         <button className="btn-gold w-full py-1 text-xs" onClick={() => onChallenge(Math.min(stake, o.max), n)} data-testid="match-challenge"><Icon name="trophy" size={14} />Challenge {f}: {n} holes for {money(Math.min(stake, o.max))}</button>
       </>}
     </div>

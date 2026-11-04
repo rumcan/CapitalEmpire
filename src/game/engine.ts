@@ -8033,7 +8033,7 @@ export class Game {
     const t = this.youTalk, p = this.playerNow(); if (!t || t.hcp === null || !p) return null;
     const rival = p.rivals?.find(x => x.name === t.name) ?? null, o = opponentOf(t.name, rival?.hcp ?? t.hcp, rival, this.townNow().day), v = this.yrView();
     const lengths = matchLengths(v?.holes.length ?? 0), max = maxStake(this.money, o.purse);
-    const why = this.yourRound() ? 'Finish your round first' : !v || !lengths.length ? 'The course has no holes to play yet' : this.yourChoices().why ?? (max ? null : o.purse < 10 ? `${firstName(t.name)} is cleaned out` : 'You cannot cover the least stake ($10)');
+    const cur = this.yourRound(), why = cur?.match?.name === t.name ? 'Your match is on: see you on the tee' : cur ? 'Finish your round first' : !v || !lengths.length ? 'The course has no holes to play yet' : this.yourChoices().why ?? (max ? null : o.purse < 10 ? `${firstName(t.name)} is cleaned out` : 'You cannot cover the least stake ($10)');
     return { name: t.name, hcp: o.hcp, yourHcp: handicapOf(p.skills), purse: o.purse, money: Math.floor(this.money), max, lengths, rival: rival ? rivalText(rival) : null, why, answer: t.answer ?? null };
   }
   /** you challenge the person you are talking to: n holes for the stake. They answer (golf/play/match.ts answerOf); a yes starts the match on the first tee */
@@ -8102,7 +8102,7 @@ export class Game {
   private matchHoleDone(r: YourRound) {
     const m = r.match!, w = m.res[m.res.length - 1], row = r.card[r.at]!, os = m.ocard[m.ocard.length - 1], f = firstName(m.name), sc = scoreOf(r);
     const head = w === 1 ? `You win the ${ordinal(row.n)}` : w === -1 ? `${f} wins the ${ordinal(row.n)}` : `The ${ordinal(row.n)} is halved`;
-    this.toast(`${head} (${row.up ? 'conceded' : row.strokes} to ${m.holed ? os : 'conceded'}) · ${sc.text}`, w === 1 ? 'good' : w === -1 ? 'warn' : 'info');
+    this.toast(`${head} (you ${row.up ? 'picked up' : row.strokes}, ${f} ${m.holed ? os : 'picked up'}) · ${sc.text}`, w === 1 ? 'good' : w === -1 ? 'warn' : 'info');
     this.yrCard = true; this.emit();
   }
   /** "Skip to result": the rest of the match played by the model for both (golf/play/match.ts skipMatch), then settled */
