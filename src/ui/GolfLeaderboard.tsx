@@ -51,7 +51,7 @@ export function GolfLeaderboard({ game }: { game: Game }) {
       {b.last && (
         <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-amber-400/40 bg-amber-400/15 px-2 py-1.5 text-xs text-amber-100" data-guide="last-group">
           <span><span className="font-semibold text-amber-200">Last group on the 18th</span><br /><span className="text-slate-200">{b.last.join(', ')}</span></span>
-          <button className="chip shrink-0" onClick={() => game.watchLastGroup()}>Watch</button>
+          <button className="chip shrink-0" onClick={() => game.watchLastGroup()} title="Follow the last group at the watching speed">Watch</button>
         </div>
       )}
       {b.waiting && (

@@ -168,6 +168,7 @@ export function flightOf(from: Pt, land: Pt | null, to: Pt, done: boolean, up: b
 /** the ball of a flight at its time (tiles; h its height in tiles: an eighth of the carry, at most 12 (24 m), on an arc): in the air, rolling (slowing), or a
  *  putt rolling; a penalty's ball stays where it landed and shows at its drop at the end */
 export function yourBallAt(f: YourFlight): { x: number; y: number; h: number } {
+  if (f.t < 0) return { x: f.from.x, y: f.from.y, h: 0 }; // (T320: before the clip's impact the ball waits at your feet)
   if (f.land && f.t < f.air) {
     const u = f.t / f.air, H = Math.min(12, Math.hypot(f.land.x - f.from.x, f.land.y - f.from.y) / 8);
     return { x: f.from.x + (f.land.x - f.from.x) * u, y: f.from.y + (f.land.y - f.from.y) * u, h: 4 * u * (1 - u) * H };
