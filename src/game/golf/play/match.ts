@@ -255,7 +255,7 @@ export function settleMatch(p: PlayerProfile, r: YourRound, conceded = false): {
   const f = firstName(m.name);
   const text = conceded ? `You conceded the match to ${f}: -$${m.stake.toLocaleString('en-US')}`
     : result === 'h' ? `Match halved with ${f}: the $${m.stake.toLocaleString('en-US')} stays put`
-    : result === 'w' ? `${sc.text.replace('You won', 'You beat ' + f)}: +$${m.stake.toLocaleString('en-US')}` : `${f} beat you ${sc.short.replace('Lost ', '')}: -$${m.stake.toLocaleString('en-US')}`;
+    : result === 'w' ? `${sc.text.replace('You won', 'You beat ' + f)}: +$${m.stake.toLocaleString('en-US')}` : `${f} beat you ${sc.left > 0 ? `${Math.abs(sc.up)}&${sc.left}` : `${Math.abs(sc.up)} up`}: -$${m.stake.toLocaleString('en-US')}`;
   return { profile: next, money, rep, result, text };
 }
 /** the rivals after a match with `name`: their record updated (or a new one), newest last, at most RIVALS_MAX */

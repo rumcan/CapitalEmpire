@@ -100,7 +100,7 @@ try {
   await page.evaluate(() => window.__game.closeMatchResult());
 
   // 4. a rival's return challenge (forced for the shot: the day's draw is golf/play/match.ts returnChallenge, tested there)
-  await page.evaluate(() => { const g = window.__game, p = g.golf.player, rv = p.rivals[p.rivals.length - 1]; g.setPlayer({ ...p, challenge: { name: rv.name, stake: Math.max(10, Math.round(rv.stake * 1.5 / 10) * 10), holes: 18, day: g.townNow().day }, chDay: g.townNow().day }); g.emit(); });
+  await page.evaluate(() => { const g = window.__game, p = g.golf.player, rv = p.rivals[p.rivals.length - 1]; g.openEventCard?.(null); g.setPlayer({ ...p, challenge: { name: rv.name, stake: Math.max(10, Math.round(rv.stake * 1.5 / 10) * 10), holes: 18, day: g.townNow().day }, chDay: g.townNow().day }); g.emit(); });
   await settle(page, 500);
   await page.screenshot({ path: join(out, '6-return-challenge.png') });
   await page.click('[data-testid="return-accept"]');

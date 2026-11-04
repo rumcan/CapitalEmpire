@@ -110,6 +110,8 @@ test('skip to result: the whole match played by the model, decided, deterministi
   assert.equal(s.rep, sc.result === 'w' ? REP_WIN : 0);
   const rv = s.profile.rivals![0]!; assert.equal(rv.name, 'Mia Lopez'); assert.equal(rv.net, s.money); assert.equal(rv.res, sc.result);
   assert.equal(s.profile.rounds.at(-1)!.kind, 'match');
+  const lost = { ...end, match: { ...end.match!, res: [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as (0 | -1)[] } };
+  assert.equal(settleMatch({ ...startProfile(), round: lost }, lost).text, 'Mia beat you 1 up: -$150');
   // conceding mid-match: a loss
   const mid = settleMatch({ ...startProfile(), round: r }, r, true); assert.equal(mid.money, -150); assert.equal(mid.result, 'l'); assert.equal(mid.profile.rounds.length, 0, 'no hole played: no round');
 });
