@@ -17,7 +17,9 @@ import type { Town, TownEvent } from '../src/game/lots/town';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
-const Y = 1000, A: Pt = { x: 0, y: Y }, B: Pt = { x: MAP - 1, y: Y }, J: Pt = { x: 1000, y: Y }, SEED: Pt = { x: 1000, y: Y - 40 };
+// T329: the 2 km map (T280): the county road at y 500 (was 1000) and the town's seed and the club at x 500 (was 1000), so the parcel south of
+// the road (450 deep) lies on the map
+const Y = 500, A: Pt = { x: 0, y: Y }, B: Pt = { x: MAP - 1, y: Y }, J: Pt = { x: 500, y: Y }, SEED: Pt = { x: 500, y: Y - 40 };
 const PARCEL: [number, number, number, number] = [J.x - 70, Y + NEAR, 300, 450];
 const HOUR = 60;
 type Inside = { town: Town; budget: Budget };
@@ -32,6 +34,11 @@ function grownCity(earned: number, kind: 'range' | 'old' = 'range') {
   editor.net.paintData = false;
   editor.addLegs([{ a: A, b: B }], CLASS.road, 0, undefined, true);
   city.netOps(editor.commit(true));
+  // T329: since T276/T292 (the town lays no roads; past FARM_LINE, 150 tiles on the 2 km map, the county road is the farms') the county road alone
+  // gives the town land for fewer residents than the floor (36 < GROWN_EARN_P0), so the room never bound: the player's own paved streets north of
+  // the road, as a player lays them, give it the land the money made then rations
+  editor.addLegs([350, 420, 580, 650].map(x => ({ a: { x, y: Y }, b: { x, y: Y - 240 } })), CLASS.street, 0);
+  city.netOps(editor.commit());
   if (kind === 'range') city.setGolf({ tier: 1, rep: 0, land: [PARCEL], start: 'range', exits: [A, B], holes: 9, townBoost: 1 });
   else city.setGolf({ tier: 1, rep: 0, land: [PARCEL] });
   (city as unknown as Inside).budget.earned = earned;

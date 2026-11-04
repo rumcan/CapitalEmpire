@@ -5,14 +5,18 @@ import { BUSINESSES } from '../src/game/business/catalogue';
 import { LIBRARY, ATLAS_PAGES } from '../src/game/library';
 import { BUSINESS_THUMBS } from '../src/game/business-library';
 import { drawnAs } from '../src/game/mirror';
+import { REMOVED_IDS, STUDIO_SCALE } from '../src/game/lots/scales';
 const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
+/** T329: the business pictures the owner removed in the studio (2026-11-02: business:stadium, business:golf-driving-range): those businesses
+ *  draw no world picture until new art lands (an art gap for the owner, not a code fault) */
+const REMOVED = new Set(REMOVED_IDS);
 
 test('every catalogue business has delivered thumbnails and world sprites inside its parcel', () => {
   for (const b of BUSINESSES) {
     assert.ok(Object.prototype.hasOwnProperty.call(BUSINESS_THUMBS, BUSINESS_IMAGE[b.id]), b.id + ' thumbnail');
     const d = { id: 2, type: b.id, x: 100, y: 200, ...b.footprint };
     const props = businessArt(d, LIBRARY, index);
-    assert.ok(props.length, b.id + ' world artwork');
+    assert.ok(props.length || REMOVED.has('business:' + BUSINESS_IMAGE[b.id]), b.id + ' world artwork');
     for (const p of props) {
       assert.ok(p.x0 >= d.x && p.y0 >= d.y && p.x1 <= d.x + d.w && p.y1 <= d.y + d.h, b.id + ' art footprint');
       assert.ok(p.scale > 0 && Number.isFinite(p.scale));
@@ -41,13 +45,16 @@ test('R turns the same composition and exchanges world axes; no picture is mirro
 test('the starter clubhouse is drawn at the clubhouse footprint on any parcel (the owner, 2026-10-28: "monterous", then "too smal", then "good now")', async () => {
   const { BUSINESS } = await import('../src/game/business/catalogue');
   const { footprintSpan, lookOf } = await import('../src/game/newart');
-  const fp = BUSINESS.clubhouse.footprint, want = (fp.w + fp.h) / 2;
+  // T329: the owner sized the shack in the studio on 2026-11-02 (scale-overrides.json golf:clubhouse-shanty 0.317, drawn as itself now that it
+  // has its own views): the owner's size wins, as businessArt's STUDIO_SCALE always did; without one it fills the footprint
+  const fp = BUSINESS.clubhouse.footprint, owner = STUDIO_SCALE['golf:clubhouse-shanty'], want = (fp.w + fp.h) / 2;
   // the town start's 40 x 24 venue and a clubhouse the player placed at the catalogue's 20 x 12: the same picture size
   for (const [w, h] of [[40, 24], [fp.w, fp.h]] as const) {
     const [p] = businessArt({ id: 1, type: 'clubhouse', x: 100, y: 200, w, h }, LIBRARY, index);
     assert.ok(p, `a clubhouse prop on ${w} x ${h}`);
     const look = lookOf(p!), n = LIBRARY[look.item]!;
     // the grand clubhouse stands in for the shack: its picture spans the footprint (not 4x it, as its 1 x 1 placeholder box made it)
+    if (owner !== undefined) { assert.equal(p!.scale, owner, `${w} x ${h}: the owner's size`); continue; }
     assert.ok(Math.abs(footprintSpan(n) * look.scale - want) < 0.01, `${w} x ${h}: drawn span ${footprintSpan(n) * look.scale} = ${want}`);
   }
 });

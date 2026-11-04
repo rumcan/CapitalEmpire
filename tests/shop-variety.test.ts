@@ -110,7 +110,8 @@ function neighbours(list: Row[]): { side: [Row, Row][]; across: [Row, Row][] } {
 }
 const shopLike = (r: Row) => r.use === LU.COM || r.use === LU.TOUR;
 const TOWNS: { name: string; city: City }[] = [];
-for (const [seed, golf] of [[1, true], [4, true], [2, false]] as const) { const c = town(seed, golf); if (c) TOWNS.push({ name: `${golf ? 'golf' : 'classic'} seed ${seed}`, city: c }); }
+// (T329: golf seeds 2 and 5, which place the old nine on the 2 km map (T280; seeds 1 and 4 did on the 4 km map, golf-place.test.ts OLD_NINE_FITS))
+for (const [seed, golf] of [[2, true], [5, true], [2, false]] as const) { const c = town(seed, golf); if (c) TOWNS.push({ name: `${golf ? 'golf' : 'classic'} seed ${seed}`, city: c }); }
 const ROWS = TOWNS.map(t => ({ name: t.name, rows: rows(t.city) }));
 
 test('no two shops alike side by side or across the street; houses nearly never (the golf start town and a classic town)', () => {

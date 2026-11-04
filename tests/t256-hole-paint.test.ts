@@ -7,7 +7,7 @@ import { SURF, cellAt, holeCellsDiff, makeGrid, paintDisc, type Grid } from '../
 import { cellShares, coursePatch, stripeAreas, type CourseLooks } from '../src/game/ext/course-grid/patch';
 import { aimsFromPlans, decodePlans } from '../src/game/ext/hole-wizard';
 import { greenPolygon } from '../src/game/ext/hole-plan';
-import { createCourseHeightField } from '../src/game/ext/course-height';
+import { CH_SIZE, createCourseHeightField } from '../src/game/ext/course-height';
 import { PaintTool, type PaintHost } from '../src/game/paint-tool';
 import { BRUSH_PRESETS, type BrushKind } from '../src/game/paint';
 import { courseLookSet, type LookStyle } from '../src/game/course-look';
@@ -211,7 +211,8 @@ test('cellShares is T218\'s walk: stripeAreas gives the same shares through it',
 test('My holes: saving and placing a hole round-trips its cells, plan, heights and looks, turned or not', () => {
   const { g, st, tool, build } = game();
   build(40, 120, 230, 120);
-  const f = createCourseHeightField(); f.data[60 * 1024 + 30] = 1.25; f.data[61 * 1024 + 31] = -0.5;
+  // (T329: the field is CH_SIZE wide: 512 on the 2 km map, T280; it was written as 1024)
+  const f = createCourseHeightField(); f.data[60 * CH_SIZE + 30] = 1.25; f.data[61 * CH_SIZE + 31] = -0.5;
   tool.setHole(1); tool.setBrush('bunker'); tool.setStyle({ tex: 'dirt' });
   const plan = decodePlans(st.plans)[0]!;
   const h = captureHole(1, { grid: g, plan, tee: plan.tee, pin: plan.green, field: f, looks: st.book.h1, frame: [{ id: 'tree-a', x: plan.tee.x + 4, y: plan.tee.y + 6, flip: false, scale: 1 }], name: 'Long one', par: 4, m: 380 })!;

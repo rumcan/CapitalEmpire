@@ -8,6 +8,12 @@ import { LIBRARY, ATLAS_PAGES } from '../src/game/library';
 import { DECOR } from '../src/game/golf/decor';
 import { KIT_GREY_GRANITE, KIT_WATER_EDGE_PLANTS } from '../src/game/kit';
 import { drawnAs } from '../src/game/mirror';
+import { appendNewProps } from '../src/game/new-props-library';
+
+// T329: the owner's new props (new-props-library.ts, 2026-11-02) are appended at the library's very tail, after every other append, so no saved
+// index moves: the tail checks below leave them out (and check they are that tail)
+const NEW_PROPS: { id: string }[] = []; appendNewProps(NEW_PROPS as never[], []);
+
 
 test('component-aware native exports preserve overlapping foliage bounds and faint edge pixels', async () => {
   const { partitionSheet } = await import(pathToFileURL(path.resolve('scripts/assets/prep-landscaping-kit.mjs')).href);
@@ -56,7 +62,8 @@ test('organic art is twelve unique tail records on the existing golf page and tw
   const masters = JSON.parse(await fs.readFile('art/landscaping-kit/items.json', 'utf8')).items;
   const ids = masters.map((x: { id: string }) => x.id), expected = [...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id);
   assert.deepEqual(ids, expected); assert.equal(new Set(ids).size, 12);
-  assert.deepEqual(LIBRARY.slice(-12).map(p => p.id), ids, 'new records append after every previous library, including supplemental views');
+  assert.deepEqual(LIBRARY.slice(-NEW_PROPS.length).map(p => p.id), NEW_PROPS.map(p => p.id), 'the new props are the tail');
+  assert.deepEqual(LIBRARY.slice(0, -NEW_PROPS.length).slice(-12).map(p => p.id), ids, 'new records append after every previous library, including supplemental views');
   const golfPage = LIBRARY.find(p => p.id === 'kit:shrub-burning-bush')!.tex[0]; // tournament building pictures may be replaced by their views page
   assert.equal(new Set(LIBRARY.slice(-12).map(p => p.tex[0])).size, 1);
   for (const id of ids) {

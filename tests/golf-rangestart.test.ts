@@ -15,6 +15,9 @@ import { plotOfFront, plotPoint, rangeLayout } from '../src/game/golf/range';
 import { rangeLot } from '../src/game/golf/rangebiz';
 
 const VERGE = CLASS.road!.h + CLASS.road!.walk;
+/** T329: the hand-made maps below were the 4 km map's (J at 1000, rivers at 200 and 1700-1860); the 2 km map (T280) scales their places by S and
+ *  puts J on the lattice point nearest the centre. River widths stay (a bridge's limit, STRUCT_MAX, is not the map's) */
+const S = MAP / 2048, MID = Math.round(MAP / 2 / BLOCK) * BLOCK, at = (x: number) => Math.round(x * S);
 const terrains = new Map<number, Terrain>();
 /** the terrain of a seed (cached: each takes about half a second) */
 const terrain = (s: number) => { let t = terrains.get(s); if (!t) terrains.set(s, t = generateTerrain(s)); return t; };
@@ -26,8 +29,8 @@ const SEEDS = Array.from({ length: 12 }, (_, i) => i + 1);
 function flat(mountainEdges: Edge[], wet?: (x: number, y: number) => boolean): Terrain {
   const cls = new Uint8Array(MAP * MAP).fill(TC.GROUND);
   if (wet) for (let y = 0; y < MAP; y++) for (let x = 0; x < MAP; x++) if (wet(x, y)) cls[y * MAP + x] = TC.WATER;
-  return { seed: 1, attempt: 0, height: new Float32Array(256 * 256), cls, waters: [], mountainEdges, highway: { x: 0, y: 1024, edge: 'W' }, start: { x: 992, y: 992, size: 64 },
-    towns: [{ x: 992, y: 992, size: 64 }], chokepoints: [] };
+  return { seed: 1, attempt: 0, height: new Float32Array(256 * 256), cls, waters: [], mountainEdges, highway: { x: 0, y: MAP / 2, edge: 'W' }, start: { x: MID - 32, y: MID - 32, size: 64 },
+    towns: [{ x: MID - 32, y: MID - 32, size: 64 }], chokepoints: [] };
 }
 /** the tiles of r that pass ok */
 function countIn(t: Terrain, r: Rect, ok: (c: number) => boolean): number {
@@ -77,22 +80,22 @@ test('the road ends on the border at two edges, with no tunnel and at most 2 bri
     if (!ends.some(e => t.mountainEdges.includes(e))) for (const e of road.edges) assert.ok(!t.mountainEdges.includes(e), `seed ${s}: an open end`);
   }
   // a flat map with mountains north and south: an east-west road with two open ends
-  const ns = regionalRoute(flat(['N', 'S']), { x: 1000, y: 1000 }, 'x')!;
+  const ns = regionalRoute(flat(['N', 'S']), { x: MID, y: MID }, 'x')!;
   assert.deepEqual([...ns.edges].sort(), ['E', 'W']);
   // mountains east and south: the north-south road bends at most once per half and reaches the open north edge
-  const es = regionalRoute(flat(['E', 'S']), { x: 1000, y: 1000 }, 'y')!;
+  const es = regionalRoute(flat(['E', 'S']), { x: MID, y: MID }, 'y')!;
   assert.ok(es.edges.includes('N'), 'the open north edge');
 });
 
 test('the road: a river wider than a bridge fails, two river crossings are bridged, three are refused', () => {
-  const J = { x: 1000, y: 1000 };
+  const J = { x: MID, y: MID };
   // a 160-tile river across the whole map east of J: every east half crosses it, over STRUCT_MAX
-  assert.equal(regionalRoute(flat([], (x) => x >= 1700 && x < 1860), J, 'x'), null);
+  assert.equal(regionalRoute(flat([], (x) => x >= at(1700) && x < at(1700) + 160), J, 'x'), null);
   // two narrow rivers: two bridge runs
-  const two = regionalRoute(flat([], (x) => (x >= 1700 && x < 1720) || (x >= 200 && x < 220)), J, 'x')!;
+  const two = regionalRoute(flat([], (x) => (x >= at(1700) && x < at(1700) + 20) || (x >= at(200) && x < at(200) + 20)), J, 'x')!;
   assert.equal(bridgeRuns(two.kinds), 2);
   // three narrow rivers that no bend escapes (full-height stripes): refused
-  assert.equal(regionalRoute(flat([], (x) => (x >= 1700 && x < 1720) || (x >= 1800 && x < 1820) || (x >= 200 && x < 220)), J, 'x'), null);
+  assert.equal(regionalRoute(flat([], (x) => (x >= at(1700) && x < at(1700) + 20) || (x >= at(1800) && x < at(1800) + 20) || (x >= at(200) && x < at(200) + 20)), J, 'x'), null);
 });
 
 test('within 600 tiles of J the road is one axis-aligned run through J, and J is on the 40-tile lattice', () => {

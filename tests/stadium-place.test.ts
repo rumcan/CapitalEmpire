@@ -25,19 +25,21 @@ test('siteAt: the site placeStadium finds is the same when rebuilt from its foot
 
 test('siteWhy: open ground far from the towns is fine; the map edge, a water tile and a spot by a town are each refused, with the reason', () => {
   const cls = new Uint8Array(MAP * MAP);
-  const ok = siteAt(1400, 1400, STADIUM_W, STADIUM_H);
+  // (T329: the 2 km map, T280: the open site moved from (1400, 1400) to (800, 800), the edge site from (10, 1000) to (10, 500), the town test's
+  // site from (1000, 1000) to (500, 500))
+  const ok = siteAt(800, 800, STADIUM_W, STADIUM_H);
   assert.equal(siteWhy(ok, cls, CENTRES), '');
-  assert.equal(siteWhy(siteAt(10, 1000, STADIUM_W, STADIUM_H), cls, CENTRES), 'Too close to the map edge');
+  assert.equal(siteWhy(siteAt(10, 500, STADIUM_W, STADIUM_H), cls, CENTRES), 'Too close to the map edge');
 
-  const wet = new Uint8Array(cls); wet[1440 * MAP + 1450] = TC.WATER;
+  const wet = new Uint8Array(cls); wet[840 * MAP + 850] = TC.WATER;
   assert.equal(siteWhy(ok, wet, CENTRES), 'Needs open land (no water, creek, bank or hill)');
-  const patch = new Uint8Array(cls); patch[1440 * MAP + 1450] = TC.PATCH;
+  const patch = new Uint8Array(cls); patch[840 * MAP + 850] = TC.PATCH;
   assert.equal(siteWhy(ok, patch, CENTRES), '', 'a patch is open land');
 
-  // the site's centre is (1050, 1040): a town STADIUM_TOWN_MIN - 1 tiles from it is too close, one STADIUM_TOWN_MIN away is not
-  const at = siteAt(1000, 1000, STADIUM_W, STADIUM_H);
-  assert.equal(siteWhy(at, cls, [{ x: 1050 + STADIUM_TOWN_MIN - 1, y: 1040 }]), 'Too close to a town: stadiums stand outside the towns');
-  assert.equal(siteWhy(at, cls, [{ x: 1050 + STADIUM_TOWN_MIN, y: 1040 }]), '');
+  // the site's centre is (550, 540): a town STADIUM_TOWN_MIN - 1 tiles from it is too close, one STADIUM_TOWN_MIN away is not
+  const at = siteAt(500, 500, STADIUM_W, STADIUM_H);
+  assert.equal(siteWhy(at, cls, [{ x: 550 + STADIUM_TOWN_MIN - 1, y: 540 }]), 'Too close to a town: stadiums stand outside the towns');
+  assert.equal(siteWhy(at, cls, [{ x: 550 + STADIUM_TOWN_MIN, y: 540 }]), '');
 });
 
 test('City with autoStadium off: no site after the terrain and startRound refused; setStadium places it and the round starts; setStadium(null) is refused mid-round', () => {

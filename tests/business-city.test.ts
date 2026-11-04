@@ -107,12 +107,13 @@ test('bizView: every business shows its own stored level; the stadium\'s is not 
 });
 
 test('siteWhy with water: a water-side spot needs a water tile within 6 tiles of its footprint; townMin 0 skips the town check', () => {
-  const cls = new Uint8Array(MAP * MAP), at = siteAt(1000, 1000, 60, 40), far = [{ x: 200, y: 200 }];
+  // (T329: the 2 km map, T280: the spot moved from (1000, 1000) to (600, 600), the water tiles and the town with it)
+  const cls = new Uint8Array(MAP * MAP), at = siteAt(600, 600, 60, 40), far = [{ x: 200, y: 200 }];
   const msg = 'Must stand by water (a lake or a river within 12 m)';
   assert.equal(siteWhy(at, cls, far, 150, true), msg, 'no water near');
-  const near = new Uint8Array(cls); near[1020 * MAP + 1063] = TC.WATER;
+  const near = new Uint8Array(cls); near[620 * MAP + 663] = TC.WATER;
   assert.equal(siteWhy(at, near, far, 150, true), '', 'a lake 3 tiles off the east edge');
-  const away = new Uint8Array(cls); away[1020 * MAP + 1070] = TC.WATER;
+  const away = new Uint8Array(cls); away[620 * MAP + 670] = TC.WATER;
   assert.equal(siteWhy(at, away, far, 150, true), msg, 'a lake 10 tiles off is too far');
-  assert.equal(siteWhy(at, cls, [{ x: 1030, y: 1020 }], 0, false), '', 'townMin 0: no town check');
+  assert.equal(siteWhy(at, cls, [{ x: 630, y: 620 }], 0, false), '', 'townMin 0: no town check');
 });

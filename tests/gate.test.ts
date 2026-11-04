@@ -33,7 +33,9 @@ function riverLeg(t: Terrain): { leg: Leg; w: number } {
   return { leg: { a: { x: P.x - n.x * r, y: P.y - n.y * r }, b: { x: P.x + n.x * r, y: P.y + n.y * r } }, w };
 }
 
-/** the first east-west run of hill tiles (12..250 long, 10 clear tiles either side) on a row between y 100 and MAP - 100 */
+/** the first east-west run of hill tiles (12..250 long, 10 clear tiles either side across the road's width) on a row between y 100 and MAP - 100.
+ *  T329: the clear tiles are checked on every row the road covers (y - HALF..y + HALF), not only its centre line: on the 2 km map's seed 2 the
+ *  first run had hill beside its ends a few rows off, so the road's ends were classed as tunnel */
 function hillLeg(t: Terrain): Leg {
   const cls = t.cls;
   for (let y = 100; y < MAP - 100; y += 6) {
@@ -43,8 +45,10 @@ function hillLeg(t: Terrain): Leg {
       while (x1 < MAP && cls[y * MAP + x1] === TC.HILL) x1++;
       const len = x1 - x;
       let clear = x - 10 >= 0 && x1 + 10 <= MAP;
-      for (let i = 1; clear && i <= 10; i++) {
-        for (const c of [cls[y * MAP + x - i], cls[y * MAP + x1 + i - 1]]) if (c === TC.HILL || c === TC.WATER) clear = false;
+      const R = Math.ceil(HALF);
+      for (let i = 1; clear && i <= 10; i++) for (let dy = -R; clear && dy <= R; dy++) {
+        const row = (y + dy) * MAP;
+        for (const c of [cls[row + x - i], cls[row + x1 + i - 1]]) if (c === TC.HILL || c === TC.WATER) clear = false;
       }
       if (len >= 12 && len <= 250 && clear) return { a: { x: x - 8, y }, b: { x: x1 + 8, y } };
       x = x1;

@@ -396,9 +396,10 @@ function build(genSeed: number): Terrain {
     // accepted creeks are processed in order, so the creek this one joins is already final
     const fin0 = trimmed.length < 8 ? null : trimmed;
     let fin = fin0 && cr.join >= 0 ? joinTo(fin0, finals[cr.join]) : fin0;
-    // a creek that runs within 24 tiles of a border (more than 48 tiles of arc from its end) is dropped
-    if (fin && hugsBorder(fin)) fin = null;
     if (fin && cr.join < 0) fin = intoRiver(fin);
+    // a creek that runs within 24 tiles of a border (more than 48 tiles of arc from its end) is dropped. T329: checked on the final creek, after
+    // intoRiver lengthens it (checked before, a point near the border could leave the end's 48-tile allowance: seed 12 on the 2 km map)
+    if (fin && hugsBorder(fin)) fin = null;
     finals.push(fin);
   });
   for (const fin of finals) {

@@ -832,6 +832,8 @@ function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: L
   const f = p.frame;
   for (const it of layoutOf(lot, p, state, hi, group)) {
     if (it.kind === 'decal') { decalMarks(B, f, [{ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }]); continue; }
+    // T329: a picture the owner removed (or the library no longer has) that the shipped model's pools still name is left out, as a removed prop is
+    if (removedOf(it.id)) continue;
     if (it.kind === 'car' && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) continue;
     const t = turned(it.id, f.q), s = ownerScaleOf(it.id), c = toWorld(f, it.x, it.y), pa = parkedAs(t.id, s, footprintOf(t.id, s, t.flip), c.x, c.y); // (T236: a parked wagon takes the mix's vehicle)
     B.atW({ id: pa.id, s, flip: t.flip, h: pa.h }, c, { ...(pa.id !== t.id ? { foot: true } : {}), plant: it.kind === 'tree' || it.kind === 'bush' || it.kind === 'flowerbed', ...(it.kind === 'car' ? { paved: true } : {}) });

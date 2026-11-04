@@ -19,13 +19,14 @@ import {
   sampleCourseHeight,
   saveCourseHeight,
 } from '../src/game/ext/course-height';
+import { MAP } from '../src/game/iso';
 
 describe('ext/course-height (T026)', () => {
-  it('creates a zeroed 1024x1024 field at 2-tile (4 m) step and clamps heights to [-3, +3] m', () => {
+  it('creates a zeroed MAP / 2 square field (512 x 512 on the 2 km map, T280) at 2-tile (4 m) step and clamps heights to [-3, +3] m', () => {
     const f = createCourseHeightField();
     assert.equal(CH_STEP, 2);
-    assert.equal(CH_SIZE, 1024);
-    assert.equal(f.data.length, 1024 * 1024);
+    assert.equal(CH_SIZE, MAP / CH_STEP);
+    assert.equal(f.data.length, CH_SIZE * CH_SIZE);
     assert.equal(sampleCourseHeight(f, 500, 500), 0);
     assert.equal(clampCourseHeightM(9.5), CH_MAX_M);
     assert.equal(clampCourseHeightM(-8.2), CH_MIN_M);

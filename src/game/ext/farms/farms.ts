@@ -517,7 +517,14 @@ export const POPLAR_ART: Readonly<Record<'greengold' | 'gold' | 'bare', string |
 /** the poplars' stage by calendar month (0 January) */
 const poplarStage = (month: number): 'greengold' | 'gold' | 'bare' => { const m = ((Math.floor(month) % 12) + 12) % 12; return m >= 3 && m <= 8 ? 'greengold' : m >= 9 && m <= 10 ? 'gold' : 'bare'; };
 /** an orchard tree in a month: its stage's art (ORCHARD_ART) once it lands, else the stand-in species' leaf stage */
-export const orchardTreeId = (sp: string, month: number) => ORCHARD_ART[orchardStage(month)] ?? `capital:tree-${sp}-${orchardStage(month)}`;
+export const orchardTreeId = (sp: string, month: number) => ORCHARD_ART[orchardStage(month)] ?? leafStage(sp, orchardStage(month));
+/** T329: the stand-in species' tree at a leaf stage; a stage the library no longer has (the owner removed capital:tree-maple-open, 2026-11-02)
+ *  takes the nearest later stage it has, so a maple orchard in full leaf keeps its trees */
+const STAGES: readonly OrchardStage[] = ['open', 'moderate', 'patchy', 'near-bare'];
+function leafStage(sp: string, st: OrchardStage): string {
+  const i = STAGES.indexOf(st), ids = [...STAGES.slice(i), ...STAGES.slice(0, i).reverse()].map(k => `capital:tree-${sp}-${k}`);
+  return ids.find(id => BY.has(id)) ?? ids[0]!;
+}
 /** a windbreak's tree in a month: a poplar row's stage art (POPLAR_ART) once it lands, else its stand-in (one tree all year) */
 const windTreeId = (id: string, month: number) => (WIND_POPLAR.includes(id) ? POPLAR_ART[poplarStage(month)] : null) ?? id;
 

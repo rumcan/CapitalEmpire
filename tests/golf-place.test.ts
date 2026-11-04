@@ -7,13 +7,24 @@ import { SITE_MARGIN } from '../src/game/event/config';
 import { BLOCK } from '../src/game/lots/roads';
 import { TOWN_BLOCKS, townGrid } from '../src/game/lots/seedtowns';
 import { generateOldNine } from '../src/game/golf/coursegen';
-import { CLUB_MAX, CLUB_MIN, canonicalSite, golfTownClasses, orientLayout, placeCourse, townAxis } from '../src/game/golf/place';
+import { CLUB_MAX, CLUB_MIN, COURSE_SIZES, VENUE, canonicalSite, golfTownClasses, orientLayout, placeCourse, townAxis } from '../src/game/golf/place';
 import type { Rect } from '../src/game/golf/mode';
 import type { Pt } from '../src/game/network';
 import { HIDDEN_MAX, hiddenShare } from '../src/game/golf/parkplace';
 
-/** the town's centre, tiles: the town grid's top-left tile is (880, 880) */
-const CENTRE: Pt = { x: 1024, y: 1024 };
+/** the town's centre, tiles: the map's centre (T329: 1024 on the 4 km map, 512 on the 2 km map, T280; the places below are offsets from it) */
+const CENTRE: Pt = { x: MAP / 2, y: MAP / 2 };
+const C = CENTRE.x;
+/** T329: whether the old nine fits beside a town at the map's centre: the town's half span, the shortest drive (20), the venue (24) and the
+ *  smallest course (360 along) must stay SITE_MARGIN inside the map. On the 4 km map they do; on the 2 km map (T280) they cannot (160 + 20 + 24 +
+ *  360 > 512 - 64), so the tests that need a course on every side of a centred town skip there, and the all-ground test uses a town in a corner.
+ *  REAL GAP for the lead: placeCourse (the old-nine start, engine newGolfGame, the fallback when a range start fails) was not scaled for the 2 km
+ *  map; it places a course on 2 of seeds 1-6 (golf-start.test.ts) */
+const SMALLEST = COURSE_SIZES[COURSE_SIZES.length - 1]!;
+const OLD_NINE_FITS = MAP / 2 - SITE_MARGIN >= TOWN_BLOCKS * BLOCK / 2 + 20 + VENUE[1] + SMALLEST[1];
+const SKIP_CENTRED = OLD_NINE_FITS ? false : 'the old nine does not fit beside a centred town on the 2 km map (T280; see OLD_NINE_FITS)';
+/** a town in the map's corner with room on its south and east sides for the largest course (on the 2 km map; the centre where it fits) */
+const ROOMY: Pt = OLD_NINE_FITS ? CENTRE : { x: 300, y: 300 };
 /** the town grid's span, tiles */
 const SPAN = TOWN_BLOCKS * BLOCK;
 
@@ -39,9 +50,9 @@ const mid = (r: Rect): Pt => ({ x: r[0] + r[2] / 2, y: r[1] + r[3] / 2 });
 const overlap = (a: Rect, b: Rect) => a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3];
 
 test('all ground: a plan with the venue 150 to 350 tiles out, a one-leg drive from the town edge, the parcels apart and inside the map', () => {
-  const cls = ground(), ends = endsOf(cls, CENTRE), p = placeCourse(cls, CENTRE, ends, 1);
+  const cls = ground(), ends = endsOf(cls, ROOMY), p = placeCourse(cls, ROOMY, ends, 1);
   assert.ok(p);
-  const c = mid(p.venue), d = Math.hypot(c.x - CENTRE.x, c.y - CENTRE.y);
+  const c = mid(p.venue), d = Math.hypot(c.x - ROOMY.x, c.y - ROOMY.y);
   assert.ok(d >= CLUB_MIN && d <= CLUB_MAX, `venue ${d.toFixed(1)} tiles from the centre`);
   assert.ok(p.drive.length === 1 || p.drive.length === 2, 'the drive, and a spur to a car park beside the venue (T237)');
   const { a, b } = p.drive[0];
@@ -57,8 +68,8 @@ test('all ground: a plan with the venue 150 to 350 tiles out, a one-leg drive fr
   }
 });
 
-test('water north of y 900 and east of x 1150: the course lies south or west of the town', () => {
-  const cls = water((x, y) => y < 900 || x > 1150);
+test('water north of y C - 124 and east of x C + 126: the course lies south or west of the town', { skip: SKIP_CENTRED }, () => {
+  const cls = water((x, y) => y < C - 124 || x > C + 126);
   const p = placeCourse(cls, CENTRE, endsOf(cls, CENTRE), 1);
   assert.ok(p, 'a plan');
   assert.ok(p.dir === 2 || p.dir === 3, `dir ${p.dir}`);
@@ -74,7 +85,7 @@ test('the same inputs and seed give the same plan', () => {
   assert.deepEqual(placeCourse(cls, CENTRE, ends, 3), placeCourse(cls, CENTRE, ends, 3));
 });
 
-test('orientLayout: on each side the oriented course holds its areas and its clubhouse faces the town', () => {
+test('orientLayout: on each side the oriented course holds its areas and its clubhouse faces the town', { skip: SKIP_CENTRED }, () => {
   const A = townAxis(CENTRE);
   for (const dir of [0, 1, 2, 3] as const) {
     // the three sides of the town other than dir are flooded: north (y < y0), east, south, west
@@ -109,12 +120,12 @@ test('golfTownClasses: the 8 legs of the main axis are avenues, every other leg 
   }
 });
 
-test('T237: the club car park is never behind the clubhouse in screen space; beside it on a spur off the drive where the drive side is', () => {
+test('T237: the club car park is never behind the clubhouse in screen space; beside it on a spur off the drive where the drive side is', { skip: SKIP_CENTRED }, () => {
   // each side of the town by water on the other three: the course lies that way (dir 0 north .. 3 west)
-  const only: ((x: number, y: number) => boolean)[] = [(_x, y) => y > 860, x => x < 1180, (_x, y) => y < 1180, x => x > 860];
+  const only: ((x: number, y: number) => boolean)[] = [(_x, y) => y > C - 164, x => x < C + 156, (_x, y) => y < C + 156, x => x > C - 164];
   const dirs = new Set<number>();
   for (const pred of only) {
-    const cls = water((x, y) => pred(x, y) && !(x >= 860 && x < 1190 && y >= 860 && y < 1190)), p = placeCourse(cls, CENTRE, endsOf(cls, CENTRE), 1);
+    const cls = water((x, y) => pred(x, y) && !(x >= C - 164 && x < C + 166 && y >= C - 164 && y < C + 166)), p = placeCourse(cls, CENTRE, endsOf(cls, CENTRE), 1);
     if (!p) continue;
     dirs.add(p.dir);
     const c = p.carpark, v = p.venue;

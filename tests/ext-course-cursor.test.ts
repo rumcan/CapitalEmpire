@@ -16,7 +16,8 @@ import { LAND_WHY, PaintTool, type LandRefusal } from '../src/game/paint-tool';
 import { unitBuildCost } from '../src/game/golf/costs';
 
 const RADII = [0.5, 0.9, 1, 2, 2.3, 5, 8, 20];
-const SPOTS: [number, number][] = [[100.13, 200.07], [100, 200], [100.25, 200.25], [57.49, 32.51], [33.1, 32.3], [512.74, 1024.9]];
+// (T329: the far spot was (512.74, 1024.9), past the 2 km map's edge since T280: (512.74, 1000.9) keeps a spot far from the origin on it)
+const SPOTS: [number, number][] = [[100.13, 200.07], [100, 200], [100.25, 200.25], [57.49, 32.51], [33.1, 32.3], [512.74, 1000.9]];
 const ZOOMS = [0.3, 0.15, 0.06];
 
 const key = (cx: number, cy: number) => cy * 100000 + cx;

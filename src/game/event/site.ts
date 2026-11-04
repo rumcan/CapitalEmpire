@@ -13,7 +13,7 @@ export interface Site { x: number; y: number; w: number; h: number; c: Pt; doors
 /** the lattice the centres are searched on, tiles */
 const LATTICE = 16;
 /** the search's extra reach when no centre fits (tiles beyond SITE_MAX), in turn */
-const RELAX = [0, 250, 500];
+const RELAX = [0, SITE_MAX / 5, (2 * SITE_MAX) / 5]; // (T329: 250 and 500 on the 4 km map, scaled with SITE_MAX)
 
 /** the integral image of buildable tiles (GROUND or PATCH): S[y * (MAP + 1) + x] is the count over [0, x) x [0, y) */
 function buildable(cls: Uint8Array): Int32Array {

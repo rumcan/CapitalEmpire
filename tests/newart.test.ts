@@ -33,5 +33,5 @@ test('?newart draws only new art for buildings, shops and trees, on the same foo
     }
   });
   // fewer each time four-view art lands (92 on 2026-10-26, after 20 sheets synced)
-  assert.ok(swapped > 50, `${swapped} pictures swapped`);
+  assert.ok(swapped > 0, `${swapped} pictures swapped`); // (T329: the owner's views for 182 of 204 buildings, 2026-11-02, left 33 pictures swapped by ?newart: the count only shrinks as the art lands; every one still drawn as a stand-in is checked)
 });

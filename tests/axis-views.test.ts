@@ -13,7 +13,7 @@ import { axisViews, baseView, footprintOf, sizeKey, sizeViews, turned } from '..
 import { drawnAsStandIn, lookOf, standInLabel } from '../src/game/newart';
 import { carModel } from '../src/game/ext/car-art';
 import { DECOR } from '../src/game/golf/decor';
-import { OWNER_SCALE } from '../src/game/lots/scales';
+import { OWNER_SCALE, VIEW_FACTOR } from '../src/game/lots/scales';
 import { placeable, spriteGroup } from '../src/game/dev/lot-lab-palette';
 
 const BY = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
@@ -83,7 +83,8 @@ test('sizes: a set is sized with its subject (one studio size, its card), a car 
   assert.equal(sizeKey('view:ce:parking-garage-6storey:s'), 'ce:parking-garage-6storey');
   assert.deepEqual(sizeViews('ce:parking-garage-6storey'), [...AXIS_SETS['ce:parking-garage-6storey']!, ...(GARAGE_VIEW_SETS['ce:parking-garage-6storey'] ?? [])]);
   const bakery = sizeViews('town:bakery'); assert.equal(bakery.length, 8, 'the bakery: its four diagonal views and its four screen-axis views');
-  for (const v of AXIS_SETS['world:bench']!) assert.equal(OWNER_SCALE[v], OWNER_SCALE['world:bench'], `${v} takes the bench's size`);
+  // (T329: times its own per-view factor since the studio's per-view sizes, 2026-11-02, view-scales.json: 0.857 for the bench's views)
+  for (const v of AXIS_SETS['world:bench']!) assert.equal(OWNER_SCALE[v], +((OWNER_SCALE['world:bench'] ?? 1) * (VIEW_FACTOR[v] ?? 1)).toFixed(3), `${v} takes the bench's size`);
   for (const v of AXIS_SETS['static:pickup_n']!) { assert.equal(carModel(v), 'static:pickup'); assert.equal(LIBRARY[BY.get(v)!]!.kind, 'car'); }
 });
 

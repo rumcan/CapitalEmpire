@@ -6,6 +6,7 @@
 // Vite fills the globs in when it builds; under plain node (the esbuild test bundle) there are none, so a picture has no URL (as Icon.tsx).
 import { ATLAS_PAGES, ATLAS_SIZE } from '../game/library';
 import type { LibItem } from '../game/types';
+import { KIT_GREY_GRANITE, KIT_WATER_EDGE_PLANTS } from '../game/kit';
 
 const glob = (g: () => Record<string, string>): Record<string, string> => { try { return g(); } catch { return {}; } };
 /** the masters' URLs by repo path ('art/concept-kit/boulder-small-a.webp') */
@@ -14,17 +15,23 @@ const MASTER_URLS: Readonly<Record<string, string>> = Object.fromEntries(Object.
   ...glob(() => import.meta.glob('../../art/construction/site-kit/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>),
   // T258: the range's ChatGPT art (prep-range-art.mjs; none until the owner's pictures land)
   ...glob(() => import.meta.glob('../../art/range-kit/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>),
+  // T329: T274's organic kit (grey granite, water-edge plants): its masters are in art/landscaping-kit, not art/concept-kit
+  ...glob(() => import.meta.glob('../../art/landscaping-kit/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>),
 }).map(([k, v]) => [k.replace(/^(\.\.\/)+/, ''), v]));
 
 /** the repo path of a library picture's full-resolution master, or null: the concept kit's (kit:<slug>), the building-site kit's
  *  (construction:site-<...>, construction:timber-frame-<n>) and T258's range art (range:<slug>-<view>) */
 export function masterPath(id: string): string | null {
+  if (LANDSCAPING.has(id)) return `art/landscaping-kit/${id.slice(4)}.webp`;
   if (id.startsWith('kit:')) return `art/concept-kit/${id.slice(4)}.webp`;
   if (id.startsWith('range:')) return `art/range-kit/${id.slice(6)}.webp`;
   const m = /^construction:(site-[a-z0-9-]+|timber-frame-\d+)$/.exec(id);
   return m ? `art/construction/site-kit/${m[1]}.webp` : null;
 }
 
+/** T329: T274's organic kit ids (kit:granite-*, kit:water-edge-*), whose masters are in art/landscaping-kit (masterPath named a missing
+ *  art/concept-kit file, so the build drew their thumbnails from the atlas) */
+const LANDSCAPING: ReadonlySet<string> = new Set([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
 const HAS_URLS = (u: Readonly<Record<string, string>>) => { for (const _ in u) return true; return false; };
 /** what a thumbnail is drawn from: the master (the whole picture) or an atlas page's mip 0 (rect: x, y, w, h in its pixels; flip: the cell
  *  is stored mirrored); url null under node */

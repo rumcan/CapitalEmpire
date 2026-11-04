@@ -8,7 +8,7 @@ import { SIZE_HI, baselineOf, footprintSpan, lookOf, maxDrawScale, thumbItem } f
 import { PIXEL_LIMIT, PIXEL_SLACK, atlasMip0, pixelLimit } from '../src/game/sizes';
 import { ZOOM_MAX } from '../src/game/iso';
 import { spriteRect } from '../src/game/sprites';
-import { OWNER_SCALE, STUDIO_SCALE } from '../src/game/lots/scales';
+import { OWNER_SCALE, STUDIO_SCALE, VIEW_FACTOR } from '../src/game/lots/scales';
 import { businessArt } from '../src/game/business/art';
 import { BUSINESSES } from '../src/game/business/catalogue';
 import { CAR_SCALE } from '../src/game/ext/car-art';
@@ -98,7 +98,7 @@ test('no stand-in is drawn above its native pixels, whatever the footprint it st
       assert.ok(Math.abs((s.x0 + s.x1) / 2 - (d.x0 + d.x1) / 2) < 1e-6 && Math.abs((s.y0 + s.y1) / 2 - (d.y0 + d.y1) / 2) < 1e-6, `${it.id}: ${n.id} is centred on the footprint`);
     }
   });
-  assert.ok(swapped > 100, `${swapped} stand-ins`);
+  assert.ok(swapped > 0, `${swapped} stand-ins`); // (T329: the owner's views for 182 of 204 buildings, 2026-11-02, left 2 old buildings drawn as stand-ins: the count only shrinks as the art lands; every one still drawn as a stand-in is checked)
   assert.ok(fills > 0 && atCap > 0, `${fills} fill their footprint, ${atCap} are drawn at their limit`);
 });
 
@@ -111,7 +111,7 @@ test('a stand-in is picked to fit within its pixels when its family has one that
     const span = footprintSpan, n = LIBRARY[l.item]!, fill = d.scale * span(it) / span(n);
     if (fill <= PIXEL_LIMIT[l.item]! * PIXEL_SLACK) fit++;
   });
-  assert.ok(fit > 20, `${fit} old buildings drawn as a stand-in that fills their footprint within its pixels`);
+  assert.ok(fit > 0, `${fit} old buildings drawn as a stand-in that fills their footprint within its pixels`); // (T329: the owner's views for 182 of 204 buildings, 2026-11-02, left 2 old buildings drawn as stand-ins: the count only shrinks as the art lands; every one still drawn as a stand-in is checked)
 });
 
 test('the player resizes a sprite only as far as its picture allows (engine.scaleSelected: maxDrawScale)', () => {
@@ -129,7 +129,10 @@ test("the studio's sizes are the game's: OWNER_SCALE is scale-overrides.json for
   for (const it of LIBRARY) {
     const m = /^view:(.+):(se|sw|nw)$/.exec(it.id); if (!m || !INDEX.has(m[1]!)) continue;
     views++;
-    assert.equal(OWNER_SCALE[it.id], OWNER_SCALE[m[1]!], `${it.id} has its subject's size`);
+    // (T329: the studio's per-view sizes, 2026-11-02, view-scales.json: a view is its subject's size times its own factor, 1 when it has none)
+    const f = VIEW_FACTOR[it.id];
+    if (f === undefined) assert.equal(OWNER_SCALE[it.id], OWNER_SCALE[m[1]!], `${it.id} has its subject's size`);
+    else if (!(it.id in STUDIO_SCALE)) assert.equal(OWNER_SCALE[it.id], +((OWNER_SCALE[m[1]!] ?? 1) * f).toFixed(3), `${it.id} has its subject's size times its view factor`);
   }
   assert.ok(views > 100, `${views} views`);
 });
@@ -153,7 +156,7 @@ test('thumbItem: an old building is thumbnailed as the stand-in it is drawn as a
     n++;
     assert.equal(LIBRARY[lookOf(drawable(i, 0, 0, false, OWNER_SCALE[it.id] ?? 1)).item], t, it.id);
   });
-  assert.ok(n > 20, `${n} thumbnails`);
+  assert.ok(n > 0, `${n} thumbnails`); // (T329: the owner's views for 182 of 204 buildings, 2026-11-02, left 2 old buildings drawn as stand-ins: the count only shrinks as the art lands; every one still drawn as a stand-in is checked)
 });
 
 test('every screen above 1x samples mip 0, so a sprite at its pixel limit is never stretched at the closest zoom (a dpr-1.25 screen was, from mip 1)', () => {

@@ -8,6 +8,7 @@ import { TREE_LIGHT, TREE_MIRROR } from '../src/game/tree-sun';
 import { OWNER_SCALE } from '../src/game/lots/scales';
 import { CONIFER_IDS, FOREST_BROADLEAF, FOREST_CONIFERS, TREE_POOL_IDS } from '../src/game/forest';
 import { TOWN_BROAD_DEAL, TOWN_CONIFER_DEAL } from '../src/game/towntrees';
+import { NEW_BROADLEAF_SPECIES, NEW_CONIFER_SPECIES } from '../src/game/new-props-library';
 
 const byId = new Map(LIBRARY.map(it => [it.id, it]));
 const treeIds = LIBRARY.filter(it => it.kind === 'tree').map(it => it.id);
@@ -45,7 +46,17 @@ test('the tree pools hold every library tree once: conifers are the pines, spruc
 });
 
 test('the generated trees: seven species in four views each, sized, footed and in the tree pools', () => {
-  const gen = LIBRARY.filter(it => it.id.startsWith('gen:tree-'));
+  // T329: the owner's 56 new trees (new-props-library.ts, 2026-11-02) are gen:tree- views too, sized by a reference tree per species: checked
+  // below on their own; the seven generated species keep every check
+  const NEW = new Set([...NEW_CONIFER_SPECIES, ...NEW_BROADLEAF_SPECIES].flatMap(sp => sp.ids));
+  const fresh = LIBRARY.filter(it => NEW.has(it.id));
+  assert.equal(fresh.length, NEW.size, 'every new tree view is in the library');
+  for (const it of fresh) {
+    assert.equal(it.kind, 'tree', it.id);
+    assert.ok(TREE_POOL_IDS.includes(it.id), `${it.id} is in the forest pools`);
+    assert.ok(byId.has(it.id.replace(/:(ne|se|sw|nw)$/, ':ne')), `${it.id}: its species has its views`);
+  }
+  const gen = LIBRARY.filter(it => it.id.startsWith('gen:tree-') && !NEW.has(it.id));
   assert.equal(gen.length, 28, `${gen.length} generated tree views`);
   const species = new Set(gen.map(it => it.id.replace(/:(ne|se|sw|nw)$/, '')));
   assert.equal(species.size, 7);

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clampLook, coversMap, crossovers, FAMILIES, familyById, familyVersions, familyWeights, LEVEL_NAMES, lookColour, lookKey, nativeZoom, resolveFamily } from '../src/game/painted-families';
+import { clampLook, coversMap, crossovers, FAMILIES, familyById, familyVersions, familyWeights, LEVEL_NAMES, lookColour, lookKey, MAP_METRES, nativeZoom, resolveFamily } from '../src/game/painted-families';
 import { clampSurfaces, lawnSlot, lawnTex, lookOfTex, SURFACES, surfaceOfTex, WOODLAND, knownFamily } from '../src/game/painted-surfaces';
 import { grassDetailWeights } from '../src/game/painted-grass-lod';
 import { BLEND_WAVES, blendAlpha, blendNoise } from '../src/game/painted-grass-lod';
@@ -64,7 +64,10 @@ test('the levels crossfade by zoom where neither is much enlarged or shrunk: nea
   for (const L of [0.3, 0.2, 0.15, 0.1, 0.035]) assert.deepEqual(familyWeights(first, L), grassDetailWeights(L));
   // the far level covers the map: laid once, it cannot repeat on it
   assert.ok(coversMap(r.far) && !coversMap(r.mid));
-  assert.ok(!coversMap(resolveFamily({ family: 'sage-medium', version: null, scale: 0.5 })!.far));
+  // a half-scale far painting covers half the metres: short of the 4 km map; T329: on the 2 km map (T280) it covers it exactly, the rule follows MAP
+  const half = resolveFamily({ family: 'sage-medium', version: null, scale: 0.5 })!.far;
+  assert.ok(Math.abs(half.metres - r.far.metres / 2) < 1e-6);
+  assert.equal(coversMap(half), half.metres >= MAP_METRES - 1e-6);
 });
 
 test('a look is clamped, keyed without its tint and tone, and coloured by its tint and tone', () => {
