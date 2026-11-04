@@ -190,19 +190,28 @@ function lots() {
 test('the yards\' kit: house lots get hedges, shrubs and mums by draws of their own, and every lot\'s other props and ground stay exactly where they were', () => {
   const L = lots(), rnd = mulberry(231), states: ComposeState[] = [];
   for (let i = 0; i < 160; i++) states.push({ use: [LU.RES, LU.RES, LU.RES, LU.COM, LU.IND][Math.floor(rnd() * 5)]!, level: [LV.BUILT, LV.UPGRADED, LV.BUILDING][Math.floor(rnd() * 3)]!, decline: Math.floor(rnd() * 4), seed: Math.floor(rnd() * 4294967296) >>> 0 });
-  let kit = 0, hedges = 0, plants = 0;
-  for (const [i, st] of states.entries()) {
-    const lot = L[i % L.length]!;
-    KIT_YARDS.on = false; const before = compose(lot, st);
-    KIT_YARDS.on = true; const after = compose(lot, st);
-    const mine = after.props.filter(p => isKit(p.id)), rest = after.props.filter(p => !isKit(p.id));
-    assert.deepEqual(rest, before.props, `lot ${lot.key} ${JSON.stringify(st)}: the other props moved`);
-    assert.deepEqual(after.ground, before.ground, 'the ground did not change');
-    kit += mine.length; hedges += mine.filter(p => p.id === KIT_HEDGE.x || p.id === KIT_HEDGE.y).length; plants += mine.filter(p => (KIT_SHRUBS as readonly string[]).includes(p.id) || (KIT_FLOWERS as readonly string[]).includes(p.id)).length;
-    if (mine.length) assert.equal(st.use, LU.RES, 'only house lots');
-    if (mine.length) assert.ok(st.level >= LV.BUILT && st.decline < 2, 'built and kept');
-    assert.ok(mine.every(p => !p.flip), 'never mirrored');
+  // T331 (#945): both ways a frozen house lot is composed: its yard from the generator (T160, the game's default) and its frozen preset's own items
+  // (?oldlots). The kit's counts are the game's: since T305 the big lots (AUTO_LOT_W x AUTO_LOT_D: here the 14.5 x 16.5 ones, the only ones with a
+  // clear front) are generated whole, and every frozen house preset left on this grid has its own row of ferns and grasses along the front, so under
+  // ?oldlots the hedge (KIT_YARD_RULES.hedgeIn) never fits; in the game's yards it does (25 pieces here). The other props stay put either way.
+  for (const gen of [false, true]) {
+    setGeneratedLots(gen);
+    let kit = 0, hedges = 0, plants = 0;
+    for (const [i, st] of states.entries()) {
+      const lot = L[i % L.length]!;
+      KIT_YARDS.on = false; const before = compose(lot, st);
+      KIT_YARDS.on = true; const after = compose(lot, st);
+      const mine = after.props.filter(p => isKit(p.id)), rest = after.props.filter(p => !isKit(p.id));
+      assert.deepEqual(rest, before.props, `lot ${lot.key} ${JSON.stringify(st)}: the other props moved`);
+      assert.deepEqual(after.ground, before.ground, 'the ground did not change');
+      kit += mine.length; hedges += mine.filter(p => p.id === KIT_HEDGE.x || p.id === KIT_HEDGE.y).length; plants += mine.filter(p => (KIT_SHRUBS as readonly string[]).includes(p.id) || (KIT_FLOWERS as readonly string[]).includes(p.id)).length;
+      if (mine.length) assert.equal(st.use, LU.RES, 'only house lots');
+      if (mine.length) assert.ok(st.level >= LV.BUILT && st.decline < 2, 'built and kept');
+      assert.ok(mine.every(p => !p.flip), 'never mirrored');
+    }
+    KIT_YARDS.on = true;
+    if (gen) assert.ok(hedges > 0 && plants > 0, `the yards got hedges (${hedges}) and plants (${plants}) of ${kit} kit props`);
+    else assert.ok(plants > 0, `the frozen yards got plants (${plants}) of ${kit} kit props`);
   }
-  KIT_YARDS.on = true;
-  assert.ok(hedges > 0 && plants > 0, `the yards got hedges (${hedges}) and plants (${plants}) of ${kit} kit props`);
+  setGeneratedLots(false);
 });
