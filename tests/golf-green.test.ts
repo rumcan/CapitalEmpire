@@ -98,3 +98,21 @@ test('the settings: the break grid when putting and tracers on by default, remem
   assert.equal(loadBreakMode(st), 'always'); assert.equal(loadTracers(st), false);
   assert.equal(loadBreakMode(null), 'putt');
 });
+
+test('T318 spin on the roll: backspin skids on to its check then spins back to its rest; topspin runs out (keeps its pace longer)', async () => {
+  const { flightSpin, rollShare } = await import('../src/game/golf/play/yours');
+  const land = { x: 100, y: 0 }, check = { x: 102, y: 0 }, rest = { x: 98, y: 0 };
+  const back = flightOf({ x: 0, y: 0 }, land, rest, false, false, row, false, flightSpin({ at: land, lie: 'green', rest, restLie: 'green', spin: -2, check }));
+  assert.deepEqual(back.check, check);
+  let past = 0; for (let k = 0; k <= 200; k++) { back.t = back.air + (back.dur - back.air) * k / 200; past = Math.max(past, yourBallAt(back).x); }
+  assert.ok(past > 101.5, `skids past the landing toward its check (${past})`);
+  back.t = back.dur; const b = yourBallAt(back); assert.ok(Math.abs(b.x - 98) < 1e-9, 'then back to its rest');
+  // topspin: the same roll's share at mid-time is less (slows less at first, carries its pace further), and still ends at the rest
+  assert.ok(rollShare(0.5, 4) < rollShare(0.5, 0) && rollShare(1, 4) === 1 && rollShare(0.95, 4) < 1);
+  const top = flightOf({ x: 0, y: 0 }, land, { x: 110, y: 0 }, false, false, row, false, flightSpin({ at: land, lie: 'green', rest: { x: 110, y: 0 }, restLie: 'green', spin: 4 }));
+  const plain = flightOf({ x: 0, y: 0 }, land, { x: 110, y: 0 }, false, false, row, false);
+  assert.equal(top.spin, 4); top.t = plain.t = top.air + 0.9 * (top.dur - top.air);
+  const vTop = yourBallAt(top).x, vPlain = yourBallAt(plain).x; assert.ok(vTop < vPlain && vTop < 110, 'still rolling late on');
+  top.t = top.dur; assert.ok(Math.abs(yourBallAt(top).x - 110) < 1e-9);
+  assert.deepEqual(flightSpin(undefined), {});
+});

@@ -14,7 +14,7 @@ import { TILE_M } from '../types';
 import { holeFrom } from './courseview';
 import { shotOutcome, POWER, type OwnerInput, type OwnerTurn } from './live';
 import { carryM, chooseShot, rng, skillFor, type ShotSkill } from './shot';
-import type { CourseView, Lie, PlayHole, Pt, Shot } from './types';
+import type { CourseView, Landing, Lie, PlayHole, Pt, Shot } from './types';
 import type { TeeKind } from '../types';
 import { CUP_DROP, CUP_HOLD_S, CUP_NONE, CUP_SHAVE, DROP_S, shotPoint, type PuttRoll } from './green';
 
@@ -158,27 +158,39 @@ export function ordinal(n: number): string {
 
 /** your ball in the air and rolling (real seconds): from, where it lands (null: a putt), where it comes to rest, the time so far and in all, the time in
  *  the air, whether the hole is done then (holed, or picked up: up), the card's row, and a penalty (the drop shows at the end). T319: the aim (the
- *  flight bends from it to the landing: the tracer's shape), a putt's visible roll with its break and its end at the cup (green.ts PuttRoll), and the
- *  hold on a holed ball in the cup (s, inside dur) */
+ *  flight bends from it to the landing: the tracer's shape), a putt's visible roll with its break and its end at the cup (green.ts PuttRoll), the hold
+ *  on a holed ball in the cup (s, inside dur), and the spin's change to the roll (m, landing.spin: topspin runs out, rollShare) */
 export interface YourFlight { from: Pt; land: Pt | null; to: Pt; t: number; dur: number; air: number; done: boolean; up: boolean; row: CardRow; pen: boolean;
-  aim: Pt | null; putt: PuttRoll | null; hold: number }
+  aim: Pt | null; putt: PuttRoll | null; hold: number; spin: number;
+  /** T318: a spin back's check (landing.check): the ball skids on to it first, then spins back to its rest */
+  check?: Pt }
+/** what a flight may carry besides its points: the aim (T319), a putt's roll (T319), a spin back's check and the spin's change to the roll (T318) */
+export interface FlightExtra { aim?: Pt; putt?: PuttRoll; check?: Pt; spin?: number }
 /** a flight's timing (real seconds): a full shot 0.9 s plus 0.012 s a tile in the air, then its roll (0.25 s plus 0.04 s a tile, at most 1.5 s; a
- *  penalty's 0.2 s); a putt 0.4 s plus 0.25 s a tile (at most 3 s), and CUP_HOLD_S on the ball in the cup when it drops */
-export function flightOf(from: Pt, land: Pt | null, to: Pt, done: boolean, up: boolean, row: CardRow, pen: boolean, x: { aim?: Pt; putt?: PuttRoll } = {}): YourFlight {
+ *  penalty's 0.2 s; a spin back CHECK_S more); a putt 0.4 s plus 0.25 s a tile (at most 3 s), and CUP_HOLD_S on the ball in the cup when it drops */
+export function flightOf(from: Pt, land: Pt | null, to: Pt, done: boolean, up: boolean, row: CardRow, pen: boolean, x: FlightExtra = {}): YourFlight {
   const air = land ? 0.9 + 0.012 * Math.hypot(land.x - from.x, land.y - from.y) : 0;
   const roll = land ? (pen ? 0.2 : Math.min(1.5, 0.25 + 0.04 * Math.hypot(to.x - land.x, to.y - land.y))) : Math.min(3, 0.4 + 0.25 * Math.hypot(to.x - from.x, to.y - from.y));
   const putt = !land && x.putt ? x.putt : null, hold = putt && putt.fate === CUP_DROP ? CUP_HOLD_S : 0;
-  return { from: { x: from.x, y: from.y }, land: land ? { x: land.x, y: land.y } : null, to: { x: to.x, y: to.y }, t: 0, dur: air + roll + hold, air, done, up, row, pen,
-    aim: x.aim ? { x: x.aim.x, y: x.aim.y } : null, putt, hold };
+  const ck = land && x.check && !pen ? { check: { x: x.check.x, y: x.check.y } } : {};
+  return { from: { x: from.x, y: from.y }, land: land ? { x: land.x, y: land.y } : null, to: { x: to.x, y: to.y }, t: 0, dur: air + roll + (ck.check ? CHECK_S : 0) + hold, air, done, up, row, pen,
+    aim: x.aim ? { x: x.aim.x, y: x.aim.y } : null, putt, hold, spin: land && !pen && x.spin ? x.spin : 0, ...ck };
 }
-/** the share of a full shot's roll (after it lands) at a share u of the roll's time: slowing to a stop. T318's spin changes the roll here */
-export const rollShare = (u: number): number => 1 - (1 - u) * (1 - u);
+/** a shot's landing's spin for its flight (T318's landing.check and landing.spin); {} with none */
+export function flightSpin(l: Landing | undefined): Pick<FlightExtra, 'check' | 'spin'> {
+  return l ? { ...(l.check ? { check: l.check } : {}), ...(l.spin ? { spin: l.spin } : {}) } : {};
+}
+/** T318: the time (s) a spin back's hop on to its check takes */
+const CHECK_S = 0.3;
+/** the share of a full shot's roll (after it lands) at a share u of the roll's time: slowing to a stop. Topspin (spinM metres more roll, T318's
+ *  landing.spin) keeps its pace longer: it runs out (the slowing eases from a square toward a straight line, at most 60% of the way at 10 m) */
+export const rollShare = (u: number, spinM = 0): number => { const k = spinM > 0 ? Math.min(0.6, spinM / 10 * 0.6) : 0; return 1 - Math.pow(1 - u, 2 - k); };
 /** where a ball of yours is: its ground point (tiles), height (h: tiles, the flight's lift) and how far it has dropped into the cup (0..1) */
 export interface YourBall { x: number; y: number; h: number; sink: number }
 const PT = { x: 0, y: 0, h: 0 };
 /** the ball of a flight at its time (tiles; h its height in tiles: an eighth of the carry, at most 12 (24 m), on an arc; T319: along the shot's bend from
- *  the aim): in the air, rolling (slowing), or a putt rolling with its break (and into the cup); a penalty's ball stays where it landed and shows at its
- *  drop at the end */
+ *  the aim): in the air, rolling (slowing; T318: a spin back skids on to its check then zips back, topspin runs out), or a putt rolling with its break
+ *  (and into the cup); a penalty's ball stays where it landed and shows at its drop at the end */
 export function yourBallAt(f: YourFlight): YourBall {
   if (f.t < 0) return { x: f.from.x, y: f.from.y, h: 0, sink: 0 }; // (T320: before the clip's impact the ball waits at your feet)
   if (f.land && f.t < f.air) {
@@ -192,8 +204,16 @@ export function yourBallAt(f: YourFlight): YourBall {
     const sink = f.hold > 0 ? Math.min(1, Math.max(0, (f.t - f.air - rollDur) / DROP_S)) : 0;
     return { x: PT.x, y: PT.y, h: PT.h / TILE_M, sink };
   }
-  const a = f.land ?? f.from, e = rollShare(u);
+  const a = f.land ?? f.from;
   if (f.pen) return u < 1 ? { x: a.x, y: a.y, h: 0, sink: 0 } : { x: f.to.x, y: f.to.y, h: 0, sink: 0 };
+  if (f.check) {
+    // T318: a spin back: a low hop on to the check, then the ball zips back to its rest (slowing)
+    const tc = CHECK_S / rollDur, c = f.check;
+    if (u < tc) { const v = u / tc; return { x: a.x + (c.x - a.x) * v, y: a.y + (c.y - a.y) * v, h: 4 * v * (1 - v) * 0.15, sink: 0 }; }
+    const v = (u - tc) / Math.max(1e-3, 1 - tc), w = 1 - (1 - v) * (1 - v);
+    return { x: c.x + (f.to.x - c.x) * w, y: c.y + (f.to.y - c.y) * w, h: 0, sink: 0 };
+  }
+  const e = rollShare(u, f.spin);
   return { x: a.x + (f.to.x - a.x) * e, y: a.y + (f.to.y - a.y) * e, h: 0, sink: 0 };
 }
 /** the time (s from the strike) a putt reaches the cup (null: it never does): the drop or the lip-out happens then */

@@ -70,6 +70,7 @@ import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
+import { SpinBall } from './ui/SpinBall';
 import { RangeCard } from './ui/golf/RangeCard';
 import { ClubhouseCard } from './ui/golf/ClubhouseCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
@@ -382,7 +383,7 @@ export default function App() {
       <canvas
         ref={overlayRef}
         className="absolute inset-0 h-full w-full touch-none"
-        style={{ cursor: game?.youHover && game.youControls() ? VERB_CURSOR[game.youHover.verb ?? 'none'] : game?.teePlace ? (game.teePlace.drag ? 'grabbing' : 'copy') : game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : game?.paintOn ? game.paint.cursorStyle : 'crosshair' }}
+        style={{ cursor: game?.youHover && game.youControls() ? VERB_CURSOR[game.youHover.verb ?? 'none'] : game?.teePlace ? (game.teePlace.drag ? 'grabbing' : 'copy') : game?.tool === 'select' ? (game.hoverProp ? 'pointer' : game.you ? 'default' : 'grab') : game?.paintOn ? game.paint.cursorStyle : 'crosshair' }}
         onPointerDown={e => game?.pointerDown(e.nativeEvent)}
         onPointerMove={e => game?.pointerMove(e.nativeEvent)}
         onPointerUp={() => game?.pointerUp()}
@@ -443,9 +444,8 @@ export default function App() {
                   {game.hasClubhouse && <button className={`chip ${game.clubCardOpen ? 'chip-on' : ''}`} onClick={() => game.openClubCard()} data-tip="The clubhouse: today's members, visitors, green fees and waits" aria-label="Clubhouse" data-testid="club-chip"><Icon name="house" size={16} /><span className={WIDE}>Club</span></button>}
                   {/* T241: your golf (the profile card: your skills, handicap, practice and your tee time) */}
                   {game.golf && <button className={`chip ${game.playerCardOpen ? 'chip-on' : ''}`} onClick={() => game.openPlayerCard()} data-tip="Your golf: your skills, handicap, practice log and your round today" aria-label="You" data-testid="you-chip"><Icon name="people" size={16} /><span className={WIDE}>You</span></button>}
-                  {/* T240: your character: Me frames you (and follows you again), Walk switches clicks and WASD between walking you and Select's inspector */}
-                  {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character, following as you walk" aria-label="Me" data-testid="me-chip"><Icon name="pin" size={16} /><span className={WIDE}>Me</span></button>}
-                  {game.you && <button className={`chip ${game.youWalkMode ? 'chip-on' : ''}`} onClick={() => game.setYouWalk(!game.youWalkMode)} data-tip={game.youWalkMode ? 'Walk mode on: with Select in hand a click walks you there and uses what you clicked; WASD or the arrows walk you. Ctrl+click looks at once' : 'Walk mode off: Select inspects at once and the keys pan the map'} aria-label="Walk" data-testid="walk-chip"><Icon name="people" size={16} /><span className={WIDE}>Walk</span></button>}
+                  {/* T240: your character: Me frames you once (T323: the camera no longer follows; Walk and Select are the rail's two cursors) */}
+                  {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character (once: it does not follow)" aria-label="Me" data-testid="me-chip"><Icon name="pin" size={16} /><span className={WIDE}>Me</span></button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.weatherRun()); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
                   {/* T188 (P23-UX P2-2): the season chip opens the Season card (the founding checklist or the tournament plan, and the Course stats, which had a
@@ -698,7 +698,7 @@ export default function App() {
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
             {/* T182: the groups (Driving range, Course, Facilities (T206) · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
             {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
-            <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} />
+            <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} walk={game.you ? { on: game.youWalkMode, set: (on: boolean) => { setFly(null); activeRail.current = 'select'; if (game.range.cardOpen) game.openRangeCard(false); game.setYouWalk(on); } } : undefined} />
             {!up && flyouts}
             {/* T255: a club tool's panel (and Select's) in the left tool panel; a town tool's is docked above the town footer (TownFooter) */}
             {dock === 'side' && (
@@ -800,6 +800,7 @@ export default function App() {
           {game.site && game.resultsOpen() && <EvalScreen game={game} />}
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
+          {game.spinView() && <SpinBall game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} />; })()}
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} />}

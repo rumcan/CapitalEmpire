@@ -85,6 +85,7 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .rail-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; width: 4.4rem; height: 4.2rem; border-radius: 0.8rem; border: 1px solid transparent; font-size: 0.7rem; color: #d9d3c4; }
 .rail-tab:hover { background: rgba(255, 255, 255, 0.05); }
 .rail-tab-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); box-shadow: inset 0 0 12px rgba(245, 181, 46, 0.18); }
+.rail-tab-half { height: 3.4rem; } /* T323: the Select slot's two cursors (pointer, walking figure) */
 
 .seg { display: flex; gap: 0.25rem; border-radius: 0.7rem; background: rgba(0, 0, 0, 0.25); padding: 0.2rem; }
 .seg > button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 0.55rem; padding: 0.3rem 0.4rem; font-size: 0.75rem; color: #d9d3c4; }
