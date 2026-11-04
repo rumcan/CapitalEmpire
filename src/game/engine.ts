@@ -8284,7 +8284,7 @@ export class Game {
     if (this.ownHold && minute < t.t - OWNER_ADDRESS / 2) return; // (T320: not while the camera holds on his last ball, unless his turn is pressing)
     // (T320: nor before he is shown at his ball, unless his strike is nearly due: the sim pauses with the panel, and a golfer short of his ball would
     // cut to it at the swing)
-    { const me = this.play!.pv.people.find(p => p.golfer === own.id); if (me && Math.hypot(me.x - t.ball.x, me.y - t.ball.y) > 1 && minute < t.t - 0.05) return; }
+    { const me = this.play!.pv.people.find(p => p.golfer === own.id); if (me && Math.hypot(me.x - t.ball.x, me.y - t.ball.y) > 1 && minute < t.t - 0.01) return; }
     this.ownHold = null;
     this.shotSpeed = this.speed || this.lastSpeed; this.setSpeed(0);
     this.shot = { turn: t, input: { club: t.suggested.club, aim: { x: t.suggested.aim.x, y: t.suggested.aim.y }, power: t.suggested.power } };
