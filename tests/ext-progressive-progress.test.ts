@@ -83,12 +83,13 @@ describe('player progress (T033, T117)', () => {
     assert.deepEqual(p.seen, []);
     assert.equal(advanceProgress(p, progressFacts(p, course()), 'course'), false, 'Holes never carries NEW');
     const c3 = course({ holes: 3 });
-    assert.equal(advanceProgress(p, progressFacts(p, c3), 'road'), true);
+    // (T288: the road tool and its Traffic group are open from the start, the owner 2026-11-04: "Yes, unlock it"; Upgrade still opens at stage 3)
+    assert.equal(advanceProgress(p, progressFacts(p, c3), 'lane'), true);
     assert.equal(p.stage, 3);
-    assert.deepEqual(p.seen, ['road', 'roads']);
+    assert.deepEqual(p.seen, ['lane']);
     assert.ok(!ui(p, c3).newGroups.includes('roads'));
-    assert.ok(ui(p, c3).newTools.includes('lane'));
-    assert.equal(advanceProgress(p, progressFacts(p, c3), 'road'), false);
+    assert.ok(ui(p, c3).newTools.includes('downgrade'));
+    assert.equal(advanceProgress(p, progressFacts(p, c3), 'lane'), false);
     // with every tool shown, a tool opened early counts as seen
     const q = prog({ advanced: true });
     assert.equal(advanceProgress(q, progressFacts(q, course()), 'junction'), true);

@@ -305,10 +305,10 @@ export function stepMet(n: number, f: GuideFacts): boolean {
 /** the step to show (null when the guide is off, past step 7, or an old save without its progress): the saved step, moved forward past every
  *  auto step already met, from the start's table */
 export function guideStep(f: GuideFacts): GuideStep | null {
-  if (f.tutorial === 'off' || f.step > GUIDE_STEPS || f.progress === false) return null;
-  const table = guideTable(f);
+  const table = guideTable(f); // (T288: a range start's has nine steps, the old start's GUIDE_STEPS)
+  if (f.tutorial === 'off' || f.step > table.length || f.progress === false) return null;
   let curr = Math.max(1, f.step);
-  while (curr <= GUIDE_STEPS) {
+  while (curr <= table.length) {
     const stepDef = table[curr - 1]!;
     if (stepDef.done === 'auto' && stepMet(curr, f)) {
       curr++;

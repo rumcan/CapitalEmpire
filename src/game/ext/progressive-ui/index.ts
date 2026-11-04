@@ -139,11 +139,12 @@ export const STUCK_PLAY_SEC = 1200;
 
 /** the stage each golf rail group opens at, in the rail's order (P23 4.2; golf games have no Business tool, so it is never listed) */
 export const GROUP_STAGE: Readonly<Partial<Record<RailGroupId, OnboardingStage>>> = Object.freeze({
-  select: 1, course: 1, roads: 3, junction: 3, transport: 3, paint: 2, bulldoze: 1,
+  select: 1, course: 1, roads: 1, junction: 3, transport: 3, paint: 2, bulldoze: 1, // T288: the owner, 2026-11-04 ("Yes, unlock it"): the road tool from the start
 });
-/** the stage each golf tool opens at: Holes, Paths and Buildings from the start, Paint with the first hole, the town's tools at stage 3 */
+/** the stage each golf tool opens at: Holes, Paths and Buildings from the start, Paint with the first hole, the town's tools at stage 3. T288 (the
+ *  owner, 2026-11-04, asked whether to unlock the road tool from the start of a new game: "Yes, unlock it"): the road tool (Build) from the start */
 export const TOOL_STAGE: Readonly<Partial<Record<UiToolId, OnboardingStage>>> = Object.freeze({
-  select: 1, course: 1, path: 1, buildings: 1, props: 1, greenkeeping: 1, practice: 1, road: 3, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
+  select: 1, course: 1, path: 1, buildings: 1, props: 1, greenkeeping: 1, practice: 1, road: 1, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
 });
 /** the rail group each golf tool sits in */
 export const TOOL_GROUP: Readonly<Partial<Record<UiToolId, RailGroupId>>> = Object.freeze({

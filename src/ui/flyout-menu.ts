@@ -115,8 +115,9 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       // T288 (#873, the owner: "make cart paths and roads its own button above facilities in the main left menu"): the course's cart paths and
       // drives (the road tool on your property, its classes under their families), then the town's roads (Traffic › Build's classes), each with
       // its own lock: the roads say when they open
+      // (two tiles: the cart paths with the T233 cart path tile, the roads on the navy square; each opens its classes as a list)
       const p = byId('path');
-      if (p) rows.push(...classes(p, c.paths));
+      if (p) { const r = group('paths', 'Cart paths & drives', 'sidewalk', classes(p, c.paths), p); if (r) rows.push({ ...r, note: 'Roads and cart paths on your property', tile: ROW_TILE.paths }); }
       const rd = byId('road');
       if (rd) { const r = group('roads', 'Roads', 'road', classes(rd, c.roads), rd); if (r) rows.push({ ...r, note: 'Town roads: they give the town new lots' }); }
       break;
