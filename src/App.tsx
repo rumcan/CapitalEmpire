@@ -252,8 +252,13 @@ export default function App() {
     canvas.addEventListener('wheel', wheel, { passive: false });
     const kd = (e: KeyboardEvent) => g.keyDown(e), ku = (e: KeyboardEvent) => g.keyUp(e);
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
+    // T330 (#941): a key whose keyup the page never sees (Alt-Tab, a hidden tab, a context menu, a text field) is let go, never left held
+    const release = () => g.releaseKeys(), hidden = () => { if (document.hidden) g.releaseKeys(); };
+    const menu = (e: MouseEvent) => { if (!e.defaultPrevented) g.releaseKeys(); };
+    const focus = (e: FocusEvent) => { const t = e.target as HTMLElement | null; if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) g.releaseKeys(); };
+    window.addEventListener('blur', release); document.addEventListener('visibilitychange', hidden); window.addEventListener('contextmenu', menu); window.addEventListener('focusin', focus);
     const iv = window.setInterval(bump, 500);
-    return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); clearInterval(iv); };
+    return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', release); document.removeEventListener('visibilitychange', hidden); window.removeEventListener('contextmenu', menu); window.removeEventListener('focusin', focus); clearInterval(iv); };
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < (t.scene ? 9000 : 4000)) : []; // (T242: one with a Set the scene button stays longer)
