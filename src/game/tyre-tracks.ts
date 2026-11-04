@@ -12,18 +12,18 @@
 //
 // The ground pass reads it (gl.ts FS_QUAD, TRACKS_GLSL) as a brightness change, the way the height light is (ext/course-height/light.ts): only
 // light and dark, the grass's own texture times a factor, no colour, no wash. A track brightens where it was driven toward the sun's side
-// (SUN_TILE_DIR: the grass laid over toward the light) and darkens where it was driven away, as mowing stripes do; two paired tyre streaks
+// (LEAN: the grass laid over toward the light) and darkens where it was driven away, as mowing stripes do; two paired tyre streaks
 // (GAUGE apart) on a soft worn lane. No ground re-bake, no atlas page: one RGBA8 texture of the map's tiles, its changed rows sent to the GPU
 // now and then (UPLOAD_MS).
 // Pure TypeScript (no DOM, no GL): the engine owns one, gl.ts uploads its bytes, tests/tyre-tracks.test.ts runs it in node.
-import { SUN_TILE_DIR } from './ext/course-height';
 
 /** tiles between two deposits along a vehicle's way */
 export const STEP = 0.5;
 /** the tracks lie this far to the right of the way driven (tiles): a two-way route leaves two tracks side by side */
 export const LANE = 0.6;
-/** a vehicle that moved further than this (tiles) since its last sample jumped (a skip, a new day, another vehicle in its slot): no wear */
-export const MAX_JUMP = 14;
+/** a vehicle that moved further than this (tiles) since its last sample jumped (a skip, a new day, another vehicle in its slot): no wear. A
+ *  fast game moves a cart several tiles a frame: up to this, the way between two samples is taken as straight */
+export const MAX_JUMP = 40;
 /** the wear that shows as about 63% of a track's full strength (w, tiles driven): a few passes faint, ten or so clear */
 export const W_SAT = 8;
 /** the most wear a cell holds (a route driven all season fades in days, not months) */
@@ -38,7 +38,13 @@ const W_EPS = 0.05;
 export const OFF_RANGE = 0.5;
 /** the tracks' look (gl.ts TRACKS_GLSL): half the gauge between the paired streaks (tiles: 1.1 m between the wheels), a streak's width (its
  *  gaussian's sigma, tiles), the worn lane's share and width, and the strength (the brightness change at a full one-way track) */
-export const GAUGE = 0.28, STREAK = 0.075, LANE_SHARE = 0.35, LANE_W = 0.5, STRENGTH = 0.14;
+export const GAUGE = 0.28, STREAK = 0.1, LANE_SHARE = 0.3, LANE_W = 0.5, STRENGTH = 0.5;
+/** the way (tiles, unit) a track driven along is lightest: toward the sun's side (the screen's upper right, tile −y), turned 22.5° so that none of
+ *  the common ways (the tile axes, the screen's axes, 45° apart) runs straight across it: a way within about 14° of square to it (LEAN_SHARP) fades from light
+ *  to dark, every other way is fully one or the other */
+export const LEAN = { x: Math.sin(Math.PI / 8), y: -Math.cos(Math.PI / 8) } as const;
+/** the sign's sharpness: light or dark in full once the way is more than asin(1 / LEAN_SHARP) (about 14°) off square to LEAN */
+export const LEAN_SHARP = 4;
 /** the switch, kept across reloads (the gear menu's Tyre tracks) */
 export const TRACKS_KEY = 'capitalempire.tyreTracks';
 
@@ -125,6 +131,15 @@ export class TyreTracks {
     }
     this.reBox();
   }
+  /** the bench's worst case (dev, ?tracks=stress): two-way routes every `every` tiles across the box, `passes` times each way, so every grass
+   *  pixel on screen runs the tracks' shader */
+  stress(x0: number, y0: number, x1: number, y1: number, every = 4, passes = 6) {
+    for (let p = 0; p < passes; p++) for (let y = y0; y <= y1; y += every) {
+      const id = 'stress' + y;
+      this.last.delete(id); for (let x = x0; x <= x1; x += 2) this.move(id, x, y + 0.5 * Math.sin(x / 9), 'cart');
+      this.last.delete(id); for (let x = x1; x >= x0; x -= 2) this.move(id, x, y + 0.5 * Math.sin(x / 9), 'cart');
+    }
+  }
   /** all wear gone (a new game, a load) */
   clear() {
     for (const i of this.cells.keys()) this.encode(i, null);
@@ -162,7 +177,7 @@ export class TyreTracks {
  *  than a pixel turns into its mean (the zoomed-out look: a soft lane). Lighter where the cell was driven toward the sun's side, darker (a cool
  *  multiply) where away; a cell driven both ways about equally only darkens a little (the grass pressed down) */
 export const TRACKS_GLSL = `
-const vec2 TRACK_LEAN = vec2(${SUN_TILE_DIR.x.toFixed(5)}, ${SUN_TILE_DIR.y.toFixed(5)});
+const vec2 TRACK_LEAN = vec2(${LEAN.x.toFixed(5)}, ${LEAN.y.toFixed(5)});
 float trackProfile(float u, float px) {
   float sg = sqrt(${STREAK.toFixed(4)} * ${STREAK.toFixed(4)} + 0.36 * px * px), a = ${STREAK.toFixed(4)} / sg;
   float du = u - ${GAUGE.toFixed(4)}, dv = u + ${GAUGE.toFixed(4)}, lw = ${LANE_W.toFixed(4)};
@@ -183,7 +198,7 @@ vec3 tyreTracks(vec3 c, vec2 p, float px) {
     float off = (e.b * 255.0 - 128.0) / 127.0 * ${OFF_RANGE.toFixed(2)};
     float u = dot(p - vec2(t) - 0.5, n) - off;
     float pr = trackProfile(u, px) * e.a * wk;
-    float s = clamp(dot(d, TRACK_LEAN) * 2.5, -1.0, 1.0) * min(1.0, coh * 1.25);
+    float s = clamp(dot(d, TRACK_LEAN) * ${LEAN_SHARP.toFixed(1)}, -1.0, 1.0) * min(1.0, coh * 1.25);
     lit += pr * s; pressed += pr * (1.0 - abs(s)) * 0.45;
   }
   float g = uTrack.x * (lit - pressed);

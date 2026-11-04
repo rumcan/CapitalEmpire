@@ -2493,7 +2493,7 @@ export class Game {
     try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
     this.ground.slopeLight = this.slopeLight;
     try { this.tyreTracks = localStorage.getItem(TRACKS_KEY) !== '0'; } catch { /* the default, on */ }
-    { const q = new URLSearchParams(location.search).get('tracks'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.tyreTracks = q === 'on'; }
+    { const q = new URLSearchParams(location.search).get('tracks'); if (import.meta.env.DEV && (q === 'on' || q === 'off' || q === 'stress')) { this.tyreTracks = q !== 'off'; this.tracksStress = q === 'stress'; } }
     try { const v = parseFloat(localStorage.getItem('capitalempire.leafDensity') ?? ''); if (Number.isFinite(v)) this.leafDensity = clampLeafDensity(v); } catch { /* the default */ }
     this.ground.leafDensity = this.leafDensity;
     this.unfinish?.(); this.unfinish = this.watchFinish();
@@ -3117,6 +3117,8 @@ export class Game {
   }
   /** T322: the wear field (made on the first frame with a map), what its tiles were judged by, and its last upload's time */
   private tracks: TyreTracks | null = null; private tracksKey = ''; private tracksTerrain: unknown = null; private tracksSent = 0;
+  /** T322 (dev, ?tracks=stress): tracks laid over the whole map at once, the bench's worst case */
+  private tracksStress = false;
   /** T322: whether a vehicle's wear can lie on tile (x, y): grass, not water, a green, a tee, a bunker or a waste area, a road, a path, a drive,
    *  a car park or a business's lot */
   private trackOk = (x: number, y: number): boolean => {
@@ -3141,6 +3143,7 @@ export class Game {
     const g = this.courseGrid, key = `${this.net.version}:${g ? `${g.x0},${g.y0},${g.w},${g.h},${g.rev}` : '-'}:${this.parkDefs.length}:${this.bizDefs.length}`;
     if (key !== this.tracksKey) { this.tracksKey = key; t.forgetOk(); }
     t.beginFrame();
+    if (this.tracksStress && this.ready && !t.cells.size) t.stress(1, 1, MAP - 2, MAP - 2); // (dev: the bench's worst case)
     const T = this.traffic; if (T) t.fade(townMinute(T.town, T.simTime(now)));
     if (t.dirty && now - this.tracksSent >= TRACK_UPLOAD_MS) { this.tracksSent = now; gl.uploadTracks(t); }
     gl.tracks = t.box ? { field: t, strength: TRACK_STRENGTH } : null;
