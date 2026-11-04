@@ -1764,9 +1764,9 @@ export class GroundPainter {
         const px = 1 / minW, sh = Math.max(1, 0.08 * px);
         ctx.save(); ctx.setTransform(M); ctx.lineCap = 'round';
         ctx.shadowColor = 'rgba(22,26,44,0.55)'; ctx.shadowOffsetX = -0.8 * sh; ctx.shadowOffsetY = 0.6 * sh; ctx.shadowBlur = 0.5 * sh;
-        ctx.lineWidth = Math.max(0.17, 2 * minW); ctx.strokeStyle = '#9e9b91'; ctx.stroke(bars);
+        ctx.lineWidth = Math.max(0.17, 2 * minW); ctx.strokeStyle = '#8e8b83'; ctx.stroke(bars);
         ctx.shadowColor = 'rgba(0,0,0,0)'; ctx.setTransform(new DOMMatrix().translate(0.35 * sh, -0.3 * sh).multiply(M));
-        ctx.lineWidth = Math.max(0.07, minW); ctx.strokeStyle = 'rgba(226,223,212,0.85)'; ctx.stroke(bars);
+        ctx.lineWidth = Math.max(0.05, minW); ctx.strokeStyle = 'rgba(214,211,200,0.7)'; ctx.stroke(bars);
         ctx.restore(); ctx.setTransform(M);
       }
       // T259: the crop fields' stand-in rows (those whose state has no art yet)

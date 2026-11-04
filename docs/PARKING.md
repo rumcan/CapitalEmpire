@@ -92,6 +92,22 @@ Everything above stays: tournament spectators park in these car parks, bay-row l
 - **Message signs** send drivers to car parks that still have space; a full car park turns cars away to the next one (the
   missed spectators when none is left).
 
+## 7. Town car parks along their street (T296, #881)
+
+The town's lot car parks are laid in the lot's own frame, so they follow the street at any angle (`lots/carpark-lot.ts`):
+- **`layCarPark`**: a car park in a frame rectangle. From the street back, modules of [row, aisle, row] where both rows fit, else [aisle, row], as many as
+  the depth takes; one module is entered at its middle, several by a side drive joining their aisles. Rows are cut into bays and kerbed planted islands
+  (`bayRuns`; none on a short row), lamp posts on the back rows' end islands. Bays are sized from the car's body (`bayDims`), cars stand in some of them
+  in the picture nearest the bay's axis. The asphalt is one patch with its painted lines; the islands are drawn over it (`park`).
+- **Wheel stops in every heading** (`rowInto`): the `expansion:wheel-stop` picture where the rows run within 2 degrees of a world axis; otherwise the stop
+  is painted on the ground (`PresetPatch.stops` / `LotPatch.stops`: a concrete bar with its shadow, drawn after the bay lines). Art request in
+  `docs/GOLF-SPRITES.md`.
+- **Where:** the public car parks (15% of commercial lots, `isCarPark`) draw the generated template `park` (`autolot.ts parkLot`: a planted strip, street
+  lamps and the P sign at the mouth, trees behind); the small shop's car park; the shopping centre's stops; and every preset's own car park (com, park,
+  tour, civic) is re-laid in its outline (`autolot.ts relayParks`, from `compose.ts lotPreset`; not the lot lab's forced preset). `setTownCarParks(false)`
+  keeps the old look.
+- Cars here are lot props (parked decor); the sim's parking still uses the car parks of sections 1-2.
+
 ## Saving
 
 New optional fields `rows: [ax, ay, bx, by, side, bay, col][]`, `curbs: [ax, ay, bx, by][]` (ids 1..n in order) and `parkFee`. No version bump.
