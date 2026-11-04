@@ -511,6 +511,8 @@ type PropLog = { added: Prop[]; removed: Prop[] };
 /** the tools' names as the rail and the panels say them (a locked tool's toast, P23 4.10) */
 const TOOL_NAME: Partial<Record<Tool, string>> = { road: 'Roads', lane: 'Upgrade', downgrade: 'Downgrade', junction: 'Junctions', bus: 'Bus routes', park: 'Car parks', toll: 'Toll gates', paint: 'Paint', course: 'Holes', path: 'Cart paths & roads', buildings: 'Buildings', bulldoze: 'Bulldoze', practice: 'Practice' };
 
+/** T298: the least ms between two lamp syncs for the lots' own lamps (engine.flushLotGround) */
+const LAMP_SYNC_MS = 250;
 export class Game {
   gl: GLRenderer; ov: CanvasRenderingContext2D;
   dpr = 1; cw = 1; ch = 1; cssW = 1; cssH = 1;
@@ -3353,9 +3355,10 @@ export class Game {
       if (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1 && areaAt([a], cx, cy)) this.removeProp(p);
     }
   }
-  /** T298 (#883): a lot's lamp came or went (a shopping centre's car park lamps): the pools are laid again once, at the next flush */
-  private lampsDirty = false;
-  private flushLotGround() { if (this.lampsDirty) { this.lampsDirty = false; this.syncLamps(); } if (!this.lotPending.size) return; const t0 = performance.now(); const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop, this.lotStale); this.lotStale = new Map(); this.perf.lotFlushMs = performance.now() - t0; }
+  /** T298 (#883): a lot's lamp came or went (a shopping centre's car park lamps): the pools are laid again at a flush, at most every LAMP_SYNC_MS (a loading
+   *  town places hundreds of lots a frame: one sync for them all) */
+  private lampsDirty = false; private lampSyncAt = 0;
+  private flushLotGround() { if (this.lampsDirty && performance.now() - this.lampSyncAt >= LAMP_SYNC_MS) { this.lampsDirty = false; this.lampSyncAt = performance.now(); this.syncLamps(); } if (!this.lotPending.size) return; const t0 = performance.now(); const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop, this.lotStale); this.lotStale = new Map(); this.perf.lotFlushMs = performance.now() - t0; }
   /** the town's lots: up to 40 queued keys a frame (more while the queue is over 2,000, up to 400), so a loaded city fills in */
   private applyLotQueue() {
     const q = this.lotQueue; if (!q.size) return;

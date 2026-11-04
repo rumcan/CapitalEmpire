@@ -259,6 +259,11 @@ variation (39 + 32), `ref:building-gas-canopy` (39), `world:house_5` (38), `worl
 `world:snack_bar` (35), `expansion:rundown-house` (34), `town:laundromat` (33), `static:garage_timber` (31), `ref:landmark-water-tower` (27),
 `static:garage_brick` (26), `world:house_2` (25), `world:house_4` (20).
 
+T298 (#883, the shopping centre, `lots/centre.ts`): on a road at 45 degrees a centre shows only the three shops with a set (bakery, grocery,
+pharmacy). **Wanted next, P1:** the N, E, S, W views of `world:video`, `world:video_rental`, `town:laundromat`, `town:fish_tackle` and
+`town:barber`, so a centre (and a shop lot) on those roads shows the whole palette; and the wheel stop (`expansion:wheel-stop`) at the screen
+headings (T296), which the centre's bays on those roads leave out until it lands.
+
 ## Props kit (plan P24 Phase 3, T131: art requests)
 The Props tool (`golf/decor.ts DECOR`) shows these as labelled stand-ins ("Stand In for ..." on the card and once per kind on the map); each
 goes in by replacing its item's `id` (and dropping its `standIn`). Four views where it says so (NE, SE, SW, NW as the building sheets: the front
