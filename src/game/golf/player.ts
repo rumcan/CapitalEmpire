@@ -15,6 +15,7 @@ import type { GameSkills, Golfer, Sex } from './play/types';
 import type { TeeKind } from './types';
 import { normalizeYou, type YouSave } from './you';
 import { normalizeYourRound, type YourRound } from './play/yours';
+import { normalizeChallenge, normalizeRivals, type Challenge, type Rival } from './play/match';
 
 /** the five skills, in the order the cards show them */
 export const SKILL_IDS = ['driving', 'irons', 'short', 'putting', 'nerve'] as const;
@@ -112,6 +113,10 @@ export interface PlayerProfile {
   you?: YouSave;
   /** T317: the round you are playing by hand (play/yours.ts: the holes, the card, your ball); absent: none under way */
   round?: YourRound;
+  /** T244: the people you played money matches with (play/match.ts Rival: their record against you), newest last; absent: none */
+  rivals?: Rival[];
+  /** T244: a rival's return challenge waiting for your answer (a card); absent: none. chDay: the last town day a return challenge was drawn */
+  challenge?: Challenge; chDay?: number;
 }
 /** the practice log and the rounds keep this many (newest last) */
 export const LOG_MAX = 30, ROUNDS_MAX = 20;
@@ -160,6 +165,9 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     booked,
     ...(normalizeYou(p.you) ? { you: normalizeYou(p.you) } : {}),
     ...(normalizeYourRound(p.round) ? { round: normalizeYourRound(p.round) } : {}),
+    ...(normalizeRivals(p.rivals) ? { rivals: normalizeRivals(p.rivals) } : {}),
+    ...(normalizeChallenge(p.challenge) ? { challenge: normalizeChallenge(p.challenge) } : {}),
+    ...(typeof p.chDay === 'number' && Number.isFinite(p.chDay) ? { chDay: Math.round(p.chDay) } : {}),
   };
 }
 
