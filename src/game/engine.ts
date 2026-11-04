@@ -8529,7 +8529,7 @@ export class Game {
     const s = this.shot; if (!s || s.input.club === 'putter') return null;
     const d = s.spin ?? { x: 0, y: 0 }, e = spinEffect({ x: d.x, y: d.y, pump: 0 }, s.input.club, s.turn.lie), u = Math.hypot(d.x, d.y);
     const cap = u > 1e-3 ? e.cap : spinEffect({ x: 0, y: -1, pump: 0 }, s.input.club, s.turn.lie).cap;
-    return { air: false, x: d.x, y: d.y, pump: 0, club: s.input.club, lie: s.turn.lie, amount: e.amount, cap, room: true, text: spinText(e) };
+    return { air: false, x: d.x, y: d.y, pump: 0, club: s.input.club, lie: s.turn.lie, amount: e.amount, cap, room: e.amount < cap - 1e-9, text: spinText(e) };
   }
   /** T318: a click on the spin ball (or the F key) while the ball is in the air: one more click of the chosen spin, up to the club's and the lie's cap */
   spinPump() {

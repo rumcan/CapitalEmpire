@@ -42,7 +42,7 @@ function drawBall(c: HTMLCanvasElement, v: View, pulse: number) {
     ctx.beginPath(); ctx.arc(dx, dy, 7 + 14 * v.amount + 6 * pulse, 0, Math.PI * 2); ctx.strokeStyle = `rgba(239,68,68,${0.35 + 0.5 * pulse})`; ctx.lineWidth = 2; ctx.stroke();
   }
   ctx.beginPath(); ctx.arc(dx, dy, 6, 0, Math.PI * 2); ctx.fillStyle = '#dc2626'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = '#7f1d1d'; ctx.stroke();
-  ctx.font = '500 7px system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = 'rgba(226,232,240,0.4)'; ctx.fillText('Stand In for spin ball art', 2, H - 2);
+  ctx.font = '500 7px system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = 'rgba(226,232,240,0.4)'; ctx.fillText('Stand In for spin ball art', 1, 7);
 }
 
 /** the spin ball: nothing with no full shot open and no spun ball in the air */
