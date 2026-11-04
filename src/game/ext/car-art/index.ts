@@ -1,6 +1,7 @@
 import { STUDIO_SCALE } from '../../lots/scales';
-import { carModel, carModelSize } from './model.mjs';
-export { CAR_MODEL_NAMES, carModel, carModelName, carModelSize, foldCarSizes } from './model.mjs';
+import { carModel, carModelSize, carPictureFactorIn } from './model.mjs';
+import CAR_LENGTHS from './car-lengths.json';
+export { CAR_CLASS, CAR_MODEL_NAMES, CLASS_LENGTH, carModel, carModelName, carModelSize, foldCarSizes, type CarClass } from './model.mjs';
 
 /** Eight sprite headings in world-angle order. The delivery labels describe the nose on screen. */
 export const CAR_DIRECTIONS = ['SE', 'S', 'SW', 'W', 'NW', 'N', 'NE', 'E'] as const;
@@ -15,21 +16,34 @@ export const CAR_SCALE = 0.88;
  *  (cars:<model>:<heading> -> cars:<model>), a town car's facings and their views (static:compact_n, static:compact_e-v2,
  *  variation:static-compact_n-<hash>:1 -> static:compact), a world car's views (variation:world-car_0-<hash>:2 -> world:car_0). For car ids only */
 export function carSizeId(id: string): string { return carModel(id); }
-/** a car's owner size (the sprite studio's size for its model, scale-overrides.json; 1 when unset): a car is drawn at CAR_SCALE times it, parked and
+/** a car's owner size (the sprite studio's size for its model, scale-overrides.json; 1 when unset, times its picture's factor: carPictureFactor,
+ *  T313): a car is drawn at CAR_SCALE times it, parked and
  *  moving, whichever way it faces, so cars keep the road cars' size until the owner sets one. A size the studio kept under one of the model's pictures
  *  before T143 (a facing's or a view's own key) still counts: the largest of them (carModelSize), until the studio's next save folds them into the
  *  model's key. The table's car sizes (places-v5) are not used: lot and road cars never took them */
 export function carOwnerScale(id: string, sizes: Readonly<Record<string, number>> = STUDIO_SCALE): number {
   // the studio's own sizes are read through a memo (carModelSize scans every size key: the lots ask for each car they compose, T160), kept while
   // the model's own size stands as it was (a size set or cleared by hand, as the tests do, is seen); a studio save clears it (lots/scales-live.ts)
-  if (sizes !== STUDIO_SCALE) return carModelSize(sizes, carModel(id)) ?? 1;
+  if (sizes !== STUDIO_SCALE) return (carModelSize(sizes, carModel(id)) ?? 1) * carPictureFactor(id);
   let m = MODEL_OF.get(id);
   if (m === undefined) MODEL_OF.set(id, m = carModel(id));
   const e = OWN.get(id), d = sizes[m];
   if (e && e.d === d) return e.s;
-  const s = carModelSize(sizes, m) ?? 1;
+  const s = (carModelSize(sizes, m) ?? 1) * carPictureFactor(id);
   OWN.set(id, { s, d });
   return s;
+}
+/** T313 (#898): the measured body length in metres of each car picture at scale 1, and each model's reference length (the median of its pictures'):
+ *  car-lengths.json, written by scripts/assets/car-lengths.ts from the atlas pixels */
+const LENGTHS: { models: Record<string, number>; pictures: Record<string, number> } = CAR_LENGTHS;
+/** a car picture's length at scale 1 in metres (car-lengths.json; undefined for a picture not measured yet) */
+export function carPictureLength(id: string): number | undefined { return LENGTHS.pictures[id]; }
+/** the factor a car picture is drawn at on top of its model's size, so every picture of one model shows one body length: its model's reference
+ *  length over its own (1 when either is unmeasured). An eight-way car's headings are fitted to one body (prep-cars.mjs): 1 */
+export function carPictureFactor(id: string): number { return carPictureFactorIn(LENGTHS, id); }
+/** the length in metres a car picture is drawn at (CAR_SCALE times its owner size times its length at scale 1); undefined when unmeasured */
+export function carDrawnLength(id: string, sizes: Readonly<Record<string, number>> = STUDIO_SCALE): number | undefined {
+  const own = LENGTHS.pictures[id]; return own === undefined ? undefined : CAR_SCALE * carOwnerScale(id, sizes) * own;
 }
 /** the memo of carOwnerScale over the studio's sizes (each id's size and its model's own size when it was read), and each id's model */
 const OWN = new Map<string, { s: number; d: number | undefined }>(), MODEL_OF = new Map<string, string>();
