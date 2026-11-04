@@ -418,5 +418,5 @@ export function specFit(B: Build, list: string[], maxW: number, maxD: number, o:
 }
 
 /** is a built or upgraded commercial lot a public car park: the lot's seed falls in the first 15% (seed % 100 < 15).
- *  Decided from the seed alone, so no other lot's draws change. */
-export function isCarPark(st: ComposeState): boolean { return st.use === LU.COM && st.level >= LV.BUILT && st.seed % 100 < 15; }
+ *  Decided from the seed alone, so no other lot's draws change. T298: never a shopping centre (its business starts '@': centre-biz.ts) */
+export function isCarPark(st: ComposeState): boolean { return st.use === LU.COM && st.level >= LV.BUILT && st.seed % 100 < 15 && st.biz?.[0] !== '@'; }

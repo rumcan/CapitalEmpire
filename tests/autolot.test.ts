@@ -28,8 +28,8 @@ function lotOn(r: number, w: number, d: number): LotGeom {
 /** the headings under test: the four screen-straight roads (1, 3, 5, 7) and two diagonals (0, 2) */
 const ROADS: Road[] = [1, 3, 5, 7, 0, 2];
 /** each template's lot size (tiles): a house and a shop a 16-tile frontage, the yards 20 to 30 deep */
-const SIZE: Record<AutoTemplate, [number, number]> = { house: [16, 20], corner: [16, 20], trailer: [20, 30], junk: [20, 20], shop: [20, 16] };
-const FENCE = /fence|chainlink/;
+const SIZE: Record<AutoTemplate, [number, number]> = { house: [16, 20], corner: [16, 20], trailer: [20, 30], junk: [20, 20], shop: [20, 16], centre: [36, 20] };
+const FENCE = /fence|chainlink/, CAR_OR_STOP = /^cars:|wheel-stop/;
 /** a piece's box in the preset frame (x along the street, y away from it) */
 const boxes = (f: PresetFrame, props: { id: string; x: number; y: number; scale: number; view: number }[]): (Box4 & { id: string })[] => props.map(q => {
   const h = frameHalf(f)(q as never); return Object.assign([q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb] as Box4, { id: q.id });
@@ -49,6 +49,9 @@ test('every template on the four screen-straight headings and two diagonals: ins
       for (let j = k + 1; j < bx.length; j++) {
         const o = bx[j]!;
         if (FENCE.test(o.id)) continue;
+        // (T298: a centre's cars stand in bays sized from their bodies, a wheel stop under a car's nose; the world box of a car on a screen-straight street
+        // is its bounding square, two bays wide: shopping-centre.test.ts checks them by their bodies)
+        if (t === 'centre' && (CAR_OR_STOP.test(b.id) || CAR_OR_STOP.test(o.id))) continue;
         assert.ok(share(b, o) <= OVERLAP + 1e-9, `${t} r${r}: ${b.id} overlaps ${o.id} (${share(b, o).toFixed(2)})`);
       }
     });

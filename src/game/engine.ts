@@ -512,6 +512,8 @@ type PropLog = { added: Prop[]; removed: Prop[] };
 /** the tools' names as the rail and the panels say them (a locked tool's toast, P23 4.10) */
 const TOOL_NAME: Partial<Record<Tool, string>> = { road: 'Roads', lane: 'Upgrade', downgrade: 'Downgrade', junction: 'Junctions', bus: 'Bus routes', park: 'Car parks', toll: 'Toll gates', paint: 'Paint', course: 'Holes', path: 'Cart paths & roads', buildings: 'Buildings', bulldoze: 'Bulldoze', practice: 'Practice' };
 
+/** T298: the least ms between two lamp syncs for the lots' own lamps (engine.flushLotGround) */
+const LAMP_SYNC_MS = 250;
 export class Game {
   gl: GLRenderer; ov: CanvasRenderingContext2D;
   dpr = 1; cw = 1; ch = 1; cssW = 1; cssH = 1;
@@ -3356,7 +3358,10 @@ export class Game {
       if (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1 && areaAt([a], cx, cy)) this.removeProp(p);
     }
   }
-  private flushLotGround() { if (!this.lotPending.size) return; const t0 = performance.now(); const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop, this.lotStale); this.lotStale = new Map(); this.perf.lotFlushMs = performance.now() - t0; }
+  /** T298 (#883): a lot's lamp came or went (a shopping centre's car park lamps): the pools are laid again at a flush, at most every LAMP_SYNC_MS (a loading
+   *  town places hundreds of lots a frame: one sync for them all) */
+  private lampsDirty = false; private lampSyncAt = 0;
+  private flushLotGround() { if (this.lampsDirty && performance.now() - this.lampSyncAt >= LAMP_SYNC_MS) { this.lampsDirty = false; this.lampSyncAt = performance.now(); this.syncLamps(); } if (!this.lotPending.size) return; const t0 = performance.now(); const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop, this.lotStale); this.lotStale = new Map(); this.perf.lotFlushMs = performance.now() - t0; }
   /** the town's lots: up to 40 queued keys a frame (more while the queue is over 2,000, up to 400), so a loaded city fills in */
   private applyLotQueue() {
     const q = this.lotQueue; if (!q.size) return;
@@ -3490,7 +3495,7 @@ export class Game {
   /** the lot's props and ground go */
   private dropLot(key: string) {
     const old = this.lotProps.get(key);
-    if (old) { for (const p of old) if (this.props.has(p)) { this.removeProp(p); this.perf.lotProps--; } this.lotProps.delete(key); }
+    if (old) { for (const p of old) if (this.props.has(p)) { if (LIBRARY[p.item]!.kind === 'lamp') this.lampsDirty = true; this.removeProp(p); this.perf.lotProps--; } this.lotProps.delete(key); }
     this.setLotGround(key, null); this.yardRough.delete(key);
   }
   // ---------- the dev lot editor's hooks (P20 / T071: src/game/dev/lot-editor.ts, dev builds only)
@@ -3538,6 +3543,7 @@ export class Game {
       if (q.from) this.lotFrom.set(p, q.from);
     }
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
+    if (ps.some(p => LIBRARY[p.item]!.kind === 'lamp')) this.lampsDirty = true;
     // a yard of its own only where a building stands (a big sprite that is not a car, as sendBlocks counts buildings, or a baked house lot); an
     // empty lot shows its block's grass
     const built = ps.some(p => { const it = LIBRARY[p.item]!; return !!it.block || (it.big && it.kind !== 'car'); });
