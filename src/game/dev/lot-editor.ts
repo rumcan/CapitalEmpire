@@ -28,7 +28,7 @@ import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from '../library';
 import { spriteRect, type Drawable } from '../sprites';
 import { worldX, worldY } from '../iso';
 import { OWNER_SCALE, TABLE_SCALE } from '../lots/scales';
-import { carOwnerScale, carSizeId, foldCarSizes } from '../ext/car-art';
+import { carModelSize, carSizeId, foldCarSizes } from '../ext/car-art';
 import { lookOf, maxDrawScale, refreshSizeRange, softAt } from '../newart';
 import { compose, lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, setLotPresets, type PresetDrop } from '../lots/compose';
 import { formatPresets, type LotPreset, type PresetProp } from '../lots/presets';
@@ -506,9 +506,9 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     const it = LIBRARY[item]!, car = isCar(it.id), id = car ? carSizeId(it.id) : sizeKey(it.id);
     if (a === 'bigger' || a === 'smaller') {
       // the studio's rule (server.mjs /api/scale): its size, else the table's (a car's: 1, the size of its model), times the step; never past the pixels of any of its views
-      // a car's size is its model's (carOwnerScale: a size the studio kept under one of its pictures' own keys before T143 counts, the largest), and the
+      // a car's size is its model's (carModelSize, the model's own size without its picture's factor, T313: a size the studio kept under one of its pictures' own keys before T143 counts, the largest), and the
       // save folds those keys into the model's (foldCarSizes), as the studio's save does
-      const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = car ? 1 : TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = car ? carOwnerScale(it.id, sizes) : sizes[id] ?? base;
+      const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = car ? 1 : TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = car ? carModelSize(sizes, id) ?? 1 : sizes[id] ?? base;
       const lim = artLimit(car ? it.id : id), next = growWithin(cur, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) return say(refused(id, lim));
       const out = car ? { ...foldCarSizes(sizes, CAR_IDS), [id]: +next.toFixed(3) } : scaleOverride(sizes, id, base, next / cur), views = sizeViews(id), before = views.map(v => [v, OWNER_SCALE[v]] as const);

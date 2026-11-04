@@ -38,7 +38,7 @@ import { mapScale } from '../lot-layout.mjs';
 import { boundsOf, lotVariants } from '../lot-variants.mjs';
 import { fixCode, newFramePath, parseFix } from '../walker-fix.mjs';
 import { averageHash, foldCopies } from './copies.mjs';
-import { carModel, carModelName, carModelSize, foldCarSizes } from '../../../src/game/ext/car-art/model.mjs';
+import { carModel, carModelName, carModelSize, carPictureFactorIn, foldCarSizes } from '../../../src/game/ext/car-art/model.mjs';
 import { thumbStep } from './thumb-size.mjs';
 
 const PORT = +(process.argv[process.argv.indexOf('--port') + 1] || 5179) || 5179;
@@ -51,6 +51,8 @@ const carKey = carModel;
 /** every car id the game has or had (the library's kind car, the removed ones too): what foldCarSizes folds into the models' keys */
 const carIds = () => [...library().filter(s => s.kind === 'car').map(s => s.id), ...Object.entries(readRemoved()).filter(([, r]) => r.kind === 'car').map(([id]) => id)];
 /** the road cars' size (src/game/ext/car-art CAR_SCALE): a car is drawn at it times its studio size, so its card shows that size */
+/** the cars' measured lengths (T313, scripts/assets/car-lengths.ts), read at each listing */
+const CAR_LENGTHS = () => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'src/game/ext/car-art/car-lengths.json'), 'utf8')); } catch { return { models: {}, pictures: {} }; } };
 const CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(path.join(ROOT, 'src/game/ext/car-art/index.ts'), 'utf8'))?.[1] ?? 1);
 
 // ---------------------------------------------------------------- sizes: every sprite as the game draws it (review/size-report.ts)
@@ -412,8 +414,9 @@ http.createServer(async (req, res) => {
       // the display lists More houses with Houses (the game's library keeps its own category)
       for (const s of list) if (s.cat === 'More houses') s.cat = 'Houses';
       // a car is drawn at the road cars' size (CAR_SCALE) times its studio size, which its model shares (sizeId; carModelSize: a size still kept under one of
-      // its pictures' own keys counts, the largest, until the next save folds them): 1 when unset
-      for (const s of list) { const car = s.kind === 'car'; s.base = car ? 1 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = car ? (carModelSize(sc, carKey(s.id)) ?? 1) : (sc[s.id] ?? s.base); if (car) Object.assign(s, { sizeId: carKey(s.id), carScale: CAR_SCALE }); s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
+      // its pictures' own keys counts, the largest, until the next save folds them): 1 when unset; a picture's card is drawn at its factor on top (T313:
+      // car-lengths.json, every picture of a model one body length, ext/car-art carPictureFactor)
+      for (const s of list) { const car = s.kind === 'car'; s.base = car ? 1 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = car ? (carModelSize(sc, carKey(s.id)) ?? 1) : (sc[s.id] ?? s.base); if (car) Object.assign(s, { sizeId: carKey(s.id), carScale: CAR_SCALE * carPictureFactorIn(CAR_LENGTHS(), s.id) }); s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
       // the game's sizes (size-report.ts): the scale it places each sprite at, what a reset falls back to, the id whose size it takes (a building's
       // views share one), what it is drawn as and how big, the scale it is sharp to at the closest zoom and the most its source pixels allow
       for (const s of list) {

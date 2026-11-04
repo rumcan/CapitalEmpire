@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { LIBRARY } from '../src/game/library';
 import { spriteRect, type Drawable } from '../src/game/sprites';
-import { CAR_SCALE, carModel, carModelSize, carOwnerScale } from '../src/game/ext/car-art';
+import { CAR_SCALE, carModel, carModelSize, carOwnerScale, carPictureFactor } from '../src/game/ext/car-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from '../src/game/sizes';
 import { footprintOf, ownerScaleOf, turned } from '../src/game/lots/preset-art';
 import { compose, lotPresets } from '../src/game/lots/compose';
@@ -25,10 +25,10 @@ const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const)), Z = 0.3;
 const html = fs.readFileSync('scripts/assets/review/studio.html', 'utf8');
 const lines = ['const PIXEL_SLACK', 'const drawnOf'].map(h => html.split('\n').find(l => l.startsWith(h))!);
 const drawnOf = new Function(`${lines.join('\n')}\nreturn drawnOf;`)() as (s: Record<string, unknown>) => { quad: number[]; k: number };
-/** a car's card as the studio builds it (server.mjs /api/sprites: its model's size, CAR_SCALE; size-report.ts: sharp, the picture's limit) and its
+/** a car's card as the studio builds it (server.mjs /api/sprites: its model's size, CAR_SCALE times its picture's factor (T313); size-report.ts: sharp, the picture's limit) and its
  *  drawn width at zoom Z (studio.html stage(): the quad's width x k x K) */
 function cardWidth(id: string): number {
-  const it = LIBRARY[INDEX.get(id)!]!, s = { id, quad: it.quad, scale: carModelSize(STUDIO_SCALE, carModel(id)) ?? 1, carScale: CAR_SCALE, sharp: PIXEL_LIMIT[INDEX.get(id)!]! * PIXEL_SLACK / CAR_SCALE, cap: maxDrawScale(INDEX.get(id)!) };
+  const it = LIBRARY[INDEX.get(id)!]!, s = { id, quad: it.quad, scale: carModelSize(STUDIO_SCALE, carModel(id)) ?? 1, carScale: CAR_SCALE * carPictureFactor(id), sharp: PIXEL_LIMIT[INDEX.get(id)!]! * PIXEL_SLACK / CAR_SCALE, cap: maxDrawScale(INDEX.get(id)!) };
   const d = drawnOf(s); return (d.quad[2]! - d.quad[0]!) * d.k * Z;
 }
 /** a car composed on a lot as the engine places it (its scale, the footprint at it) and its drawn width at zoom Z (sprites.ts spriteRect) */

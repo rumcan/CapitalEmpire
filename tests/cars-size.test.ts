@@ -3,7 +3,7 @@
 // (ownerScaleOf). A decal's studio size is packed into its strip (prep-decals.mjs), so it is not tested here. Headless: npm test.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CAR_DIRECTIONS, CAR_SCALE, carModelSize, carOwnerScale, carSizeId } from '../src/game/ext/car-art';
+import { CAR_DIRECTIONS, CAR_SCALE, carModelSize, carOwnerScale, carPictureFactor, carSizeId } from '../src/game/ext/car-art';
 import { facings } from '../src/game/traffic';
 import { LIBRARY } from '../src/game/library';
 import { STUDIO_SCALE } from '../src/game/lots/scales';
@@ -32,15 +32,15 @@ test('a car takes its model\'s size: the eight headings share one key, a town ca
 
 test('a car\'s owner size is its studio size for its model, 1 when unset; the table\'s car sizes are not used', () => {
   assert.equal(carOwnerScale(CAR), carModelSize(STUDIO_SCALE, MODEL) ?? 1);
-  assert.equal(carOwnerScale('world:car_0'), carModelSize(STUDIO_SCALE, 'world:car_0') ?? 1, 'OWNER_SCALE holds 1.371 for world:car_0; a car never takes it');
+  assert.equal(carOwnerScale('world:car_0'), (carModelSize(STUDIO_SCALE, 'world:car_0') ?? 1) * carPictureFactor('world:car_0'), 'OWNER_SCALE holds 1.371 for world:car_0; a car never takes it');
   const sizes = { [MODEL]: 1.25 };
   for (const d of CAR_DIRECTIONS) assert.equal(carOwnerScale(`${MODEL}:${d}`, sizes), 1.25, `${d}: every heading of the model`);
   assert.equal(carOwnerScale(OTHER, sizes), 1, 'another model keeps its own size');
-  assert.equal(carOwnerScale('static:compact_e', { 'static:compact': 1.19 }), 1.19, 'a town car is keyed by its model');
-  assert.equal(carOwnerScale('variation:static-compact_w-3465d046:2', { 'static:compact': 1.19 }), 1.19, 'its views too');
+  assert.equal(carOwnerScale('static:compact_e', { 'static:compact': 1.19 }), 1.19 * carPictureFactor('static:compact_e'), 'a town car is keyed by its model (times its picture factor, T313)');
+  assert.equal(carOwnerScale('variation:static-compact_w-3465d046:2', { 'static:compact': 1.19 }), 1.19 * carPictureFactor('variation:static-compact_w-3465d046:2'), 'its views too');
   // a size kept under a facing's or a view's own key before T143 still counts, the largest of them, until the studio folds them into the model's key
   const old = { 'static:compact_e': 1.166, 'static:compact_w': 1.259, 'variation:static-compact_n-82988799:1': 1.08, 'static:compact': 1.1 };
-  for (const id of ['static:compact_n', 'static:compact_e', 'static:compact_w', 'variation:static-compact_s-0c90743f:4']) assert.equal(carOwnerScale(id, old), 1.259, `${id}: the largest of the model's keys`);
+  for (const id of ['static:compact_n', 'static:compact_e', 'static:compact_w', 'variation:static-compact_s-0c90743f:4']) assert.equal(carOwnerScale(id, old), 1.259 * carPictureFactor(id), `${id}: the largest of the model's keys`);
 });
 
 test('traffic: every facing carries its model\'s owner size, so the cars on the road are drawn at it', () => {
