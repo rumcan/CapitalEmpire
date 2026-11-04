@@ -106,7 +106,7 @@ test('the title: kept in your profile, shown on your card, saved', () => {
   const p = withTitle(p0, r, 2);
   assert.equal(p0.titles, undefined);
   assert.equal(p.titles!.length, 1);
-  assert.deepEqual(p.titles![0], { id: 'mayor', name: "The Mayor's Cup", year: eventYear('mayor', 2), strokes: 7, toPar: -1, holes: 2 });
+  assert.deepEqual(p.titles![0], { id: 'mayor', name: "Mayor's Cup", year: eventYear('mayor', 2), strokes: 7, toPar: -1, holes: 2 });
   const back = normalizePlayer(JSON.parse(JSON.stringify(p)))!;
   assert.deepEqual(back.titles, p.titles);
   assert.match(playerCardView(back, { k: 'none', next: null, why: null }).titles[0]!, /^Mayor's Cup 1986 · 7 \(−1\) over 2$/);

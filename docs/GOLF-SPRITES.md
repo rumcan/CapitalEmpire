@@ -409,3 +409,11 @@ The spin ball in the bottom right of the shot view (`src/ui/SpinBall.tsx` drawBa
 - **Stand In for the Select and Walk rail icons**: `src/ui/Rail.tsx` draws a line pointer (an arrow) and a walking figure as inline SVGs. Wanted: two
   icons in the rail's style (`src/assets/ui/icons/*.webp`, the same size and finish as compass, pin, trophy): `cursor-select` (a mouse arrow)
   and `cursor-walk` (a golfer mid-stride, side-on, facing right). Swap them in `CursorPair` (Rail.tsx) when they land.
+
+## The mayor and the Mayor's Cup (T246, #708: art requests)
+- **Stand In for the Mayor**: `src/ui/golf/EventCard.tsx` `MayorStandIn` draws a plain figure (a head, a dark suit and a gold sash) labelled
+  "Stand In for the Mayor". Wanted (with GOLF-ART-LIST 222, the town hall and the mayor's office): a portrait of the town's mayor, 1980s, chain of
+  office or sash, about 160 x 192, and a presentation picture (the mayor handing a silver cup to a golfer on the 18th green, the clubhouse behind,
+  sun upper right). Swap them into `MayorStandIn` (the card's announcement and the result) when they land.
+- **The trophies** (optional): a small silver cup (the Mayor's Cup) and a club championship plate for the player card's Titles rows (the trophy icon
+  stands in).

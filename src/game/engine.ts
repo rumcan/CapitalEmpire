@@ -8017,7 +8017,7 @@ export class Game {
     if (this.traffic.round.stage !== 'free' || !this.dayPlay) return; // (announced once the course has a day of play)
     const id = announceDue(ev, season, this.seasonMonthNow(now));
     if (id) {
-      ev.announced[id] = season; this.eventCardOpen = id; this.scheduleSave();
+      ev.announced[id] = season; if (!this.eventCardOpen) this.eventCardOpen = id; this.scheduleSave(); // (a card already open stays: the toast names it)
       this.toast(`${CLUB_EVENTS[id].name}: ${eventWhen(id, season)} at your club`, 'info'); this.emit();
     }
   }
@@ -8028,6 +8028,8 @@ export class Game {
     if (ev.today && ev.today.day === day) { if (!ev.today.done) ev.today = eventDay(ev.today.id, ev.today.season, day, dp.view.plan, view, dp.base); return; }
     if (this.evDayChecked === day) return;
     this.evDayChecked = day;
+    // (an event's day waits while your round in the last one goes on: its result comes with your card)
+    const r = this.golf.player?.round; if (ev.today && !ev.today.done && r && eventOfMode(r.mode) === ev.today.id && r.day === ev.today.day) return;
     const id = this.devEvent ?? eventDue(ev, season, this.seasonMonthNow(now)); if (!id) return;
     this.devEvent = null;
     if (ev.today && !ev.today.done) this.finishEvent(null);

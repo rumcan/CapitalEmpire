@@ -18,7 +18,7 @@ export interface ClubEventDef { id: EventId; name: string; month: number; field:
 export const CLUB_MAX_HCP = 18;
 export const CLUB_EVENTS: Readonly<Record<EventId, ClubEventDef>> = {
   club: { id: 'club', name: 'Club Championship', month: 4, field: 'members', maxHcp: CLUB_MAX_HCP, win: { rep: 1, money: 500 }, title: 'Club Champion' },
-  mayor: { id: 'mayor', name: "The Mayor's Cup", month: 9, field: 'all', maxHcp: null, win: { rep: 2, money: 1000 }, title: "Mayor's Cup" },
+  mayor: { id: 'mayor', name: "Mayor's Cup", month: 9, field: 'all', maxHcp: null, win: { rep: 2, money: 1000 }, title: "Mayor's Cup" },
 };
 /** your round's mode in an event (play/yours.ts RoundMode, the flag shared with T244's money matches), and the event of a mode (null: not an event) */
 export const MODE_OF: Readonly<Record<EventId, RoundMode>> = { club: 'championship', mayor: 'mayors-cup' };
