@@ -813,8 +813,12 @@ export default function App() {
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} />}
           {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
           {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.playEvent(ev.id)} />; })()}
-          {(() => { const rv = game.yourRoundView(); return rv && <>{/* T317: your round's bar and its scorecard */}
-            <RoundBar v={rv} onJump={() => game.yourJump()} onCart={() => game.youCartToggle()} onCallCart={() => game.youCartCall()} onMull={() => game.yourMulligan()} onGimme={() => game.yourGimme()} onCard={() => game.toggleYourCard()} onQuit={() => game.yourRoundEnd()} onSkip={() => game.matchSkip()} />
+          {(() => { const rv = game.yourRoundView(); if (!rv) return null;
+            // T328 (#936): the bar starts right of the left rail and stops left of a right-hand card (event, tee, talk, challenge: 320 px at most)
+            const side = game.panel ? '19.5rem' : '0.75rem', card = !!game.youTalk || !!game.youTeeView() || !!game.eventCard() || !!game.challengeView();
+            const left = `${Math.round(railRef.current?.getBoundingClientRect().right ?? 96) + 8}px`, right = card ? `calc(${side} + 328px)` : side;
+            return <>{/* T317: your round's bar and its scorecard */}
+            <RoundBar left={left} right={right} v={rv} onJump={() => game.yourJump()} onCart={() => game.youCartToggle()} onCallCart={() => game.youCartCall()} onMull={() => game.yourMulligan()} onGimme={() => game.yourGimme()} onCard={() => game.toggleYourCard()} onQuit={() => game.yourRoundEnd()} onSkip={() => game.matchSkip()} />
             {rv.card && <ScoreCard v={rv} onNext={() => game.yourNextHole()} onDone={() => game.yourRoundEnd()} onClose={() => game.toggleYourCard(false)} />}</>; })()}
           {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
