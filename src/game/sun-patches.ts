@@ -38,7 +38,7 @@ export const COVER = 0.53, SOFT = 0.07;
 /** the light at strength 1 in full sun (the height light's lift and highlight, light.ts LIFT_G 0.3 and SPEC_G 0.26 on a slope facing the sun
  *  squarely, a little less: flat ground in the sun): the gain on the texel's mid-tones and up, per channel slightly warm, and the warm screen
  *  of the sunlight over its lit tips */
-export const LIFT = 0.2, LIFT_W = [1.06, 1, 0.84] as const, SPEC = 0.06, SUN_RGB = [255, 236, 176] as const;
+export const LIFT = 0.34, LIFT_W = [1.06, 1, 0.84] as const, SPEC = 0.1, SUN_RGB = [255, 236, 176] as const;
 /** the lift's luminance mask: none in the dark gaps (luminance under LUM_LO), all of it from LUM_HI up; the highlight's: from SPEC_LO to SPEC_HI */
 export const LUM_LO = 0.04, LUM_HI = 0.18, SPEC_LO = 0.32, SPEC_HI = 0.62;
 /** the strength's range: 0 = off, 1 = the default look, 2 = twice the light */
