@@ -53,6 +53,8 @@ export interface You {
   x: number; y: number; face: number;
   path: number[]; seg: number; run: boolean; moving: boolean; keys: boolean;
   phase: number; swing: number; skip: boolean;
+  /** T212: the swing is a putt (the putt clip, not the drive's) */
+  putt?: boolean;
   /** the target marker's point (NaN: none) and its age (s) */
   tx: number; ty: number; mark: number;
   /** T317: the pace (tiles per second; a run is RUN_K faster): 0 is a person's (YOU_WALK, YOU_RUN); your golf cart drives at CART_TILES */
@@ -148,8 +150,10 @@ export function keyStep(y: You, kx: number, ky: number, run: boolean, dt: number
 /** the clip frame to draw (k frames into the golfer sheets' row: idle 0, walk 1..8, the drive 9..20): the walk while moving, the drive's
  *  frames while swinging at a mat (a swing every SWING_EVERY s), else idle */
 export const SWING_EVERY = 4;
-export function youFrame(y: You, walk: { start: number; n: number }, idle: number, drive: { start: number; n: number; times: readonly number[] } | null): number {
+export function youFrame(y: You, walk: { start: number; n: number }, idle: number, swing: { start: number; n: number; times: readonly number[] } | null,
+  putt?: { start: number; n: number; times: readonly number[] }): number {
   if (y.moving || y.keys) return walk.start + (Math.floor(y.phase) % walk.n + walk.n) % walk.n;
+  const drive = y.putt && putt ? putt : swing;   // (T212: a putt plays the putt clip)
   if (drive && y.swing >= 0) {
     const t = y.swing % SWING_EVERY, T = drive.times; let k = 0;
     while (k + 1 < drive.n && T[k + 1]! <= t) k++;

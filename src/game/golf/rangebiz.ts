@@ -11,7 +11,7 @@ import { KIOSK_QMAX, KIOSK_SERVE, KIOSK_SHARE, LESSON_SHARE, TIER2_BAYS, extraVa
 export * from './rangesave';
 import { NEAR, RANGE_LOT } from './rangestart';
 import { GOLFER_CLIPS } from '../library';
-import { clipFrame, golferRow, hash, rowToward, type CrowdPerson } from '../crowdview';
+import { PUTT_IMPACT_S, clipFrame, golferRow, hash, rowToward, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
 import { practiceArea, type PracticeArea, type PracticeScan } from './practice';
 import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
@@ -567,9 +567,9 @@ const SWING = ADDRESS + CLIP + PAUSE;
 const PRO_PERSON = 3, PICKER_CAR = 1;
 /** the most balls lying on the range, and of golfers queued patiently (town hours) */
 const LYING_MAX = 800, PATIENCE_H = 2;
-/** the practice facilities (T130): a golfer practises this long (town hours); a putt's beats (address, the stroke, the ball leaving at PUTT_HIT,
- *  the next putt after PUTT_T) and a chip's (the drive clip as the stand-in swing: SWING) */
-const PRACTICE_H = 0.45, PUTT_ADDR = 1.3, PUTT_STROKE = 0.55, PUTT_HIT = 1.6, PUTT_T = 3.6;
+/** the practice facilities (T130): a golfer practises this long (town hours); a putt's beats (address, the stroke: T212's putt clip for PUTT_STROKE
+ *  s, the ball leaving at its impact PUTT_HIT, the next putt after PUTT_T) and a chip's (the drive clip as the stand-in swing: SWING) */
+const PRACTICE_H = 0.45, PUTT_ADDR = 1.3, PUTT_STROKE = 1.6, PUTT_HIT = PUTT_ADDR + PUTT_IMPACT_S, PUTT_T = 4;
 /** the upper deck's stairs (T133): a golfer climbs over the leg from the path behind to its bay (tiles), so the lift ramps over it */
 const STAIR = STAND_V - PATH_V;
 /** the ball picker cart drives its lanes in this many town hours (T133), whatever the day's length */
@@ -1373,7 +1373,7 @@ export class RangeSim {
         // at a practice facility, facing the cup: a putt is the drive clip's address, its takeaway and its impact frame (a stand-in until the
         // putting clip, GOLF-SPRITES), a chip the whole drive clip (a stand-in until the chipping clip)
         p.row = golferRow(v.aim.x - v.x, v.aim.y - v.y);
-        if (v.fac === 'putting') { const lt = v.t % PUTT_T, D = G.golf_drive; p.frame = lt < PUTT_ADDR ? D.start : lt < PUTT_ADDR + PUTT_STROKE * 0.5 ? D.start + 1 : lt < PUTT_ADDR + PUTT_STROKE + 0.6 ? D.start + 5 : G.idle.start; }
+        if (v.fac === 'putting') { const lt = v.t % PUTT_T, P = G.golf_putt; p.frame = lt < PUTT_ADDR ? P.start : lt < PUTT_ADDR + PUTT_STROKE ? clipFrame(P, P.times[0]! + lt - PUTT_ADDR) : G.idle.start; }
         else { const lt = v.t % SWING; p.frame = lt < ADDRESS ? G.golf_drive.start : lt < ADDRESS + CLIP ? clipFrame(G.golf_drive, G.golf_drive.times[0]! + lt - ADDRESS) : G.idle.start; }
       } else if (v.stage === S.Queue && v.desk !== undefined && this.desks[v.desk]?.on) {
         // at a counter (T146): facing it (toward the road)
