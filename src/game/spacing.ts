@@ -22,12 +22,16 @@ const TAU = 0.3;
 const OMAX = 0.6;
 /** a person is found again within this many tiles of his point last frame */
 const MATCH = 0.8;
+/** the margin (tiles) past GAP within which a pair is kept for the frame's relaxation passes */
+const PAIR_MARGIN = 0.06;
+/** within this (tiles) of where his slot last frame was heading, a person is that slot's (no search) */
+const SAME = 0.08;
 /** relaxation passes a frame */
 const ITER = 4;
 /** below this speed (tiles/s) a person stands */
 const STAND = 0.12;
 /** the hash grid's buckets (a power of two) */
-const BUCKETS = 4096, MASK = BUCKETS - 1;
+const BUCKETS = 16384, MASK = BUCKETS - 1;
 
 const cellOf = (cx: number, cy: number): number => (Math.imul(cx, 73856093) ^ Math.imul(cy, 19349663)) & MASK;
 
@@ -49,6 +53,8 @@ export class PeopleSpacer {
   // the hash grid (heads by bucket, then the chain)
   private head = new Int32Array(BUCKETS); private next = new Int32Array(64);
   private cells = new Int32Array(9);
+  // the frame's close pairs (step 3)
+  private pa = new Int32Array(256); private pb = new Int32Array(256);
 
   /** starts a frame */
   begin(): void { this.n = 0; }
@@ -88,6 +94,7 @@ export class PeopleSpacer {
   /** works out every person's offset (ox, oy) for a frame dt seconds after the last */
   solve(dt: number): void {
     const n = this.n, X = this.x, Y = this.y, OX = this.ox, OY = this.oy, VX = this.vx, VY = this.vy, inv = this.inv;
+    if (!n && !this.pn) return;
     const d = Math.min(Math.max(dt, 0), 0.1), C = this.cells;
     // 1. each person found again (his look, his layer, the nearest within MATCH of where he was heading): his offset carried over and his velocity (smoothed)
     const pn = this.pn;
@@ -97,7 +104,9 @@ export class PeopleSpacer {
     const kv = d > 0 ? 1 - Math.exp(-d / 0.15) : 0;
     for (let i = 0; i < n; i++) {
       let best = -1, bd = MATCH * MATCH;
-      if (pn) {
+      // (the movers come in the same order frame to frame: his own slot last frame, when it is him, saves the search)
+      if (i < pn && this.taken[i] !== st && this.plook[i] === this.look[i] && this.player[i] === this.layer[i] && (this.px[i]! - X[i]!) ** 2 + (this.py[i]! - Y[i]!) ** 2 < SAME * SAME) best = i;
+      else if (pn) {
         const k = this.around(X[i]!, Y[i]!, 1);
         for (let c = 0; c < k; c++) for (let j = this.head[C[c]!]!; j >= 0; j = this.next[j]!) {
           if (this.taken[j] === st || this.plook[j] !== this.look[i] || this.player[j] !== this.layer[i]) continue;
@@ -144,24 +153,33 @@ export class PeopleSpacer {
       }
       OX[i] = OX[i]! + (tx - OX[i]!) * ke; OY[i] = OY[i]! + (ty - OY[i]!) * ke;
     }
-    // 3. apart: everyone nearer than GAP pushed apart (the pinned not at all), a few passes
-    const S = 0.5; // the cell (>= GAP: the 3x3 cells hold every pair within GAP at the grid's making)
+    // 3. apart: everyone nearer than GAP pushed apart (the pinned not at all), a few passes over the frame's close pairs (found once, on the grid,
+    //    with a margin for what the passes move)
+    const S = 0.5, NEAR = (GAP + PAIR_MARGIN) ** 2; // (the cell >= GAP + the margin: the 3x3 cells hold every such pair)
     this.grid(S, true, X, Y, n);
+    let np = 0, PA = this.pa, PB = this.pb;
+    const head = this.head, next = this.next, layer = this.layer;
+    for (let i = 0; i < n; i++) {
+      const qx = X[i]! + OX[i]!, qy = Y[i]! + OY[i]!, k = this.around(qx, qy, S), li = layer[i]!, wi = inv[i]!;
+      for (let c = 0; c < k; c++) for (let j = head[C[c]!]!; j >= 0; j = next[j]!) {
+        if (j <= i || layer[j] !== li || wi + inv[j]! === 0) continue;
+        const dx = X[j]! + OX[j]! - qx, dy = Y[j]! + OY[j]! - qy;
+        if (dx * dx + dy * dy >= NEAR) continue;
+        if (np >= PA.length) { const a2 = new Int32Array(PA.length * 2), b2 = new Int32Array(PB.length * 2); a2.set(PA); b2.set(PB); this.pa = PA = a2; this.pb = PB = b2; }
+        PA[np] = i; PB[np] = j; np++;
+      }
+    }
     for (let it = 0; it < ITER; it++) {
-      for (let i = 0; i < n; i++) {
-        const k = this.around(X[i]! + OX[i]!, Y[i]! + OY[i]!, S);
-        for (let c = 0; c < k; c++) for (let j = this.head[C[c]!]!; j >= 0; j = this.next[j]!) {
-          if (j <= i || this.layer[j] !== this.layer[i]) continue;
-          const wi = inv[i]!, wj = inv[j]!; if (wi + wj === 0) continue;
-          let dx = X[j]! + OX[j]! - X[i]! - OX[i]!, dy = Y[j]! + OY[j]! - Y[i]! - OY[i]!;
-          const e = dx * dx + dy * dy;
-          if (e >= GAP * GAP) continue;
-          let L = Math.sqrt(e), p: number;
-          if (L < 1e-6) { const a = ((i * 0.618 + j * 0.382) % 1) * Math.PI * 2; dx = Math.cos(a); dy = Math.sin(a); L = 1; p = GAP / (wi + wj); } // (on one point: a fixed way apart)
-          else p = (GAP - L) / (wi + wj);
-          const ux = dx / L, uy = dy / L;
-          OX[i] = OX[i]! - ux * p * wi; OY[i] = OY[i]! - uy * p * wi; OX[j] = OX[j]! + ux * p * wj; OY[j] = OY[j]! + uy * p * wj;
-        }
+      for (let q = 0; q < np; q++) {
+        const i = PA[q]!, j = PB[q]!, wi = inv[i]!, wj = inv[j]!;
+        let dx = X[j]! + OX[j]! - X[i]! - OX[i]!, dy = Y[j]! + OY[j]! - Y[i]! - OY[i]!;
+        const e = dx * dx + dy * dy;
+        if (e >= GAP * GAP) continue;
+        let L = Math.sqrt(e), p: number;
+        if (L < 1e-6) { const a = ((i * 0.618 + j * 0.382) % 1) * Math.PI * 2; dx = Math.cos(a); dy = Math.sin(a); L = 1; p = GAP / (wi + wj); } // (on one point: a fixed way apart)
+        else p = (GAP - L) / (wi + wj);
+        const ux = dx / L * p, uy = dy / L * p;
+        OX[i] = OX[i]! - ux * wi; OY[i] = OY[i]! - uy * wi; OX[j] = OX[j]! + ux * wj; OY[j] = OY[j]! + uy * wj;
       }
     }
     for (let i = 0; i < n; i++) { const L = Math.hypot(OX[i]!, OY[i]!); if (L > OMAX) { OX[i] = OX[i]! * OMAX / L; OY[i] = OY[i]! * OMAX / L; } }
@@ -177,6 +195,9 @@ export class PeopleSpacer {
 const NW = WALK_DIRS.length;
 const W_END = WALKER_BASE + WALKER_PEOPLE.length * NW * WALK_FRAMES, S_END = SPECTATOR_BASE + SPECTATOR_PEOPLE.length * NW * SPECTATOR_FRAMES;
 const G_END = GOLFER_BASE + GOLFER_PEOPLE.length * NW * GOLFER_FRAMES;
+/** the most people spaced a frame (the rest drawn on their paths: a cap the biggest crowd on screen stays under, ~0.8 ms) */
+const SPACE_MAX = 3000;
+
 /** a person's look from his drawn item (the townspeople, the spectators, the golfers: his art; the same look is the same person to the solver),
  *  -1 for anything else */
 export function personLook(item: number): number {
@@ -197,7 +218,7 @@ export function personPinned(item: number): boolean {
 export function spacePeople(sp: PeopleSpacer, lists: readonly (readonly Drawable[])[], dt: number, refs: Drawable[]): void {
   sp.begin(); refs.length = 0;
   for (const list of lists) for (const d of list) {
-    const look = personLook(d.item); if (look < 0) continue;
+    const look = personLook(d.item); if (look < 0 || refs.length >= SPACE_MAX) continue;
     refs.push(d); sp.add(d.x, d.y, look, Math.round((d.lift ?? 0) / 8), personPinned(d.item));
   }
   if (!refs.length) { sp.solve(dt); return; }
