@@ -19,7 +19,7 @@ test('every stand-in gets "Stand In for <its plain name>", and nothing drawn as 
     if (standsIn(i) && it.kind !== 'tree') { labelled++; assert.equal(label, `Stand In for ${plainName(it)}`, `${it.id} is labelled`); }
     else { plain++; assert.equal(label, null, `${it.id} is drawn as itself (or not at all): no label`); }
   });
-  assert.ok(labelled > 20, `${labelled} stand-ins labelled`);
+  assert.ok(labelled > 0, `${labelled} stand-ins labelled`); // (T329: the owner's views for 182 of 204 buildings, 2026-11-02, left 2 old buildings drawn as stand-ins: the count only shrinks as the art lands; every one still drawn as a stand-in is checked)
   assert.ok(plain > 1000, `${plain} pictures with no label`);
 });
 
@@ -27,11 +27,15 @@ test('the labels name the building plainly', () => {
   const label = (id: string) => standInLabel(INDEX.get(id)!);
   // the owner's example, the church: its four views landed on 2026-10-26 (world-church-44e76535-plain-1-4views-v2), so it is drawn as itself now
   assert.equal(label('variation:world-church-44e76535-plain:1'), null);
-  assert.equal(label('golf:clubhouse-shanty'), 'Stand In for Starter clubhouse');
+  // (T329: the starter clubhouse has its own views since 2026-11-02 and is drawn as itself; two old buildings still stand in, named plainly)
+  assert.equal(label('golf:clubhouse-shanty'), null);
+  assert.equal(label('variation:expansion-abandoned-workshop-26852883:1'), 'Stand In for Derelict brick repair workshop');
   // (the fire house, the earlier example here, was removed in the studio: removed.json; the next Rebuild left it out of the library, T154)
-  assert.equal(label('world:watertower'), 'Stand In for Watertower');
-  assert.equal(label('world:gazebo'), 'Stand In for Gazebo');
-  assert.equal(label('variation:expansion-garage-rear-91bcbe45:1'), 'Stand In for Timber garage');
+  // (T329: the water tower was removed in the studio on 2026-11-02: the produce crates stand in now)
+  assert.equal(label('town:produce_stand'), 'Stand In for Storefront produce crates');
+  // (T329: the gazebo and the timber garage have their own views since 2026-11-02: drawn as themselves, no label)
+  assert.equal(label('world:gazebo'), null);
+  assert.equal(label('variation:expansion-garage-rear-91bcbe45:1'), null);
   // real art and props: none
   for (const id of ['town:bakery', 'golf:grandstand-s', 'business:golf-clubhouse', 'business:golf-pin-red', 'business:golf-bench-course-map', 'world:streetlamp'])
     assert.equal(label(id), null, `${id} has no label`);
