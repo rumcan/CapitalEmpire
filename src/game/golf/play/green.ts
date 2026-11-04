@@ -156,12 +156,14 @@ export function shotShape(bend: number): 'straight' | 'draw' | 'fade' | 'hook' |
   const d = bend * 180 / Math.PI, a = Math.abs(d);
   return a < 1.5 ? 'straight' : d < 0 ? (a < 6 ? 'draw' : 'hook') : (a < 6 ? 'fade' : 'slice');
 }
-/** the ground point of a full shot at a share u of its flight, into out: a quadratic from the ball through a control point on the aim's line (half the
- *  carry out), to where it lands, so the flight starts on the aim and bends to the landing (a straight shot: a straight line) */
+/** how far out along the aim's line (a share of the carry) a flight's control point is: the later, the later and harder it bends */
+export const BEND_AT = 0.65;
+/** the ground point of a full shot at a share u of its flight, into out: a quadratic from the ball through a control point on the aim's line (BEND_AT
+ *  of the carry out), to where it lands, so the flight starts on the aim and bends to the landing (a straight shot: a straight line) */
 export function shotPoint(from: Pt, aim: Pt | null, land: Pt, u: number, out: { x: number; y: number }): void {
   const d = Math.hypot(land.x - from.x, land.y - from.y), ax = aim ? aim.x - from.x : 0, ay = aim ? aim.y - from.y : 0, al = Math.hypot(ax, ay);
   let cx = (from.x + land.x) / 2, cy = (from.y + land.y) / 2;
-  if (al > 1e-6 && d > 1e-6) { const ux = ax / al, uy = ay / al, dot = Math.max(0, (land.x - from.x) * ux + (land.y - from.y) * uy) / 2; cx = from.x + ux * dot; cy = from.y + uy * dot; }
+  if (al > 1e-6 && d > 1e-6) { const ux = ax / al, uy = ay / al, dot = Math.max(0, (land.x - from.x) * ux + (land.y - from.y) * uy) * BEND_AT; cx = from.x + ux * dot; cy = from.y + uy * dot; }
   const v = 1 - u; out.x = v * v * from.x + 2 * v * u * cx + u * u * land.x; out.y = v * v * from.y + 2 * v * u * cy + u * u * land.y;
 }
 

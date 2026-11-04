@@ -7958,9 +7958,14 @@ export class Game {
   private drawYourBall(ctx: CanvasRenderingContext2D) {
     const r = this.yourRound(); if (!r || r.over || this.cam.z < DISTRICT_Z) return;
     const f = this.yrFlight; if (!f && (r.holed || this.shot?.mine)) return;
-    const b = f ? yourBallAt(f) : { x: r.ball.x, y: r.ball.y, h: 0, sink: 0 }; if (b.sink >= 1) return;
-    const dpr = this.dpr, p = this.screen(b.x, b.y), lift = b.h * HH * this.cam.z * dpr, rad = Math.max(3 * dpr, 0.14 * HW * this.cam.z * dpr) * (1 - 0.6 * b.sink);
+    const b = f ? yourBallAt(f) : { x: r.ball.x, y: r.ball.y, h: 0, sink: 0 };
+    const dpr = this.dpr, p = this.screen(b.x, b.y), lift = b.h * HH * this.cam.z * dpr, r0 = Math.max(3 * dpr, 0.14 * HW * this.cam.z * dpr), rad = r0 * (1 - 0.5 * b.sink);
     ctx.save();
+    if (b.sink > 0) {
+      // in the cup: the hole a dark oval, the ball sinking into it, its top left showing once in
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, r0 * 1.35, r0 * 0.7, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(10,14,20,0.85)'; ctx.fill();
+      if (b.sink >= 1) { ctx.beginPath(); ctx.ellipse(p.x, p.y - r0 * 0.1, r0 * 0.6, r0 * 0.32, 0, Math.PI, Math.PI * 2); ctx.fillStyle = '#e2e8f0'; ctx.fill(); ctx.restore(); return; }
+    }
     if (lift > 0.5) { ctx.beginPath(); ctx.ellipse(p.x, p.y, 3 * dpr, 1.5 * dpr, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(15,23,42,0.35)'; ctx.fill(); }
     else if (b.sink <= 0) { ctx.beginPath(); ctx.ellipse(p.x - 0.55 * rad, p.y + 0.45 * rad, rad * 1.05, rad * 0.55, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(15,23,42,0.3)'; ctx.fill(); }
     const g = 248 - 150 * b.sink | 0;
@@ -8017,10 +8022,18 @@ export class Game {
   /** a green's break grid (cached; built once per pin, height edit and course grid change: a few hundred points) */
   private breakGridOf(pin: Pt): BreakGrid | null {
     const g = this.courseGrid; if (!g) return null;
-    const key = `${pin.x.toFixed(2)},${pin.y.toFixed(2)}|${this.courseHeight.rev}|${g.rev}`;
+    const key = `${pin.x.toFixed(2)},${pin.y.toFixed(2)}|${this.courseHeight.rev}|${g.rev}|${this.net.version}`;
     let bg = this.breakGrids.get(key);
     if (!bg) {
-      bg = buildBreakGrid(this.ballHeight, (x, y) => { const k = cellAt(g, x, y); return k >= 0 && g.surf[k] === SURF.green; }, pin.x, pin.y, 22);
+      // on the green's cells and off any cart path or road crossing it (a path's half width and its verge)
+      const onPath = (x: number, y: number): boolean => {
+        for (const sg of this.net.segsNear({ x, y }, 4)) {
+          const ax = sg.a.x, ay = sg.a.y, dx = sg.b.x - ax, dy = sg.b.y - ay, L2 = dx * dx + dy * dy, u = L2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / L2)) : 0;
+          if (Math.hypot(x - ax - dx * u, y - ay - dy * u) < sg.cls.h + sg.cls.walk + 0.25) return true;
+        }
+        return false;
+      };
+      bg = buildBreakGrid(this.ballHeight, (x, y) => { const k = cellAt(g, x, y); return k >= 0 && g.surf[k] === SURF.green && !onPath(x, y); }, pin.x, pin.y, 22);
       if (this.breakGrids.size >= 6) this.breakGrids.delete(this.breakGrids.keys().next().value!);
       this.breakGrids.set(key, bg);
     }
@@ -8087,6 +8100,10 @@ export class Game {
       if (tracerGone(age)) { T.splice(n, 1); continue; }
       if (el <= 0) continue;
       const A = tracerAlpha(age), uMax = Math.min(1, el / f.air), H = Math.min(12, Math.hypot(land.x - f.from.x, land.y - f.from.y) / 8), N = 40;
+      // its track on the ground (the bend reads there whatever the view), faint, then the flight
+      ctx.beginPath();
+      for (let k = 0; k <= N; k++) { shotPoint(f.from, f.aim, land, uMax * k / N, pt); const X = (pt.x - pt.y) * ax + cx, Y = (pt.x + pt.y) * ay + cy; if (k) ctx.lineTo(X, Y); else ctx.moveTo(X, Y); }
+      ctx.strokeStyle = `rgba(250,204,21,${0.35 * A})`; ctx.lineWidth = 1.5 * this.dpr; ctx.setLineDash([4 * this.dpr, 5 * this.dpr]); ctx.stroke(); ctx.setLineDash([]);
       ctx.beginPath();
       for (let k = 0; k <= N; k++) {
         const u = uMax * k / N; shotPoint(f.from, f.aim, land, u, pt);
