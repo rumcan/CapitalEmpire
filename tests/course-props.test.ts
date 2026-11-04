@@ -104,7 +104,8 @@ test('every business draws its pictures as themselves or as a stand-in of their 
           assert.ok(BUILDING_IDS.has(id), `${id} on a ${type} is a prop but is drawn as ${d}`);
           assert.equal(standInFamily(BY_ID.get(d)!), standInFamily(BY_ID.get(id)!), `${id} on a ${type} is drawn as ${d}`);
         }
-        if (id === 'golf:clubhouse-shanty') { club++; assert.equal(d, 'business:golf-clubhouse', `the starter clubhouse is drawn as ${d}`); }
+        // (T329: the shack has its own views since 2026-11-02 and is drawn as itself; before, the grand clubhouse stood in for it)
+        if (id === 'golf:clubhouse-shanty') { club++; assert.ok(d === 'golf:clubhouse-shanty' || d === 'business:golf-clubhouse', `the starter clubhouse is drawn as ${d}`); }
       }
     }
   }
