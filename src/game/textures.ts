@@ -487,7 +487,10 @@ export class Textures {
     this.mosaics.set('base', this.mipChain(this.mosaic(seeds, srcA, srcB))); await tick();
     this.mosaics.set('lit1', this.mipChain(this.mosaic(seeds, lit(srcA, 0.4), lit(srcB, 0.4)))); await tick();
     this.mosaics.set('lit2', this.mipChain(this.mosaic(seeds, lit(srcA, 0.9), lit(srcB, 0.9)))); await tick();
-    this.mosaics.set('lot', this.mipChain(lotMosaic(toCanvas(lotImg)))); await tick();
+    const lotSrc = toCanvas(lotImg);
+    this.mosaics.set('lot', this.mipChain(lotMosaic(lotSrc))); await tick();
+    // T298 (#883): the car park asphalt lit by a lamp (the road's lit(0.4) response on the lot's own painting), made on first use (a bake with a car park lamp)
+    this.lazyMosaics.set('lotLit', () => (function* (t: Textures) { const c = lit(lotSrc, 0.4); yield; t.mosaics.set('lotLit', t.mipChain(lotMosaic(c))); })(this));
     // ---- grass: hex-mixed paintings with low-frequency tone, in screen space
     // the base grass: the owner's mix and picture sizes when the studio's Ground tab saved them (art.grassMix), else the game's original
     const gm = art.grassMix, pa = Math.round((gm?.px[0] ?? 256) * AUTHOR), pb = Math.round((gm?.px[1] ?? 256) * AUTHOR);

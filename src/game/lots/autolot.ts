@@ -22,12 +22,15 @@ import { axisSetOf, drawnView, faces, isVehicle, ownerScaleOf } from './preset-a
 import { CHAIN, OVERLAP, PRIVACY, mix, share, type Box4, type LotGeom } from './compose-core';
 import { mulberry } from '../iso';
 import { carPark } from './carpark-lot';
+import { centreLot, type CentreKit } from './centre';
+import { centreOf } from './centre-biz';
 import { parsePresets, type Fitted, type LotPreset, type PresetPatch, type PresetProp, type PresetState, type PresetUse, type Road, type View } from './presets';
 import PRESET_JSON from './lot-presets.json';
 
-/** the templates a lot draws (the lot lab's picker lists them all): a house, a corner house, a trailer park, a junk yard and a small shop */
-export type AutoTemplate = 'house' | 'corner' | 'trailer' | 'junk' | 'shop';
-export const AUTO_TEMPLATES: readonly AutoTemplate[] = ['house', 'corner', 'trailer', 'junk', 'shop'];
+/** the templates a lot draws (the lot lab's picker lists them all): a house, a corner house, a trailer park, a junk yard, a small shop and (T298) a small
+ *  shopping centre (the town gives it to a commercial lot it widens over its neighbours: centre-biz.ts; the lab to any lot) */
+export type AutoTemplate = 'house' | 'corner' | 'trailer' | 'junk' | 'shop' | 'centre';
+export const AUTO_TEMPLATES: readonly AutoTemplate[] = ['house', 'corner', 'trailer', 'junk', 'shop', 'centre'];
 /** the template a lot of a use, tier and seed draws: res splits by the seed (a house, a corner house, and on a starter lot a quarter trailer parks);
  *  ind is a junk yard, com a small shop; a park, a tour venue and a civic lot have none (null) */
 export function templateOf(use: PresetUse, tier: number, seed: number): AutoTemplate | null {
@@ -62,7 +65,7 @@ export function texOf(use: PresetUse, state: PresetState, kind: PresetPatch['kin
 /** the owned boundary: the preset x of the side line the lot owns and whether it owns its back (compose's boundaryFence rule) */
 interface Own { side: number; back: boolean }
 /** a template's seed salts (the lot's draws differ by template) */
-const SALT: Record<AutoTemplate, number> = { house: 0x51, corner: 0x52, trailer: 0x53, junk: 0x54, shop: 0x55 };
+const SALT: Record<AutoTemplate, number> = { house: 0x51, corner: 0x52, trailer: 0x53, junk: 0x54, shop: 0x55, centre: 0x56 };
 
 let HOUSE_ODD: string[] | null = null, HOUSE_EVEN: string[] | null = null;
 /** the pieces with a screen-axis set that are not houses: a back yard's set or deck, a pool, a shop of the industry, a warehouse (the house pick skips them) */
@@ -81,7 +84,7 @@ const JUNK_PILES = ['expansion:scrap-metal', 'expansion:tyre-stack', 'expansion:
 const JUNK_CARS = ['expansion:junk-car', 'expansion:scrap-pickup-rear', 'expansion:crushed-car-stack'];
 
 /** one lot's layout in the preset frame: its props and ground patches (the composer's footprints and overlap rule), filled as the template asks */
-class Lay {
+export class Lay {
   readonly props: PresetProp[] = [];
   readonly patches: PresetPatch[] = [];
   readonly boxes: Box4[] = [];
@@ -289,6 +292,18 @@ function shopLot(L: Lay, own: Own, first: number): boolean {
   return true;
 }
 
+/** T298 (#883): a small shopping centre (centre.ts) with the shops of its business (centre-biz.ts: the town's picks, each counted against T295's cap), else
+ *  the palette from the lot's colour (the lot lab). A shop of the list that cannot stand here (removed, above the lot's tier, or with no picture facing this
+ *  road: on a screen-straight street only the shops with a screen-axis set) is replaced by the next palette shop that can, so the centre shows as many
+ *  shops as it asked for and no shop twice. False when the lot is too small for one (the caller lays a small shop) */
+function centreTpl(L: Lay, shops: readonly string[], seed: number): boolean {
+  const ok = (id: string) => !gone(id) && tierOf(id) <= L.tier && faces(id, L.road);
+  const want = shops.filter(ok), rest = SHOP_PALETTE.filter(id => !shops.includes(id) && ok(id));
+  for (const id of shops) if (!ok(id) && rest.length) want.push(rest.shift()!);
+  const kit: CentreKit = { trees: realTrees(), shrubs: HEDGE, ok };
+  return centreLot(L, want, kit, seed) !== null;
+}
+
 /** a plot no template fits (a lot too shallow for a house, say): planters by the street, the yard trees and the owned boundary, so the lot is never bare */
 function plotLot(L: Lay, own: Own): boolean {
   const { W } = L;
@@ -309,7 +324,7 @@ interface Keep { b: Box4; m: number }
 const gapTo = (b: Box4, x: number, y: number): number => Math.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - y, 0, y - b[3]));
 let REAL_TREES: string[] | null = null;
 /** the owner's 56 real trees (library cat 'New: Trees'; their NE view, as the decor menu offers them), the leafed ones (no bare or dead tree in a yard) */
-function realTrees(): string[] {
+export function realTrees(): string[] {
   return REAL_TREES ??= LIBRARY.filter(it => it.kind === 'tree' && it.cat === 'New: Trees' && it.id.endsWith(':ne') && !/bare|dead|stump/.test(it.id) && !gone(it.id)).map(it => it.id).sort();
 }
 /** one yard tree at (x, y) clear of the kept boxes (each gap times slack): from the lot groups' trees of the zone (the owner's own picks) or the real
@@ -349,7 +364,7 @@ function yardTrees(L: Lay, keep: readonly Keep[], have = 0): number {
   return n;
 }
 /** the clipped hedge's shrubs (round ones: they read as a hedge along any line), drawn in turn by the lot's draws */
-const HEDGE = ['landscape:bush-deep-green', 'landscape:bush-sage-round', 'world:bush_0', 'landscape:bush-deep-green'];
+export const HEDGE = ['landscape:bush-deep-green', 'landscape:bush-sage-round', 'world:bush_0', 'landscape:bush-deep-green'];
 /** a hedge's shrubs: about HEDGE_STEP tiles apart, each fitted to HEDGE_HALF (tiles) */
 const HEDGE_STEP = 1.4, HEDGE_HALF = 1.0;
 /** a hedge from (x0, y0) to (x1, y1): its shrubs laid where they are clear (a tree's trunk or a shed leaves a gap; open: the drive, never planted over).
@@ -439,8 +454,10 @@ export function clearAutoLots(): void { CACHE.clear(); }
 export function autoLot(lot: LotGeom, use: PresetUse, tier: number, seed: number, state: PresetState = 'built', template: AutoTemplate | null = templateOf(use, tier, seed), biz?: string): LotPreset | null {
   if (!template) return null;
   // (a shop: the business the town picked for the lot (T295 #2, LotState.biz), else the lot's colour on the street lattice, T270)
-  const first = template !== 'shop' ? 0 : biz !== undefined && SHOP_PALETTE.includes(biz) ? SHOP_PALETTE.indexOf(biz) : colourOf(lot, SHOP_PALETTE.length);
-  const road = roadOf(lot.n), key = `${lot.w}|${lot.d}|${road}|${facingOf(lot.n)}|${use}|${state}|${tier}|${seed}|${template}|${first}`;
+  const first = template !== 'shop' && template !== 'centre' ? 0 : biz !== undefined && SHOP_PALETTE.includes(biz) ? SHOP_PALETTE.indexOf(biz) : colourOf(lot, SHOP_PALETTE.length);
+  // (T298: a centre's shops: its business's, else the palette from the lot's colour)
+  const shops = template === 'centre' ? centreOf(biz)?.shops ?? tryOrder(first, SHOP_PALETTE.length).map(c => SHOP_PALETTE[c]!) : [];
+  const road = roadOf(lot.n), key = `${lot.w}|${lot.d}|${road}|${facingOf(lot.n)}|${use}|${state}|${tier}|${seed}|${template}|${first}|${shops.join('+')}`;
   const hit = CACHE.get(key); if (hit !== undefined) return hit;
   const f = frameOf(lot), own = ownedOf(lot);
   let L: Lay | null = null;
@@ -449,12 +466,15 @@ export function autoLot(lot: LotGeom, use: PresetUse, tier: number, seed: number
   for (const drive of modes) {
     const T = new Lay(f, lot.w, lot.d, use, state, road, tier, mulberry(mix(seed, SALT[template], 0x305)));
     const ok = template === 'house' ? houseLot(T, false, (seed >> 2) % 2 === 0, own, drive) : template === 'corner' ? houseLot(T, true, (seed >> 2) % 2 === 0, own, false)
-      : template === 'trailer' ? trailerLot(T) : template === 'junk' ? junkLot(T) : shopLot(T, own, first);
+      : template === 'trailer' ? trailerLot(T) : template === 'junk' ? junkLot(T) : template === 'centre' ? centreTpl(T, shops, seed) : shopLot(T, own, first);
     if (ok) { L = T; break; }
   }
+  // (T298: a lot too small for a centre is a small shop)
+  let drawn: AutoTemplate = template;
+  if (!L && template === 'centre') { const T = new Lay(f, lot.w, lot.d, use, state, road, tier, mulberry(mix(seed, SALT.shop, 0x305))); if (shopLot(T, own, first)) { L = T; drawn = 'shop'; } }
   // (the template does not fit: the plot, so the lot is never left bare on a road it has to front)
   if (!L) { const T = new Lay(f, lot.w, lot.d, use, state, road, tier, mulberry(mix(seed, 0x306))); if (plotLot(T, own)) L = T; }
-  const out: LotPreset | null = L ? { id: `auto:${template}`, use, state, w: lot.w, d: lot.d, props: L.props, patches: L.patches, whole: true } : null;
+  const out: LotPreset | null = L ? { id: `auto:${drawn}`, use, state, w: lot.w, d: lot.d, props: L.props, patches: L.patches, whole: true } : null;
   if (CACHE.size > 4096) CACHE.clear();
   CACHE.set(key, out);
   return out;

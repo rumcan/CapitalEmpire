@@ -563,6 +563,8 @@ export type OccRaster = (net: RoadNetwork, box: BBox) => void;
 export class RoadNetwork {
   nodes = new Map<string, Node>(); segs = new Set<Seg>(); version = 0;
   routes = new Set<Route>(); pools: Pool[] = [];
+  /** T298 (#883): the lamps standing off the roads (a car park's lamp posts): their pools light the car parks' asphalt (renderer.ts drawLots), not the road's */
+  lotPools: Pool[] = [];
   occ = new Uint8Array(MAP * MAP);
   /** the ground box the last rebuild changed (null = nothing), and the auto props it added and removed */
   lastDirty: BBox | null = null; autoAdded: AutoProp[] = []; autoRemoved: AutoProp[] = [];
@@ -723,7 +725,7 @@ export class RoadNetwork {
     this.speedTier = 0;
     this.litterLRU.clear();
     this.nodes.clear(); this.segs.clear(); this.routes.clear(); this.routeOf.clear(); this.routeFx.clear(); this.nodeFx.clear();
-    this.segGrid.clear(); this.fxGrid.clear(); this.poolGrid.clear(); this.pools = []; this.occ.fill(0); this.touched.clear(); this.removed.clear(); this.version++;
+    this.segGrid.clear(); this.fxGrid.clear(); this.poolGrid.clear(); this.pools = []; this.lotPools = []; this.occ.fill(0); this.touched.clear(); this.removed.clear(); this.version++;
   }
 
   /** Rebuild what the edits since the last rebuild touched: the touched nodes and their neighbours, every route through
@@ -1159,19 +1161,21 @@ export class RoadNetwork {
   /** Street lamps (the ground points below their heads, tiles: engine.ts lampHeads) light the road when a curb is within 2.5 tiles; the pool
    *  sits right below the head (T324: no longer moved onto the curb point, off its lamp). Returns the boxes whose ground changed. */
   setLamps(lamps: Pt[]): BBox[] {
-    const pools: Pool[] = [];
+    const pools: Pool[] = [], lotPools: Pool[] = [];
     for (const l of lamps) {
       let near = false;
       for (const s of this.segsNear(l, 12)) {
         const d = sub(s.b, s.a), L = vlen(d), u = mul(d, 1 / L), t = clamp(dot(sub(l, s.a), u), 0, L), q = add(s.a, mul(u, t));
         if (Math.abs(vlen(sub(l, q)) - s.cls.h) < 2.5) { near = true; break; }
       }
-      if (near) pools.push({ x: l.x, y: l.y, strength: 1 });
+      (near ? pools : lotPools).push({ x: l.x, y: l.y, strength: 1 });
     }
-    const key = (p: Pool) => p.x.toFixed(3) + ',' + p.y.toFixed(3), before = new Set(this.pools.map(key)), after = new Set(pools.map(key)), changed: BBox[] = [];
-    for (const p of this.pools) if (!after.has(key(p))) changed.push([p.x - 9, p.y - 9, p.x + 9, p.y + 9]);
-    for (const p of pools) if (!before.has(key(p))) changed.push([p.x - 9, p.y - 9, p.x + 9, p.y + 9]);
-    this.pools = pools; this.poolGrid.clear(); for (const p of pools) this.poolGrid.add(p, [p.x - 9, p.y - 9, p.x + 9, p.y + 9]);
+    // (T298: a lamp off the road lights its car park: the lot pools, keyed apart so a lamp moving between the two lists re-bakes its ground)
+    const key = (p: Pool) => p.x.toFixed(3) + ',' + p.y.toFixed(3), all = (r: Pool[], l: Pool[]) => [...r.map(key), ...l.map(p => 'L' + key(p))];
+    const before = new Set(all(this.pools, this.lotPools)), after = new Set(all(pools, lotPools)), changed: BBox[] = [];
+    for (const [p, k] of [...this.pools.map(p => [p, key(p)] as const), ...this.lotPools.map(p => [p, 'L' + key(p)] as const)]) if (!after.has(k)) changed.push([p.x - 9, p.y - 9, p.x + 9, p.y + 9]);
+    for (const [p, k] of [...pools.map(p => [p, key(p)] as const), ...lotPools.map(p => [p, 'L' + key(p)] as const)]) if (!before.has(k)) changed.push([p.x - 9, p.y - 9, p.x + 9, p.y + 9]);
+    this.pools = pools; this.lotPools = lotPools; this.poolGrid.clear(); for (const p of pools) this.poolGrid.add(p, [p.x - 9, p.y - 9, p.x + 9, p.y + 9]);
     return changed;
   }
   private decalsFor(r: Route, out: Decal[]) {

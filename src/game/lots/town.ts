@@ -8,6 +8,7 @@ import { FARM_LINE, GROWN_BASE, GROWN_BUILD_S, GROWN_PER_BUILT, GROWN_PER_HOLE, 
 import { inCommercial, inIndustrial, industrialRect } from './districts';
 import { tierOf } from './tiers';
 import { SHOP_PALETTE, colourOf, tryOrder } from './variety';
+import { CENTRE_BUILT, CENTRE_TIER, bizNames, centreBiz, centreOf, findSpan, isCentre, partBiz, partOf, shopCount, spanCovers } from './centre-biz';
 
 export const LU = { NONE: 0, RES: 1, COM: 2, IND: 3, TOUR: 4, GOV: 5 } as const;
 /** shops gather in rows: a lot's shop neighbours (within COM_ROW tiles, on the same side of the street) raise its shop score by COM_PULL each
@@ -121,6 +122,8 @@ export class Town {
   tier = 3;
   /** T295 #2: the lots standing per shop business (the commercial lots' biz), and whether a restore is loading the saved lots (no new picks then) */
   private bizN = new Map<string, number>(); private loading = false;
+  /** T298 (#883): the events of the empty lots a shopping centre took as its parts or let go ('clear': they compose again), sent with the next batch */
+  private spill: TownEvent[] = [];
   popK: number[] = []; builtK: number[] = []; govK: number[] = [];
 
   constructor(seed: number) { this.seed = seed >>> 0; this.rs = this.seed; }
@@ -131,6 +134,9 @@ export class Town {
     for (const l of added) keep.add(l.key);
     for (const key of removed) {
       const s = this.states.get(key); if (!s || keep.has(key)) continue;
+      // (T298: a centre's part gone (a road through it): the centre would stand over the road, so it is cleared, its other parts let go)
+      const a = partOf(s.biz), as = a !== null ? this.states.get(a) : undefined;
+      if (as && as.level !== LV.EMPTY) { this.set(as, LU.NONE, LV.EMPTY, 0, this.t); ev.push(this.evt(as, 'clear')); }
       ev.push({ key, kind: 'gone', use: s.use, level: s.level, decline: s.decline, seed: s.seed, since: s.since });
       this.set(s, LU.NONE, LV.EMPTY, 0, this.t);
       this.candDel(key); this.states.delete(key); this.geo.delete(key); this.townIdx.delete(key);
@@ -143,8 +149,11 @@ export class Town {
       }
     }
     if (added.length || removed.length) this.dirty = true;
+    this.drain(ev);
     return ev;
   }
+  /** T298: the spilled events into a batch */
+  private drain(ev: TownEvent[]) { if (this.spill.length) { for (const e of this.spill) ev.push(e); this.spill.length = 0; } }
 
   /** a saved town on load (after the lots are known): the states of the saved keys that exist, the clock at t (the hour too, so
    *  no hours are replayed). Returns a 'complete' event per restored lot, so the main thread composes it. */
@@ -157,6 +166,11 @@ export class Town {
       // (an old save's lot has no tier or business: it stays as it was drawn, the top tier and the lattice colour)
       s.tier = tier; this.bizSet(s, biz);
       ev.push({ key, kind: 'complete', use, level, decline, seed, since, tier: s.tier, biz: s.biz });
+    }
+    // T298: a shopping centre's parts (empty, so not saved) taken again from its business: the lots its span covers
+    for (const s of this.states.values()) {
+      const c = centreOf(s.biz), a = this.geo.get(s.key); if (!c || !a || s.level === LV.EMPTY) continue;
+      for (const [k, l] of this.geo) { const p = this.states.get(k)!; if (p.level === LV.EMPTY && p.use === LU.NONE && spanCovers(a, l, c)) { p.biz = partBiz(s.key); ev.push(this.evt(p, 'clear')); } }
     }
     this.loading = false;
     this.t = t; this.hour = Math.floor(t / HOUR);
@@ -189,6 +203,7 @@ export class Town {
         this.set(s, use, level, 0, T); out.push(this.evt(s, 'complete'));
       }
     }
+    this.drain(out);
     return out;
   }
 
@@ -212,6 +227,7 @@ export class Town {
     const h = Math.floor(t / HOUR);
     while (this.hour < h) { this.hour++; this.step(this.hour * HOUR, ctx, ev); }
     if (t > this.t) this.t = t;
+    this.drain(ev);
     return ev;
   }
 
@@ -276,6 +292,8 @@ export class Town {
   /** the zone growth of a lot's zone if the lot is reachable, else 0 */
   private openness(l: Lot, ctx: TownCtx): number {
     if ((this.holdUntil.get(l.key) ?? -Infinity) > this.t) return 0;
+    // (T298: a shopping centre's part: the centre stands on it)
+    if (partOf(this.states.get(l.key)?.biz) !== null) return 0;
     return ctx.reachable(l) ? zoneGrowth(this.access[zoneOf(l.c.x, l.c.y)]) : 0;
   }
 
@@ -464,7 +482,7 @@ export class Town {
     const was = s.use !== LU.NONE, k = this.townOf(s.key);
     // T295: a lot built or upgraded takes the town's tier; a lot cleared gives its business back (before its level changes: the count is of a standing lot)
     const fresh = s.level === LV.EMPTY && level !== LV.EMPTY, upg = s.level === LV.BUILT && level === LV.UPGRADED;
-    if (level === LV.EMPTY) this.bizSet(s, undefined);
+    if (level === LV.EMPTY) { if (isCentre(s.biz)) this.release(s.key); this.bizSet(s, undefined); }
     if (s.level !== LV.EMPTY) { this.cnt[s.use]--; this.occ--; }
     this.pop -= s.pop; this.jobs -= s.jobs;
     if (k >= 0) this.popK[k] -= s.pop;
@@ -473,7 +491,8 @@ export class Town {
     s.use = use; s.level = level; s.decline = decline; s.since = T;
     if (fresh || upg) s.tier = this.tier;
     // T295 #2: a new commercial lot shows a business the town can take (pickBiz); none for the other uses
-    if (fresh && !this.loading) this.bizSet(s, use === LU.COM ? this.pickBiz(this.geo.get(s.key)!) : undefined);
+    // T298: a grown town's commercial lot with room beside it becomes the town's shopping centre (centreFor), the shops its businesses
+    if (fresh && !this.loading) this.bizSet(s, use === LU.COM ? this.centreFor(s.key) ?? this.pickBiz(this.geo.get(s.key)!) : undefined);
     s.pop = yieldOf(POP, s); s.jobs = yieldOf(JOBS, s);
     this.pop += s.pop; this.jobs += s.jobs;
     if (k >= 0) this.popK[k] += s.pop;
@@ -493,24 +512,51 @@ export class Town {
    *  (That is the fewest lots first, ties in the lattice order.) T331 (#945): among the businesses with the fewest lots, one no standing shop beside it or
    *  across the street shows (BIZ_NEAR) first: leaving its colour for the fewest lots put the same shop side by side (T270, the owner: "5 video vault
    *  stores next to eachother"). With no shop nearby it is the T295 pick as before */
-  private pickBiz(l: Lot): string {
+  private pickBiz(l: Lot, taken: readonly string[] = []): string {
     const pal = SHOP_PALETTE, n = pal.length;
     const order = tryOrder(colourOf(l, n), n).map(i => pal[i]!);
     let pool = order.filter(id => tierOf(id) <= this.tier); if (!pool.length) pool = order;
     const cnt = (id: string) => this.bizN.get(id) ?? 0, near = new Set<string>();
     for (const s of this.states.values()) {
       if (s.biz === undefined || s.level === LV.EMPTY || s.key === l.key) continue;
-      const o = this.geo.get(s.key); if (o && dist(o.c, l.c) < BIZ_NEAR) near.add(s.biz);
+      const o = this.geo.get(s.key); if (o && dist(o.c, l.c) < BIZ_NEAR) for (const b of bizNames(s.biz)) near.add(b);
     }
-    const rank = (id: string) => 2 * cnt(id) + (near.has(id) ? 1 : 0);
+    // (T298: a centre's shops are picked in turn, each one taken counting as a lot more and never picked twice)
+    const rank = (id: string) => 2 * (cnt(id) + (taken.includes(id) ? 1 : 0)) + (near.has(id) ? 1 : 0) + (taken.includes(id) ? 1000 : 0);
     let best = pool[0]!; for (const id of pool) if (rank(id) < rank(best)) best = id;
     return best;
   }
   /** T295 #2: a lot's business (undefined: none), its count moving with it while the lot stands (BUILDING or more); call it before a lot's level changes to EMPTY */
   private bizSet(s: LotState, b: string | undefined) {
-    if (s.biz !== undefined && s.level !== LV.EMPTY) this.bizN.set(s.biz, (this.bizN.get(s.biz) ?? 1) - 1);
+    // (T298: a centre counts each of its shops; a centre's part counts nothing)
+    if (s.level !== LV.EMPTY) for (const id of bizNames(s.biz)) this.bizN.set(id, (this.bizN.get(id) ?? 1) - 1);
     s.biz = b;
-    if (b !== undefined && s.level !== LV.EMPTY) this.bizN.set(b, (this.bizN.get(b) ?? 0) + 1);
+    if (s.level !== LV.EMPTY) for (const id of bizNames(b)) this.bizN.set(id, (this.bizN.get(id) ?? 0) + 1);
+  }
+
+  /** T298 (#883; the owner, 2026-11-02: "build small shopping center with multiple commercial stores circling a nice parking lot"): the business of a new
+   *  commercial lot that becomes a shopping centre, or undefined. A grown town (setGrown) at the town tier or above (CENTRE_TIER), with CENTRE_BUILT lots built
+   *  and no centre standing in this town, makes one where the lot and its empty neighbours on the street line reach CENTRE_W (centre-biz.ts findSpan):
+   *  the neighbours become its parts (held: the town grows nothing on them; spilled 'clear' events compose them as nothing), its shops are picked in turn
+   *  as a shop lot's are (pickBiz: the fewest lots first, so each named shop keeps to T295's cap of two) */
+  private centreFor(key: string): string | undefined {
+    if (!this.grown || this.tier < CENTRE_TIER || this.built < CENTRE_BUILT) return undefined;
+    const k = this.townOf(key), l = this.geo.get(key); if (!l) return undefined;
+    for (const s of this.states.values()) if (isCentre(s.biz) && s.level !== LV.EMPTY && this.townOf(s.key) === k) return undefined;
+    const free: Lot[] = [];
+    for (const c of this.cand) {
+      if (c.key === key || this.townOf(c.key) !== k || (this.holdUntil.get(c.key) ?? -Infinity) > this.t) continue;
+      const s = this.states.get(c.key); if (s && s.use === LU.NONE && s.level === LV.EMPTY && partOf(s.biz) === null) free.push(c);
+    }
+    const f = findSpan(l, free); if (!f) return undefined;
+    const shops: string[] = [];
+    for (let i = shopCount(l.w + f.span.l + f.span.r); i > 0; i--) { const b = this.pickBiz(l, shops); if (shops.includes(b)) break; shops.push(b); }
+    for (const p of f.parts) { const s = this.states.get(p)!; s.biz = partBiz(key); this.spill.push(this.evt(s, 'clear')); }
+    return centreBiz({ ...f.span, shops });
+  }
+  /** T298: a centre's parts let go (its anchor cleared): their business dropped, a 'clear' event each so they compose as empty lots again */
+  private release(key: string) {
+    for (const s of this.states.values()) if (partOf(s.biz) === key) { s.biz = undefined; this.spill.push(this.evt(s, 'clear')); }
   }
 
   /** the distance of every candidate to the nearest lot not EMPTY (none: Infinity) */
