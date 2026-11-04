@@ -54,10 +54,11 @@ export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: 
 }
 
 /** the round's bar (top centre): where you are in the round, the score so far, and the buttons */
-export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCard, onQuit, onSkip }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCallCart: () => void; onMull: () => void; onGimme: () => void; onCard: () => void; onQuit: () => void; /** T244: Skip to result (a money match) */ onSkip?: () => void }) {
+export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCard, onQuit, onSkip, left = '0.75rem', right = '0.75rem' }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCallCart: () => void; onMull: () => void; onGimme: () => void; onCard: () => void; onQuit: () => void; /** T244: Skip to result (a money match) */ onSkip?: () => void;
+  /** T328 (#936): the bar's edges (CSS lengths), clear of the left rail and of a right-hand card (event, tee, talk, challenge) */ left?: string; right?: string }) {
   const t = v.totals, r = v.round;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-[calc(var(--hud-top,6rem)+2.75rem)] z-20 flex justify-center px-3">
+    <div className="pointer-events-none absolute top-[calc(var(--hud-top,6rem)+2.75rem)] z-20 flex justify-center" style={{ left, right }}>
       <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-slate-950/85 px-3 py-1.5 text-xs text-slate-200 shadow-xl backdrop-blur" data-testid="round-bar">
         {v.match && onSkip && <MatchStrip m={v.match} onSkip={onSkip} />}
         <span className="font-display font-bold text-[var(--gold-hi)]">Hole {v.hole}</span>

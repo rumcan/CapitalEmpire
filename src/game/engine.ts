@@ -36,7 +36,7 @@ import { collarTexes, courseLookSet, type BrushLooks, type LookStyle } from './c
 import { lookOfTex } from './painted-surfaces';
 import { FACILITY_OWNERS, LOOK_KINDS, holeOwner, ownerHole, seedOwner, type FacilityOwner } from './golf/looks';
 import { facilityAt } from './golf/practicebuild';
-import { escapeLadder, numberKeyUse, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
+import { escapeLadder, numberKeyUse, pickTool, SIDE_MODES, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { sizeKey, turned } from './lots/preset-art';
@@ -549,7 +549,9 @@ export class Game {
   /** when the game became ready (performance.now ms; T188: the welcome card's wait for the ground gives up after WELCOME_WAIT_MS) */
   readyAt = 0;
   // tools
-  tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
+  /** the tool in hand (T328, #936: Select at first; it was the road tool, so a ?start=town game, which picks no tool, opened with the Traffic
+   *  panel docked over the course. The range start picks the Course tool itself) */
+  tool: Tool = 'select'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
   /** the road tool's scope (T084): 'course' when the Course menu's Paths & drives opened it (it lays the course's cart paths and drives), 'town'
    *  from Roads; scopeClass: the class last picked in each scope, picked again on coming back to it */
   roadScope: 'town' | 'course' = 'town'; private scopeClass: Record<'town' | 'course', ClassId> = { town: 'street', course: 'cart-dirt' };
@@ -5318,9 +5320,19 @@ export class Game {
    *  or a pause keeps its hold: the speed it will resume at changes) */
   private watchFor(why: WatchWhy, on: boolean) {
     if (this.watchSpeed.has(why) === on) return;
+    if (on) this.shutToolsForRound(); // T328: Watch golf ('follow') and the owner's tournament round ('own') clear the tool panels
     const held = !!this.shot && !this.shot.mine, cur = held ? this.shotSpeed : this.speed || this.lastSpeed, k = this.watchSpeed.set(why, on, cur);
     if (k !== null) { if (held) this.shotSpeed = k; else if (!this.speed) this.lastSpeed = k; else this.setSpeed(k); }
     this.emit();
+  }
+  /** T328 (#936): counts the times a round shut the tool panels (App closes its open flyout when it changes) */
+  toolsShut = 0;
+  /** T328: your round, a tournament round you play or Watch golf starts: Select in hand and the side modes (Grass, Land, Holes, Event) closed, so
+   *  no footer or side tool panel covers the course, the shot panel, the spin ball or the leaderboard. Nothing reopens them after the round */
+  private shutToolsForRound() {
+    if (this.tool !== 'select') this.setTool('select');
+    if (SIDE_MODES.some(k => this[k])) { for (const k of SIDE_MODES) this[k] = false; this.tidySideModes(); }
+    this.toolsShut++; this.emit();
   }
   /** follows golfers (T320): the camera stays on them and the game runs at the watching speed until stopWatching (Stop, Esc, a pan) */
   watchGolfers(src: 'play' | 'day', ids: number[], label: string) {
@@ -7836,6 +7848,7 @@ export class Game {
     const r = startRound(v, holes, at.day, rules); if (!r) return;
     if (b && b.day === at.day && !b.result) this.setPlayer({ ...this.playerNow()!, booked: null });
     this.setYourRound(r); this.youTeeOpen = false; this.yrCard = false; this.yrFlight = null;
+    this.shutToolsForRound(); // T328: your round clears the tool panels
     const h = holeOf(v, holes[0]!)!, brought = this.youCartBring(h.tee);
     this.toast(`Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: walk up to the tee to address the ball${brought ? ' (your cart is by the tee)' : ''}`, 'good');
     this.emit();
