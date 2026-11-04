@@ -19,7 +19,7 @@ const buildable = (c: number) => c === TC.GROUND || c === TC.PATCH;
  *  750-1500 tiles apart, valleys 150-400 wide, warp, floors, the highway valley) were not scaled when the map became 2 km (T280), and on the 2 km
  *  map no seed passes its own guarantees (connected land under 55%, valleys under 150 tiles). Its tests run again on a 4 km map or once it is
  *  retuned for MAP (then drop this skip) */
-const SKIP_2KM = MAP === 2048 ? false : 'terrain v2 is tuned for the 4 km map (T280: not retuned for the 2 km map; unused by the game)';
+const SKIP_2KM = (MAP as number) === 2048 ? false : 'terrain v2 is tuned for the 4 km map (T280: not retuned for the 2 km map; unused by the game)';
 const memo = new Map<number, Terrain>();
 /** a generated terrain, cached per seed for the tests that only inspect the result */
 function gen(seed: number): Terrain {

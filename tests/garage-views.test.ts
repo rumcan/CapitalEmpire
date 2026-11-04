@@ -36,7 +36,7 @@ test('accepted garages select separate authored pictures for all eight road head
 
 test('garage diagonals append after all old art without reinterpreting N or its turns', () => {
   // (T329: the appends made after the diagonals follow them, as kit.test.ts lets them: T258's range art, T274's organic kit, the new props)
-  const organic = new Set([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
+  const organic = new Set<string>([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
   const lib = LIBRARY.filter(it => !it.id.startsWith('range:') && !organic.has(it.id) && !NEW_IDS.has(it.id));
   const diagonal = new Set(Object.values(EXTRA_VIEW_SETS).flat()), old = lib.filter(it => !diagonal.has(it.id));
   assert.deepEqual(lib.slice(0, old.length).map(it => it.id), old.map(it => it.id));

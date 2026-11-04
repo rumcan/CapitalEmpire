@@ -13,7 +13,6 @@ import { appendNewProps } from '../src/game/new-props-library';
 // T329: the owner's new props (new-props-library.ts, 2026-11-02) are appended at the library's very tail, after every other append, so no saved
 // index moves: the tail checks below leave them out (and check they are that tail)
 const NEW_PROPS: { id: string }[] = []; appendNewProps(NEW_PROPS as never[], []);
-const NEW_IDS = new Set(NEW_PROPS.map(p => p.id));
 
 
 test('component-aware native exports preserve overlapping foliage bounds and faint edge pixels', async () => {

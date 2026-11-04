@@ -17,7 +17,7 @@ test('golf starts on most seeds: one avenue run in the town, a 40 x 24 venue, th
   for (let seed = 1; seed <= 6; seed++) { const s = planGolfGame(generateTerrain(seed), seed); if (s) plans.push(s); }
   // T329: the old nine (placeCourse) was not scaled for the 2 km map (T280) and places a course on only 2 of these seeds there (golf-place.test.ts
   // OLD_NINE_FITS; a real gap left to the lead): 4 of 6 on the 4 km map, at least 2 on the 2 km map, so every plan made is still checked below
-  assert.ok(plans.length >= (MAP === 2048 ? 4 : 2), `${plans.length} of 6 seeds placed a course`);
+  assert.ok(plans.length >= ((MAP as number) === 2048 ? 4 : 2), `${plans.length} of 6 seeds placed a course`);
   for (const s of plans) {
     assert.ok(s.paints.length > 0);
     assert.ok(s.paints.every(a => checkArea(a.pts) === ''));
