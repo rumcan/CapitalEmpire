@@ -18,6 +18,7 @@ import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
 import { CAR_PAINT_GLSL } from './car-paint';
 import { GRASS_SHINE_GLSL, LUM_HP_STD, MASK_SCALE, SHINE_SHADE } from './grass-shine';
+import { TRACKS_GLSL, type TyreTracks } from './tyre-tracks';
 import { WATER_MOTION_GLSL, type MotionFrame } from './water-motion';
 import { HH, HW } from './iso';
 
@@ -80,11 +81,13 @@ uniform sampler2D uSpecTex; uniform vec4 uSpec; uniform sampler2D uGlossTex; uni
 uniform vec4 uRect; uniform vec4 uUV;
 uniform sampler2D uShineMask; uniform vec4 uShine; uniform vec4 uShineLook;
 uniform sampler2D uShadeLayer; uniform vec4 uLayerCam; uniform vec2 uLayerScreen;
+uniform sampler2D uTrackTex; uniform vec4 uTrack;
 in vec2 vUV; in vec2 vW; out vec4 o;
 ${SPEC_LIGHT_GLSL}
 ${GLOSS_LIGHT_GLSL}
 ${GRASS_SHINE_GLSL}
 ${WATER_MOTION_GLSL}
+${TRACKS_GLSL}
 float lumOf(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
 void main() {
   vec4 c = texture(uTex, vUV);
@@ -124,6 +127,12 @@ void main() {
       vec2 sl = vec2(le - l0, ls - l0) / (1.5 * tw * ${(LUM_HP_STD * 2.5).toFixed(4)});
       c.rgb = grassShine(c.rgb, z, sl, wgt, k);
     }
+  }
+  // T322: the tyre tracks (tyre-tracks.ts), last on the ground's colour as a brightness change (the shine's and the lamps' light lands on them)
+  if (uTrack.x > 0.0) {
+    vec2 tp = vec2(vW.x / ${(2 * HW).toFixed(1)} + vW.y / ${(2 * HH).toFixed(1)}, vW.y / ${(2 * HH).toFixed(1)} - vW.x / ${(2 * HW).toFixed(1)});
+    vec2 fw = fwidth(tp);
+    c.rgb = tyreTracks(c.rgb, tp, max(fw.x, fw.y));
   }
   if (uMode == 1) c *= texture(uMask, vec2(gl_FragCoord.x / uScreen.x, 1.0 - gl_FragCoord.y / uScreen.y)).a;
   o = c * uAlpha;
@@ -385,10 +394,10 @@ export class GLRenderer {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
-    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss', 'uShineMask', 'uShine', 'uShineLook', 'uShadeLayer', 'uLayerCam', 'uLayerScreen', 'uWaterTex', 'uWater', 'uWaterBox', 'uWaterT', 'uWaterDrift']);
+    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss', 'uShineMask', 'uShine', 'uShineLook', 'uShadeLayer', 'uLayerCam', 'uLayerScreen', 'uWaterTex', 'uWater', 'uWaterBox', 'uWaterT', 'uWaterDrift', 'uTrackTex', 'uTrack']);
     // (T262: the grass shine's samplers on their own units, once: 4 its weight mask, 5 the last frame's shadow layer; T248: 6 the water's
     //  motion mask)
-    gl.useProgram(this.quad.p); gl.uniform1i(this.quad.u.uShineMask!, 4); gl.uniform1i(this.quad.u.uShadeLayer!, 5); gl.uniform1i(this.quad.u.uWaterTex!, 6);
+    gl.useProgram(this.quad.p); gl.uniform1i(this.quad.u.uShineMask!, 4); gl.uniform1i(this.quad.u.uShadeLayer!, 5); gl.uniform1i(this.quad.u.uWaterTex!, 6); gl.uniform1i(this.quad.u.uTrackTex!, 7);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift', 'uMinPx']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
@@ -492,6 +501,33 @@ export class GLRenderer {
   gloss: { inner: number; outer: number; gain: number } | null = null;
   /** T199: a chunk picture's swamp gloss mask (GroundCache.glossOf), looked up by the picture itself, so it goes wherever its picture is drawn */
   glossOf: ((tex: WebGLTexture) => WebGLTexture | null) | null = null;
+  /** T322: the tyre tracks this frame (engine.ts), or null (off): the field (its box gates each chunk) and the strength */
+  tracks: { field: TyreTracks; strength: number } | null = null;
+  /** T322: the tracks' texture (RGBA8, a texel a map tile; made on the first upload) */
+  private trackTex: WebGLTexture | null = null;
+  /** T322: sends the tyre tracks' changed rows to the GPU (the engine calls it every UPLOAD_MS at most) */
+  uploadTracks(f: TyreTracks) {
+    const gl = this.gl, n = f.n, B = f.bytes; if (!B) return;
+    if (!this.trackTex) {
+      this.trackTex = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, this.trackTex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, n, n, 0, gl.RGBA, gl.UNSIGNED_BYTE, B); f.takeDirty(); return;
+    }
+    const d = f.takeDirty(); if (!d) return;
+    // only the changed rows' box, read in place from the whole map's bytes
+    gl.bindTexture(gl.TEXTURE_2D, this.trackTex);
+    gl.pixelStorei(gl.UNPACK_ROW_LENGTH, n); gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, d[0]); gl.pixelStorei(gl.UNPACK_SKIP_ROWS, d[1]);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, d[0], d[1], d[2] - d[0] + 1, d[3] - d[1] + 1, gl.RGBA, gl.UNSIGNED_BYTE, B);
+    gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0); gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0); gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+  }
+  /** T322: whether the tracks reach world rect X0..Y1 (a chunk): its tiles' box against the wear's */
+  private tracksOn(X0: number, Y0: number, X1: number, Y1: number): boolean {
+    const t = this.tracks, b = t?.field.box; if (!t || !b || !this.trackTex || t.strength <= 0) return false;
+    // the rect's corners in tiles (x = X / 2HW + Y / 2HH, y = Y / 2HH - X / 2HW): x is least at the left top, y at the right top
+    const tx0 = X0 / (2 * HW) + Y0 / (2 * HH), tx1 = X1 / (2 * HW) + Y1 / (2 * HH), ty0 = Y0 / (2 * HH) - X1 / (2 * HW), ty1 = Y1 / (2 * HH) - X0 / (2 * HW);
+    return tx1 >= b[0] - 2 && tx0 <= b[2] + 3 && ty1 >= b[1] - 2 && ty0 <= b[3] + 3;
+  }
   /** the build-reveal mask (alpha), in screen space */
   setMask(src: OffscreenCanvas | HTMLCanvasElement | null) {
     if (!src) return; const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, this.maskTex);
@@ -597,6 +633,10 @@ export class GLRenderer {
     gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, mask ?? this.emptyTex);
     gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, lv ? this.layerTex : this.emptyTex);
     gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, wm ? wm.mask : this.emptyTex);
+    // T322: the tyre tracks (unit 7), on a chunk the wear reaches
+    const tk = this.tracksOn(X0, Y0, X1, Y1);
+    gl.uniform4f(pr.u.uTrack, tk ? this.tracks!.strength : 0, this.tracks?.field.n ?? 1, 0, 0);
+    gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, tk ? this.trackTex : this.emptyTex);
     gl.activeTexture(gl.TEXTURE0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.stats.draws++;
   }

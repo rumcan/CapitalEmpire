@@ -93,7 +93,8 @@ import { fairwayStripeLook } from './course-stripes';
 import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
-import { localRate, townClockFor, townTimeOf } from './sim/townclock';
+import { localRate, townClockFor, townMinute, townTimeOf } from './sim/townclock';
+import { STRENGTH as TRACK_STRENGTH, TRACKS_KEY, TyreTracks, UPLOAD_MS as TRACK_UPLOAD_MS, type WearKind } from './tyre-tracks';
 import { CADDIE_CAP, CART_CAP, LONG_DAY_MIN, NIGHT_S, PACE_KEY, WALK_CAP, capped, dayNight, paceOf, paceOfSetting, settingOf, type GolfPace, type PaceSetting } from './golf/pace';
 import { Pacer, setPaceSpeed } from './golf/play/pacer';
 import { SPEEDS, WatchSpeed, type WatchWhy } from './golf/watch';
@@ -2491,6 +2492,8 @@ export class Game {
     this.ground.living = { on: this.groundVariety, debug: false };
     try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
     this.ground.slopeLight = this.slopeLight;
+    try { this.tyreTracks = localStorage.getItem(TRACKS_KEY) !== '0'; } catch { /* the default, on */ }
+    { const q = new URLSearchParams(location.search).get('tracks'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.tyreTracks = q === 'on'; }
     try { const v = parseFloat(localStorage.getItem('capitalempire.leafDensity') ?? ''); if (Number.isFinite(v)) this.leafDensity = clampLeafDensity(v); } catch { /* the default */ }
     this.ground.leafDensity = this.leafDensity;
     this.unfinish?.(); this.unfinish = this.watchFinish();
@@ -3104,6 +3107,48 @@ export class Game {
     this.ground.setLiving(on, this.groundDebug); this.emit();
   }
   setGroundDebug(on: boolean) { this.groundDebug = on; this.ground.setLiving(this.groundVariety, on); this.emit(); }
+  /** T322: the tyre tracks on the grass (tyre-tracks.ts): the gear menu's Tyre tracks, on by default (kept across reloads; ?tracks=on|off on
+   *  the dev server for the bench) */
+  tyreTracks = true;
+  setTyreTracks(on: boolean) {
+    this.tyreTracks = !!on;
+    try { localStorage.setItem(TRACKS_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
+  /** T322: the wear field (made on the first frame with a map), what its tiles were judged by, and its last upload's time */
+  private tracks: TyreTracks | null = null; private tracksKey = ''; private tracksTerrain: unknown = null; private tracksSent = 0;
+  /** T322: whether a vehicle's wear can lie on tile (x, y): grass, not water, a green, a tee, a bunker or a waste area, a road, a path, a drive,
+   *  a car park or a business's lot */
+  private trackOk = (x: number, y: number): boolean => {
+    const cx = x + 0.5, cy = y + 0.5, c = this.terrain.cls[y * MAP + x];
+    if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return false;
+    const g = this.courseGrid, i = g ? cellAt(g, cx, cy) : -1, sf = i >= 0 ? g!.surf[i]! : 0;
+    if (sf === SURF.green || sf === SURF.tee || sf === SURF.bunker || sf === SURF.water || sf === SURF.waste) return false;
+    if (this.net.rectOcc(x, y, x + 1, y + 1)) return false;
+    for (const b of this.parkDefs) if (cx > b.x && cx < b.x + b.w && cy > b.y && cy < b.y + b.h) return false;
+    for (const b of this.bizDefs) if (cx > b.x && cx < b.x + b.w && cy > b.y && cy < b.y + b.h) return false;
+    return true;
+  };
+  /** T322: vehicle `id` sampled at (x, y) this frame (its wear along the way since its last sample) */
+  private trackMove(id: string, x: number, y: number, kind: WearKind) { if (this.tracks && this.tyreTracks) this.tracks.move(id, x, y, kind); }
+  /** T322: the tracks this frame: a new map clears them, an edit of the course, the roads or the lots has their tiles judged again; the wear fades
+   *  by the game's minute; the changed rows go to the GPU every UPLOAD_MS at most; the ground pass draws them (gl.ts) */
+  private tracksFrame(now: number) {
+    const gl = this.gl;
+    if (!this.tyreTracks) { gl.tracks = null; return; }
+    const t = this.tracks ?? (this.tracks = new TyreTracks(MAP, this.trackOk));
+    if (this.tracksTerrain !== this.terrain) { this.tracksTerrain = this.terrain; t.clear(); t.forgetOk(); }
+    const g = this.courseGrid, key = `${this.net.version}:${g ? `${g.x0},${g.y0},${g.w},${g.h},${g.rev}` : '-'}:${this.parkDefs.length}:${this.bizDefs.length}`;
+    if (key !== this.tracksKey) { this.tracksKey = key; t.forgetOk(); }
+    t.beginFrame();
+    const T = this.traffic; if (T) t.fade(townMinute(T.town, T.simTime(now)));
+    if (t.dirty && now - this.tracksSent >= TRACK_UPLOAD_MS) { this.tracksSent = now; gl.uploadTracks(t); }
+    gl.tracks = t.box ? { field: t, strength: TRACK_STRENGTH } : null;
+    // your own cart (T317/T326), wherever it is
+    if (this.youCart) this.trackMove('you', this.youCart.x, this.youCart.y, 'cart');
+    // the range's cars (T321: over the grass where no road reaches the car park; on the roads the tiles take no wear)
+    this.range.carPoints((id, x, y) => this.trackMove('r' + id, x, y, 'car'));
+  }
   /** the course height light's strength (T126): the gear menu's Slope light, 0 (off) to 2 (kept across reloads), else light.json's */
   slopeLight = HEIGHT_LIGHT_STRENGTH;
   setSlopeLight(v: number) {
@@ -7277,8 +7322,9 @@ export class Game {
    *  to the screen's lower left or lower right; a cart heading up the screen shows the one on its side, GOLF-ART-LIST item 173) */
   private cartDrawables(carts: readonly PlayCart[], to: Drawable[], X0: number, Y0: number, X1: number, Y1: number) {
     const pool = to === this.golfCartOut ? this.golfCartDraw : this.dayCartDraw;
-    let n = 0;
+    let n = 0; const tag = to === this.golfCartOut ? 'p' : 'd';
     for (const c of carts) {
+      this.trackMove(tag + c.cart, c.x, c.y, 'cart'); // T322: its wear on the grass
       if (c.x < X0 || c.x > X1 || c.y < Y0 || c.y > Y1) continue;
       const item = CART_ART[c.hx - c.hy < 0 ? 0 : 1]!; if (item < 0) continue;
       const d = this.propDrawable(pool, n++, item, c.x, c.y, 0.6); if (c.alpha !== undefined) d.alpha = c.alpha; to.push(d); // (T266: a watchable cart fading)
@@ -8863,8 +8909,10 @@ export class Game {
       crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha < 1) out[m]!.alpha = p.alpha;
       this.caddieLabels.push({ p: out[m]!, text: p.role === 'gk' ? 'Stand In for greenkeeper' : 'Stand In for mower operator' }); m++;
     }
-    let n = 0;
+    let n = 0, k = 0;
     for (const th of v.things) {
+      if (th.veh !== 'none') this.trackMove('c' + k, th.x, th.y, th.veh === 'push' ? 'push' : th.veh === 'cart' ? 'cart' : 'mower'); // T322
+      k++;
       if (th.veh === 'none' || th.x < X0 || th.x > X1 || th.y < Y0 || th.y > Y1) continue;
       const a = Game.CREW_VEH[th.veh], item = a.items.length > 1 ? a.items[th.hx - th.hy < 0 ? 0 : 1]! : a.items[0]!; if (item < 0) continue;
       const d = this.propDrawable(this.crewThingDraw, n++, item, th.x, th.y, a.r); if (th.alpha < 1) d.alpha = th.alpha;
@@ -9006,6 +9054,7 @@ export class Game {
     const F = facings();
     for (let k = 0; k < v.cars.length; k++) {
       const c = v.cars[k]!, f = F[c.type % 5]![carHeading(c.ang)]!, z = CAR_SCALE * f.size;
+      this.trackMove('e' + k, c.x, c.y, 'car'); // T322: off the roads (T321), its wear on the grass
       const dr = this.dayCarDraw[k] ?? (this.dayCarDraw[k] = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true });
       dr.item = f.item; dr.flip = f.flip; dr.scale = z; dr.moving = true; dr.alpha = c.alpha; dr.paint = TYPE_PAINTS[c.type % TYPE_PAINTS.length]; // (T228: a paint per car type)
       dr.x = c.x - f.ox * z; dr.y = c.y - f.oy * z; dr.x0 = c.x - f.hx * z; dr.x1 = c.x + f.hx * z; dr.y0 = c.y - f.hy * z; dr.y1 = c.y + f.hy * z;
@@ -9554,6 +9603,7 @@ export class Game {
     // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)
     gl.grade = this.boot.kind === 'game' ? gradeFrame(this.grade, this.nightAmount()) : null;
     gl.begin({ X: cam.X, Y: cam.Y, ze, cw: this.cw, ch: this.ch }, [0.106, 0.157, 0.086]);
+    this.tracksFrame(now); // T322: the tyre tracks' wear and its GPU copy
     const X0 = cam.X - this.cw / 2 / ze, Y0 = cam.Y - this.ch / 2 / ze, X1 = cam.X + this.cw / 2 / ze, Y1 = cam.Y + this.ch / 2 / ze;
     const dist = (cx: number, cy: number) => Math.hypot(cx - cam.X, cy - cam.Y) * ze;
     // ---- planner map: the whole view at the planner tier, otherwise under any chunk not baked yet
