@@ -5,7 +5,8 @@ import { fbm, maskFrom, smooth } from './canvas2d';
 import { EAGER_PHOTO } from './grass-art';
 import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
 import { exposeClip, exposeDraw, exposed, exposureOf } from './exposure';
-import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
+import { SLAB_CELL } from './ground-art';
+import { poolStampMatrix } from './lamp-pool';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, growBand, riverStreams, swampStreams, type BandAlpha } from './swamp';
 import { RIVER_CUT, drawRiverCut } from './river-cut';
@@ -1949,12 +1950,9 @@ export class GroundPainter {
         through(wb, asphMask); composite(wb, 'screen');
       }
       if (pools.length) {
-        const rotA = Math.PI / 2 - tex.stampAngle, sc = 1.2 / (2 * PPM);
-        /** a pool's stamp transform (chunk px): the stamp's anchor on the pool, its streak turned to the screen's */
-        const stampAt = (p: (typeof pools)[number]) => {
-          const S = M.transformPoint(new DOMPoint(p.x, p.y));
-          return new DOMMatrix([1, 0, 0, 1, S.x, S.y]).multiply(new DOMMatrix([Math.cos(rotA), Math.sin(rotA), -Math.sin(rotA), Math.cos(rotA), 0, 0])).multiply(new DOMMatrix([1, 0, 0, 1, -S.x, -S.y])).multiply(M).multiply(new DOMMatrix([sc, 0, 0, sc, p.x, p.y])).multiply(new DOMMatrix([1, 0, 0, 1, -POOL_ANCHOR[0], -POOL_ANCHOR[1]]));
-        };
+        /** a pool's stamp transform (chunk px): T324, the round pool's disc laid on the ground round the lamp head's ground point (lamp-pool.ts
+         *  poolStampMatrix: the ground circle, a 2:1 ellipse on screen, the same for every road heading) */
+        const Ma = [M.a, M.b, M.c, M.d, M.e, M.f], stampAt = (p: (typeof pools)[number]) => new DOMMatrix(poolStampMatrix(Ma, p.x, p.y));
         if (specMean) {
           // T215: the pools' coverage (each stamp at its strength) onto the reflection mask instead, a SPEC_MASK_K-th of the chunk's size: the
           // road's mean (its alpha the asphalt's coverage) cut by the stamps' intensity 0.4 pool1 + 0.5 pool2 (lamp-reflect.ts poolIntensity), so
@@ -4009,12 +4007,8 @@ export class GroundPainter {
     // leaves lying in a lamp pool are lit like the builder's (brighter, warmer)
     const pools = net.pools.filter(p => p.x >= tx0 - 8 && p.x <= tx1 + 8 && p.y >= ty0 - 8 && p.y <= ty1 + 8);
     if (pools.length) {
-      const lm = this.buffer('leafLight', W, H), lg = ctx2d(lm), rotA = Math.PI / 2 - tex.stampAngle, sc = 1.2 / (2 * PPM);
-      for (const p of pools) {
-        const S = M.transformPoint(new DOMPoint(p.x, p.y));
-        const T = new DOMMatrix([1, 0, 0, 1, S.x, S.y]).multiply(new DOMMatrix([Math.cos(rotA), Math.sin(rotA), -Math.sin(rotA), Math.cos(rotA), 0, 0])).multiply(new DOMMatrix([1, 0, 0, 1, -S.x, -S.y])).multiply(M).multiply(new DOMMatrix([sc, 0, 0, sc, p.x, p.y])).multiply(new DOMMatrix([1, 0, 0, 1, -POOL_ANCHOR[0], -POOL_ANCHOR[1]]));
-        lg.setTransform(T); lg.drawImage(tex.pool1, 0, 0);
-      }
+      const lm = this.buffer('leafLight', W, H), lg = ctx2d(lm), Ma = [M.a, M.b, M.c, M.d, M.e, M.f];
+      for (const p of pools) { lg.setTransform(new DOMMatrix(poolStampMatrix(Ma, p.x, p.y))); lg.drawImage(tex.pool1, 0, 0); }
       lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'source-in'; lg.fillStyle = 'rgba(255,190,90,1)'; lg.fillRect(0, 0, W, H);
       lg.globalCompositeOperation = 'destination-in'; lg.drawImage(lb, 0, 0);
       g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'screen'; g.globalAlpha = 0.75; g.drawImage(lm, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';

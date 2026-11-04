@@ -8,8 +8,9 @@ import { familyWeights, lookColour, lookKey, LOOK_RANGES, resolveFamily, type Le
 import { clampSurfaces, lookOfTex, type PresetRef, type SurfacesFile } from './painted-surfaces';
 import { bandOf, specBand, specDpr, switchIn, switchOut, tiledFamily, tilePx, tileSpec, TILE_BANDS, TILES_REVISION, type TileBand, type TiledFamily } from './painted-tiles';
 import { picBytes, TileCache } from './tile-cache';
-import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
+import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 import { litPixel } from './lamp-reflect';
+import { POOL_STAMP, poolStampAlpha } from './lamp-pool';
 import { RANGE_PICS } from './golf/range-pics';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -429,7 +430,8 @@ export class Textures {
   lotDecals!: Cnv;
   /** the nature patches (nature-patches.ts NATURE rects) scattered over open grass */
   nature!: Cnv;
-  /** screen direction (radians) of the pool stamp's streak for a road running along world X (town-scene.mjs stampAngle) */
+  /** screen direction (radians) of the old pool stamp's streak (town-scene.mjs stampAngle); T324: 0, the round pool has none (kept for the
+   *  texture share's snapshot) */
   stampAngle = 0;
   curb: CurbColours = { joint: '#8a6a48', top: '#f0dfbe', face: ['#dcc29a', '#c8a876', '#a98652'], gutter: ['#1a1620', '#2a2430', '#3a3444'], faceHidden: '#d8c6a0' };
   leafSprites: LeafSprite[] = LEAVES.filter(l => !l.round).sort((a, b) => a.dim - b.dim);
@@ -465,7 +467,7 @@ export class Textures {
     this.configure(art);
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
     const steps = PAINTED.length + 12 + eager.size; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
-    const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
+    const [asA, asB, curbV, curbH, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
     this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg); this.nature = toCanvas(natureImg);
     await tick();
     for (const name of PAINTED) { if (lazy) this.lazy.set(name, () => this.procSteps(name)); else this.store(name, gen(name)); await tick(); }
@@ -500,20 +502,17 @@ export class Textures {
     const rows = (img: ImageBitmap) => { const c = toCanvas(img), g = ctx2d(c), d = g.getImageData(0, 0, c.width, c.height).data, out: number[][] = []; for (let y = 0; y < c.height; y++) { let r = 0, gg = 0, b = 0, n = 0; for (let x = 0; x < c.width; x++) { const o = (y * c.width + x) * 4; if (d[o + 3] < 128) continue; r += d[o]; gg += d[o + 1]; b += d[o + 2]; n++; } out.push(n ? [r / n, gg / n, b / n] : [0, 0, 0]); } return out; };
     const rv = rows(curbV), rh = rows(curbH), avg = (rs: number[][], a: number, b: number) => { const s = [0, 0, 0]; let n = 0; for (let y = Math.max(0, a); y < Math.min(rs.length, b); y++) { for (let k = 0; k < 3; k++) s[k] += rs[y][k]; n++; } return `rgb(${s.map(v => Math.round(v / (n || 1))).join(',')})`; };
     this.curb = { joint: avg(rh, 0, 4), top: avg(rh, 4, 10), faceHidden: avg(rh, 4, 10), face: [avg(rv, 10, 14), avg(rv, 14, 18), avg(rv, 18, 21)], gutter: [avg(rv, 21, 24), avg(rv, 24, 28), avg(rv, 28, 34)] };
-    // ---- pool stamp: two masks for the piecewise light response, plus the streak direction
-    { const c = toCanvas(pool), g = ctx2d(c), d = g.getImageData(0, 0, c.width, c.height), D = d.data, W = c.width;
-      let sx = 0, sy = 0, sw = 0;
-      const m1 = g.createImageData(W, c.height), m2 = g.createImageData(W, c.height);
-      for (let v = 0; v < c.height; v++) for (let u = 0; u < W; u++) {
-        const o = (v * W + u) * 4, a = D[o + 3] / 255;
-        const du = (u - POOL_ANCHOR[0]) / PPM, dv = (v - POOL_ANCHOR[1]) / PPM;
-        if (a > 0 && dv > 0) { const w = a * a; sx += w * 32 * (du - dv); sy += w * 16 * (du + dv); sw += w; }
+    // ---- pool stamp (T324, lamp-pool.ts): the round ground pool's two masks for the piecewise light response (pool1 = min(a, 0.4) / 0.4
+    //      toward lit(0.4), pool2 = (a - 0.4) / 0.5 toward lit(0.9)); TrickOrTreat's streak stamp (pool-straight-intensity.png) is no longer used
+    { const n = POOL_STAMP, A = poolStampAlpha(n), c = canvas(n, n), g = ctx2d(c), m1 = g.createImageData(n, n), m2 = g.createImageData(n, n);
+      for (let i = 0; i < n * n; i++) {
+        const o = i * 4, a = A[i]!;
         m1.data[o] = m1.data[o + 1] = m1.data[o + 2] = 255; m1.data[o + 3] = Math.min(a, 0.4) / 0.4 * 255;
         m2.data[o] = m2.data[o + 1] = m2.data[o + 2] = 255; m2.data[o + 3] = clamp((a - 0.4) / 0.5, 0, 1) * 255;
       }
-      this.stampAngle = Math.atan2(sy / (sw || 1), sx / (sw || 1));
-      this.pool1 = canvas(W, c.height); ctx2d(this.pool1).putImageData(m1, 0, 0);
-      this.pool2 = canvas(W, c.height); ctx2d(this.pool2).putImageData(m2, 0, 0);
+      this.stampAngle = 0;
+      this.pool1 = c; g.putImageData(m1, 0, 0);
+      this.pool2 = canvas(n, n); ctx2d(this.pool2).putImageData(m2, 0, 0);
     }
     await tick();
   }
