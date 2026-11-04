@@ -7,7 +7,8 @@
 //      locally from the person's base (rig-local-person.mjs; free)
 //   4. the sheet (render-person-3d.mjs with the person's render settings: the hands and arms the owner chose), and a sheet per extra clip
 // A person that fails is logged and skipped; rerun to try again (finished steps are kept). Progress: output/people-cast.log.
-// The cast also has runClips (RUN's own names for a clip, tried in turn) and clipRender (a clip sheet's args; default --frames 4).
+// The cast also has runClips (RUN's own names for a clip, tried in turn) and clipRender (a clip sheet's args; default --frames 4), and
+// clipFrom: a sheet rendered from another clip's animation (golf_putt: the golf_drive clip held at address and rocked by the renderer).
 //
 //   node scripts/assets/people3d/make-cast.mjs [--cast <file>] [--only id,id] [--render-only] [--limit n]
 //     --cast: the cast to make (default art/people-cast.json; a scratch cast for tests; its paths are from the repo root)
@@ -106,13 +107,14 @@ for (const p of cast.people) {
   const dir = path.join(root, p.root, p.id), has = f => fs.existsSync(path.join(dir, f));
   const extra = [...new Set(p.clips ?? [])], render = { ...cast.render, ...p.render };
   // the extra clips the base has (or RUN can make for it now); one it has not waits, and the person is made with walk and idle meanwhile
-  const ready = extra.filter(c => renderOnly ? has(`anim_${c}.glb`) : baseReady(p.from, c));
+  const src = c => cast.clipFrom?.[c] ?? c;
+  const ready = extra.filter(c => renderOnly ? has(`anim_${src(c)}.glb`) : baseReady(p.from, src(c)));
   // the template sheet (sheet.json) and each extra clip's sheet (<clip>.json): a rerun makes only what is missing
   const template = renderOnly || !has('sheet.json'), sheets = ready.filter(c => renderOnly || !has(`${c}.json`));
   if (!template && !sheets.length) continue;
   if (renderOnly && !has('anim_walk.glb')) continue;
   // the rig again when an extra clip's animation is missing (free: it rewrites them all)
-  const rig = !renderOnly && (!has('anim_walk.glb') || ready.some(c => !has(`anim_${c}.glb`)));
+  const rig = !renderOnly && (!has('anim_walk.glb') || ready.some(c => !has(`anim_${src(c)}.glb`)));
   log(`${p.id}: start (${p.role}, ${p.root})`);
   if (!renderOnly && !has('model.glb')) {
     // a picture makes the model (image-to-3d); a picture not made yet skips the person
@@ -129,7 +131,7 @@ for (const p of cast.people) {
   }
   if (!renderOnly && !has('anim_walk.glb')) cutPlate(p, dir);
   if (rig) {
-    const r = run('rig-local-person.mjs', [p.id, '--from', p.from, '--root', p.root, '--clips', [...new Set(['walk', 'idle', ...ready])].join(',')]);
+    const r = run('rig-local-person.mjs', [p.id, '--from', p.from, '--root', p.root, '--clips', [...new Set(['walk', 'idle', ...ready.map(src)])].join(',')]);
     if (!r.ok) { log(`${p.id}: rig FAILED: ${r.out}`); continue; }
     log(`${p.id}: rig ok (from ${p.from})`);
   }
@@ -140,7 +142,7 @@ for (const p of cast.people) {
   }
   // one sheet per extra clip, with its own args from cast.clipRender (default: 4 frames a facing)
   for (const clip of sheets) {
-    const r = run('render-person-3d.mjs', [p.id, '--root', p.root, '--height', String(p.height), '--clip', clip, ...(cast.clipRender?.[clip] ?? ['--frames', '4'])]);
+    const r = run('render-person-3d.mjs', [p.id, '--root', p.root, '--height', String(p.height), '--clip', src(clip), ...(src(clip) !== clip ? ['--as', clip] : []), ...(cast.clipRender?.[clip] ?? ['--frames', '4'])]);
     log(r.ok ? `${p.id}: ${clip} sheet done: ${r.out}` : `${p.id}: ${clip} render FAILED: ${r.out}`);
   }
   made++;

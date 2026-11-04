@@ -12,7 +12,12 @@
 //     about the arm's own axis, half each (the rig has no finger bones); 0 (the default) renders as before
 //     --arms-in <degrees>: the upper arms swung in toward the body (RUN's clips hold them out, from the A-pose), about the body's forward axis
 //     --seated: the json gets the seat (the hips' height and their point in the frame) for sitting the person on a grandstand seat row
-//     --prop club: a golf club in the lead hand, from the clip's address (a wider frame; the json gets addressSecs and shot)
+//     --prop club: a golf club in the lead hand, from the clip's address (a wider frame; the json gets addressSecs and shot); --prop putter: a putter
+//     --putt <back,through degrees> --as golf_putt (with --clip golf_drive --prop putter --times ...): a putting stroke keyed by hand, no new
+//     clip (Meshy's library has no putt, 2026-11-04): the clip held at its address, the upper spine rocked about the golfer's forward axis
+//     (shoulders rock, arms and hands move as one, the putter swings along the target line), the neck turned back so the head stays still.
+//     The stroke: address to the top of the backstroke at 0.5 s, impact (the address pose) at 0.8 s, the follow-through held from 1.05 s
+//     --as <name>: the sheet's name (default the clip's)
 //
 // in:  art/people3d/<id>/*.glb   the rigged model with its walk clip (and an idle clip when RUN made one)
 // out: art/people3d/<id>/sheet.webp + sheet.json   the people-sheet format TrickOrTreat's art/people uses: rows S SW W NW N NE E SE, columns
@@ -35,7 +40,9 @@ const TWIST_ARG = sarg('--hand-twist', '0').split(',').map(Number), TWIST = TWIS
 const ARMS_IN = arg('--arms-in', 0);
 // --prop club: a golf club in the lead hand (the page calibrates its address from the clip); the frame is wider and taller for it
 const PROP = sarg('--prop', null);
-if (PROP && PROP !== 'club') throw new Error(`--prop ${PROP}: only club is known`);
+if (PROP && PROP !== 'club' && PROP !== 'putter') throw new Error(`--prop ${PROP}: only club and putter are known`);
+const PUTT = sarg('--putt', null)?.split(',').map(Number) ?? null, AS = sarg('--as', null), PUTT_IMPACT = 0.8;
+if (PUTT && (!PROP || PUTT.length !== 2 || !CLIP || !TIMES)) throw new Error('--putt <back,through degrees> needs --clip, --prop (the address calibration) and --times');
 const PREFIX = path.basename(ROOT_DIR) === 'spectators' ? 'spectator' : path.basename(ROOT_DIR) === 'golfers' ? 'golfer' : 'person:3d';
 /** the art scale of the people sheets (px per metre), the person's height, the walk frames, supersampling; the frame (px) and the feet in it */
 // supersampling: 2 for a prop's big frames (96 of them at 3x held as PNGs crashed the page, 2026-10-25)
@@ -133,10 +140,10 @@ window.render = async (walkB64, idleB64, o) => {
   // from the butt (y -0.06) to the head (clubLen), held at the grip G (the midpoint of the palms). Calibrated once from the clip: the address tc
   // (the lowest grip in the first 35%), the facing there (yaw0 becomes the hips' line at tc), and the head on the ground in front of the golfer.
   // Both directions are kept in the lead hand's frame, so the club follows the hand through the swing
-  let tc = 0, placeClub = () => {};
-  if (o.PROP === 'club') {
+  let tc = 0, placeClub = () => {}, fwd0 = null;
+  if (o.PROP) {
     if (!bones.LeftHand || !bones.RightHand || !bones.LeftForeArm || !bones.RightForeArm) throw new Error('Rig has no hands for a club (have: ' + Object.keys(bones).join(',') + ')');
-    const clubLen = 1.02 * o.HEIGHT / 1.8, palm = (hand, fore) => { const p = world(hand); return p.addScaledVector(p.clone().sub(world(fore)).normalize(), 0.07 * o.HEIGHT / 1.8); };
+    const clubLen = (o.PROP === 'putter' ? 0.86 : 1.02) * o.HEIGHT / 1.8, palm = (hand, fore) => { const p = world(hand); return p.addScaledVector(p.clone().sub(world(fore)).normalize(), 0.07 * o.HEIGHT / 1.8); };
     const G = () => palm(bones.LeftHand, bones.LeftForeArm).add(palm(bones.RightHand, bones.RightForeArm)).multiplyScalar(0.5);
     let low = Infinity;
     for (let k = 0; k < 60; k++) { const t = walk.duration * 0.35 * k / 59; at(t); const u = twist(); pivot.updateMatrixWorld(true); const y = G().y; u(); if (y < low) { low = y; tc = t; } }
@@ -144,7 +151,7 @@ window.render = async (walkB64, idleB64, o) => {
     at(tc); const u0 = twist(); pivot.updateMatrixWorld(true);
     const g = G(), hp = world(hips), f = new THREE.Vector3(g.x - hp.x, 0, g.z - hp.z);
     if (f.length() < 0.05) f.set(Math.sin(yaw0), 0, Math.cos(yaw0));
-    f.normalize();
+    f.normalize(); fwd0 = f.clone();
     const gy = g.y - 0.035, D0 = f.clone().multiplyScalar(Math.sqrt(Math.max(0, clubLen * clubLen - gy * gy))).add(new THREE.Vector3(0, -gy, 0)).normalize();
     const T0 = f.clone().addScaledVector(D0, -f.dot(D0)).normalize(), qInv = bones.LeftHand.getWorldQuaternion(new THREE.Quaternion()).invert();
     const Dl = D0.clone().applyQuaternion(qInv), Tl = T0.clone().applyQuaternion(qInv);
@@ -153,13 +160,41 @@ window.render = async (walkB64, idleB64, o) => {
     club.matrixAutoUpdate = false; scene.add(club);
     const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, clubLen + 0.06, 8), mat(0xb8bcc4)); shaft.position.y = (clubLen - 0.06) / 2;
     const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.26, 10), mat(0x1c1c1c)); grip.position.y = 0.07;
-    const head = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), mat(0x5a3418)); head.scale.set(0.065, 0.035, 0.05); head.position.set(0.04, clubLen, 0);
+    // the driver's round persimmon head, or the putter's blade (heel to toe away from the golfer, square to the target line)
+    const head = o.PROP === 'putter' ? new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.028, 0.026), mat(0x9a9ea6)) : new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), mat(0x5a3418));
+    if (o.PROP === 'putter') head.position.set(0.045, clubLen - 0.004, 0); else { head.scale.set(0.065, 0.035, 0.05); head.position.set(0.04, clubLen, 0); }
     club.add(shaft, grip, head);
     placeClub = () => {
       const q = bones.LeftHand.getWorldQuaternion(new THREE.Quaternion()), D = Dl.clone().applyQuaternion(q).normalize(), T = Tl.clone().applyQuaternion(q);
       T.addScaledVector(D, -T.dot(D)).normalize();
       club.matrix.makeBasis(T, D, new THREE.Vector3().crossVectors(T, D)).setPosition(G()); club.matrixWorldNeedsUpdate = true;
     };
+  }
+  // --putt: the stroke's angle at t seconds (positive: the backstroke), eased between keys: address, the top, impact, the held finish
+  let rock = () => () => {};
+  const angleAt = t => {
+    const K = [[0, 0], [0.1, 0], [0.5, o.PUTT[0]], [o.PUTT_IMPACT, 0], [1.05, -o.PUTT[1]], [99, -o.PUTT[1]]];
+    let i = 0; while (i < K.length - 2 && t > K[i + 1][0]) i++;
+    const [t0, a0] = K[i], [t1, a1] = K[i + 1], u = Math.min(1, Math.max(0, (t - t0) / (t1 - t0)));
+    return a0 + (a1 - a0) * (0.5 - 0.5 * Math.cos(Math.PI * u));
+  };
+  if (o.PUTT) {
+    // the rocking bone: the spine bone nearest above the lead arm (the upper chest); the head kept still by turning the neck back
+    let spine = bones.LeftArm?.parent; while (spine && !/spine|chest/i.test(spine.name)) spine = spine.parent;
+    const neck = bone(/neck/i) ?? bones.Head;
+    if (!spine || !neck) throw new Error('Rig has no upper spine or neck for --putt (have: ' + Object.keys(bones).join(',') + ')');
+    const turn = deg => {
+      const saved = [[spine, spine.quaternion.clone()], [neck, neck.quaternion.clone()]];
+      const axis = fwd0.clone().applyQuaternion(pivot.quaternion), R = new THREE.Quaternion().setFromAxisAngle(axis, deg * Math.PI / 180);
+      const headQ = neck.getWorldQuaternion(new THREE.Quaternion()), pq = spine.parent.getWorldQuaternion(new THREE.Quaternion());
+      spine.quaternion.premultiply(pq.clone().invert().multiply(R).multiply(pq)); pivot.updateMatrixWorld(true);
+      neck.quaternion.copy(neck.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(headQ)); pivot.updateMatrixWorld(true);
+      return () => { for (const [b, q] of saved) b.quaternion.copy(q); pivot.updateMatrixWorld(true); };
+    };
+    // which way is back: the hands move to the golfer's right (away from the target) on the backstroke
+    at(tc); const lead = world(bones.LeftHand), u1 = turn(5), moved = world(bones.LeftHand).sub(lead); u1();
+    const sign = moved.dot(world(lUp).sub(world(rUp))) < 0 ? 1 : -1;
+    rock = t => turn(sign * angleAt(t));
   }
   // one stride: the left foot's swing along the facing, its period by autocorrelation; the frames start at its furthest reach (heel strike)
   const N = 240, sig = [];
@@ -180,10 +215,11 @@ window.render = async (walkB64, idleB64, o) => {
     for (let f = 0; f < cols; f++) {
       mixer.stopAllAction();
       if (!o.CLIP && f === 0 && idleAct) { idleAct.play(); mixer.setTime(0); }
-      else { walkAct.play(); mixer.setTime(timeOf(f)); }
+      else { walkAct.play(); mixer.setTime(o.PUTT ? tc : timeOf(f)); }
       stay(); pivot.rotation.y = yaw; pivot.updateMatrixWorld(true); const undo = twist(); pivot.updateMatrixWorld(true);
+      const unrock = o.PUTT ? rock(o.TIMES[f]) : () => {};
       placeClub();
-      renderer.render(scene, cam); frames.push(canvas.toDataURL('image/png')); undo();
+      renderer.render(scene, cam); frames.push(canvas.toDataURL('image/png')); unrock(); undo();
     }
   }
   // seated: the hips' height over the floor at the clip's start (metres)
@@ -208,10 +244,10 @@ try {
   await page.goto('http://people3d.local/');
   await page.waitForFunction(() => window.ready, null, { timeout: 60000 });
   // a clip never uses the idle file: left out, as the files go in base64 (three of a golfer's 28 MB files closed the page, 2026-10-25)
-  const out = await page.evaluate(([w, i, o]) => window.render(w, i, o), [await b64(walkFile), idleFile && !CLIP ? await b64(idleFile) : null, { FW, FH, AY, SS, ART_PPM, HEIGHT, WALK, ROWS, SCREEN, CLIP, FRAMES, STRIDE, ONCE, TIMES, TWIST, ARMS_IN, PROP, clipB64: clipFile ? await b64(clipFile) : null }]);
+  const out = await page.evaluate(([w, i, o]) => window.render(w, i, o), [await b64(walkFile), idleFile && !CLIP ? await b64(idleFile) : null, { FW, FH, AY, SS, ART_PPM, HEIGHT, WALK, ROWS, SCREEN, CLIP, FRAMES, STRIDE, ONCE, TIMES, TWIST, ARMS_IN, PROP, PUTT, PUTT_IMPACT, clipB64: clipFile ? await b64(clipFile) : null }]);
   if (problems.length) throw new Error(problems.join('\n'));
-  const PER = CLIP ? FRAMES : WALK + 1, names = CLIP ? Array.from({ length: FRAMES }, (_, k) => `${CLIP}${k + 1}`) : ['idle', ...Array.from({ length: WALK }, (_, k) => `walk${k + 1}`)];
-  const base = CLIP ?? 'sheet', previewName = CLIP ? `preview-${CLIP}.png` : 'preview.png', clear = { r: 0, g: 0, b: 0, alpha: 0 }, png = url => Buffer.from(url.split(',')[1], 'base64'), cells = [];
+  const NAME = AS ?? CLIP, PER = CLIP ? FRAMES : WALK + 1, names = CLIP ? Array.from({ length: FRAMES }, (_, k) => `${NAME}${k + 1}`) : ['idle', ...Array.from({ length: WALK }, (_, k) => `walk${k + 1}`)];
+  const base = NAME ?? 'sheet', previewName = CLIP ? `preview-${NAME}.png` : 'preview.png', clear = { r: 0, g: 0, b: 0, alpha: 0 }, png = url => Buffer.from(url.split(',')[1], 'base64'), cells = [];
   for (let i = 0; i < out.frames.length; i++) {
     const frame = await sharp(png(out.frames[i])).resize(FW, FH, { kernel: 'lanczos3' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     // a dark 2 px rim around the whole person, like the hand-painted sprites it stands next to
@@ -223,9 +259,10 @@ try {
   await sharp({ create: { width: PER * FW, height: ROWS.length * FH, channels: 4, background: clear } }).composite(cells).webp({ quality: 92, alphaQuality: 100, effort: 6 }).toFile(path.join(dir, base + '.webp'));
   const walkSecs = out.period;
   const meta = CLIP
-    ? { id: `${PREFIX}:${id}:${CLIP}`, name: `${id} ${CLIP}`, clip: CLIP, heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY }, directions: ROWS, frames: names,
-        fps: Math.round(FRAMES / ((STRIDE ? out.period : out.clipSecs) || 1) * 10) / 10, loop: !ONCE, ...(TIMES ? { times: TIMES } : {}), source: `${ROOT_DIR}/${id}`, clips: { [CLIP]: out.walk },
+    ? { id: `${PREFIX}:${id}:${NAME}`, name: `${id} ${NAME}`, clip: NAME, heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY }, directions: ROWS, frames: names,
+        fps: Math.round(FRAMES / ((PUTT ? TIMES[TIMES.length - 1] : STRIDE ? out.period : out.clipSecs) || 1) * 10) / 10, loop: !ONCE, ...(TIMES ? { times: TIMES } : {}), source: `${ROOT_DIR}/${id}`, clips: { [CLIP]: out.walk },
         ...(SEATED ? { seatHeightMetres: Math.round(out.hipY * 100) / 100, seat: { x: AX, y: Math.round(AY - out.hipY * Math.cos(Math.PI / 6) * ART_PPM) } } : {}),
+        ...(PUTT ? { from: `${CLIP} held at its address, a hand-keyed pendulum (back ${PUTT[0]} deg, through ${PUTT[1]} deg)`, impactSecs: PUTT_IMPACT } : {}),
         ...(PROP ? { prop: PROP, addressSecs: Math.round(out.tc * 100) / 100, shot: 'right-handed: the ball flies 90 degrees to the golfer\'s left of the row\'s facing (row S, the golfer facing the viewer: toward screen right)' } : {}) }
     : { id: `${PREFIX}:${id}`, name: `${id} (3D template)`, size: 'adult', heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY },
         directions: ROWS, frames: names, walkFps: Math.round(WALK / (walkSecs || 1) * 10) / 10, mirrored: {}, source: `${ROOT_DIR}/${id}`, clips: { walk: out.walk, idle: out.idle } };
