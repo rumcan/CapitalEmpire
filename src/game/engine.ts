@@ -3127,8 +3127,9 @@ export class Game {
     const g = this.courseGrid, i = g ? cellAt(g, cx, cy) : -1, sf = i >= 0 ? g!.surf[i]! : 0;
     if (sf === SURF.green || sf === SURF.tee || sf === SURF.bunker || sf === SURF.water || sf === SURF.waste) return false;
     if (this.net.rectOcc(x, y, x + 1, y + 1)) return false;
-    for (const b of this.parkDefs) if (cx > b.x && cx < b.x + b.w && cy > b.y && cy < b.y + b.h) return false;
-    for (const b of this.bizDefs) if (cx > b.x && cx < b.x + b.w && cy > b.y && cy < b.y + b.h) return false;
+    // (a tile round them too: the gate and its apron the cars wait on)
+    for (const b of this.parkDefs) if (cx > b.x - 1 && cx < b.x + b.w + 1 && cy > b.y - 1 && cy < b.y + b.h + 1) return false;
+    for (const b of this.bizDefs) if (cx > b.x - 1 && cx < b.x + b.w + 1 && cy > b.y - 1 && cy < b.y + b.h + 1) return false;
     return true;
   };
   /** T322: vehicle `id` sampled at (x, y) this frame (its wear along the way since its last sample) */
