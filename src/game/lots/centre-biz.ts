@@ -7,11 +7,16 @@
 //   anchor: '@<left>,<right>,<depth>|<shop>+<shop>+...': the tiles the lot is widened by to the left and right along its own u, the centre's depth
 //           (the shallowest part's), and its shops (SHOP_PALETTE ids, each counted against T295's cap like a shop lot's business);
 //   part:   '^<anchor key>': an empty lot the centre covers (the town grows nothing on it; compose draws nothing on it).
-import type { Pt } from './preset-frame';
+import { roadOf, type Pt } from './preset-frame';
 
-/** the least frontage (tiles) a centre takes, the most it spans, its least depth, the town tier it needs (town: the town's shops), the built lots a grown
- *  town has before it builds one */
-export const CENTRE_W = 24, CENTRE_WMAX = 44, CENTRE_D = 14, CENTRE_TIER = 2, CENTRE_BUILT = 8;
+/** the least frontage (tiles) a centre takes, the most it spans, the town tier it needs (town: the town's shops), the built lots a grown town has before it
+ *  builds one */
+export const CENTRE_W = 24, CENTRE_WMAX = 44, CENTRE_TIER = 2, CENTRE_BUILT = 8;
+/** a centre's least depth (tiles): one row of bays on its aisle and shops 3 tiles deep (centre.ts), on a screen-straight street 4.5 (its shops' pictures
+ *  stand on the diagonal: a footprint as deep as it is wide). The town's lots on a closed block are 10 to 12 deep, on an open street 15 or more */
+export const CENTRE_D = 11, CENTRE_D_STRAIGHT = 12.5;
+/** the least depth of a centre on a lot whose away vector is n */
+export const centreDepth = (n: Pt): number => (roadOf(n) % 2 ? CENTRE_D_STRAIGHT : CENTRE_D);
 /** the frontage from which a centre lays one side wing (an L) and two (a U): shops at the car park's side, facing across it */
 export const L_W = 28, U_W = 34;
 /** the gap (tiles) two lots side by side may leave between them and still join (the lattice lots meet within it; the block lots share their lines) */
@@ -62,11 +67,12 @@ export interface SpanLot { key: string; o: Pt; u: Pt; n: Pt; w: number; d: numbe
  *  their fronts on one line) that run on from a's ends, taken to the right then the left in turn until the frontage reaches CENTRE_W (never past
  *  CENTRE_WMAX), each one keeping the depth CENTRE_D or more. Null when no such run reaches CENTRE_W; else the span and the part keys */
 export function findSpan(a: SpanLot, free: readonly SpanLot[]): { span: Span; parts: string[] } | null {
-  if (a.d < CENTRE_D) return null;
+  const least = centreDepth(a.n);
+  if (a.d < least) return null;
   // each free lot's interval along a's u (a runs 0..w), on a's line and facing as a does
   const iv: { key: string; t0: number; t1: number; d: number }[] = [];
   for (const b of free) {
-    if (b.key === a.key || b.n.x * a.n.x + b.n.y * a.n.y < 0.999 || b.d < CENTRE_D) continue;
+    if (b.key === a.key || b.n.x * a.n.x + b.n.y * a.n.y < 0.999 || b.d < least) continue;
     const dx = b.o.x - a.o.x, dy = b.o.y - a.o.y;
     if (Math.abs(dx * a.n.x + dy * a.n.y) > 0.3) continue;
     const s0 = dx * a.u.x + dy * a.u.y, s1 = s0 + (b.u.x * a.u.x + b.u.y * a.u.y) * b.w;
@@ -82,7 +88,7 @@ export function findSpan(a: SpanLot, free: readonly SpanLot[]): { span: Span; pa
     d = Math.min(d, nb.d); parts.push(nb.key);
   }
   if (hi - lo < CENTRE_W) return null;
-  return { span: { l: -lo, r: hi - a.w, d }, parts };
+  return { span: { l: 0 - lo + 0, r: hi - a.w, d }, parts };
 }
 /** whether lot b lies inside the span of a centre on lot a (on a's street line, facing as a does, within the widened frontage): the parts of a centre
  *  found again from its business (a save keeps the anchor alone) */

@@ -1734,6 +1734,17 @@ export class GroundPainter {
           ctx.save(); ctx.clip(path); ctx.strokeStyle = p.tex === 'asphalt' ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = p.tex === 'asphalt' ? 0.3 : 0.16; ctx.stroke(path); ctx.restore();
         }
       }
+      // T298 (#883): the car parks' own lamp posts light their asphalt: each lamp's round pool (the road's pool stamp, lamp-pool.ts) laid as the lot asphalt's
+      // lit painting (textures 'lotLit': its own texture brightened, never a flat wash), through the car parks' outlines only, under their bay lines
+      const lp = list === parks && !lite ? this.net.lotPools.filter(p => p.x >= tx0 - 4 && p.x <= tx1 + 4 && p.y >= ty0 - 4 && p.y <= ty1 + 4) : [];
+      const lpAsph = lp.length ? list.filter(p => p.tex === 'asphalt') : [];
+      if (lpAsph.length) {
+        const Ma = [M.a, M.b, M.c, M.d, M.e, M.f], pm = this.buffer('lotPoolMask', W, H), pg = ctx2d(pm); pg.imageSmoothingEnabled = true;
+        for (const p of lp) { pg.setTransform(new DOMMatrix(poolStampMatrix(Ma, p.x, p.y))); pg.drawImage(tex.pool1, 0, 0); }
+        const am = this.buffer('lotAsphMask', W, H), ag = ctx2d(am); ag.setTransform(M); ag.fillStyle = '#fff'; for (const p of lpAsph) ag.fill(polyPath(p.pts));
+        const lit = this.buffer('lotLit', W, H), lg = ctx2d(lit); lg.setTransform(M); lg.fillStyle = this.groundPattern(lg, tex.mosaicFor('lotLit', L)); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
+        through(lit, pm); through(lit, am); composite(lit);
+      }
       // lines: parking bays in worn off-white; furrows (field and dirt patches, the farms' crop rows) in dark brown
       // (and yellow parking lines, the bay rows that ask for them; T259: a farm lane's two wheel ruts, wide and dark, on its hard-edged dirt)
       for (const kind of ['furrow', 'rut', 'white', 'yellow'] as const) {

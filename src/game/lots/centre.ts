@@ -15,7 +15,7 @@ import type { Box4 } from './compose-core';
 import type { Half } from './house-class';
 import type { PresetFrame } from './preset-frame';
 import type { PresetPatch, PresetProp, Road, View } from './presets';
-import { AISLE, bayDims, bayRow, carBody, type BayDims } from './carpark-lot';
+import { bayDims, bayRow, carBody, type BayDims } from './carpark-lot';
 import { roadView, turned } from './preset-art';
 import { wingsOf } from './centre-biz';
 
@@ -38,12 +38,13 @@ export interface CentrePlan {
   layout: 'row' | 'L' | 'U'; rows: 1 | 2; shops: number[]; wings: number[]; park: Box4; entrance: Box4; islands: Box4[]; bays: Box4[]; lamps: number[]; cars: number[];
 }
 
-/** (tiles) the side margin, the planted strip along the street, the footpath along the shop fronts and along a wing, the service yard behind the shops */
-const EDGE = 0.4, STRIP = 1.6, PATH = 1.5, WPATH = 1.3, BACK = 1.2;
+/** (tiles) the side margin, the planted strip along the street, the footpath along the shop fronts and the service yard behind the shops (each at most,
+ *  and the least a shallow lot cuts it to: the town's lots on a closed block are 10 or 11 tiles deep), the footpath along a wing, the aisle (5.6 m) */
+const EDGE = 0.4, STRIP = 1.6, STRIP0 = 0.8, STRIP1 = 2.6, PATH = 1.5, PATH0 = 1.1, BACK = 1.2, BACK0 = 0.4, WPATH = 1.3, CAISLE = 2.8;
 /** an island's least width, the most bays in a run between two islands, the entrance's width, an island's kerb */
 const ISL = 1.5, MAXRUN = 7, ENTRY = 3.4, KERB = 0.2;
 /** the depth the shops are fitted to (one terrace: the deeper ones a little smaller), the least depth a shop takes, the least scale, a wing's depth */
-const SHOP_D = 4.6, SHOP_MIN = 3.2, LEAST = 0.65, WING_D = 4.8;
+const SHOP_D = 4.6, SHOP_MIN = 3.0, SHOP_ROWS2 = 4.0, LEAST = 0.65, WING_D = 4.8;
 /** the gap between two shops of the back row: at least, at most */
 const GAP0 = 0.2, GAP1 = 1.2;
 const LAMP = 'world:streetlamp', STOP = 'expansion:wheel-stop', BENCH = 'world:bench', BIN = 'world:trashcan', DUMPSTER = 'town:dumpster';
@@ -98,15 +99,23 @@ export function centreLot(L: CentreLay, shops: readonly string[], kit: CentreKit
   const dims = bayDims(f, seed);
   if (!dims) return null;
   const { bl } = dims;
-  // the rows: two on one aisle when the lot is deep enough, else one (its aisle along the strip)
-  const room = (rows: number) => D - BACK - (STRIP + rows * bl + AISLE + PATH);
-  const rows: 1 | 2 = room(2) >= SHOP_MIN ? 2 : 1;
-  if (room(rows) < SHOP_MIN || W < 16) return null;
-  const pa = STRIP, ya = rows === 2 ? pa + bl : pa, yb = ya + AISLE, yP = yb + bl, yS = yP + PATH, depth = Math.min(SHOP_D, D - BACK - yS);
+  // the rows: two on one aisle when the lot is deep enough for them, the strip, path and yard at full depth and shops of SHOP_ROWS2; else one (its aisle along
+  // the strip). The depth left after the aisle and the bays goes to the shops first (SHOP_MIN to SHOP_D), then to the strip, the footpath and the yard
+  // (each from its least to its most), what is left over to the strip (up to STRIP1) and then the yard
+  const fixed = (rows: number) => CAISLE + rows * bl;
+  const rows: 1 | 2 = D - fixed(2) - (STRIP + PATH + BACK) >= SHOP_ROWS2 ? 2 : 1;
+  const depth = Math.min(SHOP_D, D - fixed(rows) - (STRIP0 + PATH0 + BACK0));
+  if (depth < SHOP_MIN - 1e-9 || W < 16) return null;
+  let sp = D - fixed(rows) - depth;
+  const strip0 = Math.min(STRIP, sp - PATH0 - BACK0), path = Math.min(PATH, sp - strip0 - BACK0);
+  sp -= strip0 + path;
+  const strip = strip0 + Math.max(0, Math.min(STRIP1 - strip0, sp - BACK)), back = sp - (strip - strip0);
+  const pa = strip, ya = rows === 2 ? pa + bl : pa, yb = ya + CAISLE, yP = yb + bl, yS = yP + path;
   const used = new Set<string>(), list = shops.filter(id => kit.ok(id) && !used.has(id) && (used.add(id), true));
   // ---- the wings: the last shops of the list (an L's on a seeded side), each turned to face across the car park, at the back of the strip
   const nw = wingsOf(W), sides: (0 | 1)[] = nw === 2 ? [0, 1] : nw === 1 ? [L.r() < 0.5 ? 0 : 1] : [];
-  const wingIds = list.slice(Math.max(2, list.length - sides.length));
+  // (the back row keeps three shops before a wing takes one: on a screen-straight street only the shops with a screen-axis set face it)
+  const wingIds = list.slice(Math.max(3, list.length - sides.length));
   const backIds = list.filter(id => !wingIds.includes(id));
   const placed = new Set<string>();
   // ---- the back row: fitted to one depth, fronts on y = yS, side by side across the lot, centred
@@ -122,6 +131,7 @@ export function centreLot(L: CentreLay, shops: readonly string[], kit: CentreKit
   const gap = Math.min(GAP1, row.length > 1 ? (W - 2 * EDGE - tot) / (row.length - 1) + GAP0 : 0);
   let span = 0; row.forEach((q, i) => { span += 2 * L.half(q).ha + (i ? gap : 0); });
   let x = (W - span) / 2;
+  const rx0 = x, rx1 = x + span;
   const plan: CentrePlan = { layout: 'row', rows, shops: [], wings: [], park: [0, 0, 0, 0], entrance: [0, 0, 0, 0], islands: [], bays: [], lamps: [], cars: [] };
   const seams: number[] = [];
   for (const q of row) {
@@ -151,7 +161,7 @@ export function centreLot(L: CentreLay, shops: readonly string[], kit: CentreKit
   // ---- the car park: the entrance at its middle, the rows cut into runs of bays and islands
   const ex0 = (cx0 + cx1) / 2 - ENTRY / 2, ex1 = ex0 + ENTRY;
   plan.entrance = [ex0, 0, ex1, ya]; plan.park = [cx0, pa, cx1, yP];
-  const back = runs(cx0, cx1, dims.bw);
+  const rear = runs(cx0, cx1, dims.bw);
   const front = rows === 2 ? [runs(cx0, ex0, dims.bw), runs(ex1, cx1, dims.bw)] : [];
   const fill = 0.5 + 0.3 * L.r(), lines: number[] = [], isles: { b: Box4; aisle: number; lit: boolean }[] = [];
   /** a run's bays into the plan: its cars (the bodies' boxes in the overlap rule) and its wheel stops (on the map-axis streets only: the stop's picture
@@ -162,8 +172,8 @@ export function centreLot(L: CentreLay, shops: readonly string[], kit: CentreKit
     if (road % 2 === 0) for (const p of r.stops) { const q = L.fit(STOP, 0, p.x, p.y, dims.bw / 2 - 0.02, 0.2, 0.7); if (q) { L.props.push(q); L.boxes.push(L.boxOf(q)); } }
     for (const c of r.cars) { const b = carBody(c.id); L.props.push(c); L.boxes.push([c.x - b.wid / 2, c.y - b.len / 2, c.x + b.wid / 2, c.y + b.len / 2]); plan.cars.push(L.props.length - 1); }
   };
-  back.bays.forEach(([x0, k], j) => lay(x0, k, yb, 1, seed + 17 * j));
-  back.isl.forEach(([a, b], j) => isles.push({ b: [a, yb, b, yP], aisle: yb, lit: j === 0 || j === back.isl.length - 1 }));
+  rear.bays.forEach(([x0, k], j) => lay(x0, k, yb, 1, seed + 17 * j));
+  rear.isl.forEach(([a, b], j) => isles.push({ b: [a, yb, b, yP], aisle: yb, lit: j === 0 || j === rear.isl.length - 1 }));
   front.forEach((fr, side) => {
     fr.bays.forEach(([x0, k], j) => lay(x0, k, ya, -1, seed + 101 + 31 * side + 17 * j));
     // (lit: the islands at the car park's ends and the two beside the entrance)
@@ -201,10 +211,12 @@ export function centreLot(L: CentreLay, shops: readonly string[], kit: CentreKit
   // ---- the footpaths (slabs along the shop fronts, and along each wing's front), benches and bins at the seams between the shops
   L.patches.push({ kind: 'walk', tex: 'slabs', pts: quad(EDGE, yP, W - EDGE, yS) });
   for (const wb of wingBoxes) L.patches.push({ kind: 'walk', tex: 'slabs', pts: wb[0] === EDGE ? quad(wb[2], pa, wb[2] + WPATH, yP) : quad(wb[0] - WPATH, pa, wb[0], yP) }, { kind: 'yard', tex: 'concrete', pts: quad(wb[0], pa, wb[2], yP) });
-  seams.forEach((sx, i) => { const q = L.fit(i % 2 ? BIN : BENCH, 0, sx, yP + PATH / 2, 0.6, 0.35, 0.5); if (q) L.add(q); });
-  // ---- the service yard behind the shops (concrete under them and behind), its dumpster
-  L.patches.push({ kind: 'yard', tex: 'concrete', pts: quad(EDGE, yS, W - EDGE, D) });
-  { const q = L.fit(DUMPSTER, 0, W - EDGE - 1.2, D - BACK / 2, 1.0, BACK / 2, 0.5); if (q) L.add(q); }
+  seams.forEach((sx, i) => { const q = L.fit(i % 2 ? BIN : BENCH, 0, sx, yP + path / 2, 0.6, Math.min(0.35, path / 2 - 0.1), 0.5); if (q) L.add(q); });
+  // ---- the service yard behind the shops (concrete under the row and behind it), its dumpster; trees on the grass either side of a short row
+  const sx0 = Math.max(EDGE, rx0 - 0.4), sx1 = Math.min(W - EDGE, rx1 + 0.4);
+  L.patches.push({ kind: 'yard', tex: 'concrete', pts: quad(sx0, yS, sx1, D) });
+  if (back >= 0.8) { const q = L.fit(DUMPSTER, 0, sx1 - 1.2, D - back / 2, 1.0, back / 2, 0.5); if (q) L.add(q); }
+  for (const [a, b] of [[EDGE, sx0], [sx1, W - EDGE]] as const) for (let tx = a + 1.4; tx <= b - 1.4; tx += 3) tree(L, kit, tx, (yS + D) / 2, 1.3, (D - yS) / 2 - 0.2);
   return plan;
 }
 

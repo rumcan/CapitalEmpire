@@ -84,7 +84,7 @@ const JUNK_PILES = ['expansion:scrap-metal', 'expansion:tyre-stack', 'expansion:
 const JUNK_CARS = ['expansion:junk-car', 'expansion:scrap-pickup-rear', 'expansion:crushed-car-stack'];
 
 /** one lot's layout in the preset frame: its props and ground patches (the composer's footprints and overlap rule), filled as the template asks */
-class Lay {
+export class Lay {
   readonly props: PresetProp[] = [];
   readonly patches: PresetPatch[] = [];
   readonly boxes: Box4[] = [];
@@ -324,7 +324,7 @@ interface Keep { b: Box4; m: number }
 const gapTo = (b: Box4, x: number, y: number): number => Math.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - y, 0, y - b[3]));
 let REAL_TREES: string[] | null = null;
 /** the owner's 56 real trees (library cat 'New: Trees'; their NE view, as the decor menu offers them), the leafed ones (no bare or dead tree in a yard) */
-function realTrees(): string[] {
+export function realTrees(): string[] {
   return REAL_TREES ??= LIBRARY.filter(it => it.kind === 'tree' && it.cat === 'New: Trees' && it.id.endsWith(':ne') && !/bare|dead|stump/.test(it.id) && !gone(it.id)).map(it => it.id).sort();
 }
 /** one yard tree at (x, y) clear of the kept boxes (each gap times slack): from the lot groups' trees of the zone (the owner's own picks) or the real
@@ -364,7 +364,7 @@ function yardTrees(L: Lay, keep: readonly Keep[], have = 0): number {
   return n;
 }
 /** the clipped hedge's shrubs (round ones: they read as a hedge along any line), drawn in turn by the lot's draws */
-const HEDGE = ['landscape:bush-deep-green', 'landscape:bush-sage-round', 'world:bush_0', 'landscape:bush-deep-green'];
+export const HEDGE = ['landscape:bush-deep-green', 'landscape:bush-sage-round', 'world:bush_0', 'landscape:bush-deep-green'];
 /** a hedge's shrubs: about HEDGE_STEP tiles apart, each fitted to HEDGE_HALF (tiles) */
 const HEDGE_STEP = 1.4, HEDGE_HALF = 1.0;
 /** a hedge from (x0, y0) to (x1, y1): its shrubs laid where they are clear (a tree's trunk or a shed leaves a gap; open: the drive, never planted over).
