@@ -96,7 +96,9 @@ export function gainOf(skill: number, base: number, today = 0, lessonBonus = 0):
  *  with it, and the handicap before and after */
 export interface PracticeEntry { day: number; at: number; kind: PracticeKind; cost: number; min: number; gains: Partial<Record<SkillId, number>>; lesson?: boolean; hcp: [number, number] }
 /** a round in the log: the town day, its kind, your strokes, the par and holes played, the nerve it gave, and the handicap you played off */
-export interface RoundEntry { day: number; kind: RoundKind; strokes: number; par: number; holes: number; nerve: number; hcp: number }
+export interface RoundEntry { day: number; kind: RoundKind; strokes: number; par: number; holes: number; nerve: number; hcp: number;
+  /** T325/T327: why the round does not count toward your handicap (mulligans, long gimmies): it is in your rounds, your nerve does not rise */
+  noHcp?: string }
 /** your everyday round booked on the tee sheet (T208): the town day and the tee time; your game as the round plays it (gameSkills at PRESSURE.everyday:
  *  as you booked, and after each session you practise before you walk to the tee); the result once the day's round is played (the whole day is played
  *  when it is built, so it is known from the start: shown once your round is done, put in your rounds at the day's end at the latest) */
@@ -141,7 +143,7 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     return out;
   });
   const rounds = (Array.isArray(p.rounds) ? p.rounds : []).filter(r => r && isRound(r.kind)).slice(-ROUNDS_MAX)
-    .map(r => ({ day: num(r.day), kind: r.kind, strokes: num(r.strokes), par: num(r.par), holes: num(r.holes), nerve: num(r.nerve), hcp: num(r.hcp) }));
+    .map(r => ({ day: num(r.day), kind: r.kind, strokes: num(r.strokes), par: num(r.par), holes: num(r.holes), nerve: num(r.nerve), hcp: num(r.hcp), ...(typeof r.noHcp === 'string' && r.noHcp ? { noHcp: r.noHcp.slice(0, 60) } : {}) }));
   const t = (p.today ?? {}) as Partial<PlayerProfile['today']>, tn = (t.n ?? {}) as Partial<Record<PracticeKind, number>>;
   const b = p.busy, bk = p.booked;
   let booked: Booking | null = null;
@@ -208,9 +210,12 @@ export function practise(p: PlayerProfile, kind: PracticeKind, c: Pick<PracticeC
 /** how much a finished round raises your nerve, at nerve 0 (shrinking as it grows, as practice does): a friendly round a little, a money match more,
  *  the club championship most */
 export const NERVE_GAIN: Readonly<Record<RoundKind, number>> = { everyday: 1.0, match: 2.0, tournament: 3.0 };
-/** a finished round: into the log (the last ROUNDS_MAX), and your nerve up by gainOf(nerve, NERVE_GAIN[kind]). The profile passed in is not changed */
-export function playedRound(p: PlayerProfile, r: { day: number; kind: RoundKind; strokes: number; par: number; holes: number }): PlayerProfile {
-  const nerve = keep(p.skills.nerve + gainOf(p.skills.nerve, NERVE_GAIN[r.kind])), e: RoundEntry = { ...r, nerve: Math.round((nerve - p.skills.nerve) * 100) / 100, hcp: handicapOf(p.skills) };
+/** a finished round: into the log (the last ROUNDS_MAX), and your nerve up by gainOf(nerve, NERVE_GAIN[kind]). The profile passed in is not changed.
+ *  T325: a round with noHcp (mulligans, long gimmies) goes into your rounds marked, and your nerve stays: it does not count toward your handicap */
+export function playedRound(p: PlayerProfile, r: { day: number; kind: RoundKind; strokes: number; par: number; holes: number; noHcp?: string | null }): PlayerProfile {
+  const { noHcp, ...rr } = r;
+  const nerve = noHcp ? p.skills.nerve : keep(p.skills.nerve + gainOf(p.skills.nerve, NERVE_GAIN[r.kind]));
+  const e: RoundEntry = { ...rr, nerve: Math.round((nerve - p.skills.nerve) * 100) / 100, hcp: handicapOf(p.skills), ...(noHcp ? { noHcp } : {}) };
   return { ...p, skills: { ...p.skills, nerve }, rounds: [...p.rounds, e].slice(-ROUNDS_MAX) };
 }
 
@@ -301,6 +306,6 @@ export function playerCardView(p: PlayerProfile, round: RoundState): PlayerCardV
     skills: SKILL_IDS.map(id => ({ id, name: SKILL_NAME[id], value: p.skills[id], what: SKILL_WHAT[id] })),
     round,
     log: p.log.slice(-8).reverse().map(e => ({ text: entryText(e), day: e.day, cost: e.cost, hcp: e.hcp })),
-    rounds: p.rounds.slice(-6).reverse().map(r => ({ day: r.day, kind: r.kind, strokes: r.strokes, par: r.par, text: `${r.strokes} (${toParWord(r.strokes - r.par)})${r.holes !== 18 ? ` over ${r.holes}` : ''}` })),
+    rounds: p.rounds.slice(-6).reverse().map(r => ({ day: r.day, kind: r.kind, strokes: r.strokes, par: r.par, text: `${r.strokes} (${toParWord(r.strokes - r.par)})${r.holes !== 18 ? ` over ${r.holes}` : ''}${r.noHcp ? ` · ${r.noHcp}, not for the handicap` : ''}` })),
   };
 }
