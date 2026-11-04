@@ -89,7 +89,7 @@ describe('T288: the placement helper (golf/placing.ts)', () => {
     assert.equal(landWhy([10, 10, 36, 34], c()), '');
     assert.equal(landWhy([80, 10, 21, 10], c()), 'Off your land: place it on your plot', 'one tile past the edge');
     assert.equal(landWhy([10, 10, 20, 20], c({ wet: (x, y) => x > 25 && y > 25 })), 'Not on water');
-    assert.equal(landWhy([10, 10, 20, 20], c({ course: (x, y) => x < 12 })), 'The course is there');
+    assert.equal(landWhy([10, 10, 20, 20], c({ course: x => x < 12 })), 'The course is there');
     const pts = rectSamples([0, 0, 5, 5]); assert.ok(pts.some(p => p.x === 4.5) && pts.some(p => p.y === 4.5), 'the far edges sampled');
   });
   it('placeVerdict: the reason first, then the money, else the name and price with the click', () => {
