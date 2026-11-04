@@ -19,7 +19,9 @@ import type { Budget } from '../src/game/budget';
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
-const Y = 1000, A: Pt = { x: 0, y: Y }, B: Pt = { x: MAP - 1, y: Y }, J: Pt = { x: 1000, y: Y }, SEED: Pt = { x: 1000, y: Y - 40 };
+// T329: the 2 km map (T280): the county road at y 500 (was 1000) and the town's seed and the club at x 500 (was 1000), so the parcel south of
+// the road (450 deep) lies on the map
+const Y = 500, A: Pt = { x: 0, y: Y }, B: Pt = { x: MAP - 1, y: Y }, J: Pt = { x: 500, y: Y }, SEED: Pt = { x: 500, y: Y - 40 };
 const PARCEL: [number, number, number, number] = [J.x - 70, Y + NEAR, 300, 450];
 /** a growth hour (sim s) */
 const HOUR = 60;
@@ -71,14 +73,14 @@ test("the first growth hour starts a lot, and a grown town's lot completes GROWN
 
 test("the own pick takes lots on the town's roads (the county road, its gravel); PAVED_RATE lots come only from the player's paved road", () => {
   const { city, editor } = grownCity();
-  // the player's own paved street off the county road at x 1400, north, its lots the PAVED_RATE pick's only land
-  const street: Leg = { a: { x: 1400, y: Y }, b: { x: 1400, y: Y - 200 } };
+  // the player's own paved street off the county road at x 700 (1400 on the 4 km map), north, its lots the PAVED_RATE pick's only land
+  const street: Leg = { a: { x: 700, y: Y }, b: { x: 700, y: Y - 200 } };
   const hours = 24, ev = run(city, editor, hours * HOUR, [], s => (s === 1 ? [street] : null));
   const I = city as unknown as Inside, built = builds(ev).map(e => I.lots.lots.get(e.key)!).filter(Boolean);
   const own = built.filter(l => l.seg.town || l.cls === 'gravel'), player = built.filter(l => !l.seg.town && l.cls !== 'gravel');
   assert.equal(own.length + player.length, built.length);
   assert.ok(own.some(l => l.seg.cls.id === 'road'), 'the county road (a town road, class road) grows lots of the own pick');
-  assert.ok(player.every(l => Math.abs(l.c.x - 1400) < 20), "the player's lots are on the player's street");
+  assert.ok(player.every(l => Math.abs(l.c.x - 700) < 20), "the player's lots are on the player's street");
   assert.ok(player.length > 0 && player.length <= PAVED_RATE * hours, `${player.length} lots on the player's street (at most ${PAVED_RATE} an hour)`);
 });
 

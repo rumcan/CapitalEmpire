@@ -228,7 +228,10 @@ test('reachableFrom: an anchor whose nearest node is within its reach gives its 
 test('with town centres the town grows on gravel slowly (5 + 0.02 built lots a game day), and the paved roads fill fast (6 lots a game hour)', () => {
   const gravel = gridLots(CLASS.gravel), paved = gridLots(CLASS.street);
   const builds = (g: { lm: LotMap; lots: Lot[] }, centres?: Pt[]) => run(g.lm, g.lots, 5, 1, { centres }).log.filter(e => e.kind === 'build').length;
-  const plain = builds(gravel), townGravel = builds(gravel, [ENTRY]), townPaved = builds(paved, [ENTRY]);
+  // T329: the town centre at the grid's middle (it was the entry, its corner): past FARM_LINE from every centre the town starts no lot (T276), and
+  // on the 2 km map (150 tiles, T280) the corner's quarter circle held only 84 lots, so a day used them all up and the rate never showed
+  const MID: Pt = { x: (O + last) / 2, y: (O + last) / 2 };
+  const plain = builds(gravel), townGravel = builds(gravel, [MID]), townPaved = builds(paved, [MID]);
   console.log(`day 1 builds: no centres (gravel) ${plain}, centres (gravel) ${townGravel}, centres (paved) ${townPaved}`);
   assert.ok(townGravel > 0, 'the town still grows on gravel');
   assert.ok(townGravel * 2 < plain, `the gravel growth with centres is slower (${townGravel} vs ${plain} a day)`);

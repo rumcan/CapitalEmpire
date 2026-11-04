@@ -23,11 +23,13 @@ import type { Rect } from '../src/game/golf/mode';
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
 /** the county road: straight across the map at y = Y, from the west edge (exit A) to the east edge (exit B); the town's seed across it */
-const Y = 1000, A: Pt = { x: 0, y: Y }, B: Pt = { x: MAP - 1, y: Y }, SEED: Pt = { x: 1000, y: Y - 40 };
+// T329: the 2 km map (T280): the county road at y 500 (was 1000) and the town's seed and the club at x 500 (was 1000), so the parcel south of
+// the road (450 deep) lies on the map
+const Y = 500, A: Pt = { x: 0, y: Y }, B: Pt = { x: MAP - 1, y: Y }, SEED: Pt = { x: 500, y: Y - 40 };
 const leg = (a: Pt, b: Pt): Leg => ({ a, b });
 /** the player's clubhouse and the range, beside the road on the course side, no lots */
-const CLUB: BizDef = { id: 1, type: 'clubhouse', x: 980, y: Y + 3, w: 40, h: 24 };
-const RANGE: BizDef = { id: 2, type: 'range', x: 1100, y: Y + 3, w: 70, h: 24 };
+const CLUB: BizDef = { id: 1, type: 'clubhouse', x: 480, y: Y + 3, w: 40, h: 24 };
+const RANGE: BizDef = { id: 2, type: 'range', x: 600, y: Y + 3, w: 70, h: 24 };
 /** the clubhouse's level (its tourists are TOURIST_PER_LEVEL a level an exit; at level 1, 1,000 tiles from each exit, it plans about a car a day,
  *  too few to tell the exits apart) */
 const LEVEL = 5;

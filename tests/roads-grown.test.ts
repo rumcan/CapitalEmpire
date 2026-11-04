@@ -21,7 +21,9 @@ import { NEAR } from '../src/game/golf/rangestart';
 
 /** the county road along y = Y (exits A west, B east), J on it, the seed 40 tiles north of J, the parcel south of the road (P22 2.1.2's layout:
  *  300 along, s in [J - 70, J + 230], 450 deep from V = NEAR tiles off the road's line, as golf/rangestart.ts lays it) */
-const Y = 1000, A: Pt = { x: 0, y: Y }, B: Pt = { x: MAP - 1, y: Y }, J: Pt = { x: 1000, y: Y }, SEED: Pt = { x: 1000, y: Y - 40 };
+// T329: the 2 km map (T280): the county road at y 500 (was 1000) and the town's seed and the club at x 500 (was 1000), so the parcel south of
+// the road (450 deep) lies on the map
+const Y = 500, A: Pt = { x: 0, y: Y }, B: Pt = { x: MAP - 1, y: Y }, J: Pt = { x: 500, y: Y }, SEED: Pt = { x: 500, y: Y - 40 };
 const PARCEL: [number, number, number, number] = [J.x - 70, Y + NEAR, 300, 450];
 
 type Inside = { net: RoadNetwork; lots: LotMap; town: Town; cls: Uint8Array };

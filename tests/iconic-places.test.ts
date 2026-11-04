@@ -11,6 +11,10 @@ import { hasSprite } from '../src/game/lots/preset-art';
 import { ART_FIXES, FRONT_DIR, fixedArt } from '../src/game/lots/art-fix';
 import { LIBRARY } from '../src/game/library';
 import { vehicleHeading } from '../src/game/vehicles';
+import { REMOVED_IDS } from '../src/game/lots/scales';
+/** T329: the pictures the owner removed in the studio (capital:tree-maple-open, 2026-11-02, after the places were made): a place's file may still
+ *  name one; it is left out when drawn, as on every lot (T167) */
+const REMOVED = new Set(REMOVED_IDS);
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
@@ -39,7 +43,7 @@ describe('the place file', () => {
     for (const d of PLACE_DEFS) {
       assert.equal(d.preset.whole, true, d.id);
       assert.notEqual(d.preset.approved, true, `${d.id} is never an ordinary lot's preset`);
-      for (const q of d.preset.props) assert.ok(hasSprite(q.id), `${d.id}: ${q.id} is in the library`);
+      for (const q of d.preset.props) assert.ok(hasSprite(q.id) || REMOVED.has(q.id), `${d.id}: ${q.id} is in the library (or removed by the owner)`);
       for (const id of Object.keys(d.standIns)) assert.ok(d.preset.props.some(q => q.id === id), `${d.id}: stand-in ${id} is used`);
       for (const q of d.preset.props) assert.ok(q.x >= 0 && q.x <= d.preset.w && q.y >= -1.5 && q.y <= d.preset.d, `${d.id}: ${q.id} inside its footprint`);
     }
@@ -109,7 +113,8 @@ describe('how a place draws', () => {
   for (const def of [drive, school]) for (const q of [0, 1, 2, 3] as const) {
     it(`${def.id} facing ${q}: every prop of its preset, none mirrored, on its footprint`, () => {
       const p: PlacedPlace = { id: def.id, x: 100, y: 100, q }, g = placeGeom(p, def), b = placeBox(p, def), c = composeWhole(g, def.preset, 5);
-      assert.equal(c.props.length, def.preset.props.length);
+      assert.equal(c.props.length, def.preset.props.filter(q => !REMOVED.has(q.id)).length);
+      assert.ok(c.props.every(r => !REMOVED.has(r.id)), 'no removed picture drawn');
       for (const r of c.props) {
         const from = def.preset.props[r.from!.prop]!;
         if (!/fence|chainlink/.test(r.id)) assert.equal(r.flip, false, `${r.id} mirrored`);
