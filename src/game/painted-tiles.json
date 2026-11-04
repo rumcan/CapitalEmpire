@@ -6,7 +6,7 @@
   "sha256": "9c97f8879952101a026cbb0e9eb36be920d28e33531352c8833014d9abaa4fff",
   "date": "2026-10-27"
  },
- "revision": "725301173fe5",
+ "revision": "bb7c9c2c2366",
  "display": {
   "minVisibleTiles": 2,
   "maxVisibleTiles": 4,
@@ -5309,6 +5309,428 @@
        "tb": 3.16,
        "h": 0.68,
        "v": 2.16
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "ploughed-field-run",
+   "materialId": "painted:ploughed-field-run",
+   "name": "Ploughed field, furrows along x (painted, quilted)",
+   "kind": "cut",
+   "revision": "759397e24dfc",
+   "selection": null,
+   "provisional": true,
+   "light": null,
+   "mean": "#904114",
+   "levels": {
+    "near": {
+     "revision": "near-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/ploughed-field/near/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/ploughed-field-run/near/tile-01.webp",
+       "sha256": "71caa96cee22cc9e52895c9d4da6132bc37fcb04c7cde7d47278c4163110f71c",
+       "mean": "#904114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/near/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/ploughed-field-run/near/tile-02.webp",
+       "sha256": "6f84910d29ee212861a944865768792d25550fcf57b002b8298d775e0efd37f1",
+       "mean": "#904114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/near/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/ploughed-field-run/near/tile-03.webp",
+       "sha256": "2747eb6b328b009c882663d2dda328ac43076a699ff7177b1a7c018732f4edb3",
+       "mean": "#8e4014",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/near/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/ploughed-field-run/near/tile-04.webp",
+       "sha256": "10f3a2a718604feae24cff22d1bbbe69f81ef09617ee51e43edffb58f16ecd15",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/near/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "T289: the owner's ploughed-field painting (PloughedFiled.png) turned -1.4 degrees (furrows at 26.5), at 0.803x (furrows 30.9 px apart), quilted into four and healed with one shared strip (shared-strip-match-v1, 48 px): finished tiles that meet one another as made; across any two tiles LR 19.23 -> 4.91 (inside 5.65), TB 19.93 -> 9.71 (inside 8.96)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "T289's finished near-tiles-v1 tiles (shared-strip healed when made)",
+      "before": {
+       "lr": 4.91,
+       "tb": 9.71,
+       "h": 5.65,
+       "v": 8.96
+      },
+      "healed": {
+       "lr": 4.91,
+       "tb": 9.71,
+       "h": 5.65,
+       "v": 8.96
+      },
+      "after": {
+       "lr": 7.19,
+       "tb": 11.71,
+       "h": 6.47,
+       "v": 10.08
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/ploughed-field/mid/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/ploughed-field-run/mid/tile-01.webp",
+       "sha256": "becd5532b51feb915d6828b44ad9e0b093a1537fa65b7c709210e7c5bdc60b80",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/mid/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/ploughed-field-run/mid/tile-02.webp",
+       "sha256": "ffab4b9e753856c21d57770242a18d5e6a77342405cbb9d1f9758a173f07e7ad",
+       "mean": "#904115",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/mid/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/ploughed-field-run/mid/tile-03.webp",
+       "sha256": "518c112877c6e52ca593b64622303190e7243ae1e7041a74017d62a1b9276b08",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/mid/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/ploughed-field-run/mid/tile-04.webp",
+       "sha256": "677798e585d412573e153431f288162265f23c020ae001fb4b737bf17879aacd",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/mid/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "T289: the owner's ploughed-field painting (PloughedFiled.png) turned -1.4 degrees (furrows at 27.0), at 0.312x (furrows 12.0 px apart), quilted into four and healed with one shared strip (shared-strip-match-v1, 48 px): finished tiles that meet one another as made; across any two tiles LR 18.99 -> 8.58 (inside 8.97), TB 19.65 -> 14.37 (inside 14.14)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "T289's finished mid-tiles-v1 tiles (shared-strip healed when made)",
+      "before": {
+       "lr": 8.58,
+       "tb": 14.37,
+       "h": 8.97,
+       "v": 14.14
+      },
+      "healed": {
+       "lr": 8.58,
+       "tb": 14.37,
+       "h": 8.97,
+       "v": 14.14
+      },
+      "after": {
+       "lr": 11.17,
+       "tb": 16.86,
+       "h": 10.53,
+       "v": 16.34
+      }
+     }
+    },
+    "far": {
+     "revision": "far-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/ploughed-field/far/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/ploughed-field-run/far/tile-01.webp",
+       "sha256": "deaf1743443b7ddbca3ae4efc40e9ec555cdda9d847c625dbb3782b02f24853f",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/far/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/ploughed-field-run/far/tile-02.webp",
+       "sha256": "58290acd8dd3f7c30c3cf4a89e566b8501d1c6657edbb6d2c291e25f7c611037",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/far/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/ploughed-field-run/far/tile-03.webp",
+       "sha256": "ea5dd203029aa1ad55982b33fa60a95841d36453d5b7c759492ba7fb7a438b0e",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/far/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/ploughed-field-run/far/tile-04.webp",
+       "sha256": "594dee995b76ffa0dac46814b6efc50e6d49e1311bda5adb54c2e98506109e1f",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field/far/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "T289: the owner's ploughed-field painting (PloughedFiled.png) turned -1.4 degrees (furrows at 26.5), at 0.156x (furrows 6.0 px apart), quilted into four and healed with one shared strip (shared-strip-match-v1, 48 px): finished tiles that meet one another as made; across any two tiles LR 15.56 -> 9.95 (inside 9.49), TB 16.64 -> 14.88 (inside 14.58)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "T289's finished far-tiles-v1 tiles (shared-strip healed when made)",
+      "before": {
+       "lr": 9.95,
+       "tb": 14.88,
+       "h": 9.49,
+       "v": 14.58
+      },
+      "healed": {
+       "lr": 9.95,
+       "tb": 14.88,
+       "h": 9.49,
+       "v": 14.58
+      },
+      "after": {
+       "lr": 12.38,
+       "tb": 17.98,
+       "h": 10.98,
+       "v": 16.49
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "ploughed-field-y-run",
+   "materialId": "painted:ploughed-field-y-run",
+   "name": "Ploughed field, furrows along y (painted, quilted)",
+   "kind": "cut",
+   "revision": "62ed1173fb38",
+   "selection": null,
+   "provisional": true,
+   "light": null,
+   "mean": "#8f4114",
+   "levels": {
+    "near": {
+     "revision": "near-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/near/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/ploughed-field-y-run/near/tile-01.webp",
+       "sha256": "d5001c280ae7b29c37a1bc4bc34c821d2c13a258232e394461963c40e1856739",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/near/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/ploughed-field-y-run/near/tile-02.webp",
+       "sha256": "86af047b0f2c06cb511f45b4d55207c825ea6f2d9b13340991a926b743f0bcf8",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/near/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/ploughed-field-y-run/near/tile-03.webp",
+       "sha256": "a748ce454a547c0407a28619287e3045375444e234417c8468771b4a6242e16c",
+       "mean": "#8e4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/near/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/ploughed-field-y-run/near/tile-04.webp",
+       "sha256": "ddf73807161d6b0ec9d37d605480e583c7d5b559d8b294b9ad42f93c3b6229b9",
+       "mean": "#8e4014",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/near/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "T289: the owner's ploughed-field painting (PloughedFiled.png) turned -54.6 degrees (furrows at -26.5), at 0.803x (furrows 30.9 px apart), quilted into four and healed with one shared strip (shared-strip-match-v1, 48 px): finished tiles that meet one another as made; across any two tiles LR 18.63 -> 5.73 (inside 5.31), TB 19.07 -> 7.88 (inside 7.59)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "T289's finished near-tiles-v1 tiles (shared-strip healed when made)",
+      "before": {
+       "lr": 5.73,
+       "tb": 7.88,
+       "h": 5.31,
+       "v": 7.59
+      },
+      "healed": {
+       "lr": 5.73,
+       "tb": 7.88,
+       "h": 5.31,
+       "v": 7.59
+      },
+      "after": {
+       "lr": 7.85,
+       "tb": 9.87,
+       "h": 6.07,
+       "v": 8.54
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/mid/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/ploughed-field-y-run/mid/tile-01.webp",
+       "sha256": "0c7cc8dfd866d12142065dcccf557a03642ff5cb19fe4c535058276fc78bae14",
+       "mean": "#8e4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/mid/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/ploughed-field-y-run/mid/tile-02.webp",
+       "sha256": "90ed65ee67e69c96d6a90414233441333cac494b331ac52172f6d9b5839620f7",
+       "mean": "#8e4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/mid/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/ploughed-field-y-run/mid/tile-03.webp",
+       "sha256": "2a25992cfbc94644fbf65e9333b082b92b330959978d3a6a68d4184b18dca65f",
+       "mean": "#8e4014",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/mid/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/ploughed-field-y-run/mid/tile-04.webp",
+       "sha256": "019213b43eee75bc593caf352fd641c849d87c116748f5efe1e8c95975f02f65",
+       "mean": "#8f4114",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/mid/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "T289: the owner's ploughed-field painting (PloughedFiled.png) turned -54.6 degrees (furrows at -27.0), at 0.312x (furrows 12.0 px apart), quilted into four and healed with one shared strip (shared-strip-match-v1, 48 px): finished tiles that meet one another as made; across any two tiles LR 18.76 -> 9.4 (inside 9.43), TB 19.03 -> 13.11 (inside 13.06)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "T289's finished mid-tiles-v1 tiles (shared-strip healed when made)",
+      "before": {
+       "lr": 9.4,
+       "tb": 13.11,
+       "h": 9.43,
+       "v": 13.06
+      },
+      "healed": {
+       "lr": 9.4,
+       "tb": 13.11,
+       "h": 9.43,
+       "v": 13.06
+      },
+      "after": {
+       "lr": 11.85,
+       "tb": 15.73,
+       "h": 11.04,
+       "v": 15.1
+      }
+     }
+    },
+    "far": {
+     "revision": "far-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/far/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/ploughed-field-y-run/far/tile-01.webp",
+       "sha256": "84e03b80ca7c6179f6f5bd8b8639dcddc2610f3bf8778613fe8b473ab19cfe97",
+       "mean": "#8e4013",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/far/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/ploughed-field-y-run/far/tile-02.webp",
+       "sha256": "97439a87f33774ce1a2f5b2d24738e7780c95c3b072a2e61381872abdfb08ef3",
+       "mean": "#8e4013",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/far/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/ploughed-field-y-run/far/tile-03.webp",
+       "sha256": "09ec8281a3eeec222a18c5a92d5fb8640448e0edcfd36deaa976aaa25ec04b58",
+       "mean": "#8e4013",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/far/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/ploughed-field-y-run/far/tile-04.webp",
+       "sha256": "21566ef862ceed50a7debb11b6a18b24c8d836d6e5512e140cf50b0da04b019b",
+       "mean": "#8e4013",
+       "source": "art/theme-consistency/generated/ground/run-grass/ploughed-field-y/far/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "T289: the owner's ploughed-field painting (PloughedFiled.png) turned -54.6 degrees (furrows at -26.5), at 0.156x (furrows 6.0 px apart), quilted into four and healed with one shared strip (shared-strip-match-v1, 48 px): finished tiles that meet one another as made; across any two tiles LR 15.79 -> 10.54 (inside 10.16), TB 16.23 -> 14.46 (inside 13.99)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "T289's finished far-tiles-v1 tiles (shared-strip healed when made)",
+      "before": {
+       "lr": 10.54,
+       "tb": 14.46,
+       "h": 10.16,
+       "v": 13.99
+      },
+      "healed": {
+       "lr": 10.54,
+       "tb": 14.46,
+       "h": 10.16,
+       "v": 13.99
+      },
+      "after": {
+       "lr": 13.1,
+       "tb": 17.35,
+       "h": 11.82,
+       "v": 15.87
       }
      }
     }

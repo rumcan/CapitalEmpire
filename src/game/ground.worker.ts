@@ -16,6 +16,7 @@ import { WALL_TEX } from './ext/course-walls';
 import { softCanvases } from './canvas2d';
 import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
 import { roughTexes } from './rough-yards';
+import { cropSurface } from './ext/farms/crops';
 import { layerTexes, type LotPatch } from './ground-protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -194,6 +195,9 @@ const handle = async (m: ToWorker) => {
             if (p.lawn && p.lawn.share < 1) need.add(BLOCK_UNDER);
             // T222: a rough yard's fescue, dirt and desert patches
             if (p.lawn?.rough) for (const t of roughTexes(p.lawn.rough)) need.add(t);
+            // T289: a crop field's art (ext/farms/crops.ts CROP_SURFACE: the ploughed field's tile sets), else nothing laid it (the renderer's cropArt
+            // found it painted, but its tiles were never made ready, so the field came out as the bare map grass)
+            if (p.crop) need.add(cropSurface(p.crop.st, p.crop.d[0], p.crop.d[1]));
           }
           if (painter.grassStrength > 0 && !painter.grassHeat) {
             for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {

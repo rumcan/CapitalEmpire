@@ -24,6 +24,8 @@
   "river": { "family": "lake", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "swamp": { "family": "swamp-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "field": { "family": "dirt-run", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": -0.04 },
+  "fieldPloughed": { "family": "ploughed-field-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "fieldPloughedY": { "family": "ploughed-field-y-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "woodland": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "outside": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lawn": { "family": "lawn-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },

@@ -1,0 +1,1300 @@
+{
+ "note": "T289: the desert and oasis props cut from F:/Art/newArt by scripts/assets/prep-desert-props.mjs. props: the cut key (sheet letter: a 260dbf3a, b 4f69e360, c 527a9264, d 844203c4, e download.png; then the candidate in reading order) -> its name, kind, size in metres (m: its picture height, dim h, or its footprint width, dim w), or drop. splits: candidates that hold two touching props, cut along a line of their crop.",
+ "splits": {
+  "a05": "x:363",
+  "b08": "x:220",
+  "b60": "y:295"
+ },
+ "props": {
+  "a00": {
+   "name": "Acacia on boulders",
+   "kind": "tree",
+   "m": 5.5,
+   "dim": "h"
+  },
+  "a01": {
+   "name": "Yellow desert broom",
+   "kind": "shrub",
+   "m": 1.3,
+   "dim": "h"
+  },
+  "a02": {
+   "name": "Cattail pair",
+   "kind": "reed",
+   "m": 1.9,
+   "dim": "h"
+  },
+  "a03": {
+   "name": "Date palm pair",
+   "kind": "palm",
+   "m": 8.0,
+   "dim": "h"
+  },
+  "a04": {
+   "name": "Date palm with grass",
+   "kind": "palm",
+   "m": 7.5,
+   "dim": "h"
+  },
+  "a05L": {
+   "name": "Twin acacia with boulders",
+   "kind": "tree",
+   "m": 5.5,
+   "dim": "h"
+  },
+  "a05R": {
+   "name": "Acacia with boulder",
+   "kind": "tree",
+   "m": 5.0,
+   "dim": "h"
+  },
+  "a06": {
+   "name": "Boulders with grass",
+   "kind": "rock",
+   "m": 2.4,
+   "dim": "w"
+  },
+  "a07": {
+   "name": "Slender date palm",
+   "kind": "palm",
+   "m": 9.0,
+   "dim": "h"
+  },
+  "a08": {
+   "name": "Dry grass on rocks",
+   "kind": "grass",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "a09": {
+   "name": "Small cactus on a rock",
+   "kind": "cactus",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "a10": {
+   "name": "Boulder with shrubs",
+   "kind": "rock",
+   "m": 2.2,
+   "dim": "w"
+  },
+  "a11": {
+   "name": "Yellow flowering shrub",
+   "kind": "shrub",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "a12": {
+   "name": "Grass clump on stones",
+   "kind": "grass",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "a13": {
+   "name": "Small green shrub",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "a14": {
+   "name": "Yellow broom bush",
+   "kind": "shrub",
+   "m": 1.4,
+   "dim": "h"
+  },
+  "a15": {
+   "name": "Low dry grass",
+   "kind": "grass",
+   "m": 0.5,
+   "dim": "h"
+  },
+  "a16": {
+   "name": "Cattail clump",
+   "kind": "reed",
+   "m": 1.8,
+   "dim": "h"
+  },
+  "a17": {
+   "name": "Yellow shrub by a boulder",
+   "kind": "shrub",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "a18": {
+   "name": "Pampas grass",
+   "kind": "grass",
+   "m": 1.6,
+   "dim": "h"
+  },
+  "a19": {
+   "name": "Tall cattails",
+   "kind": "reed",
+   "m": 2.0,
+   "dim": "h"
+  },
+  "a20": {
+   "name": "Sage bush",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "a21": {
+   "name": "Slim cattails",
+   "kind": "reed",
+   "m": 1.9,
+   "dim": "h"
+  },
+  "a22": {
+   "name": "Cattails on stones",
+   "kind": "reed",
+   "m": 1.8,
+   "dim": "h"
+  },
+  "a23": {
+   "name": "Dry grass tuft",
+   "kind": "grass",
+   "m": 0.7,
+   "dim": "h"
+  },
+  "a24": {
+   "name": "Pink and yellow shrubs",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "a25": {
+   "name": "Yucca on stones",
+   "kind": "shrub",
+   "m": 1.1,
+   "dim": "h"
+  },
+  "a26": {
+   "name": "Yellow flowering bush",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "a27": {
+   "name": "Green grass tuft",
+   "kind": "grass",
+   "m": 0.6,
+   "dim": "h"
+  },
+  "a28": {
+   "name": "Mixed flowering shrubs",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "a29": {
+   "name": "Sage and grass",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "a30": {
+   "name": "Sandstone boulder",
+   "kind": "rock",
+   "m": 1.4,
+   "dim": "w"
+  },
+  "a31": {
+   "name": "Boulder with grass",
+   "kind": "rock",
+   "m": 1.8,
+   "dim": "w"
+  },
+  "a32": {
+   "name": "Driftwood stump",
+   "kind": "wood",
+   "m": 2.6,
+   "dim": "w"
+  },
+  "a33": {
+   "name": "Flat boulder",
+   "kind": "rock",
+   "m": 1.6,
+   "dim": "w"
+  },
+  "a34": {
+   "name": "Driftwood log",
+   "kind": "wood",
+   "m": 2.2,
+   "dim": "w"
+  },
+  "a35": {
+   "name": "Cattails by a rock",
+   "kind": "reed",
+   "m": 1.8,
+   "dim": "h"
+  },
+  "a36": {
+   "name": "Grass on a sand patch",
+   "kind": "grass",
+   "m": 0.7,
+   "dim": "h"
+  },
+  "a37": {
+   "name": "Stones with grass",
+   "kind": "rock",
+   "m": 2.0,
+   "dim": "w"
+  },
+  "a38": {
+   "name": "Stacked sandstone blocks",
+   "kind": "rock",
+   "m": 2.4,
+   "dim": "w"
+  },
+  "a39": {
+   "name": "Driftwood root",
+   "kind": "wood",
+   "m": 2.6,
+   "dim": "w"
+  },
+  "a40": {
+   "name": "Dry grass mound",
+   "kind": "grass",
+   "m": 0.5,
+   "dim": "h"
+  },
+  "a41": {
+   "name": "Grass tuft on stones",
+   "kind": "grass",
+   "m": 0.7,
+   "dim": "h"
+  },
+  "a42": {
+   "name": "Small reed pool",
+   "kind": "water",
+   "m": 3.5,
+   "dim": "w"
+  },
+  "a43": {
+   "name": "Rock pool with grass",
+   "kind": "water",
+   "m": 4.0,
+   "dim": "w"
+  },
+  "a44": {
+   "name": "Reed pool",
+   "kind": "water",
+   "m": 3.0,
+   "dim": "w"
+  },
+  "a45": {
+   "name": "Rocky oasis pool",
+   "kind": "water",
+   "m": 5.0,
+   "dim": "w"
+  },
+  "a46": {
+   "name": "Sandstone ledge with grass",
+   "kind": "rock",
+   "m": 3.0,
+   "dim": "w"
+  },
+  "a47": {
+   "name": "Grassy pool",
+   "kind": "water",
+   "m": 3.0,
+   "dim": "w"
+  },
+  "a48": {
+   "name": "Water lilies",
+   "kind": "lily",
+   "m": 1.6,
+   "dim": "w"
+  },
+  "a49": {
+   "name": "Lily pad",
+   "kind": "lily",
+   "m": 0.8,
+   "dim": "w"
+  },
+  "a50": {
+   "name": "Blue sage shrub",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "a51": {
+   "name": "Lily pool",
+   "kind": "water",
+   "m": 3.5,
+   "dim": "w"
+  },
+  "a52": {
+   "name": "Small reed pool, long",
+   "kind": "water",
+   "m": 4.0,
+   "dim": "w"
+  },
+  "a53": {
+   "name": "Oasis pool",
+   "kind": "water",
+   "m": 8.0,
+   "dim": "w"
+  },
+  "a54": {
+   "name": "Shallow oasis pool",
+   "kind": "water",
+   "m": 9.0,
+   "dim": "w"
+  },
+  "a55": {
+   "name": "Pool edge with grass",
+   "kind": "water",
+   "m": 5.0,
+   "dim": "w"
+  },
+  "a56": {
+   "name": "Stony pool",
+   "kind": "water",
+   "m": 6.0,
+   "dim": "w"
+  },
+  "b00": {
+   "name": "Standing stone with yellow shrub",
+   "kind": "rock",
+   "m": 1.3,
+   "dim": "w"
+  },
+  "b01": {
+   "name": "Sandstone ledge with plants",
+   "kind": "rock",
+   "m": 3.5,
+   "dim": "w"
+  },
+  "b02": {
+   "name": "Cattails and grass",
+   "kind": "reed",
+   "m": 1.8,
+   "dim": "h"
+  },
+  "b03": {
+   "name": "Round boulder",
+   "kind": "rock",
+   "m": 1.3,
+   "dim": "w"
+  },
+  "b04": {
+   "name": "Twin date palm",
+   "kind": "palm",
+   "m": 8.0,
+   "dim": "h"
+  },
+  "b05": {
+   "name": "Yellow broom",
+   "kind": "shrub",
+   "m": 1.1,
+   "dim": "h"
+  },
+  "b06": {
+   "name": "Cattails",
+   "kind": "reed",
+   "m": 1.8,
+   "dim": "h"
+  },
+  "b07": {
+   "name": "Two grass tufts",
+   "kind": "grass",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "b08L": {
+   "name": "Date palm on boulders",
+   "kind": "palm",
+   "m": 8.5,
+   "dim": "h"
+  },
+  "b08R": {
+   "name": "Young date palm",
+   "kind": "palm",
+   "m": 6.5,
+   "dim": "h"
+  },
+  "b09": {
+   "name": "Grass tufts",
+   "kind": "grass",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "b10": {
+   "name": "Cattail tuft",
+   "kind": "reed",
+   "m": 1.7,
+   "dim": "h"
+  },
+  "b11": {
+   "name": "Yellow broom bush, round",
+   "kind": "shrub",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "b12": {
+   "name": "Rock waterfall pool",
+   "kind": "water",
+   "m": 9.0,
+   "dim": "w"
+  },
+  "b13": {
+   "name": "Cattail sheaf",
+   "kind": "reed",
+   "m": 1.8,
+   "dim": "h"
+  },
+  "b14": {
+   "name": "Boulders with flowering shrubs",
+   "kind": "rock",
+   "m": 3.0,
+   "dim": "w"
+  },
+  "b15": {
+   "name": "White water lily",
+   "kind": "lily",
+   "m": 1.2,
+   "dim": "w"
+  },
+  "b16": {
+   "name": "Boulders with grass, small",
+   "kind": "rock",
+   "m": 1.8,
+   "dim": "w"
+  },
+  "b17": {
+   "name": "Red-flowered shrub",
+   "kind": "shrub",
+   "m": 1.3,
+   "dim": "h"
+  },
+  "b18": {
+   "name": "Low boulder with grass",
+   "kind": "rock",
+   "m": 2.2,
+   "dim": "w"
+  },
+  "b19": {
+   "name": "Big boulder",
+   "kind": "rock",
+   "m": 1.8,
+   "dim": "w"
+  },
+  "b20": {
+   "name": "Rock pile with grass",
+   "kind": "rock",
+   "m": 1.6,
+   "dim": "w"
+  },
+  "b21": {
+   "name": "Low boulder",
+   "kind": "rock",
+   "m": 1.2,
+   "dim": "w"
+  },
+  "b22": {
+   "name": "Tall grass tuft",
+   "kind": "grass",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "b23": {
+   "name": "Boulder group",
+   "kind": "rock",
+   "m": 2.2,
+   "dim": "w"
+  },
+  "b24": {
+   "name": "Yellow bush",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "b25": {
+   "name": "Soft grass tuft",
+   "kind": "grass",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "b26": {
+   "name": "Cattails with orange heads",
+   "kind": "reed",
+   "m": 1.6,
+   "dim": "h"
+  },
+  "b27": {
+   "name": "Lily pad cluster",
+   "kind": "lily",
+   "m": 1.6,
+   "dim": "w"
+  },
+  "b28": {
+   "name": "Small boulder",
+   "kind": "rock",
+   "m": 0.9,
+   "dim": "w"
+  },
+  "b29": {
+   "name": "Stones and reeds",
+   "kind": "rock",
+   "m": 1.4,
+   "dim": "w"
+  },
+  "b30": {
+   "name": "Leafy yellow shrub",
+   "kind": "shrub",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "b31": {
+   "name": "Yellow shrub on sand",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "b32": {
+   "name": "Slim grass tuft",
+   "kind": "grass",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "b33": {
+   "name": "Cattails with stones",
+   "kind": "reed",
+   "m": 1.6,
+   "dim": "h"
+  },
+  "b34": {
+   "name": "Stones with grass",
+   "kind": "rock",
+   "m": 1.4,
+   "dim": "w"
+  },
+  "b35": {
+   "name": "Log with grass",
+   "kind": "wood",
+   "m": 2.2,
+   "dim": "w"
+  },
+  "b36": {
+   "name": "Rock pile with a red flower",
+   "kind": "rock",
+   "m": 1.2,
+   "dim": "w"
+  },
+  "b37": {
+   "name": "Grass by stones",
+   "kind": "grass",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "b38": {
+   "name": "Grass bank",
+   "kind": "grass",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "b39": {
+   "name": "Boulder",
+   "kind": "rock",
+   "m": 1.2,
+   "dim": "w"
+  },
+  "b40": {
+   "name": "Dry grass ball",
+   "kind": "grass",
+   "m": 0.7,
+   "dim": "h"
+  },
+  "b41": {
+   "name": "Boulders with shrubs",
+   "kind": "rock",
+   "m": 2.6,
+   "dim": "w"
+  },
+  "b42": {
+   "name": "Dry grass tuft, round",
+   "kind": "grass",
+   "m": 0.7,
+   "dim": "h"
+  },
+  "b43": {
+   "name": "Cattail clump, short",
+   "kind": "reed",
+   "m": 1.6,
+   "dim": "h"
+  },
+  "b44": {
+   "name": "Reedy oasis creek",
+   "kind": "water",
+   "m": 9.0,
+   "dim": "w"
+  },
+  "b45": {
+   "name": "Red-tipped shrub on stones",
+   "kind": "shrub",
+   "m": 1.1,
+   "dim": "h"
+  },
+  "b46": {
+   "name": "Long oasis pool",
+   "kind": "water",
+   "m": 12.0,
+   "dim": "w"
+  },
+  "b47": {
+   "name": "Tall sedge",
+   "kind": "reed",
+   "m": 1.5,
+   "dim": "h"
+  },
+  "b48": {
+   "name": "Flat sandstone boulder",
+   "kind": "rock",
+   "m": 1.8,
+   "dim": "w"
+  },
+  "b49": {
+   "name": "Driftwood branch",
+   "kind": "wood",
+   "m": 2.8,
+   "dim": "w"
+  },
+  "b50": {
+   "name": "Leaning stone",
+   "kind": "rock",
+   "m": 1.3,
+   "dim": "w"
+  },
+  "b51": {
+   "name": "Boulders with grass tufts",
+   "kind": "rock",
+   "m": 2.4,
+   "dim": "w"
+  },
+  "b52": {
+   "name": "Dry branches",
+   "kind": "wood",
+   "m": 2.6,
+   "dim": "w"
+  },
+  "b53": {
+   "name": "Boulders with a bush",
+   "kind": "rock",
+   "m": 2.0,
+   "dim": "w"
+  },
+  "b54": {
+   "name": "Square boulder",
+   "kind": "rock",
+   "m": 1.6,
+   "dim": "w"
+  },
+  "b55": {
+   "name": "Weathered log",
+   "kind": "wood",
+   "m": 2.0,
+   "dim": "w"
+  },
+  "b56": {
+   "name": "Log with red flowers",
+   "kind": "wood",
+   "m": 2.4,
+   "dim": "w"
+  },
+  "b57": {
+   "name": "Dry grass bush",
+   "kind": "grass",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "b58": {
+   "name": "Tall green grass",
+   "kind": "grass",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "b59": {
+   "name": "Grass tuft",
+   "kind": "grass",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "b60T": {
+   "name": "Pool with a boulder",
+   "kind": "water",
+   "m": 4.5,
+   "dim": "w"
+  },
+  "b60B": {
+   "name": "Dead stump",
+   "kind": "wood",
+   "m": 2.2,
+   "dim": "h"
+  },
+  "b61": {
+   "name": "Twin dead trunk",
+   "kind": "wood",
+   "m": 2.6,
+   "dim": "h"
+  },
+  "c00": {
+   "name": "Saguaro",
+   "kind": "cactus",
+   "m": 4.5,
+   "dim": "h"
+  },
+  "c01": {
+   "name": "Barrel cactus cluster",
+   "kind": "cactus",
+   "m": 1.4,
+   "dim": "h"
+  },
+  "c02": {
+   "name": "Ocotillo",
+   "kind": "cactus",
+   "m": 3.5,
+   "dim": "h"
+  },
+  "c03": {
+   "name": "Joshua tree",
+   "kind": "tree",
+   "m": 4.5,
+   "dim": "h"
+  },
+  "c04": {
+   "name": "Agave clump",
+   "kind": "shrub",
+   "m": 1.3,
+   "dim": "h"
+  },
+  "c05": {
+   "name": "Saguaro with barrel cactus",
+   "kind": "cactus",
+   "m": 3.8,
+   "dim": "h"
+  },
+  "c06": {
+   "name": "Brittlebush",
+   "kind": "shrub",
+   "m": 1.3,
+   "dim": "h"
+  },
+  "c07": {
+   "name": "Flowering prickly pear",
+   "kind": "cactus",
+   "m": 1.4,
+   "dim": "h"
+  },
+  "c08": {
+   "name": "Brittlebush on stones",
+   "kind": "shrub",
+   "m": 1.1,
+   "dim": "h"
+  },
+  "c09": {
+   "name": "Blue agave",
+   "kind": "shrub",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "c10": {
+   "name": "Sandstone blocks with grass",
+   "kind": "rock",
+   "m": 2.4,
+   "dim": "w"
+  },
+  "c11": {
+   "name": "Young saguaro",
+   "kind": "cactus",
+   "m": 2.5,
+   "dim": "h"
+  },
+  "c12": {
+   "name": "Flowering yucca",
+   "kind": "shrub",
+   "m": 2.0,
+   "dim": "h"
+  },
+  "c13": {
+   "name": "Dead tree",
+   "kind": "wood",
+   "m": 2.6,
+   "dim": "h"
+  },
+  "c14": {
+   "name": "Golden desert broom",
+   "kind": "shrub",
+   "m": 1.4,
+   "dim": "h"
+  },
+  "c15": {
+   "name": "Cholla",
+   "kind": "cactus",
+   "m": 2.0,
+   "dim": "h"
+  },
+  "c16": {
+   "name": "Red flowering shrub",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "c17": {
+   "name": "Silver sage",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "c18": {
+   "name": "Boulder with succulents",
+   "kind": "rock",
+   "m": 2.4,
+   "dim": "w"
+  },
+  "c19": {
+   "name": "Flat rock ledge",
+   "kind": "rock",
+   "m": 2.4,
+   "dim": "w"
+  },
+  "c20": {
+   "name": "Small flowering yucca",
+   "kind": "shrub",
+   "m": 1.7,
+   "dim": "h"
+  },
+  "c21": {
+   "name": "Aloe with a boulder",
+   "kind": "shrub",
+   "m": 1.1,
+   "dim": "h"
+  },
+  "c22": {
+   "name": "Flowering barrel cacti",
+   "kind": "cactus",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "c23": {
+   "name": "Flat slab with agave",
+   "kind": "rock",
+   "m": 2.4,
+   "dim": "w"
+  },
+  "c24": {
+   "name": "Yellow-flowered prickly pear",
+   "kind": "cactus",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "c25": {
+   "name": "Grass and purple sage",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "c26": {
+   "name": "Dry tumble bush",
+   "kind": "shrub",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "c27": {
+   "name": "Purple flowering succulents",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d00": {
+   "name": "Golden barrel cactus",
+   "kind": "cactus",
+   "m": 1.1,
+   "dim": "h"
+  },
+  "d01": {
+   "name": "Dry desert grasses",
+   "kind": "shrub",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "d02": {
+   "name": "Dry brush with agave",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d03": {
+   "name": "Teddy-bear cholla",
+   "kind": "cactus",
+   "m": 2.2,
+   "dim": "h"
+  },
+  "d04": {
+   "name": "Small cholla in bloom",
+   "kind": "cactus",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d05": {
+   "name": "Saguaro with red brush",
+   "kind": "cactus",
+   "m": 5.0,
+   "dim": "h"
+  },
+  "d06": {
+   "name": "Joshua tree pair",
+   "kind": "tree",
+   "m": 4.8,
+   "dim": "h"
+  },
+  "d07": {
+   "name": "Spiky green shrub",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "d08": {
+   "name": "Ocotillo, tall",
+   "kind": "cactus",
+   "m": 3.8,
+   "dim": "h"
+  },
+  "d09": {
+   "name": "Agave",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "d10": {
+   "name": "Brittlebush with agave",
+   "kind": "shrub",
+   "m": 1.3,
+   "dim": "h"
+  },
+  "d11": {
+   "name": "Tall saguaro",
+   "kind": "cactus",
+   "m": 5.5,
+   "dim": "h"
+  },
+  "d12": {
+   "name": "Barrel cactus on stones",
+   "kind": "cactus",
+   "m": 0.7,
+   "dim": "h"
+  },
+  "d13": {
+   "name": "Wide agave",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d14": {
+   "name": "Tall barrel cactus",
+   "kind": "cactus",
+   "m": 1.3,
+   "dim": "h"
+  },
+  "d15": {
+   "name": "Flowering hedgehog cactus",
+   "kind": "cactus",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "d16": {
+   "name": "Cholla thicket",
+   "kind": "cactus",
+   "m": 1.6,
+   "dim": "h"
+  },
+  "d17": {
+   "name": "Small agave",
+   "kind": "shrub",
+   "m": 0.7,
+   "dim": "h"
+  },
+  "d18": {
+   "name": "Agave on stones",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "d19": {
+   "name": "Golden broom",
+   "kind": "shrub",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "d20": {
+   "name": "Small saguaro and barrel",
+   "kind": "cactus",
+   "m": 1.8,
+   "dim": "h"
+  },
+  "d21": {
+   "name": "Yellow and grey brush",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d22": {
+   "name": "Yellow brittlebush",
+   "kind": "shrub",
+   "m": 1.1,
+   "dim": "h"
+  },
+  "d23": {
+   "name": "Dry grass ball, small",
+   "kind": "grass",
+   "m": 0.6,
+   "dim": "h"
+  },
+  "d24": {
+   "name": "Budding cholla",
+   "kind": "cactus",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d25": {
+   "name": "Saguaro garden",
+   "kind": "cactus",
+   "m": 3.2,
+   "dim": "h"
+  },
+  "d26": {
+   "name": "Boulder with agave",
+   "kind": "rock",
+   "m": 2.2,
+   "dim": "w"
+  },
+  "d27": {
+   "name": "Red torch flowers",
+   "kind": "shrub",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "d28": {
+   "name": "Grey brush on stones",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d29": {
+   "name": "Flowering hedgehog cluster",
+   "kind": "cactus",
+   "m": 1.4,
+   "dim": "h"
+  },
+  "d30": {
+   "name": "Dry grass bank",
+   "kind": "grass",
+   "m": 0.6,
+   "dim": "h"
+  },
+  "d31": {
+   "name": "Barrel cactus with red blooms",
+   "kind": "cactus",
+   "m": 1.1,
+   "dim": "h"
+  },
+  "d32": {
+   "name": "Dead branch on a rock",
+   "kind": "wood",
+   "m": 2.2,
+   "dim": "w"
+  },
+  "d33": {
+   "name": "Dry grass bush, tall",
+   "kind": "grass",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "d34": {
+   "name": "Big barrel cactus",
+   "kind": "cactus",
+   "m": 1.2,
+   "dim": "h"
+  },
+  "d35": {
+   "name": "Red barrel cactus",
+   "kind": "cactus",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "d36": {
+   "name": "Tumbleweed",
+   "kind": "grass",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d37": {
+   "name": "Spiky agave",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d38": {
+   "name": "Dry grass ball on stones",
+   "kind": "grass",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "d39": {
+   "name": "Red rock outcrop",
+   "kind": "rock",
+   "m": 3.5,
+   "dim": "w"
+  },
+  "d40": {
+   "name": "Barrel cactus pair",
+   "kind": "cactus",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d41": {
+   "name": "Creosote bush",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d42": {
+   "name": "Creosote bush, small",
+   "kind": "shrub",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "d43": {
+   "name": "Grey sage bush",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "d44": {
+   "name": "Golden grass mound",
+   "kind": "grass",
+   "m": 0.7,
+   "dim": "h"
+  },
+  "d45": {
+   "name": "Dry branch",
+   "kind": "wood",
+   "m": 2.0,
+   "dim": "w"
+  },
+  "d46": {
+   "name": "Dark agave",
+   "kind": "shrub",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "d47": {
+   "name": "Small barrel cactus",
+   "kind": "cactus",
+   "m": 0.6,
+   "dim": "h"
+  },
+  "d48": {
+   "name": "Spiky shrub on stones",
+   "kind": "shrub",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "d49": {
+   "name": "Yellow shrub on stones",
+   "kind": "shrub",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "d50": {
+   "name": "Dry brush",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d51": {
+   "name": "Spiky low shrub",
+   "kind": "shrub",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "d52": {
+   "name": "Grey-green brush",
+   "kind": "shrub",
+   "m": 0.8,
+   "dim": "h"
+  },
+  "d53": {
+   "name": "Pink flowering brush",
+   "kind": "shrub",
+   "m": 0.9,
+   "dim": "h"
+  },
+  "d54": {
+   "name": "Rock pile",
+   "kind": "rock",
+   "m": 2.0,
+   "dim": "w"
+  },
+  "d55": {
+   "name": "Yellow broom on stones",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "d56": {
+   "name": "Golden broom bush",
+   "kind": "shrub",
+   "m": 1.0,
+   "dim": "h"
+  },
+  "d57": {
+   "name": "Boulders with succulents",
+   "kind": "rock",
+   "m": 2.2,
+   "dim": "w"
+  },
+  "d58": {
+   "name": "Stones with small plants",
+   "kind": "rock",
+   "m": 1.6,
+   "dim": "w"
+  },
+  "d59": {
+   "name": "Spiky green tuft",
+   "kind": "shrub",
+   "m": 0.7,
+   "dim": "h"
+  },
+  "d60": {
+   "name": "Boulder with succulents, small",
+   "kind": "rock",
+   "m": 1.6,
+   "dim": "w"
+  },
+  "d61": {
+   "name": "Dead branch on stones",
+   "kind": "wood",
+   "m": 1.8,
+   "dim": "w"
+  },
+  "e00": {
+   "drop": "duplicate of c03 (download.png holds the same pictures as sheet 527a9264, pixel for pixel)"
+  },
+  "e01": {
+   "drop": "duplicate of c07 (download.png holds the same pictures as sheet 527a9264, pixel for pixel)"
+  },
+  "e02": {
+   "drop": "duplicate of c19 (download.png holds the same pictures as sheet 527a9264, pixel for pixel)"
+  },
+  "e03": {
+   "drop": "duplicate of c04 (download.png holds the same pictures as sheet 527a9264, pixel for pixel)"
+  },
+  "e04": {
+   "drop": "duplicate of c16 (download.png holds the same pictures as sheet 527a9264, pixel for pixel)"
+  },
+  "e05": {
+   "drop": "duplicate of c26 (download.png holds the same pictures as sheet 527a9264, pixel for pixel)"
+  }
+ }
+}

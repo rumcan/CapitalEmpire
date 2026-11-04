@@ -14,9 +14,10 @@ const LIB = new Map(LIBRARY.map((it, i) => [it.id, i]));
 
 test('the catalogue: four groups of real library pictures (and the T187 town buildings), a price of $50 to $15,000 and an appeal each; stand-ins are named', () => {
   // (T329: the owner's new props, 2026-11-02, bring a group per "New: " library category between the four and the buildings: new:<category>)
+  // (T289: the owner's desert and oasis props, a group of their own after the stone: desert-props.ts)
   const fresh = DECOR_GROUPS.map(g => g.id).filter(id => id.startsWith('new:'));
   assert.ok(fresh.length > 0, 'the new props have their groups');
-  assert.deepEqual(DECOR_GROUPS.map(g => g.id), ['plants', 'water', 'stone', 'furniture', ...fresh, 'buildings']);
+  assert.deepEqual(DECOR_GROUPS.map(g => g.id), ['plants', 'water', 'stone', 'desert', 'furniture', ...fresh, 'buildings']);
   for (const g of DECOR_GROUPS) assert.ok(DECOR.some(d => d.group === g.id), g.id);
   assert.equal(new Set(DECOR.map(d => d.key)).size, DECOR.length, 'the keys are unique (they are saved)');
   for (const d of DECOR) {

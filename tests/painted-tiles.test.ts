@@ -52,7 +52,9 @@ const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples
 const PROVISIONAL = ['fairway', 'putting-green',
   'first-cut-run', 'tee-run', 'desert-run', 'swamp-run', 'dirt-run', 'sand-raked-run',
   'putting-green-run', 'rough-run', 'pond-bank-run', 'grow-in-run', 'field-parking-run',
-  'flower-bed-soil-run', 'range-tee-divots-run', 'lawn-concept-run', 'meadow-concept-run', 'rough-concept-run', 'fairway-concept-run', 'first-cut-concept-run', 'green-concept-run', 'pond-concept-run'];
+  'flower-bed-soil-run', 'range-tee-divots-run', 'lawn-concept-run', 'meadow-concept-run', 'rough-concept-run', 'fairway-concept-run', 'first-cut-concept-run', 'green-concept-run', 'pond-concept-run',
+  // T289 (#874): the owner's ploughed-field painting, turned onto each map axis and quilted (scripts/assets/prep-ploughed-field.mjs)
+  'ploughed-field-run', 'ploughed-field-y-run'];
 
 /** the owner's own paintings (T162) and the art session's fairway and putting-green paintings (T165): provisional too, one tile a level, from
  *  art/owner-supplied (committed in this repo); a level may instead be a provisional family's raw tiles healed with one shared strip (T165) */
