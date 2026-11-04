@@ -140,7 +140,8 @@ import { LotMap, ringClear } from './lots/lots';
 import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
-import { FARM_MODEL, FarmMap, claimedLots, composeFarm, farmSeason, farmStandIns, parcelCorners, type FarmModel, type FarmParcel } from './ext/farms';
+import { FARM_MODEL, FarmMap, animalAt, animalBox, claimedLots, composeFarm, farmAnimals, farmSeason, farmStandIns, parcelCorners, type AnimalView, type FarmAnimal, type FarmModel, type FarmParcel } from './ext/farms';
+import { ANIMALS, animalItem } from './animals-library';
 import { SIG, shown, sigKey } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
@@ -905,6 +906,9 @@ export class Game {
   private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
   /** the crowd's movers (crowdMovers) and its scratch people: the spectators, the golfers */
   private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
+  /** T309: the farm animals by farm key (ext/farms/animals.ts: stateless, a function of the time), each farm's box (the union of its fields), their
+   *  reused movers and scratch view */
+  private farmAnimals = new Map<string, { box: number[]; list: FarmAnimal[] }>(); private animalDraw: Drawable[] = []; private animalView: AnimalView = { x: 0, y: 0, art: 0, row: 0, frame: 0, moving: false };
   /** the day's golf round (updatePlay, docs/GOLF-PLAY.md P2): built once per tournament; playTried is the key last tried, so a round with no holes is not rebuilt every frame */
   private play: GolfPlay | null = null; private playTried = -1;
   /** T208 everyday golf: the town days' play (the save, the booking: golf/everyday.ts DayBook), the day's playback (its town day and course key; null:
@@ -976,7 +980,7 @@ export class Game {
   private grassVisible = false;
   private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
   private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, /** T265: the belt trees planted, and the most ms a frame's planting took (plantForest) */ belt: 0, plantMs: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0, /** T312: the people spacer's ms this frame and the people it spaced */ spaceMs: 0, spaced: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, /** T265: the belt trees planted, and the most ms a frame's planting took (plantForest) */ belt: 0, plantMs: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0, /** T312: the people spacer's ms this frame and the people it spaced */ spaceMs: 0, spaced: 0, /** T309: the farm animals drawn this frame and their ms */ animals: 0, animalMs: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -3786,7 +3790,7 @@ export class Game {
     const ps = this.farmProps.get(key);
     if (ps) { for (const p of ps) if (this.props.has(p)) this.removeProp(p); this.farmProps.delete(key); }
     this.setLotGround('farm:' + key, null);
-    this.farmGround.delete(key); this.farmSeasons.delete(key); this.farmLabels.delete(key);
+    this.farmGround.delete(key); this.farmSeasons.delete(key); this.farmLabels.delete(key); this.farmAnimals.delete(key);
   }
   /** every farm goes (a reset, the farms switched off) */
   private dropAllFarms() {
@@ -3820,6 +3824,9 @@ export class Game {
     this.farmProps.set(key, ps);
     const gs = JSON.stringify(c.ground); if (this.farmGround.get(key) !== gs) { this.setLotGround(pk, c.ground); this.farmGround.set(key, gs); }
     this.farmSeasons.set(key, fp ? '' : farmSeason(f.p, f.seed, model, month));
+    // T309: its animals (none on a farm drawn from a lot preset: it has no paddock of ours)
+    const herd = fp ? [] : farmAnimals(f.p, f.seed, ANIMALS, model);
+    if (herd.length) { const bs = herd.map(animalBox); this.farmAnimals.set(key, { box: [Math.min(...bs.map(b => b[0]!)) - 1, Math.min(...bs.map(b => b[1]!)) - 1, Math.max(...bs.map(b => b[2]!)) + 1, Math.max(...bs.map(b => b[3]!)) + 1], list: herd }); } else this.farmAnimals.delete(key);
     // T259: the model 2 farm's stand-in labels ("Stand In for <art>": the windbreak's and the orchard's first tree, each crop state's biggest field, the lane)
     if (fp || model !== 2) { this.farmLabels.delete(key); return; }
     const labels: { p: Drawable; text: string; box: number[] }[] = [], at = LIB_INDEX.get('world:mailbox') ?? 0;
@@ -7351,6 +7358,22 @@ export class Game {
     return out;
   }
 
+  /** T309: the farm animals in a tile box as movers (the street tier): a farm whose fields' box misses it is skipped whole, then each animal's
+   *  place and frame at `now` (seconds; ext/farms/animals.ts animalAt), culled by its point. Reused Drawables: no allocation once warm */
+  private animalMovers(x0: number, y0: number, x1: number, y1: number, now: number): Drawable[] {
+    const out = this.animalDraw, v = this.animalView; let m = 0;
+    for (const f of this.farmAnimals.values()) {
+      const b = f.box; if (b[0]! > x1 || b[2]! < x0 || b[1]! > y1 || b[3]! < y0) continue;
+      for (const a of f.list) {
+        animalAt(a, now, v);
+        if (v.x < x0 - 1 || v.x > x1 + 1 || v.y < y0 - 1 || v.y > y1 + 1) continue;
+        const d = out[m] ?? (out[m] = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: true }); m++;
+        d.item = animalItem(v.art, v.row, v.frame); d.x = v.x; d.y = v.y; d.x0 = v.x - 0.35; d.y0 = v.y - 0.35; d.x1 = v.x + 0.35; d.y1 = v.y + 0.35;
+      }
+    }
+    out.length = m;
+    return out;
+  }
   /** the crowd as movers in a tile box (the street tier, with the townspeople): each gallery spot's fans, each queue at a stop or gate (its block
    *  1.5 tiles behind the kerb toward the stop's car park, as drawWalkers had it) and each walking party, every person its 3D frame (crowdview.ts;
    *  `now` in seconds), then the golfers of the day (playMovers). A spot, a party or a queue is culled by its point to the box padded by 4 tiles, the
@@ -10114,7 +10137,8 @@ export class Game {
         if (!this.spacingOff) spacePeople(this.spacer, [peds, crowd, range], this.spaceAt ? (now - this.spaceAt) / 1000 : 0, this.spaceRefs);
         this.perf.spaceMs = performance.now() - s0; this.perf.spaced = this.spacingOff ? 0 : this.spaceRefs.length;
         this.spaceAt = now;
-        movers = cars.concat(peds, crowd, range, this.dayCarOut, this.golfCartOut, this.crewOut);
+        const a0 = performance.now(), animals = this.animalMovers(bx0, by0, bx1, by1, now / 1000); this.perf.animalMs = performance.now() - a0; this.perf.animals = animals.length;
+        movers = cars.concat(peds, crowd, range, this.dayCarOut, this.golfCartOut, this.crewOut, animals);
       } else this.spaceAt = 0;
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
       // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)

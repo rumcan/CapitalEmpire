@@ -325,6 +325,7 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   "import { appendConstruction } from './construction-library';",
   "import { appendGolf, appendKit, appendRangeArt, appendLandscapeArt } from './golf-library';",
   "import { appendNewProps } from './new-props-library';",
+  "import { appendAnimals } from './animals-library';",
   "import { appendViews } from './views-library';",
   "import { appendTrees } from './trees-library';",
   "import { appendAxisViews } from './axis-library';",
@@ -365,7 +366,8 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'appendExtraViews(LIBRARY, ATLAS_PAGES);',
   'appendRangeArt(LIBRARY); // T258: range art on the existing golf page',
   'appendLandscapeArt(LIBRARY); // T274: accepted organic art at the tail, on the same golf page',
-  'appendNewProps(LIBRARY, ATLAS_PAGES); // the owner\'s new props (art/new-props): their own pages, at the tail so no saved index moves', ''].join('\n'));
+  'appendNewProps(LIBRARY, ATLAS_PAGES); // the owner\'s new props (art/new-props): their own pages, at the tail so no saved index moves',
+  'appendAnimals(LIBRARY, ATLAS_PAGES); // T309: the farm animals (art/animals, prep-animals.mjs): their own page, at the very tail', ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
 console.log(`spectators: ${spec.people.length} people, ${spec.frames.length} frames; golfers: ${golf.people.length} people, ${golf.frames.length} frames`);
 console.log(`walk frames still needed: ${needed.length}${needed.length ? ` (${needed.join(', ')})` : ''}`);

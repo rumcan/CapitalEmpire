@@ -765,3 +765,15 @@ export function farmLayoutForTest(p: FarmParcel, seed: number) {
   const L = layoutOf2(p, seed);
   return { front: L.front, yardB0: L.yardB0, yardB1: L.yardB1, laneA: L.laneA, wind: L.wind, orchard: L.orchard && { a0: L.orchard.a0, b0: L.orchard.b0, na: L.orchard.na, nb: L.orchard.nb, plot: { a0: L.orchard.q.a0, b0: L.orchard.q.b0, a1: L.orchard.q.a1, b1: L.orchard.q.b1 } }, plots: L.plots.map(q => ({ a0: q.a0, b0: q.b0, a1: q.a1, b1: q.b1, kind: q.kind, shift: q.shift, alongU: q.alongU })), ha: L.ha, hb: L.hb, hd: L.hd };
 }
+
+/** T309 (#894): the grass fields a farm's animals graze, parcel frame (tiles): the paddock (the pasture inside the chain-link fence: cows or
+ *  horses), the other pastures and the fallow fields (sheep). From the layout alone, so the animals stay put through the year */
+export interface AnimalField { a0: number; b0: number; a1: number; b1: number; kind: 'paddock' | 'pasture' | 'fallow' }
+export function farmAnimalFields(p: FarmParcel, seed: number, model: FarmModel = FARM_MODEL): AnimalField[] {
+  const L = model === 1 ? layoutOf(p, seed) : layoutOf2(p, seed), out: AnimalField[] = [];
+  for (const q of L.plots as (Plot | Plot2)[]) {
+    if (q.kind !== 'pasture' && q.kind !== 'fallow') continue;
+    out.push({ a0: q.a0, b0: q.b0, a1: q.a1, b1: q.b1, kind: q === L.pasture ? 'paddock' : q.kind });
+  }
+  return out;
+}
