@@ -160,8 +160,10 @@ test('incremental equals full: lots built edit by edit match a fresh map on the 
 });
 
 test('timing (log): the 40x40 bench grid, full update and one edit', () => {
-  const size = (40 / 47) ** 2, { lines, at: bat } = benchLayout(size);
-  assert.equal(lines, 40);
+  // T329: the bench grid's lines follow MAP: 47 on the 4 km map (40 of them here), 21 on the 2 km map (T280: the whole map's grid, all 21)
+  const all = benchLayout(1).lines, want = Math.min(40, all);
+  const size = (want / all) ** 2, { lines, at: bat } = benchLayout(size);
+  assert.equal(lines, want);
   const e = new NetEditor(new RoadNetwork());
   benchNetwork(e, size);
   const lm = new LotMap();
