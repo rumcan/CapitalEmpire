@@ -33,13 +33,22 @@ test('a straight-on building: its contact is a screen-aligned box, its cast fall
   for (const it of axisItems) {
     if (draftKindOf(it) !== 'building') continue;
     const e = entry(it.id)!, f = axisFoot(it.id)!;
-    assert.ok(f && f.yaw === 0, `${it.id}: a dead-square footprint`);
+    // dead square, or turned a few degrees toward the sun (T315: the turned repaints, yaw -8: the right-hand wall shows)
+    assert.ok(f && (f.yaw === 0 || (f.yaw < 0 && f.yaw >= -10)), `${it.id}: a dead-square or slightly turned footprint (yaw ${f?.yaw})`);
     assert.equal(e.c?.length, 1, `${it.id}: one contact ring`);
     const c = e.c![0]!, X = new Set(c.filter((_, i) => i % 2 === 0)), Y = new Set(c.filter((_, i) => i % 2 === 1));
-    assert.ok(c.length === 8 && X.size === 2 && Y.size === 2, `${it.id}: the contact is a screen-aligned box: ${JSON.stringify(c)}`);
-    // the box: its front on the picture's base (half the depth below the anchor), its back as far above
-    const ys = [...Y].sort((a, b) => a - b);
-    assert.ok(Math.abs(ys[0]! + ys[1]!) <= 2 && ys[1]! > 5, `${it.id}: the box is centred on the anchor, front ${ys[1]} back ${ys[0]}`);
+    let ys: number[];
+    if (f.yaw === 0) {
+      assert.ok(c.length === 8 && X.size === 2 && Y.size === 2, `${it.id}: the contact is a screen-aligned box: ${JSON.stringify(c)}`);
+      // the box: its front on the picture's base (half the depth below the anchor), its back as far above
+      ys = [...Y].sort((a, b) => a - b);
+      assert.ok(Math.abs(ys[0]! + ys[1]!) <= 2 && ys[1]! > 5, `${it.id}: the box is centred on the anchor, front ${ys[1]} back ${ys[0]}`);
+    } else {
+      // a turned footprint: four corners, no two on one screen row (the ring turned), about the anchor
+      assert.ok(c.length === 8 && Y.size === 4, `${it.id}: the contact is the turned footprint: ${JSON.stringify(c)}`);
+      ys = [Math.min(...Y), Math.max(...Y)];
+      assert.ok(Math.abs(ys[0]! + ys[1]!) <= 0.25 * (ys[1]! - ys[0]!) + 4 && ys[1]! > 5, `${it.id}: the ring is about the anchor, front ${ys[1]} back ${ys[0]}`);
+    }
     // the cast: no taller than the picture's height less the ground's depth it shows (the old board cast the whole picture); it reaches out to
     // the lower left of the footprint and never past its right-hand side (the sun is at the upper right)
     const s = (e.s ?? []).flat(), cx = [...X]; let hMax = 0, lx0 = Infinity, lx1 = -Infinity, ly1 = -Infinity;
@@ -97,6 +106,10 @@ test('the packing: a turned picture\'s footprint centre found on its base, steps
   const f = fitTurnedFoot(bot, yaw, depth / front)!;
   assert.ok(Math.abs(f.cx - C[0]!) <= 2 && Math.abs(f.cy - C[1]!) <= 2, `the centre ${f.cx.toFixed(1)}, ${f.cy.toFixed(1)} (want ${C})`);
   assert.ok(Math.abs(f.front * s / AXIS_K - front) < 0.1, `the front ${(f.front * s / AXIS_K).toFixed(2)} tiles (want ${front})`);
+  // the front known from the square views (the packing): the same centre, the front exactly that
+  const k = fitTurnedFoot(bot, yaw, depth / front, 2, front * AXIS_K / s)!;
+  assert.ok(Math.abs(k.cx - C[0]!) <= 2 && Math.abs(k.cy - C[1]!) <= 2, `the centre with a known front ${k.cx.toFixed(1)}, ${k.cy.toFixed(1)} (want ${C})`);
+  assert.equal(k.front, front * AXIS_K / s);
   // the old anchor rule (the middle of the lowest row) lands on the steps, far off the centre in a turned picture without them, on the corner
   const lowest = Math.max(...bot.filter((_, x) => x < 370 || x >= 410)), atLow = [...bot].findIndex(v => v === lowest);
   assert.ok(Math.abs(atLow - C[0]!) > 80, `(without the fit the anchor would sit at the near corner, x ${atLow})`);
