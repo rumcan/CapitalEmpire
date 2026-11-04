@@ -755,7 +755,8 @@ export function farmStandIns(p: FarmParcel, seed: number, month: number): { x: n
   const NAME: Record<CropState, string> = { plough: 'ploughed field', young: 'corn field, young', ripe: 'corn field, ripe', stubble: 'corn field, stubble' };
   const best = new Map<CropState, Plot2>();
   for (const q of L.plots) { const st = plotState(q, month); if (!st) continue; const b = best.get(st); if (!b || (q.a1 - q.a0) * (q.b1 - q.b0) > (b.a1 - b.a0) * (b.b1 - b.b0)) best.set(st, q); }
-  for (const [st, q] of best) out.push({ ...world(p, (q.a0 + q.a1) / 2, (q.b0 + q.b1) / 2), text: `Stand In for ${NAME[st]}` });
+  // (T289: the ploughed field wears the owner's painting now: no stand-in label for it)
+  for (const [st, q] of best) if (st !== 'plough') out.push({ ...world(p, (q.a0 + q.a1) / 2, (q.b0 + q.b1) / 2), text: `Stand In for ${NAME[st]}` });
   out.push({ ...world(p, L.laneA, L.yardB0 / 2), text: 'Stand In for farm lane' });
   return out;
 }
