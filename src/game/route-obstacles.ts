@@ -28,7 +28,7 @@ export const ringWhy = (kind: string, name: string): string => `${kind} cannot c
 export const inSentence = (name: string): string => (name.startsWith('The ') ? 't' + name.slice(1) : name);
 /** a business's name in a refusal: the golf buildings and the stadium by name, any other "a business" */
 export function bizName(type: string): string {
-  return type === 'clubhouse' ? 'the clubhouse' : type === 'halfway' ? 'the halfway house' : type === 'range' ? 'the driving range' : type === 'stadium' ? 'the stadium' : 'a business';
+  return type === 'clubhouse' ? 'the clubhouse' : type === 'halfway' ? 'the halfway house' : type === 'prooffice' ? "the pro's office" : type === 'teachhut' ? 'the teaching hut' : type === 'range' ? 'the driving range' : type === 'stadium' ? 'the stadium' : 'a business';
 }
 
 /** the corridor of half width hw along leg l as a polygon: its two sides, no caps past the ends (a route's corridor has always been judged so:
