@@ -34,6 +34,8 @@ import type { DaySave } from '../event/daysave';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
+/** T320: a step back of the sim time shown smaller than this (s) is held (simTime): a pause, a frame behind the extrapolation */
+const HOLD_BACK = 2.5;
 /** how long the engine's save waits for the worker's tournament day (T209, daySave), ms */
 const DAY_WAIT_MS = 1500;
 /** a car that moved this far (tiles) between two frames was respawned or re-planned: drawn at its new place, not lerped */
@@ -244,7 +246,7 @@ export class SimClient {
   buyLot(key: string) { this.post({ t: 'buyLot', key }); }
   /** sets the number of cars the sim keeps on the network */
   setTarget(n: number) { this.target = n; this.post({ t: 'target', n }); }
-  /** the sim speed: 0 pauses, 1 is real time, 2, 4, 8 and 20 are faster */
+  /** the sim speed: 0 pauses, 1 is real time, 2, 4, 8 and 20 are faster; below 1 slower (T320: the worker steps every 1/k frames) */
   setSpeed(k: number) { this.speed = k; this.post({ t: 'speed', k }); }
   /** fast-forwards the sim as fast as the worker can until the sim time until (s); the cars are not drawn between frames meanwhile */
   skip(until: number) { this.post({ t: 'skip', until }); }
@@ -327,7 +329,16 @@ export class SimClient {
   }
 
   /** the sim's time now, s: the time of the last frame, moved on at the sim speed since it arrived (0 before the first frame) */
-  simTime(now: number): number { if (!this.cur) return 0; return this.stats.skipping ? this.stats.simT : this.stats.simT + Math.max(0, now - this.tCur) / 1000 * this.speed; }
+  simTime(now: number): number {
+    if (!this.cur) return 0;
+    const t = this.stats.skipping ? this.stats.simT : this.stats.simT + Math.max(0, now - this.tCur) / 1000 * this.speed;
+    // T320: never a little back: a pause (or a frame of the worker's, which steps once every 1/k frames below 1x) can fall behind what was shown by
+    // up to a step; the time shown holds until the sim reaches it (a real jump back, a load or a new game, is more than HOLD_BACK and goes through)
+    if (t < this.tShown && this.tShown - t < HOLD_BACK) return this.tShown;
+    this.tShown = t; return t;
+  }
+  /** T320: the most sim time shown (simTime) */
+  private tShown = 0;
   /** the game clock now, s (the time of day and the game day): the clock of the last frame, moved on at the sim speed like simTime, but
    *  not while it is frozen or the sim is skipping (0 before the first frame) */
   clockTime(now: number): number { if (!this.cur) return 0; const s = this.stats; return s.clock + (s.frozen || s.skipping ? 0 : Math.max(0, now - this.tCur) / 1000 * this.speed); }
@@ -337,7 +348,7 @@ export class SimClient {
     const cur = this.cur;
     if (!cur) return;
     // performance.now(), not the rAF time: a frame that arrived after the rAF timestamp would get a negative alpha
-    const prev = this.prev, alpha = Math.min(1, Math.max(0, (performance.now() - this.tCur) / FRAME_MS));
+    const prev = this.prev, alpha = Math.min(1, Math.max(0, (performance.now() - this.tCur) / (this.speed > 0 && this.speed < 1 ? FRAME_MS / this.speed : FRAME_MS))); // (T320: below 1x a frame comes every 1/speed periods)
     for (let i = 0; i < this.n; i++) {
       const k = 4 * i, flags = cur[k + 3] | 0;
       if (!(flags & 1)) { this.alive[i] = 0; continue; }
