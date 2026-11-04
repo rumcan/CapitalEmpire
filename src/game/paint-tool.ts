@@ -1847,8 +1847,9 @@ export class PaintTool {
       const sg = s.grid;
       if (sg && sg.n) {
         const jx = squareStart(t.x, sg.n), jy = squareStart(t.y, sg.n); if (jx === sg.ix && jy === sg.iy) return;
-        squareRun(sg.ix, sg.iy, jx, jy, (ix, iy) => this.gridDab(fillPolygon(sg.g, squarePoly(ix, iy, sg.n), sg.s, sg.h, sg.month, sg.opts)));
-        sg.ix = jx; sg.iy = jy; s.dabs.push(t.x, t.y); return;
+        // T299: the stroke's preview keeps each square's start cell (drawBrush draws the squares, never the round brush's circle)
+        squareRun(sg.ix, sg.iy, jx, jy, (ix, iy) => { this.gridDab(fillPolygon(sg.g, squarePoly(ix, iy, sg.n), sg.s, sg.h, sg.month, sg.opts)); s.dabs.push(ix, iy); });
+        sg.ix = jx; sg.iy = jy; return;
       }
       // dabs on the half grid (T108): a move inside the same cell paints nothing new
       const x = snapDab(t.x), y = snapDab(t.y); if (x === s.last.x && y === s.last.y) return;
@@ -2019,7 +2020,7 @@ export class PaintTool {
       // same cells: a rub out (T125) lays the base (rough, or the land's own grass) with no hole, established, over every cell rubWhy lets it
       const n = this.brushSquare(), ix = n ? squareStart(t.x, n) : 0, iy = n ? squareStart(t.y, n) : 0;
       const grid = { g, s: erase ? this.rubBase() : s, h: erase ? 0 : h, month: erase ? 0 : plantMonth(this.plantKind, this.host.currentMonth?.()), opts: this.gridOpts(g, erase), n, ix, iy, spent: 0, cells: 0, broke: false };
-      this.stroke = { m, m0: m, r, erase, last: { x, y }, dabs: [x, y], grid };
+      this.stroke = { m, m0: m, r, erase, last: { x, y }, dabs: n ? [ix, iy] : [x, y], grid }; // T299: the square brush's dabs are start cells
       this.gridDab(n ? fillPolygon(g, squarePoly(ix, iy, n), grid.s, grid.h, grid.month, grid.opts) : paintDisc(g, x, y, r, grid.s, grid.h, grid.month, grid.opts));
       this.host.emit(); return;
     }
@@ -2055,17 +2056,25 @@ export class PaintTool {
     this.host.save(); this.host.emit();
   }
 
-  /** brush mode: the brush's circle under the cursor (white, red when rubbing out), and during a stroke every dab's circle filled translucent in the kind's colour (red when erasing) */
+  /** brush mode: the brush's circle under the cursor (white, red when rubbing out), and during a stroke every dab filled translucent in the kind's
+   *  colour (red when erasing): the round brush's circles, or (T299) the square brush's n x n squares, never a circle (the owner, 2026-11-02:
+   *  "when you click the square shape it shows a big transparent circle where you paint. that needs to be removed") */
   private drawBrush(v: PaintView) {
     const ctx = v.ctx, d = v.dpr, c = this.cursor, s = this.stroke, r = this.brush[this.brushKind].r, erase = s ? s.erase : this.rubOut;
     if (s && s.dabs.length) {
       v.setIso(ctx); ctx.beginPath();
-      for (let i = 0; i < s.dabs.length; i += 2) { const x = s.dabs[i]!, y = s.dabs[i + 1]!; ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, Math.PI * 2); }
+      const n = s.grid?.n ?? 0;
+      if (n) for (let i = 0; i < s.dabs.length; i += 2) { const q = squarePoly(s.dabs[i]!, s.dabs[i + 1]!, n); ctx.moveTo(q[0]!.x, q[0]!.y); for (let k = 1; k < 4; k++) ctx.lineTo(q[k]!.x, q[k]!.y); ctx.closePath(); }
+      else for (let i = 0; i < s.dabs.length; i += 2) { const x = s.dabs[i]!, y = s.dabs[i + 1]!; ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, Math.PI * 2); }
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = erase ? 'rgba(240,80,60,0.35)' : rgba(TEX_COL.get(this.brush[this.brushKind].style.tex) ?? '#888888', 0.35); ctx.fill();
     }
     if (!c || this.puckCursor) return;
-    v.setIso(ctx); ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const sq = this.brushSquare(); // T299: without the game's cursor, the square brush's own square, not the round brush's circle
+    v.setIso(ctx); ctx.beginPath();
+    if (sq) { const q = squarePoly(squareStart(c.x, sq), squareStart(c.y, sq), sq); ctx.moveTo(q[0]!.x, q[0]!.y); for (let k = 1; k < 4; k++) ctx.lineTo(q[k]!.x, q[k]!.y); ctx.closePath(); }
+    else ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.strokeStyle = erase ? '#f87171' : '#ffffff'; ctx.lineWidth = 1.5 * d; ctx.stroke();
   }
 

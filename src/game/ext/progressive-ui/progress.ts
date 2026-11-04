@@ -3,6 +3,7 @@
 // Pure TypeScript, no DOM. index.ts re-exports this file, so the imports from './index' are type-only or read inside function bodies (no
 // import-cycle surprises).
 import { normalizeRangeGuide, rangeGuideCurrent, type RangeGuideSave } from './guide';
+import { normalizeTour, type TourSave } from './tour';
 import { NEW_BADGE_IDS, RAMP_TOOL_STEP, TOOL_GROUP, TOOL_STAGE, rampEarned, rampLock, resolveOnboardingStage, type OnboardingStage, type PlayerProgressFacts, type RampFacts, type RampStep, type UiToolId } from './index';
 
 /** what the player did in this golf game (saved in GolfSave.progress): course pieces placed, road builds, car parks, event structures, real play
@@ -12,7 +13,10 @@ import { NEW_BADGE_IDS, RAMP_TOOL_STEP, TOOL_GROUP, TOOL_STAGE, rampEarned, ramp
 export interface GolfProgress { pieces: number; roads: number; parks: number; structures: number; playS: number; dismissed: string[]; advanced: boolean; stage: OnboardingStage; seen: string[]; ramp?: RampStep;
   /** T239: a new range game's guided build (guide.ts RANGE_GUIDE: the steps ticked and skipped, the guide skipped); missing: no guide card (every
    *  other start, and a range save from before T239) */
-  guide?: RangeGuideSave }
+  guide?: RangeGuideSave;
+  /** T293: the start tutorial (tour.ts TOWN_TOUR: the steps done and skipped, skipped as a whole, the town roads built while it ran); missing: none
+   *  (a save from before T293) */
+  tour?: TourSave }
 
 /** a new game's progress: nothing done yet, stage 1 (a new range game sets ramp 0 itself) */
 export function emptyProgress(): GolfProgress { return { pieces: 0, roads: 0, parks: 0, structures: 0, playS: 0, dismissed: [], advanced: false, stage: 1, seen: [] }; }
@@ -41,6 +45,7 @@ export function normalizeProgress(p: Partial<GolfProgress> | null | undefined): 
   };
   if (!old && typeof q.ramp === 'number' && Number.isFinite(q.ramp)) out.ramp = Math.min(3, Math.max(0, Math.floor(q.ramp))) as RampStep;
   const g = out.ramp !== undefined ? normalizeRangeGuide(q.guide) : null; if (g) out.guide = g; // T239: the guided build (a ramp's only)
+  const t = normalizeTour(q.tour); if (t) out.tour = t; // T293: the start tutorial
   return out;
 }
 

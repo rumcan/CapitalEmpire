@@ -203,10 +203,13 @@ export type GuideLineState = 'done' | 'skipped' | 'todo';
 /** the guide card's line for a step: the step, its state, and whether it is the current one (the first still to do) */
 export interface GuideLine { step: GuideStep; state: GuideLineState; current: boolean }
 /** the guide card's lines (null: no guide: an old save's, skipped, or every step done or skipped) */
-export function rangeGuideLines(g: RangeGuideSave | null | undefined): GuideLine[] | null {
+export function rangeGuideLines(g: RangeGuideSave | null | undefined): GuideLine[] | null { return guideLines(RANGE_GUIDE, g); }
+/** a guide card's lines for any table of steps (the range's guided build, T293's start tutorial): null when there is no guide, it is off, or
+ *  every step is done or skipped */
+export function guideLines(table: readonly GuideStep[], g: RangeGuideSave | null | undefined): GuideLine[] | null {
   if (!g || g.off) return null;
   let cur = false;
-  const lines = RANGE_GUIDE.map(step => {
+  const lines = table.map(step => {
     const state: GuideLineState = g.done.includes(step.id) ? 'done' : g.skipped.includes(step.id) ? 'skipped' : 'todo';
     const current = state === 'todo' && !cur; if (current) cur = true;
     return { step, state, current };
