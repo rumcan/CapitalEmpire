@@ -121,7 +121,7 @@ test('T320: your walk-on round\'s ball waits at your feet until the clip\'s impa
   const { IMPACT_S } = await import('../src/game/golf/play');
   const row = { i: 0, n: 1, par: 4, strokes: 1 } as unknown as Parameters<typeof flightOf>[5];
   const f = flightOf({ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 110, y: 0 }, false, false, row, false);
-  f.t = -IMPACT_S; assert.deepEqual(yourBallAt(f), { x: 0, y: 0, h: 0 });
-  f.t = -0.01; assert.deepEqual(yourBallAt(f), { x: 0, y: 0, h: 0 });
+  f.t = -IMPACT_S; assert.deepEqual(yourBallAt(f), { x: 0, y: 0, h: 0, sink: 0 });
+  f.t = -0.01; assert.deepEqual(yourBallAt(f), { x: 0, y: 0, h: 0, sink: 0 });
   f.t = f.air / 2; assert.ok(yourBallAt(f).h > 0);
 });

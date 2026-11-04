@@ -113,11 +113,11 @@ test('the flight lands, rolls and comes to rest where the shot did; a penalty sh
   const row = { i: 0, n: 1, par: 4, strokes: 1, putts: 0, pen: 0, done: false };
   const f = flightOf({ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 110, y: 0 }, false, false, row, false);
   f.t = f.air / 2; const mid = yourBallAt(f); assert.ok(mid.h > 5 && Math.abs(mid.x - 50) < 1e-9, 'high in the middle');
-  f.t = f.dur; assert.deepEqual(yourBallAt(f), { x: 110, y: 0, h: 0 });
+  f.t = f.dur; assert.deepEqual(yourBallAt(f), { x: 110, y: 0, h: 0, sink: 0 });
   const pf = flightOf({ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 40, y: 0 }, false, false, row, true);
   pf.t = pf.air + 0.01; assert.equal(yourBallAt(pf).x, 100); pf.t = pf.dur; assert.equal(yourBallAt(pf).x, 40);
   const putt = flightOf({ x: 0, y: 0 }, null, { x: 4, y: 0 }, true, false, row, false);
-  assert.ok(putt.dur > 0.4 && putt.dur <= 3); putt.t = putt.dur; assert.deepEqual(yourBallAt(putt), { x: 4, y: 0, h: 0 });
+  assert.ok(putt.dur > 0.4 && putt.dur <= 3); putt.t = putt.dur; assert.deepEqual(yourBallAt(putt), { x: 4, y: 0, h: 0, sink: 0 });
 });
 
 test('score names and ordinals', () => {

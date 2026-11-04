@@ -504,6 +504,15 @@ export default function App() {
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)
                     </label>
+                    {/* T319: the golf view's break grid on the green and your shots' tracers; kept in this browser */}
+                    <div className="flex items-center gap-2 px-2 py-2 text-sm" role="group" aria-label="Break grid" data-tip="A grid over the green with arrows and running dots showing which way the putt breaks and how hard (warmer and faster where steeper): when you putt, on every green near the camera, or off">
+                      <span className="flex-1">Break grid</span>
+                      {(['off', 'putt', 'always'] as const).map(m => <button key={m} className={`chip ${game.breakMode === m ? 'chip-on' : ''}`} aria-pressed={game.breakMode === m} onClick={() => { game.setBreakMode(m); bump(); }}>{m === 'off' ? 'Off' : m === 'putt' ? 'Putting' : 'Always'}</button>)}
+                    </div>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A yellow line traces your ball's flight (its draw, fade, hook or slice), fading a few seconds after it lands">
+                      <input type="checkbox" checked={game.tracersOn} onChange={e => { game.setTracers(e.target.checked); bump(); }} />
+                      Shot tracers
+                    </label>
                     {/* T135: the traffic views moved here from the top bar (it keeps one row at 1366 px); their keys are unchanged (F, B) */}
                     <div className="flex items-center gap-2 px-2 py-2 text-sm">
                       <label className="flex cursor-pointer items-center gap-2" data-tip="Live congestion heat map (F)">
