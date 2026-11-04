@@ -56,7 +56,7 @@ try {
 
   // 2. the green: tilted round the pin (2.5% falling toward the lower left of the screen, +y in tiles, plus a cross fall), the ball 5 m from the pin
   await page.waitForFunction(() => !!window.__game.yrView(), null, { timeout: 30000 }).catch(() => log('no course view'));
-  const pin = await page.evaluate(() => { const g = window.__game, r = g.yourRound(), v = g.yrView(), h = v.holes[r.card[r.at].i]; return { x: h.pin.x, y: h.pin.y }; });
+  const pin = await page.evaluate(() => { const g = window.__game, r = g.yourRound(), v = g.yrView(), h = v?.holes[r.card[r.at].i]; const p = h ? h.pin : g.golf.pins.find(q => q.hole === r.card[r.at].n); return { x: p.x, y: p.y }; });
   log('pin', JSON.stringify(pin));
   await page.evaluate(({ x, y }) => {
     const g = window.__game, f = g.courseHeight, N = Math.round(Math.sqrt(f.data.length)), S = 2;
@@ -101,7 +101,7 @@ try {
   const ms = await page.evaluate(async () => {
     // the break grid's draw cost: the overlay's time with it and without it (the same frame, 60 draws each)
     const g = window.__game, c = g.overlay.getContext('2d'), t0 = performance.now();
-    for (let k = 0; k < 60; k++) { g.breakFade = 1; g.breakShown = [g.yrView().holes[g.yourRound().card[g.yourRound().at].i].pin]; g.drawBreakGrid(c, performance.now()); }
+    for (let k = 0; k < 60; k++) { g.breakFade = 1; g.breakShown = g.breakShown.length ? g.breakShown : g.breakPins(); g.drawBreakGrid(c, performance.now()); }
     return (performance.now() - t0) / 60;
   });
   log('break grid draw ms/frame', ms.toFixed(3));
