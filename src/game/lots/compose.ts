@@ -344,7 +344,7 @@ function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
 /** T305 (#890): the generated lot of a lot (autolot.ts autoLot) for its use and state, its tier (st.tier) and its place on its street, re-rolled by the lot
  *  lab's remix offset (st.remix); the lab's template (st.autoTemplate) when it forces one; null when the use has no template or the lot does not fit it */
 function autoPreset(lot: LotGeom, st: ComposeState, use: PresetUse, state: PresetState): LotPreset | null {
-  return autoLot(lot, use, st.tier ?? 3, mix(fnv(`${streetKey(lot)}#${streetSlot(lot)}#auto`), st.remix ?? 0, 0x305), state, st.autoTemplate as AutoTemplate | undefined);
+  return autoLot(lot, use, st.tier ?? 3, mix(fnv(`${streetKey(lot)}#${streetSlot(lot)}#auto`), st.remix ?? 0, 0x305), state, st.autoTemplate as AutoTemplate | undefined, use === 'com' ? st.biz : undefined);
 }
 // ---------- T295 (#880): the building tiers (lots/tiers.ts): a lot draws the presets whose buildings are at or under its tier
 /** a preset's tier, cached by the preset (its building props: presetTier, the library's building test) */
@@ -464,7 +464,10 @@ export function swapScale(q: PresetProp, id: string, f: PresetFrame, R: SwapRule
   const key = `${q.id}|${q.scale}|${q.view}|${id}|${f.q}|${roadOf(f.n)}|${R.side}|${R.area}|${R.least}`;
   let k = SWAP_K.get(key); if (k !== undefined) return k;
   if (SWAP_K.size > 1 << 16) SWAP_K.clear();
-  const half = frameHalf(f), h0 = half(q), h1 = half({ ...q, id, scale: 1 }), view = drawnView(id, f, q.view).id, lim = PIXEL_LIMIT[LIB_AT.get(view) ?? -1] ?? 0;
+  // (T331: the limit of the view it is drawn in and of view 0: faceStreet turns a swapped shop to face its street after the swap, and the turned view's
+  // picture can hold fewer pixels: a laundromat swapped at its view's limit was drawn 0.04% past the east view's)
+  const limOf = (v: number) => PIXEL_LIMIT[LIB_AT.get(drawnView(id, f, v).id) ?? -1] ?? 0;
+  const half = frameHalf(f), h0 = half(q), h1 = half({ ...q, id, scale: 1 }), lim = Math.min(limOf(q.view), limOf(0));
   k = Math.min(q.scale, lim / ownerScaleOf(id), (h0.ha + R.side) / h1.ha, (2 * h0.hb + R.back) / (2 * h1.hb));
   k = k >= R.least && h1.ha * h1.hb * k * k >= R.area * h0.ha * h0.hb ? k : 0;
   SWAP_K.set(key, k); return k;

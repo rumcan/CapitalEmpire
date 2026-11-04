@@ -66,6 +66,9 @@ function yieldOf(T: number[][], s: LotState): number {
 export function lotJobs(s: Pick<LotState, 'use' | 'level' | 'decline'>): number { return JOBS[s.use] ? yieldOf(JOBS, s as LotState) : 0; }
 /** the value of a lot's frontage for growth: corner +0.3, +0.2 per paved class step above gravel */
 const lotValue = (l: Lot) => 1 + (l.corner ? 0.3 : 0) + 0.2 * Math.max(0, l.seg.cls.order + 1);
+/** T331 (#945): the reach (tiles, lot centre to lot centre) of the shops a new shop lot keeps apart from (town.ts pickBiz): the lots beside it (frontages up
+ *  to 25 tiles) and across the street (two lot depths and the street) */
+const BIZ_NEAR = 36;
 const dist = (a: Pt, b: Pt) => Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 function hashStr(h: number, s: string): number { for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; }
 
@@ -486,14 +489,21 @@ export class Town {
 
   /** T295 #2 (#880; the owner, 2026-11-02: "never reuse a commercial building with a name more than twice"): the business a new commercial lot shows:
    *  its lattice colour (variety.ts colourOf) among the businesses the town's tier allows (tierOf <= tier; all of them when none is allowed), unless that
-   *  business has two lots in the town, or one while an allowed one has none: then the allowed business with the fewest lots (ties: the lattice order) */
+   *  business has two lots in the town, or one while an allowed one has none: then the allowed business with the fewest lots (ties: the lattice order).
+   *  (That is the fewest lots first, ties in the lattice order.) T331 (#945): among the businesses with the fewest lots, one no standing shop beside it or
+   *  across the street shows (BIZ_NEAR) first: leaving its colour for the fewest lots put the same shop side by side (T270, the owner: "5 video vault
+   *  stores next to eachother"). With no shop nearby it is the T295 pick as before */
   private pickBiz(l: Lot): string {
     const pal = SHOP_PALETTE, n = pal.length;
     const order = tryOrder(colourOf(l, n), n).map(i => pal[i]!);
     let pool = order.filter(id => tierOf(id) <= this.tier); if (!pool.length) pool = order;
-    const cnt = (id: string) => this.bizN.get(id) ?? 0, first = pool[0]!;
-    if (cnt(first) < 2 && !(cnt(first) === 1 && pool.some(id => cnt(id) === 0))) return first;
-    let best = first; for (const id of pool) if (cnt(id) < cnt(best)) best = id;
+    const cnt = (id: string) => this.bizN.get(id) ?? 0, near = new Set<string>();
+    for (const s of this.states.values()) {
+      if (s.biz === undefined || s.level === LV.EMPTY || s.key === l.key) continue;
+      const o = this.geo.get(s.key); if (o && dist(o.c, l.c) < BIZ_NEAR) near.add(s.biz);
+    }
+    const rank = (id: string) => 2 * cnt(id) + (near.has(id) ? 1 : 0);
+    let best = pool[0]!; for (const id of pool) if (rank(id) < rank(best)) best = id;
     return best;
   }
   /** T295 #2: a lot's business (undefined: none), its count moving with it while the lot stands (BUILDING or more); call it before a lot's level changes to EMPTY */
