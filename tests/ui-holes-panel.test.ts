@@ -38,6 +38,8 @@ function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[];
   return {
     golfMode: true, paint, toolUi: () => ui, courseHoleViews: () => views,
     holeGrowLabel: (n: number) => growReadyLabel(o.growing?.[n]),
+    // T329: Edit hole's Tee sets block (TeeSets.tsx EditTees) reads the hole's tee rows: none here, so it draws nothing
+    teeSetRows: () => ({ tees: [], addable: [] }),
   } as unknown as Game;
 }
 const render = (g: Game) => renderToStaticMarkup(createElement(CoursePanel, { game: g }));
@@ -152,8 +154,9 @@ describe('T238: the brush shape and Edit hole\'s paint', () => {
     p.editingHole = 1; p.heightR = 6; p.heightLevel = 3; p.lookOwner = 'h1'; // T256: Edit hole edits the open hole's looks
     let h = render(g);
     const sec = h.slice(h.indexOf('data-section="edit-paint"'));
-    assert.match(sec, /data-testid="looks-entry"[\s\S]*My looks[\s\S]*data-looks[^>]*>Fairway: /, "the looks entry, in Edit hole's paint section");
-    assert.match(sec, /Fairways on hole 1: only they wear this look/, "T256: a look is the hole's own");
+    // T329: the owner's ffa1b52 (2026-10-31) merged My looks into Create your own: "the My looks entries are gone from Shape by hand, Range >
+    // Build and Edit hole (the facilities keep theirs)": Edit hole's paint section has no looks entry now
+    assert.doesNotMatch(sec, /data-testid="looks-entry"/, "no My looks entry in Edit hole (merged into Create your own)");
     assert.match(sec, /<button[^>]*data-ground-height[^>]*aria-pressed="false"[^>]*>Ground height/);
     assert.doesNotMatch(sec, /data-testid="ground-height"/, 'its controls show once it is in hand');
     p.mode = 'height'; p.planOpen = true; p.heightMode = 'lower';
