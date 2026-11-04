@@ -79,7 +79,7 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     assert.deepEqual(find(k, 'Holes', 'Shape by hand', 'Green').leaf?.act, { k: 'surface', id: 'green' });
     assert.deepEqual(find(k, 'Holes', 'Shape by hand', 'Waste area').leaf?.act, { k: 'surface', id: 'waste' }, 'T222: the Waste area brush');
     assert.equal(find(k, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'its pebbles mark');
-    assert.deepEqual(labels(find(k, 'Buildings').children!), ['Clubhouse', 'Halfway house']);
+    assert.deepEqual(labels(find(k, 'Buildings').children!), ['Clubhouse', 'Halfway house', "Pro's office"]); // (T214: the pro's office)
     if (GREENKEEPING) assert.deepEqual(labels(find(k, 'Greenkeeping').children!), ['Grass care', 'Mow', 'Water']);
     assert.deepEqual(find(k, 'Tournament').leaf?.act, { k: 'event' });
   });
@@ -87,7 +87,7 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     const d = menuOf(RAIL.find(r => r.id === 'facilities')!, ALL), td = menuOf(RAIL.find(r => r.id === 'towndecor')!, ALL);
     assert.deepEqual(labels(d), ['Practice', 'Plants', 'Decoration', 'Build on your property']); // T256: the property's paint, gold
     assert.deepEqual(find(d, 'Build on your property').leaf?.act, { k: 'build' }); assert.equal(find(d, 'Build on your property').gold, true);
-    assert.deepEqual(labels(find(d, 'Practice').children!), ['Putting green', 'Chipping green and bunker']);
+    assert.deepEqual(labels(find(d, 'Practice').children!), ['Putting green', 'Chipping green and bunker', 'Teaching hut']); // (T214: the teaching hut)
     assert.deepEqual(find(d, 'Practice', 'Putting green').leaf?.act, { k: 'practice', id: 'putting' });
     assert.equal(find(d, 'Practice', 'Putting green').leaf?.entry.id, 'practice', 'its own building tool, not the hole brushes');
     assert.deepEqual(labels(find(d, 'Plants').children!), ['Trees', 'Bushes', 'Flowers'], 'the plant brush, reachable from the course side');
@@ -243,13 +243,13 @@ describe('the tool tiles (T233)', () => {
     assert.deepEqual(tiles(find(courseRows, 'Holes').children!), ['New hole=golf-hole', 'Your holes', 'Shape by hand=fairway']);
     assert.deepEqual(tiles(find(courseRows, 'Holes', 'Shape by hand').children!), ['Fairway=fairway', 'Green=green', 'Tee=tee', 'Rough=rough', 'Bunker=bunker', 'Water=pond', 'Waste area=waste-sand', 'Long grass=long-grass']); // T272: separate painted waste/long-grass art; gameplay brush IDs stay intact
     assert.equal(find(courseRows, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'the gameplay mark stays available with the new tile');
-    assert.deepEqual(tiles(find(courseRows, 'Buildings').children!), ['Clubhouse=clubhouse', 'Halfway house=snack-hut']);
+    assert.deepEqual(tiles(find(courseRows, 'Buildings').children!), ['Clubhouse=clubhouse', 'Halfway house=snack-hut', "Pro's office=clubhouse"]);
     assert.deepEqual(tiles(find(pathRows, 'Cart paths & drives').children!), ['Walking path', 'Gravel drive'], 'the classes stay a list under their families');
     assert.equal(find(pathRows, 'Cart paths & drives').note, 'Roads and cart paths on your property', 'its tooltip kept');
   });
   it("Facilities: Practice and its greens, Plants and its Trees and Flowers, Decoration and its Props' Stone (the rocks), Water and Plants", () => {
     assert.deepEqual(tiles(fac), ['Practice=range-bays', 'Plants=trees', 'Decoration=street-furniture', 'Build on your property=surveyor-turf']);
-    assert.deepEqual(tiles(find(fac, 'Practice').children!), ['Putting green=green', 'Chipping green and bunker=chipping-green']);
+    assert.deepEqual(tiles(find(fac, 'Practice').children!), ['Putting green=green', 'Chipping green and bunker=chipping-green', 'Teaching hut=snack-hut']);
     assert.deepEqual(tiles(find(fac, 'Plants').children!), ['Trees=trees', 'Bushes=autumn-shrubs', 'Flowers=flower-bed']);
     assert.equal(find(fac, 'Plants', 'Bushes').swatch, '#3b5', 'the plant swatch stays available with the new tile');
     assert.deepEqual(tiles(find(fac, 'Decoration').children!), ['Props']);

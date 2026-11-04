@@ -310,6 +310,9 @@ the tile's navy square; a second sheet in 174's style would finish the panel (on
 | `chipping` | Facilities › Practice › Chipping green and bunker (wears `bunker` today) | a small chipping green with a flag, a bunker beside it, a few balls | P2 |
 | `build` | Facilities › Build on your property; Range › Build | surveyor's stakes with orange tape and a wheelbarrow of turf on a lawn edge | P2 |
 
+| `pro-office` | Course › Buildings › Pro's office (T214; wears `clubhouse` today) | a small white clapboard office with a green door and a "Pro" window, a flag on a short pole | P2 |
+| `teaching-hut` | Facilities › Practice › Teaching hut (T214; wears `snack-hut` today) | a tiny timber hut with an open front, a bucket of balls and an alignment stick beside it | P2 |
+
 All twelve are art 181, one sheet in the ChatGPT queue (`docs/art/CHATGPT-IMAGE-QUEUE.md`, first). Sheet order, row by row: waste,
 halfway-house, your-holes, tournament / land, bushes, palms, props / furniture, long-grass, chipping, build.
 
@@ -425,3 +428,16 @@ The spin ball in the bottom right of the shot view (`src/ui/SpinBall.tsx` drawBa
   sun upper right). Swap them into `MayorStandIn` (the card's announcement and the result) when they land.
 - **The trophies** (optional): a small silver cup (the Mayor's Cup) and a club championship plate for the player card's Titles rows (the trophy icon
   stands in).
+
+## The club's pros (T214, #559: P26 phases 3-4, GOLF-ART-LIST 53-55 and 136-138: art requests)
+The pro's office and the teaching hut stand in today, labelled "Stand In for <name>" (`business/art.ts LAYOUT`, `golf/pros.ts` labels); the
+staff walk as stand-in people (`engine.ts Game.PRO_ART`). Each building in four views, the sun at the upper right, shadows at 145°, early autumn
+dusk, nothing mirrored; each person in the golfer sheets' eight directions and clips (idle, walk; the coach and handshake clips as 136-138 ask):
+| Sprite (id to use) | Footprint (m) / height | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Pro's office (`golf:pro-office`, four views; art 53) | 8 x 6 / 4.5 | `business:golf-pro-shop` fitted to the 4 x 3 tiles | a small white clapboard golf office with a green door, a porch with two chairs, a window lettered "Golf Professional", a club rack by the door | P1 |
+| Teaching hut (`golf:teaching-hut`, four views; art 54) | 4 x 3 / 3.5 | `expansion:lean-to-shed` | an open-fronted timber teaching hut with a pitched shingle roof, a mirror and a whiteboard inside, a bucket of balls and alignment sticks out front | P1 |
+| Membership desk sign (`golf:membership-sign`; art 55) | 1 x 0.3 / 1.5 | `poi:fishing-board` at the office's door | a painted A-frame sign on the porch reading "Memberships" in the club's green and cream | P2 |
+| Head pro (`golfer:staff_head_pro_m`; art 136) | a person | `golf_pro_m2` | a man in his fifties in a navy club polo, khaki trousers, a visor; idle, walk, coach, handshake | P1 |
+| Teaching pro (`golfer:staff_teach_pro_w`; art 137) | a person | `golf_pro_w1` | a woman in her thirties in a white club polo and a cap, a club in hand; idle, walk, the drive, demonstrate | P1 |
+| Membership secretary (`spectator:staff_secretary_w`; art 138) | a person | `spec_w_older_cardigan` | a woman in her sixties in a cardigan with a clipboard and a folder; idle, walk, handshake, hand over a folder | P2 |

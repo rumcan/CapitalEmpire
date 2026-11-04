@@ -20,6 +20,8 @@ export const PROP_GROUP_TILE: Readonly<Partial<Record<string, ToolTile>>> = { st
 /** Existing Course/Facilities rows: menu pictures, not gameplay object replacements. */
 export const ROW_TILE = {
   holes: 'golf-hole', newHole: 'golf-hole', shape: 'fairway', buildings: 'clubhouse', club: 'clubhouse', halfway: 'snack-hut', paths: 'cart-path',
+  // T214: stand-in tiles until GOLF-SPRITES' Build-tool tiles for the pro's office and the teaching hut land
+  proOffice: 'clubhouse', teachHut: 'snack-hut',
   practice: 'range-bays', plants: 'trees', decoration: 'street-furniture', build: 'surveyor-turf',
 } as const satisfies Record<string, ToolTile>;
 /** Existing Course extras from rail-items.ts. */

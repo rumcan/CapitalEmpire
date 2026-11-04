@@ -25,6 +25,15 @@ export const CLUB_ROLES: readonly ClubRole[] = ['head', 'teach', 'sec'];
 export const CLUB_WAGE: Readonly<Record<ClubRole, number>> = { head: 900, teach: 300, sec: 450 };
 /** the most of each club role: one head pro, a teaching pro for each of up to three huts, one secretary */
 export const CLUB_MAX: Readonly<Record<ClubRole, number>> = { head: 1, teach: 3, sec: 1 };
+/** T214 phase 4: a club staff member (the Staff card's row): role, name, the business id of the building he works from (the pro's office, a
+ *  teaching hut), the game month he was hired, and this season's work (lessons given and their takings $, members sold and kept) */
+export interface ProHire { role: ClubRole; name: string; at: number; since: number; work: { lessons: number; takings: number; sold: number; kept: number } }
+/** T214 phase 4: the counts the lessons are read from (lifetime: golf.range's) */
+export interface LessonSeen { range: number; putting: number; chipping: number; academy: number }
+/** T214 phase 4: the club roles' counts of a list of hires */
+export function clubOf(pros: readonly ProHire[]): Partial<Record<ClubRole, number>> {
+  const c: Partial<Record<ClubRole, number>> = {}; for (const p of pros) c[p.role] = (c[p.role] ?? 0) + 1; return c;
+}
 /** the jobs, in the order a role works them (the first are done first when the crew is short) */
 export type Job = 'cups' | 'sands' | 'greens' | 'fairways' | 'rough';
 export const JOBS: readonly Job[] = ['cups', 'sands', 'greens', 'fairways', 'rough'];
@@ -52,6 +61,14 @@ export type JobDays = Record<Job, number>;
 export interface StaffState {
   staff: Record<StaffRole, number>;
   club?: Partial<Record<ClubRole, number>>;
+  /** T214 phase 4: the club staff by name (golf/pros.ts): each hire's role, name, building (its business id) and month hired, and this season's
+   *  work; club is kept as their counts (clubOf). Absent: none hired */
+  pros?: ProHire[];
+  /** T214 phase 4: how many club staff were ever hired (a new hire's name is seeded by it) */
+  hires?: number;
+  /** T214 phase 4: the range's lifetime counts the lessons were last worked out from (golf/pros.ts lessonsMonth): its golfers, the putting and the
+   *  chipping greens' users, the academy's lessons. Absent: not read yet */
+  seen?: LessonSeen;
   holes: Record<number, JobDays>;
   day: number; today: Record<Job, number[]>;
   season: { holeDays: number; stale: number };
@@ -146,7 +163,8 @@ export function changeStaff(s: StaffState, role: StaffRole, delta: 1 | -1): { s:
   return { s: { ...s, staff: { ...s.staff, [role]: n } }, cost: delta < 0 ? WAGE[role] : 0 };
 }
 /** the season closes (the tournament): its pin count starts again */
-export const closeSeason = (s: StaffState): StaffState => ({ ...s, season: { holeDays: 0, stale: 0 } });
+export const closeSeason = (s: StaffState): StaffState => ({ ...s, season: { holeDays: 0, stale: 0 },
+  ...(s.pros ? { pros: s.pros.map(p => ({ ...p, work: { lessons: 0, takings: 0, sold: 0, kept: 0 } })) } : {}) }); // (T214: the club staff's season's work too)
 
 /** a finite number, else d */
 const num = (v: unknown, d = 0): number => (typeof v === 'number' && Number.isFinite(v) ? v : d);
@@ -161,6 +179,20 @@ export function normalizeStaff(v: unknown): StaffState | null {
   const out: StaffState = { staff: { gk: cl(o.staff.gk), mo: cl(o.staff.mo) }, holes, day: Math.floor(o.day), today, season: { holeDays: Math.max(0, num(o.season?.holeDays)), stale: Math.max(0, num(o.season?.stale)) }, paid: Math.floor(num(o.paid)) };
   // T214: the club's own staff, each role within its most (none kept: the field stays out)
   if (o.club && typeof o.club === 'object') { const c: Partial<Record<ClubRole, number>> = {}; for (const r of CLUB_ROLES) { const n = Math.max(0, Math.min(CLUB_MAX[r], Math.floor(num(o.club[r])))); if (n > 0) c[r] = n; } if (Object.keys(c).length) out.club = c; }
+  // T214 phase 4: the hires by name, each role within its most; the club's counts are theirs
+  if (Array.isArray(o.pros)) {
+    const pros: ProHire[] = [], n: Partial<Record<ClubRole, number>> = {};
+    for (const q of o.pros as Partial<ProHire>[]) {
+      if (!q || !CLUB_ROLES.includes(q.role as ClubRole) || typeof q.name !== 'string' || !q.name) continue;
+      const r = q.role as ClubRole; if ((n[r] ?? 0) >= CLUB_MAX[r]) continue; n[r] = (n[r] ?? 0) + 1;
+      const w = (q.work ?? {}) as Partial<ProHire['work']>;
+      pros.push({ role: r, name: q.name.slice(0, 40), at: Math.floor(num(q.at)), since: Math.floor(num(q.since)), work: { lessons: Math.max(0, num(w.lessons)), takings: Math.max(0, num(w.takings)), sold: Math.max(0, num(w.sold)), kept: Math.max(0, num(w.kept)) } });
+    }
+    if (pros.length) { out.pros = pros; out.club = clubOf(pros); } else delete out.club;
+  }
+  if (typeof o.hires === 'number' && Number.isFinite(o.hires) && o.hires > 0) out.hires = Math.floor(o.hires);
+  const sn = o.seen as Partial<LessonSeen> | undefined;
+  if (sn && typeof sn === 'object') out.seen = { range: Math.max(0, num(sn.range)), putting: Math.max(0, num(sn.putting)), chipping: Math.max(0, num(sn.chipping)), academy: Math.max(0, num(sn.academy)) };
   return out;
 }
 

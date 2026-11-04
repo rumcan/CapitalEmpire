@@ -59,8 +59,9 @@ export function WhoCard({ name, look, looks, hcp, onDone }: { name: string; look
 }
 
 /** the talk card: you walked up to a person; their name, what they do and a line (T243 gives them portraits, jobs and skills) */
-export function TalkCard({ talk, right, onClose, offer, onChallenge }: { talk: { name: string; line: string; what: string }; right: string; onClose: () => void;
-  /** T244: the money match on their card (they golf), and the challenge */ offer?: MatchOffer | null; onChallenge?: (stake: number, holes: number) => void }) {
+export function TalkCard({ talk, right, onClose, offer, onChallenge, lesson, onLesson }: { talk: { name: string; line: string; what: string; answer?: { yes: boolean; line: string } }; right: string; onClose: () => void;
+  /** T244: the money match on their card (they golf), and the challenge */ offer?: MatchOffer | null; onChallenge?: (stake: number, holes: number) => void;
+  /** T214: one of your pros: book a lesson (why: '' to book) */ lesson?: { why: string; bonus: number } | null; onLesson?: () => void }) {
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 w-[300px] space-y-2 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="talk-card">
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
@@ -72,6 +73,16 @@ export function TalkCard({ talk, right, onClose, offer, onChallenge }: { talk: {
       </div>
       <p className="rounded-lg bg-white/5 px-2 py-1.5 text-sm italic text-slate-200">"{talk.line}"</p>
       {offer && onChallenge && <ChallengeBox key={talk.name} o={offer} onChallenge={onChallenge} />}
+      {lesson && onLesson && (
+        <div className="space-y-1 rounded-lg border border-emerald-400/30 bg-emerald-400/5 px-2 py-1.5 text-xs" data-testid="talk-lesson">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-slate-300">A lesson: your next practice session today gains {Math.round(lesson.bonus * 100)}% more. Free: your own pro.</span>
+            <button className="chip chip-on shrink-0 disabled:cursor-not-allowed disabled:opacity-40" disabled={!!lesson.why} onClick={onLesson} data-testid="talk-lesson-book">Book a lesson</button>
+          </div>
+          {lesson.why && <div className="text-[11px] text-slate-400" data-testid="talk-lesson-why">{lesson.why}</div>}
+          {talk.answer && <p className="italic text-emerald-200">"{talk.answer.line}"</p>}
+        </div>
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@
 // - Handicap (handicapOf): the strokes over par your skills average over 18 holes, from the shot model itself (a fitted curve, see HCP_CURVE).
 // - Practice (practise): a bucket at the range raises driving and irons, the putting green putting, the chipping green the short game. Each session
 //   costs game minutes and money (the bucket price, the practice green's fee); its gains shrink as a skill grows and with each session of the same
-//   kind on the same day. A lesson (P26 3.2, not built yet: the Lesson hook) adds a bonus.
+//   kind on the same day. A lesson (P26 3.2, T214: booked with your pro from the talk card, golf/pros.ts) adds a bonus to the next session.
 // - Rounds: your everyday round is a slot on T208's tee sheet (freeTee, withYou), money matches (T244) and the tournament (T246, P4's live play) take
 //   playerGolfer at their pressure. Each round you finish raises your nerve a little (playedRound).
 // Everything here runs on events (a click, a round's end), never per frame.
@@ -81,10 +81,10 @@ export const PRACTICE: Readonly<Record<PracticeKind, { name: string; min: number
 };
 /** each session of the same kind on the same day gains this share of the one before (the third bucket of the day teaches less than the first) */
 export const FATIGUE = 0.7;
-/** P26's lessons (docs/plans/P26.md 3.2: the teaching pro), not built yet. A lesson taken with a session multiplies its gains by 1 + bonus and adds
- *  its price to the cost; the engine passes one when a teaching pro can give it (Engine.lessonFor, null until P26) */
+/** P26's lessons (docs/plans/P26.md 3.2: the teaching pro; T214). A lesson taken with a session multiplies its gains by 1 + bonus and adds its price
+ *  to the cost; the engine passes one when you booked one with your pro today and have not used it (Engine.lessonFor) */
 export interface Lesson { bonus: number; price: number }
-/** the bonus P26's lesson should give (its hook's suggested value) */
+/** the bonus a lesson gives (T214: your pro's lesson) */
 export const LESSON_BONUS = 0.5;
 
 /** the gain of one session for a skill now (0..100): base * (1 - skill / 100)², times FATIGUE for each session of its kind already today, times
@@ -120,6 +120,8 @@ export interface PlayerProfile {
   challenge?: Challenge; chDay?: number;
   /** T246: the titles you won (golf/clubevents.ts: the Club Championship, the Mayor's Cup), oldest first; absent: none */
   titles?: Title[];
+  /** T214 (P26 3.2): a lesson booked with your pro (golf/pros.ts lessonWhy): the town day, the pro's name, and whether your session took it; absent: none */
+  lesson?: { day: number; with: string; used: boolean };
 }
 /** the practice log and the rounds keep this many (newest last) */
 export const LOG_MAX = 30, ROUNDS_MAX = 20;
@@ -172,6 +174,7 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     ...(normalizeChallenge(p.challenge) ? { challenge: normalizeChallenge(p.challenge) } : {}),
     ...(typeof p.chDay === 'number' && Number.isFinite(p.chDay) ? { chDay: Math.round(p.chDay) } : {}),
     ...(normalizeTitles(p.titles) ? { titles: normalizeTitles(p.titles) } : {}),
+    ...(p.lesson && typeof p.lesson === 'object' && Number.isFinite(p.lesson.day) && typeof p.lesson.with === 'string' ? { lesson: { day: Math.round(p.lesson.day), with: p.lesson.with.slice(0, 40), used: p.lesson.used === true } } : {}),
   };
 }
 

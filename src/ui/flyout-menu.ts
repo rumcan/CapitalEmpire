@@ -16,7 +16,7 @@ export type LeafAct =
   | { k: 'road'; id: string } | { k: 'junction'; id: string } | { k: 'surface'; id: string } | { k: 'newHole' } | { k: 'holes' }
   | { k: 'club' } | { k: 'halfway' } | { k: 'care'; id: string } | { k: 'event' } | { k: 'props'; group: string | null }
   | { k: 'paint'; tex: string } | { k: 'plant'; id: string } | { k: 'paintMode'; id: string } | { k: 'range'; section: string | null } | { k: 'land' }
-  | { k: 'practice'; id: string } | { k: 'build' } | { k: 'place'; id: string };
+  | { k: 'practice'; id: string } | { k: 'build' } | { k: 'place'; id: string } | { k: 'pro'; id: 'prooffice' | 'teachhut' };
 /** T256 (#743): Build, the holes' painting tools on your property (Range › Build, Facilities › Build on your property): the course tool's
  *  entry with the property's brush */
 const BUILD_TOOL: RailTool = { id: 'course', label: 'Build', key: '', icon: 'terrain' };
@@ -104,7 +104,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
         tiled(group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => tiled({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }, SURFACE_TILE[s.id]))), ROW_TILE.shape),
       ] : [], h), ROW_TILE.holes));
       const b = byId('buildings');
-      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway)], b), ROW_TILE.buildings));
+      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice)], b), ROW_TILE.buildings));
       // (T288: Cart paths & roads is a rail button of its own, below Course)
       const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));
@@ -127,7 +127,9 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       // T233: the tiles (tool-tiles.ts): Practice (the range bays) and its putting and chipping greens, Plants (the trees) with its Trees and
       // Flowers, Decoration (the boulders) and its Props' Stone, Water and Plants
       const pt = byId('practice');
-      if (pt) rows.push(tiled(group('practice', 'Practice', 'pin', (c.practice ?? []).map(f => tiled({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why }, PRACTICE_TILE[f.id])), pt), ROW_TILE.practice));
+      // T214: the teaching hut, after the greens (placed with the Buildings tool's ghost)
+      if (pt) rows.push(tiled(group('practice', 'Practice', 'pin', [...(c.practice ?? []).map(f => tiled({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why }, PRACTICE_TILE[f.id])),
+        ...(c.practice?.length ? [tiled({ ...leaf(pt, 'Teaching hut', { k: 'pro', id: 'teachhut' }, 'house')!, why: toolLock(c.ui, pt.id) ?? (c.practice.every(f => f.why) ? c.practice[0]!.why : null) }, ROW_TILE.teachHut)] : [])], pt), ROW_TILE.practice));
       const pa = byId('paint');
       if (pa) rows.push(tiled(group('plants', 'Plants', 'trees', c.plants.map(m => tiled({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) }, PLANT_TILE[m.id])), pa), ROW_TILE.plants));
       const pr = byId('props');
