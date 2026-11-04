@@ -234,7 +234,7 @@ export class PlayView {
       if (newest && bt < 0) {
         this.bi[id] = nb; const b = this.slot(nb++); b.x = newest.from.x; b.y = newest.from.y; b.h = 0;
       } else if (newest && bt < fs) {
-        this.bi[id] = nb; this.bm[id] = 1;
+        this.bi[id] = nb; this.bm[id] = newest.club === 'putter' ? 1 : 2; // (T318: 2, a full shot in the air: the spin's clicks count)
         const u = bt / fs, b = this.slot(nb++);
         if (newest.club === 'putter') { if (ballRoll.on) this.rollOf(id, newest).along(u, b); else { b.x = newest.from.x + (newest.to.x - newest.from.x) * u; b.y = newest.from.y + (newest.to.y - newest.from.y) * u; b.h = 0; } }
         else {
@@ -347,8 +347,9 @@ export class PlayView {
     for (const s of this.plan.shots) { const hole = this.view.holes[s.hole]; if (s.holed && hole && celebrated(s.stroke + s.penalty, hole.par)) this.celebrate.add(s); }
   }
 
-  /** T320: golfer id's ball as of the last update (null: none drawn) and whether it is moving (in the air, bouncing or rolling) */
-  ballOf(id: number): { ball: PlayBall; moving: boolean } | null { const i = id < this.bi.length ? this.bi[id]! : -1; return i >= 0 && this.balls[i] ? { ball: this.balls[i]!, moving: this.bm[id] === 1 } : null; }
+  /** T320: golfer id's ball as of the last update (null: none drawn) and whether it is moving (in the air, bouncing or rolling); T318: air, a full shot
+   *  still in the air (not yet landed) */
+  ballOf(id: number): { ball: PlayBall; moving: boolean; air: boolean } | null { const i = id < this.bi.length ? this.bi[id]! : -1; return i >= 0 && this.balls[i] ? { ball: this.balls[i]!, moving: this.bm[id] !== 0, air: this.bm[id] === 2 } : null; }
   /** the ball object at index i of balls (made on first use, then reused), its effect cleared */
   private slot(i: number): PlayBall { const b = this.balls[i] ?? (this.balls[i] = { x: 0, y: 0, h: 0, fx: FX_NONE, fu: 0 }); b.fx = FX_NONE; b.fu = 0; return b; }
   /** T251: golfer id's roll for shot s, set once for it: a full shot's bounce and roll from its landing (within what is left of ROLL_DONE_S after its
