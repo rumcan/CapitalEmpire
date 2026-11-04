@@ -7744,7 +7744,7 @@ export class Game {
     const at = this.townNow(), st = v.stats, money = this.money, onCourse = this.youOnCourse(at.day, at.dayMin);
     const c = (price: number, facility: boolean): PracticeCtx => ({ day: at.day, minute: at.dayMin, open: st.open * 60, close: st.close * 60, price, facility, money, onCourse });
     const open = (id: 'putting' | 'chipping') => v.practice.some(f => f.id === id && f.state === 'open');
-    return { bucket: c(v.biz.price, true), putting: c(v.fee, open('putting')), chipping: c(v.fee, open('chipping')) };
+    return { bucket: c(v.biz.price, v.biz.built !== false), /* T288: no bucket before the range is placed */ putting: c(v.fee, open('putting')), chipping: c(v.fee, open('chipping')) };
   }
   /** the range card's "You" block and its practice greens' rows (golf/player.ts youRangeView), from the card's view; null with no card or profile */
   youRange(v: RangeCardView | null): YouRangeView | null { const p = v ? this.playerNow() : null; return p && v ? youRangeView(p, this.practiceCtx(v), this.lessonFor('bucket')) : null; }

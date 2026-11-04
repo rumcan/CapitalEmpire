@@ -55,6 +55,10 @@ try {
   await look(page, gate, 0.3); await settle(page); await shot(page, '01-bare-start-trailer-30pct');
   await look(page, await homePt(page, 60, 40), 0.1); await settle(page); await shot(page, '02-bare-start-plot-10pct');
 
+  // the range card in a bare start: its Place block (the range, its car park, the practice area), the upgrades waiting for the range
+  await page.evaluate(() => window.__game.openRangeCard(true)); await page.waitForTimeout(400);
+  check(await page.$('[data-testid="range-places"]') !== null, 'the range card offers the placements'); await shot(page, '02b-range-card-place-block');
+  await page.evaluate(() => window.__game.openRangeCard(false));
   // the driving range: on the home (refused), then on its start spot (fine), placed
   await page.evaluate(() => window.__game.placeRangePart('range'));
   st = await state(page); check(st.placing === 'range' && !st.range, 'Place the driving range: a ghost in hand, nothing built');
