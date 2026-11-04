@@ -14,7 +14,7 @@ const W = 1280, H = 800, Z = 0.3;
 mkdirSync(out, { recursive: true });
 const gpu = ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'];
 const browser = await chromium.launch({ channel: 'msedge', headless: !headed, args: headed ? [...gpu, '--window-position=-32000,-32000', '--window-size=1366,860'] : gpu });
-const settle = async (page, ms = 1500) => {
+const settle = async (page, ms = 3000) => {
   await page.waitForTimeout(ms);
   await page.evaluate(() => { window.__calm = 0; });
   await page.waitForFunction(() => { const g = window.__game; window.__calm = g.ground.busy === 0 && !g.lotsPending ? window.__calm + 1 : 0; return window.__calm > 20; }, null, { timeout: 40000, polling: 50 }).catch(() => console.log('  (settle timed out)'));
@@ -33,16 +33,17 @@ for (const scene of ['town', 'grid', 'diag']) {
   // the night by hand, the game paused, no baking ahead; each lamp's heading (its nearest segment's, folded to 0..180°) and its head point
   const lamps = await page.evaluate(async () => {
     const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.nightAmount = () => 1;
-    const head = await import('/src/game/lamp-pool.ts').then(m => p => m.lampHeadOf(p)).catch(() => p => ({ x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }));
+    // T324's head points (engine.ts lampHeads), else (before T324) the lamps' footprint centres
+    const heads = g.lampHeads ? g.lampHeads() : [...g.lampProps].map(p => ({ x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }));
     const segs = [...g.net.segs.values()], out = [];
-    for (const p of g.lampProps) {
-      const c = { x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }; let best = null, bd = 6;
+    for (const c of heads) {
+      let best = null, bd = 6;
       for (const s of segs) {
         const dx = s.b.x - s.a.x, dy = s.b.y - s.a.y, L = Math.hypot(dx, dy); if (L < 1e-6) continue;
         const t = Math.max(0, Math.min(L, ((c.x - s.a.x) * dx + (c.y - s.a.y) * dy) / L)), d = Math.hypot(s.a.x + dx * t / L - c.x, s.a.y + dy * t / L - c.y);
         if (d < bd) { bd = d; best = { ang: ((Math.atan2(dy, dx) * 180 / Math.PI) + 360) % 180, median: s.cls.median > 0 }; }
       }
-      if (best) out.push({ ...head(p), ...best });
+      if (best) out.push({ ...c, ...best });
     }
     return out;
   });

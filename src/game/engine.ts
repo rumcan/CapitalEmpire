@@ -197,6 +197,7 @@ import { checkStructurePlacement, findStructureIndexAt, structureRect, structure
 import { STRUCTURE } from './golf/tents';
 import { gallerySpots } from './golf/galleries';
 import { invitedFacts, tierInfo, tournamentDue, type InviteCheck, type Need } from './golf/tour';
+import { lampGround } from './lamp-pool';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
@@ -3194,12 +3195,18 @@ export class Game {
       p.item = item; this.sprites.update(p);
     }
   }
-  /** street lamps light the road: their reflection pools are part of the ground picture */
+  /** street lamps light the road: their reflection pools are part of the ground picture, each straight below its lamp's head (T324) */
   syncLamps() {
-    const pts = [...this.lampProps].map(p => ({ x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }));
+    const pts = this.lampHeads();
     const changed = this.net.setLamps(pts);
     this.ground.lamps(new Float32Array(pts.flatMap(p => [p.x, p.y])));
     for (const b of changed) this.ground.invalidate(b, false, 0, 'gm');
+  }
+  /** T324: the ground point below each street lamp's head (lamp-pool.ts lampGround), for the picture it is drawn as (newart.ts lookOf) */
+  lampHeads(): Pt[] {
+    const out: Pt[] = [];
+    for (const p of this.lampProps) { const l = lookOf(p); if (l.hidden) continue; const q = l === p ? p : { ...p, ...l }, it = LIBRARY[q.item]; if (it) out.push(lampGround(it, q)); }
+    return out;
   }
   /** a lot's ground patches (driveways, walks, car parks, yards); null drops them. Batched: the ground hears of them once per frame */
   setLotGround(key: string, patches: LotPatch[] | null) {

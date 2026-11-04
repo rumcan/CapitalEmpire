@@ -1,3 +1,4 @@
+import { lampGround } from './lamp-pool';
 import type { LibItem, Prop } from './types';
 
 /** The night: TrickOrTreat's town-builder lighting (scripts/town-builder/app/night-light.js and the game's render.ts night grade), ported.
@@ -106,6 +107,7 @@ export function propLights(p: Prop, it: LibItem, s: NightSettings, screen: Scree
     if (k) {
       const t = s.types[k];
       if (k === 'porch' || k === 'window' || k === 'neon') { const out2 = (k === 'porch' ? 1 : 1.6) / 2; pool(p.flip ? p.x1 + out2 : cx, p.flip ? cy : p.y1 + out2, t); }
+      else if (k === 'lamp') { const h = lampGround(it, p); pool(h.x, h.y, t); } // T324: below the lamp's head, as its road pool
       else pool(cx, cy, t);
     }
   }
