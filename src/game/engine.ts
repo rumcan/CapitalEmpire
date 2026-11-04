@@ -1,5 +1,5 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clamp, clampZoom, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
-import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
+import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { PeopleSpacer, spacePeople } from './spacing';
 import { PUTT_IMPACT_S, galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
@@ -42,7 +42,7 @@ import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { sizeKey, turned } from './lots/preset-art';
 import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceHasArt, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
-import { homeStage } from './golf/rangesave';
+import { homeStage, rangeScale } from './golf/rangesave';
 import { RangeHost, type RangeCardView } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { PracticeTool } from './golf/practicetool';
@@ -50,6 +50,7 @@ import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } fro
 import { CELL as POND_CELL, discOutline, lilyPads, normalizePondMarks, pieceKey, pondAt, pondId, shorePieces, type Pond, type PondPiece } from './golf/ponds';
 import { fountainAt, fountainFrame } from './kit';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
+import { DESK_SIGN_LABEL, HUT_COST, HUT_LABEL, HUT_NAME, HUT_UPKEEP, OFFICE_COST, OFFICE_LABEL, OFFICE_UPKEEP, ROLE_TITLE, dropProsAt, hireWhy, hirePro, hutSpotWhy, lessonWhy, lessonsMonth, letGoPro, officeSpotWhy, PLAYER_LESSON_PRICE, proPose, rectGap, staffCardView, staffWork, type HutAt, type HutPlace, type ProBeat, type ProPose, type StaffCardView, type StaffNeeds } from './golf/pros';
 import { newTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourSkip, tourTick, type TourFacts } from './ext/progressive-ui/tour';
 import { RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLines, rangeGuideOff, rangeGuideSkip, rangeGuideTick, type GuideEvent, type GuideLine } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
@@ -90,7 +91,7 @@ import { choosePin, greenAt, pinIn, pinLine, pinReport, pinSlot, rollDayPins, wi
 import { crewCells, crewGround, type CrewGround } from './golf/crewground';
 import { crewDay, crewFlips, crewFor, fullyCut, holeWindows, normalizeCrewSave, rotaJobs, type CrewDay, type Veh as CrewVeh } from './golf/crew';
 import { CrewView, cupSetAt } from './golf/crewview';
-import { ROLE_NAME, WAGE, changeStaff, closeSeason, clubTerms, courseCondition, crewCard, crewNeed, freshStaff, payWages, pinReputation, qualityFactor, wages as staffWages, workDay, type CrewCardView, type StaffRole, type StaffState } from './golf/staff';
+import { CLUB_WAGE, ROLE_NAME, WAGE, changeStaff, closeSeason, clubTerms, courseCondition, crewCard, crewNeed, freshStaff, payWages, pinReputation, qualityFactor, wages as staffWages, workDay, type ClubRole, type CrewCardView, type StaffRole, type StaffState } from './golf/staff';
 import { fairwayStripeLook } from './course-stripes';
 import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
@@ -170,7 +171,7 @@ import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex, unitBuildCost } from './golf/costs';
-import { bizName, inSentence, inTheWay, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
+import { bizName, inSentence, inTheWay, overlaps, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
@@ -181,14 +182,14 @@ import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './go
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
 import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
-import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
+import { FRAMES_PER_TILE, SWING_EVERY, doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
-import { BOOK_LEAD, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
+import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -301,6 +302,12 @@ function personName(seed: number): string {
 }
 /** T240: what a person says when you walk up (the stand-in talk until T243's cards) */
 const TALK_LINES: readonly string[] = ['Nice day for it.', 'You run the range, right? My brother-in-law swears by it.', 'Hit any good ones today?', 'They say a course is coming. About time.', 'I shot a 92 last week. Personal best.', 'Is the bucket still three dollars?', 'Watch out for the ditch on the left.', 'My wife thinks I golf too much. She is right.'];
+/** T214: what your pros say when you walk up (the lesson box follows for a pro who teaches) */
+const PRO_LINES: Readonly<Record<ClubRole, readonly string[]>> = {
+  head: ['Boss. Want me to look at that swing of yours?', 'Sold two memberships before lunch.', 'The members are asking about a monthly medal.'],
+  teach: ['Fancy a lesson? Your grip could use a look.', 'Keep your head down and let the club do the work.', 'I had a beginner break 100 this week.'],
+  sec: ['The membership list is growing nicely.', 'Two renewals in the post this morning.', 'Shall I put the dues up? They say we are fair.'],
+};
 /** T240: whether (x, y) lies in polygon z (x y pairs; the even-odd rule) */
 function inPolygon(z: readonly number[], x: number, y: number): boolean {
   let c = false;
@@ -318,6 +325,8 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
 }
 /** T213: the caddie's stand-in (no caddie is packed yet: GOLF-ART-LIST item 176; the made `staff_caddie_m` waits in art/spectators), a spectator in a
  *  polo and visor, as an index into SPECTATOR_PEOPLE; and its label */
+/** T214: a club staff member's beat in the world (Game.beatsNow) */
+type ProBeatRow = { k: number; role: ClubRole; name: string; beat: ProBeat };
 const CADDIE_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_polo_visor')), CADDIE_LABEL = 'Stand In for caddie';
 /** T213: the hire cart's two facings (GOLF-ART-LIST item 173 asks for eight: the nearest of the two is drawn), the caddie's bag (the bag trolley), and
  *  their scales (the studio's size, else the owner's table's) */
@@ -2279,7 +2288,7 @@ export class Game {
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the hint pill's words for the Course brush (T118: what a click does: the surface, the hole it joins or starts, the price a cell, and the state); '' otherwise */
   courseHint(): string {
-    const m = this.paint.mode; if (!(this.tool === 'course' && this.paintOn && this.brushOpen && (m === 'brush' || m === 'draw') && !this.clubPlacing && !this.halfwayPlacing)) return '';
+    const m = this.paint.mode; if (!(this.tool === 'course' && this.paintOn && this.brushOpen && (m === 'brush' || m === 'draw') && !this.clubPlacing && !this.halfwayPlacing && !this.proPlacing)) return '';
     // a growing hole's pill says so after the hole's name (P23 4.6, T135): 'Painting Fairway · Hole 1 · growing · ready Mar 1985 · $2 a cell'
     const n = this.paint.brushHole; return hintWithGrow(this.courseCursor.hint, n, this.holeGrowLabel(n));
   }
@@ -5150,6 +5159,8 @@ export class Game {
         // T208: the clubhouse (its footprint, and the building's height up the screen: 6 tiles back) opens the clubhouse card
         const club = this.golf && !p ? this.bizDefs.find(d => d.type === 'clubhouse') : undefined;
         if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) { this.openClubCard(true); this.inspectScene(null, true); return; }
+        // T214: the pro's office and a teaching hut open the Staff card
+        if (this.proBuildingOf(p)) { this.openStaffCard(true); return; }
         // T219: an iconic place's props open its card
         if (p?.auto?.startsWith('place:')) { this.selected = null; this.selectedPlace = p.auto.slice(6); this.inspectScene(p); this.emit(); return; }
         this.selectedPlace = null;
@@ -5172,6 +5183,7 @@ export class Game {
       case 'paint': case 'course':
         if (this.clubPlacing && this.tool === 'course') { this.clubUpdate(mx, my); this.clubClick(); break; }
         if (this.halfwayPlacing && this.tool === 'course') { this.halfwayUpdate(mx, my); this.halfwayClick(); break; }
+        if (this.proPlacing && this.tool === 'course') { this.proUpdate(mx, my); this.proClick(); break; } // T214
         if (!this.paintOn || !this.brushOpen) break; // Buildings with nothing in hand, or Holes at stage 1 outside New hole: a click lays nothing
         this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); this.courseCursor.press(this.paint, e.altKey); break;
       case 'park': {
@@ -5209,6 +5221,7 @@ export class Game {
     if (this.tool === 'bus') this.busUpdate(mx, my);
     if (this.clubPlacing && this.tool === 'course') this.clubUpdate(mx, my);
     else if (this.halfwayPlacing && this.tool === 'course') this.halfwayUpdate(mx, my);
+    else if (this.proPlacing && this.tool === 'course') this.proUpdate(mx, my); // T214
     else if (this.paintOn && !this.teePlace) this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift')); // (T268: a tee set in hand is the engine's)
     if (this.tool === 'park') {
       if (this.parking.mode === 'rows') { if (this.hover) { this.parking.snap15 = this.keys.has('Shift'); this.parking.move(this.hover, mx, my); } }
@@ -5349,6 +5362,10 @@ export class Game {
       this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.halfwayUpdate(h.mx, h.my); this.emit();
       return;
     }
+    if (this.proPlacing && this.tool === 'course' && (e.key === 'r' || e.key === 'R')) { // T214
+      this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.proUpdate(h.mx, h.my); this.emit();
+      return;
+    }
     if (this.paintOn && this.paint.key(e)) return;
     if (this.tool === 'park' && this.parking.key(e)) return;
     if (this.tool === 'props' && this.decor.key(e)) return;
@@ -5427,6 +5444,7 @@ export class Game {
     if (this.holeCardHole !== null) { this.closeHoleCard(); return true; } // T174: the hole card first
     if (this.clubPlacing && this.tool === 'course') { this.placeClubhouse(false); return true; }
     if (this.halfwayPlacing && this.tool === 'course') { this.placeHalfway(false); return true; }
+    if (this.proPlacing && this.tool === 'course') { this.placePro(null); return true; } // T214
     if (this.paintOn && this.paint.key(e)) return true;
     if (this.tool === 'park' && this.parking.key(e)) return true;
     if (this.tool === 'props' && this.decor.esc()) return true;
@@ -5640,6 +5658,7 @@ export class Game {
     this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium') ?? defs.find(d => d.type === 'clubhouse') ?? defs.find(d => d.type === 'range'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null;
     this.businessProps = defs.flatMap(d => businessArt(d, LIBRARY, LIB_INDEX));
     for (const p of this.businessProps) this.sprites.add(p);
+    this.labelBizProps(); // T214: the club buildings' stand-in labels
   }
   /** the game's own spot for the stadium on this valley (placeStadium), as [x, y, w, h] tiles; null without towns or a fit */
   private gameSpot(): [number, number, number, number] | null { const s = placeStadium(this.terrain.cls, this.townPts); return s ? [s.x, s.y, s.w, s.h] : null; }
@@ -5736,7 +5755,7 @@ export class Game {
   placeHalfway(on: boolean) {
     const go = on && !!this.golf;
     if (go && this.uiTool !== 'buildings') this.setTool('buildings');
-    this.halfwayPlacing = go; if (go) this.clubPlacing = false; this.bizHover = null;
+    this.halfwayPlacing = go; if (go) { this.clubPlacing = false; this.proPlacing = null; } this.bizHover = null;
     this.emit();
   }
   /** why the halfway house cannot stand on rect r ('' if it can): golf/halfway.ts halfwaySpotWhy */
@@ -5750,20 +5769,7 @@ export class Game {
   }
   /** the halfway house's ghost at the cursor: as the clubhouse's (its front snapped to the nearest path within reach and slid along it to the
    *  first spot it can stand on; else centred on the cursor, R turns it) */
-  private halfwayUpdate(mx: number, my: number) {
-    const t = this.tileAt(mx, my), B = BUSINESS.halfway, fp = { w: B.footprint.w, d: B.footprint.h }, segs: SnapSeg[] = [];
-    for (const s of this.net.segsNear(t, 40)) { const g = snapSegOf(s); if (g) segs.push(g); }
-    const sn = snapFrontage(t.x, t.y, fp, segs, CLUB_REACH), cands: [number, number, number, number][] = [];
-    if (sn) {
-      const w = sn.rot ? fp.d : fp.w, h = sn.rot ? fp.w : fp.d, away = (v: number, f: number) => (f > 0 ? Math.floor(v) : f < 0 ? Math.ceil(v) : Math.round(v));
-      const x0 = away(sn.cx - w / 2, sn.face.x), y0 = away(sn.cy - h / 2, sn.face.y);
-      for (let k = 0; k <= 20; k++) { const off = (k % 2 ? 1 : -1) * Math.ceil(k / 2); cands.push(sn.rot ? [x0, y0 + off, w, h] : [x0 + off, y0, w, h]); }
-    }
-    const w = this.bizRot ? fp.d : fp.w, h = this.bizRot ? fp.w : fp.d; cands.push([Math.round(t.x - w / 2), Math.round(t.y - h / 2), w, h]);
-    let r = cands[0]!, why = this.halfwayWhy(r);
-    for (let i = 1; why && i < cands.length; i++) { const wy = this.halfwayWhy(cands[i]!); if (!wy) { r = cands[i]!; why = ''; } }
-    this.bizHover = { mx, my, def: { id: 0, type: 'halfway', x: r[0], y: r[1], w: r[2], h: r[3] }, site: siteAt(r[0], r[1], r[2], r[3]), why };
-  }
+  private halfwayUpdate(mx: number, my: number) { this.ghostAt('halfway', mx, my, r => this.halfwayWhy(r), true); }
   /** builds the halfway house on the ghost (or says why not): paid for, a business (no cars of its own), its takings from the golfers passing */
   private halfwayClick() {
     const h = this.bizHover; if (!h || h.def.type !== 'halfway') return;
@@ -5787,7 +5793,7 @@ export class Game {
   placeClubhouse(on: boolean) {
     const go = on && !!this.golf;
     if (go && this.uiTool !== 'buildings') this.setTool('buildings');
-    this.clubPlacing = go; if (go) this.halfwayPlacing = false; this.bizHover = null;
+    this.clubPlacing = go; if (go) { this.halfwayPlacing = false; this.proPlacing = null; } this.bizHover = null;
     this.emit();
   }
   /** the gap from rect (x, y, w, h) to the nearest road's verge (any road or drive), tiles: below 0 when a verge reaches into it; Infinity with no
@@ -5851,6 +5857,7 @@ export class Game {
     const B = BUSINESS[d.type];
     this.traffic.spend('construction', -B.buildCost / 2);
     this.setBizDefs(this.bizDefs.filter(q => q.id !== id)); this.traffic.setBusinesses(this.bizDefs); this.farmsUpdate();
+    this.dropGoneStaff(); // T214: its staff go with it (a month's wage each)
     this.scheduleSave(); this.toast(`${B.name} demolished (+$${(B.buildCost / 2).toLocaleString()})`, 'good'); this.emit();
   }
   /** demolishes the stadium (between rounds only; see demolishBusiness) */
@@ -7380,6 +7387,7 @@ export class Game {
     m = this.playMovers(out, m, X0, Y0, X1, Y1);
     m = this.dayMovers(out, m, X0, Y0, X1, Y1, now); // T208: everyday golf
     m = this.crewMovers(out, m, X0, Y0, X1, Y1, now); // T269: the grounds crew
+    m = this.proMovers(out, m, X0, Y0, X1, Y1); // T214: the club staff
     m = this.youMovers(out, m, X0, Y0, X1, Y1); // T240: your character
     out.length = m;
     return out;
@@ -7514,7 +7522,10 @@ export class Game {
   private setPlayer(p: PlayerProfile) { if (!this.golf) return; this.golf.player = p; this.scheduleSave(); }
   /** P26's lessons (docs/plans/P26.md 3.2: the teaching pro): the lesson a pro gives with a session of this kind (golf/player.ts Lesson: its bonus and
    *  price). The hook P26 fills: null until the teaching pro is built */
-  lessonFor(_kind: PracticeKind): Lesson | null { return null; }
+  lessonFor(_kind: PracticeKind): Lesson | null {
+    const l = this.golf?.player?.lesson; // T214: a lesson booked with your pro today and not used yet, with any session (golf/pros.ts)
+    return l && !l.used && l.day === this.townNow().day && this.proTeaches() ? { bonus: LESSON_BONUS, price: PLAYER_LESSON_PRICE } : null;
+  }
   /** the town day and its minute now */
   private townNow() { const tr = this.traffic; return townTimeOf(tr.town, tr.simTime(performance.now())); }
   /** each practice session's place now (golf/player.ts PracticeCtx), from the range card's view: the range's hours, the bucket price, the practice greens'
@@ -7535,7 +7546,8 @@ export class Game {
     const c = this.practiceCtx(v)[kind], lesson = this.lessonFor(kind), why = practiceWhy(p, kind, c, lesson);
     if (why) { this.toast(why, 'warn'); return; }
     const { profile, entry } = practise(p, kind, c, lesson);
-    this.setPlayer(rebook(profile, entry.day, entry.at));
+    const pr = lesson && profile.lesson ? { ...profile, lesson: { ...profile.lesson, used: true } } : profile; // (T214: the lesson is taken)
+    this.setPlayer(rebook(pr, entry.day, entry.at));
     if (entry.cost > 0) {
       const at = kind === 'bucket' ? this.rangeSpot() : this.range.scene ? { ...this.range.scene.practice.label } : null;
       this.spendAt(at, 'upkeep', entry.cost);
@@ -7587,7 +7599,7 @@ export class Game {
   /** what a click does under the pointer (the cursor's verb and the hover label), the pointer (css px) */
   youHover: { verb: YouVerb | null; text: string; mx: number; my: number } | null = null;
   /** the talk card (a person you walked up to), the first tee's card (Start a round) */
-  youTalk: { name: string; line: string; what: string; /** T244: their handicap when they golf (a money match can be offered); null: they do not */ hcp: number | null; answer?: { yes: boolean; line: string } } | null = null; youTeeOpen = false;
+  youTalk: { name: string; line: string; what: string; /** T244: their handicap when they golf (a money match can be offered); null: they do not */ hcp: number | null; answer?: { yes: boolean; line: string }; /** T214: one of your pros (the lesson box) */ pro?: { role: ClubRole } } | null = null; youTeeOpen = false;
   /** what you do on arriving (the thing's use) and the point you face then */
   private youThen: { act: (() => void) | null; face: Pt | null; key: string } | null = null;
   /** the blocked tiles round the last route or round you (1: may not be crossed): a box of the map, its buffer reused */
@@ -7723,6 +7735,13 @@ export class Game {
         const name = personName(v.person * 7919 + Math.floor(v.x) * 31 + Math.floor(v.y)), at = talkSpot(v, from), pt = { x: v.x, y: v.y };
         return { kind: 'person', name, at, face: pt, key: 'p' + v.person, act: () => this.youTalkTo(name, 'a townsperson', pt, golfs(name) ? hcpOfName(name) : null) };
       }
+      // T214: your club staff (their names: a pro offers a lesson)
+      for (const q of this.proSeen) {
+        if (!hit(q.x, q.y)) continue;
+        const h = this.golf?.crew?.staff?.pros?.[q.k]; if (!h) continue;
+        const pt = { x: q.x, y: q.y }, role = h.role;
+        return { kind: 'person', name: h.name, at: talkSpot(pt, from), face: pt, key: 'pro' + q.k, act: () => this.youTalkTo(h.name, `your ${ROLE_TITLE[role]}`, pt, null, role) };
+      }
       // the range's golfers (walking to a mat, queueing, hitting): a name of their own until T243's people
       if (this.range.scene) { const rd = this.range.sim.view(); for (let k = 0; k < rd.nPeople; k++) {
         const q = rd.people[k]!; if (q.lift || !hit(q.x, q.y)) continue;
@@ -7761,6 +7780,11 @@ export class Game {
     if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) {
       const box: [number, number, number, number] = [club.x - 1, club.y - 1, club.x + club.w + 1, club.y + club.h + 1], door = this.youDoor(box, from);
       return door && { kind: 'building', name: 'the clubhouse', at: door, face: { x: club.x + club.w / 2, y: club.y + club.h / 2 }, key: 'club', act: () => { this.openClubCard(true); this.inspectScene(null, true); } };
+    }
+    const pb = this.proBuildingOf(p); // T214: walk to the pro's office or a hut: the Staff card
+    if (pb) {
+      const door = this.youDoor([pb.x - 1, pb.y - 1, pb.x + pb.w + 1, pb.y + pb.h + 1], from);
+      return door && { kind: 'building', name: pb.type === 'prooffice' ? "the pro's office" : 'the teaching hut', at: door, face: { x: pb.x + pb.w / 2, y: pb.y + pb.h / 2 }, key: 'biz' + pb.id, act: () => this.openStaffCard(true) };
     }
     if (p && (p.auto?.startsWith('place:') || YOU_LOOKS_AT.has(LIBRARY[p.item]!.kind) || LIBRARY[p.item]!.big)) {
       const place = p.auto?.startsWith('place:') ? p.auto.slice(6) : null, d = place ? placeDef(place) : null;
@@ -7823,10 +7847,10 @@ export class Game {
   /** T323: Alt (a lone tap) swaps the cursors */
   toggleYouWalk() { this.setYouWalk(!this.youWalkMode); this.toast(this.youWalkMode ? 'Walk: a click walks you there (Alt: Select)' : 'Select: a click inspects (Alt: Walk)', 'info'); }
   /** you walk up to a person: you face each other and the talk card opens (T243 brings the portraits and their skills) */
-  private youTalkTo(name: string, what: string, at: Pt, hcp: number | null = null) {
+  private youTalkTo(name: string, what: string, at: Pt, hcp: number | null = null, pro?: ClubRole) {
     const y = this.you; if (y) y.face = facingOf(at.x - y.x, at.y - y.y);
-    const lines = TALK_LINES, k = Math.floor(hash(name.length * 131 + name.charCodeAt(0), Math.floor(this.townNow().dayMin / 30)) * lines.length);
-    this.youTalk = { name, what, line: lines[k]!, hcp }; this.emit();
+    const lines = pro ? PRO_LINES[pro] : TALK_LINES, k = Math.floor(hash(name.length * 131 + name.charCodeAt(0), Math.floor(this.townNow().dayMin / 30)) * lines.length);
+    this.youTalk = { name, what, line: lines[k]!, hcp, ...(pro ? { pro: { role: pro } } : {}) }; this.emit();
   }
   closeYouTalk() { this.youTalk = null; this.emit(); }
   closeYouTee() { this.youTeeOpen = false; this.emit(); }
@@ -8824,7 +8848,8 @@ export class Game {
   /** the crew's wages, each game month as it begins (golf/staff.ts payWages: a skip pays every month it crossed), booked as upkeep at the clubhouse */
   private payStaff() {
     const g = this.golf, st = g?.crew?.staff; if (!g || !st) return;
-    const { s, due } = payWages(st, this.golfMonthIndex()); if (s === st) return;
+    const { s: s0, due } = payWages(st, this.golfMonthIndex()); if (s0 === st) return;
+    const s = this.prosMonth(s0, s0.paid - st.paid); // T214: the club buildings' upkeep and the lessons, each month begun
     this.setStaff(s);
     if (due > 0) { const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', due); this.scheduleSave(); }
   }
@@ -8876,6 +8901,7 @@ export class Game {
       }
     }
     const r = stepClubTo(g.club, month, () => this.clubInputs()), b = r.booked; g.club = r.s;
+    if (b.months > 0) this.creditSales(b.joined, g.club.members * b.months, g.club.price); // T214: the head pro's and the secretary's work
     if (b.dues > 0) { this.traffic.spend('business', -b.dues); this.floatMoney({ x: c.x, y: c.y, amount: Math.round(b.dues), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
     if (b.upkeep > 0) this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', b.upkeep);
     if (g.club !== was) { this.scheduleSave(); if (this.clubCardOpen) this.emit(); }
@@ -8897,6 +8923,280 @@ export class Game {
     const g = this.golf; if (!g) return null;
     const cl = g.club, st = g.crew?.staff;
     return { dues: cl && this.hasClubhouse ? Math.round(cl.members) * cl.price : 0, wages: st ? staffWages(st.staff, st.club) : 0 };
+  }
+  // ---------- T214 (#559, plan P26 phases 3-4): the pro's office, the teaching huts, the club staff and lessons (golf/pros.ts) ----------
+  /** the club building being placed with its ghost (Course › Buildings: the pro's office; Facilities › Practice: a teaching hut); null: none */
+  proPlacing: 'prooffice' | 'teachhut' | null = null;
+  /** starts placing a club building (null, or the same one again: stops); the Buildings tool opens */
+  placePro(kind: 'prooffice' | 'teachhut' | null) {
+    const go = !!kind && !!this.golf;
+    if (go && this.uiTool !== 'buildings') this.setTool('buildings');
+    this.proPlacing = go ? kind : null; if (go) { this.clubPlacing = false; this.halfwayPlacing = false; } this.bizHover = null;
+    this.emit();
+  }
+  /** the room check (one small helper for every placed club building): why something already stands on rect r ('' when the ground is free): the
+   *  businesses (the range's whole plot excepted), the range's structures, the iconic places, the car parks and the town's built lots */
+  private roomWhy(r: readonly [number, number, number, number]): string {
+    const poly = rectPoly(r[0], r[1], r[0] + r[2], r[1] + r[3]);
+    for (const o of routeObstacles({ course: true, biz: this.bizDefs, parks: this.parkDefs, structures: this.rangeStructs(), places: this.placeStructures() })) {
+      if (overlaps(poly, o.outline)) { const n = o.name ?? 'something'; return `${n.charAt(0).toUpperCase()}${n.slice(1)} stands there: find a free spot`; }
+    }
+    if (this.lotsUnder({ x: r[0], y: r[1], w: r[2], h: r[3] })) return 'A town building stands there: find a free spot';
+    return '';
+  }
+  /** a building's ghost at the cursor (the halfway house's and the club buildings': one generic helper): with snap, its front snapped to the
+   *  nearest path within reach and slid along it; then centred on the cursor and nudged up to two tiles round it; the first spot why() passes,
+   *  else the first tried (red, with its reason) */
+  private ghostAt(type: BusinessId, mx: number, my: number, why: (r: [number, number, number, number]) => string, snap: boolean) {
+    const t = this.tileAt(mx, my), B = BUSINESS[type], fp = { w: B.footprint.w, d: B.footprint.h }, cands: [number, number, number, number][] = [];
+    if (snap) {
+      const segs: SnapSeg[] = [];
+      for (const s of this.net.segsNear(t, 40)) { const g = snapSegOf(s); if (g) segs.push(g); }
+      const sn = snapFrontage(t.x, t.y, fp, segs, CLUB_REACH);
+      if (sn) {
+        const w = sn.rot ? fp.d : fp.w, h = sn.rot ? fp.w : fp.d, away = (v: number, f: number) => (f > 0 ? Math.floor(v) : f < 0 ? Math.ceil(v) : Math.round(v));
+        const x0 = away(sn.cx - w / 2, sn.face.x), y0 = away(sn.cy - h / 2, sn.face.y);
+        for (let k = 0; k <= 20; k++) { const off = (k % 2 ? 1 : -1) * Math.ceil(k / 2); cands.push(sn.rot ? [x0, y0 + off, w, h] : [x0 + off, y0, w, h]); }
+      }
+    }
+    const w = this.bizRot ? fp.d : fp.w, h = this.bizRot ? fp.w : fp.d, cx = Math.round(t.x - w / 2), cy = Math.round(t.y - h / 2);
+    cands.push([cx, cy, w, h]);
+    if (!snap) for (let d = 1; d <= 2; d++) for (const [i, j] of [[d, 0], [-d, 0], [0, d], [0, -d], [d, d], [-d, -d], [d, -d], [-d, d]] as const) cands.push([cx + i, cy + j, w, h]);
+    let r = cands[0]!, wy = why(r);
+    for (let i = 1; wy && i < cands.length; i++) { const q = why(cands[i]!); if (!q) { r = cands[i]!; wy = ''; } }
+    this.bizHover = { mx, my, def: { id: 0, type, x: r[0], y: r[1], w: r[2], h: r[3] }, site: siteAt(r[0], r[1], r[2], r[3]), why: wy };
+  }
+  /** the course's play surfaces at a tile ('play': a fairway, green, tee, bunker or water) */
+  private playAt = (x: number, y: number): 'play' | '' => {
+    const grid = this.courseGrid; if (!grid) return '';
+    const i = cellAt(grid, x, y), s = i >= 0 ? grid.surf[i]! : -1;
+    return s === SURF.fairway || s === SURF.green || s === SURF.tee || s === SURF.bunker || s === SURF.water ? 'play' : '';
+  };
+  /** why the pro's office cannot stand on rect r (golf/pros.ts officeSpotWhy) */
+  private officeWhy(r: [number, number, number, number]): string {
+    const club = this.bizDefs.find(d => d.type === 'clubhouse');
+    const plot = ([[0, 0], [1, 0], [0, 1], [1, 1], [0.5, 0.5]] as const).some(([u, v]) => this.onRangePlot(r[0] + u * r[2], r[1] + v * r[3])) ? 'Off the driving range: beside the clubhouse' : '';
+    return officeSpotWhy(r, {
+      count: this.bizCount('prooffice'), clubhouse: club ? [club.x, club.y, club.w, club.h] : null, owned: (x, y) => this.ownedAt(x, y), surf: this.playAt,
+      room: plot || this.roomWhy(r), pathGap: this.roadGapOf(r[0], r[1], r[2], r[3]), money: this.money,
+    });
+  }
+  /** the places a teaching hut teaches at: the range's mats (the tee box's box), the putting and the chipping greens (their centres, else the
+   *  practice area), each open when built */
+  private hutPlaces(): HutPlace[] {
+    const sc = this.range.scene; if (!sc) return [];
+    const tb = sc.teeBox; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let i = 0; i + 1 < tb.length; i += 2) { x0 = Math.min(x0, tb[i]!); x1 = Math.max(x1, tb[i]!); y0 = Math.min(y0, tb[i + 1]!); y1 = Math.max(y1, tb[i + 1]!); }
+    const f = this.range.practiceFacts(), scan = this.range.practice, pb = sc.practice.box;
+    const green = (id: 'putting' | 'chipping'): [number, number, number, number] => { const c = scan?.[id].centre; return c ? [c.x - 4, c.y - 4, 8, 8] : [pb[0], pb[1], pb[2] - pb[0], pb[3] - pb[1]]; };
+    return [
+      { at: 'range', rect: [x0, y0, x1 - x0, y1 - y0], open: Number.isFinite(x0) },
+      { at: 'putting', rect: green('putting'), open: f?.putting === 'open' },
+      { at: 'chipping', rect: green('chipping'), open: f?.chipping === 'open' },
+    ];
+  }
+  /** the teaching huts standing and where each teaches: in the order built, each the nearest place no earlier hut took */
+  private hutsAt(): { id: number; at: HutAt; def: BizDef }[] {
+    const places = this.hutPlaces(), out: { id: number; at: HutAt; def: BizDef }[] = [];
+    for (const d of this.bizDefs.filter(q => q.type === 'teachhut').sort((a, b) => a.id - b.id)) {
+      let best: HutAt | null = null, bd = Infinity;
+      for (const p of places) { if (out.some(o => o.at === p.at)) continue; const g = rectGap([d.x, d.y, d.w, d.h], p.rect); if (g < bd) { bd = g; best = p.at; } }
+      if (best) out.push({ id: d.id, at: best, def: d });
+    }
+    return out;
+  }
+  /** why a teaching hut cannot stand on rect r (golf/pros.ts hutSpotWhy) */
+  private hutWhy(r: [number, number, number, number]): string {
+    return hutSpotWhy(r, { huts: this.hutsAt().map(h => h.at), places: this.hutPlaces(), owned: (x, y) => this.ownedAt(x, y), surf: this.playAt, room: this.roomWhy(r), money: this.money });
+  }
+  private proUpdate(mx: number, my: number) {
+    const k = this.proPlacing; if (!k) return;
+    if (k === 'prooffice') this.ghostAt(k, mx, my, r => this.officeWhy(r), true); else this.ghostAt(k, mx, my, r => this.hutWhy(r), false);
+  }
+  /** builds the club building on the ghost (or says why not): paid for, a business with no cars of its own (P26.D8) */
+  private proClick() {
+    const h = this.bizHover, k = this.proPlacing; if (!h || !k || h.def.type !== k) return;
+    if (h.why) { this.toast(h.why, 'warn'); this.emit(); return; }
+    const cost = k === 'prooffice' ? OFFICE_COST : HUT_COST;
+    this.traffic.spend('construction', cost);
+    this.setBizDefs([...this.bizDefs, { ...h.def, id: Math.max(0, ...this.bizDefs.map(d => d.id)) + 1 }]);
+    this.traffic.setBusinesses(this.bizDefs);
+    this.proPlacing = null; this.bizHover = null;
+    const at = k === 'teachhut' ? this.hutsAt().find(q => q.def.x === h.def.x && q.def.y === h.def.y)?.at : null;
+    this.scheduleSave();
+    this.toast(k === 'prooffice' ? `Pro's office built (-$${OFFICE_COST.toLocaleString()}): hire a head pro on the Staff card` : `${at ? HUT_NAME[at] : 'Teaching hut'} built (-$${HUT_COST.toLocaleString()}): hire its teaching pro on the Staff card`, 'good');
+    this.staffCardOpen = true; this.emit();
+  }
+  /** the pro's office or teaching hut a business picture belongs to (business/art.ts: uid -1000000 - id x 100 - piece), or null */
+  private proBuildingOf(p: Prop | null | undefined): BizDef | null {
+    if (!this.golf || p?.auto !== 'business-art') return null;
+    const id = Math.floor((-1000000 - p.uid) / 100), d = this.bizDefs.find(q => q.id === id);
+    return d && (d.type === 'prooffice' || d.type === 'teachhut') ? d : null;
+  }
+  /** the stand-in labels of the club buildings' pictures (drawStandIns), made with the business props (setBizDefs) */
+  private bizLabels = new Map<Prop, string>();
+  private labelBizProps() {
+    this.bizLabels.clear();
+    for (const p of this.businessProps) {
+      const u = -1000000 - p.uid, id = Math.floor(u / 100), n = u % 100, d = this.bizDefs.find(q => q.id === id); if (!d) continue; // (business/art.ts: uid -1000000 - id x 100 - piece)
+      if (d.type === 'prooffice') this.bizLabels.set(p, n === 0 ? OFFICE_LABEL : DESK_SIGN_LABEL);
+      else if (d.type === 'teachhut') this.bizLabels.set(p, HUT_LABEL);
+    }
+  }
+
+  // the staff
+  /** the Staff card is open (beside the Clubhouse card) */
+  staffCardOpen = false;
+  openStaffCard(on = !this.staffCardOpen) { this.staffCardOpen = on && !!this.golf; this.emit(); }
+  /** what the staff's roles need now (golf/pros.ts StaffNeeds) */
+  private staffNeeds(): StaffNeeds {
+    const o = this.bizDefs.find(d => d.type === 'prooffice');
+    return { clubhouse: this.hasClubhouse, office: o ? o.id : null, huts: this.hutsAt().map(h => ({ id: h.id, at: h.at })), holes: this.staffHoles().length };
+  }
+  /** the Clubhouse card's staff line (P26 5.1: "Staff: head pro Bob Hale · secretary —"; undefined outside golf) */
+  staffLine(): string | undefined {
+    if (!this.golf) return undefined;
+    const pros = this.golf.crew?.staff?.pros ?? [], who = (r: ClubRole) => pros.filter(p => p.role === r).map(p => p.name).join(', ') || '—';
+    return `Staff: head pro ${who('head')} · secretary ${who('sec')} · teaching ${who('teach')}`;
+  }
+  /** the Staff card's view (null: not open, or not golf) */
+  staffCard(): StaffCardView | null {
+    if (!this.staffCardOpen || !this.golf) return null;
+    const m = this.golfMonthIndex();
+    return staffCardView(this.staffNow(), this.staffNeeds(), m - this.seasonsDone() * 12 + 1, m);
+  }
+  /** hires a role at a building (the Staff card's Hire): named, paid from the next month, at work from the next minute of the working day */
+  hireClubStaff(role: ClubRole, at: number | null) {
+    const g = this.golf; if (!g) return;
+    const st = this.staffNow(), n = this.staffNeeds(), b = role === 'teach' ? at : n.office, why = hireWhy(st, role, b, n);
+    if (why || b === null) { this.toast(why || 'Nowhere to work from', 'warn'); return; }
+    const r = hirePro(st, role, b, this.golfMonthIndex(), this.seed);
+    this.setStaff(r.s); this.proBeatsKey = '';
+    this.toast(`${r.hire.name} is your ${ROLE_TITLE[role]} ($${CLUB_WAGE[role]} a month)`, 'good');
+    this.scheduleSave(); this.emit();
+  }
+  /** lets the k-th hire go (the Staff card's confirmed Let go): a month's wage now */
+  letGoClubStaff(k: number) {
+    const g = this.golf; if (!g) return;
+    const r = letGoPro(this.staffNow(), k); if (!r) return;
+    this.setStaff(r.s); this.proBeatsKey = '';
+    const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', r.cost);
+    this.toast(`${r.gone.name} has gone: a month's wage, $${r.cost.toLocaleString()}`, 'info');
+    this.scheduleSave(); this.emit();
+  }
+  /** a building bulldozed lets its staff go (P26 2.2), each with a month's wage */
+  private dropGoneStaff() {
+    const g = this.golf, st = g?.crew?.staff; if (!g || !st?.pros?.length) return;
+    const r = dropProsAt(st, new Set(this.bizDefs.map(d => d.id))); if (!r.gone.length) return;
+    this.setStaff(r.s); this.proBeatsKey = '';
+    const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', r.cost);
+    this.toast(`${r.gone.map(p => p.name).join(' and ')} let go with the building: a month's wage, $${r.cost.toLocaleString()}`, 'info');
+  }
+  /** the club buildings' upkeep and the lessons for `months` game months just begun (payStaff, beside the wages): the upkeep booked at each
+   *  building; each hut's lessons (golf/pros.ts lessonsMonth from the range's own counts) and the members' lessons, booked as business takings and
+   *  floated in at the hut (the office); each pro's season's work. Returns the staff state with the counts read */
+  private prosMonth(s: StaffState, months: number): StaffState {
+    const g = this.golf; if (!g || months <= 0) return s;
+    const office = this.bizDefs.find(d => d.type === 'prooffice'), huts = this.hutsAt(), mid = (d: BizDef) => ({ x: d.x + d.w / 2, y: d.y + d.h / 2 });
+    if (office) { const p = mid(office); this.spendAt({ ...p, group: 'prooffice', gx: p.x, gy: p.y }, 'upkeep', OFFICE_UPKEEP * months); }
+    for (const h of huts) { const p = mid(h.def); this.spendAt({ ...p, group: 'teachhut' + h.id, gx: p.x, gy: p.y }, 'upkeep', HUT_UPKEEP * months); }
+    const rb = g.range, pros = (s.pros ?? []).map(p => ({ ...p, work: { ...p.work } }));
+    const counts = { range: rb?.total.golfers ?? 0, putting: rb?.practice.putting.total.golfers ?? 0, chipping: rb?.practice.chipping.total.golfers ?? 0, academy: rb?.extras.academy.total.golfers ?? 0 };
+    const taught = huts.filter(h => pros.some(p => p.role === 'teach' && p.at === h.id));
+    const L = lessonsMonth(s.seen, { counts, scale: rangeScale(this.traffic.dayLen), huts: taught.map(h => h.at), members: this.hasClubhouse ? g.club?.members ?? 0 : 0, anyPro: pros.some(p => p.role !== 'sec') }, months);
+    for (const h of taught) {
+      const l = L.at[h.at]; if (!l || l.takings <= 0) continue;
+      const p = mid(h.def), pro = pros.find(q => q.role === 'teach' && q.at === h.id)!;
+      this.traffic.spend('business', -l.takings); this.floatMoney({ ...p, amount: l.takings, kind: 'in', group: 'teachhut' + h.id, gx: p.x, gy: p.y, note: 'lessons' });
+      pro.work.lessons += l.lessons; pro.work.takings += l.takings;
+    }
+    if (L.members.takings > 0) {
+      const p = office ? mid(office) : g.clubhouse, who = pros.filter(q => q.role === 'teach').length ? pros.filter(q => q.role === 'teach') : pros.filter(q => q.role === 'head');
+      this.traffic.spend('business', -L.members.takings); this.floatMoney({ ...p, amount: L.members.takings, kind: 'in', group: 'clubhouse', gx: g.clubhouse.x, gy: g.clubhouse.y, note: "members' lessons" });
+      for (const q of who) { q.work.lessons += L.members.lessons / who.length; q.work.takings += L.members.takings / who.length; }
+    }
+    return pros.length ? { ...s, pros, seen: L.seen } : { ...s, seen: L.seen };
+  }
+  /** the month's sales and renewals credited to the head pro and the secretary (stepClub: golf/pros.ts staffWork) and what their sales bring in
+   *  (the new members' first month's dues) */
+  private creditSales(joined: number, members: number, price: number) {
+    const st = this.golf?.crew?.staff; if (!st?.pros?.length || joined <= 0 && members <= 0) return;
+    const head = st.pros.some(p => p.role === 'head'), sec = st.pros.some(p => p.role === 'sec'); if (!head && !sec) return;
+    const w = staffWork(joined, members, head, sec);
+    this.setStaff({ ...st, pros: st.pros.map(p => p.role === 'head' || p.role === 'sec' ? { ...p, work: { ...p.work, sold: p.work.sold + w[p.role].sold, kept: p.work.kept + w[p.role].kept, takings: p.work.takings + w[p.role].sold * price } } : p) });
+  }
+
+  // your lesson (T241's hook)
+  /** whether a pro on the staff teaches you: a teaching pro or the head pro */
+  private proTeaches(): boolean { return (this.golf?.crew?.staff?.pros ?? []).some(p => p.role !== 'sec'); }
+  /** the talk card's lesson (a pro you walked up to): why not ('' : Book) */
+  lessonView(): { why: string; bonus: number } | null {
+    const t = this.youTalk; if (!t?.pro || t.pro.role === 'sec') return null;
+    const at = this.townNow();
+    return { why: lessonWhy(this.golf?.player?.lesson, at.day, at.dayMin, this.proTeaches()), bonus: LESSON_BONUS };
+  }
+  /** books a lesson with the pro you are talking to: your next practice session today comes with it */
+  bookLesson() {
+    const v = this.lessonView(), p = this.playerNow(), t = this.youTalk; if (!v || !p || !t?.pro) return;
+    if (v.why) { this.toast(v.why, 'warn'); return; }
+    this.setPlayer({ ...p, lesson: { day: this.townNow().day, with: t.name, used: false } });
+    this.youTalk = { ...t, answer: { yes: true, line: `Grab a bucket or a green and I'll stand with you. Your next session today: +${Math.round(LESSON_BONUS * 100)}% from it.` } };
+    this.toast(`Lesson booked with ${t.name}: your next practice session today gains ${Math.round(LESSON_BONUS * 100)}% more`, 'good'); this.emit();
+  }
+
+  // the people (P26 3.5)
+  /** the stand-ins (until art 136-138): the head pro golf_pro_m2, the teaching pro golf_pro_w1 (golfers: they have the drive clip), the secretary
+   *  spec_w_older_cardigan (a spectator) */
+  private static readonly PRO_ART: Record<ClubRole, { group: 0 | 1; person: number; label: string }> = {
+    head: { group: 1, person: Math.max(0, GOLFER_PEOPLE.findIndex(p => p.id === 'golfer:golf_pro_m2')), label: 'Stand In for head pro' },
+    teach: { group: 1, person: Math.max(0, GOLFER_PEOPLE.findIndex(p => p.id === 'golfer:golf_pro_w1')), label: 'Stand In for teaching pro' },
+    sec: { group: 0, person: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_w_older_cardigan')), label: 'Stand In for membership secretary' },
+  };
+  /** each hire's beat (golf/pros.ts ProBeat), remade when the staff or the buildings change */
+  private proBeats: ProBeatRow[] = []; private proBeatsKey = '';
+  private proPoseOut: ProPose = { x: 0, y: 0, face: 0, walking: false, walked: 0, work: -1, alpha: 1 };
+  /** where each pro was drawn last frame (the talk's hit test) */
+  private proSeen: { x: number; y: number; k: number }[] = [];
+  private beatsNow(): ProBeatRow[] {
+    const g = this.golf, pros = g?.crew?.staff?.pros; if (!g || !pros?.length) { this.proBeats.length = 0; return this.proBeats; }
+    const key = `${pros.map(p => p.at + p.role).join()}|${this.bizDefs.length}|${g.clubhouse.x},${g.clubhouse.y}|${this.range.practice?.putting.centre?.x ?? ''}`;
+    if (key === this.proBeatsKey) return this.proBeats;
+    this.proBeatsKey = key; this.proBeats = [];
+    const huts = this.hutsAt(), places = this.hutPlaces(), sc = this.range.scene;
+    const door = (d: BizDef): Pt => doorOf([d.x, d.y, d.x + d.w, d.y + d.h], { x: d.x + d.w / 2, y: d.y + d.h / 2 }, () => true, (x, y) => this.roadGapOf(x, y, 0, 0)) ?? { x: d.x + d.w / 2, y: d.y + d.h + 1 };
+    pros.forEach((p, k) => {
+      const d = this.bizDefs.find(q => q.id === p.at); if (!d) return;
+      const home = door(d); let work: Pt = g.clubhouse;
+      if (p.role === 'teach') {
+        const at = huts.find(h => h.id === p.at)?.at, pl = places.find(q => q.at === at);
+        const bay = at === 'range' && sc?.bays.length ? sc.bays.reduce((a, b) => (Math.hypot(b.stand.x - home.x, b.stand.y - home.y) < Math.hypot(a.stand.x - home.x, a.stand.y - home.y) ? b : a)).back : null;
+        work = bay ?? (pl ? { x: pl.rect[0] + pl.rect[2] / 2, y: pl.rect[1] + pl.rect[3] / 2 } : home);
+      } else if (p.role === 'sec') work = { x: g.clubhouse.x + 1, y: g.clubhouse.y + 1 };
+      this.proBeats.push({ k, role: p.role, name: p.name, beat: { home, work, seed: k + 1, demo: p.role === 'teach' } });
+    });
+    return this.proBeats;
+  }
+  /** the club staff in the tile box, from mover m on (as crewMovers): each on his beat through the working day (golf/pros.ts proPose), his
+   *  stand-in labelled. Returns the next mover index */
+  private proMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number): number {
+    this.proSeen.length = 0;
+    const beats = this.beatsNow(); if (!beats.length || this.dayOff) return m;
+    const T = this.traffic, t = T.simTime(performance.now()), minute = this.townNow().dayMin, o = this.proPoseOut;
+    const c = this.crowdGolfers[6] ?? (this.crowdGolfers[6] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
+    for (const b of beats) {
+      if (!proPose(b.beat, t, minute, o) || o.x < X0 || o.x > X1 || o.y < Y0 || o.y > Y1) continue;
+      const A = Game.PRO_ART[b.role];
+      c.group = A.group; c.x = o.x; c.y = o.y; c.person = A.person; c.row = o.face;
+      if (A.group === 1) {
+        const W = GOLFER_CLIPS.walk, D = GOLFER_CLIPS.golf_drive;
+        if (o.walking) c.frame = W.start + (Math.floor(o.walked * FRAMES_PER_TILE) % W.n);
+        else if (b.beat.demo && o.work >= 0 && D) { const u = o.work % SWING_EVERY; let f = 0; while (f + 1 < D.n && D.times[f + 1]! <= u) f++; c.frame = u > D.times[D.n - 1]! + 0.6 ? GOLFER_CLIPS.idle.start : D.start + f; }
+        else c.frame = GOLFER_CLIPS.idle.start;
+      } else c.frame = o.walking ? SPECTATOR_CLIPS.walk.start + (Math.floor(o.walked * FRAMES_PER_TILE) % SPECTATOR_CLIPS.walk.n) : SPECTATOR_CLIPS.idle.start;
+      crowdDrawable(out, m, c); if (o.alpha < 1) out[m]!.alpha = o.alpha;
+      this.caddieLabels.push({ p: out[m]!, text: A.label }); this.proSeen.push({ x: o.x, y: o.y, k: b.k }); m++;
+    }
+    return m;
   }
   // ---------- T269 (#810) part 2: the grounds crew (golf/crew.ts, crewground.ts, crewview.ts) ----------
   /** the day's crew: its day (the schedule), its playback, the town day it was made for, and the next cup event's minute (the flags) */
@@ -10318,7 +10618,7 @@ export class Game {
     if (px !== this.siPx) { this.siPx = px; this.siFont = `600 ${px}px system-ui, sans-serif`; }
     this.siFade = fade;
     for (const p of this.siHits) this.standInPill(p, p, ze);
-    for (const p of this.businessProps) this.standInPill(p, p, ze);
+    for (const p of this.businessProps) this.standInPill(p, p, ze, this.bizLabels.get(p)); // (T214: the club buildings' own labels)
     for (const l of this.range.labels) this.standInPill(l, l.p, ze, l.text);
     // T259: the farms' stand-ins (the windbreak, the orchard, the crop fields, the lane) in the view's box
     for (const ls of this.farmLabels.values()) for (const l of ls) if (l.box[2]! >= b[0]! && l.box[0]! <= b[2]! && l.box[3]! >= b[1]! && l.box[1]! <= b[3]!) this.standInPill(l, l.p, ze, l.text);
@@ -10560,6 +10860,8 @@ export class Game {
       const bt = this.bizType; this.bizType = 'clubhouse'; this.drawBizPreview(ctx); this.bizType = bt;
     } else if (this.halfwayPlacing && this.tool === 'course') {
       const bt = this.bizType; this.bizType = 'halfway'; this.drawBizPreview(ctx); this.bizType = bt;
+    } else if (this.proPlacing && this.tool === 'course') { // T214
+      const bt = this.bizType; this.bizType = this.proPlacing; this.drawBizPreview(ctx); this.bizType = bt;
     } else if (this.paintOn && this.brushOpen) {
       this.paint.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
       const v = this.cursorView; v.ze = this.cam.z * this.dpr; v.camX = this.cam.X; v.camY = this.cam.Y; v.cw = this.cw; v.ch = this.ch; v.dpr = this.dpr;

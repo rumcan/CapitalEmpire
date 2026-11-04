@@ -17,7 +17,7 @@ const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')
 /** minutes as "12 min" or "1 h 05" */
 const mins = (m: number) => m < 60 ? `${Math.round(m)} min` : `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, '0')}`;
 
-export function ClubhouseCard({ view, onClose, onStaff, onPrice, right = 'right-3', onScene }: { view: ClubCardView; onClose: () => void; onStaff?: (role: StaffRole, delta: 1 | -1) => void; /** T214: the dues stepper (the dues a month) */ onPrice?: (price: number) => void; right?: string; /** T242: Set the scene (the clubhouse's picture card by tier; absent: no art yet) */ onScene?: () => void }) {
+export function ClubhouseCard({ view, onClose, onStaff, onPrice, right = 'right-3', onScene, staffLine, onStaffCard }: { view: ClubCardView; onClose: () => void; onStaff?: (role: StaffRole, delta: 1 | -1) => void; /** T214: the club staff's line ("Staff: head pro Bob Hale · secretary —") and the Staff card's button */ staffLine?: string; onStaffCard?: () => void; /** T214: the dues stepper (the dues a month) */ onPrice?: (price: number) => void; right?: string; /** T242: Set the scene (the clubhouse's picture card by tier; absent: no art yet) */ onScene?: () => void }) {
   const t = view.today, s = view.season, pace = s.paceRep > 0 ? `+${s.paceRep}` : `${s.paceRep}`;
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="club-card">
@@ -53,6 +53,12 @@ export function ClubhouseCard({ view, onClose, onStaff, onPrice, right = 'right-
         {view.members && <div className="flex items-center justify-between" data-testid="club-season-dues" title="The members' dues are paid as each month begins, into the treasury; the season's results show them as Memberships"><span className="text-slate-300">Dues: <span className="font-semibold text-emerald-300">{money(view.members.season.dues)}</span> this season</span><span className="text-slate-400">joined {view.members.season.joined} · left {view.members.season.left}</span></div>}
       </div>
       {view.members && <MembersBlock m={view.members} onPrice={onPrice} />}
+      {staffLine !== undefined && (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="club-staff-line" title="Your club staff: the head pro and the secretary sell memberships and keep members; the teaching pros give lessons. Hire them on the Staff card">
+          <span className="min-w-0 text-slate-300">{staffLine}</span>
+          {onStaffCard && <button className="chip shrink-0" onClick={onStaffCard} data-testid="club-staff-open">Staff</button>}
+        </div>
+      )}
       {view.crew && <CrewBlock c={view.crew} onStaff={onStaff} />}
     </div>
   );

@@ -73,6 +73,7 @@ import { ShotPanel } from './ui/ShotPanel';
 import { SpinBall } from './ui/SpinBall';
 import { RangeCard } from './ui/golf/RangeCard';
 import { ClubhouseCard } from './ui/golf/ClubhouseCard';
+import { StaffCard } from './ui/golf/StaffCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
 import { TalkCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
 import { MatchResultCard, ReturnChallengeCard } from './ui/golf/MatchCards';
@@ -331,6 +332,7 @@ export default function App() {
       case 'newHole': newHole(game); break;
       case 'club': if (!game.bizDefs.some(d => d.type === 'clubhouse')) game.placeClubhouse(true); break;
       case 'halfway': game.placeHalfway(true); break;
+      case 'pro': game.placePro(act.id); break; // T214: the pro's office, a teaching hut
       case 'care': game.grassAction = act.id as typeof game.grassAction; break;
       case 'props': if (act.group !== 'buildings') game.decor.focus = act.group as typeof game.decor.focus; break;
       case 'paint': p.setMode('draw'); p.setStyle({ tex: act.tex as Parameters<typeof p.setStyle>[0]['tex'] }); break;
@@ -828,7 +830,7 @@ export default function App() {
           {game.spinView() && <SpinBall game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} />; })()}
-          {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} />}
+          {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
           {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} />}
           {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
@@ -850,7 +852,11 @@ export default function App() {
             const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen ? game.rangeGuideView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return gv && <RangeGuideCard view={gv} right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
-          {(() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} />; })()}
+          {(() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
+          {(() => { // T214: the Staff card, beside the Clubhouse card (to its left) when that is open
+            const sv = game.staffCard(); if (!sv) return null;
+            return <StaffCard view={sv} right={game.clubCardOpen ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openStaffCard(false)} onHire={(r, at) => game.hireClubStaff(r, at)} onLetGo={k => game.letGoClubStaff(k)} />;
+          })()}
           {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} />; })()}
           {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
             const pv = game.playerCard(); if (!pv) return null;
