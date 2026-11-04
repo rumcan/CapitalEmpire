@@ -56,23 +56,45 @@ export function pickHoles(n: number, choice: HoleChoice, picked: readonly number
 }
 
 /** one hole on the card: the course's hole index and number, its par, the strokes (penalties in), the putts, the penalty strokes, and whether it is
- *  holed (done) or was picked up at par + PICK_UP_OVER */
-export interface CardRow { i: number; n: number; par: number; strokes: number; putts: number; pen: number; done: boolean; up?: boolean }
+ *  holed (done) or was picked up at par + PICK_UP_OVER. T325: the mulligans taken on it (absent: none) */
+export interface CardRow { i: number; n: number; par: number; strokes: number; putts: number; pen: number; done: boolean; up?: boolean; mull?: number }
+
+/** T325 (#925): mulligans in your own round: none, one per nine (the default), or as many as you like */
+export type MullRule = 'none' | 'nine' | 'any';
+export const MULL_RULES: readonly { id: MullRule; label: string }[] = [{ id: 'none', label: 'None' }, { id: 'nine', label: '1 per nine' }, { id: 'any', label: 'Unlimited' }];
+/** the first tee's settings for your round (T325 mulligans; T327 adds the gimmies) */
+export interface RoundRules { mull: MullRule }
+/** a new round's settings: one mulligan per nine */
+export const DEFAULT_RULES: Readonly<RoundRules> = { mull: 'nine' };
+/** a round that is not your own (the tournament, a money match, your tournament and the Mayor's Cup): no mulligans, ever */
+export const COMPETITION_RULES: Readonly<RoundRules> = { mull: 'none' };
+/** the settings a round of this kind plays under: your own everyday round the ones chosen at the first tee, a competition never any */
+export function rulesFor(kind: 'everyday' | 'match' | 'tournament', chosen: RoundRules = DEFAULT_RULES): RoundRules {
+  return kind === 'everyday' ? { mull: MULL_RULES.some(m => m.id === chosen.mull) ? chosen.mull : DEFAULT_RULES.mull } : { ...COMPETITION_RULES };
+}
 /** your round: the town day it began, the holes (indices of the everyday course, in play order), the hole you are on (an index into holes), the card (a
  *  row per hole), your ball and its lie (on the tee before the first stroke: the tee's point and lie 'tee'), holed (the hole is done: the card shows,
  *  "Next hole" goes on), over (the last hole is done) */
-export interface YourRound { v: 1; day: number; holes: number[]; at: number; card: CardRow[]; ball: Pt; lie: Lie; holed: boolean; over: boolean }
+export interface YourRound { v: 1; day: number; holes: number[]; at: number; card: CardRow[]; ball: Pt; lie: Lie; holed: boolean; over: boolean;
+  /** T325: the first tee's settings (absent, a round from before them: no mulligans) */
+  rules?: RoundRules;
+  /** T325: the round as it was before your last shot (a mulligan puts it back); absent before the first shot of a hole and after a mulligan */
+  undo?: YourRoundState;
+  /** T325: the mulligans taken in the round so far (each gives the replayed shot a stream of its own: the same shot again is not the same outcome) */
+  mk?: number }
+/** a round without its undo (what the undo keeps) */
+export type YourRoundState = Omit<YourRound, 'undo'>;
 
 /** the hole you play as you play it: your tee set's tee and line (holeFrom) */
 export function holeOf(view: CourseView, i: number): PlayHole | null { const h = view.holes[i]; return h ? holeFrom(h, YOUR_TEES) : null; }
 
 /** a new round on the holes (indices of view's holes), the ball on the first hole's tee. Null when no hole fits the course */
-export function startRound(view: CourseView, holes: readonly number[], day: number): YourRound | null {
+export function startRound(view: CourseView, holes: readonly number[], day: number, rules: RoundRules = DEFAULT_RULES): YourRound | null {
   const hs = holes.filter(i => !!view.holes[i]);
   if (!hs.length) return null;
   const card = hs.map(i => ({ i, n: view.holes[i]!.n, par: view.holes[i]!.par, strokes: 0, putts: 0, pen: 0, done: false }));
   const t = holeOf(view, hs[0]!)!.tee;
-  return { v: 1, day, holes: hs, at: 0, card, ball: { x: t.x, y: t.y }, lie: 'tee', holed: false, over: false };
+  return { v: 1, day, holes: hs, at: 0, card, ball: { x: t.x, y: t.y }, lie: 'tee', holed: false, over: false, rules: rulesFor('everyday', rules) };
 }
 
 /** the row of the hole you are on */
@@ -98,7 +120,7 @@ export function addressOf(ball: Pt, aim: Pt): Pt {
 export const nearBall = (x: number, y: number, ball: Pt): boolean => Math.hypot(x - ball.x, y - ball.y) <= SNAP_TILES;
 
 /** the stream of your shot on hole index i, stroke k: the same shot on a reload (the seed is the game's and the round's day) */
-const streamOf = (seed: number, r: YourRound, i: number, k: number) => rng(seed, 0x796f75 + r.day, i * 32 + k);
+const streamOf = (seed: number, r: YourRound, i: number, k: number) => rng(seed, 0x796f75 + r.day, i * 32 + k + (r.mk ? r.mk * 4096 : 0)); // (T325: a mulligan's own)
 
 /** plays your shot from the input (club, aim, power; the swing meter's outcome) at your ball: the round after it (the card's strokes, putts and
  *  penalties; the ball and its lie; holed when it went in, or picked up at par + PICK_UP_OVER), and the shot as the tournament records one (for the
@@ -112,14 +134,43 @@ export function playYours(view: CourseView, r: YourRound, sk: ShotSkill, input: 
   const nrow: CardRow = { ...row, strokes: up ? cap : strokes, putts, pen: row.pen + o.penalty, done: holed, ...(up ? { up: true } : {}) };
   const card = r.card.slice(); card[r.at] = nrow;
   const shot: Shot = { golfer: -1, hole: row.i, stroke, t: 0, from: { x: r.ball.x, y: r.ball.y }, to: o.to, club: input.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
-  return { round: { ...r, card, ball: { x: o.to.x, y: o.to.y }, lie: o.lie, holed, over: holed && r.at === r.holes.length - 1 }, shot, up };
+  const { undo: _u, ...before } = r; void _u;
+  return { round: { ...r, card, ball: { x: o.to.x, y: o.to.y }, lie: o.lie, holed, over: holed && r.at === r.holes.length - 1, undo: before }, shot, up };
 }
 
 /** on to the next hole (after a hole is holed): the ball on its tee; the round as it is when the hole is not done or the round is over */
 export function nextHole(view: CourseView, r: YourRound): YourRound {
   if (!r.holed || r.over || r.at + 1 >= r.holes.length) return r;
   const at = r.at + 1, h = holeOf(view, r.holes[at]!); if (!h) return { ...r, over: true };
-  return { ...r, at, ball: { x: h.tee.x, y: h.tee.y }, lie: 'tee', holed: false };
+  const { undo: _u, ...rest } = r; void _u;
+  return { ...rest, at, ball: { x: h.tee.x, y: h.tee.y }, lie: 'tee', holed: false };
+}
+
+/** T325: the mulligans left now (Infinity: unlimited): none under 'none'; one per nine of the round (holes 1-9 of it, 10-18) under 'nine' */
+export function mulligansLeft(r: YourRound): number {
+  const m = r.rules?.mull ?? 'none';
+  if (m === 'none') return 0;
+  if (m === 'any') return Infinity;
+  const k0 = Math.floor(r.at / 9) * 9; let used = 0;
+  for (let k = k0; k < Math.min(r.card.length, k0 + 9); k++) used += r.card[k]!.mull ?? 0;
+  return Math.max(0, 1 - used);
+}
+/** whether a mulligan is offered now: a shot to take back and one left (the round's settings allow it) */
+export const canMulligan = (r: YourRound | null | undefined): boolean => !!r?.undo && mulligansLeft(r) > 0;
+/** T325: the mulligan: the round as it was before your last shot (the ball where it was hit from, its lie, the hole's strokes), the hole marked with
+ *  one more mulligan, the round's count up (the replayed shot's stream changes). The round as it is when none is offered */
+export function takeMulligan(r: YourRound): YourRound {
+  if (!canMulligan(r)) return r;
+  const u = r.undo!, card = u.card.slice(), row = card[u.at]!;
+  card[u.at] = { ...row, mull: (row.mull ?? 0) + 1 };
+  return { ...u, card, rules: r.rules ?? u.rules, mk: (r.mk ?? 0) + 1 };
+}
+/** T325: the mulligans taken in the round (the scorecard's "2 mulligans") */
+export const mulligansOf = (r: YourRound): number => r.card.reduce((a, c) => a + (c.mull ?? 0), 0);
+/** why a round does not count toward your handicap (null: it does): mulligans taken (T325) */
+export function noHandicapWhy(r: YourRound): string | null {
+  const m = mulligansOf(r);
+  return m ? `${m} mulligan${m > 1 ? 's' : ''}` : null;
 }
 
 /** the card's totals: the strokes and par of the holes done, to par, the putts, the holes done (thru) of all */
@@ -137,11 +188,20 @@ export function normalizeYourRound(x: unknown): YourRound | undefined {
   if (!n(o.day) || !Array.isArray(o.holes) || !Array.isArray(o.card) || !o.ball || !n(o.ball.x) || !n(o.ball.y) || !n(o.at)) return undefined;
   const holes = o.holes.filter(n).map(Math.round), card = o.card.filter(c => c && n(c.i) && n(c.par) && n(c.strokes)).map(c => ({
     i: Math.round(c.i), n: n(c.n) ? Math.round(c.n) : Math.round(c.i) + 1, par: Math.round(c.par), strokes: Math.max(0, Math.round(c.strokes)), putts: n(c.putts) ? Math.max(0, Math.round(c.putts)) : 0,
-    pen: n(c.pen) ? Math.max(0, Math.round(c.pen)) : 0, done: c.done === true, ...(c.up === true ? { up: true } : {}),
+    pen: n(c.pen) ? Math.max(0, Math.round(c.pen)) : 0, done: c.done === true, ...(c.up === true ? { up: true } : {}), ...(n(c.mull) && c.mull >= 1 ? { mull: Math.round(c.mull) } : {}),
   }));
   if (!holes.length || holes.length !== card.length || holes.some((h, k) => card[k]!.i !== h)) return undefined;
   const at = Math.max(0, Math.min(holes.length - 1, Math.round(o.at)));
-  return { v: 1, day: Math.round(o.day), holes, at, card, ball: { x: o.ball.x, y: o.ball.y }, lie: LIES.includes(o.lie as Lie) ? o.lie as Lie : 'rough', holed: o.holed === true, over: o.over === true };
+  const base: YourRound = { v: 1, day: Math.round(o.day), holes, at, card, ball: { x: o.ball.x, y: o.ball.y }, lie: LIES.includes(o.lie as Lie) ? o.lie as Lie : 'rough', holed: o.holed === true, over: o.over === true };
+  // T325: the settings, the mulligans' count and the undo (itself a round, without an undo); an old save has none of them and is unchanged
+  const ru = o.rules as Partial<RoundRules> | undefined;
+  if (ru && typeof ru === 'object' && MULL_RULES.some(m => m.id === ru.mull)) base.rules = { mull: ru.mull! };
+  if (n(o.mk) && o.mk >= 1) base.mk = Math.round(o.mk);
+  if (o.undo && typeof o.undo === 'object') {
+    const u = normalizeYourRound({ ...(o.undo as object), undo: undefined });
+    if (u && u.holes.length === holes.length) { const { undo: _x, ...us } = u; void _x; base.undo = us; }
+  }
+  return base;
 }
 
 /** the name of a hole's score: a hole in one, albatross, eagle, birdie, par, bogey, double and triple bogey, else "+n" */
@@ -225,5 +285,7 @@ export function cupTime(f: YourFlight): number | null {
 /** the HUD of your round (the engine's yourRoundView) */
 export interface YourRoundView { round: YourRound; hole: number; par: number; stroke: number; distM: number; lie: Lie; totals: ReturnType<typeof cardTotals>;
   canJump: boolean; inCart: boolean; nearCart: boolean;
+  /** T325: a mulligan is offered now, and how many are left (Infinity: unlimited; 0 with the rule 'none') */
+  canMull: boolean; mullLeft: number;
   /** T326: your cart is out of reach (the Cart button calls it) */
   cartFar: boolean; card: boolean; flying: boolean; addressing: boolean }

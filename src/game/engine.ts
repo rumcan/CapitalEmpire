@@ -180,7 +180,7 @@ import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, 
 import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
-import { CART_REACH, CART_TILES, addressOf, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
+import { CART_REACH, CART_TILES, addressOf, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { BOOK_LEAD, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
@@ -5164,6 +5164,8 @@ export class Game {
     if (typing) return;
     this.keys.add(e.key);
     if (WALK_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youKeysOn()) { e.preventDefault(); return; } // T240, T323: WASD walk you in either cursor (the frame reads them)
+    // T325: M takes a mulligan in your round (a shot to take back, or the shot open: it says why not); elsewhere M stays the business tool's key
+    if ((e.key === 'm' || e.key === 'M') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.yourRound() && (this.yourRound()!.undo || this.shot?.mine || this.yrFlight)) { e.preventDefault(); this.yourMulligan(); return; }
     // T326: C calls your cart, in your round (at your ball's address too) or in the Walk cursor (elsewhere C stays the course tool's key)
     if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.youCart && ((this.youKeysOn() && (this.youWalkMode || this.yourRound())) || this.shot?.mine)) { e.preventDefault(); this.youCartCall(); return; }
     if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.youKeysOn() && this.youCart && (this.youInCart || this.youNearCart())) { e.preventDefault(); this.youCartToggle(); return; } // T317
@@ -7800,7 +7802,7 @@ export class Game {
   }
   /** starts your round on the holes chosen at the first tee (all, the front 9, the back 9, or a pick): the ball on its first tee, the card empty. A round
    *  booked today and not yet under way is cancelled (you play this one by hand instead); one under way is refused */
-  yourRoundStart(choice: HoleChoice, picked: number[] = []) {
+  yourRoundStart(choice: HoleChoice, picked: number[] = [], rules?: RoundRules) {
     const p = this.playerNow(), v = this.yrView(), c = this.yourChoices(); if (!p) return;
     if (c.why) { this.toast(c.why, 'warn'); return; }
     if (!v) return;
@@ -7808,7 +7810,7 @@ export class Game {
     if (b && b.day === at.day && at.dayMin >= b.tee - BOOK_LEAD && !(b.result && at.dayMin >= b.result.done)) { this.toast('You are out on the course in your booked round', 'warn'); return; }
     const holes = pickHoles(v.holes.length, choice, picked);
     if (!holes.length) { this.toast('Pick at least one hole', 'warn'); return; }
-    const r = startRound(v, holes, at.day); if (!r) return;
+    const r = startRound(v, holes, at.day, rules); if (!r) return;
     if (b && b.day === at.day && !b.result) this.setPlayer({ ...this.playerNow()!, booked: null });
     this.setYourRound(r); this.youTeeOpen = false; this.yrCard = false; this.yrFlight = null;
     const h = holeOf(v, holes[0]!)!, brought = this.youCartBring(h.tee);
@@ -7862,6 +7864,7 @@ export class Game {
     const sk = this.yourSkills(), i = s.input;
     const spin = this.shotSpin(), input = { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}) };
     const { round, shot, up } = playYours(v, r, sk, input, this.seed);
+    this.yrLastInput = { club: i.club, aim: { x: i.aim.x, y: i.aim.y }, power: i.power }; // (T325: a mulligan opens the shot again on it)
     this.spinAir = spin ? { mine: true, input: { ...input, spin }, lie: r.lie, prev: r, seen: false, at: performance.now() } : null;
     this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(sk, i.club), i.club === 'putter') : null);
     this.toast(this.lastShot.text, 'info');
@@ -7874,6 +7877,7 @@ export class Game {
     this.yrFlight = flightOf(shot.from, land, shot.to, round.holed, up, rowOf(round), shot.penalty > 0, { aim: i.aim, ...(putt ? { putt } : {}), ...flightSpin(shot.landing) });
     this.yrFlight.t = -IMPACT_S; // (T320: the ball leaves at the drive clip's impact, as the field's do: play/view.ts)
     if (land) this.yourTracer(this.yrFlight);
+    this.yrShotFlight = this.yrFlight;
     this.youFollow = true;
     this.emit();
   }
@@ -7905,6 +7909,29 @@ export class Game {
     const h = holeOf(v, n.holes[n.at]!); if (h) this.toast(`Hole ${h.n}, par ${h.par}: to the tee (walk, drive, or Jump to ball)`, 'info');
     this.emit();
   }
+  /** T325 (#925): the last shot's input (club, aim, power) and its flight: a mulligan opens the shot again on them and takes its tracer away */
+  private yrLastInput: { club: Club; aim: Pt; power: number } | null = null;
+  private yrShotFlight: YourFlight | null = null;
+  /** T325: the Mulligan button and key M: your last shot taken back (play/yours.ts takeMulligan: the ball where it was hit from, the stroke not
+   *  counted, the hole marked), in flight or at rest, and the shot opened again on the same club and aim. Only your own round has them */
+  yourMulligan() {
+    const r = this.yourRound(); if (!r) return;
+    if (!canMulligan(r)) {
+      this.toast((r.rules?.mull ?? 'none') === 'none' ? 'No mulligans in this round (chosen at the first tee)' : !r.undo ? 'No shot to take back' : 'Your mulligan on this nine is used', 'warn');
+      return;
+    }
+    const n = takeMulligan(r), T = this.yrTracers;
+    if (this.yrShotFlight && T.length && T[T.length - 1]!.f === this.yrShotFlight) T.pop();
+    this.yrFlight = null; this.yrShotFlight = null; if (this.spinAir?.mine) this.spinAir = null;
+    this.shot = null; this.yrCard = false; this.lastShot = null;
+    this.setYourRound(n);
+    this.yourAddress();
+    const s = this.shot as ShotState | null, li = this.yrLastInput;
+    if (s?.mine && li && allowedClubs(s.turn.lie, s.turn.lie === 'tee').includes(li.club)) { this.shot = { ...s, input: { club: li.club, aim: { x: li.aim.x, y: li.aim.y }, power: li.power } }; this.yourFace(); }
+    const left = mulligansLeft(n);
+    this.toast(`Mulligan: hit it again (stroke ${rowOf(n).strokes + 1})${left === Infinity ? '' : left ? ` · ${left} left` : ' · none left on this nine'}`, 'info');
+    this.emit();
+  }
   /** your round ends (the last hole done, or you quit): the holes done go into your rounds (an everyday round: golf/player.ts playedRound), the card
    *  closes and the round is cleared */
   yourRoundEnd(why?: string) {
@@ -7914,9 +7941,10 @@ export class Game {
     const t = cardTotals(r.card);
     const { round: _r, ...rest } = p; void _r;
     if (t.thru > 0) {
-      const next = playedRound(rest, { day: r.day, kind: 'everyday', strokes: t.strokes, par: t.par, holes: t.thru });
+      const noHcp = noHandicapWhy(r); // (T325: mulligans: in your rounds, not toward your handicap)
+      const next = playedRound(rest, { day: r.day, kind: 'everyday', strokes: t.strokes, par: t.par, holes: t.thru, noHcp });
       this.setPlayer(next);
-      this.toast(`${why ? why + '. ' : ''}You shot ${t.strokes} (${toParWord(t.toPar)}) over ${t.thru} hole${t.thru > 1 ? 's' : ''} · handicap ${hcpText(next.rounds[next.rounds.length - 1]!.hcp)}`, 'good');
+      this.toast(`${why ? why + '. ' : ''}You shot ${t.strokes} (${toParWord(t.toPar)}) over ${t.thru} hole${t.thru > 1 ? 's' : ''} · ${noHcp ? `${noHcp}: not for your handicap` : `handicap ${hcpText(next.rounds[next.rounds.length - 1]!.hcp)}`}`, 'good');
     } else { this.setPlayer(rest); this.toast(why ?? 'Your round is called off', 'info'); }
     this.emit();
   }
@@ -7939,7 +7967,7 @@ export class Game {
     const r = this.yourRound(); if (!r || !this.you) return null;
     const row = r.card[r.at]!, v = this.yrView(), h = v ? holeOf(v, row.i) : null, flying = !!this.yrFlight, addressing = !!this.shot?.mine;
     return { round: r, hole: row.n, par: row.par, stroke: row.strokes + 1, distM: h ? Math.hypot(h.pin.x - r.ball.x, h.pin.y - r.ball.y) * TILE_M : 0, lie: r.lie,
-      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing, inCart: this.youInCart, nearCart: this.youNearCart(), cartFar: this.youCartFar(), card: this.yrCard, flying, addressing };
+      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing, inCart: this.youInCart, nearCart: this.youNearCart(), cartFar: this.youCartFar(), canMull: canMulligan(r), mullLeft: mulligansLeft(r), card: this.yrCard, flying, addressing };
   }
   /** whether you stand within CART_REACH of your cart (and are not in it) */
   youNearCart(): boolean { const c = this.youCart, y = this.you; return !!c && !!y && !this.youInCart && Math.hypot(c.x - y.x, c.y - y.y) <= CART_REACH; }

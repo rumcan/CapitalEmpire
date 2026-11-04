@@ -8,7 +8,7 @@ import type { Verb } from '../../game/golf/you';
 import { Icon } from '../Icon';
 import { Thumb } from '../Thumb';
 import { HoleChoiceBox } from './YourRound';
-import type { HoleChoice } from '../../game/golf/play/yours';
+import type { HoleChoice, RoundRules } from '../../game/golf/play/yours';
 
 const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 
@@ -75,7 +75,7 @@ export function TalkCard({ talk, right, onClose }: { talk: { name: string; line:
 
 /** the first tee: start a round. Play in today's tournament while you can join it, else your everyday round on the tee sheet */
 export function TeeCard({ view, right, onJoin, onBook, onClose, play, onPlay }: { view: { join: boolean; round: RoundState; name: string }; right: string; onJoin: () => void; onBook: () => void; onClose: () => void;
-  /** T317: the holes you may play yourself now (play/yours.ts holeOptions) and the start */ play?: Parameters<typeof HoleChoiceBox>[0]['choices']; onPlay?: (c: HoleChoice, picked: number[]) => void }) {
+  /** T317: the holes you may play yourself now (play/yours.ts holeOptions) and the start */ play?: Parameters<typeof HoleChoiceBox>[0]['choices']; onPlay?: (c: HoleChoice, picked: number[], rules: RoundRules) => void }) {
   const r = view.round;
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 w-[300px] space-y-2 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="tee-card">

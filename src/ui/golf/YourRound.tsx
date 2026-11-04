@@ -2,15 +2,16 @@
 // distance, the score so far, "Jump to ball", the cart, the scorecard, quit), and the scorecard (strokes, par, to par, putts per hole) that opens between
 // holes and at the end. The engine plays the round (golf/play/yours.ts); these only show it and send the clicks.
 import { useState } from 'react';
-import type { CardRow, HoleChoice, YourRoundView } from '../../game/golf/play/yours';
+import { DEFAULT_RULES, MULL_RULES, mulligansOf, noHandicapWhy, type CardRow, type HoleChoice, type RoundRules, type YourRoundView } from '../../game/golf/play/yours';
 import { Icon } from '../Icon';
 
 const toPar = (d: number): string => d === 0 ? 'E' : d > 0 ? `+${d}` : `${d}`;
 const LIE: Record<string, string> = { tee: 'on the tee', fairway: 'in the fairway', rough: 'in the rough', fescue: 'in the deep grass', bunker: 'in a bunker', green: 'on the green', water: 'in the water', out: 'out of bounds' };
 
 /** the first tee's choice (the owner: "you should be asked if you are playing all the holes"): all of them, the front 9, the back 9, or a pick */
-export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: HoleChoice; label: string; holes: number[] }[]; holes: { i: number; n: number; par: number }[]; why: string | null }; onStart: (c: HoleChoice, picked: number[]) => void }) {
+export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: HoleChoice; label: string; holes: number[] }[]; holes: { i: number; n: number; par: number }[]; why: string | null }; onStart: (c: HoleChoice, picked: number[], rules: RoundRules) => void }) {
   const [pick, setPick] = useState<number[] | null>(null);
+  const [rules, setRules] = useState<RoundRules>({ ...DEFAULT_RULES });
   if (choices.why) return <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs text-slate-400" data-testid="tee-play-why">Play a round yourself: {choices.why}</div>;
   return (
     <div className="space-y-1.5 rounded-lg border border-emerald-300/30 bg-emerald-400/5 p-2 text-xs" data-testid="tee-play">
@@ -19,7 +20,7 @@ export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: 
         <div className="grid grid-cols-2 gap-1">
           {choices.options.map(o => (
             <button key={o.id} className={`chip justify-center ${o.id === 'all' ? 'chip-on' : ''}`} data-testid={`tee-play-${o.id}`}
-              onClick={() => (o.id === 'pick' ? setPick([]) : onStart(o.id, []))}>{o.label}</button>
+              onClick={() => (o.id === 'pick' ? setPick([]) : onStart(o.id, [], rules))}>{o.label}</button>
           ))}
         </div>
       ) : (
@@ -33,17 +34,22 @@ export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: 
           </div>
           <div className="flex justify-between gap-1">
             <button className="chip" onClick={() => setPick(null)}>Back</button>
-            <button className="chip chip-on disabled:opacity-40" disabled={!pick.length} onClick={() => onStart('pick', pick)} data-testid="tee-pick-go">Play {pick.length} hole{pick.length === 1 ? '' : 's'}</button>
+            <button className="chip chip-on disabled:opacity-40" disabled={!pick.length} onClick={() => onStart('pick', pick, rules)} data-testid="tee-pick-go">Play {pick.length} hole{pick.length === 1 ? '' : 's'}</button>
           </div>
         </div>
       )}
+      {/* T325: the round's settings (T327 adds the gimmies to this row) */}
+      <div className="flex flex-wrap items-center gap-1" data-testid="tee-rules">
+        <span className="text-slate-400">Mulligans:</span>
+        {MULL_RULES.map(m => <button key={m.id} className={`chip px-1.5 py-0.5 text-[11px] ${rules.mull === m.id ? 'chip-on' : ''}`} data-testid={`tee-mull-${m.id}`} onClick={() => setRules(r => ({ ...r, mull: m.id }))}>{m.label}</button>)}
+      </div>
       <p className="text-[11px] text-slate-500">You walk or drive your cart to each ball; near it you address it and swing (the 3-click meter).</p>
     </div>
   );
 }
 
 /** the round's bar (top centre): where you are in the round, the score so far, and the buttons */
-export function RoundBar({ v, onJump, onCart, onCallCart, onCard, onQuit }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCallCart: () => void; onCard: () => void; onQuit: () => void }) {
+export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onCard, onQuit }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCallCart: () => void; onMull: () => void; onCard: () => void; onQuit: () => void }) {
   const t = v.totals, r = v.round;
   return (
     <div className="pointer-events-none absolute inset-x-0 top-[calc(var(--hud-top,6rem)+2.75rem)] z-20 flex justify-center px-3">
@@ -54,6 +60,7 @@ export function RoundBar({ v, onJump, onCart, onCallCart, onCard, onQuit }: { v:
         {v.canJump && <button className="btn-gold px-2 py-0.5 text-xs" onClick={onJump} data-testid="you-jump" data-tip="Skip the trip: you are at your ball, addressing it"><Icon name="forward2" size={14} />Jump to ball</button>}
         {(v.inCart || v.nearCart) && !v.addressing && <button className="chip" onClick={onCart} data-testid="you-cart">{v.inCart ? 'Get out (E)' : 'Get in the cart (E)'}</button>}
         {v.cartFar && <button className="chip" onClick={onCallCart} data-testid="you-cart-call" data-tip="Your cart drives to you (C); then E gets in"><Icon name="compass" size={14} />Cart (C)</button>}
+        {v.canMull && <button className="chip" onClick={onMull} data-testid="you-mulligan" data-tip="Take your last shot back and hit it again: no stroke counted (M). A round with mulligans does not count toward your handicap">Mulligan (M){v.mullLeft !== Infinity ? ` · ${v.mullLeft} left` : ''}</button>}
         <button className="chip" onClick={onCard} data-testid="round-card-btn">Scorecard</button>
         <button className="chip" onClick={onQuit} title="Stop your round here: the holes done go into your rounds" data-testid="round-quit">Quit</button>
       </div>
@@ -71,7 +78,7 @@ function CardBlock({ rows, label, at }: { rows: CardRow[]; label: string; at: nu
       <tbody>
         <tr className="text-slate-400"><th className="pr-2 text-left font-medium">Hole</th>{rows.map((r, k) => <td key={k} className={`${cell} ${k === at ? 'text-amber-300' : ''}`}>{r.n}</td>)}<td className={`${cell} w-10 font-semibold`}>{label}</td></tr>
         <tr className="text-slate-400"><th className="pr-2 text-left font-medium">Par</th>{rows.map((r, k) => <td key={k} className={cell}>{r.par}</td>)}<td className={`${cell} w-10`}>{rows.reduce((a, r) => a + r.par, 0)}</td></tr>
-        <tr className="text-white"><th className="pr-2 text-left font-medium text-slate-300">Score</th>{rows.map((r, k) => <td key={k} className={cell}><span className={`inline-block min-w-[1.4rem] ${mark(r)}`}>{r.done ? r.strokes : ''}{r.up ? '*' : ''}</span></td>)}<td className={`${cell} w-10 font-semibold`}>{done.length ? sum(r => r.strokes) : ''}</td></tr>
+        <tr className="text-white"><th className="pr-2 text-left font-medium text-slate-300">Score</th>{rows.map((r, k) => <td key={k} className={cell}><span className={`inline-block min-w-[1.4rem] ${mark(r)}`}>{r.done ? r.strokes : ''}{r.up ? '*' : ''}</span>{r.mull ? <sup className="ml-px text-[9px] font-semibold text-sky-300" title={`${r.mull} mulligan${r.mull > 1 ? 's' : ''}`} data-testid="card-mull">m</sup> : null}</td>)}<td className={`${cell} w-10 font-semibold`}>{done.length ? sum(r => r.strokes) : ''}</td></tr>
         <tr className="text-slate-300"><th className="pr-2 text-left font-medium">Putts</th>{rows.map((r, k) => <td key={k} className={cell}>{r.done || r.putts ? r.putts : ''}</td>)}<td className={`${cell} w-10`}>{done.length ? sum(r => r.putts) : ''}</td></tr>
       </tbody>
     </table>
@@ -80,7 +87,7 @@ function CardBlock({ rows, label, at }: { rows: CardRow[]; label: string; at: nu
 
 /** the scorecard (the owner: "it should keep score"): the holes in blocks of nine, the totals and to par; between holes "Next hole", at the end "Done" */
 export function ScoreCard({ v, onNext, onDone, onClose }: { v: YourRoundView; onNext: () => void; onDone: () => void; onClose: () => void }) {
-  const r = v.round, t = v.totals, blocks: CardRow[][] = [];
+  const r = v.round, t = v.totals, blocks: CardRow[][] = [], mulls = mulligansOf(r), noHcp = noHandicapWhy(r);
   for (let k = 0; k < r.card.length; k += 9) blocks.push(r.card.slice(k, k + 9));
   const next = r.holed && !r.over ? r.card[r.at + 1] : undefined;
   return (
@@ -95,9 +102,10 @@ export function ScoreCard({ v, onNext, onDone, onClose }: { v: YourRoundView; on
         </div>
         <div className="space-y-2">{blocks.map((b, k) => <CardBlock key={k} rows={b} label={blocks.length > 1 ? (k === 0 ? 'Out' : 'In') : 'Tot'} at={r.at - k * 9} />)}</div>
         <div className="flex flex-wrap items-baseline justify-between gap-3 border-t border-white/10 pt-2 text-sm" data-testid="scorecard-total">
-          <span>Total <b className="text-white tabular-nums">{t.strokes}</b> · par {t.par} · <b className="text-white">{toPar(t.toPar)}</b> · {t.putts} putts · thru {t.thru} of {t.holes}</span>
-          <span className="text-[11px] text-slate-500">◯ birdie or better · ▢ bogey or worse · * picked up</span>
+          <span>Total <b className="text-white tabular-nums">{t.strokes}</b> · par {t.par} · <b className="text-white">{toPar(t.toPar)}</b> · {t.putts} putts · thru {t.thru} of {t.holes}{mulls ? <span className="text-sky-300" data-testid="card-mulls"> · {mulls} mulligan{mulls > 1 ? 's' : ''}</span> : null}</span>
+          <span className="text-[11px] text-slate-500">◯ birdie or better · ▢ bogey or worse · * picked up{mulls ? ' · m mulligan' : ''}</span>
         </div>
+        {noHcp && <div className="text-[11px] text-amber-200/80" data-testid="card-no-hcp">Counts in your rounds, not toward your handicap ({noHcp}).</div>}
         <div className="flex justify-end gap-2">
           {next && <button className="btn-gold px-3 py-1.5 text-sm" onClick={onNext} data-testid="round-next"><Icon name="play" size={16} />Next hole: {next.n} (par {next.par})</button>}
           {r.over && <button className="btn-gold px-3 py-1.5 text-sm" onClick={onDone} data-testid="round-done">Done: into your rounds</button>}
