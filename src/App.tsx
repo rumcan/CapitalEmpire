@@ -2002,6 +2002,7 @@ function Help({ onClose, tab, onTab, keys, lab, onTour }: { onClose: () => void;
             <button role="tab" aria-selected={tab === 'keys'} className={`px-4 ${tab === 'keys' ? 'on' : ''}`} onClick={() => onTab('keys')} data-testid="help-keys">Keys</button>
             <button role="tab" aria-selected={tab === 'how'} className={`px-4 whitespace-nowrap ${tab === 'how' ? 'on' : ''}`} onClick={() => onTab('how')}>How it works</button>
           </div>}
+          {onTour && <button className="chip px-3" onClick={onTour} data-testid="help-tour" title="The short tutorial from the start: your town, and the roads it grows along"><Icon name="play" size={16} />Replay the start tutorial</button>}
           <span className="ml-auto text-[12px] text-slate-400"><span className="keycap">?</span> or <span className="keycap">F1</span> opens this · <span className="keycap">Esc</span> closes</span>
         </div>
         {tab === 'keys' ? <KeysSheet sections={keys} /> : <>
@@ -2020,10 +2021,7 @@ function Help({ onClose, tab, onTab, keys, lab, onTour }: { onClose: () => void;
           <li>F shows traffic flow and junction levels of service; B lists the worst bottlenecks (click one to jump there).</li>
           <li>With the select tool, click a car to inspect its trip; with the flow overlay on, click a junction to see where its traffic comes from and goes.</li>
         </ul></>}
-        <div className="mt-5 flex flex-wrap gap-2">
-          <button className="btn" onClick={onClose}>Close</button>
-          {onTour && <button className="btn" onClick={onTour} data-testid="help-tour" title="The short tutorial from the start: your town, and the roads it grows along"><Icon name="play" size={16} />Replay the start tutorial</button>}
-        </div>
+        <button className="btn mt-5" onClick={onClose}>Close</button>
       </div>
     </div>
   );

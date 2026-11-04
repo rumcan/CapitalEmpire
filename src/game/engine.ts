@@ -4906,7 +4906,8 @@ export class Game {
     if (this.guideRings && !this.guideRings.walk) this.guideRings = null;
     if (st.n === 1) {
       const c = this.townPts[0] ?? this.townCentreOfLots(); if (!c) return;
-      const near = [...this.traffic.lots.values()].map(v => { const b = lotBoxOf(v.o, v.u, v.n, v.w, v.d); return { x: (b[0]! + b[2]!) / 2, y: (b[1]! + b[3]!) / 2 }; })
+      const all = [...this.traffic.lots.values()], built = all.filter(v => this.houseLots.has(v.key)); // its houses first, else its first lots
+      const near = (built.length ? built : all).map(v => { const b = lotBoxOf(v.o, v.u, v.n, v.w, v.d); return { x: (b[0]! + b[2]!) / 2, y: (b[1]! + b[3]!) / 2 }; })
         .sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y)).slice(0, 3);
       this.lookAt(c.x, c.y, 0.12); this.guideRings = { pts: near.length ? near : [c], until: performance.now() + 20000 };
     }

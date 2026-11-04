@@ -19,7 +19,7 @@ test('four steps in order: your town, roads are your job, out of room, then the 
   assert.deepEqual(TOWN_TOUR.map(s => s.n), [1, 2, 3, 4]);
   assert.deepEqual(TOWN_TOUR.map(s => s.done), ['next', 'auto', 'next', 'next']);
   assert.equal(TOWN_TOUR[1]!.target.ui, 'rail-traffic'); // the ring on the road tool's group
-  assert.match(TOWN_TOUR[0]!.body, /only on land that has a road/);
+  assert.match(TOWN_TOUR[0]!.body, /only on land that has a road/); assert.match(TOWN_TOUR[0]!.body, /county road/);
   assert.match(TOWN_TOUR[1]!.body, /never lays a road/);
 });
 

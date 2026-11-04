@@ -12,7 +12,7 @@ export const TOWN_TOUR: readonly GuideStep[] = Object.freeze([
     id: 'tour-town',
     n: 1,
     title: 'Your town',
-    body: 'The houses along the county road are the town. It grows by itself, but only on land that has a road.',
+    body: 'Your town grows here, along the county road (the rings): houses go up on the lots beside a road by themselves, but only on land that has a road.',
     done: 'next',
     target: {},
   },
