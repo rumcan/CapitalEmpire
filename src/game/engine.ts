@@ -180,7 +180,7 @@ import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, 
 import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
-import { CART_REACH, CART_TILES, addressOf, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
+import { CART_REACH, CART_TILES, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { BOOK_LEAD, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
@@ -5164,6 +5164,8 @@ export class Game {
     if (typing) return;
     this.keys.add(e.key);
     if (WALK_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youKeysOn()) { e.preventDefault(); return; } // T240, T323: WASD walk you in either cursor (the frame reads them)
+    // T327: G concedes your short putt in your round (on the green; outside the ring it says so); elsewhere G stays the grid's key
+    if ((e.key === 'g' || e.key === 'G') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.yourRound() && this.yourRound()!.lie === 'green' && !this.yourRound()!.holed && gimmeM(this.yourRound()!) > 0) { e.preventDefault(); this.yourGimme(); return; }
     // T325: M takes a mulligan in your round (a shot to take back, or the shot open: it says why not); elsewhere M stays the business tool's key
     if ((e.key === 'm' || e.key === 'M') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.yourRound() && (this.yourRound()!.undo || this.shot?.mine || this.yrFlight)) { e.preventDefault(); this.yourMulligan(); return; }
     // T326: C calls your cart, in your round (at your ball's address too) or in the Walk cursor (elsewhere C stays the course tool's key)
@@ -7932,6 +7934,37 @@ export class Game {
     this.toast(`Mulligan: hit it again (stroke ${rowOf(n).strokes + 1})${left === Infinity ? '' : left ? ` · ${left} left` : ' · none left on this nine'}`, 'info');
     this.emit();
   }
+  /** T327 (#927): the Gimme button and key G: your ball inside the gimme ring on the green, the putt is conceded (play/yours.ts takeGimme: one stroke,
+   *  counted as a putt, the hole done) and the ball is seen to drop into the cup (T319's holing roll), then the hole's card. Only your own round */
+  yourGimme() {
+    const r = this.yourRound(), v = this.yrView(); if (!r || !v) return;
+    if (this.yrFlight) return;
+    if (!canGimme(v, r)) {
+      const g = gimmeM(r); this.toast(!g ? 'No gimmies in this round (chosen at the first tee)' : r.lie !== 'green' ? 'A gimme is for a short putt on the green' : `Outside the gimme ring (${g} m): putt it`, 'warn');
+      return;
+    }
+    const n = takeGimme(v, r), row = rowOf(n), from = { x: r.ball.x, y: r.ball.y }, pin = n.ball;
+    this.shot = null; this.yrCard = false; this.yrShotFlight = null;
+    this.setYourRound(n);
+    const putt = new PuttRoll().set(from, pin, pin, true, this.ballHeight);
+    this.yrFlight = flightOf(from, null, pin, true, false, row, false, { putt });
+    this.lastShot = null;
+    this.toast(`Gimme: holed for ${row.strokes}`, 'info');
+    this.emit();
+  }
+  /** T327: the faint gimme ring round the cup of the hole you play (its radius the round's gimme distance), gold while your ball is inside it */
+  private drawGimmeRing(ctx: CanvasRenderingContext2D) {
+    const r = this.yourRound(); if (!r || r.holed || r.over || this.cam.z < DISTRICT_Z) return;
+    const g = gimmeM(r), v = this.yrView(); if (!g || !v) return;
+    const h = holeOf(v, rowOf(r).i); if (!h) return;
+    const dpr = this.dpr, p = this.screen(h.pin.x, h.pin.y), rx = g / TILE_M * Math.SQRT2 * HW * this.cam.z * dpr, inside = !this.yrFlight && canGimme(v, r);
+    if (p.x < -rx || p.y < -rx || p.x > this.cw + rx || p.y > this.ch + rx) return;
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(p.x, p.y, rx, rx / 2, 0, 0, Math.PI * 2);
+    ctx.fillStyle = inside ? 'rgba(250,204,21,0.12)' : 'rgba(255,255,255,0.06)'; ctx.fill();
+    ctx.setLineDash([4 * dpr, 3 * dpr]); ctx.lineWidth = 1.25 * dpr; ctx.strokeStyle = inside ? 'rgba(250,204,21,0.8)' : 'rgba(255,255,255,0.45)'; ctx.stroke();
+    ctx.restore();
+  }
   /** your round ends (the last hole done, or you quit): the holes done go into your rounds (an everyday round: golf/player.ts playedRound), the card
    *  closes and the round is cleared */
   yourRoundEnd(why?: string) {
@@ -7967,7 +8000,7 @@ export class Game {
     const r = this.yourRound(); if (!r || !this.you) return null;
     const row = r.card[r.at]!, v = this.yrView(), h = v ? holeOf(v, row.i) : null, flying = !!this.yrFlight, addressing = !!this.shot?.mine;
     return { round: r, hole: row.n, par: row.par, stroke: row.strokes + 1, distM: h ? Math.hypot(h.pin.x - r.ball.x, h.pin.y - r.ball.y) * TILE_M : 0, lie: r.lie,
-      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing, inCart: this.youInCart, nearCart: this.youNearCart(), cartFar: this.youCartFar(), canMull: canMulligan(r), mullLeft: mulligansLeft(r), card: this.yrCard, flying, addressing };
+      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing, inCart: this.youInCart, nearCart: this.youNearCart(), cartFar: this.youCartFar(), canMull: canMulligan(r), mullLeft: mulligansLeft(r), canGimme: !flying && !!v && canGimme(v, r), card: this.yrCard, flying, addressing };
   }
   /** whether you stand within CART_REACH of your cart (and are not in it) */
   youNearCart(): boolean { const c = this.youCart, y = this.you; return !!c && !!y && !this.youInCart && Math.hypot(c.x - y.x, c.y - y.y) <= CART_REACH; }
@@ -9658,6 +9691,7 @@ export class Game {
     this.drawYourCart(ctx); // T326
     this.drawYou(ctx); // T240
     this.drawYourTracers(ctx, performance.now()); // T319
+    this.drawGimmeRing(ctx); // T327
     this.drawYourBall(ctx); // T317
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;

@@ -57,21 +57,33 @@ export function pickHoles(n: number, choice: HoleChoice, picked: readonly number
 
 /** one hole on the card: the course's hole index and number, its par, the strokes (penalties in), the putts, the penalty strokes, and whether it is
  *  holed (done) or was picked up at par + PICK_UP_OVER. T325: the mulligans taken on it (absent: none) */
-export interface CardRow { i: number; n: number; par: number; strokes: number; putts: number; pen: number; done: boolean; up?: boolean; mull?: number }
+export interface CardRow { i: number; n: number; par: number; strokes: number; putts: number; pen: number; done: boolean; up?: boolean; mull?: number;
+  /** T327: the hole was finished with a gimme (a short putt conceded, counted as a putt) */
+  gim?: boolean }
 
 /** T325 (#925): mulligans in your own round: none, one per nine (the default), or as many as you like */
 export type MullRule = 'none' | 'nine' | 'any';
 export const MULL_RULES: readonly { id: MullRule; label: string }[] = [{ id: 'none', label: 'None' }, { id: 'nine', label: '1 per nine' }, { id: 'any', label: 'Unlimited' }];
-/** the first tee's settings for your round (T325 mulligans; T327 adds the gimmies) */
-export interface RoundRules { mull: MullRule }
-/** a new round's settings: one mulligan per nine */
-export const DEFAULT_RULES: Readonly<RoundRules> = { mull: 'nine' };
-/** a round that is not your own (the tournament, a money match, your tournament and the Mayor's Cup): no mulligans, ever */
-export const COMPETITION_RULES: Readonly<RoundRules> = { mull: 'none' };
+/** T327 (#927): gimmies in your own round: off, inside the leather (about 0.6 m, the default), 1 m or 2 m */
+export type GimmeRule = 'off' | 'leather' | 'm1' | 'm2';
+export const GIMME_RULES: readonly { id: GimmeRule; label: string; m: number }[] = [
+  { id: 'off', label: 'Off', m: 0 }, { id: 'leather', label: 'The leather (0.6 m)', m: 0.6 }, { id: 'm1', label: '1 m', m: 1 }, { id: 'm2', label: '2 m', m: 2 }];
+/** gimmies of this many metres or more keep a round from your handicap (as mulligans do) */
+export const GIMME_NO_HCP_M = 1;
+/** the first tee's settings for your round: the mulligans (T325) and the gimmies (T327; absent, a round from before them: off) */
+export interface RoundRules { mull: MullRule; gimme?: GimmeRule }
+/** a new round's settings: one mulligan per nine, gimmies inside the leather */
+export const DEFAULT_RULES: Readonly<RoundRules> = { mull: 'nine', gimme: 'leather' };
+/** a round that is not your own (the tournament, a money match, your tournament and the Mayor's Cup): no mulligans and no gimmies, ever (a money
+ *  match's opponent may concede a putt one day: a hook of its own, not these settings) */
+export const COMPETITION_RULES: Readonly<RoundRules> = { mull: 'none', gimme: 'off' };
 /** the settings a round of this kind plays under: your own everyday round the ones chosen at the first tee, a competition never any */
 export function rulesFor(kind: 'everyday' | 'match' | 'tournament', chosen: RoundRules = DEFAULT_RULES): RoundRules {
-  return kind === 'everyday' ? { mull: MULL_RULES.some(m => m.id === chosen.mull) ? chosen.mull : DEFAULT_RULES.mull } : { ...COMPETITION_RULES };
+  if (kind !== 'everyday') return { ...COMPETITION_RULES };
+  return { mull: MULL_RULES.some(m => m.id === chosen.mull) ? chosen.mull : DEFAULT_RULES.mull, gimme: GIMME_RULES.some(g => g.id === chosen.gimme) ? chosen.gimme! : 'off' };
 }
+/** T327: the gimme distance of a round (metres; 0: off, and a round from before the setting) */
+export const gimmeM = (r: YourRound): number => GIMME_RULES.find(g => g.id === (r.rules?.gimme ?? 'off'))?.m ?? 0;
 /** your round: the town day it began, the holes (indices of the everyday course, in play order), the hole you are on (an index into holes), the card (a
  *  row per hole), your ball and its lie (on the tee before the first stroke: the tee's point and lie 'tee'), holed (the hole is done: the card shows,
  *  "Next hole" goes on), over (the last hole is done) */
@@ -167,10 +179,29 @@ export function takeMulligan(r: YourRound): YourRound {
 }
 /** T325: the mulligans taken in the round (the scorecard's "2 mulligans") */
 export const mulligansOf = (r: YourRound): number => r.card.reduce((a, c) => a + (c.mull ?? 0), 0);
-/** why a round does not count toward your handicap (null: it does): mulligans taken (T325) */
+/** T327: the gimmies taken in the round */
+export const gimmiesOf = (r: YourRound): number => r.card.reduce((a, c) => a + (c.gim ? 1 : 0), 0);
+/** why a round does not count toward your handicap (null: it does): mulligans taken (T325), gimmies taken at GIMME_NO_HCP_M or more (T327) */
 export function noHandicapWhy(r: YourRound): string | null {
-  const m = mulligansOf(r);
-  return m ? `${m} mulligan${m > 1 ? 's' : ''}` : null;
+  const m = mulligansOf(r), g = gimmeM(r) >= GIMME_NO_HCP_M ? gimmiesOf(r) : 0, out: string[] = [];
+  if (m) out.push(`${m} mulligan${m > 1 ? 's' : ''}`);
+  if (g) out.push(`${g} ${g > 1 ? 'gimmies' : 'gimme'} inside ${gimmeM(r)} m`);
+  return out.length ? out.join(', ') : null;
+}
+/** T327: whether the gimme is offered: your ball at rest on the green, the hole not done, within the round's gimme distance of the cup */
+export function canGimme(view: CourseView, r: YourRound | null | undefined): boolean {
+  if (!r || r.holed || r.over || r.lie !== 'green') return false;
+  const g = gimmeM(r), h = holeOf(view, rowOf(r).i); if (!g || !h) return false;
+  return Math.hypot(h.pin.x - r.ball.x, h.pin.y - r.ball.y) * TILE_M <= g;
+}
+/** T327: the gimme: the putt conceded, holed for one stroke (counted as a putt), the hole done (the round over after the last); the round as it is when
+ *  none is offered. No mulligan takes it back (the undo goes) */
+export function takeGimme(view: CourseView, r: YourRound): YourRound {
+  if (!canGimme(view, r)) return r;
+  const row = rowOf(r), pin = holeOf(view, row.i)!.pin, card = r.card.slice();
+  card[r.at] = { ...row, strokes: row.strokes + 1, putts: row.putts + 1, done: true, gim: true };
+  const { undo: _u, ...rest } = r; void _u;
+  return { ...rest, card, ball: { x: pin.x, y: pin.y }, holed: true, over: r.at === r.holes.length - 1 };
 }
 
 /** the card's totals: the strokes and par of the holes done, to par, the putts, the holes done (thru) of all */
@@ -188,14 +219,14 @@ export function normalizeYourRound(x: unknown): YourRound | undefined {
   if (!n(o.day) || !Array.isArray(o.holes) || !Array.isArray(o.card) || !o.ball || !n(o.ball.x) || !n(o.ball.y) || !n(o.at)) return undefined;
   const holes = o.holes.filter(n).map(Math.round), card = o.card.filter(c => c && n(c.i) && n(c.par) && n(c.strokes)).map(c => ({
     i: Math.round(c.i), n: n(c.n) ? Math.round(c.n) : Math.round(c.i) + 1, par: Math.round(c.par), strokes: Math.max(0, Math.round(c.strokes)), putts: n(c.putts) ? Math.max(0, Math.round(c.putts)) : 0,
-    pen: n(c.pen) ? Math.max(0, Math.round(c.pen)) : 0, done: c.done === true, ...(c.up === true ? { up: true } : {}), ...(n(c.mull) && c.mull >= 1 ? { mull: Math.round(c.mull) } : {}),
+    pen: n(c.pen) ? Math.max(0, Math.round(c.pen)) : 0, done: c.done === true, ...(c.up === true ? { up: true } : {}), ...(n(c.mull) && c.mull >= 1 ? { mull: Math.round(c.mull) } : {}), ...(c.gim === true ? { gim: true } : {}),
   }));
   if (!holes.length || holes.length !== card.length || holes.some((h, k) => card[k]!.i !== h)) return undefined;
   const at = Math.max(0, Math.min(holes.length - 1, Math.round(o.at)));
   const base: YourRound = { v: 1, day: Math.round(o.day), holes, at, card, ball: { x: o.ball.x, y: o.ball.y }, lie: LIES.includes(o.lie as Lie) ? o.lie as Lie : 'rough', holed: o.holed === true, over: o.over === true };
   // T325: the settings, the mulligans' count and the undo (itself a round, without an undo); an old save has none of them and is unchanged
   const ru = o.rules as Partial<RoundRules> | undefined;
-  if (ru && typeof ru === 'object' && MULL_RULES.some(m => m.id === ru.mull)) base.rules = { mull: ru.mull! };
+  if (ru && typeof ru === 'object' && MULL_RULES.some(m => m.id === ru.mull)) base.rules = { mull: ru.mull!, ...(GIMME_RULES.some(g => g.id === ru.gimme) ? { gimme: ru.gimme! } : {}) };
   if (n(o.mk) && o.mk >= 1) base.mk = Math.round(o.mk);
   if (o.undo && typeof o.undo === 'object') {
     const u = normalizeYourRound({ ...(o.undo as object), undo: undefined });
@@ -287,5 +318,7 @@ export interface YourRoundView { round: YourRound; hole: number; par: number; st
   canJump: boolean; inCart: boolean; nearCart: boolean;
   /** T325: a mulligan is offered now, and how many are left (Infinity: unlimited; 0 with the rule 'none') */
   canMull: boolean; mullLeft: number;
+  /** T327: the gimme is offered now (your ball inside the ring) */
+  canGimme: boolean;
   /** T326: your cart is out of reach (the Cart button calls it) */
   cartFar: boolean; card: boolean; flying: boolean; addressing: boolean }
