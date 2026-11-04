@@ -76,7 +76,7 @@ function Row({ r, ask, setAsk, onHire, onLetGo }: { r: StaffRow; ask: number | n
             <div className="truncate">{`Hire a ${r.title}`} · <span className="text-amber-200">{money(r.wage)} a month</span></div>
             {r.why && <div className="text-[11px] text-slate-400" data-testid="staff-why">{r.why}</div>}
           </div>
-          <button className="chip chip-on shrink-0" disabled={!!r.why} onClick={() => onHire(r.role, r.at)} data-testid="staff-hire">Hire</button>
+          <button className="chip chip-on shrink-0 disabled:cursor-not-allowed disabled:opacity-40" disabled={!!r.why} onClick={() => onHire(r.role, r.at)} data-testid="staff-hire">Hire</button>
         </>
       )}
     </div>

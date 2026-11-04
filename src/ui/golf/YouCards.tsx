@@ -77,7 +77,7 @@ export function TalkCard({ talk, right, onClose, offer, onChallenge, lesson, onL
         <div className="space-y-1 rounded-lg border border-emerald-400/30 bg-emerald-400/5 px-2 py-1.5 text-xs" data-testid="talk-lesson">
           <div className="flex items-center justify-between gap-2">
             <span className="text-slate-300">A lesson: your next practice session today gains {Math.round(lesson.bonus * 100)}% more. Free: your own pro.</span>
-            <button className="chip chip-on shrink-0" disabled={!!lesson.why} onClick={onLesson} data-testid="talk-lesson-book">Book a lesson</button>
+            <button className="chip chip-on shrink-0 disabled:cursor-not-allowed disabled:opacity-40" disabled={!!lesson.why} onClick={onLesson} data-testid="talk-lesson-book">Book a lesson</button>
           </div>
           {lesson.why && <div className="text-[11px] text-slate-400" data-testid="talk-lesson-why">{lesson.why}</div>}
           {talk.answer && <p className="italic text-emerald-200">"{talk.answer.line}"</p>}
