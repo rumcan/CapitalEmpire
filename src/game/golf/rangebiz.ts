@@ -23,7 +23,7 @@ import type { Lie } from './play/types';
 import RANGE_PICS_FILE from '../../assets/ground/range-pics.json';
 import RANGE_ART_FILE from './range-art.json';
 import type { OffRoad } from '../offroad';
-import { DESERT, DESERT_IDS, desertScatter, type DesertType } from '../desert-props';
+import { DESERT_IDS, desertScatter } from '../desert-props';
 
 // ---------------------------------------------------------------- the scene
 
@@ -302,10 +302,10 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     const clear = (u: number, v: number) => u > 4.5 && u < 65.5 && v > TEE[3] + TEE_GAP + 5 && v < FAR_V - 2
       && TARGET_U.every((tu, i) => Math.hypot(u - tu, v - STAND_V - TARGET_D[i]!) > TARGET_R[i]! + 5)
       && !(u < 22 && v > FAR_V - 18);
-    desertScatter(223289, [3, 67, TEE[3] + TEE_GAP + 4, FAR_V - 1], 7, 0.62, (u, v) => clear(u, v) && (v > 60 || (u * 7 + v * 13) % 10 < 5))
+    desertScatter(223289, [3, 67, TEE[3] + TEE_GAP + 4, FAR_V - 1], 5, 0.72, (u, v) => clear(u, v) && (v > 60 || (u * 7 + v * 13) % 10 < 5))
       .forEach((d, i) => put(`desert${i}`, d.id, d.u, d.v));
-    const oasis: [DesertType, number, number, number][] = [['water', 0, 12, FAR_V - 9], ['palm', 1, 7.5, FAR_V - 12.5], ['palm', 4, 15.5, FAR_V - 14], ['reed', 0, 18, FAR_V - 9.5], ['reed', 3, 6, FAR_V - 7], ['rock', 7, 19.5, FAR_V - 13]];
-    oasis.forEach(([t, k, u, v], i) => { const pool = DESERT[t]; if (pool.length) put(`oasis${i}`, pool[k % pool.length]!, u, v); });
+    const oasis: [string, number, number][] = [['oasis-pool', 12.5, FAR_V - 9], ['date-palm-pair', 5.5, FAR_V - 11], ['slender-date-palm', 19.5, FAR_V - 12.5], ['tall-cattails', 15.5, FAR_V - 6], ['cattail-clump', 8.5, FAR_V - 6.5], ['sandstone-boulder', 18.5, FAR_V - 7.5]];
+    oasis.forEach(([slug, u, v], i) => { const id = `newprop:desert-${slug}`; if (DESERT_IDS.includes(id)) put(`oasis${i}`, id, u, v); });
   }
   // ---- the sign at the drive, the bench and bins at the tee, a bag trolley by the shop
   // (T258: each drawn as the owner's ChatGPT picture once it lands, its label gone)

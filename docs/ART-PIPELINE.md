@@ -16,6 +16,8 @@ to it, least of all its `output/town-builder/` (the owner's painted town and bui
 | `prep-sprites.mjs` | the atlas (`src/assets/atlas/`, 15 pages x 5 mips) + `src/game/library.ts`: every upright TrickOrTreat sprite, the baked house lots, the 40 townspeople's walk frames | ~20 min |
 | `prep-scales.mjs` | `src/game/lots/scales.ts` (OWNER_SCALE): the owner's map scale (plus studio overrides) for each packed id | seconds |
 | `audit-sprites.mjs` | the check: sprites stretched past their atlas pixels at the closest zoom (want 0), TrickOrTreat sprites the game lacks | seconds |
+| `prep-desert-props.mjs` | T289: the owner's desert and oasis sheets (F:/Art/newArt, read only) cut into props: `--cut` writes the numbered candidates to classify, `art/desert-props/manifest.json` names, sizes and drops them (and splits two touching props), the run writes the masters and `items.json` (provenance: sheet and crop box); `prep-new-props.mjs` then packs them into the free room of its pages (no new page) and lists them (`DESERT_PROP_IDS`, used by `desert-props.ts`) | seconds |
+| `prep-ploughed-field.mjs` | T289: the owner's ploughed-field painting turned onto each map axis (never mirrored), quilted and shared-strip healed into the `ploughed-field-run` / `ploughed-field-y-run` tile sets, worn by the farms' ploughed fields (`fieldPloughed` / `fieldPloughedY` in painted-surfaces.json; remove those two lines for the old stand-in rows) | ~1 min |
 
 Full rebuild, from the checkout: `export TOT_REPO="C:/Work Admin/PERSONAL/Repos/TrickOrTreat"` (not needed from the main
 checkout), then `node scripts/assets/prep-sprites.mjs && node scripts/assets/prep-scales.mjs && node scripts/assets/audit-sprites.mjs`.
