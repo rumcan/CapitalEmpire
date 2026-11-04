@@ -449,3 +449,4 @@ export * from './transport';
 
 /** the guided Year 1 (P06/T045) */
 export * from './guide';
+export * from './tour';
