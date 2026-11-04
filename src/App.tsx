@@ -569,6 +569,10 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.slopeLight} onChange={e => { game.setSlopeLight(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.slopeLight * 100)}%</span>
                     </label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Tyre tracks where golf carts, the grounds crew's mowers and cars off the road cross the grass: paired light and dark streaks, lighter one way of travel and darker the other, building with traffic and fading slowly without (T322)">
+                      <input type="checkbox" checked={game.tyreTracks} onChange={e => { game.setTyreTracks(e.target.checked); bump(); }} />
+                      Tyre tracks
+                    </label>
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before">
                       <span className="w-16 shrink-0">Fallen leaves</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.leafDensity} onChange={e => { game.setLeafDensity(+e.target.value); bump(); }} />

@@ -243,6 +243,12 @@ export class RangeHost {
     }
     return out;
   }
+  /** T322: each car's id and point (tiles), every car of the range's sim (the tyre tracks sample them) */
+  carPoints(f: (id: number, x: number, y: number) => void): void {
+    if (!this.scene) return;
+    const d = this.sim.view();
+    for (let k = 0; k < d.nCars; k++) { const c = d.cars[k]!; f(c.id >= 0 ? c.id : -1 - k, c.x, c.y); }
+  }
   private mover(k: number): Drawable { const a = this.peopleDraw; return a[k] ?? (a[k] = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: false }); }
   private peopleDraw: Drawable[] = [];
   private carMover(k: number): Drawable { const a = this.carDraw; return a[k] ?? (a[k] = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true }); }
