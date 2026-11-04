@@ -2,10 +2,17 @@
 // lot's house by a house of its size class that suits the lot's road and state and fits its band, another building by one of its kind and
 // footprint (else nothing), an expansion or a prop left out; picked by the lot, so it never changes on a reload; everything else of a preset is
 // drawn exactly as before; the owner's data files are only read. Headless.
+// T329: on 2026-11-02 (d527f8d) the owner restored the 18 pictures these tests leaned on (the decrepit rundown house, the fire station, the
+// dormer's rear set, ...), so no preset placed a removed house any more. The tests now remove those 18 again for this run only, from their
+// removed.json entries of before the restore (tests/fixtures/removed-restored.json), merged into the removed list compose reads: the same
+// scenario, "the owner removes a house", on today's presets.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { compose, lotPreset, lotPresets, setGeneratedLots, type ComposeState, type LotGeom } from '../src/game/lots/compose';
+import { compose, lotPreset, lotPresets, setGeneratedLots, standIns, type ComposeState, type LotGeom } from '../src/game/lots/compose';
+import { frameOf } from '../src/game/lots/preset-frame';
+import REMOVED_LIVE from '../scripts/assets/removed.json';
+import RESTORED from './fixtures/removed-restored.json';
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { isBuilding } from '../src/game/mirror';
@@ -14,7 +21,9 @@ import { fitPreset, type LotPreset } from '../src/game/lots/presets';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
-const REMOVED = JSON.parse(fs.readFileSync('scripts/assets/removed.json', 'utf8')) as Record<string, { kind: string }>;
+// (T329) the restored pictures removed again for this run: the same object compose.ts imports (one bundle), before anything is composed
+Object.assign(REMOVED_LIVE as Record<string, unknown>, RESTORED);
+const REMOVED = { ...JSON.parse(fs.readFileSync('scripts/assets/removed.json', 'utf8')), ...RESTORED } as Record<string, { kind: string }>;
 const BY = new Map(LIBRARY.map(i => [i.id, i]));
 const gone = (id: string) => id in REMOVED || !BY.has(id);
 const USE: Record<string, number> = { res: LU.RES, com: LU.COM, park: LU.COM, tour: LU.TOUR, ind: LU.IND, civic: LU.GOV };
@@ -55,9 +64,11 @@ describe('stand-ins for the pictures the owner removed (T167)', () => {
     assert.ok(ids.size > 1, `the houses standing in: ${[...ids].join(', ')}`);
   });
   it('4. everything else of a preset is drawn as before: only its removed props change', () => {
+    // (T329: lotPreset now also remixes a preset's plants (T297) and turns its buildings to the road (T308), on purpose; the stand-in step itself,
+    // standIns, is what must leave everything but the removed props alone)
     for (const p of placing()) {
-      const l = lotFor(p, 1), lp = lotPreset(l.g, l.st)!, fit = fitPreset(p, l.g.w, l.g.d);
-      const mine = lp.fit.props.filter((_, i) => !lp.fit.standIn?.[i]).map(q => q.id).sort();
+      const l = lotFor(p, 1), fit = fitPreset(p, l.g.w, l.g.d), si = standIns(fit, p, l.g, frameOf(l.g));
+      const mine = si.props.filter((_, i) => !si.standIn?.[i]).map(q => q.id).sort();
       const before = fit.props.filter(q => !gone(q.id)).map(q => q.id).sort();
       assert.deepEqual(mine, before, `${p.id}: the props it keeps are its own`);
     }

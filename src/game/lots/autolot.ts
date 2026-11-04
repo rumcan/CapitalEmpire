@@ -12,7 +12,7 @@ import { PIXEL_LIMIT } from '../sizes';
 import REMOVED from '../../../scripts/assets/removed.json';
 import ALLOC_JSON from './house-allocations.json';
 import { FRONTAL } from './frontal';
-import { SHOP_PALETTE } from './variety';
+import { SHOP_PALETTE, colourOf, tryOrder } from './variety';
 import { frameHalf, houseFamilies } from './house-class';
 import { allows, parseAllocations } from './house-alloc';
 import { tierOf } from './tiers';
@@ -109,9 +109,10 @@ class Lay {
   }
   /** the first piece of a list (from a seeded place in it) that fits the spot and is clear; false when none does. Buildings only of the lot's tier and
    *  facing its road (tierOf, faces); the list is a group's members (groups.ts) or a fixed set of ids */
-  pick(list: readonly string[], view: View, cx: number, cy: number, ha: number, hb: number, least = 0.7): boolean {
+  pick(list: readonly string[], view: View, cx: number, cy: number, ha: number, hb: number, least = 0.7, from?: number): boolean {
     const n = list.length; if (!n) return false;
-    const at = Math.floor(this.r() * n);
+    // (from: the list is in its order of choice, tried from that place; the draw is still taken, so the lot's later draws stay as they were)
+    const r = Math.floor(this.r() * n), at = from ?? r;
     for (let t = 0, tried = 0; t < n && tried < 24; t++) {
       const id = list[(at + t) % n]!;
       if (gone(id)) continue;
@@ -264,11 +265,13 @@ function junkLot(L: Lay): boolean {
 /** a small shop at the street (a shop front of the palette its road and tier allow) with its car park beside it (carpark-lot.ts: one row of bays square to the
  *  street, a 6 m aisle in front, a car nose out in each bay, the painted lines on the car park patch only), the yard grass round it, a lamp at each end of
  *  the frontage, the owned fence. Everything sits on the lot's own frame: no piece at a free angle */
-function shopLot(L: Lay, own: Own): boolean {
+function shopLot(L: Lay, own: Own, first: number): boolean {
   const { W, D, road, f } = L, sw = Math.min(W * 0.45, W - 6), hb = D * 0.4;
   L.patch('yard', texOf('park', L.state, 'yard', 'grass'), 0, 0, W, D);
-  const shops = SHOP_PALETTE.filter(id => !gone(id) && faces(id, road));
-  if (!L.pick(shops, 0, sw / 2 + 0.3, 1.0 + hb, sw / 2 - 0.3, hb, 0.7)) return false;
+  // T331 (#945): the shop of the lot's business or colour on the street lattice first (as a preset shop lot: compose.ts shopPlan), then the next
+  // colours; a seeded place in the list showed the same few shops side by side and across the street (and a named one twice to a block)
+  const shops = tryOrder(first, SHOP_PALETTE.length).map(c => SHOP_PALETTE[c]!).filter(id => !gone(id) && faces(id, road));
+  if (!L.pick(shops, 0, sw / 2 + 0.3, 1.0 + hb, sw / 2 - 0.3, hb, 0.7, 0)) return false;
   const sb = L.boxOf(L.props[L.props.length - 1]!);
   const park = carPark(f, Math.min(W - 1, sb[2] + 0.5), W - 0.3, Math.floor(L.r() * 4096));
   if (park) {
@@ -433,9 +436,11 @@ const CACHE = new Map<string, LotPreset | null>();
 export function clearAutoLots(): void { CACHE.clear(); }
 /** a whole lot generated for a lot of w x d tiles on its road: the preset (whole: it draws alone, as a farm does; the owned fences, the street items and the
  *  ground patches all in it), in the lot's preset frame; a plot (fence and planting) when the template does not fit the lot; null only for a use with no template. Cached by its inputs */
-export function autoLot(lot: LotGeom, use: PresetUse, tier: number, seed: number, state: PresetState = 'built', template: AutoTemplate | null = templateOf(use, tier, seed)): LotPreset | null {
+export function autoLot(lot: LotGeom, use: PresetUse, tier: number, seed: number, state: PresetState = 'built', template: AutoTemplate | null = templateOf(use, tier, seed), biz?: string): LotPreset | null {
   if (!template) return null;
-  const road = roadOf(lot.n), key = `${lot.w}|${lot.d}|${road}|${facingOf(lot.n)}|${use}|${state}|${tier}|${seed}|${template}`;
+  // (a shop: the business the town picked for the lot (T295 #2, LotState.biz), else the lot's colour on the street lattice, T270)
+  const first = template !== 'shop' ? 0 : biz !== undefined && SHOP_PALETTE.includes(biz) ? SHOP_PALETTE.indexOf(biz) : colourOf(lot, SHOP_PALETTE.length);
+  const road = roadOf(lot.n), key = `${lot.w}|${lot.d}|${road}|${facingOf(lot.n)}|${use}|${state}|${tier}|${seed}|${template}|${first}`;
   const hit = CACHE.get(key); if (hit !== undefined) return hit;
   const f = frameOf(lot), own = ownedOf(lot);
   let L: Lay | null = null;
@@ -444,7 +449,7 @@ export function autoLot(lot: LotGeom, use: PresetUse, tier: number, seed: number
   for (const drive of modes) {
     const T = new Lay(f, lot.w, lot.d, use, state, road, tier, mulberry(mix(seed, SALT[template], 0x305)));
     const ok = template === 'house' ? houseLot(T, false, (seed >> 2) % 2 === 0, own, drive) : template === 'corner' ? houseLot(T, true, (seed >> 2) % 2 === 0, own, false)
-      : template === 'trailer' ? trailerLot(T) : template === 'junk' ? junkLot(T) : shopLot(T, own);
+      : template === 'trailer' ? trailerLot(T) : template === 'junk' ? junkLot(T) : shopLot(T, own, first);
     if (ok) { L = T; break; }
   }
   // (the template does not fit: the plot, so the lot is never left bare on a road it has to front)

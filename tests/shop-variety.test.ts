@@ -75,13 +75,13 @@ function town(seed: number, golf: boolean): City | null {
   return city;
 }
 interface Row { key: string; use: number; g: LotGeom; c: Composition; drawn: string; ax: 0 | 1; a0: number; a1: number; f: number; ns: number }
-/** every built lot of a town composed, with the picture its biggest building is drawn as (newart.ts lookOf) and its frontage on its street's axis */
+/** every built lot of a town composed (as the engine does, with the lot's tier and business: T295, T331), with the picture its biggest building is drawn as (newart.ts lookOf) and its frontage on its street's axis */
 function rows(city: City): Row[] {
   const out: Row[] = [];
   for (const st of city.town.states.values()) {
     if (st.level < LV.BUILT) continue;
     const l = city.lots.lots.get(st.key); if (!l) continue;
-    const g: LotGeom = { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d }, c = compose(g, { use: st.use, level: st.level, decline: st.decline, seed: st.seed });
+    const g: LotGeom = { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d }, c = compose(g, { use: st.use, level: st.level, decline: st.decline, seed: st.seed, tier: st.tier, biz: st.biz });
     let best = 0, drawn = '';
     for (const q of c.props) {
       const i = INDEX.get(q.id), it = i === undefined ? null : LIBRARY[i]!; if (!it || !isBuilding(it) || !it.big) continue;
@@ -110,7 +110,8 @@ function neighbours(list: Row[]): { side: [Row, Row][]; across: [Row, Row][] } {
 }
 const shopLike = (r: Row) => r.use === LU.COM || r.use === LU.TOUR;
 const TOWNS: { name: string; city: City }[] = [];
-for (const [seed, golf] of [[1, true], [4, true], [2, false]] as const) { const c = town(seed, golf); if (c) TOWNS.push({ name: `${golf ? 'golf' : 'classic'} seed ${seed}`, city: c }); }
+// (T329: golf seeds 2 and 5, which place the old nine on the 2 km map (T280; seeds 1 and 4 did on the 4 km map, golf-place.test.ts OLD_NINE_FITS))
+for (const [seed, golf] of [[2, true], [5, true], [2, false]] as const) { const c = town(seed, golf); if (c) TOWNS.push({ name: `${golf ? 'golf' : 'classic'} seed ${seed}`, city: c }); }
 const ROWS = TOWNS.map(t => ({ name: t.name, rows: rows(t.city) }));
 
 test('no two shops alike side by side or across the street; houses nearly never (the golf start town and a classic town)', () => {
@@ -153,7 +154,7 @@ test('the choice is by place: the same lot draws the same, alone, again, or afte
   const presets = JSON.stringify(lotPresets());
   const list = ROWS[0]!.rows.filter(r => r.use !== LU.RES).concat(ROWS[0]!.rows.filter(r => r.use === LU.RES).slice(0, 60));
   const digest = (c: Composition) => JSON.stringify(c.props.map(p => [p.id, p.x.toFixed(3), p.y.toFixed(3), p.flip, p.scale.toFixed(4)]));
-  const st = (r: Row) => { const s = TOWNS[0]!.city.town.states.get(r.key)!; return { use: s.use, level: s.level, decline: s.decline, seed: s.seed }; };
+  const st = (r: Row) => { const s = TOWNS[0]!.city.town.states.get(r.key)!; return { use: s.use, level: s.level, decline: s.decline, seed: s.seed, tier: s.tier, biz: s.biz }; };
   const back = [...list].reverse().map(r => digest(compose({ o: { ...r.g.o }, u: { ...r.g.u }, n: { ...r.g.n }, w: r.g.w, d: r.g.d }, st(r)))).reverse();
   assert.deepEqual(back, list.map(r => digest(r.c)), 'composed again in the other order, from copies of the lots');
   assert.equal(JSON.stringify(lotPresets()), presets, 'no preset changed');
@@ -163,7 +164,7 @@ test('a swapped shop or house is never drawn past its pixels, nor mirrored', () 
   let swapped = 0;
   for (const { name, rows: list } of ROWS) for (const r of list) {
     if (r.use !== LU.COM && r.use !== LU.TOUR && r.use !== LU.RES) continue;
-    const s = TOWNS.find(t => t.name === name)!.city.town.states.get(r.key)!, preset = pickedPreset(r.g, { use: s.use, level: s.level, decline: s.decline, seed: s.seed });
+    const s = TOWNS.find(t => t.name === name)!.city.town.states.get(r.key)!, preset = pickedPreset(r.g, { use: s.use, level: s.level, decline: s.decline, seed: s.seed, tier: s.tier, biz: s.biz });
     if (!preset) continue;
     // the lot's biggest building, and whether its preset holds that picture (else it was swapped in)
     let main: Placed | null = null, area = 0;

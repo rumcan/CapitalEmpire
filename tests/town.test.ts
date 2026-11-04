@@ -75,8 +75,19 @@ test('10x10 street grid, 10 game days: built lots form a blob around the entry, 
   console.log(`[town] 10 days: lots ${all.length}, finished day 7 ${day7}, day 10 ${day10} (ratio ${ratio.toFixed(3)}), mean dist built at day 5 ${day5.toFixed(1)} vs all ${dAll.toFixed(1)} tiles (ratio ${(day5 / dAll).toFixed(3)})`);
   console.log(`[town] COM share of built+building ${comShare.toFixed(3)}`);
   console.log(`[town] uses (not EMPTY): RES ${uses.get(LU.RES) ?? 0}, COM ${uses.get(LU.COM) ?? 0}, IND ${uses.get(LU.IND) ?? 0}, TOUR ${uses.get(LU.TOUR) ?? 0}, GOV ${uses.get(LU.GOV) ?? 0}; pop ${town.pop}, jobs ${town.jobs}, jobs/pop ${(town.jobs / town.pop).toFixed(3)}`);
-  // 0.9 since the house lots grew 25% (2026-10-22): as many lots a day cover more ground (it was 0.85)
-  assert.ok(day5 < 0.9 * dAll, `day 5: built lots ${day5} vs all ${dAll} tiles from the entry`);
+  // 0.9 since the house lots grew 25% (2026-10-22): as many lots a day cover more ground (it was 0.85).
+  // T331 (#945): over seeds 1-8, not seed 1 alone. Seed 1 went 0.883 -> 0.914 at 8484b9c (T295 #3, civic places: a few more GOV lots, so the town's
+  // draws run differently), but the growth did not spread: the mean of seeds 1-8 is 0.864 with that change and 0.860 without it, one seed swings
+  // +-0.05 (0.80 to 0.91 either way), and seed 4 is 0.908 without it. The blob is the mean under 0.9 and every seed under 0.95.
+  const ratios = [day5 / dAll];
+  for (let seed = 2; seed <= 8; seed++) {
+    let d5 = 0;
+    run(lm, lots, seed, 5, { before: (h, t) => { if (h === 5 * 24) d5 = mean(finished(t).map(s => distTo(lm, s.key))); } });
+    ratios.push(d5 / dAll);
+  }
+  console.log(`[town] day-5 distance ratio, seeds 1-8: ${ratios.map(r => r.toFixed(3)).join(' ')} (mean ${mean(ratios).toFixed(3)})`);
+  assert.ok(mean(ratios) < 0.9, `day 5: built lots at ${mean(ratios).toFixed(3)} of all lots' distance from the entry (seeds 1-8: ${ratios.map(r => r.toFixed(3)).join(' ')})`);
+  for (const [i, r] of ratios.entries()) assert.ok(r < 0.95, `day 5, seed ${i + 1}: built lots at ${r.toFixed(3)} of all lots' distance from the entry`);
   assert.ok(ratio >= 1.4 && ratio <= 2.0, `day 10 / day 7 = ${ratio}`);
   for (const u of [LU.RES, LU.COM, LU.IND, LU.GOV]) assert.ok((uses.get(u) ?? 0) > 0, `use ${u} appears`);
   assert.ok(comShare >= 0.1 && comShare <= 0.3, `COM share ${comShare}`);
@@ -228,7 +239,10 @@ test('reachableFrom: an anchor whose nearest node is within its reach gives its 
 test('with town centres the town grows on gravel slowly (5 + 0.02 built lots a game day), and the paved roads fill fast (6 lots a game hour)', () => {
   const gravel = gridLots(CLASS.gravel), paved = gridLots(CLASS.street);
   const builds = (g: { lm: LotMap; lots: Lot[] }, centres?: Pt[]) => run(g.lm, g.lots, 5, 1, { centres }).log.filter(e => e.kind === 'build').length;
-  const plain = builds(gravel), townGravel = builds(gravel, [ENTRY]), townPaved = builds(paved, [ENTRY]);
+  // T329: the town centre at the grid's middle (it was the entry, its corner): past FARM_LINE from every centre the town starts no lot (T276), and
+  // on the 2 km map (150 tiles, T280) the corner's quarter circle held only 84 lots, so a day used them all up and the rate never showed
+  const MID: Pt = { x: (O + last) / 2, y: (O + last) / 2 };
+  const plain = builds(gravel), townGravel = builds(gravel, [MID]), townPaved = builds(paved, [MID]);
   console.log(`day 1 builds: no centres (gravel) ${plain}, centres (gravel) ${townGravel}, centres (paved) ${townPaved}`);
   assert.ok(townGravel > 0, 'the town still grows on gravel');
   assert.ok(townGravel * 2 < plain, `the gravel growth with centres is slower (${townGravel} vs ${plain} a day)`);

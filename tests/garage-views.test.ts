@@ -10,6 +10,14 @@ import { drawnAs } from '../src/game/mirror';
 import { axisViews, drawnView, fourViews, roadView, setRoadHeadings, sizeKey, sizeViews, turned } from '../src/game/lots/preset-art';
 import { placeable } from '../src/game/lots/item-kinds';
 import { OWNER_SCALE } from '../src/game/lots/scales';
+import { KIT_GREY_GRANITE, KIT_WATER_EDGE_PLANTS } from '../src/game/kit';
+import { appendNewProps } from '../src/game/new-props-library';
+
+// T329: the owner's new props (new-props-library.ts, 2026-11-02) are appended at the library's very tail, after every other append, so no saved
+// index moves: the tail checks below leave them out (and check they are that tail)
+const NEW_PROPS: { id: string }[] = []; appendNewProps(NEW_PROPS as never[], []);
+const NEW_IDS = new Set(NEW_PROPS.map(p => p.id));
+
 
 const BY = new Map(LIBRARY.map((it, i) => [it.id, i]));
 
@@ -27,8 +35,11 @@ test('accepted garages select separate authored pictures for all eight road head
 });
 
 test('garage diagonals append after all old art without reinterpreting N or its turns', () => {
-  const diagonal = new Set(Object.values(EXTRA_VIEW_SETS).flat()), old = LIBRARY.filter(it => !diagonal.has(it.id));
-  assert.deepEqual(LIBRARY.slice(0, old.length).map(it => it.id), old.map(it => it.id));
+  // (T329: the appends made after the diagonals follow them, as kit.test.ts lets them: T258's range art, T274's organic kit, the new props)
+  const organic = new Set<string>([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
+  const lib = LIBRARY.filter(it => !it.id.startsWith('range:') && !organic.has(it.id) && !NEW_IDS.has(it.id));
+  const diagonal = new Set(Object.values(EXTRA_VIEW_SETS).flat()), old = lib.filter(it => !diagonal.has(it.id));
+  assert.deepEqual(lib.slice(0, old.length).map(it => it.id), old.map(it => it.id));
   for (const [base, views] of Object.entries(EXTRA_VIEW_SETS)) {
     assert.match(base, /^(?:ce:parking-garage-[2-6]storey|landscape:)/);
     assert.deepEqual(views, ['ne', 'se', 'sw', 'nw'].map(dir => `view:${base}:${dir}`));

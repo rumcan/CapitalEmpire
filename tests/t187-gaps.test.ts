@@ -41,7 +41,9 @@ test('props by place: the category table, the filter by the group opened from, A
   // the library's own art only: none of the town's buildings is drawn as a stand-in (the library's gazebo is one, so it is not offered)
   const idx = new Map(LIBRARY.map((i, k) => [i.id, k]));
   for (const d of DECOR.filter(q => q.group === 'buildings')) assert.equal(drawnAsStandIn(idx.get(d.id)!), false, d.key);
-  assert.equal(drawnAsStandIn(idx.get('world:gazebo')!), true);
+  // (T329: the gazebo has its own views since 2026-11-02 and is drawn as itself; the derelict workshop still stands in)
+  assert.equal(drawnAsStandIn(idx.get('world:gazebo')!), false);
+  assert.equal(drawnAsStandIn(idx.get('variation:expansion-abandoned-workshop-26852883:1')!), true);
 });
 
 test("the town's spot rule: off your land, off the town's lots, on the grass between them", () => {

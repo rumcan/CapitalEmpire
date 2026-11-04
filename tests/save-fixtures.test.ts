@@ -93,16 +93,17 @@ describe('save fixtures & golden tests (T043)', () => {
     assert.equal(p.stage, 3, 'an old save opens at stage 3 with every tool (T117; was the 10-minute playS default)');
   });
 
-  it('5. golf-v5-height-progress.json -> loadCourseHeight has non-zero sample near (600, 600) and (1400, 900); saveCourseHeight deep-equals fixture height; normalizeProgress keeps counters', () => {
+  it('5. golf-v5-height-progress.json -> loadCourseHeight has non-zero sample near (600, 600) and (700, 450); saveCourseHeight deep-equals fixture height; normalizeProgress keeps counters', () => {
     const raw = loadFixture('golf-v5-height-progress.json');
     const parsed = JSON.parse(raw) as SaveV5;
     assert.ok(parsed.golf);
 
     const h = loadCourseHeight(parsed.golf.height);
     const s1 = sampleCourseHeight(h, 600, 600);
-    const s2 = sampleCourseHeight(h, 1400, 900);
+    // (T329: the 2 km map, T280: the fixture's second raised patch moved from (1400, 900) to (700, 450), its 16-block chunks halved)
+    const s2 = sampleCourseHeight(h, 700, 450);
     assert.ok(s1 > 0, 'sample near (600, 600) should be raised');
-    assert.ok(s2 > 0, 'sample near (1400, 900) should be raised');
+    assert.ok(s2 > 0, 'sample near (700, 450) should be raised');
 
     const reSavedHeight = saveCourseHeight(h);
     assert.deepEqual(reSavedHeight, parsed.golf.height);
@@ -141,22 +142,22 @@ describe('save fixtures & golden tests (T043)', () => {
     }
   });
 
-  it('7. Size (P07 decision 8): fully edited heightfield (64x64 blocks) gzip size is under 2 MB', async () => {
+  it('7. Size (P07 decision 8): fully edited heightfield (every 16x16 block; 64x64 on the 4 km map, 32x32 on the 2 km map) gzip size is under 2 MB', async () => {
     const field = createCourseHeightField();
-    const blocks = CH_SIZE / 16; // 64
+    const blocks = CH_SIZE / 16; // 32 on the 2 km map (T280; 64 on the 4 km map)
     for (let bj = 0; bj < blocks; bj++) {
       for (let bi = 0; bi < blocks; bi++) {
         field.data[(bj * 16) * CH_SIZE + bi * 16] = 0.5;
       }
     }
     const height = saveCourseHeight(field);
-    assert.equal(height.length, 4096, 'expected 4096 non-zero chunks');
+    assert.equal(height.length, blocks * blocks, `expected ${blocks * blocks} non-zero chunks`);
 
     const json = JSON.stringify({ golf: { height } });
     const gz = await gzip(json);
     const sizeBytes = gz.byteLength;
     const sizeMB = (sizeBytes / (1024 * 1024)).toFixed(3);
-    console.log(`[P07 decision 8 size test] 4096-chunk heightfield gzip size: ${sizeBytes} bytes (${sizeMB} MB)`);
+    console.log(`[P07 decision 8 size test] ${blocks * blocks}-chunk heightfield gzip size: ${sizeBytes} bytes (${sizeMB} MB)`);
 
     assert.ok(sizeBytes < 2 * 1024 * 1024, `expected gzip size under 2 MB, got ${sizeBytes} bytes`);
   });
@@ -201,9 +202,11 @@ describe('save fixtures & golden tests (T043)', () => {
     assert.equal(g.exits?.length, 2);
     assert.deepEqual(g.tees, [], 'the course land is still to build: no tees');
     assert.deepEqual(g.pins, [], 'and no pins');
-    // P22 2.7's year-20 band: 1,800-3,200 lots
+    // P22 2.7's year-20 band was 1,800-3,200 lots on the 4 km map, the town laying its own streets. T329: since T280/T292 (the 2 km map, one
+    // slow town, no town-laid roads) a town left to grow only fills the county road's frontage (the player lays the streets): the regenerated
+    // fixture (npm run range:fixture -- 1 20 --player) holds 16 lots. The check keeps a grown town (at least 10 lots) and the upper bound
     const lots = s.lots ?? [];
-    assert.ok(lots.length >= 1800 && lots.length <= 3200, `${lots.length} lots`);
+    assert.ok(lots.length >= 10 && lots.length <= 3200, `${lots.length} lots`);
     // the town's streets (gravel, the towns') keep 6 tiles off the golf land
     const land = [g.course, g.parcel];
     for (const [ax, ay, bx, by, cls, , , town] of s.segs) {

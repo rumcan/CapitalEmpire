@@ -64,7 +64,8 @@ describe('the eight-heading contract: buildings on roads at 45 degrees (T154 Pha
     for (const id of SET_BUILDINGS) for (const r of [1, 3, 5, 7]) for (const v of [0, 1, 2, 3] as const) {
       const p = presetOf(id, r, v), g = lotOn(r, p.w, p.d, v), b = drawn(p, g).props.find(q => q.from?.preset === p.id)!;
       assert.equal(b.flip, false);
-      assert.equal(b.id, roadView(id, r, v));
+      // (T329: since T308 a building that faces the street (view 0) where it fits is turned to it: its view v, else the street's view)
+      assert.ok(b.id === roadView(id, r, v) || b.id === roadView(id, r, 0), `${id} road ${r} view ${v}: ${b.id}`);
       const fp = footprintOf(b.id, b.scale, false), mx = b.x + (fp[0] + fp[2]) / 2, my = b.y + (fp[1] + fp[3]) / 2, f = frameOf(g);
       for (const [x, y] of [[mx, b.y + fp[1]], [b.x + fp[2], my], [mx, b.y + fp[3]], [b.x + fp[0], my]] as const) {
         const q = toFrame(f, x, y);

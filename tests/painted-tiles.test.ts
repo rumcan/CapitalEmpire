@@ -178,8 +178,9 @@ test('the zoom range (T156): the player cannot zoom out past 1.25%; a camera or 
   // a save resting at an old furthest zoom (0.006, 0.0075) comes back at the new one, in FAR at a quarter of its native size
   for (const tb of [2, 1, 0, undefined]) assert.equal(nextBand(clampZoom(0.0075), tb), 2, `saved band ${tb}`);
   assert.ok(Math.abs(drawnScale(clampZoom(0.006), 2) - 0.25) < 1e-9);
-  // the whole map at the furthest zoom: 3277 CSS px wide (it was 1966): it no longer fits a 1920 px screen; the minimap shows it whole
-  assert.ok(Math.abs(2 * MAP * HW * ZOOM_MIN - 3276.8) < 0.01);
+  // the whole map at the furthest zoom: the 4 km map was 3277 CSS px wide (1966 before T156) and no longer fit a 1920 px screen; T329: the 2 km
+  // map (T280) is 1638 px wide there; the minimap shows it whole
+  assert.ok(Math.abs(2 * MAP * HW * ZOOM_MIN - 3276.8 * MAP / 2048) < 0.01);
   assert.deepEqual(ANCHORS.zoom, [ZOOM_MIN, ZOOM_MAX]);
 });
 

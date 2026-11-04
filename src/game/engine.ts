@@ -3355,7 +3355,8 @@ export class Game {
       if (lines.side || lines.back) this.placeFence(key, g, v.seed, lines); else this.dropLot(key);
       return;
     }
-    this.placeLot(key, g, { use: v.use, level: v.level, decline: v.decline, seed: v.seed });
+    // (T331: with the lot's building tier and shop business, T295, as lotOf has them: without them every lot drew the top tier and its lattice colour)
+    this.placeLot(key, g, { use: v.use, level: v.level, decline: v.decline, seed: v.seed, tier: v.tier, biz: v.biz });
   }
   /** a lot's share of the fence grid alone (compose fenceOnly): panels that would stand in a building or another prop are left out */
   private placeFence(key: string, g: LotGeom, seed: number, lines: FenceLines) {

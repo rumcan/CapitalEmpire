@@ -26,7 +26,7 @@ test('every stand-in is packed for the largest size any building drawn as it nee
       assert.ok(need[n.id]! >= want - 1e-9, `${n.id} is packed for ${it.id} at x${own(i)}: x${need[n.id]} >= x${want.toFixed(3)}`);
     }
   });
-  assert.ok(buildings > 20, `${buildings} buildings drawn as stand-ins`);
+  assert.ok(buildings > 0, `${buildings} buildings drawn as stand-ins`); // (T329: the owner's views for 182 of 204 buildings, 2026-11-02, left 2 old buildings drawn as stand-ins: the count only shrinks as the art lands; every one still drawn as a stand-in is checked)
   // nothing is listed that no building needs, and every need is a real size
   for (const [id, k] of Object.entries(need)) { assert.ok(VIEW_ART.has(id), `${id} is four-view art`); assert.ok(k > 0 && Number.isFinite(k), `${id}: x${k}`); }
 });

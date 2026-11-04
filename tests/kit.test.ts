@@ -25,6 +25,13 @@ import { LU, LV } from '../src/game/lots/town';
 import { mulberry } from '../src/game/iso';
 import PRESET_FIXTURE from './fixtures/lot-presets.json';
 import type { Prop } from '../src/game/types';
+import { appendNewProps } from '../src/game/new-props-library';
+
+// T329: the owner's new props (new-props-library.ts, 2026-11-02) are appended at the library's very tail, after every other append, so no saved
+// index moves: the tail checks below leave them out (and check they are that tail)
+const NEW_PROPS: { id: string }[] = []; appendNewProps(NEW_PROPS as never[], []);
+const NEW_IDS = new Set(NEW_PROPS.map(p => p.id));
+
 
 const BY = new Map(LIBRARY.map((it, i) => [it.id, { it, i }]));
 const KIT_IDS = [...KIT_SHRUBS, ...KIT_FLOWERS, ...KIT_BOULDERS.small, ...KIT_BOULDERS.medium, ...KIT_BOULDERS.large, ...KIT_PALM_IDS, ...KIT_LAMPS, KIT_HEDGE.x, KIT_HEDGE.y, KIT_HEDGE.end!,
@@ -48,17 +55,17 @@ test('the atlas: the kit is in the library on the golf page, packed apart from t
   // they: #582's supplemental views (extra-views-library.ts, on their own pages) and T258's range art (range:*, on the golf page). (#776: this
   // asked for the kit last, which #582 ended; the lead, 2026-10-28: no saved index may move, so the later appends stay after the kit)
   const organicTail = new Set<string>([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
-  const later = (it: (typeof LIBRARY)[number]) => EXTRA_VIEW_BASE.has(it.id) || it.id.startsWith('range:') || organicTail.has(it.id);
+  const later = (it: (typeof LIBRARY)[number]) => EXTRA_VIEW_BASE.has(it.id) || it.id.startsWith('range:') || organicTail.has(it.id) || NEW_IDS.has(it.id);
   const originalKit = new Set<string>(KIT_IDS);
   const kitAt = LIBRARY.flatMap((it, i) => (originalKit.has(it.id) ? [i] : [])), firstKit = kitAt[0]!, lastKit = kitAt[kitAt.length - 1]!;
   assert.equal(lastKit - firstKit + 1, kitAt.length, 'the kit is one run in the library');
   assert.deepEqual(LIBRARY.slice(lastKit + 1).filter(it => !later(it)).map(it => it.id), [], 'only the later appends follow the kit');
   assert.deepEqual(LIBRARY.slice(0, firstKit).filter(later).map(it => it.id), [], 'no later append comes before the kit (the kit\'s indices hold)');
-  // no page added for the kit: its page holds the golf art appended before it (the count was 74 before T231 and is still 74 up to the kit;
-  // #582's supplemental views brought their own pages after it)
-  const before = LIBRARY.slice(0, firstKit);
-  assert.ok(before.some(it => it.tex[0] === golf), 'the kit\'s page is the golf art\'s');
-  assert.equal(Math.max(...before.map(it => it.tex[0])) + 1, 74, 'no atlas page added up to the kit');
+  // no page added for the kit: its page held the golf art appended before it (the count was 74 before T231 and still 74 up to the kit; #582's
+  // supplemental views brought their own pages after it). T329: the owner's Rebuild (2026-11-02, d527f8d) repacked the whole atlas: the golf art
+  // moved to pages of its own and the kit's page now holds the kit's pictures alone (the kit and its later kit: appends), so the page count up
+  // to the kit is no measure any more; the budget check below is what "no page added" guarded
+  assert.deepEqual(LIBRARY.filter(it => it.tex[0] === golf && !it.id.startsWith('kit:') && !it.id.startsWith('range:')).map(it => it.id), [], 'the kit\'s page holds the kit');
   for (const dpr of [1, 2]) {
     const plan = planAtlas({ pages: ATLAS_PAGES.length, size: 2048, levels: 5, bpp: 1, budget: atlasBudget(dpr), finest: dpr > 1 ? 0 : 1 });
     assert.ok(plan.bytes <= atlasBudget(dpr), `dpr ${dpr}: ${(plan.bytes / MB).toFixed(1)} MB`);
@@ -183,19 +190,28 @@ function lots() {
 test('the yards\' kit: house lots get hedges, shrubs and mums by draws of their own, and every lot\'s other props and ground stay exactly where they were', () => {
   const L = lots(), rnd = mulberry(231), states: ComposeState[] = [];
   for (let i = 0; i < 160; i++) states.push({ use: [LU.RES, LU.RES, LU.RES, LU.COM, LU.IND][Math.floor(rnd() * 5)]!, level: [LV.BUILT, LV.UPGRADED, LV.BUILDING][Math.floor(rnd() * 3)]!, decline: Math.floor(rnd() * 4), seed: Math.floor(rnd() * 4294967296) >>> 0 });
-  let kit = 0, hedges = 0, plants = 0;
-  for (const [i, st] of states.entries()) {
-    const lot = L[i % L.length]!;
-    KIT_YARDS.on = false; const before = compose(lot, st);
-    KIT_YARDS.on = true; const after = compose(lot, st);
-    const mine = after.props.filter(p => isKit(p.id)), rest = after.props.filter(p => !isKit(p.id));
-    assert.deepEqual(rest, before.props, `lot ${lot.key} ${JSON.stringify(st)}: the other props moved`);
-    assert.deepEqual(after.ground, before.ground, 'the ground did not change');
-    kit += mine.length; hedges += mine.filter(p => p.id === KIT_HEDGE.x || p.id === KIT_HEDGE.y).length; plants += mine.filter(p => (KIT_SHRUBS as readonly string[]).includes(p.id) || (KIT_FLOWERS as readonly string[]).includes(p.id)).length;
-    if (mine.length) assert.equal(st.use, LU.RES, 'only house lots');
-    if (mine.length) assert.ok(st.level >= LV.BUILT && st.decline < 2, 'built and kept');
-    assert.ok(mine.every(p => !p.flip), 'never mirrored');
+  // T331 (#945): both ways a frozen house lot is composed: its yard from the generator (T160, the game's default) and its frozen preset's own items
+  // (?oldlots). The kit's counts are the game's: since T305 the big lots (AUTO_LOT_W x AUTO_LOT_D: here the 14.5 x 16.5 ones, the only ones with a
+  // clear front) are generated whole, and every frozen house preset left on this grid has its own row of ferns and grasses along the front, so under
+  // ?oldlots the hedge (KIT_YARD_RULES.hedgeIn) never fits; in the game's yards it does (25 pieces here). The other props stay put either way.
+  for (const gen of [false, true]) {
+    setGeneratedLots(gen);
+    let kit = 0, hedges = 0, plants = 0;
+    for (const [i, st] of states.entries()) {
+      const lot = L[i % L.length]!;
+      KIT_YARDS.on = false; const before = compose(lot, st);
+      KIT_YARDS.on = true; const after = compose(lot, st);
+      const mine = after.props.filter(p => isKit(p.id)), rest = after.props.filter(p => !isKit(p.id));
+      assert.deepEqual(rest, before.props, `lot ${lot.key} ${JSON.stringify(st)}: the other props moved`);
+      assert.deepEqual(after.ground, before.ground, 'the ground did not change');
+      kit += mine.length; hedges += mine.filter(p => p.id === KIT_HEDGE.x || p.id === KIT_HEDGE.y).length; plants += mine.filter(p => (KIT_SHRUBS as readonly string[]).includes(p.id) || (KIT_FLOWERS as readonly string[]).includes(p.id)).length;
+      if (mine.length) assert.equal(st.use, LU.RES, 'only house lots');
+      if (mine.length) assert.ok(st.level >= LV.BUILT && st.decline < 2, 'built and kept');
+      assert.ok(mine.every(p => !p.flip), 'never mirrored');
+    }
+    KIT_YARDS.on = true;
+    if (gen) assert.ok(hedges > 0 && plants > 0, `the yards got hedges (${hedges}) and plants (${plants}) of ${kit} kit props`);
+    else assert.ok(plants > 0, `the frozen yards got plants (${plants}) of ${kit} kit props`);
   }
-  KIT_YARDS.on = true;
-  assert.ok(hedges > 0 && plants > 0, `the yards got hedges (${hedges}) and plants (${plants}) of ${kit} kit props`);
+  setGeneratedLots(false);
 });

@@ -47,8 +47,18 @@ export const SHOP_PALETTE: readonly string[] = ['town:bakery', 'town:grocery', '
 /** the venues a tour lot shows (its gas stations are laid by their own plan, gas-station.ts, and keep their preset) */
 export const VENUE_PALETTE: readonly string[] = ['world:arcade', 'world:diner', 'world:snack_bar'];
 /** a preset's building that stands for a palette picture: the arcade's straight-on variation (frontal.ts: never drawn as itself on a lot, it was
- *  drawn as a stand-in, a barn or the video shop: newart.ts) is an arcade's spot, always drawn as a palette venue */
-export const SPOT_OF: Readonly<Record<string, string>> = { 'variation:world-arcade-f5b7f5eb-plain:1': 'world:arcade' };
+ *  drawn as a stand-in, a barn or the video shop: newart.ts) is an arcade's spot, always drawn as a palette venue.
+ *  T331 (#945): the same for the shops' straight-on variations. The owner's 2026-11-02 shop presets (lab-com-built-20x20 r0 and r2, 52 of the 57
+ *  approved shop lots) hold the pharmacy's (and the bakery's) straight-on variation; it was no palette picture, so those lots kept it as it is and most
+ *  of a town's shops showed the pharmacy. As a shop's spot it takes the lot's colour like any palette shop (and a straight-on picture never lines up
+ *  with a road: frontal.ts) */
+export const SPOT_OF: Readonly<Record<string, string>> = {
+  'variation:world-arcade-f5b7f5eb-plain:1': 'world:arcade',
+  'variation:town-bakery-af15d7f5-plain:1': 'town:bakery', 'variation:town-barber-13c5ef06-plain:1': 'town:barber',
+  'variation:town-fish_tackle-99c1401c-plain:1': 'town:fish_tackle', 'variation:town-grocery-46d5dc39-plain:1': 'town:grocery',
+  'variation:town-laundromat-43183f9e-plain:1': 'town:laundromat', 'variation:town-pharmacy-d87b861c-plain:1': 'town:pharmacy',
+  'variation:world-video-bf85dfb9-plain:1': 'world:video', 'variation:world-video_rental-cc8c504f-plain:1': 'world:video_rental',
+};
 
 /** a lot's place on the lattice: its cell along its street (floor of the frontage centre over LATTICE), the side it faces (0: +y or +x, 1: the
  *  other way) and its street's axis (0: along x, 1: along y) */

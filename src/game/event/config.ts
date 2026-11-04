@@ -25,10 +25,11 @@ export const TOWN_GROWTH = 0.25;
 export const STADIUM_W = 100;
 /** the stadium's footprint, tiles: its height (y) */
 export const STADIUM_H = 80;
-/** the nearest a stadium centre may be to a town centre, tiles */
-export const SITE_MIN = 500;
-/** the farthest a stadium centre may be to a town centre, tiles (the search relaxes it by 250 then 500) */
-export const SITE_MAX = 1250;
+/** the nearest a stadium centre may be to a town centre, tiles. T329: 500 on the 4 km map, scaled with the map as FARM_LINE is (T280: 250 on the
+ *  2 km map, whose towns are 375-750 tiles apart; 500 from all three found no site on some seeds) */
+export const SITE_MIN = 500 * MAP / 2048;
+/** the farthest a stadium centre may be to a town centre, tiles (1250 on the 4 km map, scaled; the search relaxes it by a fifth, then two fifths) */
+export const SITE_MAX = 1250 * MAP / 2048;
 /** the stadium's footprint keeps this many tiles from the map's edges */
 export const SITE_MARGIN = 64;
 /** what the player pays to build the stadium, $ (demolishing gives back half) */

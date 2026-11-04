@@ -128,7 +128,8 @@ describe('lots generated on the fly (T160)', () => {
     // the generated lots of the set (the owner's own presets are exact: theirs may overlap, as the owner laid them)
     let gen = 0;
     const lots = examLots().filter(frozenHouse);
-    assert.ok(lots.length >= 20, `${lots.length} generated lots in the exam set`);
+    // (T329: 14 on 2026-11-04: more of the exam lots draw the owner's approved presets since his studio work of 2026-11-02; each generated one is checked)
+    assert.ok(lots.length >= 10, `${lots.length} generated lots in the exam set`);
     for (const l of lots) {
       const c = compose(l.g, l.st), f = frameOf(l.g), boxes: { id: string; fp: [number, number, number, number] }[] = [];
       for (const p of c.props) {

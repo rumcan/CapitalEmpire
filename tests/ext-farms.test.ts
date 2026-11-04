@@ -85,9 +85,11 @@ function share(p: number[], q: number[]): number {
   const ix = Math.min(p[2], q[2]) - Math.max(p[0], q[0]), iy = Math.min(p[3], q[3]) - Math.max(p[1], q[1]);
   return ix <= 0 || iy <= 0 ? 0 : ix * iy / Math.min((p[2] - p[0]) * (p[3] - p[1]), (q[2] - q[0]) * (q[3] - q[1]));
 }
-const segE = { a: { x: 200, y: 1000 }, b: { x: 700, y: 1000 }, h: 3 };          // 500 tiles = 1 km of 'road'
+// (T329: the 2 km map, T280: the east-west road moved from y 1000 to 600 and the diagonal from (350, 1400)-(850, 900) to (200, 800)-(700, 300), so
+// both sides' parcels lie inside the map; the bands of the hill and water tests moved with the road)
+const segE = { a: { x: 200, y: 600 }, b: { x: 700, y: 600 }, h: 3 };            // 500 tiles = 1 km of 'road'
 const segN = { a: { x: 400, y: 300 }, b: { x: 400, y: 800 }, h: 1.625 };       // 1 km of 'street'
-const segD = { a: { x: 350, y: 1400 }, b: { x: 850, y: 900 }, h: 3 };          // a 45-degree country road
+const segD = { a: { x: 200, y: 800 }, b: { x: 700, y: 300 }, h: 3 };           // a 45-degree country road
 
 test('1 km of straight road on clear ground: parcels both sides in the spec ranges, clean, clear of the road, no overlaps', () => {
   const t0 = Date.now(), ps = farmParcels(segE, CLEAR, 42), ms = Date.now() - t0;
@@ -106,7 +108,7 @@ test('a 45-degree road and a north-south street: the same guarantees at any head
 
 test('splitting a seg along its line keeps its parcels: every parcel of the two halves is a parcel of the whole', () => {
   const whole = new Map(farmParcels(segE, CLEAR, 99).map(p => [p.key, p]));
-  const halves = [farmParcels({ a: segE.a, b: { x: 460, y: 1000 }, h: 3 }, CLEAR, 99), farmParcels({ a: { x: 460, y: 1000 }, b: segE.b, h: 3 }, CLEAR, 99)].flat();
+  const halves = [farmParcels({ a: segE.a, b: { x: 460, y: 600 }, h: 3 }, CLEAR, 99), farmParcels({ a: { x: 460, y: 600 }, b: segE.b, h: 3 }, CLEAR, 99)].flat();
   assert.ok(halves.length >= 8, `only ${halves.length} parcels from the halves`);
   for (const p of halves) {
     const q = whole.get(p.key);
@@ -117,13 +119,13 @@ test('splitting a seg along its line keeps its parcels: every parcel of the two 
 });
 
 test('bad terrain is skipped: a hill band trims depths on its side, a water strip along the frontage drops that side', () => {
-  const hills = flatMap([[200, 1060, 700, 1250, TC.HILL]]);   // side +1 is +y here
+  const hills = flatMap([[200, 660, 700, 850, TC.HILL]]);   // side +1 is +y here
   const ps = farmParcels(segE, hills, 42);
   assertParcels(ps, segE, hills, false);
   const plus = ps.filter(p => p.side === 1), minus = ps.filter(p => p.side === -1);
   assert.ok(plus.length > 0 && plus.every(p => p.d <= 57), `hill side depths ${plus.map(p => p.d)}`);
   assert.ok(minus.some(p => p.d > 57), 'the clear side keeps its full depths');
-  const water = flatMap([[200, 940, 700, 999, TC.WATER]]);
+  const water = flatMap([[200, 540, 700, 599, TC.WATER]]);
   const pw = farmParcels(segE, water, 42);
   assertParcels(pw, segE, water, false);
   assert.equal(pw.filter(p => p.side === -1).length, 0, 'no parcels fronting water');

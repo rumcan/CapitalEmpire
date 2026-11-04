@@ -2,7 +2,7 @@
 import { MAP, mulberry, tileOf } from './iso';
 import { fbm, hash2, smoothstep, type Noise } from './terrain/noise';
 import { TC, sampleField } from './terrain/types';
-import { OWNER_SCALE } from './lots/scales';
+import { OWNER_SCALE, REMOVED_IDS } from './lots/scales';
 import { NEW_BROADLEAF_SPECIES, NEW_CONIFER_SPECIES } from './new-props-library';
 
 /** tiles per forest cell: the engine plants the trees of one cell at a time, as the camera reaches it */
@@ -19,7 +19,9 @@ export function forestCellRange(X0: number, Y0: number, X1: number, Y1: number, 
  *  pictures of an old one), dealt evenly; w, its share among the species of its pool; dead, a dead snag (the woods only, never the town) */
 export interface TreeSpecies { name: string; ids: readonly string[]; w: number; dead?: true }
 const views = (s: string) => ['ne', 'se', 'sw', 'nw'].map(d => `gen:tree-${s}:${d}`);
-const stages = (s: string) => ['open', 'moderate', 'patchy', 'near-bare'].map(k => `capital:tree-${s}-${k}`);
+/** (T329: a stage the owner removed in the studio is left out: capital:tree-maple-open, 2026-11-02, was still dealt and drawn as nothing) */
+const REMOVED = new Set(REMOVED_IDS);
+const stages = (s: string) => ['open', 'moderate', 'patchy', 'near-bare'].map(k => `capital:tree-${s}-${k}`).filter(id => !REMOVED.has(id));
 /** the conifers: every pine, spruce and fir of the library (the owner, 2026-10-24: "it's not using all the trees in the generating") */
 const WORLD_CONIFERS: readonly TreeSpecies[] = [
   { name: 'pine', ids: stages('pine'), w: 1 },

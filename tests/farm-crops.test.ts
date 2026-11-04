@@ -20,9 +20,11 @@ const isFence = (id: string) => { const k = byId.get(id)?.kind; return k === 'fe
 const isHouse = (id: string) => (byId.get(id)?.cat === 'Houses' && byId.get(id)?.kind === 'house') || id === 'expansion:ranch-rear';
 const STREET = new Set(['world:mailbox', 'expansion:rural-mailboxes', 'town:utility_pole']);
 const CLEAR = new Uint8Array(MAP * MAP);
-const segE = { a: { x: 200, y: 1000 }, b: { x: 700, y: 1000 }, h: 3 };
+// (T329: the 2 km map, T280: the roads moved onto it as in ext-farms.test.ts: the east-west road from y 1000 to 600, the diagonal from
+// (350, 1400)-(850, 900) to (200, 800)-(700, 300))
+const segE = { a: { x: 200, y: 600 }, b: { x: 700, y: 600 }, h: 3 };
 const segN = { a: { x: 400, y: 300 }, b: { x: 400, y: 800 }, h: 1.625 };
-const segD = { a: { x: 350, y: 1400 }, b: { x: 850, y: 900 }, h: 3 };
+const segD = { a: { x: 200, y: 800 }, b: { x: 700, y: 300 }, h: 3 };
 /** the 104 fixture farms of tests/ext-farms.test.ts: three roads, two world seeds */
 const FARMS: { p: FarmParcel; seed: number }[] = [];
 for (const ws of [11, 22]) for (const seg of [segE, segN, segD]) for (const p of farmParcels(seg, CLEAR, ws)) FARMS.push({ p, seed: seedForParcel(p, ws) });
@@ -109,9 +111,12 @@ test('stand-in rows: parallel to the field, a pitch apart, inside it and cut to 
 });
 
 test('model 1 (T005\'s farm, the saves made with it) composes exactly as before T259', () => {
-  // the digest pinned from main before T259 (7ed8b99, composeFarm/farmTrack/farmsteadOf as they were): the first 100 fixture farms' compositions, tracks and farmsteads
+  // the digest pinned from main before T259 (7ed8b99, composeFarm/farmTrack/farmsteadOf as they were): the first 100 fixture farms' compositions,
+  // tracks and farmsteads. T329: re-pinned on lead/live (was d5ebd258): two deliberate changes since moved it, the owner's T291 (2026-11-01: no
+  // town wood fences on farms, model 1 too) and the 2 km map (T280: the fixture roads moved onto it, so the farms are other parcels). It now
+  // guards model 1 against any change from here
   const out = FARMS.slice(0, 100).map(({ p, seed }) => JSON.stringify(composeFarm(p, seed, { model: 1 })) + JSON.stringify(farmTrack(p, seed, 1)) + JSON.stringify(farmsteadOf(p, seed, 1)));
-  assert.equal(fnv(out.join('|')), 'd5ebd258');
+  assert.equal(fnv(out.join('|')), 'f26e468d');
   assert.equal(farmSeason(FARMS[0].p, FARMS[0].seed, 1, 3), farmSeason(FARMS[0].p, FARMS[0].seed, 1, 9));
 });
 
@@ -218,7 +223,10 @@ test('model 2: the orchard is a strict grid of straight rows ORCHARD_PITCH (6 m)
       assert.ok(!c.props.some(q => !isOrchardTree(q.id) && byId.get(q.id)?.kind === 'tree' && inPlot(q)), `${p.key}: another tree in the orchard`);
       assert.ok(o.na <= ORCHARD_MAX && o.nb <= ORCHARD_MAX && o.na >= 4 && o.nb >= 4, `${p.key}: grid ${o.na} x ${o.nb}`);
       assert.equal(new Set(trees.map(q => q.id)).size, 1, `${p.key}: one tree an orchard`);
-      assert.ok(trees[0].id.endsWith(orchardStage(m)), `${p.key}: the leaves of month ${m}`);
+      // (T329: the month's stage, or the stand-in's fallback stage when the owner removed that stage's picture: orchardTreeId)
+      const sp = /^capital:tree-(oak|maple)-/.exec(trees[0].id)![1]!;
+      assert.equal(trees[0].id, orchardTreeId(sp, m), `${p.key}: the leaves of month ${m}`);
+      assert.ok(trees[0].id.endsWith(orchardStage(m)) || !byId.has(`capital:tree-${sp}-${orchardStage(m)}`), `${p.key}: the leaves of month ${m}`);
       for (const q of trees) {
         const f = frame(p, centre(q).x, centre(q).y), i = (f.a - o.a0) / ORCHARD_PITCH, j = (f.b - o.b0) / ORCHARD_PITCH;
         assert.ok(Math.abs(i - Math.round(i)) < 1e-6 && Math.abs(j - Math.round(j)) < 1e-6, `${p.key}: off the grid (${i}, ${j})`);
