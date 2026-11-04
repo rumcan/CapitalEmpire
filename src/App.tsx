@@ -573,6 +573,17 @@ export default function App() {
                       <input type="checkbox" checked={game.tyreTracks} onChange={e => { game.setTyreTracks(e.target.checked); bump(); }} />
                       Tyre tracks
                     </label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" data-tip="The sun breaking through the clouds: soft patches of sunlight drift over the ground with the wind (faster at the faster game speeds), brightening it; outside them the day is overcast and the objects cast no drop shadows (their contact shadows stay) (T310)">
+                      <input type="checkbox" checked={game.sunLook.on} onChange={e => { game.setSunLook({ on: e.target.checked }); bump(); }} />
+                      Sun and clouds
+                    </label>
+                    {game.sunLook.on && (
+                      <label className="flex items-center gap-2 px-2 py-1 text-xs" data-tip="How bright the patches of sun are (and from 100%, how fully the overcast hides the drop shadows). 100% = the default">
+                        <span className="w-16 shrink-0">Strength</span>
+                        <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.sunLook.strength} onChange={e => { game.setSunLook({ strength: +e.target.value }); bump(); }} />
+                        <span className="w-10 text-right tabular-nums">{Math.round(game.sunLook.strength * 100)}%</span>
+                      </label>
+                    )}
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before">
                       <span className="w-16 shrink-0">Fallen leaves</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.leafDensity} onChange={e => { game.setLeafDensity(+e.target.value); bump(); }} />

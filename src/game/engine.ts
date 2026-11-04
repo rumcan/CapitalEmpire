@@ -95,6 +95,7 @@ import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
 import { localRate, townClockFor, townMinute, townTimeOf } from './sim/townclock';
+import { SUN_KEY, clampSun, sunOffsets, sunStep, type SunSetting } from './sun-patches';
 import { STRENGTH as TRACK_STRENGTH, TRACKS_KEY, TyreTracks, UPLOAD_MS as TRACK_UPLOAD_MS, type WearKind } from './tyre-tracks';
 import { CADDIE_CAP, CART_CAP, LONG_DAY_MIN, NIGHT_S, PACE_KEY, WALK_CAP, capped, dayNight, paceOf, paceOfSetting, settingOf, type GolfPace, type PaceSetting } from './golf/pace';
 import { Pacer, setPaceSpeed } from './golf/play/pacer';
@@ -2496,6 +2497,9 @@ export class Game {
     try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
     this.ground.slopeLight = this.slopeLight;
     try { this.tyreTracks = localStorage.getItem(TRACKS_KEY) !== '0'; } catch { /* the default, on */ }
+    // T310: the sun through the clouds as the player left it (the gear menu's Sun and clouds; on by default), and ?sun=on|off (the dev server)
+    try { const s = localStorage.getItem(SUN_KEY); if (s) this.sunLook = clampSun(JSON.parse(s)); } catch { /* the default */ }
+    { const q = new URLSearchParams(location.search).get('sun'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.sunLook = { ...this.sunLook, on: q === 'on' }; }
     { const q = new URLSearchParams(location.search).get('tracks'); if (import.meta.env.DEV && (q === 'on' || q === 'off' || q === 'stress')) { this.tyreTracks = q !== 'off'; this.tracksStress = q === 'stress'; } }
     try { const v = parseFloat(localStorage.getItem('capitalempire.leafDensity') ?? ''); if (Number.isFinite(v)) this.leafDensity = clampLeafDensity(v); } catch { /* the default */ }
     this.ground.leafDensity = this.leafDensity;
@@ -3155,6 +3159,23 @@ export class Game {
     if (this.youCart) this.trackMove('you', this.youCart.x, this.youCart.y, 'cart');
     // the range's cars (T321: over the grass where no road reaches the car park; on the roads the tiles take no wear)
     this.range.carPoints((id, x, y) => this.trackMove('r' + id, x, y, 'car'));
+  }
+  /** T310: the sun breaking through the clouds (sun-patches.ts): the gear menu's Sun and clouds (on by default) and its strength, kept across
+   *  reloads */
+  sunLook: SunSetting = clampSun(null);
+  setSunLook(v: Partial<SunSetting>) {
+    this.sunLook = clampSun({ ...this.sunLook, ...v });
+    try { localStorage.setItem(SUN_KEY, JSON.stringify(this.sunLook)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
+  /** T310: the patches' clock (game s of drift) and the last frame it ran (performance.now()) */
+  private sunClock = 0; private sunLast = 0;
+  /** T310: the sun this frame: the clock runs at the sim speed (at 1x while paused), the ground and shadow passes read it (gl.ts) */
+  private sunFrame(now: number) {
+    const dt = this.sunLast ? Math.min(0.25, (now - this.sunLast) / 1000) : 0; this.sunLast = now;
+    this.sunClock += sunStep(dt, this.speed);
+    const s = this.sunLook;
+    this.gl.sun = s.on && s.strength > 0 ? { strength: s.strength, hide: Math.min(1, s.strength), off: sunOffsets(this.sunClock) } : null;
   }
   /** the course height light's strength (T126): the gear menu's Slope light, 0 (off) to 2 (kept across reloads), else light.json's */
   slopeLight = HEIGHT_LIGHT_STRENGTH;
@@ -9614,6 +9635,7 @@ export class Game {
     gl.grade = this.boot.kind === 'game' ? gradeFrame(this.grade, this.nightAmount()) : null;
     gl.begin({ X: cam.X, Y: cam.Y, ze, cw: this.cw, ch: this.ch }, [0.106, 0.157, 0.086]);
     this.tracksFrame(now); // T322: the tyre tracks' wear and its GPU copy
+    this.sunFrame(now); // T310: the sun patches' drift
     const X0 = cam.X - this.cw / 2 / ze, Y0 = cam.Y - this.ch / 2 / ze, X1 = cam.X + this.cw / 2 / ze, Y1 = cam.Y + this.ch / 2 / ze;
     const dist = (cx: number, cy: number) => Math.hypot(cx - cam.X, cy - cam.Y) * ze;
     // ---- planner map: the whole view at the planner tier, otherwise under any chunk not baked yet

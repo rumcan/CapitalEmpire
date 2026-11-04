@@ -21,6 +21,9 @@ import { GRASS_SHINE_GLSL, LUM_HP_STD, MASK_SCALE, SHINE_SHADE } from './grass-s
 import { TRACKS_GLSL, type TyreTracks } from './tyre-tracks';
 import { WATER_MOTION_GLSL, type MotionFrame } from './water-motion';
 import { HH, HW } from './iso';
+import { SUN_GLSL, SUN_TEX, SUN_UNIT, REPEAT_A, sunNoise, tileGlsl } from './sun-patches';
+/** T310: the sun patches' uniforms (sun-patches.ts SUN_GLSL) */
+const SUN_UNIFORMS = 'uniform sampler2D uSunTex; uniform vec4 uSun; uniform vec4 uSunOff;';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -82,16 +85,26 @@ uniform vec4 uRect; uniform vec4 uUV;
 uniform sampler2D uShineMask; uniform vec4 uShine; uniform vec4 uShineLook;
 uniform sampler2D uShadeLayer; uniform vec4 uLayerCam; uniform vec2 uLayerScreen;
 uniform sampler2D uTrackTex; uniform vec4 uTrack;
+${SUN_UNIFORMS}
 in vec2 vUV; in vec2 vW; out vec4 o;
 ${SPEC_LIGHT_GLSL}
 ${GLOSS_LIGHT_GLSL}
 ${GRASS_SHINE_GLSL}
 ${WATER_MOTION_GLSL}
 ${TRACKS_GLSL}
+${SUN_GLSL}
 float lumOf(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
 void main() {
   vec4 c = texture(uTex, vUV);
   if (uWater.x > 0.0) c.rgb = waterMotion(c.rgb, vec2(vW.x / ${(2 * HW).toFixed(1)} + vW.y / ${(2 * HH).toFixed(1)}, vW.y / ${(2 * HH).toFixed(1)} - vW.x / ${(2 * HW).toFixed(1)}));
+  // T310: the sun through the clouds (sun-patches.ts): the ground brightened where the sun reaches it, as the height light's lift (the bake's,
+  // so before the lamps, the glint, the shine and the tracks, which land on it); the overcast is the ground as it was. The picture's level
+  // of detail from the tile's footprint (far zooms read its coarser levels: no sparkle)
+  if (uSun.z > 0.5 && uSun.x > 0.0) {
+    vec2 st = ${tileGlsl('vW', HW, HH)};
+    vec2 sf = fwidth(st);
+    c.rgb = sunLight(c.rgb, sunAt(st, max(0.0, log2(max(sf.x, sf.y) * ${(SUN_TEX / REPEAT_A).toFixed(5)}))));
+  }
   if (uSpec.z > 0.0) {
     vec4 m = texture(uSpecTex, vUV * vec2(textureSize(uTex, 0)) / (${SPEC_MASK_K.toFixed(1)} * vec2(textureSize(uSpecTex, 0))));
     if (m.a > 0.002) {
@@ -189,7 +202,9 @@ const VS_CAST = `#version 300 es
 layout(location=0) in vec4 aRect; layout(location=1) in vec4 aUV; layout(location=2) in vec4 aMisc; layout(location=3) in vec4 aClip;
 layout(location=4) in vec4 aFoot;
 uniform vec4 uCam; uniform vec2 uScreen; uniform vec4 uCast; uniform float uMinPx;
+${SUN_UNIFORMS}
 out vec3 vUV; out float vAlpha; out vec2 vW; flat out vec4 vClip;
+${SUN_GLSL}
 float foot(float x) { float cx = clamp(x, aFoot.z, aFoot.w); return aFoot.y - 0.5 * abs(cx - aFoot.x); }
 void main() {
   int col = gl_VertexID >> 1; bool top = (gl_VertexID & 1) == 0;
@@ -204,6 +219,8 @@ void main() {
   gl_Position = cull || aMisc.w < 0.0 ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
   // (T176: a tint's 2 + alpha; T228: a painted car's 2 + 2 code + alpha)
   vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 - 2.0 * floor((aMisc.y - 2.0) * 0.5) : aMisc.y; vW = vec2(x, y); vClip = aClip;
+  // T310: none of it in the overcast (sun-patches.ts), by the sun at its foot's near corner
+  vAlpha *= sunCast(${tileGlsl('aFoot', HW, HH)});
 }`;
 const FS_CAST = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;
@@ -268,7 +285,9 @@ precision highp float; precision highp int; precision highp usampler2D;
 layout(location=0) in vec4 aA; layout(location=1) in vec4 aB; layout(location=2) in vec4 aClip; layout(location=3) in vec4 aRect; layout(location=4) in vec4 aCull;
 uniform vec4 uCam; uniform vec2 uScreen; uniform vec2 uShear; uniform vec2 uMul; uniform int uFar; uniform float uMinPx;
 uniform highp sampler2D uVerts; uniform highp usampler2D uIdx;
+${SUN_UNIFORMS}
 out vec2 vSrc; out float vCore; out float vEdge; flat out vec4 vClip; flat out vec4 vRect;
+${SUN_GLSL}
 void main() {
   int id = gl_VertexID, count = int((uFar == 1 ? aB.w : aB.y) + 0.5);
   vClip = aClip; vRect = aRect; vSrc = vec2(0.0); vCore = 0.0; vEdge = 0.0;
@@ -278,7 +297,8 @@ void main() {
   int i = int((uFar == 1 ? aB.z : aB.x) + 0.5) + id;
   int v = int(texelFetch(uIdx, ivec2(i % ${MESH_W}, i / ${MESH_W}), 0).r) * 2;
   vec4 A = texelFetch(uVerts, ivec2(v % ${MESH_W}, v / ${MESH_W}), 0), B = texelFetch(uVerts, ivec2((v + 1) % ${MESH_W}, (v + 1) / ${MESH_W}), 0);
-  float mul = A.w > 0.5 ? uMul.y : aA.z > 0.0 ? 0.0 : uMul.x;
+  // T310: a cast vertex's darkness times the sun at the anchor's ground spot (sun-patches.ts: none in the overcast); the contact shapes as they are
+  float mul = A.w > 0.5 ? uMul.y * sunCast(${tileGlsl('aA', HW, HH)}) : aA.z > 0.0 ? 0.0 : uMul.x;
   if (mul <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float h = A.z * aA.w + aA.z;
   vec2 w = aA.xy + vec2(A.x, A.y) * aA.w + h * uShear;
@@ -394,13 +414,14 @@ export class GLRenderer {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
-    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss', 'uShineMask', 'uShine', 'uShineLook', 'uShadeLayer', 'uLayerCam', 'uLayerScreen', 'uWaterTex', 'uWater', 'uWaterBox', 'uWaterT', 'uWaterDrift', 'uTrackTex', 'uTrack']);
+    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss', 'uShineMask', 'uShine', 'uShineLook', 'uShadeLayer', 'uLayerCam', 'uLayerScreen', 'uWaterTex', 'uWater', 'uWaterBox', 'uWaterT', 'uWaterDrift', 'uTrackTex', 'uTrack', 'uSunTex', 'uSun', 'uSunOff']);
     // (T262: the grass shine's samplers on their own units, once: 4 its weight mask, 5 the last frame's shadow layer; T248: 6 the water's
     //  motion mask)
-    gl.useProgram(this.quad.p); gl.uniform1i(this.quad.u.uShineMask!, 4); gl.uniform1i(this.quad.u.uShadeLayer!, 5); gl.uniform1i(this.quad.u.uWaterTex!, 6); gl.uniform1i(this.quad.u.uTrackTex!, 7);
+    gl.useProgram(this.quad.p); gl.uniform1i(this.quad.u.uShineMask!, 4); gl.uniform1i(this.quad.u.uShadeLayer!, 5); gl.uniform1i(this.quad.u.uWaterTex!, 6); gl.uniform1i(this.quad.u.uTrackTex!, 7); gl.uniform1i(this.quad.u.uSunTex!, SUN_UNIT);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift', 'uMinPx']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
-    this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
+    this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx', 'uSunTex', 'uSun', 'uSunOff']);
+    gl.useProgram(this.vec.p); gl.uniform1i(this.vec.u.uSunTex!, SUN_UNIT);
     this.layerProg = this.program(VS_FULL, FS_LAYER, ['uLayer', 'uAmbient']);
     this.shadeProg = this.program(VS_QUAD, FS_SHADEMASK, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex']);
     this.gradeProg = this.program(VS_FULL, FS_GRADE, ['uScene', 'uBlur', 'uGrade', 'uScreen']);
@@ -443,7 +464,8 @@ export class GLRenderer {
     if (!a) throw err;
     const lib = a.glsl(), samplers = a.samplerNames();
     this.sprite = this.program(VS_SPRITE, FS_SPRITE(lib), ['uCam', 'uScreen', 'uMinPx', ...samplers]);
-    this.cast = this.program(VS_CAST, FS_CAST(lib), ['uCam', 'uScreen', 'uCast', 'uMinPx', ...samplers]);
+    this.cast = this.program(VS_CAST, FS_CAST(lib), ['uCam', 'uScreen', 'uCast', 'uMinPx', 'uSunTex', 'uSun', 'uSunOff', ...samplers]);
+    this.gl.useProgram(this.cast.p); this.gl.uniform1i(this.cast.u.uSunTex!, SUN_UNIT);
     this.atlas = a; this.atlasReady = true;
   }
   /** bind the atlas textures for a sprite program (units 2 on: 0 and 1 are the chunks' texture and mask; the chunk program's reflection mask, T215,
@@ -501,6 +523,25 @@ export class GLRenderer {
   gloss: { inner: number; outer: number; gain: number } | null = null;
   /** T199: a chunk picture's swamp gloss mask (GroundCache.glossOf), looked up by the picture itself, so it goes wherever its picture is drawn */
   glossOf: ((tex: WebGLTexture) => WebGLTexture | null) | null = null;
+  /** T310: the sun patches this frame (engine.ts sunFrame), or null (off): the light's strength, how far the overcast hides the drop shadows
+   *  (0..1) and the noise reads' offsets (sun-patches.ts sunOffsets) */
+  sun: { strength: number; hide: number; off: readonly number[] } | null = null;
+  /** T310: the noise picture (R8, SUN_TEX square, repeating, mipmapped; made on the first frame the sun is on) */
+  private sunTex: WebGLTexture | null = null;
+  /** T310: the sun's uniforms for program pr, and its picture on unit SUN_UNIT (the empty one while off: the sampler's unit always holds one) */
+  private sunUniforms(pr: Prog) {
+    const gl = this.gl, s = this.sun;
+    if (s && !this.sunTex) {
+      const t = this.sunTex = gl.createTexture()!; gl.activeTexture(gl.TEXTURE0 + SUN_UNIT); gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, SUN_TEX, SUN_TEX, 0, gl.RED, gl.UNSIGNED_BYTE, sunNoise()); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    }
+    gl.uniform4f(pr.u.uSun!, s ? s.strength : 0, s ? s.hide : 0, s ? 1 : 0, 0);
+    if (s) gl.uniform4f(pr.u.uSunOff!, s.off[0]!, s.off[1]!, s.off[2]!, s.off[3]!);
+    gl.activeTexture(gl.TEXTURE0 + SUN_UNIT); gl.bindTexture(gl.TEXTURE_2D, s ? this.sunTex : this.emptyTex); gl.activeTexture(gl.TEXTURE0);
+  }
   /** T322: the tyre tracks this frame (engine.ts), or null (off): the field (its box gates each chunk) and the strength */
   tracks: { field: TyreTracks; strength: number } | null = null;
   /** T322: the tracks' texture (RGBA8, a texel a map tile; made on the first upload) */
@@ -633,6 +674,7 @@ export class GLRenderer {
     gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, mask ?? this.emptyTex);
     gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, lv ? this.layerTex : this.emptyTex);
     gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, wm ? wm.mask : this.emptyTex);
+    this.sunUniforms(pr); // T310
     // T322: the tyre tracks (unit 7), on a chunk the wear reaches
     const tk = this.tracksOn(X0, Y0, X1, Y1);
     gl.uniform4f(pr.u.uTrack, tk ? this.tracks!.strength : 0, this.tracks?.field.n ?? 1, 0, 0);
@@ -719,7 +761,7 @@ export class GLRenderer {
   drawCast(firstFloat: number, count: number, sx: number, sy: number, strength: number, minPx: number) {
     if (!count || !this.atlas || !this.cast || strength <= 0) return; const gl = this.gl, pr = this.cast;
     this.layerUsed = true;
-    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform4f(pr.u.uCast, sx, sy, strength, 0); gl.uniform1f(pr.u.uMinPx, minPx);
+    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform4f(pr.u.uCast, sx, sy, strength, 0); gl.uniform1f(pr.u.uMinPx, minPx); this.sunUniforms(pr);
     this.bindAtlas(pr);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
     const B = SPRITE_STRIDE * 4, o = firstFloat * 4;
@@ -761,7 +803,7 @@ export class GLRenderer {
   drawVector(firstFloat: number, count: number, verts: number, sx: number, sy: number, contact: number, cast: number, far = false, minPx = 0) {
     if (!count || !verts || !this.vecVerts || (contact <= 0 && cast <= 0)) return; const gl = this.gl, pr = this.vec;
     this.layerUsed = true;
-    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform2f(pr.u.uShear, sx, sy); gl.uniform2f(pr.u.uMul, contact, cast); gl.uniform1i(pr.u.uFar, far ? 1 : 0); gl.uniform1f(pr.u.uMinPx, minPx);
+    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform2f(pr.u.uShear, sx, sy); gl.uniform2f(pr.u.uMul, contact, cast); gl.uniform1i(pr.u.uFar, far ? 1 : 0); gl.uniform1f(pr.u.uMinPx, minPx); this.sunUniforms(pr);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.vecVerts); gl.uniform1i(pr.u.uVerts, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.vecIdx); gl.uniform1i(pr.u.uIdx, 1);
     gl.activeTexture(gl.TEXTURE0);
