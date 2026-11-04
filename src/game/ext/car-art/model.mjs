@@ -33,3 +33,19 @@ export function foldCarSizes(sizes, carIds) {
   for (const [k, v] of Object.entries(sizes)) { const m = models.has(carModel(k)) ? carModel(k) : k; out[m] = out[m] === undefined ? v : Math.max(out[m], v); }
   return out;
 }
+// T313 (#898, the owner: "car sizes differ drastically"): every car is drawn at a real-world length for its class, measured on its pictures
+// (car-lengths.json, scripts/assets/car-lengths.ts). A new car model needs a class here (tests/car-class-sizes.test.ts says which is missing)
+/** the real-world length in metres of each class of car */
+export const CLASS_LENGTH = { compact: 4.2, sedan: 4.8, suv: 5.2, pickup: 5.2, van: 5.2, bus: 12 };
+/** each car model's class (the station wagons are sedans: a wagon is a sedan's length) */
+export const CAR_CLASS = {
+  'static:compact': 'compact', 'static:pickup': 'pickup', 'static:van': 'van',
+  'world:car_0': 'sedan', 'world:car_1': 'sedan', 'world:car_2': 'sedan', 'world:car_3': 'sedan', 'world:schoolbus': 'bus',
+  'cars:burgundy-wagon': 'sedan', 'cars:navy-wood-panel-wagon': 'sedan',
+};
+/** a car picture's factor on top of its model's size in a lengths table (car-lengths.json: models -> reference length, pictures -> length at scale 1):
+ *  its model's reference over its own length, so every picture of a model shows one body length; 1 when either is unmeasured */
+export function carPictureFactorIn(lengths, id) {
+  const own = lengths.pictures[id], ref = lengths.models[carModel(id)];
+  return own && ref ? ref / own : 1;
+}

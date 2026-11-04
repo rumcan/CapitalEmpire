@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { CAR_DIRECTIONS, carModel, carModelName, carModelSize, carOwnerScale, foldCarSizes } from '../src/game/ext/car-art';
+import { CAR_DIRECTIONS, carModel, carModelName, carModelSize, carOwnerScale, carPictureFactor, foldCarSizes } from '../src/game/ext/car-art';
 import { LIBRARY } from '../src/game/library';
 
 const REMOVED = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'scripts/assets/removed.json'), 'utf8')) as Record<string, { kind?: string }>;
@@ -51,11 +51,11 @@ test('a model\'s size is its own key, else the largest kept under its pictures\'
   assert.equal(carModelSize(sizes, 'world:car_1'), 1.2);
   assert.equal(carModelSize(sizes, 'static:compact'), 1.08);
   assert.equal(carModelSize(sizes, 'world:schoolbus'), undefined);
-  // a size set on the model reaches every picture of it, in the game's reading of the sizes (carOwnerScale)
+  // a size set on the model reaches every picture of it, in the game's reading of the sizes (carOwnerScale: times the picture's factor, T313)
   const set = { 'static:compact': 1.3, 'world:car_0': 1.1 };
-  for (const id of CAR_IDS) if (carModel(id) === 'static:compact') assert.equal(carOwnerScale(id, set), 1.3, id);
-  for (const id of CAR_IDS) if (carModel(id) === 'world:car_0') assert.equal(carOwnerScale(id, set), 1.1, id);
-  for (const id of CAR_IDS) if (carModel(id) === 'world:car_1') assert.equal(carOwnerScale(id, set), 1, `${id}: unset`);
+  for (const id of CAR_IDS) if (carModel(id) === 'static:compact') assert.ok(Math.abs(carOwnerScale(id, set) - 1.3 * carPictureFactor(id)) < 1e-12, id);
+  for (const id of CAR_IDS) if (carModel(id) === 'world:car_0') assert.ok(Math.abs(carOwnerScale(id, set) - 1.1 * carPictureFactor(id)) < 1e-12, id);
+  for (const id of CAR_IDS) if (carModel(id) === 'world:car_1') assert.ok(Math.abs(carOwnerScale(id, set) - carPictureFactor(id)) < 1e-12, `${id}: unset`);
 });
 
 test('folding the sizes: one key per car model (the largest), the other keys as they were, and the file\'s order is the studio\'s to keep', () => {
