@@ -19,6 +19,7 @@ import { normalizeDayPins, type DayPinsSave } from './daypins';
 import { normalizeCrewSave, type CrewSave } from './crew';
 import { normalizeClubSave, type ClubSave } from './club';
 import { normalizePlayer, type PlayerProfile } from './player';
+import { normalizeEvents, type ClubEventsSave } from './clubevents';
 import type { GameSkills } from './play/types';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
@@ -96,6 +97,9 @@ export interface GolfSave {
  /** T241 (#705): your golf (golf/player.ts): your name, skills, practice log, rounds and booked tee time; T240 extends it. Missing: an older save, whose
   *  player starts with the starting profile the first time it is needed */
  player?: PlayerProfile;
+ /** T246 (#708): the club's own events (golf/clubevents.ts): the Club Championship and the Mayor's Cup, the seasons held, entered and announced, the
+  *  event day and the last result. Missing: an older save (none held yet) */
+ clubEvents?: ClubEventsSave;
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
@@ -126,7 +130,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -167,5 +171,6 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   const cl = normalizeClubSave(club); if (cl) out.club = cl; // T214: the members, well formed only (none: the engine seeds an old save's)
   // T241: your golf, well formed (none: the engine starts the starting profile when it is first needed)
   const pp = normalizePlayer(player); if (pp) out.player = pp;
+  if (clubEvents) out.clubEvents = normalizeEvents(clubEvents); // T246
   return out;
 }

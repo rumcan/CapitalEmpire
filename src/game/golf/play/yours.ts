@@ -93,7 +93,15 @@ export interface YourRound { v: 1; day: number; holes: number[]; at: number; car
   /** T325: the round as it was before your last shot (a mulligan puts it back); absent before the first shot of a hole and after a mulligan */
   undo?: YourRoundState;
   /** T325: the mulligans taken in the round so far (each gives the replayed shot a stream of its own: the same shot again is not the same outcome) */
-  mk?: number }
+  mk?: number;
+  /** T246/T244: what the round is (one shared flag): your own casual round (absent: an older save's, or one started at the first tee), your Club
+   *  Championship, the Mayor's Cup, or a money match. Every mode but casual is a competition: COMPETITION_RULES, the tournament's pressure */
+  mode?: RoundMode }
+/** T246/T244: a round's mode (YourRound.mode) */
+export type RoundMode = 'casual' | 'championship' | 'mayors-cup' | 'match';
+export const ROUND_MODES: readonly RoundMode[] = ['casual', 'championship', 'mayors-cup', 'match'];
+/** a competition round: any mode but casual (no mulligans, no gimmies; golf/player.ts PRESSURE.tournament or .match) */
+export const isCompetition = (r: Pick<YourRound, 'mode'> | null | undefined): boolean => !!r?.mode && r.mode !== 'casual';
 /** a round without its undo (what the undo keeps) */
 export type YourRoundState = Omit<YourRound, 'undo'>;
 
@@ -228,6 +236,7 @@ export function normalizeYourRound(x: unknown): YourRound | undefined {
   const ru = o.rules as Partial<RoundRules> | undefined;
   if (ru && typeof ru === 'object' && MULL_RULES.some(m => m.id === ru.mull)) base.rules = { mull: ru.mull!, ...(GIMME_RULES.some(g => g.id === ru.gimme) ? { gimme: ru.gimme! } : {}) };
   if (n(o.mk) && o.mk >= 1) base.mk = Math.round(o.mk);
+  if (o.mode && ROUND_MODES.includes(o.mode) && o.mode !== 'casual') { base.mode = o.mode; base.rules = { ...COMPETITION_RULES }; } // (T246: a competition keeps its rules)
   if (o.undo && typeof o.undo === 'object') {
     const u = normalizeYourRound({ ...(o.undo as object), undo: undefined });
     if (u && u.holes.length === holes.length) { const { undo: _x, ...us } = u; void _x; base.undo = us; }

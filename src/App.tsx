@@ -75,6 +75,7 @@ import { RangeCard } from './ui/golf/RangeCard';
 import { ClubhouseCard } from './ui/golf/ClubhouseCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
 import { TalkCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
+import { EventCard } from './ui/golf/EventCard';
 import { RoundBar, ScoreCard } from './ui/golf/YourRound';
 import { PlaceCard } from './ui/PlaceCard';
 import { SceneCard } from './ui/SceneCard';
@@ -805,7 +806,8 @@ export default function App() {
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} />; })()}
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} />}
-          {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
+          {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} event={game.eventTee()} onEvent={id => { game.closeYouTee(); game.openEventCard(id); }} />; })()}
+          {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.playEvent(ev.id)} />; })()}
           {(() => { const rv = game.yourRoundView(); return rv && <>{/* T317: your round's bar and its scorecard */}
             <RoundBar v={rv} onJump={() => game.yourJump()} onCart={() => game.youCartToggle()} onCallCart={() => game.youCartCall()} onMull={() => game.yourMulligan()} onGimme={() => game.yourGimme()} onCard={() => game.toggleYourCard()} onQuit={() => game.yourRoundEnd()} />
             {rv.card && <ScoreCard v={rv} onNext={() => game.yourNextHole()} onDone={() => game.yourRoundEnd()} onClose={() => game.toggleYourCard(false)} />}</>; })()}
