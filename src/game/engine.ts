@@ -177,6 +177,7 @@ import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './go
 import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, swingEffect, type ShotReport, type SwingOutcome, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
 import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
+import { AltTap, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { CART_REACH, CART_TILES, addressOf, cardTotals, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { BOOK_LEAD, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
@@ -282,7 +283,6 @@ const YOU_SURF: Readonly<Record<number, number>> = { [SURF.water]: Infinity, [SU
 const YOU_VERB_COLOR: Readonly<Record<YouVerb | 'none', string>> = { walk: '#facc15', talk: '#38bdf8', look: '#c084fc', use: '#4ade80', none: '#f87171' };
 /** T317: where your golf cart first waits: beside where you first stand (tile offsets, the first open one) */
 const CART_HOME: readonly (readonly [number, number])[] = [[2.5, 0], [0, 2.5], [-2.5, 0], [0, -2.5], [3.5, 1.5]];
-const YOU_KEYS: ReadonlySet<string> = new Set(['w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 /** T240: a person's name from a seed (the field's name lists) until T243 gives the town's people their own */
 function personName(seed: number): string {
   const r = (k: number) => hash(seed, k), w = r(1) < 0.5, first = w ? GOLFER_NAMES.w : GOLFER_NAMES.m;
@@ -4948,6 +4948,7 @@ export class Game {
     }
     }
     const pan = e.button === 1 || e.button === 2 || this.keys.has(' ');
+    this.youAlt.other(); // (T323: an Alt+click is no lone tap)
     if (this.keys.has(' ')) this.spacePanned = true;
     if (this.tool === 'practice' && !pan) { if (e.button === 0) this.practice.click(mx, my); return; } // T206
     if (this.tool === 'props' && !pan) { if (e.button === 0) this.decor.down(mx, my); return; } // the Props tool (T131): place, or select and drag
@@ -4955,7 +4956,7 @@ export class Game {
     if (this.paintOn && e.button === 2 && this.paint.secondary(this.tileAt(mx, my), mx, my)) return;
     if ((this.tool === 'lane' || this.tool === 'downgrade') && e.button === 2) { this.laneReverse(mx, my); return; }
     // T240: Walk mode: a click walks your character there (on release, so a drag still pans); Ctrl+click is Select's instant look
-    if (!pan && e.button === 0 && !e.ctrlKey && !e.metaKey && this.youControls()) { this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, you: true }; return; }
+    if (!pan && e.button === 0 && this.youKeysOn() && clickDoes(this.youWalkMode ? 'walk' : 'select', true, e.ctrlKey || e.metaKey) === 'walk') { this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, you: true }; return; }
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
         // a car under the pointer (street tier) is inspected; else a prop is selected; else, with the flow on, the junction there is watched
@@ -5015,7 +5016,7 @@ export class Game {
       else if (d.kind === 'park') this.parkUpdate(mx, my);
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
     if (!d && this.youControls()) this.youHoverAt(mx, my); else if (this.youHover && !d) { this.youHover = null; this.emit(); }
-    if (d?.you && d.moved) this.youFollow = false; // (T240: you dragged the map: the camera stays where you put it)
+    if (d?.kind === 'pan' && d.moved) this.youFollow = false; // (T240: you dragged the map: the camera stays where you put it; T323: either cursor)
     if (this.tool === 'props') this.decor.move(mx, my);
     if (this.tool === 'practice') this.practice.move(mx, my);
     if (this.tool === 'select' && !d) this.hoverRoad = this.hoverProp ? '' : this.roadNameAt(this.hover);
@@ -5065,6 +5066,7 @@ export class Game {
   junctionNameAt(x: number, y: number): string { const n = this.net.nodeAt({ x, y }); return n ? this.junctionName(n) : ''; }
   doubleClick() { this.routeInput('double'); if (this.paintOn) this.paint.doubleClick(); if (this.youControls()) this.youRun(); }
   wheel(e: WheelEvent) {
+    this.youAlt.other();
     e.preventDefault();
     const f = Math.exp(-e.deltaY * 0.0014);
     this.zoomAt(clampZoom(this.cam.z * f), e.offsetX, e.offsetY);
@@ -5135,10 +5137,11 @@ export class Game {
     if (e.key === 'Escape' && this.sceneRef) { this.closeScene(); return; } // T242: the picture card, over everything, goes first
     if (e.key === 'Escape' && (this.youTalk || this.youTeeOpen)) { this.youTalk = null; this.youTeeOpen = false; this.emit(); return; } // T240
     if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
+    if (!e.repeat) this.youAlt.down(e.key, typing); // T323: a lone tap of Alt swaps Walk and Select (keyUp)
     if (typing) return;
     this.keys.add(e.key);
-    if (YOU_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youControls()) { e.preventDefault(); return; } // T240: they walk you (the frame reads them)
-    if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.youControls() && this.youCart && (this.youInCart || this.youNearCart())) { e.preventDefault(); this.youCartToggle(); return; } // T317
+    if (WALK_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youKeysOn()) { e.preventDefault(); return; } // T240, T323: WASD walk you in either cursor (the frame reads them)
+    if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.youKeysOn() && this.youCart && (this.youInCart || this.youNearCart())) { e.preventDefault(); this.youCartToggle(); return; } // T317
     // T268: the tee set in hand: R turns it (Shift+R back), [ ] size it
     if (this.teePlace && !e.ctrlKey && !e.metaKey && !e.altKey) {
       if (e.key === 'r' || e.key === 'R') { this.turnTeePlace(e.shiftKey); return; }
@@ -5254,6 +5257,8 @@ export class Game {
   }
   keyUp(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement)?.tagName;
+    // T323: Alt tapped alone swaps the cursors; its default (the browser's menu bar taking the focus) is prevented in a golf game
+    if (this.youAlt.up(e.key) && this.you) { e.preventDefault(); this.toggleYouWalk(); }
     if (e.key === ' ' && !this.spacePanned && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && tag !== 'BUTTON') this.togglePause();
     this.keys.delete(e.key);
   }
@@ -7367,11 +7372,14 @@ export class Game {
   // ---------- T240 (#704): your character: point-and-click and the keys (golf/you.ts) ----------
   /** your character in the world (null: none yet, or not a golf game); the golf save it was placed for (a load or a new game starts again) */
   you: YouChar | null = null; private youFor: GolfSave | null = null;
-  /** Walk mode (on by default in a golf game): with Select in hand and no side mode open, a click walks you there or to a thing and uses it, and
-   *  WASD / the arrows walk you (the camera follows). Off: Select is the old instant inspector and the keys pan. Ctrl+click is always instant */
-  youWalkMode = true;
-  /** the camera follows you while you walk (on by default; a drag of the map lets go, the Me button takes it back) */
+  /** Walk mode, the rail's walking-figure cursor (T323: the Select slot's two cursors, Alt swaps them, remembered; golf/cursors.ts): with Select
+   *  in hand and no side mode open, a click walks you there or to a thing and uses it. Off (the pointer): Select is the old instant inspector.
+   *  Ctrl+click is always instant. WASD walk you in either cursor; the camera never follows you (T323) */
+  youWalkMode = loadCursorMode(storageOf()) === 'walk';
+  /** the camera follows your ball's flight after a shot (a drag of the map lets go); never your walk or your drive (T323) */
   youFollow = true;
+  /** T323: the lone Alt tap that swaps the cursors */
+  private youAlt = new AltTap();
   /** what a click does under the pointer (the cursor's verb and the hover label), the pointer (css px) */
   youHover: { verb: YouVerb | null; text: string; mx: number; my: number } | null = null;
   /** the talk card (a person you walked up to), the first tee's card (Start a round) */
@@ -7383,8 +7391,10 @@ export class Game {
   private youRSet = new Set<Prop>(); private youRBox: BBox = [0, 0, 0, 0]; private youPedV: WalkerView[] = [];
   private youSaveDue = false;
   /** whether your character takes the clicks and the keys now: a golf game, Walk mode, Select in hand, no side mode, no shot or tee set in hand */
-  youControls(): boolean {
-    return !!this.you && this.youWalkMode && this.tool === 'select' && !this.landMode && !this.holesTool && !this.eventTool && !this.grassPanel && !this.shot && !this.teePlace;
+  youControls(): boolean { return this.youWalkMode && this.youKeysOn(); }
+  /** whether WASD (and E, the cart) move your character: Select in hand in either cursor, no side mode, no shot or tee set in hand (T323) */
+  youKeysOn(): boolean {
+    return !!this.you && this.tool === 'select' && !this.landMode && !this.holesTool && !this.eventTool && !this.grassPanel && !this.shot && !this.teePlace;
   }
   /** your look (an index into GOLFER_PEOPLE): the saved one, else the owner's art for your sex */
   youArt(): number { const p = this.golf?.player; const l = p?.you?.look; return l !== undefined && l < GOLFER_PEOPLE.length ? l : ownerArt(p?.sex ?? 'm'); }
@@ -7410,25 +7420,17 @@ export class Game {
     // T317: your golf cart (placed once by the clubhouse, or where you left it); in it, the keys and the clicks drive it and you ride
     if (!this.youCart) this.youCartPlace();
     const c = this.youCart, mv = this.youInCart && c ? c : y, ok = mv === y ? this.youOk : this.cartOk, wasMoving = mv.moving || mv.keys;
-    let kx = 0, ky = 0;
-    if (this.youControls()) {
-      if (this.keys.has('ArrowLeft') || this.keys.has('a') || this.keys.has('A')) kx -= 1; if (this.keys.has('ArrowRight') || this.keys.has('d') || this.keys.has('D')) kx += 1;
-      if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
-    }
+    const { kx, ky } = this.youKeysOn() ? walkAxes(this.keys) : { kx: 0, ky: 0 };
     if (kx || ky) {
       if (mv.moving) this.youThen = null;
       this.youRaster(mv.x, mv.y, 24, false);
       keyStep(mv, kx, ky, this.keys.has('Shift'), dt, ok);
-      this.youFollow = true;
     } else {
       keyStep(mv, 0, 0, false, dt, ok);
       if (stepYou(mv, dt)) this.youArrive();
     }
     if (mv !== y) { y.x = mv.x; y.y = mv.y; y.face = mv.face; y.moving = false; y.keys = false; }
-    if ((mv.moving || mv.keys) && this.youFollow) {
-      const tx = worldX(mv.x, mv.y), ty = worldY(mv.x, mv.y), k = Math.min(1, dt * 5);
-      this.camEase = null; this.cam.X += (tx - this.cam.X) * k; this.cam.Y += (ty - this.cam.Y) * k; this.clampCam();
-    }
+    // (T323, the owner: the camera no longer follows you walking or driving: Me centres it once)
     if (wasMoving && !mv.moving && !mv.keys) { this.youSaveDue = true; this.emit(); }
     this.yourFrame(dt); // T317: your round: the ball's flight, the snap to the address
     if (this.youSaveDue) { this.youSaveDue = false; this.youKeep(); }
@@ -7587,7 +7589,7 @@ export class Game {
     const y = this.you; if (!y) return;
     const t = this.youThingAt(mx, my);
     if (!t) { this.toast('You cannot walk there', 'warn'); return; }
-    this.youTalk = null; this.youTeeOpen = false; this.youFollow = true;
+    this.youTalk = null; this.youTeeOpen = false;
     // T317: in your cart a click drives it there (the nearest spot short of a green or a bunker; a click on the cart gets you out)
     const c = this.youInCart ? this.youCart : null, mv = c ?? y;
     if (mv.moving && this.youThen?.key === t.key) { mv.run = true; return; } // (a second click on the same place: run)
@@ -7604,9 +7606,16 @@ export class Game {
   youRun() { if (this.you?.moving) this.you.run = true; }
   /** Skip: you arrive at once (a long trip; golf/you.ts SKIP_TILES) */
   youSkip() { const y = this.youInCart && this.youCart ? this.youCart : this.you; if (!y?.moving) return; skipAhead(y, 2); this.emit(); }
-  /** the Me button: the camera on you (the street zoom at least), following again, Walk mode on */
-  youMe() { const y = this.you; if (!y) return; this.youWalkMode = true; this.youFollow = true; if (this.tool !== 'select') this.setTool('select'); this.lookAt(y.x, y.y, Math.max(this.cam.z, 0.2)); }
-  setYouWalk(on: boolean) { this.youWalkMode = on; if (!on) this.youHover = null; this.emit(); }
+  /** the Me button: the camera on you once (the street zoom at least; T323: it does not follow), Select in hand in the cursor you had */
+  youMe() { const y = this.you; if (!y) return; if (this.tool !== 'select') this.setTool('select'); this.lookAt(y.x, y.y, Math.max(this.cam.z, 0.2)); }
+  /** T323: the rail's cursor (Walk: the walking figure; Select: the pointer), remembered; Select taken in hand */
+  setYouWalk(on: boolean) {
+    this.youWalkMode = on; saveCursorMode(storageOf(), on ? 'walk' : 'select'); if (!on) this.youHover = null;
+    if (this.tool !== 'select') this.setTool('select');
+    this.emit();
+  }
+  /** T323: Alt (a lone tap) swaps the cursors */
+  toggleYouWalk() { this.setYouWalk(!this.youWalkMode); this.toast(this.youWalkMode ? 'Walk: a click walks you there (Alt: Select)' : 'Select: a click inspects (Alt: Walk)', 'info'); }
   /** you walk up to a person: you face each other and the talk card opens (T243 brings the portraits and their skills) */
   private youTalkTo(name: string, what: string, at: Pt) {
     const y = this.you; if (y) y.face = facingOf(at.x - y.x, at.y - y.y);
@@ -7788,7 +7797,8 @@ export class Game {
     if (f) {
       f.t += dt;
       const b = yourBallAt(f);
-      if (this.youFollow) { const k = Math.min(1, dt * 4); this.camEase = null; this.cam.X += (worldX(b.x, b.y) - this.cam.X) * k; this.cam.Y += (worldY(b.x, b.y) - this.cam.Y) * k; this.clampCam(); }
+      const ch = cameraChase(b, this.youFollow); // T317: the camera follows the ball's flight (the shot), never your walk (T323)
+      if (ch) { const k = Math.min(1, dt * 4); this.camEase = null; this.cam.X += (worldX(ch.x, ch.y) - this.cam.X) * k; this.cam.Y += (worldY(ch.x, ch.y) - this.cam.Y) * k; this.clampCam(); }
       if (f.t >= f.dur) { this.yrFlight = null; if (f.done) this.youHoledOut(f.row, f.up); this.emit(); }
       return;
     }
@@ -7883,7 +7893,7 @@ export class Game {
     const c = this.youCart;
     if (this.youInCart && c) { stopWalk(c); const p = this.cartNear(r.ball, c); if (p) { c.x = p.x; c.y = p.y; } this.youInCart = false; }
     stopWalk(y); this.youThen = null; y.x = r.ball.x; y.y = r.ball.y;
-    this.youFollow = true; this.youSaveDue = true;
+    this.youSaveDue = true;
     this.yourAddress();
     this.emit();
   }
@@ -7905,8 +7915,8 @@ export class Game {
       this.youSaveDue = true; this.emit(); return;
     }
     if (Math.hypot(c.x - y.x, c.y - y.y) > CART_REACH) { this.toast('Walk to your cart first', 'warn'); return; }
-    stopWalk(y); this.youThen = null; this.youInCart = true; y.x = c.x; y.y = c.y; this.youFollow = true;
-    this.youSaveDue = true; this.toast('In your cart: WASD or the arrows drive (Shift: faster), a click drives there, E gets out', 'info'); this.emit();
+    stopWalk(y); this.youThen = null; this.youInCart = true; y.x = c.x; y.y = c.y;
+    this.youSaveDue = true; this.toast('In your cart: WASD drive (Shift: faster), a click drives there, E gets out', 'info'); this.emit();
   }
   /** where you stand beside the cart: 1.2 tiles off it toward `from` first, then the other sides; the cart's own spot when none is open */
   private cartSide(c: Pt, from: Pt): Pt {
@@ -8608,11 +8618,7 @@ export class Game {
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();
-    const sp = 900 / this.cam.z * dt; let kx = 0, ky = 0;
-    if (!this.youControls()) {
-    if (this.keys.has('ArrowLeft') || this.keys.has('a') || this.keys.has('A')) kx -= 1; if (this.keys.has('ArrowRight') || this.keys.has('d') || this.keys.has('D')) kx += 1;
-    if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
-    }
+    const sp = 900 / this.cam.z * dt, { kx, ky } = panAxes(this.keys, this.youKeysOn()); // T323: the arrows pan; WASD too when you cannot walk
     if ((kx || ky) && this.golfWatch) this.stopWatching(); // T320: a pan leaves the golfers followed
     if (kx || ky) { this.camEase = null; this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
     else this.stepCamEase(now);

@@ -398,3 +398,8 @@ The owner's 3-click swing meter (the shot panel, `src/ui/ShotPanel.tsx` drawMete
 - **A half-circle meter face** (about 300 x 180 px, transparent): the arc from the snap line at the right end over the top to the left end, a gold 100%
   mark at 5/6 of the way (150 degrees), the overswing (the last sixth) in red, a short tail below the snap line on the right, a polished 1985 golf-game
   look (brass and enamel). The marker, the ticks, the sweet spot and the numbers stay drawn by the code on top.
+
+## The rail's cursors (T323, #921: an art request)
+- **Stand In for the Select and Walk rail icons**: `src/ui/Rail.tsx` draws a line pointer (an arrow) and a walking figure as inline SVGs. Wanted: two
+  icons in the rail's style (`src/assets/ui/icons/*.webp`, the same size and finish as compass, pin, trophy): `cursor-select` (a mouse arrow)
+  and `cursor-walk` (a golfer mid-stride, side-on, facing right). Swap them in `CursorPair` (Rail.tsx) when they land.
