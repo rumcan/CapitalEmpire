@@ -31,6 +31,7 @@ export function GolfLeaderboard({ game }: { game: Game }) {
         <span className="font-display text-sm font-bold tracking-wide text-[var(--gold-hi)] uppercase">Leaderboard</span>
         <span className="text-sm font-bold tabular-nums text-[var(--gold-hi)]">{clock(b.minute)}</span>
       </div>
+      {b.event && <div className="text-[11px] text-slate-400" data-testid="board-event">{b.event}</div>}
       {join && (
         <div className="mt-2 flex items-center justify-between gap-2 rounded bg-white/5 px-2 py-1.5 text-xs text-slate-200">
           <span>Play in it</span>

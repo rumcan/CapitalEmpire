@@ -15,6 +15,7 @@ import type { GameSkills, Golfer, Sex } from './play/types';
 import type { TeeKind } from './types';
 import { normalizeYou, type YouSave } from './you';
 import { normalizeYourRound, type YourRound } from './play/yours';
+import { normalizeTitles, titleText, type Title } from './clubevents';
 
 /** the five skills, in the order the cards show them */
 export const SKILL_IDS = ['driving', 'irons', 'short', 'putting', 'nerve'] as const;
@@ -112,6 +113,8 @@ export interface PlayerProfile {
   you?: YouSave;
   /** T317: the round you are playing by hand (play/yours.ts: the holes, the card, your ball); absent: none under way */
   round?: YourRound;
+  /** T246: the titles you won (golf/clubevents.ts: the Club Championship, the Mayor's Cup), oldest first; absent: none */
+  titles?: Title[];
 }
 /** the practice log and the rounds keep this many (newest last) */
 export const LOG_MAX = 30, ROUNDS_MAX = 20;
@@ -160,6 +163,7 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     booked,
     ...(normalizeYou(p.you) ? { you: normalizeYou(p.you) } : {}),
     ...(normalizeYourRound(p.round) ? { round: normalizeYourRound(p.round) } : {}),
+    ...(normalizeTitles(p.titles) ? { titles: normalizeTitles(p.titles) } : {}),
   };
 }
 
@@ -298,6 +302,8 @@ export interface PlayerCardView {
   round: RoundState;
   log: { text: string; day: number; cost: number; hcp: [number, number] }[];
   rounds: { day: number; kind: RoundKind; strokes: number; par: number; text: string }[];
+  /** T246: the titles you won, newest first ("Club Champion 1986 · 74 (+2)") */
+  titles: string[];
 }
 export function playerCardView(p: PlayerProfile, round: RoundState): PlayerCardView {
   const h = handicapOf(p.skills);
@@ -306,6 +312,7 @@ export function playerCardView(p: PlayerProfile, round: RoundState): PlayerCardV
     skills: SKILL_IDS.map(id => ({ id, name: SKILL_NAME[id], value: p.skills[id], what: SKILL_WHAT[id] })),
     round,
     log: p.log.slice(-8).reverse().map(e => ({ text: entryText(e), day: e.day, cost: e.cost, hcp: e.hcp })),
+    titles: (p.titles ?? []).slice().reverse().map(titleText),
     rounds: p.rounds.slice(-6).reverse().map(r => ({ day: r.day, kind: r.kind, strokes: r.strokes, par: r.par, text: `${r.strokes} (${toParWord(r.strokes - r.par)})${r.holes !== 18 ? ` over ${r.holes}` : ''}${r.noHcp ? ` · ${r.noHcp}, not for the handicap` : ''}` })),
   };
 }

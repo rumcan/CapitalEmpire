@@ -64,6 +64,13 @@ export function PlayerCard({ view, onClose, onBook, onCancel, right = 'right-3' 
           <div key={i} className="flex justify-between text-[12px] text-slate-300"><span>Day {x.day} · {x.kind === 'everyday' ? 'Everyday round' : x.kind === 'match' ? 'Money match' : 'Tournament'}</span><span className="font-semibold text-white">{x.text}</span></div>
         )) : <div className="text-[12px] text-slate-400">None yet. Nerve grows as you play: a little from a friendly round, more from a match or the tournament.</div>}
       </div>
+      {/* T246: the titles you won (the Club Championship, the Mayor's Cup) */}
+      <div className="space-y-1" data-testid="player-titles">
+        <div className="text-[12px] uppercase text-slate-400">Titles</div>
+        {view.titles.length ? view.titles.map((t, i) => (
+          <div key={i} className="flex items-center gap-1.5 text-[12px] font-semibold text-amber-200"><Icon name="trophy" size={13} /><span>{t}</span></div>
+        )) : <div className="text-[12px] text-slate-400">None yet. Win the Club Championship (May, handicap 18.0 or less) or the Mayor's Cup (October) at your club.</div>}
+      </div>
     </div>
   );
 }
