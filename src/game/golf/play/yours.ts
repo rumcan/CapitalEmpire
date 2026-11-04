@@ -16,7 +16,7 @@ import { shotOutcome, POWER, type OwnerInput, type OwnerTurn } from './live';
 import { carryM, chooseShot, rng, skillFor, type ShotSkill } from './shot';
 import type { CourseView, Landing, Lie, PlayHole, Pt, Shot } from './types';
 import type { TeeKind } from '../types';
-import { normalizeMatch, type MatchPlay } from './match';
+import { normalizeMatch, type MatchPlay, type MatchView } from './match';
 import { CUP_DROP, CUP_HOLD_S, CUP_NONE, CUP_SHAVE, DROP_S, shotPoint, type PuttRoll } from './green';
 
 /** within this many tiles of the ball (8 m) you snap to the address: you stand at it, facing the aim, and the shot opens */
@@ -333,5 +333,7 @@ export interface YourRoundView { round: YourRound; hole: number; par: number; st
   canMull: boolean; mullLeft: number;
   /** T327: the gimme is offered now (your ball inside the ring) */
   canGimme: boolean;
+  /** T244: a money match's bar (play/match.ts matchView); null or absent: not a match */
+  match?: MatchView | null;
   /** T326: your cart is out of reach (the Cart button calls it) */
   cartFar: boolean; card: boolean; flying: boolean; addressing: boolean }

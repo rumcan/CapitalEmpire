@@ -66,6 +66,8 @@ export function hcpOfName(name: string): number {
   const u = draw(name, 1), v = draw(name, 2);
   return Math.round((u < 0.2 ? 4 + 8 * v : 14 + 16 * v) * 10) / 10;
 }
+/** whether a townsperson golfs (about half do; everyone at the range or on the course does): only a golfer can be challenged */
+export const golfs = (name: string): boolean => draw(name, 5) < 0.55;
 /** what a person carries for a bet ($, before their losses to you): $60 to $1,560, more for the better golfers (they play for money) */
 export function basePurse(name: string, hcp: number): number {
   const u = draw(name, 3), k = hcp < 10 ? 1.6 : 1;

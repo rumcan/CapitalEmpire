@@ -8,6 +8,7 @@ import type { Verb } from '../../game/golf/you';
 import { Icon } from '../Icon';
 import { Thumb } from '../Thumb';
 import { HoleChoiceBox } from './YourRound';
+import { ChallengeBox, type MatchOffer } from './MatchCards';
 import type { HoleChoice, RoundRules } from '../../game/golf/play/yours';
 
 const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
@@ -58,7 +59,8 @@ export function WhoCard({ name, look, looks, hcp, onDone }: { name: string; look
 }
 
 /** the talk card: you walked up to a person; their name, what they do and a line (T243 gives them portraits, jobs and skills) */
-export function TalkCard({ talk, right, onClose }: { talk: { name: string; line: string; what: string }; right: string; onClose: () => void }) {
+export function TalkCard({ talk, right, onClose, offer, onChallenge }: { talk: { name: string; line: string; what: string }; right: string; onClose: () => void;
+  /** T244: the money match on their card (they golf), and the challenge */ offer?: MatchOffer | null; onChallenge?: (stake: number, holes: number) => void }) {
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 w-[300px] space-y-2 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="talk-card">
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
@@ -69,6 +71,7 @@ export function TalkCard({ talk, right, onClose }: { talk: { name: string; line:
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
       </div>
       <p className="rounded-lg bg-white/5 px-2 py-1.5 text-sm italic text-slate-200">"{talk.line}"</p>
+      {offer && onChallenge && <ChallengeBox key={talk.name} o={offer} onChallenge={onChallenge} />}
     </div>
   );
 }
