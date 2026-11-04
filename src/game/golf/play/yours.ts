@@ -157,14 +157,19 @@ export function ordinal(n: number): string {
 
 /** your ball in the air and rolling (real seconds): from, where it lands (null: a putt), where it comes to rest, the time so far and in all, the time in
  *  the air, whether the hole is done then (holed, or picked up: up), the card's row, and a penalty (the drop shows at the end) */
-export interface YourFlight { from: Pt; land: Pt | null; to: Pt; t: number; dur: number; air: number; done: boolean; up: boolean; row: CardRow; pen: boolean }
+export interface YourFlight { from: Pt; land: Pt | null; to: Pt; t: number; dur: number; air: number; done: boolean; up: boolean; row: CardRow; pen: boolean;
+  /** T318: a spin back's check (landing.check): the ball skids on to it first, then spins back to its rest */
+  check?: Pt }
 /** a flight's timing (real seconds): a full shot 0.9 s plus 0.012 s a tile in the air, then its roll (0.25 s plus 0.04 s a tile, at most 1.5 s; a
  *  penalty's 0.2 s); a putt 0.4 s plus 0.25 s a tile (at most 3 s) */
-export function flightOf(from: Pt, land: Pt | null, to: Pt, done: boolean, up: boolean, row: CardRow, pen: boolean): YourFlight {
+export function flightOf(from: Pt, land: Pt | null, to: Pt, done: boolean, up: boolean, row: CardRow, pen: boolean, check?: Pt): YourFlight {
   const air = land ? 0.9 + 0.012 * Math.hypot(land.x - from.x, land.y - from.y) : 0;
   const roll = land ? (pen ? 0.2 : Math.min(1.5, 0.25 + 0.04 * Math.hypot(to.x - land.x, to.y - land.y))) : Math.min(3, 0.4 + 0.25 * Math.hypot(to.x - from.x, to.y - from.y));
-  return { from: { x: from.x, y: from.y }, land: land ? { x: land.x, y: land.y } : null, to: { x: to.x, y: to.y }, t: 0, dur: air + roll, air, done, up, row, pen };
+  const ck = land && check && !pen ? { check: { x: check.x, y: check.y } } : {};
+  return { from: { x: from.x, y: from.y }, land: land ? { x: land.x, y: land.y } : null, to: { x: to.x, y: to.y }, t: 0, dur: air + roll + (ck.check ? CHECK_S : 0), air, done, up, row, pen, ...ck };
 }
+/** T318: the time (s) a spin back's hop on to its check takes */
+const CHECK_S = 0.3;
 /** the ball of a flight at its time (tiles; h its height in tiles: an eighth of the carry, at most 12 (24 m), on an arc): in the air, rolling (slowing), or a
  *  putt rolling; a penalty's ball stays where it landed and shows at its drop at the end */
 export function yourBallAt(f: YourFlight): { x: number; y: number; h: number } {
@@ -175,6 +180,13 @@ export function yourBallAt(f: YourFlight): { x: number; y: number; h: number } {
   }
   const a = f.land ?? f.from, u = Math.min(1, Math.max(0, (f.t - f.air) / Math.max(1e-3, f.dur - f.air))), e = 1 - (1 - u) * (1 - u);
   if (f.pen) return u < 1 ? { x: a.x, y: a.y, h: 0 } : { x: f.to.x, y: f.to.y, h: 0 };
+  if (f.check) {
+    // T318: a spin back: a low hop on to the check, then the ball zips back to its rest (slowing)
+    const tc = CHECK_S / Math.max(1e-3, f.dur - f.air), c = f.check;
+    if (u < tc) { const v = u / tc; return { x: a.x + (c.x - a.x) * v, y: a.y + (c.y - a.y) * v, h: 4 * v * (1 - v) * 0.15 }; }
+    const v = (u - tc) / Math.max(1e-3, 1 - tc), w = 1 - (1 - v) * (1 - v);
+    return { x: c.x + (f.to.x - c.x) * w, y: c.y + (f.to.y - c.y) * w, h: 0 };
+  }
   return { x: a.x + (f.to.x - a.x) * e, y: a.y + (f.to.y - a.y) * e, h: 0 };
 }
 

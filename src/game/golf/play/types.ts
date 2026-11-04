@@ -37,7 +37,12 @@ export interface Shot { golfer: number; hole: number; stroke: number; t: number;
   landing?: Landing }
 /** T251: where a full shot or chip landed and its lie there, and where its roll stopped and its lie there (rest: `to`, unless the ball went into water
  *  or out of bounds, when `to` is the drop or the stroke again) */
-export interface Landing { at: Pt; lie: Lie; rest: Pt; restLie: Lie }
+export interface Landing { at: Pt; lie: Lie; rest: Pt; restLie: Lie;
+  /** T318: the owner's spin's change to the roll (m along the flight; below 0 shorter, past the landing a spin back), the roll's `spinRoll` hook for
+   *  T319's roll; absent: no spin */
+  spin?: number;
+  /** T318: a spin back's check: the point past the landing the ball skids to before it spins back to its rest (absent: none) */
+  check?: Pt }
 /** T211 pace of play: a group's wait on the group ahead: the group (an index into groups), the hole index, where (on the tee, for the landing area; or
  *  short of the green, for the green), and from..to in game minutes (to is Infinity while the group ahead has not let it play yet) */
 export interface Wait { group: number; hole: number; at: 'tee' | 'green'; from: number; to: number }

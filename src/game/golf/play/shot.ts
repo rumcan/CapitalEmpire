@@ -2,6 +2,7 @@
 // Every golfer x hole draws from its own seeded stream (rng), so one golfer's play never shifts another's. Pure TS, no DOM, no Math.random.
 import { TILE_M } from '../types';
 import type { Club, CourseView, GameSkills, Landing, Lie, Pt, PlayHole } from './types';
+import { SPIN, curveOf, spinRollM, type SpinEffect } from './spin';
 
 /** the full carry in metres of each club at skill 1 (the putter has none); a skill s carries base * (0.75 + 0.25 s) */
 export const CLUBS: Record<Club, number> = { driver: 250, wood3: 225, iron4: 195, iron6: 170, iron8: 145, pw: 120, sw: 90, putter: 0 };
@@ -97,8 +98,9 @@ export function chooseShot(lie: Lie, from: Pt, hole: PlayHole, skill: ShotSkill,
 
 /** T316: what the owner's swing meter changes in a hit (all absent: the model's shot exactly as before, the same draws): maxF lets the carry pass the
  *  club's full carry (an overswing, a key-spam boost), spread scales the distance and direction spread, angF the direction spread alone (the meter's
- *  miss takes over the direction), roll the roll (a hook runs on) */
-export interface HitMod { maxF?: number; spread?: number; angF?: number; roll?: number }
+ *  miss takes over the direction), roll the roll (a hook runs on). T318: spin, the owner's spin (spin.ts): its side spin curves the flight and kicks the
+ *  bounce, its topspin and backspin lengthen or shorten the roll (a spin back past the landing); no draws, so the stream is the same with it or without */
+export interface HitMod { maxF?: number; spread?: number; angF?: number; roll?: number; spin?: SpinEffect }
 
 /** a full shot or chip (not the putt) from a lie at an aim with a club: where the ball comes to rest and its lie. Water at the final point
  *  is a penalty and the ball drops where it last was out of the water (on the way back from the water to the stroke). Out of bounds is a
@@ -113,11 +115,20 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
   const carry = (sand ? dM : Math.min(dM, carryM(club, skill) * (mod?.maxF ?? 1)) * CARRY_F[lie]) * mf;
   const spread = (sand ? 1.6 : SPREAD_F[lie]) * (mod?.spread ?? 1);
   const sD = (0.03 + 0.07 * (1 - skill)) * carry * spread, sA = (1.5 + 5 * (1 - skill)) * spread * (mod?.angF ?? 1) * Math.PI / 180;
-  const ang = Math.atan2(aim.y - from.y, aim.x - from.x) + gauss(r) * sA + (mis ? gauss(r) * MISHIT.deg * Math.PI / 180 : 0);
+  const sp = mod?.spin && mod.spin.amount > 0 ? mod.spin : null; // (T318: the curve and the roll below; no draws)
+  const ang = Math.atan2(aim.y - from.y, aim.x - from.x) + gauss(r) * sA + (mis ? gauss(r) * MISHIT.deg * Math.PI / 180 : 0) + (sp ? curveOf(sp, carry) : 0);
   const flown = Math.max(0, carry + gauss(r) * sD), cs = Math.cos(ang), sn = Math.sin(ang);
   const land = { x: from.x + cs * flown / TILE_M, y: from.y + sn * flown / TILE_M };
-  const landLie = view.lieAt(land.x, land.y), roll = flown * ROLL[landLie] * (mod?.roll ?? 1) / TILE_M;
-  const end = { x: land.x + cs * roll, y: land.y + sn * roll }, endLie = view.lieAt(end.x, end.y), landing: Landing = { at: land, lie: landLie, rest: end, restLie: endLie };
+  const landLie = view.lieAt(land.x, land.y);
+  let roll = flown * ROLL[landLie] * (mod?.roll ?? 1) / TILE_M, rc = cs, rs = sn, spinM: number | undefined, check: Pt | undefined;
+  if (sp && landLie !== 'water' && landLie !== 'bunker') {
+    // T318: the spin on the first bounce: topspin runs on, backspin checks (and spins back past the landing), side spin kicks the way of the spin
+    const m0 = roll * TILE_M, m = spinRollM(sp, m0, landLie), k = sp.side * SPIN.kickDeg * Math.PI / 180, c = Math.cos(k), q = Math.sin(k);
+    rc = cs * c - sn * q; rs = cs * q + sn * c; roll = m / TILE_M; spinM = m - m0;
+    if (m < 0) { const f = Math.min(SPIN.checkM, SPIN.checkK * flown) / TILE_M; check = { x: land.x + cs * f, y: land.y + sn * f }; }
+  }
+  const end = { x: land.x + rc * roll, y: land.y + rs * roll }, endLie = view.lieAt(end.x, end.y), landing: Landing = { at: land, lie: landLie, rest: end, restLie: endLie };
+  if (spinM !== undefined) { landing.spin = spinM; if (check) landing.check = check; }
   if (endLie === 'out') return { to: { x: from.x, y: from.y }, lie, penalty: 1, holed: false, landing };
   if (endLie === 'water') {
     // walk back from the water in half-tile steps: the first point that is not water is where the ball drops

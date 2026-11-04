@@ -175,7 +175,7 @@ import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
-import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, swingEffect, type ShotReport, type SwingOutcome, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
+import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
 import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { CART_REACH, CART_TILES, addressOf, cardTotals, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
@@ -329,8 +329,12 @@ interface OwnerPlay { id: number; sex: Sex; /** T241: his skill (OWNER_SKILL) or
   /** T241: your profile's skills as he joined (saved, so a reload replays the same round) */ skills?: GameSkills }
 /** the owner's open shot (P4b, the shot panel): his turn and his input so far (the club, the aim point in tiles, the power: see powerFor) */
 export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number };
+  /** T318: the spin's dot on the ball (spin.ts: x -1 draw .. +1 fade, y -1 backspin .. +1 topspin); absent: none */
+  spin?: { x: number; y: number };
   /** T317: the shot of your own round (play/yours.ts), not the tournament's: the sim runs on (no pause) and the hit plays your round */
   mine?: boolean }
+/** T318: a spun ball in the air (Game.spinAir) */
+interface SpinAir { mine: boolean; input: { club: Club; aim: Pt; power: number; swing?: SwingOutcome; spin: SpinInput }; lie: Lie; prev: YourRound | null; seen: boolean; at: number }
 /** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
  *  everyone is done (else null), whether everyone is done, the tournament's name, and the owner's group's tee time (null without him) */
 export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string | null; done: boolean; event: string; ownerTee: number | null;
@@ -347,6 +351,10 @@ const OWN_WATCH_LEAD = 2;
 /** T320: after the owner's shot the camera stays on his ball until it is at rest, then this many real ms more before his next shot may open; and
  *  never longer than OWN_HOLD_MAX_MS */
 const OWN_BEAT_MS = 900, OWN_HOLD_MAX_MS = 12000;
+/** T318: the most (ms) the tournament owner's spun ball is waited for in the air before its clicks are played in anyway */
+const SPIN_AIR_MAX_MS = 9000;
+/** T318: log the tournament's spin rebuild time (ms) to the console (the perf check) */
+const DEV_LOG_SPIN = import.meta.env.DEV;
 /** T210: the end of the round (the last group's moment, the round over) is stepped at most this often, ms (at 20x about 4 game minutes) */
 const FINISH_EVERY_MS = 200;
 /** a closed path over a flat x y list, in the current transform's units */
@@ -913,6 +921,10 @@ export class Game {
   private dayHold: { speed: number; at: number } | null = null;
   /** the owner's open shot (P4b: the shot panel; null when none is open) and the speed the sim had when it opened (it resumes at least at 1x) */
   private shot: ShotState | null = null; private shotSpeed = 1;
+  /** T318: the owner's ball in the air with spin on it: the shot's input (its spin's dot and the clicks so far), the lie it was played from; mine: your
+   *  round's (prev: the round before the shot, to play it again with the clicks), else the tournament's (seen: his ball was seen in the air; at: when
+   *  struck, ms). Null with no ball in the air or no spin chosen */
+  private spinAir: SpinAir | null = null;
   /** T316: the owner's last played shot as the shot panel reports it (the club, the miss, the carry and total); null before his first */
   private lastShot: ShotReport | null = null;
   /** T320: the camera's hold on the owner's ball after his shot: since when (performance.now ms), whether the ball has moved yet, and when it last
@@ -7248,7 +7260,7 @@ export class Game {
     this.ownerFrame(minute); this.holdDay(now, true);
     // T320: the owner's own live round plays at the watching speed, from his first address until his group is done
     this.watchFor('own', !!own?.turn && (this.watchSpeed.has('own') || minute >= own.tee - OWN_WATCH_LEAD));
-    this.ownHoldFrame(now);
+    this.ownHoldFrame(now); this.spinAirFrame(now);
     // the crowd follows the play (docs/GOLF-PLAY.md decision 6): the featured holes are worked out at most every FEATURED_EVERY_MS and sent when they change
     if (now - this.featuredAt >= FEATURED_EVERY_MS) { this.featuredAt = now; this.sendFeatured(this.featuredHoles(this.play, minute)); }
     // T211: a marshal's wave-through is toasted as the minute passes it (those before the first frame, a reload mid-day, are not)
@@ -7792,10 +7804,12 @@ export class Game {
   /** each frame (real seconds): your ball's flight (the camera follows it), then the snap: near your ball (SNAP_TILES), on foot or in the cart, you
    *  stand at the address and the shot opens */
   private yourFrame(dt: number) {
-    const r = this.yourRound(), y = this.you; if (!r || !y) { this.yrFlight = null; return; }
-    const f = this.yrFlight;
+    const r = this.yourRound(), y = this.you; if (!r || !y) { this.yrFlight = null; if (this.spinAir?.mine) this.spinAir = null; return; }
+    let f = this.yrFlight;
+    if (!f && this.spinAir?.mine) this.spinAir = null;
     if (f) {
       f.t += dt;
+      if (this.spinAir?.mine && f.t >= f.air) { this.spinLand(); f = this.yrFlight ?? f; } // (T318: the spin's clicks are in: the shot as they play it)
       const b = yourBallAt(f);
       const ch = cameraChase(b, this.youFollow); // T317: the camera follows the ball's flight (the shot), never your walk (T323)
       if (ch) { const k = Math.min(1, dt * 4); this.camEase = null; this.cam.X += (worldX(ch.x, ch.y) - this.cam.X) * k; this.cam.Y += (worldY(ch.x, ch.y) - this.cam.Y) * k; this.clampCam(); }
@@ -7831,12 +7845,14 @@ export class Game {
   private yourHit(swing?: SwingOutcome) {
     const s = this.shot, r = this.yourRound(), v = this.yrView(); if (!s?.mine || !r || !v) return;
     const sk = this.yourSkills(), i = s.input;
-    const { round, shot, up } = playYours(v, r, sk, { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}) }, this.seed);
+    const spin = this.shotSpin(), input = { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}) };
+    const { round, shot, up } = playYours(v, r, sk, input, this.seed);
+    this.spinAir = spin ? { mine: true, input: { ...input, spin }, lie: r.lie, prev: r, seen: false, at: performance.now() } : null;
     this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(sk, i.club), i.club === 'putter') : null);
     this.toast(this.lastShot.text, 'info');
     this.shot = null; this.setYourRound(round);
     if (this.you) this.you.swing = 0; // (the drive clip plays once)
-    this.yrFlight = flightOf(shot.from, shot.landing?.at ?? null, shot.to, round.holed, up, rowOf(round), shot.penalty > 0);
+    this.yrFlight = flightOf(shot.from, shot.landing?.at ?? null, shot.to, round.holed, up, rowOf(round), shot.penalty > 0, shot.landing?.check);
     this.yrFlight.t = -IMPACT_S; // (T320: the ball leaves at the drive clip's impact, as the field's do: play/view.ts)
     this.youFollow = true;
     this.emit();
@@ -8489,6 +8505,78 @@ export class Game {
   private shotSk(): ShotSkill | null { const s = this.shot; if (!s) return null; return s.mine ? this.yourSkills() : this.play?.own?.skill ?? null; }
   /** T316: the owner's last played shot (the shot panel's "Last shot" line), or null */
   lastShotReport(): ShotReport | null { return this.lastShot; }
+  /** T318: the open shot's spin as the save keeps it (the dot, no clicks yet); null for a putt or with the dot at the centre */
+  private shotSpin(): SpinInput | null {
+    const s = this.shot, d = s?.spin; if (!s || !d || s.input.club === 'putter' || Math.hypot(d.x, d.y) < 1e-3) return null;
+    return { x: d.x, y: d.y, pump: 0 };
+  }
+  /** T318: the spin's dot for the open shot (a click or drag on the ball): x -1 draw .. +1 fade, y -1 backspin .. +1 topspin, kept inside the ball */
+  setShotSpin(x: number, y: number) {
+    const s = this.shot; if (!s || !Number.isFinite(x) || !Number.isFinite(y)) return;
+    const r = Math.hypot(x, y), k = r > 1 ? 1 / r : 1;
+    this.shot = { ...s, spin: { x: x * k, y: y * k } }; this.emit();
+  }
+  /** T318: the spin ball's view: before the shot (the open shot's dot, club and lie) or with the ball in the air (the dot, the clicks, whether one still
+   *  adds spin); the effect after the caps (cap: the most in the dot's direction, straight down with the dot at the centre). Null with neither (no shot,
+   *  a putt, no spin in the air) */
+  spinView(): { air: boolean; x: number; y: number; pump: number; club: Club; lie: Lie; amount: number; cap: number; room: boolean; text: string } | null {
+    if (this.spinAir && !this.spinAir.mine && !this.play?.own) this.spinAir = null; // (the day's play is gone)
+    const a = this.spinAir;
+    if (a) {
+      const e = spinEffect(a.input.spin, a.input.club, a.lie);
+      return { air: true, x: a.input.spin.x, y: a.input.spin.y, pump: a.input.spin.pump, club: a.input.club, lie: a.lie, amount: e.amount, cap: e.cap, room: spinRoom(a.input.spin, a.input.club, a.lie), text: spinText(e) };
+    }
+    const s = this.shot; if (!s || s.input.club === 'putter') return null;
+    const d = s.spin ?? { x: 0, y: 0 }, e = spinEffect({ x: d.x, y: d.y, pump: 0 }, s.input.club, s.turn.lie), u = Math.hypot(d.x, d.y);
+    const cap = u > 1e-3 ? e.cap : spinEffect({ x: 0, y: -1, pump: 0 }, s.input.club, s.turn.lie).cap;
+    return { air: false, x: d.x, y: d.y, pump: 0, club: s.input.club, lie: s.turn.lie, amount: e.amount, cap, room: e.amount < cap - 1e-9, text: spinText(e) };
+  }
+  /** T318: a click on the spin ball (or the F key) while the ball is in the air: one more click of the chosen spin, up to the club's and the lie's cap */
+  spinPump() {
+    const a = this.spinAir; if (!a || !spinRoom(a.input.spin, a.input.club, a.lie)) return;
+    if (a.mine ? !this.yrFlight || this.yrFlight.t >= this.yrFlight.air : !a.seen) return; // (only while the ball flies)
+    a.input.spin = { ...a.input.spin, pump: a.input.spin.pump + 1 }; this.emit();
+  }
+  /** T318: each frame with the tournament owner's spun ball: in the air (PlayView ballOf air), then landed: the clicks are played in */
+  private spinAirFrame(now: number) {
+    const a = this.spinAir; if (!a || a.mine) return;
+    const own = this.play?.own, b = own ? this.play!.pv.ballOf(own.id) : null;
+    if (b?.air) { if (!a.seen) { a.seen = true; this.emit(); } return; }
+    if (a.seen || now - a.at > SPIN_AIR_MAX_MS) this.spinLand();
+  }
+  /** T318: the ball has landed: with clicks added in the air, the shot is played again with them (the same stream, the same landing: only the bounce and
+   *  the roll change). Your round: from the round before the shot. The tournament: the day rebuilt from the saved inputs, the last with its clicks (what a
+   *  reload does), so the field plays on from the new rest */
+  private spinLand() {
+    const a = this.spinAir; this.spinAir = null; if (!a) return;
+    if (a.input.spin.pump > 0) { if (a.mine) this.spinLandYours(a); else this.spinLandOwner(a); }
+    this.emit();
+  }
+  /** T318: your round's spun shot played again with its clicks, from the round before it; the flight runs on from where it is */
+  private spinLandYours(a: SpinAir) {
+    const v = this.yrView(), f = this.yrFlight; if (!v || !a.prev || !f) return;
+    const sk = this.yourSkills(), { round, shot, up } = playYours(v, a.prev, sk, a.input, this.seed);
+    this.setYourRound(round);
+    const n = flightOf(shot.from, shot.landing?.at ?? null, shot.to, round.holed, up, rowOf(round), shot.penalty > 0, shot.landing?.check);
+    n.t = f.t; this.yrFlight = n;
+    this.lastShot = shotReport(shot, a.input.swing ? swingEffect(a.input.swing, skillFor(sk, a.input.club), false) : null);
+    this.toast(`${spinText(spinEffect(a.input.spin, a.input.club, a.lie))}: ${this.lastShot.text}`, 'info');
+  }
+  /** T318: the tournament owner's spun shot with its clicks: the day rebuilt from the saved inputs (the last with them), its latches kept */
+  private spinLandOwner(a: SpinAir) {
+    const pl = this.play, sv = this.golf?.play, last = sv?.inputs[sv.inputs.length - 1];
+    if (!pl || !pl.own || !sv || sv.key !== pl.key || !last?.spin) return;
+    const inputs = sv.inputs.slice(); inputs[inputs.length - 1] = { ...last, spin: { ...a.input.spin } };
+    let built: GolfPlay | null = null;
+    const t0 = performance.now();
+    try { built = this.buildPlay(pl.key, { ...sv, inputs }); } catch { built = null; }
+    if (!built?.own) return;
+    if (DEV_LOG_SPIN) console.info(`[T318] spin rebuild ${(performance.now() - t0).toFixed(1)} ms`);
+    built.finish = pl.finish; built.waves = pl.waves; this.play = built; this.saveOwner();
+    const own = built.own, s = built.plan.shots.find(x => x.golfer === own.id && x.hole === last.holeIdx && x.stroke === last.stroke);
+    if (s) { this.lastShot = shotReport(s, a.input.swing ? swingEffect(a.input.swing, skillFor(own.skill, a.input.club), false) : null); this.toast(`${spinText(spinEffect(a.input.spin, a.input.club, a.lie))}: ${this.lastShot.text}`, 'info'); }
+    if (!own.turn) this.ownerDone(built);
+  }
   /** T316: the owner's swing on the 3-click meter (swing.ts): plays the open shot with the club and aim of the panel and the meter's outcome (its power,
    *  miss and spread), as ownerHit does; the outcome is saved with the input (the replay plays the same shot), and the shot's carry and total are toasted */
   ownerSwing(o: SwingOutcome) {
@@ -8523,7 +8611,9 @@ export class Game {
     if (this.shot?.mine) { this.yourHit(swing); return; }
     const s = this.shot, pl = this.play, own = pl?.own; if (!s || !pl || !own) return;
     const i = s.input;
-    const shot = own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}) });
+    const spin = this.shotSpin();
+    const shot = own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}) });
+    this.spinAir = spin ? { mine: false, input: { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), spin }, lie: s.turn.lie, prev: null, seen: false, at: performance.now() } : null;
     // T316: what the shot did (its miss, carry and total), toasted and kept for the panel's "Last shot" line
     this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(own.skill, i.club), i.club === 'putter') : null);
     this.toast(this.lastShot.text, 'info');

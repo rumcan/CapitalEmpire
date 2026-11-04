@@ -399,6 +399,12 @@ The owner's 3-click swing meter (the shot panel, `src/ui/ShotPanel.tsx` drawMete
   mark at 5/6 of the way (150 degrees), the overswing (the last sixth) in red, a short tail below the snap line on the right, a polished 1985 golf-game
   look (brass and enamel). The marker, the ticks, the sweet spot and the numbers stay drawn by the code on top.
 
+## The spin ball (T318, #904: an art request)
+The spin ball in the bottom right of the shot view (`src/ui/SpinBall.tsx` drawBall) is drawn on a plain canvas, labelled "Stand In for spin ball art".
+- **A golf ball face** (about 110 x 110 px, transparent round it): a white ball seen face on, dimpled, lit from the upper right (the sun), a cool shade at
+  the lower left, a faint cross through it; the 2008-era golf game look. The dot, its pulse, the TOP / BACK / DRAW / FADE words and the meter stay drawn
+  by the code on top.
+
 ## The rail's cursors (T323, #921: an art request)
 - **Stand In for the Select and Walk rail icons**: `src/ui/Rail.tsx` draws a line pointer (an arrow) and a walking figure as inline SVGs. Wanted: two
   icons in the rail's style (`src/assets/ui/icons/*.webp`, the same size and finish as compass, pin, trophy): `cursor-select` (a mouse arrow)

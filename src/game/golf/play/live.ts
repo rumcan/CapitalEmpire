@@ -8,12 +8,14 @@ import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
 import { carryM, chooseShot, hitShot, putt, rng, skillFor, type ShotSkill } from './shot';
 import { holeFrom } from './courseview';
 import { BOOST, METER, METER_ANG, MIN_SWING_POWER, readSwing, swingEffect, type SwingOutcome } from './swing';
+import { readSpin, spinEffect, type SpinInput } from './spin';
 import type { Club, CourseView, Landing, Lie, PlayHole, Pt, RoundPlan, Shot } from './types';
 
 /** the owner's input for his shot at a turn: the hole index and stroke it answers, the club, the aim point, and the power: 0.3..1 of the club's full
  *  carry (the putter: 0.5..1.5 of the putt's length). T316: swing, the 3-click meter's outcome (swing.ts): with it the meter's power, miss and spread
- *  play the shot and `power` is only the slider's (absent: a shot from before T316, played exactly as before) */
-export interface OwnerInput { holeIdx: number; stroke: number; club: Club; aim: Pt; power: number; swing?: SwingOutcome }
+ *  play the shot and `power` is only the slider's (absent: a shot from before T316, played exactly as before). T318: spin, the ball's dot and the
+ *  clicks added in the air (spin.ts; a full shot only; absent: no spin, a shot from before T318 played exactly as before) */
+export interface OwnerInput { holeIdx: number; stroke: number; club: Club; aim: Pt; power: number; swing?: SwingOutcome; spin?: SpinInput }
 /** the owner's turn: his golfer, the hole (index, number, par), the stroke he plays, the minute he strikes, his lie, his ball and the pin (tiles), the
  *  distance to the pin (metres), and the suggested shot: the model's club and aim, and the power that carries to the aim (1 on the green) */
 export interface OwnerTurn { golfer: number; holeIdx: number; hole: number; par: number; stroke: number; t: number; lie: Lie; ball: Pt; pin: Pt; distM: number;
@@ -65,10 +67,10 @@ export class LiveGroup {
     if (!turn || !p || !g || !hr || this.field.caddied) throw new Error('LiveGroup.play: no owner turn to play (call advance first)');
     if (input.holeIdx !== turn.holeIdx || input.stroke !== turn.stroke) throw new Error(`LiveGroup.play: the input is for hole ${input.holeIdx} stroke ${input.stroke}, the turn is hole ${turn.holeIdx} stroke ${turn.stroke}`);
     const r = rng(this.ctx.seed, p.id, hr.h * 32 + turn.stroke);
-    const { to, lie, penalty, holed, landing, sw } = shotOutcome(this.ctx.view, this.ctx.view.holes[hr.h]!, p.ball, p.lie, p.sk, input, r);
+    const { to, lie, penalty, holed, landing, sw, spin } = shotOutcome(this.ctx.view, this.ctx.view.holes[hr.h]!, p.ball, p.lie, p.sk, input, r);
     const putting = input.club === 'putter';
     const s = hr.record(p, input.club, turn.t, putting ? PUTT_FLIGHT : FLIGHT_TIME, to, lie, penalty, holed, landing);
-    this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power, ...(sw ? { swing: sw } : {}) });
+    this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power, ...(sw ? { swing: sw } : {}), ...(spin ? { spin } : {}) });
     this.field.settle(g);
     this.turn = null; this.player = null; this.due = null;
     this.flush();
@@ -101,12 +103,13 @@ export class LiveGroup {
 /** T317: the owner's shot from his input, through the one shot model (LiveGroup.play's, and your own round's, play/yours.ts): from the ball at `from` on
  *  the lie `lie` on the hole `hole` of `view`, with the skill sk and the stream r. T316: the swing meter's outcome (when he swung it) plays its power, miss
  *  and spread; without it the input's power. Returns where the ball came to rest, its lie, the penalty, whether it went in, the full shot's landing, and
- *  the swing read (null: none) */
+ *  the swing read (null: none), and the spin read (T318; null: none) */
 export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Lie, sk: ShotSkill, input: Omit<OwnerInput, 'holeIdx' | 'stroke'>, r: () => number):
-  { to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean; landing: Landing | undefined; sw: SwingOutcome | null } {
+  { to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean; landing: Landing | undefined; sw: SwingOutcome | null; spin: SpinInput | null } {
   const putting = input.club === 'putter';
   let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Landing | undefined;
   // T316: the swing meter's outcome (when he swung it): its power, its miss (radians off the aim, + right as he faces it) and spread
+  const spin = !putting && input.spin ? readSpin(input.spin) : null; // (T318: a putt takes no spin)
   const sw = input.swing ? readSwing(input.swing) : null, eff = sw ? swingEffect(sw, skillFor(sk, input.club), putting) : null, miss = eff ? eff.deg * Math.PI / 180 : 0;
   if (putting) {
     const pw = eff ? clamp(eff.power, MIN_SWING_POWER, METER.top + BOOST.max) : clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
@@ -135,9 +138,11 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     const d = carryM(input.club, skillFor(sk, input.club)) * pw / TILE_M, at = { x: from.x + ux / L * d, y: from.y + uy / L * d };
     // (T241: his part of the game's skill; T316: a meter shot may carry past the club's full carry, with its spread, and keeps METER_ANG of the
     // model's direction spread, the meter's miss taking over the rest)
-    const mod = eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: METER_ANG, roll: eff.roll } : undefined;
+    // (T318: the spin, from the lie it is played from: the curve, the check, the release; none without it)
+    const sp = spin ? spinEffect(spin, input.club, plie) : null;
+    const mod = eff || sp ? { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}) } : undefined;
     const o = hitShot(r, sk, plie, from, at, input.club, view, mod);
     to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
   }
-  return { to, lie, penalty, holed, landing, sw };
+  return { to, lie, penalty, holed, landing, sw, spin };
 }
