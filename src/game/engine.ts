@@ -175,8 +175,9 @@ import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
-import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, swingEffect, type ShotReport, type SwingOutcome, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
-import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
+import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, swingEffect, type ShotReport, type SwingOutcome, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
+import { doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
+import { CART_REACH, CART_TILES, addressOf, cardTotals, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { BOOK_LEAD, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
@@ -279,6 +280,8 @@ const YOU_SURF: Readonly<Record<number, number>> = { [SURF.water]: Infinity, [SU
 /** T240: the keys that walk your character in Walk mode (they pan the camera otherwise) */
 /** T240: the hover label's rim by verb (none: you cannot walk there) */
 const YOU_VERB_COLOR: Readonly<Record<YouVerb | 'none', string>> = { walk: '#facc15', talk: '#38bdf8', look: '#c084fc', use: '#4ade80', none: '#f87171' };
+/** T317: where your golf cart first waits: beside where you first stand (tile offsets, the first open one) */
+const CART_HOME: readonly (readonly [number, number])[] = [[2.5, 0], [0, 2.5], [-2.5, 0], [0, -2.5], [3.5, 1.5]];
 const YOU_KEYS: ReadonlySet<string> = new Set(['w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 /** T240: a person's name from a seed (the field's name lists) until T243 gives the town's people their own */
 function personName(seed: number): string {
@@ -325,7 +328,9 @@ interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: numbe
 interface OwnerPlay { id: number; sex: Sex; /** T241: his skill (OWNER_SKILL) or his skills by part of the game (your profile's as he joined) */ skill: ShotSkill; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null; /** T254: his tee set */ tees?: TeeKind;
   /** T241: your profile's skills as he joined (saved, so a reload replays the same round) */ skills?: GameSkills }
 /** the owner's open shot (P4b, the shot panel): his turn and his input so far (the club, the aim point in tiles, the power: see powerFor) */
-export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number } }
+export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number };
+  /** T317: the shot of your own round (play/yours.ts), not the tournament's: the sim runs on (no pause) and the hit plays your round */
+  mine?: boolean }
 /** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
  *  everyone is done (else null), whether everyone is done, the tournament's name, and the owner's group's tee time (null without him) */
 export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string | null; done: boolean; event: string; ownerTee: number | null;
@@ -5133,6 +5138,7 @@ export class Game {
     if (typing) return;
     this.keys.add(e.key);
     if (YOU_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youControls()) { e.preventDefault(); return; } // T240: they walk you (the frame reads them)
+    if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.youControls() && this.youCart && (this.youInCart || this.youNearCart())) { e.preventDefault(); this.youCartToggle(); return; } // T317
     // T268: the tee set in hand: R turns it (Shift+R back), [ ] size it
     if (this.teePlace && !e.ctrlKey && !e.metaKey && !e.altKey) {
       if (e.key === 'r' || e.key === 'R') { this.turnTeePlace(e.shiftKey); return; }
@@ -5258,7 +5264,7 @@ export class Game {
   /** the sim speed (0 pauses); a speed above 0 is remembered for the resume */
   setSpeed(k: number) {
     // while the owner's shot is open the clock waits for it: only a pause goes through (closeShot clears the shot before it resumes)
-    if (k > 0 && this.shot) { this.toast(SHOT_HOLD, 'warn'); return; }
+    if (k > 0 && this.shot && !this.shot.mine) { this.toast(SHOT_HOLD, 'warn'); return; }
     if (k > 0) this.lastSpeed = k; this.speed = k; this.traffic.setSpeed(k); setPaceSpeed(k); this.emit();
   }
   // ---------- T320 (#908): watching golf at the watching speed (golf/watch.ts) ----------
@@ -5270,8 +5276,8 @@ export class Game {
    *  or a pause keeps its hold: the speed it will resume at changes) */
   private watchFor(why: WatchWhy, on: boolean) {
     if (this.watchSpeed.has(why) === on) return;
-    const cur = this.shot ? this.shotSpeed : this.speed || this.lastSpeed, k = this.watchSpeed.set(why, on, cur);
-    if (k !== null) { if (this.shot) this.shotSpeed = k; else if (!this.speed) this.lastSpeed = k; else this.setSpeed(k); }
+    const held = !!this.shot && !this.shot.mine, cur = held ? this.shotSpeed : this.speed || this.lastSpeed, k = this.watchSpeed.set(why, on, cur);
+    if (k !== null) { if (held) this.shotSpeed = k; else if (!this.speed) this.lastSpeed = k; else this.setSpeed(k); }
     this.emit();
   }
   /** follows golfers (T320): the camera stays on them and the game runs at the watching speed until stopWatching (Stop, Esc, a pan) */
@@ -5357,7 +5363,7 @@ export class Game {
   }
   /** fast-forwards the sim to the next 7:30 or 16:30 (game clock s 450 and 990 of the day); resumes first if paused. Not while the clock is frozen. */
   skipToRush() {
-    if (this.shot) { this.toast(SHOT_HOLD, 'warn'); return; }
+    if (this.shot && !this.shot.mine) { this.toast(SHOT_HOLD, 'warn'); return; }
     if (this.traffic.skipping) return;
     if (this.traffic.stats.frozen) { this.toast('The clock is frozen during an event'); return; }
     const now = performance.now(), c = this.traffic.clockTime(now), day = Math.floor(c / GAME_DAY) * GAME_DAY;
@@ -6611,7 +6617,7 @@ export class Game {
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {
-  if (this.shot) { this.toast(SHOT_HOLD, 'warn'); return; }
+  if (this.shot && !this.shot.mine) { this.toast(SHOT_HOLD, 'warn'); return; }
   if (!this.golf || this.traffic.skipping) return;
   if (this.traffic.stats.frozen) { this.toast('The clock is frozen during an event'); return; }
     const now = performance.now(), c = this.traffic.clockTime(now), target = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
@@ -7225,7 +7231,7 @@ export class Game {
    *  when the round is free, or when there is no golf */
   private updatePlay(now: number) {
     const tr = this.traffic, r = tr?.round;
-    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval' && !this.devTourney)) { this.watchFor('own', false); this.play = null; this.playTried = -1; this.playSavedHr = -1; this.resultsEarly = false; this.clearFeatured(); if (this.shot) this.closeShot(); this.holdDay(now, false); return; }
+    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval' && !this.devTourney)) { this.watchFor('own', false); this.play = null; this.playTried = -1; this.playSavedHr = -1; this.resultsEarly = false; this.clearFeatured(); if (this.shot && !this.shot.mine) this.closeShot(); this.holdDay(now, false); return; }
     if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlaySaved(r.runs); }
     if (!this.play) { this.watchFor('own', false); this.clearFeatured(); this.holdDay(now, true); return; }
     const minute = this.playMinute(this.play, townTimeOf(tr.town, tr.simTime(now)).dayMin);
@@ -7394,43 +7400,48 @@ export class Game {
   /** one frame of your character (real seconds: you walk at a person's pace whatever the sim's speed): placed once, the keys or the route, the
    *  use on arriving, the camera following, the save when you stop. No allocation */
   private youStep(dt: number) {
-    if (this.youFor !== this.golf) { this.youFor = this.golf; this.you = null; this.youThen = null; this.youTalk = null; this.youTeeOpen = false; }
+    if (this.youFor !== this.golf) { this.youFor = this.golf; this.you = null; this.youThen = null; this.youTalk = null; this.youTeeOpen = false; this.youCart = null; this.youInCart = false; this.yrFlight = null; this.yrCard = false; }
     const g = this.golf; if (!g) return;
     if (!this.you) {
       const sv = g.player?.you, at = sv ? { x: sv.x, y: sv.y } : this.youStart(); if (!at) return;
       this.you = makeYou(at.x, at.y, sv?.f ?? 0);
     }
-    const y = this.you, wasMoving = y.moving || y.keys;
+    const y = this.you;
+    // T317: your golf cart (placed once by the clubhouse, or where you left it); in it, the keys and the clicks drive it and you ride
+    if (!this.youCart) this.youCartPlace();
+    const c = this.youCart, mv = this.youInCart && c ? c : y, ok = mv === y ? this.youOk : this.cartOk, wasMoving = mv.moving || mv.keys;
     let kx = 0, ky = 0;
     if (this.youControls()) {
       if (this.keys.has('ArrowLeft') || this.keys.has('a') || this.keys.has('A')) kx -= 1; if (this.keys.has('ArrowRight') || this.keys.has('d') || this.keys.has('D')) kx += 1;
       if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
     }
     if (kx || ky) {
-      if (y.moving) this.youThen = null;
-      this.youRaster(y.x, y.y, 24, false);
-      keyStep(y, kx, ky, this.keys.has('Shift'), dt, this.youOk);
+      if (mv.moving) this.youThen = null;
+      this.youRaster(mv.x, mv.y, 24, false);
+      keyStep(mv, kx, ky, this.keys.has('Shift'), dt, ok);
       this.youFollow = true;
     } else {
-      keyStep(y, 0, 0, false, dt, this.youOk);
-      if (stepYou(y, dt)) this.youArrive();
+      keyStep(mv, 0, 0, false, dt, ok);
+      if (stepYou(mv, dt)) this.youArrive();
     }
-    if ((y.moving || y.keys) && this.youFollow) {
-      const tx = worldX(y.x, y.y), ty = worldY(y.x, y.y), k = Math.min(1, dt * 5);
+    if (mv !== y) { y.x = mv.x; y.y = mv.y; y.face = mv.face; y.moving = false; y.keys = false; }
+    if ((mv.moving || mv.keys) && this.youFollow) {
+      const tx = worldX(mv.x, mv.y), ty = worldY(mv.x, mv.y), k = Math.min(1, dt * 5);
       this.camEase = null; this.cam.X += (tx - this.cam.X) * k; this.cam.Y += (ty - this.cam.Y) * k; this.clampCam();
     }
-    if (wasMoving && !y.moving && !y.keys) { this.youSaveDue = true; this.emit(); }
+    if (wasMoving && !mv.moving && !mv.keys) { this.youSaveDue = true; this.emit(); }
+    this.yourFrame(dt); // T317: your round: the ball's flight, the snap to the address
     if (this.youSaveDue) { this.youSaveDue = false; this.youKeep(); }
   }
   /** your place into the profile (saved with the game): on stopping, never per frame */
   private youKeep() {
     const p = this.golf?.player ?? this.playerNow(), y = this.you; if (!p || !y) return;
-    const look = p.you?.look ?? this.youArt();
-    this.setPlayer({ ...p, you: { x: Math.round(y.x * 100) / 100, y: Math.round(y.y * 100) / 100, f: y.face, look } });
+    const look = p.you?.look ?? this.youArt(), c = this.youCart, r2 = (v: number) => Math.round(v * 100) / 100;
+    this.setPlayer({ ...p, you: { x: r2(y.x), y: r2(y.y), f: y.face, look, ...(c ? { cart: { x: r2(c.x), y: r2(c.y), f: c.face, in: this.youInCart } } : {}) } });
   }
   /** arrived: face the thing and use it */
   private youArrive() {
-    const t = this.youThen, y = this.you; this.youThen = null; if (!y) return;
+    const t = this.youThen, y = this.youInCart && this.youCart ? this.youCart : this.you; this.youThen = null; if (!y) return;
     y.tx = NaN; y.ty = NaN;
     if (!t) return;
     if (t.face) y.face = facingOf(t.face.x - y.x, t.face.y - y.y);
@@ -7516,7 +7527,15 @@ export class Game {
         return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: 'g' + p.golfer, act: () => this.youTalkTo(name, 'out on the course', pt) };
       }
     }
-    // the first tee (T317 builds the round on it)
+    // T317: your golf cart (get in; get out when you sit in it) and your ball in your round (walk up to it: you snap to the address when near)
+    const cart = this.youCart;
+    if (cart && Math.hypot(tl.x - cart.x, tl.y - cart.y) <= 1.6) {
+      const inIt = this.youInCart, side = inIt ? { x: cart.x, y: cart.y } : this.cartSide(cart, from);
+      return { kind: 'cart', name: inIt ? 'Get out of the cart (E)' : 'Get in your golf cart (E)', at: side, face: { x: cart.x, y: cart.y }, key: 'cart', act: () => this.youCartToggle() };
+    }
+    const yr = this.yourRound();
+    if (yr && !yr.holed && !yr.over && Math.hypot(tl.x - yr.ball.x, tl.y - yr.ball.y) <= 1.5) return { kind: 'ball', name: '', at: { x: yr.ball.x, y: yr.ball.y }, face: null, key: 'ball', act: null };
+    // the first tee (T317: your round starts on its card)
     const g = this.golf;
     if (g) for (const t of g.tees) if (t.hole === 1 && Math.hypot(tl.x - t.x, tl.y - t.y) <= 3) {
       const pt = { x: t.x, y: t.y }; return { kind: 'tee', name: 'the first tee', at: { x: t.x + 1.5, y: t.y + 1.5 }, face: pt, key: 'tee', act: () => { this.youTeeOpen = true; this.emit(); } };
@@ -7569,18 +7588,22 @@ export class Game {
     const t = this.youThingAt(mx, my);
     if (!t) { this.toast('You cannot walk there', 'warn'); return; }
     this.youTalk = null; this.youTeeOpen = false; this.youFollow = true;
-    if (y.moving && this.youThen?.key === t.key) { y.run = true; return; } // (a second click on the same place: run)
-    const d = Math.hypot(t.at.x - y.x, t.at.y - y.y);
+    // T317: in your cart a click drives it there (the nearest spot short of a green or a bunker; a click on the cart gets you out)
+    const c = this.youInCart ? this.youCart : null, mv = c ?? y;
+    if (mv.moving && this.youThen?.key === t.key) { mv.run = true; return; } // (a second click on the same place: run)
+    const at = c && t.kind !== 'cart' ? this.cartNear(t.at, c) : t.at;
+    if (!at) { this.toast('The cart cannot get there: get out (E) and walk', 'warn'); return; }
+    const d = Math.hypot(at.x - mv.x, at.y - mv.y);
     if (d < 0.3) { this.youThen = { act: t.act, face: t.face, key: t.key }; this.youArrive(); return; }
-    this.youRaster(y.x, y.y, 64, true, t.at.x, t.at.y);
-    const route = routeOf({ x: y.x, y: y.y }, t.at, this.youCost);
-    startWalk(y, route, run); this.youThen = { act: t.act, face: t.face, key: t.key };
+    this.youRaster(mv.x, mv.y, 64, true, at.x, at.y);
+    const route = routeOf({ x: mv.x, y: mv.y }, at, c ? this.cartCost : this.youCost);
+    startWalk(mv, route, run); this.youThen = { act: t.act, face: t.face, key: t.key };
     this.emit();
   }
   /** a double-click: you run the rest of the way */
   youRun() { if (this.you?.moving) this.you.run = true; }
   /** Skip: you arrive at once (a long trip; golf/you.ts SKIP_TILES) */
-  youSkip() { const y = this.you; if (!y?.moving) return; skipAhead(y, 2); this.emit(); }
+  youSkip() { const y = this.youInCart && this.youCart ? this.youCart : this.you; if (!y?.moving) return; skipAhead(y, 2); this.emit(); }
   /** the Me button: the camera on you (the street zoom at least), following again, Walk mode on */
   youMe() { const y = this.you; if (!y) return; this.youWalkMode = true; this.youFollow = true; if (this.tool !== 'select') this.setTool('select'); this.lookAt(y.x, y.y, Math.max(this.cam.z, 0.2)); }
   setYouWalk(on: boolean) { this.youWalkMode = on; if (!on) this.youHover = null; this.emit(); }
@@ -7634,7 +7657,13 @@ export class Game {
   /** your character as a mover (the street tier): your look's frame for your facing (walk, swing or idle), labelled "Stand In for <name>"
    *  until the player looks (art 232-234) land */
   private youMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number): number {
-    const y = this.you; if (!y || y.x < X0 || y.x > X1 || y.y < Y0 || y.y > Y1) return m;
+    const c = this.youCart;
+    if (c && c.x >= X0 && c.x <= X1 && c.y >= Y0 && c.y <= Y1) { // T317: your golf cart (the hire cart's art: its side by your heading)
+      const f = c.face; this.youCartSide = f >= 1 && f <= 3 ? 0 : f >= 5 ? 1 : this.youCartSide;
+      const item = CART_ART[this.youCartSide]!;
+      if (item >= 0) { const d = this.propDrawable(this.youCartDraw, 0, item, c.x, c.y, 0.6); this.golfCartOut.push(d); if (this.youInCart) this.caddieLabels.push({ p: d, text: this.golf?.player?.name ?? 'You' }); }
+    }
+    const y = this.you; if (!y || this.youInCart || y.x < X0 || y.x > X1 || y.y < Y0 || y.y > Y1) return m;
     const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
     t.group = 1; t.x = y.x; t.y = y.y; t.person = this.youArt(); t.row = y.face; t.frame = youFrame(y, GOLFER_CLIPS.walk, GOLFER_CLIPS.idle.start, GOLFER_CLIPS.golf_drive);
     crowdDrawable(out, m, t);
@@ -7703,6 +7732,231 @@ export class Game {
       this.toast(`Your round: ${b.result.strokes} (${toParWord(b.result.strokes - b.result.par)}) · handicap ${hcpText(next.rounds[next.rounds.length - 1]!.hcp)}`, 'good');
     }
     this.setPlayer(next); this.emit();
+  }
+  // ---------- T317 (#903): your own round by hand (play/yours.ts) and your golf cart ----------
+  /** your golf cart (a mover like you, at the cart's pace: golf/you.ts You with speed CART_TILES); placed by the clubhouse once, then where you leave it */
+  youCart: YouChar | null = null;
+  /** you sit in your cart: the keys and the clicks drive it, you ride (not drawn) */
+  youInCart = false;
+  private youCartSide = 1; private youCartDraw: Drawable[] = [];
+  /** your ball in the air (real seconds): from, where it lands (null: a putt), where it comes to rest, the time so far and in all, the share of it in the
+   *  air, whether it went in (or the hole was picked up), the card's row then, and a penalty (the drop shows at the end) */
+  private yrFlight: YourFlight | null = null;
+  /** the scorecard is open (between holes and at the end it opens itself; the HUD's Scorecard button too) */
+  yrCard = false;
+  /** your round under way (the profile's, saved with the game); null: none */
+  yourRound(): YourRound | null { return this.golf?.player?.round ?? null; }
+  private setYourRound(r: YourRound | null) {
+    const p = this.playerNow(); if (!p) return;
+    const { round: _old, ...rest } = p; void _old;
+    this.setPlayer(r ? { ...rest, round: r } : rest);
+  }
+  /** your game in your round: your skills under an everyday round's pressure (golf/player.ts gameSkills), as a booked round plays */
+  private yourSkills(): ShotSkill { const p = this.playerNow(); return p ? gameSkills(p.skills, PRESSURE.everyday) : OWNER_SKILL; }
+  /** the course your round is played on: the everyday course (each hole once), null with none */
+  private yrView(): CourseView | null { const c = this.dayCourseOf(performance.now()); return c && c.view.holes.length ? c.view : null; }
+  /** the first tee's hole choices (play/yours.ts holeOptions) for the everyday course's holes, and why you cannot start (null: you can) */
+  yourChoices(): { options: { id: HoleChoice; label: string; holes: number[] }[]; holes: { i: number; n: number; par: number }[]; why: string | null } {
+    const v = this.yrView(), why = this.youBookWhy(this.townNow().day);
+    const holes = v ? v.holes.map((h, i) => ({ i, n: h.n, par: h.par })) : [];
+    // (the tee sheet's day not open yet does not stop a round by hand; no clubhouse or a tournament day does)
+    const w = why === 'The tee sheet opens with the day' || why === 'The course has no holes to play yet' ? null : why;
+    return { options: holeOptions(holes.length), holes, why: w ?? (v ? null : 'The course has no holes to play yet') };
+  }
+  /** starts your round on the holes chosen at the first tee (all, the front 9, the back 9, or a pick): the ball on its first tee, the card empty. A round
+   *  booked today and not yet under way is cancelled (you play this one by hand instead); one under way is refused */
+  yourRoundStart(choice: HoleChoice, picked: number[] = []) {
+    const p = this.playerNow(), v = this.yrView(), c = this.yourChoices(); if (!p) return;
+    if (c.why) { this.toast(c.why, 'warn'); return; }
+    if (!v) return;
+    const at = this.townNow(), b = p.booked;
+    if (b && b.day === at.day && at.dayMin >= b.tee - BOOK_LEAD && !(b.result && at.dayMin >= b.result.done)) { this.toast('You are out on the course in your booked round', 'warn'); return; }
+    const holes = pickHoles(v.holes.length, choice, picked);
+    if (!holes.length) { this.toast('Pick at least one hole', 'warn'); return; }
+    const r = startRound(v, holes, at.day); if (!r) return;
+    if (b && b.day === at.day && !b.result) this.setPlayer({ ...this.playerNow()!, booked: null });
+    this.setYourRound(r); this.youTeeOpen = false; this.yrCard = false; this.yrFlight = null;
+    const h = holeOf(v, holes[0]!)!;
+    this.toast(`Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: walk up to the tee to address the ball`, 'good');
+    this.emit();
+  }
+  /** each frame (real seconds): your ball's flight (the camera follows it), then the snap: near your ball (SNAP_TILES), on foot or in the cart, you
+   *  stand at the address and the shot opens */
+  private yourFrame(dt: number) {
+    const r = this.yourRound(), y = this.you; if (!r || !y) { this.yrFlight = null; return; }
+    const f = this.yrFlight;
+    if (f) {
+      f.t += dt;
+      const b = yourBallAt(f);
+      if (this.youFollow) { const k = Math.min(1, dt * 4); this.camEase = null; this.cam.X += (worldX(b.x, b.y) - this.cam.X) * k; this.cam.Y += (worldY(b.x, b.y) - this.cam.Y) * k; this.clampCam(); }
+      if (f.t >= f.dur) { this.yrFlight = null; if (f.done) this.youHoledOut(f.row, f.up); this.emit(); }
+      return;
+    }
+    if (r.holed || r.over || this.shot) return;
+    const mv = this.youInCart && this.youCart ? this.youCart : y;
+    if (nearBall(mv.x, mv.y, r.ball)) this.yourAddress();
+  }
+  /** the snap (the owner: "it can snap to the hitting position when close"): out of the cart, at the address facing the suggested aim, and the shot
+   *  panel opens on the suggested club, aim and power (the 3-click meter, T316). The sim runs on (your round is not on the day's clock). A round whose
+   *  hole the course no longer has ends */
+  private yourAddress() {
+    const r = this.yourRound(), v = this.yrView(), y = this.you; if (!r || !y) return;
+    if (!v || !v.holes[r.card[r.at]!.i]) { this.yourRoundEnd('The course changed: your round ends here'); return; }
+    const turn = yourTurn(v, r, this.yourSkills()); if (!turn) return;
+    if (this.youInCart && this.youCart) { stopWalk(this.youCart); this.youInCart = false; }
+    stopWalk(y); this.youThen = null; this.youTalk = null; this.youTeeOpen = false; this.yrCard = false;
+    this.shot = { turn, input: { club: turn.suggested.club, aim: { x: turn.suggested.aim.x, y: turn.suggested.aim.y }, power: turn.suggested.power }, mine: true };
+    this.yourFace();
+    this.lookAt(turn.ball.x, turn.ball.y, Math.max(this.cam.z, 0.25));
+    this.youSaveDue = true;
+  }
+  /** you at the address of the open shot, facing its aim (a new aim moves you round the ball) */
+  private yourFace() {
+    const s = this.shot, y = this.you; if (!s?.mine || !y) return;
+    const a = addressOf(s.turn.ball, s.input.aim); y.x = a.x; y.y = a.y;
+    const dx = s.input.aim.x - s.turn.ball.x, dy = s.input.aim.y - s.turn.ball.y; if (dx || dy) y.face = facingOf(dx, dy);
+  }
+  /** your swing (or a hit without the meter): plays your shot from the panel's club and aim and the meter's outcome (play/yours.ts playYours: the one
+   *  shot model), saves the round, toasts what the shot did, and sends the ball flying (the camera follows it) */
+  private yourHit(swing?: SwingOutcome) {
+    const s = this.shot, r = this.yourRound(), v = this.yrView(); if (!s?.mine || !r || !v) return;
+    const sk = this.yourSkills(), i = s.input;
+    const { round, shot, up } = playYours(v, r, sk, { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}) }, this.seed);
+    this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(sk, i.club), i.club === 'putter') : null);
+    this.toast(this.lastShot.text, 'info');
+    this.shot = null; this.setYourRound(round);
+    if (this.you) this.you.swing = 0; // (the drive clip plays once)
+    this.yrFlight = flightOf(shot.from, shot.landing?.at ?? null, shot.to, round.holed, up, rowOf(round), shot.penalty > 0);
+    this.yrFlight.t = -IMPACT_S; // (T320: the ball leaves at the drive clip's impact, as the field's do: play/view.ts)
+    this.youFollow = true;
+    this.emit();
+  }
+  /** T317: a hole is done (holed, or picked up at par + 5): the score is toasted and the scorecard opens ("Next hole" goes on). T319 hangs the ball's
+   *  visible drop into the cup (and the break grid's end) here */
+  private youHoledOut(row: CardRow, up: boolean) {
+    this.toast(up ? `Picked up on the ${ordinal(row.n)}: ${row.strokes}` : `${scoreName(row.strokes, row.par)} on the ${ordinal(row.n)} (${row.strokes})`, up ? 'warn' : 'good');
+    this.yrCard = true;
+  }
+  /** "Let the caddie finish the hole": the model plays the rest of this hole (its suggested club, aim and power, no meter); the hole is done */
+  private yourCaddie() {
+    let r = this.yourRound(); const v = this.yrView(), s = this.shot; if (!s?.mine || !r || !v) return;
+    const sk = this.yourSkills(); let up = false;
+    for (let k = 0; k < 20 && !r.holed && !r.over; k++) {
+      const t = yourTurn(v, r, sk); if (!t) break;
+      const o = playYours(v, r, sk, { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power }, this.seed);
+      r = o.round; up = o.up;
+    }
+    this.shot = null; this.setYourRound(r);
+    if (r.holed) this.youHoledOut(rowOf(r), up);
+    this.emit();
+  }
+  /** "Next hole": the ball on the next hole's tee (walk or drive there, or Jump to ball); the card closes. After the last hole: the round ends */
+  yourNextHole() {
+    const r = this.yourRound(), v = this.yrView(); if (!r || !v) return;
+    if (r.over) { this.yourRoundEnd(); return; }
+    const n = nextHole(v, r); if (n === r) { this.yrCard = false; this.emit(); return; }
+    this.setYourRound(n); this.yrCard = false;
+    const h = holeOf(v, n.holes[n.at]!); if (h) this.toast(`Hole ${h.n}, par ${h.par}: to the tee (walk, drive, or Jump to ball)`, 'info');
+    this.emit();
+  }
+  /** your round ends (the last hole done, or you quit): the holes done go into your rounds (an everyday round: golf/player.ts playedRound), the card
+   *  closes and the round is cleared */
+  yourRoundEnd(why?: string) {
+    const r = this.yourRound(), p = this.playerNow(); if (!r || !p) return;
+    if (this.shot?.mine) this.shot = null;
+    this.yrFlight = null; this.yrCard = false;
+    const t = cardTotals(r.card);
+    const { round: _r, ...rest } = p; void _r;
+    if (t.thru > 0) {
+      const next = playedRound(rest, { day: r.day, kind: 'everyday', strokes: t.strokes, par: t.par, holes: t.thru });
+      this.setPlayer(next);
+      this.toast(`${why ? why + '. ' : ''}You shot ${t.strokes} (${toParWord(t.toPar)}) over ${t.thru} hole${t.thru > 1 ? 's' : ''} · handicap ${hcpText(next.rounds[next.rounds.length - 1]!.hcp)}`, 'good');
+    } else { this.setPlayer(rest); this.toast(why ?? 'Your round is called off', 'info'); }
+    this.emit();
+  }
+  /** opens or closes the scorecard (the HUD's Scorecard) */
+  toggleYourCard(open = !this.yrCard) { this.yrCard = open && !!this.yourRound(); this.emit(); }
+  /** "Jump to ball" (the owner: "add a button to jump to ball after the shot"): you are at your ball at once (the cart comes along when you ride it,
+   *  parked at the nearest spot it may stand), at the address with the shot open */
+  yourJump() {
+    const r = this.yourRound(), y = this.you, v = this.yrView(); if (!r || !y || !v || r.holed || r.over || this.shot || this.yrFlight) return;
+    const c = this.youCart;
+    if (this.youInCart && c) { stopWalk(c); const p = this.cartNear(r.ball, c); if (p) { c.x = p.x; c.y = p.y; } this.youInCart = false; }
+    stopWalk(y); this.youThen = null; y.x = r.ball.x; y.y = r.ball.y;
+    this.youFollow = true; this.youSaveDue = true;
+    this.yourAddress();
+    this.emit();
+  }
+  /** the HUD of your round (null: none): the round, the hole and its par, the stroke to play, the distance to the pin, your lie, the totals, whether you
+   *  can jump (the ball at rest, no shot open), in the cart, near it, the card open, the ball flying, the shot open */
+  yourRoundView(): YourRoundView | null {
+    const r = this.yourRound(); if (!r || !this.you) return null;
+    const row = r.card[r.at]!, v = this.yrView(), h = v ? holeOf(v, row.i) : null, flying = !!this.yrFlight, addressing = !!this.shot?.mine;
+    return { round: r, hole: row.n, par: row.par, stroke: row.strokes + 1, distM: h ? Math.hypot(h.pin.x - r.ball.x, h.pin.y - r.ball.y) * TILE_M : 0, lie: r.lie,
+      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing, inCart: this.youInCart, nearCart: this.youNearCart(), card: this.yrCard, flying, addressing };
+  }
+  /** whether you stand within CART_REACH of your cart (and are not in it) */
+  youNearCart(): boolean { const c = this.youCart, y = this.you; return !!c && !!y && !this.youInCart && Math.hypot(c.x - y.x, c.y - y.y) <= CART_REACH; }
+  /** gets you in your cart (within CART_REACH) or out of it (beside it, on a side you can stand on) */
+  youCartToggle() {
+    const c = this.youCart, y = this.you; if (!c || !y) return;
+    if (this.youInCart) {
+      stopWalk(c); this.youInCart = false; const p = this.cartSide(c, { x: c.x + 1, y: c.y + 1 }); y.x = p.x; y.y = p.y;
+      this.youSaveDue = true; this.emit(); return;
+    }
+    if (Math.hypot(c.x - y.x, c.y - y.y) > CART_REACH) { this.toast('Walk to your cart first', 'warn'); return; }
+    stopWalk(y); this.youThen = null; this.youInCart = true; y.x = c.x; y.y = c.y; this.youFollow = true;
+    this.youSaveDue = true; this.toast('In your cart: WASD or the arrows drive (Shift: faster), a click drives there, E gets out', 'info'); this.emit();
+  }
+  /** where you stand beside the cart: 1.2 tiles off it toward `from` first, then the other sides; the cart's own spot when none is open */
+  private cartSide(c: Pt, from: Pt): Pt {
+    this.youRaster(c.x, c.y, 4, false);
+    const L = Math.hypot(from.x - c.x, from.y - c.y) || 1, ux = (from.x - c.x) / L, uy = (from.y - c.y) / L;
+    for (const [a, b] of [[ux, uy], [-uy, ux], [uy, -ux], [-ux, -uy]] as const) { const x = c.x + a * 1.2, y = c.y + b * 1.2; if (this.youOk(x, y)) return { x, y }; }
+    return { x: c.x, y: c.y };
+  }
+  /** places your cart: the save's (and whether you sit in it), else its home by the clubhouse (or the range's shack): beside where you first stand */
+  private youCartPlace() {
+    const sv = this.golf?.player?.you?.cart;
+    let at: Pt | null = sv ? { x: sv.x, y: sv.y } : null;
+    if (!at) {
+      const s = this.youStart(); if (!s) return;
+      this.youRaster(s.x, s.y, 8, false);
+      at = CART_HOME.map(([dx, dy]) => ({ x: s.x + dx, y: s.y + dy })).find(p => this.cartOk(p.x, p.y)) ?? s;
+    }
+    const c = makeYou(at.x, at.y, sv?.f ?? 6); c.speed = CART_TILES; this.youCart = c;
+    this.youInCart = !!sv?.in;
+    if (this.youInCart && this.you) { this.you.x = c.x; this.you.y = c.y; }
+  }
+  /** whether your cart may be at (x, y): where you may stand (no water, building, fence, wall, parked car) and not on a green or a bunker (the course
+   *  grid's surface there; play/yours.ts cartMay says the same by the lie) */
+  private cartOk = (x: number, y: number): boolean => {
+    if (!this.youOk(x, y)) return false;
+    const g = this.courseGrid; if (!g) return true;
+    const k = cellAt(g, x, y); if (k < 0) return true;
+    const sf = g.surf[k]!; return sf !== SURF.green && sf !== SURF.bunker && sf !== SURF.waste;
+  };
+  /** the cost of your cart's route over (x, y): where it may drive; the paths and roads cheap (a cart drives on them), the course as you walk it */
+  private cartCost = (x: number, y: number): number => { if (!this.cartOk(x, y)) return Infinity; return Math.min(this.youCost(x, y), 2); };
+  /** the spot your cart drives to for a target: the target where the cart may be, else the first spot back toward the cart (half-tile steps, 40 tiles at
+   *  most); null: none */
+  private cartNear(t: Pt, c: Pt): Pt | null {
+    this.youRaster(t.x, t.y, 4, true, c.x, c.y);
+    const L = Math.hypot(c.x - t.x, c.y - t.y), ux = L > 0 ? (c.x - t.x) / L : 0, uy = L > 0 ? (c.y - t.y) / L : 0;
+    for (let d = 0; d <= Math.min(40, L); d += 0.5) { const x = t.x + ux * d, y = t.y + uy * d; if (this.cartOk(x, y)) return { x, y }; }
+    return null;
+  }
+  /** your ball on the course (the 2D overlay): at rest a white ball, in the air higher with its shadow below; none in the cup or at the address (the
+   *  open shot draws it there) */
+  private drawYourBall(ctx: CanvasRenderingContext2D) {
+    const r = this.yourRound(); if (!r || r.over || this.cam.z < DISTRICT_Z) return;
+    const f = this.yrFlight; if (!f && (r.holed || this.shot?.mine)) return;
+    const b = f ? yourBallAt(f) : { x: r.ball.x, y: r.ball.y, h: 0 }, dpr = this.dpr, p = this.screen(b.x, b.y), lift = b.h * HH * this.cam.z * dpr;
+    ctx.save();
+    if (lift > 0.5) { ctx.beginPath(); ctx.ellipse(p.x, p.y, 3 * dpr, 1.5 * dpr, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(15,23,42,0.35)'; ctx.fill(); }
+    ctx.beginPath(); ctx.arc(p.x, p.y - lift, Math.max(2.5 * dpr, 0.12 * HW * this.cam.z * dpr), 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill();
+    ctx.lineWidth = 1.2 * dpr; ctx.strokeStyle = '#0f172a'; ctx.stroke();
+    ctx.restore();
   }
   // ---------- T269 (#810) part 3: the grounds staff (golf/staff.ts) ----------
   /** the course needs a crew and has none: said once a session */
@@ -8116,7 +8370,7 @@ export class Game {
     if (!h.at) h.at = now;
     if (!ready && now - h.at < DAY_HOLD_MS) return;
     this.dayHold = null;
-    if (this.shot) this.shotSpeed = h.speed; else this.setSpeed(h.speed);
+    if (this.shot && !this.shot.mine) this.shotSpeed = h.speed; else this.setSpeed(h.speed);
   }
   /** the holes the crowd follows at a game minute (docs/GOLF-PLAY.md decision 6), sorted, no repeats: the holes the last three groups are on (the marquee
    *  groups tee off last) and the holes of the top three of the standings, among the golfers who have teed off and are not done. A golfer's hole is its
@@ -8220,20 +8474,23 @@ export class Game {
   /** the owner's open shot for the shot panel, or null */
   shotState(): ShotState | null { return this.shot; }
   /** T316: the skill (0..1) the open shot's club is played at (your part of the game for it, T241): the swing meter's speed and sweet spot; 0 with no shot */
-  shotSkill(): number { const s = this.shot, own = this.play?.own; return s && own ? skillFor(own.skill, s.input.club) : 0; }
+  shotSkill(): number { const s = this.shot, sk = this.shotSk(); return s && sk !== null ? skillFor(sk, s.input.club) : 0; }
+  /** the skill the open shot is played at: your round's (T317: your everyday game) or the tournament owner's; null with no shot */
+  private shotSk(): ShotSkill | null { const s = this.shot; if (!s) return null; return s.mine ? this.yourSkills() : this.play?.own?.skill ?? null; }
   /** T316: the owner's last played shot (the shot panel's "Last shot" line), or null */
   lastShotReport(): ShotReport | null { return this.lastShot; }
   /** T316: the owner's swing on the 3-click meter (swing.ts): plays the open shot with the club and aim of the panel and the meter's outcome (its power,
    *  miss and spread), as ownerHit does; the outcome is saved with the input (the replay plays the same shot), and the shot's carry and total are toasted */
   ownerSwing(o: SwingOutcome) {
-    const sw = readSwing(o); if (sw) this.ownerHit(sw);
+    const sw = readSwing(o); if (!sw) return;
+    if (this.shot?.mine) this.yourHit(sw); else this.ownerHit(sw);
   }
   /** the owner's club for the open shot: one his lie allows (allowedClubs; the driver only from the tee). The power resets to what carries the distance to
    *  the aim (powerFor) */
   setShotClub(c: Club) {
-    const s = this.shot, own = this.play?.own; if (!s || !own || !allowedClubs(s.turn.lie, s.turn.lie === 'tee').includes(c)) return;
+    const s = this.shot, sk = this.shotSk(); if (!s || sk === null || !allowedClubs(s.turn.lie, s.turn.lie === 'tee').includes(c)) return;
     const dM = Math.hypot(s.input.aim.x - s.turn.ball.x, s.input.aim.y - s.turn.ball.y) * TILE_M;
-    this.shot = { ...s, input: { club: c, aim: s.input.aim, power: powerFor(c, dM, own.skill) } }; this.emit();
+    this.shot = { ...s, input: { club: c, aim: s.input.aim, power: powerFor(c, dM, sk) } }; this.emit();
   }
   /** the owner's power for the open shot: clamped to the club's range (30% to 100% of the full carry; a putt 50% to 150% of its length) */
   setShotPower(p: number) {
@@ -8244,14 +8501,16 @@ export class Game {
   /** the owner's aim: a point on the course (a click, not a drag, while his shot is open). The power follows (powerFor), so the ring is where he means the
    *  ball to land: a click 30 m out with the driver at 100% would otherwise fly the full carry past it */
   private aimAt(t: Pt) {
-    const s = this.shot, own = this.play?.own; if (!s) return;
+    const s = this.shot, sk = this.shotSk(); if (!s) return;
     const aim = { x: t.x, y: t.y }, dM = Math.hypot(aim.x - s.turn.ball.x, aim.y - s.turn.ball.y) * TILE_M;
-    const power = own && s.input.club !== 'putter' ? powerFor(s.input.club, dM, own.skill) : s.input.power;
+    const power = sk !== null && s.input.club !== 'putter' ? powerFor(s.input.club, dM, sk) : s.input.power;
     this.shot = { ...s, input: { ...s.input, aim, power } }; this.emit();
+    if (s.mine) this.yourFace();
   }
   /** the owner's hit (P4b): plays his shot from the panel's input, plays the day on to his next turn, closes the shot (the sim resumes) and saves. When his
    *  group is done, his score is toasted */
   ownerHit(swing?: SwingOutcome) {
+    if (this.shot?.mine) { this.yourHit(swing); return; }
     const s = this.shot, pl = this.play, own = pl?.own; if (!s || !pl || !own) return;
     const i = s.input;
     const shot = own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}) });
@@ -8271,6 +8530,7 @@ export class Game {
   /** the owner hands the rest to the caddie (P4b): the model plays his group on, the shot closes (the sim resumes), the save records how many inputs he had
    *  played, and his score is toasted (the group is done at once) */
   ownerCaddie() {
+    if (this.shot?.mine) { this.yourCaddie(); return; }
     const s = this.shot, pl = this.play, own = pl?.own; if (!s || !pl || !own) return;
     own.live.caddie(); own.caddie = own.live.inputs.length; own.turn = own.live.advance();
     this.closeShot(); this.saveOwner();
@@ -8311,12 +8571,12 @@ export class Game {
    *  faint ellipse of its expected spread at the landing point (the carry along the aim): two sigmas along (0.03 + 0.07 * (1 - skill) of the carry) and
    *  across ((1.5 + 5 * (1 - skill)) degrees) */
   private drawShot(ctx: CanvasRenderingContext2D) {
-    const s = this.shot, own = this.play?.own; if (!s || !own) return;
+    const s = this.shot, sk0 = this.shotSk(); if (!s || sk0 === null) return;
     const i = s.input, t = s.turn, dpr = this.dpr, b = this.screen(t.ball.x, t.ball.y), a = this.screen(i.aim.x, i.aim.y);
     ctx.save();
     if (i.club !== 'putter') {
       const L = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) || 1, ux = (i.aim.x - t.ball.x) / L, uy = (i.aim.y - t.ball.y) / L;
-      const sk = skillFor(own.skill, i.club), carry = carryM(i.club, sk) * i.power / TILE_M, k = 1 - sk; // (T241: his club's part of the game)
+      const sk = skillFor(sk0, i.club), carry = carryM(i.club, sk) * i.power / TILE_M, k = 1 - sk; // (T241: his club's part of the game)
       const px = t.ball.x + ux * carry, py = t.ball.y + uy * carry, A = 2 * (0.03 + 0.07 * k) * carry, B = 2 * carry * Math.tan((1.5 + 5 * k) * Math.PI / 180);
       const c = this.screen(px, py), e1 = this.screen(px + ux * A, py + uy * A), e2 = this.screen(px - uy * B, py + ux * B);
       // the unit circle through the spread's axes (their screen vectors from the landing point), filled faint
@@ -8998,6 +9258,7 @@ export class Game {
     this.drawPracticeGhost(ctx);
     this.drawBusPreview(ctx);
     this.drawYou(ctx); // T240
+    this.drawYourBall(ctx); // T317
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
       this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);

@@ -115,3 +115,13 @@ test('T320: the worker steps below 1x: the same steps over 1/k frames, no drift;
     assert.ok(gaps <= Math.ceil(1 / k), `steps evenly spread (largest gap ${gaps} frames)`);
   }
 });
+
+test('T320: your walk-on round\'s ball waits at your feet until the clip\'s impact, then flies', async () => {
+  const { flightOf, yourBallAt } = await import('../src/game/golf/play/yours');
+  const { IMPACT_S } = await import('../src/game/golf/play');
+  const row = { i: 0, n: 1, par: 4, strokes: 1 } as unknown as Parameters<typeof flightOf>[5];
+  const f = flightOf({ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 110, y: 0 }, false, false, row, false);
+  f.t = -IMPACT_S; assert.deepEqual(yourBallAt(f), { x: 0, y: 0, h: 0 });
+  f.t = -0.01; assert.deepEqual(yourBallAt(f), { x: 0, y: 0, h: 0 });
+  f.t = f.air / 2; assert.ok(yourBallAt(f).h > 0);
+});
