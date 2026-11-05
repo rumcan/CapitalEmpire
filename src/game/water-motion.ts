@@ -194,13 +194,14 @@ export const BANK_GATE = [0.05, 0.3] as const, SPECK = 0.12;
  *  and the same mask run them, gently: still, shallow water.
  *  - far: the signed distance (tiles) the pools' weight rises over (whole from the first out: the open water's bank before the second);
  *  - scale: the ripples this many times finer than the open water's; slow: their drift this share of its speed over the ground;
- *  - shade: the ripples' light (the open water's RIPPLE.shade 0.14); the swamp's own colour and texture stay (a multiply);
- *  - sparkle, exp: the glint's strength (the open water's 0.6) and its exponent (lower: a softer, dimmer, wider glint); patch: where it glints
- *    (higher: fewer patches than the open water's);
+ *  - shade: the ripples' light (the open water's RIPPLE.shade 0.14: more here, the pools are dark and small); the swamp's own colour and
+ *    texture stay (a multiply);
+ *  - sparkle, exp: the glint's strength and its exponent (the open water's 0.6 and 220: lower, a softer, dimmer glint, about two thirds as
+ *    many over the same water as a pond's); patch: where it glints (a little fewer patches than the open water's);
  *  - tap: the picture's four taps round a pixel (tiles) that find a pool's edge (mud on any side), deep: the diagonal four further in (the
  *    ripples and the glint rise toward a pool's open middle);
  *  - shore: the soft pale rim's alpha at a pool's edge, its laps' rate (a share of the open water's waves), the share it keeps between laps */
-export const SWAMP_POOL = { far: [-1.5, -1], scale: 1.8, slow: 0.4, shade: 0.1, sparkle: 0.3, exp: 140, patch: [0.2, 0.75], tap: 0.12, deep: 0.3, shore: 0.2, rate: 0.5, floor: 0.35 } as const;
+export const SWAMP_POOL = { far: [-1.5, -1], scale: 1.8, slow: 0.4, shade: 0.2, sparkle: 0.9, exp: 160, patch: [0.07, 0.6], tap: 0.12, deep: 0.3, shore: 0.3, rate: 0.5, floor: 0.35 } as const;
 
 /** the direction toward the sun along the ground (tiles, unit) and its elevation's sine: the screen's sun (grass-shine.ts SUN_SCREEN, the
  *  upper right) taken back through the iso projection (iso.ts: X = HW (x - y), Y = HH (x + y)) */

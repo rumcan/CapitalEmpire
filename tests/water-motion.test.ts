@@ -193,15 +193,15 @@ test("T343: a swamp with no open water near still gets a mask, its pools' weight
 test('T343: the swamp mask feeds the motion pass: the pools ripple, glint and lap at their edges, gently; the mud and reeds stay', () => {
   const fr = frame(), sw = sampleOf(0, 128, 128, 255);
   // the pool water moves (over a patch, some pixels lighter, some darker), the swamp's own colour kept (no wash: a multiply and small)
-  let lighter = 0, darker = 0, most = 0;
+  let lighter = 0, darker = 0, most = 0, sum = 0;
   for (let i = 0; i < 400; i++) {
-    const x = 3 + (i % 20) * 0.37, y = 5 + Math.floor(i / 20) * 0.41, o = motionPixel(POOL, x, y, sw, fr);
-    const d = o[1]! - POOL[1]!; if (d > 0.5) lighter++; if (d < -0.5) darker++; most = Math.max(most, Math.abs(d));
+    const x = 3 + (i % 20) * 0.37, y = 5 + Math.floor(i / 20) * 0.41, o = motionPixel(POOL, x, y, sw, fr), r = swampPixel(POOL, x, y, 1, frame({ sparkle: 0, foam: 0 }));
+    const d = r[1]! - POOL[1]!; if (d > 0.5) lighter++; if (d < -0.5) darker++; most = Math.max(most, Math.abs(d)); sum += Math.abs(d);
     // (the same as the twin itself)
     assert.deepEqual(o, swampPixel(POOL, x, y, 1, fr));
   }
   assert.ok(lighter > 40 && darker > 40, `ripples both ways: ${lighter} ${darker}`);
-  assert.ok(most < 0.25 * POOL[1]!, `gentle: at most ${most}`);
+  assert.ok(sum / 400 < 0.08 * POOL[1]! && most < 0.4 * POOL[1]!, `the ripples' light gentle (a multiply): mean ${sum / 400}, at most ${most}`);
   // the mud and the reeds between the pools are untouched
   for (const c of [MUD, REED, GRASS]) assert.deepEqual(motionPixel(c, 4.3, 6.1, sw, fr), c);
   // no swamp weight there (the open water's far bank, as before): untouched
@@ -218,16 +218,23 @@ test('T343: the swamp mask feeds the motion pass: the pools ripple, glint and la
   assert.deepEqual(motionPixel(POOL, 4.3, 6.1, sw, null), POOL);
 });
 
-test("T343: the swamp pools' glint: fewer and softer than the open water's, none in a shadow", () => {
-  assert.ok(SWAMP_POOL.sparkle < 0.6 * 0.6 && SWAMP_POOL.exp < 220 && SWAMP_POOL.patch[0] > 0.05, 'dimmer, softer, in fewer patches');
-  const fr = frame({ sparkle: 3 });
-  let lit = 0, shaded = 0;
-  for (let i = 0; i < 4000; i++) {
-    const x = (i % 80) * 0.11, y = Math.floor(i / 80) * 0.13;
-    if (swampPixel(POOL, x, y, 1, fr)[0]! > POOL[0]! * 1.4) lit++;
-    if (swampPixel(POOL, x, y, 1, fr, 1, 1, 1)[0]! > POOL[0]! * 1.4) shaded++;
-  }
-  assert.ok(lit < 400, `a glint here and there: ${lit} of 4000`); assert.equal(shaded, 0, 'none in a shadow');
+test("T343: the swamp pools' glint: fewer and softer than a pond's, none in a shadow", () => {
+  assert.ok(SWAMP_POOL.exp < 220, 'softer: a lower exponent than the open water');
+  // (the glint alone: no ripples' light, no rim; four moments over the same water, the pond's sparkle beside)
+  const count = (over: Partial<MotionFrame> = {}, shade = 0) => {
+    let sw = 0, pond = 0;
+    for (const t of [1.1, 3.7, 7.9, 12.3]) {
+      const fr = frame({ ...phasesAt(t, WATER_MOTION), ripple: 0, foam: 0, ...over });
+      for (let i = 0; i < 40000; i++) {
+        const x = (i % 200) * 0.05, y = Math.floor(i / 200) * 0.05;
+        if (swampPixel(POOL, x, y, 1, fr, 1, 1, shade)[0]! - POOL[0]! > 15) sw++;
+        if (motionPixel(LAKE, x, y, { sd: 3, fx: 0, fy: 0, amp: 0.4 }, fr, 1, shade)[0]! - LAKE[0]! > 15) pond++;
+      }
+    }
+    return { sw, pond };
+  };
+  const c = count(); assert.ok(c.sw > 0 && c.sw < c.pond, `a glint here and there, fewer than a pond's: ${c.sw} < ${c.pond}`);
+  assert.equal(count({}, 1).sw, 0, 'none in a shadow');
 });
 
 test('T343: the river is unchanged: its water and bank texels as before with the swamp laid, and its pixels drawn as before', () => {
