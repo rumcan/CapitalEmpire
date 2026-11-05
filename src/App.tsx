@@ -601,7 +601,7 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.roughYards} onChange={e => { game.setRoughYards(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.roughYards * 100)}%</span>
                     </label>
-                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" data-tip="The world as a desert (T341): every tree drawn as a palm or a rock, the bushes and flower beds as desert plants and rocks, the open ground desert sand, dirt and pale sand, the lot lawns golden fescue. The golf course and the range stay as they are. Only the look: nothing is planted or saved differently, and off restores today's look">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" data-tip="This game's world as a desert (T341, T342: chosen when the game starts, saved with it): every world tree drawn as a palm or a rock, the bushes and flower beds as desert plants and rocks, the open ground desert sand, dirt and pale sand, damp dirt along the rivers, the lot lawns golden fescue. New holes plant desert plants; the plants you placed on the course stay as they are. Off: the autumn look">
                       <input type="checkbox" checked={game.desertTheme} onChange={e => { game.setDesertTheme(e.target.checked); bump(); }} />
                       Desert theme
                     </label>
@@ -838,7 +838,7 @@ export default function App() {
           {game.shotState() && <ShotPanel game={game} />}
           {game.spinView() && <SpinBall game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
-          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} />; })()}
+          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} />; })()}
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
           {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} />}

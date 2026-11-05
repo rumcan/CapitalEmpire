@@ -10,6 +10,7 @@
 // clump, so a clump is a group and there is a gap between two. Deterministic from the hole's seed. Pure TS, no DOM; units are tiles (2 m).
 import { mulberry } from '../iso';
 import { CELL_T, SURF } from '../ext/course-grid';
+import { desertHolePlant } from '../desert-planting';
 import { FOREST_BROADLEAF, FOREST_CONIFERS, dealTree, ownerSize, treeDeal, type TreeSpecies } from '../forest';
 import { TILE_M } from './types';
 
@@ -73,6 +74,9 @@ export interface FrameSite {
   landings?: readonly number[];
   /** whether a tree may stand at (x, y) as the map has it now (the host's checks: see the file's head) */
   ok(x: number, y: number): boolean;
+  /** T342: a desert game: the frame plants desert plants (desert-planting.ts: palms, desert trees, tall cacti, shrubs, big rocks), never an
+   *  autumn broadleaf or a conifer */
+  desert?: boolean;
 }
 /** a frame tree: its point, the library id, its size and its clump */
 export interface FrameTree { x: number; y: number; id: string; scale: number; clump: number }
@@ -251,7 +255,7 @@ export function frameHole(site: FrameSite, keep: readonly Pt[] = [], rules: Fram
   const pick = mulberry(Math.imul(site.seed | 0, 0x27d4eb2f) ^ (site.hole * 0x165667b1) ^ 0x3c6ef372);
   const share = Array.from({ length: clumps }, () => 0.2 + 0.6 * pick());
   const out: FrameTree[] = trees.map(t => {
-    const id = pick() < share[t.clump]! ? dealTree(FRAME_CONIFER_DEAL, pick()) : dealTree(FRAME_BROAD_DEAL, pick());
+    const u = pick(), v = pick(), id = site.desert ? desertHolePlant(v) : u < share[t.clump]! ? dealTree(FRAME_CONIFER_DEAL, v) : dealTree(FRAME_BROAD_DEAL, v);
     const scale = Math.round(ownerSize(id) * (0.9 + 0.25 * pick()) * (1 + R.backGrow * back(t.x, t.y)) * 100) / 100;
     return { x: Math.round(t.x * 100) / 100, y: Math.round(t.y * 100) / 100, id, scale, clump: t.clump };
   });

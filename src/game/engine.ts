@@ -65,6 +65,7 @@ import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type Gr
 import { aimsFromPlans, decodePlans, encodePlans, frameView, planSeed, type FreeRect, type WizardGhost } from './ext/hole-wizard';
 import type { HolePlan } from './ext/hole-plan';
 import { FRAME_CONIFER_IDS, FRAME_RULES, FRAME_TREE_KEY, cartLanes, frameHole, framePrice, landingSpots, type FrameSite, type FrameTree } from './golf/holeframe';
+import { DESERT_HOLE_IDS, desertFrameTree, desertPlantIds } from './desert-planting';
 import { FOREST_CLEAR, LABEL_FADE_ALPHA, LABEL_FADE_PX, TOWN_CLEAR, plantedTreeCleared, propTreeCleared, treesCleared, type NearTree } from './ext/hole-wizard/extras';
 import { holeAreas, holeCard, markerMove, swapHoleNumbers, teeLengths, type HoleCardView, type HoleFix } from './golf/holecard';
 import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, type MyHole } from './golf/myholes';
@@ -74,7 +75,7 @@ import { CourseContour, type CourseChunkOut } from './course-contour';
 import { roadRoute } from './road-route';
 import { linesOnRoads, mainRoads, offRoadTo, type OffRoad } from './offroad';
 import { PRESETS, surfacePreset } from './paint-presets';
-import { plantPoints, plantPool, type PlantBrushKind } from './plant';
+import { plantPoints, plantPool, type PlantBrushKind, type PlantFilter } from './plant';
 import { ParkingTool } from './parking-tool';
 import { gateSpots } from './parking-props';
 import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
@@ -988,7 +989,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T207: a road tool right-click: on release without a drag it takes back the last point */ back?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt; /** T240: a Walk mode click (your character walks there on release) */ you?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
+  paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
@@ -1161,7 +1162,8 @@ export class Game {
    *  returns what it spent ($) */
   private placeSavedFrame(n: number, trees: readonly { id: string; x: number; y: number; flip: boolean; scale: number }[]): number {
     const d = DECOR_BY_KEY.get(FRAME_TREE_KEY), price = d?.price ?? 0; let spent = 0;
-    for (const t of trees) {
+    for (const t0 of trees) {
+      const t = this.desertTheme ? desertFrameTree(t0) : t0; // T342: a desert game plants a saved hole's trees as desert plants
       const i = LIB_INDEX.get(t.id); if (i === undefined || this.money - spent < price) continue;
       const k = Math.min(maxDrawScale(i), t.scale); if (this.canPlace(LIBRARY[i]!, t.x, t.y, false, k)) continue;
       const p = this.addProp(i, t.x, t.y, t.flip, k); p.decor = FRAME_TREE_KEY; p.frame = n; spent += price;
@@ -2286,7 +2288,7 @@ export class Game {
       return true;
     };
     const site: FrameSite = {
-      hole: n, seed: pl?.seed || planSeed(n), line, others: [...lines].filter(([h]) => h !== n).map(([, l]) => l), lanes, ok,
+      hole: n, seed: pl?.seed || planSeed(n), line, others: [...lines].filter(([h]) => h !== n).map(([, l]) => l), lanes, ok, desert: this.desertTheme, // (T342)
       grid: { x0: g.x0, y0: g.y0, w: g.w, h: g.h, surf, hole },
       ...(pl ? { landings: landingSpots(L * 2, pl.widths) } : {}),
     };
@@ -2872,6 +2874,7 @@ export class Game {
   /** a new game by the start mode (?start=): a range start, else (or with ?start=town) the old start; true when a golf game was laid. False
    *  (?start=valley, or no seed fits either) leaves the caller to make the classic valley */
   private newGame(): boolean {
+    this.newGameTheme(); // T342: the look the new game starts in (its "Who are you?" card offers both)
     // a new town composes its house lots with the latest shipped lot model (T160; the save records it: lotModel)
     setLotModel(LATEST_LOT_MODEL);
     // T259: and its farms with the latest farm model (the save records it: farmModel)
@@ -2940,7 +2943,7 @@ export class Game {
       this.paint.load(s.paints.map((a, i) => toTuple({ id: i + 1, ...a })));
       this.golf = s.save; this.golf.progress = { ...emptyProgress(), tour: newTour() }; this.clubLegacy = false; // (T293: the start tutorial)
       // (T214: a new club, its founding drive at the first frame)
-      for (const p of dressCourse(s.layout, seed)) {
+      for (const p of dressCourse(s.layout, seed, this.desertTheme)) { // (T342: a desert game's holes lined with desert plants)
       const i = LIB_INDEX.get(p.id);
       if (i !== undefined) {
       const prop = this.addProp(i, p.x, p.y, p.flip, p.scale);
@@ -3011,20 +3014,23 @@ export class Game {
   }
   /** places a golf hole's props (golf/holepreset.ts): a flag, trees, bushes and flowers from the library, picked and turned and sized by a seeded rnd; a prop that cannot be placed is skipped. Returns how many were placed */
   placePresetProps(ps: PresetProp[], seed: number): number {
-    const trees = LIBRARY.flatMap((it, i) => it.kind === 'tree' && !/dead/.test(it.id) ? [i] : []), bushes = LIBRARY.flatMap((it, i) => it.kind === 'bush' ? [i] : []);
-    const flowers = ['town:hydrangea', 'town:fern', 'town:ornamental_grass'].flatMap(id => LIB_INDEX.get(id) ?? []);
+    // T342: a desert game's presets plant desert plants: the trees from a desert hole's sets, the bushes desert shrubs, the flowers the flowering ones
+    const dz = this.desertTheme, ix = (ids: readonly string[]) => ids.flatMap(id => LIB_INDEX.get(id) ?? []);
+    const trees = dz ? ix(DESERT_HOLE_IDS) : LIBRARY.flatMap((it, i) => it.kind === 'tree' && !/dead/.test(it.id) ? [i] : []), bushes = dz ? ix(desertPlantIds('bushes')) : LIBRARY.flatMap((it, i) => it.kind === 'bush' ? [i] : []);
+    const flowers = dz ? ix(desertPlantIds('flowers')) : ['town:hydrangea', 'town:fern', 'town:ornamental_grass'].flatMap(id => LIB_INDEX.get(id) ?? []);
     const flag = LIB_INDEX.get(PIN_RED_ID);
     const rnd = mulberry(seed * 7919); let n = 0;
-    for (const q of ps) {
+    for (let q of ps) {
       if (q.id !== undefined) {
-        const i = LIB_INDEX.get(q.id); if (i === undefined) continue;
-        const flip = q.flip ?? false, scale = q.scale ?? (OWNER_SCALE[q.id] ?? 1);
+        if (dz && LIBRARY[LIB_INDEX.get(q.id) ?? -1]?.kind === 'tree') { const t = desertFrameTree({ id: q.id, x: q.x, y: q.y, scale: q.scale ?? (OWNER_SCALE[q.id] ?? 1) }); q = { ...q, id: t.id, scale: t.scale, flip: false }; }
+        const id = q.id!, i = LIB_INDEX.get(id); if (i === undefined) continue;
+        const flip = q.flip ?? false, scale = q.scale ?? (OWNER_SCALE[id] ?? 1);
         if (this.canPlace(LIBRARY[i]!, q.x, q.y, flip, scale)) continue;
         this.addProp(i, q.x, q.y, flip, scale); n++; continue;
       }
       const pool = q.kind === 'tree' ? trees : q.kind === 'bush' ? bushes : q.kind === 'flower' ? flowers : flag === undefined ? [] : [flag];
       if (!pool.length) continue;
-      const i = pool[Math.floor(rnd() * pool.length)]!, flip = q.kind === 'flag' ? false : rnd() < 0.5;
+      const i = pool[Math.floor(rnd() * pool.length)]!, flip = q.kind === 'flag' ? false : rnd() < 0.5 && !dz;
       const scale = q.kind === 'flag' ? OWNER_SCALE[LIBRARY[i]!.id] ?? MARKER_SCALE.pin : (OWNER_SCALE[LIBRARY[i]!.id] ?? 1) * (0.9 + 0.2 * rnd());
       if (this.canPlace(LIBRARY[i]!, q.x, q.y, flip, scale)) continue;
       this.addProp(i, q.x, q.y, flip, scale); n++;
@@ -3049,7 +3055,7 @@ export class Game {
     if (n) this.scheduleSave(); return n;
   }
   /** the sprites a plant brush can use (the Paint panel's picks) */
-  plantPool(kind: PlantBrushKind) { return plantPool(LIBRARY, kind); }
+  plantPool(kind: PlantBrushKind, filter: PlantFilter = this.paint.plantFilter) { return plantPool(LIBRARY, kind, filter); }
   /** how many props the plant brushes have placed */
   plantedCount() { let n = 0; for (const p of this.props) if (p.plant) n++; return n; }
   /** the plant brush's Rub out: removes the props placed by a plant brush (Prop.plant) whose anchor is inside the circle; never other props. Returns how many */
@@ -3416,14 +3422,24 @@ export class Game {
   setDesertTheme(on: boolean) {
     if (on === this.desertTheme) return;
     this.desertTheme = on;
+    // T342: the game's look is saved with the game; localStorage keeps the last choice (a new game's first pick, a session that cannot save)
     try { localStorage.setItem(DESERT_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ }
-    this.applyDesert(); this.emit();
+    this.applyDesert(); this.scheduleSave(); this.emit();
   }
+  /** T342: a loaded game's look (on: desert), unless the dev server's ?desert=on|off says otherwise for the session */
+  private themeFor(on: boolean) {
+    const q = import.meta.env.DEV ? new URLSearchParams(location.search).get('desert') : null;
+    const want = q === 'on' ? true : q === 'off' ? false : on;
+    if (want !== this.desertTheme) { this.desertTheme = want; this.applyDesert(); }
+  }
+  /** T342: the look a new game starts in ("Who are you?" offers Autumn or Desert): the last choice made (localStorage), else autumn */
+  private newGameTheme() { let on = false; try { on = localStorage.getItem(DESERT_KEY) === '1'; } catch { /* autumn */ } this.themeFor(on); }
   /** the ms the last switch took on the main thread (re-listing the sprites; the ground's bake follows in the workers) */
   desertMs = 0;
   private applyDesert() {
     const t0 = performance.now();
     DESERT_THEME.on = this.desertTheme; DESERT_THEME.gen++; DESERT_THEME.keep = d => this.courseOwns(d);
+    this.paint.plantFilter = this.desertTheme ? 'desert' : 'all'; // T342: the plant brushes start on the game's plants (the player may pick All or Autumn)
     setDesertSurfaces(this.desertTheme);
     this.ground.setLeafDensity(this.desertTheme ? 0 : this.leafDensity); // no fallen leaves under the palms
     this.sprites.relist();
@@ -7164,7 +7180,7 @@ export class Game {
     const rs = this.traffic.round.stage, tourney = this.golf && (rs === 'surge' || rs === 'eval') ? await this.traffic.daySave() : null;
     if (this.saveBlocked) return 0;
     const d: SaveV5 = {
-      version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(),
+      version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(), theme: this.desertTheme ? 'desert' : 'autumn',
       // T259: the farm model (an old save's farms rebuilt since on the new one: farmsNew)
       farmModel: this.farmModel, ...(this.farmModel === 1 && this.farmsNew.size ? { farmsNew: [...this.farmsNew] } : {}),
       segs: [...this.net.segs].map(segRec),
@@ -7202,6 +7218,8 @@ export class Game {
       // T259: its farms compose with the farm model it was made with (a save from before has none: model 1), those rebuilt since on the new one
       this.farmModel = d.farmModel === 2 ? 2 : 1; this.farmsNew = new Set(this.farmModel === 1 && Array.isArray(d.farmsNew) ? d.farmsNew.filter(k => typeof k === 'string') : []);
       this.bizOpenSeen = null;
+      // T342: the game's own look (a save from before T342 is autumn); ?desert=on|off on the dev server still wins for the session
+      this.themeFor(d.theme === 'desert');
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
