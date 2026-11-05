@@ -3429,10 +3429,12 @@ export class Game {
     this.sprites.relist();
     this.desertMs = performance.now() - t0;
   }
-  /** T341: whether the course or the range owns a drawable (it keeps its art in the desert theme): a decor or frame prop, or one standing on the
-   *  club's land (the course and its parcels), on a course grid cell, or on the range's plot or practice area */
+  /** T341: whether the course or the range owns a drawable (it keeps its art in the desert theme): a decor or frame prop, or a prop (placed,
+   *  the hole dressing's, the range's; not a planted forest or town tree) standing on the club's land (the course and its parcels), on a course grid cell, or on the range's plot or practice area */
   courseOwns(d: { x: number; y: number; x0?: number; y0?: number; x1?: number; y1?: number; decor?: string; frame?: number }): boolean {
     if (d.decor !== undefined || d.frame !== undefined) return true;
+    // the planted forest, river-belt and town trees are sprites, never props: always the world's (the course clears them off its cells)
+    if (!this.props.has(d as Prop)) return false;
     const cx = d.x0 !== undefined && d.x1 !== undefined ? (d.x0 + d.x1) / 2 : d.x, cy = d.y0 !== undefined && d.y1 !== undefined ? (d.y0 + d.y1) / 2 : d.y;
     if (this.golf && this.ownedAt(cx, cy)) return true;
     for (const b of [this.range.scene?.box, this.range.scene?.practice.box]) if (b && cx >= b[0] && cx <= b[2] && cy >= b[1] && cy <= b[3]) return true;

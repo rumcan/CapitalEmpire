@@ -23,14 +23,16 @@ export const DESERT_KEY = 'capitalempire.desertTheme';
 
 // ---------------------------------------------------------------- the ground
 
-const look = (family: string, scale = 1, tone = 0): PaintedLook => ({ family, version: null, scale, tint: '#ffffff', tone });
+const look = (family: string, scale = 1, tone = 0, tint = '#ffffff'): PaintedLook => ({ family, version: null, scale, tint, tone });
+/** the pale sand's warm tint and tone: the bunker's unraked sand brought toward the desert sand, so its patches blend in as paler ground */
+const PALE_TINT = '#fff0dc';
 /** the open ground's looks: desert sand (the Waste area sand's painting) for the map's ground, pale unraked sand (the bunker's ripples) over
  *  the meadow's soft patches and dirt for the woodland floor, worn and dry ground, so the desert is three blended materials, never one colour */
-export const DESERT_SAND = 'desert-run', DESERT_DIRT = 'dirt-run', DESERT_PALE = 'sand-ripples-tiles', LAWN_FESCUE = 'golden-fescue';
+export const DESERT_SAND = 'desert-run', DESERT_DIRT = 'dirt-run', DESERT_PALE = 'sand-ripples', LAWN_FESCUE = 'golden-fescue';
 /** the world's grass surfaces (painted-surfaces.ts SURFACES keys) and the look each wears in the desert */
 export const DESERT_GROUND: Readonly<Record<string, PaintedLook>> = {
   base: look(DESERT_SAND), outside: look(DESERT_SAND),
-  meadow: look(DESERT_PALE), dry: look(DESERT_PALE, 1, -0.04),
+  meadow: look(DESERT_PALE, 1, -0.04, PALE_TINT), dry: look(DESERT_PALE, 1, -0.08, PALE_TINT),
   worn: look(DESERT_DIRT), woodland: look(DESERT_DIRT, 1, -0.03),
   // the living ground's patchy grass (under trees, at doors) is bare dirt in the desert; its lush grass (along fences and water) is dirt already
   patchy: look(DESERT_DIRT), lush: look(DESERT_DIRT),
