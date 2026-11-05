@@ -21,7 +21,7 @@ import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_S
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
-import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
+import { onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, finishBorders, finishOf, finishStripeLook } from './course-finish';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
@@ -212,7 +212,8 @@ import { lampGround } from './lamp-pool';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
-import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale, standInLabel } from './newart';
+import { DESERT_KEY } from './desert-theme';
+import { DESERT_THEME, NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale, standInLabel } from './newart';
 import { webpSource } from './atlas-gl';
 import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
@@ -2713,7 +2714,11 @@ export class Game {
     { const q = new URLSearchParams(location.search).get('sun'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.sunLook = { ...this.sunLook, on: q === 'on' }; }
     { const q = new URLSearchParams(location.search).get('tracks'); if (import.meta.env.DEV && (q === 'on' || q === 'off' || q === 'stress')) { this.tyreTracks = q !== 'off'; this.tracksStress = q === 'stress'; } }
     try { const v = parseFloat(localStorage.getItem('capitalempire.leafDensity') ?? ''); if (Number.isFinite(v)) this.leafDensity = clampLeafDensity(v); } catch { /* the default */ }
-    this.ground.leafDensity = this.leafDensity;
+    // T341: the desert theme as the player left it (off by default), and ?desert=on|off (the dev server, for the session)
+    try { this.desertTheme = localStorage.getItem(DESERT_KEY) === '1'; } catch { /* the default, off */ }
+    { const q = new URLSearchParams(location.search).get('desert'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.desertTheme = q === 'on'; }
+    this.ground.leafDensity = this.desertTheme ? 0 : this.leafDensity;
+    if (this.desertTheme) this.applyDesert();
     this.unfinish?.(); this.unfinish = this.watchFinish();
     try { const v = parseFloat(localStorage.getItem('capitalempire.roughYards') ?? ''); if (Number.isFinite(v)) this.roughYards = clampRoughYards(v); } catch { /* the default */ }
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
@@ -3401,7 +3406,39 @@ export class Game {
   setLeafDensity(v: number) {
     this.leafDensity = clampLeafDensity(v);
     try { localStorage.setItem('capitalempire.leafDensity', String(this.leafDensity)); } catch { /* storage may be unavailable */ }
-    this.ground.setLeafDensity(this.leafDensity); this.emit();
+    this.ground.setLeafDensity(this.desertTheme ? 0 : this.leafDensity); this.emit();
+  }
+  /** T341 (#968): the desert theme, the gear menu's Desert theme (kept across reloads; ?desert=on|off on the dev server for the session): the
+   *  world's trees drawn as palms and rocks, its bushes as desert plants and rocks, its open ground desert sand, dirt and pale sand and the lot
+   *  lawns golden fescue (desert-theme.ts); the course and the range as they are (courseOwns). Only the drawing: nothing is planted, saved or
+   *  regenerated differently. The switch re-lists the sprites (the next frame) and the ground bakes again once (the surfaces file changed) */
+  desertTheme = false;
+  setDesertTheme(on: boolean) {
+    if (on === this.desertTheme) return;
+    this.desertTheme = on;
+    try { localStorage.setItem(DESERT_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ }
+    this.applyDesert(); this.emit();
+  }
+  /** the ms the last switch took on the main thread (re-listing the sprites; the ground's bake follows in the workers) */
+  desertMs = 0;
+  private applyDesert() {
+    const t0 = performance.now();
+    DESERT_THEME.on = this.desertTheme; DESERT_THEME.gen++; DESERT_THEME.keep = d => this.courseOwns(d);
+    setDesertSurfaces(this.desertTheme);
+    this.ground.setLeafDensity(this.desertTheme ? 0 : this.leafDensity); // no fallen leaves under the palms
+    this.sprites.relist();
+    this.desertMs = performance.now() - t0;
+  }
+  /** T341: whether the course or the range owns a drawable (it keeps its art in the desert theme): a decor or frame prop, or a prop (placed,
+   *  the hole dressing's, the range's; not a planted forest or town tree) standing on the club's land (the course and its parcels), on a course grid cell, or on the range's plot or practice area */
+  courseOwns(d: { x: number; y: number; x0?: number; y0?: number; x1?: number; y1?: number; decor?: string; frame?: number }): boolean {
+    if (d.decor !== undefined || d.frame !== undefined) return true;
+    // the planted forest, river-belt and town trees are sprites, never props: always the world's (the course clears them off its cells)
+    if (!this.props.has(d as Prop)) return false;
+    const cx = d.x0 !== undefined && d.x1 !== undefined ? (d.x0 + d.x1) / 2 : d.x, cy = d.y0 !== undefined && d.y1 !== undefined ? (d.y0 + d.y1) / 2 : d.y;
+    if (this.golf && this.ownedAt(cx, cy)) return true;
+    for (const b of [this.range.scene?.box, this.range.scene?.practice.box]) if (b && cx >= b[0] && cx <= b[2] && cy >= b[1] && cy <= b[3]) return true;
+    return this.courseSurfAt(cx, cy) > 0;
   }
   /** T222: the share of the town's house lots that wear a rough yard (rough-yards.ts), the gear menu's Rough yards: 0 (all mown) to 2, 1 the
    *  default schedule (about 40% in a new town, falling to about 10% by 3,000 residents); kept across reloads */

@@ -218,6 +218,8 @@ export class SpriteTiles {
   clear() { this.tiles.clear(); this.where.clear(); this.count = 0; }
   /** re-pack every tile (the vector shadows turned on or off) */
   repack() { for (const t of this.tiles.values()) t.order = null; }
+  /** T341: every prop listed again in the tiles its picture touches (the desert theme changed what the plants are drawn as, and so their rects) */
+  relist() { const ps = [...this.where.keys()]; this.clear(); for (const p of ps) this.add(p); }
   /** the props of the tiles touching a world-px point, front-most first (for picking) */
   at(X: number, Y: number): Prop[] {
     const t = this.tiles.get(tkey(Math.floor(X / CHUNK_W), Math.floor(Y / CHUNK_H))); if (!t) return [];
