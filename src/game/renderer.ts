@@ -11,7 +11,7 @@ import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, growBand, riverStreams, swampStreams, type BandAlpha } from './swamp';
 import { RIVER_CUT, drawRiverCut } from './river-cut';
 import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
-import { motionMask, pondLap, riverLap, type BandRef, type MotionMaskData } from './water-motion';
+import { BANK_REACH, motionMask, pondLap, riverLap, type BandRef, type MotionMaskData } from './water-motion';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
 import { layOnGround } from './base-grass';
@@ -525,9 +525,11 @@ export class GroundPainter {
   /** T248: the motion mask over the chunk just baked: the chunk's water field (made now if no water site asked for it: a shore just past the
    *  chunk still wets its bank here) with the bridges over it and the swamp bands laid; null without water near, or with the motion off */
   private waterMotionMask(lite: boolean, net: FxView): MotionMaskData | null {
-    const w = this.waterField(lite); if (!w || !w.f.flow) return null;
-    const b = w.f.box, brs = net.bridges.filter(r => r.bbox[2] >= b[0] && r.bbox[0] <= b[2] && r.bbox[3] >= b[1] && r.bbox[1] <= b[3]);
-    return motionMask(w.f, { bridges: brs, bands: this.bandsNow });
+    // (T343: a chunk with swamp laid and no water near still gets one, over an empty field: its pools move)
+    const w = this.waterField(lite), c = this.chunkNow, f = w?.f.flow ? w.f : c && this.bandsNow.some(r => r) ? WaterField.over(c.box, BANK_REACH + 2, fieldRes(c.L, lite)).motion() : null;
+    if (!f) return null;
+    const b = f.box, brs = net.bridges.filter(r => r.bbox[2] >= b[0] && r.bbox[0] <= b[2] && r.bbox[3] >= b[1] && r.bbox[1] <= b[3]);
+    return motionMask(f, { bridges: brs, bands: this.bandsNow });
   }
   /** T262: the grass shine's weight mask over the chunk just baked (grass-shine.ts), a texel SHINE_TEXEL world px (or more), with a margin:
    *  the map's own grass first (its terrain: the ground, meadow and woodland floor in the map's grass weight, the water, creeks and banks none),
