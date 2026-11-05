@@ -7,12 +7,13 @@ import { MAP } from '../src/game/iso';
 import { readSave, setSaveStore, upgradeSave, writeSave, type SaveV5 } from '../src/game/save';
 import { CELL_T, SURF, makeGrid, paintDisc, paintStroke } from '../src/game/ext/course-grid';
 import { cartLanes, frameHole, FRAME_TREE_IDS, type FrameSite, type Pt } from '../src/game/golf/holeframe';
-import { DESERT_HOLE_IDS, DESERT_HOLE_SETS, desertFrameTree, desertHolePlant, desertPlantIds, isDesertHolePlant } from '../src/game/desert-planting';
+import { DESERT_HOLE_IDS, DESERT_HOLE_SETS, desertFrameTree, desertHolePlant, desertHoleSize, desertPlantIds, isDesertHolePlant } from '../src/game/desert-planting';
+import { ownerSize } from '../src/game/forest';
 import { PLANT_FILTERS, PLANT_KINDS, plantPool } from '../src/game/plant';
 import { LIBRARY } from '../src/game/library';
 import { REMOVED_IDS } from '../src/game/lots/scales';
 import { DESERT_DIRT, DESERT_GROUND } from '../src/game/desert-theme';
-import { DESERT_BANK_M, desertBank, influence, livingSignature } from '../src/game/living-ground';
+import { DESERT_BANK_M, desertBank, influence, livingMasks, livingSignature } from '../src/game/living-ground';
 
 const BY = new Map(LIBRARY.map(it => [it.id, it] as const));
 const removed = new Set(REMOVED_IDS);
@@ -114,4 +115,31 @@ test('the desert ground: near the world\'s water the ground maps to dirt, breaki
   assert.equal(desertBank(31.5, 70.25, 20), desertBank(31.5, 70.25, 20));
   assert.equal(desertBank(31.5, 70.25, DESERT_BANK_M * 3), 0);
   assert.notEqual(livingSignature(1, src), livingSignature(1, { ...src, desert: true }));
+});
+
+test("the desert hole plants stand at tree size: the tree-sized sets about the autumn frame trees' height, within the pictures' pixel limit", () => {
+  const height = (id: string, k: number) => BY.get(id)!.h * k;
+  const autumn = FRAME_TREE_IDS.reduce((a, id) => a + height(id, ownerSize(id)), 0) / FRAME_TREE_IDS.length;
+  const mean = (ids: readonly string[]) => ids.reduce((a, id) => a + height(id, desertHoleSize(id)), 0) / ids.length;
+  for (const name of ['palm', 'tree']) { const s = DESERT_HOLE_SETS.find(x => x.name === name)!, h = mean(s.ids); assert.ok(h > autumn * 0.85 && h < autumn * 1.25, `${name}s at ${h.toFixed(0)} px vs the trees' ${autumn.toFixed(0)}`); }
+  for (const s of DESERT_HOLE_SETS) assert.ok(s.grow >= 1 && s.grow <= 1.5, `${s.name} grows ${s.grow}`);
+  // the whole frame: its plants on average near the autumn frame's, and most of them tree-sized
+  const a = frameHole(holeSite(false)).trees, d = frameHole(holeSite(true)).trees;
+  const avg = (ts: typeof a) => ts.reduce((x, t) => x + BY.get(t.id)!.h * t.scale, 0) / ts.length;
+  assert.ok(avg(d) > avg(a) * 0.75, `the desert frame ${avg(d).toFixed(0)} px vs the autumn ${avg(a).toFixed(0)} px`);
+  assert.ok(d.filter(t => /palm|acacia|joshua/.test(t.id)).length > d.length * 0.6, 'mostly palms and desert trees');
+});
+
+test("the damp dirt by the desert's water is laid whole and darkened, strongest at the bank; none in the autumn or by the course's water", () => {
+  const river = { pts: [{ x: 0, y: 50, w: 8 }, { x: 120, y: 50, w: 8 }], bank: 2.6 };
+  const box: [number, number, number, number] = [0, 0, 120, 120], src = { casters: new Float32Array(0), rivers: [river] };
+  const wet = influence(box, 1, { ...src, desert: true }), m = livingMasks(wet), dry = livingMasks(influence(box, 1, src));
+  assert.ok(wet.damp && m.damp && (m.max.damp ?? 0) > 0.7, 'a damp mask, dark at the bank');
+  assert.equal(dry.damp, undefined);
+  const at = (a: Uint8ClampedArray, x: number, y: number) => a[((Math.floor(y) - wet.iy0) * wet.w + (Math.floor(x) - wet.ix0)) * 4 + 3]!;
+  // at the bank the dirt is whole (no sand through it) and darkest; further out lighter or none
+  let near = 0, mid = 0; for (let x = 5; x < 115; x++) { assert.equal(at(m.lush, x, 58), 255, `whole dirt at the bank (x ${x})`); near += at(m.damp!, x, 58); mid += at(m.damp!, x, 66); }
+  assert.ok(near > mid, `darker at the bank (${near} vs ${mid})`);
+  const course = { casters: new Float32Array(0), shores: [{ pts: [10, 10, 60, 10, 60, 30, 10, 30, 10, 10] }], desert: true };
+  assert.equal(influence(box, 1, course).damp, undefined);
 });

@@ -10,7 +10,7 @@
 // clump, so a clump is a group and there is a gap between two. Deterministic from the hole's seed. Pure TS, no DOM; units are tiles (2 m).
 import { mulberry } from '../iso';
 import { CELL_T, SURF } from '../ext/course-grid';
-import { desertHolePlant } from '../desert-planting';
+import { desertHolePlant, desertHoleSize } from '../desert-planting';
 import { FOREST_BROADLEAF, FOREST_CONIFERS, dealTree, ownerSize, treeDeal, type TreeSpecies } from '../forest';
 import { TILE_M } from './types';
 
@@ -256,7 +256,7 @@ export function frameHole(site: FrameSite, keep: readonly Pt[] = [], rules: Fram
   const share = Array.from({ length: clumps }, () => 0.2 + 0.6 * pick());
   const out: FrameTree[] = trees.map(t => {
     const u = pick(), v = pick(), id = site.desert ? desertHolePlant(v) : u < share[t.clump]! ? dealTree(FRAME_CONIFER_DEAL, v) : dealTree(FRAME_BROAD_DEAL, v);
-    const scale = Math.round(ownerSize(id) * (0.9 + 0.25 * pick()) * (1 + R.backGrow * back(t.x, t.y)) * 100) / 100;
+    const scale = Math.round((site.desert ? desertHoleSize(id) : ownerSize(id)) * (0.9 + 0.25 * pick()) * (1 + R.backGrow * back(t.x, t.y)) * 100) / 100;
     return { x: Math.round(t.x * 100) / 100, y: Math.round(t.y * 100) / 100, id, scale, clump: t.clump };
   });
   // the frame as a fresh one would be (the kept trees play no part in it, so it is the same frame every time), less every clump that comes

@@ -108,8 +108,10 @@ try {
       return { x: best.x, y: best.y };
     });
     console.log('river at', JSON.stringify(at));
-    for (const z of [0.3, 0.12]) {
-      await page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); }, [at.x, at.y, z]);
+    // 12% on the river, then 30% on its bank (the right bank as the 12% view shows it)
+    const bank = await page.evaluate(([x, y]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, 0.12); return g.tileAt(900, 470); }, [at.x, at.y]);
+    for (const [z, p] of [[0.12, at], [0.3, bank]]) {
+      await page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); }, [p.x, p.y, z]);
       await page.evaluate(() => window.__game.setDesertTheme(false)); await settle(page); await shot(page, `river-${Math.round(z * 100)}-autumn`);
       await page.evaluate(() => window.__game.setDesertTheme(true)); await settle(page, 600); await shot(page, `river-${Math.round(z * 100)}-desert`);
     }

@@ -1,6 +1,6 @@
 // Course dressing (docs/GOLF-PLAN.md sections 3, 4.2 and 10): deterministic prop placements {id, x, y, flip, scale} for tee markers, flagsticks at pins, benches near tees, trees lining holes outside fairways, and a painted cart path loop. Pure TS, no DOM.
 import { mulberry } from '../iso';
-import { desertHolePlant } from '../desert-planting';
+import { desertHolePlant, desertHoleSize } from '../desert-planting';
 import { LIVE_BROAD_DEAL, LIVE_CONIFER_DEAL, dealTree, ownerSize } from '../forest';
 import { deriveHoles, surfaceAt, type Pt } from './holes';
 import type { CourseArea, CourseLayout } from './types';
@@ -212,7 +212,7 @@ export function dressCourse(layout: CourseLayout, seed: number, desert = false):
           const tu = rng(), treeId = desert ? desertHolePlant(tu) : dressTree(tu);
           const flip = rng() < 0.5 && !desert;
           // at owner size, as the town trees (lots/scales.ts OWNER_SCALE), +-10%
-          const scale = Math.round(ownerSize(treeId) * (0.9 + rng() * 0.2) * 100) / 100;
+          const scale = Math.round((desert ? desertHoleSize(treeId) : ownerSize(treeId)) * (0.9 + rng() * 0.2) * 100) / 100;
           if (!safeTree(tx, ty)) continue;
           treePts.push({ x: tx, y: ty });
           props.push({ id: treeId, x: tx, y: ty, flip, scale });
