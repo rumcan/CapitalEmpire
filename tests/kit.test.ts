@@ -76,7 +76,8 @@ test('the kit joins no pool that picks by kind: the lots\' learned pools, the co
   const pools = kindPools();
   for (const [k, ids] of Object.entries(pools)) assert.ok(!ids.some(isKit), `the ${k} pool has kit art`);
   assert.ok(!TREES.some(isKit) && !BUSHES.some(isKit), 'the composer\'s trees and bushes');
-  assert.ok(!plantPool(LIBRARY, 'trees').some(p => isKit(p.id)), 'the Trees brush stays autumn broadleaves and conifers');
+  // (T342: the palms are among the Trees now: the Autumn filter is the autumn broadleaves and conifers, the kit's palms under All and Desert)
+  assert.ok(!plantPool(LIBRARY, 'trees', 'autumn').some(p => isKit(p.id)), 'the Autumn filter of the Trees brush stays autumn broadleaves and conifers');
   // the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right": no kit picture mirrors, its
   // boulders, shrubs, mums and palms included (T257 had mirrored those)
   const natural = new Set<string>([...KIT_SHRUBS, ...KIT_FLOWERS, ...KIT_BOULDERS.small, ...KIT_BOULDERS.medium, ...KIT_BOULDERS.large, ...KIT_PALM_IDS]);
@@ -98,7 +99,7 @@ test("the menus: Facilities > Plants has the palms among the Trees (T342: no Pal
   const rows = menuOf(fac, { golf: true, ui: null, roads: [], paths: [], junctions: [], surfaces: [], cares: [], practice: [], plants: PLANT_KINDS.map(k => ({ id: k.kind, name: k.name, col: k.col })), propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }], materials: [], range: [], newHoleWhy: null } as never);
   const labels = leavesOf(rows).map(l => [...l.path.map(k => k.split(':')[0]), l.row.label].join(' > '));
   assert.ok(!labels.some(l => /Palms$/.test(l)), `no Palms in the Facilities menu: ${labels.join(' | ')}`);
-  assert.ok(labels.some(l => /Plants > Trees$/.test(l)), `Trees in the Facilities menu: ${labels.join(' | ')}`);
+  assert.ok(labels.some(l => /^plants > .* > Trees$/.test(l)), `Trees in the Facilities menu: ${labels.join(' | ')}`);
   // the catalogue: the kit's items by group, each a library picture, priced and with an appeal as decor.ts's rules
   const want: [string, string][] = [['kit-shrub', 'plants'], ['kit-mums', 'plants'], ['kit-hedge', 'plants'], ['kit-palm-windmill', 'plants'], ['kit-palm-canary', 'plants'], ['kit-palm-fan', 'plants'],
     ['kit-fountain', 'water'], ['kit-pond', 'water'], ['kit-pond-stones', 'water'], ['kit-boulder-s', 'stone'], ['kit-boulder-m', 'stone'], ['kit-boulder-l', 'stone'], ['kit-lamp', 'furniture'], ['kit-lamp-twin', 'furniture']];

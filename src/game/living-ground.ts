@@ -133,7 +133,9 @@ export interface LivingSources {
  *  at the bank, broken up outward by two octaves of value noise into irregular, blotchy patches (the same organic edge as the open ground's
  *  dirt patches: a narrow smoothstep across the noise, never a smooth or straight band) out to about DESERT_BANK_M, and a few blotches of
  *  their own further out to DESERT_BLOT_M. World-space noise only: deterministic, and neighbouring chunks agree at their seams */
-export const DESERT_BANK_M = 34, DESERT_BLOT_M = 80;
+export const DESERT_BANK_M = 42, DESERT_BLOT_M = 90;
+/** the damp dirt's distance lattice (tiles between its points) */
+const WILD_STEP = 2;
 export function desertBank(x: number, y: number, d: number): number {
   if (d >= DESERT_BLOT_M) return 0;
   const n = vnoise(x / 6.5 + 2.3, y / 6.5 - 7.1, 71) * 0.62 + vnoise(x / 2.3 - 4.9, y / 2.3 + 1.7, 73) * 0.38;
@@ -284,22 +286,51 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
   // ---- roads, cart paths, hard ground, water
   for (const r of src.roads ?? []) segInto(field(r.cart ? 'cart' : 'road'), r.ax, r.ay, r.bx, r.by, r.hw, 2.2);
   for (const ring of src.paths ?? []) { const m = ring.length; for (let k = 0; k + 1 < m; k += 2) { const k2 = (k + 2) % m; segInto(field('path'), ring[k]!, ring[k + 1]!, ring[k2]!, ring[k2 + 1]!, 0, 1.7); } }
-  // (T342: in the desert the world's water also into 'wild', the damp dirt's distance; its reach is wider than the lush grass's)
-  const wild = src.desert ? field('wild') : null;
   for (const wl of src.rivers ?? []) {
     const f = field('water'), p = wl.pts;
     for (let k = 0; k < p.length; k++) {
-      const a = p[k]!, b = p[Math.min(p.length - 1, k + 1)]!, ra = a.w / 2 + wl.bank, rb = b.w / 2 + wl.bank, g = Math.max(ra, rb) + (wild ? DESERT_BLOT_M / M_PER_TILE : 4);
+      const a = p[k]!, b = p[Math.min(p.length - 1, k + 1)]!, ra = a.w / 2 + wl.bank, rb = b.w / 2 + wl.bank, g = Math.max(ra, rb) + 4;
       const s = span(Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g); if (!s) continue;
       const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
       for (let j = s[1]; j <= s[3]; j++) { const y = Y(j); for (let i = s[0]; i <= s[2]; i++) {
         const x = X(i), t = l2 > 0 ? clamp01(((x - a.x) * dx + (y - a.y) * dy) / l2) : 0, ex = a.x + dx * t - x, ey = a.y + dy * t - y, d = (Math.sqrt(ex * ex + ey * ey) - (ra + (rb - ra) * t)) * M_PER_TILE, q = j * w + i;
         if (d < f[q]!) f[q] = d;
-        if (wild && d < wild[q]!) wild[q] = d;
       } }
     }
   }
-  for (const sh of src.shores ?? []) { const p = sh.pts, m = p.length, f = field('water'); for (let k = 0; k + 3 < m + (sh.ring ? 2 : 0); k += 2) { const k2 = (k + 2) % m; segInto(f, p[k]!, p[k + 1]!, p[k2]!, p[k2 + 1]!, 0, 4); if (wild && sh.ring) segInto(wild, p[k]!, p[k + 1]!, p[k2]!, p[k2 + 1]!, 0, DESERT_BLOT_M / M_PER_TILE); } }
+  for (const sh of src.shores ?? []) { const p = sh.pts, m = p.length, f = field('water'); for (let k = 0; k + 3 < m + (sh.ring ? 2 : 0); k += 2) { const k2 = (k + 2) % m; segInto(f, p[k]!, p[k + 1]!, p[k2]!, p[k2 + 1]!, 0, 4); } }
+  // ---- T342: the desert's damp dirt by the world's water (the rivers, creeks and painted ponds): its distance (metres past the bank) on a
+  //      coarse lattice every WILD_STEP tiles of the world (the same points in every chunk, so seams agree; the distance is smooth) and
+  //      stretched, so its wide reach costs a fraction of the per-sample fields
+  let wildAt: ((i: number, j: number) => number) | null = null;
+  if (src.desert && ((src.rivers?.length ?? 0) || (src.shores ?? []).some(s => s.ring))) {
+    const S = WILD_STEP, reach = DESERT_BLOT_M / M_PER_TILE, lx0 = Math.floor(X(0) / S) - 1, ly0 = Math.floor(Y(0) / S) - 1;
+    const lw = Math.floor(X(w - 1) / S) - lx0 + 3, lh = Math.floor(Y(h - 1) / S) - ly0 + 3, lat = new Float32Array(lw * lh).fill(BIG);
+    const lspan = (x0: number, y0: number, x1: number, y1: number) => {
+      const i0 = Math.max(0, Math.floor(x0 / S) - lx0), i1 = Math.min(lw - 1, Math.ceil(x1 / S) - lx0), j0 = Math.max(0, Math.floor(y0 / S) - ly0), j1 = Math.min(lh - 1, Math.ceil(y1 / S) - ly0);
+      return i0 > i1 || j0 > j1 ? null : [i0, j0, i1, j1] as const;
+    };
+    for (const wl of src.rivers ?? []) { const p = wl.pts; for (let k = 0; k + 1 < p.length; k++) {
+      const a = p[k]!, b = p[k + 1]!, ra = a.w / 2 + wl.bank, rb = b.w / 2 + wl.bank, g = Math.max(ra, rb) + reach;
+      const s = lspan(Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g); if (!s) continue;
+      const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
+      for (let j = s[1]; j <= s[3]; j++) { const y = (ly0 + j) * S; for (let i = s[0]; i <= s[2]; i++) {
+        const x = (lx0 + i) * S, t = l2 > 0 ? clamp01(((x - a.x) * dx + (y - a.y) * dy) / l2) : 0, ex = a.x + dx * t - x, ey = a.y + dy * t - y, d = (Math.sqrt(ex * ex + ey * ey) - (ra + (rb - ra) * t)) * M_PER_TILE, q = j * lw + i;
+        if (d < lat[q]!) lat[q] = d;
+      } }
+    } }
+    for (const sh of src.shores ?? []) { if (!sh.ring) continue; const p = sh.pts, m = p.length; for (let k = 0; k + 1 < m; k += 2) {
+      const k2 = (k + 2) % m, ax = p[k]!, ay = p[k + 1]!, bx = p[k2]!, by = p[k2 + 1]!;
+      const s = lspan(Math.min(ax, bx) - reach, Math.min(ay, by) - reach, Math.max(ax, bx) + reach, Math.max(ay, by) + reach); if (!s) continue;
+      for (let j = s[1]; j <= s[3]; j++) { const y = (ly0 + j) * S; for (let i = s[0]; i <= s[2]; i++) { const d = Math.sqrt(segD2((lx0 + i) * S, y, ax, ay, bx, by)) * M_PER_TILE, q = j * lw + i; if (d < lat[q]!) lat[q] = d; } }
+    } }
+    wildAt = (i, j) => {
+      const fx = X(i) / S - lx0, fy = Y(j) / S - ly0, i0 = Math.floor(fx), j0 = Math.floor(fy), tx = fx - i0, ty = fy - j0, q = j0 * lw + i0;
+      const a = lat[q]!, b = lat[q + 1]!, c = lat[q + lw]!, e = lat[q + lw + 1]!;
+      if (a >= BIG || b >= BIG || c >= BIG || e >= BIG) return Math.min(a, b, c, e);
+      return (a * (1 - tx) + b * tx) * (1 - ty) + (c * (1 - tx) + e * tx) * ty;
+    };
+  }
   // ---- the distance fields into the channels, and the open ground's noise
   const F = (name: string) => fields.get(name);
   const fence = F('line' + CK.FENCE), hedge = F('line' + CK.HEDGE), wallL = F('line' + CK.WALL), road = F('road'), cart = F('cart'), path = F('path'), water = F('water'), wall = F('wall'), corner = F('corner'), door = F('door');
@@ -323,7 +354,7 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
       if (cart) { const d = cart[q]!; if (d < BIG) { T = add(0.38 * near(0.1, 1.0, d), T); L = add(0.35 * band(0.8, 1.5, 2.2, 3.6, d), L); A = add(0.1 * near(0, 0.35, d), A); } }
       if (path) { const d = path[q]!; if (d < BIG) { T = add(0.4 * near(0.1, 1.0, d), T); L = add(0.25 * band(0.9, 1.5, 2.2, 3.2, d), L); A = add(0.15 * near(0, 0.35, d), A); } }
       if (water) { const d = water[q]!; if (d < BIG) L = add(0.9 * near(0.5, 7, Math.max(0, d)), L); }
-      if (wild) { const d = wild[q]!; if (d < BIG) L = add(desertBank(X(i), Y(j), d), L); }
+      if (wildAt) { const d = wildAt(i, j); if (d < DESERT_BLOT_M) L = add(desertBank(X(i), Y(j), d), L); }
       if (wall) { const d = wall[q]!; if (d < BIG) { A = add(1 - (1 - 0.42 * near(0, 1.3, d)) * (1 - 0.25 * near(0, 0.35, d)), A); L = add(0.3 * band(0.3, 0.7, 1.2, 2.4, d), L); } }
       if (corner) { const d = corner[q]!; if (d < BIG) T = add(0.5 * near(0.4, 2.2, d), T); }
       if (door) { const d = door[q]!; if (d < BIG) { T = add(0.95 * near(0.6, 3.2, d), T); B = add(0.75 * near(0.3, 1.6, d), B); } }
