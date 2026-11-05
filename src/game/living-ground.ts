@@ -171,7 +171,8 @@ export function openNoise(x: number, y: number) {
 /* ---- the influence grid ---- */
 /** the five channels, each 0..1 per sample: lush (darker, denser grass), thin (patchy grass with dirt in its gaps), bare (dirt), litter (leaves
  *  and needles) and ao (how much the ground is darkened) */
-export interface InfluenceGrid { ix0: number; iy0: number; res: number; w: number; h: number; lush: Float32Array; thin: Float32Array; bare: Float32Array; litter: Float32Array; ao: Float32Array }
+export interface InfluenceGrid { ix0: number; iy0: number; res: number; w: number; h: number; lush: Float32Array; thin: Float32Array; bare: Float32Array; litter: Float32Array; ao: Float32Array;
+  /** T342: the desert's damp dirt by the world's water, 0..1 (desertBank's dirt, deeper toward the bank); only in the desert */ damp?: Float32Array }
 /** samples past the chunk's box on every side (so the bilinear stretch has neighbours at its edges) */
 const PAD = 2;
 /** the sample density for a chunk baked at level L (samples per tile): about one every 12 px, at most 3 (two thirds of a metre) and at least one every
@@ -302,7 +303,7 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
   // ---- T342: the desert's damp dirt by the world's water (the rivers, creeks and painted ponds): its distance (metres past the bank) on a
   //      coarse lattice every WILD_STEP tiles of the world (the same points in every chunk, so seams agree; the distance is smooth) and
   //      stretched, so its wide reach costs a fraction of the per-sample fields
-  let wildAt: ((i: number, j: number) => number) | null = null;
+  let wildAt: ((i: number, j: number) => number) | null = null, damp: Float32Array | undefined;
   if (src.desert && ((src.rivers?.length ?? 0) || (src.shores ?? []).some(s => s.ring))) {
     const S = WILD_STEP, reach = DESERT_BLOT_M / M_PER_TILE, lx0 = Math.floor(X(0) / S) - 1, ly0 = Math.floor(Y(0) / S) - 1;
     const lw = Math.floor(X(w - 1) / S) - lx0 + 3, lh = Math.floor(Y(h - 1) / S) - ly0 + 3, lat = new Float32Array(lw * lh).fill(BIG);
@@ -324,6 +325,7 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
       const s = lspan(Math.min(ax, bx) - reach, Math.min(ay, by) - reach, Math.max(ax, bx) + reach, Math.max(ay, by) + reach); if (!s) continue;
       for (let j = s[1]; j <= s[3]; j++) { const y = (ly0 + j) * S; for (let i = s[0]; i <= s[2]; i++) { const d = Math.sqrt(segD2((lx0 + i) * S, y, ax, ay, bx, by)) * M_PER_TILE, q = j * lw + i; if (d < lat[q]!) lat[q] = d; } }
     } }
+    damp = new Float32Array(n);
     wildAt = (i, j) => {
       const fx = X(i) / S - lx0, fy = Y(j) / S - ly0, i0 = Math.floor(fx), j0 = Math.floor(fy), tx = fx - i0, ty = fy - j0, q = j0 * lw + i0;
       const a = lat[q]!, b = lat[q + 1]!, c = lat[q + lw]!, e = lat[q + lw + 1]!;
@@ -354,14 +356,14 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
       if (cart) { const d = cart[q]!; if (d < BIG) { T = add(0.38 * near(0.1, 1.0, d), T); L = add(0.35 * band(0.8, 1.5, 2.2, 3.6, d), L); A = add(0.1 * near(0, 0.35, d), A); } }
       if (path) { const d = path[q]!; if (d < BIG) { T = add(0.4 * near(0.1, 1.0, d), T); L = add(0.25 * band(0.9, 1.5, 2.2, 3.2, d), L); A = add(0.15 * near(0, 0.35, d), A); } }
       if (water) { const d = water[q]!; if (d < BIG) L = add(0.9 * near(0.5, 7, Math.max(0, d)), L); }
-      if (wildAt) { const d = wildAt(i, j); if (d < DESERT_BLOT_M) L = add(desertBank(X(i), Y(j), d), L); }
+      if (wildAt) { const d = wildAt(i, j); if (d < DESERT_BLOT_M) { const v = desertBank(X(i), Y(j), d); L = add(v, L); damp![q] = v * (0.45 + 0.55 * (1 - sm(0, DESERT_BANK_M, Math.max(0, d)))); } }
       if (wall) { const d = wall[q]!; if (d < BIG) { A = add(1 - (1 - 0.42 * near(0, 1.3, d)) * (1 - 0.25 * near(0, 0.35, d)), A); L = add(0.3 * band(0.3, 0.7, 1.2, 2.4, d), L); } }
       if (corner) { const d = corner[q]!; if (d < BIG) T = add(0.5 * near(0.4, 2.2, d), T); }
       if (door) { const d = door[q]!; if (d < BIG) { T = add(0.95 * near(0.6, 3.2, d), T); B = add(0.75 * near(0.3, 1.6, d), B); } }
       lush[q] = L; thin[q] = T; bare[q] = B; ao[q] = A;
     }
   }
-  return { ix0, iy0, res, w, h, lush, thin, bare, litter, ao };
+  return { ix0, iy0, res, w, h, lush, thin, bare, litter, ao, ...(damp ? { damp } : {}) };
 }
 
 /** a cheap signature of what a chunk's influence is made from (its sample density and sources): a re-bake whose sources did not change (a
@@ -381,6 +383,9 @@ export function livingSignature(res: number, src: LivingSources): number {
 /* ---- the masks the renderer lays the variants through (RGBA, one px per sample, stretched bilinear over the chunk) ---- */
 /** the lush layer's strength at full influence (the grass laid over itself and tinted: deeper, denser, more saturated) */
 export const LUSH_MAX = 0.85;
+/** T342 follow-up (the owner: the river dirt "clearly darker brown"): the damp dirt by the desert's water darkens the dirt it lies on, a
+ *  multiply of DAMP_TINT up to DAMP_MAX at the bank (the texture stays; only the dirt's own patch, never a wash over the ground) */
+export const DAMP_MAX = 0.9, DAMP_TINT = '#a06e4e';
 /** the ambient occlusion's colour at full strength (a cool multiply that keeps the texture, T110) and its most */
 export const AO_COLOUR: readonly [number, number, number] = [0.5, 0.58, 0.74];
 export const AO_MAX = 0.62;
@@ -390,13 +395,15 @@ export const AO_MAX = 0.62;
  *  quarter (red 0.74-0.78, blue 0.84 of the painting) and taking a fifth of its detail. The variants (the streaks, the soil, the litter) stay */
 export const LIVING_AO = false;
 export interface LivingMasks { W: number; H: number; x0: number; y0: number; res: number; lush: Uint8ClampedArray; thin: Uint8ClampedArray; bare: Uint8ClampedArray; litter: Uint8ClampedArray; ao: Uint8ClampedArray;
+  /** T342: the damp dirt's darkening (alpha; only in the desert, by the world's water) */ damp?: Uint8ClampedArray;
   /** the most each mask reaches (0..1): a pass whose mask stays near 0 is skipped */
-  max: { lush: number; thin: number; bare: number; litter: number; ao: number } }
+  max: { lush: number; thin: number; bare: number; litter: number; ao: number; damp?: number } }
 /** the masks from a grid: each channel broken up by fine noise into painted-looking patches (never a smooth disc, never flat), at the sample
  *  density: the finest wave (about 1.4 m) only where the samples resolve it */
 export function livingMasks(g: InfluenceGrid): LivingMasks {
   const { w, h, res, ix0, iy0 } = g, n = w * h, mk = () => new Uint8ClampedArray(n * 4);
   const lush = mk(), thin = mk(), bare = mk(), litter = mk(), ao = mk(), max = { lush: 0, thin: 0, bare: 0, litter: 0, ao: 0 };
+  const damp = g.damp ? mk() : undefined; let dmax = 0;
   // the finest wave only where the samples resolve it; the broad wave never finer than about two samples (a district chunk's patches stay
   // patches, not speckle)
   const fine = res >= 3 ? 1 : res >= 2 ? 0.5 : 0, s1 = Math.max(1.8, 2.2 / res), s2 = Math.max(1.1, 1.6 / res);
@@ -407,7 +414,9 @@ export function livingMasks(g: InfluenceGrid): LivingMasks {
       // two breakup noises: a 3.6 m wave everywhere, a 1.4 m wave where the samples resolve it
       const n1 = vnoise(x / s1 + 11.1, y / s1 - 4.2, 51), n2 = fine ? vnoise(x / 0.7 - 2.3, y / 0.7 + 7.7, 53) : 0.5, nf = n1 * (1 - 0.45 * fine) + n2 * 0.45 * fine;
       const nb = vnoise(x / s2 + 5.5, y / s2 + 1.9, 57);
-      const L = LUSH_MAX * sm(0.05, 0.85, g.lush[q]! * (0.7 + 0.6 * nf));
+      // (T342: the damp dirt by the desert's water is laid whole: its own noise made its blotchy edge already)
+      const dv = g.damp ? g.damp[q]! : 0, L = Math.max(LUSH_MAX * sm(0.05, 0.85, g.lush[q]! * (0.7 + 0.6 * nf)), dv > 0 ? sm(0.15, 0.3, dv) : 0);
+      if (damp) { const D = DAMP_MAX * dv; damp[o + 3] = D * 255; if (D > dmax) dmax = D; }
       const T = sm(0.22, 0.8, g.thin[q]! + (nf - 0.5) * 0.5);
       // bare soil: the cores (big trees' trunks, doors) and, only in the deepest shade (canopies overlapping), small patches between the grass
       // clumps; mostly the ground stays thin grass (never soil on the open ground's thin patches)
@@ -420,7 +429,7 @@ export function livingMasks(g: InfluenceGrid): LivingMasks {
       if (L > max.lush) max.lush = L; if (T > max.thin) max.thin = T; if (B > max.bare) max.bare = B; if (F > max.litter) max.litter = F; if (A > max.ao) max.ao = A;
     }
   }
-  return { W: w, H: h, x0: ix0 / res, y0: iy0 / res, res, lush, thin, bare, litter, ao, max };
+  return { W: w, H: h, x0: ix0 / res, y0: iy0 / res, res, lush, thin, bare, litter, ao, max: damp ? { ...max, damp: dmax } : max, ...(damp ? { damp } : {}) };
 }
 /** the dev debug view of a grid: lush green, thin orange, bare brown, litter red, the ambient occlusion as blue-grey shade (RGBA, laid over the
  *  ground, opaque) */

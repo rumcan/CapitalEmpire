@@ -15,18 +15,23 @@ const keep = (ids: readonly string[]) => ids.filter(id => !removed.has(id));
 const TALL_CACTI = keep((DESERT_PROP_IDS.cactus ?? []).filter(id => /saguaro|ocotillo|cholla/.test(id)));
 /** the bigger rocks (outcrops, boulder groups, ledges): a tree's stand-in */
 const BIG_ROCKS = keep((DESERT_PROP_IDS.rock ?? []).filter(id => /big|group|outcrop|ledge|stacked|blocks|boulders/.test(id)));
-/** a hole's desert planting: each set and its share (palms first: the owner's desert is "palm trees and rocks") */
-export const DESERT_HOLE_SETS: readonly { name: string; w: number; ids: readonly string[] }[] = [
-  { name: 'palm', w: 0.38, ids: keep([...(DESERT_PROP_IDS.palm ?? []), ...KIT_PALM_IDS]) },
-  { name: 'tree', w: 0.22, ids: keep(DESERT_PROP_IDS.tree ?? []) },
-  { name: 'cactus', w: 0.15, ids: TALL_CACTI },
-  { name: 'shrub', w: 0.15, ids: keep(DESERT_PROP_IDS.shrub ?? []) },
-  { name: 'rock', w: 0.10, ids: BIG_ROCKS },
+/** a hole's desert planting: each set, its share and its grow (T342 follow-up, the owner: the desert plants "at tree size": each set's size
+ *  times its owner size, so a set's typical height comes near the autumn frame tree's it replaces, about 375 px at owner size, within the
+ *  pictures' pixel limit, about 1.5; palms first, the tree-sized sets most: the owner's desert is "palm trees and rocks") */
+export const DESERT_HOLE_SETS: readonly { name: string; w: number; grow: number; ids: readonly string[] }[] = [
+  { name: 'palm', w: 0.45, grow: 1, ids: keep([...(DESERT_PROP_IDS.palm ?? []), ...KIT_PALM_IDS]) },
+  { name: 'tree', w: 0.27, grow: 1.16, ids: keep(DESERT_PROP_IDS.tree ?? []) },
+  { name: 'cactus', w: 0.14, grow: 1.5, ids: TALL_CACTI },
+  { name: 'shrub', w: 0.08, grow: 1.5, ids: keep(DESERT_PROP_IDS.shrub ?? []) },
+  { name: 'rock', w: 0.06, grow: 1.5, ids: BIG_ROCKS },
 ].filter(s => s.ids.length);
 const TOTAL = DESERT_HOLE_SETS.reduce((a, s) => a + s.w, 0);
 /** every id a desert hole can plant (the tests hold it to the library) */
 export const DESERT_HOLE_IDS: readonly string[] = DESERT_HOLE_SETS.flatMap(s => s.ids);
 const HOLE_SET: ReadonlySet<string> = new Set(DESERT_HOLE_IDS);
+const GROW: ReadonlyMap<string, number> = new Map(DESERT_HOLE_SETS.flatMap(s => s.ids.map(id => [id, s.grow] as const)));
+/** a desert hole plant's size: its owner size times its set's grow (a hole's frame sizes it as a frame tree's owner size) */
+export const desertHoleSize = (id: string): number => ownerSize(id) * (GROW.get(id) ?? 1);
 /** whether an id is one a desert hole plants */
 export const isDesertHolePlant = (id: string) => HOLE_SET.has(id);
 
@@ -49,7 +54,7 @@ export function spotU(x: number, y: number, salt = 0x6d2b79f5): number {
 export function desertFrameTree<T extends { id: string; x: number; y: number; scale: number; flip?: boolean }>(t: T): T {
   if (HOLE_SET.has(t.id)) return t;
   const id = desertHolePlant(spotU(t.x, t.y));
-  return { ...t, id, scale: Math.round(t.scale / ownerSize(t.id) * ownerSize(id) * 100) / 100, ...(t.flip !== undefined ? { flip: false } : {}) };
+  return { ...t, id, scale: Math.round(t.scale / ownerSize(t.id) * desertHoleSize(id) * 100) / 100, ...(t.flip !== undefined ? { flip: false } : {}) };
 }
 
 /** the plant brushes' Desert filter (Facilities › Plants: Trees, Bushes, Flowers): the desert sets of each. Trees: the palms, the desert
