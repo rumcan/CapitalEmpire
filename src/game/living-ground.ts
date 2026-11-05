@@ -124,6 +124,23 @@ export interface LivingSources {
   /** other water edges (course water, painted ponds) as polylines x0 y0 x1 y1 ...; closed when the last point repeats the first, or ring
    *  (a painted pond's outline) */
   shores?: readonly { pts: ArrayLike<number>; ring?: boolean }[];
+  /** T342: the desert theme: the world's water (the rivers, the creeks and the painted ponds; never the course's water) wears a band of damp
+   *  dirt (the lush channel, which the desert's surfaces lay as dirt), widest at the bank and breaking up outward into blotches (desertBank) */
+  desert?: boolean;
+}
+/** T342 (the owner, 2026-11-05: "you see this transition you have between dirt and the desert is very random. we need more of that around
+ *  the rivers and water"): the damp dirt by the world's water in the desert, 0..1, at a sample d metres past the bank at tile (x, y): whole
+ *  at the bank, broken up outward by two octaves of value noise into irregular, blotchy patches (the same organic edge as the open ground's
+ *  dirt patches: a narrow smoothstep across the noise, never a smooth or straight band) out to about DESERT_BANK_M, and a few blotches of
+ *  their own further out to DESERT_BLOT_M. World-space noise only: deterministic, and neighbouring chunks agree at their seams */
+export const DESERT_BANK_M = 34, DESERT_BLOT_M = 80;
+export function desertBank(x: number, y: number, d: number): number {
+  if (d >= DESERT_BLOT_M) return 0;
+  const n = vnoise(x / 6.5 + 2.3, y / 6.5 - 7.1, 71) * 0.62 + vnoise(x / 2.3 - 4.9, y / 2.3 + 1.7, 73) * 0.38;
+  const reach = 1 - sm(0, DESERT_BANK_M, Math.max(0, d));
+  const v = reach * 1.25 + (n - 0.5) * 1.05;
+  const blot = vnoise(x / 9 - 3.3, y / 9 + 6.2, 79) * 0.7 + n * 0.3;
+  return Math.max(sm(0.5, 0.6, v), sm(0.7, 0.76, blot) * (1 - sm(DESERT_BLOT_M * 0.6, DESERT_BLOT_M, d)));
 }
 
 /* ---- noise: value noise on the world grid (never periodic) ---- */
@@ -267,19 +284,22 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
   // ---- roads, cart paths, hard ground, water
   for (const r of src.roads ?? []) segInto(field(r.cart ? 'cart' : 'road'), r.ax, r.ay, r.bx, r.by, r.hw, 2.2);
   for (const ring of src.paths ?? []) { const m = ring.length; for (let k = 0; k + 1 < m; k += 2) { const k2 = (k + 2) % m; segInto(field('path'), ring[k]!, ring[k + 1]!, ring[k2]!, ring[k2 + 1]!, 0, 1.7); } }
+  // (T342: in the desert the world's water also into 'wild', the damp dirt's distance; its reach is wider than the lush grass's)
+  const wild = src.desert ? field('wild') : null;
   for (const wl of src.rivers ?? []) {
     const f = field('water'), p = wl.pts;
     for (let k = 0; k < p.length; k++) {
-      const a = p[k]!, b = p[Math.min(p.length - 1, k + 1)]!, ra = a.w / 2 + wl.bank, rb = b.w / 2 + wl.bank, g = Math.max(ra, rb) + 4;
+      const a = p[k]!, b = p[Math.min(p.length - 1, k + 1)]!, ra = a.w / 2 + wl.bank, rb = b.w / 2 + wl.bank, g = Math.max(ra, rb) + (wild ? DESERT_BLOT_M / M_PER_TILE : 4);
       const s = span(Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g); if (!s) continue;
       const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
       for (let j = s[1]; j <= s[3]; j++) { const y = Y(j); for (let i = s[0]; i <= s[2]; i++) {
         const x = X(i), t = l2 > 0 ? clamp01(((x - a.x) * dx + (y - a.y) * dy) / l2) : 0, ex = a.x + dx * t - x, ey = a.y + dy * t - y, d = (Math.sqrt(ex * ex + ey * ey) - (ra + (rb - ra) * t)) * M_PER_TILE, q = j * w + i;
         if (d < f[q]!) f[q] = d;
+        if (wild && d < wild[q]!) wild[q] = d;
       } }
     }
   }
-  for (const sh of src.shores ?? []) { const p = sh.pts, m = p.length, f = field('water'); for (let k = 0; k + 3 < m + (sh.ring ? 2 : 0); k += 2) { const k2 = (k + 2) % m; segInto(f, p[k]!, p[k + 1]!, p[k2]!, p[k2 + 1]!, 0, 4); } }
+  for (const sh of src.shores ?? []) { const p = sh.pts, m = p.length, f = field('water'); for (let k = 0; k + 3 < m + (sh.ring ? 2 : 0); k += 2) { const k2 = (k + 2) % m; segInto(f, p[k]!, p[k + 1]!, p[k2]!, p[k2 + 1]!, 0, 4); if (wild && sh.ring) segInto(wild, p[k]!, p[k + 1]!, p[k2]!, p[k2 + 1]!, 0, DESERT_BLOT_M / M_PER_TILE); } }
   // ---- the distance fields into the channels, and the open ground's noise
   const F = (name: string) => fields.get(name);
   const fence = F('line' + CK.FENCE), hedge = F('line' + CK.HEDGE), wallL = F('line' + CK.WALL), road = F('road'), cart = F('cart'), path = F('path'), water = F('water'), wall = F('wall'), corner = F('corner'), door = F('door');
@@ -303,6 +323,7 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
       if (cart) { const d = cart[q]!; if (d < BIG) { T = add(0.38 * near(0.1, 1.0, d), T); L = add(0.35 * band(0.8, 1.5, 2.2, 3.6, d), L); A = add(0.1 * near(0, 0.35, d), A); } }
       if (path) { const d = path[q]!; if (d < BIG) { T = add(0.4 * near(0.1, 1.0, d), T); L = add(0.25 * band(0.9, 1.5, 2.2, 3.2, d), L); A = add(0.15 * near(0, 0.35, d), A); } }
       if (water) { const d = water[q]!; if (d < BIG) L = add(0.9 * near(0.5, 7, Math.max(0, d)), L); }
+      if (wild) { const d = wild[q]!; if (d < BIG) L = add(desertBank(X(i), Y(j), d), L); }
       if (wall) { const d = wall[q]!; if (d < BIG) { A = add(1 - (1 - 0.42 * near(0, 1.3, d)) * (1 - 0.25 * near(0, 0.35, d)), A); L = add(0.3 * band(0.3, 0.7, 1.2, 2.4, d), L); } }
       if (corner) { const d = corner[q]!; if (d < BIG) T = add(0.5 * near(0.4, 2.2, d), T); }
       if (door) { const d = door[q]!; if (d < BIG) { T = add(0.95 * near(0.6, 3.2, d), T); B = add(0.75 * near(0.3, 1.6, d), B); } }
@@ -322,6 +343,7 @@ export function livingSignature(res: number, src: LivingSources): number {
   for (const p of src.paths ?? []) { mix(p.length); for (let i = 0; i < p.length; i++) mix(p[i]!); }
   for (const w of src.rivers ?? []) { mix(w.pts.length); mix(w.bank); for (const p of w.pts) { mix(p.x); mix(p.y); mix(p.w); } }
   for (const s of src.shores ?? []) { mix(s.pts.length); mix(s.ring ? 1 : 0); for (let i = 0; i < s.pts.length; i++) mix(s.pts[i]!); }
+  mix(src.desert ? 1 : 0);
   return h >>> 0;
 }
 

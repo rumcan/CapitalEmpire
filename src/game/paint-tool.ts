@@ -17,7 +17,7 @@ import { MAP } from './iso';
 import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, type PresetProp, type StoredHole } from './golf/holepreset';
 import HOLE_PRESETS from './golf/hole-presets.json';
 import { EARTHWORK_PER_M3, SHAPE_RATE_M3, areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
-import { PLANT_KINDS, clampPlant, type PlantBrushKind, type PlantSet } from './plant';
+import { PLANT_KINDS, clampPlant, type PlantBrushKind, type PlantFilter, type PlantSet } from './plant';
 import { drawGhostPoly, drawGhostRing, drawGhostSnap, ghostStatus } from './ext/ghost-preview';
 import { edgeProfileOf } from './paint-edges';
 import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement, type SnapTargetRoad } from './ext/course-snap';
@@ -177,7 +177,7 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** removes the plant-brush props in the circle; returns how many */
   unplant(x: number, y: number, r: number): number;
   /** the sprites a plant brush can use */
-  plantPool(kind: PlantBrushKind): { id: string; name: string }[];
+  plantPool(kind: PlantBrushKind, filter?: PlantFilter): { id: string; name: string }[];
   /** the prop journal (undo): begin records every prop added or removed until end, which returns them (null: none); undo and redo
    *  reverse or replay a journal and return the journal to keep for the opposite step */
   journal?: { begin(): void; end(): PropJournal | null; undo(j: PropJournal): PropJournal; redo(j: PropJournal): PropJournal };
@@ -387,6 +387,10 @@ export class PaintTool {
   brush: Record<BrushKind, BrushSet> = loadBrush();
   /** plant mode: the plant brush in use and each kind's brush (remembered); the drag in progress (erasing or not, the last dab) */
   plantBrush: PlantBrushKind = 'trees';
+  /** T342: the plant brushes' filter (All, Autumn, Desert): which of the kind's plants the brush shows and plants; the engine starts it on
+   *  Desert in a desert game (and on All in an autumn one) */
+  plantFilter: PlantFilter = 'all';
+  setPlantFilter(f: PlantFilter) { if (f === this.plantFilter) return; this.plantFilter = f; this.host.emit(); }
   plant: Record<PlantBrushKind, PlantSet> = loadPlant();
   /** piece mode (T030): the archetype in hand, its turn (degrees, R) and size (×, [ ]), whether it snaps to the piece it touches, and the plan at the cursor (rebuilt when its key changes) */
   pieceArch: CoursePieceArchetype = 'fairway-pear';
@@ -1742,7 +1746,11 @@ export class PaintTool {
     this.host.emit();
   }
   /** the sprites the current plant brush picks from (its ids, or every sprite of the kind) */
-  plantIds(): string[] { const s = this.plant[this.plantBrush], all = this.host.plantPool(this.plantBrush).map(x => x.id); return s.ids ? s.ids.filter(id => all.includes(id)) : all; }
+  plantIds(): string[] {
+    const s = this.plant[this.plantBrush], all = this.host.plantPool(this.plantBrush, this.plantFilter).map(x => x.id);
+    // (T342: picks made under another filter: the filter's plants when none of the picks is among them)
+    if (!s.ids) return all; const picked = s.ids.filter(id => all.includes(id)); return picked.length || !s.ids.length ? picked : all;
+  }
   /** one plant dab at t: plant (or rub out) in the circle */
   private plantDab(t: { x: number; y: number }, erase: boolean) {
     const s = this.plant[this.plantBrush];

@@ -27,7 +27,14 @@ export const VERB_CURSOR: Readonly<Record<Verb | 'none', string>> = {
 };
 
 /** "Who are you?" (a new range game, before the welcome card): your name, your look and your starting handicap. Short: one card, one button */
-export function WhoCard({ name, look, looks, hcp, onDone }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void }) {
+/** T342 (#970): the two looks a new game can start in, each with its preview (a tree, a bush and a flower of its world) */
+const THEMES: readonly { desert: boolean; name: string; note: string; ids: readonly string[] }[] = [
+  { desert: false, name: 'Autumn', note: 'Maples, oaks and conifers on green grass', ids: ['ref:tree-maple-crimson', 'town:hydrangea'] },
+  { desert: true, name: 'Desert', note: 'Palms, cacti and rocks on desert sand', ids: ['newprop:desert-date-palm-pair', 'newprop:desert-saguaro', 'newprop:desert-agave-clump'] },
+];
+const BY_ID = new Map(LIBRARY.map(it => [it.id, it] as const));
+export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void;
+  /** T342: the game's look (desert or autumn) and the choice (the world changes behind the card at once) */ desert?: boolean; onTheme?: (desert: boolean) => void }) {
   const [n, setN] = useState(name), [l, setL] = useState(look);
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
@@ -47,6 +54,20 @@ export function WhoCard({ name, look, looks, hcp, onDone }: { name: string; look
             ))}
           </div>
         </div>
+        {onTheme && (
+          <div>
+            <div className="mb-1 text-xs text-slate-400">Your world <span className="text-slate-500">(saved with this game; the gear menu changes it later)</span></div>
+            <div className="grid grid-cols-2 gap-1.5" data-testid="who-theme">
+              {THEMES.map(t => (
+                <button key={t.name} className={`flex flex-col items-center rounded-lg border px-1 pb-1 pt-0.5 ${!!desert === t.desert ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => onTheme(t.desert)} title={t.note} data-testid={`who-theme-${t.desert ? 'desert' : 'autumn'}`}>
+                  <span className="flex h-[60px] items-end justify-center gap-0.5">{t.ids.map(id => BY_ID.get(id)).map((it, i) => it && <Thumb key={i} it={it} size={i ? 40 : 56} />)}</span>
+                  <span className="text-sm font-semibold text-white">{t.name}</span>
+                  <span className="text-[11px] leading-tight text-slate-400">{t.note}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="flex items-baseline justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5" title="Your skills as a mid-handicap amateur: practise at the range to lower it">
           <span className="text-xs uppercase text-slate-400">Starting handicap</span>
           <span className="text-lg font-bold text-white" data-testid="who-hcp">{hcp}</span>

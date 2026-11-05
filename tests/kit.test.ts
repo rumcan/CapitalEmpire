@@ -88,16 +88,17 @@ test('the kit joins no pool that picks by kind: the lots\' learned pools, the co
   for (const id of KIT_LAMPS) { const it = BY.get(id)!.it; assert.equal(it.kind, 'lamp'); assert.ok((it.glows?.length ?? 0) > 0, `${id} glows at night`); }
 });
 
-test('the menus: Facilities > Plants has the Palms brush; the kit\'s shrubs and mums join Bushes and Flowers; Decoration\'s groups carry the kit', () => {
-  assert.deepEqual(PLANT_KINDS.map(k => k.kind), ['trees', 'bushes', 'flowers', 'palms']);
-  assert.deepEqual(plantPool(LIBRARY, 'palms').map(p => p.id).sort(), [...KIT_PALM_IDS].sort());
+test("the menus: Facilities > Plants has the palms among the Trees (T342: no Palms brush); the kit's shrubs and mums join Bushes and Flowers; Decoration's groups carry the kit", () => {
+  assert.deepEqual(PLANT_KINDS.map(k => k.kind), ['trees', 'bushes', 'flowers']);
+  for (const id of KIT_PALM_IDS) assert.ok(plantPool(LIBRARY, 'trees').some(p => p.id === id), id);
   for (const id of KIT_SHRUBS) assert.ok(plantPool(LIBRARY, 'bushes').some(p => p.id === id), id);
   for (const id of KIT_FLOWERS) assert.ok(plantPool(LIBRARY, 'flowers').some(p => p.id === id), id);
-  // the flyout: Facilities > Plants > Palms, and Decoration > Props > the groups
+  // the flyout: Facilities > Plants (no Palms), and Decoration > Props > the groups
   const fac = RAIL.find(r => r.id === 'facilities')!;
   const rows = menuOf(fac, { golf: true, ui: null, roads: [], paths: [], junctions: [], surfaces: [], cares: [], practice: [], plants: PLANT_KINDS.map(k => ({ id: k.kind, name: k.name, col: k.col })), propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }], materials: [], range: [], newHoleWhy: null } as never);
   const labels = leavesOf(rows).map(l => [...l.path.map(k => k.split(':')[0]), l.row.label].join(' > '));
-  assert.ok(labels.some(l => /Palms$/.test(l)), `Palms in the Facilities menu: ${labels.join(' | ')}`);
+  assert.ok(!labels.some(l => /Palms$/.test(l)), `no Palms in the Facilities menu: ${labels.join(' | ')}`);
+  assert.ok(labels.some(l => /Plants > Trees$/.test(l)), `Trees in the Facilities menu: ${labels.join(' | ')}`);
   // the catalogue: the kit's items by group, each a library picture, priced and with an appeal as decor.ts's rules
   const want: [string, string][] = [['kit-shrub', 'plants'], ['kit-mums', 'plants'], ['kit-hedge', 'plants'], ['kit-palm-windmill', 'plants'], ['kit-palm-canary', 'plants'], ['kit-palm-fan', 'plants'],
     ['kit-fountain', 'water'], ['kit-pond', 'water'], ['kit-pond-stones', 'water'], ['kit-boulder-s', 'stone'], ['kit-boulder-m', 'stone'], ['kit-boulder-l', 'stone'], ['kit-lamp', 'furniture'], ['kit-lamp-twin', 'furniture']];

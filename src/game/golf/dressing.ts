@@ -1,5 +1,6 @@
 // Course dressing (docs/GOLF-PLAN.md sections 3, 4.2 and 10): deterministic prop placements {id, x, y, flip, scale} for tee markers, flagsticks at pins, benches near tees, trees lining holes outside fairways, and a painted cart path loop. Pure TS, no DOM.
 import { mulberry } from '../iso';
+import { desertHolePlant } from '../desert-planting';
 import { LIVE_BROAD_DEAL, LIVE_CONIFER_DEAL, dealTree, ownerSize } from '../forest';
 import { deriveHoles, surfaceAt, type Pt } from './holes';
 import type { CourseArea, CourseLayout } from './types';
@@ -132,7 +133,8 @@ export function withCartPathLoop(layout: CourseLayout): CourseLayout {
 }
 
 /** deterministically generate prop placements {id, x, y, flip, scale} for pins, tee markers, benches near tees, and hole-lining trees */
-export function dressCourse(layout: CourseLayout, seed: number): DressedProp[] {
+/** T342: desert, a desert game's starter course: its holes lined with desert plants (desert-planting.ts), never mirrored */
+export function dressCourse(layout: CourseLayout, seed: number, desert = false): DressedProp[] {
   const rng = mulberry(seed);
   const props: DressedProp[] = [];
   const holes = deriveHoles(layout.areas, layout.tees, layout.pins, layout.aims);
@@ -207,8 +209,8 @@ export function dressCourse(layout: CourseLayout, seed: number): DressedProp[] {
           const off = 15 + rng() * 5;
           const tx = q4(a.x + (d + jitterAlong) * ux + side * off * nx);
           const ty = q4(a.y + (d + jitterAlong) * uy + side * off * ny);
-          const treeId = dressTree(rng());
-          const flip = rng() < 0.5;
+          const tu = rng(), treeId = desert ? desertHolePlant(tu) : dressTree(tu);
+          const flip = rng() < 0.5 && !desert;
           // at owner size, as the town trees (lots/scales.ts OWNER_SCALE), +-10%
           const scale = Math.round(ownerSize(treeId) * (0.9 + rng() * 0.2) * 100) / 100;
           if (!safeTree(tx, ty)) continue;

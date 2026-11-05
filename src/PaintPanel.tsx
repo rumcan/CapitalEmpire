@@ -8,7 +8,7 @@ import { BORDER_KINDS, GRID_KINDS, type PaintMode } from './game/paint-tool';
 import { paintedSwatch } from './game/painted-surfaces-live';
 import { areaBuildCost } from './game/golf/costs';
 import { LIBRARY } from './game/library';
-import { PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from './game/plant';
+import { PLANT_FILTERS, PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from './game/plant';
 import { Thumb } from './ui/Thumb';
 import { exposureAtStops, exposureLabel, exposureOf, exposureStops, toneOfExposure } from './game/exposure';
 import { TexturePicker, type TextureOption } from './ui/TexturePicker';
@@ -114,7 +114,7 @@ export function PaintPanel({ game }: { game: Game }) {
 
 /** the plant brush's controls: size, spacing, the plant sizes, which plants are picked, Rub out and the count (shown in plant mode) */
 export function PlantControls({ game }: { game: Game }) {
-  const p = game.paint, ps = p.plant[p.plantBrush], pk = PLANT_KINDS.find(k => k.kind === p.plantBrush)!, pool = game.plantPool(p.plantBrush), plantPicked = new Set(ps.ids ?? pool.map(x => x.id));
+  const p = game.paint, ps = p.plant[p.plantBrush], pk = PLANT_KINDS.find(k => k.kind === p.plantBrush)!, pool = game.plantPool(p.plantBrush), plantPicked = new Set(p.plantIds());
   const togglePick = (id: string) => { const next = new Set(plantPicked); if (next.has(id)) next.delete(id); else next.add(id); p.setPlantSet({ ids: pool.map(x => x.id).filter(x => next.has(x)) }); };
   return (
     <>
@@ -140,6 +140,10 @@ export function PlantControls({ game }: { game: Game }) {
       </div>
       <div className="mt-1 flex flex-wrap gap-1">
         <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Rub out</button>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-1 text-[12px] text-slate-400" data-testid="plant-filter" title="Which plants the brush shows and plants: the autumn trees, bushes and flowers, the desert ones (palms, desert trees, cacti, desert shrubs and flowers), or all of them">
+        <span className="mr-1">Show</span>
+        {PLANT_FILTERS.map(f => <button key={f.id} className={`chip ${p.plantFilter === f.id ? 'chip-on' : ''}`} onClick={() => p.setPlantFilter(f.id)} data-testid={`plant-filter-${f.id}`}>{f.name}</button>)}
       </div>
       <div className="mt-2 flex items-center gap-2 text-[12px] text-slate-400">
         {`${pk.name}: ${plantPicked.size} of ${pool.length} picked`}

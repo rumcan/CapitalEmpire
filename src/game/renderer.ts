@@ -50,7 +50,7 @@ import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type 
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
 import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
-import { LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
+import { DESERT_BLOT_M, LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 import { courseBlendG, courseTexG, paintedLay, type Aff } from './painted-turn';
 /** a DOMMatrix as painted-turn's plain affine */
 const affOf = (m: DOMMatrix): Aff => [m.a, m.b, m.c, m.d, m.e, m.f];
@@ -2069,9 +2069,13 @@ export class GroundPainter {
       // (T247: dirt and desert with a soft edge wear no trampled band of their own: their band is the grass going over to them)
       if (waterTex(p.tex)) shores.push({ pts: p.pts, ring: true }); else if (!this.softTex(p.tex)) paths.push(p.pts);
     }
-    const waters = this.waters.filter(w => w.box[2] >= gb[0] - 4 && w.box[0] <= gb[2] + 4 && w.box[3] >= gb[1] - 4 && w.box[1] <= gb[3] + 4);
+    // T342: the desert theme's damp dirt reaches further from the world's water (living-ground.ts desertBank): the rivers, creeks and painted
+    // ponds within its reach count, so the chunks agree at their seams
+    const desert = !!this.tex.surfaces?.desert, wr = desert ? DESERT_BLOT_M / 2 + 4 : 4;
+    if (desert) for (const p of this.lotsIn([gb[0] - wr, gb[1] - wr, gb[2] + wr, gb[3] + wr])) if (!p.course && !p.top && !p.lawn && waterTex(p.tex) && !lots.includes(p)) shores.push({ pts: p.pts, ring: true });
+    const waters = this.waters.filter(w => w.box[2] >= gb[0] - wr && w.box[0] <= gb[2] + wr && w.box[3] >= gb[1] - wr && w.box[1] <= gb[3] + wr);
     const rivers: WaterLine[] = waters.map(w => ({ pts: w.w.pts, bank: w.w.kind === 'river' ? 2.6 : 0.4 }));
-    const src = { casters, roads, paths, rivers, shores }, ck = `${this.chunkNow!.key}:${livingSignature(res, src)}`;
+    const src = { casters, roads, paths, rivers, shores, desert }, ck = `${this.chunkNow!.key}:${livingSignature(res, src)}`;
     let made = this.livingMade.get(ck);
     if (made) { this.livingMade.delete(ck); this.livingMade.set(ck, made); }
     else { made = { grid: influence(box, res, src), masks: null }; this.livingMade.set(ck, made); trimLru(this.livingMade, new Set([ck]), LIVING_MADE); }
