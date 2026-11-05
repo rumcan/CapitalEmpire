@@ -385,7 +385,7 @@ export function livingSignature(res: number, src: LivingSources): number {
 export const LUSH_MAX = 0.85;
 /** T342 follow-up (the owner: the river dirt "clearly darker brown"): the damp dirt by the desert's water darkens the dirt it lies on, a
  *  multiply of DAMP_TINT up to DAMP_MAX at the bank (the texture stays; only the dirt's own patch, never a wash over the ground) */
-export const DAMP_MAX = 0.9, DAMP_TINT = '#a06e4e';
+export const DAMP_MAX = 0.9, DAMP_TINT = '#9c7c66';
 /** the ambient occlusion's colour at full strength (a cool multiply that keeps the texture, T110) and its most */
 export const AO_COLOUR: readonly [number, number, number] = [0.5, 0.58, 0.74];
 export const AO_MAX = 0.62;

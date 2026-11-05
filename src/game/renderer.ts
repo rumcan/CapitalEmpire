@@ -1654,9 +1654,12 @@ export class GroundPainter {
       const p = new Path2D(); let any = false; for (const w of rivers) any = waterShape(p, w.w.pts, 2, box) || any;
       if (any) { g.globalCompositeOperation = 'destination-out'; g.fill(p); g.globalCompositeOperation = 'source-over'; }
     };
-    if (tall) layer('golfFescue', ringOf(tall));
-    if (border) layer('dirt', ringOf(border));
-    this.ringNow = tall ? { a: tall, x0: tx0 - RP, y0: ty0 - RP, res: rres } : null;
+    // T342 follow-up: in the desert no fescue ring and no laid dirt border: the living ground's damp dirt (living-ground.ts desertBank) runs
+    // from the swamp band outward, whole and darkest at the water and breaking into blotches, so the ring is not kept off it either
+    const ringed = !this.tex.surfaces?.desert;
+    if (tall && ringed) layer('golfFescue', ringOf(tall));
+    if (border && ringed) layer('dirt', ringOf(border));
+    this.ringNow = tall && ringed ? { a: tall, x0: tx0 - RP, y0: ty0 - RP, res: rres } : null;
     const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, rv.box, lite) : null, rres) : null;
     // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
     //  painted look composed and laid as before)
