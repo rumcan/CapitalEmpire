@@ -601,6 +601,10 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.roughYards} onChange={e => { game.setRoughYards(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.roughYards * 100)}%</span>
                     </label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" data-tip="The world as a desert (T341): every tree drawn as a palm or a rock, the bushes and flower beds as desert plants and rocks, the open ground desert sand, dirt and pale sand, the lot lawns golden fescue. The golf course and the range stay as they are. Only the look: nothing is planted or saved differently, and off restores today's look">
+                      <input type="checkbox" checked={game.desertTheme} onChange={e => { game.setDesertTheme(e.target.checked); bump(); }} />
+                      Desert theme
+                    </label>
                     {dev && (
                       <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs" data-tip="Developer: the ground shows the living ground's influence maps instead of the grass: lush green, thin orange, bare brown, litter red, shade blue-grey">
                         <input type="checkbox" checked={game.groundDebug} onChange={e => { game.setGroundDebug(e.target.checked); bump(); }} />

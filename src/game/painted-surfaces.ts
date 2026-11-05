@@ -77,7 +77,8 @@ export interface LawnLook extends PaintedLook { weight: number }
  *  (water-look.ts: the depth toward the middle, the light edge, the shore's reflections; absent: the tuned look, `on: false` the water as before);
  *  T258: the range's ground art (golf/range-look.ts: the mats and the target greens as their pictures or their stand-ins, and the bullseye
  *  green; absent: the pictures) */
-export interface SurfacesFile { v: 1; surfaces: Record<string, PaintedLook>; lawns: LawnLook[]; presets: Record<string, PaintedLook>; course?: CourseFinish; water?: WaterLook; range?: RangeLook }
+export interface SurfacesFile { v: 1; surfaces: Record<string, PaintedLook>; lawns: LawnLook[]; presets: Record<string, PaintedLook>; course?: CourseFinish; water?: WaterLook; range?: RangeLook;
+  /** T341: the desert theme is on (desert-theme.ts desertSurfaces: never saved, the running game's view of the file) */ desert?: boolean }
 export const LAWN_SLOTS = 8;
 /** a lawn's texture id (the town's lawns, when the painted art is on: one per lot and per road block, picked by lawnSlot) */
 export const lawnTex = (i: number) => `lawn:${i}`;
