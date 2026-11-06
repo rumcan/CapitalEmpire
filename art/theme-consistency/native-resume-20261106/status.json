@@ -121,11 +121,214 @@
       "provenance": "variation~town-firestation-north-0ac85582-plain~1\\corners-v1.provenance.json"
     },
     {
+      "id": "variation~town-firestation-north-0ac85582-plain~1",
+      "kind": "corners",
+      "version": 2,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~town-firestation-north-0ac85582-plain~1\\corners-v2.provenance.json"
+    },
+    {
       "id": "variation~town-fish_tackle-99c1401c-plain~1",
       "kind": "corners",
       "version": 1,
       "status": "imported-awaiting-visual-review",
       "provenance": "variation~town-fish_tackle-99c1401c-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~town-hardware-bf36737f-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~town-hardware-bf36737f-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~town-laundromat-43183f9e-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~town-laundromat-43183f9e-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~town-pharmacy-d87b861c-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~town-pharmacy-d87b861c-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~town-postoffice-1c7025b8-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~town-postoffice-1c7025b8-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~world-barn-ae80f6c9-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~world-barn-ae80f6c9-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~world-church-44e76535-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~world-church-44e76535-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~world-house_0-51fa4b80-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~world-house_0-51fa4b80-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~world-house_0-north-1dde6f56-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~world-house_0-north-1dde6f56-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~world-house_2-north-332663ab-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~world-house_2-north-332663ab-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~world-house_5-d6198cb0-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~world-house_5-d6198cb0-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~world-house_5-north-bffd2c68-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~world-house_5-north-bffd2c68-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~arcade",
+      "kind": "axisturn",
+      "version": 1,
+      "status": "rejected-validation",
+      "provenance": "world~arcade\\axisturn-v1.provenance.json"
+    },
+    {
+      "id": "world~arcade",
+      "kind": "axisturn",
+      "version": 2,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~arcade\\axisturn-v2.provenance.json"
+    },
+    {
+      "id": "world~arcade",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~arcade\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~arcade",
+      "kind": "corners",
+      "version": 2,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~arcade\\corners-v2.provenance.json"
+    },
+    {
+      "id": "world~barn",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~barn\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~diner",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~diner\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~drivein_marquee",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~drivein_marquee\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~house_0",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~house_0\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~house_1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~house_1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~house_2",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~house_2\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~house_3",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~house_3\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~house_4",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~house_4\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~house_5",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~house_5\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~primary_school",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~primary_school\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~school",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~school\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~snack_bar",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~snack_bar\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~video",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~video\\corners-v1.provenance.json"
     },
     {
       "id": "world~video_rental",

@@ -1,0 +1,271 @@
+{
+  "id": "world~drivein_marquee",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T19:19:40.611750+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-3a258ebf-9029-451e-ac74-16657afa7730.png",
+    "sha256": "22e619f000fca35fbd72faeaaa6f0cc80c739572a7af04c7e58043fac2d8406b",
+    "bytes": 876389
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~drivein_marquee\\corners-v1.png",
+    "sha256": "22e619f000fca35fbd72faeaaa6f0cc80c739572a7af04c7e58043fac2d8406b",
+    "bytes": 876389
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~drivein_marquee\\corners-v1.prompt.txt",
+    "sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+    "bytes": 1818
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\world-drivein_marquee.native.png",
+      "sha256": "e4246384478d6053469bae6c0c95e304db0b1ae3484067fb574b80f9c21b748a",
+      "bytes": 89016
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\world~drivein_marquee-corners.png",
+      "sha256": "749e4cb98abd0fc07f2e1cd36f6f1880a8803af00fd5dd2e0d51d2245f4f0458",
+      "bytes": 203359
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\world-drivein_marquee.native.png",
+      "sha256": "e4246384478d6053469bae6c0c95e304db0b1ae3484067fb574b80f9c21b748a",
+      "bytes": 89016
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\world~drivein_marquee-corners.png",
+      "sha256": "749e4cb98abd0fc07f2e1cd36f6f1880a8803af00fd5dd2e0d51d2245f4f0458",
+      "bytes": 203359
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "split_x": 627,
+    "split_y": 627,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "subject_bbox": [
+          196,
+          41,
+          436,
+          584
+        ],
+        "transparent_fraction": 0.7802070058428658,
+        "margins_px": [
+          196,
+          41,
+          191,
+          43
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "subject_bbox": [
+          177,
+          41,
+          432,
+          584
+        ],
+        "transparent_fraction": 0.7773199128021591,
+        "margins_px": [
+          177,
+          41,
+          195,
+          43
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "subject_bbox": [
+          192,
+          28,
+          433,
+          598
+        ],
+        "transparent_fraction": 0.7775361268184234,
+        "margins_px": [
+          192,
+          28,
+          194,
+          29
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "subject_bbox": [
+          194,
+          31,
+          462,
+          600
+        ],
+        "transparent_fraction": 0.7631947783043225,
+        "margins_px": [
+          194,
+          31,
+          165,
+          27
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 39.667073567708336
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 28.993245442708332
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 41.820475260416664
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 39.953450520833336
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 34.953206380208336
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 44.465576171875
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~drivein_marquee\\SE.png",
+        "sha256": "dcfd85c80a1d566ab46e330fa2cd10283820cd269a1aade2d387499b99821330",
+        "bytes": 204440
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~drivein_marquee\\SE.native.png",
+        "sha256": "dcfd85c80a1d566ab46e330fa2cd10283820cd269a1aade2d387499b99821330",
+        "bytes": 204440
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~drivein_marquee\\SW.png",
+        "sha256": "5e3a46611c8bdfd89ad7e59f323672e52d77ee92c7127c12fcc6dfbca39baf7b",
+        "bytes": 211263
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~drivein_marquee\\SW.native.png",
+        "sha256": "5e3a46611c8bdfd89ad7e59f323672e52d77ee92c7127c12fcc6dfbca39baf7b",
+        "bytes": 211263
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~drivein_marquee\\NW.png",
+        "sha256": "056d8e2527e6ce3e8ed04cad8289b4a61310c9eef73b7a4908c563722fbc13a7",
+        "bytes": 212432
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~drivein_marquee\\NW.native.png",
+        "sha256": "056d8e2527e6ce3e8ed04cad8289b4a61310c9eef73b7a4908c563722fbc13a7",
+        "bytes": 212432
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~drivein_marquee\\NE.png",
+        "sha256": "2b941a8d8bea684a5e428d38d11b0c6866d16cb7e6165f24668fecd9ce3a6cfc",
+        "bytes": 226047
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~drivein_marquee\\NE.native.png",
+        "sha256": "2b941a8d8bea684a5e428d38d11b0c6866d16cb7e6165f24668fecd9ce3a6cfc",
+        "bytes": 226047
+      }
+    }
+  ]
+}
