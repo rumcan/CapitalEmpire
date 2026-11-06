@@ -1,0 +1,232 @@
+{
+  "id": "variation~industrial-textile-mill-eedf9576~1",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:28:25.607396+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-90ad15a8-47ad-46d2-ac0b-0938f1e370ee.png",
+    "sha256": "6d4500d37ed9b79bd7c5c099e2b1e95908319c6ae9c4f846cb5114e4df257574",
+    "bytes": 1926882
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-textile-mill-eedf9576~1\\corners-v1.png",
+    "sha256": "6d4500d37ed9b79bd7c5c099e2b1e95908319c6ae9c4f846cb5114e4df257574",
+    "bytes": 1926882
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-textile-mill-eedf9576~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-industrial-textile-mill-eedf9576-1.native.png",
+      "sha256": "cb4cd37e0965421103a0ec0354accb047769198b00622b6fa7fddbe208307e7a",
+      "bytes": 329700
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~industrial-textile-mill-eedf9576~1-corners.png",
+      "sha256": "449b58c1b7da73705daf1ab4af0e9e1377a137520d269c165d1ad09869f477c2",
+      "bytes": 638657
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          123,
+          39,
+          500,
+          573
+        ],
+        "transparent_fraction": 0.5787794845966591,
+        "margins_px": [
+          123,
+          39,
+          127,
+          54
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          126,
+          37,
+          509,
+          578
+        ],
+        "transparent_fraction": 0.5716367909770076,
+        "margins_px": [
+          126,
+          37,
+          118,
+          49
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          122,
+          21,
+          504,
+          599
+        ],
+        "transparent_fraction": 0.5619732962971442,
+        "margins_px": [
+          122,
+          21,
+          123,
+          28
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          125,
+          24,
+          532,
+          594
+        ],
+        "transparent_fraction": 0.5378031129730954,
+        "margins_px": [
+          125,
+          24,
+          95,
+          33
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 24.752522786458332
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 23.810628255208332
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 32.039225260416664
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 23.628092447916668
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 32.119547526041664
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 33.539632161458336
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "original export, intentionally retained by sheets.py",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-textile-mill-eedf9576~1\\SE.png",
+        "sha256": "c8b8f479f0f87595e4dfea4a87b887334d3838bd65eecf4bcbc841ec6dabab27",
+        "bytes": 423203
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-textile-mill-eedf9576~1\\SE.native.png",
+        "sha256": "c8b8f479f0f87595e4dfea4a87b887334d3838bd65eecf4bcbc841ec6dabab27",
+        "bytes": 423203
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-textile-mill-eedf9576~1\\SW.png",
+        "sha256": "555c07f617c7000c37d5f2d2eb8028a1b80eaf2859989e7e70c8f1405536a260",
+        "bytes": 423643
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-textile-mill-eedf9576~1\\SW.native.png",
+        "sha256": "555c07f617c7000c37d5f2d2eb8028a1b80eaf2859989e7e70c8f1405536a260",
+        "bytes": 423643
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-textile-mill-eedf9576~1\\NW.png",
+        "sha256": "cf86af7e320f1480bc6caa8df112c4fffdb5126815d4730f7421f90677a9675d",
+        "bytes": 430184
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-textile-mill-eedf9576~1\\NW.native.png",
+        "sha256": "cf86af7e320f1480bc6caa8df112c4fffdb5126815d4730f7421f90677a9675d",
+        "bytes": 430184
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-textile-mill-eedf9576~1\\NE.png",
+        "sha256": "cb4cd37e0965421103a0ec0354accb047769198b00622b6fa7fddbe208307e7a",
+        "bytes": 329700
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-textile-mill-eedf9576~1\\NE.native.png",
+        "sha256": "cb4cd37e0965421103a0ec0354accb047769198b00622b6fa7fddbe208307e7a",
+        "bytes": 329700
+      }
+    }
+  ]
+}

@@ -1,0 +1,232 @@
+{
+  "id": "variation~industrial-lumber-workshop-8a43a691~1",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:27:05.418969+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-88ed657c-3f25-4a40-b39a-fd5953052d4e.png",
+    "sha256": "98f9eb3aecbaa7864f5e52b38e07281b74216dc398e6605abab92fadcb976b8c",
+    "bytes": 2258729
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-lumber-workshop-8a43a691~1\\corners-v1.png",
+    "sha256": "98f9eb3aecbaa7864f5e52b38e07281b74216dc398e6605abab92fadcb976b8c",
+    "bytes": 2258729
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-lumber-workshop-8a43a691~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-industrial-lumber-workshop-8a43a691-1.native.png",
+      "sha256": "3dcff1c660a26732b95a705dbe300dab6fa405a5fe2d57ffc889d7dd1dd7ed23",
+      "bytes": 453145
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~industrial-lumber-workshop-8a43a691~1-corners.png",
+      "sha256": "df8348196ca49e1ed657a3b47838922927f4878b9135ee8c381b58a2cdcce1a1",
+      "bytes": 879316
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          32,
+          80,
+          602,
+          566
+        ],
+        "transparent_fraction": 0.4910143998534832,
+        "margins_px": [
+          32,
+          80,
+          25,
+          61
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          23,
+          80,
+          611,
+          563
+        ],
+        "transparent_fraction": 0.4861534000289981,
+        "margins_px": [
+          23,
+          80,
+          16,
+          64
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          25,
+          74,
+          587,
+          544
+        ],
+        "transparent_fraction": 0.4905692533494095,
+        "margins_px": [
+          25,
+          74,
+          40,
+          83
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          23,
+          80,
+          605,
+          555
+        ],
+        "transparent_fraction": 0.495638836107232,
+        "margins_px": [
+          23,
+          80,
+          22,
+          72
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 32.066324869791664
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 29.88427734375
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 37.9375
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 33.866617838541664
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 29.188557942708332
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 39.627115885416664
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "original export, intentionally retained by sheets.py",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-lumber-workshop-8a43a691~1\\SE.png",
+        "sha256": "59e5a1bab5bca67e26de7dc04cd2e615304088c78fd4997d2f034a0d8d972635",
+        "bytes": 528751
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-lumber-workshop-8a43a691~1\\SE.native.png",
+        "sha256": "59e5a1bab5bca67e26de7dc04cd2e615304088c78fd4997d2f034a0d8d972635",
+        "bytes": 528751
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-lumber-workshop-8a43a691~1\\SW.png",
+        "sha256": "eab235c287dad365cdda8c7de015d6a5874b3d005cca2ed04482bb8b29b94c41",
+        "bytes": 520250
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-lumber-workshop-8a43a691~1\\SW.native.png",
+        "sha256": "eab235c287dad365cdda8c7de015d6a5874b3d005cca2ed04482bb8b29b94c41",
+        "bytes": 520250
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-lumber-workshop-8a43a691~1\\NW.png",
+        "sha256": "8213ab105388b6970207fe637e2a792a925cc66988a67b598c6cf30ae7bebb4a",
+        "bytes": 476872
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-lumber-workshop-8a43a691~1\\NW.native.png",
+        "sha256": "8213ab105388b6970207fe637e2a792a925cc66988a67b598c6cf30ae7bebb4a",
+        "bytes": 476872
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-lumber-workshop-8a43a691~1\\NE.png",
+        "sha256": "3dcff1c660a26732b95a705dbe300dab6fa405a5fe2d57ffc889d7dd1dd7ed23",
+        "bytes": 453145
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-lumber-workshop-8a43a691~1\\NE.native.png",
+        "sha256": "3dcff1c660a26732b95a705dbe300dab6fa405a5fe2d57ffc889d7dd1dd7ed23",
+        "bytes": 453145
+      }
+    }
+  ]
+}

@@ -1,0 +1,244 @@
+{
+  "id": "variation~ref-building-garage-0f7895a1-plain~1",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:34:42.710119+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-df2bd470-fe72-4723-afa7-599f823724a3.png",
+    "sha256": "683a9b83cb19c633300d7d8ee548befe938028cd64c6b845f9adb4ada0e7af2f",
+    "bytes": 1747231
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-garage-0f7895a1-plain~1\\corners-v1.png",
+    "sha256": "683a9b83cb19c633300d7d8ee548befe938028cd64c6b845f9adb4ada0e7af2f",
+    "bytes": 1747231
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-garage-0f7895a1-plain~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-ref-building-garage-0f7895a1-plain-1.native.png",
+      "sha256": "503984e589111ef4320d21a4b79a96003d4e5a5676f6e7ffc6e676a278c5c36d",
+      "bytes": 106875
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~ref-building-garage-0f7895a1-plain~1-corners.png",
+      "sha256": "ec03a9d2d7b710f0efe6f068ac567110be977139f25555025921262427571d5d",
+      "bytes": 128563
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-ref-building-garage-0f7895a1-plain-1.native.png",
+      "sha256": "503984e589111ef4320d21a4b79a96003d4e5a5676f6e7ffc6e676a278c5c36d",
+      "bytes": 106875
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~ref-building-garage-0f7895a1-plain~1-corners.png",
+      "sha256": "ec03a9d2d7b710f0efe6f068ac567110be977139f25555025921262427571d5d",
+      "bytes": 128563
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          73,
+          93,
+          552,
+          532
+        ],
+        "transparent_fraction": 0.5811705572471123,
+        "margins_px": [
+          73,
+          93,
+          75,
+          95
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          57,
+          90,
+          529,
+          531
+        ],
+        "transparent_fraction": 0.5944893406489982,
+        "margins_px": [
+          57,
+          90,
+          98,
+          96
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          77,
+          78,
+          552,
+          528
+        ],
+        "transparent_fraction": 0.5918464422619547,
+        "margins_px": [
+          77,
+          78,
+          75,
+          99
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          66,
+          83,
+          553,
+          529
+        ],
+        "transparent_fraction": 0.5608413523296424,
+        "margins_px": [
+          66,
+          83,
+          74,
+          98
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 27.011555989583332
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 27.896402994791668
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 29.70068359375
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 17.262288411458332
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 22.5224609375
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 25.320556640625
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-garage-0f7895a1-plain~1\\SE.png",
+        "sha256": "1c3616ddb52cf750bc8fdd8bc6c628020221c4e82a3289578a5904c343187145",
+        "bytes": 373165
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-garage-0f7895a1-plain~1\\SE.native.png",
+        "sha256": "1c3616ddb52cf750bc8fdd8bc6c628020221c4e82a3289578a5904c343187145",
+        "bytes": 373165
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-garage-0f7895a1-plain~1\\SW.png",
+        "sha256": "ae992f9f9bef8470605a8da7b39c0c2175be7135e27d644444c261f26504a78e",
+        "bytes": 350223
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-garage-0f7895a1-plain~1\\SW.native.png",
+        "sha256": "ae992f9f9bef8470605a8da7b39c0c2175be7135e27d644444c261f26504a78e",
+        "bytes": 350223
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-garage-0f7895a1-plain~1\\NW.png",
+        "sha256": "311997deabb161ee5f6e975c12882fac49462f30ed8da5a10e6bdbdb5aecfafb",
+        "bytes": 359580
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-garage-0f7895a1-plain~1\\NW.native.png",
+        "sha256": "311997deabb161ee5f6e975c12882fac49462f30ed8da5a10e6bdbdb5aecfafb",
+        "bytes": 359580
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-garage-0f7895a1-plain~1\\NE.png",
+        "sha256": "0e2d83486051f575688c306d8c02026f48caaf0f624b031008384e148b9f69c5",
+        "bytes": 390713
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-garage-0f7895a1-plain~1\\NE.native.png",
+        "sha256": "0e2d83486051f575688c306d8c02026f48caaf0f624b031008384e148b9f69c5",
+        "bytes": 390713
+      }
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "generator": "native imagegen",
+  "imports": [
+    {
+      "id": "variation~industrial-freight-depot-a030c919~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~industrial-freight-depot-a030c919~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~industrial-lumber-workshop-8a43a691~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~industrial-lumber-workshop-8a43a691~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~industrial-textile-mill-eedf9576~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~industrial-textile-mill-eedf9576~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~industrial-utility-substation-54820c2b~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~industrial-utility-substation-54820c2b~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~ref-building-barn-74bee205-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~ref-building-barn-74bee205-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~ref-building-barn-v2-b96e34dc-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~ref-building-barn-v2-b96e34dc-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~ref-building-farm-shed-0280794d-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~ref-building-farm-shed-0280794d-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~ref-building-farmhouse-ef501a21-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~ref-building-farmhouse-ef501a21-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~ref-building-garage-0f7895a1-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~ref-building-garage-0f7895a1-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~ref-building-gas-shop-3326e70f-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~ref-building-gas-shop-3326e70f-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~ref-building-house-dormer-b4413f08-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~ref-building-house-dormer-b4413f08-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~ref-building-house-dormer-north-6952cea5-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~ref-building-house-dormer-north-6952cea5-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~static-shop_market_rear-f9272004-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~static-shop_market_rear-f9272004-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~town-bakery-af15d7f5-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~town-bakery-af15d7f5-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~town-barber-13c5ef06-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "held-geometry-requires-regeneration",
+      "provenance": "variation~town-barber-13c5ef06-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~town-barber-13c5ef06-plain~1",
+      "kind": "corners",
+      "version": 2,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~town-barber-13c5ef06-plain~1\\corners-v2.provenance.json"
+    },
+    {
+      "id": "variation~town-firestation-north-0ac85582-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "held-geometry-requires-regeneration",
+      "provenance": "variation~town-firestation-north-0ac85582-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "variation~town-fish_tackle-99c1401c-plain~1",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "variation~town-fish_tackle-99c1401c-plain~1\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~video_rental",
+      "kind": "axisturn",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~video_rental\\axisturn-v1.provenance.json"
+    },
+    {
+      "id": "world~video_rental",
+      "kind": "corners",
+      "version": 1,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~video_rental\\corners-v1.provenance.json"
+    },
+    {
+      "id": "world~video_rental",
+      "kind": "corners",
+      "version": 2,
+      "status": "imported-awaiting-visual-review",
+      "provenance": "world~video_rental\\corners-v2.provenance.json"
+    }
+  ]
+}

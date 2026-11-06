@@ -1,0 +1,225 @@
+{
+  "id": "world~video_rental",
+  "selected_utc": "2026-11-06T18:46:34.936534+00:00",
+  "selection": {
+    "corners": "corners-v2.png",
+    "axisturn": "axisturn-v1.png"
+  },
+  "lighting": "daytime",
+  "sunlight": "upper-right",
+  "shadows": "lower-left",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "status": "candidate-art-awaiting-owner-review",
+  "validation_note": "All eight native crops match compatible output hashes and retain true transparent pixels. Crop-corner alpha is at most 24/255 (the existing cutter visibility threshold). Crops are deliberately tightly trimmed; clear full-cell margins are measured in archived source sheets.",
+  "crops": [
+    {
+      "view": "NE",
+      "kind": "corners",
+      "version": 2,
+      "path": "NE.native.png",
+      "sha256": "d74785eb60ec8a85e5afe66c3d5d2d0323d8027c55757295011fcd7f46cbd25a",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~video_rental\\NE.png",
+      "dimensions": [
+        593,
+        446
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.29770340066092454,
+      "crop_corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_cell_margins_px": [
+        3,
+        97,
+        31,
+        84
+      ]
+    },
+    {
+      "view": "SE",
+      "kind": "corners",
+      "version": 2,
+      "path": "SE.native.png",
+      "sha256": "12148275bedb8f2b0d56fd0318fa8bdd9c5d74ccd1fbfff150fd63607140076a",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~video_rental\\SE.png",
+      "dimensions": [
+        580,
+        457
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.3138270580245982,
+      "crop_corner_alpha": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "source_cell_margins_px": [
+        13,
+        87,
+        34,
+        83
+      ]
+    },
+    {
+      "view": "SW",
+      "kind": "corners",
+      "version": 2,
+      "path": "SW.native.png",
+      "sha256": "b147c9e5c68e1cc655b0b3302259d9f7ab02c1453e737646ea7fa3a89b8a85cf",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~video_rental\\SW.png",
+      "dimensions": [
+        591,
+        464
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.28333770931792984,
+      "crop_corner_alpha": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "source_cell_margins_px": [
+        3,
+        71,
+        33,
+        92
+      ]
+    },
+    {
+      "view": "NW",
+      "kind": "corners",
+      "version": 2,
+      "path": "NW.native.png",
+      "sha256": "1805a24778d7d8046260335eead6601c6a407896c1ba12cd308eca3e5ba685e1",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~video_rental\\NW.png",
+      "dimensions": [
+        581,
+        474
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.2950826815399028,
+      "crop_corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_cell_margins_px": [
+        12,
+        84,
+        34,
+        69
+      ]
+    },
+    {
+      "view": "N",
+      "kind": "axisturn",
+      "version": 1,
+      "path": "turned/N.native.png",
+      "sha256": "c62b40ccbc2bb12120a3e066f46df9b3d1860075db3b947b69b672727e2863f6",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~video_rental\\turned\\N.png",
+      "dimensions": [
+        574,
+        383
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.10146377853185469,
+      "crop_corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_cell_margins_px": [
+        48,
+        133,
+        5,
+        111
+      ]
+    },
+    {
+      "view": "E",
+      "kind": "axisturn",
+      "version": 1,
+      "path": "turned/E.native.png",
+      "sha256": "8e3256bee14a8df485c1405da9f63ae719c7561da4efe2f18ba199fc5deac20c",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~video_rental\\turned\\E.png",
+      "dimensions": [
+        412,
+        447
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.1831139636411025,
+      "crop_corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_cell_margins_px": [
+        131,
+        86,
+        84,
+        94
+      ]
+    },
+    {
+      "view": "S",
+      "kind": "axisturn",
+      "version": 1,
+      "path": "turned/S.native.png",
+      "sha256": "8bea64e1984155baf8bb6b9743b8d8bd9d29205292dd18b5c3b460104f97071b",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~video_rental\\turned\\S.png",
+      "dimensions": [
+        570,
+        427
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.12442581864497308,
+      "crop_corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_cell_margins_px": [
+        43,
+        78,
+        14,
+        122
+      ]
+    },
+    {
+      "view": "W",
+      "kind": "axisturn",
+      "version": 1,
+      "path": "turned/W.native.png",
+      "sha256": "e4dcb460fc003b9894d6acff4c402bee3a3afadfef9fb119ca6a28edf2bd4d67",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~video_rental\\turned\\W.png",
+      "dimensions": [
+        386,
+        459
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.1192500028220845,
+      "crop_corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_cell_margins_px": [
+        157,
+        61,
+        84,
+        107
+      ]
+    }
+  ]
+}

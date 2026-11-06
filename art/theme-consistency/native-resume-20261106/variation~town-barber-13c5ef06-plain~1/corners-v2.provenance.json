@@ -1,0 +1,272 @@
+{
+  "id": "variation~town-barber-13c5ef06-plain~1",
+  "kind": "corners",
+  "version": 2,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:55:35.831383+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-1e65b870-c676-4894-8636-bed0570ac143.png",
+    "sha256": "75c27fd780312f476f81b5c74d7a76cac2efbff75996b70d4c3317449b7a5219",
+    "bytes": 2170121
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-barber-13c5ef06-plain~1\\corners-v2.png",
+    "sha256": "75c27fd780312f476f81b5c74d7a76cac2efbff75996b70d4c3317449b7a5219",
+    "bytes": 2170121
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-barber-13c5ef06-plain~1\\corners-v2.prompt.txt",
+    "sha256": "fd55e76eb6368aa3f5205ae381f87b950da0b3c76833b16b62496d643903fedb",
+    "bytes": 1482
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-barber-13c5ef06-plain~1\\corners-v1.png",
+      "sha256": "b6150f97583e5f8cc8a4817d8aad35301a52dd30c0be8cda4da5f628350fd7fe",
+      "bytes": 1881095
+    },
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-barber-13c5ef06-plain-1.native.png",
+      "sha256": "43a719415616e24122fccff2a2be5fcca7942c9625a65b5bee746a4ac18e16c0",
+      "bytes": 164547
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-barber-13c5ef06-plain-1.native.png",
+      "sha256": "43a719415616e24122fccff2a2be5fcca7942c9625a65b5bee746a4ac18e16c0",
+      "bytes": 164547
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-barber-13c5ef06-plain~1-corners.png",
+      "sha256": "887faf792863504573fdb3b23e753a86a6c360f60ee559c68a4250e065100ad9",
+      "bytes": 216476
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "split_x": 627,
+    "split_y": 627,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "subject_bbox": [
+          65,
+          48,
+          560,
+          591
+        ],
+        "transparent_fraction": 0.4546650081779772,
+        "margins_px": [
+          65,
+          48,
+          67,
+          36
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "subject_bbox": [
+          47,
+          61,
+          558,
+          584
+        ],
+        "transparent_fraction": 0.4589765700317199,
+        "margins_px": [
+          47,
+          61,
+          69,
+          43
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "subject_bbox": [
+          67,
+          39,
+          563,
+          578
+        ],
+        "transparent_fraction": 0.4467719247371728,
+        "margins_px": [
+          67,
+          39,
+          64,
+          49
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "subject_bbox": [
+          47,
+          37,
+          552,
+          581
+        ],
+        "transparent_fraction": 0.4313800304734578,
+        "margins_px": [
+          47,
+          37,
+          75,
+          46
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 39.421712239583336
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 28.2939453125
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 43.807454427083336
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 38.758951822916664
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 32.1044921875
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 44.6572265625
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-barber-13c5ef06-plain~1\\SE.png",
+        "sha256": "bab2dc63956bee302592274762a6a33266e1f971fba6a0c9100cd26c67c260ef",
+        "bytes": 497765
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-barber-13c5ef06-plain~1\\SE.native.png",
+        "sha256": "bab2dc63956bee302592274762a6a33266e1f971fba6a0c9100cd26c67c260ef",
+        "bytes": 497765
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-barber-13c5ef06-plain~1\\SW.png",
+        "sha256": "bddabafabea707a3f275fa268eac677e42a8eb2e2f7aaa809fc81de8e8cf239f",
+        "bytes": 485966
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-barber-13c5ef06-plain~1\\SW.native.png",
+        "sha256": "bddabafabea707a3f275fa268eac677e42a8eb2e2f7aaa809fc81de8e8cf239f",
+        "bytes": 485966
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-barber-13c5ef06-plain~1\\NW.png",
+        "sha256": "0a1678f6819c24eff0dd6bb75bb4bca0b8c52bb8b8ee5a94991269b5a77a212a",
+        "bytes": 486647
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-barber-13c5ef06-plain~1\\NW.native.png",
+        "sha256": "0a1678f6819c24eff0dd6bb75bb4bca0b8c52bb8b8ee5a94991269b5a77a212a",
+        "bytes": 486647
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-barber-13c5ef06-plain~1\\NE.png",
+        "sha256": "85c72dab2f8bc44ad2fbd0911520051aa7c485bb053ea3e11a9349ebce041fa3",
+        "bytes": 515540
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-barber-13c5ef06-plain~1\\NE.native.png",
+        "sha256": "85c72dab2f8bc44ad2fbd0911520051aa7c485bb053ea3e11a9349ebce041fa3",
+        "bytes": 515540
+      }
+    }
+  ],
+  "previous_crops_backup": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-barber-13c5ef06-plain~1\\backups\\20261106T185535849895Z"
+}
