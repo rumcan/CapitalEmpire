@@ -1,5 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clamp, clampZoom, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
+import { BoundedLru, hasPickingPixel, mapConcurrent, pickingMask } from './ext/asset-residency';
 import { PeopleSpacer, spacePeople } from './spacing';
 import { PUTT_IMPACT_S, galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
@@ -561,7 +562,8 @@ export class Game {
   /** lot ground edits made since the last frame (key -> patches, or null to drop), sent as one message per frame */
   private lotPending = new Map<string, LotPatch[] | null>();
   /** the atlas pages at full size (mip 0), loaded on first use for the 2D previews (the business ghost), so a preview is never drawn from mip 1 */
-  private pageFull = new Map<number, HTMLImageElement>();
+  /** At most two decoded 2048px preview pages (~32MiB RGBA), independent of catalogue size. */
+  private pageFull = new BoundedLru<number, HTMLImageElement>(2, image => image.removeAttribute('src'));
   private pageImage0(page: number): HTMLImageElement | null {
     let im = this.pageFull.get(page); if (!im) { im = new Image(); im.src = ATLAS_PAGES[page]![0]!; this.pageFull.set(page, im); }
     return im.complete && im.naturalWidth ? im : null;
@@ -2798,19 +2800,26 @@ export class Game {
     // per display px, more than mip 1 holds; the owner, 2026-10-24: nothing painted blurry or pixelated)
     // the pages as GPU blocks (BC7 / ASTC / ETC2, transcoded from the build's KTX2) where the build has them and the GPU takes one, else RGBA8
     const ktx = ktx2Built() ? pickFormat(this.gl.gl) : null;
-    const atlas = this.gl.initAtlas(this.dpr, ktx ? [ktx2Source(ATLAS_PAGES, ktx), webpSource(ATLAS_PAGES)] : [webpSource(ATLAS_PAGES)], this.boot.atlasMB, this.boot.atlasKeep);
+    let atlasFailed = false, atlasFailure: unknown;
+    const atlas = this.gl.initAtlas(this.dpr, ktx ? [ktx2Source(ATLAS_PAGES, ktx), webpSource(ATLAS_PAGES)] : [webpSource(ATLAS_PAGES)], this.boot.atlasMB, this.boot.atlasKeep)
+      .catch(error => { atlasFailed = true; atlasFailure = error; });
     // the alpha for picking, from mip 2 (the old mip-1 images halved): no page kept decoded as an image
-    this.pageAlpha = await Promise.all(ATLAS_PAGES.map(async row => {
+    this.pageAlpha = await mapConcurrent(ATLAS_PAGES, 2, async row => {
+      let bitmap: ImageBitmap | null = null, canvas: OffscreenCanvas | null = null;
       try {
-        const b = await createImageBitmap(await (await fetch(row[2]!)).blob()), w = b.width, h = b.height, g = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true })!;
-        g.drawImage(b, 0, 0); b.close();
-        const rgba = g.getImageData(0, 0, w, h).data, bits = new Uint8Array((w * h + 7) >> 3);
-        for (let i = 0; i < w * h; i++) if (rgba[i * 4 + 3]! > PICK_ALPHA) bits[i >> 3]! |= 1 << (i & 7);
-        return { w, h, bits };
+        if (this.dead || atlasFailed) return null;
+        const response = await fetch(row[2]!); if (!response.ok) return null;
+        if (this.dead || atlasFailed) return null;
+        bitmap = await createImageBitmap(await response.blob()); const w = bitmap.width, h = bitmap.height;
+        canvas = new OffscreenCanvas(w, h); const g = canvas.getContext('2d', { willReadFrequently: true }); if (!g) return null;
+        g.drawImage(bitmap, 0, 0); bitmap.close(); bitmap = null;
+        return pickingMask(g.getImageData(0, 0, w, h).data, w, h, PICK_ALPHA);
       } catch { return null; }
-    }));
+      finally { bitmap?.close(); if (canvas) { canvas.width = 0; canvas.height = 0; } }
+    });
     tick(0.3);
-    await atlas; this.perf.atlasMB = (this.gl.atlas?.bytes ?? 0) / 1048576; tick(0.5); if (this.dead) return;
+    await atlas; if (atlasFailed) throw atlasFailure;
+    this.perf.atlasMB = (this.gl.atlas?.bytes ?? 0) / 1048576; tick(0.5); if (this.dead) return;
     // a light boot without a save (the lot lab) never reads one and never writes one
     if (!this.boot.save) this.saveBlocked = true;
     // the dev-only ?fixture= save (T098, dev/fixtures.ts; ?fixture=range20: the range start's grown town at year 20, the course land empty and
@@ -2971,7 +2980,7 @@ export class Game {
   dead = false;
   /** T227: stops watching the surfaces file for the course finish's collar widths */
   private unfinish: (() => void) | null = null;
-  destroy() { this.dead = true; this.unfinish?.(); this.unfinish = null; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); clearTimeout(this.lotBlocksTimer); this.ground.terminate(); this.traffic?.terminate(); this.contour.terminate(); this.areaWorker.terminate(); }
+  destroy() { this.dead = true; this.pageFull.clear(); this.unfinish?.(); this.unfinish = null; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); clearTimeout(this.lotBlocksTimer); this.ground.terminate(); this.traffic?.terminate(); this.contour.terminate(); this.areaWorker.terminate(); }
 
   // ---------- geometry helpers ----------
   resize() {
@@ -5441,10 +5450,10 @@ export class Game {
       if (!this.props.has(p)) continue; // forest trees are not props: never picked
       spriteRect(p, r); if (X < r[0] || X > r[2] || Y < r[1] || Y > r[3]) continue;
       const it = LIBRARY[p.item], [page, u0, v0, u1, v1] = it.tex, a = this.pageAlpha[page];
-      if (!a) return p;
+      if (!a) continue; // Missing opacity cannot turn a transparent sprite rectangle into a click target.
       let u = (X - r[0]) / (r[2] - r[0]); if (p.flip) u = 1 - u;
       const v = (Y - r[1]) / (r[3] - r[1]), px = clamp(Math.floor((u0 + (u1 - u0) * u) * a.w), 0, a.w - 1), py = clamp(Math.floor((v0 + (v1 - v0) * v) * a.h), 0, a.h - 1);
-      const i = py * a.w + px; if ((a.bits[i >> 3]! >> (i & 7)) & 1) return p;
+      if (hasPickingPixel(a, px, py)) return p;
     }
     return null;
   }
