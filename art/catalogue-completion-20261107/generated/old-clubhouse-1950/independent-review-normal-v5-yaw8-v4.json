@@ -1,0 +1,961 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "approvalClaimed": false,
+  "integrationPerformed": false,
+  "disposition": "candidate-ready-for-parent-review",
+  "blockingIdentityOrRepeatedCameraIssueFound": false,
+  "sources": {
+    "normal": {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "size": [
+        1254,
+        1254
+      ],
+      "calibrationFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\guides\\normal-world-v2.calibration.json",
+      "calibrationSha256": "739e0e2156513450b7d64e0240fbad9775301ef4ff59a4a7c1d456aeedab63fe",
+      "sourceCameraHorizontalOffsetDegrees": -45
+    },
+    "yaw8": {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\yaw8-v4.png",
+      "sha256": "091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862",
+      "size": [
+        1254,
+        1254
+      ],
+      "calibrationFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\guides\\yaw8-world-v2.calibration.json",
+      "calibrationSha256": "b20288b593d819be16bb1cabd0b463fddd469499ecc3416cda042bb10929aac3",
+      "sourceCameraHorizontalOffsetDegrees": 8
+    }
+  },
+  "model": {
+    "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\guides\\old-clubhouse-1950-world-model-v2.json",
+    "sha256": "63f6e566ea3782720ed9514bd6adca195e499d2aace3961cc56990309ffbd07a",
+    "bodyDimensionsMetres": [
+      12,
+      8,
+      3
+    ],
+    "front": "model y=-4",
+    "chimneyWorldLocation": [
+      -4,
+      0,
+      4.2
+    ]
+  },
+  "visualObservations": [
+    "All four normal corners and four near-cardinal pictures were visually inspected against both detailed world guides.",
+    "Chimney moves left/right and near/far consistent with one fixed world location. Prior always-screen-left failure is corrected.",
+    "Front window/door/service hatch/awning/bench/steps/crate stay on front; exactly two rear vents and two windows on each gable. W has rear/right sliver and only protruding front furniture at left, correcting previous front-sliver repetition.",
+    "Consistent cream weathered timber, green trim, rusty corrugated gable roof and daylight. Windows are unlit reflective glass; no artificial light pools. Upper-right sun/chimney shadows toward lower-left plausible.",
+    "No strong-alpha silhouette touches a cell boundary. Some near-transparent residue outside the silhouette remains; these are native isolated alpha images, not opaque screenshots.",
+    "Small paint/outline variation remains; this is candidate art, not a mathematical certificate that every source vertex perfectly equals the proxy."
+  ],
+  "calibrationSummary": {
+    "nativeTrueCameraPixelsPerMetreRange": [
+      34.3075,
+      35.338
+    ],
+    "medianSourceTrueCameraPixelsPerMetre": 34.93344999999999,
+    "candidateGroundAnchorsOnly": true,
+    "runtimeHandednessNotAssumed": true,
+    "sourceCameraLabelsAreNotRuntimeYawCertificates": true,
+    "physicalAnchor": "Enclosed12x8body centre at world z=0, NOT enclosed-body centroidz1.5 or bottom of steps/shadows."
+  },
+  "views": [
+    {
+      "sourceFamily": "normal",
+      "sourceCameraName": "SE",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "sourceObjectRotationDegreesAboutZ": 0,
+      "runtimeFacingKey": null,
+      "runtimeHeadingDegrees": null,
+      "registrationMethod": "Least-squares isotropic scale+translation of observed visible foundation corners to detailed single-world model12x8m z=0 camera projection. Points are manually observed within approx2-4px. No height or alpha-box-centre gauge.",
+      "observedFoundationCorrespondences": [
+        {
+          "worldMetres": [
+            -6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            70,
+            403
+          ]
+        },
+        {
+          "worldMetres": [
+            -6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            257,
+            499
+          ]
+        },
+        {
+          "worldMetres": [
+            6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            556,
+            360
+          ]
+        }
+      ],
+      "candidateTrueCameraPixelsPerMetre": 34.3075,
+      "candidateGroundAnchorCellPixels": {
+        "x": 310.506,
+        "y": 380.235
+      },
+      "candidateGroundAnchorCropPixels": {
+        "x": 259.506,
+        "y": 242.235
+      },
+      "registrationRmsPixels": 4.564,
+      "registrationMaxResidualPixels": 5.593,
+      "measurementLimit": "Approximate painted foundation/outline positions; retain parent review before import.",
+      "strongAlphaBBoxCellExclusive": [
+        55,
+        142,
+        569,
+        501
+      ],
+      "suggestedCropRectCell": {
+        "left": 51,
+        "top": 138,
+        "width": 522,
+        "height": 367
+      },
+      "registeredGroundPolygonCellPixels": [
+        [
+          261.9879518072289,
+          501.5301204819277
+        ],
+        [
+          553.0963855421687,
+          355.9759036144579
+        ],
+        [
+          359.0240963855422,
+          258.93975903614466
+        ],
+        [
+          67.91566265060243,
+          404.4939759036145
+        ]
+      ],
+      "perViewCalibrationEvidence": "Detailed world model v2,12x8m ground-corner correspondences in independent-review-normal-v5-yaw8-v4.json; camera scale 34.3075px/m, RMS 4.564px; source-only candidate, runtime handedness unassigned.",
+      "measuredImageContourSegments": [
+        {
+          "xRangeCell": [
+            80,
+            235
+          ],
+          "observedAlphaContourSlope": 0.5063046261320352,
+          "idealGuideGroundEdgeSlope": 0.5,
+          "maxLineResidualPixels": 0.6940536211955646
+        },
+        {
+          "xRangeCell": [
+            503,
+            552
+          ],
+          "observedAlphaContourSlope": -0.5060744297719088,
+          "idealGuideGroundEdgeSlope": -0.5,
+          "maxLineResidualPixels": 0.6330372148859169
+        }
+      ],
+      "contourMeasurementLimit": "Bottom alpha contour includes painted outline/contact shadow and occasional foreground support. Small-rise cardinal slopes are particularly sensitive to2-4pixel paint. These fits are diagnostics, not exact camera-angle certificates."
+    },
+    {
+      "sourceFamily": "normal",
+      "sourceCameraName": "SW",
+      "cell": 1,
+      "cellRect": {
+        "left": 627,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "sourceObjectRotationDegreesAboutZ": 90,
+      "runtimeFacingKey": null,
+      "runtimeHeadingDegrees": null,
+      "registrationMethod": "Least-squares isotropic scale+translation of observed visible foundation corners to detailed single-world model12x8m z=0 camera projection. Points are manually observed within approx2-4px. No height or alpha-box-centre gauge.",
+      "observedFoundationCorrespondences": [
+        {
+          "worldMetres": [
+            6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            68,
+            359
+          ]
+        },
+        {
+          "worldMetres": [
+            -6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            365,
+            500
+          ]
+        },
+        {
+          "worldMetres": [
+            -6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            556,
+            403
+          ]
+        }
+      ],
+      "candidateTrueCameraPixelsPerMetre": 34.448,
+      "candidateGroundAnchorCellPixels": {
+        "x": 313.428,
+        "y": 380.069
+      },
+      "candidateGroundAnchorCropPixels": {
+        "x": 261.428,
+        "y": 241.069
+      },
+      "registrationRmsPixels": 3.104,
+      "registrationMaxResidualPixels": 3.77,
+      "measurementLimit": "Approximate painted foundation/outline positions; retain parent review before import.",
+      "strongAlphaBBoxCellExclusive": [
+        56,
+        143,
+        571,
+        503
+      ],
+      "suggestedCropRectCell": {
+        "left": 52,
+        "top": 139,
+        "width": 523,
+        "height": 368
+      },
+      "registeredGroundPolygonCellPixels": [
+        [
+          557.0120481927711,
+          404.4277108433735
+        ],
+        [
+          264.71084337349396,
+          258.27710843373495
+        ],
+        [
+          69.84337349397592,
+          355.710843373494
+        ],
+        [
+          362.1445783132531,
+          501.8614457831326
+        ]
+      ],
+      "perViewCalibrationEvidence": "Detailed world model v2,12x8m ground-corner correspondences in independent-review-normal-v5-yaw8-v4.json; camera scale 34.4480px/m, RMS 3.104px; source-only candidate, runtime handedness unassigned.",
+      "measuredImageContourSegments": [
+        {
+          "xRangeCell": [
+            85,
+            340
+          ],
+          "observedAlphaContourSlope": 0.481172751201648,
+          "idealGuideGroundEdgeSlope": 0.5,
+          "maxLineResidualPixels": 0.9920437314030437
+        },
+        {
+          "xRangeCell": [
+            390,
+            548
+          ],
+          "observedAlphaContourSlope": -0.5104221399570098,
+          "idealGuideGroundEdgeSlope": -0.5,
+          "maxLineResidualPixels": 0.8583104450282235
+        }
+      ],
+      "contourMeasurementLimit": "Bottom alpha contour includes painted outline/contact shadow and occasional foreground support. Small-rise cardinal slopes are particularly sensitive to2-4pixel paint. These fits are diagnostics, not exact camera-angle certificates."
+    },
+    {
+      "sourceFamily": "normal",
+      "sourceCameraName": "NW",
+      "cell": 2,
+      "cellRect": {
+        "left": 0,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "sourceObjectRotationDegreesAboutZ": 180,
+      "runtimeFacingKey": null,
+      "runtimeHeadingDegrees": null,
+      "registrationMethod": "Least-squares isotropic scale+translation of observed visible foundation corners to detailed single-world model12x8m z=0 camera projection. Points are manually observed within approx2-4px. No height or alpha-box-centre gauge.",
+      "observedFoundationCorrespondences": [
+        {
+          "worldMetres": [
+            6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            68,
+            402
+          ]
+        },
+        {
+          "worldMetres": [
+            6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            261,
+            500
+          ]
+        },
+        {
+          "worldMetres": [
+            -6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            560,
+            350
+          ]
+        }
+      ],
+      "candidateTrueCameraPixelsPerMetre": 34.8612,
+      "candidateGroundAnchorCellPixels": {
+        "x": 312.767,
+        "y": 376.249
+      },
+      "candidateGroundAnchorCropPixels": {
+        "x": 264.767,
+        "y": 241.249
+      },
+      "registrationRmsPixels": 2.133,
+      "registrationMaxResidualPixels": 2.516,
+      "measurementLimit": "Approximate painted foundation/outline positions; retain parent review before import.",
+      "strongAlphaBBoxCellExclusive": [
+        52,
+        139,
+        576,
+        502
+      ],
+      "suggestedCropRectCell": {
+        "left": 48,
+        "top": 135,
+        "width": 532,
+        "height": 371
+      },
+      "registeredGroundPolygonCellPixels": [
+        [
+          362.0682730923695,
+          252.99598393574297
+        ],
+        [
+          66.2610441767068,
+          400.89959839357425
+        ],
+        [
+          263.46586345381525,
+          499.5020080321285
+        ],
+        [
+          559.2730923694779,
+          351.59839357429723
+        ]
+      ],
+      "perViewCalibrationEvidence": "Detailed world model v2,12x8m ground-corner correspondences in independent-review-normal-v5-yaw8-v4.json; camera scale 34.8612px/m, RMS 2.133px; source-only candidate, runtime handedness unassigned.",
+      "measuredImageContourSegments": [
+        {
+          "xRangeCell": [
+            85,
+            240
+          ],
+          "observedAlphaContourSlope": 0.5109671097343175,
+          "idealGuideGroundEdgeSlope": 0.5,
+          "maxLineResidualPixels": 0.5602356003013256
+        },
+        {
+          "xRangeCell": [
+            285,
+            550
+          ],
+          "observedAlphaContourSlope": -0.4993163425842537,
+          "idealGuideGroundEdgeSlope": -0.5,
+          "maxLineResidualPixels": 1.0059981414208892
+        }
+      ],
+      "contourMeasurementLimit": "Bottom alpha contour includes painted outline/contact shadow and occasional foreground support. Small-rise cardinal slopes are particularly sensitive to2-4pixel paint. These fits are diagnostics, not exact camera-angle certificates."
+    },
+    {
+      "sourceFamily": "normal",
+      "sourceCameraName": "NE",
+      "cell": 3,
+      "cellRect": {
+        "left": 627,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "sourceObjectRotationDegreesAboutZ": 270,
+      "runtimeFacingKey": null,
+      "runtimeHeadingDegrees": null,
+      "registrationMethod": "Least-squares isotropic scale+translation of observed visible foundation corners to detailed single-world model12x8m z=0 camera projection. Points are manually observed within approx2-4px. No height or alpha-box-centre gauge.",
+      "observedFoundationCorrespondences": [
+        {
+          "worldMetres": [
+            -6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            66,
+            358
+          ]
+        },
+        {
+          "worldMetres": [
+            6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            361,
+            501
+          ]
+        },
+        {
+          "worldMetres": [
+            6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            557,
+            401
+          ]
+        }
+      ],
+      "candidateTrueCameraPixelsPerMetre": 34.6568,
+      "candidateGroundAnchorCellPixels": {
+        "x": 311.663,
+        "y": 379.157
+      },
+      "candidateGroundAnchorCropPixels": {
+        "x": 264.663,
+        "y": 245.157
+      },
+      "registrationRmsPixels": 2.538,
+      "registrationMaxResidualPixels": 3.403,
+      "measurementLimit": "Approximate painted foundation/outline positions; retain parent review before import.",
+      "strongAlphaBBoxCellExclusive": [
+        51,
+        138,
+        574,
+        503
+      ],
+      "suggestedCropRectCell": {
+        "left": 47,
+        "top": 134,
+        "width": 531,
+        "height": 373
+      },
+      "registeredGroundPolygonCellPixels": [
+        [
+          66.60240963855424,
+          354.65060240963857
+        ],
+        [
+          360.6746987951807,
+          501.6867469879518
+        ],
+        [
+          556.722891566265,
+          403.66265060240966
+        ],
+        [
+          262.6506024096386,
+          256.62650602409644
+        ]
+      ],
+      "perViewCalibrationEvidence": "Detailed world model v2,12x8m ground-corner correspondences in independent-review-normal-v5-yaw8-v4.json; camera scale 34.6568px/m, RMS 2.538px; source-only candidate, runtime handedness unassigned.",
+      "measuredImageContourSegments": [
+        {
+          "xRangeCell": [
+            270,
+            345
+          ],
+          "observedAlphaContourSlope": 0.42493506493506494,
+          "idealGuideGroundEdgeSlope": 0.5,
+          "maxLineResidualPixels": 0.7495693779904968
+        },
+        {
+          "xRangeCell": [
+            390,
+            548
+          ],
+          "observedAlphaContourSlope": -0.5079681155958921,
+          "idealGuideGroundEdgeSlope": -0.5,
+          "maxLineResidualPixels": 0.7766161133667993
+        }
+      ],
+      "contourMeasurementLimit": "Bottom alpha contour includes painted outline/contact shadow and occasional foreground support. Small-rise cardinal slopes are particularly sensitive to2-4pixel paint. These fits are diagnostics, not exact camera-angle certificates."
+    },
+    {
+      "sourceFamily": "yaw8",
+      "sourceCameraName": "N",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "sourceObjectRotationDegreesAboutZ": 0,
+      "runtimeFacingKey": null,
+      "runtimeHeadingDegrees": null,
+      "registrationMethod": "Least-squares isotropic scale+translation of observed visible foundation corners to detailed single-world model12x8m z=0 camera projection. Points are manually observed within approx2-4px. No height or alpha-box-centre gauge.",
+      "observedFoundationCorrespondences": [
+        {
+          "worldMetres": [
+            -6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            83,
+            422
+          ]
+        },
+        {
+          "worldMetres": [
+            6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            499,
+            449
+          ]
+        },
+        {
+          "worldMetres": [
+            6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            542,
+            305
+          ]
+        }
+      ],
+      "candidateTrueCameraPixelsPerMetre": 35.3027,
+      "candidateGroundAnchorCellPixels": {
+        "x": 311.299,
+        "y": 363.781
+      },
+      "candidateGroundAnchorCropPixels": {
+        "x": 248.299,
+        "y": 194.781
+      },
+      "registrationRmsPixels": 3.225,
+      "registrationMaxResidualPixels": 3.827,
+      "measurementLimit": "Approximate painted foundation/outline positions; retain parent review before import.",
+      "strongAlphaBBoxCellExclusive": [
+        67,
+        173,
+        554,
+        465
+      ],
+      "suggestedCropRectCell": {
+        "left": 63,
+        "top": 169,
+        "width": 495,
+        "height": 300
+      },
+      "registeredGroundPolygonCellPixels": [
+        [
+          81.89182292520698,
+          418.95942990336016
+        ],
+        [
+          501.40134888920176,
+          448.43853937565234
+        ],
+        [
+          540.7068281855913,
+          308.6020307209875
+        ],
+        [
+          121.19730222159654,
+          279.1229212486953
+        ]
+      ],
+      "perViewCalibrationEvidence": "Detailed world model v2,12x8m ground-corner correspondences in independent-review-normal-v5-yaw8-v4.json; camera scale 35.3027px/m, RMS 3.225px; source-only candidate, runtime handedness unassigned.",
+      "measuredImageContourSegments": [
+        {
+          "xRangeCell": [
+            385,
+            490
+          ],
+          "observedAlphaContourSlope": 0.06450865304682973,
+          "idealGuideGroundEdgeSlope": 0.07027041735119573,
+          "maxLineResidualPixels": 0.6915938232108374
+        },
+        {
+          "xRangeCell": [
+            505,
+            540
+          ],
+          "observedAlphaContourSlope": -3.472200772200772,
+          "idealGuideGroundEdgeSlope": -3.5576848611921044,
+          "maxLineResidualPixels": 1.319648219648343
+        }
+      ],
+      "contourMeasurementLimit": "Bottom alpha contour includes painted outline/contact shadow and occasional foreground support. Small-rise cardinal slopes are particularly sensitive to2-4pixel paint. These fits are diagnostics, not exact camera-angle certificates."
+    },
+    {
+      "sourceFamily": "yaw8",
+      "sourceCameraName": "E",
+      "cell": 1,
+      "cellRect": {
+        "left": 627,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "sourceObjectRotationDegreesAboutZ": 90,
+      "runtimeFacingKey": null,
+      "runtimeHeadingDegrees": null,
+      "registrationMethod": "Least-squares isotropic scale+translation of observed visible foundation corners to detailed single-world model12x8m z=0 camera projection. Points are manually observed within approx2-4px. No height or alpha-box-centre gauge.",
+      "observedFoundationCorrespondences": [
+        {
+          "worldMetres": [
+            -6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            133,
+            478
+          ]
+        },
+        {
+          "worldMetres": [
+            -6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            413,
+            497
+          ]
+        }
+      ],
+      "candidateTrueCameraPixelsPerMetre": 35.338,
+      "candidateGroundAnchorCellPixels": {
+        "x": 302.509,
+        "y": 382.518
+      },
+      "candidateGroundAnchorCropPixels": {
+        "x": 190.509,
+        "y": 249.518
+      },
+      "registrationRmsPixels": 0.337,
+      "registrationMaxResidualPixels": 0.337,
+      "measurementLimit": "E uses two visible gable-floor corners; front furniture hides far floor, so full-depth validation is less constrained.",
+      "strongAlphaBBoxCellExclusive": [
+        116,
+        137,
+        507,
+        500
+      ],
+      "suggestedCropRectCell": {
+        "left": 112,
+        "top": 133,
+        "width": 399,
+        "height": 371
+      },
+      "registeredGroundPolygonCellPixels": [
+        [
+          412.9763752047985,
+          497.33619830494877
+        ],
+        [
+          471.99356503449104,
+          287.3716354977511
+        ],
+        [
+          192.0408146248941,
+          267.69923888785354
+        ],
+        [
+          133.02362479520156,
+          477.66380169505123
+        ]
+      ],
+      "perViewCalibrationEvidence": "Detailed world model v2,12x8m ground-corner correspondences in independent-review-normal-v5-yaw8-v4.json; camera scale 35.3380px/m, RMS 0.337px; source-only candidate, runtime handedness unassigned.",
+      "measuredImageContourSegments": [
+        {
+          "xRangeCell": [
+            160,
+            405
+          ],
+          "observedAlphaContourSlope": 0.06303657831257317,
+          "idealGuideGroundEdgeSlope": 0.07027041735119573,
+          "maxLineResidualPixels": 0.7425590242021372
+        }
+      ],
+      "contourMeasurementLimit": "Bottom alpha contour includes painted outline/contact shadow and occasional foreground support. Small-rise cardinal slopes are particularly sensitive to2-4pixel paint. These fits are diagnostics, not exact camera-angle certificates."
+    },
+    {
+      "sourceFamily": "yaw8",
+      "sourceCameraName": "S",
+      "cell": 2,
+      "cellRect": {
+        "left": 0,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "sourceObjectRotationDegreesAboutZ": 180,
+      "runtimeFacingKey": null,
+      "runtimeHeadingDegrees": null,
+      "registrationMethod": "Least-squares isotropic scale+translation of observed visible foundation corners to detailed single-world model12x8m z=0 camera projection. Points are manually observed within approx2-4px. No height or alpha-box-centre gauge.",
+      "observedFoundationCorrespondences": [
+        {
+          "worldMetres": [
+            6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            83,
+            424
+          ]
+        },
+        {
+          "worldMetres": [
+            -6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            499,
+            449
+          ]
+        },
+        {
+          "worldMetres": [
+            -6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            542,
+            312
+          ]
+        }
+      ],
+      "candidateTrueCameraPixelsPerMetre": 35.1693,
+      "candidateGroundAnchorCellPixels": {
+        "x": 311.539,
+        "y": 366.887
+      },
+      "candidateGroundAnchorCropPixels": {
+        "x": 248.539,
+        "y": 191.887
+      },
+      "registrationRmsPixels": 2.376,
+      "registrationMaxResidualPixels": 2.941,
+      "measurementLimit": "Approximate painted foundation/outline positions; retain parent review before import.",
+      "strongAlphaBBoxCellExclusive": [
+        67,
+        179,
+        554,
+        452
+      ],
+      "suggestedCropRectCell": {
+        "left": 63,
+        "top": 175,
+        "width": 495,
+        "height": 281
+      },
+      "registeredGroundPolygonCellPixels": [
+        [
+          540.0793710795513,
+          311.9171872950038
+        ],
+        [
+          122.15514972324692,
+          282.5494778391228
+        ],
+        [
+          82.99820378207221,
+          421.8575516245576
+        ],
+        [
+          500.9224251383765,
+          451.2252610804386
+        ]
+      ],
+      "perViewCalibrationEvidence": "Detailed world model v2,12x8m ground-corner correspondences in independent-review-normal-v5-yaw8-v4.json; camera scale 35.1693px/m, RMS 2.376px; source-only candidate, runtime handedness unassigned.",
+      "measuredImageContourSegments": [
+        {
+          "xRangeCell": [
+            100,
+            490
+          ],
+          "observedAlphaContourSlope": 0.05987826568754592,
+          "idealGuideGroundEdgeSlope": 0.07027041735119573,
+          "maxLineResidualPixels": 0.8342554413069365
+        },
+        {
+          "xRangeCell": [
+            505,
+            540
+          ],
+          "observedAlphaContourSlope": -3.379407979407979,
+          "idealGuideGroundEdgeSlope": -3.5576848611921044,
+          "maxLineResidualPixels": 1.716816816816845
+        }
+      ],
+      "contourMeasurementLimit": "Bottom alpha contour includes painted outline/contact shadow and occasional foreground support. Small-rise cardinal slopes are particularly sensitive to2-4pixel paint. These fits are diagnostics, not exact camera-angle certificates."
+    },
+    {
+      "sourceFamily": "yaw8",
+      "sourceCameraName": "W",
+      "cell": 3,
+      "cellRect": {
+        "left": 627,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "sourceObjectRotationDegreesAboutZ": 270,
+      "runtimeFacingKey": null,
+      "runtimeHeadingDegrees": null,
+      "registrationMethod": "Least-squares isotropic scale+translation of observed visible foundation corners to detailed single-world model12x8m z=0 camera projection. Points are manually observed within approx2-4px. No height or alpha-box-centre gauge.",
+      "observedFoundationCorrespondences": [
+        {
+          "worldMetres": [
+            6,
+            -4,
+            0
+          ],
+          "nativeCellPixels": [
+            155,
+            476
+          ]
+        },
+        {
+          "worldMetres": [
+            6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            430,
+            493
+          ]
+        },
+        {
+          "worldMetres": [
+            -6,
+            4,
+            0
+          ],
+          "nativeCellPixels": [
+            492,
+            286
+          ]
+        }
+      ],
+      "candidateTrueCameraPixelsPerMetre": 35.0057,
+      "candidateGroundAnchorCellPixels": {
+        "x": 322.524,
+        "y": 380.42
+      },
+      "candidateGroundAnchorCropPixels": {
+        "x": 210.524,
+        "y": 248.42
+      },
+      "registrationRmsPixels": 1.789,
+      "registrationMaxResidualPixels": 2.271,
+      "measurementLimit": "Approximate painted foundation/outline positions; retain parent review before import.",
+      "strongAlphaBBoxCellExclusive": [
+        116,
+        136,
+        504,
+        496
+      ],
+      "suggestedCropRectCell": {
+        "left": 112,
+        "top": 132,
+        "width": 396,
+        "height": 368
+      },
+      "registeredGroundPolygonCellPixels": [
+        [
+          213.0946506422875,
+          266.681599672846
+        ],
+        [
+          154.6324206761603,
+          474.67179017486797
+        ],
+        [
+          431.9526746788562,
+          494.159200163577
+        ],
+        [
+          490.4149046449834,
+          286.16900966155504
+        ]
+      ],
+      "perViewCalibrationEvidence": "Detailed world model v2,12x8m ground-corner correspondences in independent-review-normal-v5-yaw8-v4.json; camera scale 35.0057px/m, RMS 1.789px; source-only candidate, runtime handedness unassigned.",
+      "measuredImageContourSegments": [
+        {
+          "xRangeCell": [
+            165,
+            420
+          ],
+          "observedAlphaContourSlope": 0.05852454795147631,
+          "idealGuideGroundEdgeSlope": 0.07027041735119573,
+          "maxLineResidualPixels": 0.758769526779588
+        },
+        {
+          "xRangeCell": [
+            440,
+            490
+          ],
+          "observedAlphaContourSlope": -3.535475113122172,
+          "idealGuideGroundEdgeSlope": -3.5576848611921044,
+          "maxLineResidualPixels": 1.7847058823526822
+        }
+      ],
+      "contourMeasurementLimit": "Bottom alpha contour includes painted outline/contact shadow and occasional foreground support. Small-rise cardinal slopes are particularly sensitive to2-4pixel paint. These fits are diagnostics, not exact camera-angle certificates."
+    }
+  ],
+  "nextAction": "Parent visual/crop/registration review and scene-agent handedness proof. Only then populate reviewed importer metadata; do not copy filenames directly into runtime heading assignments. Preserve raw sources and rejected attempts."
+}

@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { transformSync } from 'esbuild';
+import ts from 'typescript';
 import { KEYS, cutObject, integrateObject, validateDistinct, validateSeating, readGameProjection, objectDisplayScale } from './import-object-eight.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
@@ -61,6 +62,16 @@ test('native two-sheet importer keeps sources, holds candidates and appends revi
   const calibration=JSON.parse(fs.readFileSync(path.join(path.dirname(path.resolve(dir,'src/game',ledger.pages[0][0])),'calibration.json'),'utf8'));
   assert.equal(calibration.space,'orthographic-camera');assert.equal(calibration.engineProjection.tileMetres,2);assert.equal(calibration.views.normalNE.sourcePixelsPerMetre,32);
   assert.ok(fs.readFileSync(path.join(dir,'src/game/object-eight-library.ts'),'utf8').includes('appendObjectEight'));
+  // Compile the emitted module against the real facing/seating contract. A spread
+  // of untyped inline objects widens review/projection and fails only on first import.
+  const game=path.join(dir,'src/game');fs.mkdirSync(path.join(game,'golf'),{recursive:true});
+  fs.copyFileSync(path.join(root,'src/game/object-eight-types.ts'),path.join(game,'object-eight-types.ts'));
+  fs.copyFileSync(path.join(root,'src/game/golf/event-seating.ts'),path.join(game,'golf/event-seating.ts'));
+  fs.writeFileSync(path.join(game,'types.ts'),"export interface Box {hx:number;hy:number;dx:number;dy:number}\nexport interface LibItem {tex:[number,number,number,number,number];[key:string]:unknown}\n");
+  fs.writeFileSync(path.join(game,'object-eight-existing.ts'),"import type {LibItem} from './types';import type {ObjectEightSet} from './object-eight-types';export declare const EXISTING_OBJECT_EIGHT_SETS:readonly ObjectEightSet[];export declare function appendExistingObjectEight(items:LibItem[]):void;\n");
+  fs.writeFileSync(path.join(game,'assets.d.ts'),"declare module '*.webp' {const src:string;export default src;}\n");
+  const program=ts.createProgram([path.join(game,'object-eight-library.ts'),path.join(game,'assets.d.ts')],{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.ESNext,moduleResolution:ts.ModuleResolutionKind.Bundler,strict:true,noEmit:true,skipLibCheck:true,types:[]});
+  assert.deepEqual(ts.getPreEmitDiagnostics(program).map(d=>ts.flattenDiagnosticMessageText(d.messageText,'\n')),[]);
   await assert.rejects(()=>integrateObject(candidate,dir),/already registered/);
   assert.ok(fs.existsSync(path.join(dir,'normal.png'))&&fs.existsSync(path.join(out,'normalNE.native.png')));
 });
