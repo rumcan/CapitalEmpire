@@ -204,8 +204,11 @@ import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, teePropId } from './golf/dressing';
 import { BOX_LEN_M, BOX_WID_M, TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, markerWarnings } from './golf/teesets';
 import { TEE_SCALE_STEP, TEE_TURN_DEG, boxAngle, boxOutline, clampTeeScale, dropHoleBoxes, handOver, layDown, oldBox, planTee, recStands, snapTurn, swapTeeBoxes, takeUp, teeAim, teeBoxM, teeCells, teeKey, type TeeCourse, type TeeOld, type TeePlan, type TeeRoad } from './golf/teeplace';
-import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
+import { STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
+import { nextStructureFacing, structurePicture } from './golf/structure-facing';
+import { objectFacings } from './object-eight';
+import { objectAnchor, objectFacingLabel, type ObjectFacingKey } from './object-eight-types';
 import { STRUCTURE } from './golf/tents';
 import { gallerySpots } from './golf/galleries';
 import { invitedFacts, tierInfo, tournamentDue, type InviteCheck, type Need } from './golf/tour';
@@ -470,8 +473,14 @@ const STANDIN_FADE = [0.08, 0.12] as const, STANDIN_REACH = 1200;
 /** a golf structure's sprite scale: its picture fitted to the structure's footprint (tiles, turned when rotated), then the owner's size for
  *  that sprite from the studio (OWNER_SCALE). The stand-in sprites are much bigger than the structures they stand for; a smaller one keeps
  *  its own size (the entrance gate stood in by a 0.8-tile boom gate was drawn 7.8x) until the structure has its own art. */
-function structureScale(typeId: string, it: LibItem, rotated: boolean) {
+function structureScale(typeId: string, it: LibItem, rotated: boolean, facing?: ObjectFacingKey, visualTier?: string) {
   const def = STRUCTURE[typeId], own = OWNER_SCALE[it.id] ?? 1; if (!def) return own;
+  if (facing) {
+    const [, , w, h] = structureRect({ typeId, x: 0, y: 0, facing, visualTier });
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const b of it.boxes) { x0 = Math.min(x0, (b.dx - b.hx) / 2); x1 = Math.max(x1, (b.dx + b.hx) / 2); y0 = Math.min(y0, (b.dy - b.hy) / 2); y1 = Math.max(y1, (b.dy + b.hy) / 2); }
+    return Math.min(1, w / Math.max(1e-6, x1 - x0), h / Math.max(1e-6, y1 - y0)) * own;
+  }
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const b of it.boxes) { const hx = (rotated ? b.hy : b.hx) / 2, hy = (rotated ? b.hx : b.hy) / 2, dx = (rotated ? b.dy : b.dx) / 2, dy = (rotated ? b.dx : b.dy) / 2; x0 = Math.min(x0, dx - hx); x1 = Math.max(x1, dx + hx); y0 = Math.min(y0, dy - hy); y1 = Math.max(y1, dy + hy); }
   const w = rotated ? def.footprint.h : def.footprint.w, h = rotated ? def.footprint.w : def.footprint.h, fw = x1 - x0, fh = y1 - y0;
@@ -4165,30 +4174,68 @@ export class Game {
     golfProps = new Map<string, Prop>();
     golfStructureProps = new Map<number, Prop>();
     eventTool = false;
-    eventStructurePending: { typeId: string; mode: 'rent' | 'buy' } | null = null;
+    eventStructurePending: { typeId: string; mode: 'rent' | 'buy'; facing?: ObjectFacingKey; visualTier?: string; moveId?: number } | null = null;
     toggleEventTool() { this.toggleSideMode('eventTool'); }
     setPendingStructure(typeId: string, mode: 'rent' | 'buy') {
-    this.eventStructurePending = { typeId, mode };
+    this.eventStructurePending = { typeId, mode, facing: structurePicture({ typeId }).facing };
     const def = STRUCTURE[typeId];
     this.toast(`Selected ${def ? def.name : typeId} (${mode}). Click open owned land to place it.`);
     this.emit();
     }
     /** checkStructurePlacement for a candidate against the course's holes, placed structures and owned parcels (the click and the ghost share it) */
-    private structureCheck(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean }): StructurePlacementCheck {
+    private structureCheck(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean; facing?: ObjectFacingKey; visualTier?: string; moveId?: number }): StructurePlacementCheck {
     const g = this.golf!;
     const holes = this.courseStatsView() ? deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims) : [];
-    return checkStructurePlacement(candidate, { tier: g.tier, holes, existing: g.structures ?? [], parcels: g.parcels ?? [g.parcel] });
+    const check = checkStructurePlacement(candidate, { tier: g.tier, holes, existing: (g.structures ?? []).filter(s => s.id !== candidate.moveId), parcels: g.parcels ?? [g.parcel] });
+    return candidate.moveId ? { ...check, cost: 0 } : check;
     }
-    placeEventStructure(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean }): boolean {
+    selectedEventStructure(): PlacedEventStructure | undefined { return this.golf?.structures?.find(s => this.golfStructureProps.get(s.id) === this.selected); }
+    eventFacingInfo() { const s = this.eventStructurePending ?? this.selectedEventStructure(); return s ? structurePicture(s) : null; }
+    eventFacingLabel(): string { const p = this.eventFacingInfo(); return p ? objectFacingLabel(p.facing) : ''; }
+    turnEventStructure(): void {
+      const pending = this.eventStructurePending, s = pending ?? this.selectedEventStructure(); if (!s) return;
+      const next = nextStructureFacing(s), info = structurePicture(s).info;
+      if (info.ids.length < 2) { this.toast('This structure has one picture; more authored views are still needed', 'info'); return; }
+      if (pending) pending.facing = next;
+      else {
+        const old = s as PlacedEventStructure, before = structureRect(old), after = structureRect({ ...old, facing: next });
+        const candidate = { ...old, facing: next, x: old.x + (before[2] - after[2]) / 2, y: old.y + (before[3] - after[3]) / 2, moveId: old.id };
+        const check = this.structureCheck(candidate); if (!check.ok) { this.toast(check.reason ?? 'No room to turn here', 'warn'); return; }
+        Object.assign(old, { facing: next, x: candidate.x, y: candidate.y }); this.refreshStructure(old); this.syncCourseGates(); this.bump('structures'); this.scheduleSave();
+      }
+      this.ghostCache = null; this.emit();
+    }
+    moveSelectedEventStructure(): void {
+      const s = this.selectedEventStructure(); if (!s) return;
+      this.eventStructurePending = { typeId: s.typeId, mode: s.mode, facing: structurePicture(s).facing, visualTier: s.visualTier, moveId: s.id };
+      this.toast('Choose a new position; R turns it before placing', 'info'); this.emit();
+    }
+    cancelEventStructure(): void { this.eventStructurePending = null; this.ghostCache = null; this.emit(); }
+    /** Replacing the prop updates spatial indices and preserves the selected structure's identity. */
+    private refreshStructure(s: PlacedEventStructure): void {
+      const previous = this.golfStructureProps.get(s.id), selected = previous === this.selected;
+      if (previous) this.removeProp(previous);
+      const pic = structurePicture(s), item = LIB_INDEX.get(pic.id); if (item === undefined) return;
+      const scale = structureScale(s.typeId, LIBRARY[item]!, false, pic.facing, s.visualTier), anchor = objectAnchor(LIBRARY[item]!.boxes, structureRect(s), scale);
+      const p = this.addProp(item, anchor.x, anchor.y, false, scale);
+      this.golfStructureProps.set(s.id, p); if (selected) this.selected = p;
+    }
+    placeEventStructure(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean; facing?: ObjectFacingKey; visualTier?: string; moveId?: number }): boolean {
     if (!this.golf) return false;
+    candidate = { ...candidate, facing: structurePicture(candidate).facing };
     const check = this.structureCheck(candidate);
     if (!check.ok) {
     this.toast(check.reason ?? 'Cannot place structure here', 'warn');
     return false;
     }
-    if (this.money < check.cost) {
+    if (!candidate.moveId && this.money < check.cost) {
     this.toast(`Not enough money ($${check.cost.toLocaleString()} required)`, 'warn');
     return false;
+    }
+    if (candidate.moveId) {
+      const s = this.golf.structures?.find(q => q.id === candidate.moveId); if (!s) return false;
+      Object.assign(s, { x: candidate.x, y: candidate.y, facing: candidate.facing }); this.refreshStructure(s); this.syncCourseGates(); this.bump('structures');
+      this.eventStructurePending = null; this.scheduleSave(); this.emit(); return true;
     }
     if (candidate.mode === 'buy' && check.cost > 0) {
     this.traffic.spend('construction', check.cost);
@@ -4197,12 +4244,12 @@ export class Game {
     const placed: PlacedEventStructure = { id, ...candidate };
     if (!this.golf.structures) this.golf.structures = [];
     this.golf.structures.push(placed); this.syncCourseGates(); this.bump('structures');
-    const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? FALLBACK_STRUCTURE_SPRITE;
+    const sprId = structurePicture(candidate).id;
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
     // the sprite sits on the middle of the structure's rectangle (x, y is its corner)
-    const [rx, ry, rw, rh] = structureRect(placed);
-    const prop = this.addProp(item, rx + rw / 2, ry + rh / 2, Boolean(candidate.rotated), structureScale(candidate.typeId, LIBRARY[item]!, Boolean(candidate.rotated)));
+    const scale = structureScale(candidate.typeId, LIBRARY[item]!, false, candidate.facing, candidate.visualTier), anchor = objectAnchor(LIBRARY[item]!.boxes, structureRect(placed), scale);
+    const prop = this.addProp(item, anchor.x, anchor.y, false, scale);
     this.golfStructureProps.set(id, prop);
     }
     const def = STRUCTURE[candidate.typeId];
@@ -4289,21 +4336,21 @@ export class Game {
     }
     const claimed = new Set<Prop>();
     for (const s of this.golf.structures ?? []) {
-    const sprId = STRUCTURE_SPRITE[s.typeId] ?? FALLBACK_STRUCTURE_SPRITE;
+    const pic = structurePicture(s), sprId = pic.id;
     const item = LIB_INDEX.get(sprId);
     if (item === undefined) continue;
     let found: Prop | undefined;
-    const [rx, ry, rw, rh] = structureRect(s), cx = rx + rw / 2, cy = ry + rh / 2;
+    const scale = structureScale(s.typeId, LIBRARY[item]!, false, pic.facing, s.visualTier), anchor = objectAnchor(LIBRARY[item]!.boxes, structureRect(s), scale), cx = anchor.x, cy = anchor.y;
     const at = (p: Prop) => Math.hypot(p.x - cx, p.y - cy) < 2 || Math.hypot(p.x - s.x, p.y - s.y) < 2;
     for (const p of this.props) {
     if (!claimed.has(p) && p.item === item && at(p)) { found = p; break; }
+    if (!claimed.has(p) && at(p) && objectFacings(LIBRARY[p.item]!.id).subject === pic.info.subject) { this.removeProp(p); break; }
     }
     // a save's prop of the picture this structure had before T111 (STRUCTURE_SPRITE_OLD) goes: today's picture is placed instead
     const old = LIB_INDEX.get(STRUCTURE_SPRITE_OLD[s.typeId] ?? '');
     if (!found && old !== undefined) for (const p of this.props) if (!claimed.has(p) && p.item === old && at(p)) { this.removeProp(p); break; }
-    const scale = structureScale(s.typeId, LIBRARY[item]!, Boolean(s.rotated));
-    if (!found) found = this.addProp(item, cx, cy, Boolean(s.rotated), scale);
-    else if (Math.abs(found.scale - scale) > 1e-6) { found.scale = scale; this.propChanged(found); } // a save keeps the size it was drawn at: refit it to today's rule
+    if (!found) found = this.addProp(item, cx, cy, false, scale);
+    else if (Math.abs(found.scale - scale) > 1e-6 || found.flip || Math.abs(found.x-cx)>1e-6 || Math.abs(found.y-cy)>1e-6) { found.scale = scale; found.flip = false; found.x = cx; found.y = cy; this.propChanged(found); } // refit old saves without mirroring the authored view
     claimed.add(found);
     this.golfStructureProps.set(s.id, found);
     }
@@ -5375,7 +5422,7 @@ export class Game {
   }
   this.overlay.setPointerCapture(e.pointerId);
     if (side && this.eventTool && this.eventStructurePending && this.golf && this.hover && e.button === 0) {  
- this.placeEventStructure({ typeId: this.eventStructurePending.typeId, mode: this.eventStructurePending.mode, x: Math.round(this.hover.x), y: Math.round(this.hover.y) });  
+ this.placeEventStructure({ ...this.eventStructurePending, x: Math.round(this.hover.x), y: Math.round(this.hover.y) });
  return;  
  }  
  if (side && e.button === 0 && !this.keys.has(' ')) { const b = this.badgeAt(mx, my); if (b) { this.overlay.setPointerCapture(e.pointerId); this.badgeDrag = { n: b, sx: mx, sy: my, mx, my, moved: false }; return; } } // T174: a hole badge
@@ -5627,6 +5674,7 @@ export class Game {
       return;
     }
     if (this.paintOn && this.paint.key(e)) return;
+    if ((e.key === 'r' || e.key === 'R') && (this.eventStructurePending || this.selectedEventStructure())) { this.turnEventStructure(); return; }
     if (this.tool === 'park' && this.parking.key(e)) return;
     if (this.tool === 'props' && this.decor.key(e)) return;
     if (this.tool === 'practice' && this.practice.key(e)) { this.emit(); return; } // T206
@@ -10981,9 +11029,22 @@ export class Game {
     const h = this.hover, m = this.ghostMouse, g = this.golf; if (!h || !m || !g) return;
     let key = '', make: (() => GhostBlueprint) | null = null;
     if (this.eventTool && this.eventStructurePending) {
-      const p = this.eventStructurePending, cand = { typeId: p.typeId, mode: p.mode, x: Math.round(h.x), y: Math.round(h.y) };
-      key = `s|${p.typeId}|${p.mode}|${cand.x}|${cand.y}|${this.money}|${this.paint.areas.length}|${this.gaRev}|${(g.structures ?? []).length}`;
+      const p = this.eventStructurePending, cand = { ...p, x: Math.round(h.x), y: Math.round(h.y) };
+      key = `s|${p.typeId}|${p.mode}|${p.facing}|${p.moveId}|${cand.x}|${cand.y}|${this.money}|${this.paint.areas.length}|${this.gaRev}|${(g.structures ?? []).length}`;
       make = () => structureGhost(structureRect(cand), this.structureCheck(cand), this.money, STRUCTURE[p.typeId]?.name ?? p.typeId, p.mode);
+      if (this.ghostCache?.key !== key) this.ghostCache = { key, bp: make() };
+      const pic = structurePicture(cand), item = LIB_INDEX.get(pic.id);
+      if (item !== undefined) {
+        const d = this.decorDraw, scale = structureScale(p.typeId, LIBRARY[item]!, false, pic.facing, p.visualTier), anchor = objectAnchor(LIBRARY[item]!.boxes, structureRect(cand), scale);
+        d.item = item; d.x = anchor.x; d.y = anchor.y; d.flip = false; d.scale = scale;
+        const l = lookOf(d), it = LIBRARY[l.item]!, [page, u0, v0, u1, v1] = it.tex, image = this.pageImage0(page);
+        if (image && !l.hidden) {
+          const z = this.cam.z * this.dpr, r = spriteRect(d);
+          ctx.save(); ctx.globalAlpha = this.ghostCache?.bp.bad ? 0.35 : 0.7;
+          ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1-u0)*image.naturalWidth, (v1-v0)*image.naturalHeight,
+            (r[0]-this.cam.X)*z+this.cw/2, (r[1]-this.cam.Y)*z+this.ch/2, (r[2]-r[0])*z, (r[3]-r[1])*z); ctx.restore();
+        }
+      }
     } else if ((this.holesTool || this.markerDrag) && this.selectedGolfMarker) {
       const s = this.selectedGolfMarker;
       key = `m|${s.hole}|${s.kind}|${h.x}|${h.y}|${this.paint.areas.length}|${this.gaRev}`;

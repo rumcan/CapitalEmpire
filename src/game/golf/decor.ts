@@ -6,6 +6,7 @@
 import type { Pt } from '../network';
 import { PROPS_APPEAL_CAP } from './rangesave';
 import { LIBRARY } from '../library';
+import { OBJECT_EIGHT_SETS } from '../object-eight-library';
 import { FRAME_TREE_KEY, FRAME_TREE_PRICE } from './holeframe';
 import { DESERT, type DesertType } from '../desert-props';
 import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_GREY_GRANITE, KIT_HEDGE, KIT_LAMPS, KIT_PALMS, KIT_POND_EDGE, KIT_SHRUBS, KIT_WATER_EDGE_PLANTS, type RunKit } from '../kit';
@@ -154,9 +155,11 @@ const CATALOGUE: readonly DecorItem[] = [
 ];
 /** the owner's new props (library cat 'New: <category>'): plain placeable props, each its category's group, priced by the library's cost; no appeal yet */
 // the new trees (kind tree, four library views on one picture) are one card each: their north-east view (the engine's tree sun decides a mirror)
-const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
+const EIGHT_ACTIVE = new Map(OBJECT_EIGHT_SETS.map(s => [s.subject, s]));
+const EIGHT_FIRST = new Map([...EIGHT_ACTIVE.values()].map(s => [s.views.normalNE.id, s]));
+const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && (!i.id.startsWith('object8:') || EIGHT_FIRST.has(i.id)) && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
   ? { key: `newprop-${i.id.slice('gen:tree-'.length, -':ne'.length)}`, name: i.name.replace(/ \(NE\)$/, ''), group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'plant', id: i.id, price: i.cost, appeal: 0, desc: 'A tree: plant it in the grounds (no appeal yet)' }
-  : { key: `newprop-${i.id.slice('newprop:'.length)}`, name: i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, desc: `${i.cat.slice(5)}: a new prop to place (no appeal yet)` });
+  : { key: EIGHT_FIRST.has(i.id) ? `object8-${EIGHT_FIRST.get(i.id)!.subject}` : `newprop-${i.id.slice('newprop:'.length)}`, name: EIGHT_FIRST.get(i.id)?.name ?? i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, ...(EIGHT_FIRST.has(i.id) ? { scale: EIGHT_FIRST.get(i.id)!.baselineScale } : {}), desc: `${i.cat.slice(5)}: a new prop to place (no appeal yet)` });
 /** T289: the desert and oasis props (desert-props.ts, the owner's desert sheets): a card a type, R stepping through its pictures (never mirrored),
  *  and a mixed brush of the dry desert's scrub, cacti and rocks. Each one picture, its own size */
 const DESERT_CARDS: { t: DesertType; name: string; kind: DecorKind; price: number; appeal: number; desc: string }[] = [

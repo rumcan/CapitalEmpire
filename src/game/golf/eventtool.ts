@@ -7,6 +7,9 @@ import {
 } from './tents';
 import type { Need } from './tour';
 import { TILE_M } from './types';
+import { OBJECT_EIGHT_SETS } from '../object-eight-library';
+import { eventArtSet } from '../object-eight-core';
+import { objectFootprint, type ObjectEightSet, type ObjectFacingKey } from '../object-eight-types';
 
 /** half-width of a hole's playing corridor (tiles; 15 tiles = 30 m each side = 60 m corridor, GOLF-PLAN 4.2 and 6.3) */
 export const HOLE_CORRIDOR_HALF = 15;
@@ -39,6 +42,10 @@ export interface PlacedEventStructure {
   x: number;
   y: number;
   rotated?: boolean;
+  /** Explicit authored orientation. Old saves without it retain their rotated boolean. */
+  facing?: ObjectFacingKey;
+  /** Art condition only; capacities, prices and tournament tiers remain the catalogue's. */
+  visualTier?: string;
   mode: PlaceMode;
   priceCard?: PriceCardId;
 }
@@ -77,9 +84,21 @@ export interface EventStructuresDaySummary {
 }
 
 /** world rectangle [x, y, w, h] (tiles) of a placed structure (swapping w and h when rotated) */
-export function structureRect(s: { typeId: string; x: number; y: number; rotated?: boolean }): Rect {
+export function structureRect(s: { typeId: string; x: number; y: number; rotated?: boolean; facing?: ObjectFacingKey; visualTier?: string }, sets: readonly ObjectEightSet[] = OBJECT_EIGHT_SETS): Rect {
   const def = STRUCTURE[s.typeId];
   if (!def) return [s.x, s.y, 0, 0];
+  if (s.facing) {
+    const set = eventArtSet(sets, s.typeId, s.visualTier), view = set?.views[s.facing];
+    if (view?.boxes.length) {
+      const x0 = Math.min(...view.boxes.map(b => b.dx-b.hx)), x1 = Math.max(...view.boxes.map(b => b.dx+b.hx));
+      const y0 = Math.min(...view.boxes.map(b => b.dy-b.hy)), y1 = Math.max(...view.boxes.map(b => b.dy+b.hy));
+      return [s.x, s.y, (x1-x0)/TILE_M, (y1-y0)/TILE_M];
+    }
+    const normals: Partial<Record<ObjectFacingKey, number>> = { normalNE: 0, normalSE: 90, normalSW: 180, normalNW: 270 };
+    const angle = view?.headingDegrees ?? normals[s.facing] ?? (s.rotated ? 90 : 0);
+    const b = objectFootprint(set?.footprintMetres.width ?? def.footprint.w * TILE_M, set?.footprintMetres.depth ?? def.footprint.h * TILE_M, angle);
+    return [s.x, s.y, b.hx * 2 / TILE_M, b.hy * 2 / TILE_M];
+  }
   const w = s.rotated ? def.footprint.h : def.footprint.w;
   const h = s.rotated ? def.footprint.w : def.footprint.h;
   return [s.x, s.y, w, h];
@@ -157,7 +176,7 @@ export interface StructureCheckOpts { tier: number; holes: readonly Hole[]; exis
 export interface EvaluateEventDayOpts { placed: readonly PlacedEventStructure[]; holes: readonly Hole[]; gates: readonly Pt[]; tier: number; spectators: number; hoursOpen?: number; mobileOrdering?: boolean }
 
 /** validate placing a structure given tier, holes, existing structures, optional owned parcels, and optional road rects */
-export function checkStructurePlacement(candidate: { typeId: string; x: number; y: number; rotated?: boolean; mode: PlaceMode }, opts: StructureCheckOpts): StructurePlacementCheck {
+export function checkStructurePlacement(candidate: { typeId: string; x: number; y: number; rotated?: boolean; facing?: ObjectFacingKey; visualTier?: string; mode: PlaceMode }, opts: StructureCheckOpts): StructurePlacementCheck {
   const def = STRUCTURE[candidate.typeId];
   const rect = structureRect(candidate);
   if (!def) return { ok: false, rect, cost: Infinity, reason: 'Unknown structure type' };

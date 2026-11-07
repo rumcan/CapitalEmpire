@@ -17,12 +17,16 @@ import type { Prop } from '../types';
 import type { Pt } from '../network';
 import type { RangeScene } from './rangebiz';
 import { turned } from '../lots/preset-art';
+import { objectFacings } from '../object-eight';
+import { facingAt, type ObjectFacing } from '../object-eight-core';
 import { DECOR_BY_KEY, POND_R, SIZE_STEP, clampSize, decorAppeal, decorSpotWhy, familyKey, inPoly, mixPick, sellBack, sizeText, sizedPrice, standsIn, type Box, type DecorGroup, type DecorItem, type DecorSpot } from './decor';
 import { discCells, pondAt, pondHasStones, setPondEdge, shorePieces, type Pond, type PondPiece } from './ponds';
 import { KIT_FOUNTAIN } from '../kit';
 
 /** what the tool needs of the engine */
 export interface PropsHostCtx {
+  /** Optional catalogue resolver for a Studio/test host; the game uses the reviewed object registry. */
+  facings?(id: string): ObjectFacing;
   /** a golf game (the tool works only there); the library index of an id */
   golf(): boolean; item(id: string): number | undefined; idOf(p: Prop): string;
   /** the size a library item is drawn at (want: the catalogue's, else the studio's, else its own; capped by its pixels) and its footprint there (unflipped) */
@@ -98,19 +102,25 @@ export class PropsTool {
   /** the library item an item of the catalogue is drawn with at view q (turned, never mirrored; T231: a variant item's q-th picture) */
   pictureOf(d: DecorItem, q: number): number | undefined {
     if (d.variants?.length) return this.ctx.item(d.variants[((q % d.variants.length) + d.variants.length) % d.variants.length]!) ?? this.ctx.item(d.id);
+    const v = this.facings(d.id);
+    if (v.mode === 'eight') return this.ctx.item(facingAt(v, q).id) ?? this.ctx.item(d.id);
     return this.ctx.item(turned(d.id, q).id) ?? this.ctx.item(d.id);
   }
+  private facings(id: string): ObjectFacing { return this.ctx.facings?.(id) ?? objectFacings(id); }
+  /** Actual reviewed turn count, separately from shape variants or missing source art. */
+  facingInfo(d: DecorItem): ObjectFacing { return this.facings(d.id); }
   /** how R turns an item (T257): through its four views (four-view art), through its pictures (T231's variants), or not at all (one picture;
    *  a run, a pond, a mixed brush). Nothing is ever mirrored (the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right") */
   turnMode(d: DecorItem): 'views' | 'pictures' | 'none' {
     if (d.run || d.pond || d.mix) return 'none';
+    if (!d.variants && this.facings(d.id).mode === 'eight') return 'views';
     if (!d.variants && turned(d.id, 1).id !== d.id) return 'views';
     return (d.variants?.length ?? 0) > 1 ? 'pictures' : 'none';
   }
   /** whether R turns the item at all */
   turns(d: DecorItem): boolean { return this.turnMode(d) !== 'none'; }
   /** how many views or pictures R steps through */
-  private views(d: DecorItem): number { return d.variants?.length ?? (this.turnMode(d) === 'views' ? 4 : 1); }
+  private views(d: DecorItem): number { return d.variants?.length ?? (this.turnMode(d) === 'views' ? (this.facings(d.id).mode === 'eight' ? 8 : 4) : 1); }
   /** whether [ and ] size the item (everything placed one at a time: not a run or a pond) */
   scales(d: DecorItem): boolean { return !d.run && !d.pond; }
   /** a placed prop's size against its catalogue size (80%..120%) */
@@ -228,7 +238,8 @@ export class PropsTool {
     if (mode === 'none') { this.ctx.toast(`${s.d.name}: one picture, never mirrored (the sun stays at the upper right)`, 'info'); return; }
     // T231: a variant item steps to its next picture where it stands (never mirrored)
     const vs = s.d.variants, cur = this.ctx.idOf(s.p), k = vs ? vs.indexOf(cur) : -1;
-    const next = mode === 'views' ? turned(cur, 1).id : vs ? (k < 0 ? cur : vs[(k + 1) % vs.length]!) : cur, flip = false;
+    const facing = this.facings(cur);
+    const next = mode === 'views' ? (facing.mode === 'eight' ? facingAt(facing, facing.at + 1).id : turned(cur, 1).id) : vs ? (k < 0 ? cur : vs[(k + 1) % vs.length]!) : cur, flip = false;
     const item = this.ctx.item(next); if (item === undefined) return;
     const g = this.ghostOf(s.d, item, s.p.x, s.p.y, s.p.scale, s.p, { flip }); if (g.why) { this.ctx.toast(g.why, 'warn'); return; }
     this.ctx.step(`Turn ${s.d.name.toLowerCase()}`, () => { const q = this.remake(s.p, item, s.p.x, s.p.y, { flip, key: familyKey(s.d, next) }); this.ctx.select(q); return 0; });

@@ -810,6 +810,14 @@ export default function App() {
           <div className="flex items-center gap-2 font-semibold text-amber-200"><Icon name="buildings" size={18} />Event Structures</div>
           <button className="btn-icon" onClick={() => game.toggleEventTool()}>✕</button>
           </div>
+          {game.eventFacingInfo() && <div className="space-y-1 rounded-lg bg-white/5 p-2 text-xs" data-testid="event-facing-controls">
+            <div>{game.eventFacingLabel()} · {game.eventFacingInfo()!.info.ids.length} of 8 angles ready</div>
+            <div className="flex gap-1.5">
+              <button className="chip" disabled={game.eventFacingInfo()!.info.ids.length < 2} onClick={() => game.turnEventStructure()}>Turn (R)</button>
+              {!game.eventStructurePending && game.selectedEventStructure() && <button className="chip" onClick={() => game.moveSelectedEventStructure()}>Move</button>}
+              {game.eventStructurePending && <button className="chip" onClick={() => game.cancelEventStructure()}>Cancel placement</button>}
+            </div>
+          </div>}
           <div className="space-y-1.5 text-xs">
           {STRUCTURES.filter(s => s.tier <= gv.tier + 1).map(s => (
           <div key={s.id} className="space-y-1 rounded-lg border border-white/5 bg-white/5 p-2">

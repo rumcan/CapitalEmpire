@@ -13,7 +13,7 @@
 //   The packs size the pictures for this: prep-views.mjs packs each stand-in for the largest size any building drawn as it needs (standInNeeds).
 import { LIBRARY } from './library';
 import { TW } from './iso';
-import { isBuilding } from './mirror';
+import { drawnAs, isBuilding } from './mirror';
 import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
 import { AXIS_HEADING } from './axis-library';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
@@ -22,6 +22,8 @@ import { CAR_SCALE, carOwnerScale } from './ext/car-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import type { LibItem } from './types';
 import { DESERT_CLASS, desertPick } from './desert-theme';
+import { OBJECT_EIGHT_SETS } from './object-eight-library';
+const OBJECT_BASELINE = new Map(OBJECT_EIGHT_SETS.flatMap(s => Object.values(s.views).map(v => [v.id, s.baselineScale] as const)));
 
 const params = (() => { try { return new URLSearchParams(globalThis.location?.search ?? ''); } catch { return new URLSearchParams(); } })();
 /** the preview (?newart): buildings AND trees are drawn as new art (no old picture) */
@@ -149,7 +151,7 @@ const baseId = (id: string) => id.replace(/^view:/, '').replace(/:(n|ne|e|se|s|s
 export function baselineOf(it: LibItem): number {
   if (it.kind === 'car') return carOwnerScale(it.id);
   const b = baseId(it.id);
-  return STUDIO_SCALE[it.id] ?? STUDIO_SCALE[b] ?? OWNER_SCALE[it.id] ?? OWNER_SCALE[b] ?? 1;
+  return STUDIO_SCALE[it.id] ?? STUDIO_SCALE[b] ?? OWNER_SCALE[it.id] ?? OWNER_SCALE[b] ?? OBJECT_BASELINE.get(it.id) ?? 1;
 }
 /** SIZE_HI x each item's baseline (refreshSizeRange reads them again after a size changes in the lab or the studio) */
 let HI = Float64Array.from(LIBRARY, it => SIZE_HI * baselineOf(it));
@@ -219,6 +221,8 @@ export function maxDrawScale(item: number): number { return SWAP[item] ? Infinit
 
 /** the item a library item is thumbnailed as (its stand-in at its owner scale, or itself when it is drawn as itself) */
 export function thumbItem(it: LibItem): LibItem {
+  const replacement = drawnAs(it, false)[0], replacementIndex = replacement === it.id ? undefined : INDEX.get(replacement);
+  if (replacement.startsWith('object8:') && replacementIndex !== undefined) return LIBRARY[replacementIndex]!;
   const i = INDEX.get(it.id); if (i === undefined || !SWAP[i]) return it;
   const s = standIn(it, 0, 0, own(it));
   return (s === undefined ? undefined : LIBRARY[s]) ?? it;

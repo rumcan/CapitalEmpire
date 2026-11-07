@@ -46,6 +46,7 @@ export function PropsPanel({ game }: { game: Game }) {
           <div className="sub-line">Drag it to move it{t.turns(sel.d) ? (t.turnMode(sel.d) === 'pictures' ? ', R shows the next picture' : ', R turns it') : ''}{t.scales(sel.d) ? `, [ and ] size it (${sizeText(selSize)})` : ''}.</div>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {t.turns(sel.d) && <button className="chip" onClick={() => t.turn()} title={t.turnMode(sel.d) === 'pictures' ? 'Show its next picture (R)' : 'Turn it to its next view (R)'}>Turn</button>}
+            {sel.d.kind !== 'plant' && !sel.d.natural && t.turnMode(sel.d) !== 'pictures' && <span className="text-xs text-slate-400">{t.facingInfo(sel.d).ids.length} of 8 angles ready</span>}
             {t.scales(sel.d) && <button className="chip" onClick={() => t.resize(-1)} title="A size smaller, down to 80% ([): half the difference back" data-testid="props-smaller">Smaller</button>}
             {t.scales(sel.d) && <button className="chip" onClick={() => t.resize(1)} title="A size bigger, up to 120% (]): it pays the difference" data-testid="props-bigger">Bigger</button>}
             <button className="chip" onClick={() => t.sell()} title="Sell it for half its price (Delete)" data-testid="props-sell">Sell +{money(sellBack(sel.d, selSize))}</button>
