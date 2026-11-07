@@ -16,8 +16,8 @@ import { AXIS_FOOT } from '../src/game/axis-library';
 const views = Object.fromEntries(OBJECT_FACING_KEYS.map((key, i) => [key, { id: `test-eight:${key}`, headingDegrees: i % 2 ? i * 45 - 8 : i * 45, boxes: [objectFootprint(8, 4, i % 2 ? i * 45 - 8 : i * 45)] }])) as ObjectEightSet['views'];
 const set: ObjectEightSet = { subject: 'test:eight', name: 'Eight', version: 1, review: 'approved', projection: 'normal+yaw8', views, baselineScale: 1, footprintMetres: { width: 8, depth: 4 }, eventTypes: ['standS'], visualTier: 'worn' };
 
-test('26 unflagged registered native sets are immediately selectable in eight positions, with no new atlas pages', () => {
-  assert.equal(EXISTING_OBJECT_EIGHT_SETS.length,26);assert.equal(EXISTING_EVIDENCE.excluded.length,6);
+test('24 reviewed historical sets are selectable in eight positions; held rows preserve saved indices', () => {
+  assert.equal(EXISTING_OBJECT_EIGHT_SETS.length,24);assert.equal(EXISTING_EVIDENCE.excluded.length,8);
   const by=new Map(LIBRARY.map(i=>[i.id,i]));
   for(const s of EXISTING_OBJECT_EIGHT_SETS){
     const info=objectFacings(s.subject);assert.equal(info.mode,'eight',s.subject);assert.equal(new Set(info.ids).size,8);

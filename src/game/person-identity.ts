@@ -41,7 +41,7 @@ export function personJob(lookId: string, role: PersonRole): string {
 export function personIdentity(seed: number, instance: string, lookId: string, role: PersonRole,
   details: Partial<Pick<PersonIdentity, 'name' | 'job' | 'profile'>> = {}): PersonIdentity {
   const id = `${seed >>> 0}:${instance}`, h = identityHash(seed, instance);
-  const first = /(?:_w_|woman|girl)/.test(lookId) ? FIRST_W : FIRST_M;
+  const first = /(?:_w(?:_|\d)|woman|girl)/.test(lookId) ? FIRST_W : FIRST_M;
   const name = `${first[h % first.length]} ${LAST[identityHash(h, 'surname') % LAST.length]}`;
   const profile = role === 'town' ? 'A familiar face around town.' : role === 'spectator' ? 'Here to follow the golf and enjoy the tournament.'
     : role === 'staff' ? 'Part of the team keeping the course running.' : 'Enjoying a day of golf.';

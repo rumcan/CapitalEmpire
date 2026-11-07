@@ -111,7 +111,7 @@
       "baselineScale": 0.317,
       "footprintMetres": {
         "width": 10,
-        "depth": 7.0
+        "depth": 7
       },
       "sourceIds": {
         "normalNE": "golf:clubhouse-shanty",
@@ -201,11 +201,13 @@
           ]
         }
       },
-      "runtimeReuse": true
+      "runtimeReuse": true,
+      "runtimeEnabled": false,
+      "runtimeHoldReason": "Owner explicitly rejected fantasy tarp-shack style; ordinary 1950s replacement under review"
     },
     {
       "subject": "gen:back-bbq-deck",
-      "name": "House back \u00e2\u20ac\u201d deck & barbecue",
+      "name": "House back â€” deck & barbecue",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -405,7 +407,7 @@
     },
     {
       "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
-      "name": "House back \u00e2\u20ac\u201d deck & barbecue \u00e2\u20ac\u201d variation 1",
+      "name": "House back â€” deck & barbecue â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -605,7 +607,7 @@
     },
     {
       "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
-      "name": "House back \u00e2\u20ac\u201d patio & pool \u00e2\u20ac\u201d variation 1",
+      "name": "House back â€” patio & pool â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -805,7 +807,7 @@
     },
     {
       "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
-      "name": "House back \u00e2\u20ac\u201d screened porch \u00e2\u20ac\u201d variation 1",
+      "name": "House back â€” screened porch â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -1005,7 +1007,7 @@
     },
     {
       "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
-      "name": "House back \u00e2\u20ac\u201d swing set & grill \u00e2\u20ac\u201d variation 1",
+      "name": "House back â€” swing set & grill â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -1205,7 +1207,7 @@
     },
     {
       "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
-      "name": "House back \u00e2\u20ac\u201d swing set & grill \u00e2\u20ac\u201d variation 1",
+      "name": "House back â€” swing set & grill â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -1405,7 +1407,7 @@
     },
     {
       "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
-      "name": "House Cottage \u00e2\u20ac\u201d variation 1",
+      "name": "House Cottage â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -1605,7 +1607,7 @@
     },
     {
       "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
-      "name": "House Garage \u00e2\u20ac\u201d variation 1",
+      "name": "House Garage â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -1805,7 +1807,7 @@
     },
     {
       "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
-      "name": "House Large \u00e2\u20ac\u201d variation 1",
+      "name": "House Large â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -2005,7 +2007,7 @@
     },
     {
       "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
-      "name": "Garage Timber V2 \u00e2\u20ac\u201d variation 1",
+      "name": "Garage Timber V2 â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -2205,7 +2207,7 @@
     },
     {
       "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
-      "name": "House 1 \u00e2\u20ac\u201d variation 1",
+      "name": "House 1 â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -2405,7 +2407,7 @@
     },
     {
       "subject": "variation:world-house_1-north-2521eca8-plain:1",
-      "name": "House 1 \u00e2\u20ac\u201d variation 1",
+      "name": "House 1 â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -2605,7 +2607,7 @@
     },
     {
       "subject": "variation:world-house_3-north-2638a034-plain:1",
-      "name": "House 3 \u00e2\u20ac\u201d variation 1",
+      "name": "House 3 â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -2805,7 +2807,7 @@
     },
     {
       "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
-      "name": "Abandoned brick store \u00e2\u20ac\u201d rear \u00e2\u20ac\u201d variation 1",
+      "name": "Abandoned brick store â€” rear â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -2910,7 +2912,7 @@
       },
       "baselineScale": 1.928,
       "footprintMetres": {
-        "width": 9.0,
+        "width": 9,
         "depth": 6
       },
       "sourceIds": {
@@ -3005,7 +3007,7 @@
     },
     {
       "subject": "variation:expansion-derelict-two-storey-012bed48:1",
-      "name": "Dilapidated two-storey house \u00e2\u20ac\u201d variation 1",
+      "name": "Dilapidated two-storey house â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -3205,7 +3207,7 @@
     },
     {
       "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
-      "name": "Boarded-up timber house \u00e2\u20ac\u201d variation 1",
+      "name": "Boarded-up timber house â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -3310,8 +3312,8 @@
       },
       "baselineScale": 1.15,
       "footprintMetres": {
-        "width": 9.0,
-        "depth": 7.0
+        "width": 9,
+        "depth": 7
       },
       "sourceIds": {
         "normalNE": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
@@ -3405,7 +3407,7 @@
     },
     {
       "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
-      "name": "Boarded-up timber house \u00e2\u20ac\u201d variation 1",
+      "name": "Boarded-up timber house â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -3510,8 +3512,8 @@
       },
       "baselineScale": 1,
       "footprintMetres": {
-        "width": 9.0,
-        "depth": 7.0
+        "width": 9,
+        "depth": 7
       },
       "sourceIds": {
         "normalNE": "variation:expansion-rundown-house-north-24ae3116-plain:1",
@@ -3605,7 +3607,7 @@
     },
     {
       "subject": "variation:world-arcade-f5b7f5eb-plain:1",
-      "name": "Arcade \u00e2\u20ac\u201d variation 1",
+      "name": "Arcade â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -3805,7 +3807,7 @@
     },
     {
       "subject": "variation:world-diner-c9878d46-plain:1",
-      "name": "Diner \u00e2\u20ac\u201d variation 1",
+      "name": "Diner â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -4005,7 +4007,7 @@
     },
     {
       "subject": "variation:world-video-bf85dfb9-plain:1",
-      "name": "Video \u00e2\u20ac\u201d variation 1",
+      "name": "Video â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -4401,11 +4403,13 @@
           ]
         }
       },
-      "runtimeReuse": true
+      "runtimeReuse": true,
+      "runtimeEnabled": false,
+      "runtimeHoldReason": "Visual review: three nominal corners repeat the same front camera; requires redraw"
     },
     {
       "subject": "expansion:dormer-rear",
-      "name": "Dormer home \u00e2\u20ac\u201d rear and side",
+      "name": "Dormer home â€” rear and side",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -4605,7 +4609,7 @@
     },
     {
       "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
-      "name": "Cottage \u00e2\u20ac\u201d rear and side \u00e2\u20ac\u201d variation 1",
+      "name": "Cottage â€” rear and side â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -4805,7 +4809,7 @@
     },
     {
       "subject": "variation:expansion-garage-rear-91bcbe45:1",
-      "name": "Timber garage \u00e2\u20ac\u201d rear view \u00e2\u20ac\u201d variation 1",
+      "name": "Timber garage â€” rear view â€” variation 1",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -4910,7 +4914,7 @@
       },
       "baselineScale": 2.29,
       "footprintMetres": {
-        "width": 5.0,
+        "width": 5,
         "depth": 4
       },
       "sourceIds": {
@@ -5251,6 +5255,20 @@
       "evidence": {
         "flag": "angles-wrong",
         "at": "2026-11-02T18:18:06.088Z"
+      }
+    },
+    {
+      "subject": "world:gazebo",
+      "reason": "Visual review: three nominal corners repeat the same front camera; requires redraw",
+      "evidence": {
+        "review": "art/catalogue-completion-20261107/audit/historical26-visual-review-v1.json"
+      }
+    },
+    {
+      "subject": "golf:clubhouse-shanty",
+      "reason": "Owner explicitly rejected fantasy tarp-shack style; ordinary 1950s replacement under review",
+      "evidence": {
+        "review": "art/catalogue-completion-20261107/audit/historical26-visual-review-v1.json"
       }
     }
   ]

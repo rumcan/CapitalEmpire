@@ -3981,6 +3981,8 @@ export class Game {
   }
   /** the building a library picture shows (a view's, a turned set's, an east picture's own subject; a variation keeps its id: scenes.ts reads it) */
   private sceneSubject(item: number): string {
+    const authored = objectFacings(LIBRARY[item]?.id ?? '');
+    if (authored.mode === 'eight') return authored.subject;
     const s = sizeKey(LIBRARY[item]?.id ?? ''); const v = /^view:(.+):(ne|nw|se|sw|n|e|s|w)$/.exec(s);
     return v ? v[1]! : s.startsWith('east:') ? s.slice(5) : s;
   }

@@ -85,7 +85,7 @@ function Card({ game, d }: { game: Game; d: DecorItem }) {
   const t = game.decor, on = t.hand === d.key, item = t.pictureOf(d, on ? t.view : 0), it = item !== undefined ? LIBRARY[item] : undefined;
   // T257: the price at the size in hand
   const size = on ? t.size : 1, price = sizedPrice(d.price, size), poor = price > game.money, mode = t.turnMode(d);
-  const tip = mode === 'views' ? ' · four views (R turns it)' : mode === 'pictures' ? ' · R shows the next picture' : '';
+  const tip = mode === 'views' ? ` · ${t.facingInfo(d).mode === 'eight' ? 'eight' : 'four'} views (R turns it)` : mode === 'pictures' ? ' · R shows the next picture' : '';
   return (
     <button className={`card gap-1 ${on ? 'card-on' : ''}`} data-card={`prop-${d.key}`} aria-pressed={on} onClick={() => t.pick(d.key)} title={`${d.desc}${tip}${t.scales(d) ? ' · [ ] size it' : ''}`}>
       <div className="grid h-14 w-full place-items-center overflow-hidden rounded-lg bg-black/30">{it && <Thumb it={it} size={50} />}</div>
