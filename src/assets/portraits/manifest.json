@@ -1,4 +1,13 @@
 {
   "v": 1,
-  "pictures": []
+  "pictures": [
+    {
+      "lookId": "golfer:golf_pro_m1",
+      "file": "golf-pro-m1.png",
+      "w": 1672,
+      "h": 941,
+      "bytes": 3337751,
+      "state": "one"
+    }
+  ]
 }
