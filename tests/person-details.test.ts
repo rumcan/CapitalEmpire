@@ -9,7 +9,7 @@ import { GOLFER_PEOPLE, SPECTATOR_PEOPLE, WALKER_PEOPLE } from '../src/game/libr
 import { PersonPortrait } from '../src/ui/PersonPortrait';
 import { TalkCard } from '../src/ui/golf/YouCards';
 import { SceneCard } from '../src/ui/SceneCard';
-import { HARD_TIMES, pickPicture, propertyPicture, propertyScene, type PropertySceneFacts, type SceneManifest, type ScenePic } from '../src/game/scenes';
+import { HARD_TIMES, pickPicture, propertyPicture, propertyScene, objectScene, exactScenePictures, type PropertySceneFacts, type SceneManifest, type ScenePic } from '../src/game/scenes';
 
 const town = (people = 15) => {
   const p = new Pedestrians(41, people, 24);
@@ -143,4 +143,46 @@ test('business inside/outside tabs support exact identity and pending tabs witho
   const markup = renderToStaticMarkup(createElement(SceneCard, { view, onView() {}, onClose() {} }));
   assert.match(markup, /scene-picture-pending/); assert.match(markup, /Video Vault/); assert.doesNotMatch(markup, /data-testid="scene-picture"/);
   assert.equal(pickPicture('video-store-outside', HARD_TIMES, m), null, 'identity-scoped pictures cannot leak into a legacy generic picker');
+});
+
+
+test('exact subject and explicit view match descriptive batch slugs independently of semantic family', () => {
+  const m: SceneManifest = { v: 1, pictures: [picture({ slug: 'property-world-house-0-8123-exterior', subject: home.subject, view: 'outside', file: 'actual-house.png' }),
+    picture({ slug: 'unrelated-wording', subject: home.subject, view: 'inside', file: 'actual-kitchen.png' })] };
+  assert.equal(propertyPicture(home, 'outside', m)?.file, 'actual-house.png');
+  assert.equal(propertyPicture(home, 'inside', m)?.file, 'actual-kitchen.png');
+  assert.equal(propertyPicture({ ...home, subject: 'world:house_1' }, 'outside', m), null);
+  assert.equal(propertyPicture(home, 'outside', { v: 1, pictures: [picture({ subject: home.subject, view: 'inside' })] }), null, 'explicit view overrides a misleading legacy slug');
+});
+
+test('exact batch scene variants preserve instance precedence and never cross property condition', () => {
+  const exact = picture({ slug: 'completely-descriptive', subject: home.subject, view: 'outside', file: 'house.png' });
+  const m: SceneManifest = { v: 1, pictures: [exact, { ...exact, instanceKey: home.key, state: 'upgraded', file: 'personal-new.png' }] };
+  assert.equal(propertyPicture(home, 'outside', m), null, 'missing worn instance art cannot silently borrow common worn art');
+  assert.equal(propertyPicture({ ...home, good: true }, 'outside', m)?.file, 'personal-new.png');
+  assert.equal(propertyPicture({ ...home, key: 'lot:2' }, 'outside', m)?.file, 'house.png');
+  const keyOnly: SceneManifest = { v: 1, pictures: [picture({ slug: 'place-specific', view: 'outside', instanceKey: home.key })] };
+  assert.equal(propertyPicture(home, 'outside', keyOnly)?.instanceKey, home.key);
+});
+
+test('manually placed Arcade has exact illustrated states, no simulated condition and no generic borrowed art', () => {
+  const f = { key: 'prop:42', subject: 'world:arcade', name: 'Arcade' };
+  const m: SceneManifest = { v: 1, pictures: [picture({ slug: 'property-arcade-exterior', subject: f.subject, view: 'outside', state: 'upgraded' }),
+    picture({ slug: 'arcade-private-interior', subject: f.subject, view: 'inside' }), picture({ slug: 'arcade-outside', file: 'generic.png' })] };
+  const c = objectScene(f, 'inside:rundown', m)!;
+  assert.equal(c.at, 1); assert.equal(c.kicker, 'Illustrated property views');
+  assert.deepEqual(c.views.map(v => v.label), ['Outside · Upgraded', 'Inside · Run-down']);
+  assert.ok(c.views.every(v => v.tiles.length === 0 && v.line.includes('no tracked repair')));
+  assert.equal(objectScene({ ...f, subject: 'world:video' }, undefined, m), null);
+  assert.equal(objectScene(f, undefined, { v: 1, pictures: [picture({ slug: 'arcade-outside' })] }), null);
+});
+
+test('known clubhouse or range conditions filter exact scene art and respect placed-instance identity', () => {
+  const f = { key: 'prop:-1000100', subject: 'business:golf-clubhouse', name: 'Clubhouse' };
+  const m: SceneManifest = { v: 1, pictures: [picture({ slug: 'property-business-golf-clubhouse-outside', subject: f.subject, view: 'outside', state: 'upgraded' })] };
+  assert.equal(objectScene({ ...f, good: false }, undefined, m), null);
+  assert.equal(objectScene({ ...f, good: true }, undefined, m)?.views[0].state, 'upgraded');
+  m.pictures = [...m.pictures, picture({ slug: 'clubhouse-actual', subject: f.subject, view: 'outside', instanceKey: 'prop:other' })];
+  assert.equal(exactScenePictures(f.key, f.subject, m).length, 1);
+  assert.equal(objectScene({ ...f, good: false }, undefined, m), null);
 });

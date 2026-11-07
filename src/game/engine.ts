@@ -45,7 +45,7 @@ import { escapeLadder, numberKeyUse, pickTool, SIDE_MODES, switchSideMode, type 
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { sizeKey, turned } from './lots/preset-art';
-import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, lotGood, propertyScene, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
+import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, lotGood, propertyScene, objectScene, rangeGood, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
 import { homeStage, rangeScale } from './golf/rangesave';
 import { RangeHost, type RangeCardView } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
@@ -3937,7 +3937,10 @@ export class Game {
   /** the card's tab (the range's road, bays, shop, green or home; a business's Outside or Inside) */
   sceneView(view: string) { const r = this.sceneRef; if (!r || r.kind === 'farm') return; this.sceneRef = { ...r, view }; this.sceneCache = null; this.emit(); }
   /** whether the range or the clubhouse has any picture (the cards' Set the scene buttons), or an iconic place */
-  sceneArt(kind: 'range' | 'club'): boolean { return kind === 'range' ? this.golf?.start === 'range' && sceneArt('range') : !!this.golf && sceneArt('club'); }
+  sceneArt(kind: 'range' | 'club'): boolean {
+    if (kind === 'range') return this.golf?.start === 'range' && sceneArt('range');
+    const prop = this.clubSceneProp(); return !!this.golf && (sceneArt('club') || !!(prop && this.objectSceneOf(prop)));
+  }
   placeSceneArt(id: string): boolean { return placeHasArt(id); }
   sceneCard(): SceneCardView | null {
     const r = this.sceneRef; if (!r) return null;
@@ -3950,7 +3953,9 @@ export class Game {
     switch (r.kind) {
       case 'range': { const f = this.rangeSceneFacts(); return f && rangeScene(f, r.view); }
       case 'club': {
-        const g = this.golf, bk = this.dayBook; if (!g || !bk || !sceneArt('club') || !this.bizDefs.some(d => d.type === 'clubhouse')) return null;
+        const g = this.golf, bk = this.dayBook; if (!g || !bk || !this.bizDefs.some(d => d.type === 'clubhouse')) return null;
+        const exact = this.clubSceneProp(); if (exact) { const scene = this.objectSceneOf(exact, r.view); if (scene) return scene; }
+        if (!sceneArt('club')) return null;
         const v = clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen));
         return clubScene({ tier: g.tier, members: v.clubMembers, visitors: v.today.visitors, fees: v.today.fees, rounds: v.season.members + v.season.visitors }, r.view);
       }
@@ -3960,17 +3965,21 @@ export class Game {
       }
       case 'property': {
         const l = this.traffic.lots.get(r.key); if (!l || l.level < 2) return null;
-        const place = r.place ? LOT_PLACES.find(p => p.id === r.place) : undefined;
-        return propertyScene({ key: r.key, subject: r.subject, name: r.name, slug: r.home ? 'town-home' : place?.slug ?? 'town-business', good: lotGood(l), home: r.home, lines: place?.lines, tiles: [
+        const prop = r.uid === undefined ? undefined : this.sceneProp(r.uid); if (r.uid !== undefined && !prop) return null;
+        const look = prop && lookOf(prop); if (look?.hidden) return null;
+        const subject = look ? this.sceneSubject(look.item) : r.subject;
+        const place = lotPlaceOf(subject) ?? undefined;
+        return propertyScene({ key: r.key, subject, name: place?.name ?? (look ? LIBRARY[look.item]!.name : r.name), slug: r.home ? 'town-home' : place?.slug ?? 'town-business', good: lotGood(l), home: r.home, lines: place?.lines, tiles: [
           { label: 'Condition', value: l.decline > 0 ? ['In good repair', 'Shabby', 'Boarded up', 'Derelict'][Math.min(3, l.decline)]! : lotGood(l) ? 'Upgraded' : 'Getting by' },
           { label: r.home ? 'Residents' : 'Staff', value: `${r.home ? lotResidents(l) : lotJobs(l)}` },
           { label: 'Town', value: town },
         ] }, r.view);
       }
+      case 'object': { const prop = this.sceneProp(r.uid); return prop ? this.objectSceneOf(prop, r.view) : null; }
       case 'event': {
         const s = this.golf?.structures?.find(q => q.id === r.id), def = s && STRUCTURE[s.typeId]; if (!s || !def) return null;
         const prop = this.golfStructureProps.get(s.id), visualTier = (s as typeof s & { visualTier?: string }).visualTier;
-        return propertyScene({ key: `event:${s.id}`, subject: prop ? this.sceneSubject(prop.item) : `event:${s.typeId}`, name: def.name, slug: `event-${s.typeId}`, good: visualTier === 'upgraded', tiles: [
+        return propertyScene({ key: `event:${s.id}`, subject: prop ? this.sceneSubject(lookOf(prop).item) : `event:${s.typeId}`, name: def.name, slug: `event-${s.typeId}`, good: visualTier === 'upgraded', tiles: [
           { label: 'Condition', value: visualTier === 'upgraded' ? 'Upgraded' : 'Budget / worn' },
           { label: 'Capacity', value: def.capacity > 0 ? `${def.capacity.toLocaleString('en-US')} ${def.unit}` : '—' },
           { label: 'Footprint', value: `${def.footprint.w * 2} × ${def.footprint.h * 2} m` },
@@ -3993,28 +4002,50 @@ export class Game {
   }
   /** the building a library picture shows (a view's, a turned set's, an east picture's own subject; a variation keeps its id: scenes.ts reads it) */
   private sceneSubject(item: number): string {
-    const authored = objectFacings(LIBRARY[item]?.id ?? '');
-    if (authored.mode === 'eight') return authored.subject;
-    const s = sizeKey(LIBRARY[item]?.id ?? ''); const v = /^view:(.+):(ne|nw|se|sw|n|e|s|w)$/.exec(s);
+    const id = LIBRARY[item]?.id ?? '', facing = objectFacings(id); if (facing.mode === 'eight') return facing.subject;
+    const s = sizeKey(id); const v = /^view:(.+):(ne|nw|se|sw|n|e|s|w)$/.exec(s);
     return v ? v[1]! : s.startsWith('east:') ? s.slice(5) : s;
   }
   /** a click on the map with Select inspects what it hit (the map press shut the card first): a range piece's view (its ground: the road), the
    *  clubhouse, an iconic place, a business's building on its lot, a farm's farmhouse. Each opens only when it has a picture */
   private inspectScene(p: Prop | null, club = false): void {
     const a = p?.auto ?? '';
-    if (club) { if (this.sceneArt('club')) this.openScene({ kind: 'club' }); return; }
-    if (a.startsWith('range:') || !p) { if (this.sceneArt('range')) this.openScene({ kind: 'range', view: a ? rangeViewOfKey(a.slice(6)) : 'road' }); return; }
+    if (club) { const prop = this.clubSceneProp(); if (prop && this.objectSceneOf(prop)) { this.openScene({ kind: 'object', uid: prop.uid }); return; } if (this.sceneArt('club')) this.openScene({ kind: 'club' }); return; }
+    if (a.startsWith('range:') || !p) { if (p && this.objectSceneOf(p)) this.openScene({ kind: 'object', uid: p.uid }); else if (this.sceneArt('range')) this.openScene({ kind: 'range', view: a ? rangeViewOfKey(a.slice(6)) : 'road' }); return; }
     if (a.startsWith('place:')) { if (placeHasArt(a.slice(6))) this.openScene({ kind: 'place', id: a.slice(6) }); return; }
     for (const [id, prop] of this.golfStructureProps) if (prop === p) { this.openScene({ kind: 'event', id }); return; }
-    // (T270: a lot is the business it is drawn as: the picture newart.ts lookOf draws, else its own)
-    const drawn = this.sceneSubject(lookOf(p).item), own = this.sceneSubject(p.item);
+    const look = lookOf(p); if (look.hidden) return;
+    const drawn = this.sceneSubject(look.item), own = this.sceneSubject(p.item);
     if (a.startsWith('lot:') && YOU_LOOKS_AT.has(LIBRARY[p.item]!.kind)) {
       const l = this.traffic.lots.get(a.slice(4)); if (!l || l.level < 2) return;
-      const pl = lotPlaceOf(own) ?? lotPlaceOf(drawn), home = l.use === LU.RES;
-      this.openScene({ kind: 'property', key: a.slice(4), subject: own, name: pl?.name ?? (home ? this.youPropName(p) : LIBRARY[p.item]!.name), home, ...(pl ? { place: pl.id } : {}) });
+      const pl = lotPlaceOf(drawn), home = l.use === LU.RES;
+      this.openScene({ kind: 'property', key: a.slice(4), subject: drawn, uid: p.uid, name: pl?.name ?? LIBRARY[look.item]!.name, home, ...(pl ? { place: pl.id } : {}) });
       return;
     }
+    if (this.objectSceneOf(p)) { this.openScene({ kind: 'object', uid: p.uid }); return; }
     if (a.startsWith('farm:') && (FARMHOUSE_SUBJECTS.has(drawn) || FARMHOUSE_SUBJECTS.has(own))) this.openScene({ kind: 'farm', key: a.slice(5) });
+  }
+  private sceneProp(uid: number): Prop | undefined { return this.businessProps.find(p => p.uid === uid) ?? [...this.props].find(p => p.uid === uid); }
+  private clubSceneProp(): Prop | undefined {
+    const club = this.bizDefs.find(d => d.type === 'clubhouse');
+    return club && this.businessProps.find(p => p.uid === -1000000 - club.id * 100);
+  }
+  /** Exact rendered architecture, with simulated condition only where this actual facility supplies it. */
+  private objectSceneOf(p: Prop, view?: string): SceneCardView | null {
+    const look = lookOf(p); if (look.hidden) return null;
+    const subject = this.sceneSubject(look.item), key = `prop:${p.uid}`;
+    let good: boolean | undefined; const tiles: import('./scenes').SceneTile[] = [];
+    if (p.auto === 'business-art') {
+      const biz = this.bizDefs.find(d => d.id === Math.floor((-1000000 - p.uid) / 100));
+      if (biz) {
+        tiles.push({ label: 'Business', value: bizName(biz.type) });
+        if (biz.type === 'clubhouse' && this.golf) { good = this.golf.tier >= 4; tiles.push({ label: 'Club tier', value: `${this.golf.tier}` }); }
+        // Other business levels measure trading performance, not the sprite's repair condition.
+      }
+    } else if (p.auto?.startsWith('range:')) {
+      const facts = this.rangeSceneFacts(); if (facts) good = rangeGood(rangeViewOfKey(p.auto.slice(6)), facts);
+    }
+    return objectScene({ key, subject, name: LIBRARY[look.item]!.name, good, tiles }, view);
   }
   /** the range's pictures as last read (null: not yet, so a load never toasts), and the tick that reads them about once a second */
   private sceneKeys: Record<RangeSceneView, string> | null = null; private sceneTick = 0;
@@ -5444,14 +5475,15 @@ export class Game {
   closeInspect() { this.inspecting = -1; this.followCar = false; this.traffic.inspect(-1); this.emit(); }
   /** closes the junction watch (its Close button, Esc) */
   closeWatch() { this.traffic.unwatch(); this.emit(); }
-  propAt(mx: number, my: number): Prop | null {
+  propAt(mx: number, my: number, includeBusinessScenes = false): Prop | null {
     const X = this.cam.X + (mx - this.cssW / 2) / this.cam.z, Y = this.cam.Y + (my - this.cssH / 2) / this.cam.z, r = [0, 0, 0, 0];
     for (const p of this.sprites.at(X, Y)) {
-      if (!this.props.has(p)) continue; // forest trees are not props: never picked
+      if (!this.props.has(p) && !(includeBusinessScenes && this.businessProps.includes(p) && this.objectSceneOf(p))) continue; // render-only business pieces are inspectable only with exact matching art
       spriteRect(p, r); if (X < r[0] || X > r[2] || Y < r[1] || Y > r[3]) continue;
-      const it = LIBRARY[p.item], [page, u0, v0, u1, v1] = it.tex, a = this.pageAlpha[page];
+      const look = lookOf(p); if (look.hidden) continue;
+      const it = LIBRARY[look.item], [page, u0, v0, u1, v1] = it.tex, a = this.pageAlpha[page];
       if (!a) continue; // Missing opacity cannot turn a transparent sprite rectangle into a click target.
-      let u = (X - r[0]) / (r[2] - r[0]); if (p.flip) u = 1 - u;
+      let u = (X - r[0]) / (r[2] - r[0]); if (look.flip) u = 1 - u;
       const v = (Y - r[1]) / (r[3] - r[1]), px = clamp(Math.floor((u0 + (u1 - u0) * u) * a.w), 0, a.w - 1), py = clamp(Math.floor((v0 + (v1 - v0) * v) * a.h), 0, a.h - 1);
       if (hasPickingPixel(a, px, py)) return p;
     }
@@ -5539,14 +5571,15 @@ export class Game {
         // Select can inspect a person's identity immediately; Walk still walks up before opening the same card.
         if (this.cam.z >= DISTRICT_Z && this.you) { const person = this.youThingAt(mx, my); if (person?.kind === 'person') { person.act?.(); return; } }
         if (this.cam.z >= DISTRICT_Z && this.repairAt(mx, my)) return;
-        const p = this.propAt(mx, my), tl = this.tileAt(mx, my);
+        const p = this.propAt(mx, my, true), tl = this.tileAt(mx, my);
         // the range's own props and its front open the range card (P24, T129)
         if (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y))) { this.openRangeCard(true); this.inspectScene(p); return; } // (T242: and its picture)
         // T208: the clubhouse (its footprint, and the building's height up the screen: 6 tiles back) opens the clubhouse card
         const club = this.golf && !p ? this.bizDefs.find(d => d.type === 'clubhouse') : undefined;
         if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) { this.openClubCard(true); this.inspectScene(null, true); return; }
         // T214: the pro's office and a teaching hut open the Staff card
-        if (this.proBuildingOf(p)) { this.openStaffCard(true); return; }
+        if (this.proBuildingOf(p)) { this.openStaffCard(true); this.inspectScene(p); return; }
+        if (p?.auto === 'business-art') { this.inspectScene(p); return; }
         // T219: an iconic place's props open its card
         if (p?.auto?.startsWith('place:')) { this.selected = null; this.selectedPlace = p.auto.slice(6); this.inspectScene(p); this.emit(); return; }
         this.selectedPlace = null;
@@ -8202,14 +8235,14 @@ export class Game {
     if (g) for (const t of g.tees) if (t.hole === 1 && Math.hypot(tl.x - t.x, tl.y - t.y) <= 3) {
       const pt = { x: t.x, y: t.y }; return { kind: 'tee', name: 'the first tee', at: { x: t.x + 1.5, y: t.y + 1.5 }, face: pt, key: 'tee', act: () => { this.youTeeOpen = true; this.emit(); } };
     }
-    const p = this.propAt(mx, my), sc = this.range.scene;
+    const p = this.propAt(mx, my, true), sc = this.range.scene;
     // the range: its practice greens (use them), its pieces and its front (buy a bucket, hit at a mat)
     if (sc && (p?.auto?.startsWith('range:') || (!p && inPractice(sc.practice, tl.x, tl.y)))) {
       if (!p && inPractice(sc.practice, tl.x, tl.y)) {
         const f = this.range.practiceFacts(), kind: PracticeKind | null = f?.putting === 'open' && f.chipping === 'open' ? null : f?.putting === 'open' ? 'putting' : f?.chipping === 'open' ? 'chipping' : null;
         return { kind: 'practice', name: 'the practice area', at: { ...sc.practice.entry }, face: { ...sc.practice.label }, key: 'practice', act: () => { this.openRangeCard(true); if (kind) this.youPractise(kind); } };
       }
-      return { kind: 'range', name: 'the range', at: { x: sc.queueAt.x, y: sc.queueAt.y }, face: { ...sc.counter }, key: 'range', act: () => this.openRangeCard(true) };
+      return { kind: 'range', name: 'the range', at: { x: sc.queueAt.x, y: sc.queueAt.y }, face: { ...sc.counter }, key: 'range', act: () => { this.openRangeCard(true); this.inspectScene(p); } };
     }
     const club = g && !p ? this.bizDefs.find(d => d.type === 'clubhouse') : undefined;
     if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) {
@@ -8219,13 +8252,13 @@ export class Game {
     const pb = this.proBuildingOf(p); // T214: walk to the pro's office or a hut: the Staff card
     if (pb) {
       const door = this.youDoor([pb.x - 1, pb.y - 1, pb.x + pb.w + 1, pb.y + pb.h + 1], from);
-      return door && { kind: 'building', name: pb.type === 'prooffice' ? "the pro's office" : 'the teaching hut', at: door, face: { x: pb.x + pb.w / 2, y: pb.y + pb.h / 2 }, key: 'biz' + pb.id, act: () => this.openStaffCard(true) };
+      return door && { kind: 'building', name: pb.type === 'prooffice' ? "the pro's office" : 'the teaching hut', at: door, face: { x: pb.x + pb.w / 2, y: pb.y + pb.h / 2 }, key: 'biz' + pb.id, act: () => { this.openStaffCard(true); if (p) this.inspectScene(p); } };
     }
     if (p && (p.auto?.startsWith('place:') || YOU_LOOKS_AT.has(LIBRARY[p.item]!.kind) || LIBRARY[p.item]!.big)) {
       const place = p.auto?.startsWith('place:') ? p.auto.slice(6) : null, d = place ? placeDef(place) : null;
       const box: [number, number, number, number] = [p.x0, p.y0, p.x1, p.y1], door = this.youDoor(box, from);
       const name = d ? inSentence(placeName(d, this.townName(0))) : this.youPropName(p);
-      return door && { kind: 'building', name, at: door, face: { x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }, key: 'b' + p.uid, act: () => { if (place) { this.selected = null; this.selectedPlace = place; } else this.selected = p; this.inspectScene(p); this.emit(); } };
+      return door && { kind: 'building', name, at: door, face: { x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }, key: 'b' + p.uid, act: () => { if (place) { this.selected = null; this.selectedPlace = place; } else if (p.auto !== 'business-art') this.selected = p; this.inspectScene(p); this.emit(); } };
     }
     const b = this.bizDefs.find(d => d.type !== 'range' && tl.x >= d.x && tl.x < d.x + d.w && tl.y >= d.y && tl.y < d.y + d.h);
     if (b) { const door = this.youDoor([b.x - 1, b.y - 1, b.x + b.w + 1, b.y + b.h + 1], from); return door && { kind: 'building', name: inSentence(bizName(b.type)), at: door, face: { x: b.x + b.w / 2, y: b.y + b.h / 2 }, key: 'z' + b.id, act: null }; }

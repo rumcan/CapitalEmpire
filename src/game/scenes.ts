@@ -31,7 +31,8 @@ export type SceneRef =
   | { kind: 'range'; view?: string }
   | { kind: 'club'; view?: string }
   | { kind: 'lot'; key: string; place: string; view?: string }
-  | { kind: 'property'; key: string; subject: string; name: string; home: boolean; place?: string; view?: string }
+  | { kind: 'property'; key: string; subject: string; name: string; home: boolean; place?: string; uid?: number; view?: string }
+  | { kind: 'object'; uid: number; view?: string }
   | { kind: 'event'; id: number; view?: string }
   | { kind: 'farm'; key: string }
   | { kind: 'place'; id: string; view?: string };
@@ -260,7 +261,7 @@ export interface PropertySceneFacts {
 /** Select the same subject/instance and requested condition. A general house image is never silently borrowed for a different house. */
 export function propertyPicture(f: Pick<PropertySceneFacts, 'key' | 'subject' | 'slug' | 'good' | 'home'>, view: 'outside' | 'inside', m: SceneManifest = SCENE_MANIFEST): ScenePic | null {
   const slug = `${f.slug}-${view}`;
-  const matching = m.pictures.filter(p => (p.slug === slug || (p.slug === f.slug && p.view === view))
+  const matching = m.pictures.filter(p => (!p.view || p.view === view) && (p.view === view && (p.subject === f.subject || p.instanceKey === f.key) || p.slug === slug || (p.slug === f.slug && p.view === view))
     && (!p.instanceKey || p.instanceKey === f.key) && (!p.subject || p.subject === f.subject));
   const instances = matching.filter(p => p.instanceKey === f.key), subjects = matching.filter(p => p.subject === f.subject && !p.instanceKey);
   // An explicit identity owns its condition variants. Do not fall through to an unrelated general scene if its worn view is missing.
@@ -270,6 +271,32 @@ export function propertyPicture(f: Pick<PropertySceneFacts, 'key' | 'subject' | 
     const pic = candidates.find(p => p.state === state); if (pic) return pic;
   }
   return null;
+}
+
+/** Exact-scoped art only: a descriptive slug is not an identity, and another instance never supplies this object's picture. */
+export function exactScenePictures(key: string, subject: string, m: SceneManifest = SCENE_MANIFEST): readonly ScenePic[] {
+  const matching = m.pictures.filter(p => p.subject === subject && (!p.instanceKey || p.instanceKey === key) && (p.view === 'outside' || p.view === 'inside'));
+  const instances = matching.filter(p => p.instanceKey === key);
+  return instances.length ? instances : matching.filter(p => !p.instanceKey);
+}
+
+/** Placed decoration has no simulated repair/upgrade state. Expose exact approved illustration variants, not invented business facts.
+ * Known facility states still filter pictures through the same hard/good-times policy as ordinary properties. */
+export function objectScene(f: { key: string; subject: string; name: string; good?: boolean; tiles?: SceneTile[] }, want?: string, m: SceneManifest = SCENE_MANIFEST): SceneCardView | null {
+  const pictures = exactScenePictures(f.key, f.subject, m);
+  const views: SceneView[] = [];
+  for (const id of ['outside', 'inside'] as const) {
+    const candidates = pictures.filter(p => p.view === id);
+    const selected = f.good === undefined ? candidates.filter((p, i) => candidates.findIndex(q => q.state === p.state) === i)
+      : [propertyPicture({ ...f, slug: '__exact-object__', good: f.good, home: true }, id, m)].filter((p): p is ScenePic => !!p);
+    for (const pic of selected) {
+      const condition = pic.state === 'upgraded' ? 'Upgraded' : pic.state === 'rundown' ? 'Run-down' : pic.state;
+      views.push({ id: f.good === undefined ? `${id}:${pic.state}` : id, label: `${id === 'outside' ? 'Outside' : 'Inside'}${f.good === undefined && pic.state !== 'one' ? ` · ${condition}` : ''}`,
+        slug: pic.slug, state: pic.state, good: pic.state === 'upgraded', pic, tiles: f.tiles ?? [],
+        line: f.good === undefined ? 'An illustrated view. This placed item has no tracked repair or upgrade condition.' : lineOf(pic.slug, pic.state) });
+    }
+  }
+  return card(f.name, f.good === undefined ? 'Illustrated property views' : 'Set the scene', views, want);
 }
 
 /** A house/business/facility card with identity-specific pictures, or an honest pending-art view with the actual property details. */
