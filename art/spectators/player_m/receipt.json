@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/4G0mrT5UcCtD5KY8luXQ/4e2592dd-09b2-4d65-b367-141a78e8c92b/model.compressed.glb",
+  "look": "Club owner and golf coach, the player character, a friendly fit man in his 40s, tanned, short brown hair, a plain navy polo shirt tucked into light grey golf slacks, a brown leather belt, white golf shoes, a plain white cap. No logos, no lettering. Full-body figure standing on nothing: no ground, no grass, no base, nothing under the shoes.",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

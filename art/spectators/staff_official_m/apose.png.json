@@ -1,0 +1,14 @@
+{
+  "generationId": "98cc23e7-b25b-478b-b478-529cb2bbd3b5",
+  "prompt": "3D-modelling A-pose reference of ONE person: Tournament director in his 60s, silver hair, a plain dark green blazer over a white shirt and a plain tie, grey trousers, black dress shoes. No logos, no lettering. Front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open and empty with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart with a clear gap between them. The whole figure from head to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes. Realistic proportions for the age, clean painterly game-art finish.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 1797178056,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/4G0mrT5UcCtD5KY8luXQ/OGeroRmBwlYVXlOowOJXkuea1bs1/8a46ea88-a03f-4899-a33e-ee1d81071959.png",
+  "requestPrompt": "3D-modelling A-pose reference of ONE person: Tournament director in his 60s, silver hair, a plain dark green blazer over a white shirt and a plain tie, grey trousers, black dress shoes. No logos, no lettering. Front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open and empty with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart with a clear gap between them. The whole figure from head to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes. Realistic proportions for the age, clean painterly game-art finish.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "3:4",
+  "gameId": "4G0mrT5UcCtD5KY8luXQ",
+  "outputPath": "art/spectators/staff_official_m/apose.png",
+  "status": "saved",
+  "sha256": "aded4fbff267788503a081b0ccf6c43609847e0b39517b4d7bf2ad7a53b5a983"
+}
