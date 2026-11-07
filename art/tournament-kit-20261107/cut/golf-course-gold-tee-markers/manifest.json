@@ -1,0 +1,316 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "version": 1,
+  "review": "approved",
+  "footprintMetres": {
+    "width": 1,
+    "depth": 0.25
+  },
+  "pixelsPerMetre": 577.15,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1,
+  "views": {
+    "normalNE": {
+      "file": "normalNE.native.png",
+      "sha256": "7e15252592607b935746208b9d922cedfeca77be747dcd5330c7f3db936bad8c",
+      "width": 434,
+      "height": 445,
+      "anchor": {
+        "x": 217,
+        "y": 303.5
+      },
+      "headingDegrees": 0,
+      "boxes": null,
+      "pixelsPerMetre": 577.15,
+      "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1 x 0.25 m, height 0.35 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "sourceFamily": "view",
+      "sourceSha256": "b27b9b47886080ae695290a0b07748d1bed939eda14127bb1a2a6ae24ea9b048",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "crop": {
+        "left": 100,
+        "top": 47,
+        "width": 434,
+        "height": 445
+      }
+    },
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "6c34ff1a68bde268ebd37db7fd887b469a1b42b74a3f684ddf635600deb37e0d",
+      "width": 509,
+      "height": 326,
+      "anchor": {
+        "x": 259.5,
+        "y": 262.5
+      },
+      "headingDegrees": 323,
+      "boxes": null,
+      "pixelsPerMetre": 563.94,
+      "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1 x 0.25 m, height 0.35 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "sourceFamily": "view",
+      "sourceSha256": "d97a18548f5b4e8983eeb5e75b98f0d1a07a05b003157f172d642c3fc48ebfce",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 768,
+        "height": 512
+      },
+      "crop": {
+        "left": 141,
+        "top": 106,
+        "width": 509,
+        "height": 326
+      }
+    },
+    "normalSE": {
+      "file": "normalSE.native.png",
+      "sha256": "17cb8ddb520c3cf2a02fe1c5e1de57ab300f9e987d0d2a1564c24be27891ba04",
+      "width": 419,
+      "height": 455,
+      "anchor": {
+        "x": 209.5,
+        "y": 312.5
+      },
+      "headingDegrees": 270,
+      "boxes": null,
+      "pixelsPerMetre": 577.15,
+      "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1 x 0.25 m, height 0.35 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "sourceFamily": "view",
+      "sourceSha256": "e3abf75fd717dc8b187a505019f09d7d1af0fbd7ee9337d0b858a8c409a527a5",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "crop": {
+        "left": 95,
+        "top": 58,
+        "width": 419,
+        "height": 455
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "7319692c12f5d452eccbd24964bf80f9c2fa7ad7154827e993165cc8eb72b47d",
+      "width": 279,
+      "height": 422,
+      "anchor": {
+        "x": 145,
+        "y": 266.5
+      },
+      "headingDegrees": 233,
+      "boxes": null,
+      "pixelsPerMetre": 563.94,
+      "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1 x 0.25 m, height 0.35 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "sourceFamily": "view",
+      "sourceSha256": "bf603af5b48b6c47bde1c0c1aa029f169ff697c217ecbff5d576e29d277429e3",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 768,
+        "height": 512
+      },
+      "crop": {
+        "left": 241,
+        "top": 52,
+        "width": 279,
+        "height": 422
+      }
+    },
+    "normalSW": {
+      "file": "normalSW.native.png",
+      "sha256": "213383523830f7cb26a05f8f6b5dc221457b42e07d1cafc68a0b445e0f4a5b74",
+      "width": 403,
+      "height": 456,
+      "anchor": {
+        "x": 202,
+        "y": 314.5
+      },
+      "headingDegrees": 180,
+      "boxes": null,
+      "pixelsPerMetre": 577.15,
+      "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1 x 0.25 m, height 0.35 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "sourceFamily": "view",
+      "sourceSha256": "14229f29792b13189930afa25ea5bdaea3b355ff290c8a9331b061c0fff545cf",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "crop": {
+        "left": 103,
+        "top": 62,
+        "width": 403,
+        "height": 456
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "9b80e51a9216f1d0526ceb1912a834928586adc81242ef7e15aa7e3482b507cb",
+      "width": 513,
+      "height": 328,
+      "anchor": {
+        "x": 263,
+        "y": 261.5
+      },
+      "headingDegrees": 143,
+      "boxes": null,
+      "pixelsPerMetre": 563.94,
+      "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1 x 0.25 m, height 0.35 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "sourceFamily": "view",
+      "sourceSha256": "e47c89659ea70c0413f4eb6844c83fa2bd4d1cf1005ed1beceae66da57ecc9e1",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 768,
+        "height": 512
+      },
+      "crop": {
+        "left": 125,
+        "top": 101,
+        "width": 513,
+        "height": 328
+      }
+    },
+    "normalNW": {
+      "file": "normalNW.native.png",
+      "sha256": "7eb1ebb720b7504b37a179b2c687244265bc35a02a8299a6389d77cd5f610ec7",
+      "width": 407,
+      "height": 443,
+      "anchor": {
+        "x": 204,
+        "y": 299.5
+      },
+      "headingDegrees": 90,
+      "boxes": null,
+      "pixelsPerMetre": 577.15,
+      "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1 x 0.25 m, height 0.35 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "sourceFamily": "view",
+      "sourceSha256": "8d13eec4a414f45e28e903f4ab7f47fc5353cf2000260d46183ff3e02e85c65e",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "crop": {
+        "left": 112,
+        "top": 55,
+        "width": 407,
+        "height": 443
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "e76baddf1f98432b628c9e7b33c7dcf5ec155c63fc30928873702423f09baafb",
+      "width": 280,
+      "height": 424,
+      "anchor": {
+        "x": 146.5,
+        "y": 269.5
+      },
+      "headingDegrees": 53,
+      "boxes": null,
+      "pixelsPerMetre": 563.94,
+      "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1 x 0.25 m, height 0.35 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "sourceFamily": "view",
+      "sourceSha256": "6ecdd6cd622a957d99ba818ecaa52178df5da334ccf6169ff792c7fe4d36551f",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 768,
+        "height": 512
+      },
+      "crop": {
+        "left": 212,
+        "top": 46,
+        "width": 280,
+        "height": 424
+      }
+    }
+  },
+  "source": {
+    "views": {
+      "normalNE": {
+        "file": "../../batch02/gold-tee-markers/normal-NE.png",
+        "sha256": "b27b9b47886080ae695290a0b07748d1bed939eda14127bb1a2a6ae24ea9b048",
+        "width": 627,
+        "height": 627
+      },
+      "yaw8N": {
+        "file": "../../batch02/gold-tee-markers/yaw8-N.png",
+        "sha256": "d97a18548f5b4e8983eeb5e75b98f0d1a07a05b003157f172d642c3fc48ebfce",
+        "width": 768,
+        "height": 512
+      },
+      "normalSE": {
+        "file": "../../batch02/gold-tee-markers/normal-SE.png",
+        "sha256": "e3abf75fd717dc8b187a505019f09d7d1af0fbd7ee9337d0b858a8c409a527a5",
+        "width": 627,
+        "height": 627
+      },
+      "yaw8E": {
+        "file": "../../batch02/gold-tee-markers/yaw8-E.png",
+        "sha256": "bf603af5b48b6c47bde1c0c1aa029f169ff697c217ecbff5d576e29d277429e3",
+        "width": 768,
+        "height": 512
+      },
+      "normalSW": {
+        "file": "../../batch02/gold-tee-markers/normal-SW.png",
+        "sha256": "14229f29792b13189930afa25ea5bdaea3b355ff290c8a9331b061c0fff545cf",
+        "width": 627,
+        "height": 627
+      },
+      "yaw8S": {
+        "file": "../../batch02/gold-tee-markers/yaw8-S.png",
+        "sha256": "e47c89659ea70c0413f4eb6844c83fa2bd4d1cf1005ed1beceae66da57ecc9e1",
+        "width": 768,
+        "height": 512
+      },
+      "normalNW": {
+        "file": "../../batch02/gold-tee-markers/normal-NW.png",
+        "sha256": "8d13eec4a414f45e28e903f4ab7f47fc5353cf2000260d46183ff3e02e85c65e",
+        "width": 627,
+        "height": 627
+      },
+      "yaw8W": {
+        "file": "../../batch02/gold-tee-markers/yaw8-W.png",
+        "sha256": "6ecdd6cd622a957d99ba818ecaa52178df5da334ccf6169ff792c7fe4d36551f",
+        "width": 768,
+        "height": 512
+      }
+    }
+  },
+  "subject": "golf:course-gold-tee-markers",
+  "name": "Gold tee markers",
+  "kind": "decor",
+  "category": "Eight-view props",
+  "aliases": [
+    "newprop:gold-tee-markers"
+  ],
+  "solid": 1,
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ],
+  "reviewNote": "Lead review 2026-11-07: identity, eight distinct facings, upper-right light, alpha, and calibrated footprint/anchor overlays checked on art/tournament-kit-20261107/review/*.png"
+}

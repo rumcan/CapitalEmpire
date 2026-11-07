@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-four-lane-entrance",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../../batch01/four-lane-entrance/budget/yaw8-S.png",
+    "sha256": "be7b55cfcaaed4b751845e4dc03653e99878d6179549895de9c784c6aca71a9b",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 3,
+    "top": 192,
+    "width": 608,
+    "height": 260
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "617e96a0bd958c850f12b1e12fdf8d72f77cdf5bf42acce367ddceab5ce203b3",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

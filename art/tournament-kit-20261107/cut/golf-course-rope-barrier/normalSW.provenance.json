@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-rope-barrier",
+  "version": 1,
+  "key": "normalSW",
+  "source": {
+    "file": "../../batch02/rope-barrier/normal-SW.png",
+    "sha256": "949d19845ed987f00a5e6df5dba676055573bc3c964d52a581885f2342eda148",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 79,
+    "top": 107,
+    "width": 487,
+    "height": 445
+  },
+  "output": "normalSW.native.png",
+  "sha256": "8f3ccc6bfee48c617f04288e4aed6bd54c6ba79f599a11ff4433e2f516c559b2",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

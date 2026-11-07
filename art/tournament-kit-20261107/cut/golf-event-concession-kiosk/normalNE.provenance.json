@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-concession-kiosk",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch01/concession-kiosk/budget/normal-NE.png",
+    "sha256": "b4ef28546b583fe2c0bbd35ba8eec4d10daae806a01d59515a3b264ca6d41deb",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 59,
+    "top": 58,
+    "width": 507,
+    "height": 500
+  },
+  "output": "normalNE.native.png",
+  "sha256": "91b4e1b30f6f70377adfed026145c5c0cd85832e7972c07c900adcdb6594efa6",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-rope-barrier-corner",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../../batch02/rope-barrier-corner/normal-SE.png",
+    "sha256": "1bb7423bc4d1d7e26058e814ed01f10880c61276fc0d733a74c7e95c166c3904",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 4,
+    "top": 167,
+    "width": 589,
+    "height": 318
+  },
+  "output": "normalSE.native.png",
+  "sha256": "53d63332259cdddcc482bb7428abec44905f8ebfa150b9ed016641336f057579",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

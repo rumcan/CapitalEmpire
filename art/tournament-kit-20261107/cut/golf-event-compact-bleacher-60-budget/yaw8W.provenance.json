@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-compact-bleacher-60-budget",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../../bleachers/budget/yaw8-v1.png",
+    "sha256": "c9e60d9025f5f990279b41638e20f148b98e0b450fe482a0eced603955c80133",
+    "width": 1254,
+    "height": 1254
+  },
+  "cell": 3,
+  "cellRect": {
+    "left": 627,
+    "top": 627,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 121,
+    "top": 108,
+    "width": 338,
+    "height": 395
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "39a9384f502f57f3c2bab38a4f3f2e28623ff17a19f448377e8d9328fc7328c8",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

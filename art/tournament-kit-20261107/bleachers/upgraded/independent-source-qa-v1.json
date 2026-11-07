@@ -1,0 +1,194 @@
+{
+  "schema": 1,
+  "status": "HOLD yaw8-v1 capacity mismatch",
+  "capacity_requirement": {
+    "rows": 6,
+    "places_per_row": 10,
+    "total": 60
+  },
+  "normal_visual_observation": "TL front corner appears6rowsx10; no claim all other occluded cells independently count60.",
+  "yaw8_visual_observation": "N/top-left clearly only5rowsx10=50 chairs. No sixth row hidden behind rear rail. Other angled cells partially occlude chairs and cannot prove60.",
+  "geometry_exact8_approval": false,
+  "runtime_approved": false,
+  "native_pixel_changes": false,
+  "sources": {
+    "normal": {
+      "original": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-091f1ce8-3d70-49e8-9f8d-351396694954.png",
+      "sha256": "55639fff1bcc61e963755694942ccea358a3fc1cbe348266153a550bbff7456b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "zero_alpha_fraction": 0.49534185979665707,
+      "outer_border_alpha_max": 2,
+      "horizontal_center_gutter_alpha_max": 2,
+      "vertical_center_gutter_alpha_max": 2,
+      "cells": [
+        {
+          "view": "SE",
+          "rect_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alpha_gt128_bbox": [
+            59,
+            111,
+            566,
+            529
+          ],
+          "minimum_core_margin_px": 59,
+          "cell_boundary_alpha_max": 2,
+          "cell_boundary_core_gt128_pixels": 0
+        },
+        {
+          "view": "SW",
+          "rect_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alpha_gt128_bbox": [
+            78,
+            158,
+            580,
+            479
+          ],
+          "minimum_core_margin_px": 47,
+          "cell_boundary_alpha_max": 2,
+          "cell_boundary_core_gt128_pixels": 0
+        },
+        {
+          "view": "NW",
+          "rect_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alpha_gt128_bbox": [
+            57,
+            176,
+            564,
+            488
+          ],
+          "minimum_core_margin_px": 57,
+          "cell_boundary_alpha_max": 2,
+          "cell_boundary_core_gt128_pixels": 0
+        },
+        {
+          "view": "NE",
+          "rect_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alpha_gt128_bbox": [
+            60,
+            104,
+            560,
+            520
+          ],
+          "minimum_core_margin_px": 60,
+          "cell_boundary_alpha_max": 2,
+          "cell_boundary_core_gt128_pixels": 0
+        }
+      ],
+      "alpha_disposition": "native RGBA true transparency; no opaque/cell-boundary core clipping",
+      "colored_fringe_note": "Low-alpha RGB ringing is visible in raw viewer; no alpha manipulation performed."
+    },
+    "yaw8": {
+      "original": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-82d97c24-7f44-4259-a24d-96c0d222f43b.png",
+      "sha256": "fd9a233c2cc4ee29e0460038a6fa1013e0b86e3756f3b3d72171c54d93724f37",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "zero_alpha_fraction": 0.4544983962007382,
+      "outer_border_alpha_max": 2,
+      "horizontal_center_gutter_alpha_max": 2,
+      "vertical_center_gutter_alpha_max": 2,
+      "cells": [
+        {
+          "view": "N",
+          "rect_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alpha_gt128_bbox": [
+            91,
+            188,
+            542,
+            469
+          ],
+          "minimum_core_margin_px": 85,
+          "cell_boundary_alpha_max": 2,
+          "cell_boundary_core_gt128_pixels": 0
+        },
+        {
+          "view": "E",
+          "rect_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alpha_gt128_bbox": [
+            177,
+            142,
+            479,
+            533
+          ],
+          "minimum_core_margin_px": 94,
+          "cell_boundary_alpha_max": 2,
+          "cell_boundary_core_gt128_pixels": 0
+        },
+        {
+          "view": "S",
+          "rect_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alpha_gt128_bbox": [
+            95,
+            214,
+            561,
+            401
+          ],
+          "minimum_core_margin_px": 66,
+          "cell_boundary_alpha_max": 2,
+          "cell_boundary_core_gt128_pixels": 0
+        },
+        {
+          "view": "W",
+          "rect_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alpha_gt128_bbox": [
+            137,
+            124,
+            461,
+            502
+          ],
+          "minimum_core_margin_px": 124,
+          "cell_boundary_alpha_max": 1,
+          "cell_boundary_core_gt128_pixels": 0
+        }
+      ],
+      "alpha_disposition": "native RGBA true transparency; no opaque/cell-boundary core clipping",
+      "colored_fringe_note": "Low-alpha RGB ringing is visible in raw viewer; no alpha manipulation performed."
+    }
+  }
+}

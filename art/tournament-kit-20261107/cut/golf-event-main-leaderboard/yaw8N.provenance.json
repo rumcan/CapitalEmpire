@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-main-leaderboard",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch01/main-leaderboard/budget/yaw8-N.png",
+    "sha256": "6d1c0d23cd9b22da9d127c394afae27c62f33ff9d79a4dabaf401f6eee45ec53",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 74,
+    "top": 110,
+    "width": 488,
+    "height": 427
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "fe57dd839f3a02c7032498ef8c9352307923a650f9c6671c7402df12c139da78",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

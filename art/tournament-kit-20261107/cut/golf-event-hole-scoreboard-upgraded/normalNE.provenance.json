@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-hole-scoreboard-upgraded",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch01/hole-scoreboard/upgraded/normal-NE.png",
+    "sha256": "2351d7bbb1a4de1bc799ec455abf26f66c15bd96468aa9dc9b80a1ed6ad0c51a",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 111,
+    "top": 13,
+    "width": 470,
+    "height": 599
+  },
+  "output": "normalNE.native.png",
+  "sha256": "ca4424a5bd992500c63d4c89cbbb65066693a9e6979c54e3466e826de3e9a359",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

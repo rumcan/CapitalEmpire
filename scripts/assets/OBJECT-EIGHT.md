@@ -87,6 +87,28 @@ The initial runtime retained 26 historical native sets as 208 appended rows with
 
 Implementation checks, 2026-11-07: TypeScript clean; both importer checks pass; the focused rotation/placement/road-heading/event/course tests pass. The neighbouring props-variety suite retains its pre-existing `desert-palm desert` assertion because it excludes the newer desert group; the same failure was reproduced from HEAD's original source. The sparse checkout's thumbnail test passes after including the construction/concept/landscaping/range masters. No full suite, build, browser or server was started for this change. Actual imported new art still needs its visual review and browser preview before release.
 
+## Per-view sources and batch packing
+
+**Per-view sources.** Instead of two 2x2 sheets, `source` may name all eight keys, each a native alpha PNG relative to the manifest folder:
+
+```json
+"source": { "views": { "normalNE": "ne.png", "yaw8N": "n.png", "normalSE": "se.png", "yaw8E": "e.png", "normalSW": "sw.png", "yaw8S": "s.png", "normalNW": "nw.png", "yaw8W": "w.png" } }
+```
+
+Each file is one whole cell for its key, so there is no cell layout and no even-size rule. The same alpha crop, boundary, duplicate and mirror checks apply. The cut manifest records each file's hash under `source.views`, and integration refuses a changed original with `<key>: original source changed after cutting`. Both forms are accepted; a manifest with neither is rejected.
+
+**Batch integration.** Several approved manifests can share atlas pages:
+
+```
+node scripts/assets/import-object-eight.mjs --integrate-batch TAG [--density 0.6] A/manifest.json B/manifest.json ...
+```
+
+`TAG` is lowercase letters, digits and hyphens. The command writes `src/assets/object-eight/TAG-v1/` with shared `page-<i>-<mip>.webp` files (five lossless mips) and one `<subject-tag>.calibration.json` per set, then prints `Imported N sets into TAG: P shared pages`. It applies the same checks as `--integrate`, and it rejects a subject+version that is already registered or repeated in the batch. The single-set `--integrate` path is unchanged and produces identical output.
+
+**Atlas density.** Each cell is stored at `r = min(1, 0.6 x display scale)` of its native crop, where display scale is the factor above. That is the game's art convention: mip 0 at 0.6x display. Display size is unchanged: `w`, `h`, `ax`, `ay`, boxes and `quad` still use the native crop size times the display scale. Only the `tex` rectangle covers the smaller stored cell. Each view's calibration records its `atlasResize` (`r`), and the batch calibration records `atlasDensity`.
+
+**Shared pages.** Cells from all sets are shelf-packed together, tallest first, with an 8 px gutter. A catalogue batch therefore uses a few 2048 pages, not one mostly empty page per subject. Every set keeps its own IDs (`object8:<subject-tag>:<key>`), provenance and anchors.
+
 ## Bulk catalogue memory and hard limits
 
 The game already streams GPU atlas cells through a fixed residency plan. It does not put every full 2048px page on the GPU: default compressed texture budgets are 32 MiB at DPR 1 and 96 MiB above DPR 1; WebP/RGBA fallback deliberately uses four times those budgets. Every catalogue page does retain a coarse mip, down to 128px with the current five-level chain. Fine cells load only for visible/nearby sprites and evict by recency. Production KTX2 discovery reads the actual `ATLAS_PAGES`, including new object pages automatically.

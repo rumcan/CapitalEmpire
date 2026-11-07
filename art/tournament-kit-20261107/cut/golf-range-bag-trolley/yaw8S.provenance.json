@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:range-bag-trolley",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../../batch01/bag-trolley/upgraded/yaw8-S.png",
+    "sha256": "b41427ca631c09256b064055ea3d6d0e51296f1550e8ec30b544e4d6e6bcca41",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 138,
+    "top": 5,
+    "width": 341,
+    "height": 565
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "5f743cb448ae54b09df55145cca000644d40ad0a0636c5ec815f6ad3b74a84d4",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

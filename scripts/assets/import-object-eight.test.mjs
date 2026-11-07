@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { transformSync } from 'esbuild';
 import ts from 'typescript';
-import { KEYS, cutObject, integrateObject, validateDistinct, validateSeating, readGameProjection, objectDisplayScale } from './import-object-eight.mjs';
+import { KEYS, cutObject, integrateObject, integrateObjects, validateDistinct, validateSeating, readGameProjection, objectDisplayScale } from './import-object-eight.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const parent=path.join(root,'output'); fs.mkdirSync(parent,{recursive:true});
@@ -89,4 +89,54 @@ test('opaque sheets, duplicates and mirrored sources are rejected before they ca
   const input={schema:1,projection:'normal+yaw8',subject:'test:bad',name:'Bad',version:1,review:'candidate',source:{normal:'opaque.png',yaw8:'opaque.png'},pixelsPerMetre:16,baselineScale:1,footprintMetres:{width:8,depth:4}};
   const file=path.join(dir,'input.json');fs.writeFileSync(file,JSON.stringify(input));await assert.rejects(()=>cutObject(file,path.join(dir,'bad')),/opaque background/);
   const data=Buffer.from([1,2,3,255,4,5,6,255]);assert.throws(()=>validateDistinct([{key:'a',width:2,height:1,data},{key:'b',width:2,height:1,data:Buffer.from([4,5,6,255,1,2,3,255])}]),/Duplicate|mirrored/);
+});
+/** One distinct asymmetric alpha view per key: size, colour and a left stripe differ, so no two are mirrors. */
+async function viewPng(file,i) {
+  const W=48+i*2,H=40+i,data=Buffer.alloc(W*H*4);
+  for(let y=8;y<H-8;y++)for(let x=8;x<W-8;x++)if(x<12+i||y>H/2){const k=(y*W+x)*4;data[k]=30+i*25;data[k+1]=200-i*15;data[k+2]=90+i*10;data[k+3]=255;}
+  await sharp(data,{raw:{width:W,height:H,channels:4}}).png().toFile(file);
+}
+test('per-view source files cut as whole cells, and a changed original blocks integration',async t=>{
+  const dir=fixture(t),views={};
+  for(const [i,key] of KEYS.entries()){views[key]=`${key}.png`;await viewPng(path.join(dir,views[key]),i);}
+  const input={schema:1,projection:'normal+yaw8',subject:'test:views',name:'Per-view test',version:1,review:'candidate',source:{views},pixelsPerMetre:16,baselineScale:1,footprintMetres:{width:8,depth:4}};
+  const inputFile=path.join(dir,'input.json');fs.writeFileSync(inputFile,JSON.stringify(input));
+  const out=path.join(dir,'v1');const result=await cutObject(inputFile,out);
+  assert.equal(Object.keys(result.views).length,8);assert.equal(Object.keys(result.source.views).length,8);
+  assert.equal(new Set(KEYS.map(k=>result.views[k].sha256)).size,8);
+  assert.deepEqual(result.views.normalNE.cellRect,{left:0,top:0,width:48,height:40});assert.deepEqual(result.views.normalNE.crop,{left:4,top:4,width:40,height:32});
+  assert.equal(result.views.normalNE.cell,0);assert.equal(result.views.normalNE.sourceFamily,'view');
+  const candidate=path.join(out,'manifest.json');
+  result.review='approved';for(const [i,key]of KEYS.entries()){const v=result.views[key];v.anchor={x:v.width/2,y:v.height-5};v.headingDegrees=i*45;}
+  fs.mkdirSync(path.join(dir,'scripts/assets'),{recursive:true});fs.mkdirSync(path.join(dir,'src/game'),{recursive:true});
+  fs.writeFileSync(candidate,JSON.stringify(result));
+  const imported=await integrateObject(candidate,dir);assert.equal(new Set(Object.values(imported.views).map(v=>v.id)).size,8);
+  await viewPng(path.join(dir,'normalNE.png'),3);
+  await assert.rejects(()=>integrateObject(candidate,dir),/normalNE: original source changed after cutting/);
+});
+/** Cut one per-view subject and mark it approved with explicit anchors and headings. */
+async function approvedViewSet(dir,name,subject) {
+  const src=path.join(dir,name);fs.mkdirSync(src,{recursive:true});const views={};
+  for(const [i,key] of KEYS.entries()){views[key]=`${key}.png`;await viewPng(path.join(src,views[key]),i);}
+  const input={schema:1,projection:'normal+yaw8',subject,name,version:1,review:'candidate',source:{views},pixelsPerMetre:44,pixelCalibrationSpace:'orthographic-camera',baselineScale:1,footprintMetres:{width:8,depth:4}};
+  const inputFile=path.join(src,'input.json');fs.writeFileSync(inputFile,JSON.stringify(input));
+  const out=path.join(src,'v1');const result=await cutObject(inputFile,out);
+  result.review='approved';for(const [i,key]of KEYS.entries()){const v=result.views[key];v.anchor={x:v.width/2,y:v.height-5};v.headingDegrees=i*45;}
+  fs.writeFileSync(path.join(out,'manifest.json'),JSON.stringify(result));return path.join(out,'manifest.json');
+}
+test('batch integration packs several per-view subjects into shared pages at atlas density',async t=>{
+  const dir=fixture(t);const a=await approvedViewSet(dir,'a','test:batch-a'),b=await approvedViewSet(dir,'b','test:batch-b');
+  fs.mkdirSync(path.join(dir,'scripts/assets'),{recursive:true});fs.mkdirSync(path.join(dir,'src/game'),{recursive:true});
+  await assert.rejects(()=>integrateObjects([a],{root:dir,tag:'Bad Tag'}),/lowercase/);
+  const sets=await integrateObjects([a,b],{root:dir,tag:'batch'});
+  assert.equal(sets.length,2);
+  const assetDir=path.join(dir,'src/assets/object-eight/batch-v1'),files=fs.readdirSync(assetDir);
+  assert.equal(files.filter(f=>/^page-\d+-0\.webp$/.test(f)).length,1);assert.equal(files.filter(f=>f.endsWith('.calibration.json')).length,2);
+  const ledger=JSON.parse(fs.readFileSync(path.join(dir,'scripts/assets/object-eight-registry.json'),'utf8'));
+  assert.equal(ledger.pages.length,1);assert.equal(ledger.items.length,16);
+  const lib=fs.readFileSync(path.join(dir,'src/game/object-eight-library.ts'),'utf8');
+  for(const s of sets)assert.ok(lib.includes(`"subject":"${s.subject}"`));
+  const k=objectDisplayScale(44),native=JSON.parse(fs.readFileSync(a,'utf8')).views.normalNE,item=ledger.items.find(i=>i.id===sets[0].views.normalNE.id);
+  assert.equal(item.w,native.width*k);assert.equal(item.h,native.height*k);
+  assert.equal(Math.round((item.tex[3]-item.tex[1])*2048),Math.round(native.width*Math.min(1,.6*k)));
 });

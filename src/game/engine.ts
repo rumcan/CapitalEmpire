@@ -6,7 +6,7 @@ import { PUTT_IMPACT_S, galleryPeople, hash, queuePeople, walkerPeople, type Cro
 import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { personIdentity, type PersonIdentity } from './person-identity';
 import { legacySeating, placeSeating, seatLiftWorldPixels, seatingProblems, type PlacedSeating } from './golf/event-seating';
-import { facilityCondition, facilityImprovement, type FacilityCondition } from './golf/facility-models';
+import { facilityCondition, facilityImprovement, hasUpgradedArt, improvementCost, type FacilityCondition } from './golf/facility-models';
 import { GREENKEEPING } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
@@ -213,6 +213,7 @@ import { nextStructureFacing, structurePicture, structureArtReadiness, structure
 import { objectFacings } from './object-eight';
 import { objectAnchor, objectFacingLabel, type ObjectFacingKey } from './object-eight-types';
 import { STRUCTURE } from './golf/tents';
+import { prepDue, prepView, suggestSpot, type PrepFacts, type PrepTarget, type PrepView } from './golf/prep';
 import { gallerySpots } from './golf/galleries';
 import { invitedFacts, tierInfo, tournamentDue, type InviteCheck, type Need } from './golf/tour';
 import { lampGround } from './lamp-pool';
@@ -4244,10 +4245,13 @@ export class Game {
     /** Condition for newly placed seating, independent of tournament tier, size and facing. */
     eventCondition: FacilityCondition = 'budget';
     eventStructurePending: { typeId: string; mode: 'rent' | 'buy'; facing?: ObjectFacingKey; visualTier?: string; moveId?: number } | null = null;
+    /** the spot the tournament prep suggests for the pending structure (prepShowMe): a click inside it places there; cleared with the pending one */
+    eventSuggest: { typeId: string; x: number; y: number } | null = null;
     toggleEventTool() { this.toggleSideMode('eventTool'); }
     setPendingStructure(typeId: string, mode: 'rent' | 'buy') {
+    this.eventSuggest = null;
     const def = STRUCTURE[typeId];
-    const state = { typeId, ...(def?.requiresEightArt ? { visualTier: this.eventCondition } : {}) }, art = structureArtReadiness(state);
+    const state = { typeId, ...(def?.requiresEightArt || hasUpgradedArt(typeId) ? { visualTier: this.eventCondition } : {}) }, art = structureArtReadiness(state);
     if (!art.ready) { this.toast(art.reason, 'info'); return; }
     this.eventStructurePending = { ...state, mode, facing: structurePicture(state).facing };
     this.toast(`Selected ${def ? def.name : typeId} (${mode}). Click open owned land to place it.`);
@@ -4257,10 +4261,10 @@ export class Game {
     setEventCondition(condition: FacilityCondition): void {
       this.eventCondition = facilityCondition(condition);
       const pending = this.eventStructurePending;
-      if (pending && !pending.moveId && STRUCTURE[pending.typeId]?.requiresEightArt) {
+      if (pending && !pending.moveId && (STRUCTURE[pending.typeId]?.requiresEightArt || hasUpgradedArt(pending.typeId))) {
         const next = { ...pending, visualTier: this.eventCondition }, ready = structureArtReadiness(next);
         if (ready.ready) { pending.visualTier = next.visualTier; pending.facing = structurePicture(next).facing; }
-        else { this.eventStructurePending = null; this.toast(ready.reason, 'info'); }
+        else { this.eventStructurePending = null; this.eventSuggest = null; this.toast(ready.reason, 'info'); }
       }
       this.ghostCache = null; this.emit();
     }
@@ -4303,10 +4307,10 @@ export class Game {
     }
     moveSelectedEventStructure(): void {
       const s = this.selectedEventStructure(); if (!s) return;
-      this.eventStructurePending = { typeId: s.typeId, mode: s.mode, facing: structurePicture(s).facing, visualTier: s.visualTier, moveId: s.id };
+      this.eventSuggest = null; this.eventStructurePending = { typeId: s.typeId, mode: s.mode, facing: structurePicture(s).facing, visualTier: s.visualTier, moveId: s.id };
       this.toast('Choose a new position; R turns it before placing', 'info'); this.emit();
     }
-    cancelEventStructure(): void { this.eventStructurePending = null; this.ghostCache = null; this.emit(); }
+    cancelEventStructure(): void { this.eventStructurePending = null; this.eventSuggest = null; this.ghostCache = null; this.emit(); }
     /** Replacing the prop updates spatial indices and preserves the selected structure's identity. */
     private refreshStructure(s: PlacedEventStructure): void {
       const previous = this.golfStructureProps.get(s.id), selected = previous === this.selected;
@@ -4325,7 +4329,7 @@ export class Game {
     this.toast(check.reason ?? 'Cannot place structure here', 'warn');
     return false;
     }
-    const conditionFee = !candidate.moveId && STRUCTURE[candidate.typeId]?.requiresEightArt && facilityCondition(candidate.visualTier) === 'upgraded' ? STRUCTURE[candidate.typeId]!.upgradeCost ?? 0 : 0;
+    const feeDef = STRUCTURE[candidate.typeId], conditionFee = !candidate.moveId && feeDef && (feeDef.requiresEightArt || hasUpgradedArt(feeDef.id)) && facilityCondition(candidate.visualTier) === 'upgraded' ? improvementCost(feeDef) : 0;
     if (!candidate.moveId && this.money < check.cost + conditionFee) {
     this.toast(`Not enough money ($${(check.cost + conditionFee).toLocaleString()} required)`, 'warn');
     return false;
@@ -4333,7 +4337,7 @@ export class Game {
     if (candidate.moveId) {
       const s = this.golf.structures?.find(q => q.id === candidate.moveId); if (!s) return false;
       Object.assign(s, { x: candidate.x, y: candidate.y, facing: candidate.facing }); this.refreshStructure(s); this.syncCourseGates(); this.bump('structures');
-      this.eventStructurePending = null; this.scheduleSave(); this.emit(); return true;
+      this.eventStructurePending = null; this.eventSuggest = null; this.scheduleSave(); this.emit(); return true;
     }
     if (candidate.mode === 'buy' && check.cost > 0) {
     this.traffic.spend('construction', check.cost);
@@ -4353,7 +4357,7 @@ export class Game {
     }
     const def = STRUCTURE[candidate.typeId];
     this.toast(candidate.mode === 'rent' ? `Placed ${def ? def.name : candidate.typeId} (rent $${check.cost.toLocaleString()}/yr at tournament)` : `Placed ${def ? def.name : candidate.typeId} ($${check.cost.toLocaleString()})`);
-    this.eventStructurePending = null;
+    this.eventStructurePending = null; this.eventSuggest = null;
     this.scheduleSave();
     this.emit();
     return true;
@@ -5306,6 +5310,95 @@ export class Game {
       default: this.startFirstHole(); queueMicrotask(() => this.pulseAnchor('new-hole')); return;
     }
   }
+  // ---------- the tournament prep quests (golf/prep.ts; the RangeGuideCard's look): this tier's chapter (or the next) as a checklist, the first
+  // structure of a step suggested as a spot to click (the game never places a structure itself), each step paid once when it is built
+  /** the prep quests' facts (null outside golf): the tier, the needs the course has, its placed structures, its saved progress, and whether a
+   *  type's art is ready and its tier allowed */
+  private prepFacts(): PrepFacts | null {
+    const g = this.golf; if (!g) return null;
+    return { tier: g.tier, have: this.golfFacts(g).facts.have, placed: g.structures ?? [], save: g.prep ?? { done: [], skipped: [] }, available: id => this.eventArtStatus(id).ready && (STRUCTURE[id]?.tier ?? 9) <= g.tier + 1 };
+  }
+  /** the chapter the checklist shows, the player's hiding ignored (null: no chapter has a todo step) */
+  private prepChapter(f: PrepFacts): number | null { return prepView({ ...f, save: { done: f.save.done, skipped: f.save.skipped } })?.chapter ?? null; }
+  /** the prep quests' tick (progressCheck, a few times a second): an old save's first look marks the steps it has built as done, unpaid; then each
+   *  newly built step pays its reward once, and a hidden chapter comes back once the checklist moves on to the next chapter */
+  private prepTick = 0;
+  /** the prep card's view as the last tick (or a skip) found it: the course facts are not cheap, so the card never derives them per render */
+  private prepCached: PrepView | null = null;
+  private prepCheck(force = false) {
+    if (!force && ++this.prepTick % 6) return; // about once a second
+    const g = this.golf, f = this.prepFacts(); if (!g || !f) { this.prepCached = null; return; }
+    if (!g.prep) { g.prep = { done: prepDue(f).map(s => s.id), skipped: [] }; this.scheduleSave(); return; }
+    const p = g.prep, due = prepDue(f);
+    for (const s of due) { p.done.push(s.id); this.traffic.spend('construction', -s.reward); this.toast(`Tournament prep: ${s.title} ✓ (+$${s.reward.toLocaleString()})`, 'good'); }
+    const unhide = p.hidden !== undefined && p.hidden !== this.prepChapter(f);
+    if (unhide) delete p.hidden;
+    const was = this.prepCached; this.prepCached = prepView(f);
+    if (!due.length && !unhide) { if (JSON.stringify(was) !== JSON.stringify(this.prepCached)) this.emit(); return; }
+    this.scheduleSave(); this.emit();
+  }
+  /** the prep card's folded state (the player's; not saved; null: folded when the checklist is longer than six lines) */
+  prepFolded: boolean | null = null;
+  /** the prep card's view: the shown chapter's lines as guide lines (null: not golf, a tutorial or guide card stands, or no chapter to show) */
+  prepCardView(): { lines: GuideLine[]; folded: boolean; heading: string } | null {
+    if (!this.golf || this.tourView() || this.rangeGuideView()) return null;
+    const view = this.prepCached; if (!view) return null;
+    const lines = view.lines.map((l, i): GuideLine => ({ step: { id: l.step.id, n: i + 1, title: `${l.step.title}${l.progress ? ` (${l.progress})` : ''}${l.step.optional ? ' · optional' : ''}`, body: l.step.body, done: 'auto', target: {}, reward: l.step.reward }, state: l.state, current: l.current }));
+    return { lines, folded: this.prepFolded ?? lines.length > 6, heading: `Tournament prep · ${view.name}` };
+  }
+  /** Skip on a prep line (no reward; the step leaves the checklist), or Hide (id null): the chapter shown goes away until the checklist moves on */
+  prepSkip(id: string | null) {
+    const p = this.golf?.prep; if (!p) return;
+    if (id !== null) { if (!p.skipped.includes(id)) p.skipped.push(id); }
+    else { const f = this.prepFacts(), c = f ? this.prepChapter(f) : null; if (c === null) return; p.hidden = c; }
+    this.prepCheck(true); this.scheduleSave(); this.emit();
+  }
+  /** Show me on a prep line: the Event tool in hand with its structure. The first of its type is offered a spot (its ghost there, a click places it
+   *  there); a later one is placed where the player likes */
+  prepShowMe(id: string) {
+    const f = this.prepFacts(), line = f ? prepView(f)?.lines.find(l => l.step.id === id) : undefined, g = this.golf;
+    if (!f || !line || !g) return;
+    const step = line.step;
+    if (!this.eventTool) this.toggleEventTool();
+    const before = this.eventStructurePending;
+    this.setPendingStructure(step.typeId, (STRUCTURE[step.typeId]?.rent ?? 0) > 0 ? 'rent' : 'buy');
+    const pend = this.eventStructurePending; if (!pend || pend === before) return; // (setPendingStructure leaves the old one when the art is not ready)
+    if (!line.first) { this.toast('Place it where you like', 'info'); this.emit(); return; }
+    const at = this.prepSpotTarget(step.target, step.typeId);
+    const holes = this.courseStatsView() ? deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims) : [];
+    const opts = { tier: g.tier, holes, existing: g.structures ?? [], parcels: g.parcels ?? [g.parcel] };
+    // the suggestion prefers open ground (no tree, prop or building standing in its rect); the player may still place it on any valid spot
+    const valid = (x: number, y: number) => checkStructurePlacement({ ...pend, x, y }, opts).ok;
+    const open = (x: number, y: number) => { const r = structureRect({ ...pend, x, y }); return valid(x, y) && !this.propGrid.query([r[0], r[1], r[0] + r[2], r[1] + r[3]]).size; };
+    const spot = suggestSpot(at, open, 60) ?? suggestSpot(at, valid, 60);
+    if (!spot) { this.toast('No free spot is near there: place it where you like', 'info'); this.emit(); return; }
+    this.eventSuggest = { typeId: step.typeId, x: spot.x, y: spot.y };
+    const r = structureRect({ ...pend, x: spot.x, y: spot.y });
+    this.lookAt(r[0] + r[2] / 2, r[1] + r[3] / 2, 0.25);
+    this.toast('A suggested spot is shown: click it to place there, or place it anywhere you like', 'info');
+    this.emit();
+  }
+  /** where a prep step's first structure aims: the 18th green (the highest hole's pin), the first green (by hole) with no such structure within 25 tiles,
+   *  the clubhouse, the gate's approach, or the entrance (the first gate's centre) */
+  private prepSpotTarget(target: PrepTarget, typeId: string): Pt {
+    const g = this.golf!, pins = [...g.pins].sort((a, b) => a.hole - b.hole), club = g.clubhouse;
+    const centres = (g.structures ?? []).filter(s => s.typeId === typeId).map(s => { const r = structureRect(s); return { x: r[0] + r[2] / 2, y: r[1] + r[3] / 2 }; });
+    const covered = (p: Pt) => centres.some(c => Math.hypot(c.x - p.x, c.y - p.y) <= 25);
+    switch (target) {
+      case 'green18': return pins[pins.length - 1] ?? club;
+      case 'green': return pins.find(p => !covered(p)) ?? pins[0] ?? club;
+      case 'entry': { const gate = (g.structures ?? []).find(s => s.typeId === 'gate'); if (!gate) return this.prepGatePoint(); const r = structureRect(gate); return { x: r[0] + r[2] / 2, y: r[1] + r[3] / 2 }; }
+      case 'gate': return this.prepGatePoint();
+      default: return club;
+    }
+  }
+  /** 40% of the way from the clubhouse to the nearest car park's centre (x, y is its corner; the clubhouse when there is none): the gate's approach */
+  private prepGatePoint(): Pt {
+    const c = this.golf!.clubhouse, parks = this.parkDefs.map(d => ({ x: d.x + d.w / 2, y: d.y + d.h / 2 }));
+    if (!parks.length) return c;
+    const p = parks.reduce((a, b) => (Math.hypot(b.x - c.x, b.y - c.y) < Math.hypot(a.x - c.x, a.y - c.y) ? b : a));
+    return { x: c.x + (p.x - c.x) * 0.4, y: c.y + (p.y - c.y) * 0.4 };
+  }
   // ---------- T293 (#878): the start tutorial (tour.ts TOWN_TOUR; the RangeGuideCard's look): the town grows only along the roads you build
   /** what the tutorial's steps read: the road tool's lock and the start */
   private tourFacts(): TourFacts { return { roadLock: this.toolLock('road'), start: this.golf?.start === 'range' ? 'range' : 'town' }; }
@@ -5531,7 +5624,11 @@ export class Game {
   }
   this.overlay.setPointerCapture(e.pointerId);
     if (side && this.eventTool && this.eventStructurePending && this.golf && this.hover && e.button === 0) {  
- this.placeEventStructure({ ...this.eventStructurePending, x: Math.round(this.hover.x), y: Math.round(this.hover.y) });
+ const pend = this.eventStructurePending, sug = this.eventSuggest, spot = sug && sug.typeId === pend.typeId && !pend.moveId ? structureRect({ ...pend, x: sug.x, y: sug.y }) : null;
+ // a click inside the suggested spot (prepShowMe) places it there; anywhere else, on the tile under the cursor
+ const inSpot = !!sug && !!spot && this.hover.x >= spot[0] && this.hover.x <= spot[0] + spot[2] && this.hover.y >= spot[1] && this.hover.y <= spot[1] + spot[3];
+ const at = inSpot && sug ? sug : { x: Math.round(this.hover.x), y: Math.round(this.hover.y) };
+ this.placeEventStructure({ ...pend, x: at.x, y: at.y });
  return;  
  }  
  if (side && e.button === 0 && !this.keys.has(' ')) { const b = this.badgeAt(mx, my); if (b) { this.overlay.setPointerCapture(e.pointerId); this.badgeDrag = { n: b, sx: mx, sy: my, mx, my, moved: false }; return; } } // T174: a hole badge
@@ -7001,7 +7098,7 @@ export class Game {
   private tidySideModes() {
   if (!this.landMode) { this.land.hover = null; this.land.cancel(); }
   if (!this.holesTool && !this.markerDrag) this.selectedGolfMarker = null;
-  if (!this.eventTool) this.eventStructurePending = null;
+  if (!this.eventTool) { this.eventStructurePending = null; this.eventSuggest = null; }
   if (!this.grassPanel) this.grassAction = null;
   }
   private blockLandClass(r: [number, number, number, number]): { landClass: ParcelLandClass; houses: number; buildings: number } {
@@ -7122,6 +7219,7 @@ export class Game {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
     this.rangeGuideCheck(); // T239: the guided build's steps tick
     this.tourCheck(); // T293: the start tutorial's steps
+    this.prepCheck(); // the tournament prep quests: each built step pays once
     this.sceneNewsCheck(); // T242: a range view's picture turned: a toast offers its card (about once a second)
     const f = this.playerProgressFacts(), was = p.ramp;
     if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
@@ -11179,27 +11277,41 @@ export class Game {
   private ghostView(ctx: CanvasRenderingContext2D): GhostView {
     return { ctx, setIso: c => this.setIso(c as CanvasRenderingContext2D), screen: (x, y) => this.screen(x, y), dpr: this.dpr };
   }
+  /** a structure's picture at its candidate spot, drawn at alpha (the Event tool's cursor ghost and the suggested spot share it) */
+  private drawStructureArt(ctx: CanvasRenderingContext2D, cand: { typeId: string; x: number; y: number; facing?: ObjectFacingKey; visualTier?: string }, alpha: number) {
+    const pic = structurePicture(cand), item = LIB_INDEX.get(pic.id);
+    if (item === undefined) return;
+    const d = this.decorDraw, scale = structureScale(cand.typeId, LIBRARY[item]!, false, pic.facing, cand.visualTier), anchor = objectAnchor(LIBRARY[item]!.boxes, structureRect(cand), scale);
+    d.item = item; d.x = anchor.x; d.y = anchor.y; d.flip = false; d.scale = scale;
+    const l = lookOf(d), it = LIBRARY[l.item]!, [page, u0, v0, u1, v1] = it.tex, image = this.pageImage0(page);
+    if (!image || l.hidden) return;
+    const z = this.cam.z * this.dpr, r = spriteRect(d);
+    ctx.save(); ctx.globalAlpha = alpha;
+    ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1-u0)*image.naturalWidth, (v1-v0)*image.naturalHeight,
+      (r[0]-this.cam.X)*z+this.cw/2, (r[1]-this.cam.Y)*z+this.ch/2, (r[2]-r[0])*z, (r[3]-r[1])*z); ctx.restore();
+  }
+  /** the spot the tournament prep suggests (prepShowMe): the pending structure's picture there at 45% and its footprint, labelled 'Suggested spot' */
+  private suggestGhost: { sug: object; facing?: ObjectFacingKey; visualTier?: string; bp: GhostBlueprint } | null = null;
+  private drawSuggestedSpot(ctx: CanvasRenderingContext2D, pend: { typeId: string; mode: 'rent' | 'buy'; facing?: ObjectFacingKey; visualTier?: string }, sug: { typeId: string; x: number; y: number }) {
+    const cand = { ...pend, x: sug.x, y: sug.y };
+    let sg = this.suggestGhost;
+    if (!sg || sg.sug !== sug || sg.facing !== pend.facing || sg.visualTier !== pend.visualTier) sg = this.suggestGhost = { sug, facing: pend.facing, visualTier: pend.visualTier, bp: { ...structureGhost(structureRect(cand), { ok: true, cost: 0 }, this.money, '', pend.mode), label: 'Suggested spot' } };
+    const r = structureRect(cand), c = this.screen(r[0] + r[2] / 2, r[1] + r[3] / 2);
+    this.drawStructureArt(ctx, cand, 0.45);
+    drawGhostBlueprint(this.ghostView(ctx), sg.bp, c.x / this.dpr, c.y / this.dpr);
+  }
   /** the Event tool's and the Holes tool's ghosts at the cursor (T019): the pending structure's footprint or the selected marker's ring, green when the click would succeed, else red, with its one-line label; rebuilt only when the hover spot or the course changes */
   private drawEventGhosts(ctx: CanvasRenderingContext2D) {
-    const h = this.hover, m = this.ghostMouse, g = this.golf; if (!h || !m || !g) return;
+    const h = this.hover, m = this.ghostMouse, g = this.golf, sug = this.eventSuggest, pend = this.eventStructurePending;
+    if (g && sug && pend && this.eventTool && !pend.moveId && sug.typeId === pend.typeId) this.drawSuggestedSpot(ctx, pend, sug);
+    if (!h || !m || !g) return;
     let key = '', make: (() => GhostBlueprint) | null = null;
     if (this.eventTool && this.eventStructurePending) {
       const p = this.eventStructurePending, cand = { ...p, x: Math.round(h.x), y: Math.round(h.y) };
       key = `s|${p.typeId}|${p.mode}|${p.facing}|${p.moveId}|${cand.x}|${cand.y}|${this.money}|${this.paint.areas.length}|${this.gaRev}|${(g.structures ?? []).length}`;
       make = () => structureGhost(structureRect(cand), this.structureCheck(cand), this.money, STRUCTURE[p.typeId]?.name ?? p.typeId, p.mode);
       if (this.ghostCache?.key !== key) this.ghostCache = { key, bp: make() };
-      const pic = structurePicture(cand), item = LIB_INDEX.get(pic.id);
-      if (item !== undefined) {
-        const d = this.decorDraw, scale = structureScale(p.typeId, LIBRARY[item]!, false, pic.facing, p.visualTier), anchor = objectAnchor(LIBRARY[item]!.boxes, structureRect(cand), scale);
-        d.item = item; d.x = anchor.x; d.y = anchor.y; d.flip = false; d.scale = scale;
-        const l = lookOf(d), it = LIBRARY[l.item]!, [page, u0, v0, u1, v1] = it.tex, image = this.pageImage0(page);
-        if (image && !l.hidden) {
-          const z = this.cam.z * this.dpr, r = spriteRect(d);
-          ctx.save(); ctx.globalAlpha = this.ghostCache?.bp.bad ? 0.35 : 0.7;
-          ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1-u0)*image.naturalWidth, (v1-v0)*image.naturalHeight,
-            (r[0]-this.cam.X)*z+this.cw/2, (r[1]-this.cam.Y)*z+this.ch/2, (r[2]-r[0])*z, (r[3]-r[1])*z); ctx.restore();
-        }
-      }
+      this.drawStructureArt(ctx, cand, this.ghostCache?.bp.bad ? 0.35 : 0.7);
     } else if ((this.holesTool || this.markerDrag) && this.selectedGolfMarker) {
       const s = this.selectedGolfMarker;
       key = `m|${s.hole}|${s.kind}|${h.x}|${h.y}|${this.paint.areas.length}|${this.gaRev}`;

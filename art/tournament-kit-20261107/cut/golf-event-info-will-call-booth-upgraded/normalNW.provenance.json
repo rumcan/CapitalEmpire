@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-info-will-call-booth-upgraded",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../batch01/info-will-call-booth/upgraded/normal-NW.png",
+    "sha256": "99faff750b49bae1b61f2c9193fd90c571a001428a0fb99cd678280dae9d9f28",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 42,
+    "top": 44,
+    "width": 561,
+    "height": 524
+  },
+  "output": "normalNW.native.png",
+  "sha256": "b752cc18755bb0a3d167a929c9b9718ff9f8c6cc37695e6584d01ddf4042f690",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

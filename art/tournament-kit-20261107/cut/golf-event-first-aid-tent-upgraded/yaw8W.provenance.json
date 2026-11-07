@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-first-aid-tent-upgraded",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../../batch01/first-aid-tent/upgraded/yaw8-W.png",
+    "sha256": "40e98c19d611c1deb7f105ea3e89e5d58789deb6386a1758dad81f253215761c",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 61,
+    "top": 89,
+    "width": 484,
+    "height": 413
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "2416a71bee27a056d6b1d423c39f93e84ec5b2e20da55184233d7c275d938e08",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

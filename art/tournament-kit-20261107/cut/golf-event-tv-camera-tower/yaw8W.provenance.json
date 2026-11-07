@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-tv-camera-tower",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../../batch01/tv-camera-tower/budget/yaw8-W.png",
+    "sha256": "511fbdebaff7f46d0635118ed93c6f9a2c656bc36d8e3c6694d2780bdad7ef7b",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 198,
+    "top": 51,
+    "width": 231,
+    "height": 511
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "a8579f4ab5e6e478d9cc6dd7ef3f4359e65a75cb9fc5495add3bad3d4f004674",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

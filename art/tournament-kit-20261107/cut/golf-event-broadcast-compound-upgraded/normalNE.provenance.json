@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-broadcast-compound-upgraded",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch01/broadcast-compound/upgraded/normal-NE.png",
+    "sha256": "7bcc15082da0c9c907db313958bc01f9a8c9928265ce5017abeea1fb3faecff1",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 23,
+    "top": 77,
+    "width": 565,
+    "height": 458
+  },
+  "output": "normalNE.native.png",
+  "sha256": "b0ca22ae51e28753a76cd63d4b5c75a2b96b8ad2a7921e0fb3025afe2e700bfa",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

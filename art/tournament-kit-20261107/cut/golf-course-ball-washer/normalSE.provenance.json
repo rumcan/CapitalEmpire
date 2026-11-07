@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-ball-washer",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../../batch02/ball-washer/normal-SE.png",
+    "sha256": "20195ddd8beb7725b0b3d6ba6c74dd93366a8242876c2bbffb5f191e8b309328",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 174,
+    "top": 16,
+    "width": 347,
+    "height": 568
+  },
+  "output": "normalSE.native.png",
+  "sha256": "ec186d2d5970b2096b46822c00b92f0b58a93d74e85ddafcf34183fc4e75d35b",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

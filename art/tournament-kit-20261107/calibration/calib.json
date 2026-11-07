@@ -1,0 +1,2942 @@
+{
+ "food-truck/budget": {
+  "W": 7,
+  "D": 2.5,
+  "H": 3,
+  "views": {
+   "normal-NE": {
+    "p": 72.44,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 305.5,
+     "y": 392.3
+    },
+    "widthRatio": 1.01
+   },
+   "normal-SE": {
+    "p": 72.44,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 335,
+     "y": 430.3
+    },
+    "widthRatio": 1.08
+   },
+   "normal-SW": {
+    "p": 72.44,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 288.5,
+     "y": 407.3
+    },
+    "widthRatio": 1.05
+   },
+   "normal-NW": {
+    "p": 72.44,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 342,
+     "y": 357.3
+    },
+    "widthRatio": 0.99
+   },
+   "yaw8-N": {
+    "p": 93.45,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 353.5,
+     "y": 443.4
+    },
+    "widthRatio": 0.88
+   },
+   "yaw8-E": {
+    "p": 74.38,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 327,
+     "y": 416.6
+    },
+    "widthRatio": 1.24
+   },
+   "yaw8-S": {
+    "p": 91.14,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 351,
+     "y": 410.4
+    },
+    "widthRatio": 0.92
+   },
+   "yaw8-W": {
+    "p": 71.18,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 313,
+     "y": 384.5
+    },
+    "widthRatio": 1.25
+   }
+  }
+ },
+ "food-truck/upgraded": {
+  "W": 7,
+  "D": 2.5,
+  "H": 3,
+  "views": {
+   "normal-NE": {
+    "p": 72.69,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 305.5,
+     "y": 392.9
+    },
+    "widthRatio": 1.01
+   },
+   "normal-SE": {
+    "p": 72.69,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 335.5,
+     "y": 430.9
+    },
+    "widthRatio": 1.08
+   },
+   "normal-SW": {
+    "p": 72.69,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 289,
+     "y": 407.9
+    },
+    "widthRatio": 1.05
+   },
+   "normal-NW": {
+    "p": 72.69,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 342,
+     "y": 357.9
+    },
+    "widthRatio": 1
+   },
+   "yaw8-N": {
+    "p": 93.22,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 361,
+     "y": 441.6
+    },
+    "widthRatio": 0.87
+   },
+   "yaw8-E": {
+    "p": 74.06,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 330.5,
+     "y": 410.2
+    },
+    "widthRatio": 1.24
+   },
+   "yaw8-S": {
+    "p": 91.6,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 361.5,
+     "y": 408
+    },
+    "widthRatio": 0.89
+   },
+   "yaw8-W": {
+    "p": 69.25,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 318,
+     "y": 376
+    },
+    "widthRatio": 1.25
+   }
+  }
+ },
+ "tv-camera-tower/budget": {
+  "W": 2,
+  "D": 2,
+  "H": 5.2,
+  "views": {
+   "normal-NE": {
+    "p": 84.24,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 314,
+     "y": 486.4
+    },
+    "widthRatio": 1.05
+   },
+   "normal-SE": {
+    "p": 84.24,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 314,
+     "y": 486.4
+    },
+    "widthRatio": 1.02
+   },
+   "normal-SW": {
+    "p": 84.24,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 313.5,
+     "y": 485.4
+    },
+    "widthRatio": 1.03
+   },
+   "normal-NW": {
+    "p": 84.24,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 314,
+     "y": 486.4
+    },
+    "widthRatio": 1.05
+   },
+   "yaw8-N": {
+    "p": 89.03,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 312,
+     "y": 511.7
+    },
+    "widthRatio": 1.1
+   },
+   "yaw8-E": {
+    "p": 89.03,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 310.5,
+     "y": 507.7
+    },
+    "widthRatio": 1.08
+   },
+   "yaw8-S": {
+    "p": 89.03,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 311,
+     "y": 509.7
+    },
+    "widthRatio": 1.11
+   },
+   "yaw8-W": {
+    "p": 89.03,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 313.5,
+     "y": 507.7
+    },
+    "widthRatio": 1.1
+   }
+  }
+ },
+ "tv-camera-tower/upgraded": {
+  "W": 2,
+  "D": 2,
+  "H": 5.2,
+  "views": {
+   "normal-NE": {
+    "p": 81.96,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 314.5,
+     "y": 498
+    },
+    "widthRatio": 1.09
+   },
+   "normal-SE": {
+    "p": 81.96,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 313,
+     "y": 498
+    },
+    "widthRatio": 1.09
+   },
+   "normal-SW": {
+    "p": 168.49,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 627.5,
+     "y": 994.9
+    },
+    "widthRatio": 1.09
+   },
+   "normal-NW": {
+    "p": 81.96,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 313.5,
+     "y": 498
+    },
+    "widthRatio": 1.09
+   },
+   "yaw8-N": {
+    "p": 89.83,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 313.5,
+     "y": 511.3
+    },
+    "widthRatio": 1.13
+   },
+   "yaw8-E": {
+    "p": 89.83,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 313.5,
+     "y": 509.3
+    },
+    "widthRatio": 1.12
+   },
+   "yaw8-S": {
+    "p": 89.83,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 313,
+     "y": 509.3
+    },
+    "widthRatio": 1.13
+   },
+   "yaw8-W": {
+    "p": 89.83,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 314.5,
+     "y": 510.3
+    },
+    "widthRatio": 1.12
+   }
+  }
+ },
+ "broadcast-compound/budget": {
+  "W": 16,
+  "D": 12,
+  "H": 4.5,
+  "views": {
+   "normal-NE": {
+    "p": 26.46,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 309.5,
+     "y": 367
+    },
+    "widthRatio": 0.98
+   },
+   "normal-SE": {
+    "p": 26.46,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 307.5,
+     "y": 365
+    },
+    "widthRatio": 1.01
+   },
+   "normal-SW": {
+    "p": 26.46,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 317.5,
+     "y": 364
+    },
+    "widthRatio": 1.03
+   },
+   "normal-NW": {
+    "p": 26.46,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 310.5,
+     "y": 343
+    },
+    "widthRatio": 1.02
+   },
+   "yaw8-N": {
+    "p": 25.8,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 314,
+     "y": 381
+    },
+    "widthRatio": 0.94
+   },
+   "yaw8-E": {
+    "p": 25.8,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 308,
+     "y": 372
+    },
+    "widthRatio": 1.13
+   },
+   "yaw8-S": {
+    "p": 25.8,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 307.5,
+     "y": 373
+    },
+    "widthRatio": 0.94
+   },
+   "yaw8-W": {
+    "p": 25.8,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 302.5,
+     "y": 354
+    },
+    "widthRatio": 1.19
+   }
+  }
+ },
+ "broadcast-compound/upgraded": {
+  "W": 16,
+  "D": 12,
+  "H": 4.5,
+  "views": {
+   "normal-NE": {
+    "p": 31.02,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 305,
+     "y": 377.4
+    },
+    "widthRatio": 0.91
+   },
+   "normal-SE": {
+    "p": 31.02,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 307,
+     "y": 390.4
+    },
+    "widthRatio": 0.92
+   },
+   "normal-SW": {
+    "p": 31.02,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 313.5,
+     "y": 379.4
+    },
+    "widthRatio": 0.91
+   },
+   "normal-NW": {
+    "p": 31.02,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 308,
+     "y": 367.4
+    },
+    "widthRatio": 0.92
+   },
+   "yaw8-N": {
+    "p": 65.79,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 779,
+     "y": 682.9
+    },
+    "widthRatio": 0.87
+   },
+   "yaw8-E": {
+    "p": 65.79,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 729.5,
+     "y": 593.9
+    },
+    "widthRatio": 0.98
+   },
+   "yaw8-S": {
+    "p": 65.79,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 754,
+     "y": 577.9
+    },
+    "widthRatio": 0.79
+   },
+   "yaw8-W": {
+    "p": 65.79,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 762,
+     "y": 660.9
+    },
+    "widthRatio": 1.06
+   }
+  }
+ },
+ "first-aid-tent/budget": {
+  "W": 5,
+  "D": 5,
+  "H": 3.2,
+  "views": {
+   "normal-NE": {
+    "p": 72.86,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 307.5,
+     "y": 410.2
+    },
+    "widthRatio": 1.04
+   },
+   "normal-SE": {
+    "p": 72.86,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 312,
+     "y": 430.2
+    },
+    "widthRatio": 1.04
+   },
+   "normal-SW": {
+    "p": 72.86,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 312.5,
+     "y": 430.2
+    },
+    "widthRatio": 1.03
+   },
+   "normal-NW": {
+    "p": 72.86,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 311.5,
+     "y": 412.2
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-N": {
+    "p": 75.7,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 323.5,
+     "y": 424.1
+    },
+    "widthRatio": 1.06
+   },
+   "yaw8-E": {
+    "p": 75.7,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 298.5,
+     "y": 429.1
+    },
+    "widthRatio": 1.15
+   },
+   "yaw8-S": {
+    "p": 75.7,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 322.5,
+     "y": 386.1
+    },
+    "widthRatio": 0.95
+   },
+   "yaw8-W": {
+    "p": 75.7,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 304.5,
+     "y": 389.1
+    },
+    "widthRatio": 1.07
+   }
+  }
+ },
+ "first-aid-tent/upgraded": {
+  "W": 5,
+  "D": 5,
+  "H": 3.2,
+  "views": {
+   "normal-NE": {
+    "p": 73.41,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 310,
+     "y": 411.2
+    },
+    "widthRatio": 1.03
+   },
+   "normal-SE": {
+    "p": 73.41,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 312.5,
+     "y": 429.2
+    },
+    "widthRatio": 1.03
+   },
+   "normal-SW": {
+    "p": 73.41,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 311.5,
+     "y": 431.2
+    },
+    "widthRatio": 1.02
+   },
+   "normal-NW": {
+    "p": 73.41,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 312.5,
+     "y": 413.2
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-N": {
+    "p": 76.77,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 323.5,
+     "y": 426.6
+    },
+    "widthRatio": 1.05
+   },
+   "yaw8-E": {
+    "p": 76.77,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 300.5,
+     "y": 428.6
+    },
+    "widthRatio": 1.17
+   },
+   "yaw8-S": {
+    "p": 76.77,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 324.5,
+     "y": 387.6
+    },
+    "widthRatio": 0.95
+   },
+   "yaw8-W": {
+    "p": 76.77,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 301.5,
+     "y": 388.6
+    },
+    "widthRatio": 1.09
+   }
+  }
+ },
+ "info-will-call-booth/budget": {
+  "W": 4,
+  "D": 4,
+  "H": 3,
+  "views": {
+   "normal-NE": {
+    "p": 95,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 305,
+     "y": 429.7
+    },
+    "widthRatio": 1.02
+   },
+   "normal-SE": {
+    "p": 95,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 322.5,
+     "y": 446.7
+    },
+    "widthRatio": 1.03
+   },
+   "normal-SW": {
+    "p": 95,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 308,
+     "y": 446.7
+    },
+    "widthRatio": 1.03
+   },
+   "normal-NW": {
+    "p": 95,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 321.5,
+     "y": 427.7
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-N": {
+    "p": 106.76,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 342,
+     "y": 451.4
+    },
+    "widthRatio": 1.1
+   },
+   "yaw8-E": {
+    "p": 106.76,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 310.5,
+     "y": 453.4
+    },
+    "widthRatio": 1
+   },
+   "yaw8-S": {
+    "p": 106.76,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 325.5,
+     "y": 422.4
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-W": {
+    "p": 106.76,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 305.5,
+     "y": 425.4
+    },
+    "widthRatio": 0.95
+   }
+  }
+ },
+ "info-will-call-booth/upgraded": {
+  "W": 4,
+  "D": 4,
+  "H": 3,
+  "views": {
+   "normal-NE": {
+    "p": 95.09,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 305,
+     "y": 431.5
+    },
+    "widthRatio": 1.02
+   },
+   "normal-SE": {
+    "p": 95.09,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 322.5,
+     "y": 448.5
+    },
+    "widthRatio": 1.02
+   },
+   "normal-SW": {
+    "p": 95.09,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 307,
+     "y": 448.5
+    },
+    "widthRatio": 1.03
+   },
+   "normal-NW": {
+    "p": 95.09,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 322,
+     "y": 428.5
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-N": {
+    "p": 106.45,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 341,
+     "y": 452.8
+    },
+    "widthRatio": 1.11
+   },
+   "yaw8-E": {
+    "p": 106.45,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 310.5,
+     "y": 451.8
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-S": {
+    "p": 106.45,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 324,
+     "y": 422.8
+    },
+    "widthRatio": 1.04
+   },
+   "yaw8-W": {
+    "p": 106.45,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 306,
+     "y": 424.8
+    },
+    "widthRatio": 0.95
+   }
+  }
+ },
+ "four-lane-entrance/budget": {
+  "W": 10,
+  "D": 3,
+  "H": 3.2,
+  "views": {
+   "normal-NE": {
+    "p": 55.11,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 310.5,
+     "y": 397.4
+    },
+    "widthRatio": 1.04
+   },
+   "normal-SE": {
+    "p": 55.11,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 311,
+     "y": 398.4
+    },
+    "widthRatio": 1.02
+   },
+   "normal-SW": {
+    "p": 55.11,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 316,
+     "y": 398.4
+    },
+    "widthRatio": 1.01
+   },
+   "normal-NW": {
+    "p": 55.11,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 316.5,
+     "y": 382.4
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-N": {
+    "p": 55.8,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 314,
+     "y": 394.1
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-E": {
+    "p": 55.8,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 310,
+     "y": 416
+    },
+    "widthRatio": 1.23
+   },
+   "yaw8-S": {
+    "p": 55.8,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 314,
+     "y": 384.1
+    },
+    "widthRatio": 1
+   },
+   "yaw8-W": {
+    "p": 55.8,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 303.5,
+     "y": 405
+    },
+    "widthRatio": 1.23
+   }
+  }
+ },
+ "four-lane-entrance/upgraded": {
+  "W": 10,
+  "D": 3,
+  "H": 3.2,
+  "views": {
+   "normal-NE": {
+    "p": 53.07,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 311.5,
+     "y": 396
+    },
+    "widthRatio": 1.05
+   },
+   "normal-SE": {
+    "p": 53.07,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 313.5,
+     "y": 396
+    },
+    "widthRatio": 1.05
+   },
+   "normal-SW": {
+    "p": 53.07,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 311,
+     "y": 389
+    },
+    "widthRatio": 1.05
+   },
+   "normal-NW": {
+    "p": 53.07,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 316.5,
+     "y": 390
+    },
+    "widthRatio": 1.06
+   },
+   "yaw8-N": {
+    "p": 52.68,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 316.5,
+     "y": 386.5
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-E": {
+    "p": 52.68,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 311,
+     "y": 396.1
+    },
+    "widthRatio": 1.15
+   },
+   "yaw8-S": {
+    "p": 52.68,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 315.5,
+     "y": 381.5
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-W": {
+    "p": 52.68,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 313,
+     "y": 392.1
+    },
+    "widthRatio": 1.15
+   }
+  }
+ },
+ "media-centre/budget": {
+  "W": 14,
+  "D": 7,
+  "H": 4.5,
+  "views": {
+   "normal-NE": {
+    "p": 37.67,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 309,
+     "y": 382.2
+    },
+    "widthRatio": 1.03
+   },
+   "normal-SE": {
+    "p": 37.67,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 315,
+     "y": 389.2
+    },
+    "widthRatio": 1
+   },
+   "normal-SW": {
+    "p": 37.67,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 312,
+     "y": 387.2
+    },
+    "widthRatio": 1.01
+   },
+   "normal-NW": {
+    "p": 37.67,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 315,
+     "y": 376.2
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-N": {
+    "p": 46.06,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 339,
+     "y": 438.7
+    },
+    "widthRatio": 0.84
+   },
+   "yaw8-E": {
+    "p": 38.79,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 328.5,
+     "y": 404.1
+    },
+    "widthRatio": 1
+   },
+   "yaw8-S": {
+    "p": 43.19,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 331.5,
+     "y": 419.1
+    },
+    "widthRatio": 0.88
+   },
+   "yaw8-W": {
+    "p": 43.19,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 347,
+     "y": 362.8
+    },
+    "widthRatio": 0.86
+   }
+  }
+ },
+ "media-centre/upgraded": {
+  "W": 14,
+  "D": 7,
+  "H": 4.5,
+  "views": {
+   "normal-NE": {
+    "p": 37.72,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 308,
+     "y": 383
+    },
+    "widthRatio": 1.03
+   },
+   "normal-SE": {
+    "p": 37.72,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 315,
+     "y": 389
+    },
+    "widthRatio": 1.01
+   },
+   "normal-SW": {
+    "p": 37.72,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 309.5,
+     "y": 388
+    },
+    "widthRatio": 1.02
+   },
+   "normal-NW": {
+    "p": 37.72,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 315,
+     "y": 378
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-N": {
+    "p": 46.06,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 329.5,
+     "y": 439.7
+    },
+    "widthRatio": 0.88
+   },
+   "yaw8-E": {
+    "p": 39.41,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 313.5,
+     "y": 403.8
+    },
+    "widthRatio": 1.05
+   },
+   "yaw8-S": {
+    "p": 43.4,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 323.5,
+     "y": 419.6
+    },
+    "widthRatio": 0.9
+   },
+   "yaw8-W": {
+    "p": 43.4,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 343.5,
+     "y": 363
+    },
+    "widthRatio": 0.88
+   }
+  }
+ },
+ "hole-scoreboard/budget": {
+  "W": 3,
+  "D": 1,
+  "H": 2.8,
+  "views": {
+   "normal-NE": {
+    "p": 155.9,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 357.5,
+     "y": 492.8
+    },
+    "widthRatio": 1
+   },
+   "normal-SE": {
+    "p": 155.9,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 305.5,
+     "y": 500.8
+    },
+    "widthRatio": 1.05
+   },
+   "normal-SW": {
+    "p": 155.9,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 355.5,
+     "y": 508.8
+    },
+    "widthRatio": 0.96
+   },
+   "normal-NW": {
+    "p": 155.9,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 288,
+     "y": 505.8
+    },
+    "widthRatio": 1.06
+   },
+   "yaw8-N": {
+    "p": 138.57,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 319.5,
+     "y": 489.2
+    },
+    "widthRatio": 0.9
+   },
+   "yaw8-E": {
+    "p": 138.57,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 331,
+     "y": 487.3
+    },
+    "widthRatio": 1.35
+   },
+   "yaw8-S": {
+    "p": 138.57,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 302,
+     "y": 519.2
+    },
+    "widthRatio": 0.9
+   },
+   "yaw8-W": {
+    "p": 138.57,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 304.5,
+     "y": 462.3
+    },
+    "widthRatio": 1.3
+   }
+  }
+ },
+ "hole-scoreboard/upgraded": {
+  "W": 3,
+  "D": 1,
+  "H": 2.8,
+  "views": {
+   "normal-NE": {
+    "p": 157.2,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 346,
+     "y": 495.8
+    },
+    "widthRatio": 1.03
+   },
+   "normal-SE": {
+    "p": 157.2,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 304.5,
+     "y": 500.8
+    },
+    "widthRatio": 1.06
+   },
+   "normal-SW": {
+    "p": 157.2,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 354.5,
+     "y": 508.8
+    },
+    "widthRatio": 0.98
+   },
+   "normal-NW": {
+    "p": 157.2,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 287,
+     "y": 505.8
+    },
+    "widthRatio": 1.05
+   },
+   "yaw8-N": {
+    "p": 136.87,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 318,
+     "y": 494.8
+    },
+    "widthRatio": 0.92
+   },
+   "yaw8-E": {
+    "p": 136.87,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 307,
+     "y": 486.6
+    },
+    "widthRatio": 1.51
+   },
+   "yaw8-S": {
+    "p": 136.87,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 308,
+     "y": 492.8
+    },
+    "widthRatio": 0.88
+   },
+   "yaw8-W": {
+    "p": 136.87,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 293,
+     "y": 465.6
+    },
+    "widthRatio": 1.41
+   }
+  }
+ },
+ "main-leaderboard/budget": {
+  "W": 8,
+  "D": 4,
+  "H": 5.8,
+  "views": {
+   "normal-NE": {
+    "p": 59.25,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 312.5,
+     "y": 451.3
+    },
+    "widthRatio": 0.96
+   },
+   "normal-SE": {
+    "p": 56.88,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 326.5,
+     "y": 445.3
+    },
+    "widthRatio": 1.06
+   },
+   "normal-SW": {
+    "p": 56.88,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 321.5,
+     "y": 437.3
+    },
+    "widthRatio": 0.98
+   },
+   "normal-NW": {
+    "p": 59.25,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 324,
+     "y": 433.3
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-N": {
+    "p": 54.25,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 325,
+     "y": 463.2
+    },
+    "widthRatio": 1
+   },
+   "yaw8-E": {
+    "p": 54.25,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 312,
+     "y": 460
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-S": {
+    "p": 54.25,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 327,
+     "y": 423.2
+    },
+    "widthRatio": 0.98
+   },
+   "yaw8-W": {
+    "p": 54.25,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 312.5,
+     "y": 433
+    },
+    "widthRatio": 1.11
+   }
+  }
+ },
+ "main-leaderboard/upgraded": {
+  "W": 8,
+  "D": 4,
+  "H": 5.8,
+  "views": {
+   "normal-NE": {
+    "p": 49.59,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 304.5,
+     "y": 446.8
+    },
+    "widthRatio": 0.99
+   },
+   "normal-SE": {
+    "p": 49.59,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 320,
+     "y": 430.8
+    },
+    "widthRatio": 1.06
+   },
+   "normal-SW": {
+    "p": 49.59,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 316,
+     "y": 430.8
+    },
+    "widthRatio": 0.98
+   },
+   "normal-NW": {
+    "p": 49.59,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 315.5,
+     "y": 422.8
+    },
+    "widthRatio": 1.04
+   },
+   "yaw8-N": {
+    "p": 48.61,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 319.5,
+     "y": 443.3
+    },
+    "widthRatio": 1.07
+   },
+   "yaw8-E": {
+    "p": 48.61,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 315.5,
+     "y": 447
+    },
+    "widthRatio": 1.07
+   },
+   "yaw8-S": {
+    "p": 48.61,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 329.5,
+     "y": 402.3
+    },
+    "widthRatio": 1.08
+   },
+   "yaw8-W": {
+    "p": 48.61,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 306,
+     "y": 422
+    },
+    "widthRatio": 1.09
+   }
+  }
+ },
+ "concession-kiosk/budget": {
+  "W": 4.8,
+  "D": 3,
+  "H": 3,
+  "views": {
+   "normal-NE": {
+    "p": 90.28,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 312.5,
+     "y": 428.5
+    },
+    "widthRatio": 1
+   },
+   "normal-SE": {
+    "p": 90.28,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 320,
+     "y": 446.5
+    },
+    "widthRatio": 1.01
+   },
+   "normal-SW": {
+    "p": 90.28,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 306.5,
+     "y": 440.5
+    },
+    "widthRatio": 1.01
+   },
+   "normal-NW": {
+    "p": 90.28,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 318,
+     "y": 421.5
+    },
+    "widthRatio": 0.99
+   },
+   "yaw8-N": {
+    "p": 101.87,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 365.5,
+     "y": 438.3
+    },
+    "widthRatio": 1
+   },
+   "yaw8-E": {
+    "p": 91.06,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 301,
+     "y": 413.3
+    },
+    "widthRatio": 0.91
+   },
+   "yaw8-S": {
+    "p": 102.21,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 340.5,
+     "y": 409
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-W": {
+    "p": 102.21,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 321,
+     "y": 407.9
+    },
+    "widthRatio": 0.93
+   }
+  }
+ },
+ "concession-kiosk/upgraded": {
+  "W": 4.8,
+  "D": 3,
+  "H": 3,
+  "views": {
+   "normal-NE": {
+    "p": 90.74,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 311.5,
+     "y": 428.9
+    },
+    "widthRatio": 0.99
+   },
+   "normal-SE": {
+    "p": 90.74,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 320.5,
+     "y": 446.9
+    },
+    "widthRatio": 1
+   },
+   "normal-SW": {
+    "p": 90.74,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 307,
+     "y": 441.9
+    },
+    "widthRatio": 1.01
+   },
+   "normal-NW": {
+    "p": 90.74,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 317.5,
+     "y": 420.9
+    },
+    "widthRatio": 0.99
+   },
+   "yaw8-N": {
+    "p": 101.87,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 366,
+     "y": 439.3
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-E": {
+    "p": 91.06,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 298.5,
+     "y": 412.3
+    },
+    "widthRatio": 0.92
+   },
+   "yaw8-S": {
+    "p": 102.06,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 340.5,
+     "y": 407.2
+    },
+    "widthRatio": 1.02
+   },
+   "yaw8-W": {
+    "p": 102.06,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 321,
+     "y": 410.1
+    },
+    "widthRatio": 0.94
+   }
+  }
+ },
+ "practice-net/upgraded": {
+  "W": 3,
+  "D": 3,
+  "H": 3,
+  "views": {
+   "normal-NE": {
+    "p": 106.58,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 315,
+     "y": 435
+    },
+    "widthRatio": 1.09
+   },
+   "normal-SE": {
+    "p": 106.58,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 315.5,
+     "y": 441
+    },
+    "widthRatio": 1.07
+   },
+   "normal-SW": {
+    "p": 106.58,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 311,
+     "y": 441
+    },
+    "widthRatio": 1.04
+   },
+   "normal-NW": {
+    "p": 106.58,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 314,
+     "y": 445
+    },
+    "widthRatio": 1.04
+   },
+   "yaw8-N": {
+    "p": 105.89,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 327.5,
+     "y": 425.3
+    },
+    "widthRatio": 1.16
+   },
+   "yaw8-E": {
+    "p": 105.89,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 303,
+     "y": 422.3
+    },
+    "widthRatio": 1.14
+   },
+   "yaw8-S": {
+    "p": 105.89,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 308.5,
+     "y": 407.3
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-W": {
+    "p": 105.89,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 315,
+     "y": 411.3
+    },
+    "widthRatio": 1.14
+   }
+  }
+ },
+ "bag-trolley/upgraded": {
+  "W": 0.6,
+  "D": 0.9,
+  "H": 1.15,
+  "views": {
+   "normal-NE": {
+    "p": 374.12,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 293,
+     "y": 474.8
+    },
+    "widthRatio": 1.05
+   },
+   "normal-SE": {
+    "p": 374.12,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 336,
+     "y": 486.8
+    },
+    "widthRatio": 0.97
+   },
+   "normal-SW": {
+    "p": 374.12,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 307.5,
+     "y": 496.8
+    },
+    "widthRatio": 0.93
+   },
+   "normal-NW": {
+    "p": 374.12,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 316.5,
+     "y": 511.8
+    },
+    "widthRatio": 1
+   },
+   "yaw8-N": {
+    "p": 388.47,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 329,
+     "y": 477.3
+    },
+    "widthRatio": 0.97
+   },
+   "yaw8-E": {
+    "p": 388.47,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 297,
+     "y": 500.1
+    },
+    "widthRatio": 1.05
+   },
+   "yaw8-S": {
+    "p": 388.47,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 331.5,
+     "y": 469.3
+    },
+    "widthRatio": 1.02
+   },
+   "yaw8-W": {
+    "p": 388.47,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 292.5,
+     "y": 488.1
+    },
+    "widthRatio": 1.03
+   }
+  }
+ },
+ "ball-washer/upgraded": {
+  "W": 0.5,
+  "D": 0.5,
+  "H": 1.05,
+  "views": {
+   "normal-NE": {
+    "p": 442.25,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 327.5,
+     "y": 504.8
+    },
+    "widthRatio": 1.07
+   },
+   "normal-SE": {
+    "p": 442.25,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 347.5,
+     "y": 498.8
+    },
+    "widthRatio": 1.08
+   },
+   "normal-SW": {
+    "p": 442.25,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 300.5,
+     "y": 499.8
+    },
+    "widthRatio": 0.96
+   },
+   "normal-NW": {
+    "p": 442.25,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 283.5,
+     "y": 503.8
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-N": {
+    "p": 467.42,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 341.5,
+     "y": 514
+    },
+    "widthRatio": 1.31
+   },
+   "yaw8-E": {
+    "p": 467.42,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 291,
+     "y": 516
+    },
+    "widthRatio": 0.82
+   },
+   "yaw8-S": {
+    "p": 467.42,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 301.5,
+     "y": 516
+    },
+    "widthRatio": 1.29
+   },
+   "yaw8-W": {
+    "p": 467.42,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 320.5,
+     "y": 514
+    },
+    "widthRatio": 0.81
+   }
+  }
+ },
+ "ball-bucket-stand/upgraded": {
+  "W": 1.2,
+  "D": 1.6,
+  "H": 2,
+  "views": {
+   "normal-NE": {
+    "p": 204.27,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 303,
+     "y": 485.9
+    },
+    "widthRatio": 1
+   },
+   "normal-SE": {
+    "p": 204.27,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 320,
+     "y": 495.9
+    },
+    "widthRatio": 0.93
+   },
+   "normal-SW": {
+    "p": 204.27,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 318,
+     "y": 475.9
+    },
+    "widthRatio": 0.97
+   },
+   "normal-NW": {
+    "p": 204.27,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 318,
+     "y": 473.9
+    },
+    "widthRatio": 1.03
+   },
+   "yaw8-N": {
+    "p": 215.45,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 317.5,
+     "y": 497.7
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-E": {
+    "p": 215.45,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 316,
+     "y": 487
+    },
+    "widthRatio": 1.08
+   },
+   "yaw8-S": {
+    "p": 215.45,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 309.5,
+     "y": 465.7
+    },
+    "widthRatio": 1.06
+   },
+   "yaw8-W": {
+    "p": 215.45,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 268.5,
+     "y": 493
+    },
+    "widthRatio": 1.12
+   }
+  }
+ },
+ "ball-dispenser/upgraded": {
+  "W": 1.2,
+  "D": 1.6,
+  "H": 2.1,
+  "views": {
+   "normal-NE": {
+    "p": 171.97,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 308,
+     "y": 444.9
+    },
+    "widthRatio": 0.96
+   },
+   "normal-SE": {
+    "p": 171.97,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 334,
+     "y": 453.9
+    },
+    "widthRatio": 0.93
+   },
+   "normal-SW": {
+    "p": 262.06,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 617.5,
+     "y": 878.3
+    },
+    "widthRatio": 1.07
+   },
+   "normal-NW": {
+    "p": 171.97,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 301.5,
+     "y": 433.9
+    },
+    "widthRatio": 0.98
+   },
+   "yaw8-N": {
+    "p": 176.88,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 316.5,
+     "y": 475.6
+    },
+    "widthRatio": 0.93
+   },
+   "yaw8-E": {
+    "p": 176.88,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 301,
+     "y": 474.6
+    },
+    "widthRatio": 1.04
+   },
+   "yaw8-S": {
+    "p": 176.88,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 317.5,
+     "y": 441.6
+    },
+    "widthRatio": 0.95
+   },
+   "yaw8-W": {
+    "p": 176.88,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 299.5,
+     "y": 470.6
+    },
+    "widthRatio": 1.07
+   }
+  }
+ },
+ "park-bench/upgraded": {
+  "W": 1.5,
+  "D": 0.6,
+  "H": 0.9,
+  "views": {
+   "normal-NE": {
+    "p": 355.81,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 287.5,
+     "y": 430.9
+    },
+    "widthRatio": 0.9
+   },
+   "normal-SE": {
+    "p": 590.72,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 604.5,
+     "y": 841.7
+    },
+    "widthRatio": 0.72
+   },
+   "normal-SW": {
+    "p": 590.72,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 618,
+     "y": 832.7
+    },
+    "widthRatio": 0.86
+   },
+   "normal-NW": {
+    "p": 355.81,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 332,
+     "y": 453.9
+    },
+    "widthRatio": 0.87
+   },
+   "yaw8-N": {
+    "p": 306.29,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 434.5,
+     "y": 407.5
+    },
+    "widthRatio": 1.11
+   },
+   "yaw8-E": {
+    "p": 306.29,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 370,
+     "y": 383.9
+    },
+    "widthRatio": 0.78
+   },
+   "yaw8-S": {
+    "p": 348.9,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 439.5,
+     "y": 369
+    },
+    "widthRatio": 0.94
+   },
+   "yaw8-W": {
+    "p": 306.29,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 360,
+     "y": 362.9
+    },
+    "widthRatio": 0.78
+   }
+  }
+ },
+ "water-tank-stall/upgraded": {
+  "W": 2.5,
+  "D": 2,
+  "H": 2.4,
+  "views": {
+   "normal-NE": {
+    "p": 133.13,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 297.5,
+     "y": 433.1
+    },
+    "widthRatio": 1.01
+   },
+   "normal-SE": {
+    "p": 133.13,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 341,
+     "y": 464.1
+    },
+    "widthRatio": 1.05
+   },
+   "normal-SW": {
+    "p": 133.13,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 299.5,
+     "y": 463.1
+    },
+    "widthRatio": 1.02
+   },
+   "normal-NW": {
+    "p": 133.13,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 350.5,
+     "y": 455.1
+    },
+    "widthRatio": 1.04
+   },
+   "yaw8-N": {
+    "p": 143.11,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 316,
+     "y": 480.7
+    },
+    "widthRatio": 1.02
+   },
+   "yaw8-E": {
+    "p": 143.11,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 337.5,
+     "y": 461.5
+    },
+    "widthRatio": 1.07
+   },
+   "yaw8-S": {
+    "p": 143.11,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 303,
+     "y": 453.7
+    },
+    "widthRatio": 1.01
+   },
+   "yaw8-W": {
+    "p": 143.11,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 301.5,
+     "y": 462.5
+    },
+    "widthRatio": 1.09
+   }
+  }
+ },
+ "rope-barrier/upgraded": {
+  "W": 3,
+  "D": 0.3,
+  "H": 1,
+  "views": {
+   "normal-NE": {
+    "p": 214,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 319.5,
+     "y": 406.2
+    },
+    "widthRatio": 1
+   },
+   "normal-SE": {
+    "p": 214,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 322.5,
+     "y": 428.2
+    },
+    "widthRatio": 0.94
+   },
+   "normal-SW": {
+    "p": 214,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 322.5,
+     "y": 422.2
+    },
+    "widthRatio": 0.96
+   },
+   "normal-NW": {
+    "p": 214,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 322.5,
+     "y": 401.2
+    },
+    "widthRatio": 1
+   },
+   "yaw8-N": {
+    "p": 201.1,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 375.5,
+     "y": 425.1
+    },
+    "widthRatio": 1.04
+   },
+   "yaw8-E": {
+    "p": 201.49,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 300.5,
+     "y": 429.2
+    },
+    "widthRatio": 1.34
+   },
+   "yaw8-S": {
+    "p": 200.28,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 378,
+     "y": 349.2
+    },
+    "widthRatio": 1.06
+   },
+   "yaw8-W": {
+    "p": 204.87,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 297,
+     "y": 349.7
+    },
+    "widthRatio": 1.41
+   }
+  }
+ },
+ "rope-barrier-corner/upgraded": {
+  "W": 2,
+  "D": 2,
+  "H": 1,
+  "views": {
+   "normal-NE": {
+    "p": 161.17,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 313.5,
+     "y": 407
+    },
+    "widthRatio": 0.69
+   },
+   "normal-SE": {
+    "p": 161.17,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 310.5,
+     "y": 366
+    },
+    "widthRatio": 1.22
+   },
+   "normal-SW": {
+    "p": 161.17,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 308.5,
+     "y": 410
+    },
+    "widthRatio": 0.71
+   },
+   "normal-NW": {
+    "p": 161.17,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 311,
+     "y": 352
+    },
+    "widthRatio": 1.22
+   },
+   "yaw8-N": {
+    "p": 195.95,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 293,
+     "y": 381.3
+    },
+    "widthRatio": 1.05
+   },
+   "yaw8-E": {
+    "p": 195.95,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 284.5,
+     "y": 379.3
+    },
+    "widthRatio": 1.18
+   },
+   "yaw8-S": {
+    "p": 195.95,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 286.5,
+     "y": 332.3
+    },
+    "widthRatio": 1.06
+   },
+   "yaw8-W": {
+    "p": 195.95,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 291,
+     "y": 332.3
+    },
+    "widthRatio": 1.21
+   }
+  }
+ },
+ "rope-walkway/upgraded": {
+  "W": 3,
+  "D": 1.5,
+  "H": 1,
+  "views": {
+   "normal-NE": {
+    "p": 167.68,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 312,
+     "y": 365.6
+    },
+    "widthRatio": 0.9
+   },
+   "normal-SE": {
+    "p": 167.68,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 303,
+     "y": 396.6
+    },
+    "widthRatio": 0.92
+   },
+   "normal-SW": {
+    "p": 167.68,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 302.5,
+     "y": 387.6
+    },
+    "widthRatio": 0.93
+   },
+   "normal-NW": {
+    "p": 167.68,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 311.5,
+     "y": 361.6
+    },
+    "widthRatio": 0.92
+   },
+   "yaw8-N": {
+    "p": 198.07,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 311.5,
+     "y": 412.8
+    },
+    "widthRatio": 0.78
+   },
+   "yaw8-E": {
+    "p": 198.07,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 293,
+     "y": 353.6
+    },
+    "widthRatio": 1.21
+   },
+   "yaw8-S": {
+    "p": 198.07,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 299.5,
+     "y": 370.8
+    },
+    "widthRatio": 0.77
+   },
+   "yaw8-W": {
+    "p": 198.07,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 306.5,
+     "y": 324.6
+    },
+    "widthRatio": 1.14
+   }
+  }
+ },
+ "direction-signpost/upgraded": {
+  "W": 0.8,
+  "D": 0.8,
+  "H": 2.4,
+  "views": {
+   "normal-NE": {
+    "p": 218.79,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 306.5,
+     "y": 528.1
+    },
+    "widthRatio": 1.43
+   },
+   "normal-SE": {
+    "p": 218.79,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 334,
+     "y": 527.1
+    },
+    "widthRatio": 1.55
+   },
+   "normal-SW": {
+    "p": 218.79,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 294,
+     "y": 527.1
+    },
+    "widthRatio": 1.44
+   },
+   "normal-NW": {
+    "p": 218.79,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 323.5,
+     "y": 528.1
+    },
+    "widthRatio": 1.35
+   },
+   "yaw8-N": {
+    "p": 222.32,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 344,
+     "y": 531.8
+    },
+    "widthRatio": 2.09
+   },
+   "yaw8-E": {
+    "p": 222.32,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 324.5,
+     "y": 530.8
+    },
+    "widthRatio": 0.75
+   },
+   "yaw8-S": {
+    "p": 222.32,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 341.5,
+     "y": 531.8
+    },
+    "widthRatio": 2.12
+   },
+   "yaw8-W": {
+    "p": 222.32,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 326.5,
+     "y": 532.8
+    },
+    "widthRatio": 0.78
+   }
+  }
+ },
+ "gold-tee-markers/upgraded": {
+  "W": 1,
+  "D": 0.25,
+  "H": 0.35,
+  "views": {
+   "normal-NE": {
+    "p": 577.15,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 317,
+     "y": 350.5
+    },
+    "widthRatio": 0.83
+   },
+   "normal-SE": {
+    "p": 577.15,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 304.5,
+     "y": 370.5
+    },
+    "widthRatio": 0.8
+   },
+   "normal-SW": {
+    "p": 577.15,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 305,
+     "y": 376.5
+    },
+    "widthRatio": 0.77
+   },
+   "normal-NW": {
+    "p": 577.15,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 316,
+     "y": 354.5
+    },
+    "widthRatio": 0.78
+   },
+   "yaw8-N": {
+    "p": 563.94,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 400.5,
+     "y": 368.5
+    },
+    "widthRatio": 0.85
+   },
+   "yaw8-E": {
+    "p": 563.94,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 386,
+     "y": 318.5
+    },
+    "widthRatio": 1.18
+   },
+   "yaw8-S": {
+    "p": 563.94,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 388,
+     "y": 362.5
+    },
+    "widthRatio": 0.85
+   },
+   "yaw8-W": {
+    "p": 563.94,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 358.5,
+     "y": 315.5
+    },
+    "widthRatio": 1.19
+   }
+  }
+ },
+ "hole-12-sign/upgraded": {
+  "W": 1,
+  "D": 0.5,
+  "H": 1.6,
+  "views": {
+   "normal-NE": {
+    "p": 248.18,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 322,
+     "y": 482.2
+    },
+    "widthRatio": 0.97
+   },
+   "normal-SE": {
+    "p": 248.18,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 305,
+     "y": 473.2
+    },
+    "widthRatio": 0.95
+   },
+   "normal-SW": {
+    "p": 248.18,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 324.5,
+     "y": 474.2
+    },
+    "widthRatio": 0.95
+   },
+   "normal-NW": {
+    "p": 248.18,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 305.5,
+     "y": 475.2
+    },
+    "widthRatio": 0.95
+   },
+   "yaw8-N": {
+    "p": 252.6,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 311.5,
+     "y": 480.9
+    },
+    "widthRatio": 1.12
+   },
+   "yaw8-E": {
+    "p": 252.6,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 325,
+     "y": 485.1
+    },
+    "widthRatio": 0.66
+   },
+   "yaw8-S": {
+    "p": 252.6,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 312,
+     "y": 464.9
+    },
+    "widthRatio": 1.1
+   },
+   "yaw8-W": {
+    "p": 252.6,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 316,
+     "y": 469.1
+    },
+    "widthRatio": 0.69
+   }
+  }
+ },
+ "course-map-board/upgraded": {
+  "W": 2,
+  "D": 0.8,
+  "H": 2.2,
+  "views": {
+   "normal-NE": {
+    "p": 196.88,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 320,
+     "y": 488.5
+    },
+    "widthRatio": 1.12
+   },
+   "normal-SE": {
+    "p": 196.88,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 328,
+     "y": 485.5
+    },
+    "widthRatio": 1.13
+   },
+   "normal-SW": {
+    "p": 196.88,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 326,
+     "y": 493.5
+    },
+    "widthRatio": 1
+   },
+   "normal-NW": {
+    "p": 196.88,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 303.5,
+     "y": 496.5
+    },
+    "widthRatio": 0.99
+   },
+   "yaw8-N": {
+    "p": 208.46,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 357,
+     "y": 505.2
+    },
+    "widthRatio": 0.98
+   },
+   "yaw8-E": {
+    "p": 208.46,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 332.5,
+     "y": 485
+    },
+    "widthRatio": 0.91
+   },
+   "yaw8-S": {
+    "p": 211.46,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 346.5,
+     "y": 497.4
+    },
+    "widthRatio": 0.98
+   },
+   "yaw8-W": {
+    "p": 211.46,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 327.5,
+     "y": 488.4
+    },
+    "widthRatio": 0.87
+   }
+  }
+ },
+ "bleacher/budget": {
+  "W": 8,
+  "D": 4,
+  "H": 2.6,
+  "views": {
+   "normal-NE": {
+    "p": 47.43,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 300,
+     "y": 382.4
+    },
+    "widthRatio": 1.05,
+    "cell": [
+     627,
+     627,
+     627,
+     627
+    ]
+   },
+   "normal-SE": {
+    "p": 47.43,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 319.5,
+     "y": 398.4
+    },
+    "widthRatio": 0.99,
+    "cell": [
+     0,
+     0,
+     627,
+     627
+    ]
+   },
+   "normal-SW": {
+    "p": 47.43,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 317,
+     "y": 360.4
+    },
+    "widthRatio": 1.03,
+    "cell": [
+     627,
+     0,
+     627,
+     627
+    ]
+   },
+   "normal-NW": {
+    "p": 47.43,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 311.5,
+     "y": 344.4
+    },
+    "widthRatio": 1.02,
+    "cell": [
+     0,
+     627,
+     627,
+     627
+    ]
+   },
+   "yaw8-N": {
+    "p": 58.79,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 310,
+     "y": 385.4
+    },
+    "widthRatio": 0.89,
+    "cell": [
+     0,
+     0,
+     627,
+     627
+    ]
+   },
+   "yaw8-E": {
+    "p": 58.79,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 318.5,
+     "y": 395.4
+    },
+    "widthRatio": 0.96,
+    "cell": [
+     627,
+     0,
+     627,
+     627
+    ]
+   },
+   "yaw8-S": {
+    "p": 58.79,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 313.5,
+     "y": 335.4
+    },
+    "widthRatio": 0.92,
+    "cell": [
+     0,
+     627,
+     627,
+     627
+    ]
+   },
+   "yaw8-W": {
+    "p": 58.79,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 291.5,
+     "y": 373.4
+    },
+    "widthRatio": 1.09,
+    "cell": [
+     627,
+     627,
+     627,
+     627
+    ]
+   }
+  }
+ },
+ "bleacher/upgraded": {
+  "W": 8,
+  "D": 4,
+  "H": 2.6,
+  "views": {
+   "normal-NE": {
+    "p": 56.74,
+    "headingDegrees": 0,
+    "anchor": {
+     "x": 310,
+     "y": 399.6
+    },
+    "widthRatio": 1.04,
+    "cell": [
+     627,
+     627,
+     627,
+     627
+    ]
+   },
+   "normal-SE": {
+    "p": 56.74,
+    "headingDegrees": 270,
+    "anchor": {
+     "x": 312.5,
+     "y": 408.6
+    },
+    "widthRatio": 1.05,
+    "cell": [
+     0,
+     0,
+     627,
+     627
+    ]
+   },
+   "normal-SW": {
+    "p": 56.74,
+    "headingDegrees": 180,
+    "anchor": {
+     "x": 329,
+     "y": 358.6
+    },
+    "widthRatio": 1.04,
+    "cell": [
+     627,
+     0,
+     627,
+     627
+    ]
+   },
+   "normal-NW": {
+    "p": 56.74,
+    "headingDegrees": 90,
+    "anchor": {
+     "x": 310.5,
+     "y": 367.6
+    },
+    "widthRatio": 1.05,
+    "cell": [
+     0,
+     627,
+     627,
+     627
+    ]
+   },
+   "yaw8-N": {
+    "p": 67.3,
+    "headingDegrees": 323,
+    "anchor": {
+     "x": 325,
+     "y": 413.6
+    },
+    "widthRatio": 0.83,
+    "cell": [
+     0,
+     0,
+     627,
+     627
+    ]
+   },
+   "yaw8-E": {
+    "p": 67.3,
+    "headingDegrees": 233,
+    "anchor": {
+     "x": 339.5,
+     "y": 410.3
+    },
+    "widthRatio": 0.96,
+    "cell": [
+     627,
+     0,
+     627,
+     627
+    ]
+   },
+   "yaw8-S": {
+    "p": 67.3,
+    "headingDegrees": 143,
+    "anchor": {
+     "x": 325.5,
+     "y": 330.6
+    },
+    "widthRatio": 0.88,
+    "cell": [
+     0,
+     627,
+     627,
+     627
+    ]
+   },
+   "yaw8-W": {
+    "p": 67.3,
+    "headingDegrees": 53,
+    "anchor": {
+     "x": 306,
+     "y": 389.3
+    },
+    "widthRatio": 1.13,
+    "cell": [
+     627,
+     627,
+     627,
+     627
+    ]
+   }
+  }
+ }
+}

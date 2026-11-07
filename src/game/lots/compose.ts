@@ -685,12 +685,12 @@ function standInHouse(q: PresetProp, r: RemovedPic, fit: Fitted, lot: LotGeom, f
   return ok.reduce((a, b) => (Math.abs(fam.area.get(a)! - area) <= Math.abs(fam.area.get(b)! - area) ? a : b));
 }
 /** a stand-in building of another use (a fire station): one of the library's buildings of the removed one's kind (not removed, drawn as itself, a
- *  front view) within 40% of its footprint area, one of the three nearest picked by the seed; null when there is none. On a road at 45 degrees
+ *  front view, not a tournament structure: those are the Event tool's) within 40% of its footprint area, one of the three nearest picked by the seed; null when there is none. On a road at 45 degrees
  *  (T154 Phase 2) those with a screen-axis set come first */
 function standInBuilding(q: PresetProp, r: RemovedPic, seed: number, road: Road): string | null {
   const hr = removedHalf(q.id, r, q.scale), area = 4 * hr * hr;
   let pool = KIND_POOL.get(r.kind);
-  if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
+  if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && it.cat !== 'Golf tournament' && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
     .map(it => { const fp = footprintOf(it.id, OWNER_SCALE[it.id] ?? 1, false); return { id: it.id, a: (fp[2] - fp[0]) * (fp[3] - fp[1]) }; }));
   const all = pool.filter(c => c.a >= area * 0.6 && c.a <= area * 1.4).sort((a, b) => Math.abs(a.a - area) - Math.abs(b.a - area) || (a.id < b.id ? -1 : 1));
   const faced = all.filter(c => roadView(c.id, road, 0)), near = (faced.length ? faced : all).slice(0, 3);

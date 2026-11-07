@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-food-truck-upgraded",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../batch01/food-truck/upgraded/normal-NW.png",
+    "sha256": "78f8cd6dbb811a3215e10576af189a875b2d3ed72be75c0e05586c70082ef277",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 94,
+    "top": 62,
+    "width": 496,
+    "height": 423
+  },
+  "output": "normalNW.native.png",
+  "sha256": "dda20608778eb86c0b328ebf75871d117e003c9183fdf8a154081d221d44c1cd",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

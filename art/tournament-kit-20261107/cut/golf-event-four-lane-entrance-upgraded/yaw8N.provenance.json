@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-four-lane-entrance-upgraded",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch01/four-lane-entrance/upgraded/yaw8-N.png",
+    "sha256": "4245689d76ac056a92036eed8b1ec1c9a45a5859882252a93b3296cdef9658dd",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 15,
+    "top": 182,
+    "width": 587,
+    "height": 267
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "8dd2c7e00f86f0d355eaff5f5e46b452b943ed61c647871cd7d070599d66774a",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

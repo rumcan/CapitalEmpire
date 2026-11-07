@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-first-aid-tent",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../batch01/first-aid-tent/budget/normal-NW.png",
+    "sha256": "248a6de546562a00ebdacaefa80a124c66829fbb784b671146a4c59ec6c08ec5",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 40,
+    "top": 73,
+    "width": 542,
+    "height": 473
+  },
+  "output": "normalNW.native.png",
+  "sha256": "eda8f7eaef618d09e3df3bcaf6132e2b83550b0ecb98ffa6b6a9acf5edaee331",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

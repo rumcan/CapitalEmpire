@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-food-truck",
+  "version": 1,
+  "key": "normalSW",
+  "source": {
+    "file": "../../batch01/food-truck/budget/normal-SW.png",
+    "sha256": "f798e74d19793b23dbf5ad45a7ad6cbccffc6b547f42c804750a54d0c90a2c98",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 27,
+    "top": 125,
+    "width": 522,
+    "height": 409
+  },
+  "output": "normalSW.native.png",
+  "sha256": "75079c814d1ded0094d3752fc9e35fbabc5f412e7b3269311e8f8014b5bd9040",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

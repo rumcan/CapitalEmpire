@@ -3,6 +3,7 @@
 import type { Pt } from '../network';
 import type { AimPoint, Pin, TeeBoxRec, TeeKind, TeeMark } from './types';
 import type { PlacedEventStructure } from './eventtool';
+import type { PrepSave } from './prep';
 import type { CourseHeightSaveChunk } from '../ext/course-height';
 import type { GolfProgress } from '../ext/progressive-ui';
 import type { GridSave } from '../ext/course-grid';
@@ -40,6 +41,9 @@ export interface GolfSave {
   *  player's until bought in Land for sale (then this goes and the rect joins parcels). Missing: the player's (an old save's own) */
  practiceLot?: Rect;
  structures?: PlacedEventStructure[];
+ /** the tournament prep quests' progress (golf/prep.ts): the steps done (paid) and skipped, and the chapter the player hid. Missing: started
+  *  fresh, and the engine's prepCheck marks the steps the course already has as done without paying them */
+ prep?: PrepSave;
  cards?: string[];
  /** the course height field as sparse chunks (T027); missing = flat */
  height?: CourseHeightSaveChunk[];

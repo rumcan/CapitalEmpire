@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-ball-bucket-stand",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../../batch02/ball-bucket-stand/yaw8-W.png",
+    "sha256": "bbfec62f2daa1efbcd3175b84ed1be3c0fd894e29ce08bd1e14165141c23bd4e",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 52,
+    "top": 14,
+    "width": 433,
+    "height": 559
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "22d0d38422c8ae46d4b2ff51f425a6623215f36bb48f56cbe5f55bddc036fe39",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

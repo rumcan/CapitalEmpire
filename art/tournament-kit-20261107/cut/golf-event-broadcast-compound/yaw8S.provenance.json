@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-broadcast-compound",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../../batch01/broadcast-compound/budget/yaw8-S.png",
+    "sha256": "62e1782f18086e82eca5dd5ca3d755996781b36c8a9d19cc17554168350954ee",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 86,
+    "top": 184,
+    "width": 439,
+    "height": 285
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "87c54f69631b973d47424f65332497ca641a421433fcac4ce8a76841c6d646cb",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}
