@@ -14,7 +14,8 @@ Input JSON fields:
   "review": "candidate",
   "source": { "normal": "corners-v1.png", "yaw8": "yaw8-v1.png" },
   "footprintMetres": { "width": 16, "depth": 8 },
-  "pixelsPerMetre": 32,
+  "pixelsPerMetre": 44,
+  "pixelCalibrationSpace": "orthographic-camera",
   "baselineScale": 1,
   "kind": "building",
   "category": "New: Seating",
@@ -27,6 +28,12 @@ Input JSON fields:
 ```
 
 Source paths are relative to the input JSON. `pixelsPerMetre` is an actual measured calibration, not a suggested constant. The normal sheet cells are `normalSE normalSW / normalNW normalNE`; the yaw8 sheet cells are `yaw8N yaw8E / yaw8S yaw8W`. Yaw8 means the approved eight-degree tilted cardinal geometry. An old square-cardinal sheet is a different family and does not qualify merely because it contains N/E/S/W pictures.
+
+`pixelsPerMetre` means the **true orthographic camera scale before yaw/pitch foreshortening**. At the normal45° heading, a12m horizontal ground edge spans `12 / sqrt(2) * pixelsPerMetre` image pixels in X and half that in Y. Measure the accepted building's actual foundation corners; exclude steps, benches, eaves and shadows. A resized painting does not inherit its guide's44px/m number automatically. Do not infer scale from an unverified door height or an alpha bounding box.
+
+The importer reads `HW`, `HH` and `TILE_M` from the actual engine source. Currently `worldX=(metresX-metresY)*32`, `worldY=(metresX+metresY)*16`: the game-equivalent true camera scale is **32*sqrt(2)=45.2548339959 world pixels per metre**, with30° ground foreshortening. The source-to-library display factor is therefore `sqrt(2)*HW/TILE_M/pixelsPerMetre`. A44px/m camera source uses factor **1.02851895445**; its12x8m normal-view ground footprint becomes **640x320 game pixels**. The former `64/pixelsPerMetre` factor was sqrt(2) too large. Library width/height and anchors use the corrected factor together; physical collision boxes remain in metres. Camera up/down signs follow the selected view and do not change this scale calculation.
+
+Use one shared measured scale when the sheet is consistent. If an accepted native view has a genuinely different measured camera scale, its `views.<key>.pixelsPerMetre` may override the shared value, but a non-empty `calibrationEvidence` describing the measured ground segment and known length is then required. This adjusts native-to-display size only, never redraws or repairs a wrong camera. A held or inconsistent perspective must be corrected, not hidden with per-view scaling. Each immutable runtime asset version receives a `calibration.json` recording the engine constants, actual display factors and measurement notes. Existing imported versions are preserved; a corrected import requires a new version.
 
 Run:
 
@@ -76,6 +83,6 @@ This is a **draft proposal**, not accepted seat coordinates. Measure actual chai
 
 Completion states remain separate: generated source, candidate crops, reviewed art, imported library, and player-selectable angles. Existing four/single-view items retain their limited rotations and report missing yaw8 art. Character walk/swing/crowd sheets and large scene/portrait images have their own pipelines.
 
-The initial runtime also reuses **26 existing registered native sets** without creating new GPU atlas pages. Their 208 appended standalone IDs share the old atlas UVs; normal boxes are copied and yaw8 bounds come from each existing measured `AXIS_FOOT` record with yaw exactly -8. Normal road-lot rows and their boxes remain unchanged. The explicit whitelist, all eight native/source pixel hashes and six excluded owner review flags are recorded in `src/game/object-eight-existing.json`. The original eligible count was 32; both L-ranch variants, farmhouse-north, snack-bar, corner-store and house_4-north are excluded for existing angle/style flags. This reuses selected runtime art, not newer held candidates. New approved native sets override their subject's lookup normally.
+The initial runtime retained 26 historical native sets as 208 appended rows without creating new GPU atlas pages. Independent visual review subsequently held the gazebo's repeated corner camera and the owner's rejected tarp-shack clubhouse style: **24 are active, eight of the original 32 subjects are excluded**. All 208 historical rows remain stored so source IDs and prior saves still resolve. Their atlas UVs are shared; normal boxes are copied and yaw8 bounds come from each measured `AXIS_FOOT` record with yaw exactly -8. Normal road-lot rows and their boxes remain unchanged. The explicit whitelist, native/source pixel hashes and exclusion reasons are recorded in `src/game/object-eight-existing.json`. The other six owner-flagged subjects are both L-ranch variants, farmhouse-north, snack-bar, corner-store and house_4-north. This reuses selected runtime art, not newer held candidates. New approved native sets override their subject's lookup normally.
 
 Implementation checks, 2026-11-07: TypeScript clean; both importer checks pass; the focused rotation/placement/road-heading/event/course tests pass. The neighbouring props-variety suite retains its pre-existing `desert-palm desert` assertion because it excludes the newer desert group; the same failure was reproduced from HEAD's original source. The sparse checkout's thumbnail test passes after including the construction/concept/landscaping/range masters. No full suite, build, browser or server was started for this change. Actual imported new art still needs its visual review and browser preview before release.

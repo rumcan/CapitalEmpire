@@ -4,10 +4,31 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { KEYS, cutObject, integrateObject, validateDistinct, validateSeating } from './import-object-eight.mjs';
+import { transformSync } from 'esbuild';
+import { KEYS, cutObject, integrateObject, validateDistinct, validateSeating, readGameProjection, objectDisplayScale } from './import-object-eight.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const parent=path.join(root,'output'); fs.mkdirSync(parent,{recursive:true});
+test('true 44px/m camera ground segments map to the actual game projection at every facing',async()=>{
+  const projection=readGameProjection(),sourcePpm=44,k=objectDisplayScale(sourcePpm,projection);
+  // Execute the actual engine projection functions, rather than duplicating their formula as the expected result.
+  const compiled=transformSync(fs.readFileSync(path.join(root,'src/game/iso.ts'),'utf8'),{loader:'ts',format:'esm'}).code;
+  const engine=await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
+  const corners=[[-6,-4],[6,-4],[6,4],[-6,4]],near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
+  for(const degrees of [0,37,90,127,180,217,270,307]){
+    const a=degrees*Math.PI/180,painted=[],expected=[];
+    for(const [x,y]of corners){
+      const wx=x*Math.cos(a)-y*Math.sin(a),wy=x*Math.sin(a)+y*Math.cos(a);
+      const native=[(wx-wy)/Math.SQRT2*sourcePpm,(wx+wy)/Math.SQRT2*.5*sourcePpm];
+      const game=[engine.worldX(wx/projection.tileMetres,wy/projection.tileMetres),engine.worldY(wx/projection.tileMetres,wy/projection.tileMetres)];
+      near(native[0]*k,game[0]);near(native[1]*k,game[1]);painted.push(native.map(v=>v*k));expected.push(game);
+    }
+    for(let axis=0;axis<2;axis++){const span=pts=>Math.max(...pts.map(p=>p[axis]))-Math.min(...pts.map(p=>p[axis]));near(span(painted),span(expected));}
+    if(degrees===0){near(Math.max(...painted.map(p=>p[0]))-Math.min(...painted.map(p=>p[0])),640);near(Math.max(...painted.map(p=>p[1]))-Math.min(...painted.map(p=>p[1])),320);}
+  }
+  near(k,45.254833995939045/44);
+  assert.throws(()=>objectDisplayScale(0),/Positive/);
+});
 function fixture(t) {
   const dir=fs.mkdtempSync(path.join(parent,'object-eight-test-'));
   t.after(()=>{ assert.ok(path.resolve(dir).startsWith(path.resolve(parent)+path.sep));fs.rmSync(dir,{recursive:true,force:true}); });return dir;
@@ -30,9 +51,15 @@ test('native two-sheet importer keeps sources, holds candidates and appends revi
   const candidate=path.join(out,'manifest.json');await assert.rejects(()=>integrateObject(candidate,dir),/approved/);
   result.review='approved';for(const [i,key]of KEYS.entries()){const v=result.views[key];v.anchor={x:v.width/2,y:v.height-5};v.headingDegrees=i%2?i*45-8:i*45;}
   fs.mkdirSync(path.join(dir,'scripts/assets'),{recursive:true});fs.mkdirSync(path.join(dir,'src/game'),{recursive:true});fs.writeFileSync(candidate,JSON.stringify(result));
+  result.views.normalNE.pixelsPerMetre=32;fs.writeFileSync(candidate,JSON.stringify(result));
+  await assert.rejects(()=>integrateObject(candidate,dir),/calibrationEvidence/);
+  result.views.normalNE.calibrationEvidence='Synthetic fixture calibration:32camera pixels per metre, independent of its global16px/m default.';fs.writeFileSync(candidate,JSON.stringify(result));
   const imported=await integrateObject(candidate,dir);assert.equal(imported.projection,'normal+yaw8');assert.equal(new Set(Object.values(imported.views).map(v=>v.id)).size,8);
   assert.deepEqual(imported.seating,seating);assert.deepEqual(imported.views.normalNE.seating,input.views.normalNE.seating);
   const ledger=JSON.parse(fs.readFileSync(path.join(dir,'scripts/assets/object-eight-registry.json'),'utf8'));assert.equal(ledger.items.length,8);assert.equal(ledger.items[0].tex[0],0);
+  const row=ledger.items.find(i=>i.id===imported.views.normalNE.id),view=result.views.normalNE;assert.equal(row.w,view.width*objectDisplayScale(32));assert.equal(row.ax,view.anchor.x*objectDisplayScale(32));
+  const calibration=JSON.parse(fs.readFileSync(path.join(path.dirname(path.resolve(dir,'src/game',ledger.pages[0][0])),'calibration.json'),'utf8'));
+  assert.equal(calibration.space,'orthographic-camera');assert.equal(calibration.engineProjection.tileMetres,2);assert.equal(calibration.views.normalNE.sourcePixelsPerMetre,32);
   assert.ok(fs.readFileSync(path.join(dir,'src/game/object-eight-library.ts'),'utf8').includes('appendObjectEight'));
   await assert.rejects(()=>integrateObject(candidate,dir),/already registered/);
   assert.ok(fs.existsSync(path.join(dir,'normal.png'))&&fs.existsSync(path.join(out,'normalNE.native.png')));
