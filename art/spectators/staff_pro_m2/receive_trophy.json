@@ -1,0 +1,34 @@
+{
+  "id": "spectator:staff_pro_m2:receive_trophy",
+  "name": "staff_pro_m2 receive_trophy",
+  "clip": "receive_trophy",
+  "heightMetres": 1.8,
+  "frameWidth": 160,
+  "frameHeight": 275,
+  "anchor": {
+    "x": 80,
+    "y": 265
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "receive_trophy1",
+    "receive_trophy2",
+    "receive_trophy3",
+    "receive_trophy4"
+  ],
+  "fps": 1,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m2",
+  "clips": {
+    "receive_trophy": "retarget_clip 3.97s, stride 2.00s, body turned -3 deg"
+  }
+}

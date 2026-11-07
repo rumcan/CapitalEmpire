@@ -104,9 +104,17 @@ every p1 is done: `clips <id> p2`, same order. Stop and tell the owner when the 
   above the shoulders: redrawn with "arms pointing down and out, hands below the waist"). **39 of 49 done. RUN balance 332: stopped for a
   top-up.** **Next:** the last 10 (staff_greenkeeper_m, staff_janitor_m, staff_scorer_w, staff_tvcam_m, staff_photog_w, staff_range_m,
   golfer_m_range, golfer_w_range, family_w_wife, family_k_son; about 1,130 credits each), then the Meshy rigs and clips of the 16 new
-  people in section 4's order (Meshy 380 credits: not enough for all).
+  people in section 4's order.
+- **Meshy, 2026-11-07 20:18 UTC:** all six new people rigged (10 each). Role clips (p1) made for staff_caddie_w (6), staff_pro_m1 (18)
+  and staff_pro_m2 (18); their sheets are on lead/live (`<clip>.webp` + `.json`; previews and GLBs stay local). The queue stopped at
+  **34 Meshy credits** (under its 40 floor): player_m (coach), staff_starter_m and staff_official_m are rigged but have no role clips yet.
+  **Held:** staff_caddie_w `rake_bunker` (text-to-motion): the head folds sideways onto the shoulder and there is no rake; not committed,
+  do not wire it; remake it once credits allow. The pros' `golf_drive` lifts the back foot off the ground at the finish: usable for a
+  far crowd view, not for the play view (the golfers' own swing sheets are better). **Next when Meshy is topped up:** rerun
+  `bash scripts/assets/people3d/meshy-queue.sh` (it picks up player_m, the starter and the official in role order).
 
 ## 6. Log (newest first; one line each)
+- 2026-11-07: Meshy: 6 rigs, p1 clips for caddie_w and both pros (346 credits); stopped at 34. caddie rake_bunker held (broken head).
 - 2026-11-07: 5 more from pictures (both pros, caddie_w, starter, official), all clean; 6 pictures + 5 models = 5,785 credits; balance 332.
 - 2026-11-07: player_m made from an A-pose picture (image-to-3D): first take had arm-to-hip skin webs (arms too close), second take
   (arms 40 degrees out) clean, 1.66. Cost 2,266 RUN credits for the test (2 pictures, 2 models).

@@ -1,0 +1,36 @@
+{
+  "id": "spectator:staff_pro_m2:golf_drive",
+  "name": "staff_pro_m2 golf_drive",
+  "clip": "golf_drive",
+  "heightMetres": 1.8,
+  "frameWidth": 160,
+  "frameHeight": 275,
+  "anchor": {
+    "x": 80,
+    "y": 265
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "golf_drive1",
+    "golf_drive2",
+    "golf_drive3",
+    "golf_drive4",
+    "golf_drive5",
+    "golf_drive6"
+  ],
+  "fps": 1.9,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m2",
+  "clips": {
+    "golf_drive": "Armature|golf_drive|baselayer 3.10s, stride 0.87s, body turned 46 deg"
+  }
+}

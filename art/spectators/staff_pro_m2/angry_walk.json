@@ -1,0 +1,38 @@
+{
+  "id": "spectator:staff_pro_m2:angry_walk",
+  "name": "staff_pro_m2 angry_walk",
+  "clip": "angry_walk",
+  "heightMetres": 1.8,
+  "frameWidth": 160,
+  "frameHeight": 275,
+  "anchor": {
+    "x": 80,
+    "y": 265
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "angry_walk1",
+    "angry_walk2",
+    "angry_walk3",
+    "angry_walk4",
+    "angry_walk5",
+    "angry_walk6",
+    "angry_walk7",
+    "angry_walk8"
+  ],
+  "fps": 9,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m2",
+  "clips": {
+    "angry_walk": "retarget_clip 3.97s, stride 0.89s, body turned 3 deg"
+  }
+}

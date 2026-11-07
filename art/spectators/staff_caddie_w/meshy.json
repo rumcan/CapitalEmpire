@@ -1,0 +1,38 @@
+{
+  "clips": {
+    "bag_walk": {
+      "action": "m:bag_walk",
+      "task": "01a1b792-05ea-7381-8af9-ff356071c52e",
+      "credits": 3
+    },
+    "hand_club": {
+      "action": "m:hand_club",
+      "task": "01a1b792-7cad-73e2-a5e5-ecf1bf0ab255",
+      "credits": 3
+    },
+    "rake_bunker": {
+      "action": "m:rake_bunker",
+      "task": "01a1b792-f2ef-7460-8b5e-28392afa40b8",
+      "credits": 3
+    },
+    "flag_tend": {
+      "action": "m:flag_tend",
+      "task": "01a1b793-68bf-7232-956d-882b5702283d",
+      "credits": 3
+    },
+    "read_putt": {
+      "action": 54,
+      "task": "01a1b793-a930-768f-9d32-040d243f07ec",
+      "credits": 3
+    },
+    "clean_ball": {
+      "action": "m:clean_ball",
+      "task": "01a1b794-351d-72bd-8d85-71492611453c",
+      "credits": 3
+    }
+  },
+  "remeshTask": "01a1b786-e014-7440-a8e8-6363dabfcc85",
+  "remeshCredits": 5,
+  "rigTask": "01a1b788-0029-7504-b3c1-282a65c59817",
+  "rigCredits": 5
+}
