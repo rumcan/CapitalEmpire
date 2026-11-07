@@ -1,0 +1,36 @@
+{
+  "id": "spectator:staff_pro_m2:lift_trophy",
+  "name": "staff_pro_m2 lift_trophy",
+  "clip": "lift_trophy",
+  "heightMetres": 1.8,
+  "frameWidth": 160,
+  "frameHeight": 275,
+  "anchor": {
+    "x": 80,
+    "y": 265
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "lift_trophy1",
+    "lift_trophy2",
+    "lift_trophy3",
+    "lift_trophy4",
+    "lift_trophy5",
+    "lift_trophy6"
+  ],
+  "fps": 1.2,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m2",
+  "clips": {
+    "lift_trophy": "retarget_clip 4.97s, stride 3.50s, body turned -11 deg"
+  }
+}

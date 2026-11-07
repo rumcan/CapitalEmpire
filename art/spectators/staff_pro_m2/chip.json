@@ -1,0 +1,36 @@
+{
+  "id": "spectator:staff_pro_m2:chip",
+  "name": "staff_pro_m2 chip",
+  "clip": "chip",
+  "heightMetres": 1.8,
+  "frameWidth": 160,
+  "frameHeight": 275,
+  "anchor": {
+    "x": 80,
+    "y": 265
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "chip1",
+    "chip2",
+    "chip3",
+    "chip4",
+    "chip5",
+    "chip6"
+  ],
+  "fps": 1.5,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m2",
+  "clips": {
+    "chip": "retarget_clip 3.97s, stride 0.89s, body turned 5 deg"
+  }
+}

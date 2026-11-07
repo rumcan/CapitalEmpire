@@ -1,0 +1,34 @@
+{
+  "id": "spectator:staff_pro_m1:handshake",
+  "name": "staff_pro_m1 handshake",
+  "clip": "handshake",
+  "heightMetres": 1.83,
+  "frameWidth": 160,
+  "frameHeight": 279,
+  "anchor": {
+    "x": 80,
+    "y": 269
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "handshake1",
+    "handshake2",
+    "handshake3",
+    "handshake4"
+  ],
+  "fps": 1,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m1",
+  "clips": {
+    "handshake": "retarget_clip 3.97s, stride 3.67s, body turned 20 deg"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "id": "spectator:staff_pro_m1:putt",
+  "name": "staff_pro_m1 putt",
+  "clip": "putt",
+  "heightMetres": 1.83,
+  "frameWidth": 160,
+  "frameHeight": 279,
+  "anchor": {
+    "x": 80,
+    "y": 269
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "putt1",
+    "putt2",
+    "putt3",
+    "putt4",
+    "putt5",
+    "putt6"
+  ],
+  "fps": 1.5,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m1",
+  "clips": {
+    "putt": "retarget_clip 3.97s, stride 2.13s, body turned -5 deg"
+  }
+}
