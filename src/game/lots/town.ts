@@ -65,6 +65,8 @@ function yieldOf(T: number[][], s: LotState): number {
 }
 /** T242: a lot's jobs now (the set-the-scene card's Staff): none while building, half at decline 2+, none when derelict */
 export function lotJobs(s: Pick<LotState, 'use' | 'level' | 'decline'>): number { return JOBS[s.use] ? yieldOf(JOBS, s as LotState) : 0; }
+/** A lot's resident count from the simulation's existing population table; no new capacity or growth rule. */
+export function lotResidents(s: Pick<LotState, 'use' | 'level' | 'decline'>): number { return POP[s.use] ? yieldOf(POP, s as LotState) : 0; }
 /** the value of a lot's frontage for growth: corner +0.3, +0.2 per paved class step above gravel */
 const lotValue = (l: Lot) => 1 + (l.corner ? 0.3 : 0) + 0.2 * Math.max(0, l.seg.cls.order + 1);
 /** T331 (#945): the reach (tiles, lot centre to lot centre) of the shops a new shop lot keeps apart from (town.ts pickBiz): the lots beside it (frontages up

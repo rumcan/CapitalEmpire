@@ -3,6 +3,7 @@ import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, L
 import { PeopleSpacer, spacePeople } from './spacing';
 import { PUTT_IMPACT_S, galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
+import { personIdentity, type PersonIdentity } from './person-identity';
 import { GREENKEEPING } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
@@ -41,7 +42,7 @@ import { escapeLadder, numberKeyUse, pickTool, SIDE_MODES, switchSideMode, type 
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { sizeKey, turned } from './lots/preset-art';
-import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceHasArt, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
+import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, lotGood, propertyScene, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
 import { homeStage, rangeScale } from './golf/rangesave';
 import { RangeHost, type RangeCardView } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
@@ -130,7 +131,7 @@ import { BELT, beltField, riverBeltCell, type BeltField } from './river-trees';
 const PLANT_FRAME_MS = 1;
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
-import { LU, LV, lotJobs, type LotTuple } from './lots/town';
+import { LU, LV, lotJobs, lotResidents, type LotTuple } from './lots/town';
 import { rectPlot, surveyBlocks, surveyPatch } from './lots/survey';
 /** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
 const LAND_SURVEY_INSET = 0.6;
@@ -190,7 +191,6 @@ import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, pa
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
-import { GOLFER_NAMES } from './golf/play/field';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
 import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
@@ -302,11 +302,6 @@ const YOU_VERB_COLOR: Readonly<Record<YouVerb | 'none', string>> = { walk: '#fac
 /** T326: a parked cart keeps this far (tiles, either axis) from a tee marker: off the tee pad */
 const TEE_PAD = 7;
 const CART_HOME: readonly (readonly [number, number])[] = [[2.5, 0], [0, 2.5], [-2.5, 0], [0, -2.5], [3.5, 1.5]];
-/** T240: a person's name from a seed (the field's name lists) until T243 gives the town's people their own */
-function personName(seed: number): string {
-  const r = (k: number) => hash(seed, k), w = r(1) < 0.5, first = w ? GOLFER_NAMES.w : GOLFER_NAMES.m;
-  return `${first[Math.floor(r(2) * first.length)]} ${GOLFER_NAMES.last[Math.floor(r(3) * GOLFER_NAMES.last.length)]}`;
-}
 /** T240: what a person says when you walk up (the stand-in talk until T243's cards) */
 const TALK_LINES: readonly string[] = ['Nice day for it.', 'You run the range, right? My brother-in-law swears by it.', 'Hit any good ones today?', 'They say a course is coming. About time.', 'I shot a 92 last week. Personal best.', 'Is the bucket still three dollars?', 'Watch out for the ditch on the left.', 'My wife thinks I golf too much. She is right.'];
 /** T214: what your pros say when you walk up (the lesson box follows for a pro who teaches) */
@@ -3951,6 +3946,25 @@ export class Game {
         const l = this.traffic.lots.get(r.key), p = LOT_PLACES.find(q => q.id === r.place); if (!l || !p) return null;
         return lotScene(p, { level: l.level, decline: l.decline, jobs: lotJobs(l), town, pop: this.traffic.pop }, r.view);
       }
+      case 'property': {
+        const l = this.traffic.lots.get(r.key); if (!l || l.level < 2) return null;
+        const place = r.place ? LOT_PLACES.find(p => p.id === r.place) : undefined;
+        return propertyScene({ key: r.key, subject: r.subject, name: r.name, slug: r.home ? 'town-home' : place?.slug ?? 'town-business', good: lotGood(l), home: r.home, lines: place?.lines, tiles: [
+          { label: 'Condition', value: l.decline > 0 ? ['In good repair', 'Shabby', 'Boarded up', 'Derelict'][Math.min(3, l.decline)]! : lotGood(l) ? 'Upgraded' : 'Getting by' },
+          { label: r.home ? 'Residents' : 'Staff', value: `${r.home ? lotResidents(l) : lotJobs(l)}` },
+          { label: 'Town', value: town },
+        ] }, r.view);
+      }
+      case 'event': {
+        const s = this.golf?.structures?.find(q => q.id === r.id), def = s && STRUCTURE[s.typeId]; if (!s || !def) return null;
+        const prop = this.golfStructureProps.get(s.id), visualTier = (s as typeof s & { visualTier?: string }).visualTier;
+        return propertyScene({ key: `event:${s.id}`, subject: prop ? this.sceneSubject(prop.item) : `event:${s.typeId}`, name: def.name, slug: `event-${s.typeId}`, good: visualTier === 'upgraded', tiles: [
+          { label: 'Condition', value: visualTier === 'upgraded' ? 'Upgraded' : 'Budget / worn' },
+          { label: 'Capacity', value: def.capacity > 0 ? `${def.capacity.toLocaleString('en-US')} ${def.unit}` : '—' },
+          { label: 'Footprint', value: `${def.footprint.w * 2} × ${def.footprint.h * 2} m` },
+          { label: 'Ownership', value: s.mode === 'buy' ? 'Owned' : 'Rented' },
+        ] }, r.view);
+      }
       case 'farm': { const f = this.farmMap.farms.get(r.key); return f ? farmScene({ ha: (f.p.w * f.p.d * 4) / 10000, town, fortune: townFortune(this.traffic.lots.values()) }) : null; }
       case 'place': { const pc = this.places.find(q => q.id === r.id), def = placeDef(r.id); return pc && def ? placeScene({ id: r.id, name: placeName(def, this.townName(0)), pop: def.pop, w: def.preset.w * 2, d: def.preset.d * 2, fortune: townFortune(this.traffic.lots.values()) }, r.view) : null; }
     }
@@ -3967,7 +3981,7 @@ export class Game {
   }
   /** the building a library picture shows (a view's, a turned set's, an east picture's own subject; a variation keeps its id: scenes.ts reads it) */
   private sceneSubject(item: number): string {
-    const s = sizeKey(LIBRARY[item]?.id ?? ''); const v = /^view:(.+):(ne|nw|se|sw)$/.exec(s);
+    const s = sizeKey(LIBRARY[item]?.id ?? ''); const v = /^view:(.+):(ne|nw|se|sw|n|e|s|w)$/.exec(s);
     return v ? v[1]! : s.startsWith('east:') ? s.slice(5) : s;
   }
   /** a click on the map with Select inspects what it hit (the map press shut the card first): a range piece's view (its ground: the road), the
@@ -3977,9 +3991,15 @@ export class Game {
     if (club) { if (this.sceneArt('club')) this.openScene({ kind: 'club' }); return; }
     if (a.startsWith('range:') || !p) { if (this.sceneArt('range')) this.openScene({ kind: 'range', view: a ? rangeViewOfKey(a.slice(6)) : 'road' }); return; }
     if (a.startsWith('place:')) { if (placeHasArt(a.slice(6))) this.openScene({ kind: 'place', id: a.slice(6) }); return; }
+    for (const [id, prop] of this.golfStructureProps) if (prop === p) { this.openScene({ kind: 'event', id }); return; }
     // (T270: a lot is the business it is drawn as: the picture newart.ts lookOf draws, else its own)
     const drawn = this.sceneSubject(lookOf(p).item), own = this.sceneSubject(p.item);
-    if (a.startsWith('lot:')) { const pl = lotPlaceOf(drawn) ?? lotPlaceOf(own); if (pl && lotPlaceHasArt(pl)) this.openScene({ kind: 'lot', key: a.slice(4), place: pl.id }); return; }
+    if (a.startsWith('lot:') && YOU_LOOKS_AT.has(LIBRARY[p.item]!.kind)) {
+      const l = this.traffic.lots.get(a.slice(4)); if (!l || l.level < 2) return;
+      const pl = lotPlaceOf(own) ?? lotPlaceOf(drawn), home = l.use === LU.RES;
+      this.openScene({ kind: 'property', key: a.slice(4), subject: own, name: pl?.name ?? (home ? this.youPropName(p) : LIBRARY[p.item]!.name), home, ...(pl ? { place: pl.id } : {}) });
+      return;
+    }
     if (a.startsWith('farm:') && (FARMHOUSE_SUBJECTS.has(drawn) || FARMHOUSE_SUBJECTS.has(own))) this.openScene({ kind: 'farm', key: a.slice(5) });
   }
   /** the range's pictures as last read (null: not yet, so a load never toasts), and the tick that reads them about once a second */
@@ -5459,6 +5479,8 @@ export class Game {
         // a car under the pointer (street tier) is inspected; else a prop is selected; else, with the flow on, the junction there is watched
         const car = this.cam.z >= DISTRICT_Z ? this.carAt(mx, my) : -1;
         if (car >= 0) { this.inspectCar(car); return; }
+        // Select can inspect a person's identity immediately; Walk still walks up before opening the same card.
+        if (this.cam.z >= DISTRICT_Z && this.you) { const person = this.youThingAt(mx, my); if (person?.kind === 'person') { person.act?.(); return; } }
         if (this.cam.z >= DISTRICT_Z && this.repairAt(mx, my)) return;
         const p = this.propAt(mx, my), tl = this.tileAt(mx, my);
         // the range's own props and its front open the range card (P24, T129)
@@ -7229,6 +7251,7 @@ export class Game {
     if (this.saveBlocked) return 0;
     const d: SaveV5 = {
       version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(), theme: this.desertTheme ? 'desert' : 'autumn',
+      pedestrianIdentities: this.peds.identityState(),
       // T259: the farm model (an old save's farms rebuilt since on the new one: farmsNew)
       farmModel: this.farmModel, ...(this.farmModel === 1 && this.farmsNew.size ? { farmsNew: [...this.farmsNew] } : {}),
       segs: [...this.net.segs].map(segRec),
@@ -7269,6 +7292,7 @@ export class Game {
       // T342: the game's own look (a save from before T342 is autumn); ?desert=on|off on the dev server still wins for the session
       this.themeFor(d.theme === 'desert');
       this.genTerrain(d.seed);
+      this.peds.restoreIdentities(d.pedestrianIdentities); this.pedNet = -1; this.pedLots = -1; this.pedTick = 0;
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
       // T288: a range from before T288 was built for the player: its guide's placement steps are done (no reward)
@@ -7314,6 +7338,7 @@ export class Game {
     } catch (e) { console.error('load failed', e); return false; }
   }
   private reset() {
+    this.peds.restoreIdentities(); this.pedNet = -1; this.pedLots = -1; this.pedTick = 0; this.spectatorSeenN = 0;
     this.courseHeight = createCourseHeightField(); this.chSave = null;
     this.grass.clear(); this.grassZones.clear(); this.grassSim = -1; this.grassElapsed = 0; this.grassTrafficT = -1; this.grassPedOut.fill(0); this.grassCarAlive.fill(0); this.grassTarget = null; this.grassAction = null;
     this.edit.clear(); this.snapshot = null; this.pondKey = ''; // T231: the ponds' edges are laid again for the loaded game
@@ -7668,7 +7693,17 @@ export class Game {
    *  1.5 tiles behind the kerb toward the stop's car park, as drawWalkers had it) and each walking party, every person its 3D frame (crowdview.ts;
    *  `now` in seconds), then the golfers of the day (playMovers). A spot, a party or a queue is culled by its point to the box padded by 4 tiles, the
    *  reach of its people. Reused Drawables and scratch people: no allocation per frame once the crowd is warm */
+  /** Visible spectator identity slots; buffer group/slot keys remain stable while present, without allocating identities every render frame. */
+  private spectatorSeen: { x: number; y: number; person: number; source: number; index: number; slot: number }[] = [];
+  private spectatorSeenN = 0;
+  private rememberSpectators(people: CrowdPerson[], count: number, source: number, index: number): void {
+    for (let slot = 0; slot < count; slot++) {
+      const p = people[slot]!, at = this.spectatorSeenN++, o = this.spectatorSeen[at] ?? (this.spectatorSeen[at] = { x: 0, y: 0, person: 0, source: 0, index: 0, slot: 0 });
+      o.x = p.x; o.y = p.y; o.person = p.person; o.source = source; o.index = index; o.slot = slot;
+    }
+  }
   private crowdMovers(x0: number, y0: number, x1: number, y1: number, now: number): Drawable[] {
+    this.spectatorSeenN = 0;
     const G = this.traffic.gallery, W = this.traffic.walkers, S = this.traffic.stops, out = this.crowdDraw, P = this.crowdPeople;
     const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length, ch = this.play?.pv.cheers.length ? this.play.pv.cheers : null;
     let m = 0;
@@ -7679,12 +7714,14 @@ export class Game {
       let cheer = -1;
       if (ch) for (const c of ch) if ((c.x - x) ** 2 + (c.y - y) ** 2 < CHEER_TILES * CHEER_TILES) cheer = Math.max(cheer, c.t);
       const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P, cheer);
+      this.rememberSpectators(P, k, 0, spot);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
     for (let i = 0; i + 5 < W.length; i += 6) {
       const x = W[i]!, y = W[i + 1]!;
       if (x < X0 || x > X1 || y < Y0 || y > Y1) continue;
       const k = walkerPeople(W, i, i / 6, now, nS, P);
+      this.rememberSpectators(P, k, 1, i / 6);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
     for (let i = 0; i + 3 < S.length; i += 4) {
@@ -7695,6 +7732,7 @@ export class Game {
       let ux = 0, uy = 1;
       if (def) for (const p of this.parkDefs) if (p.id === def.park) { const cx = p.x + p.w / 2 - sx, cy = p.y + p.h / 2 - sy, L = Math.hypot(cx, cy); if (L > 0) { ux = cx / L; uy = cy / L; } break; }
       const k = queuePeople(sx + ux * 1.5, sy + uy * 1.5, sx, sy, q, r, now, nS, P);
+      this.rememberSpectators(P, k, 2, i / 4);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
     m = this.playMovers(out, m, X0, Y0, X1, Y1);
@@ -7912,7 +7950,7 @@ export class Game {
   /** what a click does under the pointer (the cursor's verb and the hover label), the pointer (css px) */
   youHover: { verb: YouVerb | null; text: string; mx: number; my: number } | null = null;
   /** the talk card (a person you walked up to), the first tee's card (Start a round) */
-  youTalk: { name: string; line: string; what: string; /** T244: their handicap when they golf (a money match can be offered); null: they do not */ hcp: number | null; answer?: { yes: boolean; line: string }; /** T214: one of your pros (the lesson box) */ pro?: { role: ClubRole } } | null = null; youTeeOpen = false;
+  youTalk: { name: string; line: string; what: string; person?: PersonIdentity; /** T244: their handicap when they golf (a money match can be offered); null: they do not */ hcp: number | null; answer?: { yes: boolean; line: string }; /** T214: one of your pros (the lesson box) */ pro?: { role: ClubRole } } | null = null; youTeeOpen = false;
   /** what you do on arriving (the thing's use) and the point you face then */
   private youThen: { act: (() => void) | null; face: Pt | null; key: string } | null = null;
   /** the blocked tiles round the last route or round you (1: may not be crossed): a box of the map, its buffer reused */
@@ -8045,26 +8083,51 @@ export class Game {
       const V = this.youPedV, n = this.peds.inBox(tl.x - 4, tl.y - 2, tl.x + 4, tl.y + 6, V);
       for (let k = 0; k < n; k++) {
         const v = V[k]!; if (!hit(v.x, v.y)) continue;
-        const name = personName(v.person * 7919 + Math.floor(v.x) * 31 + Math.floor(v.y)), at = talkSpot(v, from), pt = { x: v.x, y: v.y };
-        return { kind: 'person', name, at, face: pt, key: 'p' + v.person, act: () => this.youTalkTo(name, 'a townsperson', pt, golfs(name) ? hcpOfName(name) : null) };
+        const person = personIdentity(this.seed, `town:${v.id}`, WALKER_PEOPLE[v.person]!.id, 'town'), { name } = person, at = talkSpot(v, from), pt = { x: v.x, y: v.y };
+        return { kind: 'person', name, at, face: pt, key: person.id, act: () => this.youTalkTo(name, 'a townsperson', pt, golfs(name) ? hcpOfName(name) : null, undefined, person) };
       }
       // T214: your club staff (their names: a pro offers a lesson)
       for (const q of this.proSeen) {
         if (!hit(q.x, q.y)) continue;
         const h = this.golf?.crew?.staff?.pros?.[q.k]; if (!h) continue;
-        const pt = { x: q.x, y: q.y }, role = h.role;
-        return { kind: 'person', name: h.name, at: talkSpot(pt, from), face: pt, key: 'pro' + q.k, act: () => this.youTalkTo(h.name, `your ${ROLE_TITLE[role]}`, pt, null, role) };
+        const pt = { x: q.x, y: q.y }, role = h.role, art = Game.PRO_ART[role];
+        const person = personIdentity(this.seed, `pro:${h.at}:${role}:${h.name}`, (art.group === 1 ? GOLFER_PEOPLE : SPECTATOR_PEOPLE)[art.person]!.id, 'staff', { name: h.name, job: ROLE_TITLE[role] });
+        return { kind: 'person', name: h.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(h.name, `your ${ROLE_TITLE[role]}`, pt, null, role, person) };
       }
       // the range's golfers (walking to a mat, queueing, hitting): a name of their own until T243's people
       if (this.range.scene) { const rd = this.range.sim.view(); for (let k = 0; k < rd.nPeople; k++) {
         const q = rd.people[k]!; if (q.lift || !hit(q.x, q.y)) continue;
-        const name = personName(q.person * 7919 + k * 131 + 17), pt = { x: q.x, y: q.y };
-        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: 'r' + k, act: () => this.youTalkTo(name, 'a golfer at your range', pt, hcpOfName(name)) };
+        const person = personIdentity(this.seed, q.id === 0 ? 'range:academy-pro' : `range:visit:${q.id}`, GOLFER_PEOPLE[q.person]!.id, q.id === 0 ? 'staff' : 'golfer', q.id === 0 ? { job: 'Teaching pro' } : {}), { name } = person, pt = { x: q.x, y: q.y };
+        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(name, 'at your range', pt, q.id === 0 ? null : hcpOfName(name), undefined, person) };
       } }
       const d = this.dayPlay; if (d && !this.dayOff) for (const p of d.view.people) {
         if (!hit(p.x, p.y)) continue;
         const gf = d.base.golfers[p.golfer], name = gf?.name ?? 'a golfer', pt = { x: p.x, y: p.y };
-        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: 'g' + p.golfer, act: () => this.youTalkTo(name, 'out on the course', pt, gf ? hcpOfSkill(gf.skills ?? gf.skill) : hcpOfName(name)) };
+        const person = personIdentity(this.seed, `club-golfer:${gf?.id ?? p.golfer}:${name}`, GOLFER_PEOPLE[this.dayArt[p.golfer] ?? 0]!.id, 'golfer', { name });
+        return { kind: 'person', name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(name, 'out on the course', pt, gf ? hcpOfSkill(gf.skills ?? gf.skill) : hcpOfName(name), undefined, person) };
+      }
+      const tournament = this.play;
+      if (tournament) for (const p of tournament.pv.people) {
+        if ((p.alpha ?? 1) < 0.2 || !hit(p.x, p.y)) continue;
+        const gf = tournament.plan.golfers.find(q => q.id === p.golfer); if (!gf || gf.owner) continue;
+        const person = personIdentity(this.seed, `tour-golfer:${gf.id}:${gf.name}`, GOLFER_PEOPLE[tournament.art[p.golfer] ?? 0]!.id, 'golfer', { name: gf.name, job: gf.pro ? 'Tour professional' : 'Tournament golfer' }), pt = { x: p.x, y: p.y };
+        return { kind: 'person', name: person.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(person.name, 'playing in the tournament', pt, null, undefined, person) };
+      }
+      if (tournament) for (const p of tournament.pv.caddies) {
+        if ((p.alpha ?? 1) < 0.2 || !hit(p.x, p.y)) continue;
+        const golfer = tournament.plan.golfers.find(q => q.id === p.golfer);
+        const person = personIdentity(this.seed, `caddie:${p.golfer}:${golfer?.name ?? ''}`, SPECTATOR_PEOPLE[CADDIE_ART]!.id, 'staff', { job: 'Caddie', profile: golfer ? `Carrying the bag for ${golfer.name}.` : 'Helping a golfer through the round.' }), pt = { x: p.x, y: p.y };
+        return { kind: 'person', name: person.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(person.name, 'out on the course', pt, null, undefined, person) };
+      }
+      if (this.crew && !this.dayOff) for (const p of this.crew.view.people) {
+        if (p.alpha < 0.2 || !hit(p.x, p.y)) continue;
+        const person = personIdentity(this.seed, `crew:${p.role}:${p.k}`, SPECTATOR_PEOPLE[Game.CREW_ART[p.role]]!.id, 'staff', { job: p.role === 'gk' ? 'Greenkeeper' : 'Mower operator' }), pt = { x: p.x, y: p.y };
+        return { kind: 'person', name: person.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(person.name, 'working on the course', pt, null, undefined, person) };
+      }
+      for (let i = 0; i < this.spectatorSeenN; i++) {
+        const p = this.spectatorSeen[i]!; if (!hit(p.x, p.y)) continue;
+        const person = personIdentity(this.seed, `spectator:${p.source}:${p.index}:${p.slot}`, SPECTATOR_PEOPLE[p.person]!.id, 'spectator'), pt = { x: p.x, y: p.y };
+        return { kind: 'person', name: person.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(person.name, 'watching the tournament', pt, null, undefined, person) };
       }
     }
     // T317: your golf cart (get in; get out when you sit in it) and your ball in your round (walk up to it: you snap to the address when near)
@@ -8160,10 +8223,10 @@ export class Game {
   /** T323: Alt (a lone tap) swaps the cursors */
   toggleYouWalk() { this.setYouWalk(!this.youWalkMode); this.toast(this.youWalkMode ? 'Walk: a click walks you there (Alt: Select)' : 'Select: a click inspects (Alt: Walk)', 'info'); }
   /** you walk up to a person: you face each other and the talk card opens (T243 brings the portraits and their skills) */
-  private youTalkTo(name: string, what: string, at: Pt, hcp: number | null = null, pro?: ClubRole) {
+  private youTalkTo(name: string, what: string, at: Pt, hcp: number | null = null, pro?: ClubRole, person?: PersonIdentity) {
     const y = this.you; if (y) y.face = facingOf(at.x - y.x, at.y - y.y);
     const lines = pro ? PRO_LINES[pro] : TALK_LINES, k = Math.floor(hash(name.length * 131 + name.charCodeAt(0), Math.floor(this.townNow().dayMin / 30)) * lines.length);
-    this.youTalk = { name, what, line: lines[k]!, hcp, ...(pro ? { pro: { role: pro } } : {}) }; this.emit();
+    this.youTalk = { name, what, line: lines[k]!, hcp, ...(person ? { person } : {}), ...(pro ? { pro: { role: pro } } : {}) }; this.emit();
   }
   closeYouTalk() { this.youTalk = null; this.emit(); }
   closeYouTee() { this.youTeeOpen = false; this.emit(); }

@@ -10,6 +10,8 @@ import { Thumb } from '../Thumb';
 import { HoleChoiceBox } from './YourRound';
 import { ChallengeBox, type MatchOffer } from './MatchCards';
 import type { HoleChoice, RoundRules } from '../../game/golf/play/yours';
+import type { PersonIdentity } from '../../game/person-identity';
+import { PersonPortrait } from '../PersonPortrait';
 
 const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 
@@ -80,7 +82,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme }: { n
 }
 
 /** the talk card: you walked up to a person; their name, what they do and a line (T243 gives them portraits, jobs and skills) */
-export function TalkCard({ talk, right, onClose, offer, onChallenge, lesson, onLesson }: { talk: { name: string; line: string; what: string; answer?: { yes: boolean; line: string } }; right: string; onClose: () => void;
+export function TalkCard({ talk, right, onClose, offer, onChallenge, lesson, onLesson }: { talk: { name: string; line: string; what: string; person?: PersonIdentity; answer?: { yes: boolean; line: string } }; right: string; onClose: () => void;
   /** T244: the money match on their card (they golf), and the challenge */ offer?: MatchOffer | null; onChallenge?: (stake: number, holes: number) => void;
   /** T214: one of your pros: book a lesson (why: '' to book) */ lesson?: { why: string; bonus: number } | null; onLesson?: () => void }) {
   return (
@@ -88,10 +90,14 @@ export function TalkCard({ talk, right, onClose, offer, onChallenge, lesson, onL
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
         <div>
           <div className="font-semibold text-sky-200">{talk.name}</div>
-          <div className="text-[12px] text-slate-400">{talk.what} · Stand In card (portraits come with T243)</div>
+          <div className="text-[12px] text-slate-400">{talk.person?.job ?? talk.what}</div>
         </div>
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
       </div>
+      {talk.person && <>
+        <PersonPortrait person={talk.person} />
+        <p className="text-xs text-slate-400" data-testid="person-profile">{talk.person.profile}</p>
+      </>}
       <p className="rounded-lg bg-white/5 px-2 py-1.5 text-sm italic text-slate-200">"{talk.line}"</p>
       {offer && onChallenge && <ChallengeBox key={talk.name} o={offer} onChallenge={onChallenge} />}
       {lesson && onLesson && (

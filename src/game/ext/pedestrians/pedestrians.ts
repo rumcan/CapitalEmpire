@@ -3,6 +3,7 @@
 // cross to the nearest other sidewalk end at a junction or turn back at a dead end. Seeded (mulberry), allocation-free per step.
 // The engine draws each walker from its facing (8 screen directions, from the velocity) and its walk frame (from the distance).
 import { mulberry } from '../../iso';
+import { personLookIndex } from '../../person-identity';
 
 type Pt = { x: number; y: number };
 /** a road as the walkers see it: its centreline (tiles), the half width to the kerb and the sidewalk width (tiles) */
@@ -71,7 +72,10 @@ export function facing(dx: number, dy: number): number {
 export const FACING_ROW: readonly [number, boolean][] = [[0, false], [1, false], [2, false], [3, false], [4, false], [5, false], [6, false], [7, false]];
 
 /** one walker in view (inBox): position (tiles), facing (0-7), walk frame (0 idle, 1..walkFrames), the person index */
-export interface WalkerView { x: number; y: number; face: number; frame: number; person: number }
+export interface WalkerView { x: number; y: number; face: number; frame: number; person: number; /** Monotonic actor id, independent of position or a recycled population slot. */ id: number }
+
+/** Compact identity-only save: next monotonic actor id and live slot [id, appearance] pairs; no movement/animation state. */
+export interface PedestrianIdentities { nextId: number; people: [number, number][] }
 
 /** a door the walkers come out of and go into (tiles): a home (kind 0) or a place they go to (kind 1: shops, work, civic, venues) */
 export interface Door { x: number; y: number; kind: 0 | 1 }
@@ -97,6 +101,7 @@ export class Pedestrians {
   private homes: Door[] = []; private places: Door[] = [];
   private readonly sw: Int32Array; private readonly s: Float64Array; private readonly dir: Int8Array; private readonly spd: Float32Array;
   private readonly lat: Float32Array; private readonly dist: Float32Array; private readonly pause: Float32Array; private readonly who: Uint16Array;
+  private readonly identity: Uint32Array; private nextIdentity = 1; private restoredIdentities = 0;
   /** a crossing in progress: from (x0, y0) to (x1, y1), t in tiles walked of len; then sidewalk tgt from end tend */
   private readonly cx: Float32Array; private readonly ct: Float32Array; private readonly tgt: Int32Array; private readonly tend: Int8Array;
   /** the door it heads for and its home door (tiles); seconds left indoors (positive: at a place, negative: at home, 0: out) */
@@ -104,10 +109,11 @@ export class Pedestrians {
   readonly x: Float32Array; readonly y: Float32Array; readonly face: Uint8Array;
 
   /** `walkFrames` walk frames per cycle (1..walkFrames after the idle frame 0) */
-  constructor(seed: number, readonly people: number, readonly cap = 4096, readonly walkFrames = 8) {
+  constructor(private readonly seed: number, readonly people: number, readonly cap = 4096, readonly walkFrames = 8) {
     this.r = mulberry(seed >>> 0);
     this.sw = new Int32Array(cap); this.s = new Float64Array(cap); this.dir = new Int8Array(cap); this.spd = new Float32Array(cap);
     this.lat = new Float32Array(cap); this.dist = new Float32Array(cap); this.pause = new Float32Array(cap); this.who = new Uint16Array(cap);
+    this.identity = new Uint32Array(cap);
     this.cx = new Float32Array(cap * 4); this.ct = new Float32Array(cap * 2); this.tgt = new Int32Array(cap); this.tend = new Int8Array(cap);
     this.dx = new Float32Array(cap); this.dy = new Float32Array(cap); this.hx = new Float32Array(cap); this.hy = new Float32Array(cap); this.inside = new Float32Array(cap);
     this.x = new Float32Array(cap); this.y = new Float32Array(cap); this.face = new Uint8Array(cap);
@@ -117,6 +123,26 @@ export class Pedestrians {
   get out() { let k = 0; for (let i = 0; i < this.n; i++) if (this.inside[i] === 0) k++; return k; }
   /** is walker i out on the sidewalks (not indoors) */
   isOut(i: number) { return this.inside[i] === 0; }
+
+  /** Identity-only snapshot (actor ids and look indices); movements remain transient as before. */
+  identityState(): PedestrianIdentities {
+    const people: [number, number][] = [];
+    for (let i = 0; i < Math.max(this.n, this.restoredIdentities); i++) if (this.identity[i]) people.push([this.identity[i]!, this.who[i]!]);
+    return { nextId: this.nextIdentity, people };
+  }
+
+  /** Restore stable identities on load, or clear them for a new world. Invalid records get fresh identities when populated. */
+  restoreIdentities(saved?: PedestrianIdentities): void {
+    this.n = 0; this.identity.fill(0); this.restoredIdentities = 0; this.nextIdentity = 1;
+    const seen = new Set<number>();
+    if (saved && Array.isArray(saved.people)) for (const pair of saved.people.slice(0, this.cap)) {
+      if (!Array.isArray(pair)) continue;
+      const [id, look] = pair;
+      if (!Number.isSafeInteger(id) || id <= 0 || id >= 0xffffffff || seen.has(id) || !Number.isInteger(look) || look < 0 || look >= this.people) continue;
+      const slot = this.restoredIdentities++; this.identity[slot] = id; this.who[slot] = look; seen.add(id); this.nextIdentity = Math.max(this.nextIdentity, id + 1);
+    }
+    if (saved && Number.isSafeInteger(saved.nextId) && saved.nextId > 0 && saved.nextId < 0xffffffff) this.nextIdentity = Math.max(this.nextIdentity, saved.nextId);
+  }
 
   /** the doors: homes (where walkers live) and the places they go; with no places, walkers visit other homes */
   setDoors(doors: Door[]) { this.homes = doors.filter(d => d.kind === 0); this.places = doors.filter(d => d.kind === 1); }
@@ -175,13 +201,17 @@ export class Pedestrians {
   /** grow or shrink to n walkers (capped): a new walker lives at a seeded home and starts indoors there, out within seconds */
   populate(n: number) {
     n = Math.max(0, Math.min(this.cap, Math.floor(n)));
+    for (let i = n; i < this.n; i++) this.identity[i] = 0; // Retired actors are never reassigned to a recycled population slot.
     for (let i = this.n; i < n; i++) {
       const h = this.pick(this.homes) ?? { x: 0, y: 0 };
       this.hx[i] = h.x; this.hy[i] = h.y; this.dx[i] = h.x; this.dy[i] = h.y; this.x[i] = h.x; this.y[i] = h.y;
       this.spd[i] = WALK_SPEED * (0.8 + 0.4 * this.r()); this.lat[i] = (this.r() - 0.5) * 0.5; this.dist[i] = this.r() * 10;
-      this.who[i] = Math.floor(this.r() * this.people); this.tgt[i] = -1; this.pause[i] = 0; this.inside[i] = -(0.2 + this.r() * 6);
+      this.r(); // Keep the movement RNG stream unchanged; appearance belongs to the actor, not a trip or spawn time.
+      if (!this.identity[i]) { this.identity[i] = this.nextIdentity++; this.who[i] = personLookIndex(this.seed, this.identity[i]!, this.people); }
+      this.tgt[i] = -1; this.pause[i] = 0; this.inside[i] = -(0.2 + this.r() * 6);
     }
     this.n = n;
+    if (n >= this.restoredIdentities) this.restoredIdentities = 0;
   }
   /** the position of walker i on its sidewalk (with its lateral offset), and its facing from the move (mx, my) */
   private place(i: number, mx: number, my: number) {
@@ -259,8 +289,8 @@ export class Pedestrians {
     for (let i = 0; i < this.n; i++) {
       if (this.inside[i] !== 0) continue;
       const x = this.x[i], y = this.y[i]; if (x < x0 || x > x1 || y < y0 || y > y1) continue;
-      const o = out[m] ?? (out[m] = { x: 0, y: 0, face: 0, frame: 0, person: 0 });
-      o.x = x; o.y = y; o.face = this.face[i]; o.frame = this.frame(i); o.person = this.who[i]; m++;
+      const o = out[m] ?? (out[m] = { x: 0, y: 0, face: 0, frame: 0, person: 0, id: 0 });
+      o.id = this.identity[i]!; o.x = x; o.y = y; o.face = this.face[i]; o.frame = this.frame(i); o.person = this.who[i]; m++;
     }
     return m;
   }

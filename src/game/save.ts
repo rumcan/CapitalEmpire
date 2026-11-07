@@ -15,6 +15,7 @@ import type { Seg } from './network';
 import type { GolfSave } from './golf/mode';
 import type { GrassSave } from './ext/grass-management';
 import type { DaySave } from './event/daysave';
+import type { PedestrianIdentities } from './ext/pedestrians';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
@@ -52,6 +53,8 @@ export function rle(a: Uint8Array) { const out: number[] = []; for (let i = 0; i
 export function unrle(runs: number[], out: Uint8Array) { let o = 0; for (let k = 0; k + 1 < runs.length; k += 2) { out.fill(runs[k], o, o + runs[k + 1]); o += runs[k + 1]; } return out; }
 
 export interface SaveV5 {
+  /** Persistent pedestrian actor ids and looks only; old saves initialize them deterministically without a version bump. */
+  pedestrianIdentities?: PedestrianIdentities;
   /** Optional managed turf grid; older saves retain their existing base/lawn/paint choices. */
   grass?: GrassSave;
   version: number; map: number;
