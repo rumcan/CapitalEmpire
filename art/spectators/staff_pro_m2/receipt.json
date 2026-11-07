@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/4G0mrT5UcCtD5KY8luXQ/a4becd48-233e-4732-804c-5201ff1eea6b/model.compressed.glb",
+  "look": "Young touring pro golfer in his 20s, slim, a plain yellow polo shirt, navy trousers, a plain white visor, white golf shoes. No logos, no lettering Full-body figure standing on nothing: no ground, no grass, no base, nothing under the shoes.",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

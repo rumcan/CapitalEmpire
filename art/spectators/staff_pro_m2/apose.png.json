@@ -1,0 +1,14 @@
+{
+  "generationId": "0d124297-c3a2-4d88-a1b0-5a52bca3707c",
+  "prompt": "3D-modelling A-pose reference of ONE person: Young touring pro golfer in his 20s, slim, a plain yellow polo shirt, navy trousers, a plain white visor, white golf shoes. No logos, no lettering Front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open and empty with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart with a clear gap between them. The whole figure from head to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes. Realistic proportions for the age, clean painterly game-art finish.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 1088201423,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/4G0mrT5UcCtD5KY8luXQ/OGeroRmBwlYVXlOowOJXkuea1bs1/80675369-5341-4401-afa7-5293386a0ae2.png",
+  "requestPrompt": "3D-modelling A-pose reference of ONE person: Young touring pro golfer in his 20s, slim, a plain yellow polo shirt, navy trousers, a plain white visor, white golf shoes. No logos, no lettering Front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open and empty with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart with a clear gap between them. The whole figure from head to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes. Realistic proportions for the age, clean painterly game-art finish.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "3:4",
+  "gameId": "4G0mrT5UcCtD5KY8luXQ",
+  "outputPath": "art/spectators/staff_pro_m2/apose.png",
+  "status": "saved",
+  "sha256": "7681c0c78ceb1771f3fcb37fca8913277aa12e5daf6294e4913fa1a1293e76be"
+}

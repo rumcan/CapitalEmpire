@@ -1,0 +1,14 @@
+{
+  "generationId": "907d9c22-e4f8-4ffe-8b34-4593859fdc74",
+  "prompt": "3D-modelling A-pose reference of ONE person: Professional golfer in his 30s, athletic, a plain light blue polo shirt, grey trousers, a white golf glove on the left hand, a plain white cap, white golf shoes. No logos, no lettering Front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open and empty with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart with a clear gap between them. The whole figure from head to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes. Realistic proportions for the age, clean painterly game-art finish.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 191199746,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/4G0mrT5UcCtD5KY8luXQ/OGeroRmBwlYVXlOowOJXkuea1bs1/f7b540ce-8dda-47f7-a4f8-0b680d26fa1e.png",
+  "requestPrompt": "3D-modelling A-pose reference of ONE person: Professional golfer in his 30s, athletic, a plain light blue polo shirt, grey trousers, a white golf glove on the left hand, a plain white cap, white golf shoes. No logos, no lettering Front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open and empty with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart with a clear gap between them. The whole figure from head to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes. Realistic proportions for the age, clean painterly game-art finish.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "3:4",
+  "gameId": "4G0mrT5UcCtD5KY8luXQ",
+  "outputPath": "art/spectators/staff_pro_m1/apose.png",
+  "status": "saved",
+  "sha256": "06391ff86d3fa4c6e40e4a86967b6a4118c10f2ed46555fb1e247f96ec473ff9"
+}

@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/4G0mrT5UcCtD5KY8luXQ/dcee1e57-cb7b-4160-b1b9-9aed066005b4/model.compressed.glb",
+  "look": "Tour caddie, an athletic woman in her 20s, a plain white caddie bib over a light blue polo, navy shorts, white sneakers, a plain white visor. No logos, no lettering. Full-body figure standing on nothing: no ground, no grass, no base, nothing under the shoes.",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "generationId": "6dc1abfb-7113-452a-b6a4-4eaec31a57ef",
+  "prompt": "Character turnaround reference for a 3D model: ONE full-body figure, front view, facing the viewer straight on, standing in a relaxed A-pose with the arms held slightly away from the body, palms facing the thighs, feet a little apart, the whole figure from cap to shoes in frame with a margin. Club owner and golf coach, a friendly fit man in his 40s, tanned, short brown hair, a plain navy polo shirt tucked into light grey golf slacks, a brown leather belt, white golf shoes, a plain white cap. No logos, no lettering. Even soft studio light, plain flat light grey background, the figure standing on nothing: no floor, no ground, no grass, no base, no shadow under the shoes. Realistic proportions, clean painterly game-art finish.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 243216156,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/4G0mrT5UcCtD5KY8luXQ/OGeroRmBwlYVXlOowOJXkuea1bs1/633fd96d-6c7e-48ed-91b6-4438df9612e4.png",
+  "requestPrompt": "Character turnaround reference for a 3D model: ONE full-body figure, front view, facing the viewer straight on, standing in a relaxed A-pose with the arms held slightly away from the body, palms facing the thighs, feet a little apart, the whole figure from cap to shoes in frame with a margin. Club owner and golf coach, a friendly fit man in his 40s, tanned, short brown hair, a plain navy polo shirt tucked into light grey golf slacks, a brown leather belt, white golf shoes, a plain white cap. No logos, no lettering. Even soft studio light, plain flat light grey background, the figure standing on nothing: no floor, no ground, no grass, no base, no shadow under the shoes. Realistic proportions, clean painterly game-art finish.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "4G0mrT5UcCtD5KY8luXQ",
+  "outputPath": "art/spectators/player_m/apose.png",
+  "status": "saved",
+  "sha256": "f13fe02680f2034c180ee2a355026ecc2c04c9f6b85a36abfb91e9ae9e7d0594"
+}
