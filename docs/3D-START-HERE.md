@@ -8,7 +8,7 @@ Read this file only. It is the whole 3D job: the accounts, the steps, where it s
 
 **When you stop, update section 5 (the state) and section 6 (the log) first.** The next model starts from them with nothing else.
 
-**Branch note (2026-11-07):** this file, the picture script and the 6 people made from pictures are committed on `art/people-3d-20261107` (from lead/live). The Meshy pipeline (`meshy.mjs`, `meshy-person.sh`, `meshy-queue.sh`, `art/meshy-clips.json` and the `<id>`-form `plain-glb.mjs`) is still only in the E: checkout, uncommitted: lead/live's `plain-glb.mjs` is a different tool with another command line, so committing them needs a merge of the two first. The new people's `meshyRole` in the cast is what that pipeline calls `clips`.
+**Branch note (2026-11-07):** the Meshy pipeline is committed on `art/meshy-pipeline-20261107`: `meshy.mjs`, `meshy-person.sh`, `meshy-queue.sh`, `art/meshy-clips.json` and `meshy-plain-glb.mjs` (renamed from the E: checkout's `plain-glb.mjs`, because live's `plain-glb.mjs` is a different tool). The role each person's clips come from is `meshyRole` in the cast (older copies kept it in `clips`; both are read).
 
 ## 1. Accounts (the owner's; set up 2026-10-29)
 - **RUN.world** (models): the `rundot` CLI, signed in as nicola.smit1987@gmail.com (user OnyxQuasar408), 110,000 credits on
@@ -75,7 +75,7 @@ every p1 is done: `clips <id> p2`, same order. Stop and tell the owner when the 
   clip (clap, eat, chip, putt, grill, dig, sweep: the library has none). Each is made once (10 credits) and shared by everyone
   (`output/meshy/motions.json`); Meshy keeps it 3 days, after which the script makes it again (another 10), so do the people who
   need one within 3 days of the first.
-- How it works: RUN's file is Draco + quantized + webp with about 500,000 faces, which Meshy refuses; `plain-glb.mjs` writes a plain
+- How it works: RUN's file is Draco + quantized + webp with about 500,000 faces, which Meshy refuses; `meshy-plain-glb.mjs` writes a plain
   copy, Meshy remeshes it to 100,000 faces and rigs that. A rerun skips what is done (`meshy.json`, `anim_<clip>.glb`); failed
   Meshy jobs are refunded. Not done by Meshy (no clip yet): point_down, tiptoe, sidestep, hush, point, wave_back, paddle_up, duck.
 - Check (section 7): one `preview-<clip>.png` per person (a text-to-motion clip when it has one), not all.

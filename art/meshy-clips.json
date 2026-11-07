@@ -1,0 +1,548 @@
+{
+  "note": "Clips per role for Meshy (scripts/assets/people3d/meshy.mjs). A number is a Meshy library action_id (names: output/meshy/library.json, free to list); 'm:<name>' is a text-to-motion clip from 'motions' (made once, 10 credits, kept by Meshy 3 days, then remade). Each role has p1 (made first) and p2 (only when every p1 is done and credits remain), most-wanted first. A person's role is its 'clips' field in art/people-cast.json; women and girls also take the 'female' replacements. 'render' is frames per facing and the render mode per clip (4 frames when not listed).",
+  "roles": {
+    "coach": {
+      "p1": {
+        "talk_hands": 313,
+        "golf_drive": 323,
+        "chip": "m:chip",
+        "putt": "m:putt",
+        "demo_swing": "m:demo_swing",
+        "look": 338,
+        "grill": "m:grill",
+        "eat": "m:eat",
+        "drink": 342
+      },
+      "p2": {
+        "talk": 314,
+        "wave": 290,
+        "thumbs_up": "m:thumbs_up",
+        "handshake": "m:handshake",
+        "angry_talk": 311
+      }
+    },
+    "tourpro": {
+      "p1": {
+        "golf_drive": 323,
+        "chip": "m:chip",
+        "putt": "m:putt",
+        "practice_swing": "m:practice_swing",
+        "read_putt": 54,
+        "fist_pump": 403,
+        "frustrated": 588,
+        "tip_cap": "m:tip_cap",
+        "lift_trophy": "m:lift_trophy",
+        "receive_trophy": "m:receive_trophy",
+        "hug": "m:hug",
+        "handshake": "m:handshake",
+        "club_throw": "m:club_throw",
+        "club_slam": 389,
+        "angry_walk": "m:angry_walk",
+        "fist_shout": "m:fist_shout",
+        "angry_stomp": 26,
+        "shout_angry": 51
+      },
+      "p2": {
+        "sign_autograph": "m:sign_autograph",
+        "talk": 314,
+        "drink": 342
+      }
+    },
+    "family": {
+      "p1": {
+        "run_hug": "m:run_hug",
+        "hug": "m:hug",
+        "cheer": 298,
+        "clap": "m:clap",
+        "jump_joy": 59
+      },
+      "p2": {
+        "wipe_tears": "m:wipe_tears",
+        "wave": 290,
+        "sit": 33,
+        "drink": 342
+      }
+    },
+    "official": {
+      "p1": {
+        "present_trophy": "m:present_trophy",
+        "handshake": "m:handshake",
+        "announce_mic": "m:announce_mic",
+        "clap": "m:clap"
+      },
+      "p2": {
+        "talk_hands": 313,
+        "write": "m:write"
+      }
+    },
+    "spectator": {
+      "p1": {
+        "run": 14,
+        "cheer": 298,
+        "sit": 33,
+        "sit_clap": 354,
+        "clap": "m:clap",
+        "drink": 342,
+        "eat": "m:eat"
+      },
+      "p2": {
+        "sprint": 16,
+        "peer": 276,
+        "crouch": 54,
+        "back_up": 544,
+        "groan": 391,
+        "photo_phone": "m:photo_phone",
+        "shout_angry": 51
+      }
+    },
+    "marshal": {
+      "p1": {
+        "quiet_sign": "m:quiet_sign",
+        "arms_out": 260,
+        "wave_back": "m:wave_back",
+        "point_way": "m:point_way",
+        "run": 14
+      },
+      "p2": {
+        "talk": 314,
+        "drink": 342
+      }
+    },
+    "security": {
+      "p1": {
+        "guard_stand": "m:guard_stand",
+        "radio": 50,
+        "point_way": "m:point_way",
+        "look": 338
+      },
+      "p2": {
+        "check_ticket": "m:check_ticket",
+        "talk": 313,
+        "drink": 342
+      }
+    },
+    "camera": {
+      "p1": {
+        "camera_walk": "m:camera_walk",
+        "film": "m:film",
+        "camera_kneel": "m:camera_kneel",
+        "look": 338
+      },
+      "p2": {
+        "drink": 342
+      }
+    },
+    "photographer": {
+      "p1": {
+        "photo_crouch": "m:photo_crouch",
+        "photo_stand": "m:photo_stand",
+        "look": 338
+      },
+      "p2": {
+        "drink": 342
+      }
+    },
+    "caddie": {
+      "p1": {
+        "bag_walk": "m:bag_walk",
+        "hand_club": "m:hand_club",
+        "rake_bunker": "m:rake_bunker",
+        "flag_tend": "m:flag_tend",
+        "read_putt": 54,
+        "clean_ball": "m:clean_ball"
+      },
+      "p2": {
+        "talk": 56,
+        "fist_pump": 403,
+        "drink": 342,
+        "eat": "m:eat"
+      }
+    },
+    "range": {
+      "p1": {
+        "tube_pick": "m:tube_pick",
+        "pick_up": 276,
+        "carry_bucket": 552,
+        "dump_bucket": "m:dump_bucket"
+      },
+      "p2": {
+        "look": 338,
+        "drink": 342
+      }
+    },
+    "golfer": {
+      "p1": {
+        "golf_drive": 323,
+        "tee_up": "m:tee_up",
+        "lean_club": "m:lean_club",
+        "practice_swing": "m:practice_swing",
+        "club_throw": "m:club_throw",
+        "club_slam": 389,
+        "angry_walk": "m:angry_walk",
+        "fist_shout": "m:fist_shout",
+        "shout_angry": 51
+      },
+      "p2": {
+        "talk": 56,
+        "drink": 342,
+        "fist_pump": 403,
+        "frustrated": 588
+      }
+    },
+    "scorer": {
+      "p1": {
+        "write": "m:write",
+        "place_score": "m:place_score",
+        "talk": 313
+      },
+      "p2": {
+        "wave": 290,
+        "drink": 342
+      }
+    },
+    "starter": {
+      "p1": {
+        "announce_mic": "m:announce_mic",
+        "talk_hands": 313,
+        "point_way": "m:point_way",
+        "write": "m:write"
+      },
+      "p2": {
+        "handshake": "m:handshake",
+        "drink": 342
+      }
+    },
+    "vendor": {
+      "p1": {
+        "grill": "m:grill",
+        "serve_food": "m:serve_food",
+        "pour_drink": "m:pour_drink",
+        "talk": 313
+      },
+      "p2": {
+        "wave": 290,
+        "eat": "m:eat",
+        "drink": 342
+      }
+    },
+    "server": {
+      "p1": {
+        "carry_tray": "m:carry_tray",
+        "serve_food": "m:serve_food",
+        "pour_drink": "m:pour_drink"
+      },
+      "p2": {
+        "talk": 56,
+        "wave": 290
+      }
+    },
+    "greenkeeper": {
+      "p1": {
+        "cut_cup": "m:cut_cup",
+        "flag_pull": 283,
+        "flag_place": 274,
+        "rake_bunker": "m:rake_bunker",
+        "push_mower": "m:push_mower",
+        "dig": "m:dig"
+      },
+      "p2": {
+        "carry": 551,
+        "look": 338,
+        "drink": 342
+      }
+    },
+    "janitor": {
+      "p1": {
+        "sweep": "m:sweep",
+        "empty_bin": "m:empty_bin",
+        "pick_up": 276
+      },
+      "p2": {
+        "carry_bucket": 552,
+        "drink": 342,
+        "eat": "m:eat"
+      }
+    },
+    "staff": {
+      "p1": {
+        "talk": 313,
+        "point_way": "m:point_way",
+        "hand_out": "m:hand_out",
+        "wave": 290
+      },
+      "p2": {
+        "look": 338,
+        "drink": 342,
+        "eat": "m:eat"
+      }
+    },
+    "town": {
+      "p1": {
+        "talk": 56,
+        "drink": 342,
+        "eat": "m:eat"
+      },
+      "p2": {
+        "look": 338,
+        "sit": 33,
+        "wave": 290
+      }
+    }
+  },
+  "female": {
+    "sit": 32,
+    "peer": 281,
+    "pick_up": 281
+  },
+  "motions": {
+    "clap": {
+      "prompt": "A person stands still and claps both hands together in front of the chest, steady applause, feet planted.",
+      "duration": 3
+    },
+    "eat": {
+      "prompt": "A person stands and eats a burger held in the right hand, raising it to the mouth, taking a bite, chewing, lowering it.",
+      "duration": 4
+    },
+    "chip": {
+      "prompt": "A golfer addresses a ball with knees slightly bent and makes a short chip shot: a small backswing to hip height and a smooth short follow-through, then holds the finish.",
+      "duration": 4
+    },
+    "putt": {
+      "prompt": "A golfer bends over a putt, eyes down, arms hanging, rocks the shoulders for a short smooth pendulum putting stroke, holds still, then looks up toward the hole.",
+      "duration": 4
+    },
+    "practice_swing": {
+      "prompt": "A golfer stands beside the ball and makes two slow half practice swings with a club, then steps forward to address.",
+      "duration": 5
+    },
+    "demo_swing": {
+      "prompt": "A golf coach demonstrates a swing slowly: takes the club back to the top, pauses, points at his own hands with the left hand, then swings through slowly to the finish.",
+      "duration": 6
+    },
+    "grill": {
+      "prompt": "A man stands at a kettle barbecue grill and flips burgers with a spatula in the right hand, reaching forward to the grill, turning food, stepping back slightly.",
+      "duration": 5
+    },
+    "dig": {
+      "prompt": "A groundskeeper digs with a shovel: pushes the blade into the ground with the foot, levers it back, lifts the soil and tips it to the side.",
+      "duration": 5
+    },
+    "sweep": {
+      "prompt": "A janitor sweeps the floor with a long push broom held in both hands, pushing it forward in steady strokes while stepping slowly forward.",
+      "duration": 5
+    },
+    "thumbs_up": {
+      "prompt": "A person nods and gives an encouraging thumbs up with the right hand, then lowers the hand.",
+      "duration": 2.5
+    },
+    "handshake": {
+      "prompt": "A person steps forward, shakes hands firmly with the right hand with someone in front, pats their shoulder with the left hand, steps back.",
+      "duration": 4
+    },
+    "tip_cap": {
+      "prompt": "A golfer touches the brim of his cap with the right hand to acknowledge applause, nods to the crowd, then lowers the hand.",
+      "duration": 3
+    },
+    "lift_trophy": {
+      "prompt": "A winner holds a large trophy with both hands, lifts it high above the head, turns slightly left and right to show it, then brings it down to the chest.",
+      "duration": 5
+    },
+    "receive_trophy": {
+      "prompt": "A person reaches forward with both hands to receive a large object from someone in front, takes it, brings it to the chest and smiles.",
+      "duration": 4
+    },
+    "present_trophy": {
+      "prompt": "An official holds a large trophy at the chest with both hands, steps forward and hands it over to someone in front, then lets go and claps once.",
+      "duration": 4
+    },
+    "hug": {
+      "prompt": "Two arms open wide, a person steps forward and hugs someone of the same height warmly, rocking gently, then steps back holding their shoulders.",
+      "duration": 4
+    },
+    "run_hug": {
+      "prompt": "A person runs a few steps forward excitedly, arms opening, and throws the arms around someone in a big hug, then bounces with joy.",
+      "duration": 4
+    },
+    "wipe_tears": {
+      "prompt": "A happy emotional person puts the right hand on the chest, then wipes the eyes with the back of the hand, smiling, and claps lightly.",
+      "duration": 4
+    },
+    "announce_mic": {
+      "prompt": "A person stands holding a microphone near the mouth in the right hand and announces, gesturing outward with the left hand.",
+      "duration": 5
+    },
+    "write": {
+      "prompt": "A person holds a clipboard in the left hand and writes on it with a pen in the right hand, looks up, then writes again.",
+      "duration": 4
+    },
+    "photo_phone": {
+      "prompt": "A spectator raises a small camera with both hands to the eyes, holds still to take a photo, then lowers it.",
+      "duration": 3
+    },
+    "quiet_sign": {
+      "prompt": "A marshal raises a paddle sign high above the head with the right arm straight up and holds it still, standing tall and silent.",
+      "duration": 4
+    },
+    "wave_back": {
+      "prompt": "A marshal faces a crowd and waves both arms back and down, palms out, gesturing people to step back and make room.",
+      "duration": 3
+    },
+    "point_way": {
+      "prompt": "A person points firmly along a path with the left arm extended, looks back over the shoulder and points again.",
+      "duration": 3
+    },
+    "guard_stand": {
+      "prompt": "A security guard stands still with arms folded across the chest, feet apart, turning the head slowly to watch the crowd.",
+      "duration": 5
+    },
+    "check_ticket": {
+      "prompt": "A gate attendant takes a ticket from someone with the right hand, looks at it, tears it and hands it back.",
+      "duration": 4
+    },
+    "camera_walk": {
+      "prompt": "A TV cameraman walks slowly forward with a large video camera on the right shoulder, right hand on the camera, eye to the viewfinder.",
+      "duration": 4
+    },
+    "film": {
+      "prompt": "A TV cameraman stands with a large video camera on the right shoulder, eye at the viewfinder, slowly panning left and right to follow action.",
+      "duration": 5
+    },
+    "camera_kneel": {
+      "prompt": "A cameraman kneels on one knee with a big video camera on the shoulder, filming low and holding very still.",
+      "duration": 4
+    },
+    "photo_crouch": {
+      "prompt": "A press photographer crouches low holding a large camera with a long lens to the eye with both hands and takes several photos.",
+      "duration": 4
+    },
+    "photo_stand": {
+      "prompt": "A press photographer stands holding a large camera with a long lens to the eye with both hands, turning slightly to follow and taking photos.",
+      "duration": 4
+    },
+    "bag_walk": {
+      "prompt": "A caddie walks forward carrying a heavy golf bag on the right shoulder by its strap, right hand on the strap, steady pace.",
+      "duration": 4
+    },
+    "hand_club": {
+      "prompt": "A caddie standing beside a golf bag pulls out a club with the right hand and hands it to someone beside him.",
+      "duration": 3
+    },
+    "rake_bunker": {
+      "prompt": "A person smooths sand with a long rake held in both hands, pulling it back toward the body in short strokes while stepping backwards.",
+      "duration": 5
+    },
+    "flag_tend": {
+      "prompt": "A caddie stands beside the hole holding a flagstick upright with the right hand, then pulls it out and steps away holding it.",
+      "duration": 4
+    },
+    "clean_ball": {
+      "prompt": "A caddie wipes a golf ball with a towel held in both hands, turning it, then hands the ball forward.",
+      "duration": 3
+    },
+    "tube_pick": {
+      "prompt": "A worker walks slowly and presses a long tube ball retriever down onto golf balls on the grass again and again, picking them up.",
+      "duration": 5
+    },
+    "dump_bucket": {
+      "prompt": "A worker lifts a full bucket with both hands and tips it forward to pour golf balls out, then lowers the empty bucket.",
+      "duration": 3
+    },
+    "tee_up": {
+      "prompt": "A golfer bends down, places a ball on a tee in the ground, straightens up and takes the address stance.",
+      "duration": 3
+    },
+    "lean_club": {
+      "prompt": "A golfer stands relaxed, leaning on a golf club planted like a cane with both hands on the grip, shifting weight, watching.",
+      "duration": 4
+    },
+    "place_score": {
+      "prompt": "A person reaches up high with the right hand to hang a number card on a tall board, steps back and looks at it.",
+      "duration": 4
+    },
+    "serve_food": {
+      "prompt": "A server reaches forward over a counter and hands a plate of food with both hands, then a small nod.",
+      "duration": 3
+    },
+    "pour_drink": {
+      "prompt": "A person holds a cup in the left hand and pours a drink from a jug in the right hand, then holds the cup out.",
+      "duration": 4
+    },
+    "carry_tray": {
+      "prompt": "A waitress walks carefully carrying a tray of drinks held up flat on the right hand at shoulder height.",
+      "duration": 4
+    },
+    "cut_cup": {
+      "prompt": "A greenkeeper stands on a putting green and pushes a hole cutter tube down into the ground with both hands and a foot, twists, and lifts out a plug.",
+      "duration": 5
+    },
+    "push_mower": {
+      "prompt": "A greenkeeper walks slowly forward pushing a walk-behind mower with both hands on the handle bar.",
+      "duration": 4
+    },
+    "empty_bin": {
+      "prompt": "A janitor lifts a bag out of a trash bin with both hands, ties it, and swings it over the shoulder.",
+      "duration": 4
+    },
+    "hand_out": {
+      "prompt": "A volunteer holds a stack of leaflets in the left hand and hands one forward with the right hand, smiling, then the next.",
+      "duration": 3
+    },
+    "sign_autograph": {
+      "prompt": "A golfer takes a cap from someone, signs it with a pen, and hands it back with a smile.",
+      "duration": 4
+    },
+    "club_throw": {
+      "prompt": "An angry golfer after a bad shot spins and hurls a golf club side-arm far away with the right arm, then stands with both hands on the hips, shaking the head.",
+      "duration": 4
+    },
+    "angry_walk": {
+      "prompt": "An angry man walks fast and stiffly forward, head down, shoulders hunched, fists clenched at the sides, stomping each step.",
+      "duration": 4
+    },
+    "fist_shout": {
+      "prompt": "A furious man raises the right fist high in the air and shouts angrily at the sky, leaning forward, then drops the arm in disgust.",
+      "duration": 3.5
+    }
+  },
+  "render": {
+    "run": "8:--stride",
+    "sprint": "8:--stride",
+    "back_up": "8:--stride",
+    "carry": "8:--stride",
+    "carry_bucket": "8:--stride",
+    "camera_walk": "8:--stride",
+    "bag_walk": "8:--stride",
+    "push_mower": "8:--stride",
+    "carry_tray": "8:--stride",
+    "tube_pick": "6",
+    "sit": "2:--seated",
+    "sit_clap": "4:--seated",
+    "crouch": "2",
+    "read_putt": "2",
+    "peer": "3",
+    "groan": "3",
+    "arms_out": "2",
+    "golf_drive": "6",
+    "chip": "6",
+    "putt": "6",
+    "practice_swing": "6",
+    "demo_swing": "6",
+    "lift_trophy": "6",
+    "hug": "6",
+    "run_hug": "6",
+    "dig": "6",
+    "sweep": "6",
+    "rake_bunker": "6",
+    "cut_cup": "6",
+    "quiet_sign": "2",
+    "guard_stand": "2",
+    "camera_kneel": "2",
+    "film": "4",
+    "angry_walk": "8:--stride",
+    "club_throw": "6",
+    "fist_shout": "4",
+    "club_slam": "4",
+    "angry_stomp": "4",
+    "shout_angry": "4"
+  }
+}
