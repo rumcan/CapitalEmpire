@@ -1,6 +1,7 @@
 // The golf events' tents and event structures (GOLF-PLAN section 6): the catalogue the Event tool places (footprints, rent and buy, capacity,
 // tier), the spend per spectator a day, the price cards, and the pure formulas for a tent's day (demand, queue, sales, satisfaction) and its
 // catchment. 1985 dollars, first estimates. Pure TS, no DOM.
+import { SEATING_FACILITIES } from './facility-models';
 
 /** what a structure does: sells food, drink, snacks or merchandise; hosts guests; shows scores or a screen; films or serves the media; admits,
  *  serves or moves people */
@@ -8,7 +9,9 @@ export type StructureKind = 'food' | 'drink' | 'snack' | 'merch' | 'hospitality'
 /** a structure type: id, name, kind, footprint (tiles of 2 m, before rotation), rent per tournament ($; 0 = cannot be rented), buy ($, permanent
  *  with monthly upkeep; 0 = cannot be bought), capacity in `unit` (per hour, seats, guests, lanes, cubicles, or '' for none), the tier it opens at,
  *  and a one-line blurb */
-export interface StructureType { id: string; name: string; kind: StructureKind; footprint: { w: number; h: number }; rent: number; buy: number; capacity: number; unit: string; tier: number; blurb: string }
+export interface StructureType { id: string; name: string; kind: StructureKind; footprint: { w: number; h: number }; rent: number; buy: number; capacity: number; unit: string; tier: number; blurb: string;
+  /** New facilities cannot be placed with a stand-in; require complete reviewed art and authored seating. */ requiresEightArt?: boolean;
+  /** One-time condition improvement fee ($); existing types retain their prices and have no new fee. */ upgradeCost?: number }
 
 /** every structure type (GOLF-PLAN 6.1; the shuttle hub is today's bus route, not listed here) */
 export const STRUCTURES: StructureType[] = [
@@ -40,6 +43,7 @@ export const STRUCTURES: StructureType[] = [
   { id: 'helipad', name: 'Helipad', kind: 'helipad', footprint: { w: 10, h: 10 }, rent: 0, buy: 60000, capacity: 0, unit: '', tier: 5, blurb: 'VIP satisfaction (tier 5 hospitality)' },
   { id: 'hotel', name: 'Resort hotel', kind: 'info', footprint: { w: 16, h: 10 }, rent: 15000, buy: 120000, capacity: 120, unit: 'rooms', tier: 3, blurb: 'rooms for players, officials and travelling fans; tier 4 needs one' },
   { id: 'interchange', name: 'Highway interchange', kind: 'transport', footprint: { w: 24, h: 14 }, rent: 0, buy: 250000, capacity: 4, unit: 'lanes', tier: 4, blurb: 'grade-separated slip roads at the parcel edge nearest the town road; tier 5 needs one' },
+  ...SEATING_FACILITIES,
 ];
 
 /** every structure type by id */

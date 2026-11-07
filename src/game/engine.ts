@@ -4,6 +4,8 @@ import { PeopleSpacer, spacePeople } from './spacing';
 import { PUTT_IMPACT_S, galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { personIdentity, type PersonIdentity } from './person-identity';
+import { legacySeating, placeSeating, seatLiftWorldPixels, seatingProblems, type PlacedSeating } from './golf/event-seating';
+import { facilityCondition, facilityImprovement, type FacilityCondition } from './golf/facility-models';
 import { GREENKEEPING } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
@@ -206,7 +208,7 @@ import { BOX_LEN_M, BOX_WID_M, TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, ma
 import { TEE_SCALE_STEP, TEE_TURN_DEG, boxAngle, boxOutline, clampTeeScale, dropHoleBoxes, handOver, layDown, oldBox, planTee, recStands, snapTurn, swapTeeBoxes, takeUp, teeAim, teeBoxM, teeCells, teeKey, type TeeCourse, type TeeOld, type TeePlan, type TeeRoad } from './golf/teeplace';
 import { STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
-import { nextStructureFacing, structurePicture } from './golf/structure-facing';
+import { nextStructureFacing, structurePicture, structureArtReadiness, structureSeating } from './golf/structure-facing';
 import { objectFacings } from './object-eight';
 import { objectAnchor, objectFacingLabel, type ObjectFacingKey } from './object-eight-types';
 import { STRUCTURE } from './golf/tents';
@@ -323,7 +325,8 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   d.item = p.group ? GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame : SPECTATOR_BASE + (p.person * WALK_DIRS.length + p.row) * SPECTATOR_FRAMES + p.frame;
   d.x = p.x; d.y = p.y; d.x0 = p.x - 0.12; d.y0 = p.y - 0.12; d.x1 = p.x + 0.12; d.y1 = p.y + 0.12;
   // (T213: a slot may have held a caddie's bag or a hopping golfer last frame)
-  d.lift = undefined; d.scale = 1; d.flip = false; d.moving = false; d.alpha = undefined;
+  d.lift = p.seatHeightMetres === undefined ? undefined : seatLiftWorldPixels(p.seatHeightMetres, SPECTATOR_PEOPLE[p.person]?.seat ?? 0, SPECTATOR_PEOPLE[p.person]?.w ?? 80, p.benchPixelsPerMetre ?? HH);
+  d.scale = 1; d.flip = false; d.moving = false; d.alpha = undefined;
 }
 /** T213: the caddie's stand-in (no caddie is packed yet: GOLF-ART-LIST item 176; the made `staff_caddie_m` waits in art/spectators), a spectator in a
  *  polo and visor, as an index into SPECTATOR_PEOPLE; and its label */
@@ -4195,14 +4198,45 @@ export class Game {
     }
     golfProps = new Map<string, Prop>();
     golfStructureProps = new Map<number, Prop>();
+    /** Prepared row/entry anchors by worker gallery slot; rebuilt only when structures or holes change. */
+    private gallerySeating = new Map<number, PlacedSeating>();
     eventTool = false;
+    /** Condition for newly placed seating, independent of tournament tier, size and facing. */
+    eventCondition: FacilityCondition = 'budget';
     eventStructurePending: { typeId: string; mode: 'rent' | 'buy'; facing?: ObjectFacingKey; visualTier?: string; moveId?: number } | null = null;
     toggleEventTool() { this.toggleSideMode('eventTool'); }
     setPendingStructure(typeId: string, mode: 'rent' | 'buy') {
-    this.eventStructurePending = { typeId, mode, facing: structurePicture({ typeId }).facing };
     const def = STRUCTURE[typeId];
+    const state = { typeId, ...(def?.requiresEightArt ? { visualTier: this.eventCondition } : {}) }, art = structureArtReadiness(state);
+    if (!art.ready) { this.toast(art.reason, 'info'); return; }
+    this.eventStructurePending = { ...state, mode, facing: structurePicture(state).facing };
     this.toast(`Selected ${def ? def.name : typeId} (${mode}). Click open owned land to place it.`);
     this.emit();
+    }
+    eventArtStatus(typeId: string) { return structureArtReadiness({ typeId, visualTier: this.eventCondition }); }
+    setEventCondition(condition: FacilityCondition): void {
+      this.eventCondition = facilityCondition(condition);
+      const pending = this.eventStructurePending;
+      if (pending && !pending.moveId && STRUCTURE[pending.typeId]?.requiresEightArt) {
+        const next = { ...pending, visualTier: this.eventCondition }, ready = structureArtReadiness(next);
+        if (ready.ready) { pending.visualTier = next.visualTier; pending.facing = structurePicture(next).facing; }
+        else { this.eventStructurePending = null; this.toast(ready.reason, 'info'); }
+      }
+      this.ghostCache = null; this.emit();
+    }
+    eventUpgradeInfo() {
+      const s = this.selectedEventStructure(), def = s && STRUCTURE[s.typeId];
+      return s ? facilityImprovement(def, s.visualTier, this.money, structureArtReadiness({ ...s, visualTier: 'upgraded' })) : null;
+    }
+    /** A paid visual improvement to a new facility; size, seats and existing event prices remain unchanged. */
+    upgradeSelectedFacility(): void {
+      const s = this.selectedEventStructure(), info = this.eventUpgradeInfo(); if (!s || !info) return;
+      if (!info.available) { this.toast(info.reason, 'info'); return; }
+      const before = structureRect(s), after = structureRect({ ...s, visualTier: 'upgraded' });
+      const candidate = { ...s, visualTier: 'upgraded', x: s.x + (before[2] - after[2]) / 2, y: s.y + (before[3] - after[3]) / 2, moveId: s.id };
+      const check = this.structureCheck(candidate); if (!check.ok) { this.toast(check.reason ?? 'No room for this improvement', 'warn'); return; }
+      if (info.cost) this.traffic.spend('construction', info.cost);
+      Object.assign(s, { visualTier: 'upgraded', x: candidate.x, y: candidate.y }); this.refreshStructure(s); this.syncCourseGates(); this.bump('structures'); this.scheduleSave(); this.emit();
     }
     /** checkStructurePlacement for a candidate against the course's holes, placed structures and owned parcels (the click and the ghost share it) */
     private structureCheck(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean; facing?: ObjectFacingKey; visualTier?: string; moveId?: number }): StructurePlacementCheck {
@@ -4244,14 +4278,16 @@ export class Game {
     }
     placeEventStructure(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean; facing?: ObjectFacingKey; visualTier?: string; moveId?: number }): boolean {
     if (!this.golf) return false;
+    const art = structureArtReadiness(candidate); if (!art.ready) { this.toast(art.reason, 'info'); return false; }
     candidate = { ...candidate, facing: structurePicture(candidate).facing };
     const check = this.structureCheck(candidate);
     if (!check.ok) {
     this.toast(check.reason ?? 'Cannot place structure here', 'warn');
     return false;
     }
-    if (!candidate.moveId && this.money < check.cost) {
-    this.toast(`Not enough money ($${check.cost.toLocaleString()} required)`, 'warn');
+    const conditionFee = !candidate.moveId && STRUCTURE[candidate.typeId]?.requiresEightArt && facilityCondition(candidate.visualTier) === 'upgraded' ? STRUCTURE[candidate.typeId]!.upgradeCost ?? 0 : 0;
+    if (!candidate.moveId && this.money < check.cost + conditionFee) {
+    this.toast(`Not enough money ($${(check.cost + conditionFee).toLocaleString()} required)`, 'warn');
     return false;
     }
     if (candidate.moveId) {
@@ -4262,6 +4298,7 @@ export class Game {
     if (candidate.mode === 'buy' && check.cost > 0) {
     this.traffic.spend('construction', check.cost);
     }
+    if (conditionFee > 0) this.traffic.spend('construction', conditionFee);
     const id = Math.max(0, ...(this.golf.structures ?? []).map(s => s.id)) + 1;
     const placed: PlacedEventStructure = { id, ...candidate };
     if (!this.golf.structures) this.golf.structures = [];
@@ -4321,7 +4358,16 @@ export class Game {
     for (const s of this.golf?.structures ?? []) { const def = STRUCTURE[s.typeId]; if (def?.kind !== 'gate') continue; const [x, y, w, h] = structureRect(s); gates.push({ x: x + w / 2, y: y + h / 2, lanes: Math.max(1, def.capacity) }); }
     this.traffic.setGates(gates);
     // the galleries (LEAD.md M2.2): the greens and tees of the course and the placed grandstands and tents
-    this.traffic.setSpots(this.golf ? gallerySpots(this.golf.tees ?? [], this.golf.pins ?? [], this.golf.structures ?? []) : []);
+    const spots = this.golf ? gallerySpots(this.golf.tees ?? [], this.golf.pins ?? [], this.golf.structures ?? []) : [];
+    this.gallerySeating.clear();
+    spots.forEach((spot, i) => {
+      if (spot.kind !== 'stand' || spot.structureId === undefined) return;
+      const s = this.golf?.structures?.find(q => q.id === spot.structureId), def = s && STRUCTURE[s.typeId]; if (!s || !def) return;
+      const authored = structureSeating(s), good = authored.layout && !seatingProblems(authored.layout, def.capacity, authored.footprint).length;
+      const layout = good ? authored.layout! : legacySeating(def.capacity, def.footprint.w * 2, def.footprint.h * 2);
+      this.gallerySeating.set(i, placeSeating(layout, authored.headingDegrees, spot));
+    });
+    this.traffic.setSpots(spots);
     }
     private syncGolfProps() {
     this.golfProps.clear();
@@ -7340,6 +7386,7 @@ export class Game {
     } catch (e) { console.error('load failed', e); return false; }
   }
   private reset() {
+    this.eventCondition = 'budget'; this.gallerySeating.clear();
     this.peds.restoreIdentities(); this.pedNet = -1; this.pedLots = -1; this.pedTick = 0; this.spectatorSeenN = 0;
     this.courseHeight = createCourseHeightField(); this.chSave = null;
     this.grass.clear(); this.grassZones.clear(); this.grassSim = -1; this.grassElapsed = 0; this.grassTrafficT = -1; this.grassPedOut.fill(0); this.grassCarAlive.fill(0); this.grassTarget = null; this.grassAction = null;
@@ -7696,12 +7743,13 @@ export class Game {
    *  `now` in seconds), then the golfers of the day (playMovers). A spot, a party or a queue is culled by its point to the box padded by 4 tiles, the
    *  reach of its people. Reused Drawables and scratch people: no allocation per frame once the crowd is warm */
   /** Visible spectator identity slots; buffer group/slot keys remain stable while present, without allocating identities every render frame. */
-  private spectatorSeen: { x: number; y: number; person: number; source: number; index: number; slot: number }[] = [];
+  private spectatorSeen: { x: number; y: number; person: number; source: number; index: number; slot: number; lift: number }[] = [];
   private spectatorSeenN = 0;
   private rememberSpectators(people: CrowdPerson[], count: number, source: number, index: number): void {
     for (let slot = 0; slot < count; slot++) {
-      const p = people[slot]!, at = this.spectatorSeenN++, o = this.spectatorSeen[at] ?? (this.spectatorSeen[at] = { x: 0, y: 0, person: 0, source: 0, index: 0, slot: 0 });
+      const p = people[slot]!, at = this.spectatorSeenN++, o = this.spectatorSeen[at] ?? (this.spectatorSeen[at] = { x: 0, y: 0, person: 0, source: 0, index: 0, slot: 0, lift: 0 });
       o.x = p.x; o.y = p.y; o.person = p.person; o.source = source; o.index = index; o.slot = slot;
+      o.lift = p.seatHeightMetres === undefined ? 0 : seatLiftWorldPixels(p.seatHeightMetres, SPECTATOR_PEOPLE[p.person]?.seat ?? 0, SPECTATOR_PEOPLE[p.person]?.w ?? 80, p.benchPixelsPerMetre ?? HH);
     }
   }
   private crowdMovers(x0: number, y0: number, x1: number, y1: number, now: number): Drawable[] {
@@ -7715,7 +7763,7 @@ export class Game {
       // (T213: the fans cheer a birdie or better holed near them, the playback's celebrations)
       let cheer = -1;
       if (ch) for (const c of ch) if ((c.x - x) ** 2 + (c.y - y) ** 2 < CHEER_TILES * CHEER_TILES) cheer = Math.max(cheer, c.t);
-      const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P, cheer);
+      const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P, cheer, this.gallerySeating.get(spot));
       this.rememberSpectators(P, k, 0, spot);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
@@ -8081,7 +8129,7 @@ export class Game {
     const tl = this.tileAt(mx, my), from = { x: y.x, y: y.y }, dpr = this.dpr, ze = this.cam.z * dpr, px = mx * dpr, py = my * dpr;
     // a person: a townsperson on the pavement or an everyday golfer, by his picture's box on the screen (feet to head)
     if (this.cam.z >= DISTRICT_Z) {
-      const hit = (x: number, yy: number): boolean => { const sx = (worldX(x, yy) - this.cam.X) * ze + this.cw / 2, sy = (worldY(x, yy) - this.cam.Y) * ze + this.ch / 2; return Math.abs(px - sx) < Math.max(6 * dpr, 0.35 * HW * ze) && py <= sy + 4 * dpr && py >= sy - Math.max(14 * dpr, 1.9 * HH * 2 * ze); };
+      const hit = (x: number, yy: number, liftWorldPx = 0): boolean => { const sx = (worldX(x, yy) - this.cam.X) * ze + this.cw / 2, sy = (worldY(x, yy) - this.cam.Y - liftWorldPx) * ze + this.ch / 2; return Math.abs(px - sx) < Math.max(6 * dpr, 0.35 * HW * ze) && py <= sy + 4 * dpr && py >= sy - Math.max(14 * dpr, 1.9 * HH * 2 * ze); };
       const V = this.youPedV, n = this.peds.inBox(tl.x - 4, tl.y - 2, tl.x + 4, tl.y + 6, V);
       for (let k = 0; k < n; k++) {
         const v = V[k]!; if (!hit(v.x, v.y)) continue;
@@ -8127,7 +8175,7 @@ export class Game {
         return { kind: 'person', name: person.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(person.name, 'working on the course', pt, null, undefined, person) };
       }
       for (let i = 0; i < this.spectatorSeenN; i++) {
-        const p = this.spectatorSeen[i]!; if (!hit(p.x, p.y)) continue;
+        const p = this.spectatorSeen[i]!; if (!hit(p.x, p.y, p.lift)) continue;
         const person = personIdentity(this.seed, `spectator:${p.source}:${p.index}:${p.slot}`, SPECTATOR_PEOPLE[p.person]!.id, 'spectator'), pt = { x: p.x, y: p.y };
         return { kind: 'person', name: person.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(person.name, 'watching the tournament', pt, null, undefined, person) };
       }

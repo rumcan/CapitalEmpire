@@ -23,9 +23,9 @@ test('galleries: grandstands by their seats, tents in front of them; other struc
   const s = gallerySpots([], [], [{ id: 1, typeId: 'standS', x: 10, y: 10, mode: 'rent' }, { id: 2, typeId: 'foodTent', x: 30, y: 30, mode: 'rent' }, { id: 3, typeId: 'gate', x: 50, y: 50, mode: 'rent' }] as never);
   assert.deepEqual(s.map(q => q.kind), ['stand', 'tent']);
   assert.equal(s[0]!.cap, 200); assert.ok(s[1]!.y > 34, 'in front of the tent');
-  // a grandstand's fans look one tile toward +x +y (aim at the same point); a tent's look back at its centre, behind its front spot
+  // a grandstand's front follows its physical orientation; a tent's fans look back at its centre, behind its front spot
   const st = s[0]!, tn = s[1]!;
-  assert.ok(Math.abs(st.fx - st.x - 0.7071) < 1e-9 && Math.abs(st.fy - st.y - 0.7071) < 1e-9 && st.ax === st.fx && st.ay === st.fy, JSON.stringify(st));
+  assert.ok(Math.abs(st.fx - st.x) < 1e-9 && Math.abs(st.fy - st.y - 1) < 1e-9 && st.ax === st.fx && st.ay === st.fy, JSON.stringify(st));
   assert.ok(tn.fx === tn.ax && tn.fy === tn.ay && tn.fy < tn.y, JSON.stringify(tn));
 });
 

@@ -4,18 +4,23 @@
 // structures, the City (sim worker) picks them.
 import { STRUCTURE } from './tents';
 import { structureRect, type PlacedEventStructure } from './eventtool';
+import { facilityArtReadiness, structureSeating } from './facility-art';
+import { eventAnchor, seatingProblems, type SeatPoint } from './event-seating';
+import { OBJECT_EIGHT_SETS } from '../object-eight-library';
+import type { ObjectEightSet } from '../object-eight-types';
 
 export type GalleryKind = 'green' | 'tee' | 'stand' | 'tent';
 /** a spot: its point (tiles), kind, pull, room (fans) and hole (0 for a structure); fx, fy: what its fans face (the pin of a green, the tee, a
- *  grandstand's point a tile toward the screen's bottom, a tent's centre); ax, ay: where play aims (the pin for a green or a tee, else fx, fy) */
-export interface GallerySpot { x: number; y: number; kind: GalleryKind; weight: number; cap: number; hole: number; fx: number; fy: number; ax: number; ay: number }
+ *  grandstand's authored front, a tent's centre); ax, ay: where play aims (the pin for a green or a tee, else fx, fy) */
+export interface GallerySpot { x: number; y: number; kind: GalleryKind; weight: number; cap: number; hole: number; fx: number; fy: number; ax: number; ay: number;
+  /** Structure identity for the renderer's authored seat layout; entry is the real approach/exit point in tiles. */ structureId?: number; entry?: SeatPoint }
 
 /** the pulls and rooms: a green's gallery (the last hole's pulls most), a tee's, a grandstand's (by its seats), a tent's (by its rate) */
 export const GALLERY = { green: { weight: 3, cap: 400, off: 7 }, lastGreen: { weight: 5, cap: 800 }, tee: { weight: 1.5, cap: 150, back: 3, off: 4 }, standPerWeight: 80, tentWeight: 1, tentFront: 3 };
 const TENT_KINDS = new Set(['food', 'drink', 'snack', 'merch', 'hospitality']);
 
 /** the spots of a course (tees and pins by hole; a hole with no pin has no green spot) and its placed structures */
-export function gallerySpots(tees: readonly { hole: number; x: number; y: number }[], pins: readonly { hole: number; x: number; y: number }[], structures: readonly PlacedEventStructure[] = []): GallerySpot[] {
+export function gallerySpots(tees: readonly { hole: number; x: number; y: number }[], pins: readonly { hole: number; x: number; y: number }[], structures: readonly PlacedEventStructure[] = [], sets: readonly ObjectEightSet[] = OBJECT_EIGHT_SETS): GallerySpot[] {
   const out: GallerySpot[] = [], last = Math.max(0, ...pins.map(p => p.hole));
   for (const p of [...pins].sort((a, b) => a.hole - b.hole)) {
     const t = tees.find(q => q.hole === p.hole);
@@ -28,11 +33,18 @@ export function gallerySpots(tees: readonly { hole: number; x: number; y: number
   }
   for (const s of structures) {
     const def = STRUCTURE[s.typeId]; if (!def) continue;
-    const [x, y, w, h] = structureRect(s);
-    // a grandstand's fans look a tile toward the screen's bottom; a tent's look at its centre (its spot is in front)
-    const cx = x + w / 2, cy = y + h / 2;
-    if (def.kind === 'grandstand') { const fx = cx + 0.7071, fy = cy + 0.7071; out.push({ x: cx, y: cy, kind: 'stand', weight: def.capacity / GALLERY.standPerWeight, cap: def.capacity, hole: 0, fx, fy, ax: fx, ay: fy }); }
-    else if (TENT_KINDS.has(def.kind)) out.push({ x: cx, y: y + h + GALLERY.tentFront, kind: 'tent', weight: GALLERY.tentWeight, cap: Math.max(20, Math.round(def.capacity / 2)), hole: 0, fx: cx, fy: cy, ax: cx, ay: cy });
+    if (def.requiresEightArt && !facilityArtReadiness(s, sets).ready) continue;
+    const [x, y, w, h] = structureRect(s, sets), centre = { x: x + w / 2, y: y + h / 2 }, authored = structureSeating(s, sets);
+    if (def.kind === 'grandstand') {
+      const layout = authored.layout && !seatingProblems(authored.layout, def.capacity, authored.footprint).length ? authored.layout : undefined;
+      const front = layout?.front ?? { x: 0, y: 1 }, length = Math.hypot(front.x, front.y);
+      const focus = eventAnchor({ x: front.x * 2 / length, y: front.y * 2 / length }, authored.headingDegrees, centre);
+      const entry = eventAnchor(layout?.entries[0] ?? { x: -def.footprint.w, y: def.footprint.h }, authored.headingDegrees, centre);
+      out.push({ ...centre, kind: 'stand', weight: def.capacity / GALLERY.standPerWeight, cap: def.capacity, hole: 0, fx: focus.x, fy: focus.y, ax: focus.x, ay: focus.y, structureId: s.id, entry });
+    } else if (TENT_KINDS.has(def.kind)) {
+      const entry = eventAnchor({ x: 0, y: def.footprint.h + GALLERY.tentFront * 2 }, authored.headingDegrees, centre);
+      out.push({ ...entry, kind: 'tent', weight: GALLERY.tentWeight, cap: Math.max(20, Math.round(def.capacity / 2)), hole: 0, fx: centre.x, fy: centre.y, ax: centre.x, ay: centre.y, structureId: s.id, entry });
+    }
   }
   return out;
 }

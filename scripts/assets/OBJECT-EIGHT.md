@@ -50,6 +50,30 @@ This verifies original and crop hashes, appends versioned lossless atlas pages a
 
 `capacity` is documented art metadata. It does not silently change the event catalogue's prices or capacities. `visualTier` describes physical condition independently of tournament unlock tier. A matching event type defaults to worn when available; an explicit upgraded state selects its corresponding reviewed set. Use distinct subjects for worn/upgraded designs and publish new versions to replace a design.
 
+Event seating uses exactly two conditions, `budget` and `upgraded`; older `worn`/`rundown` wording aliases `budget`. The new event IDs are `seatedPavilion24`, `seatedPavilion60`, `seatedPavilion120`, and `compactBleacher60`. They remain unavailable until their complete reviewed eight-view set and measured seating are installed; they never borrow a scaled small-grandstand picture.
+
+An event seating manifest carries `capacity` and a `seating` object, optionally overridden by `views.<key>.seating`:
+
+```json
+{
+  "capacity": 24,
+  "visualTier": "budget",
+  "eventTypes": ["seatedPavilion24"],
+  "seating": {
+    "review": "draft",
+    "front": { "x": 0, "y": 1 },
+    "rows": [
+      { "start": { "x": -2.275, "y": 0.9 }, "step": { "x": 0.65, "y": 0 }, "seats": 8, "seatHeightMetres": 0.45 },
+      { "start": { "x": -2.275, "y": 0 }, "step": { "x": 0.65, "y": 0 }, "seats": 8, "seatHeightMetres": 0.45 },
+      { "start": { "x": -2.275, "y": -0.9 }, "step": { "x": 0.65, "y": 0 }, "seats": 8, "seatHeightMetres": 0.45 }
+    ],
+    "entries": [{ "x": -3.075, "y": 1.7 }]
+  }
+}
+```
+
+This is a **draft proposal**, not accepted seat coordinates. Measure actual chair/bench locations and entry ramps against every accepted picture before changing seating review to `approved`. Coordinates are local metres about the physical footprint centre; the actual view `headingDegrees` rotates rows, entry anchors and facing together. `seatHeightMetres` is the bench top: the renderer compensates for the existing adult/child character's actual source-rendered hip pixel offset. Optional seating `verticalPixelsPerMetre` calibrates bench elevation to measured art (default 32 world px/m); use it instead of changing physical bench heights to conceal a source-scale mismatch. Split banks at aisles; optional row `front` vectors support different orientations around a horseshoe. New seating needs exactly its catalogue capacity and at least one valid entry anchor. Metadata cannot replace checking the images or mean that missing source views are finished.
+
 Completion states remain separate: generated source, candidate crops, reviewed art, imported library, and player-selectable angles. Existing four/single-view items retain their limited rotations and report missing yaw8 art. Character walk/swing/crowd sheets and large scene/portrait images have their own pipelines.
 
 The initial runtime also reuses **26 existing registered native sets** without creating new GPU atlas pages. Their 208 appended standalone IDs share the old atlas UVs; normal boxes are copied and yaw8 bounds come from each existing measured `AXIS_FOOT` record with yaw exactly -8. Normal road-lot rows and their boxes remain unchanged. The explicit whitelist, all eight native/source pixel hashes and six excluded owner review flags are recorded in `src/game/object-eight-existing.json`. The original eligible count was 32; both L-ranch variants, farmhouse-north, snack-bar, corner-store and house_4-north are excluded for existing angle/style flags. This reuses selected runtime art, not newer held candidates. New approved native sets override their subject's lookup normally.

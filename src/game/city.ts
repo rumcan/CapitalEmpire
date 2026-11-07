@@ -276,7 +276,8 @@ export class City {
   private toGallery(town: number, n: number, x: number, y: number): void {
     const C = this.crowd; if (!C || !this.golf || !this.spots.length) return;
     const i = pickSpot(this.spots, C.gallery, this.spotRnd(), this.spotDraws()), s = this.spots[i]!;
-    C.add({ x, y, tx: s.x + (this.spotRnd() - 0.5) * 3, ty: s.y + (this.spotRnd() - 0.5) * 3, n, town, stage: 3, route: i });
+    const entry = s.entry ?? s, scatter = s.entry ? 0 : 3;
+    C.add({ x, y, tx: entry.x + (this.spotRnd() - 0.5) * scatter, ty: entry.y + (this.spotRnd() - 0.5) * scatter, n, town, stage: 3, route: i });
   }
   /** the fans move between the spots at every RELOCATE_EVERY game minute of the tournament day from FIRST_TEE to PLAY_END (each 30-minute mark once;
    *  gallerydraw relocate): a move takes its fans off the `from` spot and sends them on as a stage 3 group to the `to` spot, where they count when
@@ -292,7 +293,8 @@ export class City {
       if (n <= 0) continue;
       C.gallery[mv.from]! -= n;
       // the walk starts and ends within 1.5 tiles of the spots' points, as toGallery's (town 0: a spot does not keep its fans' towns)
-      C.add({ x: from.x + (this.spotRnd() - 0.5) * 3, y: from.y + (this.spotRnd() - 0.5) * 3, tx: to.x + (this.spotRnd() - 0.5) * 3, ty: to.y + (this.spotRnd() - 0.5) * 3, n, town: 0, stage: 3, route: mv.to });
+      const a = from.entry ?? from, b = to.entry ?? to, scatterA = from.entry ? 0 : 3, scatterB = to.entry ? 0 : 3;
+      C.add({ x: a.x + (this.spotRnd() - 0.5) * scatterA, y: a.y + (this.spotRnd() - 0.5) * scatterA, tx: b.x + (this.spotRnd() - 0.5) * scatterB, ty: b.y + (this.spotRnd() - 0.5) * scatterB, n, town: 0, stage: 3, route: mv.to });
     }
   }
   /** going home (golf, LEAD.md M2.3): every party car that parked (its town, car park and bay), the surge's homes by town (where the cars
@@ -1387,7 +1389,7 @@ export class City {
    *  the site's middle, else its car's bay */
   private leaveFrom(C: Crowd, bay: Pt): Pt {
     const withFans: number[] = []; C.gallery.forEach((n, i) => { if (n > 0) withFans.push(i); });
-    if (withFans.length && this.spots.length) { const i = withFans[Math.floor(this.leaveRnd() * withFans.length)]!; C.gallery[i] = Math.max(0, C.gallery[i]! - PARTY); return this.spots[i]!; }
+    if (withFans.length && this.spots.length) { const i = withFans[Math.floor(this.leaveRnd() * withFans.length)]!; C.gallery[i] = Math.max(0, C.gallery[i]! - PARTY); return this.spots[i]!.entry ?? this.spots[i]!; }
     if (this.gates.length) { let best = this.gates[0]!; for (const g of this.gates) if (Math.hypot(g.x - bay.x, g.y - bay.y) < Math.hypot(best.x - bay.x, best.y - bay.y)) best = g; return best; }
     return this.site ? this.site.c : bay;
   }

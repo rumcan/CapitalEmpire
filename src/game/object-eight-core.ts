@@ -46,6 +46,7 @@ export function objectNormalReplacements(sets: readonly ObjectEightSet[], corner
 }
 export function eventArtSet(sets: readonly ObjectEightSet[], typeId: string, visualTier?: string): ObjectEightSet | undefined {
   const matches = sets.filter(s => s.review === 'approved' && s.projection === 'normal+yaw8' && s.eventTypes?.includes(typeId));
-  const tier = visualTier ?? (matches.some(s => s.visualTier === 'worn') ? 'worn' : matches.some(s => s.visualTier === 'budget') ? 'budget' : matches[0]?.visualTier);
-  return [...matches].reverse().find(s => !tier || s.visualTier === tier);
+  const canonical = (tier?: string) => tier === 'worn' || tier === 'rundown' ? 'budget' : tier;
+  const tier = canonical(visualTier) ?? (matches.some(s => canonical(s.visualTier) === 'budget') ? 'budget' : matches[0]?.visualTier);
+  return [...matches].reverse().find(s => !tier || canonical(s.visualTier) === tier);
 }

@@ -46,7 +46,7 @@ import { PLANT_KINDS } from './game/plant';
 import { newHole } from './ui/course/HoleStrip';
 import { SurfaceMark } from './ui/course/SurfaceMark';
 import { MENU_TEXES, SURFACE_BRUSHES } from './game/paint';
-import { STRUCTURES } from './game/golf/tents';
+import { STRUCTURE, STRUCTURES } from './game/golf/tents';
 import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
 import { computeTournamentCloseBook } from './game/golf/yearend';
@@ -816,8 +816,18 @@ export default function App() {
               <button className="chip" disabled={game.eventFacingInfo()!.info.ids.length < 2} onClick={() => game.turnEventStructure()}>Turn (R)</button>
               {!game.eventStructurePending && game.selectedEventStructure() && <button className="chip" onClick={() => game.moveSelectedEventStructure()}>Move</button>}
               {game.eventStructurePending && <button className="chip" onClick={() => game.cancelEventStructure()}>Cancel placement</button>}
+              {game.eventUpgradeInfo() && <button className="chip" disabled={!game.eventUpgradeInfo()!.available} title={game.eventUpgradeInfo()!.reason}
+                onClick={() => game.upgradeSelectedFacility()} data-testid="event-upgrade">Improve · ${game.eventUpgradeInfo()!.cost.toLocaleString()}</button>}
             </div>
+            {game.selectedEventStructure() && STRUCTURE[game.selectedEventStructure()!.typeId]?.requiresEightArt && <div>{game.selectedEventStructure()!.visualTier === 'upgraded' ? 'Upgraded' : 'Budget / worn'}</div>}
           </div>}
+          <div className="space-y-1 rounded-lg bg-white/5 p-2 text-xs" data-testid="event-condition-controls">
+            <div className="text-slate-400">New seating condition</div>
+            <div className="flex gap-1.5">
+              <button className={`chip ${game.eventCondition === 'budget' ? 'chip-on' : ''}`} onClick={() => game.setEventCondition('budget')}>Budget / worn</button>
+              <button className={`chip ${game.eventCondition === 'upgraded' ? 'chip-on' : ''}`} onClick={() => game.setEventCondition('upgraded')}>Upgraded</button>
+            </div>
+          </div>
           <div className="space-y-1.5 text-xs">
           {STRUCTURES.filter(s => s.tier <= gv.tier + 1).map(s => (
           <div key={s.id} className="space-y-1 rounded-lg border border-white/5 bg-white/5 p-2">
@@ -826,12 +836,14 @@ export default function App() {
           <span className="text-[12px] text-slate-400">{s.footprint.w}×{s.footprint.h}{s.unit ? ` · ${s.capacity} ${s.unit}` : ''}</span>
           </div>
           <p className="text-[12px] text-slate-400">{s.blurb}</p>
+          {s.requiresEightArt && !game.eventArtStatus(s.id).ready && <p className="text-[12px] text-amber-200/80" data-testid={`facility-pending-${s.id}`}>Pictures and seating are being prepared.</p>}
+          {s.requiresEightArt && game.eventCondition === 'upgraded' && <p className="text-[12px] text-slate-400">One-time improvement: ${(s.upgradeCost ?? 0).toLocaleString()}</p>}
           <div className="flex gap-1.5 pt-1">
           {s.rent > 0 && (
-          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'rent' ? 'chip-on' : ''}`} onClick={() => { if (game) { game.setPendingStructure(s.id, 'rent'); bump(); } }}>Rent ${s.rent.toLocaleString()}</button>
+          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'rent' ? 'chip-on' : ''}`} disabled={!game.eventArtStatus(s.id).ready} title={game.eventArtStatus(s.id).reason} onClick={() => { if (game) { game.setPendingStructure(s.id, 'rent'); bump(); } }}>Rent ${s.rent.toLocaleString()}</button>
           )}
           {s.buy > 0 && (
-          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'buy' ? 'chip-on' : ''}`} onClick={() => { if (game) { game.setPendingStructure(s.id, 'buy'); bump(); } }}>Buy ${s.buy.toLocaleString()}</button>
+          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'buy' ? 'chip-on' : ''}`} disabled={!game.eventArtStatus(s.id).ready} title={game.eventArtStatus(s.id).reason} onClick={() => { if (game) { game.setPendingStructure(s.id, 'buy'); bump(); } }}>Buy ${s.buy.toLocaleString()}</button>
           )}
           </div>
           </div>

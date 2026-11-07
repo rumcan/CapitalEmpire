@@ -10,6 +10,7 @@ import { TILE_M } from './types';
 import { OBJECT_EIGHT_SETS } from '../object-eight-library';
 import { eventArtSet } from '../object-eight-core';
 import { objectFootprint, type ObjectEightSet, type ObjectFacingKey } from '../object-eight-types';
+import { facilityArtReadiness } from './facility-art';
 
 /** half-width of a hole's playing corridor (tiles; 15 tiles = 30 m each side = 60 m corridor, GOLF-PLAN 4.2 and 6.3) */
 export const HOLE_CORRIDOR_HALF = 15;
@@ -170,7 +171,7 @@ export function structurePlaceCost(typeId: string, mode: PlaceMode): number {
 }
 
 /** options for validating structure placement */
-export interface StructureCheckOpts { tier: number; holes: readonly Hole[]; existing: readonly PlacedEventStructure[]; parcels?: readonly Rect[]; roads?: readonly Rect[]; townPt?: Pt }
+export interface StructureCheckOpts { tier: number; holes: readonly Hole[]; existing: readonly PlacedEventStructure[]; parcels?: readonly Rect[]; roads?: readonly Rect[]; townPt?: Pt; artSets?: readonly ObjectEightSet[] }
 
 /** options for evaluating all placed structures on a tournament day */
 export interface EvaluateEventDayOpts { placed: readonly PlacedEventStructure[]; holes: readonly Hole[]; gates: readonly Pt[]; tier: number; spectators: number; hoursOpen?: number; mobileOrdering?: boolean }
@@ -180,6 +181,8 @@ export function checkStructurePlacement(candidate: { typeId: string; x: number; 
   const def = STRUCTURE[candidate.typeId];
   const rect = structureRect(candidate);
   if (!def) return { ok: false, rect, cost: Infinity, reason: 'Unknown structure type' };
+  const art = facilityArtReadiness(candidate, opts.artSets);
+  if (!art.ready) return { ok: false, rect, cost: Infinity, reason: art.reason };
   if (def.tier > opts.tier + 1) return { ok: false, rect, cost: Infinity, reason: `Available from tier ${def.tier - 1}` };
   const cost = structurePlaceCost(candidate.typeId, candidate.mode);
   if (!Number.isFinite(cost)) return { ok: false, rect, cost, reason: `Cannot ${candidate.mode} ${def.name}` };

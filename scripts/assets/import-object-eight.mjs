@@ -30,6 +30,24 @@ export function validateInput(m) {
   assert(m.review==='candidate'||m.review==='approved','explicit candidate/approved review required');
   assert(m.source?.normal&&m.source?.yaw8,'two actual source sheets required');
 }
+/** Preserve local-metre seating only after checking real row counts, access and approval. No generated guesses unlock a facility. */
+export function validateSeating(layout,capacity,footprint) {
+  const point=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y);
+  assert(layout?.review==='approved','Seating layout must be explicitly approved');
+  assert(layout.verticalPixelsPerMetre===undefined||positive(layout.verticalPixelsPerMetre),'Invalid bench height calibration');
+  assert(point(layout.front)&&Math.hypot(layout.front.x,layout.front.y)>0,'Seating facing is required');
+  assert(Number.isSafeInteger(capacity)&&capacity>0,'Seating capacity is required');
+  assert(Array.isArray(layout.entries)&&layout.entries.length&&layout.entries.every(point),'Seating entry anchors are required');
+  assert(Array.isArray(layout.rows)&&layout.rows.length,'Seating rows are required');
+  let total=0;
+  for(const r of layout.rows) {
+    assert(point(r.start)&&point(r.step)&&Math.hypot(r.step.x,r.step.y)>=.3&&Number.isSafeInteger(r.seats)&&r.seats>0&&Number.isFinite(r.seatHeightMetres)&&r.seatHeightMetres>=0,'Invalid seating row');
+    assert(!r.front||(point(r.front)&&Math.hypot(r.front.x,r.front.y)>0),'Invalid seat bank facing');
+    for(const p of [r.start,{x:r.start.x+r.step.x*(r.seats-1),y:r.start.y+r.step.y*(r.seats-1)}])assert(Math.abs(p.x)<=footprint.width/2&&Math.abs(p.y)<=footprint.depth/2,'Seating lies outside physical footprint');
+    total+=r.seats;
+  }
+  assert(total===capacity,`Seating rows must contain exactly ${capacity} places`);
+}
 /** Reject repeated and horizontally mirrored native pixels, rather than counting metadata as new art. */
 export function validateDistinct(images) {
   const seen=new Set();
@@ -71,7 +89,7 @@ export async function cutObject(manifestFile,out) {
     const png=await sharp(p.data,{raw:{width:p.width,height:p.height,channels:4}}).png().toBuffer(),filename=`${p.key}.native.png`,v=input.views?.[p.key]??{};
     writeNew(path.join(out,filename),png);
     const anchor=v.anchor?{x:v.anchor.x-p.crop.left,y:v.anchor.y-p.crop.top}:null;
-    views[p.key]={file:filename,sha256:hash(png),width:p.width,height:p.height,anchor,headingDegrees:v.headingDegrees??null,boxes:v.boxes??null,sourceFamily:p.family,sourceSha256:sources[p.family].sha256,cell:p.cell,cellRect:p.cellRect,crop:p.crop};
+    views[p.key]={file:filename,sha256:hash(png),width:p.width,height:p.height,anchor,headingDegrees:v.headingDegrees??null,boxes:v.boxes??null,...(v.seating?{seating:v.seating}:{}),sourceFamily:p.family,sourceSha256:sources[p.family].sha256,cell:p.cell,cellRect:p.cellRect,crop:p.crop};
     writeNew(path.join(out,`${p.key}.provenance.json`),json({schema:1,subject:input.subject,version:input.version,key:p.key,source:sources[p.family],cell:p.cell,cellRect:p.cellRect,crop:p.crop,output:filename,sha256:hash(png),operation:'native RGBA cell crop only; no flip/repaint/view synthesis',review:'candidate'}));
   }
   const result={...input,review:'candidate',source:sources,views,artReviewRequired:['same subject across all eight views','normal and actual yaw8 geometry','upper-right daylight and lower-left shadows','true alpha and complete silhouette','per-view ground anchors and physical footprint','no duplicates or fake mirror views']};
@@ -79,6 +97,8 @@ export async function cutObject(manifestFile,out) {
 }
 export async function integrateObject(manifestFile,root=ROOT) {
   const m=readJSON(manifestFile); validateInput(m); assert(m.review==='approved','Only an explicitly approved manifest can enter the runtime');
+  if(m.seating)validateSeating(m.seating,m.capacity,m.footprintMetres);
+  for(const key of KEYS)if(m.views?.[key]?.seating)validateSeating(m.views[key].seating,m.capacity,m.footprintMetres);
   const dir=path.dirname(manifestFile),images=[];
   for (const family of ['normal','yaw8']) {
     const source=m.source[family];assert(typeof source.file==='string'&&typeof source.sha256==='string',`${family}: native source provenance required`);
@@ -96,7 +116,7 @@ export async function integrateObject(manifestFile,root=ROOT) {
   assert(!ledger.sets.some(s=>s.subject===m.subject&&s.version===m.version),'This version is already registered; use a new reviewed version');
   const slug=m.subject.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),tag=`${slug}-${hash(Buffer.from(m.subject)).slice(0,8)}-v${m.version}`,assetDir=path.join(root,'src/assets/object-eight',tag);
   assert(!fs.existsSync(assetDir),'Versioned asset directory exists; do not overwrite'); fs.mkdirSync(assetDir,{recursive:true});
-  const set={subject:m.subject,name:m.name,version:m.version,review:'approved',projection:'normal+yaw8',views:{},footprintMetres:m.footprintMetres,baselineScale:m.baselineScale,...(m.capacity===undefined?{}:{capacity:m.capacity}),...(m.visualTier?{visualTier:m.visualTier}:{}),...(m.eventTypes?{eventTypes:m.eventTypes}:{}),...(m.aliases?{aliases:m.aliases}:{})};
+  const set={subject:m.subject,name:m.name,version:m.version,review:'approved',projection:'normal+yaw8',views:{},footprintMetres:m.footprintMetres,baselineScale:m.baselineScale,...(m.capacity===undefined?{}:{capacity:m.capacity}),...(m.seating?{seating:m.seating}:{}),...(m.visualTier?{visualTier:m.visualTier}:{}),...(m.eventTypes?{eventTypes:m.eventTypes}:{}),...(m.aliases?{aliases:m.aliases}:{})};
   // Shelf pack this immutable version into 2048 pages. Appending pages/items never moves saved indices.
   const PAGE=2048,GUT=8,pages=[];let pg={inputs:[],x:GUT,y:GUT,row:0};pages.push(pg);
   for(const p of images) {
@@ -106,7 +126,7 @@ export async function integrateObject(manifestFile,root=ROOT) {
     p.page=pages.length-1;p.left=pg.x;p.top=pg.y;pg.inputs.push(p);pg.x+=p.width+GUT;pg.row=Math.max(pg.row,p.height);
     const id=`object8:${tag}:${p.key}`,k=64/m.pixelsPerMetre,v=p.v,boxes=v.boxes??[bounds(m.footprintMetres.width,m.footprintMetres.depth,v.headingDegrees)];
     assert(boxes.length&&boxes.every(b=>positive(b.hx)&&positive(b.hy)&&Number.isFinite(b.dx)&&Number.isFinite(b.dy)),`${p.key}: invalid footprint boxes`);
-    set.views[p.key]={id,headingDegrees:v.headingDegrees,boxes};
+    set.views[p.key]={id,headingDegrees:v.headingDegrees,boxes,...(v.seating?{seating:v.seating}:{})};
     ledger.items.push({id,name:`${m.name} (${p.key})`,cat:m.category??'New: Objects',kind:m.kind??'decor',w:p.width*k,h:p.height*k,ax:v.anchor.x*k,ay:v.anchor.y*k,boxes,solid:m.solid??2,big:m.kind==='building',door:false,cost:m.cost??0,tex:[ledger.pages.length+p.page,p.left/PAGE,p.top/PAGE,(p.left+p.width)/PAGE,(p.top+p.height)/PAGE],quad:[0,0,p.width*k,p.height*k]});
   }
   for(const [i,page] of pages.entries()) {
