@@ -11,7 +11,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
-const base = opt('base', 'http://127.0.0.1:5187/'), out = opt('out', 'output/bunker-wall-shots'), tag = opt('tag', 'after'), seed = opt('seed', '1');
+const base = opt('base', 'http://127.0.0.1:5187/'), out = opt('out', 'output/bunker-wall-shots'), tag = opt('tag', 'after'), seed = opt('seed', '7');
 const W = 1366, H = 768;
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
