@@ -21,7 +21,7 @@ try {
   page.on('pageerror', e => log('[pageerror]', e.message));
   page.on('console', m => { if (m.type() === 'error') log('[console]', m.text().slice(0, 300)); });
   await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
-  await page.goto(`${base}?start=town`, { waitUntil: 'domcontentloaded', timeout: 180000 });
+  await page.goto(`${base}?start=town&seed=${opt('seed', '2')}`, { waitUntil: 'domcontentloaded', timeout: 180000 });
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
   await page.evaluate(() => { const g = window.__game; g.closeWho?.('Jack Burns', 2); g.closeWelcome?.(false); g.setSpeed(1); });
   await page.waitForFunction(() => !!window.__game?.you && !!window.__game?.youCart, null, { timeout: 90000 }).catch(() => log('no character or cart'));

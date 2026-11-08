@@ -19,7 +19,7 @@ try {
   const page = await ctx.newPage();
   page.on('pageerror', e => log('[pageerror]', e.message));
   await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
-  await page.goto(`${base}?start=town`, { waitUntil: 'domcontentloaded', timeout: 300000 });
+  await page.goto(`${base}?start=town&seed=${opt('seed', '2')}`, { waitUntil: 'domcontentloaded', timeout: 300000 });
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
   await page.evaluate(() => { const g = window.__game; g.closeWho?.('Jack Burns', 2); g.closeWelcome?.(false); g.setSpeed(1); });
   await page.waitForFunction(() => !!window.__game?.you && !!window.__game.yrView(), null, { timeout: 90000 });
@@ -28,12 +28,15 @@ try {
     const g = window.__game; g.yourRoundStart('all');
     const R = g.yourRound(), v = g.yrView(), h = v.holes[R.card[R.at].i], pin = h.pin;
     g.money = 1e9; g.eventCardOpen = null;
+    // (the land round the green yours, so the brush may work there: a wide dab reaches past a starting course's land)
+    const gs = g.golf; gs.parcels = [...(gs.parcels ?? [gs.parcel]), [pin.x - 40, pin.y - 40, 80, 80]];
     // the height brush (Ground height, raise) beside the pin: the tool's own dab (paint-tool.ts heightDabAt: journaled, charged, the ground re-baked)
     const p = g.paint; p.heightMode = 'raise';
     const dabs = brush === 'wide' ? (p.heightR = 20, p.heightLevel = 1, [{ x: pin.x + 8, y: pin.y }]) : (p.heightR = 6, p.heightLevel = 2, [0, 1, 2].map(k => ({ x: pin.x + 5, y: pin.y - 2 + k * 2 })));
     p.begin?.('raise ground'); p.heighting = { last: dabs[0], broke: false };
     for (const d of dabs) p.heightDabAt(d);
     p.heighting = null;
+    if (!g.courseHeight.rev) return { refused: true };
     // your ball on the green 3 tiles short of the pin, then Jump to ball: the shot opens with the putter
     g.yrFlight = null; g.shot = null; g.setYourRound({ ...g.yourRound(), ball: { x: pin.x - 3, y: pin.y + 0.5 }, lie: 'green' }); g.yourJump();
     g.lookAt(pin.x - 1, pin.y, 0.32);
@@ -43,7 +46,7 @@ try {
     if (bg) for (let k = 0; k < bg.n; k++) { if ((bg.ij[2 * k] & 1) || (bg.ij[2 * k + 1] & 1)) continue; b[bucket(bg.pts[5 * k + 4])]++; }
     return { pin, club: g.shot?.input?.club, shown: bp.length, points: bg?.n ?? 0, buckets: b, fade: g.breakFade, rev: g.courseHeight.rev };
   }, [brush, flat]);
-  log(JSON.stringify(r));
+  log(JSON.stringify(r)); if (r.refused) throw new Error('the height brush was refused (no change)');
   arrows = r.buckets[1] + r.buckets[2] + r.buckets[3];
   await page.screenshot({ path: join(out, `${name}.png`), clip: { x: 283, y: 180, width: 800, height: 420 } });
   log(`${name}: grid ${r.shown ? 'shown' : 'NOT shown'}, ${arrows} arrows (gentle/firm/steep ${r.buckets.slice(1).join('/')}), ${r.buckets[0]} still dots`);

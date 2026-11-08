@@ -328,8 +328,8 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   // (T213: a slot may have held a caddie's bag or a hopping golfer last frame)
   d.lift = undefined; d.scale = 1; d.flip = false; d.moving = false; d.alpha = undefined; d.pin = undefined;
 }
-/** T333: the see-through copy of d into g (drawn over every prop of its tiles at SEE_THROUGH of d's alpha: under a half, so it casts no shadow); returns g */
-const SEE_THROUGH = 0.4;
+/** T333: the see-through copy of d into g (drawn over every prop of its tiles at SEE_THROUGH of d's alpha; it casts no shadow: sprites.ts top); returns g */
+const SEE_THROUGH = 0.6;
 function seeThrough(d: Drawable, g: Drawable): Drawable {
   g.item = d.item; g.x = d.x; g.y = d.y; g.flip = d.flip; g.scale = d.scale; g.x0 = d.x0; g.y0 = d.y0; g.x1 = d.x1; g.y1 = d.y1; g.moving = false;
   g.lift = d.lift; g.alpha = SEE_THROUGH * (d.alpha ?? 1); g.top = true; g.pin = undefined; g.tint = undefined; g.paint = undefined; g.lamps = undefined;
