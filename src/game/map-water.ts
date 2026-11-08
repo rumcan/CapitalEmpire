@@ -18,7 +18,7 @@ export const JOIN_EDGE = 1.5;
 /** how far inside the map's water's edge the renderer keeps the course's water off it, tiles (the course's water covers the soft edge) */
 export const JOIN_INSET = 0.1;
 /** the seam's fade: the course's water drawn on into the map's water in bands JOIN_FADE_STEP tiles wide, at these alphas (the renderer) */
-export const JOIN_FADE: readonly number[] = [0.7, 0.45, 0.2], JOIN_FADE_STEP = 0.3;
+export const JOIN_FADE: readonly number[] = [0.6, 0.35, 0.15], JOIN_FADE_STEP = 0.2;
 /** the bucket side of the segment index, tiles */
 const BUCKET = 16;
 
@@ -29,11 +29,14 @@ export function waterRuns(waters: readonly { kind: string; pts: readonly { x: nu
   for (const w of waters) {
     const k = scale(w.kind), p = w.pts, n = p.length; if (!n || !(k > 0)) continue;
     const r = (i: number) => Math.max(0.05, (p[i]!.w / 2) * k);
-    const inBox = (i: number) => !box || (p[i]!.x + r(i) >= box[0]! - pad && p[i]!.x - r(i) <= box[2]! + pad && p[i]!.y + r(i) >= box[1]! - pad && p[i]!.y - r(i) <= box[3]! + pad);
+    // a point's disc, or the segment from point i to i + 1 (its box grown by its wider end), within pad of the box
+    const hit = (x0: number, y0: number, x1: number, y1: number) => !box || (x1 >= box[0]! - pad && x0 <= box[2]! + pad && y1 >= box[1]! - pad && y0 <= box[3]! + pad);
+    const disc = (i: number) => hit(p[i]!.x - r(i), p[i]!.y - r(i), p[i]!.x + r(i), p[i]!.y + r(i));
+    const seg = (i: number) => { if (i < 0 || i + 1 >= n) return false; const a = p[i]!, b = p[i + 1]!, g = Math.max(r(i), r(i + 1)); return hit(Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g); };
     let run: number[] | null = null;
     for (let i = 0; i < n; i++) {
-      // a segment is kept when either end is near: its both ends go in
-      const keep = inBox(i) || (i > 0 && inBox(i - 1)) || (i + 1 < n && inBox(i + 1));
+      // a segment that is near keeps both its ends
+      const keep = disc(i) || seg(i - 1) || seg(i);
       if (keep) { (run ??= []).push(p[i]!.x, p[i]!.y, r(i)); } else if (run) { out.push(run); run = null; }
     }
     if (run) out.push(run);
@@ -84,10 +87,13 @@ export class MapWater {
   }
   /** whether tile point (x, y) lies in the map's water, its edge moved out by grow tiles (negative: in) */
   at(x: number, y: number, grow = 0): boolean {
-    const s = this.prims;
-    for (const o of this.buckets.get((Math.floor(y / BUCKET) + 64) * 8192 + Math.floor(x / BUCKET) + 64) ?? []) {
-      if (x < s[o + 7]! - grow || x > s[o + 9]! + grow || y < s[o + 8]! - grow || y > s[o + 10]! + grow) continue;
-      if (inPrim(s, o, x, y, grow)) return true;
+    const s = this.prims, g = Math.max(0, grow);
+    // (grown out, a piece in a neighbouring bucket can reach the point: the buckets under the point's box grown alike)
+    for (let by = Math.floor((y - g) / BUCKET); by <= Math.floor((y + g) / BUCKET); by++) for (let bx = Math.floor((x - g) / BUCKET); bx <= Math.floor((x + g) / BUCKET); bx++) {
+      for (const o of this.buckets.get((by + 64) * 8192 + bx + 64) ?? []) {
+        if (x < s[o + 7]! - g || x > s[o + 9]! + g || y < s[o + 8]! - g || y > s[o + 10]! + g) continue;
+        if (inPrim(s, o, x, y, grow)) return true;
+      }
     }
     return false;
   }
