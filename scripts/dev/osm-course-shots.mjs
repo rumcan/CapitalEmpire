@@ -212,6 +212,8 @@ try {
         off: s ? { dx: Math.round(s.x / g.dpr - g.cssW / 2), dy: Math.round(s.y / g.dpr - g.cssH / 2) } : null };
     });
     const camOk = st => !!st.off && Math.abs(st.off.dx) < 150 && Math.abs(st.off.dy) < 150;
+    /** the same JSON whatever the order of an object's keys (golf.osm's keys come back from a save in the loader's order) */
+    const canon = v => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => (a < b ? -1 : 1))) : x));
     for (const c of ALL) {
       console.log(`-- ${c.id}`);
       // the dev URL: golf.osm whole, and the camera over the course right after the load and still there seconds later (nothing moves it)
@@ -246,7 +248,7 @@ try {
       await xp.waitForTimeout(1500);
       const s2 = await stateOf(xp);
       console.log('  after a reload', JSON.stringify({ osm: s2.osm?.id, scale: s2.osm?.scale, entry: s2.osm?.entry, tees: s2.tees, pins: s2.pins, grid: s2.grid, credit: s2.osm?.credit }));
-      check(!!s2.osm && JSON.stringify(s2.osm) === JSON.stringify(s1.osm) && JSON.stringify(s2.course) === JSON.stringify(s1.course) && s2.tees === s1.tees && s2.pins === s1.pins && s2.grid, `${c.id}: the save keeps the real course whole: after a reload golf.osm, the land and the ${s2.tees} tee markers are as they were`);
+      check(!!s2.osm && canon(s2.osm) === canon(s1.osm) && canon(s2.course) === canon(s1.course) && s2.tees === s1.tees && s2.pins === s1.pins && s2.grid, `${c.id}: the save keeps the real course whole: after a reload golf.osm, the land and the ${s2.tees} tee markers are as they were`);
       if (c.id === 'rondebosch') { await settle(xp, 2000); await shot(xp, 'card-3-after-reload'); }
       await xctx.close();
     }
