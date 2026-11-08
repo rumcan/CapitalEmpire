@@ -101,9 +101,18 @@ check(gstate.osm?.name === 'Wingatepark Country Club' && gstate.osm.derived === 
 await page.waitForTimeout(2500);
 await shot('4-game-on-the-imported-course');
 
+// 3b. the saved game of an imported course reloads whole (golf.osm, its markers, the course grid)
+await page.waitForTimeout(5500); // (the autosave)
+await page.reload({ waitUntil: 'domcontentloaded' });
+await page.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
+await page.waitForTimeout(1500);
+const after = await page.evaluate(() => { const g = window.__game; return { osm: g.osmGame(), tees: g.golf?.tees.length, pins: g.golf?.pins.length, grid: !!g.courseGrid }; });
+check(after.osm?.id === 'way/4261725' && after.osm.derived === true && after.osm.holes === 3 && after.pins === 3 && after.tees >= 3 && after.grid, `the saved game of an imported course reloads whole: ${JSON.stringify(after.osm)} (${after.tees} tee markers, ${after.pins} pins)`);
+
 // 4. the picker is on the new-game card: a new game brings it back (the gear menu's New game does the same); Downloaded courses lists the course, a search already made sends nothing
 await page.evaluate(() => window.__game.newTown());
 await openPicker();
+await page.waitForSelector('[data-testid^=dl-row-]', { timeout: 20000 });
 const rows = await page.$$eval('[data-testid^=dl-row-]', els => els.map(e => e.textContent));
 check(rows.length === 1 && rows[0].includes('Wingatepark Country Club') && rows[0].includes('3 holes'), `Downloaded courses lists the course: ${rows[0]}`);
 check((await page.$eval('[data-testid^=dl-grade-]', e => e.dataset.grade)) === 'partial', 'its row carries the Partial grade');
@@ -194,7 +203,6 @@ check((await inDb())?.includes('way/4261725'), `IndexedDB holds the downloaded c
 await page.reload({ waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
 check((await inDb())?.includes('way/4261725'), 'and still after a reload');
-check(!!(await page.evaluate(() => window.__game.osmGame())), 'while the saved game, reloaded, is still on the imported course');
 await page.goto(`${base}?osmcourse=rondebosch`, { waitUntil: 'domcontentloaded' }); // (a fixture-style game: no Who card here)
 await page.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
 check((await inDb())?.includes('way/4261725'), 'and in another game');
@@ -213,13 +221,14 @@ await page.goto(base, { waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
 await page.evaluate(() => window.__game.newTown()); // (the saved game loads without the card: a new game brings it back)
 await openPicker();
-const nd = await page.$$eval('[data-testid^=dl-row-]', els => els.length);
-await page.click('[data-testid^=dl-delete-]');
-check((await page.$eval('[data-testid^=dl-delete-]', e => e.textContent)) === 'Sure?', 'Delete asks once before it deletes');
-check(await page.$$eval('[data-testid^=dl-row-]', els => els.length) === nd, 'the first click deleted nothing');
-await page.click('[data-testid^=dl-delete-]');
-await page.waitForTimeout(500);
-check(await page.$$eval('[data-testid^=dl-row-]', els => els.length) === nd - 1 && !(await inDb())?.includes('way/4261725'), 'the second click deletes the course from the library and from IndexedDB');
+await page.waitForSelector('[data-testid="dl-delete-way-4261725"]', { timeout: 20000 });
+const nd = await page.$$eval('[data-testid^=dl-row-]', els => els.length), del = '[data-testid="dl-delete-way-4261725"]';
+await page.click(del);
+check((await page.$eval(del, e => e.textContent)) === 'Sure?', 'Delete asks once before it deletes');
+check(await page.$$eval('[data-testid^=dl-row-]', els => els.length) === nd && (await inDb())?.includes('way/4261725'), 'the first click deleted nothing');
+await page.click(del);
+await page.waitForTimeout(600);
+check(await page.$$eval('[data-testid^=dl-row-]', els => els.length) === nd - 1 && !(await inDb())?.includes('way/4261725') && (await inDb())?.length === nd - 1, 'the second click deletes the course from the library and from IndexedDB, and only that one');
 await shot('12-after-delete');
 
 // the live servers were never asked: every request to a map server was answered by this script

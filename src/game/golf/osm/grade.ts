@@ -36,7 +36,7 @@ function numberedLines(json: OsmCourseJson, course: string | null): { all: numbe
   return { all: lines.length, numbered: refs.size };
 }
 
-/** what the converter made up, counted by what it is, in one line for the card ("" when it made up nothing) */
+/** what the converter made up, counted by what it is, in one line for the card ("" when it made up nothing; a stream left out for running underground is a note, not a make-up) */
 export function madeUpLine(fills: readonly { code: string }[]): string {
   const n: Record<string, number> = {};
   for (const f of fills) n[f.code] = (n[f.code] ?? 0) + 1;
@@ -44,7 +44,6 @@ export function madeUpLine(fills: readonly { code: string }[]): string {
   add('green', 'green', 'greens'); add('tee', 'tee', 'tees'); add('fairway', 'fairway band', 'fairway bands');
   add('pin', "pin at its green's middle", "pins at their greens' middles"); add('pin-moved', 'pin moved onto its green', 'pins moved onto their greens');
   add('par', 'par worked out from the length', 'pars worked out from the lengths'); add('tee-dropped', 'tee set left as plain ground', 'tee sets left as plain ground');
-  add('stream-hidden', 'underground stream not drawn', 'underground streams not drawn');
   return parts.join(', ');
 }
 
