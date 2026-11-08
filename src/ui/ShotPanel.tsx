@@ -36,7 +36,9 @@ const ang = (u: number): number => (u / METER.top) * Math.PI;
 const pt = (u: number, r: number): [number, number] => [CX + r * Math.cos(ang(u)), CY - r * Math.sin(ang(u))];
 
 /** what the meter draws besides the swing: the sweet spot's half width, the aim's mark, the 100% label, whether it is a putt */
-interface MeterLook { sweet: number; aimMark: number; full: string; putting: boolean }
+interface MeterLook { sweet: number; aimMark: number; full: string; putting: boolean;
+  /** T337: the pace window's half width in meter units (the Pace Putting Robot: where the power may stop and the putt can still drop), a green band round 100%; null: none */ pace: number | null;
+  /** T336: the Space power-spam is unlocked (Power Mash; a save from before the cards has it): the meter says so; locked, it says nothing of it */ boost: boolean }
 
 /** draws the meter at time t (s), with the swing's result line once it is done */
 function drawMeter(c: HTMLCanvasElement, m: SwingMeter | null, t: number, look: MeterLook, result: string | null) {
@@ -54,6 +56,7 @@ function drawMeter(c: HTMLCanvasElement, m: SwingMeter | null, t: number, look: 
   band(Math.max(METER.low, -look.sweet), Math.min(METER.top, look.sweet), 'rgba(74,222,128,0.95)', 18);
   for (let u = 0.25; u < 1; u += 0.25) tick(u, R - 8, R + 8, 'rgba(226,232,240,0.35)', 1);
   tick(0, R - 14, R + 14, '#f8fafc', 2); label(0, R + 24, 'snap', '#e2e8f0', 9);
+  if (look.pace !== null) { ctx.beginPath(); ctx.arc(CX, CY, R - 22, -ang(1 - look.pace), -ang(1 + look.pace), true); ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 7; ctx.lineCap = 'butt'; ctx.stroke(); label(1 - look.pace - 0.11, R - 32, 'pace', '#86efac', 9); }
   tick(1, R - 12, R + 12, '#fbbf24', 3); label(1, R + 26, look.full, '#fcd34d', 10);
   label((1 + METER.top) / 2, R - 22, 'over', 'rgba(254,202,202,0.9)', 9);
   if (look.aimMark > 0.02) { tick(look.aimMark, R - 10, R + 10, '#22d3ee', 2); label(look.aimMark, R - 22, 'aim', '#67e8f9', 9); }
@@ -73,7 +76,7 @@ function drawMeter(c: HTMLCanvasElement, m: SwingMeter | null, t: number, look: 
   ctx.font = '700 22px system-ui, sans-serif'; ctx.fillText(pw === null ? 'Ready' : `${Math.round(pw * 100)}%`, CX, CY - 8);
   const b = m ? m.boost() : 0;
   ctx.font = '600 11px system-ui, sans-serif'; ctx.fillStyle = b > 0 ? '#fca5a5' : 'rgba(226,232,240,0.6)';
-  ctx.fillText(b > 0 ? `boost +${Math.round(b * 100)}%${b >= BOOST.max ? ' (max)' : ''}` : 'Space: boost', CX, CY + 8);
+  ctx.fillText(b > 0 ? `boost +${Math.round(b * 100)}%${b >= BOOST.max ? ' (max)' : ''}` : look.boost ? 'Space: boost' : '', CX, CY + 8);
   if (result) { ctx.font = '700 13px system-ui, sans-serif'; ctx.fillStyle = '#fde68a'; ctx.fillText(result, CX, CY + 34); }
   ctx.font = '500 8px system-ui, sans-serif'; ctx.fillStyle = 'rgba(226,232,240,0.4)'; ctx.textAlign = 'left'; ctx.fillText('Stand In for swing meter art', 4, CH - 4);
 }
@@ -124,15 +127,18 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
   const meter = useRef<SwingMeter | null>(null), canvas = useRef<HTMLCanvasElement | null>(null), fired = useRef(false);
   const [phase, setPhase] = useState<SwingPhase>('ready');
   const [result, setResult] = useState<string | null>(null);
-  const look: MeterLook = { sweet: sweetSpot(skill, 0, kit?.sweet ?? 1), aimMark: meterMark(fullM > 0 ? playsM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting };
+  // (T336: the moves a card unlocks, and the cards in play; a stand-in game without cards: the legacy set, none shown)
+  const can = typeof game.shotCan === 'function' ? game.shotCan() : { boost: true, airspin: true }, cards = typeof game.shotCards === 'function' ? game.shotCards() : [], tools = typeof game.shotTools === 'function' ? game.shotTools() : null;
+  const look: MeterLook = { sweet: sweetSpot(skill, 0, kit?.sweet ?? 1), aimMark: meterMark(fullM > 0 ? playsM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting, boost: can.boost, pace: tools?.paceHalf ?? null };
   const swinging = phase === 'up' || phase === 'back', busy = phase !== 'ready';
+  const boostOn = useRef(can.boost); boostOn.current = can.boost;
   const last = game.lastShotReport();
 
   /** the swing's end (by the third click, or by itself past the arc's end): shows the miss, holds, then plays the shot */
   const finish = (m: SwingMeter) => {
     const o = m.outcome(); if (!o || fired.current) return;
     fired.current = true;
-    const e = swingEffect(o, game.shotSkill(), putting, game.shotKit()?.sweet ?? 1);
+    const e = swingEffect(o, game.shotSkill(), putting, game.shotKit()?.sweet ?? 1, game.shotKit()?.miss ?? 1);
     setPhase('done'); setResult(`${shapeText(e)} · ${Math.round(e.power * 100)}%`);
     window.setTimeout(() => game.ownerSwing(o), HOLD_MS);
   };
@@ -163,7 +169,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
       else if (k === ' ') {
         // a tap counts, a held key does not (the spam is the point)
         e.preventDefault(); e.stopImmediatePropagation();
-        const m = meter.current; if (!e.repeat && m && (m.phase === 'up' || m.phase === 'back')) m.press(performance.now() / 1000);
+        const m = meter.current; if (!e.repeat && m && boostOn.current && (m.phase === 'up' || m.phase === 'back')) m.press(performance.now() / 1000); // (T336: Space is Power Mash's: without it the key does nothing, and still never pauses the game)
       } else if (/^[qQeE]$/.test(k)) { e.preventDefault(); e.stopImmediatePropagation(); if (!e.repeat) api.current.cycle(k === 'q' || k === 'Q' ? -1 : 1); }
     };
     const up = (e: KeyboardEvent) => { if (!typing(e) && (e.key === 'Enter' || e.key === ' ' || /^[qQeE]$/.test(e.key))) { e.preventDefault(); e.stopImmediatePropagation(); } };
@@ -200,6 +206,17 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
           <p className="mt-1 text-xs tabular-nums text-slate-300">
             To the pin {putting ? t.distM.toFixed(1) : Math.round(t.distM)} m ({Math.round(t.distM * YARDS)} yd) · to the aim {putting ? aimM.toFixed(1) : Math.round(aimM)} m · {LIE_NAME[t.lie]}
           </p>
+          {cards.length > 0 && (
+            <div className="mt-1 flex flex-wrap items-center gap-1" data-testid="shot-cards" aria-label="Cards in play">
+              <span className="text-[11px] uppercase text-slate-400">Cards</span>
+              {cards.map(c => (
+                <span key={c.id} className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] ${c.off ? 'opacity-50 line-through' : ''}`} style={{ borderColor: c.here ? `${c.color}cc` : 'rgba(255,255,255,0.12)', background: c.here ? `${c.color}22` : undefined, color: c.here ? '#f1f5f9' : '#94a3b8' }}
+                  title={`${c.name}${c.off ? ' (banned in competition: off)' : c.here ? ' (in play for this club)' : ''}: ${c.lines.join(' · ')}`} data-testid={`shot-card-${c.id}`}>
+                  <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: c.color }} />{c.name}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1" onWheel={e => { if (e.deltaY) cycle(e.deltaY > 0 ? 1 : -1); }} title="Q / E or the mouse wheel change the club" data-testid="club-strip">
             {CLUB_GROUPS.map(g => {
               const list = clubs.filter(c => g.clubs.includes(c));
@@ -226,12 +243,18 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
             </div>
           )}
           {!putting && cond && cond.shape.lines.length > 0 && <p className="mt-1 text-[11px] text-amber-200" data-testid="shape-lines">{pickText(cond.shape.pick)}:{cond.shape.lines.join(' · ')}</p>}
+          {tools && (tools.lines.length > 0 || tools.scramble) && (
+            <div className="mt-1 space-y-0.5 rounded-md bg-slate-900/50 px-2 py-1" data-testid="shot-tools">
+              {tools.lines.map(l => <div key={l} className="text-[11px] text-sky-200">{l}</div>)}
+              {tools.scramble && <button disabled={busy} className={`chip ${tools.scramble.on ? 'chip-on' : ''}`} onClick={() => game.setShotScramble(!tools.scramble!.on)} title="Hit a second ball from the tee: the better of the two stands (once on each nine)" data-testid="scramble-toggle">Scramble: a second ball ({tools.scramble.left} left this nine){tools.scramble.on ? ' · on' : ''}</button>}
+            </div>
+          )}
           <p className="mt-1 text-xs tabular-nums text-slate-300">
             {levelOf(i.club) > 0 ? `${LEVEL_NAME[levelOf(i.club)]} ` : ''}{levelOf(i.club) > 0 ? CLUB_NAME[i.club].toLowerCase() : CLUB_NAME[i.club]}{i.club === suggested ? ' (suggested)' : ''}: {putting ? `putting scale, 100% is the hole (${t.distM.toFixed(1)} m)` : `full carry ${Math.round(fullM)} m (${Math.round(fullM * YARDS)} yd)`}
             {!putting && Math.abs(playsM - aimM) >= 3 ? <span className="text-cyan-200"> · the aim plays like {Math.round(playsM)} m</span> : null}
           </p>
           <p className="mt-1 min-h-[4.5em] text-[12px] text-slate-400">
-            {phase === 'ready' ? 'Enter or click the meter to swing: again for the power, once more at the snap line. Space during the swing: more power, riskier. Q / E or the wheel: club. Click the course to aim.'
+            {phase === 'ready' ? `Enter or click the meter to swing: again for the power, once more at the snap line.${can.boost ? ' Space during the swing: more power, riskier.' : ''} Q / E or the wheel: club. Click the course to aim.`
               : phase === 'up' ? 'Click (or Enter) to set the power…' : phase === 'back' ? 'Click (or Enter) at the snap line…' : ''}
           </p>
           {last && <p className="mt-1 text-[12px] tabular-nums text-slate-300">Last shot: {last.text}</p>}

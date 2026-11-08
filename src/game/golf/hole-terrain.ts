@@ -49,10 +49,13 @@ export function sampleLine(line: readonly Pt[], step = TERRAIN_STEP): Pt[] {
   return out;
 }
 
-/** the terrain of one hole on this field */
-export function holeTerrain(field: CourseHeightField, hole: Hole): HoleTerrain {
+/** a height read at a tile point (metres): the ground under a real course, the land plus the player's course height (T357) */
+export type HeightSampler = (x: number, y: number) => number;
+
+/** the terrain of one hole on this field (or this sampler: the ground the game reads, land and course height) */
+export function holeTerrain(field: CourseHeightField | HeightSampler, hole: Hole): HoleTerrain {
   const pts = sampleLine(hole.line);
-  const h = pts.map(p => sampleCourseHeight(field, p.x, p.y));
+  const h = pts.map(typeof field === 'function' ? (p => field(p.x, p.y)) : (p => sampleCourseHeight(field, p.x, p.y)));
   let minM = 0, maxM = 0, maxSlope = 0, fairwayMaxSlope = 0, along = 0, total = 0;
   for (let k = 0; k + 1 < pts.length; k++) total += Math.hypot(pts[k + 1]!.x - pts[k]!.x, pts[k + 1]!.y - pts[k]!.y);
   for (let k = 0; k < h.length; k++) {
@@ -79,6 +82,6 @@ export function holeTerrain(field: CourseHeightField, hole: Hole): HoleTerrain {
 }
 
 /** the terrain of every hole */
-export function courseTerrain(field: CourseHeightField, holes: readonly Hole[]): HoleTerrain[] {
+export function courseTerrain(field: CourseHeightField | HeightSampler, holes: readonly Hole[]): HoleTerrain[] {
   return holes.map(hole => holeTerrain(field, hole));
 }

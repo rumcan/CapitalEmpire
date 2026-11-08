@@ -11,7 +11,7 @@
 //   and the blade head) is no mods at all: the shot model plays exactly as it did before the bag. T336's cards add their mods after these.
 // Pure TS, no DOM, no draws.
 import { CLUB_ORDER, carryFor } from './shot';
-import { CLUB_BASE, FAMILY, applyMods, type Family, type Mod } from './mods';
+import { CLUB_BASE, FAMILY, applyMods, type Family, type MechId, type Mod } from './mods';
 import { SPIN_BACK_CAP } from './spin';
 import type { Club, GameSkills } from './types';
 
@@ -126,8 +126,8 @@ export function bagMods(bag: BagSave | null | undefined): Mod[] {
   for (const kind of ['shaft', 'head'] as const) { const m = partMod(kind, fittedPart(bag, kind)); if (m) out.push(m); }
   return out;
 }
-/** what the bag adds to a golfer's game (GameSkills): its mods and the clubs in it */
-export interface Gear { mods: readonly Mod[]; clubs: readonly Club[] }
+/** what the bag adds to a golfer's game (GameSkills): its mods and the clubs in it. T336 (#962): the cards add their mods after the bag's and `mech`, the mechanics they unlock (absent: the legacy set, as before the cards) */
+export interface Gear { mods: readonly Mod[]; clubs: readonly Club[]; mech?: readonly MechId[] }
 const DEFAULT_GEAR: Gear = { mods: [], clubs: clubsOf(null) };
 const memo = new WeakMap<object, Gear>();
 /** the bag's gear for a golfer's skills (gameSkills' third argument): the mods and the clubs, remembered for a bag object (profiles are replaced, not changed, so a bag is read again only when it changes) */

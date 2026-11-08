@@ -452,6 +452,17 @@ at 145°, nothing mirrored, each picture in the four views:
 | Pin flag sheet (`golf:pin-flag-wind`, 8 frames x 4 wind directions: S, W, N, E; strengths limp, light, firm) | 0.1 m / 2.2 m | `business:golf-pin-red` with the shader's ripple | a red flagstick cloth in four wind directions, each as limp, a light breeze and a firm wind (8 frames of the ripple loop), the white pole and the black base the same in every frame | P2 |
 | Tree sway sheet (`golf:tree-sway`, 4 frames) for the common trees | as each tree | the shader's shear | the same tree with its crown leaning left, upright and right in a gust (4 frames loop), the trunk fixed | P3 |
 
+## House lots (T353, #995: art requests)
+Course › Buildings › House lots (golf/estate.ts) draws a plot for sale as bare dirt inside the white dashed survey line with a post by its front corner; a sold plot
+with the builder's first delivery; a lot being built as the town's own building site; a finished lot as the town's own house lot (the saved game's lot model), so the
+houses need no art of their own. These are stand-ins, labelled "Stand In" on the card; the sun at the upper right, shadows at 145°, nothing mirrored, no lettering
+(the owner, 2026-10-21: signs are pictograms):
+| Sprite (id to use) | Footprint / height | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| For Sale post (`golf:estate-sale-post`, four views) | 0.3 m / 1.8 m | `newprop:shanty-signpost` | a short timber post with a white board hung from an arm, a red band across the top and a green golf-flag pictogram, no lettering | P2 |
+| Sold post (`golf:estate-sold-post`, four views) | 0.3 m / 1.8 m | the lumber stack and the earth heap | the same post with a diagonal red band across the board (a pictogram for sold), no lettering | P3 |
+| House lots tile (`estate` in `src/assets/ui/tiles/`, the flyout row) | tile | the house icon on the navy square | a little isometric diorama on a dark navy rounded square #1E2A44: three small houses in a row along a new street beside a fairway, a For Sale post at the near end, the light from the upper right, no lettering (the Build-tool tiles' style) | P2 |
+
 ## Your bag's club icons (T335, #961: art requests)
 The bag card (`src/ui/golf/BagCard.tsx`) and the shot panel's club strip draw each club as a small SVG stand-in (`src/ui/golf/ClubIcon.tsx`, labelled "Stand In for club icons" on the card): a shaft
 and a head by the club's family, the head tinted by its upgrade level (Garage-sale slate, Club sky, Tour green, Prototype gold). The real pictures, one square icon each on the owner's gold-on-charcoal UI
@@ -465,6 +476,54 @@ style, the sun at the upper right, nothing mirrored, 64 x 64 px, the club standi
 | Putter icon (`ui:club-putter`) | `ClubIcon` putter | a blade putter, flat head, vertical shaft | P2 |
 | Level frames (`ui:club-level-0..3`: Garage-sale, Club, Tour, Prototype) | the tile's border colour | four tile frames: worn slate, sky steel, emerald enamel, gold foil | P3 |
 | Putter shafts and heads (`ui:putter-shaft-*`, `ui:putter-head-*`: stock steel, whippy graphite, stiff counter-balanced; blade, mallet, lie-angle balanced) | text only | six small parts icons | P3 |
+
+## Your cards and the prize machine (T336, #962: art requests)
+The cards (`src/game/golf/cards/catalogue.ts`) have two stand-in looks today (`src/ui/golf/CardArt.tsx`, labelled "Stand In for card art"): a drawn glyph on a dark frame lit from the upper right, and, for the
+cards that have one, a painting taken from TrickOrTreat's treats (`src/assets/cards/<key>.webp`, cut by `scripts/assets/prep-card-art.mjs`: Power Mash is the button-masher's controller, Range Rat a Walkman, the
+machine's header the arcade cabinet). Every card needs its own painting in the same loot-card style: 16:9, 640 x 360 px, one object lit from the upper right on a deep purple-black ground with a soft glow in the
+rarity's colour, no lettering, nothing mirrored, no brand names or logos. Put the file in `src/assets/cards/<card id>.webp` and set the card's `art` (a card with a painting shows it everywhere at once).
+| Sprite (id to use) | Today | Prompt (short) | P |
+| --- | --- | --- | --- |
+| Infomercial Wonder-Wedge (`card:wonder-wedge`, common) | glyph | a chrome wedge on a shopping-channel starburst, a sticker reading nothing, grooves glowing | P2 |
+| Range Rat (`card:range-rat`, common) | TrickOrTreat's Walkman | a range-bucket of white balls with headphones hung on it | P3 |
+| Overspeed Sticks (`card:overspeed-sticks`, common) | glyph | three colour-banded swing-speed whip sticks crossed | P2 |
+| Lucky Ball Marker (`card:lucky-marker`, common) | glyph | a brass coin ball marker on a green, a four-leaf clover stamped on it | P2 |
+| Lead Tape Special (`card:lead-tape`, common) | glyph | a roll of grey lead tape with a strip peeled onto a driver head | P3 |
+| Power Mash (`card:power-mash`, uncommon) | TrickOrTreat's controller | a worn arcade button-masher, one big round button, sparks | P2 |
+| Arm-Lock Putter Grip (`card:arm-lock`), Broomstick Putter (`card:broomstick`) (uncommon) | glyph | a putter locked along a forearm; a very long putter anchored at the chest | P2 |
+| Swing-Plane Hoop (`card:swing-hoop`, uncommon) | glyph | a bright hoop on a belt around a golfer's waist, straps trailing | P3 |
+| Mid-Flight Whisper (`card:mid-flight-whisper`, rare) | glyph | a golf ball in flight with sound waves curling round it as if listening | P2 |
+| Hybrid Hero (`card:hybrid-hero`), Tour Van Fitting (`card:tour-van-fitting`) (rare) | glyph | a hybrid club with a cape; a fitting van with its back doors open on a rack of clubs | P2 |
+| Long Drive Shaft (`card:long-drive-shaft`), Lie-Angle Balanced Flatstick (`card:flatstick`), Garage Launch Monitor (`card:launch-monitor`) (epic) | glyph | a bent graphite shaft; a putter with a level bubble on its face; a basement screen with a ball-flight graph | P2 |
+| Tour Pro in a Bottle (`card:pro-in-a-bottle`), Non-Conforming Driver (`card:hot-driver`) (legendary) | glyph | a potion bottle with a tiny golfer inside; a glowing red-hot driver face with heat waves | P1 |
+| The junk (`dud:*`: Broken Tee, Ball Retriever (No Head), Scorecard Pencil, Cracked Divot Tool, Somebody Else's Ball, Sun-Bleached Visor, Expired Sunscreen, Empty Range Bag) | grey glyphs | eight bits of lost-and-found golf junk, each faded and a little sad, on the same dark ground | P3 |
+| Rarity backs and frames (`ui:card-frame-0..4`: common, uncommon, rare, epic, legendary) | a coloured bar and border | five card frames: worn grey, green enamel, blue steel, purple foil, orange gold foil with a glow | P2 |
+| Pull tokens (`ui:pull-bronze`, `-silver`, `-gold`) | coloured text chips | three small pull tickets: a copper, a silver and a gold prize ticket | P3 |
+| The prize machine (`business:prize-machine`, in the clubhouse and the pro shop, four views) and its front (`ui:prize-machine-front`) | the arcade cabinet painting in the machine's header | a 1985 prize vending machine with a glass front of golf prizes, a coin slot and a chute, lit from the upper right | P2 |
+
+## The rest of the cards (T337, #963: art requests)
+Same rules as the T336 table above (16:9, 640 x 360 px, one object lit from the upper right on a deep purple-black ground, a soft glow in the rarity's colour, no lettering, nothing mirrored, no brands). Today each card is a drawn
+glyph on the dark frame (`CardArt.tsx`, "Stand In for card art"; T337 added twelve glyphs: the laser, the eye, the heart, the eraser, the microphone, the robot, the wind, the slope, the dice, the beer, the flag and the trophy), except
+Backyard Trick Shot, which uses TrickOrTreat's yo-yo painting (`src/assets/cards/yoyo.webp`, cut by `scripts/assets/prep-card-art.mjs`). A card's painting goes in `src/assets/cards/<card id>.webp` and the card's `art` points at it.
+| Sprite (id to use) | Today | Prompt (short) | P |
+| --- | --- | --- | --- |
+| Putting Mirror (`card:putting-mirror`), Pre-Shot Routine Card (`card:routine-card`), Weighted Donut (`card:weighted-donut`) (common) | glyph | a small mirror with two ball-width lines on a green; a laminated card of numbered steps with a pencil; a doughnut-shaped club weight on a driver | P3 |
+| Tall Tees (`card:tall-tees`), Hack-Out Boots (`card:hackout-boots`) (common) | glyph | three very tall wooden tees in a row with a ball on top; a pair of muddy spiked boots standing in long grass | P3 |
+| Tour Caddie's Yardage Book (`card:yardage-book`), Dad's Old Persimmon (`card:persimmon`) (uncommon) | glyph | a small spiral book of hand-drawn hole maps with a pencil in the spine; a dark wooden driver with a worn leather head cover | P3 |
+| Tour Issue Balls (`card:tour-balls`), Two-Piece Rocket Balls (`card:rocket-balls`) (uncommon) | glyph | a box of three unmarked white balls with a ribbon; a ball with a small rocket flame trailing it | P3 |
+| Rake of Truth (`card:bunker-rake`), Fairway Finder (`card:fairway-finder`), Cold Beer, Hot Hands (`card:cold-beer`) (uncommon) | glyph | a bunker rake combing a perfect line; a flag with a compass needle on a fairway; a frosty bottle of golden beer, a little steam rising from a gripping hand | P3 |
+| Laser Rangefinder (`card:laser-rangefinder`) (uncommon) | glyph | a small black binocular-shaped rangefinder with a thin red beam to a far flag | P2 |
+| Lesson Voucher Book (`card:lesson-book`), Gambler's Dice (`card:gamblers-dice`) (uncommon) | glyph | a booklet of tear-off vouchers with a pencil; two dice on a green felt showing one golf ball pip each | P3 |
+| Slow-Mo Swing App (`card:slow-mo-app`), Green-Speed Nerd (`card:speed-nerd`), Pace Putting Robot (`card:pace-robot`) (rare) | glyph | a tablet showing a frozen swing with an arc overlay; a tiny nerd with thick glasses tilting a ramp for a ball; a small tin robot putting a ball with a measured stroke | P2 |
+| Wind Whisperer (`card:wind-whisperer`), Slope Mode (`card:slope-mode`) (rare) | glyph | a golfer cupping a hand to listen to curling streams of wind; a green drawn as a tilted contour map with a ball rolling | P2 |
+| Mic'd-Up Caddie (`card:mic-caddie`), Skins Hustler (`card:skins-hustler`), Sponsor Tent (`card:sponsor-tent`) (rare) | glyph | a caddie with a headset microphone pointing at a club; a man with a roll of banknotes behind his back grinning; a striped sponsor tent with a banner and a trophy | P2 |
+| Driver Off the Deck (`card:deck-driver`), Scramble Captain (`card:scramble-captain`) (rare) | glyph | a driver sitting on a fairway lie, the ball low on the grass; a captain's hat on a star with two balls flying side by side | P2 |
+| Carbon Everything (`card:carbon-bag`), The Hole-Whisperer's Putter (`card:putter-whisperer`) (epic) | glyph | a black carbon-weave golf bag with every club a matching dark shaft; a putter whose head is a small cupped ear listening to a hole | P2 |
+| Read the Feet (`card:read-the-feet`), Backyard Trick Shot (`card:trick-shot`) (epic) | glyph; TrickOrTreat's yo-yo | a pair of golf shoes with a glowing line along the green; a ball bouncing off a garage door, a trampoline and a yo-yo into a cup | P2 |
+| The Snowman Eraser (`card:snowman-eraser`), Self-Correcting Ball (`card:self-correcting-ball`) (legendary) | glyph | a pencil eraser rubbing out a big 8 on a scorecard; a ball with tiny steering fins and a gyroscope | P1 |
+| Ace Magnet (`card:ace-magnet`), Clutch Gene (`card:clutch-gene`) (legendary) | glyph | a horseshoe magnet pulling a golf ball into a cup across a green; a glowing heart in a ribbon of DNA | P1 |
+| The Help page's Cards tab (`ui:help-cards`) | the card list | a hand fanning eight cards, the top one's corner glowing | P3 |
+| Course tools (`ui:tool-laser`, `ui:tool-slope`, `ui:tool-read`, `ui:tool-pace`, `ui:tool-scramble`) | text chips on the shot panel | five small tool icons: a laser line, a hill, a green's grain arrow, a metronome, two balls | P3 |
 
 ## Place a real course (T356, #998: an art request)
 Course › *Place a real course…* is a row of the Course flyout with the generic trophy glyph today (no tile art; its three courses are rows with the pin glyph). Same tile rules as

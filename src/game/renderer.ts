@@ -1322,7 +1322,7 @@ export class GroundPainter {
       ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts));
     }
     // the course height's light over the painted course (T028b, T126): over the lot and paint fills, under the roads
-    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, 0.25); if (hl) this.heightLight(ctx, hl, M, W, H, L); ctx.setTransform(M); }
+    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, 0.25); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); ctx.setTransform(M); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF.filter(f => f.tex !== 'turf'), '#9a9184');
@@ -1339,6 +1339,14 @@ export class GroundPainter {
     return cv;
   }
 
+  /** T357: the course height's light over the map only. The land under a real course is not 0 at the map's edge (Woodhill's land is 24 tiles from it), and the light's grid
+   *  reaches a few points past the edge, where the heights are held: that margin would shade a band of the dark ground beyond the map. The tile rectangle of the map clips it */
+  private heightLightOnMap(ctx: C2D, g: HeightLightGrid, M: DOMMatrix, W: number, H: number, L: number, box: BBox) {
+    // a chunk whose tile box lies inside the map has no pixel beyond it (the clip is only for the few at the edge)
+    if (box[0] >= 0 && box[1] >= 0 && box[2] <= MAP && box[3] <= MAP) { this.heightLight(ctx, g, M, W, H, L); return; }
+    ctx.save(); ctx.setTransform(M); ctx.beginPath(); ctx.rect(0, 0, MAP, MAP); ctx.clip();
+    try { this.heightLight(ctx, g, M, W, H, L); } finally { ctx.restore(); }
+  }
   /** the course height's light (T126, ext/course-height/light.ts) on the W x H chunk ctx draws at cache level L, whose tile to pixel matrix
    *  is M, from its light grid g. All of it is canvas compositing on the GPU over the pixels the light touches, never a read-back (which
    *  would stall the bake until the GPU caught up: 50-150 ms a chunk):
@@ -1845,7 +1853,7 @@ export class GroundPainter {
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite, under, laid, sc ? softBand : null); ctx.setTransform(M); }
     // ---- 1a'''. the course height's light (T028b, T126): its slopes lit by the sun at the upper right and shaded away from it, its steep rises'
     //      cast shadows and its hollows' occlusion, over the grass, the lots and the painted course, under the living ground, car parks and roads
-    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, lite ? 1 : 2); if (hl) this.heightLight(ctx, hl, M, W, H, L); ctx.setTransform(M); }
+    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, lite ? 1 : 2); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); ctx.setTransform(M); }
     // ---- 1a''''. the living ground (T111): grass variety from what stands here and its ambient occlusion, over the grass, the lots and the
     //      painted areas, under the car parks and roads
     if (this.living.on || this.living.debug) { this.drawLiving(ctx, L, lite, box, M, Minv, W, H, X0, Y0); ctx.setTransform(M); }

@@ -6,6 +6,7 @@
 //   node scripts/dev/osm-search-shots.mjs --base http://localhost:5188/ --out E:/ClaudeTemp/T358
 // Needs a dev server (vite) on --base. One headless Edge, closed when done. Exits 1 on a failed check. Run it from the repository's root.
 import { chromium } from 'playwright-core';
+import sharp from 'sharp';
 import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -41,6 +42,17 @@ const overpass = body => {
   return J({ elements: [], remark: 'runtime error: no fixture for this query' });
 };
 
+// T357: the elevation tiles (AWS Terrain Tiles) are MOCKED too: every tile is a PNG made here (a plane that rises east and north with a hill on it, continuous across tiles), served
+// with the CORS and imagery-source headers the real bucket gives, and counted (a build with the ground height ticked asks for a few, one each; one unticked none; a reload none)
+const demRequests = [];
+const demTile = async (tx, ty) => {
+  const raw = Buffer.alloc(256 * 256 * 3), X0 = 18956 * 256, Y0 = 18817 * 256;
+  for (let py = 0; py < 256; py++) for (let px = 0; px < 256; px++) {
+    const X = tx * 256 + px, Y = ty * 256 + py, h = 1500 + 0.04 * (X - X0) - 0.03 * (Y - Y0) + 25 * Math.exp(-(((X - X0 - 200) ** 2) + ((Y - Y0 - 130) ** 2)) / (2 * 150 * 150)), v = h + 32768, k = (py * 256 + px) * 3;
+    raw[k] = Math.floor(v / 256); raw[k + 1] = Math.floor(v) % 256; raw[k + 2] = Math.floor((v - Math.floor(v)) * 256);
+  }
+  return sharp(raw, { raw: { width: 256, height: 256, channels: 3 } }).png().toBuffer();
+};
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
 const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
 await ctx.route(/^https:\/\/(nominatim\.openstreetmap\.org|overpass[^/]*)\//, route => {
@@ -49,6 +61,12 @@ await ctx.route(/^https:\/\/(nominatim\.openstreetmap\.org|overpass[^/]*)\//, ro
   if (url.hostname.startsWith('nominatim')) { const q = (url.searchParams.get('q') ?? '').toLowerCase(); requests.push({ kind: 'nominatim', at, q, header: req.headers()['x-requested-with'] }); return route.fulfill(nominatim(q)); }
   const body = decodeURIComponent((req.postData() ?? '').replace(/^data=/, '')); requests.push({ kind: 'overpass', at, body, host: url.hostname });
   return route.fulfill(overpass(body));
+});
+await ctx.route(/^https:\/\/s3\.amazonaws\.com\/elevation-tiles-prod\//, async route => {
+  const url = route.request().url(), m = /terrarium\/15\/(\d+)\/(\d+)\.png$/.exec(url);
+  if (!m) return route.fulfill({ status: 404, body: '' });
+  demRequests.push({ url, at: Date.now(), headers: route.request().headers() });
+  return route.fulfill({ status: 200, contentType: 'image/png', body: await demTile(+m[1], +m[2]), headers: { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'x-amz-meta-x-imagery-sources', 'x-amz-meta-x-imagery-sources': 'srtm/S26E028.tif' } });
 });
 const page = await ctx.newPage();
 page.on('pageerror', e => { console.log('[pageerror]', e.message); bad++; });
@@ -99,6 +117,11 @@ check(built, 'Build this course starts a new game on the imported course');
 const gstate = await page.evaluate(() => { const g = window.__game; return { osm: g.osmGame(), tees: g.golf.tees.length, pins: g.golf.pins.length, course: g.golf.course }; });
 check(gstate.osm?.name === 'Wingatepark Country Club' && gstate.osm.derived === true && gstate.osm.holes === 3 && gstate.osm.credit === '© OpenStreetMap contributors' && gstate.pins === 3, `the game carries golf.osm for it (the map's own name, derived, 3 holes, the credit): ${JSON.stringify(gstate.osm)}`);
 await page.waitForTimeout(2500);
+// T357: the box was ticked: the browser asked for the course's elevation tiles (a few, one request each, none twice, no custom header: a plain GET), and the game has the land
+const tilesAsked = demRequests.length, gp = await page.evaluate(() => { const g = window.__game, c = g.golf.course; return { info: g.landInfo(), rev: g.courseHeight.rev, at: [c[0] + 40, c[1] + 40], h: g.groundHeightAt(c[0] + 40, c[1] + 40), h2: g.groundHeightAt(c[0] + c[2] - 40, c[1] + 40) }; });
+check(tilesAsked >= 1 && tilesAsked <= 16 && new Set(demRequests.map(r => r.url)).size === tilesAsked, `Build with Real ground height ticked asked for ${tilesAsked} elevation tiles, each once`);
+check(demRequests.every(r => !r.headers['x-requested-with'] && !r.headers['authorization']), 'the tile requests are plain GETs (no custom header: no preflight)');
+check(gp.info?.label === 'SRTM, 30 m' && /Geological Survey/.test(gp.info.credit) && gp.info.reliefM > 5 && gp.h2 > gp.h, `the game has the downloaded course's ground: ${JSON.stringify(gp.info)}, ${gp.h.toFixed(1)} m at the west and ${gp.h2.toFixed(1)} m at the east (the plane rises east)`);
 await shot('4-game-on-the-imported-course');
 
 // 3b. the saved game of an imported course reloads whole (golf.osm, its markers, the course grid)
@@ -107,6 +130,8 @@ await page.reload({ waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
 await page.waitForTimeout(1500);
 const after = await page.evaluate(() => { const g = window.__game; return { osm: g.osmGame(), tees: g.golf?.tees.length, pins: g.golf?.pins.length, grid: !!g.courseGrid }; });
+const land2 = await page.evaluate(([x, y]) => { const g = window.__game; return { info: g.landInfo(), h: g.groundHeightAt(x, y) }; }, gp.at);
+check(land2.info?.label === 'SRTM, 30 m' && Math.abs(land2.h - gp.h) < 0.03 && demRequests.length === tilesAsked, `the save keeps the land: after the reload the ground is ${land2.h.toFixed(2)} m where it was ${gp.h.toFixed(2)} m, and no tile was asked for again (${demRequests.length} requests)`);
 check(after.osm?.id === 'way/4261725' && after.osm.derived === true && after.osm.holes === 3 && after.pins === 3 && after.tees >= 3 && after.grid, `the saved game of an imported course reloads whole: ${JSON.stringify(after.osm)} (${after.tees} tee markers, ${after.pins} pins)`);
 
 // 4. the picker is on the new-game card: a new game brings it back (the gear menu's New game does the same); Downloaded courses lists the course, a search already made sends nothing
@@ -117,6 +142,25 @@ const rows = await page.$$eval('[data-testid^=dl-row-]', els => els.map(e => e.t
 check(rows.length === 1 && rows[0].includes('Wingatepark Country Club') && rows[0].includes('3 holes'), `Downloaded courses lists the course: ${rows[0]}`);
 check((await page.$eval('[data-testid^=dl-grade-]', e => e.dataset.grade)) === 'partial', 'its row carries the Partial grade');
 await shot('5-downloaded-courses');
+// 4b. T357: the kept course's preview has Real ground height ticked; unticked, Build makes a flat course and asks for no tile
+{
+  const d0 = demRequests.length;
+  await page.click('[data-testid^=dl-open-]');
+  await page.waitForSelector(T('find-preview'), { timeout: 30000 });
+  await page.waitForFunction(() => document.querySelector('[data-testid=find-land-note]')?.textContent?.includes('kept in this browser already'), null, { timeout: 15000 }).catch(() => undefined);
+  check(await page.$eval(T('find-land'), e => e.checked) && (await page.$eval(T('find-land-note'), e => e.textContent)).includes('AWS Terrain Tiles') && (await page.$eval(T('find-land-note'), e => e.textContent)).includes('kept in this browser already'), 'the preview offers Real ground height, ticked, and says the tiles are kept in this browser already');
+  await shot('5b-preview-ground-height-box');
+  await page.click(T('find-land'));
+  check(!(await page.$eval(T('find-land'), e => e.checked)), 'the box unticks');
+  await page.click(T('find-build'));
+  await page.waitForFunction(() => window.__game.osmGame()?.id === 'way/4261725' && window.__game.ready, null, { timeout: 120000 });
+  await page.waitForTimeout(1500);
+  const flat = await page.evaluate(() => ({ info: window.__game.landInfo(), rev: window.__game.courseHeight.rev, note: document.querySelector('[data-testid=osm-flat]')?.textContent ?? null }));
+  check(!flat.info && demRequests.length === d0 && flat.rev >= 1, `unticked: no land (flat ground), no elevation tile asked for, and the greens still have their own tilt (course height rev ${flat.rev})`);
+  await page.evaluate(() => window.__game.newTown()); // (the card comes again for the new game, as in the next steps)
+  await openPicker();
+  await page.waitForSelector('[data-testid^=dl-row-]', { timeout: 20000 });
+}
 const n0 = requests.length;
 await type('wingate');
 await page.waitForSelector(T('find-near'), { timeout: 30000 });
@@ -232,7 +276,7 @@ check(await page.$$eval('[data-testid^=dl-row-]', els => els.length) === nd - 1 
 await shot('12-after-delete');
 
 // the live servers were never asked: every request to a map server was answered by this script
-check(requests.length > 0, `no live request: all ${requests.length} map-server requests were answered by the mocks (Nominatim ${count('nominatim')}, Overpass ${count('overpass')})`);
+check(requests.length > 0, `no live request: all ${requests.length} map-server requests were answered by the mocks (Nominatim ${count('nominatim')}, Overpass ${count('overpass')}) and all ${demRequests.length} elevation-tile requests too`);
 await browser.close();
 console.log(bad ? `\n${bad} check(s) FAILED` : '\nall checks passed');
 process.exit(bad ? 1 : 0);
