@@ -278,7 +278,7 @@ save keeps the sum (`golf.land`).
 
 The slope checks judge the player's own layer: a real hill is not the player's to smooth (the layer is held to 3 m), so a steep real fairway is not marked down and "Smooth the steep
 fairway" is not said of it; the rise and the plays-like length ("plays 316 m (-22 m)") are the real ground's. **Roads and cart paths follow the land**: the road tool lays flat
-ribbons as ever, nothing flattens the land under them (`flattenRoadsIn` still flattens the player's layer), so a road across a slope is lit as the slope it crosses. Where the player shapes
+ribbons as ever, nothing flattens the land under them (`flattenRoadsIn` still flattens the player's layer), so a road across a slope is lit as the slope it crosses; house lots (T353) stand on the land as it is too (the estate levels nothing). Where the player shapes
 the ground on a hillside the shaping sits on the land (a mound is 2 m on the slope).
 
 ## Credit
@@ -297,7 +297,7 @@ busy: try again in a minute"), a 404 or no network is `DemUnavailable` (the card
 with the box ticked. In tests every request is a fake (`tests/golf-osm-land.test.ts`: the request count, the gate's pauses, the cache, the refusals).
 
 ## Checks
-- `tests/golf-osm-land.test.ts` (36 tests; every request a fake): the terrarium decode through every PNG row filter; the sampling's alignment (north up, east right, a metre a metre: a tilted plane is read at its
+- `tests/golf-osm-land.test.ts` (34 tests; every request a fake): the terrarium decode through every PNG row filter; the sampling's alignment (north up, east right, a metre a metre: a tilted plane is read at its
   true slope) and the tile maths (Woodhill is in the tile the sketch cached); the smoothing (the 60 m ripple to under a tenth, an 800 m landform keeps 98%); the packing (within half a unit, a quarter of the 16-bit size);
   the credits; the shipped fixtures (their source, step and size); the land laid (relative to its own mean, true proportion, exactly 0 beyond the skirt, the slope continuous across the land's edge, no cliff; scaled courses keep
   their slopes; greens, tees and ponds level; the same twice; a turned spec reads the same ground turned); **Woodhill's NE high point is within 300 m of the tee of hole 5 or 6, hole 6 runs 22 m down the hill**, Rondebosch rises to
@@ -331,11 +331,15 @@ pans (average / p95, ms), the ground cache's bakes (median / p95 ms) and the gro
 | | ground + tiles | 186 | 182 | 183 | 184 |
 | average bake, all stages (ms) | Woodhill / Rondebosch | 41.2 / 31.8 | 40.3 / 29.6 | 38.8 / 68.5 | 41.7 / 31.6 |
 
-**The main thread does not move** (the land is baked in the workers; the main thread gets one 1 MB array when a game loads and reads it for the ball): 1.0 to 1.8 ms average and 1.4 to 3.0 ms p95 on both sides, against
+**The main thread does not move** (the land is baked in the workers; the main thread gets one 1 MB array when a game loads and reads it for the ball): 0.8 to 1.8 ms average and 1.1 to 3.0 ms p95 on both sides (with the third runs below), against
 the 8 ms budget, the spread between two runs of the same build as wide as the difference between the builds (the PC is shared with other agents' browsers: frames a second swing too, 27 to 53). **Memory is the same**: the ground plus the
 tile pictures peak at 129 to 186 MB on both sides (the budget is 192), the heap 212 to 258 MB. **The bakes**: the land puts the slope light into every chunk of the course (it was in none), so a chunk's bake carries about
 twenty-five canvas operations more (`heightLight`) and a few ms of the light grid's arithmetic; at 15% pan Woodhill's median bake is 60 to 64 ms against 53 to 57 (about 10% more), at 30% the same, Rondebosch's second run is level with
 lead/live's. **Rondebosch's first run with the land is an outlier** (the average bake 68 ms, the median 118, against 32 and 55 in its second run and 30 to 32 in lead/live's two): it is shown as it came (the PC is shared with other agents' browsers, and the same build's second run is level with lead/live's; see the third runs below). The land adds nothing to the main thread, nothing to the memory, and about a tenth to the workers' bake.
+
+**Third runs** (Rondebosch only, to re-test the outlier; the land's third run is on the tree after the second merge with lead/live, a15baae: T353's house lots, T336's cards, T378's mirror, so it also shows those cost nothing here): lead/live 1.01 / 1.5 ms at 30% and 1.19 / 1.8 at 15%, the average bake 25.7 ms, the ground plus tiles peak 185 MB;
+**with the land** 0.78 / 1.1 at 30% and 0.79 / 1.1 at 15%, the average bake 26.1 ms, peak 184 MB. The PC was quieter this time and the picture is the same as in the second runs: the main thread, the bakes and the memory are level with lead/live's, so the first run's outlier was
+the PC's load and not the land's (two of the land's three Rondebosch runs are level with lead/live's three; the raw outputs are in `E:/ClaudeTemp/T357/bench-*.out`).
 
 ## Left out, and for the lead to decide
 - **The light's strength on real ground.** Every 3 to 8% slope gets T263's gentle-ground gain (built for 1 to 3% rolls), so the response is strong everywhere and a course on a slope facing away from the sun is darker as a
