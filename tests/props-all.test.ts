@@ -29,7 +29,9 @@ test('the placeable props: every prop of the owner\'s new categories has its car
   const fresh = LIBRARY.filter(i => i.cat.startsWith('New: ') && !i.id.startsWith('object8:') && (i.kind !== 'tree' || i.id.endsWith(':ne')));
   const cards = new Set(placeable.map(d => d.id));
   for (const it of fresh) assert.ok(cards.has(it.id), `${it.id} (${it.cat}) has a card`);
-  assert.equal(placeable.filter(d => d.group.startsWith('new:')).length, fresh.length, 'a card for each, and no more');
+  // ...and no more: a card in a new group is a library New: item (the tournament kit moves seven of them to its own group, and the eight-view sets get one card each, their first view)
+  const freshIds = new Set(fresh.map(i => i.id));
+  for (const d of placeable) if (d.group.startsWith('new:') && !d.id.startsWith('object8:')) assert.ok(freshIds.has(d.id), `${d.key} is a library New: item`);
   // every new category is a group of its own, in the groups' order
   for (const cat of new Set(fresh.map(i => i.cat))) assert.ok(DECOR_GROUPS.some(g => g.id === `new:${cat.slice(5)}`), `${cat} is a group`);
   // the kit's, the desert's and the catalogue's own items are all there: every picture a card, a variant or a mixed brush places
