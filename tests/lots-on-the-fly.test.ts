@@ -13,6 +13,9 @@ import { frameOf, toFrame } from '../src/game/lots/preset-frame';
 import { OVERLAP, share } from '../src/game/lots/compose-core';
 import { LIBRARY } from '../src/game/library';
 import { isBuilding } from '../src/game/mirror';
+import { setCleanYards } from '../src/game/lots/clean-yards';
+// T385 (#1042): this file pins the old yards (the learned generator's house yards, the kit, the starter homes): the clean base is the game's house lot now (tests/clean-lots.test.ts)
+setCleanYards(false);
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 

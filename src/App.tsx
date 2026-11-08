@@ -266,6 +266,9 @@ export default function App() {
     // the lot lab (dev builds only: ?lotlab, the studio's Lot presets tab frames it): one lot composed as the game does, edited and saved as a preset
     let lotLabOff: (() => void) | undefined;
     if (import.meta.env.DEV && new URLSearchParams(location.search).has('lotlab')) void import('./game/dev/lot-lab').then(m => { if (!disposed) lotLabOff = m.installLotLab(g); });
+    // the studio's Lot review (T385, #1042; dev builds only: ?lotreview, the studio's Lot review tab frames it): the house lots of a generated town or the estate, ticked, marked and dressed
+    let lotReviewOff: (() => void) | undefined;
+    if (import.meta.env.DEV && new URLSearchParams(location.search).has('lotreview')) void import('./game/dev/lot-review').then(m => { if (!disposed) lotReviewOff = m.installLotReview(g); });
     setGame(g);
     const unsub = g.subscribe(bump);
     g.init({ bench: new URLSearchParams(location.search).has('bench') ? +(new URLSearchParams(location.search).get('bench') || 1) || 1 : 0 }).catch(e => setFatal(String(e)));
@@ -280,7 +283,7 @@ export default function App() {
     const focus = (e: FocusEvent) => { const t = e.target as HTMLElement | null; if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) g.releaseKeys(); };
     window.addEventListener('blur', release); document.addEventListener('visibilitychange', hidden); window.addEventListener('contextmenu', menu); window.addEventListener('focusin', focus);
     const iv = window.setInterval(bump, 500);
-    return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); holdOff(); window.removeEventListener('blur', release); document.removeEventListener('visibilitychange', hidden); window.removeEventListener('contextmenu', menu); window.removeEventListener('focusin', focus); clearInterval(iv); };
+    return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); lotReviewOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); holdOff(); window.removeEventListener('blur', release); document.removeEventListener('visibilitychange', hidden); window.removeEventListener('contextmenu', menu); window.removeEventListener('focusin', focus); clearInterval(iv); };
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < (t.scene ? 9000 : 4000)) : []; // (T242: one with a Set the scene button stays longer)

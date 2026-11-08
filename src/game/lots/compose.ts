@@ -10,6 +10,10 @@
 // from that preset (the house, its drive and walk), its boundary fence and street items, and gets its plants, props, cars and decals from the
 // learned generator (lot-gen.ts generateLayout), seeded by the lot's place on its street (a lot never changes on a reload, neighbours differ),
 // with a shipped model (lot-models/: a new town the latest, a saved town its own version, lotModel). ?oldlots composes as before.
+// T385 (#1042, #1039; the owner, 2026-11-08): a built HOUSE lot is composed as its clean base and nothing more (clean-yards.ts): the house facing its road, its drive and front
+// path, the fence of the lines it owns and at most three trees clear of all of them (cleanHouse below); no car, mailbox, bin, crate, toy or junk is ever generated, and a lot
+// whose preset holds no house is an empty lot. It holds for every preset a house lot draws (the owner's lab presets included) and every lot model version (an old save
+// recomposes clean on load: the models still tell the other uses apart). ?oldyards keeps the old yards.
 // The candidate list and its checks are compose-core.ts's. Pure TS, no DOM.
 import type { LotPatch } from '../ground-protocol';
 import { mulberry } from '../iso';
@@ -47,6 +51,14 @@ import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './vari
 import { presetTier, tierOf } from './tiers';
 import { buildGroups, groupOf as cellMembers, roleOf, sizeOf, zoneOf, type Role } from './groups';
 import { autoLot, clearAutoLots, dressStraight, isBigLot, relayParks, type AutoTemplate } from './autolot';
+// T385 (#1042): the clean base of a house lot (clean-yards.ts; cleanHouse and cleanLot below): its own imports, on lines of their own
+import { hit } from './compose-core';
+import { areaOf } from './house-class';
+import { texOf } from './autolot';
+import type { PresetPatch } from './presets';
+import { cleanYards } from './clean-yards';
+import { buildingRect, cleanGround, cleanTrees, hedgeRun, type Box as CleanBox } from './clean-lot';
+import { facingView } from './house-facing';
 import { centreOf, isCentre, partOf, widen } from './centre-biz';
 import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
@@ -571,6 +583,10 @@ const HOME_DECOR = /mobile-home|camper|pop-?up-caravan|(?<!boat-)trailer/;
 let STARTERS: string[] | null = null;
 const starterPalette = (): readonly string[] => (STARTERS ??= LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && (isBuilding(it) || HOME_DECOR.test(it.id)) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:')
   && !REAR.test(it.id) && !drawnAsStandIn(i) && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort());
+/** T385 (#1042, #1039): a clean house lot (clean-yards.ts) shows a starter BUILDING, never a trailer or a mobile home: those are decor props, which houseBase left out
+ *  of a generated lot, so a tier-0 lot with a mobile home in its house's place drew its yard round no house at all (the owner: "why is there a lot with no house?") */
+let STARTER_BUILDINGS: string[] | null = null;
+const starterBuildings = (): readonly string[] => (STARTER_BUILDINGS ??= starterPalette().filter(id => { const it = BY.get(id); return !!it && isBuilding(it); }));
 /** a fitted preset's main building (the house or the shop): the index of its widest building (its half extents' area), -1 for none */
 function mainIndex(fit: Fitted, f: PresetFrame): number {
   const half = frameHalf(f); let k = -1, a = 0;
@@ -606,7 +622,7 @@ function remixOf(fit: Fitted, preset: LotPreset, lot: LotGeom, st: ComposeState,
   };
   // the starter home: a tier-0 res lot's house spot (a removed house's stand-in keeps its own place: the owner's picture is the one removed)
   if (preset.use === 'res' && cap === 0 && mainK >= 0 && fit.from[mainK] !== undefined && !removedOf(preset.props[fit.from[mainK]!]?.id ?? '') && unitOf(seed, mainK, 0x57) < STARTER_CHANCE) {
-    const list = starterPalette(), n = list.length;
+    const list = cleanYards() ? starterBuildings() : starterPalette(), n = list.length;
     if (n) { const at = mix(seed, mainK, 0x58) % n; for (let t = 0; t < n; t++) { const id = list[(at + t) % n]!; if (allows(ALLOC, id, road, state) && place(mainK, id, STARTER_RULES)) break; } }
   }
   for (let k = 0; k < fit.props.length; k++) {
@@ -1029,6 +1045,122 @@ function chainRing(B: Build) {
   B.run(CHAIN, 0.4, D - 0.4, W - 0.4, D - 0.4);
 }
 
+// ---------- T385 (#1042, #1039): the clean base of a house lot (clean-yards.ts)
+/** a lot's preset as lotPreset gives it */
+type LotP = { preset: LotPreset; fit: Fitted; frame: PresetFrame };
+/** a preset-frame box as a lot-frame box (the lot's a runs the other way along the street when its u is against the preset frame's x) */
+const inLotFrame = (f: PresetFrame, lot: LotGeom, b: CleanBox): CleanBox => (lot.u.x * f.u.x + lot.u.y * f.u.y > 0 ? b : [lot.w - b[2], b[1], lot.w - b[0], b[3]]);
+/** whether a lot owns its back line: n points to +x or +y; on a road at 45 degrees (roads 3 and 7: n.x + n.y is zero, two lots back to back) the one whose n points to +x (autolot.ts ownedOf) */
+const ownsBackLine = (lot: LotGeom): boolean => { const s = lot.n.x + lot.n.y; return Math.abs(s) > 1e-6 ? s > 0 : lot.n.x > 0; };
+/** a building that is no home however big it stands (a preset whose house is gone is left with its outhouse, greenhouse, coop, kennel or box car) */
+const NOT_A_HOME = /outhouse|glasshouse|coop|doghouse|boxcar|treehouse|birdhouse/;
+/** a clean base: the preset's house and garage (its facing set right), its drive and path, and the index of the house; the rest of the preset is left out; facing: the
+ *  eighth turns the house's picture is off the road */
+interface CleanPick { base: LotP; house: number; ground: ReturnType<typeof cleanGround>; facing: number }
+/** the house a lot shows in place of one that cannot face its road: a dwelling of the lot's road, state and tier whose picture faces the street, nearest the
+ *  old one in size, that fits its spot (T297's swap rules, placeMember) and shares no more of its footprint with another building than the lot allows */
+function facingHouse(q: PresetProp, k: number, ok: (n: PresetProp, k: number) => boolean, lot: LotGeom, f: PresetFrame, st: ComposeState, state: PresetState): PresetProp | null {
+  const road = roadOf(lot.n), cap = st.tier ?? 3, a0 = areaOf(baseOf(q.id));
+  const ids = housePalette().filter(id => tierOf(id) <= cap && allows(ALLOC, id, road, state) && facingView(id, f).exact).sort((x, y) => Math.abs(areaOf(x) - a0) - Math.abs(areaOf(y) - a0) || (x < y ? -1 : 1));
+  for (const id of ids.slice(0, 40)) {
+    const m = placeMember(q, id, lot, f, HOUSE_SWAP_RULES); if (!m) continue;
+    const n: PresetProp = { ...m.prop, view: 0 };
+    if (ok(n, k)) return n;
+  }
+  return null;
+}
+/** the clean base of a fitted house preset (T385): only its house and garage stay, each drawn in the view that faces the road (the preset's turned view
+ *  where its picture faces the street in view 0 and stands clear of the others, else a house of the lot's road that does face it, in the house's place), and
+ *  only its drive and front path (cleanGround: its own, or made); no shed, no trailer, no prop, no plant, no ground decal. null when the preset has no
+ *  house (the lot is then an empty lot) */
+function cleanBase(p: LotP, lot: LotGeom, st: ComposeState): CleanPick | null {
+  const f = p.frame, half = frameHalf(f), fit = p.fit, state = stateOf(st.level, st.decline) ?? p.preset.state, keep: number[] = [];
+  // (the house is the widest building that is no open structure, as houseBase finds it; a house whose name says "garage" or "carport" is still the house:
+  // groups.ts roleOf reads the name. Any other building is kept only when it is a garage or a carport)
+  let main = -1, area = 0;
+  fit.props.forEach((q, i) => {
+    const it = BY.get(q.id); if (!it || !isBuilding(it) || removedOf(q.id) || isOpenStructure(q.id) || NOT_A_HOME.test(q.id)) return;
+    const h = half(q), a = h.ha * h.hb; if (a > area) { area = a; main = i; }
+  });
+  if (main < 0) return null;
+  let house = -1;
+  fit.props.forEach((q, i) => {
+    const it = BY.get(q.id); if (!it || !isBuilding(it) || removedOf(q.id)) return;
+    if (i !== main && roleOf(q.id) !== 'garage') return;
+    keep.push(i); if (i === main) house = keep.length - 1;
+  });
+  const props = keep.map(i => fit.props[i]!), from = keep.map(i => fit.from[i]!), standIn = fit.standIn ? keep.map(i => fit.standIn![i]) : undefined;
+  const ok = (n: PresetProp, k: number): boolean => {
+    const b = boxAt(n, half(n));
+    return b[0] >= -EPS && b[2] <= lot.w + EPS && b[1] >= -EPS && b[3] <= lot.d + EPS && props.every((o, j) => j === k || share(b, boxAt(o, half(o))) <= OVERLAP);
+  };
+  // every building faces the street: view 0 when its picture faces the road in it (faceStreet left the preset's view where a yard prop was in the way: those props
+  // are gone); the house, when it cannot, is another house of the lot's road in its place
+  props.forEach((q, k) => {
+    if (facingView(q.id, f, q.view).exact) return;
+    const n: PresetProp = { ...q, view: 0 };
+    if (facingView(q.id, f, 0).exact && ok(n, k)) { props[k] = n; return; }
+    if (k === house) { const alt = facingHouse(q, k, ok, lot, f, st, state); if (alt) props[k] = alt; }
+  });
+  const hq = props[house]!, hb = boxAt(hq, half(hq)) as CleanBox;
+  const ground = cleanGround(fit.patches, lot.w, lot.d, hb, { drive: texOf('res', state, 'drive', 'paving'), walk: texOf('res', state, 'walk', 'paving') });
+  const patches = [ground.drive, ground.walk].filter((a): a is PresetPatch => !!a);
+  return { base: { ...p, fit: { ...fit, props, from, patches, decals: [], ...(standIn ? { standIn } : {}) } }, house, ground, facing: facingView(hq.id, f, hq.view).off };
+}
+/** draws a built house lot as its clean base (T385: clean-yards.ts): its house and garage, its drive and path, the fence of the lines it owns (panels; a
+ *  hedge on a road at 45 degrees) taken off the drive and the path, and at most three trees clear of all of them (cleanTrees). Nothing else: no street
+ *  item, no yard prop, no plant, no car, no ground mark, whatever its preset (a frozen one, the owner's or a generated lot's) holds. False, with nothing
+ *  drawn, when the preset has no house to stand on the lot */
+function cleanHouse(B: Build, lot: LotGeom, st: ComposeState, p: LotP): CleanPick | null {
+  const c = cleanBase(p, lot, st); if (!c) return null;
+  const f = p.frame, road = roadOf(lot.n);
+  B.drops = null;
+  fromPreset(B, lot, st, c.base);
+  B.cap = Infinity;
+  const ground = [c.ground.drive, c.ground.walk].filter((a): a is PresetPatch => !!a).map(a => boxOfPts(a.pts) as CleanBox);
+  const open = ground.map(b => inLotFrame(f, lot, b));
+  if (road % 2 === 0) boundaryFence(B, lot);
+  else {
+    // a hedge in place of panels on a road at 45 degrees (no fence picture runs along a screen axis: autolot.ts boundary): the side line the lot owns, and its back
+    const e = 0.9, side = fenceSide(lot, B.W), sx = side === 0 ? e : B.W - e, r = mulberry(mix(st.seed, 0x386));
+    hedgeRun(B, sx, Math.min(B.D - e, FENCE_FRONT + 0.4), sx, B.D - e, open, r);
+    if (ownsBackLine(lot)) hedgeRun(B, e, B.D - e, B.W - e, B.D - e, open, r);
+  }
+  // the fence never crosses the drive or the path
+  for (let i = B.items.length - 1; i >= 0; i--) { const it = B.items[i]!; if (it.boundary && B.patches.some(a => (a.kind === 'drive' || a.kind === 'walk') && hit(it.fp, a.quad))) B.items.splice(i, 1); }
+  const houses = B.items.filter(it => { const lib = BY.get(it.id); return !!lib && isBuilding(lib); }).map(it => buildingRect(LIB_AT.get(it.id)!, it.x, it.y, it.flip, it.s, it.fp));
+  cleanTrees(B, f, { houses, ground }, mulberry(mix(st.seed, 0x385)));
+  return c;
+}
+/** a built house lot's composition, the clean base (T385) of the first candidate that gives a house that STAYS on the lot: the lot's own preset, then a generated house lot
+ *  (autolot.ts: the lowest tier that has a house for the lot's road, a corner house last: a preset left with no house, and a starter lot whose tier has no house to deal, are
+ *  the lots that drew a yard round no house, T383). The house must survive done() (a building past the lot line is dropped there); on a first pass it must also have a drive or
+ *  parking pad (the lot's own preset: it need only face the road) and face the road (exactly on a map-axis road, the nearest view on a road at 45 degrees); a second pass
+ *  takes any house that stays; no candidate: an empty lot
+ *  (its fence lines alone), never a yard with no house */
+function cleanLot(lot: LotGeom, st: ComposeState, lp: LotP | null): Composition {
+  const state = stateOf(st.level, st.decline) ?? 'built', odd = roadOf(lot.n) % 2 === 1;
+  const fresh = () => new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
+  const auto = (tier: number, tpl: AutoTemplate) => (): LotP | null => {
+    const pr = autoLot(lot, 'res', tier, mix(fnv(`${streetKey(lot)}#${streetSlot(lot)}#auto`), st.remix ?? 0, 0x305), state, tpl);
+    return pr && pr.props.some(q => isBuildingId(q.id)) ? { preset: pr, fit: fitPreset(pr, lot.w, lot.d), frame: presetFrame(lot, pr) } : null;
+  };
+  const makers: (() => LotP | null)[] = [() => (lp && lp.preset.use === 'res' ? lp : null), auto(Math.max(1, st.tier ?? 3), 'house'), auto(3, 'house'), auto(3, 'corner')];
+  const made: (LotP | null | undefined)[] = [];
+  for (const strict of [true, false]) for (let k = 0; k < makers.length; k++) {
+    if (made[k] === undefined) made[k] = makers[k]!();
+    const cand = made[k]; if (!cand) continue;
+    const B = fresh(), pick = cleanHouse(B, lot, st, cand); if (!pick) continue;
+    const c = B.done();
+    if (!c.props.some(q => isBuildingId(q.id))) continue;
+    // (the lot's own preset keeps its house when it faces the road, drive or none: the owner's and the frozen houses stay the houses they were; a generated house must have its drive too)
+    if (strict && (pick.facing > (odd ? 1 : 0) || (k > 0 && !c.ground.some(a => a.drive)))) continue;
+    return c;
+  }
+  const E = fresh(); boundaryFence(E, lot); E.clearDrives();
+  return E.done();
+}
+
 /** T219 (P27): an iconic place's whole preset (lots/iconic.ts) on its own footprint, drawn as a whole preset draws (its props kept as authored,
  *  each turned to the footprint's facing, never mirrored; its patches; its decals as the ground marks; nothing procedural). Deterministic */
 export function composeWhole(lot: LotGeom, preset: LotPreset, seed: number): Composition {
@@ -1051,6 +1183,13 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
   // a preset that draws alone (a farm's, and a whole preset's: the lot lab's forced one, or the approved one picked for the lot): no street items, fences,
   // leaf marks or decline touches; its decals are the lot's ground marks
   const use = presetUse(st), lp = st.preset !== undefined || use ? lotPreset(lot, st) : null;
+  // T385 (#1042, #1039): a built house lot is its clean base (clean-yards.ts) whatever preset it draws (a frozen one, the owner's or a generated lot): the house
+  // facing its road, its drive and path, the fence and at most three trees, nothing else. A lot whose preset holds no house is an empty lot (its fence lines
+  // alone, as the engine draws an empty lot: the block's grass shows): never a yard with no house. The lot lab's forced preset and template stay as the owner
+  // lays them out (?oldlots, setGeneratedLots(false), is every lot as its frozen preset has it: the clean base is the generated lots')
+  if (GENERATED && cleanYards() && use === 'res' && st.preset === undefined && st.autoTemplate === undefined && st.level >= LV.BUILT) {
+    return cleanLot(lot, st, lp);
+  }
   if (lp && (lp.preset.use === 'farm' || lp.preset.whole)) { B.keepAll = true; fromPreset(B, lot, st, lp); decalMarks(B, lp.frame, lp.fit.decals); return B.done(); }
   const angled = isAngled(lot);
   // every lot but a house's and an industrial yard's draws the boundary fence on its own side lines (a shared line gets one fence); the drive's

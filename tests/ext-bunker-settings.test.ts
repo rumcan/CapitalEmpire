@@ -11,7 +11,7 @@ test('approved defaults and JSON round trips preserve every exact appearance val
   const defaults = clampBunkerSettings(JSON.parse(JSON.stringify(DEFAULT_BUNKER_SETTINGS)));
   assert.deepEqual(defaults, DEFAULT_BUNKER_SETTINGS);
   // the approved look, but the course draws the grass round a bunker: no own grass bands, no rim mound; the edge soil starts at the earth scale
-  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, depth: 0.3, settings: { ...APPROVED_APPEARANCE.settings, collar: 0.05, firstCut: 0.05, rim: 0, wall: 1.2, wallLow: 0.25, soilScale: APPROVED_APPEARANCE.settings.earthScale, sandAngle: 0, sandExposure: 1 } });
+  assert.deepEqual(bunkerAppearance(defaults), { ...APPROVED_APPEARANCE, depth: 0.3, settings: { ...APPROVED_APPEARANCE.settings, collar: 0.05, firstCut: 0.05, rim: 0, wall: 1.2, wallLow: 0, soilScale: APPROVED_APPEARANCE.settings.earthScale, sandAngle: 0, sandExposure: 1 } });
   assert.equal(defaults.version, 1);
   assert.equal(defaults.depth, 0.3);
   assert.equal(defaults.collar, 0.05);
@@ -111,6 +111,31 @@ test('a game save keeps only changed defaults; an older full save drops the form
   assert.equal(old.defaults.depth, DEFAULT_BUNKER_SETTINGS.depth); assert.equal(old.defaults.wall, DEFAULT_BUNKER_SETTINGS.wall); assert.equal(old.defaults.shadow, 2);
   const chosen = new BunkerController(); chosen.setDefaults({ depth: APPROVED_APPEARANCE.depth });
   const again = new BunkerController(); again.load(chosen.serialize(), null); assert.equal(again.defaults.depth, APPROVED_APPEARANCE.depth, 'a depth chosen on purpose survives');
+});
+
+// T367 (#1022; the owner, 2026-11-08: "change default of the bunker wall with no green behind to 0"): the Bunker look's "Wall height (no green behind)"
+// (wallLow) now starts at 0 (it was 0.25 m). Only the default moved: a value a save holds is its own, whatever the old or new default is.
+test('the wall with no green behind defaults to 0; a value a save holds stays as saved', async () => {
+  const { BunkerController } = await import('../src/game/ext/bunker-look/controller');
+  const field = BUNKER_SETTING_FIELDS.find(f => f.key === 'wallLow')!;
+  assert.equal(DEFAULT_BUNKER_SETTINGS.wallLow, 0, 'the default');
+  assert.deepEqual([field.min, field.max, field.step], [0, 2, 0.05], 'the slider still runs 0 to 2 m');
+  assert.equal(clampBunkerSettings(undefined).wallLow, 0); assert.equal(clampBunkerSettings({}).wallLow, 0, 'absent: the default');
+  assert.equal(bunkerAppearance(DEFAULT_BUNKER_SETTINGS).settings.wallLow, 0, 'the bake gets it');
+  assert.equal(DEFAULT_BUNKER_SETTINGS.wall, 1.2, 'the green side is as it was');
+  // a game save keeps what differs from the defaults: the new default is not written, a moved slider is
+  const plain = new BunkerController(); assert.ok(!('wallLow' in plain.serialize().defaults), 'the default is not saved');
+  const moved = new BunkerController(); moved.setDefaults({ wallLow: 0.8 });
+  const saved = moved.serialize(); assert.equal(saved.defaults.wallLow, 0.8);
+  const back = new BunkerController(); back.load(JSON.parse(JSON.stringify(saved)), null); assert.equal(back.defaults.wallLow, 0.8, 'a chosen value survives a save and a load');
+  // 0.25, the old default, is a value like any other once a save holds it: an older save's full snapshot, a custom bunker's snapshot
+  const full = new BunkerController(); full.load({ version: 1, defaults: { ...DEFAULT_BUNKER_SETTINGS, wallLow: 0.25 }, custom: [] }, null);
+  assert.equal(full.defaults.wallLow, 0.25, 'an older full save keeps its 0.25');
+  const sparse = new BunkerController(); sparse.load({ version: 1, sparse: true, defaults: { version: 1, shadow: 2 }, custom: [] }, null);
+  assert.equal(sparse.defaults.wallLow, 0, 'a save that never moved the slider follows the default'); assert.equal(sparse.defaults.shadow, 2);
+  assert.equal(readBunkerSettings({ ...DEFAULT_BUNKER_SETTINGS, wallLow: 0.25 })?.wallLow, 0.25, 'a custom bunker keeps its own snapshot');
+  assert.equal(resolveBunkerSettings(clampBunkerSettings({ wallLow: 0.5 }), { ...DEFAULT_BUNKER_SETTINGS, wallLow: 0.25 }).wallLow, 0.25, 'and the global default does not reach it');
+  assert.equal(resolveBunkerSettings(clampBunkerSettings({ wallLow: 0.5 })).wallLow, 0.5, 'an inheriting bunker follows the global value');
 });
 
 test('a bunker look gives the bake its sand size, turn and exposure and its own depth, walls and pictures', async () => {
