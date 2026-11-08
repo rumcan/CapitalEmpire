@@ -4,7 +4,7 @@
 // Headless: npm test.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compose, lotPresets, setLotRemix, type ComposeState, type LotGeom } from '../src/game/lots/compose';
+import { compose, lotPresets, setLotRemix, setLotSetback, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { REACH } from '../src/game/lots/compose-core';
 import { LU, LV } from '../src/game/lots/town';
 import { axisViews, eightRingOf, footprintOf, sizeKey, sizeViews } from '../src/game/lots/preset-art';
@@ -105,4 +105,23 @@ test('a shop or venue building stands behind the lot line on every road: the tow
   console.log(`T376 town lots: ${checked} buildings checked, ${padded} with a picture pad, ${bad.length} over the line`);
   assert.ok(checked > 100, 'the lots have buildings');
   assert.deepEqual(bad.slice(0, 12), [], `${bad.length} buildings over the line: ${summary(bad)}`);
+});
+
+test('without the setback the shops do stand over the pavement (what the checks above would catch; setLotSetback(false) is the old look)', () => {
+  let checked = 0, over = 0, deepest = 0;
+  setLotSetback(false);
+  try {
+    for (const biz of SHOP_PALETTE) for (const road of ROADS) for (const [w, d] of [[12, 14], [14, 14], [16, 14], [20, 18]]) {
+      const lot = lotOn(road, w!, d!);
+      for (const q of compose(lot, lotOf(LU.COM, biz, 23)).props) {
+        const it = BY.get(q.id); if (!it || !isBuilding(it) || q.street) continue;
+        const b = baseOf(q, lot); checked++;
+        if (b.front < -TOL) { over++; deepest = Math.max(deepest, -b.front); }
+      }
+    }
+  } finally { setLotSetback(true); }
+  console.log(`T376 without the setback: ${over} of ${checked} shop buildings over the line, the deepest ${deepest.toFixed(2)} tiles (${(2 * deepest).toFixed(1)} m)`);
+  assert.ok(checked > 100, 'the lots have buildings');
+  assert.ok(over >= 0.1 * checked, `${over} of ${checked} over the line without the setback: the checks above see the fault`);
+  assert.ok(deepest > 0.4, `the deepest is ${deepest.toFixed(2)} tiles`);
 });

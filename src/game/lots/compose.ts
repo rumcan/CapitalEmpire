@@ -414,6 +414,11 @@ function faceStreet(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame
   return props.some((p, k) => p !== fit.props[k]) || kept ? { ...fit, props, facing: kept } : fit;
 }
 // ---------- T376 (#1032): the commercial buildings stand behind the pavement
+/** whether the commercial buildings are set back behind the lot's front line (on; setLotSetback(false) draws the lots as before T376: the lot lab's coverage, and the
+ *  tests that show what the setback fixes) */
+let SETBACK = true;
+export function setLotSetback(on: boolean): void { SETBACK = on; }
+export const lotSetback = (): boolean => SETBACK;
 /** T376 (#1032, the owner: "the buildings that are going onto the pavement ... the commercial buildings"): a shop's or venue's buildings stand with their
  *  base behind the lot's front line, the pavement lying beyond it: the footprint (a preset may leave it REACH over the line) and the ground contact of its
  *  picture (base-pad.ts basePad: steps, door mats, planters, kerbs) both at b >= 0. A building too far forward moves straight back by what lacks, as far as
@@ -421,7 +426,7 @@ function faceStreet(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame
  *  out by done(), as an overlap always is: a shopping cart or a crate behind a shop's front is lost, the shop is not). Awnings
  *  and signs above head height cross the line as they do: only ground contact counts. The other uses are left as they are */
 function setBack(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): Fitted {
-  if ((preset.use !== 'com' && preset.use !== 'tour') || !fit.props.length || preset.id === 'auto:centre') return fit;
+  if (!SETBACK || (preset.use !== 'com' && preset.use !== 'tour') || !fit.props.length || preset.id === 'auto:centre') return fit;
   const road = roadOf(lot.n), half = frameHalf(f), props = fit.props.slice(), boxes = fit.props.map(q => boxAt(q, half(q)));
   let moved = 0;
   props.forEach((q, k) => {
