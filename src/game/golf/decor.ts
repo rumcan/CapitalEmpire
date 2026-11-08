@@ -229,6 +229,27 @@ export const shownIn = (d: Pick<DecorItem, 'group' | 'id'>, view: 'course' | 'to
 /** where an item placed from a view stands: its own place, or the view's for an item of both */
 export const standsIn = (d: Pick<DecorItem, 'group' | 'id'>, view: 'course' | 'town'): 'course' | 'town' => { const p = placeOf(d); return p === 'both' ? view : p; };
 
+// ---------------------------------------------------------------- T369: what the Props panel lists
+
+/** the panel's view of the catalogue: where it was opened from (Decoration the course, Town decoration the town), its group (Town decoration
+ *  › Buildings), the "All props" box, and the group a flyout opened (Props ▸ Plants: that group alone) */
+export interface PropsView { where: 'course' | 'town'; group: DecorGroup | null; all: boolean; focus: DecorGroup | null }
+/** every prop the tool can place: the catalogue less what the panel keeps out (a hole frame's tree, which Frame with trees plants) */
+export const placeableProps = (): readonly DecorItem[] => DECOR.filter(d => !d.hidden);
+/** T369 (the owner, 2026-11-08: "I also can't see all props when I click the checkbox"): the groups the Props panel lists, in the groups' order,
+ *  each with its cards. All props lists every card of every group: the place's filter (shownIn) is off and a group the flyout opened (Props ▸
+ *  Plants) no longer narrows it, which it did before, so the box named "All props" showed only that group. Otherwise the view's place filters the
+ *  cards and a focused group shows alone; the town's Buildings are their own view (all of them, no filter). A group with no card is left out. */
+export function propsShown(v: PropsView): { id: DecorGroup; name: string; items: DecorItem[] }[] {
+  const buildings = v.where === 'town' && v.group === 'buildings';
+  return DECOR_GROUPS
+    .filter(g => (buildings ? g.id === 'buildings' : v.all || g.id !== 'buildings') && (buildings || v.all || !v.focus || g.id === v.focus))
+    .map(g => ({ id: g.id, name: g.name, items: DECOR.filter(d => d.group === g.id && !d.hidden && (buildings || shownIn(d, v.where, v.all))) }))
+    .filter(g => g.items.length > 0);
+}
+/** how many cards the panel shows in a view (the "n of m props" line under the box, and the test: All props shows every placeable prop) */
+export const propsCount = (v: PropsView): number => propsShown(v).reduce((n, g) => n + g.items.length, 0);
+
 /** what selling a prop gives back: half its price */
 export const sellBack = (d: DecorItem, size = 1): number => Math.round(sizedPrice(d.price, size) / 2);
 /** a loaded prop's catalogue key, or null when it is not one (an old save, a renamed item) */
