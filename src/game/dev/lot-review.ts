@@ -28,8 +28,8 @@ import { thumb } from './lot-editor';
 import { BTN, DANGER, GO, ON, btn, chip, el, heading, typing } from './lot-lab-ui';
 
 const SESSION = 'ce-lotreview', API = '/__dev/lot-review';
-/** the left panel's and the review card's widths, the space (px) the fitted lot keeps clear of the free area's edges, the road strip kept in view past each end of a lot (tiles) */
-const DRAWER = 292, CARD = 372, FIT = 36, MARGIN = 8;
+/** the left panel's and the review card's widths, the flyout's width, the space (px) the fitted lot keeps clear of the free area's edges, the road strip kept in view past each end of a lot (tiles) */
+const DRAWER = 292, CARD = 372, FLY = 392, FIT = 36, MARGIN = 8;
 const FILL: Record<Standing, string> = { none: '#334155', touched: '#d97706', ok: '#16a34a', bad: '#dc2626' };
 const STANDING_WORDS: Record<Standing, string> = { none: 'not looked at', touched: 'touched', ok: 'OK', bad: 'BAD' };
 const ARROW = ['↙', '↓', '↘', '→', '↗', '↑', '↖', '←'];
@@ -156,7 +156,8 @@ export function installLotReview(game: Game): () => void {
     message = `${lots.length} house lots of the ${kind}, seed ${seed}`;
     open(idx);
   }
-  const free = () => ({ L: DRAWER, T: 0, R: innerWidth - CARD, B: innerHeight });
+  /** the free map area: between the drawer and the card, and left of the props or decals flyout while it is open (the lot stays in view, to click on) */
+  const free = () => ({ L: DRAWER, T: 0, R: innerWidth - CARD - (fly === 'props' || fly === 'decals' ? FLY : 0), B: innerHeight });
   function fit() {
     const l = cur(); if (!l) return;
     const h = lotBox(l.g), a = free(), z = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, (a.R - a.L - 2 * FIT) / (h.x1 - h.x0), (a.B - a.T - 2 * FIT) / (h.y1 - h.y0)));
@@ -173,13 +174,14 @@ export function installLotReview(game: Game): () => void {
   const PANEL = 'background:rgba(12,18,28,.95);box-shadow:0 6px 24px rgba(0,0,0,.45);pointer-events:auto;box-sizing:border-box;';
   const drawer = el('div', `position:absolute;left:0;top:0;bottom:0;width:${DRAWER}px;overflow-y:auto;overflow-x:hidden;padding:10px 12px;border-right:1px solid #38bdf8;${PANEL}`);
   const card = el('div', `position:absolute;right:0;top:0;bottom:0;width:${CARD}px;overflow-y:auto;overflow-x:hidden;padding:10px 12px;border-left:1px solid #38bdf8;${PANEL}`);
-  const flyout = el('div', `position:absolute;right:${CARD}px;top:48px;width:392px;max-height:calc(100vh - 72px);overflow-y:auto;overflow-x:hidden;padding:10px 12px;border:1px solid #38bdf8;border-right:0;border-radius:10px 0 0 10px;display:none;${PANEL}`);
+  const flyout = el('div', `position:absolute;right:${CARD}px;top:48px;width:${FLY}px;max-height:calc(100vh - 72px);overflow-y:auto;overflow-x:hidden;padding:10px 12px;border:1px solid #38bdf8;border-right:0;border-radius:10px 0 0 10px;display:none;${PANEL}`);
   const status = el('div', `position:absolute;left:${DRAWER + 10}px;top:8px;max-width:calc(100vw - ${DRAWER + CARD + 30}px);padding:4px 10px;border-radius:8px;background:rgba(12,18,28,.85);color:#fcd34d;white-space:pre-wrap;pointer-events:none`);
   root.append(drawer, card, flyout, status);
   let propSearch = '', propCat = 'quick', decalGroup = '', propShown = 120;
 
   function drawStatus() { status.textContent = (cleanYards() ? '' : 'OLD YARDS (?oldyards)  ') + (armed ? `placing ${armed.id}: click inside the lot (Shift+click: more, Esc stops)` : message); }
-  function render() { drawDrawer(); drawCard(); drawFly(); drawStatus(); game.canvas.style.cursor = armed ? 'crosshair' : ''; }
+  let wide = false; // (the props or decals flyout is open: the lot is fitted again beside it, and again when it closes)
+  function render() { const w = fly === 'props' || fly === 'decals'; if (w !== wide) { wide = w; fit(); } drawDrawer(); drawCard(); drawFly(); drawStatus(); game.canvas.style.cursor = armed ? 'crosshair' : ''; }
 
   function drawDrawer() {
     const s = summaryOf(file), top = el('div', 'display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0');
@@ -189,7 +191,7 @@ export function installLotReview(game: Game): () => void {
     sin.addEventListener('change', () => set(kind, Math.max(0, Math.floor(+sin.value || 0))));
     top.append(el('span', 'opacity:.7', 'seed'), sin);
     const th = el('div', 'display:flex;gap:6px;margin:4px 0');
-    const reload = (d: 'on' | 'off') => { remember(); const u = new URL(location.href); u.searchParams.set('desert', d); u.searchParams.set('lot', String(idx)); location.href = u.toString(); };
+    const reload = (d: 'on' | 'off') => { remember(); const u = new URL(location.href); u.searchParams.set('desert', d); u.searchParams.set('lot', String(idx)); u.searchParams.set('source', kind); u.searchParams.set('seed', String(seed)); location.href = u.toString(); };
     th.append(chip('Autumn', theme === 'autumn', () => theme !== 'autumn' && reload('off'), 'frame the page again in the autumn look'), chip('Desert', theme === 'desert', () => theme !== 'desert' && reload('on'), 'frame the page again in the desert look'));
     const fl = el('div', 'display:flex;gap:6px;margin:4px 0');
     for (const [f, w, t] of [['all', 'All', 'every lot'], ['todo', 'To do', 'lots not looked at, or touched'], ['bad', 'Bad', 'the lots marked bad']] as const) fl.append(chip(w, filter === f, () => { filter = f; remember(); render(); }, t));
@@ -218,8 +220,9 @@ export function installLotReview(game: Game): () => void {
     const dd = btn(`Valid: ${valid.length ? valid.join(', ') : 'none ticked'}  ${fly === 'checks' ? '◂' : '▸'}`, `${fly === 'checks' ? ON : BTN}width:100%;text-align:left;white-space:normal`, () => { fly = fly === 'checks' ? null : 'checks'; render(); }, 'the checks: tick what is valid, any unticked check marks the lot bad (1 to 4 toggle them)');
     const acts = el('div', 'display:flex;gap:6px;margin:6px 0;flex-wrap:wrap');
     acts.append(btn('Good (G)', GO, () => void mark('good'), 'all four valid, saved, next lot'), btn('Save (Enter)', BTN, () => void mark('save'), 'save the ticks as they are (an unticked check marks the lot bad), next lot'), btn('Mark bad (B)', DANGER, () => void mark('bad'), 'mark the lot bad, with the note, next lot'));
-    const note = el('textarea', 'width:100%;height:54px;box-sizing:border-box;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:4px 6px;font:inherit;resize:vertical'); note.placeholder = 'a note for the lead (N: type here, then B)';
+    const note = el('textarea', 'width:100%;height:54px;box-sizing:border-box;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:4px 6px;font:inherit;resize:vertical'); note.placeholder = 'a note for the lead (N to type: Enter saves, Ctrl+Enter marks bad, Esc leaves)';
     note.value = p.note; note.addEventListener('input', () => { p.note = note.value; p.dirty = true; });
+    note.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); void mark('bad'); } }); // (B types a b in the note, so the key that marks bad from the note is Ctrl+Enter)
     const ov = p.override, placed = el('div', 'margin:6px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap');
     placed.append(el('span', 'opacity:.85', `placed here: ${ov.props.length} sprites, ${ov.decals.length} decals`), btn('Undo (U)', BTN, () => void undo(false), 'take the last one off'), btn('Clear (C)', BTN, () => void undo(true), 'take every placed one off'));
     const pal = el('div', 'display:flex;gap:6px;margin:6px 0');
@@ -228,7 +231,7 @@ export function installLotReview(game: Game): () => void {
     read.append(heading('THE MACHINE READS'));
     for (const c of CHECKS) read.append(el('div', `color:${rd[c][0] ? '#86efac' : '#fca5a5'}`, `${rd[c][0] ? '✓' : '✗'} ${CHECK_WORDS[c]}: ${rd[c][1]}`));
     read.append(el('div', `color:${a.clutter.length ? '#fca5a5' : '#86efac'}`, a.clutter.length ? `✗ clutter: ${[...new Set(a.clutter)].join(', ')}` : '✓ no clutter'));
-    const keys = el('div', 'margin-top:10px;font-size:11px;opacity:.6', 'keys: arrows or , . lots · 1-4 ticks · G good · Enter save · B bad · N note · P props · D decals · U undo · C clear · Esc stop placing');
+    const keys = el('div', 'margin-top:10px;font-size:11px;opacity:.6', 'keys: arrows or , . lots · 1-4 ticks · G good · Enter save · B bad · N note · P props · D decals · U undo · C clear · Esc stop placing · in the note: Enter saves, Ctrl+Enter marks bad, Esc leaves it');
     card.replaceChildren(head, info, nav, dd, acts, el('div', 'font-size:12px;opacity:.75;margin-top:4px', 'a lot with any check unticked is bad'), note, placed, pal, read, keys);
   }
 
@@ -303,13 +306,14 @@ ${id}: click, then click on the lot`, armed?.id === id, () => { armed = armed?.i
     else used = false;
     if (used) { e.preventDefault(); e.stopImmediatePropagation(); }
   };
+  // (the game takes its pointer on the overlay canvas above the map, so this listens on the window, in the capture phase, as the lab does; a click on a panel is no map click)
   const onDown = (e: PointerEvent) => {
-    if (!armed || !started || e.button !== 0) return;
+    if (!armed || !started || e.button !== 0 || !(e.target === game.overlay || e.target === game.canvas)) return;
     e.preventDefault(); e.stopImmediatePropagation();
-    const t = game.tileAt(e.offsetX, e.offsetY); void place(t.x, t.y);
+    const b = game.canvas.getBoundingClientRect(), t = game.tileAt(e.clientX - b.left, e.clientY - b.top); void place(t.x, t.y);
     if (!e.shiftKey) { armed = null; render(); }
   };
-  window.addEventListener('keydown', onKey, true); game.canvas.addEventListener('pointerdown', onDown, true);
+  window.addEventListener('keydown', onKey, true); window.addEventListener('pointerdown', onDown, true);
   document.head.append(style); document.body.append(root);
   game.devGround = (gl, v) => gridLots.length > 0 && gridLayer.draw(gl, v, gridLots);
   const onResize = () => { fit(); };
@@ -325,7 +329,7 @@ ${id}: click, then click on the lot`, armed?.id === id, () => { armed = armed?.i
   const poll = window.setInterval(() => { if (!game.ready) return; window.clearInterval(poll); started = true; void stage(); }, 200);
   render();
   return () => {
-    window.clearInterval(poll); window.removeEventListener('keydown', onKey, true); window.removeEventListener('resize', onResize); game.canvas.removeEventListener('pointerdown', onDown, true);
+    window.clearInterval(poll); window.removeEventListener('keydown', onKey, true); window.removeEventListener('resize', onResize); window.removeEventListener('pointerdown', onDown, true);
     style.remove(); root.remove(); if (game.lotOverride) game.lotOverride = null; game.devGround = null; gridLayer.dispose(); delete (window as unknown as Record<string, unknown>).__lotReview;
   };
 }
