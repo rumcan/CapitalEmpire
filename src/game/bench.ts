@@ -173,10 +173,24 @@ export function benchGame(g: Game, scene: BenchScene) {
   if (new URLSearchParams(location.search).get('riverSwamp') === '0') (g.ground as unknown as { setRiverSwamp?: (on: boolean) => void }).setRiverSwamp?.(false);
   // T251: ?rangeBalls=N (bench.mjs --rangeBalls N), the busy range: N balls kept in the air from its bays (RangeSim.benchBalls)
   { const rb = Number(new URLSearchParams(location.search).get('rangeBalls')); if (rb > 0) g.range.sim.benchBalls = Math.floor(rb); }
+  // T353 (#995): ?estate=N (bench.mjs --estate N, a dev server): N built house lots are laid along streets on the player's land once the game is ready (dev/estate-fixture.ts), and the
+  // tour is the lots' A/B over them (estateStage): the same page with the lots drawn and not, by turns
+  const estateN = import.meta.env.DEV ? Number(new URLSearchParams(location.search).get('estate')) : 0;
+  let estateAt: { x: number; y: number } | null = null, estateReady = !(estateN > 0);
+  if (estateN > 0) void import('./dev/estate-fixture').then(m => {
+    const lay = () => {
+      if (!g.ready) { setTimeout(lay, 200); return; }
+      const r = m.layEstateFixture(g, estateN, { stages: 'built' });
+      if (r.lots.length) { const c = r.lots.map(l => ({ x: l.o.x + l.u.x * l.w / 2 + l.n.x * l.d / 2, y: l.o.y + l.u.y * l.w / 2 + l.n.y * l.d / 2 })); estateAt = { x: c.reduce((a, q) => a + q.x, 0) / c.length, y: c.reduce((a, q) => a + q.y, 0) / c.length }; }
+      console.log('[bench] estate', JSON.stringify({ asked: estateN, lots: r.lots.length, streets: r.sites.length, searchMs: r.searchMs }));
+      estateReady = true;
+    };
+    lay();
+  });
   const t0 = performance.now();
   let warm = 0;
   g.onFrame = () => {
-    if (!g.ready || (g.lotsPending > 0 && performance.now() - t0 < 30000)) return;
+    if (!g.ready || !estateReady || (g.lotsPending > 0 && performance.now() - t0 < 30000)) return;
     if (scene === 'fixture' && !warm) { const T = g.traffic; T.setTownClock(jumpTo(T.town, T.simTime(performance.now()), SCENE_MINUTE, T.town.rate)); warm = performance.now(); }
     // T208: the course scene at GOLF_MINUTE (the most golfers out on an ordinary day), the camera over the course's middle
     if (scene === 'golf' && !warm) {
@@ -205,6 +219,8 @@ export function benchGame(g: Game, scene: BenchScene) {
     // T259: ?farms=1 (bench.mjs --farms 1), the farms' before and after on the same page: the farm model 1 (T005's, as main draws it) and 2 by turns
     const farms = new URLSearchParams(location.search).get('farms') === '1' ? farmFollow(g) : null;
     if (farms) { farmStage(g, farms, (r, month) => { const out = { ...info, farms: farms.n, month, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
+    // T353: the lots' A/B over the estate (the lots drawn and not, by turns)
+    if (estateAt) { estateStage(g, estateAt, r => { const out = { ...info, estate: estateN, lots: g.estateRt?.lots.length ?? 0, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     startTour(g, info, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
   };
 }
@@ -249,6 +265,44 @@ function rollStage(g: Game, scene: BenchScene, done: (r: Record<string, unknown>
       t += dt; if (t < 1) return;
       const v = frames.get(tag) ?? { cpu: [], balls: [] }; frames.set(tag, v); v.cpu.push(g.perf.cpuMs); v.balls.push(balls());
       if (t >= 5) { k++; next(); }
+    };
+  };
+  next();
+}
+
+/** T353 (#995, "dont screw performance"): the house lots' A/B on one page (the PC's other load falls alike on both): at 30% and 15% over the estate, the lots drawn (the town's
+ *  house lots, building sites and plots: Engine.setEstateDrawn) and not drawn by turns, three times each. Each run settles 3 s (the lot queue composes or drops the lots), then 4 s
+ *  of frames: the cpu ms (average, p95), the instances and draws, the lots' props. Pooled per zoom and switch, with on less off */
+function estateStage(g: Game, focus: { x: number; y: number }, done: (r: Record<string, unknown>[]) => void) {
+  const zooms = [0.3, 0.15], runs: { z: number; on: boolean }[] = [];
+  for (const z of zooms) for (let r = 0; r < 3; r++) runs.push({ z, on: r % 2 === 0 }, { z, on: r % 2 !== 0 });
+  const frames = new Map<string, { cpu: number[]; inst: number[]; draws: number[]; props: number[] }>();
+  const q = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; };
+  const avg = (a: number[]) => a.reduce((p, v) => p + v, 0) / Math.max(1, a.length);
+  let k = 0, t = 0;
+  const next = () => {
+    if (k >= runs.length) {
+      g.onFrame = null; g.setEstateDrawn(true);
+      const out: Record<string, unknown>[] = [];
+      for (const z of zooms) {
+        const tag = `${Math.round(z * 100)}%`, r: Record<string, unknown> = { stage: `estate ${tag}` };
+        for (const on of [false, true]) {
+          const f = frames.get(`${tag} ${on ? 'on' : 'off'}`) ?? { cpu: [], inst: [], draws: [], props: [] };
+          r[on ? 'on' : 'off'] = { frames: f.cpu.length, cpuAvgMs: +avg(f.cpu).toFixed(3), cpuP95Ms: +q(f.cpu, 0.95).toFixed(3), instancesAvg: Math.round(avg(f.inst)), drawsAvg: +avg(f.draws).toFixed(1), lotProps: Math.round(avg(f.props)) };
+        }
+        const a = r.off as Record<string, number>, b = r.on as Record<string, number>;
+        r.delta = { cpuAvgMs: +(b.cpuAvgMs! - a.cpuAvgMs!).toFixed(3), cpuP95Ms: +(b.cpuP95Ms! - a.cpuP95Ms!).toFixed(3), instances: b.instancesAvg! - a.instancesAvg!, lotProps: b.lotProps! - a.lotProps! };
+        out.push(r);
+      }
+      done(out); return;
+    }
+    const r = runs[k]!, tag = `${Math.round(r.z * 100)}% ${r.on ? 'on' : 'off'}`;
+    g.setEstateDrawn(r.on); t = 0; g.lookAt(focus.x, focus.y, r.z);
+    g.onFrame = (_now, dt) => {
+      t += dt; if (t < 3) return;
+      const v = frames.get(tag) ?? { cpu: [], inst: [], draws: [], props: [] }; frames.set(tag, v);
+      v.cpu.push(g.perf.cpuMs); v.inst.push(g.perf.instances); v.draws.push(g.perf.draws); v.props.push(g.perf.lotProps);
+      if (t >= 7) { k++; next(); }
     };
   };
   next();

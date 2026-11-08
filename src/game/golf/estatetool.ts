@@ -5,7 +5,7 @@
 // offers to draw an estate street. The engine gives it a small context, so its own edits stay a few lines.
 import type { Pt } from '../network';
 import {
-  LAY_COST, CLICK_T, pickFrames, placeLots, planLots, type Along, type Estate, type EstateEnv, type EstateLot, type Frame, type StreetSeg,
+  LAY_COST, CLICK_T, placeLots, planLots, type Along, type Estate, type EstateEnv, type EstateLot, type Frame, type StreetSeg,
 } from './estate';
 
 /** what the tool needs of the engine */
@@ -102,13 +102,9 @@ export class EstateTool {
     this.key = key;
     const along = this.alongOf(from, at);
     if (!along.segs.length) { this.ghost = { frames: [], ok: 0, refused: 0, cost: 0, label: NO_STREET, bad: true }; return; }
-    const picked = pickFrames(along.segs, from, at);
-    if (!picked.length) { this.ghost = { frames: [], ok: 0, refused: 0, cost: 0, label: Math.hypot(at.x - from.x, at.y - from.y) < CLICK_T ? 'Point at a lot beside a street' : 'No lot beside the street there', bad: true }; return; }
-    const plan = planLots(e, along, this.ctx.env()), bad = new Map(plan.refused.map(x => [x.frame, x.why]));
-    const frames = picked.map(f => ({ f, why: bad.get(f) ?? '' }));
-    // (planLots works on its own picks: match them to the ghost's by their place)
-    const whyAt = (f: Frame) => plan.refused.find(x => Math.abs(x.frame.o.x - f.o.x) < 1e-6 && Math.abs(x.frame.o.y - f.o.y) < 1e-6 && x.frame.side === f.side)?.why ?? '';
-    for (const q of frames) q.why = whyAt(q.f);
+    // the lots the pointer picks along the streets, each with the reason it is refused ('' when it can be laid): the allowed ones, then the refused
+    const plan = planLots(e, along, this.ctx.env()), frames = [...plan.ok.map(f => ({ f, why: '' })), ...plan.refused.map(r => ({ f: r.frame, why: r.why }))];
+    if (!frames.length) { this.ghost = { frames: [], ok: 0, refused: 0, cost: 0, label: Math.hypot(at.x - from.x, at.y - from.y) < CLICK_T ? 'Point at a lot beside a street' : 'No lot beside the street there', bad: true }; return; }
     const ok = frames.filter(q => !q.why).length, refused = frames.length - ok, cost = ok * LAY_COST;
     let label: string, isBad = false;
     if (ok === 0) { label = frames[0]!.why + (frames.length > 1 ? ` (${frames.length} lots)` : ''); isBad = true; }

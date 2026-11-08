@@ -59,7 +59,7 @@ import { welcomeReady } from './golf/firstview';
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, rangeCarLines, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type BrushKind, type PaintTuple, type PaintTex } from './paint';
-import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, grassSlot, landGridBox, lookCellsDiff, looksUsed, makeGrid, paintDisc, paintStroke, setLook, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, grassSlot, landGridBox, lookCellsDiff, looksUsed, makeGrid, paintCells, paintDisc, paintStroke, setLook, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { PLAY_SURF, golfSurfaceOf, grassLooks, normalizeGrasses, type CustomGrass, type GrassPlay } from './golf/grasses';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
@@ -9597,6 +9597,8 @@ export class Game {
   estateOffer: Pt | null = null;
   /** an estate street being drawn (the spot to come back to): when it is built, House lots comes back armed */
   private estateStreet: Pt | null = null;
+  /** the estate's lots are not drawn (the bench's A/B, setEstateDrawn: their props and ground go, the lots stay in the books) */
+  private estateHide = false;
   /** the lots as last drawn (key → stage) and the estate's rev then (-1: draw them all); the lots' views by id, read at a course grid revision */
   private estateDrawn = new Map<string, number>(); private estateRev = -1; private estateViews = new Map<number, { rev: number; v: ES.View }>();
   readonly estateTool = new EstateTool({
@@ -9606,19 +9608,19 @@ export class Game {
     estate: () => this.estateMake(), now: () => this.golfMonthAt(performance.now()), seed: () => this.seed, money: () => this.money,
     quote: f => this.estateQuote(f),
     charge: (cost, at) => this.spendAt({ x: at.x, y: at.y }, 'construction', cost),
-    laid: () => { this.estateOffer = null; this.scheduleSave(); this.emit(); },
+    laid: placed => this.estateLaid(placed),
     noStreet: at => { this.estateOffer = { x: at.x, y: at.y }; },
     toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
   });
   /** the estate, made on first use at the game month now */
-  private estateMake(): ES.Estate { return (this.estateRt ??= ES.newEstate(this.golfMonthAt(performance.now()))); }
+  estateMake(): ES.Estate { return (this.estateRt ??= ES.newEstate(this.golfMonthAt(performance.now()))); }
   /** whether a tile point is house lot ground: the course's tools treat it as not theirs (the paint brushes, New hole, the tee boxes) */
   onEstate(x: number, y: number): boolean { const e = this.estateRt; return !!e && e.lots.length > 0 && !!ES.lotAt(e, x, y); }
   /** the map's water at a tile point (a lake, a creek, a bank) */
   private estateWet = (x: number, y: number): boolean => { const tx = Math.floor(x), ty = Math.floor(y); if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) return false; const c = this.terrain.cls[ty * MAP + tx]; return c === TC.WATER || c === TC.CREEK || c === TC.BANK; };
   /** the street pieces lots can front within r tiles of a point: the town's road classes on the ground (not cart paths or course drives, which grow no lots,
-   *  and not bridges or tunnels), each cut back at a junction or a dead end as the town's own lots are */
-  private estateStreets(near: Pt, r: number): ES.StreetSeg[] {
+   *  and not bridges or tunnels), each cut back at a junction or a dead end as the town's own lots are (T354: the pieces layEstateLots takes) */
+  estateStreets(near: Pt, r: number): ES.StreetSeg[] {
     const out: ES.StreetSeg[] = [];
     for (const s of this.net.segsNear(near, r)) {
       if (s.kind !== SK.GROUND || s.cls.noLots) continue;
@@ -9646,7 +9648,7 @@ export class Game {
   }
   /** what the lot rules read of the game now (golf/estate.ts EstateEnv): the land that is the player's less the driving range's plot and the practice area, the
    *  course grid, the map's water, each hole's line of play, the roads, and what is built */
-  private estateEnv(): ES.EstateEnv {
+  estateEnv(): ES.EstateEnv {
     const pb = this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null;
     return {
       map: MAP,
@@ -9666,6 +9668,28 @@ export class Game {
   estateAsk(l: ES.EstateLot): number { return ES.priceOf(l, this.estateViewOf(l), this.golf?.rep ?? 0); }
   /** what a lot at this frame would ask, with its view in words (the tool's price tag) */
   private estateQuote(f: ES.Frame): { price: number; view: string } { const v = ES.viewOf(f, this.courseGrid, this.estateWet); return { price: ES.priceOf(f, v, this.golf?.rep ?? 0), view: ES.viewWords(v) }; }
+  /** lots were laid (the tool, the dev fixture): the course's painted ground under them goes (a lot replaces the rough, the long grass and the fescue as a street does, T355: the
+   *  cells are cleared and carved, as a rub out leaves them, and the chunks re-bake), so the lot's own ground shows; the lots are saved and drawn */
+  estateLaid(placed: readonly ES.EstateLot[]) {
+    const g = this.courseGrid, idx: number[] = [];
+    if (g) for (const l of placed) for (const i of ES.cellsUnder(l, g)) idx.push(i);
+    if (g && idx.length) this.courseGridChanged(paintCells(g, idx, idx.length, SURF.none, 0, 0, { carve: true }), true);
+    this.estateOffer = null; this.scheduleSave(); this.emit();
+  }
+  /** T353, for the code that lays streets (T354's imported ones): lays house lots along streets as the tool does (golf/estate.ts placeLots): `along` is the street pieces (estateStreets
+   *  gives the real network's) and a side (+1, -1, or 0 / none: both) or a drag (from, to). The laying cost is paid and the course ground under the lots cleared; with too little
+   *  money none is laid (every lot the rules allow is then refused with that reason). Outside a golf game none is laid. Returns what was laid and what was refused with why */
+  layEstateLots(along: ES.Along): ES.PlaceResult {
+    if (!this.golf) return { placed: [], refused: [], cost: 0 };
+    const e = this.estateMake(), env = this.estateEnv(), plan = ES.planLots(e, along, env), cost = plan.ok.length * ES.LAY_COST;
+    if (cost > this.money) return { placed: [], refused: [...plan.refused, ...plan.ok.map(frame => ({ frame, why: `Not enough money: ${plan.ok.length} lots cost $${cost.toLocaleString()} to lay` }))], cost: 0 };
+    const r = ES.placeLots(e, along, env, this.golfMonthAt(performance.now()), this.seed);
+    if (r.cost) this.traffic.spend('construction', r.cost);
+    this.estateLaid(r.placed);
+    return r;
+  }
+  /** dev, the bench's A/B: the estate's lots drawn (true) or not (false: their props and ground go; the lots stay in the books and come back drawn) */
+  setEstateDrawn(on: boolean) { this.estateHide = !on; this.estateRev = -1; this.estateSync(); }
   /** the House lots tool goes down (another building tool, another tool, Esc) */
   private estateOff() { if (!this.estatePlacing && !this.estateTool.on) return; this.estatePlacing = false; this.estateTool.on = false; this.estateTool.leave(); }
   /** takes the House lots tool in hand (on) or puts it down: the Buildings tool opens, the clubhouse's and the others' ghosts go */
@@ -9725,14 +9749,14 @@ export class Game {
   /** the lots that need drawing again are queued for the lot queue (their stage changed, or they are new), the ones that went are dropped */
   private estateSync() {
     const e = this.estateRt; this.estateRev = e?.rev ?? -1;
-    const want = new Map<string, number>(); for (const l of e?.lots ?? []) want.set(`estate:${l.id}`, l.st);
+    const want = new Map<string, number>(); for (const l of this.estateHide ? [] : e?.lots ?? []) want.set(`estate:${l.id}`, l.st);
     for (const k of [...this.estateDrawn.keys()]) if (!want.has(k)) { this.estateDrawn.delete(k); this.lotQueue.add(k); }
     for (const [k, st] of want) if (this.estateDrawn.get(k) !== st) { this.estateDrawn.set(k, st); this.lotQueue.add(k); }
   }
   /** a lot of the estate is drawn (the lot queue's key 'estate:<id>'): for sale a pegged plot with the For Sale post; sold the plot with the builder's first
    *  delivery; being built the town's building site; built the town's house (the saved game's lot model, lots/compose.ts); no lot, nothing */
   private applyEstateLot(key: string) {
-    const l = this.estateRt?.lots.find(q => `estate:${q.id}` === key);
+    const l = this.estateHide ? undefined : this.estateRt?.lots.find(q => `estate:${q.id}` === key);
     if (!l) { this.townLotChanged(key, null); this.dropLot(key); this.estateDrawn.delete(key); return; }
     this.townLotChanged(key, lotBoxOf([l.o.x, l.o.y], [l.u.x, l.u.y], [l.n.x, l.n.y], l.w, l.d));
     if (l.st === ES.ST.BUILDING || l.st === ES.ST.BUILT) this.placeLot(key, { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d }, { use: LU.RES, level: l.st === ES.ST.BUILT ? LV.BUILT : LV.BUILDING, decline: 0, seed: l.seed });
@@ -9745,8 +9769,8 @@ export class Game {
     const e = 0.1, P = (a: number, b: number) => [l.o.x + l.u.x * a + l.n.x * b, l.o.y + l.u.y * a + l.n.y * b];
     const dirt: LotPatch = { pts: [P(e, e), P(l.w - e, e), P(l.w - e, l.d - e), P(e, l.d - e)].flat(), tex: 'dirt' }, sv = surveyPatch({ o: l.o, u: l.u, n: l.n, w: l.w, d: l.d });
     this.setLotGround(key, sv ? [dirt, sv] : [dirt]);
-    const ps: Prop[] = [], put = (id: string, a: number, b: number) => { const i = LIB_INDEX.get(id); if (i === undefined) return; const q = P(a, b); ps.push(this.addProp(i, q[0]!, q[1]!, false, artScale(i, 1), 'lot:' + key)); };
-    if (l.st === ES.ST.SALE) put(ES.SALE_SIGN, 1.6, 1.4);
+    const ps: Prop[] = [], put = (id: string, a: number, b: number, k = 1) => { const i = LIB_INDEX.get(id); if (i === undefined) return; const q = P(a, b); ps.push(this.addProp(i, q[0]!, q[1]!, false, artScale(i, 1) * k, 'lot:' + key)); };
+    if (l.st === ES.ST.SALE) put(ES.SALE_SIGN, 1.6, 1.4, 1.6);
     else { put(SITE_LUMBER[0]!, l.w * 0.3, l.d * 0.35); put(SITE_HEAPS[0]!, l.w * 0.7, l.d * 0.6); }
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
   }
@@ -9760,8 +9784,14 @@ export class Game {
   }
   /** the lots as route obstacles: a road may not be built through one (the road tools' list) */
   private estateObstacles(): Obstacle[] {
-    return (this.estateRt?.lots ?? []).map((l): Obstacle => { const p = ES.cornersOf(l).flatMap(q => [q.x, q.y]); return { why: 'Roads cannot cross a house lot', name: 'a house lot', zone: p, outline: p }; });
+    const e = this.estateRt; if (!e || !e.lots.length) return [];
+    // (made again only when the estate changes: the road tools ask on every move of the pointer)
+    if (this.estateObs && this.estateObs.rev === e.rev && this.estateObs.n === e.lots.length) return this.estateObs.list;
+    const list = e.lots.map((l): Obstacle => { const p = ES.cornersOf(l).flatMap(q => [q.x, q.y]); return { why: 'Roads cannot cross a house lot', name: 'a house lot', zone: p, outline: p }; });
+    this.estateObs = { rev: e.rev, n: e.lots.length, list };
+    return list;
   }
+  private estateObs: { rev: number; n: number; list: Obstacle[] } | null = null;
   /** the overlay while House lots is in hand: the lots laid outlined (a tag on each at close zoom), the lots a click or a drag would lay green, or red and hatched with
    *  the reason, and the words by the cursor (a lot under the pointer says its own state and price) */
   private drawEstateGhost(ctx: CanvasRenderingContext2D) {

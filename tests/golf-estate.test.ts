@@ -7,13 +7,13 @@ import { NetEditor } from '../src/game/netops';
 import { LotMap } from '../src/game/lots/lots';
 import { isAngled } from '../src/game/lots/compose';
 import { NEAR_M } from '../src/game/ext/hole-wizard';
-import { SURF, makeGrid, paintDisc, fillPolygon, type Grid } from '../src/game/ext/course-grid';
+import { CELL_T, SURF, cellAt, makeGrid, paintCells, paintDisc, fillPolygon, type Grid } from '../src/game/ext/course-grid';
 import { makeCourseView } from '../src/game/golf/play/courseview';
 import { normalizeGolfSave } from '../src/game/golf/mode';
 import { deriveHoles } from '../src/game/golf/holes';
 import {
-  BUILD_MONTHS, LAY_COST, LEVY, MARKET_CAP, OFF_AXIS_DEG, RANGE_T, SOLD_MONTHS, ST,
-  countsOf, demandOf, encodeEstate, frontageFrames, housesOf, lotAt, lotWhy, newEstate, normalizeEstate, offAxis, pickFrames, placeLots, planLots, priceOf, removeLot, repFactor,
+  BUILD_MONTHS, LAY_COST, LEVY, MARKET_CAP, OFF_AXIS_DEG, RANGE_T, SOLD_MONTHS, START_MARKET, ST,
+  cellsUnder, countsOf, demandOf, encodeEstate, inLot, frontageFrames, housesOf, lotAt, lotWhy, newEstate, normalizeEstate, offAxis, pickFrames, placeLots, planLots, priceOf, removeLot, repFactor,
   sellRate, stepEstate, viewFactor, viewOf, type EstateEnv, type Estate, type Frame, type RoadBit, type StepEnv, type StreetSeg,
 } from '../src/game/golf/estate';
 
@@ -87,7 +87,7 @@ test('lots are laid on the player\'s own land only, and need every corner and ed
   assert.match(lotWhy(lotK(12), env({ map: 100 })), /off the map/);
 });
 
-test('no lot on a painted course surface: a playing surface by name and hole, the rough with the way to clear it', () => {
+test('no lot on a playing surface, by name and hole; the rough, long grass and fescue are covered (or refused with the way to clear them)', () => {
   const g = grid();
   const f = lotK(12), cx = 125, cy = 110;
   assert.equal(lotWhy(f, env({ grid: g })), '', 'bare ground');
@@ -96,7 +96,12 @@ test('no lot on a painted course surface: a playing surface by name and hole, th
   const g2 = grid(); paintDisc(g2, cx, cy, 1.5, SURF.green, 7, 0); paintDisc(g2, cx + 3, cy, 1.5, SURF.fairway, 7, 0);
   assert.equal(lotWhy(f, env({ grid: g2 })), "Hole 7's green is in the way", 'the green is named before the fairway');
   const g3 = grid(); paintDisc(g3, cx, cy, 1.5, SURF.rough, 1, 0);
-  assert.equal(lotWhy(f, env({ grid: g3 })), 'The rough is in the way: rub it out first');
+  assert.equal(lotWhy(f, env({ grid: g3 })), '', 'the rough is ground a lot covers, as a street does (T355)');
+  assert.equal(lotWhy(f, env({ grid: g3, coverRough: false })), 'The rough is in the way: rub it out first');
+  const g3b = grid(); paintDisc(g3b, cx, cy, 1.5, SURF.longGrass, 1, 0); paintDisc(g3b, cx + 2, cy, 1, SURF.fescue, 1, 0);
+  assert.equal(lotWhy(f, env({ grid: g3b })), ''); assert.equal(lotWhy(f, env({ grid: g3b, coverRough: false })), 'The long grass is in the way: rub it out first');
+  const g3c = grid(); paintDisc(g3c, cx, cy, 1.5, SURF.waste, 1, 0);
+  assert.equal(lotWhy(f, env({ grid: g3c })), 'A waste area is in the way', 'a waste area is a hazard: never covered');
   const g4 = grid(); paintDisc(g4, cx, cy, 1.5, SURF.water, 0, 0);
   assert.equal(lotWhy(f, env({ grid: g4 })), 'A water hazard is in the way');
   const g5 = grid(); paintDisc(g5, cx, cy, 1.5, SURF.bunker, 2, 0);
@@ -353,4 +358,29 @@ test('the golf save carries the estate: well-formed lots stay in it, a save with
   assert.deepEqual(normalizeEstate(g.estate)!.lots.map(l => [l.id, l.st]), e.lots.map(l => [l.id, l.st]));
   assert.equal(normalizeGolfSave({ ...base })!.estate, undefined, 'a save from before has none');
   assert.equal(normalizeGolfSave({ ...base, estate: { v: 1, next: 1, t: 0, market: 0, lots: [[1, 2]] } as never })!.estate, undefined, 'junk lots: none');
+});
+
+test('an estate with no lots has no clock to speak of: its first lot starts it, so no buyers come for the months before it was laid', () => {
+  const e = newEstate(2); e.market = 1.4;
+  placeLots(e, { segs: [STREET], from: P(125, 110), to: P(125.2, 110) }, env(), 7);
+  assert.equal(e.lots.length, 1); assert.equal(e.t, 7); assert.equal(e.market, START_MARKET);
+  assert.equal(stepEstate(e, 7.1, stepEnv()).sold.length, 0, 'a tenth of a month after it was laid, the lot is still for sale');
+  // a second row laid later keeps the clock the first started
+  placeLots(e, { segs: [STREET], from: P(145, 110), to: P(145.2, 110) }, env(), 7.3);
+  assert.equal(e.t, 7.1);
+});
+
+test('cellsUnder: the painted cells whose centres lie in a lot (the engine clears them when the lot is laid, so its own ground shows)', () => {
+  const g = grid(), f = lotK(12); // x 120..130, y 102.65..117.65
+  assert.deepEqual(cellsUnder(f, g), [], 'bare ground has none');
+  paintDisc(g, 125, 110, 2, SURF.rough, 1, 0); // inside the lot
+  paintDisc(g, 140, 110, 2, SURF.rough, 1, 0); // beside it
+  const under = cellsUnder(f, g);
+  assert.ok(under.length > 20, `${under.length} cells under the lot`);
+  for (const i of under) { const cx = i % g.w, cy = (i - cx) / g.w; assert.ok(inLot(f, g.x0 + (cx + 0.5) * CELL_T, g.y0 + (cy + 0.5) * CELL_T)); assert.equal(g.surf[i], SURF.rough); }
+  assert.equal(cellsUnder(f, null).length, 0, 'no course, no cells');
+  const d = paintCells(g, under, under.length, SURF.none, 0, 0, { carve: true });
+  assert.equal(d.n, under.length);
+  assert.deepEqual(cellsUnder(f, g), [], 'nothing painted is left under the lot');
+  assert.equal(g.surf[cellAt(g, 140, 110)], SURF.rough, 'the rough beside it is as it was');
 });

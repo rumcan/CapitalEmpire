@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { Game } from '../../game/engine';
 import { BUSINESS, CLUBHOUSE_RANGE_COST } from '../../game/business/catalogue';
 import { HALFWAY_COST, HALFWAY_TEE_REACH } from '../../game/golf/halfway';
@@ -104,7 +105,15 @@ function ProBuildingCard({ game, kind }: { game: Game; kind: 'prooffice' | 'teac
  *  (the club is paid: the books' Lot sales), build over a few months, and each finished house brings a member to the club and a small levy a month. The card
  *  says where the lots stand and what they ask, and offers an estate street for the land that has none */
 function EstateCard({ game }: { game: Game }) {
-  const c = game.estateCard(); if (!c) return null;
+  const c = game.estateCard(), offer = !!c?.offer, row = useRef<HTMLDivElement>(null);
+  // the offer of an estate street (a click with no street near) scrolls into view: the card is the panel's last, below the fold of a short screen
+  useEffect(() => {
+    const el = row.current, box = el?.closest<HTMLElement>('.tool-panel');
+    if (!offer || !el || !box) return;
+    const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top, over = top + el.offsetHeight + 12 - box.clientHeight;
+    if (over > 0) box.scrollTop += over;
+  }, [offer]);
+  if (!c) return null;
   const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`, building = c.sold + c.building;
   return (
     <>
@@ -122,9 +131,9 @@ function EstateCard({ game }: { game: Game }) {
       <p className="mt-1 leading-snug" data-testid="estate-note">{c.placing
         ? 'Drag along a street to lay a row of lots (a click lays one): green is fine, red says why not. Lots keep 30 m from every hole, off the course, water and paths. Esc puts it down.'
         : c.total
-          ? `A standard lot asks ${money(c.ask)} at reputation ${Math.round(c.rep)}, up to ${money(c.best)} on a green by water. About ${c.rate.toFixed(1)} lots a month sell.${c.takings ? ` Sales so far: ${money(c.takings)}.` : ''}`
+          ? `A standard lot asks ${money(c.ask)} at reputation ${Math.round(c.rep)}, up to ${money(c.best)} on a green by water. About ${c.rate.toFixed(1)} lots a month sell.${c.takings ? ` Sales so far: ${money(c.takings)}.` : ''}${c.built ? ` ${c.built} finished house${c.built > 1 ? 's' : ''}: each owner joined the club and pays ${money(LEVY)} a month (${money(c.levy)} in all).` : ''}`
           : 'Pick House lots, then drag along a street on your land. A ball that lands on a lot is out of bounds.'}</p>
-      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+      <div ref={row} className="mt-1 flex flex-wrap items-center gap-1.5">
         <button className={`chip ${c.offer ? 'chip-on' : ''}`} onClick={() => game.drawEstateStreet()} data-testid="estate-draw-street" title="The road tool with a street in hand: draw it from a road to your land; House lots comes back to lay the plots along it">Draw an estate street</button>
         {c.offer && <span className="text-amber-200" data-testid="estate-offer">No street within reach of that spot</span>}
       </div>

@@ -5,7 +5,8 @@
 // - the lots' FRAME: a lot is the town's own lot (lots/lots.ts: frontage x depth of the street's class, on the global lattice along the street, its origin
 //   o at the verge's edge, u along the street, n away from it), so the town's lot composer (lots/compose.ts) draws its building site and its house as it
 //   draws a town lot's, with the saved game's lot model; frontageFrames / pickFrames work them out from a street piece;
-// - the RULES (lotWhy): the player's own land, no painted course surface (a lot replaces ground that is not the course), no water, no road, cart path or
+// - the RULES (lotWhy): the player's own land, no playing surface under it (tee, fairway, green, bunker, water hazard, waste: the rough, the long grass and the
+//   fescue are covered as a street covers them, T355), no water, no road, cart path or
 //   drive, nothing built there, no other lot, and out of range of every hole (the hole card's "golfers there are in range", NEAR_M / 2 from the hole's line);
 // - the VIEW and the PRICE: a lot on a fairway or a green, or by water, asks more; so does a course with a name (reputation);
 // - the MARKET: buyers come at a rate set by the reputation and the town's growth, and take the best lot first; a sold lot waits, is built over a few
@@ -193,6 +194,8 @@ export interface EstateEnv {
   /** whether a tile point is water in the map (a river, a creek, a lake, a bank); optional */ water?(x: number, y: number): boolean;
   /** each hole's line of play (tee, aim points, pin; tiles) */ lines: readonly { hole: number; line: readonly Pt[] }[];
   /** the roads near a box [x0, y0, x1, y1] */ roads(box: readonly [number, number, number, number]): readonly RoadBit[];
+  /** T355's way with a street: the rough, the long grass and the fescue are ground a lot may cover (the lot replaces it, as a street does); only the playing surfaces and the
+   *  hazards refuse one. false: every painted surface refuses a lot ({the rough} is in the way: rub it out first). Missing: true */ coverRough?: boolean;
   /** why something stands on a box ('' when the ground is free): a building, a prop of the player's, a car park ... */ blocked?(box: readonly [number, number, number, number]): string;
 }
 /** the surfaces of the course grid by id, as a refusal calls them */
@@ -239,8 +242,23 @@ export function lotsOverlap(p: Pick<Frame, 'o' | 'u' | 'n' | 'w' | 'd'>, q: Pick
 /** whether a lot's frontage runs more than OFF_AXIS_DEG off both map axes (lots/compose.ts isAngled: a house faces the map's axes, so such a lot draws a green) */
 export const offAxis = (u: Pt): boolean => Math.max(Math.abs(u.x), Math.abs(u.y)) < Math.cos(OFF_AXIS_DEG * Math.PI / 180);
 
-/** why a lot (a frame, or a laid lot) cannot be laid, '' when it can, in the order a player would fix it: off the map; not his land; a painted course
- *  surface under it (a playing surface by name and hole, the rough with the way to clear it); water; a road, cart path or drive through it; in range of a
+/** the course grid's painted cells (indices) under a lot: the cells that are not the map's own grass whose centres lie in it. A lot replaces the rough, the long grass and
+ *  the fescue under it (as a street does, T355): the engine clears these cells when the lot is laid, as a rub out does, so the lot's own ground (its dirt, its lawn, its drive)
+ *  shows instead of the course's, which the ground draws over every lot's */
+export function cellsUnder(f: Pick<Frame, 'o' | 'u' | 'n' | 'w' | 'd'>, g: Grid | null): number[] {
+  const out: number[] = []; if (!g) return out;
+  const box = boxOf(f);
+  const cx0 = Math.max(0, Math.floor((box[0] - g.x0) / CELL_T)), cx1 = Math.min(g.w - 1, Math.floor((box[2] - g.x0) / CELL_T));
+  const cy0 = Math.max(0, Math.floor((box[1] - g.y0) / CELL_T)), cy1 = Math.min(g.h - 1, Math.floor((box[3] - g.y0) / CELL_T));
+  for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) {
+    const i = cy * g.w + cx;
+    if (g.surf[i] !== SURF.none && inLot(f, g.x0 + (cx + 0.5) * CELL_T, g.y0 + (cy + 0.5) * CELL_T)) out.push(i);
+  }
+  return out;
+}
+
+/** why a lot (a frame, or a laid lot) cannot be laid, '' when it can, in the order a player would fix it: off the map; not his land; a playing surface
+ *  under it (by name and hole; the rough, the long grass and the fescue only when env.coverRough is false, with the way to clear it); water; a road, cart path or drive through it; in range of a
  *  hole; something built there; another lot; and a street too far off the map's axes for a house. others: the lots already laid (or accepted) */
 export function lotWhy(f: Pick<Frame, 'o' | 'u' | 'n' | 'w' | 'd'>, env: EstateEnv, others: readonly Pick<EstateLot, 'o' | 'u' | 'n' | 'w' | 'd'>[] = []): string {
   const box = boxOf(f);
@@ -256,7 +274,7 @@ export function lotWhy(f: Pick<Frame, 'o' | 'u' | 'n' | 'w' | 'd'>, env: EstateE
     for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) {
       const i = cy * g.w + cx, s = g.surf[i]!; if (s === SURF.none) continue;
       if (!inLot(f, g.x0 + (cx + 0.5) * CELL_T, g.y0 + (cy + 0.5) * CELL_T)) continue;
-      const rank = PLAYING[s]; if (rank) { if (rank > (PLAYING[playing] ?? 0)) { playing = s; playHole = g.hole[i]!; } } else other = other || s;
+      const rank = PLAYING[s]; if (rank) { if (rank > (PLAYING[playing] ?? 0)) { playing = s; playHole = g.hole[i]!; } } else if (env.coverRough === false) other = other || s;
     }
     if (playing) return playing === SURF.waste ? 'A waste area is in the way' : playWhy(playing, playHole);
     if (other) return `The ${SURF_WORD[other] ?? 'ground'} is in the way: rub it out first`;
@@ -394,6 +412,8 @@ export function planLots(e: Estate, along: Along, env: EstateEnv): { ok: Frame[]
  *  laid, what was refused and why, and the cost (LAY_COST a lot; the caller charges it). This is the call T354's streets use, and the tool's drag and click */
 export function placeLots(e: Estate, along: Along, env: EstateEnv, now: number, seed = 0): PlaceResult {
   const { ok, refused } = planLots(e, along, env), placed: EstateLot[] = [];
+  // (an estate with no lots has no clock to speak of: its first lot starts it, so the buyers do not come for months that went before the lot was laid)
+  if (ok.length && !e.lots.length) { e.t = now; e.market = START_MARKET; }
   for (const f of ok) {
     const id = e.next++;
     const l: EstateLot = { id, o: { x: +f.o.x.toFixed(4), y: +f.o.y.toFixed(4) }, u: { x: +f.u.x.toFixed(5), y: +f.u.y.toFixed(5) }, n: { x: +f.n.x.toFixed(5), y: +f.n.y.toFixed(5) }, w: f.w, d: f.d, st: ST.SALE, at: now, after: Infinity, seed: (Math.imul(seed ^ 0x811c9dc5, 16777619) ^ Math.imul(id, 0x9e3779b1)) >>> 0, price: 0 };
