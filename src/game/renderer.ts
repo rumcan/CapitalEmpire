@@ -10,6 +10,7 @@ import { poolStampMatrix } from './lamp-pool';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, growBand, riverStreams, swampStreams, type BandAlpha } from './swamp';
 import { RIVER_CUT, drawRiverCut } from './river-cut';
+import { JOIN_FADE, JOIN_FADE_STEP, JOIN_INSET, MapWater, waterRuns } from './map-water';
 import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
 import { BANK_REACH, motionMask, pondLap, riverLap, type BandRef, type MotionMaskData } from './water-motion';
 import { LOT_DECALS } from './lot-decals';
@@ -488,6 +489,9 @@ export class GroundPainter {
   riverSwamp = true;
   /** T265: the river's band (swamp.ts SwampField with RIVER_BAND), made with the terrain */
   private riverField = new SwampField([], RIVER_BAND);
+  /** T338: the map's own water (the river, the creeks as narrow as they are drawn), made with the terrain: the course's water joining it is kept
+   *  off it (drawCourses) */
+  private mapWater = new MapWater([]);
   /** T199: the swamp band of the bake in progress (its cover over the chunk's tile box, res samples a tile, from x0 y0), which the living ground
    *  leaves alone; null when the chunk lays none */
   private swampNow: { cv: Cnv; x0: number; y0: number; res: number } | null = null;
@@ -1142,7 +1146,7 @@ export class GroundPainter {
   /** the screen textures laid on the ground (isoImage), per source picture */
   private isoPics = new WeakMap<Cnv, Cnv>();
   /** take a new terrain: classes, height samples and waterways */
-  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); this.riverField = new SwampField(riverStreams(waters), RIVER_BAND); }
+  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); this.riverField = new SwampField(riverStreams(waters), RIVER_BAND); this.mapWater = new MapWater(waterRuns(waters, k => (k === 'creek' ? SWAMP.water : 1))); }
   /** a sub-rect of the course height from the main thread (samples i0.., j0.., w by h, row-major): copied in (the chunks it lights re-bake) */
   setCourse(i0: number, j0: number, w: number, h: number, data: Float32Array) {
     for (let j = 0; j < h; j++) this.courseH.set(data.subarray(j * w, (j + 1) * w), (j0 + j) * CH_SIZE + i0);
@@ -2752,9 +2756,51 @@ export class GroundPainter {
     /** whether layer `code` is drawn after the water (so its feathers would lie over it), the water's own band and fill aside */
     const overWater = (code: number) => code >> 1 !== SURF.water && rankOf(code) > rankOf(layerCode(SURF.water, false));
     walls(0); rims(0);
+    // T338 (#965): where the course's water joins the map's river or a creek (CourseLayer.join), the water's layers (its fill, its depth and
+    // glint, its band and bank, the walls over it) are kept off the map's water, a hair inside its edge: the map's water there is the one
+    // body's, and the course's runs up to it with no edge of its own (the patch dropped them). Convex pieces (map-water.ts shapes), each cut out
+    // of the chunk with one even-odd clip, so the overlapping discs and trapezoids of the waterway take nothing twice
+    const joinBox = (ls: readonly { l: CourseLayer }[]): BBox | null => {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const { l } of ls) if (l.join) { x0 = Math.min(x0, l.join[0]!); y0 = Math.min(y0, l.join[1]!); x1 = Math.max(x1, l.join[2]!); y1 = Math.max(y1, l.join[3]!); }
+      if (!(x1 > x0) || x1 < r[0]! || x0 > r[2]! || y1 < r[1]! || y0 > r[3]!) return null;
+      return [Math.max(x0, r[0]!), Math.max(y0, r[1]!), Math.min(x1, r[2]!), Math.min(y1, r[3]!)];
+    };
+    /** a map-water piece (map-water.ts shapes: a disc x, y, r or a trapezoid's corners) onto p, wound one way (a positive area: so a nonzero
+     *  fill of many is their union) */
+    const piece = (p: Path2D, q: readonly number[]) => {
+      if (q.length === 3) { p.moveTo(q[0]! + q[2]!, q[1]!); p.arc(q[0]!, q[1]!, q[2]!, 0, Math.PI * 2); p.closePath(); return; }
+      let a = 0; for (let k = 0; k < 8; k += 2) a += q[k]! * q[(k + 3) % 8]! - q[(k + 2) % 8]! * q[k + 1]!;
+      const pt = (k: number) => (a >= 0 ? k : 3 - k);
+      p.moveTo(q[2 * pt(0)]!, q[2 * pt(0) + 1]!); for (let k = 1; k < 4; k++) p.lineTo(q[2 * pt(k)]!, q[2 * pt(k) + 1]!); p.closePath();
+    };
+    /** clips ctx to the chunk with every piece of the map's water over b, its edge moved by grow, cut out (one even-odd clip a piece) */
+    const outside = (b: BBox, grow: number): boolean => {
+      const shapes = this.mapWater.shapes(b[0], b[1], b[2], b[3], grow); if (!shapes.length) return false;
+      for (const q of shapes) { const p = new Path2D(); p.rect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); piece(p, q); ctx.clip(p, 'evenodd'); }
+      return true;
+    };
+    const joinClip = (ls: readonly { l: CourseLayer }[]): boolean => {
+      const b = joinBox(ls); if (!b || !this.mapWater.shapes(b[0], b[1], b[2], b[3], -JOIN_INSET).length) return false;
+      const T = ctx.getTransform(); ctx.save(); ctx.setTransform(M); outside(b, -JOIN_INSET); ctx.setTransform(T); return true;
+    };
+    /** the seam softened: the course's water drawn on a little way into the map's water, fading (JOIN_FADE: bands, each further in fainter),
+     *  so the two waters' pictures blend instead of meeting on a line */
+    const joinFade = (ls: readonly { l: CourseLayer }[]) => {
+      const b = joinBox(ls); if (!b) return;
+      const inner = this.mapWater.shapes(b[0], b[1], b[2], b[3], -JOIN_INSET); if (!inner.length) return;
+      const within = new Path2D(); for (const q of inner) piece(within, q);
+      const T = ctx.getTransform(), A = ctx.globalAlpha;
+      JOIN_FADE.forEach((a, k) => {
+        ctx.save(); ctx.setTransform(M); ctx.clip(within, 'nonzero'); outside(b, -JOIN_INSET - (k + 1) * JOIN_FADE_STEP); ctx.setTransform(T);
+        ctx.globalAlpha = A * a; for (const { l } of ls) if (l.join) fill(l, l.fill);
+        ctx.restore();
+      });
+    };
     for (const code of DRAW_ORDER) {
       const s = code >> 1, ls = layers(s), bk = banksAt.get(code);
       if (bk) banksKept(bk, code);
+      const joined = s === SURF.water && !this.mapWater.empty && joinClip(ls);
       if (code & 1) {
         // a lip or bank lies on the ground under it and takes no part in the walls (course-walls isOverlay): kept off every wall face
         const over = isOverlay(code) && allWalls.length > 0;
@@ -2870,6 +2916,7 @@ export class GroundPainter {
       // T285 (#869): the longer grass's shade over this layer's edge, before the walls hanging over it
       if (!lite) this.courseShade(ctx, cs, code, M);
       walls(code);
+      if (joined) { ctx.restore(); if (!(code & 1) && !lite) joinFade(ls); }
     }
   }
   /** T285 (#869; the owner, 2026-10-31: "the longer the grass is the more shadow it spills from right to left onto the shorter grass next to

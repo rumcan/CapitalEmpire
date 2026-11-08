@@ -70,7 +70,7 @@ import { FOREST_CLEAR, LABEL_FADE_ALPHA, LABEL_FADE_PX, TOWN_CLEAR, plantedTreeC
 import { holeAreas, holeCard, markerMove, swapHoleNumbers, teeLengths, type HoleCardView, type HoleFix } from './golf/holecard';
 import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, type MyHole } from './golf/myholes';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
-import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
+import { COURSE_CHUNK, COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
 import { roadRoute } from './road-route';
 import { linesOnRoads, mainRoads, offRoadTo, type OffRoad } from './offroad';
@@ -200,7 +200,10 @@ import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflec
 import { SHINE_KEY, SHINE_LOOK, clampShineLook, shineExponent, shineGain, type ShineLook, type ShineWeights } from './grass-shine';
 import { WATER_MOTION, WATER_MOTION_KEY, clampWaterMotion, motionFrame, phasesAt, stepPhases, type WaterMotion } from './water-motion';
 import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from './grade';
-import { glossGain } from './swamp';
+import { SWAMP, glossGain } from './swamp';
+import { MapWater, bareMapWater, waterRuns } from './map-water';
+/** T338: the map's water as the ground draws it: a river its whole width, a creek SWAMP.water of it */
+const waterScale = (kind: string) => (kind === 'creek' ? SWAMP.water : 1);
 import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, teePropId } from './golf/dressing';
 import { BOX_LEN_M, BOX_WID_M, TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, markerWarnings } from './golf/teesets';
@@ -1005,6 +1008,7 @@ export class Game {
     // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
     // the course's; the brush's footprint and the wizard say which refusal it is
     practiceAt: (x, y) => this.golf?.start === 'range' && !!this.range.scene && inPractice(this.range.scene.practice, x, y), // T206
+    mapWaterAt: (x, y) => this.mapWater().at(x, y), // T338
     ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pondMarks: () => this.golf?.ponds ?? [], setPondMarks: m => this.setPondMarks(m), holeBuilt: () => this.guideEvent('hole'), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
     // New hole (P23 4.4, T119): the camera framing, the practice area (P24 D24), and what its warnings measure against
     fitView: (pts, zoomIn) => this.fitView(pts, zoomIn), practiceBox: () => (this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null),
@@ -2085,13 +2089,28 @@ export class Game {
     w.at = Math.min(w.at, at);
     if (!this.cgJob) this.runChunks();
   }
+  /** T338 (#965): the map's own water (the river, and the creeks as narrow as they are drawn: map-water.ts), made once a terrain */
+  private mapWaterOf: { of: unknown; w: MapWater } | null = null;
+  private mapWater(): MapWater {
+    const ws = this.terrain.waters;
+    if (this.mapWaterOf?.of !== ws) this.mapWaterOf = { of: ws, w: new MapWater(waterRuns(ws, waterScale)) };
+    return this.mapWaterOf.w;
+  }
+  /** T338: the map's water near course chunks (cx, cy pairs) as a chunk job carries it, within the reach the chunks' outlines read */
+  private courseWater(chunks: readonly number[]): number[][] {
+    if (!this.terrain.waters.length || !chunks.length) return [];
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let k = 0; k + 1 < chunks.length; k += 2) { x0 = Math.min(x0, chunks[k]! * COURSE_CHUNK); y0 = Math.min(y0, chunks[k + 1]! * COURSE_CHUNK); x1 = Math.max(x1, (chunks[k]! + 1) * COURSE_CHUNK); y1 = Math.max(y1, (chunks[k + 1]! + 1) * COURSE_CHUNK); }
+    return waterRuns(this.terrain.waters, waterScale, [x0, y0, x1, y1], 32);
+  }
   /** posts the waiting chunks as one job; its patches are applied together when it comes back */
   private runChunks() {
     const w = this.cgWait, g = this.contourGrid(); if (!w || !g) return;
     this.cgWait = null; this.cgJob = true;
     const chunks: number[] = []; for (const k of w.chunks) chunks.push(Math.floor(k / 4096), k % 4096);
     const now = this.growMonth(), bunkerRevision = g.rev;
-    this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()], paths: this.coursePaths(), flips: [...this.mowFlips()] }, (out, ms) => {
+    const water = this.courseWater(chunks);
+    this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()], paths: this.coursePaths(), flips: [...this.mowFlips()], ...(water.length ? { water } : {}) }, (out, ms) => {
       this.perf.courseJobMs = ms; this.perf.courseJobChunks = chunks.length / 2;
       const t0 = performance.now();
       this.cgJob = false;
@@ -3515,7 +3534,9 @@ export class Game {
     if (where === 'course') {
       if (!this.courseGrid) return false;
       let n = 0; const m = this.golfMonthIndex();
-      this.paint.gridEdit('dig a pond', g => { const d = paintDisc(g, x, y, r, SURF.water, 0, m); n = d.n; return { diffs: [d], spent: 0 }; });
+      // (T338: never on the map's own water the course leaves bare: the pond joins it there)
+      const wet = this.mapWater();
+      this.paint.gridEdit('dig a pond', g => { const d = paintDisc(g, x, y, r, SURF.water, 0, m, { allow: i => !bareMapWater(g, i, wet) }); n = d.n; return { diffs: [d], spent: 0 }; });
       return n > 0;
     }
     this.paint.addArea(discOutline(x, y, r), { tex: 'waterDark', border: 0, radius: 0 });

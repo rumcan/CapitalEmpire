@@ -61,6 +61,9 @@ export interface CourseTex { tex: string; sc: number; a: number; x?: number; m?:
  *    line (tee, aim points, pin; flat tiles), its share of the chunk when there are two or more (runs: boxes x0 y0 x1 y1, tiles) and a: the
  *    hook for greenkeeping's mow angle (the way the mower drives, degrees in tile space; course-stripes holeStripeLegs), absent until set */
 export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill: Float32Array[]; edges: Float32Array[];
+  /** T338 (#965): the water's join with the map's own water (map-water.ts): the box (x0, y0, x1, y1, tiles) where its fill reaches into the river
+   *  or a creek the course leaves bare; the renderer keeps the course's water off the map's water there, so the two read as one. Absent: none */
+  join?: number[];
   /** its edges sorted by the heights on their sides (ext/course-walls, T099): soft (feathered) and joint (a crisp mowing line against its own
    *  collar) runs; the rest of its edges are walls (CoursePatch.walls) or hidden under a later layer, drawn crisp. Absent: feather all edges */
   soft?: Float32Array[]; joint?: Float32Array[];
