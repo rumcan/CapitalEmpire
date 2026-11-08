@@ -26,7 +26,7 @@ import { EXIT_END, FIRST_TEE, GATES_OPEN, PLAY_END } from './golf/calendar';
 import { LATE_AFTER_MIN, minuteAt, simAt, travelEstimate, wantedLeaves } from './golf/daytimeline';
 import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, GROWN_SUCCESS0, GROWN_SUCCESS_K, GROWN_SUCCESS_MAX, GROWN_SUCCESS_MIN, NO_ROOM_EVERY_D, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_BUILDS_ROADS, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
 import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
-import { Crowd, type FanCounts } from './event/crowd';
+import { Crowd, WALK_STRIDE, type FanCounts, type WalkRouter } from './event/crowd';
 import type { TollDef } from './event/toll';
 import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, siteAt, type Site } from './event/site';
@@ -45,6 +45,7 @@ import { ON_TIME_GRACE_MIN } from './golf/tournamentday';
 import { gateRate } from './golf/venue';
 import { hasExpressGates } from './golf/golfcards';
 import { pickSpot, type GallerySpot } from './golf/galleries';
+import { RouteCache, SPECTATOR, nearestStand, type WalkField } from './golf/walkfield';
 import { RELOCATE_EVERY, relocate, spotDraw } from './golf/gallerydraw';
 import { dayShare, spectatorDemand, tierInfo, tournamentDue } from './golf/tour';
 import { earnedFor, earnedTarget, roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
@@ -262,6 +263,16 @@ export class City {
   /** the last 30-minute mark the fans moved at (the tournament day; -Infinity until the surge's crowd starts: see startBuses) */
   private relocatedAt = -Infinity;
   setSpots(list: GallerySpot[]): void { this.spots = list; this.spotHoles = Math.max(0, ...list.map(s => s.hole)); this.crowd?.setSpots(list.length); }
+  /** T377 (#1033, the owner: "fix spectators walking in step 3 at a time and over water, greens, fairways or tee boxes"): the day's walk field (golf/walkfield.ts: the
+   *  ground of the course, from the engine; null: none) and the routes the spectators take over it, each worked out once for its pair of cells and kept
+   *  (the gate to a spot is one route for all the groups that walk it) */
+  private walkField: WalkField | null = null; private walkRoutes: RouteCache | null = null;
+  setWalkField(f: WalkField | null): void { this.walkField = f; this.walkRoutes = f ? new RouteCache(f, SPECTATOR) : null; if (this.crowd) this.crowd.router = this.router(); }
+  private router(): WalkRouter | null { const rc = this.walkRoutes; return rc ? (x, y, tx, ty) => rc.route({ x, y }, { x: tx, y: ty }) : null; }
+  /** T377: the ways worked out in one step at most (each a search over the field, a millisecond or a few: a crowd that arrives at once is walked off over a few steps) */
+  private static readonly WAYS_A_STEP = 4;
+  /** T377: where a spectator may stand near (x, y): itself when the field lets him, else the nearest ground that does (12 tiles at most); (x, y) with no field */
+  private stand(x: number, y: number): Pt { const f = this.walkField; return f ? nearestStand(f, SPECTATOR, x, y) ?? { x, y } : { x, y }; }
   /** the golf play's featured holes (the full set, each time): the spots on them draw more from now (see spotDraw); [] for none */
   setFeatured(holes: number[]): void { this.featured = new Set(holes); }
   /** the spots' draws at the tournament minute (spotDraw: the featured holes, else the day's featured group; the last green in the afternoon), into
@@ -276,7 +287,9 @@ export class City {
   private toGallery(town: number, n: number, x: number, y: number): void {
     const C = this.crowd; if (!C || !this.golf || !this.spots.length) return;
     const i = pickSpot(this.spots, C.gallery, this.spotRnd(), this.spotDraws()), s = this.spots[i]!;
-    C.add({ x, y, tx: s.x + (this.spotRnd() - 0.5) * 3, ty: s.y + (this.spotRnd() - 0.5) * 3, n, town, stage: 3, route: i });
+    // (T377: the end of the walk is ground a spectator may stand on: never a tee, a green, a bunker or water)
+    const q = this.stand(s.x + (this.spotRnd() - 0.5) * 3, s.y + (this.spotRnd() - 0.5) * 3);
+    C.add({ x, y, tx: q.x, ty: q.y, n, town, stage: 3, route: i });
   }
   /** the fans move between the spots at every RELOCATE_EVERY game minute of the tournament day from FIRST_TEE to PLAY_END (each 30-minute mark once;
    *  gallerydraw relocate): a move takes its fans off the `from` spot and sends them on as a stage 3 group to the `to` spot, where they count when
@@ -292,7 +305,8 @@ export class City {
       if (n <= 0) continue;
       C.gallery[mv.from]! -= n;
       // the walk starts and ends within 1.5 tiles of the spots' points, as toGallery's (town 0: a spot does not keep its fans' towns)
-      C.add({ x: from.x + (this.spotRnd() - 0.5) * 3, y: from.y + (this.spotRnd() - 0.5) * 3, tx: to.x + (this.spotRnd() - 0.5) * 3, ty: to.y + (this.spotRnd() - 0.5) * 3, n, town: 0, stage: 3, route: mv.to });
+      const a = this.stand(from.x + (this.spotRnd() - 0.5) * 3, from.y + (this.spotRnd() - 0.5) * 3), b = this.stand(to.x + (this.spotRnd() - 0.5) * 3, to.y + (this.spotRnd() - 0.5) * 3);
+      C.add({ x: a.x, y: a.y, tx: b.x, ty: b.y, n, town: 0, stage: 3, route: mv.to });
     }
   }
   /** going home (golf, LEAD.md M2.3): every party car that parked (its town, car park and bay), the surge's homes by town (where the cars
@@ -799,7 +813,7 @@ export class City {
       this.visits.step(this.sim, this.g, this.sim.clock);
       this.stepTaxis();
     }
-    if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.relocateFans(); this.stepLeaving(); this.syncWait(); }
+    if (this.crowd) { if (this.walkRoutes) this.walkRoutes.budget = City.WAYS_A_STEP; this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.relocateFans(); this.stepLeaving(); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     if (this.tourneyDay && this.dayOver()) this.endTourneyDay();
     if (this.town.grown) this.town.grown.cap = this.townRoom() ?? Infinity;
@@ -1298,7 +1312,7 @@ export class City {
     this.sim.dropBuses();
     const C = new Crowd(this.round.crowd.length, this.busDefs.length);
     this.crowd = C; C.setGates(this.gates.length); this.gateAcc = this.gates.map(() => 0); this.relocatedAt = -Infinity;
-    C.setSpots(this.spots.length); C.onIn = (town, n, x, y) => this.toGallery(town, n, x, y);
+    C.setSpots(this.spots.length); C.onIn = (town, n, x, y) => this.toGallery(town, n, x, y); C.router = this.router(); C.varied = !!this.golf; // (T377: the walkers' ways, and each group's own pace on a golf day)
     C.onBack = (_town, route) => { this.leave?.pending.push({ k: route, at: this.sim.t }); };
     if (this.golf) C.grace = ON_TIME_GRACE_MIN;
     if (this.dayT0 >= 0) C.lateAt = simAt(LATE_AFTER_MIN, this.dayT0);
@@ -1438,10 +1452,13 @@ export class City {
     const z = new Array<number>(this.round.crowd.length).fill(0);
     return { fans: z, atStop: z.slice(), onBus: z.slice(), atGate: z.slice() };
   }
-  /** the walkers as the frame sends them: 6 floats per group (x, y in tiles, n fans, stage, tx, ty: the group's target) */
+  /** the walkers as the frame sends them: WALK_STRIDE (7) floats per group (x, y in tiles, n fans, stage, tx, ty: the point it is heading for now, and its id) */
   walkBuf(): Float32Array {
-    const W = this.crowd?.walkers ?? [], out = new Float32Array(6 * W.length);
-    W.forEach((g, i) => { const o = 6 * i; out[o] = g.x; out[o + 1] = g.y; out[o + 2] = g.n; out[o + 3] = g.stage; out[o + 4] = g.tx; out[o + 5] = g.ty; });
+    const W = this.crowd?.walkers ?? [], out = new Float32Array(WALK_STRIDE * W.length);
+    W.forEach((g, i) => {
+      const o = WALK_STRIDE * i, v = g.via ? g.via[g.vi ?? 0] : undefined; // (T377: the point it is heading for now: its next waypoint, else its target)
+      out[o] = g.x; out[o + 1] = g.y; out[o + 2] = g.n; out[o + 3] = g.stage; out[o + 4] = v ? v.x : g.tx; out[o + 5] = v ? v.y : g.ty; out[o + 6] = g.id ?? 0;
+    });
     return out;
   }
   /** the lot stops as the frame sends them: 4 floats per active route with a lot stop (x, y in tiles, the fans waiting, the route index) */

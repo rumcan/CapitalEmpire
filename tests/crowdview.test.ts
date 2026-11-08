@@ -89,25 +89,80 @@ test('galleryPeople: every frame is one of the person\'s frames; standing fans c
   assert.ok([21, 22, 23, 24].some(f => seat.has(f)), 'sitting and clapping');
 });
 
-test('walkerPeople: min(n, 3) people side by side across the heading, facing it, on the walk frames; none with no people or no fans', () => {
-  const out: CrowdPerson[] = [], W = (n: number, tx: number, ty: number) => Float32Array.of(10, 10, n, 3, tx, ty);
-  assert.equal(walkerPeople(W(5, 20, 10), 0, 4, 1, PEOPLE, out), 3, 'min(n, 3)');
-  assert.equal(walkerPeople(W(2, 20, 10), 0, 4, 1, PEOPLE, out), 2);
-  assert.equal(walkerPeople(W(0.4, 20, 10), 0, 4, 1, PEOPLE, out), 0, 'no fans');
-  assert.equal(walkerPeople(W(3, 20, 10), 0, 4, 1, 0, out), 0, 'no people');
-  const k = walkerPeople(W(3, 20, 10), 0, 4, 1, PEOPLE, out);
-  assert.equal(k, 3);
-  // heading +x: screen right-down (SE, row 7); the party stands across the heading, 0.4 tiles apart
-  for (let j = 0; j < k; j++) {
-    const p = out[j]!;
-    assert.equal(p.row, 7, 'faces +x');
-    assert.ok(p.frame >= 1 && p.frame <= 8, `a walk frame: ${p.frame}`);
-    assert.equal(p.frame, out[0]!.frame, 'one phase for the party');
-    assert.ok(Math.abs(p.x - 10) < 1e-9, 'across the heading only');
+/** a walker buffer of one group at (10, 10) heading for (tx, ty): x, y, n, stage, tx, ty, id (the 7 floats of event/crowd.ts WALK_STRIDE) */
+const walkBuf = (n: number, tx: number, ty: number, id = 4): Float32Array => Float32Array.of(10, 10, n, 3, tx, ty, id);
+
+test('walkerPeople: min(n, 3) people facing the heading, on the walk frames, together near the party\'s point; none with no people or no fans', () => {
+  const out: CrowdPerson[] = [];
+  assert.equal(walkerPeople(walkBuf(5, 20, 10), 0, 0, 1, PEOPLE, out), 3, 'min(n, 3)');
+  assert.equal(walkerPeople(walkBuf(2, 20, 10), 0, 0, 1, PEOPLE, out), 2);
+  assert.equal(walkerPeople(walkBuf(1, 20, 10), 0, 0, 1, PEOPLE, out), 1);
+  assert.equal(walkerPeople(walkBuf(0.4, 20, 10), 0, 0, 1, PEOPLE, out), 0, 'no fans');
+  assert.equal(walkerPeople(walkBuf(3, 20, 10), 0, 0, 1, 0, out), 0, 'no people');
+  for (const now of [0, 0.7, 3.3, 19, 240.2]) {
+    const k = walkerPeople(walkBuf(3, 20, 10), 0, 0, now, PEOPLE, out);
+    assert.equal(k, 3);
+    // heading +x: screen right-down (SE, row 7)
+    for (let j = 0; j < k; j++) {
+      const p = out[j]!;
+      assert.equal(p.row, 7, 'faces +x');
+      assert.ok(p.frame >= 1 && p.frame <= 8, `a walk frame: ${p.frame}`);
+      assert.ok(Math.hypot(p.x - 10, p.y - 10) < 1.5, `a party keeps together: (${p.x.toFixed(2)}, ${p.y.toFixed(2)}) at ${now} s`);
+    }
   }
-  assert.ok(Math.abs(out[2]!.y - out[0]!.y - 0.8) < 1e-9, 'three people 0.4 tiles apart');
-  walkerPeople(W(3, 10, 10), 0, 4, 1, PEOPLE, out);
+  walkerPeople(walkBuf(3, 10, 10), 0, 0, 1, PEOPLE, out);
   assert.equal(out[0]!.row, 0, 'no heading: the diagonal toward the screen bottom');
+});
+
+test('walkerPeople (T377, #1033: "spectators walking in step, 3 at a time"): the three of a party are not in step: each has his own pace, phase and place, and the places drift', () => {
+  const out: CrowdPerson[] = [];
+  // the phase: all three on one frame in only a few of the samples (one phase for the party was every sample)
+  let same = 0, samples = 0, worst = 0;
+  for (let id = 1; id <= 60; id++) {
+    let here = 0, n = 0;
+    for (let t = 0; t < 40; t += 0.37) {
+      walkerPeople(walkBuf(3, 20, 10, id), 0, 0, t, PEOPLE, out); samples++; n++;
+      if (out[0]!.frame === out[1]!.frame && out[1]!.frame === out[2]!.frame) { same++; here++; }
+    }
+    worst = Math.max(worst, here / n);
+  }
+  console.log(`# the three of a party on one frame: ${(100 * same / samples).toFixed(1)}% of ${samples} samples (the party with most: ${(100 * worst).toFixed(0)}%); the old drawing: 100%`);
+  assert.ok(same / samples < 0.06, `all three on one frame in ${(100 * same / samples).toFixed(1)}% of the samples`);
+  assert.ok(worst < 0.6, `no party stays in step: its worst ${(100 * worst).toFixed(0)}%`);
+  // the pace: the walk loop at 0.85 to 1.15 of its rate, a person's own (frames wrapping 8 to 1 over 28 s: 20 loops at the clip's own rate)
+  const loops = (id: number, j: number): number => { let w = 0, prev = -1; for (let t = 0; t < 28; t += 0.02) { walkerPeople(walkBuf(3, 20, 10, id), 0, 0, t, PEOPLE, out); const f = out[j]!.frame; if (prev === 8 && f === 1) w++; prev = f; } return w; };
+  const counts: number[] = []; for (let id = 1; id <= 20; id++) for (let j = 0; j < 3; j++) counts.push(loops(id, j));
+  assert.ok(counts.every(c => c >= 16 && c <= 24), `every person walks at 0.85 to 1.15 of the clip's rate: ${counts.join(' ')} loops in 28 s`);
+  assert.ok(Math.max(...counts) - Math.min(...counts) >= 3, `and the paces differ from person to person: ${Math.min(...counts)} to ${Math.max(...counts)} loops`);
+  // the places: along the heading and across it a person drifts (a minute covers whole periods of the drift), and the three are not on a line of fixed spacing
+  for (let id = 1; id <= 20; id++) {
+    let a0 = Infinity, a1 = -Infinity, c0 = Infinity, c1 = -Infinity;
+    for (let t = 0; t < 60; t += 0.1) { walkerPeople(walkBuf(3, 20, 10, id), 0, 0, t, PEOPLE, out); const p = out[1]!; a0 = Math.min(a0, p.x - 10); a1 = Math.max(a1, p.x - 10); c0 = Math.min(c0, p.y - 10); c1 = Math.max(c1, p.y - 10); }
+    assert.ok(a1 - a0 >= 0.8, `party ${id}: his place along the heading drifts ${(a1 - a0).toFixed(2)} tiles`);
+    assert.ok(c1 - c0 >= 0.25, `party ${id}: and across it ${(c1 - c0).toFixed(2)} tiles`);
+  }
+  const gaps = new Set<string>();
+  for (let id = 1; id <= 30; id++) { walkerPeople(walkBuf(3, 20, 10, id), 0, 0, 5, PEOPLE, out); gaps.add((out[2]!.y - out[0]!.y).toFixed(3)); }
+  assert.ok(gaps.size >= 28, `the spread of a party differs from party to party (${gaps.size} different in 30)`);
+});
+
+test('walkerPeople (T377): a person is the same person from frame to frame (the walker\'s own id seeds him, not its place in the buffer); every person of the roster walks', () => {
+  const a: CrowdPerson[] = [], b: CrowdPerson[] = [], other = walkBuf(3, 20, 10, 9);
+  // the same group in the buffer's first and third place: the same people, the same places and frames
+  const two = Float32Array.of(...walkBuf(2, 30, 30, 8), ...walkBuf(3, 20, 10, 4)), three = Float32Array.of(...walkBuf(1, 30, 30, 7), ...walkBuf(2, 30, 30, 6), ...walkBuf(3, 20, 10, 4));
+  const ka = walkerPeople(two, 7, 1, 6.5, PEOPLE, a), kb = walkerPeople(three, 14, 2, 6.5, PEOPLE, b);
+  assert.equal(ka, kb);
+  for (let j = 0; j < ka; j++) assert.deepEqual({ ...a[j]! }, { ...b[j]! }, `person ${j}`);
+  // another group is other people in other places
+  const c: CrowdPerson[] = []; walkerPeople(other, 0, 0, 6.5, PEOPLE, c);
+  assert.ok(a.some((p, j) => p.person !== c[j]!.person || p.frame !== c[j]!.frame || Math.abs(p.x - c[j]!.x) > 1e-6), 'group 9 is not group 4');
+  const seen = new Set<number>();
+  for (let id = 1; id <= 400; id++) { const n = walkerPeople(walkBuf(3, 20, 10, id), 0, 0, 1, PEOPLE, a); for (let j = 0; j < n; j++) seen.add(a[j]!.person); }
+  assert.equal(seen.size, PEOPLE, 'the whole roster walks');
+  // the old 6-float buffer (x, y, n, stage, tx, ty) still reads, the buffer index its seed
+  const old = Float32Array.of(10, 10, 3, 3, 20, 10), k6 = walkerPeople(old, 0, 4, 6.5, PEOPLE, c, 6), k7 = walkerPeople(walkBuf(3, 20, 10, 4), 0, 0, 6.5, PEOPLE, a);
+  assert.equal(k6, k7);
+  for (let j = 0; j < k6; j++) assert.deepEqual({ ...c[j]! }, { ...a[j]! }, `the old buffer, person ${j}`);
 });
 
 test('queuePeople: min(count, 24) idle people in a grid centred on the point, each facing it; none with no people', () => {

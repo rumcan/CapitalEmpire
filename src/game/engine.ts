@@ -2,6 +2,7 @@ import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLA
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { PeopleSpacer, spacePeople } from './spacing';
 import { PUTT_IMPACT_S, galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
+import { WALK_STRIDE } from './event/crowd';
 import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GREENKEEPING } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
@@ -238,6 +239,8 @@ import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } fro
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
 import { gallerySpots } from './golf/galleries';
+import { buildWalkField, type Way } from './golf/walkground';
+import { CART, RouteCache, SPECTATOR_GROW, SPECTATOR_WATER_GROW, dilate, passable, type WalkField } from './golf/walkfield';
 import { invitedFacts, tierInfo, tournamentDue, type InviteCheck, type Need } from './golf/tour';
 import { lampGround } from './lamp-pool';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
@@ -4673,8 +4676,42 @@ export class Game {
     const gates: { x: number; y: number; lanes: number }[] = [];
     for (const s of this.golf?.structures ?? []) { const def = STRUCTURE[s.typeId]; if (def?.kind !== 'gate') continue; const [x, y, w, h] = structureRect(s); gates.push({ x: x + w / 2, y: y + h / 2, lanes: Math.max(1, def.capacity) }); }
     this.traffic.setGates(gates);
-    // the galleries (LEAD.md M2.2): the greens and tees of the course and the placed grandstands and tents
-    this.traffic.setSpots(this.golf ? gallerySpots(this.golf.tees ?? [], this.golf.pins ?? [], this.golf.structures ?? []) : []);
+    // T377: the course's spectator field to the City (the spectators' ways round water, greens and tees), sent once per change of the course
+    const sf = this.golf ? this.spectatorField() : null;
+    if (sf !== this.walkFieldSent) { this.walkFieldSent = sf; this.traffic.setWalkField(sf); }
+    // the galleries (LEAD.md M2.2): the greens and tees of the course and the placed grandstands and tents (T377: a green's and a tee's gallery on open ground round it)
+    this.traffic.setSpots(this.golf ? gallerySpots(this.golf.tees ?? [], this.golf.pins ?? [], this.golf.structures ?? [], sf) : []);
+    }
+    /** T377: the spectators' field: the walk field with every tee, green, bunker and water grown by SPECTATOR_GROW tiles (walkfield.ts dilate), so a party and its
+     *  people, a little either side of its line, and a gallery keep clear of them; made again only when the walk field is */
+    private spectatorMemo: { src: WalkField | null; v: WalkField | null } | null = null;
+    private spectatorField(): WalkField | null {
+      const f = this.walkFieldNow(); if (!f) return null;
+      if (this.spectatorMemo?.src === f) return this.spectatorMemo.v;
+      const v = dilate(f, SPECTATOR_GROW, SPECTATOR_WATER_GROW); this.spectatorMemo = { src: f, v }; return v;
+    }
+    /** T377 (#1033): the course's walk field (golf/walkfield.ts: where spectators and carts may go), read from the course grid, the map's water, the roads and the
+     *  tee markers (golf/walkground.ts); null without a golf course. Kept until the course, the roads, the paint or the markers change */
+    private walkFieldMemo: { key: string; v: WalkField | null } | null = null;
+    private walkFieldSent: WalkField | null | undefined = undefined;
+    private walkFieldNow(): WalkField | null {
+      const g = this.golf, grid = this.courseGrid; if (!g || !grid) return null;
+      const key = `${grid.rev}|${this.net.version}|${g.tees.length}|${g.pins.length}|${this.paintRev}`;
+      if (this.walkFieldMemo?.key === key) return this.walkFieldMemo.v;
+      const pad = 24, x0 = Math.max(0, Math.floor(grid.x0 - pad)), y0 = Math.max(0, Math.floor(grid.y0 - pad)), x1 = Math.min(MAP, Math.ceil(grid.x0 + grid.w * CELL_T + pad)), y1 = Math.min(MAP, Math.ceil(grid.y0 + grid.h * CELL_T + pad));
+      const cls = this.terrain.cls, ways: Way[] = [];
+      for (const s of this.net.segs) {
+        if (s.kind !== SK.GROUND && s.kind !== SK.BRIDGE) continue;
+        const a = s.a, b = s.b; if (Math.max(a.x, b.x) < x0 || Math.min(a.x, b.x) > x1 || Math.max(a.y, b.y) < y0 || Math.min(a.y, b.y) > y1) continue;
+        ways.push({ ax: a.x, ay: a.y, bx: b.x, by: b.y, hw: s.cls.h + s.cls.walk, cart: s.cls.family === 'cart' || s.cls.family === 'course', bridge: s.kind === SK.BRIDGE });
+      }
+      const holes = (g.pins ?? []).flatMap(p => { const t = (g.tees ?? []).find(q => q.hole === p.hole); return t ? [{ tee: { x: t.x, y: t.y }, aim: { x: p.x, y: p.y } }] : []; });
+      const v = buildWalkField(x0, y0, x1, y1, {
+        surf: (x, y) => { const i = cellAt(grid, x, y); return i >= 0 ? grid.surf[i]! : -1; },
+        wet: (x, y) => { const tx = Math.floor(x), ty = Math.floor(y); if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) return false; const c = cls[ty * MAP + tx]; return c === TC.WATER || c === TC.CREEK || this.pondWet(Math.floor(x / POND_CELL), Math.floor(y / POND_CELL)); },
+        ways, teeBoxes: (g.tees ?? []).map(t => ({ x: t.x, y: t.y, r: 1.5 })), holes,
+      });
+      this.walkFieldMemo = { key, v }; return v;
     }
     private syncGolfProps() {
     this.golfProps.clear();
@@ -7204,7 +7241,7 @@ export class Game {
     }
     if (this.cam.z < DISTRICT_Z) {
       ctx.fillStyle = '#ffbe3c';
-      for (let i = 0; i + 5 < W.length; i += 6) {
+      for (let i = 0; i + WALK_STRIDE - 1 < W.length; i += WALK_STRIDE) {
         const px = (worldX(W[i]!, W[i + 1]!) - X0) * ze + cw / 2, py = (worldY(W[i]!, W[i + 1]!) - Y0) * ze + ch / 2;
         if (px >= -2 * dpr && px <= cw + 2 * dpr && py >= -2 * dpr && py <= ch + 2 * dpr) ctx.fillRect(px - dpr, py - dpr, 2 * dpr, 2 * dpr);
       }
@@ -8143,7 +8180,7 @@ export class Game {
         this.grassPedOut[i] = out ? 1 : 0; this.grassPedX[i] = x; this.grassPedY[i] = y;
       }
       // Event frame groups have no stable visitor id: local occupancy is usable without inventing trajectories between groups.
-      for (const [fans, st] of [[this.traffic.walkers, 6], [this.traffic.stops, 4], [this.traffic.gallery, 8]] as const) for (let k = 0; k + st <= fans.length; k += st) if (fans[k + 2] > 0 && this.grassHere(fans[k], fans[k + 1])) this.grass.traffic(fans[k], fans[k + 1], fans[k], fans[k + 1], fans[k + 2] * 0.05 * elapsed, 'foot');
+      for (const [fans, st] of [[this.traffic.walkers, WALK_STRIDE], [this.traffic.stops, 4], [this.traffic.gallery, 8]] as const) for (let k = 0; k + st <= fans.length; k += st) if (fans[k + 2] > 0 && this.grassHere(fans[k], fans[k + 1])) this.grass.traffic(fans[k], fans[k + 1], fans[k], fans[k + 1], fans[k + 2] * 0.05 * elapsed, 'foot');
       const tr = this.traffic;
       if (this.grassCarAlive.length < tr.n) { this.grassCarX = new Float32Array(tr.n); this.grassCarY = new Float32Array(tr.n); this.grassCarAlive = new Uint8Array(tr.n); }
       for (let i = 0; i < tr.n; i++) {
@@ -8218,10 +8255,10 @@ export class Game {
       const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P, cheer);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
-    for (let i = 0; i + 5 < W.length; i += 6) {
+    for (let i = 0; i + WALK_STRIDE - 1 < W.length; i += WALK_STRIDE) {
       const x = W[i]!, y = W[i + 1]!;
       if (x < X0 || x > X1 || y < Y0 || y > Y1) continue;
-      const k = walkerPeople(W, i, i / 6, now, nS, P);
+      const k = walkerPeople(W, i, i / WALK_STRIDE, now, nS, P);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
     for (let i = 0; i + 3 < S.length; i += 4) {
@@ -8355,7 +8392,7 @@ export class Game {
     if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key || this.dayPlay.you !== bk) {
       const base = this.dayBook.rosterOf()!, roster = bk && me ? withYou(base, bookedGolfer(me, bk), bk.tee) : base, plan = dayPlan(course.view, roster);
       const youId = bk ? roster.golfers.length - 1 : -1;
-      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight), day: s.day, key: course.key, base, you: bk, youId };
+      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight, this.walkFieldNow()), day: s.day, key: course.key, base, you: bk, youId };
       this.dayArt = roster.golfers.map((p, i) => i === youId ? this.youArt() : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
       // (the whole day is played now: your score is known, and shown once your round is done)
       if (bk) bk.result = { strokes: plan.strokes[youId]!.reduce((a, b) => a + b, 0), par: course.view.holes.reduce((a, h) => a + h.par, 0), holes: course.view.holes.length, done: plan.done[youId] ?? Infinity };
@@ -9792,13 +9829,15 @@ export class Game {
     this.youInCart = !!sv?.in;
     if (this.youInCart && this.you) { this.you.x = c.x; this.you.y = c.y; }
   }
-  /** whether your cart may be at (x, y): where you may stand (no water, building, fence, wall, parked car) and not on a green or a bunker (the course
-   *  grid's surface there; play/yours.ts cartMay says the same by the lie) */
+  /** whether your cart may be at (x, y): where you may stand (no water, building, fence, wall, parked car) and not on a green, a tee box or a bunker (the course
+   *  grid's surface there; play/yours.ts cartMay says the same by the lie). T377 (#1033, the owner: "they should not be driving on tee boxes or greens"): the tee
+   *  boxes too, and the map's own water under the course */
   private cartOk = (x: number, y: number): boolean => {
     if (!this.youOk(x, y)) return false;
+    const wf = this.walkFieldMemo?.v; if (wf && !passable(wf, CART, x, y)) return false; // (the field as last read: syncCourseGates keeps it)
     const g = this.courseGrid; if (!g) return true;
     const k = cellAt(g, x, y); if (k < 0) return true;
-    const sf = g.surf[k]!; return sf !== SURF.green && sf !== SURF.bunker && sf !== SURF.waste;
+    const sf = g.surf[k]!; return sf !== SURF.green && sf !== SURF.tee && sf !== SURF.bunker && sf !== SURF.waste;
   };
   /** the cost of your cart's route over (x, y): where it may drive; the paths and roads cheap (a cart drives on them), the course as you walk it */
   private cartCost = (x: number, y: number): number => { if (!this.cartOk(x, y)) return Infinity; return Math.min(this.youCost(x, y), 2); };
@@ -10731,7 +10770,9 @@ export class Game {
     const st = g.crew?.staff, jobs = st && st.day === day ? { greens: new Set(st.today.greens), sands: new Set(st.today.sands), fairways: new Set(st.today.fairways), rough: new Set(st.today.rough) } : rotaJobs(day, holes.map(h => h.n));
     const yard = this.dayPark?.entrances[0] ?? g.clubhouse;
     const pace = capped(this.golfPace);
-    const cd = crewDay({ holes: crew, yard: { x: yard.x, y: yard.y }, gk: size.gk, mo: size.mo, ...jobs, windows, firstOn, pace: pace ? { walk: WALK_CAP * spm, cart: CART_CAP * spm } : null });
+    // T377: the crew's drives go round the tees, greens, bunkers and water (the cart profile of the course's walk field), each way worked out once
+    const wf = this.walkFieldNow(), rc = wf ? new RouteCache(wf, CART, { pad: 12 }) : null;
+    const cd = crewDay({ holes: crew, yard: { x: yard.x, y: yard.y }, gk: size.gk, mo: size.mo, ...jobs, windows, firstOn, pace: pace ? { walk: WALK_CAP * spm, cart: CART_CAP * spm } : null, ...(rc ? { route: (ax: number, ay: number, bx: number, by: number) => rc.route({ x: ax, y: ay }, { x: bx, y: by }) } : {}) });
     this.crew = { day: cd, view: new CrewView(cd, pace ? { walk: WALK_CAP, cart: CART_CAP } : null), town: day, nextCup: -Infinity };
   }
   /** T269: the grounds crew's cut of each hole now (golf/crew.ts crewFlips: the saved phases and today's fresh stripes behind the mowers), as the
@@ -11055,7 +11096,7 @@ export class Game {
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner, this.tourneyConditions(key));
     const art = golfers.map(p => p.owner ? (this.golf?.player?.you ? this.youArt() : ownerArt(p.sex)) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
-    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace(), height: this.ballHeight }), key, art, finish: new DayFinish(), own: null, waves: -1 };
+    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace(), height: this.ballHeight, field: this.walkFieldNow() }), key, art, finish: new DayFinish(), own: null, waves: -1 };
     if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: owner.skills ?? OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}), ...(owner.skills ? { skills: owner.skills } : {}) };
     return pl;
   }

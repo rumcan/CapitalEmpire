@@ -97,7 +97,7 @@ test('the snap: near the ball (SNAP_TILES) you address it, ADDRESS_BACK behind i
 test('the cart drives at its pace on the keys, up to a green or a bunker and never onto one', () => {
   const c = makeYou(140, 2.5); c.speed = CART_TILES; // (north of hole 1's green, at y 10 round x 150)
   const ok = (x: number, y: number) => cartMay(lieAt(x, y));
-  assert.ok(!cartMay('green') && !cartMay('bunker') && !cartMay('water') && cartMay('fairway') && cartMay('rough') && cartMay('out'));
+  assert.ok(!cartMay('green') && !cartMay('tee') && !cartMay('bunker') && !cartMay('water') && cartMay('fairway') && cartMay('rough') && cartMay('out')); // (T377: nor on a tee box)
   // down the screen and to the right is +x +y on the map: toward the green; hold it for 10 s
   for (let k = 0; k < 600; k++) keyStep(c, 1, 1, false, 1 / 60, ok);
   assert.ok(ok(c.x, c.y), 'the cart is never on the green');

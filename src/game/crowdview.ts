@@ -4,6 +4,7 @@
 // and the engine only packs the sprites.
 import { SPECTATOR_CLIPS, type PeopleClip } from './library';
 import { facing } from './ext/pedestrians';
+import { WALK_STRIDE } from './event/crowd';
 
 /** T212 (#557): the putt clip's impact, seconds into GOLFER_CLIPS.golf_putt (its sheet's impactSecs: render-person-3d.mjs --putt, a hand-keyed
  *  pendulum: the top of the backstroke at 0.5 s, the putter back at the address and the ball struck at 0.8 s, the finish held from 1.05 s) */
@@ -112,17 +113,24 @@ export function queuePeople(x: number, y: number, fx: number, fy: number, count:
   return n;
 }
 
-/** a walking party, the walker group idx at float offset o of the 6-float walker buffer (x, y, n, stage, tx, ty): min(round(n), 3) people side by
- *  side across the heading (toward its target), 0.4 tiles apart, facing it, on the walk loop (one phase for the party, its own by idx). Writes into
- *  out; returns the count */
-export function walkerPeople(W: ArrayLike<number>, o: number, idx: number, now: number, people: number, out: CrowdPerson[]): number {
+/** a walking party, the walker group at float offset o of the 7-float walker buffer (x, y, n, stage, tx, ty, id: the point it is heading for now, and its own
+ *  number): min(round(n), 3) people who walk together and not in step (T377, #1033, the owner: "spectators walking in step 3 at a time"): each has his own
+ *  pace (the walk loop at 0.85 to 1.15 of its rate), phase, a place along the heading that drifts (a person is ahead of the others, then behind) and a place across
+ *  it that drifts, all from the group's id and his number (the id is the walker's own, not its index in the buffer, so a person is the same person from frame to
+ *  frame). The group faces its heading. Writes into out; returns the count. stride 6 reads the old buffer (idx is then the seed) */
+export function walkerPeople(W: ArrayLike<number>, o: number, idx: number, now: number, people: number, out: CrowdPerson[], stride = WALK_STRIDE): number {
   const x = W[o]!, y = W[o + 1]!, k = Math.min(Math.round(W[o + 2]!), 3);
   if (people <= 0 || k <= 0) return 0;
+  const id = stride > 6 ? W[o + 6]! : idx;
   unit(W[o + 4]! - x, W[o + 5]! - y);
-  const ux = U[0], uy = U[1], vx = -uy, vy = ux, row = rowToward(ux, uy), frame = at(SPECTATOR_CLIPS.walk, now + hash(idx, 9) * 2);
+  const ux = U[0], uy = U[1], vx = -uy, vy = ux, row = rowToward(ux, uy), C = SPECTATOR_CLIPS.walk;
   for (let j = 0; j < k; j++) {
-    const along = (j - (k - 1) / 2) * 0.4, p = slot(out, j);
-    p.x = x + vx * along; p.y = y + vy * along; p.group = 0; p.person = Math.floor(hash(idx, j) * people); p.row = row; p.frame = frame;
+    const s = 11 + j * 7, h1 = hash(id, s), h2 = hash(id, s + 1), h3 = hash(id, s + 2), h4 = hash(id, s + 3), h5 = hash(id, s + 4), h6 = hash(id, s + 5), c = j - (k - 1) / 2;
+    // the pace and the phase: the clip at 0.85 to 1.15 of its rate, from a start of his own
+    const frame = at(C, now * (0.85 + 0.3 * h1) + h2 * 3);
+    // along the heading: his place in the party (0.35 to 0.75 tiles apart) and a slow drift of 0.45 (a period of 5 to 11 s); across it: 0.35 to 0.6 apart, drifting 0.15
+    const along = c * (0.35 + 0.4 * h3) + Math.sin(now * (0.55 + 0.6 * h4) + h5 * 6.2832) * 0.45, across = c * (0.35 + 0.25 * h4) + Math.sin(now * (0.3 + 0.35 * h6) + h1 * 6.2832) * 0.15, p = slot(out, j);
+    p.x = x + ux * along + vx * across; p.y = y + uy * along + vy * across; p.group = 0; p.person = Math.floor(hash(id, j) * people); p.row = row; p.frame = frame;
   }
   return k;
 }
