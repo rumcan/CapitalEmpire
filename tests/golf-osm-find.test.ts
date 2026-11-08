@@ -207,13 +207,13 @@ out geom;`;
     assert.equal(calls.length, 4);
     const ok = fakeNet((_u, _i, n) => (n < 3 ? json({}, 429) : json({ elements: [{ type: 'node', id: 1 }] })));
     const a = await runOverpass('Q', ok.net);
-    assert.equal(ok.calls.length, 3); assert.equal(a.server, 'https://overpass.private.coffee/api/interpreter');
+    assert.equal(ok.calls.length, 3); assert.equal(a.server, 'https://overpass.kumi.systems/api/interpreter');
   });
   it('gives the main server a long while and each mirror less (a mirror that is down hangs), and says which server it asks', async () => {
     const { net, deadlines } = fakeNet(() => { throw abortError(); }), steps: string[] = [];
     await assert.rejects(() => runOverpass('Q', net, { onStep: t => steps.push(t) }), ServerDown);
-    assert.deepEqual(deadlines, [130000, 45000, 45000]);
-    assert.equal(steps.length, 3); assert.match(steps[0]!, /overpass-api\.de/); assert.match(steps[1]!, /overpass\.kumi\.systems/); assert.match(steps[2]!, /overpass\.private\.coffee/);
+    assert.deepEqual(deadlines, [130000, 60000, 45000, 45000]);
+    assert.equal(steps.length, 4); assert.match(steps[0]!, /overpass-api\.de/); assert.match(steps[1]!, /maps\.mail\.ru/); assert.match(steps[2]!, /overpass\.kumi\.systems/); assert.match(steps[3]!, /overpass\.private\.coffee/);
     assert.match(steps[1]!, /did not answer|no answer/i, 'it says why it moved on');
   });
   it('leaves a server that hung alone for five minutes, and tries it again after', async () => {

@@ -4,6 +4,7 @@
 import type { EventCardView } from '../../game/engine';
 import { clock } from '../../game/golf/player';
 import { Icon } from '../Icon';
+import { PullBanner } from './CardsCard';
 
 /** the mayor's stand-in: a framed figure with the label the owner's rule asks for ("Stand In for <name>") */
 function MayorStandIn({ presenting }: { presenting: boolean }) {
@@ -19,7 +20,7 @@ function MayorStandIn({ presenting }: { presenting: boolean }) {
   );
 }
 
-export function EventCard({ view: v, right, onClose, onEnter, onPlay }: { view: EventCardView; right: string; onClose: () => void; onEnter: () => void; onPlay: () => void }) {
+export function EventCard({ view: v, right, onClose, onEnter, onPlay, onMachine }: { view: EventCardView; right: string; onClose: () => void; onEnter: () => void; onPlay: () => void; /** T336: opens the vending machine (the card pull this result paid) */ onMachine?: () => void }) {
   const mayor = v.id === 'mayor', r = v.result;
   const about = mayor
     ? 'The town\'s yearly event at your club. You host it, you may play in it, and the mayor presents the cup.'
@@ -46,6 +47,7 @@ export function EventCard({ view: v, right, onClose, onEnter, onPlay }: { view: 
               {r.pos === null && <p className="text-slate-400">{r.strokes === null && r.of > 0 ? 'You did not hand in a card this time.' : ''}</p>}
             </div>
           </div>
+          {v.pull && <PullBanner earn={v.pull} onOpen={onMachine} />}
         </div>
       ) : (
         <div className="space-y-2 text-xs">

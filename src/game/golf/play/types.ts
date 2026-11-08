@@ -3,7 +3,7 @@
 import type { Pt } from '../holes';
 import type { TeeKind } from '../types';
 import type { LieKind } from './lies';
-import type { Mod } from './mods';
+import type { MechId, Mod } from './mods';
 export type { Pt };
 
 /** the surface a ball lies on: tee, fairway, rough, fescue (deep grass), bunker, green, water, or out of bounds */
@@ -26,7 +26,9 @@ export interface GameSkills { driving: number; irons: number; short: number; put
   /** T334 part 2: the modifiers stacked on the stats (cards, clubs and shafts: T335, T336; mods.ts applyMods); absent: none */
   mods?: readonly Mod[];
   /** T335 (#961): the clubs in his bag (any order; bag.ts bagGear): the shot panel offers these and the caddie (chooseShot) picks among them. Absent: the original seven clubs, as before the bag */
-  clubs?: readonly Club[] }
+  clubs?: readonly Club[];
+  /** T336 (#962): the mechanics his cards unlock (mods.ts MechId: the Space power-spam, spin added in the air): he may do only these. Absent: the legacy set (both), as before the cards; a new game's profile lists its own */
+  mech?: readonly MechId[] }
 /** a golfer: a unique id (0..size-1), name, sex, whether a pro, skill (0..1), look (0..4, the art variant), and the owner's golfer. T213 (entourage.ts):
  *  the cart he rides (an index shared by the two golfers of a cart; absent: he walks) and whether a caddie walks with him */
 export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skill: number; look: number; owner?: boolean; cart?: number; caddie?: boolean;

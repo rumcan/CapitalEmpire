@@ -15,6 +15,7 @@ import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, type DayRoster } from './ever
 import type { GameSkills, Golfer, Sex } from './play/types';
 import { readGameSkills } from './play/mods';
 import { bagGear, normalizeBag, type BagSave, type Gear } from './play/bag';
+import { cardsGear, emptyCards, normalizeCards, practiceFactor, type CardsSave } from './cards';
 import type { TeeKind } from './types';
 import { normalizeYou, type YouSave } from './you';
 import { normalizeYourRound, type YourRound } from './play/yours';
@@ -59,12 +60,17 @@ export function gameSkills(sk: SkillsIn, pressure: number, gear?: Gear): GameSki
   const f = 1 - NERVE_LOSS * Math.min(1, Math.max(0, pressure)) * (1 - clampSkill(sk.nerve) / 100), s = (v: number) => clampSkill(v) / 100 * f;
   // (T334 part 2: the new stats are in only when the skills have them: the older five play exactly as they did)
   return { driving: s(sk.driving), irons: s(sk.irons), short: s(sk.short), putting: s(sk.putting), ...(sk.power !== undefined ? { power: s(sk.power) } : {}), ...(sk.accuracy !== undefined ? { accuracy: s(sk.accuracy) } : {}), ...(sk.touch !== undefined ? { touch: s(sk.touch) } : {}),
-    ...(gear ? { ...(gear.mods.length ? { mods: gear.mods } : {}), clubs: gear.clubs } : {}) };
+    ...(gear ? { ...(gear.mods.length ? { mods: gear.mods } : {}), clubs: gear.clubs, ...(gear.mech ? { mech: gear.mech } : {}) } : {}) };
 }
-/** T335: your bag's gear for the shot model (the mods of its upgrades and putter fitting, the clubs in it): the default bag for a profile without one */
-export const gearOf = (p: Pick<PlayerProfile, 'bag'>): Gear => bagGear(p.bag);
+/** T335: your gear for the shot model (the mods of your bag's upgrades and putter fitting, the clubs in it): the default bag for a profile without one. T336 (#962): with your equipped cards' mods after the bag's and the mechanics
+ *  they unlock; `competition` switches off a card that is banned in competition (the club's events, the tournament). A profile without cards (a save from before them) has the bag's gear exactly: the shot model's legacy mechanics */
+export const gearOf = (p: Pick<PlayerProfile, 'bag' | 'cards'>, competition = false): Gear => cardsGear(bagGear(p.bag), p.cards, competition);
+/** T336: your gear for a round of pressure p (PRESSURE): a competition's (the tournament's pressure and up) plays without a card that is banned in competition */
+export const gearFor = (p: Pick<PlayerProfile, 'bag' | 'cards'>, pressure: number): Gear => gearOf(p, pressure >= PRESSURE.tournament);
 /** T335: the profile with a bag (null: the default bag, which is not saved); the profile passed in is not changed */
 export function withBag(p: PlayerProfile, bag: BagSave | null): PlayerProfile { const { bag: _old, ...rest } = p; void _old; return bag ? { ...rest, bag } : rest; }
+/** T336: the profile with new cards (the profile passed in is not changed) */
+export function withCards(p: PlayerProfile, cards: CardsSave): PlayerProfile { return { ...p, cards }; }
 
 /** the handicap's weights: each part of the game's share of the strokes a better skill saves, measured on the shot model (output/t241-cal, 600
  *  rounds a point on the tests' synthetic course: +0.1 of driving saves about 2.1 strokes at a skill of 0.4, the irons 0.7, the short game 0.6,
@@ -143,6 +149,9 @@ export interface PlayerProfile {
   lesson?: { day: number; with: string; used: boolean };
   /** T335 (#961): your bag (play/bag.ts): the upgrades of your clubs, the third wood's slot, the putter's shaft and head, the sponsor's vouchers; absent: the default bag (every club Garage-sale: the model's own) */
   bag?: BagSave;
+  /** T336 (#962): your cards (golf/cards): the ones you own, the 8 slots, the pulls waiting at the vending machine. A new game has them (empty: the Space power-spam and the spin added in the air are the cards' to unlock);
+   *  ABSENT is a save from before the cards, which keeps both mechanics (and makes its cards, `legacy`, with its first pull) */
+  cards?: CardsSave;
 }
 /** the practice log and the rounds keep this many (newest last) */
 export const LOG_MAX = 30, ROUNDS_MAX = 20;
@@ -153,9 +162,10 @@ const clampSkill = (v: number): number => Math.min(100, Math.max(0, Number.isFin
 const keep = (v: number): number => Math.round(clampSkill(v) * 100) / 100;
 const noSessions = (): Record<PracticeKind, number> => ({ bucket: 0, putting: 0, chipping: 0 });
 
-/** a new game's profile (and an old save's: it had none) */
-export function startProfile(sex: Sex = 'm'): PlayerProfile {
-  return { v: 1, name: DEFAULT_NAME, sex, skills: { ...START_SKILLS }, log: [], rounds: [], today: { day: 0, n: noSessions() }, busy: null, booked: null };
+/** a new game's profile (and an old save's: it had none). T336: with empty cards: a new game earns the Space power-spam and the spin added in the air with cards. `legacy` (a profile made for a save from before the profile,
+ *  by the engine when it loads one): its cards start `legacy`, which keeps both mechanics, as that save always had them */
+export function startProfile(sex: Sex = 'm', legacy = false): PlayerProfile {
+  return { v: 1, name: DEFAULT_NAME, sex, skills: { ...START_SKILLS }, log: [], rounds: [], today: { day: 0, n: noSessions() }, busy: null, booked: null, cards: emptyCards(legacy) };
 }
 
 /** a finite number, else d */
@@ -198,6 +208,7 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     ...(normalizeTitles(p.titles) ? { titles: normalizeTitles(p.titles) } : {}),
     ...(p.lesson && typeof p.lesson === 'object' && Number.isFinite(p.lesson.day) && typeof p.lesson.with === 'string' ? { lesson: { day: Math.round(p.lesson.day), with: p.lesson.with.slice(0, 40), used: p.lesson.used === true } } : {}),
     ...(normalizeBag(p.bag) ? { bag: normalizeBag(p.bag)! } : {}),
+    ...(normalizeCards(p.cards) ? { cards: normalizeCards(p.cards)! } : {}), // T336: absent stays absent: a save from before the cards keeps the mechanics the game had
   };
 }
 
@@ -206,10 +217,10 @@ export const sessionsToday = (p: PlayerProfile, kind: PracticeKind, day: number)
 
 /** what one session would give now: each skill it raises, from and to, and the handicap after (the cards' preview; practise applies the same) */
 export function practicePreview(p: PlayerProfile, kind: PracticeKind, day: number, lesson: Lesson | null = null): { gains: { id: SkillId; from: number; to: number; gain: number }[]; hcp: [number, number] } {
-  const k = sessionsToday(p, kind, day), next = { ...p.skills }, gains: { id: SkillId; from: number; to: number; gain: number }[] = [];
+  const k = sessionsToday(p, kind, day), next = { ...p.skills }, gains: { id: SkillId; from: number; to: number; gain: number }[] = [], pf = practiceFactor(p.cards); // (T336: Range Rat's practice bonus; 1 without cards)
   for (const id of SKILL_IDS) {
     const base = PRACTICE[kind].gains[id]; if (base === undefined) continue;
-    const from = p.skills[id], to = keep(from + gainOf(from, base, k, lesson?.bonus ?? 0));
+    const from = p.skills[id], to = keep(from + gainOf(from, base, k, lesson?.bonus ?? 0) * pf);
     next[id] = to; gains.push({ id, from, to, gain: Math.round((to - from) * 100) / 100 });
   }
   return { gains, hcp: [handicapOf(p.skills), handicapOf(next)] };
@@ -260,7 +271,7 @@ export function playedRound(p: PlayerProfile, r: { day: number; kind: RoundKind;
 /** your golfer for a round (the shot model's, as a field golfer): id, your name and sex, your skills under the round's pressure (gameSkills), their
  *  average as his skill, look 0 (T240 gives the looks), the white tees unless you pick others. Money matches (T244) and the tournament (T246) take it */
 export function playerGolfer(p: PlayerProfile, id: number, pressure: number, tees: TeeKind = 'middle'): Golfer {
-  const skills = gameSkills(p.skills, pressure, gearOf(p));
+  const skills = gameSkills(p.skills, pressure, gearFor(p, pressure)); // (T336: a card banned in competition is out of a competition's pressure)
   return { id, name: p.name, sex: p.sex, pro: false, skill: (skills.driving + skills.irons + skills.short + skills.putting) / 4, look: 0, tees, skills };
 }
 

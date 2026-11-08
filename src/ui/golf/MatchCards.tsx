@@ -4,7 +4,9 @@
 import { useState } from 'react';
 import { MIN_STAKE, STAKE_STEP, firstName, type HoleWin, type MatchView } from '../../game/golf/play/match';
 import type { CardRow } from '../../game/golf/play/yours';
+import type { Earn } from '../../game/golf/cards';
 import { Icon } from '../Icon';
+import { PullBanner } from './CardsCard';
 
 const money = (n: number) => `$${Math.abs(n).toLocaleString('en-US')}`;
 const hcpT = (h: number) => h < 0 ? `+${(-h).toFixed(1)}` : h.toFixed(1);
@@ -67,7 +69,7 @@ export function MatchRows({ rows, from, m, cell }: { rows: CardRow[]; from: numb
 }
 
 /** the result card: who won and by how much, the money, the reputation, your record against them now */
-export function MatchResultCard({ r, onClose }: { r: { name: string; text: string; result: 'w' | 'l' | 'h'; stake: number; money: number; rep: number; res: HoleWin[]; card: CardRow[]; ocard: number[]; rival: string }; onClose: () => void }) {
+export function MatchResultCard({ r, onClose, onMachine }: { r: { name: string; text: string; result: 'w' | 'l' | 'h'; stake: number; money: number; rep: number; res: HoleWin[]; card: CardRow[]; ocard: number[]; rival: string; /** T336: the card pull a win paid */ pull?: Earn | null }; onClose: () => void; /** T336: opens the vending machine */ onMachine?: () => void }) {
   const head = r.result === 'w' ? 'You won the match' : r.result === 'l' ? `${firstName(r.name)} won the match` : 'Match halved';
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
@@ -86,6 +88,7 @@ export function MatchResultCard({ r, onClose }: { r: { name: string; text: strin
           <div className="rounded-lg bg-white/5 p-2"><div className="text-slate-400">Reputation</div><b className="text-base text-white">{r.rep > 0 ? `+${r.rep}` : '±0'}</b></div>
           <div className="rounded-lg bg-white/5 p-2"><div className="text-slate-400">Your record</div><b className="text-[11px] text-sky-200">{r.rival.replace('You ', '')}</b></div>
         </div>
+        {r.pull && <PullBanner earn={r.pull} onOpen={onMachine} />}
         <p className="text-[11px] text-slate-500">{firstName(r.name)} will remember this: a rival may ask for a rematch on a later day.</p>
         <button className="btn-gold w-full py-1.5 text-sm" onClick={onClose} data-testid="match-result-ok">Done</button>
       </div>
