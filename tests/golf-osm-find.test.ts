@@ -32,13 +32,13 @@ const ronde = rondeboschJson as unknown as OsmCourseJson, magnolia = magnoliaJso
 interface Call { url: string; init?: RequestInit; at: number }
 /** a Net whose fetch answers from `handler`, whose clock only moves when something sleeps, and whose deadlines never fire */
 function fakeNet(handler: (url: string, init: RequestInit | undefined, n: number) => Response | Promise<Response>, t0 = 1_800_000_000_000) {
-  const clock = { t: t0 }, calls: Call[] = [];
+  const clock = { t: t0 }, calls: Call[] = [], deadlines: number[] = [];
   const net: Net = {
     fetch: async (url, init) => { calls.push({ url, init, at: clock.t }); return handler(url, init, calls.length); },
     now: () => clock.t, sleep: async ms => { clock.t += ms; },
-    deadline: (_ms, outer) => ({ signal: outer ?? new AbortController().signal, clear() {} }),
+    deadline: (ms, outer) => { deadlines.push(ms); return { signal: outer ?? new AbortController().signal, clear() {} }; },
   };
-  return { net, calls, clock };
+  return { net, calls, clock, deadlines };
 }
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}): Response => new Response(JSON.stringify(body), { status, headers });
 const abortError = (): Error => Object.assign(new Error('aborted'), { name: 'AbortError' });
@@ -208,6 +208,33 @@ out geom;`;
     const ok = fakeNet((_u, _i, n) => (n < 3 ? json({}, 429) : json({ elements: [{ type: 'node', id: 1 }] })));
     const a = await runOverpass('Q', ok.net);
     assert.equal(ok.calls.length, 3); assert.equal(a.server, 'https://overpass.private.coffee/api/interpreter');
+  });
+  it('gives the main server a long while and each mirror less (a mirror that is down hangs), and says which server it asks', async () => {
+    const { net, deadlines } = fakeNet(() => { throw abortError(); }), steps: string[] = [];
+    await assert.rejects(() => runOverpass('Q', net, { onStep: t => steps.push(t) }), ServerDown);
+    assert.deepEqual(deadlines, [130000, 45000, 45000]);
+    assert.equal(steps.length, 3); assert.match(steps[0]!, /overpass-api\.de/); assert.match(steps[1]!, /overpass\.kumi\.systems/); assert.match(steps[2]!, /overpass\.private\.coffee/);
+    assert.match(steps[1]!, /did not answer|no answer/i, 'it says why it moved on');
+  });
+  it('leaves a server that hung alone for five minutes, and tries it again after', async () => {
+    const { net, calls, clock } = fakeNet(url => { if (url === 'a') throw abortError(); return json({ elements: [] }); });
+    const first = await runOverpass('Q', net, { servers: ['a', 'b'] });
+    assert.equal(first.server, 'b'); assert.equal(calls.length, 2);
+    await runOverpass('Q', net, { servers: ['a', 'b'] });
+    assert.equal(calls.length, 3, 'a is left alone: only b is asked');
+    clock.t += 6 * 60_000;
+    await runOverpass('Q', net, { servers: ['a', 'b'] });
+    assert.equal(calls.length, 5, 'after the wait a is tried again (and hangs again), then b');
+  });
+  it('sends nothing for the minute after every server was busy, then asks again', async () => {
+    const { net, calls, clock } = fakeNet(() => json({}, 503));
+    await assert.rejects(() => runOverpass('Q', net, { servers: ['a', 'b'] }), ServerBusy);
+    assert.equal(calls.length, 2);
+    await assert.rejects(() => runOverpass('Q', net, { servers: ['a', 'b'] }), (e: unknown) => e instanceof ServerBusy && (e as ServerBusy).retryAfterS > 0);
+    assert.equal(calls.length, 2, 'cooling down: nothing was sent');
+    clock.t += 61_000;
+    await assert.rejects(() => runOverpass('Q', net, { servers: ['a', 'b'] }), ServerBusy);
+    assert.equal(calls.length, 4, 'a minute later both are asked again');
   });
   it('says "down" when no server could be reached and "busy" when any one was busy; a cancel stops at once', async () => {
     await assert.rejects(() => runOverpass('Q', fakeNet(() => { throw new TypeError('Failed to fetch'); }).net), ServerDown);

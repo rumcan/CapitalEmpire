@@ -35,8 +35,10 @@ if (first === 'hits') {
   console.log('  hits:', JSON.stringify(rows));
   console.log('picking the first hit: one real Overpass query ...');
   await page.click('[data-testid^=find-hit-]');
+  const seen = new Set(), t0 = Date.now(), watch = setInterval(async () => { const p = await page.$eval(T('find-progress'), e => e.textContent).catch(() => null); if (p && !seen.has(p)) { seen.add(p); console.log(`  progress after ${Math.round((Date.now() - t0) / 1000)} s: ${p}`); } }, 1500);
   const done = await Promise.race([page.waitForSelector(T('find-preview'), { timeout: 200000 }).then(() => 'preview'), page.waitForSelector(T('find-msg'), { timeout: 200000 }).then(() => 'msg')]).catch(() => 'timeout');
-  console.log('  the card shows:', done, done === 'msg' ? await page.$eval(T('find-msg'), e => e.textContent) : '');
+  clearInterval(watch);
+  console.log('  the card shows:', done, `after ${Math.round((Date.now() - t0) / 1000)} s`, done === 'msg' ? await page.$eval(T('find-msg'), e => e.textContent) : '');
   if (done === 'preview') {
     console.log('  grade:', await page.$eval(T('find-grade'), e => e.dataset.grade), '| counts:', await page.$eval(T('find-counts'), e => e.textContent));
     console.log('  size:', await page.$eval(T('find-size'), e => e.textContent));

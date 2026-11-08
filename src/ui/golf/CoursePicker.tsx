@@ -78,8 +78,8 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
       else { setMsg(e instanceof ServerBusy ? BUSY_MESSAGE : e instanceof ServerDown ? DOWN_MESSAGE : `That did not work: ${(e as Error).message}`); setView(back); }
     } finally { ctl.current = null; }
   };
-  const fetchAndShow = async (ref: OsmRef, hint: Hint, from: View, signal: AbortSignal, refresh = false) => {
-    const p = await fetchPreview(ref, hint, deps!, { refresh, signal });
+  const fetchAndShow = async (ref: OsmRef, hint: Hint, from: View, signal: AbortSignal, refresh = false, step?: (t: string) => void) => {
+    const p = await fetchPreview(ref, hint, deps!, { refresh, signal, onStep: step });
     if (alive.current) { setView({ v: 'preview', p, from }); listKept(deps!); }
   };
   const submit = () => {
@@ -90,18 +90,18 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
       if (!alive.current) return;
       if (o.kind === 'hits') setView({ v: 'hits', q: o.query, hits: o.hits });
       else if (o.kind === 'near') setView({ v: 'near', q: o.query, near: o.near, cands: o.candidates });
-      else if (o.kind === 'ref') { step(`Fetching ${refText(o.ref)} from the map servers (one request; a big course can take a minute)...`); await fetchAndShow(o.ref, {}, { v: 'home' }, signal); }
+      else if (o.kind === 'ref') { step(`Fetching ${refText(o.ref)} from the map servers (one request; a big course can take a minute)...`); await fetchAndShow(o.ref, {}, { v: 'home' }, signal, false, step); }
       else { setMsg(o.message); setView({ v: 'home' }); }
     }, { v: 'home' });
   };
   const pick = (ref: OsmRef, hint: Hint, list: View) =>
-    void run(`Fetching ${hint.name ?? refText(ref)} from the map servers (one request; a big course can take a minute)...`, signal => fetchAndShow(ref, hint, list, signal), list);
+    void run(`Fetching ${hint.name ?? refText(ref)} from the map servers (one request; a big course can take a minute)...`, (signal, step) => fetchAndShow(ref, hint, list, signal, false, step), list);
   const openKept = (r: CourseRecord) => void run(`Reading ${r.name}...`, async () => {
     const p = await previewOfKept(r.id, deps!);
     if (!alive.current) return;
     if (p) setView({ v: 'preview', p, from: { v: 'home' } }); else { setMsg('That course is no longer kept.'); setView({ v: 'home' }); listKept(deps!); }
   }, { v: 'home' });
-  const refresh = (r: CourseRecord) => { const [t, id] = r.id.split('/'); void run(`Fetching ${r.name} again (one request)...`, signal => fetchAndShow({ type: t as OsmRef['type'], id: Number(id) }, {}, { v: 'home' }, signal, true), { v: 'home' }); };
+  const refresh = (r: CourseRecord) => { const [t, id] = r.id.split('/'); void run(`Fetching ${r.name} again (one request)...`, (signal, step) => fetchAndShow({ type: t as OsmRef['type'], id: Number(id) }, {}, { v: 'home' }, signal, true, step), { v: 'home' }); };
   const remove = async (r: CourseRecord) => {
     if (armed !== r.id) { setArmed(r.id); return; }
     setArmed(null); await deps?.lib.remove(r.id); if (deps) listKept(deps);

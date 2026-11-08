@@ -33,10 +33,10 @@ export type SearchOutcome =
   /** nothing found, or nothing the search can use: the sentence for the card */ | { kind: 'none'; message: string };
 
 /** the look for golf near a place: one Overpass query, its answer (the candidates) kept for a week like Nominatim's, so the same search is not asked twice */
-export async function lookNear(near: Near, d: FindDeps, signal?: AbortSignal): Promise<Candidate[]> {
+export async function lookNear(near: Near, d: FindDeps, signal?: AbortSignal, onStep?: (text: string) => void): Promise<Candidate[]> {
   const key = `near:${near.lat.toFixed(4)},${near.lon.toFixed(4)}`, cache = d.lib.answers(), kept = await cache.get(key).catch(() => undefined);
   if (kept && d.net.now() - kept.at < ANSWER_TTL_MS && Array.isArray(kept.value)) return kept.value as Candidate[];
-  const a = await runOverpass(nearQuery(near.lat, near.lon), d.net, { timeoutMs: 70000, signal }), found = candidatesOf(a.json);
+  const a = await runOverpass(nearQuery(near.lat, near.lon), d.net, { timeoutsMs: [70000, 30000, 30000], signal, onStep }), found = candidatesOf(a.json);
   await cache.put(key, found, d.net.now()).catch(() => undefined);
   return found;
 }
@@ -50,7 +50,7 @@ export async function search(text: string, d: FindDeps, signal?: AbortSignal, on
   if (q.kind === 'place') {
     const near: Near = { name: `${q.lat.toFixed(4)}, ${q.lon.toFixed(4)}`, lat: q.lat, lon: q.lon };
     onStep?.(`Looking for golf features near ${near.name}...`);
-    const candidates = await lookNear(near, d, signal);
+    const candidates = await lookNear(near, d, signal, onStep);
     return candidates.length ? { kind: 'near', query: text, near, candidates } : { kind: 'none', message: 'No golf courses or golf features were found near that place.' };
   }
   const f = await d.nominatim.search(q.text, signal);
@@ -59,7 +59,7 @@ export async function search(text: string, d: FindDeps, signal?: AbortSignal, on
   if (!anchor) return { kind: 'none', message: `Nothing on the map is called "${q.text}". Try another spelling, a town, or paste the openstreetmap.org link.` };
   const near: Near = { name: anchorLine(anchor), lat: anchor.lat, lon: anchor.lon, place: [anchor.town, anchor.country].filter(Boolean).join(', ') };
   onStep?.(`No golf course by that name: looking for golf features near ${near.name}...`);
-  const candidates = await lookNear(near, d, signal);
+  const candidates = await lookNear(near, d, signal, onStep);
   return candidates.length ? { kind: 'near', query: f.query, near, candidates }
     : { kind: 'none', message: `No golf course is called "${q.text}", and no golf features were found near ${near.name}.` };
 }
@@ -86,10 +86,10 @@ export async function previewOfKept(id: string, d: FindDeps): Promise<Preview | 
 }
 
 /** fetches a course (ONE Overpass query), keeps its answer, and returns its preview; a course already kept is not fetched again unless `refresh` */
-export async function fetchPreview(ref: OsmRef, hint: Hint, d: FindDeps, opt: { refresh?: boolean; signal?: AbortSignal } = {}): Promise<Preview> {
+export async function fetchPreview(ref: OsmRef, hint: Hint, d: FindDeps, opt: { refresh?: boolean; signal?: AbortSignal; onStep?: (text: string) => void } = {}): Promise<Preview> {
   const id = refText(ref);
   if (!opt.refresh) { const kept = await previewOfKept(id, d); if (kept) return kept; }
-  const a = await runOverpass(courseQuery(ref), d.net, { signal: opt.signal });
+  const a = await runOverpass(courseQuery(ref), d.net, { signal: opt.signal, onStep: opt.onStep });
   const old = opt.refresh ? await d.lib.get(id).catch(() => undefined) : undefined;
   const src = a.json.elements.find(e => e.type === ref.type && e.id === ref.id), tags = src?.tags ?? {};
   const name = old?.name ?? (tags.name?.trim() || hint.name?.trim() || id);

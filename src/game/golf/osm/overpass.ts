@@ -1,6 +1,6 @@
 // The map data of "Find a real course" (T358, #1003): Overpass, from the player's browser. ONE query makes a course (the same one scripts/dev/osm-course.mjs
 // asks: the course's boundary and, inside it, every golf=* feature, water, streams and woods, as geometry), tried on the main server and then on the two
-// mirrors (a timeout or a busy answer moves on; nothing is retried on the same server). A second, smaller query looks for golf features near a place when
+// mirrors (a timeout or a busy answer moves on; nothing is retried on the same server; a server that hung is left alone for five minutes, one that was busy for a minute). A second, smaller query looks for golf features near a place when
 // a name search found no golf course (an estate like Woodhill: a residential area with golf features inside): it lists the golf courses near and the areas
 // that hold golf features, so the player can pick the area. Pure of DOM: the network and the clock come in as parts (polite.ts).
 import type { OsmRef } from './query';
@@ -8,6 +8,25 @@ import { BUSY_STATUS, Cancelled, ServerBusy, ServerDown, retryAfterOf, type Net 
 
 /** the public Overpass servers, the main one first (on 2026-11-08 only the main one answered; the mirrors are tried in this order when it does not) */
 export const OVERPASS_SERVERS: readonly string[] = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
+
+/** how long each server is given before the next is tried, ms: the main server a long while (a big course can take a minute), a mirror less (a mirror that is
+ *  down hangs: on 2026-11-08 one held a request for the whole 130 s and gave nothing) */
+export const SERVER_TIMEOUT_MS: readonly number[] = [130000, 45000, 45000];
+/** a server that timed out is left alone this long, ms; one that was busy or refused, a minute */
+const HUNG_MS = 5 * 60_000, BUSY_MS = 60_000;
+
+/** what this visit has learned of each server: one that hung or was busy is not asked again at once (the player's retry does not wait on it again) */
+class Health {
+  private readonly until = new Map<string, number>();
+  constructor(private readonly net: Net) {}
+  ready(url: string): boolean { return (this.until.get(url) ?? 0) <= this.net.now(); }
+  mark(url: string, ms: number): void { if (ms > 0) this.until.set(url, this.net.now() + ms); else this.until.delete(url); }
+  /** whole seconds until the first of these servers may be asked again */
+  waitS(urls: readonly string[]): number { return Math.max(1, Math.ceil((Math.min(...urls.map(u => this.until.get(u) ?? 0)) - this.net.now()) / 1000)); }
+}
+const healths = new WeakMap<Net, Health>();
+const healthOf = (net: Net): Health => { let h = healths.get(net); if (!h) { h = new Health(net); healths.set(net, h); } return h; };
+const hostOf = (url: string): string => { try { return new URL(url).hostname; } catch { return url; } };
 
 /** an element of an Overpass answer (out geom / out tags bb / out center), the fields read */
 export interface OverpassElement {
@@ -60,28 +79,38 @@ export function nearQuery(lat: number, lon: number, radius = NEAR_RADIUS): strin
 /** whether the answer says the server gave up: Overpass answers HTTP 200 with a "remark" for a runtime error, a timeout or no memory */
 const gaveUp = (remark: string | undefined): boolean => !!remark && /runtime error|timed out|out of memory|too busy/i.test(remark);
 
-/** runs a query on the servers in turn (the first that answers wins) and returns the answer, its server and its time. A server that times out, is busy or
- *  answers nonsense is left for the next one; when none answered it throws ServerBusy (any was busy) or ServerDown; a cancelled signal throws Cancelled */
-export async function runOverpass(query: string, net: Net, opt: { servers?: readonly string[]; timeoutMs?: number; signal?: AbortSignal } = {}): Promise<OverpassAnswer> {
-  const servers = opt.servers ?? OVERPASS_SERVERS, timeoutMs = opt.timeoutMs ?? 130000;
-  let busy = false, retry = 60;
+/** runs a query on the servers in turn (the first that answers wins) and returns the answer, its server and its time. A server that times out (the main one is
+ *  given long, a mirror less: SERVER_TIMEOUT_MS), is busy or answers nonsense is left for the next one, and one that hung or was busy is not asked again for a
+ *  while; when none answered it throws ServerBusy (any was busy, or all are being left alone) or ServerDown; a cancelled signal throws Cancelled. `onStep` is told
+ *  which server is being asked (and why the last was given up on), for the card's progress line */
+export async function runOverpass(query: string, net: Net, opt: { servers?: readonly string[]; timeoutsMs?: readonly number[]; signal?: AbortSignal; onStep?: (text: string) => void } = {}): Promise<OverpassAnswer> {
+  const servers = opt.servers ?? OVERPASS_SERVERS, timeouts = opt.timeoutsMs ?? SERVER_TIMEOUT_MS, health = healthOf(net);
+  const usable = servers.filter(u => health.ready(u));
+  if (!usable.length) throw new ServerBusy('every map server was busy or silent a moment ago', health.waitS(servers));
+  let busy = false, retry = 60, why = '';
   const notes: string[] = [];
-  for (const url of servers) {
+  for (let i = 0; i < usable.length; i++) {
+    const url = usable[i]!, ms = timeouts[Math.min(servers.indexOf(url), timeouts.length - 1)] ?? 60000;
     if (opt.signal?.aborted) throw new Cancelled();
-    const dl = net.deadline(timeoutMs, opt.signal);
+    opt.onStep?.(i === 0 ? `Asking ${hostOf(url)} for the map data...` : `${hostOf(usable[i - 1]!)} ${why}: asking ${hostOf(url)}...`);
+    const dl = net.deadline(ms, opt.signal);
     try {
       const res = await net.fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(query), signal: dl.signal });
-      if (BUSY_STATUS.has(res.status)) { busy = true; retry = retryAfterOf(res); notes.push(`${url}: HTTP ${res.status}`); continue; }
-      if (!res.ok) { notes.push(`${url}: HTTP ${res.status}`); continue; }
+      if (BUSY_STATUS.has(res.status)) { busy = true; retry = retryAfterOf(res); health.mark(url, BUSY_MS); why = `was busy (HTTP ${res.status})`; notes.push(`${url}: HTTP ${res.status}`); continue; }
+      if (!res.ok) { why = `answered HTTP ${res.status}`; notes.push(`${url}: HTTP ${res.status}`); continue; }
       const text = await res.text();
       let json: OverpassJson;
-      try { json = JSON.parse(text) as OverpassJson; } catch { notes.push(`${url}: not JSON`); continue; }
-      if (gaveUp(json.remark)) { busy = true; notes.push(`${url}: ${json.remark}`); continue; }
-      if (!json || !Array.isArray(json.elements)) { notes.push(`${url}: no elements in the answer`); continue; }
+      try { json = JSON.parse(text) as OverpassJson; } catch { health.mark(url, BUSY_MS); why = 'answered nonsense'; notes.push(`${url}: not JSON`); continue; }
+      if (gaveUp(json.remark)) { busy = true; health.mark(url, BUSY_MS); why = 'gave up on the query'; notes.push(`${url}: ${json.remark}`); continue; }
+      if (!json || !Array.isArray(json.elements)) { why = 'answered nonsense'; notes.push(`${url}: no elements in the answer`); continue; }
+      health.mark(url, 0);
       return { json, server: url, fetchedAt: new Date(net.now()).toISOString() };
     } catch (e) {
       if (opt.signal?.aborted) throw new Cancelled();
-      notes.push(`${url}: ${(e as Error).name === 'AbortError' ? `no answer in ${Math.round(timeoutMs / 1000)} s` : (e as Error).message}`);
+      const hung = (e as Error).name === 'AbortError';
+      if (hung) health.mark(url, HUNG_MS); // (a network error is not marked: the player may only have been offline for a moment)
+      why = hung ? `did not answer in ${Math.round(ms / 1000)} s` : 'could not be reached';
+      notes.push(`${url}: ${hung ? `no answer in ${Math.round(ms / 1000)} s` : (e as Error).message}`);
     } finally { dl.clear(); }
   }
   if (busy) throw new ServerBusy(notes.join('; '), retry);
