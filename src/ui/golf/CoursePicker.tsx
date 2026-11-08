@@ -50,8 +50,24 @@ function PreviewCanvas({ p, w = 440, h = 280 }: { p: Preview; w?: number; h?: nu
   return <canvas ref={ref} style={{ width: w, height: h }} className="mx-auto block rounded-lg border border-white/10" data-testid="find-canvas" role="img" aria-label={`Top-down preview of ${p.record.name}`} />;
 }
 
-export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, onClose, deps: given }: {
-  featured: Featured[]; current: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec) => void; onClose: () => void;
+/** a previewed course's two ways in (T358, T356): "Build this course" starts a new game on it (this map is replaced); "Place it in my map" (given a way to place one: the
+ *  owner, 2026-11-08, "place the imported course with the placing mode, and back out if they decide not to use it, rather than starting a new game straight away") takes
+ *  it in hand over this game's map, as Course > Place a real course does: the outline follows the pointer, R turns it, the price shows, Esc puts it down and this card is back */
+export function PreviewButtons({ can, holes, onBuild, onPlace }: { can: boolean; holes: number; onBuild: () => void; onPlace?: () => void }) {
+  const why = holes === 0 ? 'Cannot be built' : 'Too big for the map';
+  return (
+    <div className="space-y-1.5" data-testid="find-actions">
+      <button className="btn-gold w-full py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40" disabled={!can} onClick={onBuild} title="Start a new game on this course: this map is replaced" data-testid="find-build">{can ? 'Build this course' : why}</button>
+      {onPlace && <button className="btn w-full py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40" disabled={!can} onClick={onPlace} title="Keep this map and place the course on it: move it over the map, turn it to fit, see the price; Esc puts it down and brings this card back" data-testid="find-place">Place it in my map</button>}
+      {onPlace && can && <div className="text-[11px] leading-tight text-slate-500" data-testid="find-place-note">Build starts a new game on it. Place keeps this map: you move the course over it, R turns it, the price shows, and Esc puts it down and brings this card back.</div>}
+    </div>
+  );
+}
+
+export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, onPlace, onClose, deps: given }: {
+  featured: Featured[]; current: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec) => void;
+  /** T356: take a previewed course in hand over this game's map (the card hides until it is placed or put down); absent: only Build this course */ onPlace?: (spec: OsmCourseSpec) => void;
+  onClose: () => void;
   /** the parts the card runs on (default: the browser's network and the IndexedDB library) */ deps?: Promise<FindDeps>;
 }) {
   const [deps, setDeps] = useState<FindDeps | null>(null);
@@ -175,7 +191,7 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
         <p className="text-xs text-slate-300" data-testid="find-summary">{r.summary}</p>
         <div className="text-xs text-slate-400" data-testid="find-size">{sizeLine(r)}{r.holes > 0 ? ` · par ${r.par}${r.mappedPar !== r.par ? ` (${r.mappedPar} on the map)` : ''} · ${km(r.lengthM)} of holes` : ''}</div>
         {r.madeUpLine && <div className="text-[11px] text-amber-200/80" data-testid="find-madeup">Made up where the map had none: {r.madeUpLine}.</div>}
-        <button className="btn-gold w-full py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40" disabled={!can} onClick={() => onBuild(p.spec)} data-testid="find-build">{can ? 'Build this course' : r.holes === 0 ? 'Cannot be built' : 'Too big for the map'}</button>
+        <PreviewButtons can={can} holes={r.holes} onBuild={() => onBuild(p.spec)} onPlace={onPlace ? () => onPlace(p.spec) : undefined} />
         <div className="text-[11px] text-slate-500" data-testid="find-credit">Map data {OSM_CREDIT} (ODbL), fetched {date(p.record.fetchedAt)}. Kept in this browser under Downloaded courses.</div>
       </div>
     );

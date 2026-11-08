@@ -78,6 +78,12 @@ export class TileCache<P extends Pic> {
   /** the bytes held now, and the most ever (the pinned pictures of the bakes about to run can take it past the budget until the next trim) */
   bytes = 0; peak = 0;
   on: TileCacheEvents = {};
+  /** T356: the urls of the bake in hand (Textures.tilePinned), or null (the tests, a cache told nothing). While a bake draws, a mip or a pre-scaled copy it makes is
+   *  counted at once and the cache trimmed back within its budget there and then, the least recently used pictures of the other urls going: the pictures a draw made
+   *  were held past the budget until the bake was over (145 MB against a 136 MB budget at the end of bakes in the first pass over a placed course, which counts
+   *  against the ground's 192 MB). The pictures that go are the ones the trim after the bake would drop; a preparation's own mips are not trimmed this way (its
+   *  tiles are the bake's), and a tile the bake draws is never one of them (it is in `pinOf`) */
+  pinOf: (() => ReadonlySet<string>) | null = null;
   private map = new Map<string, Entry<P>>();
   private loads = new Map<string, Promise<void>>();
   private clock = 0; private sources = 0;
@@ -102,27 +108,30 @@ export class TileCache<P extends Pic> {
       let pending = this.loads.get(url);
       if (!pending) {
         this.on.decode?.(url);
-        pending = this.ops.decode(url).then(pic => { this.addSource(url, pic); this.image(url, px); this.dropSource(url); }, err => { this.on.error?.(url, err); })
+        pending = this.ops.decode(url).then(pic => { this.addSource(url, pic); this.image(url, px, false, false); this.dropSource(url); }, err => { this.on.error?.(url, err); })
           .finally(() => { this.loads.delete(url); });
         this.loads.set(url, pending);
       }
       // (a second bake waiting on the same decode makes its own mip from the first's)
-      return pending.then(() => { this.image(url, px); });
+      return pending.then(() => { this.image(url, px, false, false); });
     }));
     this.trim(new Set([...want.keys(), ...keep]));
   }
   /** the smallest picture of url at least px wide, made by halving if need be (a bake draws it: used now); its source when none is and the
    *  source is kept (px past the source: drawn as main drew it); null when url is not decoded, or its source is gone and px is past its mips */
-  image(url: string, px = Infinity, widest = false): P | null {
+  image(url: string, px = Infinity, widest = false, fit = true): P | null {
     const e = this.map.get(url); if (!e) return null;
+    let made = false;
     for (let last = e.pics[e.pics.length - 1]!; last.width > 96 && last.width / 2 >= px; last = e.pics[e.pics.length - 1]!) {
       const t0 = performance.now(), m = this.ops.halve(last); this.on.scale?.(performance.now() - t0);
-      e.pics.push(m); e.stamps.push(0); this.add(picBytes(m));
+      e.pics.push(m); e.stamps.push(0); this.add(picBytes(m)); made = true;
     }
     // (widest, T311: a tile set laid larger than its decode was kept for, Scale over 1 on a course look: its widest kept picture, enlarged)
     let k = this.pick(e, px); if (k < 0) { if (!widest || !e.pics.length) return null; k = 0; }
     e.stamps[k] = ++this.clock;
-    return e.pics[k]!;
+    const pic = e.pics[k]!;
+    if (made && fit) this.fit(url);
+    return pic;
   }
   /** url's full-size decode, or null when it was dropped: then the next preparation decodes it again and keeps it until it is asked for (the
    *  bake asking is provisional meanwhile). Not a use: it goes after the bake */
@@ -138,9 +147,10 @@ export class TileCache<P extends Pic> {
     const e = this.map.get(url); if (!e) return null;
     const k = `${w}x${h}`, have = e.exact.get(k);
     if (have) { have.stamp = ++this.clock; return have.pic; }
-    const from = this.image(url, w); if (!from) return null;
+    const from = this.image(url, w, false, false); if (!from) return null;
     const t0 = performance.now(), pic = make(from); this.on.scale?.(performance.now() - t0);
     e.exact.set(k, { pic, stamp: ++this.clock }); this.add(picBytes(pic));
+    this.fit(url);
     return pic;
   }
   /** the picture a px-wide cell of url would draw now (nothing made, nothing marked used: the bench), or null */
@@ -201,6 +211,12 @@ export class TileCache<P extends Pic> {
     return k >= 0 ? k : e.src ? 0 : -1;
   }
   private add(n: number) { this.bytes += n; if (this.bytes > this.peak) this.peak = this.bytes; }
+  /** after a mip or a copy of `url` made while a bake draws: back within the budget now (pinOf's urls and `url` kept; nothing when the cache was told no bake) */
+  private fit(url: string) {
+    if (!this.pinOf || this.bytes <= this.budget) return;
+    const pin = this.pinOf();
+    this.trim(pin.has(url) ? pin : new Set([...pin, url]));
+  }
   /** drops picture `at` of url's chain (its head or its tail); its last: the whole tile */
   private cut(url: string, e: Entry<P>, at: number) {
     const pic = e.pics[at]!, wasSrc = at === 0 && e.src;

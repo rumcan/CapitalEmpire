@@ -465,3 +465,10 @@ style, the sun at the upper right, nothing mirrored, 64 x 64 px, the club standi
 | Putter icon (`ui:club-putter`) | `ClubIcon` putter | a blade putter, flat head, vertical shaft | P2 |
 | Level frames (`ui:club-level-0..3`: Garage-sale, Club, Tour, Prototype) | the tile's border colour | four tile frames: worn slate, sky steel, emerald enamel, gold foil | P3 |
 | Putter shafts and heads (`ui:putter-shaft-*`, `ui:putter-head-*`: stock steel, whippy graphite, stiff counter-balanced; blade, mallet, lie-angle balanced) | text only | six small parts icons | P3 |
+
+## Place a real course (T356, #998: an art request)
+Course › *Place a real course…* is a row of the Course flyout with the generic trophy glyph today (no tile art; its three courses are rows with the pin glyph). Same tile rules as
+the Course flyout's other tiles (`ui/tool-tiles.ts ROW_TILE`, art 174: the 4:3 illustrated square, the sun at the upper right, shadows at 145°):
+| Sprite (id to use) | Size | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Course flyout tile "Place a real course" (`ROW_TILE.real`) | 4:3 tile | the trophy glyph | an aerial view of a real golf course's outline laid over a town's streets, a green dashed boundary and a few fairways and greens drawn faintly inside it, a small rotate arrow at one corner | P3 |

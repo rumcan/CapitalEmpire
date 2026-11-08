@@ -5,7 +5,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
-import { CoursePicker, GradeChip, type Featured } from '../src/ui/golf/CoursePicker';
+import { CoursePicker, GradeChip, PreviewButtons, type Featured } from '../src/ui/golf/CoursePicker';
 import { WhoCard } from '../src/ui/golf/YouCards';
 
 const FEATURED: Featured[] = [
@@ -58,5 +58,48 @@ describe('the Who-are-you card\'s Your course row (T358)', () => {
     const h = who({ current: 'way/4261725', currentName: 'Wingatepark Country Club' });
     assert.ok(h.includes('Wingatepark Country Club') && h.includes('(from map data)'));
     assert.ok(!h.includes('a driving range and an empty plot'));
+  });
+});
+
+describe('the two ways in of a previewed course (T356 with T358: "place the imported course with the placing mode, and back out, rather than starting a new game straight away")', () => {
+  const buttons = (over: { can?: boolean; holes?: number; place?: boolean } = {}) => renderToStaticMarkup(createElement(PreviewButtons, { can: over.can ?? true, holes: over.holes ?? 18, onBuild: noop, ...(over.place === false ? {} : { onPlace: noop }) }));
+  it('offers Build this course (a new game) and Place it in my map (the placing mode), and says what each does', () => {
+    const h = buttons();
+    assert.ok(h.indexOf('data-testid="find-build"') > 0 && h.indexOf('data-testid="find-place"') > h.indexOf('data-testid="find-build"'), 'Build first, Place under it');
+    assert.match(h, /data-testid="find-build"[^>]*>Build this course</);
+    assert.match(h, /data-testid="find-place"[^>]*>Place it in my map</);
+    assert.match(h, /title="Start a new game on this course: this map is replaced"/);
+    assert.match(h, /title="Keep this map and place the course on it[^"]*Esc puts it down and brings this card back"/);
+    assert.match(h, /data-testid="find-place-note"[^>]*>Build starts a new game on it\. Place keeps this map/);
+    assert.ok(!/disabled=""/.test(h), 'both on');
+  });
+  it('is Build this course alone where the card is not given a way to place a course (the route stays as it was)', () => {
+    const h = buttons({ place: false });
+    assert.ok(h.includes('data-testid="find-build"') && !h.includes('data-testid="find-place"') && !h.includes('find-place-note'));
+  });
+  it('turns both off, with the reason on the first, for a course with no holes or too big for the map', () => {
+    for (const [holes, why] of [[0, 'Cannot be built'], [18, 'Too big for the map']] as const) {
+      const h = buttons({ can: false, holes });
+      assert.match(h, new RegExp(`data-testid="find-build"[^>]*>${why}<`));
+      assert.equal((h.match(/disabled=""/g) ?? []).length, 2, `${why}: both disabled`);
+      assert.ok(!h.includes('find-place-note'), 'no note for a course that cannot be used');
+    }
+  });
+  it('the picker opens without a place button until a course is previewed (it is in the preview only)', () => {
+    assert.ok(!renderToStaticMarkup(createElement(CoursePicker, { featured: FEATURED, current: null, onOwn: noop, onFeatured: noop, onBuild: noop, onPlace: noop, onClose: noop })).includes('find-place'));
+  });
+});
+
+describe('the Who-are-you card while a course is in hand (T356)', () => {
+  const card = (over: { hidden?: boolean; current?: string | null } = {}) => renderToStaticMarkup(createElement(WhoCard, {
+    name: 'Jack', look: 0, looks: [], hcp: '18.5', onDone: noop, hidden: over.hidden,
+    course: { featured: FEATURED, current: over.current ?? null, currentName: null, onOwn: noop, onFeatured: noop, onBuild: noop, onPlace: noop },
+  }));
+  it('is out of the way (display: none) but still there, so the picker is as it was when the course is placed or put down', () => {
+    const h = card({ hidden: true });
+    assert.match(h, /style="display:none"/); assert.match(h, /data-hidden="true"/);
+    assert.ok(h.includes('data-testid="who-card"') && h.includes('data-testid="who-name"'), 'mounted, name and all');
+    const shown = card();
+    assert.ok(!/display:none/.test(shown) && !shown.includes('data-hidden'), 'shown otherwise');
   });
 });
