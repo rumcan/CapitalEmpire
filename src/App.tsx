@@ -517,7 +517,7 @@ export default function App() {
                       <span className="flex-1">UI scale</span>
                       {UI_SCALES.map(v => <button key={v} className={`chip ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
                     </div>
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A subtle iso grid of the 2 m tiles roads and lots snap to, at all times (it fades out as you zoom out). Building the course shows its 1 m half grid either way (G)">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A subtle iso grid of the 2 m tiles roads and lots snap to, shown over land that is not yours while a build or paint tool is in hand: your own land stays clear. It fades out as you zoom out (G)">
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)
                     </label>
