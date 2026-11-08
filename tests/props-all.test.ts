@@ -25,7 +25,8 @@ test('the placeable props: every prop of the owner\'s new categories has its car
   assert.ok(placeable.length > 300, `${placeable.length} placeable props`);
   assert.equal(new Set(placeable.map(d => d.key)).size, placeable.length, 'one card each');
   // the library's own list of the new props (every "New: " category: one card a prop, a tree one card for its four views): none is left out
-  const fresh = LIBRARY.filter(i => i.cat.startsWith('New: ') && (i.kind !== 'tree' || i.id.endsWith(':ne')));
+  // (T375: the eight-view art's rows, category "New: Eight-view objects", are the views the lots draw a building with, not props: no card)
+  const fresh = LIBRARY.filter(i => i.cat.startsWith('New: ') && !i.id.startsWith('object8:') && (i.kind !== 'tree' || i.id.endsWith(':ne')));
   const cards = new Set(placeable.map(d => d.id));
   for (const it of fresh) assert.ok(cards.has(it.id), `${it.id} (${it.cat}) has a card`);
   assert.equal(placeable.filter(d => d.group.startsWith('new:')).length, fresh.length, 'a card for each, and no more');
