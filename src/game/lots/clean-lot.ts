@@ -35,6 +35,8 @@ const FRONT_EPS = 0.35;
 const PAVED_TEX = /paving|concrete|slabs|asphalt|gravel/;
 /** a drive's width (one car, tiles of 2 m), the least width a patch is a drive and not a path, and the room kept between a drive and the house */
 const DRIVE_W = 1.8, DRIVE_MIN = 1.2, SIDE = 0.3;
+/** the least front yard (tiles, from the street to the house's front) that has a parking pad in it, and a path to the door */
+const PAD_MIN = 1.4, PATH_MIN = 0.6;
 /** the drive and path a clean base keeps: the preset's own (a drive patch, or a paved yard strip from the street that is a car wide; a walk patch, or a
  *  paved strip a person wide), or those it lacks made here: a drive beside the house (or a parking pad in front of it on a lot with no room beside it) and
  *  a path to the house's front. Both start at the street edge (the drive connects to the road) and stay inside the lot */
@@ -58,14 +60,15 @@ export function cleanGround(patches: readonly PresetPatch[], W: number, D: numbe
   const hx0 = house ? house[0] : W / 2 - 3, hx1 = house ? house[2] : W / 2 + 3, hy = house ? house[1] : Math.min(5, D / 3);
   if (!d) {
     // a drive beside the house, from the street to its front, on the side with the room; else a parking pad before the house, on the side the path is not
-    const room = Math.max(hx0, W - hx1), right = W - hx1 >= hx0, len = Math.min(Math.max(hy + 0.5, 3), 7, D - 1);
-    if (room >= DRIVE_W + 0.5 + SIDE) { d = { kind: 'drive', tex: tex.drive ?? 'paving', pts: rectPts(right ? [W - SIDE - DRIVE_W, 0, W - SIDE, len] : [SIDE, 0, SIDE + DRIVE_W, len]) }; parking = 'drive'; }
-    else if (hy >= 3.2) {
-      const wc = w ? (boxOfPts(w.pts)[0] + boxOfPts(w.pts)[2]) / 2 : (hx0 + hx1) / 2, left = wc > W / 2, ln = Math.min(2.6, hy - 0.6);
+    const room = Math.max(hx0, W - hx1), right = W - hx1 >= hx0, len = Math.min(Math.max(hy + 0.5, 3), 7, D - 1), dw = Math.min(DRIVE_W, room - SIDE - 0.4);
+    if (dw >= DRIVE_MIN) { d = { kind: 'drive', tex: tex.drive ?? 'paving', pts: rectPts(right ? [W - SIDE - dw, 0, W - SIDE, len] : [SIDE, 0, SIDE + dw, len]) }; parking = 'drive'; }
+    else if (hy >= PAD_MIN) {
+      // (a house with its front near the street: a short apron, a car's width, from the street to its front)
+      const wc = w ? (boxOfPts(w.pts)[0] + boxOfPts(w.pts)[2]) / 2 : (hx0 + hx1) / 2, left = wc > W / 2, ln = Math.min(2.6, hy - 0.2);
       d = { kind: 'drive', tex: tex.drive ?? 'paving', pts: rectPts(left ? [SIDE, 0, SIDE + DRIVE_W, ln] : [W - SIDE - DRIVE_W, 0, W - SIDE, ln]) }; parking = 'pad';
     }
   }
-  if (!w && house && hy >= 1.6) {
+  if (!w && house && hy >= PATH_MIN) {
     // a path to the house's front, from the middle of it; moved off the drive when it would run along it
     const cx = (hx0 + hx1) / 2, db = d ? boxOfPts(d.pts) : null;
     let x0 = cx - 0.35, x1 = cx + 0.35;
