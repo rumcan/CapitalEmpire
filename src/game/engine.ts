@@ -9194,7 +9194,7 @@ export class Game {
     }
     return bg;
   }
-  /** the break grid over the green(s) (the 2D overlay): the 1 m mesh's lines, faint, and every 2 m a short arrow downhill whose dot runs down it,
+  /** the break grid over the green(s) (the 2D overlay): the 1 m mesh's lines, faint, and every 2 m a tiny dot running downhill (no arrows),
    *  longer, faster and warmer (white, cyan, yellow, orange) where steeper; flat ground a still dot. It fades in when you putt and out after. Only
    *  the points on screen; one path per colour */
   private drawBreakGrid(ctx: CanvasRenderingContext2D, now: number) {
@@ -9219,27 +9219,24 @@ export class Game {
         if (on.has(i * 65536 + j + 1)) { ctx.moveTo(X, Y); ctx.lineTo(sx(x, y + BREAK_STEP), sy(x, y + BREAK_STEP)); }
       }
       ctx.strokeStyle = `rgba(255,255,255,${0.16 * A})`; ctx.lineWidth = this.dpr; ctx.stroke();
-      // the arrows (every second point: 2 m) and their running dots, by colour
+      // the running dots (every second point: 2 m), by colour: no arrows (the owner, 2026-11-08: "only tiny dots moving on the grid to show slope").
+      // Each dot runs downhill along its point's short run, swelling in and shrinking out (radius by sin(pi u)) so it never pops at the ends
       for (let c = 0; c < 4; c++) {
-        ctx.beginPath(); const dots: number[] = [];
+        const dots: number[] = [];
         for (let k = 0; k < bg.n; k++) {
           const i = IJ[2 * k]!, j = IJ[2 * k + 1]!; if ((i & 1) || (j & 1)) continue;
           const s = P[5 * k + 4]!; if (breakBucket(s) !== c) continue;
           const x = P[5 * k]!, y = P[5 * k + 1]!, X = sx(x, y), Y = sy(x, y); if (X < -m || Y < -m || X > W + m || Y > H + m) continue;
-          if (c === 0) { dots.push(X, Y); continue; }
+          if (c === 0) { dots.push(X, Y, 1); continue; }
           const L = 0.3 + 0.4 * steepShare(s), dx = P[5 * k + 2]! * L, dy = P[5 * k + 3]! * L;
           const X0 = sx(x - dx, y - dy), Y0 = sy(x - dx, y - dy), X2 = sx(x + dx, y + dy), Y2 = sy(x + dx, y + dy);
-          ctx.moveTo(X0, Y0); ctx.lineTo(X2, Y2);
-          const hx = X2 - (X2 - X0) * 0.3, hy = Y2 - (Y2 - Y0) * 0.3, nx = -(Y2 - hy) * 0.6, ny = (X2 - hx) * 0.6;
-          ctx.moveTo(hx + nx, hy + ny); ctx.lineTo(X2, Y2); ctx.lineTo(hx - nx, hy - ny);
           const u = (t * dotSpeed(s) + ((i * 7 + j * 13) & 15) / 16) % 1;
-          dots.push(X0 + (X2 - X0) * u, Y0 + (Y2 - Y0) * u);
+          dots.push(X0 + (X2 - X0) * u, Y0 + (Y2 - Y0) * u, Math.sin(Math.PI * u));
         }
         const col = BREAK_COLOURS[c]!;
-        if (c > 0) { ctx.strokeStyle = `rgba(${col},${0.75 * A})`; ctx.lineWidth = 1.4 * this.dpr; ctx.stroke(); }
-        ctx.beginPath(); const rd = (c === 0 ? 1.2 : 2) * this.dpr;
-        for (let d = 0; d < dots.length; d += 2) { ctx.moveTo(dots[d]! + rd, dots[d + 1]!); ctx.arc(dots[d]!, dots[d + 1]!, rd, 0, Math.PI * 2); }
-        ctx.fillStyle = `rgba(${col},${(c === 0 ? 0.45 : 0.95) * A})`; ctx.fill();
+        ctx.beginPath(); const rd = (c === 0 ? 0.9 : 1.4) * this.dpr;
+        for (let d = 0; d < dots.length; d += 3) { const r = rd * (0.35 + 0.65 * dots[d + 2]!); ctx.moveTo(dots[d]! + r, dots[d + 1]!); ctx.arc(dots[d]!, dots[d + 1]!, r, 0, Math.PI * 2); }
+        ctx.fillStyle = `rgba(${col},${(c === 0 ? 0.4 : 0.95) * A})`; ctx.fill();
       }
     }
     ctx.restore();
