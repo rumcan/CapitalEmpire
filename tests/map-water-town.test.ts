@@ -56,6 +56,9 @@ test('2. Stones edge: a pond that is not by the map water is edged exactly as be
   // and a river a good way off (6 tiles) is no neighbour either
   const far = otherOf(new MapWater(waterRuns([{ kind: 'river', pts: [{ x: -10, y: 56, w: 4 }, { x: 110, y: 56, w: 4 }] }], scale)));
   assert.deepEqual(shorePieces(pondAt(45, 44, own, undefined, far)!), shorePieces(a));
+  // a creek lying wholly under the pond's own water (a covered river: the pond is over it) is the pond's, no neighbour: the shore is as it was
+  const under = otherOf(new MapWater(waterRuns([{ kind: 'creek', pts: [{ x: 42, y: 44, w: 6 }, { x: 48, y: 44, w: 6 }] }], scale)));
+  assert.deepEqual(shorePieces(pondAt(45, 44, own, undefined, under)!), shorePieces(a));
 });
 
 test('3. Stones edge: a pond bridged to a creek by a one-cell bank is joined too; the creek is wet for the planting', () => {
