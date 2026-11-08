@@ -3,8 +3,8 @@
  *  keeps showing its old picture until the new one arrives, and every visible chunk falls back to the planner map. */
 import { CHUNK_H, CHUNK_W, MID_H, MID_W, PLAN_H, PLAN_W, PLAN_K } from './iso';
 import { GROUND_ART } from './ground-art';
-import { CH_SIZE, CH_STEP } from './ext/course-height';
 import { HEIGHT_LIGHT_REACH, HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
+import { groundRect } from './golf/osm/land';
 import { withBaseGrass } from './base-grass-saved';
 import { withPresets } from './paint-presets-saved';
 import { GRASS_ART_DEFAULT, type GrassArt } from './painted-grass-lod';
@@ -303,12 +303,11 @@ export class GroundCache {
   terrain(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { this.broadcast({ t: 'terrain', cls: t.cls, height: t.height, waters: t.waters }); }
   blocks(data: Float32Array) { this.broadcast({ t: 'blocks', data }); }
   /** the course height in tile box b (whole samples, clamped) goes to every worker, and the ground its light reaches re-bakes (the old bake
-   *  shows until then): the light at a point depends on the heights up to HEIGHT_LIGHT_REACH tiles away (T126) */
-  courseHeight(field: Float32Array, b: [number, number, number, number]) {
-    const i0 = Math.max(0, Math.floor(b[0] / CH_STEP) - 1), i1 = Math.min(CH_SIZE - 1, Math.ceil(b[2] / CH_STEP) + 1);
-    const j0 = Math.max(0, Math.floor(b[1] / CH_STEP) - 1), j1 = Math.min(CH_SIZE - 1, Math.ceil(b[3] / CH_STEP) + 1);
-    const w = i1 - i0 + 1, h = j1 - j0 + 1, data = new Float32Array(w * h);
-    for (let j = 0; j < h; j++) data.set(field.subarray((j0 + j) * CH_SIZE + i0, (j0 + j) * CH_SIZE + i1 + 1), j * w);
+   *  shows until then): the light at a point depends on the heights up to HEIGHT_LIGHT_REACH tiles away (T126). T357: with `land` (the natural
+   *  ground under a real course, the same lattice) the workers get the land plus the course height */
+  courseHeight(field: Float32Array, b: [number, number, number, number], land: Float32Array | null = null) {
+    // T357: the ground under a real course is the land plus the course height: the workers light that sum (their copy of the field is the ground's)
+    const { i0, j0, w, h, data } = groundRect(field, land, b);
     this.broadcast({ t: 'course', i0, j0, w, h, data });
     const r = HEIGHT_LIGHT_REACH; this.invalidate([b[0] - r, b[1] - r, b[2] + r, b[3] + r], true);
   }

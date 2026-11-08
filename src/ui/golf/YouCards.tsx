@@ -11,6 +11,7 @@ import { HoleChoiceBox } from './YourRound';
 import { ChallengeBox, type MatchOffer } from './MatchCards';
 import { CoursePicker, type Featured } from './CoursePicker';
 import type { OsmCourseSpec } from '../../game/golf/osm/types';
+import type { OsmLand } from '../../game/golf/osm/land';
 import type { HoleChoice, RoundRules } from '../../game/golf/play/yours';
 import { bookingLine } from '../../game/golf/startround';
 
@@ -40,7 +41,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
   /** T342: the game's look (desert or autumn) and the choice (the world changes behind the card at once) */ desert?: boolean; onTheme?: (desert: boolean) => void;
   /** T340 (#967), T358 (#1003): "Your course": build your own, one of the featured real courses, one you downloaded, or one you found (a new game starts on it); current:
    *  the game's now (its id and the name it shows; null: your own) */
-  course?: { featured: Featured[]; current: string | null; currentName: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec) => void } }) {
+  course?: { featured: Featured[]; current: string | null; currentName: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec, land: OsmLand | null) => void } }) {
   const [n, setN] = useState(name), [l, setL] = useState(look), [pick, setPick] = useState(false);
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex flex-wrap items-center justify-center gap-3 overflow-y-auto p-4">

@@ -14,9 +14,11 @@ import { paintPreview, previewOps } from '../../game/golf/osm/preview';
 import { BUSY_MESSAGE, DOWN_MESSAGE, Cancelled, ServerBusy, ServerDown } from '../../game/golf/osm/polite';
 import { refText, type OsmRef } from '../../game/golf/osm/query';
 import { OSM_CREDIT, type OsmCourseSpec } from '../../game/golf/osm/types';
+import { DemUnavailable, fetchLand, tilesKept, tilesOfCourse } from '../../game/golf/osm/dem';
+import type { OsmLand } from '../../game/golf/osm/land';
 
 /** a shipped real course, as the card lists it */
-export interface Featured { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number }
+export interface Featured { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number; /** the source of its real ground height ("SRTM, 30 m"), T357 */ ground?: string }
 
 type View =
   | { v: 'home' }
@@ -51,12 +53,22 @@ function PreviewCanvas({ p, w = 440, h = 280 }: { p: Preview; w?: number; h?: nu
 }
 
 export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, onClose, deps: given }: {
-  featured: Featured[]; current: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec) => void; onClose: () => void;
+  featured: Featured[]; current: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec, land: OsmLand | null) => void; onClose: () => void;
   /** the parts the card runs on (default: the browser's network and the IndexedDB library) */ deps?: Promise<FindDeps>;
 }) {
   const [deps, setDeps] = useState<FindDeps | null>(null);
   const [view, setView] = useState<View>({ v: 'home' });
   const [text, setText] = useState(''), [msg, setMsg] = useState(''), [kept, setKept] = useState<CourseRecord[]>([]), [armed, setArmed] = useState<string | null>(null);
+  // T357: the real ground height of a downloaded course: ticked by default; the elevation tiles are fetched when the course is built (how many, and how many are kept already, is shown)
+  const [withLand, setWithLand] = useState(true), [tiles, setTiles] = useState<{ n: number; kept: number } | null>(null);
+  const shown = view.v === 'preview' ? view.p : null;
+  useEffect(() => {
+    setTiles(null);
+    if (!shown || !deps) return;
+    let on = true; const keys = tilesOfCourse(shown.spec, shown.json);
+    void tilesKept(keys, deps.lib.answers()).then(kept => { if (on) setTiles({ n: keys.length, kept }); });
+    return () => { on = false; };
+  }, [shown, deps]);
   const ctl = useRef<AbortController | null>(null), alive = useRef(true);
   const listKept = (d: FindDeps) => { d.lib.list().then(l => { if (alive.current) setKept(l); }, () => undefined); };
   useEffect(() => {
@@ -107,6 +119,22 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
     setArmed(null); await deps?.lib.remove(r.id); if (deps) listKept(deps);
   };
   const back = (to: View) => { setMsg(''); setView(to); };
+  /** Build this course: with the ground height ticked, the elevation tiles are read first (kept ones from the library, the rest one request each); if they cannot be
+   *  read the box is unticked and the card says why, so Build makes the course flat (or the player tries again) */
+  const build = (p: Preview, from: View) => {
+    if (!withLand) { onBuild(p.spec, null); return; }
+    const here: View = { v: 'preview', p, from };
+    void run('Reading the ground height...', async (signal, step) => {
+      let land: OsmLand | null = null;
+      try { land = await fetchLand(p.spec, p.json, { net: deps!.net, cache: deps!.lib.answers() }, { signal, onStep: step }); }
+      catch (e) {
+        if (!(e instanceof DemUnavailable) || !alive.current) throw e;
+        setWithLand(false); setMsg(`The ground height could not be read: ${e.message}. The box is unticked: Build this course makes it flat, or tick it and try again.`); setView(here);
+        return;
+      }
+      if (alive.current) onBuild(p.spec, land);
+    }, here);
+  };
   const working = view.v === 'working';
 
   const row = 'rounded-lg border px-2 py-1 text-left text-xs';
@@ -175,8 +203,12 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
         <p className="text-xs text-slate-300" data-testid="find-summary">{r.summary}</p>
         <div className="text-xs text-slate-400" data-testid="find-size">{sizeLine(r)}{r.holes > 0 ? ` · par ${r.par}${r.mappedPar !== r.par ? ` (${r.mappedPar} on the map)` : ''} · ${km(r.lengthM)} of holes` : ''}</div>
         {r.madeUpLine && <div className="text-[11px] text-amber-200/80" data-testid="find-madeup">Made up where the map had none: {r.madeUpLine}.</div>}
-        <button className="btn-gold w-full py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40" disabled={!can} onClick={() => onBuild(p.spec)} data-testid="find-build">{can ? 'Build this course' : r.holes === 0 ? 'Cannot be built' : 'Too big for the map'}</button>
-        <div className="text-[11px] text-slate-500" data-testid="find-credit">Map data {OSM_CREDIT} (ODbL), fetched {date(p.record.fetchedAt)}. Kept in this browser under Downloaded courses.</div>
+        <label className="flex items-start gap-2 text-xs text-slate-200" data-testid="find-land-row">
+          <input type="checkbox" className="mt-0.5" checked={withLand} onChange={e => setWithLand(e.target.checked)} disabled={!can || working} data-testid="find-land" />
+          <span>Real ground height <span className="text-slate-400" data-testid="find-land-note">{tiles ? `(the land's slopes, from public elevation data: ${tiles.n} tile${tiles.n === 1 ? '' : 's'} from AWS Terrain Tiles${tiles.kept ? `, ${tiles.kept} kept in this browser already` : ''}; one request each, only when you build)` : "(the land's slopes, from public elevation data: a few tiles from AWS Terrain Tiles, one request each, only when you build)"}</span></span>
+        </label>
+        <button className="btn-gold w-full py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40" disabled={!can} onClick={() => build(p, from)} data-testid="find-build">{can ? 'Build this course' : r.holes === 0 ? 'Cannot be built' : 'Too big for the map'}</button>
+        <div className="text-[11px] text-slate-500" data-testid="find-credit">Map data {OSM_CREDIT} (ODbL), fetched {date(p.record.fetchedAt)}. Kept in this browser under Downloaded courses. Ground height: public elevation data via AWS Terrain Tiles (USGS and other national sources, credited in the menu).</div>
       </div>
     );
   } else {
@@ -194,6 +226,7 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
             {featured.map(o => (
               <button key={o.id} className={pickRow(current === o.id)} onClick={() => current !== o.id && onFeatured(o.id)} data-testid={`who-course-${o.id}`}>
                 <span className="font-semibold text-white">{o.name}</span> <span className="text-slate-400">· {o.holes} holes, par {o.par}{o.mappedPar !== o.par ? ` (${o.mappedPar} on the map)` : ''}{o.scale ? ` · scaled to ${Math.round(o.scale * 100)}%` : ''} · {o.place}</span>
+                {o.ground && <span className="block text-[11px] text-slate-400" data-testid={`who-ground-${o.id}`}>Real ground height ({o.ground})</span>}
               </button>
             ))}
           </div>
