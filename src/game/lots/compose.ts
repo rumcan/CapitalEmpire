@@ -417,7 +417,8 @@ function faceStreet(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame
 /** T376 (#1032, the owner: "the buildings that are going onto the pavement ... the commercial buildings"): a shop's or venue's buildings stand with their
  *  base behind the lot's front line, the pavement lying beyond it: the footprint (a preset may leave it REACH over the line) and the ground contact of its
  *  picture (base-pad.ts basePad: steps, door mats, planters, kerbs) both at b >= 0. A building too far forward moves straight back by what lacks, as far as
- *  the lot's back (REACH past it, as inside() allows) and the props it would newly overlap beyond OVERLAP (done() would drop one of them) let it. Awnings
+ *  the lot's back (REACH past it, as inside() allows) and the buildings it would newly overlap beyond OVERLAP let it (any other prop it comes to cover is left
+ *  out by done(), as an overlap always is: a shopping cart or a crate behind a shop's front is lost, the shop is not). Awnings
  *  and signs above head height cross the line as they do: only ground contact counts. The other uses are left as they are */
 function setBack(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): Fitted {
   if ((preset.use !== 'com' && preset.use !== 'tour') || !fit.props.length || preset.id === 'auto:centre') return fit;
@@ -432,8 +433,8 @@ function setBack(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): 
     let dy = Math.min(need, room);
     for (; dy > EPS / 4; dy -= 0.05) {
       const b = boxAt({ x: q.x, y: q.y + dy }, h);
-      // (a prop the building comes to overlap beyond OVERLAP is the one done() drops: so none that did not already; a pair over it already stays as it is)
-      if (boxes.every((o, j) => j === k || share(b, o) <= OVERLAP || share(boxes[k]!, o) > OVERLAP)) break;
+      // (another building must stay: two cannot share ground. Any other prop the building comes to overlap beyond OVERLAP is left out by done(), as every overlap is)
+      if (boxes.every((o, j) => j === k || !isBuildingId(props[j]!.id) || share(b, o) <= OVERLAP || share(boxes[k]!, o) > OVERLAP)) break;
     }
     if (dy <= EPS / 4) return;
     props[k] = { ...q, y: q.y + dy }; boxes[k] = boxAt(props[k]!, h); moved++;

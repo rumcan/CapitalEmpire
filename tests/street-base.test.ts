@@ -39,6 +39,8 @@ function baseOf(p: { id: string; x: number; y: number; flip: boolean; scale: num
   const b0 = Math.min(...bs);
   return { id: p.id, a0: Math.min(...as), a1: Math.max(...as), b0, b1: Math.max(...bs), front: b0 - basePad(p.id, roadOf(lot.n), p.scale) };
 }
+/** the failures counted by picture (the first words of each) */
+const summary = (bad: string[]): string => { const m = new Map<string, number>(); for (const l of bad) { const k = l.split(': ')[0]!; m.set(k, (m.get(k) ?? 0) + 1); } return [...m].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k} x${n}`).join(', '); };
 const where = (b: Base, what: string) => `${b.id}: ${what} (front ${b.front.toFixed(2)}, a ${b.a0.toFixed(2)}..${b.a1.toFixed(2)}, b ${b.b0.toFixed(2)}..${b.b1.toFixed(2)})`;
 
 /** the shop and venue subjects and every picture a lot can draw them as: four views, the screen-axis set, the eight-view ring */
@@ -74,7 +76,7 @@ test('a shop or venue building stands behind the lot line on every road: frozen 
     for (const road of p.road !== undefined ? [p.road] : ROADS) {
       const lot = lotOn(road, p.w, p.d), st: ComposeState = { use: p.use === 'com' ? LU.COM : LU.TOUR, level: LV.BUILT, decline: 0, seed: 23, preset: p.id };
       for (const q of compose(lot, st).props) {
-        const it = BY.get(q.id); if (!it || !isBuilding(it)) continue;
+        const it = BY.get(q.id); if (!it || !isBuilding(it) || q.street) continue; // (the street items stand on the verge by design)
         const b = baseOf(q, lot); checked++; if (b.front < b.b0 - 1e-9) padded++;
         if (b.front < -TOL) bad.push(where(b, `${p.id} road ${road}: the base reaches ${(-b.front).toFixed(2)} tiles over the line`));
         if (b.a0 < -REACH - TOL || b.a1 > lot.w + REACH + TOL || b.b1 > lot.d + REACH + TOL) bad.push(where(b, `${p.id} road ${road}: past the sides or the back`));
@@ -83,7 +85,7 @@ test('a shop or venue building stands behind the lot line on every road: frozen 
   }
   console.log(`T376 presets: ${checked} buildings checked, ${padded} with a picture pad, ${bad.length} over the line`);
   assert.ok(checked > 50, 'the presets have buildings');
-  assert.deepEqual(bad.slice(0, 12), [], `${bad.length} buildings over the line`);
+  assert.deepEqual(bad.slice(0, 12), [], `${bad.length} buildings over the line: ${summary(bad)}`);
 });
 
 test('a shop or venue building stands behind the lot line on every road: the town\'s lots, every business, sizes and seeds (T376)', () => {
@@ -93,7 +95,7 @@ test('a shop or venue building stands behind the lot line on every road: the tow
     for (const biz of bizs) for (const road of ROADS) for (const [w, d] of [[10, 12], [12, 14], [14, 14], [16, 14], [14, 18], [20, 18], [20, 20]]) for (const seed of [23, 61]) {
       const lot = lotOn(road, w!, d!);
       for (const q of compose(lot, lotOf(use, biz || undefined, seed)).props) {
-        const it = BY.get(q.id); if (!it || !isBuilding(it)) continue;
+        const it = BY.get(q.id); if (!it || !isBuilding(it) || q.street) continue;
         const b = baseOf(q, lot); checked++; if (b.front < b.b0 - 1e-9) padded++;
         if (b.front < -TOL) bad.push(where(b, `${biz || 'venue'} ${w}x${d} road ${road} seed ${seed}: the base reaches ${(-b.front).toFixed(2)} tiles over the line`));
         if (b.a0 < -REACH - TOL || b.a1 > lot.w + REACH + TOL || b.b1 > lot.d + REACH + TOL) bad.push(where(b, `${biz || 'venue'} ${w}x${d} road ${road} seed ${seed}: past the sides or the back`));
@@ -102,5 +104,5 @@ test('a shop or venue building stands behind the lot line on every road: the tow
   }
   console.log(`T376 town lots: ${checked} buildings checked, ${padded} with a picture pad, ${bad.length} over the line`);
   assert.ok(checked > 100, 'the lots have buildings');
-  assert.deepEqual(bad.slice(0, 12), [], `${bad.length} buildings over the line`);
+  assert.deepEqual(bad.slice(0, 12), [], `${bad.length} buildings over the line: ${summary(bad)}`);
 });
