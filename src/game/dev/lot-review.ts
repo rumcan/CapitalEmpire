@@ -67,7 +67,7 @@ export function installLotReview(game: Game): () => void {
   let filter: Filter = saved?.filter === 'todo' || saved?.filter === 'bad' ? saved.filter : 'all';
   const theme: 'autumn' | 'desert' = game.desertTheme ? 'desert' : 'autumn';
   let file: ReviewFile = { v: 1, lots: {} }, lots: ReviewLot[] = [], pend: Pending | null = null, armed: Armed = null, fly: 'checks' | 'props' | 'decals' | null = null;
-  let message = '', started = false, audit: LotAudit | null = null, auditId = '', lastWasProp = true;
+  let message = '', started = false, audit: LotAudit | null = null, auditId = '', lastWasProp = true, hidden = false;
   const gridLayer = new LotGridLayer(), gridLots: GridLot[] = [];
   const cur = (): ReviewLot | undefined => lots[idx];
   const recOf = (l: ReviewLot): ReviewRecord | undefined => file.lots[l.id];
@@ -163,7 +163,7 @@ export function installLotReview(game: Game): () => void {
     game.lookAt(l.g.o.x + (l.g.u.x * l.g.w + l.g.n.x * l.g.d) / 2, l.g.o.y + (l.g.u.y * l.g.w + l.g.n.y * l.g.d) / 2, z); // (zoom, and the camera taken back from any ease)
     const c = game.canvas.getBoundingClientRect(), ox = c.left + game.cssW / 2, oy = c.top + game.cssH / 2, wx = (h.x0 + h.x1) / 2, wy = (h.y0 + h.y1) / 2;
     game.cam.X = wx - ((a.L + a.R) / 2 - ox) / z; game.cam.Y = wy - ((a.T + a.B) / 2 - oy) / z; game.emit();
-    gridLots.length = 0; gridLots.push({ o: l.g.o, u: l.g.u, n: l.g.n, w: l.g.w, d: l.g.d, cells: false, alpha: 1 });
+    gridLots.length = 0; if (!hidden) gridLots.push({ o: l.g.o, u: l.g.u, n: l.g.n, w: l.g.w, d: l.g.d, cells: false, alpha: 1 });
   }
 
   // ---------- the panels (plain DOM over the game; the lists scroll up and down only)
@@ -318,7 +318,7 @@ ${id}: click, then click on the lot`, armed?.id === id, () => { armed = armed?.i
   // the headless shots drive the page through this (scripts/dev/lot-review-shots.mjs)
   Object.assign(window as unknown as Record<string, unknown>, { __lotReview: {
     ready: () => started && lots.length > 0, lots: () => lots, index: () => idx, file: () => file, open: (i: number) => open(i), flyout: (w: typeof fly) => { fly = w; render(); },
-    hide: (on: boolean) => { root.style.display = on ? 'none' : ''; }, say: () => message,
+    hide: (on: boolean) => { hidden = on; root.style.display = on ? 'none' : ''; if (on) gridLots.length = 0; else fit(); }, say: () => message,
   } });
 
   // ---------- start once the game is ready

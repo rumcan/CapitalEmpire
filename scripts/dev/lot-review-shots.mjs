@@ -100,8 +100,9 @@ if (!only || only === 'ui') {
   await page.evaluate(() => window.__lotReview.flyout('props')); await page.waitForTimeout(500);
   await shot(page, 'ui-3-props');
   // arm the mailbox and click on the lot: the override
-  const arm = page.locator('div[title^="Mailbox"]').first();
-  if (await arm.count()) { await arm.click(); }
+  const arm = page.locator('div[title*="world:mailbox"]').first();
+  if (await arm.count()) { await arm.click(); } else console.log('(no mailbox tile)');
+  await page.evaluate(() => window.__lotReview.flyout(null)); await page.waitForTimeout(300);
   const at = await page.evaluate(() => { const g = window.__game, r = window.__lotReview, l = r.lots()[r.index()].g; const t = { x: l.o.x + l.u.x * l.w * 0.3 + l.n.x * 1, y: l.o.y + l.u.y * l.w * 0.3 + l.n.y * 1 }; const c = g.canvas.getBoundingClientRect(), z = g.cam.z; const X = (t.x - t.y) * 64, Y = (t.x + t.y) * 32; return { x: c.left + g.cssW / 2 + (X - g.cam.X) * z, y: c.top + g.cssH / 2 + (Y - g.cam.Y) * z }; });
   await page.mouse.click(at.x, at.y); await settle(page, 800);
   await page.evaluate(() => window.__lotReview.flyout('decals')); await page.waitForTimeout(500);
