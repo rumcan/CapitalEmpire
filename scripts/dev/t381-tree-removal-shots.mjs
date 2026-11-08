@@ -180,15 +180,24 @@ try {
   });
 
   await section('A road\'s own tree (a street tree) goes with the bulldozer and stays away when the road is rebuilt', async () => {
-    const a = await page.evaluate(() => { for (const k of window.__game.autoByKey.keys()) { const q = window.__t381.autoAt(k); if (q && q.x > 80 && q.y > 80) return { auto: k, x: q.x, y: q.y }; } return null; });
+    // the grown town has no road with trees: lay a boulevard (its median is tree-lined) through the woodland, as the road tool does (the editor's legs, then the commit)
+    const spot = await woodland(page), laid = await page.evaluate(async ([x, y]) => {
+      const g = window.__game, N = await import('/src/game/network.ts'), cls = N.CLASSES.find(c => c.id === 'boulevard');
+      g.edit.addLegs([{ a: { x: x - 30, y }, b: { x: x + 30, y } }], cls, 0); g.commitNetwork();
+      let n = 0; for (const k of g.autoByKey.keys()) if (/^tree@/.test(k)) n++; return n;
+    }, [spot.x, spot.y]);
+    console.log(`  a boulevard laid at ${spot.x},${spot.y}: ${laid} road trees`);
+    const a = await page.evaluate(([x, y]) => { for (const k of window.__game.autoByKey.keys()) { const q = window.__t381.autoAt(k); if (q && Math.abs(q.x - x) < 28 && Math.abs(q.y - y) < 4) return { auto: k, x: q.x, y: q.y }; } return null; }, [spot.x, spot.y]);
     check(!!a, 'a road tree to take'); if (!a) return;
     await look(page, a); await settle(page);
+    await shot(page, 'roadtree-1-before');
     await page.evaluate(() => { const g = window.__game; g.setTool('bulldoze'); g.emit(); });
     const foot = await screenOf(page, a), hit = await pixelOn(page, foot, { auto: a.auto });
     check(!!hit, 'a pixel on the road tree'); if (!hit) return;
     await toasts(page); await page.mouse.move(hit.x, hit.y); await page.waitForTimeout(200); await page.mouse.down(); await page.mouse.up(); await page.waitForTimeout(500);
     const say = await toasts(page), gone = await page.evaluate(k => !window.__game.autoByKey.has(k), a.auto);
     check(gone, 'the road tree is gone'); check(say.includes('Removed 1 tree'), `it says "Removed 1 tree" (${JSON.stringify(say)})`);
+    await settle(page); await shot(page, 'roadtree-2-removed');
     // the network makes its trees again after a rebuild: this one does not come back
     await page.evaluate(k => { const g = window.__game, r = g.autoRecs?.get(k); if (r) g.syncAutoProps([r], []); }, a.auto);
     check(await page.evaluate(k => !window.__game.autoByKey.has(k), a.auto), 'a rebuild of the roads does not bring it back');
@@ -196,18 +205,36 @@ try {
     check(await page.evaluate(k => window.__game.autoByKey.has(k), a.auto), 'undo gives it back');
   });
 
+  // the save and the load: a new game (the fixture's page never writes its save), trees taken, the game saved to its store and the page loaded again
   await section('The save keeps the trees taken away: a reload with them gone', async () => {
-    const spot = await woodland(page); await look(page, spot); await settle(page, 1500);
-    const t = await page.evaluate(([x, y]) => window.__t381.nearest('forest', x, y), [spot.x, spot.y]);
-    await page.evaluate(([x, y, r]) => window.__game.cutMapTrees(x, y, r), [t.x, t.y, R]);
-    const cut = await page.evaluate(() => window.__game.treeCut.size); check(cut > 0, `trees cut (${cut})`);
-    await page.evaluate(() => window.__game.save()); await page.waitForTimeout(1500);
-    await page.goto(`${base}`, { timeout: 300000, waitUntil: 'domcontentloaded' }); await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
-    await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); window.__toasts = []; });
-    const size = await page.evaluate(() => window.__game.treeCut.size); check(size === cut, `the save has them (${size})`);
-    await look(page, t); await settle(page, 2000);
-    const c = await page.evaluate(([x, y, r]) => { const g = window.__game; let n = 0; for (const ps of g.forest.values()) for (const p of ps) { if (p.tk === undefined) continue; const q = { x: Math.floor(p.tk / 262144) / 64, y: (p.tk % 262144) / 64 }; if ((q.x - x) ** 2 + (q.y - y) ** 2 <= r * r) n++; } return n; }, [t.x, t.y, R]);
-    check(c === 0, `none of them is back after the reload (${c})`);
+    const url = `${base}?start=town&everyday=0&seed=7`, ctx2 = await browser.newContext({ viewport: { width: 1360, height: 860 }, deviceScaleFactor: 1 }), p2 = await ctx2.newPage();
+    p2.on('pageerror', e => { console.log('[pageerror]', e.message); bad++; });
+    const boot = async () => {
+      await p2.goto(url, { timeout: 300000, waitUntil: 'domcontentloaded' }); await p2.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
+      await p2.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.closeWelcome?.(false); g.setSpeed(0); });
+    };
+    const inCircle = (x, y, r) => p2.evaluate(([x, y, r]) => { const g = window.__game; let n = 0; for (const ps of g.forest.values()) for (const p of ps) { if (p.tk === undefined) continue; const q = { x: Math.floor(p.tk / 262144) / 64, y: (p.tk % 262144) / 64 }; if ((q.x - x) ** 2 + (q.y - y) ** 2 <= r * r) n++; } return n; }, [x, y, r]);
+    try {
+      await boot(); await settle(p2, 1500);
+      const spot = await woodland(p2); await look(p2, spot); await settle(p2, 1500);
+      const t = await p2.evaluate(([x, y]) => { const g = window.__game; let best = null, bd = Infinity; for (const ps of g.forest.values()) for (const p of ps) { if (p.tk === undefined) continue; const q = { x: Math.floor(p.tk / 262144) / 64, y: (p.tk % 262144) / 64 }, d = (q.x - x) ** 2 + (q.y - y) ** 2; if (d < bd) { bd = d; best = q; } } return best; }, [spot.x, spot.y]);
+      const before = await inCircle(t.x, t.y, R); check(before >= 3, `trees in the circle before (${before})`);
+      const cut = await p2.evaluate(([x, y, r]) => window.__game.cutMapTrees(x, y, r), [t.x, t.y, R]); check(cut === before, `the cut took them (${cut} of ${before})`);
+      const bytes = await p2.evaluate(() => window.__game.save()); check(bytes > 0, `the game saved (${bytes} bytes)`);
+      // what the store holds
+      const held = await p2.evaluate(async () => {
+        const db = await new Promise((res, rej) => { const r = indexedDB.open('capital-empire', 1); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+        const buf = await new Promise((res, rej) => { const q = db.transaction('saves', 'readonly').objectStore('saves').get('town'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+        const text = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text(), d = JSON.parse(text);
+        return { has: !!d.cutTrees, trees: d.cutTrees?.trees?.length ?? 0 };
+      });
+      console.log('  the store holds', JSON.stringify(held)); check(held.has && held.trees === cut, `the save has the ${cut} trees taken away (${held.trees})`);
+      await boot(); await settle(p2, 1500);
+      const size = await p2.evaluate(() => window.__game.treeCut.size); check(size >= cut, `the loaded game remembers them (${size})`);
+      await look(p2, t); await settle(p2, 2000);
+      const c = await inCircle(t.x, t.y, R); check(c === 0, `none of them is back after the reload (${c})`);
+      await shot(p2, 'reload-trees-gone');
+    } finally { await ctx2.close(); }
   });
   await ctx.close();
 } finally { await browser.close(); }

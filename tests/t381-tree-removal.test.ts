@@ -16,6 +16,7 @@ import { FOREST_CELL, forestCell, type ForestTree } from '../src/game/forest';
 import { townTreeCell } from '../src/game/towntrees';
 import { BELT, beltField, riverBeltCell } from '../src/game/river-trees';
 import { BLADE_R, TreeCut, keyPos, treeKey } from '../src/game/treecut';
+import { PaintTool, type PaintHost } from '../src/game/paint-tool';
 
 const seed = 1, t = generateTerrain(seed), slope = slopeField(t.height), clearing = makeNoise(t.seed ^ 0x5f0e), clump = makeNoise(t.seed ^ 0x7c1a), belt = beltField(t.seed, t.waters);
 const N = MAP / FOREST_CELL, always = () => true;
@@ -93,6 +94,19 @@ describe('T381: the game uses it (the engine, the paint tool, the bulldozer)', (
     assert.match(eng, /if \(back\) this\.uncutTrees\(j\.cut\); else this\.recutTrees\(j\.cut\)/, 'undo gives them back, redo takes them again');
     assert.match(pt, /this\.host\.unplant\(t\.x, t\.y, s\.r, this\.plantBrush === 'trees'\)/, 'the Trees brush rubs out the trees of the map too');
     assert.match(pt, /Rubbed out \$\{pl\.n\} \$\{noun\}/, 'and says how many');
+    // (the engine's adapter of the paint host: the first in-game run found it dropped the flag, so the Trees brush rubbed out the planted trees only)
+    assert.match(eng, /unplant: \(x, y, r, trees\) => this\.unplantProps\(x, y, r, trees\)/, 'the engine hands the Trees flag on to unplantProps');
+  });
+  it('Rub out of the paint tool asks the host for the trees of the map with the Trees brush only, and says what it took', () => {
+    const asked: { x: number; y: number; r: number; trees: boolean | undefined }[] = [], said: string[] = []; let took = 0;
+    const host = { setLotGround() {}, emit() {}, save() {}, toast: (m: string) => { said.push(m); }, affine() {}, placeProps: () => 0, plant: () => 0, unplant: (x: number, y: number, r: number, trees?: boolean) => { asked.push({ x, y, r, trees }); return took; }, plantPool: () => [] } as unknown as PaintHost;
+    const tool = new PaintTool(host), rub = (kind: 'trees' | 'bushes', n: number) => { took = n; tool.setPlant(kind); tool.rubOut = true; tool.cursor = { x: 50, y: 60 }; tool.pointerDown({ x: 50, y: 60 }, 0, 0); tool.pointerUp(0.5); };
+    rub('trees', 7); assert.equal(asked.length, 1); assert.equal(asked[0]!.trees, true, 'the Trees brush rubs out the trees of the map too'); assert.ok(asked[0]!.r > 0);
+    assert.deepEqual(said.slice(-1), ['Rubbed out 7 trees']);
+    rub('trees', 1); assert.deepEqual(said.slice(-1), ['Rubbed out 1 tree']);
+    rub('trees', 0); assert.deepEqual(said.slice(-1), ['No trees under the brush to rub out'], 'none: it says so, not nothing');
+    rub('bushes', 4); assert.equal(asked.at(-1)!.trees, false, 'the Bushes brush takes the placed plants only, never a tree of the map');
+    assert.deepEqual(said.slice(-1), ['Rubbed out 4 plants']);
   });
   it('the bulldozer takes a tree by a click and trees by a drag, as one undo step, and says how many', () => {
     const eng = src('src/game/engine.ts');
