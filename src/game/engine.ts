@@ -183,12 +183,13 @@ import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
-import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
+import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, breakPinOf, type BreakTurn, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
 import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
 import { FRAMES_PER_TILE, SWING_EVERY, doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
+import { ADDRESS_PACE, AT_ADDRESS, jumpAlpha, livePuffs, puffAt, stepToward, type Puff } from './golf/play/jumpfx';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
@@ -328,7 +329,14 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   d.item = p.group ? GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame : SPECTATOR_BASE + (p.person * WALK_DIRS.length + p.row) * SPECTATOR_FRAMES + p.frame;
   d.x = p.x; d.y = p.y; d.x0 = p.x - 0.12; d.y0 = p.y - 0.12; d.x1 = p.x + 0.12; d.y1 = p.y + 0.12;
   // (T213: a slot may have held a caddie's bag or a hopping golfer last frame)
-  d.lift = undefined; d.scale = 1; d.flip = false; d.moving = false; d.alpha = undefined;
+  d.lift = undefined; d.scale = 1; d.flip = false; d.moving = false; d.alpha = undefined; d.pin = undefined;
+}
+/** T333: the see-through copy of d into g (drawn over every prop of its tiles at SEE_THROUGH of d's alpha; it casts no shadow: sprites.ts top); returns g */
+const SEE_THROUGH = 0.6;
+function seeThrough(d: Drawable, g: Drawable): Drawable {
+  g.item = d.item; g.x = d.x; g.y = d.y; g.flip = d.flip; g.scale = d.scale; g.x0 = d.x0; g.y0 = d.y0; g.x1 = d.x1; g.y1 = d.y1; g.moving = false;
+  g.lift = d.lift; g.alpha = SEE_THROUGH * (d.alpha ?? 1); g.top = true; g.pin = undefined; g.tint = undefined; g.paint = undefined; g.lamps = undefined;
+  return g;
 }
 /** T213: the caddie's stand-in (no caddie is packed yet: GOLF-ART-LIST item 176; the made `staff_caddie_m` waits in art/spectators), a spectator in a
  *  polo and visor, as an index into SPECTATOR_PEOPLE; and its label */
@@ -7253,7 +7261,7 @@ export class Game {
       // a course grid that does not decode fails the load (the slot is backed up, T042), never an empty course saved over the real one
       const lg = this.golf ? loadCourseGrid(this.golf.grid) : 'migrate';
       if (lg === 'bad') { console.error('load failed: the course grid does not decode'); this.golf = null; return false; }
-      this.courseHeight = loadCourseHeight(this.golf?.height); this.chSave = null;
+      this.courseHeight = loadCourseHeight(this.golf?.height); this.chSave = null; this.breakGrids.clear(); // (T333: a new field's rev starts again: no stale grid)
       if (this.golf) this.golf.progress = normalizeProgress(this.golf.progress);
       if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
       if (this.golf?.town) { this.townPts = [this.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
@@ -7290,7 +7298,7 @@ export class Game {
     } catch (e) { console.error('load failed', e); return false; }
   }
   private reset() {
-    this.courseHeight = createCourseHeightField(); this.chSave = null;
+    this.courseHeight = createCourseHeightField(); this.chSave = null; this.breakGrids.clear();
     this.grass.clear(); this.grassZones.clear(); this.grassSim = -1; this.grassElapsed = 0; this.grassTrafficT = -1; this.grassPedOut.fill(0); this.grassCarAlive.fill(0); this.grassTarget = null; this.grassAction = null;
     this.edit.clear(); this.snapshot = null; this.pondKey = ''; // T231: the ponds' edges are laid again for the loaded game
     for (const p of [...this.props]) this.removeProp(p);
@@ -8124,7 +8132,12 @@ export class Game {
   /** a double-click: you run the rest of the way */
   youRun() { if (this.you?.moving) this.you.run = true; }
   /** Skip: you arrive at once (a long trip; golf/you.ts SKIP_TILES) */
-  youSkip() { const y = this.youInCart && this.youCart ? this.youCart : this.you; if (!y?.moving) return; skipAhead(y, 2); this.emit(); }
+  youSkip() {
+    const y = this.youInCart && this.youCart ? this.youCart : this.you; if (!y?.moving) return;
+    const from = { x: y.x, y: y.y }; skipAhead(y, 2);
+    if (this.you && y !== this.you) { this.you.x = y.x; this.you.y = y.y; }
+    this.youJumped(from, y !== this.you); this.emit(); // (T333: a jump you asked for: a puff, a fade)
+  }
   /** the Me button: the camera on you once (the street zoom at least; T323: it does not follow), Select in hand in the cursor you had */
   youMe() { const y = this.you; if (!y) return; if (this.tool !== 'select') this.setTool('select'); this.lookAt(y.x, y.y, Math.max(this.cam.z, 0.2)); }
   /** T323: the rail's cursor (Walk: the walking figure; Select: the pointer), remembered; Select taken in hand */
@@ -8185,11 +8198,15 @@ export class Game {
   /** your character as a mover (the street tier): your look's frame for your facing (walk, swing or idle), labelled "Stand In for <name>"
    *  until the player looks (art 232-234) land */
   private youMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number): number {
-    const c = this.youCart;
+    const c = this.youCart, now = performance.now();
     if (c && c.x >= X0 && c.x <= X1 && c.y >= Y0 && c.y <= Y1) { // T317: your golf cart (the hire cart's art: its side by your heading)
       const f = c.face; this.youCartSide = f >= 1 && f <= 3 ? 0 : f >= 5 ? 1 : this.youCartSide;
       const item = CART_ART[this.youCartSide]!;
-      if (item >= 0) { const d = this.propDrawable(this.youCartDraw, 0, item, c.x, c.y, 0.6); this.golfCartOut.push(d); this.caddieLabels.push({ p: d, text: this.youInCart ? this.golf?.player?.name ?? 'You' : 'Your cart' }); } // (T326: "Your cart" when it waits)
+      if (item >= 0) {
+        const d = this.propDrawable(this.youCartDraw, 0, item, c.x, c.y, 0.6), a = jumpAlpha((now - this.cartJumpAt) / 1000); if (a < 1) d.alpha = a; // (T333: brought or called from far: it fades in)
+        this.golfCartOut.push(d); this.caddieLabels.push({ p: d, text: this.youInCart ? this.golf?.player?.name ?? 'You' : 'Your cart' }); // (T326: "Your cart" when it waits)
+        if (this.youInCart) this.golfCartOut.push(seeThrough(d, this.youCartDraw[1] ??= { ...d })); // T333: you ride: the cart seen through what is in front
+      }
     }
     const mq = this.mYou, mm = this.yourRound()?.match;
     if (mq && mm && mq.x >= X0 && mq.x <= X1 && mq.y >= Y0 && mq.y <= Y1) { // T244: your opponent (a golfer's art by their name; labelled)
@@ -8201,7 +8218,11 @@ export class Game {
     const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
     t.group = 1; t.x = y.x; t.y = y.y; t.person = this.youArt(); t.row = y.face; t.frame = youFrame(y, GOLFER_CLIPS.walk, GOLFER_CLIPS.idle.start, GOLFER_CLIPS.golf_drive, GOLFER_CLIPS.golf_putt);
     crowdDrawable(out, m, t);
-    this.caddieLabels.push({ p: out[m]!, text: this.youLabel() });
+    // T333: you are never nudged by the spacer (the others step round you), you fade in after a jump, and a see-through copy of you is drawn over
+    // whatever stands in front of you (a tree, a building), so you never vanish
+    const d = out[m]!, a = jumpAlpha((now - this.youJumpAt) / 1000); d.pin = true; if (a < 1) d.alpha = a;
+    this.golfCartOut.push(seeThrough(d, this.youGhost));
+    this.caddieLabels.push({ p: d, text: this.youLabel() });
     return m + 1;
   }
   private youLabelName = ''; private youLabelText = ''; private youHoverW = { text: '', w: 0 };
@@ -8273,6 +8294,11 @@ export class Game {
   /** you sit in your cart: the keys and the clicks drive it, you ride (not drawn) */
   youInCart = false;
   private youCartSide = 1; private youCartDraw: Drawable[] = [];
+  /** T333 (#959): when you and your cart last jumped (performance.now ms: Jump to ball, Skip, a mulligan; the cart brought or called from far off; they
+   *  fade in), the dust puffs showing, your see-through copy, and the address you are walking up to (null: none) */
+  youJumpAt = -Infinity; cartJumpAt = -Infinity;
+  private yrPuffs: Puff[] = []; private youGhost: Drawable = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0 };
+  private yrWalkUp: Pt | null = null;
   /** your ball in the air (real seconds): from, where it lands (null: a putt), where it comes to rest, the time so far and in all, the share of it in the
    *  air, whether it went in (or the hole was picked up), the card's row then, and a penalty (the drop shows at the end) */
   private yrFlight: YourFlight | null = null;
@@ -8337,9 +8363,25 @@ export class Game {
       return;
     }
     if (r.match && this.matchFrame(dt, r)) return; // T244: the opponent's turn and their ball in the air
-    if (r.holed || r.over || this.shot) return;
+    // T333: at the address, a new aim turns you round the ball at a shuffle (never in one frame)
+    const s = this.shot; if (s?.mine && !y.moving && y.swing < 0) stepToward(y, addressOf(s.turn.ball, s.input.aim), ADDRESS_PACE * dt);
+    if (r.holed || r.over || this.shot) { this.yrWalkUp = null; return; }
     const mv = this.youInCart && this.youCart ? this.youCart : y;
-    if (nearBall(mv.x, mv.y, r.ball)) this.yourAddress();
+    if (nearBall(mv.x, mv.y, r.ball)) this.yourWalkUp(); else this.yrWalkUp = null;
+  }
+  /** T333 (#959; the snap was "it can snap to the hitting position when close": you were moved up to SNAP_TILES in one frame): near your ball you get
+   *  out of the cart where it stands and walk the last steps to the address; there the shot opens. Not while the keys walk you */
+  private yourWalkUp() {
+    const r = this.yourRound(), v = this.yrView(), y = this.you; if (!r || !v || !y || y.keys || (y.moving && this.yrWalkUp)) return; // (on the way, or walking where you clicked)
+    const turn = yourTurn(v, r, this.yourSkills()); if (!turn) { this.yourAddress(); return; }
+    const c = this.youCart;
+    if (this.youInCart && c) { stopWalk(c); this.youInCart = false; y.x = c.x; y.y = c.y; y.face = c.face; this.youCartPark(); this.youSaveDue = true; } // (out where it stands; T326: it parks off a tee or green)
+    const a = addressOf(turn.ball, turn.suggested.aim);
+    if (Math.hypot(a.x - y.x, a.y - y.y) <= AT_ADDRESS) { this.yrWalkUp = null; this.yourAddress(); return; }
+    this.yrWalkUp = a; this.youThen = null;
+    this.youRaster(y.x, y.y, 8, true, a.x, a.y);
+    const route = routeOf({ x: y.x, y: y.y }, a, this.youCost);
+    startWalk(y, route.length >= 2 ? route : [{ x: y.x, y: y.y }, a], false);
   }
   /** the snap (the owner: "it can snap to the hitting position when close"): out of the cart, at the address facing the suggested aim, and the shot
    *  panel opens on the suggested club, aim and power (the 3-click meter, T316). The sim runs on (your round is not on the day's clock). A round whose
@@ -8352,13 +8394,49 @@ export class Game {
     stopWalk(y); this.youThen = null; this.youTalk = null; this.youTeeOpen = false; this.yrCard = false;
     this.shot = { turn, input: { club: turn.suggested.club, aim: { x: turn.suggested.aim.x, y: turn.suggested.aim.y }, power: turn.suggested.power }, mine: true };
     this.yourFace();
-    this.lookAt(turn.ball.x, turn.ball.y, Math.max(this.cam.z, 0.25));
+    this.glideTo(turn.ball.x, turn.ball.y, Math.max(this.cam.z, 0.25)); // (T333: the camera glides to the ball, no cut)
     this.youSaveDue = true;
   }
-  /** you at the address of the open shot, facing its aim (a new aim moves you round the ball) */
-  private yourFace() {
+  /** T333: the camera eases to (x, y) at zoom z (CAM_EASE_MS; a cut under reduced motion) */
+  private glideTo(x: number, y: number, z: number) {
+    let reduce = false; try { reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no media queries */ }
+    if (reduce) { this.lookAt(x, y, z); return; }
+    this.camEase = { a: { ...this.cam }, b: { X: worldX(x, y), Y: worldY(x, y), z: clampZoom(z) }, t0: performance.now(), ms: CAM_EASE_MS };
+  }
+  /** T333: you (and your cart when it came along) jumped from `from` in one frame (Jump to ball, Skip, a mulligan back to the shot's place): a dust puff
+   *  where you left and where you landed, and you fade in there (play/jumpfx.ts) */
+  private youJumped(from: Pt, cartToo = false) {
+    const y = this.you; if (!y || Math.hypot(y.x - from.x, y.y - from.y) < 0.5) return;
+    const now = performance.now(); this.youJumpAt = now; if (cartToo) this.cartJumpAt = now;
+    this.yrPuffs.push({ x: from.x, y: from.y, at: now }, { x: y.x, y: y.y, at: now }); livePuffs(this.yrPuffs, now);
+  }
+  /** T333: your cart was moved from `from` in one frame (brought to the first tee, called from far off): it fades in at its place, with a puff at both */
+  private cartJumped(from: Pt) {
+    const c = this.youCart; if (!c || Math.hypot(c.x - from.x, c.y - from.y) < 0.5) return;
+    const now = performance.now(); this.cartJumpAt = now;
+    this.yrPuffs.push({ x: from.x, y: from.y, at: now }, { x: c.x, y: c.y, at: now }); livePuffs(this.yrPuffs, now);
+  }
+  /** T333: the dust puffs (the 2D overlay): faint rings spreading on the ground */
+  private puffRings: { r: number; a: number }[] = [];
+  private drawYourPuffs(ctx: CanvasRenderingContext2D, now: number) {
+    const P = this.yrPuffs; if (!P.length) return;
+    livePuffs(P, now); if (!P.length || this.cam.z < DISTRICT_Z) return;
+    const dpr = this.dpr, k = HW * this.cam.z * dpr * Math.SQRT2;
+    ctx.save();
+    for (const q of P) {
+      const p = this.screen(q.x, q.y); if (p.x < -60 * dpr || p.y < -60 * dpr || p.x > this.cw + 60 * dpr || p.y > this.ch + 60 * dpr) continue;
+      for (const g of puffAt((now - q.at) / 1000, this.puffRings)) {
+        ctx.beginPath(); ctx.ellipse(p.x, p.y - g.r * k * 0.25, g.r * k, g.r * k * 0.5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(214,200,170,${(g.a * 0.55).toFixed(3)})`; ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+  /** you face the open shot's aim; a new aim turns you round the ball (T333: yourFrame shuffles you to the address, never in one frame); `jump`: you
+   *  are put at the address at once (Jump to ball, a mulligan) */
+  private yourFace(jump = false) {
     const s = this.shot, y = this.you; if (!s?.mine || !y) return;
-    const a = addressOf(s.turn.ball, s.input.aim); y.x = a.x; y.y = a.y;
+    if (jump) { const a = addressOf(s.turn.ball, s.input.aim); y.x = a.x; y.y = a.y; }
     const dx = s.input.aim.x - s.turn.ball.x, dy = s.input.aim.y - s.turn.ball.y; if (dx || dy) y.face = facingOf(dx, dy);
   }
   /** your swing (or a hit without the meter): plays your shot from the panel's club and aim and the meter's outcome (play/yours.ts playYours: the one
@@ -8435,9 +8513,11 @@ export class Game {
     this.yrFlight = null; this.yrShotFlight = null; if (this.spinAir?.mine) this.spinAir = null;
     this.shot = null; this.yrCard = false; this.lastShot = null;
     this.setYourRound(n);
+    const y0 = this.you ? { x: this.you.x, y: this.you.y } : null;
     this.yourAddress();
     const s = this.shot as ShotState | null, li = this.yrLastInput;
-    if (s?.mine && li && allowedClubs(s.turn.lie, s.turn.lie === 'tee').includes(li.club)) { this.shot = { ...s, input: { club: li.club, aim: { x: li.aim.x, y: li.aim.y }, power: li.power } }; this.yourFace(); }
+    if (s?.mine && li && allowedClubs(s.turn.lie, s.turn.lie === 'tee').includes(li.club)) this.shot = { ...s, input: { club: li.club, aim: { x: li.aim.x, y: li.aim.y }, power: li.power } };
+    if (y0) { this.yourFace(true); this.youJumped(y0); } // (T333: back at the shot's place at once: a jump, with its puff)
     const left = mulligansLeft(n);
     this.toast(`Mulligan: hit it again (stroke ${rowOf(n).strokes + 1})${left === Infinity ? '' : left ? ` · ${left} left` : ' · none left on this nine'}`, 'info');
     this.emit();
@@ -8626,11 +8706,12 @@ export class Game {
   yourJump() {
     const r = this.yourRound(), y = this.you, v = this.yrView(); if (!r || !y || !v || r.holed || r.over || this.shot || this.yrFlight) return;
     if (r.match && (this.mFlight || matchTurn(v, r) !== 'you')) { this.toast(`${firstName(r.match.name)} is away: they play first`, 'info'); return; } // (T244)
-    const c = this.youCart;
+    const c = this.youCart, from = { x: y.x, y: y.y }, rode = this.youInCart && !!c;
     if (this.youInCart && c) { stopWalk(c); const p = this.cartNear(r.ball, c); if (p) { c.x = p.x; c.y = p.y; } this.youInCart = false; }
-    stopWalk(y); this.youThen = null; y.x = r.ball.x; y.y = r.ball.y;
+    stopWalk(y); this.youThen = null; this.yrWalkUp = null; y.x = r.ball.x; y.y = r.ball.y;
     this.youSaveDue = true;
     this.yourAddress();
+    this.yourFace(true); this.youJumped(from, rode); // (T333: at the address at once, with a dust puff, fading in)
     this.emit();
   }
   /** the HUD of your round (null: none): the round, the hole and its par, the stroke to play, the distance to the pin, your lie, the totals, whether you
@@ -8796,11 +8877,21 @@ export class Game {
   youCartToggle() {
     const c = this.youCart, y = this.you; if (!c || !y) return;
     if (this.youInCart) {
-      stopWalk(c); this.youInCart = false; const p = this.cartSide(c, { x: c.x + 1, y: c.y + 1 }); y.x = p.x; y.y = p.y;
+      // T333: you get out where you sat and step down beside it (no jump to its side)
+      stopWalk(c); this.youInCart = false; y.x = c.x; y.y = c.y; const p = this.cartSide(c, { x: c.x + 1, y: c.y + 1 });
+      stopWalk(y); this.youThen = null; if (Math.hypot(p.x - y.x, p.y - y.y) > 0.05) startWalk(y, [{ x: y.x, y: y.y }, p], false);
       this.youCartPark(); // T326: off a tee, clear of a green
       this.youSaveDue = true; this.emit(); return;
     }
     if (Math.hypot(c.x - y.x, c.y - y.y) > CART_REACH) { this.toast('Walk to your cart first', 'warn'); return; }
+    stopWalk(c); this.cartCalled = false;
+    // T333: you step up to it and get in there (no jump into it)
+    if (Math.hypot(c.x - y.x, c.y - y.y) > AT_ADDRESS) { startWalk(y, [{ x: y.x, y: y.y }, { x: c.x, y: c.y }], false); this.youThen = { act: () => this.youCartIn(), face: null, key: 'cart' }; this.emit(); return; }
+    this.youCartIn();
+  }
+  /** T333: you sit in your cart (beside it: youCartToggle walks you to it first) */
+  private youCartIn() {
+    const c = this.youCart, y = this.you; if (!c || !y || this.youInCart) return;
     stopWalk(y); stopWalk(c); this.cartCalled = false; this.youThen = null; this.youInCart = true; y.x = c.x; y.y = c.y;
     this.youSaveDue = true; this.toast('In your cart: WASD drive (Shift: faster), a click drives there, E gets out', 'info'); this.emit();
   }
@@ -8856,7 +8947,7 @@ export class Game {
     const spot = callSpot(y, c, this.cartOk) ?? this.cartNear(y, c); // (on a green: the nearest spot back toward it, at the green's edge)
     if (!spot) { this.toast('Your cart cannot get to you here: walk out to open ground and call again', 'warn'); return; }
     stopWalk(c);
-    if (mode === 'appear') { const a = appearSpot(y, c, this.cartOk); if (a) { c.x = a.x; c.y = a.y; c.face = facingOf(spot.x - a.x, spot.y - a.y); } }
+    if (mode === 'appear') { const a = appearSpot(y, c, this.cartOk); if (a) { const from = { x: c.x, y: c.y }; c.x = a.x; c.y = a.y; c.face = facingOf(spot.x - a.x, spot.y - a.y); this.cartJumped(from); } } // (T333: it fades in)
     this.youRaster(c.x, c.y, 16, true, spot.x, spot.y);
     startWalk(c, routeOf({ x: c.x, y: c.y }, spot, this.cartCost), true); c.tx = NaN; c.ty = NaN; c.skip = false;
     this.cartCalled = true;
@@ -8900,7 +8991,9 @@ export class Game {
     const c = this.youCart; if (!c || this.youInCart || Math.hypot(c.x - tee.x, c.y - tee.y) <= BRING_TILES) return false;
     this.youRaster(tee.x, tee.y, 14, true);
     const p = parkSpot(tee, this.cartOk, this.parkSurf, this.greenNear) ?? callSpot(tee, c, this.cartOk); if (!p) return false;
+    const from = { x: c.x, y: c.y };
     stopWalk(c); this.cartCalled = false; c.x = p.x; c.y = p.y; c.face = facingOf(tee.x - p.x, tee.y - p.y);
+    this.cartJumped(from); // (T333: brought: it fades in by the tee, a puff where it left)
     this.youSaveDue = true; return true;
   }
   /** whether the Cart button shows: you have a cart, are not in it nor within reach of it */
@@ -8997,12 +9090,23 @@ export class Game {
    *  in "always" every pin near the camera (at most 4); [] when none */
   private breakPins(): Pt[] {
     if (this.breakMode === 'off' || this.cam.z < DISTRICT_Z) return [];
-    const r = this.yourRound(), v = r && !r.over ? this.yrView() : null, h = v && r ? holeOf(v, r.card[r.at]!.i) : null;
-    if (h && r && !r.holed && (this.shot?.mine ? this.shot.input.club === 'putter' : this.yrFlight ? !!this.yrFlight.putt : r.lie === 'green')) return [h.pin];
-    if (h && this.yrFlight?.putt) return [h.pin]; // (the putt that holed: the grid holds while it drops)
+    // T333 (#959): every kind of round you play: your walk-on round (a match too), and your shots in the tournament (only the walk-on round had it)
+    const p = breakPinOf(this.yourBreakTurn()) ?? breakPinOf(this.ownerBreakTurn()); if (p) { this.breakOne[0] = p; return this.breakOne; }
     if (this.breakMode !== 'always') return [];
     const c = tileOf(this.cam.X, this.cam.Y), R = 0.75 * Math.hypot(this.cssW, this.cssH) / (this.cam.z * HW);
     return (this.golf?.pins ?? []).filter(p => Math.hypot(p.x - c.x, p.y - c.y) < R + 15).slice(0, 4);
+  }
+  private breakOne: Pt[] = [];
+  /** T333: your walk-on round's state for the break grid (green.ts breakPinOf), null with none */
+  private yourBreakTurn(): BreakTurn | null {
+    const r = this.yourRound(), v = r && !r.over ? this.yrView() : null, h = v && r ? holeOf(v, r.card[r.at]!.i) : null; if (!h || !r) return null;
+    const s = this.shot?.mine ? this.shot : null, f = this.yrFlight;
+    return { pin: h.pin, club: s ? s.input.club : null, putting: !!f?.putt, flying: !!f && !f.putt, onGreen: r.lie === 'green', holed: r.holed };
+  }
+  /** T333: the tournament's state for the break grid when you play in it (your open shot, else your next turn's ball), null with none */
+  private ownerBreakTurn(): BreakTurn | null {
+    const s = this.shot && !this.shot.mine ? this.shot : null, t = s?.turn ?? this.play?.own?.turn; if (!t) return null;
+    return { pin: t.pin, club: s ? s.input.club : null, putting: false, flying: false, onGreen: t.lie === 'green', holed: false };
   }
   /** a green's break grid (cached; built once per pin, height edit and course grid change: a few hundred points) */
   private breakGridOf(pin: Pt): BreakGrid | null {
@@ -10774,6 +10878,7 @@ export class Game {
     this.drawBusPreview(ctx);
     this.drawYourCart(ctx); // T326
     this.drawYou(ctx); // T240
+    this.drawYourPuffs(ctx, performance.now()); // T333
     this.drawYourTracers(ctx, performance.now()); // T319
     this.drawGimmeRing(ctx); // T327
     this.drawYourBall(ctx); // T317
