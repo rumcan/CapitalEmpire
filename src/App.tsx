@@ -361,7 +361,7 @@ export default function App() {
       case 'pro': game.placePro(act.id); break; // T214: the pro's office, a teaching hut
       case 'estate': game.placeEstate(true); break; // T353: House lots (Course › Buildings)
       case 'care': game.grassAction = act.id as typeof game.grassAction; break;
-      case 'props': if (act.group !== 'buildings') game.decor.focus = act.group as typeof game.decor.focus; break;
+      case 'props': if (act.group !== 'buildings') game.decor.setFocus(act.group as typeof game.decor.focus); break; // T369: a group takes the All props box off
       case 'paint': p.setMode('draw'); p.setStyle({ tex: act.tex as Parameters<typeof p.setStyle>[0]['tex'] }); break;
       case 'plant': p.setPlant(act.id as Parameters<typeof p.setPlant>[0]); break;
       case 'paintMode': p.setMode(act.id as Parameters<typeof p.setMode>[0]); break;
