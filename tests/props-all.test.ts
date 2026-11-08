@@ -14,7 +14,7 @@ import type { Game } from '../src/game/engine';
 const LIB = new Map(LIBRARY.map((it, i) => [it.id, i]));
 const view = (over: Partial<PropsView> = {}): PropsView => ({ where: 'course', group: null, all: false, focus: null, ...over });
 /** a tool with nothing behind it but the library's picture lookup (the panel reads no more of it) */
-const tool = () => new PropsTool({ golf: () => true, item: id => LIB.get(id), selected: () => null, emit: () => {} } as unknown as PropsHostCtx);
+const tool = () => new PropsTool({ golf: () => true, item: (id: string) => LIB.get(id), selected: () => null, emit: () => {} } as unknown as PropsHostCtx);
 /** the panel's markup for a tool: the game it reads is the tool, the money and no range */
 const html = (t: PropsTool) => renderToStaticMarkup(createElement(PropsPanel, { game: { decor: t, golf: { start: 'course' }, money: 1e9, emit: () => {} } as unknown as Game }));
 const cardsIn = (h: string) => (h.match(/data-card="prop-/g) ?? []).length;
