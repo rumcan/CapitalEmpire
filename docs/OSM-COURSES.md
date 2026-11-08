@@ -265,6 +265,27 @@ through the grid's own pipeline (`applyDiff`, `courseGridChanged`: the workers' 
 puts the tee sets, pins and aim points, and saves `golf.osm` with `placed: true` and `turn` (the loader then keeps the game's own map and seed; a new-game map-data
 course has no `placed` and is laid on the flat map as before). Your previous holes are **replaced** by the course's (the pop-up says so); the land they stood on stays yours.
 
+## Performance (the bench, T356)
+`node scripts/perf/bench.mjs http://localhost:5189/ --start town --seed 7 --stamp 1 --money 1 --size 1 [--realplace rondebosch | --realplace rondebosch,laid] [--zooms 30,30]` on a dev server, 1600 x 900,
+RTX 3080, the merged branch, the old start's town at pop 933 (372 built lots, 129 road pieces, 9 holes of its own). **Use `--seed 7` (or 2, 5, 10, 12, 13): `--seed 1` gives no old start, so the game
+takes a random map (the T340 table above says `--seed 1`).** The budget is 8 ms of main thread a frame. Main-thread ms a frame, average / p95:
+
+| | 30% pan | 15% pan |
+| --- | --- | --- |
+| no course placed (the game as it is) | 0.86 / 1.2 (55.6 fps) | 0.91 / 1.3 (59.2 fps) |
+| in hand, A/B on one page: off (no course) | 0.68 / 0.9 | 0.84 / 1.1 |
+| in hand, the pointer still (the outline and faint holes drawn, the plan kept) | 0.75 / 1.0 (+0.07 ms) | 0.87 / 1.1 (+0.02 ms) |
+| in hand, the pose moved a tile every frame (a replan every frame: the worst a pointer can do) | 1.42 / 1.9 (+0.73 ms) | 1.44 / 1.8 (+0.60 ms) |
+| Rondebosch placed, the first pass over it | 1.18 / 1.8 (21.8 fps) | 1.29 / 1.9 (32.6 fps) |
+| Rondebosch placed, 30% twice: first pass, then second | 1.24 / 1.9 (31.7 fps), then 1.03 / 1.5 (40.9 fps) | |
+
+- **The main thread is nowhere near the budget.** What costs frames after placing is the ground, off the main thread: the first pass over the new course bakes its chunks (median bake 67 to 76 ms
+  against 42 ms) and decodes its textures (158 to 179 tile pictures against 21; the second pass 41), as T340's new-game courses do. The ground plus tile pictures peaked at 198 MB on the first
+  pass (183 MB on the second; GAME-PLAN 2.3's budget is 192): a few MB over for the first pass only.
+- **Laying it** costs 268 ms of main thread in the bench (about 750 ms from the click to the next frame in the shots: the grid diff of every painted cell of the course, then the ground's re-bake in the workers).
+- **The plan** (`planPlace`) on a synthetic town: 3,750 lots and 1,250 road pieces 1.3 to 2.1 ms a pose, 12,150 lots and 4,050 pieces 3.6 to 5 ms (the lots' boxes, the land classes and the road graph are kept
+  between poses; `output/plan-bench` is not committed). It runs when the pose changes, never for a pointer that holds still.
+
 ## Left out, and for the lead to decide
 - **The map cannot grow.** `MAP = 1024` is a compile-time constant of the engine (typed arrays, the terrain, the workers), so "expand the map" is not offered: a course that fits
   in no turn is refused with a message that suggests a smaller or a scaled course (`specOf` already scales Woodhill to 90%; true size needs 1079 tiles). Woodhill at 90% is 976 x 529 tiles: it fits the 1016 usable tiles only at 0, 90, 180 and 270 degrees (and within 4 degrees of them); Rondebosch and Magnolia fit at every turn.

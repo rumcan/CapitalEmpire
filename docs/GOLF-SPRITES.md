@@ -451,3 +451,10 @@ at 145°, nothing mirrored, each picture in the four views:
 | --- | --- | --- | --- | --- |
 | Pin flag sheet (`golf:pin-flag-wind`, 8 frames x 4 wind directions: S, W, N, E; strengths limp, light, firm) | 0.1 m / 2.2 m | `business:golf-pin-red` with the shader's ripple | a red flagstick cloth in four wind directions, each as limp, a light breeze and a firm wind (8 frames of the ripple loop), the white pole and the black base the same in every frame | P2 |
 | Tree sway sheet (`golf:tree-sway`, 4 frames) for the common trees | as each tree | the shader's shear | the same tree with its crown leaning left, upright and right in a gust (4 frames loop), the trunk fixed | P3 |
+
+## Place a real course (T356, #998: an art request)
+Course › *Place a real course…* is a row of the Course flyout with the generic trophy glyph today (no tile art; its three courses are rows with the pin glyph). Same tile rules as
+the Course flyout's other tiles (`ui/tool-tiles.ts ROW_TILE`, art 174: the 4:3 illustrated square, the sun at the upper right, shadows at 145°):
+| Sprite (id to use) | Size | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Course flyout tile "Place a real course" (`ROW_TILE.real`) | 4:3 tile | the trophy glyph | an aerial view of a real golf course's outline laid over a town's streets, a green dashed boundary and a few fairways and greens drawn faintly inside it, a small rotate arrow at one corner | P3 |
