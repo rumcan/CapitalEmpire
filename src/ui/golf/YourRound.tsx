@@ -63,6 +63,7 @@ export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCar
         {v.match && onSkip && <MatchStrip m={v.match} onSkip={onSkip} />}
         <span className="font-display font-bold text-[var(--gold-hi)]">Hole {v.hole}</span>
         <span className="tabular-nums text-slate-300">Par {v.par} · {r.holed ? 'holed' : `stroke ${v.stroke}`}{!r.holed && !r.over ? ` · ${v.distM < 3 ? v.distM.toFixed(1) : Math.round(v.distM)} m to the pin, ${LIE[v.lie] ?? v.lie}` : ''}</span>
+        {v.wind && <span className="rounded bg-cyan-400/15 px-1.5 py-0.5 tabular-nums text-cyan-100" data-testid="round-wind" data-tip="The day's wind. The shot panel shows its gusts and what it does to the shot">Wind: {v.wind}</span>}
         <span className="rounded bg-white/10 px-1.5 py-0.5 font-semibold tabular-nums text-white" data-testid="round-score">{t.thru ? `${toPar(t.toPar)} thru ${t.thru}` : 'E'}</span>
         {v.canJump && <button className="btn-gold px-2 py-0.5 text-xs" onClick={onJump} data-testid="you-jump" data-tip="Skip the trip: you are at your ball, addressing it"><Icon name="forward2" size={14} />Jump to ball</button>}
         {(v.inCart || v.nearCart) && !v.addressing && <button className="chip" onClick={onCart} data-testid="you-cart">{v.inCart ? 'Get out (E)' : 'Get in the cart (E)'}</button>}

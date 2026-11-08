@@ -7,6 +7,7 @@ import { playRound } from './round';
 import { fieldEntourage } from './entourage';
 import { LiveGroup, POWER } from './live';
 import type { OwnerInput, OwnerTurn } from './live';
+import type { Conditions } from './conditions';
 import type { Club, CourseView, GameSkills, Golfer, Lie, RoundPlan, Sex } from './types';
 import type { TeeKind } from '../types';
 
@@ -55,13 +56,14 @@ export interface DayOwnerPlay { id: number; li: number; tee: number; live: LiveG
 
 /** the tournament day's round as the engine builds it (docs/GOLF-PLAY.md P2 and P4b; T209: the same on a reload): the field of the tier from the seed, the
  *  owner (when he plays) as the next id, the tee times, and the round; his group is played live from his saved inputs (startOwner: replayed, then the
- *  caddie) and his next turn is due. Throws when his inputs no longer fit the course (startOwner) */
-export function dayRound(view: CourseView, tier: number, seed: number, owner: DayOwner | null): { plan: RoundPlan; golfers: Golfer[]; own: DayOwnerPlay | null } {
+ *  caddie) and his next turn is due. Throws when his inputs no longer fit the course (startOwner). T334: with `cond` (the day's wind, heights and the lie's kinds) the
+ *  model's golfers play in the day's weather (play/conditions.ts); without it the day is as it was */
+export function dayRound(view: CourseView, tier: number, seed: number, owner: DayOwner | null, cond?: Conditions): { plan: RoundPlan; golfers: Golfer[]; own: DayOwnerPlay | null } {
   const field = makeField(tier, seed), id = field.length, golfers = owner ? [...field, ownerGolfer(id, owner.owner, owner.tees, owner.skills)] : field;
   const groups = teeTimes(golfers, seed), li = owner ? groups.findIndex(gr => gr.players.includes(id)) : -1;
   // T213: the tour's pros have caddies, the small events' amateurs ride carts (their moves between shots a little quicker)
   fieldEntourage(golfers, groups, tier);
-  const plan = playRound(view, golfers, groups, seed, li >= 0 ? { live: li } : undefined);
+  const plan = playRound(view, golfers, groups, seed, li >= 0 || cond ? { ...(li >= 0 ? { live: li } : {}), ...(cond ? { cond } : {}) } : undefined);
   if (!owner || li < 0) return { plan, golfers, own: null };
   const { live, turn } = startOwner(plan, view, li, seed, owner.inputs, owner.caddie);
   return { plan, golfers, own: { id, li, tee: groups[li]!.tee, live, turn } };

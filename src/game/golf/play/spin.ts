@@ -7,6 +7,7 @@
 // The save keeps the dot and the clicks (live.ts OwnerInput.spin), never the click times, so a replay plays the same shot; a shot without it has no
 // spin and plays exactly as before. The flight's curve is set at the strike (the dot); the clicks change only what the ball does once it lands (its
 // first bounce: a check, a release, a spin back), so the landing point never depends on them. Pure TS, no DOM.
+import { LIE_FX, type LieKind } from './lies';
 import type { Club, Lie } from './types';
 
 /** the spin as the save keeps it: the dot on the ball (x: -1 left, a draw .. +1 right, a fade; y: -1 the bottom, backspin .. +1 the top, topspin; inside
@@ -43,9 +44,10 @@ export function readSpin(v: unknown): SpinInput | null {
 }
 
 /** the most spin (0..1) a club and the lie it is played from allow in the dot's direction (ux, uy: a unit vector): the backspin's cap is the club's, the
- *  topspin's and side spin's 1; the lie scales all of them */
-export function spinCap(club: Club, lie: Lie, _ux: number, uy: number): number {
-  const l = SPIN_LIE[lie];
+ *  topspin's and side spin's 1; the lie scales all of them. T334: `kind`, the lie's finer kind (lies.ts: the first cut, the deep rough), scales it by its own
+ *  share instead of the coarse lie's */
+export function spinCap(club: Club, lie: Lie, _ux: number, uy: number, kind?: LieKind): number {
+  const l = kind ? LIE_FX[kind].spin : SPIN_LIE[lie];
   if (club === 'putter' || l <= 0) return 0;
   let c = 1;
   if (uy < 0) c = Math.min(c, SPIN_BACK_CAP[club] / -uy);
@@ -54,16 +56,16 @@ export function spinCap(club: Club, lie: Lie, _ux: number, uy: number): number {
 
 /** what a spin does for a club played from a lie (see SpinEffect): the dot's share of SPIN.base plus SPIN.per a click, capped (spinCap). Null spin or a
  *  dot at the centre: none. Pure: the same spin, club and lie always give the same effect */
-export function spinEffect(s: SpinInput | null, club: Club, lie: Lie): SpinEffect {
+export function spinEffect(s: SpinInput | null, club: Club, lie: Lie, kind?: LieKind): SpinEffect {
   const r = s ? Math.min(1, Math.hypot(s.x, s.y)) : 0;
   if (!s || r < 1e-6) return { side: 0, top: 0, back: 0, amount: 0, cap: 0 };
-  const ux = s.x / Math.hypot(s.x, s.y), uy = s.y / Math.hypot(s.x, s.y), cap = spinCap(club, lie, ux, uy);
+  const ux = s.x / Math.hypot(s.x, s.y), uy = s.y / Math.hypot(s.x, s.y), cap = spinCap(club, lie, ux, uy, kind);
   const amount = Math.min(cap, r * SPIN.base + clamp(Math.floor(s.pump), 0, SPIN.maxPump) * SPIN.per);
   return { side: ux * amount, top: Math.max(0, uy) * amount, back: Math.max(0, -uy) * amount, amount, cap };
 }
 
 /** whether another click in the air still adds spin (the spin is below its cap) */
-export const spinRoom = (s: SpinInput | null, club: Club, lie: Lie): boolean => { const e = spinEffect(s, club, lie); return e.cap > 0 && e.amount < e.cap - 1e-9; };
+export const spinRoom = (s: SpinInput | null, club: Club, lie: Lie, kind?: LieKind): boolean => { const e = spinEffect(s, club, lie, kind); return e.cap > 0 && e.amount < e.cap - 1e-9; };
 
 /** the flight's curve (radians, + right as the golfer faces the aim) of a spin's side spin over a carry of carryM metres */
 export const curveOf = (e: SpinEffect, carryM: number): number => e.side * SPIN.sideDeg * clamp(carryM / 200, CURVE_K[0], CURVE_K[1]) * Math.PI / 180;

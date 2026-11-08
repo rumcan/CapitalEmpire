@@ -3,10 +3,13 @@
 // with the club's full carry; the half-circle swing meter (swing.ts SwingMeter): Enter or a click on the meter starts the swing, the second sets the power,
 // the third the accuracy at the snap line; Space taps during the swing add a little power (capped) and narrow the sweet spot. Then the caddie's finish,
 // and the last shot's carry and total. It sits bottom centre and reads game.shotState(); App mounts it while a shot is open.
+// T334 (#960): the conditions (play/conditions.ts, Game.shotConditions): the wind (a dial: the arrow is the way it blows against the shot, up the line a tailwind; its speed, gusts and
+// what it adds to this shot), the lie and what it does (carry, scatter, spin, a flier's chance) and the slope under the ball; the meter's aim mark is where to stop the power for the
+// distance the shot PLAYS like in them.
 // The meter is a plain canvas (no atlas page): a labelled stand-in until meter art exists.
 import { useEffect, useRef, useState } from 'react';
 import type { Game, ShotState } from '../game/engine';
-import { BOOST, CLUB_NAME, METER, SwingMeter, allowedClubs, carryM, meterMark, shapeText, sweetSpot, swingEffect, type Lie, type SwingPhase } from '../game/golf/play';
+import { BOOST, CLUB_NAME, METER, SwingMeter, allowedClubs, carryM, compassOf, meterMark, shapeText, sweetSpot, swingEffect, type Lie, type SwingPhase } from '../game/golf/play';
 import { TILE_M } from '../game/golf/types';
 
 /** the lies as the panel names them */
@@ -74,14 +77,51 @@ function drawMeter(c: HTMLCanvasElement, m: SwingMeter | null, t: number, look: 
   ctx.font = '500 8px system-ui, sans-serif'; ctx.fillStyle = 'rgba(226,232,240,0.4)'; ctx.textAlign = 'left'; ctx.fillText('Stand In for swing meter art', 4, CH - 4);
 }
 
+/** the wind dial and the lie's box for the open shot (T334): re-read ten times a second, as the gusts move */
+function ConditionsBox({ game }: { game: Game }) {
+  const [, tick] = useState(0);
+  useEffect(() => { const id = window.setInterval(() => tick(n => (n + 1) % 1e6), 120); return () => window.clearInterval(id); }, []);
+  const c = game.shotConditions(); if (!c || !c.on) return null;
+  const w = c.wind, len = 8 + Math.min(w.mph, 25) * 0.8, pv = c.preview;
+  const add = [Math.abs(pv.windCarryM) >= 1 ? `${pv.windCarryM > 0 ? '+' : '-'}${Math.abs(Math.round(pv.windCarryM))} m` : '', Math.abs(pv.windDriftM) >= 1 ? `${Math.abs(Math.round(pv.windDriftM))} m ${pv.windDriftM > 0 ? 'right' : 'left'}` : ''].filter(Boolean).join(', ');
+  return (
+    <div className="mt-1 flex flex-col gap-1" data-testid="shot-conditions">
+      {!c.putting && (
+        <div className="flex items-center gap-2 rounded-md bg-slate-900/50 px-2 py-1" title="The wind moves the ball in the air: more on a long, high shot, less on a low one, none on a putt. The dial looks down the shot: up is the target.">
+          <svg width="46" height="46" viewBox="-23 -23 46 46" aria-label="Wind dial" className="shrink-0">
+            <circle r="21" fill="rgba(15,23,42,0.5)" stroke="rgba(148,163,184,0.5)" />
+            <path d="M0 -21 l-3.5 5.5 h7 z" fill="#fbbf24" />
+            {!w.calm && (
+              <g transform={`rotate(${w.arrow.toFixed(1)})`} stroke="#67e8f9" fill="#67e8f9" strokeLinecap="round">
+                <line x1="0" y1={len / 2} x2="0" y2={-len / 2 + 3} strokeWidth="2.4" />
+                <path d={`M0 ${-len / 2 - 3} l-4.5 7.5 h9 z`} stroke="none" />
+              </g>
+            )}
+          </svg>
+          <div className="leading-tight" data-testid="wind-text">
+            <div className="text-sm font-bold tabular-nums text-cyan-100">{w.calm ? 'Calm' : `${Math.round(w.mph)} mph`}</div>
+            <div className="text-[11px] text-slate-200">{w.rel}{add ? `: ${add}` : ''}</div>
+            {!w.calm && <div className="text-[11px] text-slate-400">from the {compassOf(w.from)} · gusts to {w.peak}</div>}
+          </div>
+        </div>
+      )}
+      <div className="rounded-md bg-slate-900/50 px-2 py-1 leading-tight" data-testid="lie-text" title={c.lie.note}>
+        <div className="text-sm font-bold text-slate-100">{c.lie.name}{c.lie.flier >= 0.05 ? ' · flier risk' : ''}</div>
+        <div className="text-[11px] text-slate-300">{c.putting ? 'On the green' : c.lie.lines.length ? c.lie.lines.join(' · ') : c.lie.note}</div>
+        {!c.putting && c.slopeLines.map(l => <div key={l} className="text-[11px] text-amber-200">{l}</div>)}
+      </div>
+    </div>
+  );
+}
+
 /** the panel for one open turn */
 function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
   const t = s.turn, i = s.input, putting = i.club === 'putter', clubs = allowedClubs(t.lie, t.lie === 'tee'), skill = game.shotSkill();
-  const aimM = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) * TILE_M, fullM = putting ? t.distM : carryM(i.club, skill);
+  const aimM = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) * TILE_M, fullM = putting ? t.distM : carryM(i.club, skill), cond = game.shotConditions(), playsM = cond?.on && !putting ? cond.playsLikeM : aimM, suggested = cond?.suggest ?? t.suggested.club;
   const meter = useRef<SwingMeter | null>(null), canvas = useRef<HTMLCanvasElement | null>(null), fired = useRef(false);
   const [phase, setPhase] = useState<SwingPhase>('ready');
   const [result, setResult] = useState<string | null>(null);
-  const look: MeterLook = { sweet: sweetSpot(skill), aimMark: meterMark(fullM > 0 ? aimM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting };
+  const look: MeterLook = { sweet: sweetSpot(skill), aimMark: meterMark(fullM > 0 ? playsM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting };
   const swinging = phase === 'up' || phase === 'back', busy = phase !== 'ready';
   const last = game.lastShotReport();
 
@@ -159,15 +199,16 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
           </p>
           <div className="mt-2 flex flex-wrap gap-1" onWheel={e => { if (e.deltaY) cycle(e.deltaY > 0 ? 1 : -1); }} title="Q / E or the mouse wheel change the club">
             {clubs.map(c => (
-              <button key={c} disabled={busy} className={`chip ${c === i.club ? 'chip-on' : ''} ${c === t.suggested.club ? 'ring-1 ring-amber-300/70' : ''}`}
-                title={c === t.suggested.club ? 'The suggested club' : undefined} onClick={() => game.setShotClub(c)}>{CLUB_NAME[c]}</button>
+              <button key={c} disabled={busy} className={`chip ${c === i.club ? 'chip-on' : ''} ${c === suggested ? 'ring-1 ring-amber-300/70' : ''}`}
+                title={c === suggested ? 'The suggested club' : undefined} onClick={() => game.setShotClub(c)}>{CLUB_NAME[c]}</button>
             ))}
           </div>
           <p className="mt-1 text-xs tabular-nums text-slate-300">
-            {CLUB_NAME[i.club]}{i.club === t.suggested.club ? ' (suggested)' : ''}: {putting ? `putting scale, 100% is the hole (${t.distM.toFixed(1)} m)` : `full carry ${Math.round(fullM)} m (${Math.round(fullM * YARDS)} yd)`}
+            {CLUB_NAME[i.club]}{i.club === suggested ? ' (suggested)' : ''}: {putting ? `putting scale, 100% is the hole (${t.distM.toFixed(1)} m)` : `full carry ${Math.round(fullM)} m (${Math.round(fullM * YARDS)} yd)`}
+            {!putting && Math.abs(playsM - aimM) >= 3 ? <span className="text-cyan-200"> · the aim plays like {Math.round(playsM)} m</span> : null}
           </p>
           <p className="mt-1 min-h-[4.5em] text-[12px] text-slate-400">
-            {phase === 'ready' ? 'Enter or click the meter to swing, again for the power, once more at the snap line. Tap Space during the swing for more power (riskier). Q / E or the wheel: club. Click the course to aim.'
+            {phase === 'ready' ? 'Enter or click the meter to swing: again for the power, once more at the snap line. Space during the swing: more power, riskier. Q / E or the wheel: club. Click the course to aim.'
               : phase === 'up' ? 'Click (or Enter) to set the power…' : phase === 'back' ? 'Click (or Enter) at the snap line…' : ''}
           </p>
           {last && <p className="mt-1 text-[12px] tabular-nums text-slate-300">Last shot: {last.text}</p>}
@@ -175,8 +216,11 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
             <button className="btn" disabled={swinging || phase === 'done'} onClick={() => game.ownerCaddie()}>{s.mine ? 'Let the caddie finish the hole' : 'Let the caddie finish'}</button>
           </div>
         </div>
-        <canvas ref={canvas} width={CW} height={CH} className="mx-auto shrink-0 cursor-pointer select-none" style={{ width: CW, height: CH }} aria-label="Swing meter"
-          onPointerDown={e => { if (e.button === 0 && !meter.current) { e.preventDefault(); click(); } }} />
+        <div className="mx-auto shrink-0" style={{ width: CW }}>
+          <canvas ref={canvas} width={CW} height={CH} className="cursor-pointer select-none" style={{ width: CW, height: CH }} aria-label="Swing meter"
+            onPointerDown={e => { if (e.button === 0 && !meter.current) { e.preventDefault(); click(); } }} />
+          <ConditionsBox game={game} />
+        </div>
       </div>
     </div>
   );

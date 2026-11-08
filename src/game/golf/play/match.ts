@@ -205,7 +205,7 @@ export function oppShot(view: CourseView, r: YourRound, seed: number): { round: 
   const hole = holeFrom(h0, MATCH_TEES), stroke = m.strokes + 1, rr = oppStream(seed, r, row.i, stroke), k = chooseShot(m.lie, m.ball, hole, m.sk, m.lie === 'tee');
   let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Shot['landing'];
   if (k.club === 'putter') {
-    const dx = hole.pin.x - m.ball.x, dy = hole.pin.y - m.ball.y, L = Math.hypot(dx, dy), o = putt(rr, skillFor(m.sk, 'putter'), L * TILE_M), s = L > 0 ? o.leaveM / TILE_M / L : 0;
+    const dx = hole.pin.x - m.ball.x, dy = hole.pin.y - m.ball.y, L = Math.hypot(dx, dy), o = putt(rr, skillFor(m.sk, 'putter'), L * TILE_M, 1, true), s = L > 0 ? o.leaveM / TILE_M / L : 0;
     to = o.holed ? { x: hole.pin.x, y: hole.pin.y } : { x: hole.pin.x + dx * s, y: hole.pin.y + dy * s }; lie = o.holed ? 'green' : view.lieAt(to.x, to.y); holed = o.holed;
   } else {
     const o = hitShot(rr, m.sk, m.lie, m.ball, k.aim, k.club, view); to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
