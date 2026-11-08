@@ -97,3 +97,14 @@ test('the entry point for streets laid by code (T354): layEstateLots lays lots a
   // the tool's click and drag go through the same laying (the tool charges and clears through its context)
   assert.match(eng, /laid: placed => this\.estateLaid\(placed\),/);
 });
+
+test('a house on the estate is the town\'s lot composition and nothing more (T385, #1042: the owner\'s lot rule is that composition\'s): one compose state, no props of the estate\'s own on a lot being built or built', () => {
+  const apply = method('private applyEstateLot(key: string) {');
+  assert.match(apply, /this\.placeLot\(key, \{ o: l\.o, u: l\.u, n: l\.n, w: l\.w, d: l\.d \}, this\.estateLotState\(l\)\)/);
+  assert.doesNotMatch(apply, /addProp|put\(|lotProps/, 'a lot being built or built adds nothing of its own');
+  assert.match(method('private estateLotState(l: ES.EstateLot): ComposeState {'), /\{ use: LU\.RES, level: l\.st === ES\.ST\.BUILT \? LV\.BUILT : LV\.BUILDING, decline: 0, seed: l\.seed \}/);
+  // the estate's own props are the plots' (before a house stands): the For Sale post, and the sold plot's first delivery
+  const plot = method('private placeEstatePlot(key: string, l: ES.EstateLot) {');
+  assert.match(plot, /if \(l\.st === ES\.ST\.SALE\) put\(ES\.SALE_SIGN, [^)]*\);\n\s+else \{ put\(SITE_LUMBER\[0\]!, [^)]*\); put\(SITE_HEAPS\[0\]!, [^)]*\); \}/);
+  assert.match(apply, /else this\.placeEstatePlot\(key, l\);/);
+});

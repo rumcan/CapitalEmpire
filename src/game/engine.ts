@@ -9961,13 +9961,17 @@ export class Game {
     for (const k of [...this.estateDrawn.keys()]) if (!want.has(k)) { this.estateDrawn.delete(k); this.lotQueue.add(k); }
     for (const [k, st] of want) if (this.estateDrawn.get(k) !== st) { this.estateDrawn.set(k, st); this.lotQueue.add(k); }
   }
+  /** the compose state of an estate lot being built or built: the town's own RES lot at its stage (lots/compose.ts compose, through placeLot, the saved game's lot model),
+   *  from the lot's own seed. A finished house lot is exactly the town's composition and nothing of the estate's own: T385 (#1042) makes that composition the owner's lot
+   *  (the house facing the road, a drive and a front path, a fence, at most three trees, no clutter) for every lot, estate lots included; an estate-only tightening goes here */
+  private estateLotState(l: ES.EstateLot): ComposeState { return { use: LU.RES, level: l.st === ES.ST.BUILT ? LV.BUILT : LV.BUILDING, decline: 0, seed: l.seed }; }
   /** a lot of the estate is drawn (the lot queue's key 'estate:<id>'): for sale a pegged plot with the For Sale post; sold the plot with the builder's first
    *  delivery; being built the town's building site; built the town's house (the saved game's lot model, lots/compose.ts); no lot, nothing */
   private applyEstateLot(key: string) {
     const l = this.estateHide ? undefined : this.estateRt?.lots.find(q => `estate:${q.id}` === key);
     if (!l) { this.townLotChanged(key, null); this.dropLot(key); this.estateDrawn.delete(key); return; }
     this.townLotChanged(key, lotBoxOf([l.o.x, l.o.y], [l.u.x, l.u.y], [l.n.x, l.n.y], l.w, l.d));
-    if (l.st === ES.ST.BUILDING || l.st === ES.ST.BUILT) this.placeLot(key, { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d }, { use: LU.RES, level: l.st === ES.ST.BUILT ? LV.BUILT : LV.BUILDING, decline: 0, seed: l.seed });
+    if (l.st === ES.ST.BUILDING || l.st === ES.ST.BUILT) this.placeLot(key, { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d }, this.estateLotState(l));
     else this.placeEstatePlot(key, l);
   }
   /** a plot not built on: bare dirt inside the white dashed survey line (as the land the player bought); for sale the For Sale post (a stand-in sign) by its front
