@@ -19,10 +19,11 @@ import { NominatimClient, anchorsOf, filterGolfHits, searchKey, type NomResult }
 import { candidatesOf, courseQuery, nearQuery, runOverpass, type OverpassJson } from '../src/game/golf/osm/overpass';
 import { buildModel, courseJsonOf } from '../src/game/golf/osm/fromosm';
 import { CourseLibrary, MemoryStore } from '../src/game/golf/osm/library';
-import { extentOf, reportOf } from '../src/game/golf/osm/grade';
-import { fetchPreview, hintOfHit, previewOfKept, search, sizeLine, type FindDeps } from '../src/game/golf/osm/find';
+import { extentOf, madeUpLine, reportOf } from '../src/game/golf/osm/grade';
+import { fetchPreview, hintOfCandidate, hintOfHit, previewOfKept, search, sizeLine, type FindDeps } from '../src/game/golf/osm/find';
 import { paintPreview, previewOps, type Ctx2D } from '../src/game/golf/osm/preview';
 import { specOf, osmCourseToSpec } from '../src/game/golf/osm';
+import { scaleJson } from '../src/game/golf/osm/convert';
 import type { OsmCourseJson } from '../src/game/golf/osm/types';
 
 const ronde = rondeboschJson as unknown as OsmCourseJson, magnolia = magnoliaJson as unknown as OsmCourseJson, woodhill = woodhillJson as unknown as OsmCourseJson;
@@ -263,6 +264,12 @@ describe('a search, end to end on fakes (T358)', () => {
     for (const bad of ['', 'https://www.openstreetmap.org/', 'https://example.com/x']) { const r = await search(bad, deps(a.net)); assert.equal(r.kind, 'none', bad); }
     assert.equal(a.calls.length, 0);
   });
+  it('the same search again asks nobody: the answers of Nominatim and of the near look are both kept', async () => {
+    const { net, calls } = fakeNet(overpassNear(nearWoodhill)), d = deps(net);
+    await search('Woodhill', d); assert.equal(calls.length, 2);
+    const again = await search('  WOODHILL ', d);
+    assert.equal(again.kind, 'near'); assert.equal(calls.length, 2, 'no request the second time');
+  });
   it('nothing found, anywhere, says so', async () => {
     const { net } = fakeNet(url => (url.includes('nominatim') ? json([]) : json({ elements: [] })));
     const o = await search('Zzyzx Links', deps(net));
@@ -276,7 +283,11 @@ describe('a search, end to end on fakes (T358)', () => {
     const { net } = fakeNet(url => (url.includes('nominatim') ? json(nomWingate) : json(near)));
     const o = await search('Wingate', deps(net));
     assert.equal(o.kind, 'near');
-    if (o.kind === 'near') { assert.equal(o.candidates[0]!.kind, 'course'); assert.equal(o.candidates[0]!.name, 'Wingatepark Country Club'); assert.equal(o.near.name, 'Wingate Park, Pretoria'); }
+    if (o.kind === 'near') {
+      assert.equal(o.candidates[0]!.kind, 'course'); assert.equal(o.candidates[0]!.name, 'Wingatepark Country Club'); assert.equal(o.near.name, 'Wingate Park, Pretoria');
+      const hint = hintOfCandidate(o.candidates[0]!, o.near);
+      assert.deepEqual([hint.name, hint.place], ['Wingatepark Country Club', 'Pretoria, South Africa'], 'the place line comes from the place the look was made near');
+    }
   });
 });
 
@@ -395,6 +406,8 @@ describe('the quality grade (T358)', () => {
     assert.match(report.summary, /worked out from its fairways/); assert.match(report.summary, /a guess/);
     assert.deepEqual([report.counts.greens, report.counts.fairways, report.counts.tees, report.counts.pins, report.counts.holeLines], [3, 3, 10, 0, 0]);
     assert.ok(report.fits);
+    assert.equal(report.madeUpLine, "3 pins at their greens' middles, 3 pars worked out from the lengths", 'what was made up, counted');
+    assert.equal(madeUpLine([]), '');
   });
   it('Bloemfontein is Outline only: nothing to build holes from, so no holes and no Build', () => {
     const { report, spec } = rawSpec(bloemRaw, 'way/7792831', 'Bloemfontein Golf Club');
@@ -402,6 +415,13 @@ describe('the quality grade (T358)', () => {
     assert.match(report.summary, /only an outline/); assert.match(report.summary, /cannot build it/);
     assert.ok(spec.warnings.some(w => w.code === 'no-holes'));
     assert.ok(report.landM[0] > 2000, 'the boundary is 2.8 km wide');
+  });
+  it('a course that would have to shrink to under a third to fit the map is too big to build, and says so with the scale it would need', () => {
+    const huge = scaleJson(ronde, 6), spec = specOf(huge, { id: 'h', name: 'H', place: '' }), r = reportOf(huge, spec);
+    assert.equal(r.grade, 'full'); assert.equal(r.fits, false); assert.ok(r.scalePct > 0 && r.scalePct < 30, `${r.scalePct}%`);
+    assert.match(sizeLine(r), /too big for the 2 km map \(it would have to shrink to \d+%\)/);
+    const big = scaleJson(ronde, 1.8), r2 = reportOf(big, specOf(big, { id: 'b', name: 'B', place: '' }));
+    assert.equal(r2.fits, true); assert.ok(r2.scalePct >= 50 && r2.scalePct < 100, `${r2.scalePct}%`);
   });
   it('a course with only some holes numbered is Partial, and a nine-hole course with nine lines is Full', () => {
     const cut = (keep: number): OsmCourseJson => ({ ...ronde, features: { ...ronde.features, hole: (ronde.features.hole ?? []).filter(h => (h.ref ?? 99) <= keep) } });

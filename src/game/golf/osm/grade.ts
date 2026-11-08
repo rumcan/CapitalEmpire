@@ -18,10 +18,13 @@ export interface CourseReport {
   /** what the map holds: hole lines (all courses), numbered hole lines of the course built, greens, bunkers, pins, tees, fairways, water areas and waterways */
   counts: { holeLines: number; numbered: number; greens: number; bunkers: number; pins: number; tees: number; fairways: number; water: number };
   /** the extent of the course's holes, features and boundary, m, at true size */ landM: [number, number];
-  /** the percent the course is scaled to fit the 2 km map (100: true size; 0 when it cannot be built), and whether it fits the map at all */ scalePct: number; fits: boolean;
-  /** what the converter made up (greens, tees, fairways, pins, par), and its warnings, as sentences */ madeUp: string[]; warnings: string[];
+  /** the percent the course is scaled to fit the 2 km map (100: true size; 0 with no holes), and whether it can be built on the map (not under MIN_SCALE) */ scalePct: number; fits: boolean;
+  /** what the converter made up (greens, tees, fairways, pins, par), as sentences and as the one line for the card ("3 pins at their greens' middles, 3 pars worked out from the lengths"), and its warnings */
+  madeUp: string[]; madeUpLine: string; warnings: string[];
 }
 
+/** a course that would have to shrink below this to fit the 2 km map is not built (its holes would be under a third of their real length) */
+export const MIN_SCALE = 0.3;
 const GRADE_LABEL: Record<Grade, string> = { full: 'Full', partial: 'Partial', outline: 'Outline only' };
 /** the number of hole lines of the course built that carry a hole number 1..18 (distinct numbers) */
 function numberedLines(json: OsmCourseJson, course: string | null): { all: number; numbered: number } {
@@ -31,6 +34,18 @@ function numberedLines(json: OsmCourseJson, course: string | null): { all: numbe
   const refs = new Set<number>();
   for (const f of mine) { const r = f.ref ?? (f.tags?.ref && /^\s*\d+\s*$/.test(f.tags.ref) ? parseInt(f.tags.ref, 10) : null); if (r !== null && r !== undefined && r >= 1 && r <= 18) refs.add(r); }
   return { all: lines.length, numbered: refs.size };
+}
+
+/** what the converter made up, counted by what it is, in one line for the card ("" when it made up nothing) */
+export function madeUpLine(fills: readonly { code: string }[]): string {
+  const n: Record<string, number> = {};
+  for (const f of fills) n[f.code] = (n[f.code] ?? 0) + 1;
+  const parts: string[] = [], add = (code: string, one: string, many: string) => { const c = n[code]; if (c) parts.push(`${c} ${c === 1 ? one : many}`); };
+  add('green', 'green', 'greens'); add('tee', 'tee', 'tees'); add('fairway', 'fairway band', 'fairway bands');
+  add('pin', "pin at its green's middle", "pins at their greens' middles"); add('pin-moved', 'pin moved onto its green', 'pins moved onto their greens');
+  add('par', 'par worked out from the length', 'pars worked out from the lengths'); add('tee-dropped', 'tee set left as plain ground', 'tee sets left as plain ground');
+  add('stream-hidden', 'underground stream not drawn', 'underground streams not drawn');
+  return parts.join(', ');
 }
 
 /** the extent of the holes' features and the boundary of the JSON, m (width, height; 0 x 0 with none) */
@@ -56,10 +71,10 @@ export function reportOf(json: OsmCourseJson, spec: OsmCourseSpec): CourseReport
     summary = `This course is only an outline on the map${has ? ` (${has}, but no holes to build)` : ': no hole lines, fairways, greens or tees'}. The game cannot build it.`;
   } else if (spec.derived) summary = `The map has no hole lines. ${n} hole${n === 1 ? '' : 's'} could be worked out from its fairways, greens and tees: a guess, and ${n === 1 ? 'only one hole' : `only ${n} holes`}.`;
   else summary = `Only ${numbered} of the course's holes are numbered on the map: ${n} hole${n === 1 ? '' : 's'} built, a shorter course than the real one.`;
-  const fits = n > 0 && osmFits(spec);
+  const fits = n > 0 && osmFits(spec) && spec.scale >= MIN_SCALE;
   return {
     grade, label: GRADE_LABEL[grade], summary, holes: n, par: spec.gameParTotal, mappedPar: spec.parTotal, lengthM: spec.lengthM, counts: c,
-    landM: extentOf(json), scalePct: fits ? Math.round(spec.scale * 100) : 0, fits,
-    madeUp: spec.fills.map(f => f.text), warnings: spec.warnings.map(w => w.text),
+    landM: extentOf(json), scalePct: n > 0 ? Math.round(spec.scale * 100) : 0, fits,
+    madeUp: spec.fills.map(f => f.text), madeUpLine: madeUpLine(spec.fills), warnings: spec.warnings.map(w => w.text),
   };
 }

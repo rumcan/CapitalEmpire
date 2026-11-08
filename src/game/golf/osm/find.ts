@@ -6,7 +6,7 @@
 import { reportOf, type CourseReport } from './grade';
 import { specOf } from './index';
 import { CourseLibrary, sharedLibrary, type CourseRecord } from './library';
-import { NominatimClient, anchorLine, hitLine, type Anchor, type Hit } from './nominatim';
+import { ANSWER_TTL_MS, NominatimClient, anchorLine, hitLine, type Anchor, type Hit } from './nominatim';
 import { candidatesOf, courseQuery, nearQuery, runOverpass, type Candidate, type OverpassJson } from './overpass';
 import { realNet, type Net } from './polite';
 import { parseCourseQuery, refText, type OsmRef } from './query';
@@ -21,8 +21,8 @@ export async function realDeps(): Promise<FindDeps> {
   return { net: realNet, lib, nominatim: new NominatimClient(realNet, lib.answers()) };
 }
 
-/** where a "golf near here" look was made from */
-export interface Near { name: string; lat: number; lon: number }
+/** where a "golf near here" look was made from (the place line is the anchor's town and country, for the course picked from the look) */
+export interface Near { name: string; lat: number; lon: number; place?: string }
 
 /** the outcome of a search */
 export type SearchOutcome =
@@ -32,20 +32,24 @@ export type SearchOutcome =
   /** an object's link or id: go straight to its preview */ | { kind: 'ref'; ref: OsmRef }
   /** nothing found, or nothing the search can use: the sentence for the card */ | { kind: 'none'; message: string };
 
-/** the look for golf near a place: one Overpass query */
+/** the look for golf near a place: one Overpass query, its answer (the candidates) kept for a week like Nominatim's, so the same search is not asked twice */
 export async function lookNear(near: Near, d: FindDeps, signal?: AbortSignal): Promise<Candidate[]> {
-  const a = await runOverpass(nearQuery(near.lat, near.lon), d.net, { timeoutMs: 70000, signal });
-  return candidatesOf(a.json);
+  const key = `near:${near.lat.toFixed(4)},${near.lon.toFixed(4)}`, cache = d.lib.answers(), kept = await cache.get(key).catch(() => undefined);
+  if (kept && d.net.now() - kept.at < ANSWER_TTL_MS && Array.isArray(kept.value)) return kept.value as Candidate[];
+  const a = await runOverpass(nearQuery(near.lat, near.lon), d.net, { timeoutMs: 70000, signal }), found = candidatesOf(a.json);
+  await cache.put(key, found, d.net.now()).catch(() => undefined);
+  return found;
 }
 
 /** runs the search for what the player typed (see the file's header). Throws ServerBusy, ServerDown or Cancelled */
-export async function search(text: string, d: FindDeps, signal?: AbortSignal): Promise<SearchOutcome> {
+export async function search(text: string, d: FindDeps, signal?: AbortSignal, onStep?: (text: string) => void): Promise<SearchOutcome> {
   const q = parseCourseQuery(text);
   if (q.kind === 'empty') return { kind: 'none', message: 'Type a golf course\'s name, or paste its openstreetmap.org link or way/123.' };
   if (q.kind === 'link') return { kind: 'none', message: 'That link does not name a golf course or a place. Paste a link like openstreetmap.org/way/123, or type the name.' };
   if (q.kind === 'osm') return { kind: 'ref', ref: q.ref };
   if (q.kind === 'place') {
     const near: Near = { name: `${q.lat.toFixed(4)}, ${q.lon.toFixed(4)}`, lat: q.lat, lon: q.lon };
+    onStep?.(`Looking for golf features near ${near.name}...`);
     const candidates = await lookNear(near, d, signal);
     return candidates.length ? { kind: 'near', query: text, near, candidates } : { kind: 'none', message: 'No golf courses or golf features were found near that place.' };
   }
@@ -53,7 +57,8 @@ export async function search(text: string, d: FindDeps, signal?: AbortSignal): P
   if (f.hits.length) return { kind: 'hits', query: f.query, hits: f.hits, fromCache: f.fromCache };
   const anchor: Anchor | undefined = f.anchors[0];
   if (!anchor) return { kind: 'none', message: `Nothing on the map is called "${q.text}". Try another spelling, a town, or paste the openstreetmap.org link.` };
-  const near: Near = { name: anchorLine(anchor), lat: anchor.lat, lon: anchor.lon };
+  const near: Near = { name: anchorLine(anchor), lat: anchor.lat, lon: anchor.lon, place: [anchor.town, anchor.country].filter(Boolean).join(', ') };
+  onStep?.(`No golf course by that name: looking for golf features near ${near.name}...`);
   const candidates = await lookNear(near, d, signal);
   return candidates.length ? { kind: 'near', query: f.query, near, candidates }
     : { kind: 'none', message: `No golf course is called "${q.text}", and no golf features were found near ${near.name}.` };
@@ -65,7 +70,7 @@ export interface Preview { record: CourseRecord; json: OsmCourseJson; spec: OsmC
 /** what the card knows of a course before it is fetched: the hit's name, place and position */
 export interface Hint { name?: string; place?: string; at?: { lat: number; lon: number } }
 export const hintOfHit = (h: Hit): Hint => ({ name: h.name, place: hitLine(h), at: { lat: h.lat, lon: h.lon } });
-export const hintOfCandidate = (c: Candidate): Hint => ({ name: c.name.startsWith('Unnamed') ? undefined : c.name });
+export const hintOfCandidate = (c: Candidate, near?: Near): Hint => ({ name: c.name.startsWith('Unnamed') ? undefined : c.name, ...(near?.place ? { place: near.place } : {}) });
 
 /** lets the page paint before a long step (the card's progress line shows first) */
 const tick = (): Promise<void> => new Promise(r => setTimeout(r, 0));
@@ -103,6 +108,6 @@ export function sizeLine(r: CourseReport): string {
   const km = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`);
   const size = `${km(r.landM[0])} x ${km(r.landM[1])}`;
   if (r.holes === 0) return `Size ${size}`;
-  if (!r.fits) return `Size ${size}: too big for the 2 km map even scaled down`;
+  if (!r.fits) return `Size ${size}: too big for the 2 km map (it would have to shrink to ${r.scalePct}%)`;
   return r.scalePct >= 100 ? `Size ${size}: fits the 2 km map at true size` : `Size ${size}: scaled to ${r.scalePct}% to fit the 2 km map (the holes get that much shorter)`;
 }
