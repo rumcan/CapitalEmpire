@@ -56,11 +56,11 @@ def blur(x, sigma):
 
 def relight(alb, depth, hgt, a, px_u, cfg=LIGHT):
     """albedo (H, W, 3) -> lit colour: the normals from the smoothed depth (plus the alpha's edge), the sun upper right"""
-    ab = a.clamp(0, 1)
-    Db = blur(depth * ab, cfg['sd']) / blur(ab, cfg['sd']).clamp(min=1e-3)
+    ab = a.clamp(0, 1); res = cfg.get('res', 1.0)  # (res: this render's pixels per the production render's, so a bigger picture is smoothed alike)
+    Db = blur(depth * ab, cfg['sd'] * res) / blur(ab, cfg['sd'] * res).clamp(min=1e-3)
     grow, gcol = torch.gradient(Db, spacing=px_u)
     nx, ny, nz = gcol, -grow, torch.ones_like(gcol)
-    ae = blur(ab, 1.6); arow, acol = torch.gradient(ae)
+    ae = blur(ab, 1.6 * res); arow, acol = torch.gradient(ae)
     nx = nx + cfg['edge'] * (-acol); ny = ny + cfg['edge'] * arow
     n = torch.stack([nx, ny, nz], -1); n = n / n.norm(dim=-1, keepdim=True)
     L = torch.tensor(cfg['L'], device=DEV); L = L / L.norm()
@@ -71,7 +71,7 @@ def relight(alb, depth, hgt, a, px_u, cfg=LIGHT):
     sh = torch.tensor(cfg['shadow'], device=DEV); li = torch.tensor(cfg['light'], device=DEV)
     shade = (sh + (li - sh) * t[..., None]) * (1 - cfg['sky'] / 2 + cfg['sky'] * sky)[..., None]
     # ambient occlusion: a point deeper than its wide neighbourhood sits in a crease
-    Dw = blur(depth * ab, 9.0) / blur(ab, 9.0).clamp(min=1e-3)
+    Dw = blur(depth * ab, 9.0 * res) / blur(ab, 9.0 * res).clamp(min=1e-3)
     occ = ((depth - Dw) / 0.05).clamp(0, 1) * (ab > 0.5)
     ao = 1 - cfg['ao'] * occ
     gr = 1 - cfg['ground'] * torch.exp(-hgt / 0.10)
@@ -111,16 +111,16 @@ def pose_frame(P, fr):
     return p, cov
 
 
-def render_heading(M, p, cov, k, alb, op, pose_h):
+def render_heading(M, p, cov, k, alb, op, pose_h, size=SIZE):
     m = M.meta; ys, s = math.radians(m['yaw_src_deg']), m['sign']
     yaw = ys + s * math.radians(45 * ((k - m['h_src']) % 8))
     right, up = cam(yaw); fwd = torch.linalg.cross(up, right)
     w, cw = world(M, p, cov)
     depth = (w @ fwd)[:, None]; hgt = (pose_h / M.h)[:, None]
     ch = torch.cat([alb, depth, hgt], 1)
-    rgb, a = render_cam(w, cw, ch, op, right, up, SIZE, HALF)
-    px_u = 2 * HALF / SIZE
-    lit = relight(rgb[..., :3], rgb[..., 3], rgb[..., 4], a, px_u, {**LIGHT, **LIGHT_BY_KIND[kind_of(M.id)]})
+    rgb, a = render_cam(w, cw, ch, op, right, up, size, HALF)
+    px_u = 2 * HALF / size
+    lit = relight(rgb[..., :3], rgb[..., 3], rgb[..., 4], a, px_u, {**LIGHT, **LIGHT_BY_KIND[kind_of(M.id)], 'res': size / SIZE})
     return lit, a, yaw, right, up, w
 
 
