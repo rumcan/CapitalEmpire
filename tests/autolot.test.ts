@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { autoLot, templateOf, AUTO_TEMPLATES, type AutoTemplate } from '../src/game/lots/autolot';
+import { cleanYards, setCleanYards } from '../src/game/lots/clean-yards';
 import { frameHalf } from '../src/game/lots/house-class';
 import { frameOf, type PresetFrame } from '../src/game/lots/preset-frame';
 import { OVERLAP, share, type Box4, type LotGeom } from '../src/game/lots/compose-core';
@@ -70,9 +71,16 @@ test('every template on the four screen-straight headings and two diagonals: ins
 });
 
 test('the templates by use and tier: a starter res lot sometimes gets a trailer park; a park lot a car park (T296); a tour lot gets none', () => {
-  let trailers = 0;
-  for (let s = 0; s < 40; s++) if (templateOf('res', 0, s) === 'trailer') trailers++;
-  assert.ok(trailers > 0 && trailers < 40, 'the starter res lots show trailer parks and houses');
+  // (T385: the clean house lot is a house, never a trailer park: clean-yards.ts; ?oldyards keeps the starter lots' trailer parks)
+  const was = cleanYards();
+  try {
+    setCleanYards(false);
+    let trailers = 0;
+    for (let s = 0; s < 40; s++) if (templateOf('res', 0, s) === 'trailer') trailers++;
+    assert.ok(trailers > 0 && trailers < 40, 'the starter res lots show trailer parks and houses');
+    setCleanYards(true);
+    for (let s = 0; s < 40; s++) assert.notEqual(templateOf('res', 0, s), 'trailer', 'a clean starter lot is a house');
+  } finally { setCleanYards(was); }
   assert.equal(templateOf('res', 2, 0) === 'trailer', false, 'no trailer park above the starter tier');
   assert.equal(templateOf('park', 0, 1), 'park');
   assert.equal(templateOf('tour', 1, 1), null);

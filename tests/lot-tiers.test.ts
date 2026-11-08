@@ -10,6 +10,9 @@ import { LIBRARY } from '../src/game/library';
 import { isBuilding } from '../src/game/mirror';
 import { parsePresets } from '../src/game/lots/presets';
 import PRESET_FIXTURE from './fixtures/lot-presets.json';
+import { setCleanYards } from '../src/game/lots/clean-yards';
+// T385 (#1042): this file pins the old yards (the learned generator's house yards, the kit, the starter homes): the clean base is the game's house lot now (tests/clean-lots.test.ts)
+setCleanYards(false);
 
 // the same frozen presets and composer as tests/compose.test.ts: the fixture's copy of lot-presets.json, no generated house lots
 setGeneratedLots(false);

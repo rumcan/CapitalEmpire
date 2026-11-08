@@ -7,6 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 import { ALLOC_PATH, checkDevRequest, checkDevSave, devSavePath, LEARN_PATH, mergeAllocations, mergePresets, mergeSamples, MODELS_DIR, shipPlan } from "./src/game/dev/dev-save";
+import { mergeReview, REVIEW_PATH } from "./src/game/dev/dev-save"; // T385 (#1042): the studio's Lot review file
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -177,6 +178,30 @@ function devSave(): Plugin {
             let text = "";
             try { text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : ""; } catch (e) { reply(res, 500, { error: String(e) }); return done(); }
             const m = mergeAllocations(text, upsert);
+            if (!m.ok) { reply(res, 403, { error: m.error }); return done(); }
+            writeAtomic(file, m.text, e => { if (e) reply(res, 500, { error: String(e) }); else reply(res, 200, { ok: true, count: m.count }); done(); });
+          })).catch(e => { if (!res.headersSent) reply(res, 500, { error: String(e) }); });
+        });
+      });
+      // the studio's Lot review (T385, #1042): the review file (scripts/assets/lot-review.json) merged per lot, one request at a time, as the allocations'; GET reads
+      // the file back (an empty one when there is none yet)
+      let reviews: Promise<void> = Promise.resolve();
+      server.middlewares.use("/__dev/lot-review", (req, res) => {
+        const no = foreign(req); if (no) return reply(res, 403, { error: no });
+        const file = path.join(__dirname, REVIEW_PATH);
+        if (req.method === "GET") { try { res.setHeader("Content-Type", "application/json"); res.end(fs.existsSync(file) ? fs.readFileSync(file, "utf8") : '{"v":1,"lots":{}}'); } catch (e) { reply(res, 500, { error: String(e) }); } return; }
+        if (req.method !== "POST") return reply(res, 405, { error: "GET or POST only" });
+        let raw = "";
+        req.setEncoding("utf8");
+        req.on("data", (c: string) => { raw += c; if (raw.length > 8 * 1024 * 1024) req.destroy(); });
+        req.on("end", () => {
+          let body: unknown;
+          try { body = JSON.parse(raw); } catch { return reply(res, 400, { error: "the body is not JSON" }); }
+          const { upsert, remove } = (typeof body === "object" && body !== null ? body : {}) as { upsert?: unknown; remove?: unknown };
+          reviews = reviews.then(() => new Promise<void>(done => {
+            let text = "";
+            try { text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : ""; } catch (e) { reply(res, 500, { error: String(e) }); return done(); }
+            const m = mergeReview(text, upsert, remove);
             if (!m.ok) { reply(res, 403, { error: m.error }); return done(); }
             writeAtomic(file, m.text, e => { if (e) reply(res, 500, { error: String(e) }); else reply(res, 200, { ok: true, count: m.count }); done(); });
           })).catch(e => { if (!res.headersSent) reply(res, 500, { error: String(e) }); });

@@ -138,6 +138,7 @@ import { rectPlot, surveyBlocks, surveyPatch } from './lots/survey';
 /** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
 const LAND_SURVEY_INSET = 0.6;
 import { SITE_HEAPS, SITE_LUMBER, acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import type { Composition } from './lots/compose'; // T385 (#1042): the Lot review's override
 import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf, type PresetState } from './lots/presets';
 import { LotMap, endReach, ringClear } from './lots/lots';
@@ -4130,6 +4131,8 @@ export class Game {
   private placeLot(key: string, g: LotGeom, st: ComposeState) {
     this.dropLot(key);
     const c = compose(g, st), ps: Prop[] = [];
+    // (T385: the studio's Lot review adds what the owner placed on a lot, its override: lotOverride, set by dev/lot-review.ts in the lab's light boot only)
+    const ov = this.lotOverride?.(key, g); if (ov) { c.props.push(...ov.props); c.ground.push(...ov.ground); }
     for (const q of c.props) {
       const i = LIB_INDEX.get(q.id); if (i === undefined || (q.street && this.inLayby(i, q))) continue;
       const p = this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key, q.foot ? { foot: q.foot } : undefined); ps.push(p); // q.foot: a parked car of the mix (T236, vehicles.ts parkedAs) on its body footprint
@@ -7798,6 +7801,38 @@ export class Game {
     for (const l of list) { this.staged.set(l.key, { g: l.g, st: l.st }); this.placeLot(l.key, l.g, l.st); }
     this.emit();
   }
+  /** T385 (#1042): what the studio's Lot review adds to a lot as that lot's override (dev/lot-review.ts sets it; null: none): its sprites and ground decals, composed
+   *  with the lot (placeLot) and so kept through every compose. Never saved, and never set in the game itself */
+  lotOverride: ((key: string, g: LotGeom) => Composition | undefined) | null = null;
+  /** debug (the lot review, dev/lot-review.ts, in the lab's light boot): the empty map with a review set laid and every lot of it composed as the game composes it. 'town':
+   *  the street grid a new game lays for a town (townGrid, six blocks across) and the lots the town's lot map (LotMap) cuts along and between its streets, each given the
+   *  state state(i) (i: its place in key order); 'estate': the streets given (a street each, as the road tool lays one) and the lots T353's estate lays along them (golf/estate.ts
+   *  frontageFrames, both sides), the state state(i) each. The lots are staged under their own keys (a staged lot is as it was staged) and returned in key order; the camera
+   *  is put over the set's middle */
+  stageReview(o: { kind: 'town' | 'estate'; state: (i: number) => ComposeState; streets: { a: Pt; b: Pt; base: string }[] }): { key: string; g: LotGeom; st: ComposeState }[] {
+    this.benchMode = true; this.farmsOn(false); this.reset(); this.afterLoad(); this.setSpeed(0);
+    const c = { x: MAP / 2, y: MAP / 2 }, frames: { key: string; g: LotGeom }[] = [];
+    if (o.kind === 'town') {
+      const gr = townGrid(c, 6, (x, y) => classAt(this.terrain, x, y)), byClass = new Map<ClassId, Leg[]>();
+      gr.legs.forEach((l, i) => { const id = gr.cls[i]!; let a = byClass.get(id); if (!a) byClass.set(id, a = []); a.push(l); });
+      for (const [id, legs] of byClass) this.edit.addLegs(legs, classOf(id), 0, undefined, true);
+      this.commitNetwork();
+      for (const l of new LotMap().update(this.net, this.terrain.cls).added) frames.push({ key: l.key, g: { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d } });
+    } else {
+      o.streets.forEach((s, seg) => {
+        const cls = CLASS[s.base as keyof typeof CLASS] ?? CLASS.street;
+        this.edit.addLegs([{ a: s.a, b: s.b }], cls, 0); this.commitNetwork();
+        for (const f of ES.frontageFrames({ a: s.a, b: s.b, base: s.base, h: cls.h, walk: cls.walk, ra: 4, rb: 4 }, [1, -1], seg)) frames.push({ key: `${seg}.${f.side > 0 ? 'l' : 'r'}${f.k}`, g: { o: f.o, u: f.u, n: f.n, w: f.w, d: f.d } });
+      });
+    }
+    frames.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+    const out = frames.map((f, i) => ({ key: f.key, g: f.g, st: o.state(i) }));
+    for (const l of out) { this.staged.set(l.key, { g: l.g, st: l.st }); this.placeLot(l.key, l.g, l.st); }
+    this.setTool('select'); this.lookAt(c.x, c.y, 0.06); this.emit();
+    return out;
+  }
+  /** debug (the lot review): a staged lot composed again (its override changed) */
+  restageReview(key: string) { const s = this.staged.get(key); if (s) { this.placeLot(key, s.g, s.st); this.emit(); } }
 
   /** a new valley: the three towns' street grids (townGrid: the legs on buildable ground, the middle lines avenues), laid as one edit; the
    *  city worker stamps the towns to TOWN_POP residents after the network arrives (stampPending). No lamps yet: the net is rebuilt only by

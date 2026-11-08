@@ -45,7 +45,8 @@ export function labBoot(): BootOptions {
  *  game as before T157 (to compare, or if the light boot ever misses something) */
 export function bootFor(search: string, dev: boolean): BootOptions {
   const q = new URLSearchParams(search);
-  if (dev && q.has('lotlab') && !q.has('fullboot')) return labBoot();
+  // (T385: the studio's Lot review, ?lotreview, boots as light as the lab: a flat map, one ground worker, the box round the review town)
+  if (dev && (q.has('lotlab') || q.has('lotreview')) && !q.has('fullboot')) return labBoot();
   // T166: a dev build's ?ground=<levers> boots the game with exactly those ground-worker levers on (boot.ts GROUND_LEVERS; ?ground=old: none);
   // T172: and ?boot=<key>:<value>,... sets its memory budgets (boot.ts BOOT_NUMBERS)
   const boot = dev && q.has('ground') ? withGroundLevers({ ...GAME_BOOT }, q.get('ground') ?? '') : { ...GAME_BOOT };

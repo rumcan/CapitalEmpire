@@ -16,6 +16,7 @@
 // --estate N (T353, a dev server, with --start town): N built house lots laid along streets on the course land before the tour (dev/estate-fixture.ts), then the lots drawn and
 //   not drawn by turns (Engine.setEstateDrawn) at 30% and 15% over them, three times each (estateAb: the frames' cpu ms (average, p95), the instances and draws, the lots' own
 //   props), then the course scene's tour over the estate with the lots drawn (its stages: fps, cpu, instances, draws and the working set in MB, the ground and tile budget's)
+// --oldyards 1 (T385, a dev server): the house lots composed as before the clean base (clean-yards.ts: ?oldyards), the A/B of the clean lots' frame cost on the same build
 // --osmcourse <id> (T340, with --start town): the game is laid on that real course built from map data (golf/osm; rondebosch, magnolia-national) on the flat map
 // --land 0 (T357, with --osmcourse): the course without its real ground height and the greens' tilt (golf/osm/land.ts): the flat plain as before T357, the A/B of the land
 // --realplace <id>[,laid] (T356, with --start town --money 1 --stamp 1 and a dev server): a real course (rondebosch, magnolia-national, woodhill) in hand over the town, the placing mode's frames against the same frames without it (off, hand, move at 30% and 15%); ,laid: the course laid there and the scene's own tour over the new game
@@ -42,7 +43,7 @@ if (args.includes('--serve')) {
 }
 const size = opt('size', '1'), dpr = +opt('dpr', '1'), shots = args.includes('--shots');
 // the game scenes (T098, bench.ts benchGame): --start range tours a new range start (17%, 4.5%), --fixture range20 the grown town (30%, 8%; a dev server)
-const scene = (opt('start', '') ? '&start=' + opt('start', '') : '') + (opt('fixture', '') ? '&fixture=' + opt('fixture', '') : ''), tag = scene.replace(/[&=]/g, '-') + (opt('grassShine', '') ? '-shine-' + opt('grassShine', '') : '') + (opt('river', '') ? '-river' : '') + (opt('farms', '') ? '-farms' : '') + (opt('ballRoll', '') ? '-balls' : '') + (opt('tourney', '') ? '-tourney' : '') + (opt('bakeab', '') ? '-bakeab' : '') + (opt('zooms', '') ? '-z' + opt('zooms', '').replace(/,/g, '-') : '') + (opt('out', '') ? '-' + opt('out', '') : '');
+const scene = (opt('start', '') ? '&start=' + opt('start', '') : '') + (opt('fixture', '') ? '&fixture=' + opt('fixture', '') : '') + (opt('oldyards', '') ? '&oldyards=1' : ''), tag = scene.replace(/[&=]/g, '-') + (opt('grassShine', '') ? '-shine-' + opt('grassShine', '') : '') + (opt('river', '') ? '-river' : '') + (opt('farms', '') ? '-farms' : '') + (opt('ballRoll', '') ? '-balls' : '') + (opt('tourney', '') ? '-tourney' : '') + (opt('bakeab', '') ? '-bakeab' : '') + (opt('zooms', '') ? '-z' + opt('zooms', '').replace(/,/g, '-') : '') + (opt('out', '') ? '-' + opt('out', '') : '');
 const out = path.resolve('output/bench'); fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
 let browser, page, gpu = 'unknown';
 // headless Chrome on the worker sometimes starts without WebGL (GPU unknown): relaunch instead of waiting for nothing

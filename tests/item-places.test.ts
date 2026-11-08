@@ -13,6 +13,9 @@ import { modelFile } from '../src/game/dev/dev-save';
 import { mulberry } from '../src/game/iso';
 import { LU, LV } from '../src/game/lots/town';
 import type { PresetUse } from '../src/game/lots/presets';
+import { setCleanYards } from '../src/game/lots/clean-yards';
+// T385 (#1042): this file pins the old yards (the learned generator's house yards, the kit, the starter homes): the clean base is the game's house lot now (tests/clean-lots.test.ts)
+setCleanYards(false);
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
@@ -71,8 +74,8 @@ describe('items know their place (T171)', () => {
     assert.ok(placesOf(t, 'a')); assert.equal(placesOf(t, 'b'), null);
     assert.deepEqual(placesData(placesFrom(placesData(t))), placesData(t));
   });
-  it('5. v4 is the latest: its houses\' counts, pairs and densities are v3\'s, it carries places, and the model file writes them back the same', () => {
-    assert.equal(LATEST, 4);
+  it('5. v4 carries the places (v5, T385, is its data again, the clean house base: the latest): its houses\' counts, pairs and densities are v3\'s, it carries places, and the model file writes them back the same', () => {
+    assert.equal(LATEST, 5);
     const v3 = LOT_MODELS[3] as Record<string, unknown>, v4 = LOT_MODELS[4] as Record<string, unknown>;
     for (const k of ['counts', 'anchors', 'pairs', 'density']) assert.deepEqual(v4[k], v3[k], k);
     const back = JSON.parse(modelFile(9, v4, 'test')!);

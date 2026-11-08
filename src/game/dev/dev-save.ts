@@ -5,6 +5,8 @@
 import { formatPresets, parsePresets } from '../lots/preset-read';
 export { mergeAllocations } from '../lots/house-alloc';
 export { mergeSamples } from '../lots/learn';
+// T385 (#1042): the studio's Lot review file, merged per lot (POST /__dev/lot-review; lots/review-file.ts, dependency-free)
+export { REVIEW_PATH, mergeReview } from '../lots/review-file';
 import { tasteData, tasteFrom } from '../lots/taste';
 import { groupsBlock } from '../lots/group-data';
 import { placesData, placesFrom } from '../lots/places';

@@ -6,6 +6,7 @@ import { LU, LV } from '../src/game/lots/town';
 import { approvedFor, fitPreset, formatPresets, parsePresets, type LotPreset, type Road } from '../src/game/lots/presets';
 import { facingOf, frameOf, quarterOfRoad, roadOf, setAngledRoadsOnly, type Pt } from '../src/game/lots/preset-frame';
 import { presetFromComposition } from '../src/game/lots/preset-from';
+import { setCleanYards } from '../src/game/lots/clean-yards';
 import { compose, lotPreset, pickedPreset, setLotPresets, type ComposeState } from '../src/game/lots/compose';
 import PRESET_FIXTURE from './fixtures/lot-presets.json';
 
@@ -164,6 +165,8 @@ describe('the lot lab presets (road set, approved)', () => {
   });
 
   it('8. a whole capture: a composed lot becomes a whole preset with its decals; composed forced, it draws alone the same props (±1) and the same decals', () => {
+    // (T385: a clean house lot has no street item or leaf decal to capture: the capture is shown on the old yards, which the lab's wizard still lays)
+    setCleanYards(false);
     try {
       const c = compose(LOT_AXIS, RES), marks = c.ground.find(g => g.tex === 'marks')?.marks ?? [];
       const cap = presetFromComposition(c, frameOf(LOT_AXIS), 10, 16, { whole: true });
@@ -177,7 +180,7 @@ describe('the lot lab presets (road set, approved)', () => {
       assert.ok(again.props.every(q => q.from?.preset === draft.id), 'drawn alone: every prop is the preset\'s own');
       assert.equal(again.ground.find(g => g.tex === 'marks')?.marks?.length ?? 0, marks.length, 'the same decals');
     } finally {
-      setLotPresets(FIXTURE.presets, FIXTURE.meta);
+      setLotPresets(FIXTURE.presets, FIXTURE.meta); setCleanYards(true);
     }
   });
 });

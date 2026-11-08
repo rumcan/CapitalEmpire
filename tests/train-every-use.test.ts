@@ -16,6 +16,9 @@ import { mulberry } from '../src/game/iso';
 import { LU, LV } from '../src/game/lots/town';
 import type { LotPreset, PresetUse } from '../src/game/lots/presets';
 import type { Sample } from '../src/game/lots/learn';
+import { setCleanYards } from '../src/game/lots/clean-yards';
+// T385 (#1042): this file pins the old yards (the learned generator's house yards, the kit, the starter homes): the clean base is the game's house lot now (tests/clean-lots.test.ts)
+setCleanYards(false);
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
@@ -97,7 +100,7 @@ describe('train every use in the lot lab (T173)', () => {
     assert.match(plan.files[2]!.content as string, /import v5 from '\.\/v5\.json';/);
     assert.equal(shipPlan([1, 2, 3, 4], liveModelData(lotPresets(), [], L4), 'test', 'data:image/png;base64,iVBORw0KGgo=')?.version, undefined);
     assert.deepEqual(shipPlan([1, 2, 3, 4], liveModelData(lotPresets(), [], L4), 'test')!.files.map(f => f.name), ['v5.json', 'index.ts']);
-    assert.equal(LATEST, 4, 'nothing shipped by the test');
+    assert.equal(LATEST, 5, 'nothing shipped by the test (v5 is T385: the clean house base, v4 data)');
   });
   // (T202: the pinned hashes here followed the owner's presets, sizes and removals, and skipped since they changed: the rules they stood for)
   it('5. v1-v4 towns each compose with their own model, the same every time; v4 generates the shops, v3 keeps them on their frozen presets', () => {
