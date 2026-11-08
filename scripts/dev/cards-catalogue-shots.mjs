@@ -109,7 +109,7 @@ try {
   expect(rep.tee.tools.scramble && rep.tee.tools.scramble.left === 1, 'the second ball: one left on this nine');
   expect(rep.tee.cards.length === 8, 'eight chips for the cards in play');
   // the frames in the SAME open shot: the tools on, then shotTools() answering null (no block, no band), then on again (before any screenshot: those leave the compositor busy)
-  await sleep(2000); rep.frames.toolsOn = await frames(3000);
+  await sleep(5000); rep.frames.toolsOn = await frames(3000); // (five seconds of warm-up first: the camera glide and the first renders of a freshly opened shot are not the tools)
   await page.evaluate(() => { const g = window.__game; g.shotTools = () => null; g.emit(); }); await sleep(1000); rep.frames.toolsOff = await frames(3000);
   await page.evaluate(() => { const g = window.__game; delete g.shotTools; g.emit(); }); await sleep(1000); rep.frames.toolsOn2 = await frames(3000);
   { const on = [rep.frames.toolsOn, rep.frames.toolsOn2], off = rep.frames.toolsOff, worst = on.reduce((a, b) => (b.p95 > a.p95 ? b : a));

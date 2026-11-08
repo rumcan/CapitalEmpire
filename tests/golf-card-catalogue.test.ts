@@ -108,15 +108,15 @@ test('moments: Clutch Gene on the last hole, the Mic’d-Up Caddie when you foll
 });
 
 // ---- the shot's own hooks ----
-function view18(par: 3 | 4 | 5): { view: CourseView; hole: PlayHole } {
-  const hole: PlayHole = { n: 1, par, tee: O, pin: { x: 120 / TILE_M, y: 0 }, line: [O, { x: 120 / TILE_M, y: 0 }] };
+function view18(par: 3 | 4 | 5, lenM = 120): { view: CourseView; hole: PlayHole } {
+  const hole: PlayHole = { n: 1, par, tee: O, pin: { x: lenM / TILE_M, y: 0 }, line: [O, { x: lenM / TILE_M, y: 0 }] };
   const lieAt = (x: number, y: number): Lie => Math.hypot(x - hole.pin.x, y - hole.pin.y) <= 7 ? 'green' : Math.abs(y) <= 6 ? 'fairway' : Math.abs(y) <= 40 ? 'rough' : 'out';
   return { view: { holes: [hole], lieAt }, hole };
 }
 const swing0 = (club: Club, over: object = {}) => ({ club, aim: { x: 120 / TILE_M, y: 0 }, power: 1, swing: { power: 1, acc: 0, boost: 0 }, v: 2, ...over });
 
 test('the shot’s hooks: Fairway Finder rolls a tee shot back from the rough, Backyard Trick Shot plays a wedge from the rough as from the fairway, Ace Magnet drops a close par-3 tee shot; each takes its draw only with the card', () => {
-  const { view, hole } = view18(4), F = gameWith(['fairway-finder']), toRough = { aim: { x: 190 / TILE_M, y: 10 } };
+  const { view, hole } = view18(4, 300), F = gameWith(['fairway-finder']), toRough = { aim: { x: 190 / TILE_M, y: 10 } };
   let moved = 0, rough = 0;
   for (let k = 0; k < 400; k++) {
     const a = shotOutcome(view, hole, O, 'tee', NONE, swing0('driver', toRough), rng(5, k, 1)), b = shotOutcome(view, hole, O, 'tee', F, swing0('driver', toRough), rng(5, k, 1));
