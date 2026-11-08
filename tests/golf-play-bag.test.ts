@@ -69,7 +69,7 @@ test('bag: a default bag is no mods at all, and the original clubs play exactly 
   assert.equal(normalizeBag(DEFAULT_BAG), null); assert.equal(normalizeBag({ v: 1, lv: { driver: 0 } }), null);
   for (const club of ORIGINAL) {
     const k = applyMods(withGear(null), club);
-    assert.deepEqual([k.carry, k.spread, k.sweet, k.speed, k.roll, k.mishit, k.spin, k.feel, k.luck], [1, 1, 1, 1, 1, 0, 1, 1, 0], `${club}: the identity kit`);
+    assert.deepEqual([k.carry, k.spread, k.sweet, k.speed, k.roll, k.mishit, k.spin, k.feel, k.line, k.luck], [1, 1, 1, 1, 1, 0, 1, 1, 1, 0], `${club}: the identity kit`);
     assert.deepEqual(kitOf(0.4, club), kitOf(0.4, club)); assert.equal(CLUB_BASE[club], undefined, `${club} has no base character`);
   }
   // the model: every original club, lie and skill plays the same shot with the default bag in the golfer's game as with his plain skills, and the same swing’s shot
@@ -98,7 +98,7 @@ test('upgrades: each level is its table’s numbers through applyMods, for that 
     let prev = applyMods(withGear(null), club);
     for (let lv = 1; lv <= 3; lv++) {
       const k = applyMods(withGear(bagOf({ [club]: lv })), club), fx = LEVEL_FX[KIND_OF[club]][lv - 1]!, p0 = applyMods(withGear(null), club);
-      assert.ok(Math.abs(k.carry - p0.carry * (fx.carry ?? 1)) < 1e-12 && Math.abs(k.spread - p0.spread * (fx.spread ?? 1)) < 1e-12 && Math.abs(k.sweet - p0.sweet * (fx.sweet ?? 1)) < 1e-12 && Math.abs(k.spin - (fx.spin ?? 1)) < 1e-12 && Math.abs(k.feel - (fx.feel ?? 1)) < 1e-12 && Math.abs(k.mishit - (p0.mishit + (fx.mishit ?? 0))) < 1e-12, `${club} ${LEVEL_NAME[lv]}`);
+      assert.ok(Math.abs(k.carry - p0.carry * (fx.carry ?? 1)) < 1e-12 && Math.abs(k.spread - p0.spread * (fx.spread ?? 1)) < 1e-12 && Math.abs(k.sweet - p0.sweet * (fx.sweet ?? 1)) < 1e-12 && Math.abs(k.spin - (fx.spin ?? 1)) < 1e-12 && Math.abs(k.feel - (fx.feel ?? 1)) < 1e-12 && Math.abs(k.line - (fx.line ?? 1)) < 1e-12 && Math.abs(k.mishit - (p0.mishit + (fx.mishit ?? 0))) < 1e-12, `${club} ${LEVEL_NAME[lv]}`);
       assert.ok(k.carry >= prev.carry && k.spread <= prev.spread && k.sweet >= prev.sweet && k.spin >= prev.spin && k.mishit <= prev.mishit && forgivePips(k) >= forgivePips(prev), `${club}: ${LEVEL_NAME[lv]} is no worse than the level before`);
       prev = k;
     }
@@ -152,15 +152,15 @@ test('upgrades over rounds: a full bag of Prototypes plays a club golfer’s rou
 test('putter: a whippy shaft trades accuracy for feel and luck, a stiff counter-balanced one feel for accuracy, a lie-angle balanced head squares the face; each is plain data on the putter only', () => {
   const kit = (shaft: string, head = 'blade') => applyMods(withGear(normalizeBag({ v: 1, shaft, head, own: { shaft: [shaft], head: [head] } })), 'putter');
   const stock = kit('stock'), whip = kit('whip'), stiff = kit('stiff'), mallet = kit('stock', 'mallet'), lie = kit('stock', 'lie'), both = kit('whip', 'lie');
-  assert.deepEqual([stock.feel, stock.sweet, stock.luck, stock.spread], [1, 1, 0, 1], 'the stock putter');
-  assert.ok(whip.feel > 1 && whip.spread < 1 && whip.luck > 0 && whip.sweet < 1, 'whippy: feel and luck up, line down');
-  assert.ok(stiff.sweet > 1 && stiff.feel < 1 && stiff.luck === 0, 'stiff: line up, feel down');
-  assert.ok(whip.feel > stock.feel && stock.feel > stiff.feel && stiff.sweet > stock.sweet && stock.sweet > whip.sweet, 'a trade in both ways');
-  assert.ok(mallet.sweet > 1 && mallet.feel < 1 && lie.sweet > mallet.sweet && lie.feel < 1, 'a mallet forgives; the lie-angle balanced head keeps the face squarest, and a little numb');
+  assert.deepEqual([stock.feel, stock.sweet, stock.line, stock.luck, stock.spread], [1, 1, 1, 0, 1], 'the stock putter');
+  assert.ok(whip.feel > 1 && whip.spread < 1 && whip.luck > 0 && whip.sweet < 1 && whip.line < 1, 'whippy: feel and luck up, line down');
+  assert.ok(stiff.sweet > 1 && stiff.line > 1 && stiff.feel < 1 && stiff.luck === 0, 'stiff: line up, feel down');
+  assert.ok(whip.feel > stock.feel && stock.feel > stiff.feel && stiff.line > stock.line && stock.line > whip.line && stiff.sweet > stock.sweet && stock.sweet > whip.sweet, 'a trade in both ways');
+  assert.ok(mallet.sweet > 1 && mallet.line > 1 && mallet.feel < 1 && lie.sweet > mallet.sweet && lie.line > mallet.line && lie.feel < 1, 'a mallet forgives; the lie-angle balanced head keeps the face squarest, and a little numb');
   assert.equal(both.luck, 0, 'the lie-angle balanced head takes the lip-outs (and the lucky drops) out of a whippy shaft: luck never falls below none');
   // only the putter
   const g = withGear(normalizeBag({ v: 1, shaft: 'whip', own: { shaft: ['whip'] } }));
-  for (const c of CLUB_ORDER.filter(x => x !== 'putter')) assert.deepEqual([applyMods(g, c).feel, applyMods(g, c).luck], [1, 0], `${c} is untouched by the putter’s shaft`);
+  for (const c of CLUB_ORDER.filter(x => x !== 'putter')) assert.deepEqual([applyMods(g, c).feel, applyMods(g, c).line, applyMods(g, c).luck], [1, 1, 0], `${c} is untouched by the putter’s shaft`);
   // the touch stat is still the putter’s own: with the putter’s shaft the kits stack
   assert.ok(applyMods({ ...g, touch: 0.8 }, 'putter').spread < whip.spread && applyMods({ ...g, touch: 0.8 }, 'putter').sweet > whip.sweet);
 });
@@ -174,10 +174,12 @@ test('putter in the model: feel holds the pace error; the stiff shaft keeps the 
   const longPace = { power: 1.18, acc: 0, boost: 0 };
   const hs = holed(gearOfParts('stock'), longPace, near), hw = holed(gearOfParts('whip'), longPace, near), hf = holed(gearOfParts('stiff'), longPace, near);
   assert.ok(hw > hs + 12 && hs > hf + 12, `pace 18% long from 3 m: ${hw} whippy, ${hs} stock, ${hf} stiff of 700`);
-  // line: a click error that is a miss for the stock sweet spot is straight in the stiff shaft’s wider one
-  const lineMiss = { power: 1, acc: 0.11, boost: 0 };
+  // line: a click error that is a miss for the stock putter still drops with the stiff shaft (the angle a putt may be off and still drop is wider, and so is the sweet spot), and one the stock putter makes is a miss for the whippy shaft
+  const lineMiss = { power: 1, acc: 0.11, boost: 0 }, lineOk = { power: 1, acc: 0.09, boost: 0 };
   const ls = holed(gearOfParts('stock'), lineMiss, near), lw = holed(gearOfParts('whip'), lineMiss, near), lf = holed(gearOfParts('stiff'), lineMiss, near);
   assert.ok(lf > ls + 100 && lf > lw + 100, `line click 0.11 off from 3 m: ${lf} stiff, ${ls} stock, ${lw} whippy of 700`);
+  const ms = holed(gearOfParts('stock'), lineOk, near), mw = holed(gearOfParts('whip'), lineOk, near), mf = holed(gearOfParts('stiff'), lineOk, near);
+  assert.ok(ms > mw + 100 && mf >= ms - 5, `line click 0.09 off from 3 m: ${ms} stock, ${mw} whippy, ${mf} stiff of 700`);
   // luck: a perfect tap-in lips out now and then with luck and never without; a sure miss drops now and then with luck
   const tap: Pt = { x: 5.8, y: 0 }, perfect = { power: 1, acc: 0, boost: 0 };
   const t0 = holed(gearOfParts('stock'), perfect, tap, 2000), t1 = holed(gearOfParts('whip'), perfect, tap, 2000);
@@ -287,9 +289,9 @@ test('save: the bag survives a save whole, junk is refused, the profile keeps it
 });
 
 test('save: mods and clubs a save names are read safely: a mod for clubs we do not know is dropped (never made global), the new fields are clamped, a forgiving club’s mishit can fall', () => {
-  const m = readMods([{ id: 'a', clubs: ['moon'], carry: 2 }, { id: 'b', clubs: 'driver', carry: 2 }, { id: 'c', clubs: ['driver', 'moon'], carry: 2 }, { id: 'd', mishit: -0.9, luck: 5, spin: 99, feel: 0.01 }, { id: 'e', mishit: -0.02, luck: -0.5 }, { id: 'f' }]);
+  const m = readMods([{ id: 'a', clubs: ['moon'], carry: 2 }, { id: 'b', clubs: 'driver', carry: 2 }, { id: 'c', clubs: ['driver', 'moon'], carry: 2 }, { id: 'd', mishit: -0.9, luck: 5, spin: 99, feel: 0.01, line: 50 }, { id: 'e', mishit: -0.02, luck: -0.5 }, { id: 'f' }]);
   assert.deepEqual(m.map(x => x.id), ['c', 'd', 'e', 'f'], 'the unknown-clubs mod and the malformed one are dropped'); assert.deepEqual(m[0]!.clubs, ['driver']);
-  assert.deepEqual([m[1]!.mishit, m[1]!.luck, m[1]!.spin, m[1]!.feel], [-0.5, 1, 4, 0.25]); assert.deepEqual([m[2]!.mishit, m[2]!.luck], [-0.02, -0.5]);
+  assert.deepEqual([m[1]!.mishit, m[1]!.luck, m[1]!.spin, m[1]!.feel, m[1]!.line], [-0.5, 1, 4, 0.25, 4]); assert.deepEqual([m[2]!.mishit, m[2]!.luck], [-0.02, -0.5]);
   assert.deepEqual(readClubs(['driver', 'moon', 'driver', 'wood', 'putter']), ['driver', 'putter']); assert.equal(readClubs(['moon']), null); assert.equal(readClubs('driver'), null);
   assert.deepEqual(readGameSkills({ driving: 0.3, irons: 0.3, short: 0.3, putting: 0.3, clubs: ['moon'] }), { driving: 0.3, irons: 0.3, short: 0.3, putting: 0.3 }, 'no known clubs: no bag');
   // a mod's luck adds and never goes below none; mishit can fall below the base chance

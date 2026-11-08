@@ -106,8 +106,8 @@ export function chooseShot(lie: Lie, from: Pt, hole: PlayHole, skill: ShotSkill,
   if (D <= sw || (lie === 'bunker' && D < SAND_M)) return { club: D > sw ? 'pw' : 'sw', aim: { x: pin.x, y: pin.y } };
   const driver = !bag || bag.includes('driver'), longest: Club = teeShot && hole.par > 3 && driver ? 'driver' : 'wood3';
   const W = Math.min(D, carryFor(skill, longest)); // the wanted distance, metres
-  const ladder: readonly Club[] = bag ? LADDER.filter(c => bag.includes(c)).sort((a, b) => carryFor(skill, a) - carryFor(skill, b)) : SHORT_TO_LONG;
-  const club = ladder.find(c => carryFor(skill, c) >= W) ?? longest;
+  // (a bag: each club's carry for him once, shortest first; the original seven: as before)
+  const club = bag ? LADDER.filter(c => bag.includes(c)).map(c => ({ c, m: carryFor(skill, c) })).sort((a, b) => a.m - b.m).find(x => x.m >= W)?.c ?? longest : SHORT_TO_LONG.find(c => carryFor(skill, c) >= W) ?? longest;
   if (W >= D - 1) return { club, aim: { x: pin.x, y: pin.y } };
   return { club, aim: arcPoint(hole.line, nearestArc(hole.line, from) + W / TILE_M) };
 }

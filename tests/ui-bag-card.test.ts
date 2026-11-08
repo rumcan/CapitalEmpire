@@ -68,12 +68,12 @@ test('bag card: the putter’s flyout has its feel, line and luck and the two sl
   assert.ok(sh.includes('data-testid="bag-shafts"') && !sh.includes('data-testid="bag-heads"'), 'the shafts');
   for (const id of ['stock', 'whip', 'stiff']) assert.ok(sh.includes(`data-testid="bag-shaft-${id}"`), id);
   assert.ok(/Whippy graphite shaft/.test(sh) && /Stiff counter-balanced shaft/.test(sh), 'the shafts by name');
-  assert.ok(/feel \+30%/.test(sh) && /luck \+25%/.test(sh) && /sweet spot -15%/.test(sh) && /sweet spot \+25%/.test(sh) && /feel -15%/.test(sh), 'what each trades, in words');
+  assert.ok(/feel \+20%/.test(sh) && /luck \+25%/.test(sh) && /sweet spot -15%/.test(sh) && /line -20%/.test(sh) && /sweet spot \+25%/.test(sh) && /line \+50%/.test(sh) && /feel -12%/.test(sh) && /leave -10%/.test(sh), 'what each trades, in words (the putter’s scatter is its leave)');
   assert.ok(/Buy \$450/.test(sh) && /Buy \$600/.test(sh) && /Fitted/.test(sh), 'new shafts are bought, the stock one is fitted');
   assert.ok(sh.indexOf('data-testid="bag-shafts"') < sh.indexOf('data-testid="bag-detail"') && sh.indexOf('data-testid="bag-detail"') < sh.indexOf('data-testid="bag-card"'), 'the parts open left of the club, which opens left of the card');
   const hd = html(null, 'putter', undefined, null, 'head');
   for (const id of ['blade', 'mallet', 'lie']) assert.ok(hd.includes(`data-testid="bag-head-${id}"`), id);
-  assert.ok(/Lie-angle balanced head/.test(hd) && /Buy \$800/.test(hd) && /Buy \$500/.test(hd) && /luck -25%/.test(hd), 'the heads');
+  assert.ok(/Lie-angle balanced head/.test(hd) && /Buy \$800/.test(hd) && /Buy \$500/.test(hd) && /luck -25%/.test(hd) && /line \+25%/.test(hd), 'the heads');
   const fit = fitPart(null, 'shaft', 'whip').bag, own = html(fit, 'putter', undefined, null, 'shaft');
   assert.ok(/data-testid="bag-fit-stock"[^>]*>Fit</.test(own), 'a part you own is fitted for free'); assert.ok(/border-amber-300\/60[^"]*"[^>]*data-testid="bag-shaft-whip"/.test(own), 'the fitted one is marked');
   assert.ok(own.includes('data-testid="bag-shaft-whip"') && !/data-testid="bag-fit-whip"/.test(own), 'no button on the fitted part');

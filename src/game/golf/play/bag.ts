@@ -32,13 +32,13 @@ export const PRICES: Readonly<Record<PriceKind, readonly [number, number, number
 };
 
 /** what a level does (cumulative from Garage-sale, so the Tour level is the whole of it, not an addition to the Club level's), by class: only the fields a level changes */
-export type LevelFx = Pick<Mod, 'carry' | 'spread' | 'sweet' | 'spin' | 'mishit' | 'feel'>;
+export type LevelFx = Pick<Mod, 'carry' | 'spread' | 'sweet' | 'spin' | 'mishit' | 'feel' | 'line'>;
 export const LEVEL_FX: Readonly<Record<PriceKind, readonly [LevelFx, LevelFx, LevelFx]>> = {
   driver: [{ carry: 1.02, spread: 0.97, sweet: 1.04 }, { carry: 1.04, spread: 0.94, sweet: 1.08, mishit: -0.01 }, { carry: 1.06, spread: 0.9, sweet: 1.12, mishit: -0.02 }],
   wood: [{ carry: 1.015, spread: 0.97, sweet: 1.04 }, { carry: 1.03, spread: 0.94, sweet: 1.08, mishit: -0.01 }, { carry: 1.045, spread: 0.9, sweet: 1.12, mishit: -0.02 }],
   iron: [{ carry: 1.01, spread: 0.97, sweet: 1.03, spin: 1.1 }, { carry: 1.02, spread: 0.94, sweet: 1.06, spin: 1.2, mishit: -0.01 }, { carry: 1.03, spread: 0.9, sweet: 1.1, spin: 1.3, mishit: -0.02 }],
   wedge: [{ spread: 0.97, sweet: 1.04, spin: 1.15 }, { spread: 0.93, sweet: 1.08, spin: 1.3, mishit: -0.01 }, { spread: 0.88, sweet: 1.12, spin: 1.5, mishit: -0.02 }],
-  putter: [{ spread: 0.95, sweet: 1.05 }, { spread: 0.9, sweet: 1.1, feel: 1.05 }, { spread: 0.85, sweet: 1.15, feel: 1.1 }],
+  putter: [{ spread: 0.95, sweet: 1.05, line: 1.05 }, { spread: 0.9, sweet: 1.1, feel: 1.05, line: 1.1 }, { spread: 0.85, sweet: 1.15, feel: 1.1, line: 1.15 }],
 };
 
 /** a loft in degrees for each club: the launch (a driver launches low and long, a lob wedge high and short) */
@@ -53,17 +53,19 @@ export const CLUB_GROUPS: readonly { name: string; clubs: readonly Club[] }[] = 
 // ---- the putter's fitting ----
 /** a part you fit to the putter: a shaft or a head. Its mod (for the putter only) is its trade of feel, accuracy and luck; the rest is the card's words */
 export interface PartDef { id: string; name: string; price: number; note: string; mod: Omit<Mod, 'id' | 'name' | 'clubs'> }
-/** the shafts. Feel is `feel` (the pace may be further out and the error counts for less) and `spread` (a closer lag putt); accuracy is `sweet` (a wider sweet spot on the line click); luck is `luck` */
+/** the shafts. Feel is `feel` (the pace may be further out and the error counts for less) and `spread` (a closer lag putt); accuracy is `line` (the angle a putt may be off and still drop) and `sweet` (a wider sweet spot on the line
+ *  click); luck is `luck`. Balanced on the scripted swinger (18 holes, 40 rounds, a club golfer's other skills): the whippy shaft takes 2 strokes off a golfer who misses the pace and costs 3 one who misses the line; the stiff one takes
+ *  5 off a golfer who misses the line and costs 2 one who misses the pace */
 export const SHAFTS: readonly PartDef[] = [
   { id: 'stock', name: 'Stock steel shaft', price: 0, note: 'The shaft the putter came with.', mod: {} },
-  { id: 'whip', name: 'Whippy graphite shaft', price: 450, note: 'Soft and whippy: you feel the pace, a lag putt dies at the cup and now and then a bad one drops anyway. The face wanders on the line.', mod: { feel: 1.3, spread: 0.85, sweet: 0.85, luck: 0.25 } },
-  { id: 'stiff', name: 'Stiff counter-balanced shaft', price: 600, note: 'Stiff and counter-balanced: the line is on rails and a mistimed click costs less, but you feel less of the pace.', mod: { sweet: 1.25, feel: 0.85, spread: 1.08 } },
+  { id: 'whip', name: 'Whippy graphite shaft', price: 450, note: 'Soft and whippy: you feel the pace, a lag putt dies at the cup and now and then a bad one drops anyway. The face wanders on the line.', mod: { feel: 1.2, spread: 0.9, sweet: 0.85, line: 0.8, luck: 0.25 } },
+  { id: 'stiff', name: 'Stiff counter-balanced shaft', price: 600, note: 'Stiff and counter-balanced: the line is on rails and a mistimed click costs less, but you feel less of the pace.', mod: { sweet: 1.25, line: 1.5, feel: 0.88, spread: 1.05 } },
 ];
 /** the heads */
 export const HEADS: readonly PartDef[] = [
   { id: 'blade', name: 'Blade head', price: 0, note: 'The head the putter came with.', mod: {} },
-  { id: 'mallet', name: 'Mallet head', price: 500, note: 'A big forgiving face: a mistimed click costs less. It feels a little numb.', mod: { sweet: 1.12, feel: 0.95 } },
-  { id: 'lie', name: 'Lie-angle balanced head', price: 800, note: 'The face stays square through the stroke: fewer pulls and pushes, and nothing lips out. A little stiff on the pace.', mod: { sweet: 1.2, feel: 0.92, luck: -0.25 } },
+  { id: 'mallet', name: 'Mallet head', price: 500, note: 'A big forgiving face: a mistimed click costs less. It feels a little numb.', mod: { sweet: 1.12, line: 1.1, feel: 0.95 } },
+  { id: 'lie', name: 'Lie-angle balanced head', price: 800, note: 'The face stays square through the stroke: fewer pulls and pushes, and nothing lips out. A little stiff on the pace.', mod: { sweet: 1.2, line: 1.25, feel: 0.92, luck: -0.25 } },
 ];
 export type PartKind = 'shaft' | 'head';
 const PARTS: Readonly<Record<PartKind, readonly PartDef[]>> = { shaft: SHAFTS, head: HEADS };
@@ -197,13 +199,14 @@ const clampN = (v: number, lo: number, hi: number): number => Math.min(hi, Math.
 /** a signed percent for a factor: x1.04 is "+4%", x0.9 "-10%" */
 const pct = (f: number): string => `${f >= 1 ? '+' : '-'}${Math.abs(Math.round((f - 1) * 100 * 10) / 10)}%`;
 /** a level's or part's effect as lines for the card: "+2% carry", "scatter -3%", "sweet spot +4%", "spin +10%", "feel +30%", "mishits -1 in 100", "luck +25%" */
-export function fxLines(fx: LevelFx & { luck?: number }): string[] {
+export function fxLines(fx: LevelFx & { luck?: number }, scatter = 'scatter'): string[] {
   const out: string[] = [];
   if (fx.carry && fx.carry !== 1) out.push(`${pct(fx.carry)} carry`);
-  if (fx.spread && fx.spread !== 1) out.push(`scatter ${pct(fx.spread)}`);
+  if (fx.spread && fx.spread !== 1) out.push(`${scatter} ${pct(fx.spread)}`);
   if (fx.sweet && fx.sweet !== 1) out.push(`sweet spot ${pct(fx.sweet)}`);
   if (fx.spin && fx.spin !== 1) out.push(`spin ${pct(fx.spin)}`);
   if (fx.feel && fx.feel !== 1) out.push(`feel ${pct(fx.feel)}`);
+  if (fx.line && fx.line !== 1) out.push(`line ${pct(fx.line)}`);
   if (fx.mishit) out.push(`mishits ${fx.mishit < 0 ? '-' : '+'}${Math.abs(Math.round(fx.mishit * 100))} in 100`);
   if (fx.luck) out.push(`luck ${fx.luck > 0 ? '+' : '-'}${Math.abs(Math.round(fx.luck * 100))}%`);
   return out;
@@ -211,7 +214,7 @@ export function fxLines(fx: LevelFx & { luck?: number }): string[] {
 /** what going from the current level's effect to the next one's adds: the factors divided, the mishit chance subtracted */
 export function fxDelta(next: LevelFx, cur: LevelFx | undefined): LevelFx {
   const d: LevelFx = {};
-  for (const k of ['carry', 'spread', 'sweet', 'spin', 'feel'] as const) { const a = next[k] ?? 1, b = cur?.[k] ?? 1; if (a !== b) d[k] = a / b; }
+  for (const k of ['carry', 'spread', 'sweet', 'spin', 'feel', 'line'] as const) { const a = next[k] ?? 1, b = cur?.[k] ?? 1; if (a !== b) d[k] = a / b; }
   const m = (next.mishit ?? 0) - (cur?.mishit ?? 0); if (m) d.mishit = Math.round(m * 1000) / 1000;
   return d;
 }
@@ -241,7 +244,7 @@ export interface BagView {
   rows: ClubRow[]; groups: { name: string; rows: ClubRow[] }[];
   /** the third wood's slot: which is in the bag, and the one out of it with its level */
   third: { is: 'wood5' | 'hybrid'; out: Club; outLevel: number };
-  putter: { shafts: PartRow[]; heads: PartRow[]; shaft: string; head: string; /** the fitted putter's feel (pace window and leave), line (sweet spot) and luck */ feel: number; line: number; luck: number };
+  putter: { shafts: PartRow[]; heads: PartRow[]; shaft: string; head: string; /** the fitted putter's feel (pace window and leave), line (the aim window and the sweet spot) and luck */ feel: number; line: number; luck: number };
   money: number; shop: boolean; shopWhy: string | null; vouchers: number;
   /** the bag's worth: the clubs' levels summed (0..42) of the most */ points: number; max: number;
 }
@@ -258,16 +261,16 @@ export function bagView(bag: BagSave | null | undefined, sk: GameSkills, ctx: Sh
       carryM: putter ? 0 : carryFor(sk, club), loftDeg: LOFT[club], launch: putter ? '' : launchWord(LOFT[club]),
       runs: putter ? null : kit.roll > 1.04 ? 'runs on' : kit.roll < 0.96 ? 'lands soft' : null,
       spinPct: putter ? 0 : Math.round(clampN(SPIN_BACK_CAP[club] * kit.spin, 0, 1) * 100), forgive: forgivePips(kit),
-      next: lv >= MAX_LEVEL ? null : { level: nextLv, name: LEVEL_NAME[nextLv]!, price: priceOf(club, nextLv), lines: fxLines(fxDelta(LEVEL_FX[kind][nextLv - 1]!, lv >= 1 ? LEVEL_FX[kind][lv - 1] : undefined)), why, voucherWhy: voucherWhy(bag, club) },
+      next: lv >= MAX_LEVEL ? null : { level: nextLv, name: LEVEL_NAME[nextLv]!, price: priceOf(club, nextLv), lines: fxLines(fxDelta(LEVEL_FX[kind][nextLv - 1]!, lv >= 1 ? LEVEL_FX[kind][lv - 1] : undefined), putter ? 'leave' : 'scatter'), why, voucherWhy: voucherWhy(bag, club) },
     };
   });
   const groups = CLUB_GROUPS.map(g => ({ name: g.name, rows: rows.filter(r => g.clubs.includes(r.club)) })).filter(g => g.rows.length);
   const pk = applyMods(sk, 'putter'), hy = bag?.third === 'hybrid';
-  const parts = (kind: PartKind): PartRow[] => PARTS[kind].map(p => ({ kind, id: p.id, name: p.name, note: p.note, price: p.price, owned: ownsPart(bag, kind, p.id), fitted: fittedPart(bag, kind).id === p.id, lines: fxLines(p.mod), why: partWhy(bag, kind, p.id, ctx) }));
+  const parts = (kind: PartKind): PartRow[] => PARTS[kind].map(p => ({ kind, id: p.id, name: p.name, note: p.note, price: p.price, owned: ownsPart(bag, kind, p.id), fitted: fittedPart(bag, kind).id === p.id, lines: fxLines(p.mod, 'leave'), why: partWhy(bag, kind, p.id, ctx) }));
   const out: Club = hy ? 'wood5' : 'hybrid';
   return {
     rows, groups, third: { is: hy ? 'hybrid' : 'wood5', out, outLevel: levelOf(bag, out) },
-    putter: { shafts: parts('shaft'), heads: parts('head'), shaft: fittedPart(bag, 'shaft').id, head: fittedPart(bag, 'head').id, feel: pk.feel / pk.spread, line: pk.sweet, luck: pk.luck },
+    putter: { shafts: parts('shaft'), heads: parts('head'), shaft: fittedPart(bag, 'shaft').id, head: fittedPart(bag, 'head').id, feel: pk.feel / pk.spread, line: pk.line * pk.sweet, luck: pk.luck },
     money: ctx.money, shop: ctx.shop, shopWhy: ctx.shopWhy ?? null, vouchers: bag?.vouchers ?? 0,
     points: rows.reduce((a, r) => a + r.level, 0), max: rows.length * MAX_LEVEL,
   };

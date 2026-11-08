@@ -4,7 +4,7 @@
 // its parts in a second flyout further left (shafts and heads trading feel, accuracy and luck). The numbers are
 // play/bag.ts bagView's, which reads the shot model's own (applyMods). The tile pictures are drawn stand-ins ("Stand In for club icons").
 import { useState } from 'react';
-import { CLUB_SHORT, LEVEL_NAME, type BagView, type Club, type ClubRow, type PartKind, type PartRow } from '../../game/golf/play';
+import { CLUB_SHORT, LEVEL_NAME, type BagView, type Club, type ClubRow, type PartKind } from '../../game/golf/play';
 import { Icon } from '../Icon';
 import { ClubIcon, LEVEL_COLOR } from './ClubIcon';
 
@@ -78,9 +78,9 @@ function PutterFitting({ view, part, onPart }: { view: BagView & { busy?: string
     <div className="space-y-2" data-testid="bag-fitting">
       <div className="space-y-1 rounded-lg border border-white/10 bg-white/5 p-2" data-testid="putter-profile">
         <div className="text-[11px] uppercase text-slate-400">Your putter</div>
-        <Bar label="Feel" value={(p.feel - 0.75) / 0.9} tip={`Distance control: the pace may be further out, the lag putt lands closer (x${p.feel.toFixed(2)})`} />
-        <Bar label="Line" value={(p.line - 0.75) / 0.9} tip={`Accuracy: the sweet spot on the line click (x${p.line.toFixed(2)})`} />
-        <Bar label="Luck" value={p.luck / 0.6} tip={`A bad putt may still drop, a good one may lip out (${Math.round(p.luck * 100)}%)`} />
+        <Bar label="Feel" value={(p.feel - 0.6) / 1.2} tip={`Distance control: the pace may be further out, the lag putt lands closer (x${p.feel.toFixed(2)})`} />
+        <Bar label="Line" value={(p.line - 0.5) / 2} tip={`Accuracy: how far off the line a putt may be and still drop, and the sweet spot on the line click (x${p.line.toFixed(2)})`} />
+        <Bar label="Luck" value={p.luck / 0.5} tip={`A bad putt may still drop, a good one may lip out (${Math.round(p.luck * 100)}%)`} />
       </div>
       {(['shaft', 'head'] as const).map(k => {
         const cur = (k === 'shaft' ? p.shafts : p.heads).find(r => r.fitted);

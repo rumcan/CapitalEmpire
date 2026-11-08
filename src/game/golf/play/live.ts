@@ -129,7 +129,8 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     const e = Math.atan2(ux * ay - uy * ax, ux * ax + uy * ay) + miss; // the aim's angle off the pin's line (radians, signed), plus the meter's miss
     const distM = L * TILE_M, v2 = (input.v ?? 1) >= 2, deg = Math.abs(e) * 180 / Math.PI;
     // (T334: v2: the aim's tolerance is the cup's angle at this distance, and the power's error is in metres: shot.ts PUTT_V2)
-    const tol = v2 ? Math.min(PUTT_V2.maxDeg, Math.max(PUTT_V2.minDeg, Math.atan(PUTT_V2.cupM / Math.max(distM, 0.25)) * 180 / Math.PI)) : AIM_DEG;
+    // (T335: `line`, the putter's accuracy on the line: the angle a putt may be off and still drop is the cup's angle times it; 1: as before)
+    const tol = (v2 ? Math.min(PUTT_V2.maxDeg, Math.max(PUTT_V2.minDeg, Math.atan(PUTT_V2.cupM / Math.max(distM, 0.25)) * 180 / Math.PI)) : AIM_DEG) * kit.line;
     // (T335: `feel`, the putter's distance control: the pace error counts for 1 / feel of what it was, in the window and in the leave; 1: as before)
     const paceErr = Math.abs(pw - 1) / kit.feel;
     const factor = deg <= tol ? (v2 ? Math.max(0, 1 - paceErr * distM / PUTT_V2.windowM) : Math.max(0, 1 - 4 * paceErr)) : 0;
