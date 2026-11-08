@@ -37,8 +37,8 @@
     },
     "yaw8N": {
       "anchor": {
-        "x": 321,
-        "y": 289.14
+        "x": 267.75,
+        "y": 230.64
       },
       "headingDegrees": 37
     },
@@ -51,8 +51,8 @@
     },
     "yaw8E": {
       "anchor": {
-        "x": 79.75,
-        "y": 306.94
+        "x": 170.5,
+        "y": 311.44
       },
       "headingDegrees": 127
     },
@@ -65,8 +65,8 @@
     },
     "yaw8S": {
       "anchor": {
-        "x": 167.25,
-        "y": 225.46
+        "x": 197.25,
+        "y": 239.71
       },
       "headingDegrees": 217
     },
@@ -85,5 +85,5 @@
       "headingDegrees": 307
     }
   },
-  "calibrationNotes": "Scale: 48.0000 px/m (the median of a free fit of the four corner views, the game native scale being 45.2548); the same on every view of the subject, as one sheet's cells are. Anchors: the 8.16 x 5.42 m footprint's centre fitted to each silhouette (scripts/assets/fit-box-silhouette.mjs, wall 4.49 m, eave 0.56 m, IoU 0.9623 0.8988 0.8834 0.8424 0.9061 0.9111 0.9199 0.9233), not owner-measured. Art: world~arcade selection.json (corners-v2.png, axisturn-v2.png), owner_approved false."
+  "calibrationNotes": "Scale: 48.0000 px/m (the median of a free fit of the four corner views, the game native scale being 45.2548); the same on every view of the subject, as one sheet's cells are. Anchors: the 8.16 x 5.42 m footprint's centre fitted to each silhouette (scripts/assets/fit-box-silhouette.mjs, wall 4.49 m, eave 0.56 m, IoU 0.9623 0.8545 0.8834 0.8219 0.9061 0.8807 0.9199 0.9233), not owner-measured. Art: world~arcade selection.json (corners-v2.png, axisturn-v2.png), owner_approved false."
 }

@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { lotPreset, lotPresets, setLotRemix, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
-import { axisSetOf, drawnView, faces, fourViews, isVehicle, ownerScaleOf } from '../src/game/lots/preset-art';
+import { axisSetOf, drawnView, eightRingOf, faces, fourViews, isVehicle, ownerScaleOf } from '../src/game/lots/preset-art';
 import { roadOf } from '../src/game/lots/preset-frame';
 import { CAR_SCALE, carModel, carOwnerScale } from '../src/game/ext/car-art';
 import { LIBRARY } from '../src/game/library';
@@ -46,8 +46,11 @@ test('every building of a res or com preset faces its street on each road headin
         if (q.view !== 0) { keptHere++; continue; }
         const drawn = drawnView(q.id, frame, q.view).id, where = `${p.id} road ${road} ${q.id} at (${q.x.toFixed(1)}, ${q.y.toFixed(1)})`;
         if (road % 2) {
-          // a screen-straight road: the screen-axis set, its member facing the street is (road - 1) / 2 (roadView: road 1 faces screen down)
-          assert.equal(axisSetOf(q.id)?.indexOf(drawn), (road - 1) / 2, `${where}: the straight-on view faces the street`);
+          // a screen-straight road: the screen-axis set, its member facing the street is (road - 1) / 2 (roadView: road 1 faces screen down);
+          // T375: a building with no old set but eight approved views (the Video Vault, the Arcade): the ring's place of the road
+          const set = axisSetOf(q.id);
+          if (set) assert.equal(set.indexOf(drawn), (road - 1) / 2, `${where}: the straight-on view faces the street`);
+          else assert.equal(eightRingOf(q.id)?.indexOf(drawn), road, `${where}: the 8-degree view faces the street`);
         } else {
           // an angled road: the corner view whose front faces the lot's street
           assert.equal(fourViews(q.id)?.views.indexOf(drawn), streetQuarter(lot), `${where}: the corner view faces the street`);

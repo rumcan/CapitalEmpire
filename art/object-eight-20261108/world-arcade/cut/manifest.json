@@ -101,8 +101,8 @@
       "width": 460,
       "height": 280,
       "anchor": {
-        "x": 317,
-        "y": 285.14
+        "x": 263.75,
+        "y": 226.64
       },
       "headingDegrees": 37,
       "boxes": null,
@@ -155,8 +155,8 @@
       "width": 333,
       "height": 420,
       "anchor": {
-        "x": 75.75,
-        "y": 302.94
+        "x": 166.5,
+        "y": 307.44
       },
       "headingDegrees": 127,
       "boxes": null,
@@ -209,8 +209,8 @@
       "width": 481,
       "height": 291,
       "anchor": {
-        "x": 163.25,
-        "y": 221.46
+        "x": 193.25,
+        "y": 235.71
       },
       "headingDegrees": 217,
       "boxes": null,
@@ -285,7 +285,7 @@
       }
     }
   },
-  "calibrationNotes": "Scale: 48.0000 px/m (the median of a free fit of the four corner views, the game native scale being 45.2548); the same on every view of the subject, as one sheet's cells are. Anchors: the 8.16 x 5.42 m footprint's centre fitted to each silhouette (scripts/assets/fit-box-silhouette.mjs, wall 4.49 m, eave 0.56 m, IoU 0.9623 0.8988 0.8834 0.8424 0.9061 0.9111 0.9199 0.9233), not owner-measured. Art: world~arcade selection.json (corners-v2.png, axisturn-v2.png), owner_approved false.",
+  "calibrationNotes": "Scale: 48.0000 px/m (the median of a free fit of the four corner views, the game native scale being 45.2548); the same on every view of the subject, as one sheet's cells are. Anchors: the 8.16 x 5.42 m footprint's centre fitted to each silhouette (scripts/assets/fit-box-silhouette.mjs, wall 4.49 m, eave 0.56 m, IoU 0.9623 0.8545 0.8834 0.8219 0.9061 0.8807 0.9199 0.9233), not owner-measured. Art: world~arcade selection.json (corners-v2.png, axisturn-v2.png), owner_approved false.",
   "artReviewRequired": [
     "same subject across all eight views",
     "normal and actual yaw8 geometry",
@@ -294,5 +294,5 @@
     "per-view ground anchors and physical footprint",
     "no duplicates or fake mirror views"
   ],
-  "reviewNote": "T375 2026-11-08: the eight crops viewed together (one building, blue/grey daylight, sun upper right, no mirrored view); anchors and scale fitted (calibrationNotes), not owner-measured. The art itself stays owner_approved=false in native-resume-20261106/<id>/selection.json: the owner reviews it on the check sheet."
+  "reviewNote": "T375 2026-11-08: the eight crops viewed together (one building, daylight, sun upper right, no mirrored view); anchors and scale fitted (calibrationNotes), not owner-measured. The art itself stays owner_approved=false in native-resume-20261106/<id>/selection.json: the owner reviews it on the check sheet."
 }

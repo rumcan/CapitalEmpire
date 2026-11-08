@@ -7,7 +7,7 @@ import { isBuilding } from '../src/game/mirror';
 import { BUILDING_IDS, VIEW_ART } from '../src/game/views-library';
 import type { LibItem } from '../src/game/types';
 
-const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:');
+const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:') || id.startsWith('object8:'); // (T375: the eight-view art is new art, drawn as itself)
 /** a building of the art inventory (the pictures that get four views): the only ones swapped; the props packed with the business art are drawn
  *  as themselves (tests/course-props.test.ts) */
 const inventory = (it: LibItem) => BUILDING_IDS.has(it.id) || isNew(it.id);

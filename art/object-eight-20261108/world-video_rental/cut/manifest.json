@@ -294,5 +294,5 @@
     "per-view ground anchors and physical footprint",
     "no duplicates or fake mirror views"
   ],
-  "reviewNote": "T375 2026-11-08: the eight crops viewed together (one building, blue/grey daylight, sun upper right, no mirrored view); anchors and scale fitted (calibrationNotes), not owner-measured. The art itself stays owner_approved=false in native-resume-20261106/<id>/selection.json: the owner reviews it on the check sheet."
+  "reviewNote": "T375 2026-11-08: the eight crops viewed together (one building, daylight, sun upper right, no mirrored view); anchors and scale fitted (calibrationNotes), not owner-measured. The art itself stays owner_approved=false in native-resume-20261106/<id>/selection.json: the owner reviews it on the check sheet."
 }

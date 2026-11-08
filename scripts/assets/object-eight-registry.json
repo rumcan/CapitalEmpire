@@ -4504,6 +4504,228 @@
         "depth": 3
       },
       "baselineScale": 1
+    },
+    {
+      "subject": "world:video_rental",
+      "name": "Video Vault",
+      "version": 1,
+      "review": "approved",
+      "projection": "normal+yaw8",
+      "views": {
+        "normalNE": {
+          "id": "object8:world-video-rental-cc8c504f-v1:normalNE",
+          "headingDegrees": 0,
+          "boxes": [
+            {
+              "hx": 5.37,
+              "hy": 2.87,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8N": {
+          "id": "object8:world-video-rental-cc8c504f-v1:yaw8N",
+          "headingDegrees": 37,
+          "boxes": [
+            {
+              "hx": 6.0158818054003405,
+              "hy": 5.52383058816223,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "normalSE": {
+          "id": "object8:world-video-rental-cc8c504f-v1:normalSE",
+          "headingDegrees": 90,
+          "boxes": [
+            {
+              "hx": 2.8700000000000006,
+              "hy": 5.37,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8E": {
+          "id": "object8:world-video-rental-cc8c504f-v1:yaw8E",
+          "headingDegrees": 127,
+          "boxes": [
+            {
+              "hx": 5.52383058816223,
+              "hy": 6.015881805400341,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "normalSW": {
+          "id": "object8:world-video-rental-cc8c504f-v1:normalSW",
+          "headingDegrees": 180,
+          "boxes": [
+            {
+              "hx": 5.37,
+              "hy": 2.8700000000000006,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8S": {
+          "id": "object8:world-video-rental-cc8c504f-v1:yaw8S",
+          "headingDegrees": 217,
+          "boxes": [
+            {
+              "hx": 6.015881805400342,
+              "hy": 5.5238305881622285,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "normalNW": {
+          "id": "object8:world-video-rental-cc8c504f-v1:normalNW",
+          "headingDegrees": 270,
+          "boxes": [
+            {
+              "hx": 2.870000000000001,
+              "hy": 5.370000000000001,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8W": {
+          "id": "object8:world-video-rental-cc8c504f-v1:yaw8W",
+          "headingDegrees": 307,
+          "boxes": [
+            {
+              "hx": 5.5238305881622285,
+              "hy": 6.015881805400342,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        }
+      },
+      "footprintMetres": {
+        "width": 10.74,
+        "depth": 5.74
+      },
+      "baselineScale": 1.239,
+      "aliases": []
+    },
+    {
+      "subject": "world:arcade",
+      "name": "Arcade",
+      "version": 1,
+      "review": "approved",
+      "projection": "normal+yaw8",
+      "views": {
+        "normalNE": {
+          "id": "object8:world-arcade-f5b7f5eb-v1:normalNE",
+          "headingDegrees": 0,
+          "boxes": [
+            {
+              "hx": 4.08,
+              "hy": 2.71,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8N": {
+          "id": "object8:world-arcade-f5b7f5eb-v1:yaw8N",
+          "headingDegrees": 37,
+          "boxes": [
+            {
+              "hx": 4.889351593735006,
+              "hy": 4.61970752668852,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "normalSE": {
+          "id": "object8:world-arcade-f5b7f5eb-v1:normalSE",
+          "headingDegrees": 90,
+          "boxes": [
+            {
+              "hx": 2.7100000000000004,
+              "hy": 4.08,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8E": {
+          "id": "object8:world-arcade-f5b7f5eb-v1:yaw8E",
+          "headingDegrees": 127,
+          "boxes": [
+            {
+              "hx": 4.61970752668852,
+              "hy": 4.889351593735006,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "normalSW": {
+          "id": "object8:world-arcade-f5b7f5eb-v1:normalSW",
+          "headingDegrees": 180,
+          "boxes": [
+            {
+              "hx": 4.08,
+              "hy": 2.7100000000000004,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8S": {
+          "id": "object8:world-arcade-f5b7f5eb-v1:yaw8S",
+          "headingDegrees": 217,
+          "boxes": [
+            {
+              "hx": 4.889351593735006,
+              "hy": 4.61970752668852,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "normalNW": {
+          "id": "object8:world-arcade-f5b7f5eb-v1:normalNW",
+          "headingDegrees": 270,
+          "boxes": [
+            {
+              "hx": 2.710000000000001,
+              "hy": 4.080000000000001,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8W": {
+          "id": "object8:world-arcade-f5b7f5eb-v1:yaw8W",
+          "headingDegrees": 307,
+          "boxes": [
+            {
+              "hx": 4.6197075266885195,
+              "hy": 4.889351593735006,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        }
+      },
+      "footprintMetres": {
+        "width": 8.16,
+        "depth": 5.42
+      },
+      "baselineScale": 1.696,
+      "aliases": []
     }
   ],
   "items": [
@@ -15010,6 +15232,566 @@
         188.04539577120767,
         202.57617635352827
       ]
+    },
+    {
+      "id": "object8:world-video-rental-cc8c504f-v1:normalNE",
+      "name": "Video Vault (normalNE)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 601.0000000005185,
+      "h": 454.00000000039176,
+      "ax": 318.50000000027484,
+      "ay": 328.52000000028346,
+      "boxes": [
+        {
+          "hx": 5.37,
+          "hy": 2.87,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.78173828125,
+        0.00390625,
+        0.9580078125,
+        0.13671875
+      ],
+      "quad": [
+        0,
+        0,
+        601.0000000005185,
+        454.00000000039176
+      ]
+    },
+    {
+      "id": "object8:world-video-rental-cc8c504f-v1:yaw8N",
+      "name": "Video Vault (yaw8N)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 582.0000000005022,
+      "h": 391.00000000033737,
+      "ax": 298.50000000025756,
+      "ay": 292.4600000002523,
+      "boxes": [
+        {
+          "hx": 6.0158818054003405,
+          "hy": 5.52383058816223,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.00390625,
+        0.28564453125,
+        0.17431640625,
+        0.400390625
+      ],
+      "quad": [
+        0,
+        0,
+        582.0000000005022,
+        391.00000000033737
+      ]
+    },
+    {
+      "id": "object8:world-video-rental-cc8c504f-v1:normalSE",
+      "name": "Video Vault (normalSE)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 588.0000000005074,
+      "h": 465.00000000040126,
+      "ax": 315.0000000002718,
+      "ay": 323.34000000027896,
+      "boxes": [
+        {
+          "hx": 2.8700000000000006,
+          "hy": 5.37,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.478515625,
+        0.00390625,
+        0.65087890625,
+        0.14013671875
+      ],
+      "quad": [
+        0,
+        0,
+        588.0000000005074,
+        465.00000000040126
+      ]
+    },
+    {
+      "id": "object8:world-video-rental-cc8c504f-v1:yaw8E",
+      "name": "Video Vault (yaw8E)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 420.0000000003624,
+      "h": 455.0000000003926,
+      "ax": 211.5000000001825,
+      "ay": 338.8900000002924,
+      "boxes": [
+        {
+          "hx": 5.52383058816223,
+          "hy": 6.015881805400341,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.65478515625,
+        0.00390625,
+        0.77783203125,
+        0.13720703125
+      ],
+      "quad": [
+        0,
+        0,
+        420.0000000003624,
+        455.0000000003926
+      ]
+    },
+    {
+      "id": "object8:world-video-rental-cc8c504f-v1:normalSW",
+      "name": "Video Vault (normalSW)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 599.0000000005168,
+      "h": 472.0000000004073,
+      "ax": 317.500000000274,
+      "ay": 339.6800000002931,
+      "boxes": [
+        {
+          "hx": 5.37,
+          "hy": 2.8700000000000006,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.18017578125,
+        0.00390625,
+        0.35546875,
+        0.14208984375
+      ],
+      "quad": [
+        0,
+        0,
+        599.0000000005168,
+        472.0000000004073
+      ]
+    },
+    {
+      "id": "object8:world-video-rental-cc8c504f-v1:yaw8S",
+      "name": "Video Vault (yaw8S)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 578.0000000004987,
+      "h": 435.00000000037534,
+      "ax": 292.00000000025193,
+      "ay": 339.9900000002934,
+      "boxes": [
+        {
+          "hx": 6.015881805400342,
+          "hy": 5.5238305881622285,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.32958984375,
+        0.14892578125,
+        0.4990234375,
+        0.2763671875
+      ],
+      "quad": [
+        0,
+        0,
+        578.0000000004987,
+        435.00000000037534
+      ]
+    },
+    {
+      "id": "object8:world-video-rental-cc8c504f-v1:normalNW",
+      "name": "Video Vault (normalNW)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 589.0000000005082,
+      "h": 482.0000000004159,
+      "ax": 302.75000000026125,
+      "ay": 345.1300000002978,
+      "boxes": [
+        {
+          "hx": 2.870000000000001,
+          "hy": 5.370000000000001,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.00390625,
+        0.00390625,
+        0.17626953125,
+        0.14501953125
+      ],
+      "quad": [
+        0,
+        0,
+        589.0000000005082,
+        482.0000000004159
+      ]
+    },
+    {
+      "id": "object8:world-video-rental-cc8c504f-v1:yaw8W",
+      "name": "Video Vault (yaw8W)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 394.00000000034,
+      "h": 467.00000000040296,
+      "ax": 200.00000000017258,
+      "ay": 333.58000000028784,
+      "boxes": [
+        {
+          "hx": 5.5238305881622285,
+          "hy": 6.015881805400342,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.359375,
+        0.00390625,
+        0.474609375,
+        0.140625
+      ],
+      "quad": [
+        0,
+        0,
+        394.00000000034,
+        467.00000000040296
+      ]
+    },
+    {
+      "id": "object8:world-arcade-f5b7f5eb-v1:normalNE",
+      "name": "Arcade (normalNE)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 546.8292441175968,
+      "h": 432.7493500861671,
+      "ax": 281.89990343303697,
+      "ay": 314.06854793181697,
+      "boxes": [
+        {
+          "hx": 4.08,
+          "hy": 2.71,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.5029296875,
+        0.14892578125,
+        0.6630859375,
+        0.27587890625
+      ],
+      "quad": [
+        0,
+        0,
+        546.8292441175968,
+        432.7493500861671
+      ]
+    },
+    {
+      "id": "object8:world-arcade-f5b7f5eb-v1:yaw8N",
+      "name": "Arcade (yaw8N)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 433.6921591277492,
+      "h": 263.98653164297775,
+      "ax": 248.66588471726925,
+      "ay": 213.67824118415885,
+      "boxes": [
+        {
+          "hx": 4.889351593735006,
+          "hy": 4.61970752668852,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.4072265625,
+        0.28564453125,
+        0.5341796875,
+        0.36279296875
+      ],
+      "quad": [
+        0,
+        0,
+        433.6921591277492,
+        263.98653164297775
+      ]
+    },
+    {
+      "id": "object8:world-arcade-f5b7f5eb-v1:normalSE",
+      "name": "Arcade (normalSE)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 556.2573345334174,
+      "h": 438.40620433565954,
+      "ax": 300.75608426467824,
+      "ay": 330.3037196278601,
+      "boxes": [
+        {
+          "hx": 2.7100000000000004,
+          "hy": 4.08,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.16259765625,
+        0.14892578125,
+        0.32568359375,
+        0.27734375
+      ],
+      "quad": [
+        0,
+        0,
+        556.2573345334174,
+        438.40620433565954
+      ]
+    },
+    {
+      "id": "object8:world-arcade-f5b7f5eb-v1:yaw8E",
+      "name": "Arcade (yaw8E)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 313.95541084682714,
+      "h": 395.9797974644666,
+      "ax": 156.97770542341357,
+      "ay": 289.8572117439896,
+      "boxes": [
+        {
+          "hx": 4.61970752668852,
+          "hy": 4.889351593735006,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.83642578125,
+        0.14892578125,
+        0.92822265625,
+        0.26513671875
+      ],
+      "quad": [
+        0,
+        0,
+        313.95541084682714,
+        395.9797974644666
+      ]
+    },
+    {
+      "id": "object8:world-arcade-f5b7f5eb-v1:normalSW",
+      "name": "Arcade (normalSW)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 528.9158723275376,
+      "h": 453.49114900097254,
+      "ax": 278.60007178749976,
+      "ay": 317.0289683223846,
+      "boxes": [
+        {
+          "hx": 4.08,
+          "hy": 2.7100000000000004,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.00390625,
+        0.14892578125,
+        0.15869140625,
+        0.28173828125
+      ],
+      "quad": [
+        0,
+        0,
+        528.9158723275376,
+        453.49114900097254
+      ]
+    },
+    {
+      "id": "object8:world-arcade-f5b7f5eb-v1:yaw8S",
+      "name": "Arcade (yaw8S)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 453.49114900097254,
+      "h": 274.3574311003805,
+      "ax": 182.19784728573376,
+      "ay": 222.22951919130819,
+      "boxes": [
+        {
+          "hx": 4.889351593735006,
+          "hy": 4.61970752668852,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.2705078125,
+        0.28564453125,
+        0.4033203125,
+        0.3662109375
+      ],
+      "quad": [
+        0,
+        0,
+        453.49114900097254,
+        274.3574311003805
+      ]
+    },
+    {
+      "id": "object8:world-arcade-f5b7f5eb-v1:normalNW",
+      "name": "Arcade (normalNW)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 564.742615907656,
+      "h": 428.9781139198389,
+      "ax": 261.1581045182316,
+      "ay": 310.3161679463204,
+      "boxes": [
+        {
+          "hx": 2.710000000000001,
+          "hy": 4.080000000000001,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.6669921875,
+        0.14892578125,
+        0.83251953125,
+        0.2744140625
+      ],
+      "quad": [
+        0,
+        0,
+        564.742615907656,
+        428.9781139198389
+      ]
+    },
+    {
+      "id": "object8:world-arcade-f5b7f5eb-v1:yaw8W",
+      "name": "Arcade (yaw8W)",
+      "cat": "Eight-view buildings",
+      "kind": "building",
+      "w": 301.6988933062603,
+      "h": 314.8982198884092,
+      "ax": 132.46467034227993,
+      "ay": 204.2312945875066,
+      "boxes": [
+        {
+          "hx": 4.6197075266885195,
+          "hy": 4.889351593735006,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 2,
+      "big": true,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        4,
+        0.17822265625,
+        0.28564453125,
+        0.2666015625,
+        0.3779296875
+      ],
+      "quad": [
+        0,
+        0,
+        301.6988933062603,
+        314.8982198884092
+      ]
     }
   ],
   "pages": [
@@ -15040,6 +15822,13 @@
       "../assets/object-eight/tournament-kit-20261107-v1/page-2-2.webp",
       "../assets/object-eight/tournament-kit-20261107-v1/page-2-3.webp",
       "../assets/object-eight/tournament-kit-20261107-v1/page-2-4.webp"
+    ],
+    [
+      "../assets/object-eight/lot-buildings-20261108-v1/page-0-0.webp",
+      "../assets/object-eight/lot-buildings-20261108-v1/page-0-1.webp",
+      "../assets/object-eight/lot-buildings-20261108-v1/page-0-2.webp",
+      "../assets/object-eight/lot-buildings-20261108-v1/page-0-3.webp",
+      "../assets/object-eight/lot-buildings-20261108-v1/page-0-4.webp"
     ]
   ]
 }

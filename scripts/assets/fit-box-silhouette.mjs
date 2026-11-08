@@ -53,7 +53,11 @@ function iou(poly, mk) {
   }
   return inter / (maskTotal + onlyPoly);
 }
-function score(p, view, mk) { return iou(hull(boxCorners(p, view)), mk); }
+/** the overlap less a penalty for an anchor outside the lower middle of the picture (x 40..62%, y 58..82% of the crop: the Video Vault's eight views and the Arcade's corners, fitted free, all lie there): a ramp, a hedge or a sign off the box cannot pull it out */
+function score(p, view, mk) {
+  const fx = p.tx / mk.W, fy = p.ty / mk.H, pen = Math.max(0, 0.40 - fx) + Math.max(0, fx - 0.62) + Math.max(0, 0.58 - fy) + Math.max(0, fy - 0.82);
+  return iou(hull(boxCorners(p, view)), mk) - 2 * pen;
+}
 /** pattern search from a start: scale, anchor (and the shared height and margin when free) */
 function climb(p0, view, mk, free) {
   let p = { ...p0 }, best = score(p, view, mk), step = { ppm: 6, t: 24, H: 0.6, e: 0.15 };
