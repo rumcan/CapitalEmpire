@@ -49,6 +49,8 @@ export interface PropsHostCtx {
    *  setter (inside a step: undo carries them), and the Fountain pond's water dug at (x, y), r tiles round, inside the open step: the course's
    *  water on your land, a painted water area in the town; false when it could not be */
   pondAt?(x: number, y: number): Pond | null;
+  /** T344 (#982): whether the map's own water (the river, a creek) lies in cell (cx, cy) of the ponds' lattice: a pond joins it, with no stones along the seam */
+  pondOther?(cx: number, cy: number): boolean;
   pondMarks?(): number[]; setPondMarks?(m: number[]): void;
   digPond?(x: number, y: number, r: number, where: 'course' | 'town'): boolean;
 }
@@ -405,7 +407,7 @@ export class PropsTool {
     const spot: DecorSpot = { ...this.ctx.spot, range: (px, py) => (sc && sc.patches.some(pa => (pa.surf === 'concrete' || pa.surf === 'asphaltDark' || pa.surf === 'tee') && inPoly(pa.pts, px, py)) ? 'mats' : ''), overlaps: b => { for (const p of this.ctx.propsIn(b)) if (b[0] < p.x1 - 0.05 && b[2] > p.x0 + 0.05 && b[1] < p.y1 - 0.05 && b[3] > p.y0 + 0.05) return this.ctx.propName(p); return ''; } };
     let why = decorSpotWhy(box, spot, standsIn(d, this.where));
     if (!why && d.price > this.ctx.money()) why = `Not enough money: it costs $${d.price.toLocaleString()}`;
-    const disc = pondOfDisc(x, y);
+    const disc = pondOfDisc(x, y, this.ctx.pondOther);
     this.ghosts = disc ? this.pieceGhosts(shorePieces(disc)) : [];
     this.ghost = { ...g, box, why, label: why || `${d.name} · $${d.price.toLocaleString()}` };
   }
@@ -460,7 +462,8 @@ const KIT_JET = KIT_FOUNTAIN[0];
 /** T231: a run's start and a Fountain pond's middle snap to the half tile (the course grid's cell lines) */
 const snapRun = (v: number) => Math.round(v * 2) / 2;
 /** T231: the round pond the Fountain pond digs at (x, y), as a pond (its stones' preview) */
-function pondOfDisc(x: number, y: number): Pond | null {
-  const s = new Set(discCells(x, y, POND_R).map(([cx, cy]) => cy * 65536 + cx));
-  return pondAt(x, y, (cx, cy) => s.has(cy * 65536 + cx));
+function pondOfDisc(x: number, y: number, other?: (cx: number, cy: number) => boolean): Pond | null {
+  // (T344: the cells over the map's own water are the river's, not the pond's: the pond joins it, as the painted area is drawn off it)
+  const s = new Set(discCells(x, y, POND_R).filter(([cx, cy]) => !other?.(cx, cy)).map(([cx, cy]) => cy * 65536 + cx));
+  return pondAt(x, y, (cx, cy) => s.has(cy * 65536 + cx), undefined, other);
 }
