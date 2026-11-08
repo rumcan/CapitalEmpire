@@ -41,13 +41,13 @@ export type SwingShape = 'straight' | 'pull' | 'push' | 'hook' | 'slice';
  *  carries short, a hook runs on) */
 export interface SwingEffect { power: number; deg: number; spread: number; shape: SwingShape; carry: number; roll: number }
 
-/** the time (s) the marker takes from the snap line to 100% for a skill (0..1) */
-export const swingTime = (skill: number): number => METER_TIME[0] + (METER_TIME[1] - METER_TIME[0]) * clamp(skill, 0, 1);
+/** the time (s) the marker takes from the snap line to 100% for a skill (0..1); T334 part 2: `speed`, the factor a golfer's stats put on the marker's speed (mods.ts ClubKit.speed: a more accurate golfer has a slower one) */
+export const swingTime = (skill: number, speed = 1): number => (METER_TIME[0] + (METER_TIME[1] - METER_TIME[0]) * clamp(skill, 0, 1)) / speed;
 /** the boost of n Space presses: BOOST.per each, at most BOOST.max */
 export const boostOf = (presses: number): number => Math.min(BOOST.max, Math.max(0, Math.floor(presses)) * BOOST.per);
-/** the sweet spot's half width (meter units) for a skill (0..1) and a boost: a full boost narrows it by BOOST.narrow */
-export const sweetSpot = (skill: number, boost = 0): number =>
-  (SWEET[0] + (SWEET[1] - SWEET[0]) * clamp(skill, 0, 1)) * (1 - BOOST.narrow * clamp(boost, 0, BOOST.max) / BOOST.max);
+/** the sweet spot's half width (meter units) for a skill (0..1) and a boost: a full boost narrows it by BOOST.narrow; T334 part 2: `sweet`, the factor a golfer's stats put on it (mods.ts ClubKit.sweet) */
+export const sweetSpot = (skill: number, boost = 0, sweet = 1): number =>
+  (SWEET[0] + (SWEET[1] - SWEET[0]) * clamp(skill, 0, 1)) * (1 - BOOST.narrow * clamp(boost, 0, BOOST.max) / BOOST.max) * sweet;
 
 /** the meter mark (u) of a full shot's power share p (overswing: 1 + (p - 1) / OVER.carry), and of a putt's (u = p); for the aim's mark on the arc */
 export function meterMark(p: number, putting: boolean): number {
@@ -57,9 +57,9 @@ export function meterMark(p: number, putting: boolean): number {
 
 /** what a swing's outcome does to the shot, for the club's skill (0..1) and a putt or a full shot (see SwingEffect). Pure: the same outcome and skill always
  *  give the same effect, so a replay plays the same shot */
-export function swingEffect(o: SwingOutcome, skill: number, putting: boolean): SwingEffect {
+export function swingEffect(o: SwingOutcome, skill: number, putting: boolean, sweet = 1): SwingEffect {
   const boost = clamp(o.boost, 0, BOOST.max), pw = clamp(o.power, 0, METER.top), acc = clamp(o.acc, METER.low, METER.top);
-  const w = sweetSpot(skill, boost), off = Math.abs(acc) <= w ? 0 : (Math.abs(acc) - w) * Math.sign(acc);
+  const w = sweetSpot(skill, boost, sweet), off = Math.abs(acc) <= w ? 0 : (Math.abs(acc) - w) * Math.sign(acc);
   // early (acc > 0) misses left (-), late misses right (+)
   const k = putting ? MISS.puttDeg : MISS.fullDeg, mx = putting ? MISS.puttMax : MISS.fullMax, deg = off === 0 ? 0 : -Math.sign(off) * Math.min(mx, Math.abs(off) * k);
   const big = !putting && Math.abs(deg) >= MISS.hookDeg;
@@ -92,7 +92,7 @@ export class SwingMeter {
   power: number | null = null; acc: number | null = null;
   private t0 = 0; private t1 = 0;
 
-  constructor(skill: number) { this.speed = 1 / swingTime(skill); }
+  constructor(skill: number, speed = 1) { this.speed = 1 / swingTime(skill, speed); }
 
   /** the marker's u at time t (s): 0 before the swing; climbing from click 1; turning back at click 2 (or the top); the outcome's acc once done */
   pos(t: number): number {
@@ -143,15 +143,15 @@ export const CLUB_NAME: Readonly<Record<Club, string>> = { driver: 'Driver', woo
 /** a played shot as the player reads it after the swing: the club, the miss, its carry and total (metres; null where there is none: a putt has no carry,
  *  a penalty no total) and one line of text: "Driver: Hook, 7° left · carry 182 m, total 195 m" */
 export interface ShotReport { club: Club; shape: string; carryM: number | null; totalM: number | null; text: string }
-/** the report of a played shot (live.ts play's Shot) and its swing's effect (null: no meter) */
-export function shotReport(s: Shot, eff: Pick<SwingEffect, 'shape' | 'deg'> | null): ShotReport {
+/** the report of a played shot (live.ts play's Shot) and its swing's effect (null: no meter). T334: `note`, what the conditions did (conditions.ts windNote), ends the line */
+export function shotReport(s: Shot, eff: Pick<SwingEffect, 'shape' | 'deg'> | null, note?: string | null): ShotReport {
   const shape = eff ? shapeText(eff) : '', m = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(b.x - a.x, b.y - a.y) * TILE_M;
-  const head = `${CLUB_NAME[s.club]}${shape ? `: ${shape}` : ''}`;
+  const head = `${CLUB_NAME[s.club]}${shape ? `: ${shape}` : ''}`, tail = note ? ` · ${note}` : '';
   if (s.club === 'putter') {
     const totalM = s.penalty ? null : m(s.from, s.to);
     return { club: s.club, shape, carryM: null, totalM, text: `${head} · ${s.holed ? 'holed' : s.penalty ? 'off the green, +1' : `rolled ${totalM!.toFixed(1)} m`}` };
   }
   const carryM = s.landing ? m(s.from, s.landing.at) : null, totalM = s.penalty ? null : s.landing ? m(s.from, s.landing.rest) : m(s.from, s.to);
   const where = s.penalty ? (s.landing?.restLie === 'water' ? 'in the water, +1' : 'out of bounds, +1') : `total ${Math.round(totalM!)} m`;
-  return { club: s.club, shape, carryM, totalM, text: `${head} · ${carryM !== null ? `carry ${Math.round(carryM)} m, ` : ''}${where}${s.holed ? ', holed!' : ''}` };
+  return { club: s.club, shape, carryM, totalM, text: `${head} · ${carryM !== null ? `carry ${Math.round(carryM)} m, ` : ''}${where}${s.holed ? ', holed!' : ''}${tail}` };
 }

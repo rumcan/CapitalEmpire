@@ -10,6 +10,7 @@ import { Thumb } from '../Thumb';
 import { HoleChoiceBox } from './YourRound';
 import { ChallengeBox, type MatchOffer } from './MatchCards';
 import type { HoleChoice, RoundRules } from '../../game/golf/play/yours';
+import { bookingLine } from '../../game/golf/startround';
 
 const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 
@@ -127,7 +128,8 @@ export function TalkCard({ talk, right, onClose, offer, onChallenge, lesson, onL
 }
 
 /** the first tee: start a round. Play in today's tournament while you can join it, else your everyday round on the tee sheet */
-export function TeeCard({ view, right, onJoin, onBook, onClose, play, onPlay, event, onEvent }: { view: { join: boolean; round: RoundState; name: string }; right: string; onJoin: () => void; onBook: () => void; onClose: () => void;
+export function TeeCard({ view, right, onJoin, onBook, onStart, onAuto, onTourney, onClose, play, onPlay, event, onEvent }: { view: { join: boolean; round: RoundState; name: string; start?: number | null }; right: string; onJoin: () => void; onBook: () => void;
+  /** T350: Start round (the clock runs to your booked tee time, then you play it), Let the game play it, and Start round for the tournament you joined */ onStart?: () => void; onAuto?: () => void; onTourney?: () => void; onClose: () => void;
   /** T246: today's club event (the Club Championship, the Mayor's Cup) and its card */ event?: { id: 'club' | 'mayor'; name: string; why: string | null } | null; onEvent?: (id: 'club' | 'mayor') => void;
   /** T317: the holes you may play yourself now (play/yours.ts holeOptions) and the start */ play?: Parameters<typeof HoleChoiceBox>[0]['choices']; onPlay?: (c: HoleChoice, picked: number[], rules: RoundRules) => void }) {
   const r = view.round;
@@ -141,16 +143,39 @@ export function TeeCard({ view, right, onJoin, onBook, onClose, play, onPlay, ev
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
       </div>
       {view.join && <button className="chip chip-on w-full justify-center" onClick={onJoin} data-testid="tee-join">Play in today's tournament</button>}
+      {view.start != null && onTourney && <button className="chip chip-on w-full justify-center" onClick={onTourney} data-testid="tee-tourney-start" title="The clock runs to your group's tee time, then you play at the pace of play">Start round: the tournament, tee time {clock(view.start)}</button>}
       {event && onEvent && <button className="chip chip-on w-full justify-center" onClick={() => onEvent(event.id)} title={event.why ?? ''} data-testid="tee-event">Today: the {event.name}{event.why ? ' (see why)' : ''}</button>}
       <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs">
         {r.k === 'none' && <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-300">{r.why ?? (r.next !== null ? `Next free tee time ${clock(r.next)}` : 'No tee times left today')}</span>
           <button className="chip chip-on disabled:opacity-40" disabled={!!r.why || r.next === null} onClick={onBook} data-testid="tee-book">Book {r.next !== null && !r.why ? clock(r.next) : ''}</button></div>}
-        {r.k === 'booked' && <div className="text-slate-300">Your tee time: <span className="font-semibold text-white">{clock(r.tee)}</span></div>}
+        {r.k === 'booked' && <div className="space-y-1.5" data-testid="tee-booked">
+          <div className="text-slate-300" data-testid="tee-booked-line">{bookingLine(r, clock)}</div>
+          {!r.auto && onStart && onAuto && <div className="flex flex-wrap gap-1.5">
+            <button className="chip chip-on" onClick={onStart} data-testid="tee-start" title="The clock runs to your tee time, then you play your round yourself at the pace of play">Start round</button>
+            <button className="chip" onClick={onAuto} data-testid="tee-auto" title="The game plays the round with your skills and tells you the score when it is done">Let the game play it</button></div>}
+        </div>}
         {r.k === 'out' && <div className="text-sky-200">You are out on the course (teed off {clock(r.tee)})</div>}
         {r.k === 'done' && <div className="text-slate-300">You shot <span className="font-semibold text-white">{r.strokes}</span> today</div>}
       </div>
       {play && onPlay && <HoleChoiceBox choices={play} onStart={onPlay} />}
-      <p className="text-[11px] text-slate-500">Booked: the day plays your round for you. Played yourself: you swing every shot.</p>
+      <p className="text-[11px] text-slate-500" data-testid="tee-note">A booking holds a tee time. Start round runs the clock there and you swing every shot; the game plays it for you only if you say so.</p>
+    </div>
+  );
+}
+
+/** T350 (#993): your booked tee time has come and you are not on the course: play now, or let the game play it. Nothing is played for you unless you say so; the clock waits while this is open */
+export function TeeAskCard({ tee, right, onPlay, onAuto, onClose }: { tee: number; right: string; onPlay: () => void; onAuto: () => void; onClose: () => void }) {
+  return (
+    <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-30 w-[300px] space-y-2 rounded-xl border border-amber-300/30 bg-slate-950/92 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="tee-ask">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div className="font-semibold text-amber-200">Your tee time: {clock(tee)}</div>
+        <button className="btn-icon" onClick={onClose} title="Decide later: the clock goes on and your booking stays"><Icon name="close" size={18} /></button>
+      </div>
+      <p className="text-xs text-slate-300">Your tee time has come. Play now, or let the game play it for you?</p>
+      <div className="flex flex-wrap gap-1.5">
+        <button className="chip chip-on" onClick={onPlay} data-testid="tee-ask-play" title="Start your round at the first tee: you swing every shot">Play now</button>
+        <button className="chip" onClick={onAuto} data-testid="tee-ask-auto" title="The game plays the round with your skills and tells you the score when it is done">Let the game play it</button>
+      </div>
     </div>
   );
 }

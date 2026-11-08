@@ -58,5 +58,5 @@ test('the game gives every sprite shadow pass the one cull, and the shaders cull
   assert.match(engine, /gl\.drawVector\(vAt\[k\]![^;]*, far, minPx\)\)/, 'vector shadows');
   assert.match(engine, /gl\.drawSprites\(pAt[^;]*, minPx\);/, 'sprites');
   assert.equal(gl.split('bool cull = ').length - 1, 4, 'VS_SPRITE, VS_CAST, VS_SHADOW and VS_VEC each cull');
-  assert.match(gl, /bool cull = aMisc\.z > 0\.5 && \(aRect\.w - aRect\.y\) \* uCam\.z < uMinPx;/, 'the sprite\'s own rule');
+  assert.match(gl, /bool cull = mod\(aMisc\.z, 2\.0\) > 0\.5 && \(aRect\.w - aRect\.y\) \* uCam\.z < uMinPx;/, 'the sprite\'s own rule (T334: the slot modulo 2, the sway code rides above the cull flag)');
 });

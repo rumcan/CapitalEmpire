@@ -139,7 +139,7 @@ export function dayRoster(seed: number, day: number, inp: DayInputs): DayRoster 
  *  second nine never shares a green with a group on its first: T211's field orders the groups per hole of the round, not per green */
 export function dayCourse(view: CourseView): CourseView {
   const H = view.holes, k = H.findIndex((h, i) => i > 0 && h.line === H[0]!.line);
-  return k > 0 ? { holes: H.slice(0, k), lieAt: view.lieAt } : view;
+  return k > 0 ? { holes: H.slice(0, k), lieAt: view.lieAt, ...(view.kindAt ? { kindAt: view.kindAt } : {}) } : view; // (T334: the finer lie goes along)
 }
 
 /** the day's round on the course (play/round.ts playRound with the roster's golfers, groups and seed): every group's holes in time order, the waits on the

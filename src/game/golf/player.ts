@@ -1,8 +1,9 @@
 // Your golf (T241, #705; docs/plans/P28.md section 2): the player's own golfer as a small saved profile (GolfSave.player). T240 (your character: the
 // "Who are you?" card, the looks, the walk) extends it; until then the name and the sex are defaults. Pure TS, no DOM; times are game minutes of the
 // town day, skills 0..100 (the shot model reads them as 0..1: skill / 100, exactly a field golfer's skill).
-// - Skills: driving, irons, short game, putting and nerve. The first four play the shots (play/shot.ts skillFor: the driver and the 3-wood drive, the
-//   irons and the pitching wedge are the irons, the sand wedge is the short game, the putter putts); nerve keeps them under pressure (gameSkills).
+// - Skills: driving, irons, wedges (the short game), putting, and (T334 part 2) power, accuracy and touch, and nerve. The first four play the shots (play/shot.ts skillFor: the driver and the
+//   3-wood drive, the irons and the pitching wedge are the irons, the sand wedge is the short game, the putter putts); power, accuracy and touch scale the meter's marker and sweet spot and the
+//   carry and the scatter by club family (play/mods.ts applyMods: 50 changes nothing); nerve keeps them all under pressure (gameSkills).
 // - Handicap (handicapOf): the strokes over par your skills average over 18 holes, from the shot model itself (a fitted curve, see HCP_CURVE).
 // - Practice (practise): a bucket at the range raises driving and irons, the putting green putting, the chipping green the short game. Each session
 //   costs game minutes and money (the bucket price, the practice green's fee); its gains shrink as a skill grows and with each session of the same
@@ -12,29 +13,35 @@
 // Everything here runs on events (a click, a round's end), never per frame.
 import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, type DayRoster } from './everyday';
 import type { GameSkills, Golfer, Sex } from './play/types';
+import { readMods } from './play/mods';
 import type { TeeKind } from './types';
 import { normalizeYou, type YouSave } from './you';
 import { normalizeYourRound, type YourRound } from './play/yours';
 import { normalizeChallenge, normalizeRivals, type Challenge, type Rival } from './play/match';
 import { normalizeTitles, titleText, type Title } from './clubevents';
 
-/** the five skills, in the order the cards show them */
-export const SKILL_IDS = ['driving', 'irons', 'short', 'putting', 'nerve'] as const;
+/** the eight skills, in the order the cards show them */
+export const SKILL_IDS = ['driving', 'irons', 'short', 'putting', 'power', 'accuracy', 'touch', 'nerve'] as const;
 export type SkillId = typeof SKILL_IDS[number];
 /** your skills, each 0..100 */
 export type Skills = Record<SkillId, number>;
-export const SKILL_NAME: Readonly<Record<SkillId, string>> = { driving: 'Driving', irons: 'Irons', short: 'Short game', putting: 'Putting', nerve: 'Nerve' };
+/** T334 part 2: the skills as the functions that read them take them: a profile's (all eight) or the older five (an opponent's, a test's): the new stats absent play as neutral, exactly as before them */
+export type SkillsIn = Omit<Skills, 'power' | 'accuracy' | 'touch'> & Partial<Pick<Skills, 'power' | 'accuracy' | 'touch'>>;
+export const SKILL_NAME: Readonly<Record<SkillId, string>> = { driving: 'Driving', irons: 'Irons', short: 'Wedges', putting: 'Putting', power: 'Power', accuracy: 'Accuracy', touch: 'Touch', nerve: 'Nerve' };
 /** what each skill plays (the cards' tooltips) */
 export const SKILL_WHAT: Readonly<Record<SkillId, string>> = {
   driving: 'The driver and the 3-wood: how far and how straight off the tee',
   irons: 'The irons and the pitching wedge: the approach shots',
-  short: 'The sand wedge: chips, pitches and bunker shots round the green',
+  short: 'The sand wedge: chips, pitches and bunker shots round the green (the short game)',
   putting: 'The putter: how many putts drop and how close the misses stay',
+  power: 'How far you hit it: the carry of the woods most (100 drives 10% further than 50), the irons less, the wedges a little',
+  accuracy: 'How straight: a smaller scatter, a wider sweet spot on the swing meter and a slower marker (the woods, the irons, half of the wedges)',
+  touch: 'Feel: the putter and the wedges (half of them): a tighter leave, a wider sweet spot and a slower marker on a short shot',
   nerve: 'Holding your game under pressure: a money match, the club championship',
 };
 
 /** the starting skills: a mid-handicap amateur (handicapOf: about 18), a better driver than he is anything else */
-export const START_SKILLS: Readonly<Skills> = { driving: 30, irons: 24, short: 22, putting: 26, nerve: 30 };
+export const START_SKILLS: Readonly<Skills> = { driving: 30, irons: 24, short: 22, putting: 26, power: 50, accuracy: 50, touch: 50, nerve: 30 };
 /** the name until T240's "Who are you?" card gives one */
 export const DEFAULT_NAME = 'You';
 
@@ -47,24 +54,30 @@ export const NERVE_LOSS = 0.3;
 
 /** your skills as the shot model plays them in a round of pressure p (0..1): each part of the game's skill / 100, less what the pressure takes
  *  (NERVE_LOSS, less with nerve) */
-export function gameSkills(sk: Skills, pressure: number): GameSkills {
-  const f = 1 - NERVE_LOSS * Math.min(1, Math.max(0, pressure)) * (1 - clampSkill(sk.nerve) / 100), s = (k: SkillId) => clampSkill(sk[k]) / 100 * f;
-  return { driving: s('driving'), irons: s('irons'), short: s('short'), putting: s('putting') };
+export function gameSkills(sk: SkillsIn, pressure: number): GameSkills {
+  const f = 1 - NERVE_LOSS * Math.min(1, Math.max(0, pressure)) * (1 - clampSkill(sk.nerve) / 100), s = (v: number) => clampSkill(v) / 100 * f;
+  // (T334 part 2: the new stats are in only when the skills have them: the older five play exactly as they did)
+  return { driving: s(sk.driving), irons: s(sk.irons), short: s(sk.short), putting: s(sk.putting), ...(sk.power !== undefined ? { power: s(sk.power) } : {}), ...(sk.accuracy !== undefined ? { accuracy: s(sk.accuracy) } : {}), ...(sk.touch !== undefined ? { touch: s(sk.touch) } : {}) };
 }
 
 /** the handicap's weights: each part of the game's share of the strokes a better skill saves, measured on the shot model (output/t241-cal, 600
  *  rounds a point on the tests' synthetic course: +0.1 of driving saves about 2.1 strokes at a skill of 0.4, the irons 0.7, the short game 0.6,
  *  putting 0.5). The driver's carry decides how many shots a long hole takes, so driving is half of it */
-export const HCP_WEIGHTS: Readonly<Record<keyof GameSkills, number>> = { driving: 0.5, irons: 0.2, short: 0.15, putting: 0.15 };
+export const HCP_WEIGHTS: Readonly<Record<'driving' | 'irons' | 'short' | 'putting', number>> = { driving: 0.5, irons: 0.2, short: 0.15, putting: 0.15 };
 /** the handicap curve: the strokes over par a golfer of one skill s (0..1) averages over 18 holes is a + b s + c s² (the shot model's own average,
  *  fitted within 0.9 of a stroke from s 0 to 1: 32 over at 0, 18 over at 0.26, scratch at 0.74, 7 under at 1) */
 export const HCP_CURVE = { a: 31.9, b: -56.2, c: 17.5 } as const;
+/** T334 part 2: the new stats' weight in the handicap's weighted skill, per 1 of stat above or below 50 (the scripted swinger, 80 rounds of a club golfer on a hand-made 18 and on the town course: 100 against 50 saves 2.4 and 1.5 strokes
+ *  an 18 for accuracy, 1.8 and 0.6 for power, 1.7 and 0.8 for touch, and 0 against 50 costs about a third more; the weights are those savings over the curve's slope (about 47 strokes
+ *  a unit of weighted skill), averaged over both ways; a stat at 50 weighs nothing, so a profile from before them has the handicap it had) */
+export const HCP_STAT_WEIGHTS = { power: 0.08, accuracy: 0.10, touch: 0.06 } as const;
 
 /** your handicap (one decimal; below 0 is a plus handicap): the curve at the weighted average of your skills as an everyday round plays them
  *  (gameSkills at PRESSURE.everyday: your nerve is in it) */
-export function handicapOf(sk: Skills): number {
+export function handicapOf(sk: SkillsIn): number {
   const g = gameSkills(sk, PRESSURE.everyday);
-  const s = HCP_WEIGHTS.driving * g.driving + HCP_WEIGHTS.irons * g.irons + HCP_WEIGHTS.short * g.short + HCP_WEIGHTS.putting * g.putting;
+  let s = HCP_WEIGHTS.driving * g.driving + HCP_WEIGHTS.irons * g.irons + HCP_WEIGHTS.short * g.short + HCP_WEIGHTS.putting * g.putting;
+  for (const k of ['power', 'accuracy', 'touch'] as const) s += HCP_STAT_WEIGHTS[k] * (clampSkill(sk[k] ?? 50) / 100 - 0.5);
   return Math.round((HCP_CURVE.a + HCP_CURVE.b * s + HCP_CURVE.c * s * s) * 10) / 10;
 }
 /** a handicap as golfers write it: 18.4, or +2.1 below scratch */
@@ -75,9 +88,9 @@ export type PracticeKind = 'bucket' | 'putting' | 'chipping';
 export const PRACTICE_KINDS: readonly PracticeKind[] = ['bucket', 'putting', 'chipping'];
 /** each session: its name, the game minutes it takes, and the most each skill it raises gains (at skill 0, the day's first session of its kind) */
 export const PRACTICE: Readonly<Record<PracticeKind, { name: string; min: number; gains: Partial<Record<SkillId, number>> }>> = {
-  bucket: { name: 'Hit a bucket', min: 45, gains: { driving: 2.0, irons: 1.6 } },
-  putting: { name: 'Putting practice', min: 30, gains: { putting: 2.0 } },
-  chipping: { name: 'Chipping practice', min: 30, gains: { short: 2.0 } },
+  bucket: { name: 'Hit a bucket', min: 45, gains: { driving: 2.0, irons: 1.6, power: 2.0, accuracy: 1.2 } },
+  putting: { name: 'Putting practice', min: 30, gains: { putting: 2.0, touch: 2.0 } },
+  chipping: { name: 'Chipping practice', min: 30, gains: { short: 2.0, touch: 2.0, accuracy: 0.8 } },
 };
 /** each session of the same kind on the same day gains this share of the one before (the third bucket of the day teaches less than the first) */
 export const FATIGUE = 0.7;
@@ -104,7 +117,7 @@ export interface RoundEntry { day: number; kind: RoundKind; strokes: number; par
 /** your everyday round booked on the tee sheet (T208): the town day and the tee time; your game as the round plays it (gameSkills at PRESSURE.everyday:
  *  as you booked, and after each session you practise before you walk to the tee); the result once the day's round is played (the whole day is played
  *  when it is built, so it is known from the start: shown once your round is done, put in your rounds at the day's end at the latest) */
-export interface Booking { day: number; tee: number; skills: GameSkills; result?: { strokes: number; par: number; holes: number; done: number } }
+export interface Booking { day: number; tee: number; skills: GameSkills; /** T350: the game plays this round for you (you said "Let the game play it"); absent: a tee time you play yourself (Start round) */ auto?: true; result?: { strokes: number; par: number; holes: number; done: number } }
 /** the profile (GolfSave.player): the name and sex (defaults until T240), the skills, the practice log and the rounds (the last LOG_MAX and ROUNDS_MAX),
  *  today's sessions by kind (the fatigue), the minute you are busy until (a session under way), and your booked round */
 export interface PlayerProfile {
@@ -158,10 +171,11 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
   const b = p.busy, bk = p.booked;
   let booked: Booking | null = null;
   if (bk && Number.isFinite(bk.day) && Number.isFinite(bk.tee)) {
-    const q = bk.skills, ok = q && [q.driving, q.irons, q.short, q.putting].every(v => typeof v === 'number' && Number.isFinite(v));
-    booked = { day: bk.day, tee: bk.tee, skills: ok ? { driving: q.driving, irons: q.irons, short: q.short, putting: q.putting } : gameSkills(skills, PRESSURE.everyday) };
+    const q = bk.skills, ok = q && [q.driving, q.irons, q.short, q.putting].every(v => typeof v === 'number' && Number.isFinite(v)), st = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? { v: Math.min(1, Math.max(0, v)) } : null;
+    booked = { day: bk.day, tee: bk.tee, skills: ok ? { driving: q.driving, irons: q.irons, short: q.short, putting: q.putting, ...(st(q.power) ? { power: st(q.power)!.v } : {}), ...(st(q.accuracy) ? { accuracy: st(q.accuracy)!.v } : {}), ...(st(q.touch) ? { touch: st(q.touch)!.v } : {}), ...(readMods(q.mods).length ? { mods: readMods(q.mods) } : {}) } : gameSkills(skills, PRESSURE.everyday) };
     const r = bk.result;
     if (r && [r.strokes, r.par, r.holes, r.done].every(v => typeof v === 'number' && Number.isFinite(v))) booked.result = { strokes: r.strokes, par: r.par, holes: r.holes, done: r.done };
+    if (bk.auto === true) booked.auto = true; // T350: the game plays it (you said so)
   }
   return {
     v: 1, name: typeof p.name === 'string' && p.name.trim() ? p.name.trim().slice(0, 40) : s0.name, sex: s0.sex, skills, log, rounds,
@@ -258,7 +272,7 @@ export function bookRound(p: PlayerProfile, day: number, tee: number): PlayerPro
 /** after a session: your round booked today and not begun (before its walk to the tee) plays with your game as it is now */
 export function rebook(p: PlayerProfile, day: number, minute: number): PlayerProfile {
   const b = p.booked; if (!b || b.day !== day || minute >= b.tee - BOOK_LEAD) return p;
-  return { ...p, booked: { day, tee: b.tee, skills: gameSkills(p.skills, PRESSURE.everyday) } };
+  return { ...p, booked: { day, tee: b.tee, skills: gameSkills(p.skills, PRESSURE.everyday), ...(b.auto ? { auto: true as const } : {}) } };
 }
 /** your golfer in the everyday round you booked: as playerGolfer, with the booking's game */
 export function bookedGolfer(p: PlayerProfile, b: Booking): Golfer {
@@ -305,7 +319,7 @@ export function youRangeView(p: PlayerProfile, ctx: Record<PracticeKind, Practic
 
 /** your round today as the profile card shows it: none booked (with the next tee time you can book, or why not), booked (the tee time), out on the
  *  course, or done (the score) */
-export type RoundState = { k: 'none'; next: number | null; why: string | null } | { k: 'booked'; tee: number } | { k: 'out'; tee: number } | { k: 'done'; strokes: number; par: number };
+export type RoundState = { k: 'none'; next: number | null; why: string | null } | { k: 'booked'; tee: number; /** T350: the tee time has passed and you have not started it */ late?: boolean; /** the game plays it (you said so) */ auto?: boolean } | { k: 'out'; tee: number } | { k: 'done'; strokes: number; par: number };
 /** the profile card ("Your golf"): name, handicap, the skills with what each plays, your round today, the practice log and the rounds (newest first) */
 export interface PlayerCardView {
   name: string; sex: Sex; hcp: number; hcpText: string;

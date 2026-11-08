@@ -4,6 +4,7 @@
 import type { Hole, Pt } from '../holes';
 import type { GolfSurface, TeeKind } from '../types';
 import { nearestSet } from '../teesets';
+import { lieKindOfSurface, type LieKind } from './lies';
 import type { CourseView, Lie, PlayHole } from './types';
 
 /** the holes a round plays: 18, in order. A course with fewer is cycled (a 9-hole course is played twice), one with more gives its first 18 */
@@ -13,6 +14,11 @@ const OUT_TILES = 40;
 /** the lie each golf surface plays as: the fringe and the first cut play as fairway, the waste area as sand, the long grass as heavy rough (T238: the
  *  deep grass lie, worse than the rough); paths and other paint as rough */
 const LIE: Record<GolfSurface, Lie> = { green: 'green', fringe: 'fairway', tee: 'tee', fairway: 'fairway', firstCut: 'fairway', rough: 'rough', longGrass: 'fescue', fescue: 'fescue', bunker: 'bunker', waste: 'bunker', water: 'water', path: 'rough', other: 'rough' };
+
+/** T334: a rough ball within this many tiles (3 m) of a fairway, a fringe, a tee or a green plays from the first cut (the band of rough beside the fairway) */
+export const FIRST_CUT_TILES = 1.5;
+/** the eight points round a ball the first cut looks at (FIRST_CUT_TILES out, the diagonals on the same circle) */
+const RING: readonly (readonly [number, number])[] = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7071, 0.7071], [-0.7071, 0.7071], [0.7071, -0.7071], [-0.7071, -0.7071]].map(([a, b]) => [a! * FIRST_CUT_TILES, b! * FIRST_CUT_TILES] as const);
 
 /** the distance (tiles) from (x, y) to the nearest point of the polyline line (infinite for a line with no segment) */
 function lineDist(line: Pt[], x: number, y: number): number {
@@ -51,6 +57,15 @@ export function makeCourseView(holes: Hole[], surfAt: (x: number, y: number) => 
       if (s) return LIE[s];
       for (const L of plines) if (lineDist(L, x, y) <= OUT_TILES) return 'rough';
       return 'out';
+    },
+    // T334: the finer lie: the surface's own kind (lies.ts lieKindOfSurface), and a rough one within FIRST_CUT_TILES of a fairway, fringe, tee or green as the first cut
+    kindAt(x: number, y: number): LieKind {
+      const s = surfAt(x, y);
+      if (!s) { for (const L of plines) if (lineDist(L, x, y) <= OUT_TILES) return 'rough'; return 'out'; }
+      const k = lieKindOfSurface(s);
+      if (k !== 'rough' || s === 'path') return k;
+      for (const [dx, dy] of RING) { const q = surfAt(x + dx!, y + dy!); if (q === 'fairway' || q === 'fringe' || q === 'tee' || q === 'green') return 'firstcut'; }
+      return 'rough';
     },
   };
 }

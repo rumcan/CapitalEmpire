@@ -441,3 +441,13 @@ dusk, nothing mirrored; each person in the golfer sheets' eight directions and c
 | Head pro (`golfer:staff_head_pro_m`; art 136) | a person | `golf_pro_m2` | a man in his fifties in a navy club polo, khaki trousers, a visor; idle, walk, coach, handshake | P1 |
 | Teaching pro (`golfer:staff_teach_pro_w`; art 137) | a person | `golf_pro_w1` | a woman in her thirties in a white club polo and a cap, a club in hand; idle, walk, the drive, demonstrate | P1 |
 | Membership secretary (`spectator:staff_secretary_w`; art 138) | a person | `spec_w_older_cardigan` | a woman in her sixties in a cardigan with a clipboard and a folder; idle, walk, handshake, hand over a folder | P2 |
+
+## The wind (T334, #960: art requests)
+The wind's cues are stand-ins today: the trees' and shrubs' tops lean and breathe in the sprite shader (a shear of the picture about its foot, `gl.ts` VS_SPRITE), and the pin
+flag's cloth ripples in the fragment shader (it streams out in a breeze, hangs limp and drawn in toward the pole in a calm; `business:golf-pin-red` and `-yellow`). The flag always
+streams to the picture's right (nothing is mirrored), so it cannot show which way the wind blows; the shot panel's dial and the arrow by the ball do. The sun at the upper right, shadows
+at 145°, nothing mirrored, each picture in the four views:
+| Sprite (id to use) | Footprint / height | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Pin flag sheet (`golf:pin-flag-wind`, 8 frames x 4 wind directions: S, W, N, E; strengths limp, light, firm) | 0.1 m / 2.2 m | `business:golf-pin-red` with the shader's ripple | a red flagstick cloth in four wind directions, each as limp, a light breeze and a firm wind (8 frames of the ripple loop), the white pole and the black base the same in every frame | P2 |
+| Tree sway sheet (`golf:tree-sway`, 4 frames) for the common trees | as each tree | the shader's shear | the same tree with its crown leaning left, upright and right in a gust (4 frames loop), the trunk fixed | P3 |

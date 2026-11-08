@@ -2,6 +2,8 @@
 // Times are game minutes of the tournament day; distances are tiles unless a name says M (metres). Pure TS, no DOM.
 import type { Pt } from '../holes';
 import type { TeeKind } from '../types';
+import type { LieKind } from './lies';
+import type { Mod } from './mods';
 export type { Pt };
 
 /** the surface a ball lies on: tee, fairway, rough, fescue (deep grass), bunker, green, water, or out of bounds */
@@ -10,13 +12,19 @@ export type Lie = 'tee' | 'fairway' | 'rough' | 'fescue' | 'bunker' | 'green' | 
  *  tee set's tee and line, back (blue) to front (red) (absent: the one tee) */
 export interface PlayHole { n: number; par: 3 | 4 | 5; tee: Pt; pin: Pt; line: Pt[]; sets?: { kind: TeeKind; tee: Pt; line: Pt[] }[] }
 /** the course a round is played on: the holes in play order (a 9-hole course is listed twice) and the lie at any point */
-export interface CourseView { holes: PlayHole[]; lieAt(x: number, y: number): Lie }
+export interface CourseView { holes: PlayHole[]; lieAt(x: number, y: number): Lie;
+  /** T334: the finer lie at a point (lies.ts LieKind: the first cut, the deep rough); absent: the coarse lie's own (a view made by hand) */
+  kindAt?(x: number, y: number): LieKind }
 /** a golfer's sex: the field's looks come from the golfer art of the matching sex */
 export type Sex = 'm' | 'w';
 /** T241: a golfer's skill by part of the game (0..1 each), as the shot model reads it (shot.ts skillFor): driving (the driver and the 3-wood), irons
  *  (the irons and the pitching wedge), the short game (the sand wedge: chips, pitches and bunker shots) and putting. Your profile's nerve is already in
  *  them (golf/player.ts gameSkills: what pressure takes off). A field golfer has none: his one skill plays every shot */
-export interface GameSkills { driving: number; irons: number; short: number; putting: number }
+export interface GameSkills { driving: number; irons: number; short: number; putting: number;
+  /** T334 part 2: the stats beyond the four parts of the game (each 0..1, nerve already in them; absent: 0.5, which changes nothing: mods.ts NEUTRAL) */
+  power?: number; accuracy?: number; touch?: number;
+  /** T334 part 2: the modifiers stacked on the stats (cards, clubs and shafts: T335, T336; mods.ts applyMods); absent: none */
+  mods?: readonly Mod[] }
 /** a golfer: a unique id (0..size-1), name, sex, whether a pro, skill (0..1), look (0..4, the art variant), and the owner's golfer. T213 (entourage.ts):
  *  the cart he rides (an index shared by the two golfers of a cart; absent: he walks) and whether a caddie walks with him */
 export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skill: number; look: number; owner?: boolean; cart?: number; caddie?: boolean;

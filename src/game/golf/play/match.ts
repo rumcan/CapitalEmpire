@@ -18,7 +18,7 @@ import { holeFrom } from './courseview';
 import { chooseShot, hitShot, putt, rng, skillFor } from './shot';
 import type { CourseView, GameSkills, Lie, Pt, Shot } from './types';
 import { cardTotals, holeOf, nextHole, playYours, rowOf, rulesFor, startRound, yourTurn, PICK_UP_OVER, type CardRow, type YourRound } from './yours';
-import { gameSkills, handicapOf, playedRound, PRESSURE, type PlayerProfile, type Skills } from '../player';
+import { gameSkills, handicapOf, playedRound, PRESSURE, type PlayerProfile, type SkillsIn } from '../player';
 import type { OwnerInput } from './live';
 
 /** the smallest stake ($) and the step the stake moves by */
@@ -49,7 +49,7 @@ export function nameSeed(s: string): number {
 const draw = (name: string, a: number, b = 0): number => rng(nameSeed(name), a, b)();
 
 /** the opponent: name, skills (0..100, nerve too), handicap (player.ts handicapOf: as yours is worked out), purse ($) */
-export interface Opponent { name: string; skills: Skills; hcp: number; purse: number }
+export interface Opponent { name: string; skills: SkillsIn; hcp: number; purse: number }
 
 /** the weighted skill (0..1, as handicapOf weighs them at everyday pressure) a handicap stands for: the HCP curve solved (handicap 32 at 0, scratch at 0.74) */
 export function skillOfHcp(hcp: number): number {
@@ -79,7 +79,7 @@ export function basePurse(name: string, hcp: number): number {
 export function opponentOf(name: string, hcp: number = hcpOfName(name), rival?: Rival | null, day = 0): Opponent {
   const s = skillOfHcp(hcp), nerve = Math.round(20 + 50 * draw(name, 4)), f = 1 - 0.3 * PRESSURE.everyday * (1 - nerve / 100);
   const part = (k: number) => Math.min(100, Math.max(0, (s / f) * 100 + (draw(name, 10 + k) - 0.5) * 12));
-  const skills: Skills = { driving: part(0), irons: part(1), short: part(2), putting: part(3), nerve };
+  const skills: SkillsIn = { driving: part(0), irons: part(1), short: part(2), putting: part(3), nerve };
   // the parts' wobble moves the handicap a little: pull driving so handicapOf gives the handicap asked (to a tenth)
   for (let k = 0; k < 6; k++) { const d = handicapOf(skills) - hcp; if (Math.abs(d) < 0.05) break; skills.driving = Math.min(100, Math.max(0, skills.driving + d * 1.4)); }
   const lost = rival ? Math.max(0, rival.net - PURSE_REGROW * Math.max(0, day - rival.last)) : 0;
@@ -205,7 +205,7 @@ export function oppShot(view: CourseView, r: YourRound, seed: number): { round: 
   const hole = holeFrom(h0, MATCH_TEES), stroke = m.strokes + 1, rr = oppStream(seed, r, row.i, stroke), k = chooseShot(m.lie, m.ball, hole, m.sk, m.lie === 'tee');
   let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Shot['landing'];
   if (k.club === 'putter') {
-    const dx = hole.pin.x - m.ball.x, dy = hole.pin.y - m.ball.y, L = Math.hypot(dx, dy), o = putt(rr, skillFor(m.sk, 'putter'), L * TILE_M), s = L > 0 ? o.leaveM / TILE_M / L : 0;
+    const dx = hole.pin.x - m.ball.x, dy = hole.pin.y - m.ball.y, L = Math.hypot(dx, dy), o = putt(rr, skillFor(m.sk, 'putter'), L * TILE_M, 1, true), s = L > 0 ? o.leaveM / TILE_M / L : 0;
     to = o.holed ? { x: hole.pin.x, y: hole.pin.y } : { x: hole.pin.x + dx * s, y: hole.pin.y + dy * s }; lie = o.holed ? 'green' : view.lieAt(to.x, to.y); holed = o.holed;
   } else {
     const o = hitShot(rr, m.sk, m.lie, m.ball, k.aim, k.club, view); to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
