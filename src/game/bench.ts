@@ -233,9 +233,13 @@ async function realPlaceBench(g: Game, spec: string, info: Record<string, unknow
   if (mode === 'laid') {
     g.real.click(); const t0 = performance.now(), laid = g.real.confirm(); const ms = Math.round(performance.now() - t0);
     console.log('[bench] real course laid', laid, `${ms} ms on the main thread`);
+    // (the main-thread ms of the first frames after the lay: the camera's move to the new land, the chunk pictures of the old place dropped (GroundCache.purgeUnused), the first bakes)
+    const after: number[] = []; g.onFrame = () => { if (after.length < 12) after.push(+g.perf.cpuMs.toFixed(2)); };
     await new Promise(r => setTimeout(r, 6000));
+    g.onFrame = null;
+    console.log('[bench] first frames after the lay (main-thread ms)', JSON.stringify(after));
     g.lookAt(best.x, best.y, 0.3);
-    startTour(g, { ...info, realplace: spec, laid, layMs: ms }, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
+    startTour(g, { ...info, realplace: spec, laid, layMs: ms, afterLayFramesMs: after }, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
     return;
   }
   const zooms = [0.3, 0.15], states = ['off', 'hand', 'move'] as const, runs: { z: number; st: (typeof states)[number] }[] = [];
@@ -428,6 +432,8 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
   let plantMax = 0, plantFrames = 0, along = 0; const bake0 = g.ground.baked;
   /** T272: the stage's first bake and the tile caches' counts at its start (tileStage) */
   let sb0 = g.ground.baked, ss0 = tileTotals(g), sumPeak = 0; g.ground.setTileStats(true);
+  /** T356: when in the stage its chunk-pictures-plus-tile-caches peak came (s), and what it was made of then (MB of 1e6 bytes: the chunk pictures, the tile caches) */
+  let peakAt: { atS: number; groundMB: number; tilesMB: number } | null = null;
   /** the sim worker's tick time: the max per stage, and the average and max over the whole tour */
   let stageSim = 0, simSum = 0, simN = 0, simMax = 0;
   const startX = g.cam.X, startY = g.cam.Y;
@@ -443,12 +449,14 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
     else { g.cam.X += st.vx * dt * dir; g.cam.Y += st.vy * dt * dir; }
     const pm = (g.perf as { plantMs?: number }).plantMs ?? 0; if (t > 1 && pm > 0) { plantMax = Math.max(plantMax, pm); plantFrames++; }
     if (st.z < PLANNER_Z / 3) { g.cam.X = 0; g.cam.Y = MAP * 32; }
-    up = Math.max(up, g.ground.uploadsThisSecond); sumPeak = Math.max(sumPeak, g.ground.residentPx * 4 + tileTotals(g).bytes);
+    up = Math.max(up, g.ground.uploadsThisSecond);
+    { const gb = g.ground.residentPx * 4, tb = tileTotals(g).bytes; if (gb + tb > sumPeak) { sumPeak = gb + tb; peakAt = { atS: +t.toFixed(1), groundMB: +(gb / 1e6).toFixed(1), tilesMB: +(tb / 1e6).toFixed(1) }; } }
     if (t > 1) { frames.push(g.perf.frameMs); cpu.push(g.perf.cpuMs); inst = Math.max(inst, g.perf.instances); draws = Math.max(draws, g.perf.draws); upload = Math.max(upload, g.perf.uploadKB); }
     if (t >= st.secs) {
       const sorted = [...cpu].sort((a, b) => a - b), q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
       const fAvg = frames.reduce((a, b) => a + b, 0) / Math.max(1, frames.length);
-      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}), tiles: tileStage(g, sb0, ss0, sumPeak) });
+      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}), tiles: { ...tileStage(g, sb0, ss0, sumPeak), peakAt } });
+      peakAt = null;
       sb0 = g.ground.baked; ss0 = tileTotals(g); sumPeak = 0; g.ground.setTileStats(true); // (the next stage's working set counted afresh)
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY; plantMax = 0; plantFrames = 0; along = 0;
       if (s >= stages.length) {
@@ -463,7 +471,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
   };
   function finish(tourBakes?: Record<string, number>) {
     const trees = { forest: g.perf.forest, townTrees: g.perf.townTrees, belt: (g.perf as { belt?: number }).belt ?? 0 };
-    const out = { ...info, ...(tourBakes ? { tourBakes, trees } : {}), cars: info.scene ? g.perf.simActive : BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), shineMB: +(g.ground.shineBytes / 1048576).toFixed(2), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
+    const out = { ...info, ...(tourBakes ? { tourBakes, trees } : {}), cars: info.scene ? g.perf.simActive : BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, groundProvisional: g.ground.provisional, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), shineMB: +(g.ground.shineBytes / 1048576).toFixed(2), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
     (window as unknown as { __bench: unknown }).__bench = out;
     console.log('[bench] results', JSON.stringify(out, null, 1));
     g.toast('Benchmark finished: results in the console', 'good');

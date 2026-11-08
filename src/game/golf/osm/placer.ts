@@ -12,6 +12,11 @@ import { gridBuildCost, scratchOf } from './placegrid';
 import { ROT_FINE, ROT_STEP, coverOutline, firstFittingAngle, normDeg, rotateSpec } from './rotate';
 import type { OsmCourseSpec } from './types';
 
+/** what the card, the pop-up and the saved game need of a course: a shipped course's entry without its loader (a downloaded course, T358, has none) */
+export type RealInfo = Omit<OsmCourseInfo, 'load'>;
+/** the entry of a course from its spec (a downloaded course's: its name, place, holes, its par as the game works it out and as the map has it, its scale) */
+export const realInfoOf = (s: OsmCourseSpec): RealInfo => ({ id: s.id, name: s.name, place: s.place, holes: s.holes.length, par: s.gameParTotal, mappedPar: s.parTotal, ...(s.scale < 1 ? { scale: s.scale } : {}) });
+
 /** what the placing mode reads of the game and asks it to do */
 export interface RealHost {
   /** the map's side, tiles */
@@ -29,7 +34,10 @@ export interface RealHost {
   /** how many holes the game has now (the pop-up says they are replaced) */
   holes(): number;
   /** lays the course: buys the land, takes down what stands there, paints the grid, puts the markers, pays (the plan is the one just worked out); true when it did */
-  lay(c: { id: string; info: OsmCourseInfo; spec: OsmCourseSpec; turned: OsmCourseSpec; plan: PlacePlan; deg: number }): boolean;
+  lay(c: { id: string; info: RealInfo; spec: OsmCourseSpec; turned: OsmCourseSpec; plan: PlacePlan; deg: number }): boolean;
+  /** a downloaded course (T358's library) by its id, as a spec the game would build (scaled to fit the map when it must be): null when it is no longer kept or
+   *  has no holes. Absent (the tests): only the shipped courses */
+  kept?(id: string): Promise<{ info: RealInfo; spec: OsmCourseSpec } | null>;
 }
 
 /** the course in hand as the card and the pop-up read it */
@@ -70,7 +78,7 @@ function sketchOf(spec: OsmCourseSpec): Sketch | null {
 /** the placing mode */
 export class RealPlacer {
   /** the course in hand (null: none) and its shipped entry, its spec as converted, the turn (degrees clockwise) and where its land's middle stands (whole tiles) */
-  id: string | null = null; info: OsmCourseInfo | null = null; spec: OsmCourseSpec | null = null; deg = 0; at: Pt | null = null;
+  id: string | null = null; info: RealInfo | null = null; spec: OsmCourseSpec | null = null; deg = 0; at: Pt | null = null;
   /** the plan a click asked the pop-up about (null: no pop-up) */
   confirming: PlacePlan | null = null;
   /** the course being loaded (its id), so a second pick or a cancel in the meantime wins */
@@ -85,16 +93,23 @@ export class RealPlacer {
 
   get active(): boolean { return this.id !== null; }
 
-  /** takes the course `id` in hand: loads it, and says so (and why not) when it cannot go in this map in any turn. True when it is in hand */
-  async start(id: string): Promise<boolean> {
+  /** the course `id` as a spec: a shipped course, else a downloaded one (the host's library); null when it is neither */
+  private async source(id: string): Promise<{ info: RealInfo; spec: OsmCourseSpec } | null> {
     const info = osmCourseInfo(id);
-    if (!info) { this.host.toast('That course is not in this build', 'warn'); return false; }
+    if (info) { const spec = await loadOsmSpec(id); return spec ? { info, spec } : null; }
+    return (await this.host.kept?.(id)) ?? null;
+  }
+
+  /** takes the course `id` (a shipped course's, or a downloaded one's, T358) in hand: loads it, and says so (and why not) when it cannot go in this map in any
+   *  turn. True when it is in hand */
+  async start(id: string): Promise<boolean> {
     this.cancel(false);
     this.loading = id;
-    const spec = await loadOsmSpec(id);
+    const src = await this.source(id).catch(() => null);
     if (this.loading !== id) return false; // (put down, or another picked, while it loaded)
     this.loading = null;
-    if (!spec) { this.host.toast('That course is not in this build', 'warn'); return false; }
+    if (!src) { this.host.toast(osmCourseInfo(id) || !this.host.kept ? 'That course is not in this build' : 'That course is no longer kept in this browser: download it again on the new-game card (Your course)', 'warn'); return false; }
+    const { info, spec } = src;
     const room = this.host.map - 2 * PLACE_EDGE, deg = firstFittingAngle(spec.w, spec.h, room);
     if (deg === null) {
       this.host.toast(`${osmDisplayName(info.name)} is bigger than the map in every direction (${spec.w} x ${spec.h} tiles; the map is ${this.host.map}): the map cannot grow, so pick a smaller or a scaled course`, 'warn');

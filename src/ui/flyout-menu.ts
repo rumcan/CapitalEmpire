@@ -47,8 +47,9 @@ export interface MenuCtx {
   plants: { id: string; name: string; col?: string }[];
   /** T206: the practice facilities (Facilities ▸ Practice) with their own lock besides the tool's (no practice area: not a range start) */
   practice?: { id: string; name: string; why: string | null }[];
-  /** T356: the real courses the game ships (Course > Place a real course): the id and the name the menu shows, with its place, holes and par */
-  real?: { id: string; name: string; place: string; holes: number; par: number }[];
+  /** T356: the real courses (Course > Place a real course): the id and the name the menu shows, with its place, holes and par; `kept`: one the player downloaded
+   *  (T358's library, listed under its own caption), else one the game ships (listed first) */
+  real?: { id: string; name: string; place: string; holes: number; par: number; kept?: boolean }[];
   /** New hole's lock (null: open) */
   newHoleWhy: string | null;
   /** the range card's sections (a game with a range); T288: place, a placement (the range, its car park, the practice area: a click takes it in
@@ -110,7 +111,12 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       const b = byId('buildings');
       if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice)], b), ROW_TILE.buildings));
       // T356 (#998, the owner: "add a way for the user to place the golf course he imported into his map"): the real courses, each placed with its outline in hand
-      if (c.golf && c.real?.length) rows.push(group('real', 'Place a real course…', 'trophy', c.real.map((x): MenuRow => ({ key: `real:${x.id}`, label: x.name, icon: 'pin', note: `${x.place} · ${x.holes} holes · par ${x.par}`, leaf: { item: item.id, entry: { id: 'select', label: x.name, key: '', icon: 'pin' }, act: { k: 'real', id: x.id } } })), h));
+      // (the shipped ones first; the player's downloaded courses under a caption of their own, only when there are some: without, the list is the three alone)
+      if (c.golf && c.real?.length) {
+        const real = (x: NonNullable<MenuCtx['real']>[number]): MenuRow => ({ key: `real:${x.id}`, label: x.name, icon: 'pin', note: `${x.place} · ${x.holes} holes · par ${x.par}`, leaf: { item: item.id, entry: { id: 'select', label: x.name, key: '', icon: 'pin' }, act: { k: 'real', id: x.id } } });
+        const shipped = c.real.filter(x => !x.kept), kept = c.real.filter(x => x.kept);
+        rows.push(group('real', 'Place a real course…', 'trophy', kept.length ? [...(shipped.length ? [{ key: 'real:cap-featured', label: 'Featured', caption: true }, ...shipped.map(real)] : []), { key: 'real:cap-kept', label: 'Downloaded courses', caption: true }, ...kept.map(real)] : shipped.map(real), h));
+      }
       // (T288: Cart paths & roads is a rail button of its own, below Course)
       const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));

@@ -153,8 +153,9 @@ import { normalizeGolfSave, stampWeather, weatherOn, type GolfPlaySave, type Gol
 import { courseSlopeAt, createCourseHeightField, sampleCourseGrid, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
-import { loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, OSM_CREDIT, OSM_LICENCE, type OsmCourseInfo, type OsmCourseSpec } from './golf/osm';
-import { RealPlacer, type RealView } from './golf/osm/placer';
+import { loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, OSM_CREDIT, OSM_LICENCE, type OsmCourseSpec } from './golf/osm';
+import { previewOfKept, realDeps } from './golf/osm/find';
+import { RealPlacer, realInfoOf, type RealInfo, type RealView } from './golf/osm/placer';
 import { cutSpan, goesPhrase, type PlacePlan, type PlaceWorld } from './golf/osm/place';
 import { placeDiff, scratchOf } from './golf/osm/placegrid';
 import { boundsOf, inRects } from './golf/osm/rotate';
@@ -1457,6 +1458,8 @@ export class Game {
     enter: () => { this.setTool('select'); if (this.range.cardOpen) this.openRangeCard(false); if (this.landMode) this.closeLandSale(); },
     holes: () => new Set((this.golf?.pins ?? []).map(p => p.hole)).size,
     lay: c => this.layRealCourse(c),
+    // (T358's library: a downloaded course read back from the browser's IndexedDB, converted as a new game would, scaled to the map when it must be)
+    kept: async id => { const p = await previewOfKept(id, await realDeps()); return p && p.spec.holes.length ? { info: realInfoOf(p.spec), spec: p.spec } : null; },
   });
   /** Course > Place a real course > (a course): takes it in hand (a golf game only; a course too big for the map in every turn is refused, the map cannot grow) */
   startRealPlace(id: string): Promise<boolean> { return this.golf ? this.real.start(id) : Promise.resolve(false); }
@@ -1515,7 +1518,7 @@ export class Game {
    *  dead ends, trimmed as the bulldozer trims them), takes the player's placed items away, paints the course into the grid as one diff through the
    *  grid's own pipeline (the workers, the ground that re-bakes itself, the trees that go), puts the tee markers, pins and aim points (the old holes' go),
    *  and keeps the course's credit. True when it did */
-  private layRealCourse(c: { id: string; info: OsmCourseInfo; spec: OsmCourseSpec; turned: OsmCourseSpec; plan: PlacePlan; deg: number }): boolean {
+  private layRealCourse(c: { id: string; info: RealInfo; spec: OsmCourseSpec; turned: OsmCourseSpec; plan: PlacePlan; deg: number }): boolean {
     const g = this.golf; if (!g) return false;
     const { plan, turned } = c;
     if (!plan.ok || plan.total > this.money) return false;
@@ -1555,12 +1558,14 @@ export class Game {
     g.aims = mk.aims;
     // (a game that was laid on the flat map for a map-data course keeps that: its entry road and no `placed`, so a load lays the flat map again; any other game keeps its own map)
     const was = g.osm, flat = !!was && !was.placed;
-    g.osm = { id: c.id, name: c.info.name, place: c.info.place, credit: OSM_CREDIT, licence: OSM_LICENCE, source: c.spec.source, holes: c.spec.holes.length, par: c.spec.gameParTotal, mappedPar: c.spec.parTotal, ...(c.spec.scale < 1 ? { scale: c.spec.scale } : {}), turn: c.deg, ...(flat ? (was!.entry ? { entry: was!.entry } : {}) : { placed: true as const }) };
+    g.osm = { id: c.id, name: c.info.name, place: c.info.place, credit: OSM_CREDIT, licence: OSM_LICENCE, source: c.spec.source, holes: c.spec.holes.length, par: c.spec.gameParTotal, mappedPar: c.spec.parTotal, ...(c.spec.scale < 1 ? { scale: c.spec.scale } : {}), ...(c.spec.derived ? { derived: true } : {}), turn: c.deg, ...(flat ? (was!.entry ? { entry: was!.entry } : {}) : { placed: true as const }) };
     this.surveySig = ''; this.syncCourseGates(); this.syncCourseMarkers(undefined, true); this.paint.clearHistory(); this.paint.newGame();
     // the camera over the whole land, as a new map-data game has it
     { const o = plan.outline, xs: number[] = [], ys: number[] = []; for (let i = 0; i < o.length; i += 2) { xs.push(worldX(o[i]!, o[i + 1]!)); ys.push(worldY(o[i]!, o[i + 1]!)); }
       const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
       this.camEase = null; this.cam.X = (x0 + x1) / 2; this.cam.Y = (y0 + y1) / 2; this.cam.z = clampZoom(Math.min((this.cssW || 1280) * 0.9 / (x1 - x0), (this.cssH || 800) * 0.8 / (y1 - y0))); this.clampCam(); }
+    // the chunk pictures held are the old place's (the camera has left it): the ones the next frame does not draw go, so the first bakes over the new land have the memory
+    this.ground.purgeUnused();
     this.scheduleSave();
     const goes = goesPhrase(plan);
     this.toast(`Placed ${c.info.name}: ${plan.land.ha >= 10 ? Math.round(plan.land.ha) : plan.land.ha} ha bought${goes ? `, ${goes} cleared` : ''} ($${plan.total.toLocaleString()})`, 'good');

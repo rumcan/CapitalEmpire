@@ -286,19 +286,24 @@ The owner, 2026-11-08: "add a way for the user to place the golf course he impor
 it should auto buy any property or expand the map size so he can place the course. the placing highlight can turn red if you cant place it coz you dont have
 enough money. It should auto build over other roads and buildings by buying the land and destroying everything under it. Add a notification pop up."
 
-**Use:** Course › *Place a real course…* › Rondebosch / Magnolia National / Woodhill. The course's outline follows the pointer; R / Shift+R (or Shift+wheel) turn it
+**Use:** Course › *Place a real course…* › Rondebosch / Magnolia National / Woodhill (*Featured*) and, under *Downloaded courses*, every course the player fetched with the
+new-game card's search (T358, kept in this browser's IndexedDB: the list is read when the page starts and again each time the Course flyout opens, so a course downloaded on the
+card is there at once; none downloaded: no caption, the three alone). The course's outline follows the pointer; R / Shift+R (or Shift+wheel) turn it
 15 degrees, Alt+R one degree, Alt+wheel freely; a click asks (the pop-up), *Place it* lays it, *Cancel* (or Esc, or a right click) leaves everything as it was.
 A map-data game (`?osmcourse=`, the new-game card) is unchanged: it still lays the course on a new flat map.
+A downloaded course is read back from the library and converted as a new game would convert it (`previewOfKept`: scaled to the map when it must be; holes worked out from the fairways
+marked as a guess in the saved game's note, `derived`); it goes through the same plan, pop-up and laying, saved with its library id (`way/4261725`) and `placed`.
 
 | piece | file |
 | --- | --- |
 | the turn: `rotateSpec(spec, deg)` (about the middle of the land, before rasterising; never a mirror; the holes' order, lengths and pars untouched; `rot` and `outline` on the turned spec), `coverStrips` (the land bought), `coverOutline`, `firstFittingAngle` | `src/game/golf/osm/rotate.ts` |
 | the plan of a pose: `planPlace(world, turnedSpec, pose, build)`: land, demolition, refusals, price; `popupText`, `priceLines`, `placeLabel` | `src/game/golf/osm/place.ts` |
 | the grid diff that lays the painted course into the game's course grid and clears the old holes; the build price from the painted spec | `src/game/golf/osm/placegrid.ts` |
-| the mode (state, keys, drawing of the outline and the faint holes, the pop-up's view) | `src/game/golf/osm/placer.ts` |
+| the mode (state, keys, drawing of the outline and the faint holes, the pop-up's view; `RealInfo`, `realInfoOf`, the host's `kept` for a downloaded course) | `src/game/golf/osm/placer.ts` |
+| the downloaded courses for the menu (the library's list kept for the flyout, `refreshKept`, `keptCourses`, `watchKept`) | `src/game/golf/osm/kept.ts` |
 | the engine's host: the world the planner reads, the lay (`Game.layRealCourse`), the pointer, keys, wheel, Esc | `src/game/engine.ts` (`real`, `realWorld`, `layRealCourse`) |
 | the Course menu entry; the card over the map and the pop-up | `src/ui/flyout-menu.ts`, `src/ui/course/RealPlaceCard.tsx`, `src/App.tsx` |
-| tests | `tests/golf-osm-place.test.ts`, `tests/golf-osm-placer.test.ts` |
+| tests | `tests/golf-osm-place.test.ts`, `tests/golf-osm-placer.test.ts`, `tests/golf-osm-kept.test.ts` |
 | shots; bench | `scripts/dev/real-place-shots.mjs`; `scripts/perf/bench.mjs --realplace <id>[,laid]` |
 
 ## How it decides (planPlace)
@@ -328,6 +333,8 @@ are dead ends, trimmed by the bulldozer's `tidyEnds`), removes the player's plac
 through the grid's own pipeline (`applyDiff`, `courseGridChanged`: the workers' cells, the ground that re-bakes itself, the trees that go), clears the old course's holes,
 puts the tee sets, pins and aim points, and saves `golf.osm` with `placed: true` and `turn` (the loader then keeps the game's own map and seed; a new-game map-data
 course has no `placed` and is laid on the flat map as before). Your previous holes are **replaced** by the course's (the pop-up says so); the land they stood on stays yours.
+The camera then goes over the whole land, and the ground cache drops the chunk pictures the next frame does not draw (`GroundCache.purgeUnused`): they are the old place's ground, and the first
+bakes over the new land need the memory (see Performance).
 
 ## Performance (the bench, T356)
 `node scripts/perf/bench.mjs http://localhost:5189/ --start town --seed 7 --stamp 1 --money 1 --size 1 [--realplace rondebosch | --realplace rondebosch,laid] [--zooms 30,30]` on a dev server, 1600 x 900,
@@ -340,12 +347,30 @@ takes a random map (the T340 table above says `--seed 1`).** The budget is 8 ms 
 | in hand, A/B on one page: off (no course) | 0.68 / 0.9 | 0.84 / 1.1 |
 | in hand, the pointer still (the outline and faint holes drawn, the plan kept) | 0.75 / 1.0 (+0.07 ms) | 0.87 / 1.1 (+0.02 ms) |
 | in hand, the pose moved a tile every frame (a replan every frame: the worst a pointer can do) | 1.42 / 1.9 (+0.73 ms) | 1.44 / 1.8 (+0.60 ms) |
-| Rondebosch placed, the first pass over it | 1.18 / 1.8 (21.8 fps) | 1.29 / 1.9 (32.6 fps) |
-| Rondebosch placed, 30% twice: first pass, then second | 1.24 / 1.9 (31.7 fps), then 1.03 / 1.5 (40.9 fps) | |
+| Rondebosch placed, the first pass over it (two runs) | 1.05 / 1.6 (26.4 fps), 1.07 / 1.8 (26.9 fps) | 1.15 / 1.8 (49.5 fps), 1.15 / 1.7 (50.7 fps) |
+| the game as it is, the same day (the base run that goes with them) | 0.80 / 1.2 (58.8 fps) | 0.81 / 1.2 (59.1 fps) |
 
-- **The main thread is nowhere near the budget.** What costs frames after placing is the ground, off the main thread: the first pass over the new course bakes its chunks (median bake 67 to 76 ms
-  against 42 ms) and decodes its textures (158 to 179 tile pictures against 21; the second pass 41), as T340's new-game courses do. The ground plus tile pictures peaked at 198 MB on the first
-  pass (183 MB on the second; GAME-PLAN 2.3's budget is 192): a few MB over for the first pass only.
+**Memory: the chunk pictures plus the tile caches** (`groundPlusTilesPeakMB` of the bench, MB of 1e6 bytes; GAME-PLAN 2.3's budget is 192; the most over the frames of a stage), the same command:
+
+| | 30% pan | 15% pan |
+| --- | --- | --- |
+| placed, before the fix (two runs) | 198, 198 | 191, 195 |
+| placed, after (two runs) | **185, 185** | **185, 186** |
+| the game as it is (before / after: nothing placed, the cache change only) | 185 / 186 | 189 / 185 |
+
+- **The main thread is nowhere near the budget.** What costs frames after placing is the ground, off the main thread: the first pass over the new course bakes its chunks (median bake 56 to 62 ms
+  against 37) and decodes its textures (109 to 124 tile pictures against 16 to 24 as it is; 18 in the 15% pass), as T340's new-game courses do.
+- **Two things held the first pass over 192 MB, both fixed.** (1) The old town's chunk pictures (about 46 MB, mostly the ground of the place the camera had left) stayed resident beside the first bakes over the
+  new land, and a chunk of a course lays a dozen tile sets: its bake pins about 150 MB of tile pictures in the one ground worker at once (198 MB = 46 + 151.7). `layRealCourse` now calls
+  `GroundCache.purgeUnused()`: the next frame drops every chunk picture it does not draw (a few dozen `deleteTexture` calls once; the frame costs are below), the tile budget
+  (what the chunk pictures leave of the 192) grows by as much, and the first pass redecodes less (109 to 124 decodes, 101 to 116 of them redecodes, against 158 to 179 and 150 to 177).
+  (2) The mips and pre-scaled copies (the swamp's) a bake makes while it draws were counted after the bake, so a full cache stood up to 9 MB past its budget at the end of a bake (145 MB against 136):
+  `TileCache.pinOf` (wired to `Textures.tilePinned`, the bake in hand's tiles) now trims the least recently used pictures of the other tiles at once when a draw makes one, the same pictures
+  the trim after the bake would have dropped (`tests/tile-cache.test.ts`). No bake lost a tile to it: `groundProvisional` (bakes that fell back to a placeholder for a tile not ready) stays 0.
+- **What is left.** The sum is the chunk pictures plus the tile caches, the second held to what the first leaves less 8 MB (`TILE_SLACK`), so a full cache sits at about 184 MB and a bake whose
+  pinned tiles alone are bigger than its share (a chunk with every surface of a course on it) can still reach past it for the length of that bake, more when the chunk pictures have filled
+  their own 128 MB budget in a long session (the floor of the tile budget is what that budget leaves, 64 MB). That is the design of T272, the same in the game as it is (185 to 189 MB above); a
+  bound on the tiles one bake may pin (two passes by layer, or the chunk pictures giving way to the overflow) is a ticket of its own.
 - **Laying it** costs 268 ms of main thread in the bench (about 750 ms from the click to the next frame in the shots: the grid diff of every painted cell of the course, then the ground's re-bake in the workers).
 - **The plan** (`planPlace`) on a synthetic town: 3,750 lots and 1,250 road pieces 1.3 to 2.1 ms a pose, 12,150 lots and 4,050 pieces 3.6 to 5 ms (the lots' boxes, the land classes and the road graph are kept
   between poses; `output/plan-bench` is not committed). It runs when the pose changes, never for a pointer that holds still.

@@ -75,7 +75,8 @@ export interface OsmCourseSpec {
   /** how many polygons of each map kind the spec uses (for the tests and the card) */
   counts: Record<string, number>;
   /** T356 (#998): a spec turned by the placing mode (rotate.ts rotateSpec): the turn, degrees clockwise (absent: as converted), and the land's outline in
-   *  the frame, the four corners of the oriented rectangle the land is, flat x, y (absent: the frame itself); w and h are then the box round it */
+   *  the frame, the four corners of the oriented rectangle the land is, flat x, y (absent: the frame itself); w and h are then the box round it. A turned spec
+   *  keeps the unturned `originM` (the preview, which reads it, only ever sees the spec as converted) */
   rot?: number; outline?: number[];
 }
 
