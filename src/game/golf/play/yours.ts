@@ -14,6 +14,7 @@ import { TILE_M } from '../types';
 import { holeFrom } from './courseview';
 import { shotOutcome, POWER, type OwnerInput, type OwnerTurn } from './live';
 import { carryFor, chooseShot, rng, type ShotSkill } from './shot';
+import { hasMech } from './mods';
 import type { CourseView, Landing, Lie, PlayHole, Pt, Shot } from './types';
 import type { TeeKind } from '../types';
 import { normalizeMatch, type MatchPlay, type MatchView } from './match';
@@ -60,7 +61,9 @@ export function pickHoles(n: number, choice: HoleChoice, picked: readonly number
  *  holed (done) or was picked up at par + PICK_UP_OVER. T325: the mulligans taken on it (absent: none) */
 export interface CardRow { i: number; n: number; par: number; strokes: number; putts: number; pen: number; done: boolean; up?: boolean; mull?: number;
   /** T327: the hole was finished with a gimme (a short putt conceded, counted as a putt) */
-  gim?: boolean }
+  gim?: boolean;
+  /** T337 (#963): the Snowman Eraser rubbed a double bogey or worse out to a bogey on this hole; the Scramble Captain's second ball was hit from its tee (the nine's one is used) */
+  er?: true; scr?: true }
 
 /** T325 (#925): mulligans in your own round: none, one per nine (the default), or as many as you like */
 export type MullRule = 'none' | 'nine' | 'any';
@@ -101,7 +104,9 @@ export interface YourRound { v: 1; day: number; holes: number[]; at: number; car
   /** T244: a money match's other side (play/match.ts: the opponent, the stake, their ball, each hole's result); present with mode 'match' */
   match?: MatchPlay;
   /** T349 (#992): a practice round from the hole card's Play: free, not an event, not recorded (no handicap, reputation or money); absent: your round as before */
-  practice?: true }
+  practice?: true;
+  /** T337 (#963): the Snowman Eraser was used this round (once); Cold Beer, Hot Hands: the holes of nerve left (set to HOT_HOLES + 1 by a birdie, one less each hole you go on to: the bonus is on while it is above 0); absent: none */
+  er?: true; hot?: number }
 /** T246/T244: a round's mode (YourRound.mode) */
 export type RoundMode = 'casual' | 'championship' | 'mayors-cup' | 'match';
 export const ROUND_MODES: readonly RoundMode[] = ['casual', 'championship', 'mayors-cup', 'match'];
@@ -153,22 +158,43 @@ const streamOf = (seed: number, r: YourRound, i: number, k: number) => rng(seed,
 export function playYours(view: CourseView, r: YourRound, sk: ShotSkill, input: Omit<OwnerInput, 'holeIdx' | 'stroke'>, seed: number): { round: YourRound; shot: Shot; up: boolean } {
   if (r.over || r.holed) throw new Error('playYours: no shot to play');
   const row = rowOf(r), hole = holeOf(view, row.i); if (!hole) throw new Error(`playYours: no hole ${row.i}`);
-  const stroke = row.strokes + 1, o = shotOutcome(view, hole, r.ball, r.lie, sk, input, streamOf(seed, r, row.i, stroke));
+  // (T337: the Scramble Captain's second ball: once a nine, off the tee, only with the card: the input's flag counts only then and marks the hole)
+  const scr = input.scr === true && scrambleLeft(r, sk) > 0 && r.lie === 'tee' && row.strokes === 0, inp = input.scr && !scr ? { ...input, scr: undefined } : input;
+  const stroke = row.strokes + 1, o = shotOutcome(view, hole, r.ball, r.lie, sk, inp, streamOf(seed, r, row.i, stroke), { last: r.at === r.holes.length - 1 });
   const strokes = row.strokes + 1 + o.penalty, putts = row.putts + (input.club === 'putter' ? 1 : 0), cap = row.par + PICK_UP_OVER;
   const up = !o.holed && strokes >= cap, holed = o.holed || up;
-  const nrow: CardRow = { ...row, strokes: up ? cap : strokes, putts, pen: row.pen + o.penalty, done: holed, ...(up ? { up: true } : {}) };
+  let nrow: CardRow = { ...row, strokes: up ? cap : strokes, putts, pen: row.pen + o.penalty, done: holed, ...(up ? { up: true } : {}), ...(scr ? { scr: true as const } : {}) };
+  let er = r.er, hot = r.hot;
+  // (T337: not in a money match, whose holes are decided by the strokes as they were played; the Snowman Eraser: once a round a double bogey or worse is rubbed out to a bogey; Cold Beer, Hot Hands: a birdie or better is two holes of nerve)
+  if (holed && !r.match) {
+    if (hasMech(sk, 'eraser') && !er && nrow.strokes >= nrow.par + 2) { nrow = { ...nrow, strokes: nrow.par + 1, er: true }; er = true; }
+    if (hasMech(sk, 'hands') && nrow.strokes <= nrow.par - 1) hot = HOT_HOLES + 1;
+  }
   const card = r.card.slice(); card[r.at] = nrow;
   const shot: Shot = { golfer: -1, hole: row.i, stroke, t: 0, from: { x: r.ball.x, y: r.ball.y }, to: o.to, club: input.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
   const { undo: _u, ...before } = r; void _u;
-  return { round: { ...r, card, ball: { x: o.to.x, y: o.to.y }, lie: o.lie, holed, over: holed && r.at === r.holes.length - 1, undo: before }, shot, up };
+  return { round: { ...r, card, ball: { x: o.to.x, y: o.to.y }, lie: o.lie, holed, over: holed && r.at === r.holes.length - 1, undo: before, ...(er ? { er } : {}), ...(hot !== undefined ? { hot } : {}) }, shot, up };
+}
+
+/** T337: Cold Beer, Hot Hands: the holes of nerve a birdie or better gives (the next two), and the nerve (skill points) it adds */
+export const HOT_HOLES = 2, HOT_NERVE = 20;
+/** the nerve bonus a round gives now (Cold Beer, Hot Hands): HOT_NERVE while it has holes left, else 0 */
+export const hotNerve = (r: Pick<YourRound, 'hot'> | null | undefined): number => r?.hot && r.hot > 0 ? HOT_NERVE : 0;
+/** T337: the Scramble Captain's second balls left on the nine you are on (the card's allowance: one a nine; 0 without the mechanic, in a match or a competition: the card is banned in one) */
+export function scrambleLeft(r: YourRound | null | undefined, sk: ShotSkill): number {
+  if (!r || !hasMech(sk, 'scramble') || r.match || isCompetition(r)) return 0;
+  const k0 = Math.floor(r.at / 9) * 9; let used = 0;
+  for (let k = k0; k < Math.min(r.card.length, k0 + 9); k++) used += r.card[k]!.scr ? 1 : 0;
+  return Math.max(0, 1 - used);
 }
 
 /** on to the next hole (after a hole is holed): the ball on its tee; the round as it is when the hole is not done or the round is over */
 export function nextHole(view: CourseView, r: YourRound): YourRound {
   if (!r.holed || r.over || r.at + 1 >= r.holes.length) return r;
   const at = r.at + 1, h = holeOf(view, r.holes[at]!); if (!h) return { ...r, over: true };
-  const { undo: _u, ...rest } = r; void _u;
-  return { ...rest, at, ball: { x: h.tee.x, y: h.tee.y }, lie: 'tee', holed: false };
+  const { undo: _u, hot: h0, ...rest } = r; void _u;
+  // (T337: Cold Beer, Hot Hands: one hole of the nerve is behind you)
+  return { ...rest, at, ball: { x: h.tee.x, y: h.tee.y }, lie: 'tee', holed: false, ...(h0 !== undefined && h0 > 1 ? { hot: h0 - 1 } : {}) };
 }
 
 /** T325: the mulligans left now (Infinity: unlimited): none under 'none'; one per nine of the round (holes 1-9 of it, 10-18) under 'nine' */
@@ -233,6 +259,7 @@ export function normalizeYourRound(x: unknown): YourRound | undefined {
   const holes = o.holes.filter(n).map(Math.round), card = o.card.filter(c => c && n(c.i) && n(c.par) && n(c.strokes)).map(c => ({
     i: Math.round(c.i), n: n(c.n) ? Math.round(c.n) : Math.round(c.i) + 1, par: Math.round(c.par), strokes: Math.max(0, Math.round(c.strokes)), putts: n(c.putts) ? Math.max(0, Math.round(c.putts)) : 0,
     pen: n(c.pen) ? Math.max(0, Math.round(c.pen)) : 0, done: c.done === true, ...(c.up === true ? { up: true } : {}), ...(n(c.mull) && c.mull >= 1 ? { mull: Math.round(c.mull) } : {}), ...(c.gim === true ? { gim: true } : {}),
+    ...(c.er === true ? { er: true as const } : {}), ...(c.scr === true ? { scr: true as const } : {}), // (T337)
   }));
   if (!holes.length || holes.length !== card.length || holes.some((h, k) => card[k]!.i !== h)) return undefined;
   const at = Math.max(0, Math.min(holes.length - 1, Math.round(o.at)));
@@ -241,6 +268,7 @@ export function normalizeYourRound(x: unknown): YourRound | undefined {
   const ru = o.rules as Partial<RoundRules> | undefined;
   if (ru && typeof ru === 'object' && MULL_RULES.some(m => m.id === ru.mull)) base.rules = { mull: ru.mull!, ...(GIMME_RULES.some(g => g.id === ru.gimme) ? { gimme: ru.gimme! } : {}) };
   if (n(o.mk) && o.mk >= 1) base.mk = Math.round(o.mk);
+  if (o.er === true) base.er = true; if (n(o.hot) && o.hot >= 1) base.hot = Math.min(HOT_HOLES + 1, Math.round(o.hot)); // T337: the Snowman Eraser used, the nerve holes left
   if (o.practice === true && !o.mode) base.practice = true; // T349: a casual round that is practice (a competition or a match never is)
   if (o.mode && ROUND_MODES.includes(o.mode) && o.mode !== 'casual') { base.mode = o.mode; base.rules = { ...COMPETITION_RULES }; } // (T246: a competition keeps its rules)
   if (base.mode === 'match') { const m = normalizeMatch(o.match, holes.length); if (m) base.match = m; else delete base.mode; } // (T244: a match without its other side is a casual round)

@@ -78,6 +78,7 @@ import { StaffCard } from './ui/golf/StaffCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
 import { BagCard } from './ui/golf/BagCard';
 import { CardsCard } from './ui/golf/CardsCard';
+import { CardsHelp } from './ui/golf/CardsHelp';
 import { VendingMachine } from './ui/golf/VendingMachine';
 import { TalkCard, TeeAskCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
 import { MatchResultCard, ReturnChallengeCard } from './ui/golf/MatchCards';
@@ -161,7 +162,7 @@ export default function App() {
   useEffect(() => { void refreshKept(); return watchKept(bump); }, []);
   const [help, setHelp] = useState(false);
   /** T202: the Help card's tab: the keys (Help › Keys: the ? button, ? and F1) or how it works */
-  const [helpTab, setHelpTab] = useState<'keys' | 'how'>('keys');
+  const [helpTab, setHelpTab] = useState<'keys' | 'how' | 'cards'>('keys');
   /** T202: the lot lab's keys (dev builds, ?lotlab: the Keys sheet there is the lab's, under its own heading) */
   const [labKeys, setLabKeys] = useState<LabKeys | null>(null);
   useEffect(() => { if (import.meta.env.DEV && new URLSearchParams(location.search).has('lotlab')) void import('./game/dev/lot-lab-ui').then(m => setLabKeys(m.KEYS)); }, []);
@@ -409,7 +410,7 @@ export default function App() {
   /** T202: Help (the Keys sheet and How it works); in the lot lab the lab's keys alone, drawn on the page over the lab's panels (the lab hides
    *  the App's layer under them: lot-lab.ts) */
   const helpCard = game && game.ready && help
-    ? <Help tab={lab ? 'keys' : helpTab} onTab={setHelpTab} onClose={() => setHelp(false)} lab={lab} onTour={!lab && game.golf?.progress ? () => { setHelp(false); game.replayTour(); } : undefined} keys={keySheet({ golf: game.golfMode, ui: game.toolUi(), range: !!game.range.scene, lab: lab ? labKeys ?? [] : null })} />
+    ? <Help tab={lab ? 'keys' : helpTab} onTab={setHelpTab} onClose={() => setHelp(false)} lab={lab} cards={!lab && game.golf ? game.golf.player?.cards?.own ?? [] : null} onTour={!lab && game.golf?.progress ? () => { setHelp(false); game.replayTour(); } : undefined} keys={keySheet({ golf: game.golfMode, ui: game.toolUi(), range: !!game.range.scene, lab: lab ? labKeys ?? [] : null })} />
     : null;
 
   return (
@@ -2054,19 +2055,22 @@ function hintFor(g: Game) {
 }
 
 /** Help (T202: two tabs: Keys, the Keys sheet, and How it works) */
-function Help({ onClose, tab, onTab, keys, lab, onTour }: { onClose: () => void; tab: 'keys' | 'how'; onTab: (t: 'keys' | 'how') => void; keys: ReturnType<typeof keySheet>; lab: boolean; /** T293: replays the start tutorial (a golf game) */ onTour?: () => void }) {
+type HelpTab = 'keys' | 'how' | 'cards';
+function Help({ onClose, tab, onTab, keys, lab, onTour, cards }: { onClose: () => void; tab: HelpTab; onTab: (t: HelpTab) => void; keys: ReturnType<typeof keySheet>; lab: boolean; /** T293: replays the start tutorial (a golf game) */ onTour?: () => void;
+  /** T337 (#963): a golf game has the Cards page: every card with its inspiration (the ids of the ones you have won); null: not a golf game */ cards?: readonly string[] | null }) {
   return (
     <div className={`${lab ? 'fixed' : 'absolute'} inset-0 z-40 flex items-center justify-center bg-black/60 p-4`} style={lab ? { zIndex: 75 } : undefined} onClick={onClose}>
-      <div className={`help-card rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl ${tab === 'keys' ? 'help-card-wide' : 'max-w-xl'}`} onClick={e => e.stopPropagation()} role="dialog" aria-label="Help" data-testid="help">
+      <div className={`help-card rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl ${tab === 'keys' ? 'help-card-wide' : tab === 'cards' ? 'max-w-3xl' : 'max-w-xl'}`} onClick={e => e.stopPropagation()} role="dialog" aria-label="Help" data-testid="help">
         <div className="flex flex-wrap items-center gap-2">
           {lab ? <div className="text-lg font-bold text-amber-200">Keys</div> : <div className="seg" role="tablist">
             <button role="tab" aria-selected={tab === 'keys'} className={`px-4 ${tab === 'keys' ? 'on' : ''}`} onClick={() => onTab('keys')} data-testid="help-keys">Keys</button>
             <button role="tab" aria-selected={tab === 'how'} className={`px-4 whitespace-nowrap ${tab === 'how' ? 'on' : ''}`} onClick={() => onTab('how')}>How it works</button>
+            {cards && <button role="tab" aria-selected={tab === 'cards'} className={`px-4 whitespace-nowrap ${tab === 'cards' ? 'on' : ''}`} onClick={() => onTab('cards')} data-testid="help-cards-tab">Cards</button>}
           </div>}
           {onTour && <button className="chip px-3" onClick={onTour} data-testid="help-tour" title="The short tutorial from the start: your town, and the roads it grows along"><Icon name="play" size={16} />Replay the start tutorial</button>}
           <span className="ml-auto text-[12px] text-slate-400"><span className="keycap">?</span> or <span className="keycap">F1</span> opens this · <span className="keycap">Esc</span> closes</span>
         </div>
-        {tab === 'keys' ? <KeysSheet sections={keys} /> : <>
+        {tab === 'keys' ? <KeysSheet sections={keys} /> : tab === 'cards' && cards ? <CardsHelp owned={cards} /> : <>
         <div className="mt-3 text-lg font-bold text-amber-200">How Maple Falls works</div>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-slate-300">
           <li><b>Roads</b> are drawn as connected routes, exactly like the town builder: click points, finish with Enter or a double-click. Everything on the ground — asphalt, kerbs, sidewalk slabs, rounded corners, crossings, centre lines, manholes and drains — is generated geometry, so a new road appears instantly, no ground rebuild.</li>

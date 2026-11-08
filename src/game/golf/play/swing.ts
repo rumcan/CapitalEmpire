@@ -57,13 +57,14 @@ export function meterMark(p: number, putting: boolean): number {
 
 /** what a swing's outcome does to the shot, for the club's skill (0..1) and a putt or a full shot (see SwingEffect). Pure: the same outcome and skill always
  *  give the same effect, so a replay plays the same shot */
-export function swingEffect(o: SwingOutcome, skill: number, putting: boolean, sweet = 1): SwingEffect {
+export function swingEffect(o: SwingOutcome, skill: number, putting: boolean, sweet = 1, miss = 1): SwingEffect {
   const boost = clamp(o.boost, 0, BOOST.max), pw = clamp(o.power, 0, METER.top), acc = clamp(o.acc, METER.low, METER.top);
   const w = sweetSpot(skill, boost, sweet), off = Math.abs(acc) <= w ? 0 : (Math.abs(acc) - w) * Math.sign(acc);
   // early (acc > 0) misses left (-), late misses right (+)
-  const k = putting ? MISS.puttDeg : MISS.fullDeg, mx = putting ? MISS.puttMax : MISS.fullMax, deg = off === 0 ? 0 : -Math.sign(off) * Math.min(mx, Math.abs(off) * k);
-  const big = !putting && Math.abs(deg) >= MISS.hookDeg;
-  const shape: SwingShape = deg === 0 ? 'straight' : deg < 0 ? (big ? 'hook' : 'pull') : (big ? 'slice' : 'push');
+  const k = putting ? MISS.puttDeg : MISS.fullDeg, mx = putting ? MISS.puttMax : MISS.fullMax, deg0 = off === 0 ? 0 : -Math.sign(off) * Math.min(mx, Math.abs(off) * k);
+  // (T337: `miss`, the factor his mods put on the angle of the miss: the Self-Correcting Ball's 0.5; the miss is named by what it was, a hook that went half as far offline is still a hook)
+  const deg = miss === 1 ? deg0 : deg0 * miss, big = !putting && Math.abs(deg0) >= MISS.hookDeg;
+  const shape: SwingShape = deg0 === 0 ? 'straight' : deg0 < 0 ? (big ? 'hook' : 'pull') : (big ? 'slice' : 'push');
   if (putting) return { power: Math.max(MIN_SWING_POWER, pw + boost), deg, spread: 1, shape, carry: 1, roll: 1 };
   const base = pw <= 1 ? pw : 1 + OVER.carry * (pw - 1);
   const spread = (1 + OVER.spread * Math.max(0, pw - 1)) * (1 + BOOST.spread * boost / BOOST.max);

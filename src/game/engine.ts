@@ -215,8 +215,9 @@ import { missingParts, missingWhy, practicePick, realHoleCount, type PracticeSco
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
 import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, gearOf, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withBag, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { gearFor, withCards } from './golf/player'; // T336 (#962): your cards
-import { hasMech } from './golf/play';
-import { addCard, addPull, bestGrade, cardById, cardsInPlay, cardsView, createSpin, earnFromMatch, earnFromPlace, emptyCards, equipCard as equipInCards, equipWhy, rollPrize, takePull, unequipCard as unequipFromCards, unequipWhy, vendingView, type CardsSave, type CardsView, type Earn, type Grade, type PlayCard, type VendingSpin, type VendingView } from './golf/cards';
+import { MECH_IDS, PUTT_V2, greenRead, hasMech, laserLines, laserReport, type MechId, type ModCtx } from './golf/play';
+import { hotNerve, scrambleLeft } from './golf/play/yours';
+import { addCard, addPull, bestGrade, cardById, cardEco, cardsInPlay, cardsView, createSpin, earnFromMatch, earnFromPlace, emptyCards, equipCard as equipInCards, equipWhy, rollPrize, takePull, unequipCard as unequipFromCards, unequipWhy, vendingView, type CardsSave, type CardsView, type Earn, type Grade, type PlayCard, type VendingSpin, type VendingView } from './golf/cards';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -386,7 +387,11 @@ interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: numbe
 interface OwnerPlay { id: number; sex: Sex; /** T241: his skill (OWNER_SKILL) or his skills by part of the game (your profile's as he joined) */ skill: ShotSkill; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null; /** T254: his tee set */ tees?: TeeKind;
   /** T241: your profile's skills as he joined (saved, so a reload replays the same round) */ skills?: GameSkills }
 /** the owner's open shot (P4b, the shot panel): his turn and his input so far (the club, the aim point in tiles, the power: see powerFor) */
+/** T337 (#963): what the cards that read the course add to the shot panel (Game.shotTools): lines of words, the second ball's toggle (how many are left on the nine, whether it is on), and the pace window's half width on the meter */
+export interface ShotTools { lines: string[]; scramble: { left: number; on: boolean } | null; paceHalf: number | null }
 export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number };
+  /** T337: the second ball is on for this tee shot (the Scramble Captain) */
+  scr?: true;
   /** T318: the spin's dot on the ball (spin.ts: x -1 draw .. +1 fade, y -1 backspin .. +1 topspin); absent: none */
   spin?: { x: number; y: number };
   /** T334 part 2: the shape picked before the swing (shape.ts: the curve and the flight); absent: straight and normal */
@@ -8190,7 +8195,7 @@ export class Game {
    *  price). The hook P26 fills: null until the teaching pro is built */
   lessonFor(_kind: PracticeKind): Lesson | null {
     const l = this.golf?.player?.lesson; // T214: a lesson booked with your pro today and not used yet, with any session (golf/pros.ts)
-    return l && !l.used && l.day === this.townNow().day && this.proTeaches() ? { bonus: LESSON_BONUS, price: PLAYER_LESSON_PRICE } : null;
+    return l && !l.used && l.day === this.townNow().day && this.proTeaches() ? { bonus: LESSON_BONUS * cardEco(this.golf?.player?.cards).lesson, price: PLAYER_LESSON_PRICE } : null; // (T337: the Lesson Voucher Book doubles it)
   }
   /** the town day and its minute now */
   private townNow() { const tr = this.traffic; return townTimeOf(tr.town, tr.simTime(performance.now())); }
@@ -8361,7 +8366,33 @@ export class Game {
     return cardsInPlay(c, s.input.club, s.mine ? isCompetition(this.yourRound()) : true);
   }
   /** the moves of the swing and the shot the open shot's golfer may make (the Space power-spam: Power Mash; spin added in the air: Mid-Flight Whisper; a save from before the cards has both) */
-  shotCan(): { boost: boolean; airspin: boolean } { const sk = this.shotSk(); return { boost: hasMech(sk, 'boost'), airspin: hasMech(sk, 'airspin') }; }
+  shotCan(): Record<MechId, boolean> { const sk = this.shotSk(); return Object.fromEntries(MECH_IDS.map(m => [m, hasMech(sk, m)])) as Record<MechId, boolean>; }
+  /** T337 (#963): the open shot's second ball, switched on before the swing (the Scramble Captain: off the tee, once a nine); a toast says why not */
+  setShotScramble(on: boolean) {
+    const s = this.shot, r = this.yourRound(), sk = this.shotSk(); if (!s || !s.mine) return;
+    if (on && (!r || sk === null || r.lie !== 'tee' || scrambleLeft(r, sk) <= 0)) { this.toast('No second ball to take: once a nine, off the tee, with the Scramble Captain', 'warn'); return; }
+    const { scr: _o, ...rest } = s; void _o; this.shot = on ? { ...rest, scr: true } : rest; this.emit();
+  }
+  /** T337: the laser's last report (its lines) and the ball, aim and pin it was read for */
+  private laserMemo: { key: string; lines: string[] } | null = null;
+  /** T337: what the cards that read the course add to the shot panel: the laser's lines (the distance to the pin to a tenth of a metre and the carry to water, sand, out of bounds and the green along the line), Slope Mode's rise to the pin, Read the Feet's
+   *  green read on a putt, the Mic'd-Up Caddie's club and whether you are on his line, the second ball's toggle, and the pace window on a putt (the half width of the meter's perfect stop, in meter units). Null with no shot or no tool */
+  shotTools(): ShotTools | null {
+    const s = this.shot, sk = this.shotSk(); if (!s || sk === null) return null;
+    const can = this.shotCan(), t = s.turn, club = s.input.club, putting = club === 'putter', v = s.mine ? this.yrView() : this.play?.view ?? null, lines: string[] = [];
+    if (can.laser && v && !putting) { // (the panel renders far more often than the ball, the aim or the pin move, and a report is a lie read every 2 m along the line: kept for the ones it was read for)
+      const key = `${t.ball.x},${t.ball.y},${s.input.aim.x},${s.input.aim.y},${t.pin.x},${t.pin.y}`;
+      if (this.laserMemo?.key !== key) this.laserMemo = { key, lines: laserLines(laserReport(v, t.ball, s.input.aim, t.pin)) };
+      lines.push(...this.laserMemo.lines);
+    }
+    if (can.slope && !putting) { const h = this.ballHeight; if (h) { const rise = h(t.pin.x, t.pin.y) - h(t.ball.x, t.ball.y); lines.push(Math.abs(rise) < 0.05 ? 'Slope Mode: the pin is level with you' : `Slope Mode: the pin is ${Math.abs(rise).toFixed(1)} m ${rise > 0 ? 'above' : 'below'} you`); } }
+    if (can.read && putting) lines.push(greenRead(this.ballHeight, t.ball, t.pin).text);
+    if (can.caddie) lines.push(`Caddie: ${CLUB_NAME[t.suggested.club]} at the line${this.shotFollow() ? ': you are on his line, +5 on every skill' : ': play his club on his line for +5 on every skill'}`);
+    const r = s.mine ? this.yourRound() : null, left = can.scramble && r ? scrambleLeft(r, sk) : 0;
+    const scramble = left > 0 && t.lie === 'tee' ? { left, on: !!s.scr } : null;
+    const kit = kitOf(sk, club, this.shotCtx()), paceHalf = can.pace && putting && t.distM > 0.2 ? Math.min(0.5, PUTT_V2.windowM * kit.feel / t.distM) : null;
+    return lines.length || scramble || paceHalf !== null ? { lines, scramble, paceHalf } : null;
+  }
 
   // the vending machine (golf/cards vending.ts, copied from TrickOrTreat's): a spinning reel that slows onto the prize, like a case opening
   /** the machine is open, and the spin on its reel (null: none yet) */
@@ -8922,7 +8953,8 @@ export class Game {
   private yourSkills(): ShotSkill {
     // T246: a competition round (your Club Championship, the Mayor's Cup; T244's money match) plays at its pressure
     const p = this.playerNow(), r = p?.round, pr = r?.mode === 'match' ? PRESSURE.match : isCompetition(r) ? PRESSURE.tournament : PRESSURE.everyday;
-    return p ? gameSkills(p.skills, pr, gearFor(p, pr)) : OWNER_SKILL; // (T335: your bag's clubs, upgrades and putter fitting are in your game; T336: and your cards, but a card banned in competition in a competition's)
+    const hot = hotNerve(r); // (T337: Cold Beer, Hot Hands: +20 nerve for the two holes after a birdie)
+    return p ? gameSkills(hot ? { ...p.skills, nerve: p.skills.nerve + hot } : p.skills, pr, gearFor(p, pr)) : OWNER_SKILL; // (T335: your bag's clubs, upgrades and putter fitting are in your game; T336: and your cards, but a card banned in competition in a competition's)
   }
   /** the course your round is played on: the everyday course (each hole once), null with none */
   private yrView(): CourseView | null { const c = this.dayCourseOf(performance.now()); return c && c.view.holes.length ? c.view : null; }
@@ -9051,11 +9083,12 @@ export class Game {
   private yourHit(swing?: SwingOutcome) {
     const s = this.shot, r = this.yourRound(), v = this.yrView(); if (!s?.mine || !r || !v) return;
     const sk = this.yourSkills(), i = s.input;
-    const spin = this.shotSpin(), env = this.shotEnv(), input = { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(s.shape && i.club !== 'putter' ? { shape: s.shape } : {}), v: MODEL_V };
+    // (T337: played as the caddie said, with the Mic'd-Up Caddie; a second ball off the tee, with the Scramble Captain, the nine's one: both saved with the input)
+    const spin = this.shotSpin(), env = this.shotEnv(), input = { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(s.shape && i.club !== 'putter' ? { shape: s.shape } : {}), ...(this.shotFollow() ? { cad: true as const } : {}), ...(s.scr && scrambleLeft(r, sk) > 0 && r.lie === 'tee' ? { scr: true as const } : {}), v: MODEL_V };
     const { round, shot, up } = r.match ? playMatchYours(v, r, sk, input, this.seed) : playYours(v, r, sk, input, this.seed); // (T244: a match's hole is decided as it goes)
     this.yrLastInput = { club: i.club, aim: { x: i.aim.x, y: i.aim.y }, power: i.power }; // (T325: a mulligan opens the shot again on it)
     this.spinAir = spin && hasMech(sk, 'airspin') ? { mine: true, input: { ...input, spin }, lie: r.lie, prev: r, seen: false, at: performance.now() } : null; // (T336: clicks in the air are Mid-Flight Whisper's: without it the ball flies on its dot's spin alone)
-    this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(sk, i.club), i.club === 'putter', kitOf(sk, i.club).sweet) : null, this.shotNote(s.shape, env, i.club, shot));
+    this.lastShot = shotReport(shot, swing ? this.swingFx(sk, i.club, swing, this.shotCtx()) : null, this.shotNote(s.shape, env, i.club, shot, kitOf(sk, i.club).wind));
     this.toast(this.lastShot.text, 'info');
     this.shot = null; this.setYourRound(round);
     if (this.you) { this.you.swing = 0; this.you.putt = shot.club === 'putter'; } // (the drive clip plays once; T212: a putt, the putt clip)
@@ -9274,6 +9307,7 @@ export class Game {
     const g = this.golf; if (!g) return;
     const ev = this.clubEv(), d = ev.today; if (!d || d.done) return;
     const res: EventResult = eventResult(d, you);
+    { const k = res.won ? cardEco(this.playerNow()?.cards, true).prize : 1; if (k !== 1) res.money = Math.round(res.money * k); } // (T337: the Sponsor Tent: a title's prize is half as much again)
     d.done = true; ev.last = res;
     // T336: a title (gold), a podium finish (silver) or the top quarter of the field (bronze) pays a card pull (golf/cards earning.ts)
     const earn = earnFromPlace(res.pos, res.of, `the ${CLUB_EVENTS[d.id].name}`); if (earn) this.pullFor.set(`event:${d.id}`, this.grantPull(earn)); else this.pullFor.delete(`event:${d.id}`);
@@ -9392,16 +9426,18 @@ export class Game {
    *  lengths the course offers, your record against them, why you cannot challenge now (null: you can), and their last answer */
   matchOffer(): { name: string; hcp: number; yourHcp: number; purse: number; money: number; max: number; lengths: number[]; rival: string | null; why: string | null; answer: { yes: boolean; line: string } | null } | null {
     const t = this.youTalk, p = this.playerNow(); if (!t || t.hcp === null || !p) return null;
-    const rival = p.rivals?.find(x => x.name === t.name) ?? null, o = opponentOf(t.name, rival?.hcp ?? t.hcp, rival, this.townNow().day), v = this.yrView();
+    const rival = p.rivals?.find(x => x.name === t.name) ?? null, o = this.hustled(opponentOf(t.name, rival?.hcp ?? t.hcp, rival, this.townNow().day), p), v = this.yrView(); // (T337: Skins Hustler: the purse an opponent brings is bigger)
     const lengths = matchLengths(v?.holes.length ?? 0), max = maxStake(this.money, o.purse);
     const cur = this.yourRound(), why = cur?.match?.name === t.name ? 'Your match is on: see you on the tee' : cur ? 'Finish your round first' : !v || !lengths.length ? 'The course has no holes to play yet' : this.yourChoices().why ?? (max ? null : o.purse < 10 ? `${firstName(t.name)} is cleaned out` : 'You cannot cover the least stake ($10)');
     return { name: t.name, hcp: o.hcp, yourHcp: handicapOf(p.skills), purse: o.purse, money: Math.floor(this.money), max, lengths, rival: rival ? rivalText(rival) : null, why, answer: t.answer ?? null };
   }
+  /** T337: an opponent with the purse your Skins Hustler card makes of it (matchStake: they carry that much more, so they take bigger stakes); as it is without the card */
+  private hustled<O extends { purse: number }>(o: O, p: PlayerProfile): O { const k = cardEco(p.cards).matchStake; return k === 1 ? o : { ...o, purse: Math.round(o.purse * k) }; }
   /** you challenge the person you are talking to: n holes for the stake. They answer (golf/play/match.ts answerOf); a yes starts the match on the first tee */
   challengeMatch(stake: number, n: number) {
     const t = this.youTalk, p = this.playerNow(), off = this.matchOffer(); if (!t || !p || !off) return;
     if (off.why) { this.toast(off.why, 'warn'); return; }
-    const rival = p.rivals?.find(x => x.name === t.name) ?? null, day = this.townNow().day, o = opponentOf(t.name, rival?.hcp ?? t.hcp!, rival, day);
+    const rival = p.rivals?.find(x => x.name === t.name) ?? null, day = this.townNow().day, o = this.hustled(opponentOf(t.name, rival?.hcp ?? t.hcp!, rival, day), p);
     const why = stakeWhy(stake, this.money, o.purse, o.name); if (why) { this.toast(why, 'warn'); return; }
     const a = answerOf(o, off.yourHcp, stake, n, rival, day);
     t.answer = { yes: a.yes, line: a.line };
@@ -9478,7 +9514,9 @@ export class Game {
   private matchSettle(r: YourRound, conceded: boolean) {
     const p = this.playerNow(), m = r.match; if (!p || !m) return;
     if (this.shot?.mine) this.shot = null;
-    const s = settleMatch({ ...p, round: r }, r, conceded);
+    const s0 = settleMatch({ ...p, round: r }, r, conceded);
+    // (T337: Skins Hustler: a money match you win pays double, the side bets; the text says so)
+    const pay = s0.result === 'w' ? Math.round(s0.money * cardEco(p.cards).matchPay) : s0.money, s = pay !== s0.money ? { ...s0, money: pay, text: `${s0.text} · the side bets pay it x${cardEco(p.cards).matchPay}: +$${pay.toLocaleString('en-US')}` } : s0;
     this.setPlayer(s.profile);
     if (s.money) this.traffic.spend('business', -s.money);
     if (s.rep && this.golf) this.golf.rep = Math.min(100, (this.golf.rep ?? 0) + s.rep);
@@ -10935,16 +10973,18 @@ export class Game {
     const on = s.mine || (!!this.play && this.weatherOn(this.play.key));
     const dx = s.input.aim.x - t.ball.x, dy = s.input.aim.y - t.ball.y, L = Math.hypot(dx, dy), ux = L > 1e-6 ? dx / L : 1, uy = L > 1e-6 ? dy / L : 0, aimedM = L * TILE_M;
     const env = on && !putting && v ? envOf(this.windNow(), v.kindAt, this.ballHeight, t.ball, t.lie, s.input.aim) : null;
-    const kind = env?.lie ?? lieKindFor(v?.kindAt, t.ball, t.lie), sfx = this.shotShapeFx(aimedM), k = previewShot(club, 100, ux, uy, env, sfx).carryM / 100;
+    // (T337: the factors his mods put on the wind and on the slope under the ball: the Wind Whisperer's and Slope Mode's halves)
+    const kit0 = this.shotKit(), wK = kit0?.wind ?? 1, sK = kit0?.slope ?? 1, slope = env?.slope && sK !== 1 ? { up: env.slope.up * sK, across: env.slope.across * sK } : env?.slope;
+    const kind = env?.lie ?? lieKindFor(v?.kindAt, t.ball, t.lie), sfx = this.shotShapeFx(aimedM), k = previewShot(club, 100, ux, uy, env, sfx, wK, sK).carryM / 100;
     // the caddie's club: the shortest whose carry in these conditions reaches the aimed distance (the longest the lie allows when none does)
     let suggest: Club | null = null;
     if (on && !putting && env) {
       const sk = this.shotSk(), clubs = this.shotClubs().filter(c => c !== 'putter' && c !== 'lw').reverse(); // (the caddie never reaches for the lob wedge)
-      if (sk !== null) suggest = clubs.find(c => carryFor(sk, c) * previewShot(c, 100, ux, uy, env, s.shape ? shapeEffect(readShape(s.shape), c, aimedM, kitOf(sk, c).skill, kitOf(sk, c)) : null).carryM / 100 >= aimedM) ?? clubs[clubs.length - 1] ?? null;
+      if (sk !== null) suggest = clubs.find(c => carryFor(sk, c) * previewShot(c, 100, ux, uy, env, s.shape ? shapeEffect(readShape(s.shape), c, aimedM, kitOf(sk, c).skill, kitOf(sk, c)) : null, kitOf(sk, c).wind, kitOf(sk, c).slope).carryM / 100 >= aimedM) ?? clubs[clubs.length - 1] ?? null;
     }
-    return { on, putting, wind: windView(on && !putting ? this.windNow() : null, on ? this.worldWind() : null, ux, uy), day: on ? this.worldWind() : null, lie: lieView(kind, club), slope: env?.slope ?? { up: 0, across: 0 },
+    return { on, putting, wind: windView(on && !putting ? this.windNow() : null, on ? this.worldWind() : null, ux, uy), day: on ? this.worldWind() : null, lie: lieView(kind, club), slope: slope ?? { up: 0, across: 0 },
       shape: { pick: s.shape ?? { curve: 0, flight: 0 }, fx: sfx ?? shapeEffect(null, club, aimedM, 0), lines: sfx && s.shape ? shapeLines(readShape(s.shape), sfx) : [] },
-      slopeLines: slopeLines(env?.slope), preview: previewShot(club, aimedM, ux, uy, env, sfx), aimedM, playsLikeM: putting || !(k > 0.2) ? aimedM : aimedM / k, suggest };
+      slopeLines: slopeLines(slope), preview: previewShot(club, aimedM, ux, uy, env, sfx, wK, sK), aimedM, playsLikeM: putting || !(k > 0.2) ? aimedM : aimedM / k, suggest };
   }
   /** T334 part 2: the shape for the open shot: the curve and/or the flight (each -1, 0 or 1; the one not given keeps its pick); none for a putt. Straight and normal clears it */
   setShotShape(curve?: -1 | 0 | 1, flight?: -1 | 0 | 1) {
@@ -10954,27 +10994,43 @@ export class Game {
     this.shot = next.curve || next.flight ? { ...rest, shape: next } : rest; this.emit();
   }
   /** T334 part 2: the open shot's club's kit: the carry, the scatter, the sweet spot and the marker's speed his stats and mods make of it (play/mods.ts applyMods); null with no shot */
-  shotKit(): ClubKit | null { const s = this.shot, sk = this.shotSk(); return s && sk !== null ? kitOf(sk, s.input.club) : null; }
-  /** T335: the clubs the open shot may be played with: the ones in your bag that the lie allows (the driver only off the tee, the putter on the green), longest first; the model's original seven for a golfer with no bag. Empty with no shot */
-  shotClubs(): Club[] { const s = this.shot, sk = this.shotSk(); return s ? allowedClubs(s.turn.lie, s.turn.lie === 'tee', sk !== null && typeof sk === 'object' ? sk.clubs : undefined) : []; }
+  shotKit(): ClubKit | null { const s = this.shot, sk = this.shotSk(); return s && sk !== null ? kitOf(sk, s.input.club, this.shotCtx()) : null; }
+  /** T337 (#963): the moment of the open shot, as the shot model will see it when it is struck (mods.ts ModCtx): its lie, a tee shot, the driver off the deck, the round's last hole, played as the caddie says */
+  private shotCtx(): ModCtx | undefined {
+    const s = this.shot; if (!s) return undefined;
+    const r = s.mine ? this.yourRound() : null, last = s.mine ? !!r && r.at === r.holes.length - 1 : !!this.play && s.turn.holeIdx === this.play.view.holes.length - 1;
+    return { lie: s.turn.lie, tee: s.turn.lie === 'tee', deck: s.input.club === 'driver' && s.turn.lie !== 'tee', last, follow: this.shotFollow() };
+  }
+  /** T337: whether the open shot is played as the Mic'd-Up Caddie says: his club (the caddie's, in the conditions) on his line (the aim within 4 degrees of the suggested one from the ball) */
+  shotFollow(): boolean {
+    const s = this.shot, sk = this.shotSk(); if (!s || sk === null || !hasMech(sk, 'caddie')) return false;
+    const t = s.turn, club = t.suggested.club;
+    const a = Math.atan2(s.input.aim.y - t.ball.y, s.input.aim.x - t.ball.x), b = Math.atan2(t.suggested.aim.y - t.ball.y, t.suggested.aim.x - t.ball.x);
+    let d = Math.abs(a - b); if (d > Math.PI) d = 2 * Math.PI - d;
+    return s.input.club === club && d <= 4 * Math.PI / 180;
+  }
+  /** T335: the clubs the open shot may be played with: the ones in your bag that the lie allows (the driver only off the tee, the putter on the green), longest first; the model's original seven for a golfer with no bag. Empty with no shot. T337: the driver off the fairway too with the Driver Off the Deck card */
+  shotClubs(): Club[] { const s = this.shot, sk = this.shotSk(); return s ? allowedClubs(s.turn.lie, s.turn.lie === 'tee', sk !== null && typeof sk === 'object' ? sk.clubs : undefined, sk !== null && typeof sk === 'object' ? sk.mech : undefined) : []; }
   /** T335: a club's upgrade level in your bag (0 Garage-sale .. 3 Prototype): the shot panel marks the upgraded clubs */
   clubLevel(club: Club): number { return levelOf(this.golf?.player?.bag, club); }
   /** T334 part 2: the open shot club's full carry for him, in metres (his power and mods in it); 0 with no shot */
-  shotCarry(): number { const s = this.shot, sk = this.shotSk(); return s && sk !== null ? carryFor(sk, s.input.club) : 0; }
+  shotCarry(): number { const s = this.shot, sk = this.shotSk(); return s && sk !== null ? carryFor(sk, s.input.club, this.shotCtx()) : 0; }
   /** the shape of the open shot at an aimed carry (metres): its effect on the flight (play/shape.ts), none when straight and normal or a putt */
   private shotShapeFx(aimedM: number): ShapeFx | null {
     const s = this.shot, sk = this.shotSk(); if (!s || sk === null || !s.shape || s.input.club === 'putter') return null;
     const kit = kitOf(sk, s.input.club); return shapeEffect(readShape(s.shape), s.input.club, aimedM, kit.skill, kit);
   }
   /** the tail of the report of a played shot: its shape ("draw, high") and what the wind did to it */
-  private shotNote(shape: ShotShape | undefined, env: ShotEnv | null, club: Club, shot: { from: Pt; to: Pt; landing?: { at: Pt } }): string | null {
-    const parts = [shape && club !== 'putter' ? pickText(shape).toLowerCase() : '', windNote(env, club, shot.from, shot.landing?.at ?? shot.to) ?? ''].filter(Boolean);
+  private shotNote(shape: ShotShape | undefined, env: ShotEnv | null, club: Club, shot: { from: Pt; to: Pt; landing?: { at: Pt } }, windK = 1): string | null {
+    const parts = [shape && club !== 'putter' ? pickText(shape).toLowerCase() : '', windNote(env, club, shot.from, shot.landing?.at ?? shot.to, windK) ?? ''].filter(Boolean);
     return parts.length ? parts.join(' · ') : null;
   }
+  /** T337: a swing's effect as the shot model plays it for this golfer and club (the kit's skill, sweet spot and miss factor: the Self-Correcting Ball's half), for the reports */
+  private swingFx(sk: ShotSkill, club: Club, swing: SwingOutcome, ctx?: ModCtx) { const k = kitOf(sk, club, ctx); return swingEffect(swing, k.skill, club === 'putter', k.sweet, k.miss); }
   /** the owner's open shot for the shot panel, or null */
   shotState(): ShotState | null { return this.shot; }
   /** T316: the skill (0..1) the open shot's club is played at (your part of the game for it, T241): the swing meter's speed and sweet spot; 0 with no shot */
-  shotSkill(): number { const s = this.shot, sk = this.shotSk(); return s && sk !== null ? skillFor(sk, s.input.club) : 0; }
+  shotSkill(): number { const s = this.shot, sk = this.shotSk(); return s && sk !== null ? skillFor(sk, s.input.club, this.shotCtx()) : 0; }
   /** the skill the open shot is played at: your round's (T317: your everyday game) or the tournament owner's; null with no shot */
   private shotSk(): ShotSkill | null { const s = this.shot; if (!s) return null; return s.mine ? this.yourSkills() : this.play?.own?.skill ?? null; }
   /** T316: the owner's last played shot (the shot panel's "Last shot" line), or null */
@@ -11036,7 +11092,7 @@ export class Game {
     this.setYourRound(round);
     const n = flightOf(shot.from, shot.landing?.at ?? null, shot.to, round.holed, up, rowOf(round), shot.penalty > 0, { ...(f.aim ? { aim: f.aim } : {}), ...flightSpin(shot.landing) });
     n.t = f.t; this.yrFlight = n;
-    this.lastShot = shotReport(shot, a.input.swing ? swingEffect(a.input.swing, skillFor(sk, a.input.club), false, kitOf(sk, a.input.club).sweet) : null);
+    this.lastShot = shotReport(shot, a.input.swing ? this.swingFx(sk, a.input.club, a.input.swing) : null);
     this.toast(`${spinText(spinEffect(a.input.spin, a.input.club, a.lie, a.input.env?.lie, kitOf(sk, a.input.club).spin))}: ${this.lastShot.text}`, 'info');
   }
   /** T318: the tournament owner's spun shot with its clicks: the day rebuilt from the saved inputs (the last with them), its latches kept */
@@ -11051,7 +11107,7 @@ export class Game {
     if (DEV_LOG_SPIN) console.info(`[T318] spin rebuild ${(performance.now() - t0).toFixed(1)} ms`);
     built.finish = pl.finish; built.waves = pl.waves; this.play = built; this.saveOwner();
     const own = built.own, s = built.plan.shots.find(x => x.golfer === own.id && x.hole === last.holeIdx && x.stroke === last.stroke);
-    if (s) { this.lastShot = shotReport(s, a.input.swing ? swingEffect(a.input.swing, skillFor(own.skill, a.input.club), false, kitOf(own.skill, a.input.club).sweet) : null); this.toast(`${spinText(spinEffect(a.input.spin, a.input.club, a.lie, a.input.env?.lie, kitOf(own.skill, a.input.club).spin))}: ${this.lastShot.text}`, 'info'); }
+    if (s) { this.lastShot = shotReport(s, a.input.swing ? this.swingFx(own.skill, a.input.club, a.input.swing) : null); this.toast(`${spinText(spinEffect(a.input.spin, a.input.club, a.lie, a.input.env?.lie, kitOf(own.skill, a.input.club).spin))}: ${this.lastShot.text}`, 'info'); }
     if (!own.turn) this.ownerDone(built);
   }
   /** T316: the owner's swing on the 3-click meter (swing.ts): plays the open shot with the club and aim of the panel and the meter's outcome (its power,
@@ -11089,10 +11145,10 @@ export class Game {
     const s = this.shot, pl = this.play, own = pl?.own; if (!s || !pl || !own) return;
     const i = s.input;
     const spin = this.shotSpin(), env = this.shotEnv();
-    const shot = own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(s.shape && i.club !== 'putter' ? { shape: s.shape } : {}), v: MODEL_V });
+    const shot = own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(s.shape && i.club !== 'putter' ? { shape: s.shape } : {}), ...(this.shotFollow() ? { cad: true as const } : {}), v: MODEL_V });
     this.spinAir = spin && hasMech(own.skill, 'airspin') ? { mine: false, input: { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(env ? { env } : {}), ...(s.shape && i.club !== 'putter' ? { shape: s.shape } : {}), v: MODEL_V, spin }, lie: s.turn.lie, prev: null, seen: false, at: performance.now() } : null;
     // T316: what the shot did (its miss, carry and total), toasted and kept for the panel's "Last shot" line
-    this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(own.skill, i.club), i.club === 'putter', kitOf(own.skill, i.club).sweet) : null, this.shotNote(s.shape, env, i.club, shot));
+    this.lastShot = shotReport(shot, swing ? this.swingFx(own.skill, i.club, swing, this.shotCtx()) : null, this.shotNote(s.shape, env, i.club, shot, kitOf(own.skill, i.club).wind));
     this.toast(this.lastShot.text, 'info');
     own.turn = own.live.advance();
     this.closeShot(); this.saveOwner();
@@ -11153,9 +11209,9 @@ export class Game {
     ctx.save();
     if (i.club !== 'putter') {
       const L = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) || 1, ux = (i.aim.x - t.ball.x) / L, uy = (i.aim.y - t.ball.y) / L;
-      const kit = kitOf(sk0, i.club), k = 1 - kit.skill; // (T241: his club's part of the game; T335: and the scatter his club and its upgrades have: kit.spread)
+      const mctx = this.shotCtx(), kit = kitOf(sk0, i.club, mctx), k = 1 - kit.skill; // (T241: his club's part of the game; T335: and the scatter his club and its upgrades have: kit.spread; T337: and the moment's mods)
       // T334: where the shot is expected to land in its conditions: the carry after the lie, the slope and the wind, off the aim by the wind's drift and the slope's pull, as wide as the lie's scatter
-      const aimed = carryFor(sk0, i.club) * i.power, pv = previewShot(i.club, aimed, ux, uy, this.shotEnv(), this.shotShapeFx(aimed)), carry = pv.carryM / TILE_M, side = pv.sideM / TILE_M;
+      const aimed = carryFor(sk0, i.club, mctx) * i.power, pv = previewShot(i.club, aimed, ux, uy, this.shotEnv(), this.shotShapeFx(aimed), kit.wind, kit.slope), carry = pv.carryM / TILE_M, side = pv.sideM / TILE_M;
       const px = t.ball.x + ux * carry - uy * side, py = t.ball.y + uy * carry + ux * side, A = 2 * (0.03 + 0.07 * k) * carry * pv.spread * kit.spread, B = 2 * carry * Math.tan((1.5 + 5 * k) * Math.PI / 180) * pv.spread * kit.spread;
       const c = this.screen(px, py), e1 = this.screen(px + ux * A, py + uy * A), e2 = this.screen(px - uy * B, py + ux * B);
       // the unit circle through the spread's axes (their screen vectors from the landing point), filled faint

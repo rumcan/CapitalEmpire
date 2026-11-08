@@ -8,7 +8,7 @@
 // Pure TS, no DOM, no draws.
 import { LEGACY_MECH, type MechId, type Mod } from '../play/mods';
 import type { Gear } from '../play/bag';
-import { cardById, cardMods, type CardDef } from './catalogue';
+import { ECO_KEYS, cardById, cardMods, type CardDef, type CardEco } from './catalogue';
 
 /** the card slots on your player */
 export const SLOTS = 8;
@@ -117,6 +117,17 @@ export function cardEffects(c: CardsSave | undefined, competition = false): Card
 }
 /** the practice factor your cards give (1: none; the practice session's gains are multiplied by it). A card banned in competition is not a competition's: practice is not either, so it counts */
 export const practiceFactor = (c: CardsSave | undefined): number => cardEffects(c, false).practice;
+
+/** T337: the economy your equipped cards change (a card banned in competition is out of one, as for the shot): the factors (1: none) the engine multiplies a money match's winnings (matchPay), the purse an opponent brings (matchStake: a bigger stake is
+ *  accepted), a title's prize (prize) and a lesson's addition to practice (lesson) by */
+export function cardEco(c: CardsSave | undefined, competition = false): CardEco {
+  const e: CardEco = { matchPay: 1, matchStake: 1, prize: 1, lesson: 1 };
+  for (const d of equipped(c)) {
+    if (competition && d.banned === 'competition') continue;
+    for (const k of ECO_KEYS) { const f = d.fx.eco?.[k]; if (f) e[k] *= f; }
+  }
+  return e;
+}
 
 const memo = new WeakMap<object, { bag: Gear; plain?: Gear; comp?: Gear }>();
 /** the gear of a golfer: the bag's with the cards' on it (after the bag's mods, in slot order) and the mechanics the cards unlock. Without cards (a profile from before them: undefined) it is the bag's gear exactly, whose skills list no
