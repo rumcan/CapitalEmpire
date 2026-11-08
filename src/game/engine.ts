@@ -152,6 +152,9 @@ import { normalizeGolfSave, type GolfPlaySave, type GolfSave, type GolfView, typ
 import { courseSlopeAt, createCourseHeightField, sampleCourseGrid, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
+import { loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, type OsmCourseSpec } from './golf/osm';
+import { planOsmGame } from './golf/osm/start';
+import { specMarkers } from './golf/osm/raster';
 import { RANGE_CAM_ZOOM, RANGE_LOT, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
@@ -910,6 +913,9 @@ export class Game {
   /** how a new game starts (?start=): 'range' (the default: the county road and the driving range, plan P22), 'town' (the old start: a seeded
    *  town, the old nine and the clubhouse) or 'valley' (the classic three towns) */
   private startMode: 'range' | 'town' | 'valley' = 'range';
+  /** T340 (#967): the map-data course the next new game is laid on (?osmcourse=<id> or the new-game card; golf/osm), and its spec once loaded. A new
+   *  game on one is the old start's rules on the flat map, the real course in the middle (newOsmGame); it clears when that game is laid */
+  private osmId: string | null = null; private osmSpec: OsmCourseSpec | null = null;
   /** a Space press that panned (held with the drag) does not also pause on release */
   private spacePanned = false;
   // fx
@@ -2770,6 +2776,7 @@ export class Game {
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
     this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('animals') === '0') this.animalsOff = true; /* T309: ?animals=0, no farm animals (dev; the bench's before) */ if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
+    this.osmId = osmCourseInfo(q.get('osmcourse'))?.id ?? null; // T340: ?osmcourse=rondebosch | magnolia-national, a new game on that real course (saving off for the session, as a fixture)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
@@ -2847,7 +2854,9 @@ export class Game {
     // a plain ?bench builds the synthetic city. Neither scene ever saves
     const benchScene = !opts.bench ? null : fixture ? 'fixture' as const : new URLSearchParams(location.search).get('start') === 'range' ? 'range' as const : new URLSearchParams(location.search).get('start') === 'town' ? 'golf' as const : null;
     if (benchScene) { this.benchMode = true; this.saveBlocked = true; }
-    const read = opts.bench || fixName || !this.boot.save ? null : await readSave(); if (this.dead) return;
+    // T340 (#967): ?osmcourse=<id> is a new game on that real course in place of any stored save, which is neither read nor written over
+    if (this.osmId && !fixName) { this.osmSpec = await loadOsmSpec(this.osmId); if (this.dead) return; if (this.osmSpec) this.saveBlocked = true; }
+    const read = opts.bench || fixName || this.osmSpec || !this.boot.save ? null : await readSave(); if (this.dead) return;
     const save = fixture ?? read?.save ?? null;
     // T042: an unreadable save is kept as a backup (then a new game starts); if the backup failed, the slot is never written over
     let readNote: { text: string; kind: Toast['kind'] } | null = null;
@@ -2911,6 +2920,8 @@ export class Game {
     setLotModel(LATEST_LOT_MODEL);
     // T259: and its farms with the latest farm model (the save records it: farmModel)
     this.farmModel = FARM_MODEL; this.farmsNew.clear();
+    if (this.osmSpec && this.newOsmGame(this.osmSpec)) return true; // T340: a real course (the flat map; else the usual start below)
+    this.osmSpec = null;
     if (this.startMode === 'valley') return false;
     return (this.startMode === 'range' && this.newRangeGame()) || this.newGolfGame();
   }
@@ -2992,6 +3003,47 @@ export class Game {
       }
       console.warn('golf: none of 8 seeds has a course beside its town; a classic game instead');
     return false;
+  }
+  /** T340 (#967): a new game on a real course built from map data (golf/osm). The flat map (boot.ts flatTerrain: a generated valley has its river through
+   *  any 700-tile window, and the real courses are 1 to 2 km across on the 2 km map), the course's land in the middle, the clubhouse parcel, car park and
+   *  drive on the side of it nearest the first tee, the entry road from the map's edge there (the terrain's highway), every surface in the course grid with its hole, the tee sets, pins and aim
+   *  points (their pictures as any marker's). The old start's rules: the tournament comes with the season. False, and nothing laid, when the land does
+   *  not fit the map (the caller then makes the usual start) */
+  private newOsmGame(spec: OsmCourseSpec): boolean {
+    const plan = planOsmGame(spec); if (!plan) { console.warn(`golf: ${spec.name} does not fit the map; the usual start instead`); return false; }
+    this.useTerrain({ ...flatTerrain(), highway: plan.entry }, this.devSeed || newSeed()); // (the highway enters where the entry road meets the map's edge)
+    this.townPts = [plan.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
+    this.edit.addLegs(plan.road, CLASS.road, 0, plan.road.map(() => SK.GROUND), true);
+    this.edit.addLegs(plan.drive, classOf('drive-gravel'), 0, undefined, true);
+    const [vx, vy, vw, vh] = plan.venue, [px, py, pw, ph] = plan.carpark;
+    this.setBizDefs([{ id: 1, type: 'clubhouse', x: vx, y: vy, w: vw, h: vh }]);
+    this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
+    // (no start tutorial: its first step points at the town's houses along a county road and moves the camera to the town, and there is neither: the
+    //  camera stays over the course)
+    this.golf = plan.save; this.golf.progress = { ...emptyProgress() }; this.clubLegacy = false;
+    this.courseGrid = plan.grid;
+    const mk = specMarkers(spec, plan.at.x, plan.at.y);
+    for (const t of mk.tees) this.setGolfMarker(t.hole, t.kind, t.x, t.y);
+    for (const p of mk.pins) this.setGolfMarker(p.hole, 'pin', p.x, p.y);
+    this.golf.aims = mk.aims;
+    // the camera over the whole land at the start, at the closest zoom that holds it (the player zooms in)
+    const [lx, ly, lw, lh] = plan.land, wx = [worldX(lx, ly), worldX(lx + lw, ly), worldX(lx, ly + lh), worldX(lx + lw, ly + lh)], wy = [worldY(lx, ly), worldY(lx + lw, ly), worldY(lx, ly + lh), worldY(lx + lw, ly + lh)];
+    const x0 = Math.min(...wx), x1 = Math.max(...wx), y0 = Math.min(...wy), y1 = Math.max(...wy);
+    this.cam.X = (x0 + x1) / 2; this.cam.Y = (y0 + y1) / 2;
+    this.cam.z = clampZoom(Math.min((this.cssW || 1280) * 0.9 / (x1 - x0), (this.cssH || 800) * 0.8 / (y1 - y0)));
+    this.osmSpec = null; this.osmId = null;
+    return true;
+  }
+  /** T340: the new-game card's real courses (the shipped ones, with the holes and par) and the one this game is laid on (null: an ordinary game) */
+  osmChoices(): { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number }[] { return OSM_COURSES.map(c => ({ id: c.id, name: osmDisplayName(c.name), place: c.place, holes: c.holes, par: c.par, mappedPar: c.mappedPar, ...(c.scale ? { scale: c.scale } : {}) })); }
+  osmGame(): GolfSave['osm'] | null { return this.golf?.osm ?? null; }
+  /** T340: a new game on the real course `id` (null: the usual start), from the new-game card: the course loads, then a new game starts as the New game
+   *  button's does (the map is replaced; the card comes again for the new game) */
+  async startRealCourse(id: string | null): Promise<void> {
+    const spec = id ? await loadOsmSpec(id) : null; if (this.dead) return;
+    if (id && !spec) { this.toast('That course is not in this build', 'warn'); return; }
+    this.osmSpec = spec; this.newTown();
+    if (id && !this.golf?.osm) this.toast('That course does not fit the map: a usual game started', 'warn');
   }
   dead = false;
   /** T227: stops watching the surfaces file for the course finish's collar widths */
@@ -7270,7 +7322,10 @@ export class Game {
       this.bizOpenSeen = null;
       // T342: the game's own look (a save from before T342 is autumn); ?desert=on|off on the dev server still wins for the session
       this.themeFor(d.theme === 'desert');
-      this.genTerrain(d.seed);
+      // T340: a map-data game is laid on the flat map whatever its seed (the save's golf state says so)
+      const osm = (d.golf as { osm?: { id?: unknown; entry?: { x?: unknown; y?: unknown; edge?: unknown } } } | undefined)?.osm, en = osm?.entry;
+      if (osm?.id) this.useTerrain(typeof en?.x === 'number' && typeof en.y === 'number' && (en.edge === 'N' || en.edge === 'E' || en.edge === 'S' || en.edge === 'W') ? { ...flatTerrain(), highway: { x: en.x, y: en.y, edge: en.edge } } : flatTerrain(), d.seed);
+      else this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
       // T288: a range from before T288 was built for the player: its guide's placement steps are done (no reward)
@@ -9162,7 +9217,7 @@ export class Game {
     }
     return bg;
   }
-  /** the break grid over the green(s) (the 2D overlay): the 1 m mesh's lines, faint, and every 2 m a short arrow downhill whose dot runs down it,
+  /** the break grid over the green(s) (the 2D overlay): the 1 m mesh's lines, faint, and every 2 m a tiny dot running downhill (no arrows),
    *  longer, faster and warmer (white, cyan, yellow, orange) where steeper; flat ground a still dot. It fades in when you putt and out after. Only
    *  the points on screen; one path per colour */
   private drawBreakGrid(ctx: CanvasRenderingContext2D, now: number) {
@@ -9187,27 +9242,24 @@ export class Game {
         if (on.has(i * 65536 + j + 1)) { ctx.moveTo(X, Y); ctx.lineTo(sx(x, y + BREAK_STEP), sy(x, y + BREAK_STEP)); }
       }
       ctx.strokeStyle = `rgba(255,255,255,${0.16 * A})`; ctx.lineWidth = this.dpr; ctx.stroke();
-      // the arrows (every second point: 2 m) and their running dots, by colour
+      // the running dots (every second point: 2 m), by colour: no arrows (the owner, 2026-11-08: "only tiny dots moving on the grid to show slope").
+      // Each dot runs downhill along its point's short run, swelling in and shrinking out (radius by sin(pi u)) so it never pops at the ends
       for (let c = 0; c < 4; c++) {
-        ctx.beginPath(); const dots: number[] = [];
+        const dots: number[] = [];
         for (let k = 0; k < bg.n; k++) {
           const i = IJ[2 * k]!, j = IJ[2 * k + 1]!; if ((i & 1) || (j & 1)) continue;
           const s = P[5 * k + 4]!; if (breakBucket(s) !== c) continue;
           const x = P[5 * k]!, y = P[5 * k + 1]!, X = sx(x, y), Y = sy(x, y); if (X < -m || Y < -m || X > W + m || Y > H + m) continue;
-          if (c === 0) { dots.push(X, Y); continue; }
+          if (c === 0) { dots.push(X, Y, 1); continue; }
           const L = 0.3 + 0.4 * steepShare(s), dx = P[5 * k + 2]! * L, dy = P[5 * k + 3]! * L;
           const X0 = sx(x - dx, y - dy), Y0 = sy(x - dx, y - dy), X2 = sx(x + dx, y + dy), Y2 = sy(x + dx, y + dy);
-          ctx.moveTo(X0, Y0); ctx.lineTo(X2, Y2);
-          const hx = X2 - (X2 - X0) * 0.3, hy = Y2 - (Y2 - Y0) * 0.3, nx = -(Y2 - hy) * 0.6, ny = (X2 - hx) * 0.6;
-          ctx.moveTo(hx + nx, hy + ny); ctx.lineTo(X2, Y2); ctx.lineTo(hx - nx, hy - ny);
           const u = (t * dotSpeed(s) + ((i * 7 + j * 13) & 15) / 16) % 1;
-          dots.push(X0 + (X2 - X0) * u, Y0 + (Y2 - Y0) * u);
+          dots.push(X0 + (X2 - X0) * u, Y0 + (Y2 - Y0) * u, Math.sin(Math.PI * u));
         }
         const col = BREAK_COLOURS[c]!;
-        if (c > 0) { ctx.strokeStyle = `rgba(${col},${0.75 * A})`; ctx.lineWidth = 1.4 * this.dpr; ctx.stroke(); }
-        ctx.beginPath(); const rd = (c === 0 ? 1.2 : 2) * this.dpr;
-        for (let d = 0; d < dots.length; d += 2) { ctx.moveTo(dots[d]! + rd, dots[d + 1]!); ctx.arc(dots[d]!, dots[d + 1]!, rd, 0, Math.PI * 2); }
-        ctx.fillStyle = `rgba(${col},${(c === 0 ? 0.45 : 0.95) * A})`; ctx.fill();
+        ctx.beginPath(); const rd = (c === 0 ? 0.9 : 1.4) * this.dpr;
+        for (let d = 0; d < dots.length; d += 3) { const r = rd * (0.35 + 0.65 * dots[d + 2]!); ctx.moveTo(dots[d]! + r, dots[d + 1]!); ctx.arc(dots[d]!, dots[d + 1]!, r, 0, Math.PI * 2); }
+        ctx.fillStyle = `rgba(${col},${(c === 0 ? 0.4 : 0.95) * A})`; ctx.fill();
       }
     }
     ctx.restore();
