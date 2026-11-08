@@ -9,6 +9,7 @@ import { LiveGroup, POWER } from './live';
 import type { OwnerInput, OwnerTurn } from './live';
 import type { Conditions } from './conditions';
 import type { Club, CourseView, GameSkills, Golfer, Lie, RoundPlan, Sex } from './types';
+import type { MechId } from './mods';
 import type { TeeKind } from '../types';
 
 /** the owner's address: his shot opens this many game minutes before his strike, where the game pauses (docs/GOLF-PLAY.md decision 7); the playback
@@ -31,11 +32,12 @@ export function ownerGolfer(id: number, sex: Sex, tees: TeeKind = 'middle', skil
 export const meanSkill = (s: GameSkills): number => (s.driving + s.irons + s.short + s.putting) / 4;
 
 /** the clubs the owner may take from a lie: the driver only from the tee (teeShot), the putter only on the green, the others any time. Longest first. T335: with `bag` (GameSkills.clubs: the clubs in
- *  his bag) those that are in it, in bag order; without, the original seven as before */
-export function allowedClubs(lie: Lie, teeShot: boolean, bag?: readonly Club[]): Club[] {
-  if (bag) return CLUB_ORDER.filter(c => bag.includes(c) && (c !== 'driver' || teeShot) && (c !== 'putter' || lie === 'green'));
+ *  his bag) those that are in it, in bag order; without, the original seven as before. T337 (#963): with the `deck` mechanic (Driver Off the Deck: `mech`, GameSkills.mech) the driver is also allowed from the fairway */
+export function allowedClubs(lie: Lie, teeShot: boolean, bag?: readonly Club[], mech?: readonly MechId[]): Club[] {
+  const driver = teeShot || (!!mech && mech.includes('deck') && lie === 'fairway');
+  if (bag) return CLUB_ORDER.filter(c => bag.includes(c) && (c !== 'driver' || driver) && (c !== 'putter' || lie === 'green'));
   const out: Club[] = [];
-  if (teeShot) out.push('driver');
+  if (driver) out.push('driver');
   out.push('wood3', 'iron4', 'iron6', 'iron8', 'pw', 'sw');
   if (lie === 'green') out.push('putter');
   return out;

@@ -24,6 +24,7 @@ import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { BUILD } from './game/save';
+import { DEM_CREDIT_DEFAULT, DEM_TILES_CREDIT } from './game/golf/osm/terrarium';
 import { bootFor } from './game/dev/lab-boot';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
@@ -83,6 +84,7 @@ import { StaffCard } from './ui/golf/StaffCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
 import { BagCard } from './ui/golf/BagCard';
 import { CardsCard } from './ui/golf/CardsCard';
+import { CardsHelp } from './ui/golf/CardsHelp';
 import { VendingMachine } from './ui/golf/VendingMachine';
 import { TalkCard, TeeAskCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
 import { MatchResultCard, ReturnChallengeCard } from './ui/golf/MatchCards';
@@ -166,7 +168,7 @@ export default function App() {
   useEffect(() => { void refreshKept(); return watchKept(bump); }, []);
   const [help, setHelp] = useState(false);
   /** T202: the Help card's tab: the keys (Help › Keys: the ? button, ? and F1) or how it works */
-  const [helpTab, setHelpTab] = useState<'keys' | 'how'>('keys');
+  const [helpTab, setHelpTab] = useState<'keys' | 'how' | 'cards'>('keys');
   /** T202: the lot lab's keys (dev builds, ?lotlab: the Keys sheet there is the lab's, under its own heading) */
   const [labKeys, setLabKeys] = useState<LabKeys | null>(null);
   useEffect(() => { if (import.meta.env.DEV && new URLSearchParams(location.search).has('lotlab')) void import('./game/dev/lot-lab-ui').then(m => setLabKeys(m.KEYS)); }, []);
@@ -414,7 +416,7 @@ export default function App() {
   /** T202: Help (the Keys sheet and How it works); in the lot lab the lab's keys alone, drawn on the page over the lab's panels (the lab hides
    *  the App's layer under them: lot-lab.ts) */
   const helpCard = game && game.ready && help
-    ? <Help tab={lab ? 'keys' : helpTab} onTab={setHelpTab} onClose={() => setHelp(false)} lab={lab} onTour={!lab && game.golf?.progress ? () => { setHelp(false); game.replayTour(); } : undefined} keys={keySheet({ golf: game.golfMode, ui: game.toolUi(), range: !!game.range.scene, lab: lab ? labKeys ?? [] : null })} />
+    ? <Help tab={lab ? 'keys' : helpTab} onTab={setHelpTab} onClose={() => setHelp(false)} lab={lab} cards={!lab && game.golf ? game.golf.player?.cards?.own ?? [] : null} onTour={!lab && game.golf?.progress ? () => { setHelp(false); game.replayTour(); } : undefined} keys={keySheet({ golf: game.golfMode, ui: game.toolUi(), range: !!game.range.scene, lab: lab ? labKeys ?? [] : null })} />
     : null;
 
   return (
@@ -668,6 +670,7 @@ export default function App() {
                     ))}
                     <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The build that is running: every save records it (P07), so a bug report with a .cesave says which build wrote it">Build {BUILD.app} · {BUILD.sha}</div>
                     <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The real courses (Rondebosch, Magnolia National, Woodhill and any you download) are built from OpenStreetMap data, which is available under the Open Database Licence (ODbL 1.0): openstreetmap.org/copyright" data-testid="osm-credit">Credits: real-course map data © OpenStreetMap contributors</div>
+                    <div className="px-2 pt-1 text-[12px] opacity-50" data-tip={`${DEM_TILES_CREDIT}. The land under a real course comes from public elevation data: ${(game.landInfo()?.credit ?? DEM_CREDIT_DEFAULT)}.`} data-testid="dem-credit">Credits: real-course ground height {game.landInfo()?.credit ?? DEM_CREDIT_DEFAULT}</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
                     <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
@@ -901,7 +904,7 @@ export default function App() {
           {game.shotState() && <ShotPanel game={game} />}
           {game.spinView() && <SpinBall game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
-          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard hidden={game.real.active} name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: spec => { void game.startRealCourse(spec); }, onPlace: spec => { void game.startRealPlaceSpec(spec); } }} />; })()}
+          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard hidden={game.real.active} name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: (spec, land) => { void game.startRealCourse(spec, land); }, onPlace: (spec, land) => { void game.startRealPlaceSpec(spec, land); } }} />; })()}
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
           {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} onMachine={() => game.openVending(true)} />}
@@ -2110,19 +2113,22 @@ function hintFor(g: Game) {
 }
 
 /** Help (T202: two tabs: Keys, the Keys sheet, and How it works) */
-function Help({ onClose, tab, onTab, keys, lab, onTour }: { onClose: () => void; tab: 'keys' | 'how'; onTab: (t: 'keys' | 'how') => void; keys: ReturnType<typeof keySheet>; lab: boolean; /** T293: replays the start tutorial (a golf game) */ onTour?: () => void }) {
+type HelpTab = 'keys' | 'how' | 'cards';
+function Help({ onClose, tab, onTab, keys, lab, onTour, cards }: { onClose: () => void; tab: HelpTab; onTab: (t: HelpTab) => void; keys: ReturnType<typeof keySheet>; lab: boolean; /** T293: replays the start tutorial (a golf game) */ onTour?: () => void;
+  /** T337 (#963): a golf game has the Cards page: every card with its inspiration (the ids of the ones you have won); null: not a golf game */ cards?: readonly string[] | null }) {
   return (
     <div className={`${lab ? 'fixed' : 'absolute'} inset-0 z-40 flex items-center justify-center bg-black/60 p-4`} style={lab ? { zIndex: 75 } : undefined} onClick={onClose}>
-      <div className={`help-card rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl ${tab === 'keys' ? 'help-card-wide' : 'max-w-xl'}`} onClick={e => e.stopPropagation()} role="dialog" aria-label="Help" data-testid="help">
+      <div className={`help-card rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl ${tab === 'keys' ? 'help-card-wide' : tab === 'cards' ? 'max-w-3xl' : 'max-w-xl'}`} onClick={e => e.stopPropagation()} role="dialog" aria-label="Help" data-testid="help">
         <div className="flex flex-wrap items-center gap-2">
           {lab ? <div className="text-lg font-bold text-amber-200">Keys</div> : <div className="seg" role="tablist">
             <button role="tab" aria-selected={tab === 'keys'} className={`px-4 ${tab === 'keys' ? 'on' : ''}`} onClick={() => onTab('keys')} data-testid="help-keys">Keys</button>
             <button role="tab" aria-selected={tab === 'how'} className={`px-4 whitespace-nowrap ${tab === 'how' ? 'on' : ''}`} onClick={() => onTab('how')}>How it works</button>
+            {cards && <button role="tab" aria-selected={tab === 'cards'} className={`px-4 whitespace-nowrap ${tab === 'cards' ? 'on' : ''}`} onClick={() => onTab('cards')} data-testid="help-cards-tab">Cards</button>}
           </div>}
           {onTour && <button className="chip px-3" onClick={onTour} data-testid="help-tour" title="The short tutorial from the start: your town, and the roads it grows along"><Icon name="play" size={16} />Replay the start tutorial</button>}
           <span className="ml-auto text-[12px] text-slate-400"><span className="keycap">?</span> or <span className="keycap">F1</span> opens this · <span className="keycap">Esc</span> closes</span>
         </div>
-        {tab === 'keys' ? <KeysSheet sections={keys} /> : <>
+        {tab === 'keys' ? <KeysSheet sections={keys} /> : tab === 'cards' && cards ? <CardsHelp owned={cards} /> : <>
         <div className="mt-3 text-lg font-bold text-amber-200">How Maple Falls works</div>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-slate-300">
           <li><b>Roads</b> are drawn as connected routes, exactly like the town builder: click points, finish with Enter or a double-click. Everything on the ground — asphalt, kerbs, sidewalk slabs, rounded corners, crossings, centre lines, manholes and drains — is generated geometry, so a new road appears instantly, no ground rebuild.</li>

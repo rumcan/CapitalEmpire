@@ -24,6 +24,7 @@ import { readGameSkills } from './play/mods';
 import { normalizeEvents, type ClubEventsSave } from './clubevents';
 import type { GameSkills } from './play/types';
 import type { OsmGolfInfo } from './osm/types';
+import type { LandSave } from './osm/land';
 import { normalizeEstate, type EstateSave } from './estate';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
@@ -52,6 +53,9 @@ export interface GolfSave {
  cards?: string[];
  /** the course height field as sparse chunks (T027); missing = flat */
  height?: CourseHeightSaveChunk[];
+ /** T357 (#999): the real ground under a map-data course (golf/osm/land.ts packLand): the land height, whole, so a load needs no fixture or download.
+  *  The engine keeps the live field; this is only written by a save. Missing: flat ground (a save from before, or a course with no elevation data) */
+ land?: LandSave;
  /** what the player did (T033; missing in older saves: see normalizeProgress) */
  progress?: GolfProgress;
  /** the course grid (plan P21 3.7, T078: ext/course-grid encodeGrid); missing in older saves, whose golf-surface paint areas then move into
