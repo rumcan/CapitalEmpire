@@ -52,6 +52,15 @@ The owner, 2026-11-08: "it tells me what I shot. The game cannot play for me?? .
 - **P3, the crowd follows:** the spots' draw from the play (decision 6), the 30-minute moves in the sim (City), the galleries' fans walking.
 - **P4, the owner plays:** decision 7.
 
+## The hole card's Play: a practice round (T349, #992)
+
+The owner, 2026-11-08, on the hole card: "add a play hole button to this menu that asks if you want to play just this hole or all 18/9". **Play** sits next to **Build** in the card's header; it asks **Just hole N**, **All 18** (**All 9** on a 9-hole course: the course's real hole count, `play/practice.ts realHoleCount`) or Cancel, and starts your own round through the play flow that already exists (the walk-up, the shot panel and the meter, the same code the Mayor's Cup and the money matches use): `Game.practiceStart` → `startRound` with `YourRound.practice`.
+- **A practice round is free and changes nothing**: not an event, no mulligan rules beyond your usual first-tee ones, and at its end `yourRoundEnd` records nothing (no handicap, nerve, rounds, reputation or money); the toast says "Practice round: ... not recorded". It does not touch a booked tee time (it refuses, as any round does, while a booked round of yours is out on the course).
+- **Just hole N**: that hole's first turn in the played course, from your tee (the white one, else the first it has: `holeOf`/`holeFrom`). The round ends after the putt: the scorecard shows "Hole 4: Birdie (3, par 4)" with **Back to the course**. **All N** is a normal round on each real hole once, and its scorecard says "Practice round".
+- **Back to the course puts you back**: the camera (eased back), the tool and the side modes that were open (Holes, Grass, ...), and the hole card (`Game.practiceBack`, `practiceReturn`).
+- **Off when the hole cannot be played**: no tee, no pin or no green (the tooltip says which: `play/practice.ts missingParts`), a round under way, a closed course or no clubhouse (`yourChoices().why`).
+- Tests: `tests/golf-practice-hole.test.ts` (the picks, the missing parts, the saved flag), `tests/ui-hole-play.test.ts` (the choice, the scorecard and bar for a practice round); `scripts/dev/practice-hole-shots.mjs` (the real game).
+
 ## P1 contract (`src/game/golf/play/`, pure TS, no DOM; times in game minutes of the day, distances in tiles unless named `M` = metres)
 ```ts
 type Pt = { x: number; y: number };                                   // tiles (TILE_M = 2 m)
