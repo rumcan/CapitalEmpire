@@ -49,7 +49,7 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
   const plain = d.plays === 'firstCut' ? 'rough' : play.name.toLowerCase();
   return (
     <section className="glass tp w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3" data-card="grass" aria-label={made ? `Your grass: ${d.name}` : 'Create your own grass'}>
-      <div className="mb-2 flex items-center justify-between gap-2">
+      <div className="win-head flex items-center justify-between gap-2">
         <h2 className="font-display text-xl font-bold">{made ? `Your grass · ${d.name}` : 'Create your own'}</h2>
         <button className="round-btn" aria-label="Close the grass editor" title="Close (Esc)" onClick={onClose}>×</button>
       </div>

@@ -22,7 +22,7 @@ export function CourseStatsPanel({ stats, onClose, onSelectHole, bare }: CourseS
 
   return (
     <div className={bare ? 'text-slate-200' : 'glass w-[360px] max-h-[calc(100vh-var(--hud-top,5.75rem)-4rem)] overflow-y-auto rounded-xl border border-white/10 bg-slate-950/85 p-3 text-slate-200 shadow-xl backdrop-blur'}>
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+      <div className={bare ? 'flex items-center justify-between border-b border-white/10 pb-2' : 'win-head win-head-slate flex items-center justify-between'}>
         <div className="flex items-center gap-2">
           <Icon name="trophy" className="h-4 w-4 text-amber-400" />
           <div>

@@ -352,3 +352,27 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .vm-winner { border-width: 2px; border-bottom-width: 4px; border-color: var(--prize, #fbbf24); box-shadow: 0 0 22px color-mix(in srgb, var(--prize, #fbbf24) 45%, transparent); }
 .vm-marker { position: absolute; z-index: 2; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(255, 226, 162, 0.55); pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .vm-reel { will-change: auto; } }
+
+/* T366 (#1021): the row that opens a menu or a window to the side (SideMenuRow.tsx): the panel's full width, a blue edge and tint (apart from the chips, which do
+   things, and the gold of what is on), its arrow in a round pocket at the end; lit gold while its menu is open */
+.side-row { display: flex; width: 100%; min-width: 0; align-items: center; gap: 0.55rem; border-radius: 0.65rem; border: 1px solid rgba(120, 170, 255, 0.42); border-left-width: 3px; background: linear-gradient(90deg, rgba(60, 110, 200, 0.22), rgba(60, 110, 200, 0.07)); padding: 0.42rem 0.5rem 0.42rem 0.65rem; text-align: left; font-size: 13px; line-height: 1.25; color: var(--ink); }
+.side-row:hover:not(:disabled), .side-row:focus-visible { border-color: var(--gold-line); background: linear-gradient(90deg, rgba(60, 110, 200, 0.32), rgba(60, 110, 200, 0.12)); outline: none; }
+.side-row:disabled { opacity: 0.45; cursor: default; }
+.side-row-open { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); box-shadow: inset 0 0 10px rgba(245, 181, 46, 0.16); }
+.side-row-lead { display: inline-flex; flex: 0 0 auto; align-items: center; }
+.side-row-text { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+.side-row-label { font-weight: 600; overflow-wrap: anywhere; }
+.side-row-sub { font-size: 12px; color: var(--muted); }
+.side-row-value { max-width: 55%; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--muted); }
+.side-row-arrow { display: grid; flex: 0 0 auto; place-items: center; width: 1.45rem; height: 1.45rem; border-radius: 999px; border: 1px solid rgba(120, 170, 255, 0.5); background: rgba(2, 6, 23, 0.55); color: #9cc0ff; font-size: 12px; line-height: 1; }
+.side-row-open .side-row-arrow { border-color: var(--gold-line); color: var(--gold-hi); }
+
+/* T366 (#1021: "make headers for windows sticky with the window close button also sticky"): a window's header row (its title and its close button, the row's
+   flex layout is Tailwind's) stays pinned at the top of the window while the content scrolls. It sits flush in the window's padding (--win-pad, 0.75rem; the
+   course picker pads more) on the window's own colour (glass, or slate for the cards), so nothing shows through it, and rounds its top corners with the window */
+.win-head { position: sticky; top: 0; z-index: 6; margin: calc(var(--win-pad, 0.75rem) * -1) calc(var(--win-pad, 0.75rem) * -1) 0.5rem; padding: var(--win-pad, 0.75rem) var(--win-pad, 0.75rem) 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; background: rgb(20, 21, 25); }
+.win-head-slate { background: rgb(2, 6, 23); }
+.win-head-pad5 { --win-pad: 1.25rem; }
+
+/* T366 (#1021: "fix main menu. we can't have text going in 2 lines"): a rail label is one line (rail-items.ts railLabel shortens the long one) */
+.rail-tab span { white-space: nowrap; }

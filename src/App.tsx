@@ -500,7 +500,6 @@ export default function App() {
                   {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { if (game.landMode) game.closeLandSale(); else game.openLandSale(); bump(); }} data-tip="Land for sale: the blocks next to your land, priced; click one to see it, Buy on its card (also Course › Land for sale)" aria-label="Land for sale"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
  {chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
- {chip('skipTournament') && <button data-guide="chip-skip" className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} data-tip={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -837,9 +836,9 @@ export default function App() {
           )}
           {game.eventTool && gv && (
           <div className={`pointer-events-auto absolute ${game?.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 max-h-[75vh] w-80 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`}>
-          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+          <div className="win-head win-head-slate flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold text-amber-200"><Icon name="buildings" size={18} />Event Structures</div>
-          <button className="btn-icon" onClick={() => game.toggleEventTool()}>✕</button>
+          <button className="btn-icon" onClick={() => game.toggleEventTool()} aria-label="Close Event Structures" data-tip="Close">✕</button>
           </div>
           <div className="space-y-1.5 text-xs">
           {STRUCTURES.filter(s => s.tier <= gv.tier + 1).map(s => (
@@ -863,7 +862,7 @@ export default function App() {
           </div>
           )}
           {game.site && game.traffic.round.stage !== 'eval' && !(game.golfMode && game.traffic.round.stage === 'free') && <RoundPanel game={game} />}
-          {seasonOpen && game.golfMode && game.traffic.round.stage !== 'eval' && <SeasonCard game={game} onClose={() => setSeasonOpen(false)} onSelectHole={h => { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.lookAt(pin.x, pin.y); }} />}
+          {seasonOpen && game.golfMode && game.traffic.round.stage !== 'eval' && <SeasonCard game={game} canSkip={chip('skipTournament')} onClose={() => setSeasonOpen(false)} onSelectHole={h => { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.lookAt(pin.x, pin.y); }} />}
           {game.site && game.resultsOpen() && <EvalScreen game={game} />}
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
