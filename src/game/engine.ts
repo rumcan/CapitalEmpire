@@ -8297,12 +8297,18 @@ export class Game {
     if (on && (!r || sk === null || r.lie !== 'tee' || scrambleLeft(r, sk) <= 0)) { this.toast('No second ball to take: once a nine, off the tee, with the Scramble Captain', 'warn'); return; }
     const { scr: _o, ...rest } = s; void _o; this.shot = on ? { ...rest, scr: true } : rest; this.emit();
   }
+  /** T337: the laser's last report (its lines) and the ball, aim and pin it was read for */
+  private laserMemo: { key: string; lines: string[] } | null = null;
   /** T337: what the cards that read the course add to the shot panel: the laser's lines (the distance to the pin to a tenth of a metre and the carry to water, sand, out of bounds and the green along the line), Slope Mode's rise to the pin, Read the Feet's
    *  green read on a putt, the Mic'd-Up Caddie's club and whether you are on his line, the second ball's toggle, and the pace window on a putt (the half width of the meter's perfect stop, in meter units). Null with no shot or no tool */
   shotTools(): ShotTools | null {
     const s = this.shot, sk = this.shotSk(); if (!s || sk === null) return null;
     const can = this.shotCan(), t = s.turn, club = s.input.club, putting = club === 'putter', v = s.mine ? this.yrView() : this.play?.view ?? null, lines: string[] = [];
-    if (can.laser && v && !putting) lines.push(...laserLines(laserReport(v, t.ball, s.input.aim, t.pin)));
+    if (can.laser && v && !putting) { // (the panel renders far more often than the ball, the aim or the pin move, and a report is a lie read every 2 m along the line: kept for the ones it was read for)
+      const key = `${t.ball.x},${t.ball.y},${s.input.aim.x},${s.input.aim.y},${t.pin.x},${t.pin.y}`;
+      if (this.laserMemo?.key !== key) this.laserMemo = { key, lines: laserLines(laserReport(v, t.ball, s.input.aim, t.pin)) };
+      lines.push(...this.laserMemo.lines);
+    }
     if (can.slope && !putting) { const h = this.ballHeight; if (h) { const rise = h(t.pin.x, t.pin.y) - h(t.ball.x, t.ball.y); lines.push(Math.abs(rise) < 0.05 ? 'Slope Mode: the pin is level with you' : `Slope Mode: the pin is ${Math.abs(rise).toFixed(1)} m ${rise > 0 ? 'above' : 'below'} you`); } }
     if (can.read && putting) lines.push(greenRead(this.ballHeight, t.ball, t.pin).text);
     if (can.caddie) lines.push(`Caddie: ${CLUB_NAME[t.suggested.club]} at the line${this.shotFollow() ? ': you are on his line, +5 on every skill' : ': play his club on his line for +5 on every skill'}`);

@@ -39,8 +39,8 @@ test('shot panel: the tools block shows the laser’s lines, the slope, the cadd
   const lines = ['Pin 143.6 m · aim 138.2 m', 'Water: carry 112 m, clear at 131 m', 'Slope Mode: the pin is 1.4 m above you', 'Caddie: 6 iron at the line: play his club on his line for +5 on every skill'];
   const h = panel('iron6', { lines, scramble: null, paceHalf: null });
   assert.ok(h.includes('data-testid="shot-tools"')); for (const l of lines) assert.ok(h.includes(esc(l)), l); assert.ok(!h.includes('scramble-toggle'), 'no toggle without the second ball');
-  const t = panel('driver', { lines: [], scramble: { left: 1, on: false } }, 'tee'); assert.ok(t.includes('data-testid="scramble-toggle"') && /Scramble: a second ball \(1 left this nine\)/.test(t) && !/· on/.test(t), 'offered off');
-  const on = panel('driver', { lines: [], scramble: { left: 1, on: true } }, 'tee', { scr: true }); assert.ok(/Scramble: a second ball \(1 left this nine\) · on/.test(on) && /chip-on/.test(on), 'switched on');
+  const t = panel('driver', { lines: [], scramble: { left: 1, on: false }, paceHalf: null }, 'tee'); assert.ok(t.includes('data-testid="scramble-toggle"') && /Scramble: a second ball \(1 left this nine\)/.test(t) && !/· on/.test(t), 'offered off');
+  const on = panel('driver', { lines: [], scramble: { left: 1, on: true }, paceHalf: null }, 'tee', { scr: true }); assert.ok(/Scramble: a second ball \(1 left this nine\) · on/.test(on) && /chip-on/.test(on), 'switched on');
   const none = panel('iron6', null); assert.ok(!none.includes('data-testid="shot-tools"'), 'no tool: no block'); assert.ok(!panel('iron6', { lines: [], scramble: null, paceHalf: 0.2 }).includes('data-testid="shot-tools"'), 'the pace window is on the meter, not a line');
   const read = panel('putter', { lines: ['Green read: breaks left to right (2.1%), downhill (1.2%): quick'], scramble: null, paceHalf: 0.15 }, 'green'); assert.ok(read.includes('Green read: breaks left to right'), 'the green read on a putt');
   assert.ok(!/overflow-x-auto|overflow-x-scroll/.test(h), 'never a sideways scrollbar');

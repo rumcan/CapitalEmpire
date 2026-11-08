@@ -168,7 +168,7 @@ export const CARDS: readonly CardDef[] = [
   { id: 'slow-mo-app', name: 'Slow-Mo Swing App', rarity: 2, glyph: 'monitor', fx: { mods: [{ speed: 0.85, sweet: 1.05 }] },
     text: 'Your swing in slow motion on your phone: the marker runs 15% slower on every club, with a slightly wider sweet spot.', flavour: 'Frame 41. There. That is where it all went wrong.',
     inspiration: 'The swing-analysis apps with a drawn line and a free trial.' },
-  { id: 'stimp-nerd', name: 'Stimpmeter Nerd', rarity: 2, glyph: 'putter', fx: { mods: [{ clubs: ['putter'], feel: 1.25, sweet: 1.1 }] },
+  { id: 'speed-nerd', name: 'Green-Speed Nerd', rarity: 2, glyph: 'putter', fx: { mods: [{ clubs: ['putter'], feel: 1.25, sweet: 1.1 }] },
     text: 'He measures every green before the round: the pace window is 25% wider and the leave 25% closer.', flavour: '"It is a ten today." He has said that before.',
     inspiration: 'The green-speed nerds with a ramp, a ball and a notebook.' },
   { id: 'wind-whisperer', name: 'Wind Whisperer', rarity: 2, glyph: 'wind', fx: { mods: [{ wind: 0.5 }] },

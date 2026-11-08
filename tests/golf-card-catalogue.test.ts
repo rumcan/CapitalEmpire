@@ -62,7 +62,7 @@ test('the driver off the deck: the card lets the driver off the fairway (and no 
   assert.ok(allowedClubs('fairway', false, g.clubs, g.mech).includes('driver') && !allowedClubs('rough', false, g.clubs, g.mech).includes('driver') && !allowedClubs('fairway', false, NONE.clubs, NONE.mech).includes('driver'), 'only with the card, only from the fairway');
   assert.ok(allowedClubs('fairway', false, undefined, g.mech).includes('driver') && !allowedClubs('fairway', false).includes('driver') && allowedClubs('tee', true, NONE.clubs, NONE.mech).includes('driver'), 'the original seven too');
   const deck = applyMods(g, 'driver', { deck: true, lie: 'fairway' }), tee = applyMods(g, 'driver', { tee: true, lie: 'tee' });
-  assert.ok(deck.carry < 0.95 && deck.roll > 1.5 && deck.spread < 0.85 && deck.wind < 0.7 && deck.mishit < 0, 'flat, running and straight'); assert.equal(tee.carry, 1, 'from the tee it is the plain driver');
+  assert.ok(deck.carry < 0.95 && deck.roll > 1.5 && deck.spread < 0.85 && deck.wind < 0.7 && deck.mishit < 0, 'flat, running and straight'); assert.equal(tee.carry, applyMods(NONE, 'driver', { tee: true, lie: 'tee' }).carry, 'from the tee it is the plain driver (the golfer’s own: his stats are in it)');
   const v = flat('fairway'), runs = (ctx?: ModCtx) => { let c = 0, t = 0; for (let k = 0; k < 80; k++) { const o = hitShot(rng(50 + k, 1, 1), g, 'fairway', O, { x: 220 / TILE_M, y: 0 }, 'driver', v, ctx ? { ctx } : undefined); c += o.landing.at.x; t += o.landing.rest.x; } return { carry: c / 80 * TILE_M, run: (t - c) / 80 * TILE_M }; };
   const a = runs({ deck: true, lie: 'fairway' }), b = runs();
   assert.ok(a.carry < b.carry * 0.96 && a.run > b.run * 1.5, `deck ${a.carry.toFixed(0)} + ${a.run.toFixed(1)} m against ${b.carry.toFixed(0)} + ${b.run.toFixed(1)} m`);
@@ -92,15 +92,16 @@ test('moments: Clutch Gene on the last hole, the Mic’d-Up Caddie when you foll
   assert.ok(sweet(['clutch-gene'], { last: true }) > 2 * sweet([]) && sweet(['clutch-gene']) === sweet([]) && sweet(['clutch-gene'], { last: false }) === sweet([]), 'the sweet spot is huge on the last hole only');
   const f = applyMods(gameWith(['mic-caddie']), 'iron6', { follow: true }), n = applyMods(gameWith(['mic-caddie']), 'iron6');
   assert.ok(f.skill > n.skill + 0.049 && f.stats.putting > n.stats.putting + 0.049 && f.carry > n.carry, 'following him: +5 on every stat'); assert.equal(n.skill, applyMods(NONE, 'iron6').skill, 'not following: nothing');
-  assert.ok(applyMods(gameWith(['tall-tees']), 'driver', { tee: true }).carry === 1.04 && applyMods(gameWith(['tall-tees']), 'driver', { lie: 'fairway' }).carry === 1);
-  assert.ok(applyMods(gameWith(['hackout-boots']), 'iron6', { lie: 'rough' }).carry === 1.1 && applyMods(gameWith(['hackout-boots']), 'iron6', { lie: 'fescue' }).carry === 1.1 && applyMods(gameWith(['hackout-boots']), 'iron6', { lie: 'fairway' }).carry === 1);
+  const rel = (id: string, club: Club, ctx?: ModCtx) => applyMods(gameWith([id]), club, ctx).carry / applyMods(NONE, club, ctx).carry;
+  assert.ok(Math.abs(rel('tall-tees', 'driver', { tee: true }) - 1.04) < 1e-9 && Math.abs(rel('tall-tees', 'driver', { lie: 'fairway' }) - 1) < 1e-9, 'Tall Tees: +4% carry off the tee only');
+  assert.ok(Math.abs(rel('hackout-boots', 'iron6', { lie: 'rough' }) - 1.1) < 1e-9 && Math.abs(rel('hackout-boots', 'iron6', { lie: 'fescue' }) - 1.1) < 1e-9 && Math.abs(rel('hackout-boots', 'iron6', { lie: 'fairway' }) - 1) < 1e-9, 'Hack-Out Boots: +10% carry from the rough and the fescue only');
   assert.ok(applyMods(gameWith(['bunker-rake']), 'sw', { lie: 'bunker' }).spread < 0.82 && applyMods(gameWith(['bunker-rake']), 'sw', { lie: 'rough' }).spread === applyMods(NONE, 'sw', { lie: 'rough' }).spread);
   // the shot itself builds the moment: following the caddie (the saved input's flag) and the round's last hole
   const { view, hole } = view18(4), inp = (over: object) => swing0('iron6', { aim: { x: 100 / TILE_M, y: 0 }, ...over });
   const mic = gameWith(['mic-caddie']), plain = shotOutcome(view, hole, O, 'fairway', mic, inp({}), rng(1, 1, 1)), fol = shotOutcome(view, hole, O, 'fairway', mic, inp({ cad: true }), rng(1, 1, 1));
   assert.ok(fol.landing!.at.x > plain.landing!.at.x, 'a followed caddie carries further (+5 power)'); assert.deepEqual(shotOutcome(view, hole, O, 'fairway', NONE, inp({ cad: true }), rng(1, 1, 1)), shotOutcome(view, hole, O, 'fairway', NONE, inp({}), rng(1, 1, 1)), 'without the card the flag is nothing');
-  const cl = gameWith(['clutch-gene']), acc = { power: 1, acc: 0.08, boost: 0 }, miss = (last: boolean) => Math.abs(shotOutcome(view, hole, O, 'fairway', cl, inp({ swing: acc }), rng(2, 2, 2), { last }).landing!.at.y);
-  assert.ok(miss(true) < miss(false), 'on the last hole a click that would have missed is inside the huge sweet spot');
+  const cl = gameWith(['clutch-gene']), acc = { power: 1, acc: 0.08, boost: 0 }, miss = (last: boolean) => { let m = 0; for (let k = 0; k < 60; k++) m += Math.abs(shotOutcome(view, hole, O, 'fairway', cl, inp({ swing: acc }), rng(2, k, 2), { last }).landing!.at.y); return m / 60; };
+  assert.ok(miss(true) < miss(false), `on the last hole a click that would have missed is inside the huge sweet spot (${miss(true).toFixed(2)} tiles off the line against ${miss(false).toFixed(2)})`);
   // a mod with a moment the model does not know is dropped from a save, never made unconditional
   assert.deepEqual(readMods([{ id: 'a', when: 'moon', carry: 2 }, { id: 'b', when: 'last', sweet: 2 }]).map(m => m.id), ['b']); assert.equal(readMods([{ id: 'b', when: 'last', sweet: 2 }])[0]!.when, 'last');
   assert.deepEqual(readMods([{ id: 'c', wind: 0.5, miss: 0.5, slope: 0.5 }])[0], { id: 'c', wind: 0.5, miss: 0.5, slope: 0.5 });
@@ -199,7 +200,7 @@ test('the laser reads the lies along the line, and Read the Feet the fall of a g
   const t = laserLines(rep); assert.ok(/^Pin 240\.0 m · aim 200\.0 m$/.test(t[0]!) && /Water: carry 11\d m, clear at 13\d m/.test(t[1]!) && /Green: from 23\d m/.test(t[3]!), t.join(' | '));
   assert.deepEqual(laserReport({ lieAt: () => 'fairway' }, O, { x: 50, y: 0 }, { x: 60, y: 0 }).items, []);
   // a green that falls to the right of the putt (the ground lower to the screen's south when putting east) breaks left to right; flat reads flat
-  const down = (x: number, y: number) => 0.05 * (-y) * 0.5; // (heights in metres: the ground falls as y grows)
+  const down = (_x: number, y: number) => 0.05 * (-y) * 0.5; // (heights in metres: the ground falls as y grows)
   const r = greenRead(down, { x: 0, y: 0 }, { x: 5, y: 0 }); assert.ok(r.cross > 0 && /breaks left to right/.test(r.text), r.text);
   assert.ok(greenRead(down, { x: 5, y: 0 }, { x: 0, y: 0 }).cross < 0 && /right to left/.test(greenRead(down, { x: 5, y: 0 }, { x: 0, y: 0 }).text));
   assert.match(greenRead(() => 0, O, { x: 5, y: 0 }).text, /flat/); assert.match(greenRead(null, O, { x: 5, y: 0 }).text, /flat/);
@@ -239,6 +240,6 @@ test('golden: no cards (a kit with no moment) play the shot of before: applyMods
   const { view, hole } = view18(4);
   for (const club of ['driver', 'iron6', 'sw', 'putter'] as Club[]) for (let k = 0; k < 6; k++) {
     const input = swing0(club, club === 'putter' ? { aim: { x: 59, y: 1 } } : {}), from = club === 'putter' ? { x: 55, y: 0 } : O;
-    assert.deepEqual(shotOutcome(view, hole, from, 'fairway', NONE, input, rng(9, k, 4)), shotOutcome(view, hole, from, 'fairway', base(), input, rng(9, k, 4), { last: true }), `${club} ${k}: the same shot with the moment and without cards`);
+    assert.deepEqual(shotOutcome(view, hole, from, 'fairway', NONE, input, rng(9, k, 4)), shotOutcome(view, hole, from, 'fairway', NONE, input, rng(9, k, 4), { last: true }), `${club} ${k}: a golfer with no cards plays the same shot with the moment and without`);
   }
 });

@@ -42,7 +42,7 @@ test('catalogue: every card is data: a made-up name, a rarity, an effect, its wo
   const bad = /\b(titleist|callaway|taylor ?made|ping|cobra|mizuno|srixon|cleveland|scotty|cameron|odyssey|nike|adidas|footjoy|puma|garmin|trackman|bushnell|aimpoint|tiger|rory|mcilroy|scheffler|koepka|mickelson|nicklaus|palmer|wham-o|hula hoop|bob does|internet invitational|good good|pelz|sik)\b/i;
   for (const c of CARDS) {
     for (const [k, v] of Object.entries({ name: c.name, text: c.text, flavour: c.flavour, inspiration: c.inspiration })) { assert.ok(v.length >= (k === 'name' ? 4 : 10), `${c.id}.${k} has words`); assert.ok(!bad.test(v), `${c.id}.${k} names no trademark or real person: ${v}`); }
-    assert.ok(c.rarity >= 0 && c.rarity <= 4); assert.ok(c.fx.mods?.length || c.fx.mech?.length || c.fx.practice, `${c.id} does something`);
+    assert.ok(c.rarity >= 0 && c.rarity <= 4); assert.ok(c.fx.mods?.length || c.fx.mech?.length || c.fx.practice || c.fx.eco, `${c.id} does something`);
   }
   for (const d of DUDS) { assert.ok(!bad.test(d.name) && !bad.test(d.quote), d.id); assert.ok(d.name && d.quote); }
   assert.ok(DUDS.length >= 6 && new Set(DUDS.map(d => d.id)).size === DUDS.length, 'the golf junk');

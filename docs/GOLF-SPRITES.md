@@ -492,7 +492,7 @@ rarity's colour, no lettering, nothing mirrored, no brand names or logos. Put th
 
 ## The rest of the cards (T337, #963: art requests)
 Same rules as the T336 table above (16:9, 640 x 360 px, one object lit from the upper right on a deep purple-black ground, a soft glow in the rarity's colour, no lettering, nothing mirrored, no brands). Today each card is a drawn
-glyph on the dark frame (`CardArt.tsx`, "Stand In for card art"; T337 added twelve glyphs: the laser, the eye, the heart, the eraser, the microphone, the robot, the wind, the slope, the dice, the beer, the flag and the star), except
+glyph on the dark frame (`CardArt.tsx`, "Stand In for card art"; T337 added twelve glyphs: the laser, the eye, the heart, the eraser, the microphone, the robot, the wind, the slope, the dice, the beer, the flag and the trophy), except
 Backyard Trick Shot, which uses TrickOrTreat's yo-yo painting (`src/assets/cards/yoyo.webp`, cut by `scripts/assets/prep-card-art.mjs`). A card's painting goes in `src/assets/cards/<card id>.webp` and the card's `art` points at it.
 | Sprite (id to use) | Today | Prompt (short) | P |
 | --- | --- | --- | --- |
@@ -503,7 +503,7 @@ Backyard Trick Shot, which uses TrickOrTreat's yo-yo painting (`src/assets/cards
 | Rake of Truth (`card:bunker-rake`), Fairway Finder (`card:fairway-finder`), Cold Beer, Hot Hands (`card:cold-beer`) (uncommon) | glyph | a bunker rake combing a perfect line; a flag with a compass needle on a fairway; a frosty bottle of golden beer, a little steam rising from a gripping hand | P3 |
 | Laser Rangefinder (`card:laser-rangefinder`) (uncommon) | glyph | a small black binocular-shaped rangefinder with a thin red beam to a far flag | P2 |
 | Lesson Voucher Book (`card:lesson-book`), Gambler's Dice (`card:gamblers-dice`) (uncommon) | glyph | a booklet of tear-off vouchers with a pencil; two dice on a green felt showing one golf ball pip each | P3 |
-| Slow-Mo Swing App (`card:slow-mo-app`), Stimpmeter Nerd (`card:stimp-nerd`), Pace Putting Robot (`card:pace-robot`) (rare) | glyph | a tablet showing a frozen swing with an arc overlay; a tiny nerd with thick glasses tilting a ramp for a ball; a small tin robot putting a ball with a measured stroke | P2 |
+| Slow-Mo Swing App (`card:slow-mo-app`), Green-Speed Nerd (`card:speed-nerd`), Pace Putting Robot (`card:pace-robot`) (rare) | glyph | a tablet showing a frozen swing with an arc overlay; a tiny nerd with thick glasses tilting a ramp for a ball; a small tin robot putting a ball with a measured stroke | P2 |
 | Wind Whisperer (`card:wind-whisperer`), Slope Mode (`card:slope-mode`) (rare) | glyph | a golfer cupping a hand to listen to curling streams of wind; a green drawn as a tilted contour map with a ball rolling | P2 |
 | Mic'd-Up Caddie (`card:mic-caddie`), Skins Hustler (`card:skins-hustler`), Sponsor Tent (`card:sponsor-tent`) (rare) | glyph | a caddie with a headset microphone pointing at a club; a man with a roll of banknotes behind his back grinning; a striped sponsor tent with a banner and a trophy | P2 |
 | Driver Off the Deck (`card:deck-driver`), Scramble Captain (`card:scramble-captain`) (rare) | glyph | a driver sitting on a fairway lie, the ball low on the grass; a captain's hat on a star with two balls flying side by side | P2 |
