@@ -13,7 +13,7 @@ import { CONTACT_LEAN } from './shadow-shape';
 import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
 import { SHADOW_AMBIENT } from './cast-shadow';
 import { BRAKE_LIGHT } from './sim/car-lamps';
-import { CAMERA_DISTANCE_GLSL, SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
+import { CAMERA_FALLOFF_GLSL, SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
 import { CAR_PAINT_GLSL } from './car-paint';
@@ -88,7 +88,7 @@ uniform sampler2D uTrackTex; uniform vec4 uTrack;
 ${SUN_UNIFORMS}
 in vec2 vUV; in vec2 vW; out vec4 o;
 ${SPEC_LIGHT_GLSL}
-${CAMERA_DISTANCE_GLSL}
+${CAMERA_FALLOFF_GLSL}
 ${GLOSS_LIGHT_GLSL}
 ${GRASS_SHINE_GLSL}
 ${WATER_MOTION_GLSL}
@@ -109,15 +109,13 @@ void main() {
   if (uSpec.z > 0.0) {
     vec4 m = texture(uSpecTex, vUV * vec2(textureSize(uTex, 0)) / (${SPEC_MASK_K.toFixed(1)} * vec2(textureSize(uSpecTex, 0))));
     if (m.a > 0.002) {
-      float d = camD(uSpec.w);
-      c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb / m.a * 255.0, m.a), (1.0 - smoothstep(uSpec.x, uSpec.y, d)) * uSpec.z) / 255.0;
+      c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb / m.a * 255.0, m.a), camFall(uSpec) * uSpec.z) / 255.0;
     }
   }
   if (uGloss.z > 0.0) {
     vec4 g = texture(uGlossTex, vUV * vec2(textureSize(uTex, 0)) / (${GLOSS.maskK.toFixed(1)} * vec2(textureSize(uGlossTex, 0))));
     if (g.a > 0.002) {
-      float d = camD(uGloss.w);
-      c.rgb = glossLight(c.rgb * 255.0, vec4(g.rgb / g.a * 255.0, g.a), (1.0 - smoothstep(uGloss.x, uGloss.y, d)) * uGloss.z) / 255.0;
+      c.rgb = glossLight(c.rgb * 255.0, vec4(g.rgb / g.a * 255.0, g.a), camFall(uGloss) * uGloss.z) / 255.0;
     }
   }
   if (uShine.z > 0.0) {

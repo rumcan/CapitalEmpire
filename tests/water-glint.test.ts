@@ -4,9 +4,10 @@
 // narrower than tall by SpecLook.oval (1 round), on the CPU twin (specFalloff) and in the shader (CAMERA_DISTANCE_GLSL, gl.ts).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
-import { CAMERA_DISTANCE_GLSL, SPEC_LOOK, SPEC_OVAL, clampSpecLook, specFalloff, specGain } from '../src/game/lamp-reflect';
+import { CAMERA_FALLOFF_GLSL, SPEC_LOOK, SPEC_OVAL, clampSpecLook, specFalloff, specGain } from '../src/game/lamp-reflect';
 import { glossGain } from '../src/game/swamp';
 import { MOTION_RANGES, WATER_MOTION, clampWaterMotion } from '../src/game/water-motion';
 import { NIGHT_DEFAULT } from '../src/game/night-light';
@@ -25,27 +26,29 @@ test('the default water: moving on, flow 2.29x, ripples 117%, foam 128%, sparkle
   assert.deepEqual(clampWaterMotion({ on: true, flow: 1, ripple: 1, foam: 1, sparkle: 1 }), { on: true, flow: 1, ripple: 1, foam: 1, sparkle: 1 });
 });
 
-test('the glint\'s oval: round at 1, narrower than tall above it; on the screen\'s middle line the vertical reach is the old round one', () => {
-  const W = 1600, H = 2400, inner = 0.15, outer = 1;
-  // oval 1 is the old falloff, whatever the optional argument says
-  for (const [x, y] of [[W / 2, H / 2], [W / 2 + 300, H / 2], [W / 2, H / 2 + 500], [100, 100], [W, 0]]) assert.equal(specFalloff(x!, y!, W, H, inner, outer, 1), specFalloff(x!, y!, W, H, inner, outer));
-  assert.equal(specFalloff(W / 2, H / 2, W, H, inner, outer, 4), 1, 'whole at the centre');
-  // a point o times farther sideways than another is as far from the centre as the other is above it: the same falloff
-  for (const o of [2, 3, 5, 8]) {
-    const up = 400, side = up / o;
-    assert.ok(Math.abs(specFalloff(W / 2 + side, H / 2, W, H, inner, outer, o) - specFalloff(W / 2, H / 2 + up, W, H, inner, outer, 1)) < 1e-12, `oval ${o}`);
-    // and the same pixel is dimmer the thinner the oval, never brighter
-    assert.ok(specFalloff(W / 2 + 300, H / 2, W, H, inner, outer, o) <= specFalloff(W / 2 + 300, H / 2, W, H, inner, outer, 1) + 1e-12);
+test('the glint\'s oval: round at 1 (the old falloff), a vertical oval above it with its sides feathered; the middle line and the height are the round glint\'s', () => {
+  const W = 1600, H = 2400, inner = 0.15, outer = 1, R = 0.5 * Math.max(W, H);
+  /** the round falloff as it was before the oval: 1 within inner, 0 past outer, a smoothstep between */
+  const old = (x: number, y: number, i = inner, o = outer) => { const d = Math.hypot(x - W / 2, y - H / 2) / R, t = Math.min(1, Math.max(0, (d - i) / (o - i))); return 1 - t * t * (3 - 2 * t); };
+  for (const [x, y] of [[W / 2, H / 2], [W / 2 + 300, H / 2], [W / 2, H / 2 + 500], [100, 100], [W, 0], [W / 2 - 220, H / 2 + 90]]) {
+    assert.ok(Math.abs(specFalloff(x!, y!, W, H, inner, outer, 1) - old(x!, y!)) < 1e-12 && Math.abs(specFalloff(x!, y!, W, H, inner, outer) - old(x!, y!)) < 1e-12, `oval 1 at ${x},${y}`);
   }
-  // straight above the centre the reach does not change with the oval (it narrows sideways only)
-  for (const o of [1, 3, 8]) assert.equal(specFalloff(W / 2, H / 2 - 600, W, H, inner, outer, o), specFalloff(W / 2, H / 2 - 600, W, H, inner, outer, 1));
-  // symmetric left and right, up and down
+  assert.equal(specFalloff(W / 2, H / 2, W, H, inner, outer, 4), 1, 'whole at the centre');
+  // straight up and down the middle line the reach is the round glint's, whatever the oval: the oval narrows it sideways only
+  for (const o of [1, 1.5, 2, 3, 8]) for (const dy of [0, 200, 600, 1000]) assert.equal(specFalloff(W / 2, H / 2 - dy, W, H, inner, outer, o), old(W / 2, H / 2 - dy), `oval ${o}, ${dy} px up`);
+  // symmetric left and right, up and down; never brighter than the round one, falling away from the middle line
   assert.equal(specFalloff(W / 2 + 120, H / 2 + 200, W, H, inner, outer, 3), specFalloff(W / 2 - 120, H / 2 - 200, W, H, inner, outer, 3));
-  // the shape: the contour of falloff 0.5 is a vertical ellipse o times taller than wide
-  const o = 3, reach = (dx: number, dy: number) => specFalloff(W / 2 + dx, H / 2 + dy, W, H, inner, outer, o);
-  let lo = 0, hi = 0.5 * H; for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (reach(0, m) > 0.5) lo = m; else hi = m; }
-  const tall = lo; lo = 0; hi = 0.5 * W; for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (reach(m, 0) > 0.5) lo = m; else hi = m; }
-  assert.ok(Math.abs(tall / lo - o) < 1e-6, `${(tall / lo).toFixed(4)} times taller than wide`);
+  for (const o of [2, 3, 5, 8]) { let prev = 1; for (let x = W / 2; x < W; x += 5) { const f = specFalloff(x, H / 2 + 80, W, H, inner, outer, o); assert.ok(f <= prev + 1e-12 && f <= old(x, H / 2 + 80) + 1e-12, `oval ${o} at ${x}`); prev = f; } }
+  // the sides are feathered (the lead's review of the first stripe: "hard-sided", "no flat colour washes"): even a hard Inner / Outer gap (0.30 to 0.31, the owner's strong
+  // glint) makes no crisp edge from oval 2 on: the biggest step of the falloff between neighbouring pixels along the middle row is small, where the round glint's is a cliff
+  const step = (o: number, i = 0.3, ou = 0.31) => { let m = 0, prev = 1; for (let x = W / 2; x < W; x++) { const f = specFalloff(x, H / 2, W, H, i, ou, o); m = Math.max(m, Math.abs(f - prev)); prev = f; } return m; };
+  assert.ok(step(1) > 0.1, `oval 1 keeps its crisp edge as it was: ${step(1).toFixed(3)} a pixel`);
+  for (const o of [2, 3, 5, 8]) assert.ok(step(o) < 0.05, `oval ${o}: the biggest step between pixels is ${step(o).toFixed(3)}`);
+  let last = Infinity; for (const o of [1, 1.25, 1.5, 1.75, 2]) { const v = step(o); assert.ok(v <= last + 1e-9, `the feather comes in from oval 1 to 2: ${o} ${v.toFixed(3)}`); last = v; }
+  // and with the game's own Inner / Outer the oval is a soft bell: the glint is half-strong a good way in from the middle line, a third of the round one's reach at oval 3
+  const half = (o: number) => { let x = W / 2; while (x < W && specFalloff(x, H / 2, W, H, inner, outer, o) > 0.5) x += 0.25; return x - W / 2; };
+  assert.ok(half(3) < half(1) / 3 * 1.05 && half(3) > half(1) / 3 * 0.5, `half strength at ${half(3)} px against the round glint\'s ${half(1)}`);
+  assert.ok(half(8) < half(3) && half(5) < half(3));
 });
 
 test('the oval knob: the game starts at a much more oval glint (3x), the slider runs from round (1) to 8, a bad value falls back', () => {
@@ -61,10 +64,16 @@ test('the oval knob: the game starts at a much more oval glint (3x), the slider 
   assert.equal(specGain(round, 0.4), specGain(thin, 0.4)); assert.equal(glossGain(round, 1), glossGain(thin, 1));
 });
 
-test('the shader\'s distance takes the oval the same way (x scaled before the length, over half the longer side)', () => {
-  assert.match(CAMERA_DISTANCE_GLSL, /float camD\(float oval\)/);
-  assert.match(CAMERA_DISTANCE_GLSL, /gl_FragCoord\.xy - 0\.5 \* uScreen/);
-  assert.match(CAMERA_DISTANCE_GLSL, /length\(vec2\(q\.x \* oval, q\.y\)\) \/ \(0\.5 \* max\(uScreen\.x, uScreen\.y\)\)/);
+test('the shader\'s falloff is the same: the sideways distance stretched by the oval, the sides feathered, over half the longer side', () => {
+  assert.match(CAMERA_FALLOFF_GLSL, /float camFall\(vec4 u\)/);
+  assert.match(CAMERA_FALLOFF_GLSL, /gl_FragCoord\.xy - 0\.5 \* uScreen/);
+  assert.match(CAMERA_FALLOFF_GLSL, /R = 0\.5 \* max\(uScreen\.x, uScreen\.y\), e = abs\(q\.x\) \* u\.w \/ R, d = length\(vec2\(e, q\.y \/ R\)\)/);
+  assert.match(CAMERA_FALLOFF_GLSL, /side = 1\.0 - smoothstep\(0\.0, u\.y, e\)/);
+  assert.match(CAMERA_FALLOFF_GLSL, /\(1\.0 - smoothstep\(u\.x, u\.y, d\)\) \* mix\(1\.0, side, clamp\(u\.w - 1\.0, 0\.0, 1\.0\)\)/);
+  // gl.ts builds it into the chunk shader and the lamp pools and the water glint both ask it (the grass shine keeps its own round falloff)
+  const gl = readFileSync('src/game/gl.ts', 'utf8');
+  assert.match(gl, /\$\{CAMERA_FALLOFF_GLSL\}/); assert.match(gl, /camFall\(uSpec\) \* uSpec\.z/); assert.match(gl, /camFall\(uGloss\) \* uGloss\.z/);
+  assert.match(gl, /length\(gl_FragCoord\.xy - 0\.5 \* uScreen\) \/ \(0\.5 \* max\(uScreen\.x, uScreen\.y\)\), k = \(1\.0 - smoothstep\(uShine\.x/, 'the shine is round, as it was');
 });
 
 test('the Night panel: the glint\'s Oval / thinness slider (1 to 8, at the game\'s own oval) and the water\'s default button', () => {

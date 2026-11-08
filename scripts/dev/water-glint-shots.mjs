@@ -76,6 +76,8 @@ try {
         await setLook(look); await page.waitForTimeout(400);
         const shot = await page.screenshot({ type: 'png' });
         await save(shot, `glint-${name}-${Math.round(z * 100)}pct`);
+        // a 2x crop of the middle (the stripe's own texture: crests lit, troughs left, soft sides)
+        if (name === 'tuned' && z === zooms[0]) await save(await sharp(shot).extract({ left: W / 2 - 210, top: H / 2 - 140, width: 420, height: 280 }).resize({ width: 840, kernel: 'nearest' }).png().toBuffer(), `glint-tuned-crop-${Math.round(z * 100)}pct`);
       }
       if (sweep && info.oval !== null && z === zooms[0]) {
         // the oval at 1, 2, 3, 5 and 8 over the same water, each a half-size frame with its label, side by side

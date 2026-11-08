@@ -353,12 +353,15 @@ export const swampKey = (r: number, g: number, b: number) => smooth(KEY.br[0], K
  *    pixel's distance from it);
  *  - maskK: the chunk's gloss mask is a maskK-th of its size each way (the pools are small: finer than the lamps' quarter);
  *  - amount: how far toward the sky the pools go at the whole gain, on their lit ripples; spread: luma: the water's texture, its distance from
- *    the local mean, in units of this; floor: the share of it the water's darkest hollows keep; max: the most a pixel goes toward the sky;
+ *    the local mean, in units of this; crest: that distance (in spreads) where a ripple takes none of the glint's share and where it takes all of it
+ *    (T363, the lead's review: "glittering highlights on the wave crests, not a lighter band": the ripples' lit sides, which face the sun, glitter, the
+ *    hollows and the flat water between them are left); floor: the share of it the darkest hollows keep (nearly none); max: the most a pixel goes
+ *    toward the sky: a soft ceiling (max x / (x + max): the slope is 1 at the start and it never goes flat), so a big gain brightens the crests without flattening them into a wash;
  *  - sky: the cool sky colour the pools reflect (0..255);
  *  - night: the share of the glint gone after dusk (no sky to reflect) */
 export const GLOSS = {
   tileScale: 0.25, inset: [1, 4.5], meanRadius: 7, maskK: 2,
-  amount: 0.55, spread: 12, floor: 0.2, max: 0.5, sky: [180, 212, 226], night: 0.8,
+  amount: 0.8, spread: 12, crest: [-0.3, 1], floor: 0.02, max: 0.5, sky: [180, 212, 226], night: 0.8,
 } as const;
 
 /** a swamp tile's gloss (src: its RGBA, w x h px, at GLOSS.tileScale of native): RGBA, alpha the gloss (its pools by colour, inset from their
@@ -407,12 +410,12 @@ export function glossTile(src: Uint8ClampedArray, w: number, h: number): Uint8Cl
 const LUMA = [0.299, 0.587, 0.114] as const;
 /** the GPU's glint (gl.ts glossLight; its twin): the ground's pixel c (0..255) where the gloss mask holds the pool's local mean m (0..255) and
  *  the gloss g, at the camera falloff times the gain k: toward the cool sky by g x k x the pixel's own water key x GLOSS.amount x its texture
- *  (its distance from the mean: the lit ripples whole, the dark hollows GLOSS.floor of it), at most GLOSS.max */
+ *  (its distance from the mean, GLOSS.crest: the lit ripples whole, the hollows GLOSS.floor of it), softly held under GLOSS.max */
 export function glossPixel(c: readonly number[], m: readonly number[], g: number, k: number): number[] {
   const a = g * swampKey(c[0]!, c[1]!, c[2]!) * k;
   if (!(a > 0)) return [...c];
   const z = ((c[0]! - m[0]!) * LUMA[0] + (c[1]! - m[1]!) * LUMA[1] + (c[2]! - m[2]!) * LUMA[2]) / GLOSS.spread;
-  const s = Math.min(a * GLOSS.amount * (GLOSS.floor + (1 - GLOSS.floor) * smooth(-1, 1, z)), GLOSS.max);
+  const x = a * GLOSS.amount * (GLOSS.floor + (1 - GLOSS.floor) * smooth(GLOSS.crest[0], GLOSS.crest[1], z)), s = GLOSS.max * x / (x + GLOSS.max);
   return c.map((v, i) => v + (GLOSS.sky[i]! - v) * s);
 }
 /** the glint's gain at the night light's amount (0 day .. 1 night): T215's strength by day, GLOSS.night of it gone after dusk */
@@ -427,6 +430,7 @@ vec3 glossLight(vec3 c, vec4 m, float k) {
   float a = m.a * swampKey(c) * k;
   if (a <= 0.0) return c;
   float z = dot(c - m.rgb, vec3(${LUMA.map(glslNum).join(', ')})) / ${glslNum(GLOSS.spread)};
-  float s = min(a * ${glslNum(GLOSS.amount)} * mix(${glslNum(GLOSS.floor)}, 1.0, smoothstep(-1.0, 1.0, z)), ${glslNum(GLOSS.max)});
+  float x = a * ${glslNum(GLOSS.amount)} * mix(${glslNum(GLOSS.floor)}, 1.0, smoothstep(${glslNum(GLOSS.crest[0])}, ${glslNum(GLOSS.crest[1])}, z));
+  float s = ${glslNum(GLOSS.max)} * x / (x + ${glslNum(GLOSS.max)});
   return c + (vec3(${GLOSS.sky.map(glslNum).join(', ')}) - c) * s;
 }`;

@@ -104,15 +104,21 @@ export function clampSpecLook(s: Partial<SpecLook> | null | undefined): SpecLook
 }
 /** the camera falloff at device px (x, y) of a w x h screen: 1 within the inner radius, 0 past the outer, a smoothstep between. The distance
  *  is in screen px over half the longer side, so the falloff is round on any screen (the aspect corrected), and outer 1 reaches the far edges.
- *  T363: oval scales the sideways distance (1 round; 3 narrower than tall by 3), so the reflection is a vertical ellipse as tall as the round one was */
+ *  T363: oval scales the sideways distance (1 round; 3 narrower than tall by 3), so the reflection is a vertical ellipse as tall as the round one was;
+ *  and from oval 1 to 2 its sides take a feather: a smoothstep over the whole half width (0 at the middle line .. the outer radius), so a narrow Inner / Outer
+ *  gap makes no crisp-sided stripe (the lead's review: "no flat colour washes"; the middle line, the vertical reach and oval 1 are as they were) */
 export function specFalloff(x: number, y: number, w: number, h: number, inner: number, outer: number, oval = 1): number {
-  const d = Math.hypot((x - w / 2) * oval, y - h / 2) / (0.5 * Math.max(w, h));
-  return 1 - smooth(inner, outer, d);
+  const R = 0.5 * Math.max(w, h), e = Math.abs(x - w / 2) * oval / R, d = Math.hypot(e, (y - h / 2) / R);
+  const side = 1 - smooth(0, outer, e), t = clamp(oval - 1, 0, 1);
+  return (1 - smooth(inner, outer, d)) * (1 + (side - 1) * t);
 }
-/** GLSL (gl.ts FS_QUAD): camD(oval), specFalloff's distance on the GPU (uSpec.w and uGloss.w carry the oval; the grass shine's own falloff stays round). Needs uniform vec2 uScreen */
-export const CAMERA_DISTANCE_GLSL = `float camD(float oval) {
+/** GLSL (gl.ts FS_QUAD): camFall(u), specFalloff on the GPU: u is uSpec or uGloss (x inner, y outer, z gain, w the oval); the grass shine's own falloff stays round.
+ *  Needs uniform vec2 uScreen */
+export const CAMERA_FALLOFF_GLSL = `float camFall(vec4 u) {
   vec2 q = gl_FragCoord.xy - 0.5 * uScreen;
-  return length(vec2(q.x * oval, q.y)) / (0.5 * max(uScreen.x, uScreen.y));
+  float R = 0.5 * max(uScreen.x, uScreen.y), e = abs(q.x) * u.w / R, d = length(vec2(e, q.y / R));
+  float side = 1.0 - smoothstep(0.0, u.y, e);
+  return (1.0 - smoothstep(u.x, u.y, d)) * mix(1.0, side, clamp(u.w - 1.0, 0.0, 1.0));
 }`;
 /** the reflection's strength at the night light's amount (0 day .. 1 night): the day share by day, the whole strength at night */
 export const specGain = (s: SpecLook, night: number) => s.strength * (s.day + (1 - s.day) * clamp(night, 0, 1));
