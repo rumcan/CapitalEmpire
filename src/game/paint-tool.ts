@@ -91,6 +91,8 @@ export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your 
 /** why Rub out leaves a cell as it is when the land rules let it (T125): nothing above the base there, or (rubHoleOnly) another hole's cell */
 /** T206: the Green and Bunker brushes in the practice area */
 export const PRACTICE_BRUSH_WHY = 'Practice greens are built with Facilities ▸ Practice';
+/** T338: why the Water brush skips the map's own water (it joins it there) */
+export const MAP_WATER_WHY = 'The river is water already: your water joins it';
 /** whether surface s is one the practice tools lay (the brushes are refused with it in the practice area) */
 const practiceSurf = (s: number) => s === SURF.green || s === SURF.bunker;
 export const RUB_WHY = { nothing: 'Nothing to rub out', hole: 'Another hole' } as const;
@@ -203,6 +205,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** T206: whether tile (x, y) lies in the driving range's practice area (its greens and bunkers are built with Facilities ▸ Practice, not
    *  the hole brushes: the Green and Bunker brushes are refused there) */
   practiceAt?(x: number, y: number): boolean;
+  /** T338 (#965): whether tile (x, y) lies in the map's own water (the river, a creek; map-water.ts): the Course brush lays no water on a cell
+   *  of it the course leaves bare (it is water already: the course's water meeting it joins it instead) */
+  mapWaterAt?(x: number, y: number): boolean;
   /** the golf game's hole plans (save tuples) and their setter: undo and redo carry them */
   plans?(): unknown[];
   setPlans?(p: unknown[]): void;
@@ -1462,7 +1467,8 @@ export class PaintTool {
   brushCellCost(): ((x: number, y: number) => number) | null {
     const g = this.courseGrid(), s = g ? this.brushSurf() : 0; if (!g || !s || this.rubOut || !this.host.golfMode?.()) return null;
     const h = this.brushHole, unit = this.priceOf(s);
-    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || (!this.paintReplace && surfAbove(g.surf[i]!, s)) ? 0 : unit; };
+    const wet = s === SURF.water ? this.host.mapWaterAt : undefined; // T338: the map's water is water already
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || (!this.paintReplace && surfAbove(g.surf[i]!, s)) || (wet && g.surf[i] === SURF.none && wet(x, y)) ? 0 : unit; };
   }
   /** the brush rules on grid g: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did; Replace: 'any') and owned
    *  cells only; a rub out (T125) takes every cell rubWhy lets it (it lays the base over them, carved: no 'below', no course-grid rub) */
@@ -1473,7 +1479,9 @@ export class PaintTool {
     const look = this.grass && (this.mode === 'brush' || this.mode === 'draw') && s === PLAY_SURF[this.grass.plays] ? { look: this.grassInHand } : {};
     // T206: a green or bunker never goes into the practice area (Facilities ▸ Practice builds there; painted ones of old saves stay)
     // T256: the property's brush never takes a hole's cell (a hole's brush takes the property's, and another hole's, as before)
-    return { over: this.paintReplace ? 'any' : 'below', allow: i => { if (prop && g.hole[i]! > 0) return false; if (!own && !prac) return true; const c = cellCentre(g, i); return (!own || own(c.x, c.y)) && !prac?.(c.x, c.y); }, ...look };
+    // T338: the water brush never lays water on the map's own water the course leaves bare (a no-op: it joins it)
+    const wet = s === SURF.water ? this.host.mapWaterAt : undefined;
+    return { over: this.paintReplace ? 'any' : 'below', allow: i => { if (prop && g.hole[i]! > 0) return false; if (!own && !prac && !wet) return true; const c = cellCentre(g, i); return (!own || own(c.x, c.y)) && !prac?.(c.x, c.y) && !(wet && g.surf[i] === SURF.none && wet(c.x, c.y)); }, ...look };
   }
   /** T256: the land the brush may paint: your land (Range › Build: the range's plot too), else your land off the range's plot (the holes) */
   private landRule(): ((x: number, y: number) => boolean) | undefined { return this.property ? this.host.landAt ?? this.host.ownedAt : this.host.ownedAt; }
@@ -1515,6 +1523,7 @@ export class PaintTool {
       if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return this.landWhyAt(c.x, c.y); }
       if (this.property && g.hole[i]! > 0) return `Hole ${g.hole[i]}'s: paint it in the Holes panel`; // T256
       if (practiceSurf(s) && this.host.practiceAt) { const c = cellCentre(g, i); if (this.host.practiceAt(c.x, c.y)) return PRACTICE_BRUSH_WHY; }
+      if (s === SURF.water && g.surf[i] === SURF.none && this.host.mapWaterAt) { const c = cellCentre(g, i); if (this.host.mapWaterAt(c.x, c.y)) return MAP_WATER_WHY; } // T338
       const top = g.surf[i]!, nm = SURF_SURFACE[top]; const nn = nm?.replace(/[A-Z]/g, c => ' ' + c.toLowerCase()); return surfAbove(top, s) ? `${nn ? nn[0]!.toUpperCase() + nn.slice(1) : 'A higher surface'} stays on top` : '';
     };
   }
