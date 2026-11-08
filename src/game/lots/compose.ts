@@ -23,7 +23,8 @@ import {
 import { WHOLE_FRONT, approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, faces, footprintOf, isVehicle, ownerScaleOf, roadView, turned } from './preset-art';
 import { fixedArt } from './art-fix';
-import { EPS, OVERLAP, share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear); T308: the facing's tolerance
+import { EPS, OVERLAP, REACH, share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear); T308: the facing's tolerance; T376: the setback's reach
+import { basePad } from './base-pad';
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
@@ -412,6 +413,33 @@ function faceStreet(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame
   });
   return props.some((p, k) => p !== fit.props[k]) || kept ? { ...fit, props, facing: kept } : fit;
 }
+// ---------- T376 (#1032): the commercial buildings stand behind the pavement
+/** T376 (#1032, the owner: "the buildings that are going onto the pavement ... the commercial buildings"): a shop's or venue's buildings stand with their
+ *  base behind the lot's front line, the pavement lying beyond it: the footprint (a preset may leave it REACH over the line) and the ground contact of its
+ *  picture (base-pad.ts basePad: steps, door mats, planters, kerbs) both at b >= 0. A building too far forward moves straight back by what lacks, as far as
+ *  the lot's back (REACH past it, as inside() allows) and the props it would newly overlap beyond OVERLAP (done() would drop one of them) let it. Awnings
+ *  and signs above head height cross the line as they do: only ground contact counts. The other uses are left as they are */
+function setBack(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): Fitted {
+  if ((preset.use !== 'com' && preset.use !== 'tour') || !fit.props.length || preset.id === 'auto:centre') return fit;
+  const road = roadOf(lot.n), half = frameHalf(f), props = fit.props.slice(), boxes = fit.props.map(q => boxAt(q, half(q)));
+  let moved = 0;
+  props.forEach((q, k) => {
+    if (!isBuildingId(q.id)) return;
+    const h = half(q), pad = basePad(drawnView(q.id, f, q.view).id, road, q.scale * ownerScaleOf(q.id));
+    // how far the base reaches in front of the line (tiles), and how far the lot's back lets the building move
+    const need = pad + h.hb - q.y, room = lot.d + REACH - (q.y + h.hb) - 3 * EPS;
+    if (need <= EPS / 4) return;
+    let dy = Math.min(need, room);
+    for (; dy > EPS / 4; dy -= 0.05) {
+      const b = boxAt({ x: q.x, y: q.y + dy }, h);
+      // (a prop the building comes to overlap beyond OVERLAP is the one done() drops: so none that did not already; a pair over it already stays as it is)
+      if (boxes.every((o, j) => j === k || share(b, o) <= OVERLAP || share(boxes[k]!, o) > OVERLAP)) break;
+    }
+    if (dy <= EPS / 4) return;
+    props[k] = { ...q, y: q.y + dy }; boxes[k] = boxAt(props[k]!, h); moved++;
+  });
+  return moved ? { ...fit, props } : fit;
+}
 /** the frame a preset is drawn in on a lot: frameOf, a lab preset of a diagonal road turned by its quarter (quarterOfRoad) */
 const presetFrame = (lot: LotGeom, preset: LotPreset): PresetFrame => { const f = frameOf(lot); return preset.road !== undefined && preset.road % 2 ? { ...f, q: quarterOfRoad(preset.road) } : f; };
 /** the preset a built lot draws (pickedPreset), fitted to the lot, and the lot's preset frame (presetFrame); a shop lot's shop swapped for the one
@@ -422,7 +450,7 @@ export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; 
   const { preset } = plan, frame = presetFrame(lot, preset);
   // T167: a picture the owner removed is never drawn: a stand-in takes its place (or it is left out), before the house finds its yards
   // T297 (#882): the remix comes last, on the props as drawn (the stand-ins and the shop in place); its main building is the shop's spot
-  const fit0 = faceStreet(swapShop(standIns(atRoadSize(fitPreset(preset, lot.w, lot.d)), preset, lot, frame), plan, lot, frame), preset, lot, frame);
+  const fit0 = setBack(faceStreet(swapShop(standIns(atRoadSize(fitPreset(preset, lot.w, lot.d)), preset, lot, frame), plan, lot, frame), preset, lot, frame), preset, lot, frame);
   const sw = plan.swap ? fit0.from.indexOf(plan.swap.spot) : -1;
   const fit1 = remixOf(fit0, preset, lot, st, frame, sw >= 0 ? sw : mainIndex(fit0, frame));
   // T314 (#899): an approved house preset on a screen-straight road gets the generated lots' yard trees, owned hedge and soft ground (autolot.ts

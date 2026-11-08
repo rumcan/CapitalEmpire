@@ -5,6 +5,7 @@
 // the road), 45 off (a four-view building on a screen-straight road: the nearest corner), WRONG (its front is turned off the road by 90 degrees or more).
 //   node scripts/dev/street-front-sheet.mjs --base http://127.0.0.1:5189/ --out E:/ClaudeTemp/T375 --tag before|after [--only shops,venues,houses] [--roads 0,1,2,3,4,5,6,7]
 //     [--houses 6]  (houses: how many of the palette's, spread along it)
+//     [--front]  (T376: each cell framed on the lot's street front, the red line, larger: the base of the walls against the pavement; the sheets are named *-front-<tag>.png)
 // Needs a dev server (vite) on --base. One headless Edge, closed when done. Nothing is saved.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -15,7 +16,8 @@ const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--
 const base = opt('base', 'http://127.0.0.1:5189/'), out = opt('out', 'output/street-front-sheet'), tag = opt('tag', 'after');
 const only = new Set(opt('only', 'shops,venues,houses').split(',')), roads = opt('roads', '0,1,2,3,4,5,6,7').split(',').map(Number), nHouses = +opt('houses', '17');
 mkdirSync(out, { recursive: true });
-const W = 1500, H = 950, ZOOM = 0.3, CELL_W = 400, CELL_H = 300;
+const front = args.includes('--front');
+const W = 1500, H = 950, ZOOM = 0.3, CELL_W = front ? 560 : 400, CELL_H = front ? 330 : 300;
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const results = [];
@@ -28,11 +30,14 @@ try {
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
   await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.setSpeed(0); });
-  const settle = async (ms = 700) => {
+  const settle = async (ms = 500) => {
+    const t0 = Date.now();
     await sleep(ms);
     await page.evaluate(() => { window.__calm = 0; });
-    await page.waitForFunction(() => { const g = window.__game; window.__calm = g.ground.busy === 0 && g.lotsPending === 0 ? window.__calm + 1 : 0; return window.__calm > 12; }, null, { timeout: 90000, polling: 50 }).catch(() => console.log('  (settle timed out)'));
-    await sleep(250);
+    // (Game.lotsPending counts the staged lab lot as well, which stays: the lot queue alone says the lots are composed)
+    await page.waitForFunction(() => { const g = window.__game; window.__calm = g.ground.busy === 0 && g.lotQueue.size === 0 ? window.__calm + 1 : 0; return window.__calm > 12; }, null, { timeout: 90000, polling: 50 }).catch(() => console.log('  (settle timed out)'));
+    await sleep(200);
+    const dt = Date.now() - t0; if (dt > 15000) { const st = await page.evaluate(() => ({ busy: window.__game.ground.busy, queue: window.__game.lotQueue.size })); console.log('  slow settle', dt, 'ms', JSON.stringify(st)); }
   };
   /** which building a lot shows and what it faces: the lot lab's lot staged for a road, shifted `shift` lattice cells along its street, `biz` forced */
   const stage = (o) => page.evaluate(async o => {
@@ -41,9 +46,12 @@ try {
     // (lead/live has no object-eight.ts: the before run reads the old art's views alone)
     let eight = null; try { eight = (await import('/src/game/object-eight.ts')).objectFacings; } catch { /* the old game */ }
     const st = { use: LU[o.use], level: 2, decline: 0, seed: o.seed, ...(o.biz ? { biz: o.biz } : {}) };
-    const lab = g.stageLab({ road: o.road, w: o.w, d: o.d, st });
-    let geom = lab.g;
-    if (o.shift) { geom = { ...geom, o: { x: geom.o.x + geom.u.x * 7 * o.shift, y: geom.o.y + geom.u.y * 7 * o.shift } }; g.placeLot('lab', geom, st); }
+    // (stageLab resets the whole map: once for a lot's kind and road, then the lot moves along its street a lattice cell at a time)
+    const lk = [o.use, o.road, o.w, o.d, o.seed, o.biz ?? ''].join('|');
+    if (window.__labKey !== lk) { window.__labGeom = g.stageLab({ road: o.road, w: o.w, d: o.d, st }).g; window.__labKey = lk; }
+    let geom = window.__labGeom;
+    if (o.shift) geom = { ...geom, o: { x: geom.o.x + geom.u.x * 7 * o.shift, y: geom.o.y + geom.u.y * 7 * o.shift } };
+    g.placeLot('lab', geom, st);
     const props = [...g.propsOfLot('lab')].filter(p => isBuilding(LIBRARY[p.item]));
     let main = null, area = 0; for (const p of props) { const a = (p.x1 - p.x0) * (p.y1 - p.y0); if (a > area) { area = a; main = p; } }
     const id = main ? LIBRARY[main.item].id : null;
@@ -65,21 +73,25 @@ try {
     const g = window.__game, { worldX, worldY } = await import('/src/game/iso.ts');
     return pts.map(([x, y]) => [(worldX(x, y) - g.cam.X) * g.cam.z + g.cssW / 2, (worldY(x, y) - g.cam.Y) * g.cam.z + g.cssH / 2]);
   }, pts);
-  const cell = async (o, label) => {
-    const r = await stage({ ...o, zoom: ZOOM });
+  const cell = async (o, label, staged) => {
+    const r = staged ?? await stage({ ...o, zoom: ZOOM });
     await settle();
     const gm = r.geom, corner = (a, b) => [gm.o.x + gm.u.x * a + gm.n.x * b, gm.o.y + gm.u.y * a + gm.n.y * b];
     const lot = await project([corner(0, 0), corner(o.w, 0), corner(o.w, o.d), corner(0, o.d)]);
     const box = r.box ? await project([[r.box[0], r.box[1]], [r.box[2], r.box[1]], [r.box[2], r.box[3]], [r.box[0], r.box[3]]]) : null;
     const png = await page.screenshot({ type: 'png' });
     const xs = lot.map(p => p[0]), ys = lot.map(p => p[1]);
-    const left = Math.max(0, Math.round(Math.min(...xs) - 40)), top = Math.max(0, Math.round(Math.min(...ys) - 150)), right = Math.min(W, Math.round(Math.max(...xs) + 40)), bottom = Math.min(H, Math.round(Math.max(...ys) + 50));
+    const fxs = [lot[0][0], lot[1][0]], fys = [lot[0][1], lot[1][1]];
+    const left = Math.max(0, Math.round((front ? Math.min(...fxs) : Math.min(...xs)) - 40)), top = Math.max(0, Math.round((front ? Math.min(...fys) - 200 : Math.min(...ys) - 150))), right = Math.min(W, Math.round((front ? Math.max(...fxs) : Math.max(...xs)) + 40)), bottom = Math.min(H, Math.round((front ? Math.max(...fys) + 70 : Math.max(...ys) + 50)));
     const pl = (pts, col, wd) => `<polygon points="${pts.map(p => `${(p[0] - left).toFixed(1)},${(p[1] - top).toFixed(1)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="${wd}"/>`;
     const frontEdge = `<line x1="${(lot[0][0] - left).toFixed(1)}" y1="${(lot[0][1] - top).toFixed(1)}" x2="${(lot[1][0] - left).toFixed(1)}" y2="${(lot[1][1] - top).toFixed(1)}" stroke="#ff3b3b" stroke-width="4"/>`;
     const svg = Buffer.from(`<svg width="${right - left}" height="${bottom - top}" xmlns="http://www.w3.org/2000/svg">${pl(lot, '#ffe600', 1.5)}${frontEdge}${box ? pl(box, '#27e0ff', 1.5) : ''}</svg>`);
     const verdict = r.diff === null ? 'single view' : r.diff === 0 ? 'front' : (r.diff === 1 || r.diff === 7) ? '45 off' : 'WRONG';
-    const buf = await sharp(png).extract({ left, top, width: right - left, height: bottom - top }).composite([{ input: svg }]).resize(CELL_W - 8, CELL_H - 52, { fit: 'inside' }).png().toBuffer();
+    // (sharp runs a composite after the resize whatever the call order: frame the outlines first, then shrink)
+    const framed = await sharp(png).extract({ left, top, width: right - left, height: bottom - top }).composite([{ input: svg }]).png().toBuffer();
+    const buf = await sharp(framed).resize(CELL_W - 8, CELL_H - 52, { fit: 'inside' }).png().toBuffer();
     results.push({ label, road: o.road, id: r.id, subject: r.subject, mode: r.mode, key: r.key, verdict });
+    console.log(`  cell ${label} road ${o.road}: ${r.key ?? '-'} ${verdict}`);
     return { buf, verdict, key: r.key, id: r.id };
   };
   const arrows = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE'];
@@ -96,13 +108,13 @@ try {
       }
       y += CELL_H - 20;
     }
-    const file = join(out, `${name}-${tag}.png`);
+    const file = join(out, `${name}${front ? '-front' : ''}-${tag}.png`);
     await sharp({ create: { width: CELL_W * cols, height: y, channels: 4, background: '#3b4252' } }).composite(comp).png().toFile(file); console.log(file);
   };
   const SHOPS = ['town:bakery', 'town:grocery', 'town:pharmacy', 'world:video', 'town:laundromat', 'world:video_rental', 'town:fish_tackle', 'town:barber'], VENUES = ['world:arcade', 'world:diner', 'world:snack_bar'];
   if (only.has('shops')) {
     const rows = [];
-    for (const biz of SHOPS) { const cells = []; for (const road of roads) cells.push(await cell({ use: 'COM', road, w: 16, d: 14, seed: 11, biz }, biz)); rows.push({ label: biz, cells }); }
+    for (const biz of SHOPS) { const cells = []; for (const road of roads) cells.push(await cell({ use: 'COM', road, w: 16, d: 14, seed: 31, biz }, biz)); rows.push({ label: biz, cells }); }
     await sheet('shops', rows);
   }
   if (only.has('venues')) {
@@ -111,7 +123,7 @@ try {
       const cells = [];
       for (const road of roads) {
         let best = null;
-        for (let shift = 0; shift < 9 && !best; shift++) { const c = await cell({ use: 'TOUR', road, w: 20, d: 18, seed: 5, shift }, want); if (c.id && results.at(-1).subject === want) best = c; else results.pop(); }
+        for (let k = 0; k < 17 && !best; k++) { const shift = k % 2 ? (k + 1) / 2 : -k / 2, o = { use: 'TOUR', road, w: 20, d: 18, seed: 5, shift }, r = await stage({ ...o, zoom: ZOOM }); if (r.id && r.subject === want) best = await cell(o, want, r); }
         cells.push(best);
       }
       rows.push({ label: want, cells });
@@ -126,7 +138,7 @@ try {
       const cells = [];
       for (const road of roads) {
         let best = null;
-        for (let shift = 0; shift < 24 && !best; shift++) { const c = await cell({ use: 'RES', road, w: 14, d: 14, seed: 3, shift }, want); const s = results.at(-1).subject; if (c.id && (s === want || results.at(-1).id === want)) best = c; else results.pop(); }
+        for (let k = 0; k < 21 && !best; k++) { const shift = k % 2 ? (k + 1) / 2 : -k / 2, o = { use: 'RES', road, w: 14, d: 14, seed: 3, shift }, r = await stage({ ...o, zoom: ZOOM }); if (r.id && (r.subject === want || r.id === want)) best = await cell(o, want, r); }
         cells.push(best);
       }
       rows.push({ label: want, cells });
@@ -135,6 +147,6 @@ try {
   }
   await ctx.close();
 } finally { await browser.close(); }
-writeFileSync(join(out, `street-front-${tag}.json`), JSON.stringify(results, null, 1));
+writeFileSync(join(out, `street-front${front ? '-fronts' : ''}-${tag}.json`), JSON.stringify(results, null, 1));
 const byBuilding = {}; for (const r of results) { (byBuilding[r.label] ??= []).push(`${r.road}:${r.verdict}`); }
 console.log(JSON.stringify(byBuilding, null, 1));
