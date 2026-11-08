@@ -22,7 +22,8 @@ import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
-import { borderDefault, finishBorders, finishOf, finishStripeLook } from './course-finish';
+import { borderDefault, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
+import { MOW_KINDS, mowOfHole, mowRecOf, type MowKind, type MowRec, type MowTable } from './mow-lines';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CoursePatch, type CourseTex, type LotPatch } from './ground-protocol';
@@ -94,6 +95,7 @@ import { crewDay, crewFlips, crewFor, fullyCut, holeWindows, normalizeCrewSave, 
 import { CrewView, cupSetAt } from './golf/crewview';
 import { CLUB_WAGE, ROLE_NAME, WAGE, changeStaff, closeSeason, clubTerms, courseCondition, crewCard, crewNeed, freshStaff, payWages, pinReputation, qualityFactor, wages as staffWages, workDay, type ClubRole, type CrewCardView, type StaffRole, type StaffState } from './golf/staff';
 import { fairwayStripeLook } from './course-stripes';
+import { isTextEntry } from './text-entry';
 import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
@@ -1780,7 +1782,7 @@ export class Game {
     // no hole (a facility's bunker: its own looks, edited from Facilities ▸ Practice)
     const g = this.courseGrid, c = g ? cellAt(g, tile.x, tile.y) : -1, n = g && c >= 0 ? g.hole[c] ?? 0 : 0;
     this.setTool('course');
-    if (this.tool === 'course') { this.paint.setLookDefault?.(false); if (n > 0) { this.paint.setProperty(false); this.paint.setHole(n); this.paint.setBrush('bunker'); } else this.paint.setProperty(true, 'bunker'); }
+    if (this.tool === 'course') { this.paint.setLookDefault?.(false, false); if (n > 0) { this.paint.setProperty(false); this.paint.setHole(n); this.paint.setBrush('bunker'); } else this.paint.setProperty(true, 'bunker'); }
     this.bunkerSelectionSerial++; this.emit(); return true;
   }
   /** The normal Select tool inspects bunkers; no building brush click is intercepted. */
@@ -1902,9 +1904,28 @@ export class Game {
     // T256: the course default's looks are the base; each hole, the property and each facility wear their own (courseOwners)
     // T253: each surface's Round off rides along (the course default's; an owner's in its own looks)
     const { surf, collar, band, lipGrass, round } = courseLookSet(this.paint.brush, pre), own = this.courseOwners(pre);
-    const looks: CourseLooks = { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), length: this.paint.courseLengths(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
+    const mow = this.courseMow(), looks: CourseLooks = { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), length: this.paint.courseLengths(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}), ...(mow ? { mow } : {}) };
     return this.withGrasses(looks);
   }
+  /** T359 (#1006): the mowing lines each mown surface lays, by surface id (mow-lines.ts): the Course default's look sets them (base), and each hole,
+   *  with looks of its own, its own (the cells of no hole wear the property's: hole 0); a hole that sets none of its own, with a Course default
+   *  that does, is {} (the finish's); undefined when no look sets any, so the chunks are made exactly as before */
+  private courseMow(): CourseLooks['mow'] {
+    const book = this.golf?.looks, out: (MowTable | undefined)[] = [];
+    for (const kind of MOW_KINDS) {
+      const base = mowRecOf(this.paint.brush[kind].style.mow), hole: (MowRec | undefined)[] = [];
+      if (book) for (const [o, set] of Object.entries(book)) {
+        const n = o === 'property' ? 0 : ownerHole(o); if (o !== 'property' && !n) continue;
+        const own = mowRecOf(set[kind]?.mow);
+        if (JSON.stringify(own ?? null) !== JSON.stringify(base ?? null)) hole[n] = own ?? {};
+      }
+      const any = hole.some(Boolean);
+      if (base || any) out[Game.MOW_SURF[kind]] = { ...(base ? { base } : {}), ...(any ? { hole } : {}) };
+    }
+    return out.some(Boolean) ? out : undefined;
+  }
+  /** T359: the draw id of each mown surface */
+  private static readonly MOW_SURF: Record<MowKind, number> = { fairway: SURF.fairway, green: SURF.green, tee: SURF.tee, rough: SURF.rough };
   /** T271 (#812): the course's own grasses (golf/grasses.ts) into the looks, at their draw ids: each one's fill, its band (the course's first
    *  cut), Border, Shadow and Round off, the surface it plays as and its stripes; the looks as they were with none */
   private withGrasses(looks: CourseLooks): CourseLooks {
@@ -5688,7 +5709,9 @@ export class Game {
     if (e.key === 'Escape' && (this.youTalk || this.youTeeOpen)) { this.youTalk = null; this.youTeeOpen = false; this.emit(); return; } // T240
     if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
     if (!e.repeat) this.youAlt.down(e.key, typing); // T323: a lone tap of Alt swaps Walk and Select (keyUp)
-    if (typing) return;
+    // T359 (#1006): Ctrl+Z and Ctrl+Y (Ctrl+Shift+Z) are the game's from a slider, a tick box or a button a click left in focus (a menu setting is an undo
+    // step, and the slider just dragged keeps the focus); a text field or a number box keeps its own undo
+    if (typing && !((e.ctrlKey || e.metaKey) && !e.altKey && /^[yz]$/i.test(e.key) && !isTextEntry(el))) return;
     this.keys.down(e); // T330: by e.code (Shift turns 's' into 'S' between the down and the up)
     if (WALK_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youKeysOn()) { e.preventDefault(); return; } // T240, T323: WASD walk you in either cursor (the frame reads them)
     // T327: G concedes your short putt in your round (on the green; outside the ring it says so); elsewhere G stays the grid's key
@@ -9669,13 +9692,15 @@ export class Game {
   /** each hole's crew ground (golf/crewground.ts), read from the grid once per course (its rev and the holes' lines) */
   private crewGroundsNow(): Map<number, CrewGround> {
     const grid = this.courseGrid, g = this.golf; if (!grid || !g) return new Map();
-    const lines = this.holeLines(), key = `${grid.rev}|${JSON.stringify([...lines])}`;
+    const lines = this.holeLines(), mow = this.courseMow()?.[SURF.fairway], key = `${grid.rev}|${JSON.stringify([...lines])}|${JSON.stringify(mow ?? null)}`;
     if (this.crewGrounds?.key === key) return this.crewGrounds.m;
-    // (the bands the ground draws: T227's finish's, along the line, else T218's own)
-    const cells = crewCells(grid), base = fairwayStripeLook(), look = finishStripeLook(finishOf(paintedSurfaces()), base) ?? base, m = new Map<number, CrewGround>();
+    // (the bands the ground draws: T227's finish's, along the line, else T218's own; T359: a hole whose look sets its own band width, the
+    // bands along the hole, is mown in those)
+    const cells = crewCells(grid), base = fairwayStripeLook(), fin = finishOf(paintedSurfaces()), look = finishStripeLook(fin, base) ?? base, m = new Map<number, CrewGround>();
     for (const p of g.pins) {
       const next = g.tees.find(t => t.hole === p.hole + 1 && t.kind === 'back') ?? g.tees.find(t => t.hole === p.hole + 1) ?? null;
-      m.set(p.hole, crewGround(grid, p.hole, cells.get(p.hole), lines.get(p.hole), look, this.greenOf(p.hole), next));
+      const spec = mow ? mowSpec('fairway', mowOfHole(mow, p.hole), fin, base) : null;
+      m.set(p.hole, crewGround(grid, p.hole, cells.get(p.hole), lines.get(p.hole), spec && spec.pattern === 'along' ? spec.look : look, this.greenOf(p.hole), next));
     }
     this.crewGrounds = { key, m }; return m;
   }
