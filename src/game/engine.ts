@@ -3178,12 +3178,13 @@ export class Game {
   osmChoices(): { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number }[] { return OSM_COURSES.map(c => ({ id: c.id, name: osmDisplayName(c.name), place: c.place, holes: c.holes, par: c.par, mappedPar: c.mappedPar, ...(c.scale ? { scale: c.scale } : {}) })); }
   osmGame(): GolfSave['osm'] | null { return this.golf?.osm ?? null; }
   /** T340: a new game on the real course `id` (null: the usual start), from the new-game card: the course loads, then a new game starts as the New game
-   *  button's does (the map is replaced; the card comes again for the new game) */
-  async startRealCourse(id: string | null): Promise<void> {
-    const spec = id ? await loadOsmSpec(id) : null; if (this.dead) return;
-    if (id && !spec) { this.toast('That course is not in this build', 'warn'); return; }
+   *  button's does (the map is replaced; the card comes again for the new game). T358: a spec built from a downloaded course (golf/osm/find.ts) starts the
+   *  same way */
+  async startRealCourse(what: string | null | OsmCourseSpec): Promise<void> {
+    const spec = typeof what === 'string' ? await loadOsmSpec(what) : what; if (this.dead) return;
+    if (typeof what === 'string' && !spec) { this.toast('That course is not in this build', 'warn'); return; }
     this.osmSpec = spec; this.newTown();
-    if (id && !this.golf?.osm) this.toast('That course does not fit the map: a usual game started', 'warn');
+    if (spec && !this.golf?.osm) this.toast('That course does not fit the map: a usual game started', 'warn');
   }
   dead = false;
   /** T227: stops watching the surfaces file for the course finish's collar widths */

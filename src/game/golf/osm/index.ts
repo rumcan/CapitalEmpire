@@ -1,6 +1,6 @@
 // The map-data courses the game ships (T340 stage 2, #967): real courses from OpenStreetMap, fetched once with scripts/dev/osm-course.mjs, trimmed with
-// scripts/dev/osm-trim-fixture.mjs and checked in under data/ with the ODbL credit in their header. Players' browsers never call Overpass or Nominatim:
-// a course is a JSON chunk loaded when it is picked. Real brand names stay out of the game: a famous club is shown under a made-up name. Pure of DOM.
+// scripts/dev/osm-trim-fixture.mjs and checked in under data/ with the ODbL credit in their header. A shipped course makes no request: it is a JSON chunk
+// loaded when it is picked (the search for other courses, T358, is find.ts, and calls the servers only on the player's own submit). Real brand names stay out of the game: a famous club is shown under a made-up name. Pure of DOM.
 import { osmCourseToSpec } from './convert';
 import { osmFits, osmScaleFor } from './start';
 import { OSM_CREDIT, type OsmCourseJson, type OsmCourseSpec } from './types';
