@@ -161,7 +161,7 @@ import { RealPlacer, realInfoOf, type RealInfo, type RealView } from './golf/osm
 import { cutSpan, goesPhrase, type PlacePlan, type PlaceWorld } from './golf/osm/place';
 import { placeDiff, scratchOf } from './golf/osm/placegrid';
 import { boundsOf, inRects } from './golf/osm/rotate';
-import { addLandPatch, clearLandIn, createLandField, designGreens, groundAt, landRelief, layLand, packLand, patchBox, turnedFrame, unpackLand, type LandField, type LandSave } from './golf/osm/land';
+import { addLandPatch, clearLandIn, createLandField, designGreens, groundAt, layLand, packLand, patchBox, turnedFrame, unpackLand, type LandField, type LandSave } from './golf/osm/land';
 import { realNet, type AnswerCache } from './golf/osm/polite';
 import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
@@ -1604,8 +1604,7 @@ export class Game {
     if (land) {
       clearLandIn(this.realLand, [ox, oy, ox + turned.w, oy + turned.h]);
       const patch = layLand(turned, land, at, { frame: turnedFrame(base, turned, deg) });
-      addLandPatch(this.realLand, patch, { src: land.src, label: land.label, credit: land.credit, fetched: land.fetched, reliefM: 0 });
-      if (this.realLand.info) this.realLand.info.reliefM = Math.round(landRelief(this.realLand) * 10) / 10;
+      addLandPatch(this.realLand, patch, { src: land.src, label: land.label, credit: land.credit, fetched: land.fetched, reliefM: Math.round(patch.reliefM * 10) / 10 });
       this.landPack = packLand(this.realLand); box = patch.w && patch.h ? patchBox(patch) : null;
     }
     box = unionCourseBox(box, designGreens(turned, at, this.courseHeight)); this.chSave = null; this.breakGrids.clear();
@@ -3251,8 +3250,7 @@ export class Game {
     if (new URLSearchParams(location.search).get('land') === '0') return;
     if (land) {
       const patch = layLand(spec, land, at);
-      addLandPatch(this.realLand, patch, { src: land.src, label: land.label, credit: land.credit, fetched: land.fetched, reliefM: 0 });
-      if (this.realLand.info) this.realLand.info.reliefM = Math.round(landRelief(this.realLand) * 10) / 10;
+      addLandPatch(this.realLand, patch, { src: land.src, label: land.label, credit: land.credit, fetched: land.fetched, reliefM: Math.round(patch.reliefM * 10) / 10 });
       this.landPack = packLand(this.realLand);
     }
     designGreens(spec, at, this.courseHeight); this.chSave = null; this.breakGrids.clear();

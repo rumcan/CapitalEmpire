@@ -299,8 +299,10 @@ describe('the land laid under a course (T357)', () => {
     const h6 = spec.holes.find(q => q.n === 6)!;
     assert.ok(landAt(f, tee(6).x, tee(6).y) - landAt(f, h6.pin.x + A.x, h6.pin.y + A.y) > 15, 'hole 6 runs down the hill');
     assert.ok(landAt(f, tee(5).x, tee(5).y) > 0.55 * best.v, 'the tee of hole 5 is high up it');
-    // the real relief: 74 m between the lowest and highest sample of the land (90% scale: the data's 91 m with the skirt's fall)
+    // the real relief: 74 m between the lowest and highest sample of the land and its skirt (90% scale: the data's 91 m with the skirt's fall); the land's own, which the card says, is under that
     assert.ok(landRelief(f) > 60 && landRelief(f) < 95, `${landRelief(f).toFixed(1)} m`);
+    const own = layLand(spec, land, plan.at).reliefM;
+    assert.ok(own > 40 && own <= landRelief(f) + 1e-6, `the land's own relief is ${own.toFixed(1)} m of the ${landRelief(f).toFixed(1)} m with its skirt`);
     assert.ok(f.base > 1400 && f.base < 1520, `the baseline is the real elevation, ${f.base.toFixed(0)} m`);
   });
   it('Rondebosch is nearly flat by the river and rises to the south west; Magnolia falls 20 m on its 18th', async () => {
@@ -418,13 +420,14 @@ describe('the land plus the course height (T357)', () => {
 describe('the land in a save (T357)', () => {
   it('packs and unpacks within 1 cm, keeps its source and baseline, and a golf save carries it through normalizing', async () => {
     const spec = synth({}, [GREEN, TEE, POND]), lay = layLand(spec, { grid: gridOfFn(hill), src: 'srtm', label: 'SRTM, 30 m', credit: DEM_CREDIT_DEFAULT, fetched: '2026-11-08' }, at);
-    const f = createLandField(); addLandPatch(f, lay, { src: 'srtm', label: 'SRTM, 30 m', credit: DEM_CREDIT_DEFAULT, fetched: '2026-11-08', reliefM: 0 });
+    const f = createLandField(); addLandPatch(f, lay, { src: 'srtm', label: 'SRTM, 30 m', credit: DEM_CREDIT_DEFAULT, fetched: '2026-11-08', reliefM: Math.round(lay.reliefM * 10) / 10 });
     const pk = await packLand(f); assert.ok(pk);
     assert.ok(pk!.x0 >= 0 && pk!.w <= CH_SIZE && pk!.step === 1 && pk!.q === 0.02);
     const back = (await unpackLand(JSON.parse(JSON.stringify(pk))))!; assert.ok(back && back.data);
     let err = 0; for (let k = 0; k < f.data!.length; k++) err = Math.max(err, Math.abs(f.data![k]! - back.data![k]!));
     assert.ok(err <= 0.0101, `max error ${err}`);
-    assert.equal(back.info!.label, 'SRTM, 30 m'); assert.equal(back.info!.credit, DEM_CREDIT_DEFAULT); assert.equal(back.base, f.base); assert.ok(back.info!.reliefM > 20);
+    assert.equal(back.info!.label, 'SRTM, 30 m'); assert.equal(back.info!.credit, DEM_CREDIT_DEFAULT); assert.equal(back.base, f.base); assert.ok(back.info!.reliefM > 5);
+    assert.equal(back.info!.reliefM, f.info!.reliefM, 'the card's relief is kept in the save');
     // a load keeps the land the save held, and none where the save had none
     const plan = planOsmGame(specOf(woodhill, { id: 'woodhill', name: 'W', place: '' }))!;
     const n = normalizeGolfSave(JSON.parse(JSON.stringify({ ...plan.save, land: pk })))!;

@@ -64,7 +64,7 @@ export function turnedFrame(base: Pick<OsmCourseSpec, 'originM' | 'scale' | 'w' 
 
 /** the land as a patch of the course height's lattice: samples (i0..i0+w-1, j0..j0+h-1), metres relative to base (the elevation, m above the datum, that
  *  0 stands for) */
-export interface LandPatch { i0: number; j0: number; w: number; h: number; data: Float32Array; base: number }
+export interface LandPatch { i0: number; j0: number; w: number; h: number; data: Float32Array; base: number; /** the land's own relief, m: its lowest to its highest sample inside the land (not the skirt) */ reliefM: number }
 
 const smooth01 = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
@@ -126,7 +126,7 @@ export function layLand(spec: OsmCourseSpec, land: OsmLand, at: Pt, opt: { skirt
   const i0 = Math.max(0, Math.floor((at.x - S) / CH_STEP)), i1 = Math.min(CH_SIZE - 1, Math.ceil((at.x + spec.w + S) / CH_STEP));
   const j0 = Math.max(0, Math.floor((at.y - S) / CH_STEP)), j1 = Math.min(CH_SIZE - 1, Math.ceil((at.y + spec.h + S) / CH_STEP));
   const w = Math.max(0, i1 - i0 + 1), h = Math.max(0, j1 - j0 + 1);
-  if (!w || !h) return { i0, j0, w: 0, h: 0, data: new Float32Array(0), base: 0 };
+  if (!w || !h) return { i0, j0, w: 0, h: 0, data: new Float32Array(0), base: 0, reliefM: 0 };
   const D = new Float64Array(w * h), out = new Float64Array(w * h), dOut = new Float32Array(w * h);
   let lSum = 0, lN = 0, allSum = 0;
   for (let j = 0; j < h; j++) {
@@ -145,8 +145,9 @@ export function layLand(spec: OsmCourseSpec, land: OsmLand, at: Pt, opt: { skirt
   // the game's own features sit level: ponds, then tees, then greens (a green beside water or a tee stays level)
   const p = { i0, j0, w, h };
   for (const kind of ['water', 'tee', 'green'] as const) for (const a of spec.areas) if (a.surf === kind) levelArea(out, p, a, at, PAD[kind].pad, PAD[kind].feather);
-  const data = new Float32Array(w * h); for (let k = 0; k < w * h; k++) data[k] = out[k]!;
-  return { i0, j0, w, h, data, base };
+  const data = new Float32Array(w * h); let lo = Infinity, hi = -Infinity;
+  for (let k = 0; k < w * h; k++) { data[k] = out[k]!; if (dOut[k] === 0) { if (out[k]! < lo) lo = out[k]!; if (out[k]! > hi) hi = out[k]!; } }
+  return { i0, j0, w, h, data, base, reliefM: hi >= lo ? hi - lo : 0 };
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ the field
@@ -274,7 +275,7 @@ export function designGreens(spec: OsmCourseSpec, at: Pt, field: CourseHeightFie
 // ------------------------------------------------------------------------------------------------------------------------ the save
 /** what a save keeps of the land (golf.land): the laid samples as a HeightPack in sample units (x0 = the first sample's column i0, y0 = its row j0, step 1, y
  *  running down the rows), the baseline, and where the land came from. The save is the whole of it: loading needs no fixture, no library and no tiles */
-export interface LandSave extends HeightPack { b: number; src: string; label: string; credit: string; fetched: string }
+export interface LandSave extends HeightPack { b: number; src: string; label: string; credit: string; fetched: string; /** the land's own relief, m (the course card's line) */ r?: number }
 
 /** the unit the save holds the land's heights to, metres: 2 cm (half the noise of 1 cm in the bytes; a slope's error at the 4 m lattice is 0.1%, which the light does not show) */
 export const SAVE_UNIT = 0.02;
@@ -289,7 +290,7 @@ export async function packLand(f: LandField): Promise<LandSave | null> {
   const w = i1 - i0 + 1, h = j1 - j0 + 1, m = new Float32Array(w * h);
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) m[j * w + i] = f.data[(j0 + j) * CH_SIZE + i0 + i]!;
   const p = await packGrid({ x0: i0, y0: j0, step: 1, w, h, m }, SAVE_UNIT);
-  return { ...p, b: f.base, src: f.info.src, label: f.info.label, credit: f.info.credit, fetched: f.info.fetched };
+  return { ...p, b: f.base, src: f.info.src, label: f.info.label, credit: f.info.credit, fetched: f.info.fetched, r: f.info.reliefM };
 }
 
 /** the land from a save, or null when the save is not one (never throws: a land that does not decode is a flat course, not a failed load) */
@@ -302,7 +303,7 @@ export async function unpackLand(s: unknown): Promise<LandField | null> {
     for (let j = 0; j < g.h; j++) for (let i = 0; i < g.w; i++) data[(p.y0 + j) * CH_SIZE + p.x0 + i] = g.m[j * g.w + i]!;
     const f: LandField = { data, rev: 1, box: [p.x0 * CH_STEP, p.y0 * CH_STEP, (p.x0 + p.w) * CH_STEP, (p.y0 + p.h) * CH_STEP], base: Number.isFinite(p.b) ? p.b : 0, info: null };
     f.info = { src: String(p.src ?? ''), label: String(p.label ?? ''), credit: String(p.credit ?? ''), fetched: String(p.fetched ?? ''), reliefM: 0 };
-    f.info.reliefM = Math.round(landRelief(f) * 10) / 10;
+    f.info.reliefM = Number.isFinite(p.r) ? Math.round(p.r! * 10) / 10 : Math.round(landRelief(f) * 10) / 10;
     return f;
   } catch { return null; }
 }

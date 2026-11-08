@@ -296,6 +296,47 @@ elevation tile does not change; a second course that shares a tile does not ask 
 busy: try again in a minute"), a 404 or no network is `DemUnavailable` (the card unticks the box and says why: Build then makes the course flat); Cancel stops it; nothing is sent unless the player builds
 with the box ticked. In tests every request is a fake (`tests/golf-osm-land.test.ts`: the request count, the gate's pauses, the cache, the refusals).
 
+## Checks
+- `tests/golf-osm-land.test.ts` (36 tests; every request a fake): the terrarium decode through every PNG row filter; the sampling's alignment (north up, east right, a metre a metre: a tilted plane is read at its
+  true slope) and the tile maths (Woodhill is in the tile the sketch cached); the smoothing (the 60 m ripple to under a tenth, an 800 m landform keeps 98%); the packing (within half a unit, a quarter of the 16-bit size);
+  the credits; the shipped fixtures (their source, step and size); the land laid (relative to its own mean, true proportion, exactly 0 beyond the skirt, the slope continuous across the land's edge, no cliff; scaled courses keep
+  their slopes; greens, tees and ponds level; the same twice; a turned spec reads the same ground turned); **Woodhill's NE high point is within 300 m of the tee of hole 5 or 6, hole 6 runs 22 m down the hill**, Rondebosch rises to
+  the south west, Magnolia's 18th climbs 20 m; the greens' tilt (1 to 2%, front low and back high, level across, not doubled); land + course height (the ball's reading, the workers' rect, the course stats' rise and plays-like
+  length, the lie's slope on a falling fairway); the save (packs and unpacks within 1 cm, `golf.land` through `normalizeGolfSave`, a land that does not decode is a flat course); and `dem.ts` (the request count, the 250 ms gate, the
+  cache, a 429 stops the lot, a 404 or no network is "unavailable", Cancel).
+- `tests/ui-osm-land.test.ts`: the picker's Featured lines, the course card, the credit.
+- `node scripts/dev/osm-land-shots.mjs --base http://localhost:5188/ --out E:/ClaudeTemp/T357 [--course ...] [--look name:dx:dy:zoom]`: each course before (`?land=0`) and after, the overview, the middle zoom over the
+  hole pair that runs over the most ground, a green, and the slope readings (the walk-on round's second shot, and a ball put 40% down a falling hole), with the game's state checked as it goes.
+- `node scripts/dev/osm-search-shots.mjs`: T358's mocked run, now with the elevation tiles mocked too: Build with Real ground height ticked asks for each of the course's tiles once with a plain GET, the game has the
+  land, the save keeps it (a reload asks for nothing), unticked it builds flat and asks for nothing.
+
+## Performance (the bench, 2026-11-08)
+`node scripts/perf/bench.mjs http://localhost:5188/ --start town --osmcourse <id> --size 1 --seed 1`, a dev server, 1600 x 900, RTX 3080, each twice: **lead/live** (01e2662, served from a copy of its tree: the bench of a branch
+against the very tree it was cut from, T356 in it) against **this branch**. The budgets: 8 ms of main thread a frame (GAME-PLAN 2.3) and 192 MB for the ground plus the tile pictures. Main-thread time a frame while the camera
+pans (average / p95, ms), the ground cache's bakes (median / p95 ms) and the ground plus tile pictures (peak MB):
+
+| | | lead/live run 1 | run 2 | the land, run 1 | run 2 |
+| --- | --- | --- | --- | --- | --- |
+| **Woodhill** 30% pan | main thread | 1.35 / 2.0 | 1.30 / 2.0 | 1.34 / 2.1 | 1.80 / 3.0 |
+| | bakes | 94 / 305 | 80 / 285 | 85 / 221 | 88 / 466 |
+| | ground + tiles | 132 | 132 | 131 | 129 |
+| Woodhill 15% pan | main thread | 1.38 / 2.0 | 1.53 / 2.5 | 1.71 / 2.5 | 1.33 / 1.9 |
+| | bakes | 53 / 106 | 57 / 131 | 64 / 117 | 60 / 118 |
+| | ground + tiles | 178 | 178 | 173 | 174 |
+| **Rondebosch** 30% pan | main thread | 1.22 / 1.8 | 1.02 / 1.5 | 1.35 / 2.1 | 1.05 / 1.7 |
+| | bakes | 64 / 130 | 58 / 143 | 118 / 334 | 55 / 137 |
+| | ground + tiles | 185 | 185 | 186 | 185 |
+| Rondebosch 15% pan | main thread | 1.37 / 1.9 | 1.44 / 2.2 | 1.24 / 1.7 | 0.95 / 1.4 |
+| | bakes | 51 / 97 | 48 / 85 | 102 / 306 | 43 / 81 |
+| | ground + tiles | 186 | 182 | 183 | 184 |
+| average bake, all stages (ms) | Woodhill / Rondebosch | 41.2 / 31.8 | 40.3 / 29.6 | 38.8 / 68.5 | 41.7 / 31.6 |
+
+**The main thread does not move** (the land is baked in the workers; the main thread gets one 1 MB array when a game loads and reads it for the ball): 1.0 to 1.8 ms average and 1.4 to 3.0 ms p95 on both sides, against
+the 8 ms budget, the spread between two runs of the same build as wide as the difference between the builds (the PC is shared with other agents' browsers: frames a second swing too, 27 to 53). **Memory is the same**: the ground plus the
+tile pictures peak at 129 to 186 MB on both sides (the budget is 192), the heap 212 to 258 MB. **The bakes**: the land puts the slope light into every chunk of the course (it was in none), so a chunk's bake carries about
+twenty-five canvas operations more (`heightLight`) and a few ms of the light grid's arithmetic; at 15% pan Woodhill's median bake is 60 to 64 ms against 53 to 57 (about 10% more), at 30% the same, Rondebosch's second run is level with
+lead/live's. **Rondebosch's first run with the land is an outlier** (the average bake 68 ms, the median 118, against 32 and 55 in its second run and 30 to 32 in lead/live's two): it is shown as it came (the PC is shared with other agents' browsers, and the same build's second run is level with lead/live's; see the third runs below). The land adds nothing to the main thread, nothing to the memory, and about a tenth to the workers' bake.
+
 ## Adding the ground to a course
 `node scripts/dev/osm-course.mjs "<name>" --height` (or `node scripts/dev/osm-height.mjs <slug>` on a stage-1 JSON already made) writes `<slug>.height.json` (the 4 m smoothed grid packed, with the
 source and credit) and `<slug>-height.png` (a hillshade with the hole lines) beside the JSON, and caches the tiles in `E:/ClaudeTemp/T340/dem/raw/<z>-<x>-<y>.png` with a `.meta` (the imagery source).
@@ -428,6 +469,7 @@ are dead ends, trimmed by the bulldozer's `tidyEnds`), removes the player's plac
 through the grid's own pipeline (`applyDiff`, `courseGridChanged`: the workers' cells, the ground that re-bakes itself, the trees that go), clears the old course's holes,
 puts the tee sets, pins and aim points, and saves `golf.osm` with `placed: true` and `turn` (the loader then keeps the game's own map and seed; a new-game map-data
 course has no `placed` and is laid on the flat map as before). Your previous holes are **replaced** by the course's (the pop-up says so); the land they stood on stays yours.
+**T357:** the course's real ground goes with it (`Game.layPlacedLand`: the land turned with the course, the greens' tilt; see "Real ground height" above).
 The camera then goes over the whole land, and the ground cache drops the chunk pictures the next frame does not draw (`GroundCache.purgeUnused`): they are the old place's ground, and the first
 bakes over the new land need the memory (see Performance).
 

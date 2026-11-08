@@ -4,6 +4,7 @@
 // exits 1 on a failed check.
 //   node scripts/dev/osm-land-shots.mjs --base http://localhost:5188/ --out E:/ClaudeTemp/T357 [--course woodhill,rondebosch,magnolia-national] [--slope 1] [--sheet 1]
 //        [--look name:dx:dy:zoom,...] (extra views: the camera at a point dx, dy tiles from the land's north-west corner, at that zoom, before and after)
+//        [--light 2] (the gear menu's Slope light set to that strength, 0 to 2: only the after shots are taken, named -light2)
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; saving is off (?osmcourse= is a fixture-style start). --sheet 1 lays each course's before and after
 // side by side as <id>-before-after-<view>.png.
 import { chromium } from 'playwright-core';
@@ -13,6 +14,7 @@ import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const looks = opt('look', '').split(',').filter(Boolean).map(t => { const [name, dx, dy, z] = t.split(':'); return { name, dx: +dx, dy: +dy, z: +z }; });
+const light = +opt('light', '1'), lightTag = light !== 1 ? `-light${light}` : '';
 const base = opt('base', 'http://localhost:5188/'), out = opt('out', 'E:/ClaudeTemp/T357'), which = opt('course', 'woodhill,rondebosch,magnolia-national'), slope = opt('slope', '1') === '1', sheet = opt('sheet', '1') === '1';
 // the hole pair of the middle zoom: where the ground rises and falls most (Woodhill's NE hill, Rondebosch's rise to the south west, Magnolia's creek)
 // slopeHole: the hole whose fairway the second slope reading is taken on (the ball put 40% of the way down it, aimed at its pin): where it falls most
@@ -49,7 +51,7 @@ try {
   for (const c of COURSES) {
     console.log(`\n== ${c.id}`);
     const files = { before: {}, after: {} };
-    for (const mode of [{ key: 'before', q: '&land=0' }, { key: 'after', q: '' }]) {
+    for (const mode of light === 1 ? [{ key: 'before', q: '&land=0' }, { key: 'after', q: '' }] : [{ key: 'after', q: '' }]) {
       console.log(` -- ${mode.key}`);
       const page = await ctx.newPage();
       page.on('pageerror', e => { console.log('[pageerror]', e.message); bad++; });
@@ -58,6 +60,7 @@ try {
       await page.goto(`${base}?osmcourse=${c.id}&seed=1${mode.q}`, { waitUntil: 'domcontentloaded', timeout: 240000 });
       await page.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
       await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); window.__night = 0; g.nightAmount = () => window.__night; g.closeWho?.('Jack Burns', 2); g.closeWelcome?.(false); const p = g.golf.progress; if (p) { for (const k of ['who', 'welcome']) if (!p.seen.includes(k)) p.seen.push(k); if (p.tour) p.tour.off = true; } g.emit(); });
+      if (light !== 1) await page.evaluate(v => window.__game.setSlopeLight(v), light);
       const info = await page.evaluate(() => {
         const g = window.__game, G = g.golf, li = g.landInfo(), at = (x, y) => g.groundHeightAt(x, y);
         // the ground along each hole: tee to pin, and the steepest 10 m stretch of its line
@@ -76,23 +79,37 @@ try {
       const land = info.course, corners = [{ x: land[0], y: land[1] }, { x: land[0] + land[2], y: land[1] }, { x: land[0], y: land[1] + land[3] }, { x: land[0] + land[2], y: land[1] + land[3] }];
       // the overview, the whole land
       const zOver = await frameOn(page, corners, 0.3); console.log('  overview zoom', zOver.toFixed(4)); await settle(page, 1500);
-      files[mode.key].over = await shot(page, `${c.id}-${mode.key}-1-overview`);
+      files[mode.key].over = await shot(page, `${c.id}-${mode.key}${lightTag}-1-overview`);
       // the middle zoom over the pair
       const pts = await page.evaluate(holes => { const G = window.__game.golf, o = []; for (const n of holes) { for (const t of G.tees.filter(q => q.hole === n)) o.push({ x: t.x, y: t.y }); for (const a of G.aims.filter(q => q.hole === n)) o.push({ x: a.x, y: a.y }); const p = G.pins.find(q => q.hole === n); if (p) o.push({ x: p.x, y: p.y }); } return o; }, c.holes);
       const z = await frameOn(page, pts, 0.3), z2 = Math.max(z, c.mid);
       if (z2 !== z) await page.evaluate(([z2, pts]) => { const g = window.__game, cx = pts.reduce((s, p) => s + p.x, 0) / pts.length, cy = pts.reduce((s, p) => s + p.y, 0) / pts.length; g.camEase = null; g.lookAt(cx, cy, z2); g.emit(); }, [z2, pts]);
       console.log(`  holes ${c.holes.join(' and ')} zoom`, z2.toFixed(3)); await settle(page, 1500);
-      files[mode.key].mid = await shot(page, `${c.id}-${mode.key}-2-mid-holes-${c.holes.join('-')}`);
+      files[mode.key].mid = await shot(page, `${c.id}-${mode.key}${lightTag}-2-mid-holes-${c.holes.join('-')}`);
       // the close zoom on a green (level, with its own tilt): the pin of the first hole of the pair
       const pin = await page.evaluate(n => { const p = window.__game.golf.pins.find(q => q.hole === n); return { x: p.x, y: p.y }; }, c.holes[0]);
       await page.evaluate(([x, y]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, 0.3); g.emit(); }, [pin.x, pin.y]); await settle(page, 1500);
-      files[mode.key].green = await shot(page, `${c.id}-${mode.key}-3-green-${c.holes[0]}`);
+      files[mode.key].green = await shot(page, `${c.id}-${mode.key}${lightTag}-3-green-${c.holes[0]}`);
 
+      // the course card (Holes panel) names the land's source and rise, and the gear menu's credits carry the elevation credit
+      if (mode.key === 'after') {
+        await page.evaluate(() => { window.__game.setTool?.('course'); window.__game.emit(); }); await page.waitForTimeout(800);
+        const note = await page.$eval('[data-testid=osm-land]', e => e.textContent).catch(() => null);
+        check(!!note && note.includes('Real ground height') && note.includes('m of rise'), `the course card says: ${note}`);
+        files.after.card = await shot(page, `${c.id}-after${lightTag}-3b-course-card`);
+        await page.evaluate(() => { window.__game.setTool?.('select'); window.__game.emit(); });
+        await page.click('button[data-tip="Settings"]'); await page.waitForTimeout(500);
+        await page.$eval('[data-testid=dem-credit]', e => e.scrollIntoView({ block: 'center' })).catch(() => undefined); await page.waitForTimeout(300);
+        const cred = await page.$eval('[data-testid=dem-credit]', e => e.textContent).catch(() => null), osmc = await page.$eval('[data-testid=osm-credit]', e => e.textContent).catch(() => null);
+        check(!!cred && /Geological Survey/.test(cred) && !!osmc && /OpenStreetMap/.test(osmc), `the gear menu's credits: "${osmc}" and "${cred}"`);
+        files.after.credits = await shot(page, `${c.id}-after${lightTag}-3c-credits-in-the-gear-menu`);
+        await page.click('button[data-tip="Settings"]'); await page.waitForTimeout(300);
+      }
       // extra views of the land (--look): the camera at a point of the land's frame
       for (const l of looks) {
         const o = await page.evaluate(([dx, dy, z]) => { const g = window.__game, c = g.golf.course; g.camEase = null; g.lookAt(c[0] + dx, c[1] + dy, z); g.emit(); return { x: c[0] + dx, y: c[1] + dy, h: g.groundHeightAt(c[0] + dx, c[1] + dy) }; }, [l.dx, l.dy, l.z]);
         await settle(page, 1500); console.log(`  look ${l.name} at ${o.x},${o.y} ground ${o.h.toFixed(1)} m`);
-        files[mode.key][`look-${l.name}`] = await shot(page, `${c.id}-${mode.key}-look-${l.name}`);
+        files[mode.key][`look-${l.name}`] = await shot(page, `${c.id}-${mode.key}${lightTag}-look-${l.name}`);
       }
 
       // the slope reading: your walk-on round, the drive, Jump to ball: the shot panel names the lie's slope
@@ -134,13 +151,13 @@ try {
           }, c.slopeHole);
           console.log('  on hole', c.slopeHole, 'fairway:', JSON.stringify(spot));
           await settle(page, 1200);
-          check(!!spot && Math.abs(spot.slope.up) > 0.02 && spot.lines.length > 0, `hole ${c.slopeHole}: the lie reads ${spot ? `${(spot.slope.up * 100).toFixed(1)}% along the shot` : ''}: ${spot?.lines.join(' | ')}`);
+          check(!!spot && Math.max(Math.abs(spot.slope.up), Math.abs(spot.slope.across)) > 0.02 && spot.lines.length > 0, `hole ${c.slopeHole}: the lie reads ${spot ? `${(spot.slope.up * 100).toFixed(1)}% along and ${(spot.slope.across * 100).toFixed(1)}% across the shot` : ''}: ${spot?.lines.join(' | ')}`);
           await shot(page, `${c.id}-after-5-slope-reading-hole-${c.slopeHole}`);
         }
       }
       await page.close();
     }
-    if (sheet) for (const [k, n] of [['over', '1-overview'], ['mid', '2-mid'], ['green', '3-green'], ...looks.map(l => [`look-${l.name}`, `look-${l.name}`])]) await side(files.before[k], files.after[k], join(out, `${c.id}-before-after-${n}.png`)).catch(e => console.log('  (sheet:', e.message, ')'));
+    if (sheet && light === 1) for (const [k, n] of [['over', '1-overview'], ['mid', '2-mid'], ['green', '3-green'], ...looks.map(l => [`look-${l.name}`, `look-${l.name}`])]) await side(files.before[k], files.after[k], join(out, `${c.id}-before-after-${n}.png`)).catch(e => console.log('  (sheet:', e.message, ')'));
   }
 } finally {
   await browser.close();
