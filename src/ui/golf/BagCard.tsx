@@ -1,6 +1,7 @@
 // Your bag (T335, #961; the owner, 2026-11-04: "all the clubs and upgrading clubs ... shaft changes on putters add more feel and luck vs accuracy"): the 14 clubs as tiles in their groups (woods, irons, wedges,
 // the putter), each tinted by its upgrade level (Garage-sale, Club, Tour, Prototype); a click opens the club's detail in a flyout to the card's left (the owner's rule: side-opening flyouts, no sideways
-// scrollbar, no one long column): its carry, launch, spin and forgiveness, what the next level adds and costs, and for the putter the fitting (shafts and heads trading feel, accuracy and luck). The numbers are
+// scrollbar, no one long column): its carry, launch, spin and forgiveness, what the next level adds and costs, and for the putter its feel, line and luck and the two slots (the shaft and the head), each of which opens
+// its parts in a second flyout further left (shafts and heads trading feel, accuracy and luck). The numbers are
 // play/bag.ts bagView's, which reads the shot model's own (applyMods). The tile pictures are drawn stand-ins ("Stand In for club icons").
 import { useState } from 'react';
 import { CLUB_SHORT, LEVEL_NAME, type BagView, type Club, type ClubRow, type PartKind, type PartRow } from '../../game/golf/play';
@@ -30,7 +31,7 @@ function Bar({ label, value, tip }: { label: string; value: number; tip: string 
 }
 
 /** the club's detail: the numbers, the next level's offer, and for the third wood's slot the swap */
-function ClubDetail({ row, view, onUpgrade, onFit, onThird, onClose }: { row: ClubRow; view: BagView & { busy?: string | null }; onUpgrade: (c: Club, voucher: boolean) => void; onFit: (k: PartKind, id: string) => void; onThird: (w: 'wood5' | 'hybrid') => void; onClose: () => void }) {
+function ClubDetail({ row, view, part, onUpgrade, onPart, onThird, onClose }: { row: ClubRow; view: BagView & { busy?: string | null }; part: PartKind | null; onUpgrade: (c: Club, voucher: boolean) => void; onPart: (k: PartKind | null) => void; onThird: (w: 'wood5' | 'hybrid') => void; onClose: () => void }) {
   const n = row.next, third = row.club === 'wood5' || row.club === 'hybrid';
   return (
     <div className="pointer-events-auto max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[300px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" data-testid="bag-detail">
@@ -65,13 +66,13 @@ function ClubDetail({ row, view, onUpgrade, onFit, onThird, onClose }: { row: Cl
           {(view.busy || n.why) && <div className="text-[11px] text-amber-200" data-testid="bag-why">{view.busy ?? n.why}</div>}
         </div>
       ) : <div className="rounded-lg border border-amber-300/30 bg-amber-300/10 p-2 text-xs text-amber-100">A Prototype: the best there is.</div>}
-      {row.club === 'putter' && <PutterFitting view={view} onFit={onFit} />}
+      {row.club === 'putter' && <PutterFitting view={view} part={part} onPart={onPart} />}
     </div>
   );
 }
 
-/** the putter's fitting: its feel, line and luck as bars, and the shafts and heads as rows to fit or buy */
-function PutterFitting({ view, onFit }: { view: BagView & { busy?: string | null }; onFit: (k: PartKind, id: string) => void }) {
+/** the putter's fitting: its feel, line and luck as bars, and its two slots (the shaft and the head) as rows that open their parts in a flyout further left */
+function PutterFitting({ view, part, onPart }: { view: BagView & { busy?: string | null }; part: PartKind | null; onPart: (k: PartKind | null) => void }) {
   const p = view.putter;
   return (
     <div className="space-y-2" data-testid="bag-fitting">
@@ -81,15 +82,28 @@ function PutterFitting({ view, onFit }: { view: BagView & { busy?: string | null
         <Bar label="Line" value={(p.line - 0.75) / 0.9} tip={`Accuracy: the sweet spot on the line click (x${p.line.toFixed(2)})`} />
         <Bar label="Luck" value={p.luck / 0.6} tip={`A bad putt may still drop, a good one may lip out (${Math.round(p.luck * 100)}%)`} />
       </div>
-      <PartList title="Shafts" parts={p.shafts} view={view} onFit={onFit} />
-      <PartList title="Heads" parts={p.heads} view={view} onFit={onFit} />
+      {(['shaft', 'head'] as const).map(k => {
+        const cur = (k === 'shaft' ? p.shafts : p.heads).find(r => r.fitted);
+        return (
+          <button key={k} className={`flex w-full items-center justify-between gap-2 rounded-lg border px-2 py-1.5 text-left text-xs hover:border-amber-300/60 ${part === k ? 'border-amber-300/70 bg-amber-300/10' : 'border-white/10 bg-white/5'}`}
+            onClick={() => onPart(part === k ? null : k)} title={`Change the putter’s ${k}: it opens to the left`} data-testid={`bag-slot-${k}`}>
+            <span><span className="block text-[11px] uppercase text-slate-400">{k === 'shaft' ? 'Shaft' : 'Head'}</span><span className="font-semibold text-slate-100">{cur?.name ?? ''}</span></span>
+            <Icon name="left" size={14} />
+          </button>
+        );
+      })}
     </div>
   );
 }
-function PartList({ title, parts, view, onFit }: { title: string; parts: PartRow[]; view: BagView & { busy?: string | null }; onFit: (k: PartKind, id: string) => void }) {
+/** the parts of one slot (the putter's shafts or heads) in a flyout: each with what it trades; Fit for one you own, Buy for one you do not */
+function PartsFlyout({ kind, view, onFit, onClose }: { kind: PartKind; view: BagView & { busy?: string | null }; onFit: (k: PartKind, id: string) => void; onClose: () => void }) {
+  const parts = kind === 'shaft' ? view.putter.shafts : view.putter.heads;
   return (
-    <div className="space-y-1" data-testid={`bag-${title.toLowerCase()}`}>
-      <div className="text-[11px] uppercase text-slate-400">{title}</div>
+    <div className="pointer-events-auto max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[300px] space-y-1.5 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" data-testid={`bag-${kind}s`}>
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div><div className="font-semibold text-sky-200">Putter {kind}s</div><div className="text-[12px] text-slate-400">Feel, line and luck: what each trades</div></div>
+        <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={16} /></button>
+      </div>
       {parts.map(r => (
         <div key={r.id} className={`rounded-lg border p-1.5 text-xs ${r.fitted ? 'border-amber-300/60 bg-amber-300/10' : 'border-white/10 bg-white/5'}`} data-testid={`bag-${r.kind}-${r.id}`}>
           <div className="flex items-center justify-between gap-2">
@@ -99,7 +113,7 @@ function PartList({ title, parts, view, onFit }: { title: string; parts: PartRow
           </div>
           <div className="text-[11px] text-slate-300">{r.lines.join(' · ') || 'The plain one'}</div>
           <div className="text-[11px] text-slate-400">{r.note}</div>
-          {!r.fitted && !r.owned && r.why && <div className="text-[11px] text-amber-200">{r.why}</div>}
+          {!r.fitted && !r.owned && (r.why || view.busy) && <div className="text-[11px] text-amber-200">{view.busy ?? r.why}</div>}
         </div>
       ))}
     </div>
@@ -107,13 +121,15 @@ function PartList({ title, parts, view, onFit }: { title: string; parts: PartRow
 }
 
 /** the bag card: the tiles, and a club's detail to their left. `initial`: the club whose detail is open at first (captures, tests) */
-export function BagCard({ view, onClose, onUpgrade, onFit, onThird, right = 'right-3', initial = null }: {
-  view: BagView & { busy?: string | null }; onClose: () => void; onUpgrade: (club: Club, voucher: boolean) => void; onFit: (kind: PartKind, id: string) => void; onThird: (which: 'wood5' | 'hybrid') => void; right?: string; initial?: Club | null }) {
-  const [sel, setSel] = useState<Club | null>(initial);
+export function BagCard({ view, onClose, onUpgrade, onFit, onThird, right = 'right-3', initial = null, initialPart = null }: {
+  view: BagView & { busy?: string | null }; onClose: () => void; onUpgrade: (club: Club, voucher: boolean) => void; onFit: (kind: PartKind, id: string) => void; onThird: (which: 'wood5' | 'hybrid') => void; right?: string; initial?: Club | null;
+  /** the putter's slot whose parts are open at first (captures, tests) */ initialPart?: PartKind | null }) {
+  const [sel, setSel] = useState<Club | null>(initial), [part, setPart] = useState<PartKind | null>(initialPart);
   const row = sel ? view.rows.find(r => r.club === sel) ?? null : null;
   return (
     <div className={`pointer-events-none absolute ${right} top-[var(--hud-top,6rem)] z-20 flex items-start gap-1.5`} data-testid="bag-root">
-      {row && <ClubDetail row={row} view={view} onUpgrade={onUpgrade} onFit={onFit} onThird={onThird} onClose={() => setSel(null)} />}
+      {row?.club === 'putter' && part && <PartsFlyout kind={part} view={view} onFit={onFit} onClose={() => setPart(null)} />}
+      {row && <ClubDetail row={row} view={view} part={part} onUpgrade={onUpgrade} onPart={setPart} onThird={onThird} onClose={() => { setSel(null); setPart(null); }} />}
       <div className="pointer-events-auto max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[304px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" data-testid="bag-card">
         <div className="flex items-center justify-between border-b border-white/10 pb-2">
           <div><div className="font-semibold text-sky-200">Your bag</div><div className="text-[12px] text-slate-400">{view.rows.length} clubs · {view.points} of {view.max} upgrades</div></div>
@@ -127,11 +143,11 @@ export function BagCard({ view, onClose, onUpgrade, onFit, onThird, right = 'rig
         {view.groups.map(g => (
           <div key={g.name} className="space-y-1" data-testid={`bag-group-${g.name.toLowerCase()}`}>
             <div className="text-[11px] uppercase text-slate-400">{g.name}</div>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-6 gap-1.5">
               {g.rows.map(r => (
-                <button key={r.club} className={`flex flex-col items-center gap-0.5 rounded-lg border bg-white/5 px-1 py-1.5 text-[11px] hover:border-amber-300/60 ${TILE_BORDER[r.level]} ${sel === r.club ? 'ring-2 ring-amber-300/80' : ''}`}
-                  title={`${r.name}: ${r.levelName}${r.club === 'putter' ? '' : `, carry ${Math.round(r.carryM)} m`}`} onClick={() => setSel(sel === r.club ? null : r.club)} data-testid={`bag-club-${r.club}`} aria-label={r.name}>
-                  <ClubIcon club={r.club} level={r.level} size={30} />
+                <button key={r.club} className={`flex flex-col items-center gap-0.5 rounded-lg border bg-white/5 px-0.5 py-1.5 text-[11px] hover:border-amber-300/60 ${r.club === 'putter' ? 'col-span-2' : ''} ${TILE_BORDER[r.level]} ${sel === r.club ? 'ring-2 ring-amber-300/80' : ''}`}
+                  title={`${r.name}: ${r.levelName}${r.club === 'putter' ? '' : `, carry ${Math.round(r.carryM)} m`}`} onClick={() => { setSel(sel === r.club ? null : r.club); setPart(null); }} data-testid={`bag-club-${r.club}`} aria-label={r.name}>
+                  <ClubIcon club={r.club} level={r.level} size={26} />
                   <span className="font-semibold text-slate-100">{CLUB_SHORT[r.club]}</span>
                   <LevelDots level={r.level} />
                 </button>

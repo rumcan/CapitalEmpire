@@ -10342,7 +10342,7 @@ export class Game {
     // the caddie's club: the shortest whose carry in these conditions reaches the aimed distance (the longest the lie allows when none does)
     let suggest: Club | null = null;
     if (on && !putting && env) {
-      const sk = this.shotSk(), clubs = this.shotClubs().filter(c => c !== 'putter').reverse();
+      const sk = this.shotSk(), clubs = this.shotClubs().filter(c => c !== 'putter' && c !== 'lw').reverse(); // (the caddie never reaches for the lob wedge)
       if (sk !== null) suggest = clubs.find(c => carryFor(sk, c) * previewShot(c, 100, ux, uy, env, s.shape ? shapeEffect(readShape(s.shape), c, aimedM, kitOf(sk, c).skill, kitOf(sk, c)) : null).carryM / 100 >= aimedM) ?? clubs[clubs.length - 1] ?? null;
     }
     return { on, putting, wind: windView(on && !putting ? this.windNow() : null, on ? this.worldWind() : null, ux, uy), day: on ? this.worldWind() : null, lie: lieView(kind, club), slope: env?.slope ?? { up: 0, across: 0 },

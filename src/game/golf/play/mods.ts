@@ -29,7 +29,7 @@ export const PART_OF: Readonly<Record<Club, 'driving' | 'irons' | 'short' | 'put
 /** a modifier (a card, a club's upgrade, a putter shaft): stat changes (added, 0..1 units: +0.1 is ten points) and factors (1: none) on the carry, the scatter, the sweet spot, the marker's
  *  speed and the roll, an extra chance of a mishit (added; below 0 a forgiving club has fewer), for every club or only the listed ones (a club or a family).
  *  T335: `spin`, a factor on the spin that gets on the ball (the club's backspin capacity and the share the lie lets on: spin.ts); `feel`, a factor on how far the putt's pace may be out before it
- *  stops dropping, and on how much of that error it leaves (distance control); `luck` (added): a missed putt still drops now and then, a holed one lips out now and then (putt.ts-like draws, only when it is above 0) */
+ *  stops dropping, and on how much of that error it leaves (distance control); `luck` (added): a missed putt still drops now and then, a holed one lips out now and then (shot.ts luckyPutt: one draw, only when it is above 0) */
 export interface Mod { id: string; name?: string; stats?: Partial<Record<StatId, number>>; carry?: number; spread?: number; sweet?: number; speed?: number; roll?: number; mishit?: number; clubs?: readonly (Club | Family)[];
   spin?: number; feel?: number; luck?: number }
 

@@ -224,11 +224,11 @@ test('the caddie picks among the clubs in the bag (a 7-iron for a 7-iron distanc
   assert.deepEqual(allowedClubs('tee', true), ['driver', 'wood3', 'iron4', 'iron6', 'iron8', 'pw', 'sw']);
 });
 
-test('the new clubs play: each carries what the table says, from the tee the 5-wood is shorter than the 3-wood, and a bunker shot with the lob wedge is a splash like the sand wedge’s', () => {
+test('every club plays: each carries what the table says, from the tee the 5-wood is shorter than the 3-wood, and a bunker shot with the lob wedge is a splash like the sand wedge’s', () => {
   const sk = withGear(null, { driving: 0.9, irons: 0.9, short: 0.9 });
   const carry = (c: Club) => mean(volley(sk, c, 300, 160).map(x => x.carry));
   const exp = (c: Club) => carryFor(sk, c);
-  for (const c of ['wood5', 'hybrid', 'iron5', 'iron7', 'iron9', 'gw', 'lw'] as Club[]) assert.ok(Math.abs(carry(c) / exp(c) - 1) < 0.045, `${c}: ${carry(c).toFixed(1)} m against ${exp(c).toFixed(1)}`);
+  for (const c of CLUB_ORDER.filter(x => x !== 'putter')) assert.ok(Math.abs(carry(c) / exp(c) - 1) < 0.045, `${c}: ${carry(c).toFixed(1)} m against ${exp(c).toFixed(1)}`); // (every club of the bag, the original eight and the new)
   assert.ok(carry('wood3') > carry('wood5') && carry('wood5') > carry('iron4') && carry('iron6') > carry('iron7') && carry('pw') > carry('gw') && carry('gw') > carry('sw') && carry('sw') > carry('lw'));
   // a bunker shot of 25 m: the sand wedge and the lob wedge both carry it (a splash is exactly the distance), the gap wedge plays a full-shot bunker lie
   const b = (c: Club) => mean(Array.from({ length: 100 }, (_, k) => dist(O, hitShot(rng(8, k, 1), sk, 'bunker', O, { x: 25 / TILE_M, y: 0 }, c, flat('fairway')).landing.at)));

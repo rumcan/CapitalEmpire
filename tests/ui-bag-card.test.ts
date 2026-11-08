@@ -8,13 +8,13 @@ import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { BagCard } from '../src/ui/golf/BagCard';
 import { ClubIcon } from '../src/ui/golf/ClubIcon';
 import { CLUB_ORDER, bagGear, bagView, fitPart, normalizeBag } from '../src/game/golf/play';
-import type { BagSave, Club } from '../src/game/golf/play';
+import type { BagSave, Club, PartKind } from '../src/game/golf/play';
 import { START_SKILLS, gameSkills } from '../src/game/golf/player';
 
 const noop = () => { /* none */ };
 const view = (bag: BagSave | null, ctx = { shop: true, money: 5000 }, busy: string | null = null) => ({ ...bagView(bag, gameSkills(START_SKILLS, 0, bagGear(bag)), ctx), busy });
-const html = (bag: BagSave | null, initial: Club | null = null, ctx = { shop: true, money: 5000 }, busy: string | null = null) =>
-  renderToStaticMarkup(createElement(BagCard, { view: view(bag, ctx, busy), onClose: noop, onUpgrade: noop, onFit: noop, onThird: noop, initial }));
+const html = (bag: BagSave | null, initial: Club | null = null, ctx = { shop: true, money: 5000 }, busy: string | null = null, initialPart: PartKind | null = null) =>
+  renderToStaticMarkup(createElement(BagCard, { view: view(bag, ctx, busy), onClose: noop, onUpgrade: noop, onFit: noop, onThird: noop, initial, initialPart }));
 
 test('bag card: 14 tiles in woods, irons, wedges and putter, each with its short name and its level; the money, the shop and no sideways scroll', () => {
   const h = html(null);
@@ -27,6 +27,7 @@ test('bag card: 14 tiles in woods, irons, wedges and putter, each with its short
   assert.ok(/0 of 42 upgrades/.test(h) && /14 clubs/.test(h), 'the count'); assert.ok(/Pro shop open/.test(h) && /\$5,000/.test(h), 'the shop and the money');
   assert.ok(/Stand In for club icons/.test(h), 'the icons are labelled stand-ins');
   assert.ok(!/overflow-x-(auto|scroll)/.test(h) && /overflow-x-hidden/.test(h), 'never a sideways scrollbar');
+  assert.ok(/grid-cols-6/.test(h) && /col-span-2[^"]*[^>]*data-testid="bag-club-putter"/.test(h), 'six tiles across: the six irons in one row, the putter’s tile two wide');
   const none = html(null, null, { shop: false, money: 5000 }); assert.ok(/No pro shop yet/.test(none));
 });
 
@@ -58,18 +59,28 @@ test('bag card: the third wood’s slot swaps the 5-wood and the hybrid; the lob
   const lw = html(null, 'lw'); assert.ok(/Very high/.test(lw) && /lands soft/.test(lw)); assert.ok(!lw.includes('data-testid="bag-third"'), 'only the third wood has the swap');
 });
 
-test('bag card: the putter’s fitting: feel, line and luck, the shafts and the heads with what each trades, fit for what you own and buy for what you do not', () => {
+test('bag card: the putter’s flyout has its feel, line and luck and the two slots; a slot opens its parts in a second flyout to the left: what each trades, Fit for what you own, Buy for what you do not', () => {
   const p = html(null, 'putter');
   assert.ok(p.includes('data-testid="bag-fitting"') && p.includes('data-testid="putter-profile"') && /Feel/.test(p) && /Line/.test(p) && /Luck/.test(p), 'the three');
-  for (const id of ['stock', 'whip', 'stiff']) assert.ok(p.includes(`data-testid="bag-shaft-${id}"`), id);
-  for (const id of ['blade', 'mallet', 'lie']) assert.ok(p.includes(`data-testid="bag-head-${id}"`), id);
-  assert.ok(/Whippy graphite shaft/.test(p) && /Stiff counter-balanced shaft/.test(p) && /Lie-angle balanced head/.test(p), 'the parts by name');
-  assert.ok(/feel \+30%/.test(p) && /luck \+25%/.test(p) && /sweet spot -15%/.test(p) && /sweet spot \+25%/.test(p) && /feel -15%/.test(p), 'what each trades, in words');
-  assert.ok(/Buy \$450/.test(p) && /Buy \$600/.test(p) && /Buy \$800/.test(p) && /Fitted/.test(p), 'new parts are bought, the stock ones are fitted');
-  const fit = fitPart(null, 'shaft', 'whip').bag, own = html(fit, 'putter'); assert.ok(/data-testid="bag-fit-stock"[^>]*>Fit</.test(own), 'a part you own is fitted for free'); assert.ok(/border-amber-300\/60[^"]*"[^>]*data-testid="bag-shaft-whip"/.test(own), 'the fitted one is marked');
+  assert.ok(p.includes('data-testid="bag-slot-shaft"') && p.includes('data-testid="bag-slot-head"') && /Stock steel shaft/.test(p) && /Blade head/.test(p), 'the two slots, each with what is fitted');
+  assert.ok(!p.includes('data-testid="bag-shafts"') && !p.includes('data-testid="bag-heads"'), 'the parts are not open until a slot is');
+  const sh = html(null, 'putter', undefined, null, 'shaft');
+  assert.ok(sh.includes('data-testid="bag-shafts"') && !sh.includes('data-testid="bag-heads"'), 'the shafts');
+  for (const id of ['stock', 'whip', 'stiff']) assert.ok(sh.includes(`data-testid="bag-shaft-${id}"`), id);
+  assert.ok(/Whippy graphite shaft/.test(sh) && /Stiff counter-balanced shaft/.test(sh), 'the shafts by name');
+  assert.ok(/feel \+30%/.test(sh) && /luck \+25%/.test(sh) && /sweet spot -15%/.test(sh) && /sweet spot \+25%/.test(sh) && /feel -15%/.test(sh), 'what each trades, in words');
+  assert.ok(/Buy \$450/.test(sh) && /Buy \$600/.test(sh) && /Fitted/.test(sh), 'new shafts are bought, the stock one is fitted');
+  assert.ok(sh.indexOf('data-testid="bag-shafts"') < sh.indexOf('data-testid="bag-detail"') && sh.indexOf('data-testid="bag-detail"') < sh.indexOf('data-testid="bag-card"'), 'the parts open left of the club, which opens left of the card');
+  const hd = html(null, 'putter', undefined, null, 'head');
+  for (const id of ['blade', 'mallet', 'lie']) assert.ok(hd.includes(`data-testid="bag-head-${id}"`), id);
+  assert.ok(/Lie-angle balanced head/.test(hd) && /Buy \$800/.test(hd) && /Buy \$500/.test(hd) && /luck -25%/.test(hd), 'the heads');
+  const fit = fitPart(null, 'shaft', 'whip').bag, own = html(fit, 'putter', undefined, null, 'shaft');
+  assert.ok(/data-testid="bag-fit-stock"[^>]*>Fit</.test(own), 'a part you own is fitted for free'); assert.ok(/border-amber-300\/60[^"]*"[^>]*data-testid="bag-shaft-whip"/.test(own), 'the fitted one is marked');
   assert.ok(own.includes('data-testid="bag-shaft-whip"') && !/data-testid="bag-fit-whip"/.test(own), 'no button on the fitted part');
-  const poor = html(null, 'putter', { shop: true, money: 100 }); assert.ok(/Needs \$450/.test(poor), 'too poor for the new shaft');
-  const g = html(null, 'driver'); assert.ok(!g.includes('data-testid="bag-fitting"'), 'only the putter has a fitting');
+  assert.ok(/Whippy graphite shaft/.test(html(fit, 'putter')), 'the slot says what is fitted');
+  const poor = html(null, 'putter', { shop: true, money: 100 }, null, 'shaft'); assert.ok(/Needs \$450/.test(poor), 'too poor for the new shaft');
+  const busy = html(null, 'putter', undefined, 'You are out on the course: your bag changes when the round is over', 'head'); assert.ok(/disabled=""[^>]*data-testid="bag-fit-mallet"/.test(busy), 'out on the course nothing is fitted');
+  const g = html(null, 'driver', undefined, null, 'shaft'); assert.ok(!g.includes('data-testid="bag-fitting"') && !g.includes('data-testid="bag-shafts"'), 'only the putter has a fitting');
 });
 
 test('club icon: a drawn stand-in for each family, tinted by level', () => {
