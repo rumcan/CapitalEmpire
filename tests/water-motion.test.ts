@@ -215,8 +215,15 @@ test('T343: the swamp mask feeds the motion pass: the pools ripple, glint and la
   assert.ok(moved > 20, `moved ${moved}`);
   assert.ok(SWAMP_POOL.scale > 1 && SWAMP_POOL.slow < 1, 'finer and slower');
   // the pool's edge (mud on a side: near 0) gets a soft pale rim, the open middle none
-  let rim = 0; for (let i = 0; i < 100; i++) { const x = 1 + i * 0.21; const e = swampPixel(POOL, x, 3, 1, fr, 0, 0), m = swampPixel(POOL, x, 3, 1, fr, 1, 0); rim = Math.max(rim, e[0]! - m[0]!); }
-  assert.ok(rim > 1 && rim < 30, `a gentle rim: ${rim}`);
+  // (T363: the bound was set on the look first tuned, foam 1; the default water's foam is 128%)
+  const tuned = frame({ ripple: 1, foam: 1, sparkle: 1 });
+  let rim = 0, rimT = 0;
+  for (let i = 0; i < 100; i++) {
+    const x = 1 + i * 0.21, e = swampPixel(POOL, x, 3, 1, fr, 0, 0), m = swampPixel(POOL, x, 3, 1, fr, 1, 0), et = swampPixel(POOL, x, 3, 1, tuned, 0, 0), mt = swampPixel(POOL, x, 3, 1, tuned, 1, 0);
+    rim = Math.max(rim, e[0]! - m[0]!); rimT = Math.max(rimT, et[0]! - mt[0]!);
+  }
+  assert.ok(rimT > 1 && rimT < 30, `a gentle rim: ${rimT}`);
+  assert.ok(rim > 1 && rim < 40, `the default water's rim too: ${rim}`);
   // the motion off (no frame): untouched
   assert.deepEqual(motionPixel(POOL, 4.3, 6.1, sw, null), POOL);
 });

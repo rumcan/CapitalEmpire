@@ -26,6 +26,17 @@ const settle = async (page, ms = 900) => {
   await page.waitForFunction(() => { const g = window.__game; window.__calm = g.ground.busy === 0 ? window.__calm + 1 : 0; return window.__calm > 20; }, null, { timeout: 60000, polling: 50 }).catch(() => console.log('  (settle timed out)'));
   await page.waitForTimeout(300);
 };
+/** wait until the ground has baked nothing new for a while (a glint switch or a new zoom bakes every chunk in view again: settle alone returns between bakes) */
+const settleBake = async (page, quiet = 3000, max = 90000) => {
+  const t0 = Date.now(); let last = -1, since = Date.now();
+  while (Date.now() - t0 < max) {
+    const s = await page.evaluate(() => { const g = window.__game; return { b: g.ground.baked, busy: g.ground.busy }; });
+    if (s.b !== last || s.busy !== 0) { last = s.b; since = Date.now(); }
+    if (Date.now() - since >= quiet) return;
+    await page.waitForTimeout(150);
+  }
+  console.log('  (bake settle timed out)');
+};
 const save = async (buf, name) => { const file = join(out, `${tag}-${name}.jpg`); await sharp(buf).jpeg({ quality: 88, mozjpeg: true }).toFile(file); console.log(file); return file; };
 const label = (w, t) => Buffer.from(`<svg width="${w}" height="26" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="26" fill="#000" opacity="0.6"/><text x="8" y="18" font-family="Arial" font-size="15" fill="#fff">${t}</text></svg>`);
 const lookAt = (page, x, y, z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); }, [x, y, z]);
@@ -53,13 +64,14 @@ try {
   // no baking ahead, paused, the day, the water's clock held; the glint on (every chunk is baked again)
   const info = await page.evaluate(([clock]) => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.waterClock = clock; g.specCam = true; return { oval: g.spec.oval ?? null, spec: g.spec, water: g.waterLook }; }, [CLOCK]);
   report.game = info; console.log('the game starts with', JSON.stringify(info));
+  await settleBake(page);
   const at = await pondSpot(page); report.pond = at; console.log('pond', JSON.stringify(at));
   if (!at) throw new Error('no pond');
   const setLook = (look) => page.evaluate(look => { window.__game.setSpec(look); }, look);
 
   if (only.has('shots')) {
     for (const z of zooms) {
-      await lookAt(page, at.x, at.y, z); await settle(page, 1500);
+      await lookAt(page, at.x, at.y, z); await settle(page, 1500); await settleBake(page);
       for (const [name, look] of [['default', { inner: 0.15, outer: 1, strength: 1, day: 0.5 }], ['tuned', TUNED]]) {
         await setLook(look); await page.waitForTimeout(400);
         const shot = await page.screenshot({ type: 'png' });
@@ -87,7 +99,7 @@ try {
     await setLook(TUNED);
     const ovalDefault = await page.evaluate(() => { const o = window.__game.spec.oval; return typeof o === 'number' ? o : null; });
     for (const z of zooms) {
-      await lookAt(page, at.x, at.y, z); await settle(page);
+      await lookAt(page, at.x, at.y, z); await settle(page); await settleBake(page);
       for (let round = 0; round < rounds; round++) for (const m of ['round', 'oval']) {
         await setLook({ oval: m === 'round' ? 1 : ovalDefault ?? 1 }); await page.waitForTimeout(300);
         const key = `${Math.round(z * 100)}pct-${m}`, e = (num[key] ??= { pan: [], draw: [], gpu: [] });
