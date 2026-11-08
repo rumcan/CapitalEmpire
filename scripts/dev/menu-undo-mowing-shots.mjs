@@ -4,7 +4,7 @@
 //  2. Course > Holes > Shape by hand > Fairway (and the other surfaces) opens that surface's panel on the Course default, its look selected;
 //  3. the Mowing lines section of the Fairway panel: on or off, the pattern (along the hole, straight, checkerboard, diamond), the band width,
 //     how light and dark, the angle; a fairway before and after, every pattern, saved and undone.
-//   node scripts/dev/menu-undo-mowing-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T359 [--seed 7] [--only flyout,mowing,undo]
+//   node scripts/dev/menu-undo-mowing-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T359 [--seed 7] [--only flyout,mowing,green,undo]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; fresh profile, no saves written (non-GET requests are answered
 // locally). The exit code is 1 when any check failed; each stage runs on its own.
 import { chromium } from 'playwright-core';
@@ -12,7 +12,7 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
-const base = opt('base', 'http://127.0.0.1:5186/'), out = opt('out', 'E:/ClaudeTemp/T359'), seed = opt('seed', '7'), only = new Set(opt('only', 'flyout,mowing,undo').split(','));
+const base = opt('base', 'http://127.0.0.1:5186/'), out = opt('out', 'E:/ClaudeTemp/T359'), seed = opt('seed', '7'), only = new Set(opt('only', 'flyout,mowing,green,undo').split(','));
 const W = 1366, H = 860;
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
@@ -135,6 +135,38 @@ try {
     await page.evaluate(() => { const g = window.__game; g.emit(); });
   });
 
+  // ---------- the green's fine stripes and the tee (off by default) are editable the same way ----------
+  if (only.has('green')) await stage('green and tee lines', async () => {
+    const sp = await page.evaluate(h => {
+      const g = window.__game.courseGrid, CT = 0.5, c = { 8: { n: 0, x: 0, y: 0 }, 5: { n: 0, x: 0, y: 0 } };
+      for (let j = 0; j < g.h; j++) for (let i = 0; i < g.w; i++) { const k = j * g.w + i, o = c[g.surf[k]]; if (o && g.hole[k] === h) { o.n++; o.x += g.x0 + (i + 0.5) * CT; o.y += g.y0 + (j + 0.5) * CT; } }
+      const at = o => (o.n ? { x: o.x / o.n, y: o.y / o.n } : null);
+      return { green: at(c[8]), tee: at(c[5]) };
+    }, spot.h);
+    console.log('green', JSON.stringify(sp.green), 'tee', JSON.stringify(sp.tee));
+    await page.evaluate(([h]) => { const g = window.__game; g.setTool('select'); g.paint.setLookDefault(false, false); g.paint.setHole(h); g.emit(); }, [spot.h]);
+    if (sp.green) {
+      await walk(page, 'course', 'holes', 'shape', '=Green'); await sleep(300);
+      await chip(page, 'This hole').click(); await sleep(200);
+      check(await page.locator('[data-mowing="green"]').count() === 1 && (await page.locator('[data-mowing="green"]').getAttribute('data-mow-on')) === 'on', "the green: Mowing lines, on by default (the finish's fine stripes)");
+      await look(sp.green.x, sp.green.y, 0.3); await settle(page, 1500);
+      await shot(page, '7-green-0-before');
+      await chip(page, 'Checkerboard').click(); await dragSlider(page, 'Light bands', 1); await dragSlider(page, 'Dark bands', 1); await dragSlider(page, 'Mowing band width', 0.2); await settle(page, 1500);
+      check((await state(page)).mow?.pattern === 'check', `the green's checkerboard ${JSON.stringify((await state(page)).mow)}`);
+      await shot(page, '7-green-1-checkerboard');
+    }
+    if (sp.tee) {
+      await walk(page, 'course', 'holes', 'shape', '=Tee'); await sleep(300);
+      await chip(page, 'This hole').click(); await sleep(200);
+      check((await page.locator('[data-mowing="tee"]').getAttribute('data-mow-on')) === 'off', 'the tee: off by default (mown plain)');
+      await look(sp.tee.x, sp.tee.y, 0.3); await settle(page, 1500);
+      await shot(page, '8-tee-0-before');
+      await page.locator('[data-mowing="tee"] [data-mow="on"]').click(); await settle(page, 1500);
+      check((await page.locator('[data-mowing="tee"]').getAttribute('data-mow-on')) === 'on', 'the tee: turned on');
+      await shot(page, '8-tee-1-lines-on');
+    }
+  });
+
   // ---------- 1. Ctrl+Z puts menu settings back ----------
   if (only.has('undo')) await stage('ctrl+z undoes menu settings', async () => {
     await page.evaluate(([h]) => { const g = window.__game; g.setTool('select'); g.paint.setLookDefault(false, false); g.paint.setHole(h); g.emit(); }, [spot.h]);
@@ -143,8 +175,9 @@ try {
     await look(spot.x, spot.y, 0.3); await settle(page, 1500);
     // (a) a texture pick
     const t0 = (await state(page)).tex;
-    const opts = await page.evaluate(() => { document.querySelector('[data-texture-picker="quick-fill"] [data-texture-current]').click(); return [...document.querySelectorAll('[data-texture-picker="quick-fill"] [data-texture-option]')].map(e => e.dataset.textureOption); });
-    await sleep(200);
+    await page.locator('[data-texture-picker="quick-fill"] [data-texture-current]').click(); await sleep(400);
+    const opts = await page.locator('[data-texture-picker="quick-fill"] [data-texture-option]').evaluateAll(els => els.map(e => e.dataset.textureOption));
+    console.log('  the picker offers', opts.length, 'textures');
     const pickId = opts.find(o => /sand|bunker|dirt|gravel/i.test(o) && o !== t0) ?? opts.find(o => o !== t0);
     await page.locator(`[data-texture-picker="quick-fill"] [data-texture-option="${pickId}"]`).first().click(); await settle(page, 1500);
     const t1 = (await state(page)).tex; check(t1 === pickId && t1 !== t0, `a texture pick: ${t0} -> ${t1}`);

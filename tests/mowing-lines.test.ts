@@ -145,6 +145,10 @@ test('the Paint tool: the Course default\'s mowing lines are written to the brow
     assert.equal(fw(book, 'h2')?.mow?.on, false);
     assert.deepEqual(fw(book, 'h1')?.mow, { pattern: 'straight', angle: 40, width: 2 }, 'one undo takes Apply to all holes back: hole 1 wears its own look again');
     assert.deepEqual(again.brush.fairway.style.mow, { pattern: 'straight', angle: 40, width: 2 }, 'and the Course default its');
+    // a new hole starts from the Course default's lines (its looks are seeded from the default at its first paint)
+    again.setLookDefault(true, false); again.seedLooks('h7');
+    assert.deepEqual(fw(book, 'h7')?.mow, { pattern: 'straight', angle: 40, width: 2 }, "a new hole wears the Course default's mowing lines");
+    again.setLookDefault(false, false);
     // Reset: none again
     again.setStyle({ mow: undefined }); assert.ok(!('mow' in again.style), 'back to the finish\'s own');
   } finally { delete (globalThis as unknown as { localStorage?: Storage }).localStorage; }
