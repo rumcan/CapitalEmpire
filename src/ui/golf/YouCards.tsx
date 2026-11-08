@@ -36,7 +36,7 @@ const BY_ID = new Map(LIBRARY.map(it => [it.id, it] as const));
 export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, course }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void;
   /** T342: the game's look (desert or autumn) and the choice (the world changes behind the card at once) */ desert?: boolean; onTheme?: (desert: boolean) => void;
   /** T340 (#967): "Your course": build your own (null), or a real course built from map data (a new game starts on it); current: the game's now */
-  course?: { options: { id: string; name: string; place: string; holes: number; par: number; mappedPar: number }[]; current: string | null; onPick: (id: string | null) => void } }) {
+  course?: { options: { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; derived?: boolean; scale?: number }[]; current: string | null; onPick: (id: string | null) => void } }) {
   const [n, setN] = useState(name), [l, setL] = useState(look);
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
@@ -79,7 +79,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
               </button>
               {course.options.map(o => (
                 <button key={o.id} className={`rounded-lg border px-2 py-1 text-left text-xs ${course.current === o.id ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => course.current !== o.id && course.onPick(o.id)} data-testid={`who-course-${o.id}`}>
-                  <span className="font-semibold text-white">{o.name}</span> <span className="text-slate-400">· {o.holes} holes, par {o.par}{o.mappedPar !== o.par ? ` (${o.mappedPar} on the map)` : ''} · {o.place}</span>
+                  <span className="font-semibold text-white">{o.name}</span> <span className="text-slate-400">· {o.holes} holes{o.derived ? ' (worked out from the fairways)' : ''}, par {o.par}{o.mappedPar !== o.par ? ` (${o.mappedPar} on the map)` : ''}{o.scale ? ` · scaled to ${Math.round(o.scale * 100)}%` : ''} · {o.place}</span>
                 </button>
               ))}
               <span className="text-[10px] leading-tight text-slate-500">Real courses are built from map data © OpenStreetMap contributors.</span>

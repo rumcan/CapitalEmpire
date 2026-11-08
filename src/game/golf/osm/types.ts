@@ -4,6 +4,8 @@ import type { TeeKind } from '../types';
 
 /** the credit every map-data course carries (the data is OpenStreetMap's, ODbL 1.0) */
 export const OSM_CREDIT = '© OpenStreetMap contributors';
+/** the margin the land keeps round the holes' features, m (the converter's default; the planner counts on it) */
+export const OSM_MARGIN_M = 40;
 /** the licence line that goes with it (fixtures keep it in their header) */
 export const OSM_LICENCE = 'Data © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)';
 
@@ -50,6 +52,8 @@ export interface SpecNote { code: string; hole: number; text: string }
 /** a course ready for the game: its size and holes, its areas in paint order, and the notes */
 export interface OsmCourseSpec {
   id: string; name: string; credit: string; licence: string; source: string; place: string;
+  /** the real coordinates were scaled by this (1: true size; below 1: the course is too big for the 2 km map) */ scale: number;
+  /** the holes were worked out from the fairways (the map has no hole lines): a guess, never mapped data */ derived: boolean;
   /** the land (the holes, their surfaces and a margin) in tiles: width and height; the frame's origin is its north-west corner */
   w: number; h: number;
   holes: SpecHole[]; areas: SpecArea[];
@@ -66,4 +70,4 @@ export interface OsmCourseSpec {
 
 /** what a map-data game saves of its course: the shipped id (the engine lays the flat map for it), the name the game shows, the place, the credit the
  *  course card and the credits show, the OSM id it came from, its holes, and its par as the game works it out (par) and as the map has it (mappedPar) */
-export interface OsmGolfInfo { id: string; name: string; place: string; credit: string; licence: string; source: string; holes: number; par: number; mappedPar: number }
+export interface OsmGolfInfo { id: string; name: string; place: string; credit: string; licence: string; source: string; holes: number; par: number; mappedPar: number; scale?: number; derived?: boolean }

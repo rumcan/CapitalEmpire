@@ -43,11 +43,14 @@ const full = g => new Set(g.filter(h => h.ref >= 1 && h.ref <= 18).map(h => h.re
 let chosen = opt('course');
 if (chosen === undefined) chosen = [...groups.entries()].sort((a, b) => full(b[1]) * 1000 + b[1].length - (full(a[1]) * 1000 + a[1].length))[0]?.[0] ?? '';
 const mine = groups.get(chosen) ?? [];
-if (!mine.length) { console.error(`no hole lines for course "${chosen}" (have: ${[...groups.keys()].map(k => `"${k}"`).join(', ')})`); process.exit(1); }
+// no hole lines at all (Wingate Park): the box is the fairways', greens', tees' and bunkers' (the converter works the holes out from them)
+const boxPts = mine.length ? mine.flatMap(h => h.line) : !holes.length ? ['fairway', 'green', 'tee', 'bunker'].flatMap(k => (F[k] ?? []).flatMap(f => (f.polys ?? []).flatMap(p => p.outer))) : [];
+if (!boxPts.length) { console.error(`no hole lines for course "${chosen}" (have: ${[...groups.keys()].map(k => `"${k}"`).join(', ')}), and no fairways, greens or tees to work holes out from`); process.exit(1); }
+if (!mine.length) console.log('no hole lines: the box is that of the fairways, greens, tees and bunkers');
 
 // the box of the chosen course's holes, its reach round it
 let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-for (const h of mine) for (const p of h.line) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+for (const p of boxPts) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
 const box = [x0 - reach, y0 - reach, x1 + reach, y1 + reach];
 const meets = pts => { let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity; for (const p of pts) { a = Math.min(a, p[0]); c = Math.max(c, p[0]); b = Math.min(b, p[1]); d = Math.max(d, p[1]); } return a <= box[2] && c >= box[0] && b <= box[3] && d >= box[1]; };
 const inBox = p => p[0] >= box[0] && p[0] <= box[2] && p[1] >= box[1] && p[1] <= box[3];
@@ -67,7 +70,9 @@ features.hole = holes.filter(h => meets(h.line)).map(h => {
   if (c) t['golf:course:name'] = rename(c);
   return { tags: t, ref: h.ref, par: h.par, line: h.line.map(pt) }; // (hole lines keep every vertex: their bends are the aim points)
 });
+if (!features.hole.length) delete features.hole;
 features.pin = (F.pin ?? []).filter(f => f.pos && inBox(f.pos)).map(f => ({ pos: pt(f.pos) }));
+if (!features.pin.length) delete features.pin;
 // waterways: the runs of each inside the box (with a vertex either side), no names
 features.waterway = [];
 for (const w of F.waterway ?? []) {
@@ -87,7 +92,7 @@ const fixture = {
   meta: {
     id, credit: '© OpenStreetMap contributors', licence: 'Data © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)',
     place: opt('place', ''), course: { osm: c.osm ?? '', name: opt('name', c.name ?? id) },
-    source: `scripts/dev/osm-course.mjs, fetched ${j.meta?.overpass?.fetchedAt?.slice(0, 10) ?? j.meta?.generated?.slice(0, 10) ?? ''}, trimmed by scripts/dev/osm-trim-fixture.mjs (the course "${rename(chosen)}", ${reach} m round its holes)`,
+    source: `scripts/dev/osm-course.mjs, fetched ${j.meta?.overpass?.fetchedAt?.slice(0, 10) ?? j.meta?.generated?.slice(0, 10) ?? ''}, trimmed by scripts/dev/osm-trim-fixture.mjs (the course "${rename(chosen)}", ${reach} m round its ${mine.length ? 'holes' : 'fairways, greens and tees'})`,
   },
   boundary: j.boundary ? { polys: polys(j.boundary) } : undefined,
   features,
@@ -95,4 +100,4 @@ const fixture = {
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(fixture) + '\n');
 const n = Object.entries(features).map(([k, v]) => `${k} ${v.length}`).join(', ');
-console.log(`${out}: ${(JSON.stringify(fixture).length / 1024).toFixed(1)} kB; the course "${rename(chosen)}" ${mine.length} holes; ${n}`);
+console.log(`${out}: ${(JSON.stringify(fixture).length / 1024).toFixed(1)} kB; the course "${rename(chosen)}" ${mine.length} hole lines; ${n}`);

@@ -11,8 +11,9 @@ import {
   bandRings, bendDeg, boxOf, boxesMeet, circleRing, distToLine, distToPoly, distToRing, inPoly, interiorPoint, lineLen, polyArea, sampleLine, sliceLine,
   type Box, type P, type Poly,
 } from './geom';
+import { deriveHoleLines } from './derive';
 import {
-  OSM_CREDIT, OSM_LICENCE, type JFeature, type OsmCourseJson, type OsmCourseSpec, type SpecArea, type SpecHole, type SpecNote, type SpecSurface, type SpecTee, type TPt,
+  OSM_CREDIT, OSM_LICENCE, OSM_MARGIN_M, type JFeature, type OsmCourseJson, type OsmCourseSpec, type SpecArea, type SpecHole, type SpecNote, type SpecSurface, type SpecTee, type TPt,
 } from './types';
 
 /** a tee polygon within this of a hole line's start belongs to that hole's tee, m */
@@ -28,7 +29,7 @@ const NEAR_HOLE = 90;
 /** a vertex of a hole line is an aim point when the line bends by more than this, degrees; aim points are at least AIM_GAP apart and at most AIM_MAX per hole */
 const AIM_BEND = 10, AIM_GAP = 25, AIM_MAX = 4;
 /** the land is the holes' features and this margin, m */
-const MARGIN = 40;
+const MARGIN = OSM_MARGIN_M;
 /** a made-up green's area, m2; a made-up tee's length and width, m; a made-up fairway band's half width, m, and what it keeps clear at each end, m */
 const GREEN_AREA = 400, TEE_LEN = 14, TEE_WID = 8, BAND_HALF = 14, BAND_TEE_CLEAR = 35, BAND_GREEN_CLEAR = 16;
 /** a par 4 or 5 whose line runs over fairway for less than this share has none (the fairway band is made up) */
@@ -45,6 +46,8 @@ export interface ConvertOptions {
   /** the place line for the card ("Cape Town, South Africa") */ place?: string;
   /** the course to build when the boundary holds several: its golf:course:name / course:name value (default: the one with holes 1..18) */ course?: string;
   /** the land's margin round the holes' features, m (default 40) */ marginM?: number;
+  /** a uniform scale for a course too big for the map (the real coordinates times this, 1 by default: true size); the margin and what is made up keep their size */ scale?: number;
+  /** work holes out from the fairways when the map has no hole lines (default: yes; see derive.ts) */ derive?: boolean;
 }
 
 /** a polygon of the JSON as the converter works with it */
@@ -81,22 +84,49 @@ function areasOf(list: JFeature[] | undefined): Area[] {
   return out;
 }
 
+/** the JSON with every coordinate times k (a copy; the course scaled about its centre) */
+export function scaleJson(json: OsmCourseJson, k: number): OsmCourseJson {
+  const pt = (p: [number, number]): [number, number] => [Math.round(p[0] * k * 100) / 100, Math.round(p[1] * k * 100) / 100];
+  const feat = (f: JFeature): JFeature => ({ ...f, ...(f.polys ? { polys: f.polys.map(q => ({ outer: q.outer.map(pt), inner: (q.inner ?? []).map(r => r.map(pt)) })) } : {}), ...(f.line ? { line: f.line.map(pt) } : {}), ...(f.pos ? { pos: pt(f.pos) } : {}) });
+  const features: OsmCourseJson['features'] = {};
+  for (const [kind, list] of Object.entries(json.features ?? {})) (features as Record<string, JFeature[]>)[kind] = (list ?? []).map(feat);
+  return { ...json, ...(json.boundary ? { boundary: feat(json.boundary) } : {}), features };
+}
+
 /** the playing length through a tee marker, aim points and pin, m (golf/holes.ts: metres, whole) */
 const playLen = (tee: P, aims: P[], pin: P): number => Math.round(lineLen([tee, ...aims, pin]));
 
 /** converts the JSON of a real course into a course spec; see the file's header. Never throws for a well-formed JSON: a course with no hole lines gives a
  *  spec with no holes and a warning */
-export function osmCourseToSpec(json: OsmCourseJson, opt: ConvertOptions = {}): OsmCourseSpec {
+export function osmCourseToSpec(json0: OsmCourseJson, opt: ConvertOptions = {}): OsmCourseSpec {
+  const scale = opt.scale !== undefined && opt.scale > 0 && opt.scale < 1 ? opt.scale : 1, json = scale < 1 ? scaleJson(json0, scale) : json0;
   const F = json.features ?? {};
   const warnings: SpecNote[] = [], fills: SpecNote[] = [];
   const warn = (code: string, hole: number, text: string) => warnings.push({ code, hole, text });
   const fill = (code: string, hole: number, text: string) => fills.push({ code, hole, text });
+  if (scale < 1) warn('scaled', 0, `The course is bigger than the 2 km map: every coordinate scaled to ${Math.round(scale * 100)}% (the holes' lengths too, so a par may differ)`);
+
+  // ---- the map's areas ----
+  const tees = areasOf(F.tee), greens = areasOf(F.green), fairways = areasOf(F.fairway), bunkers = areasOf(F.bunker);
+  const waters = [...areasOf(F.water_hazard), ...areasOf(F.lateral_water_hazard), ...areasOf(F.water)], roughs = areasOf(F.rough);
+  const pins = (F.pin ?? []).filter(f => f.pos).map(f => ({ p: f.pos as P, f }));
+  const nearTee = (p: P) => Math.min(Infinity, ...tees.map(t => distToPoly(t.poly, p[0], p[1])));
+  const nearGreen = (p: P) => Math.min(Infinity, ...greens.map(g => distToPoly(g.poly, p[0], p[1])));
 
   // ---- the hole lines, grouped by course ----
   const lines: Line[] = [];
   for (const f of F.hole ?? []) {
     if (!f.line || f.line.length < 2) continue;
     lines.push({ pts: f.line, ref: f.ref ?? num(f.tags?.ref), par: f.par ?? num(f.tags?.par), handicap: num(f.tags?.handicap), course: cname(f.tags), sel: -1 });
+  }
+  // no hole lines at all (Wingate Park): holes worked out from the fairways, the greens near their ends and the tees beyond (derive.ts), marked as a guess
+  let fromFairways = false;
+  if (!lines.length && opt.derive !== false) {
+    const d = deriveHoleLines(fairways, greens, tees);
+    d.holes.forEach((h, i) => lines.push({ pts: h.pts, ref: i + 1, par: null, handicap: null, course: '', sel: -1 }));
+    fromFairways = d.holes.length > 0;
+    if (fromFairways) warn('holes-derived', 0, `No hole lines are mapped: ${d.holes.length} hole${d.holes.length === 1 ? ' was' : 's were'} worked out from the fairways (the green near one end of each, the tee beyond the other), numbered by walking from each green to the nearest tee: a guess, not mapped data`);
+    for (const t of d.skipped) warn('derive-skipped', 0, t);
   }
   const groups = new Map<string, Line[]>();
   for (const l of lines) { const g = groups.get(l.course); if (g) g.push(l); else groups.set(l.course, [l]); }
@@ -126,13 +156,6 @@ export function osmCourseToSpec(json: OsmCourseJson, opt: ConvertOptions = {}): 
   }
   picked.forEach((l, i) => { l.sel = i; });
   if (picked.some((l, i) => l.ref !== i + 1)) warn('renumbered', 0, `The hole numbers (${picked.map(l => l.ref).join(', ')}) are not 1..${picked.length}: numbered in order`);
-
-  // ---- the map's areas ----
-  const tees = areasOf(F.tee), greens = areasOf(F.green), fairways = areasOf(F.fairway), bunkers = areasOf(F.bunker);
-  const waters = [...areasOf(F.water_hazard), ...areasOf(F.lateral_water_hazard), ...areasOf(F.water)], roughs = areasOf(F.rough);
-  const pins = (F.pin ?? []).filter(f => f.pos).map(f => ({ p: f.pos as P, f }));
-  const nearTee = (p: P) => Math.min(Infinity, ...tees.map(t => distToPoly(t.poly, p[0], p[1])));
-  const nearGreen = (p: P) => Math.min(Infinity, ...greens.map(g => distToPoly(g.poly, p[0], p[1])));
 
   // a line drawn green to tee is turned round (none of the 99 stage-1 lines was)
   for (const l of lines) {
@@ -398,7 +421,7 @@ export function osmCourseToSpec(json: OsmCourseJson, opt: ConvertOptions = {}): 
 
   const place = opt.place ?? json.meta?.place ?? '';
   return {
-    id: opt.id ?? json.meta?.id ?? 'course', name: opt.name ?? json.meta?.course?.name ?? 'Course', credit: OSM_CREDIT, licence: OSM_LICENCE,
+    id: opt.id ?? json.meta?.id ?? 'course', name: opt.name ?? json.meta?.course?.name ?? 'Course', credit: OSM_CREDIT, licence: OSM_LICENCE, scale, derived: fromFairways,
     source: json.meta?.course?.osm ?? '', place, w: W, h: H, holes, areas, warnings, fills, otherCourses, course: chosen || null,
     parTotal: holes.reduce((s, h) => s + h.par, 0), gameParTotal: holes.reduce((s, h) => s + h.gamePar, 0), lengthM: holes.reduce((s, h) => s + h.lengthM, 0),
     counts,
