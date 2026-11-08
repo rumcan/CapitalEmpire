@@ -2,6 +2,7 @@
 // (play it: your round on every hole under competition rules), and the result: the Club Championship's champion, the Mayor's Cup's presentation by the
 // mayor. The mayor's picture is a labelled stand-in until GOLF-ART-LIST 222 (the town hall and the mayor) is drawn.
 import type { EventCardView } from '../../game/engine';
+import { clock } from '../../game/golf/player';
 import { Icon } from '../Icon';
 
 /** the mayor's stand-in: a framed figure with the label the owner's rule asks for ("Stand In for <name>") */
@@ -63,7 +64,7 @@ export function EventCard({ view: v, right, onClose, onEnter, onPlay }: { view: 
             <div className="space-y-1">
               <p className="text-slate-300">{v.field ?? 0} in the field · all {v.holes} holes · competition rules: no mulligans, no gimmies · your game under tournament pressure.</p>
               {v.playing ? <p className="text-sky-200">You are out on the course in it.</p>
-                : <button className="chip chip-on w-full justify-center disabled:opacity-40" disabled={!!v.playWhy} onClick={onPlay} title={v.playWhy ?? ''} data-testid="event-play">Play the {v.name}</button>}
+                : <button className="chip chip-on w-full justify-center disabled:opacity-40" disabled={!!v.playWhy} onClick={onPlay} title={v.playWhy ?? ''} data-testid="event-play">Start round{v.tee != null ? ` · tee time ${clock(v.tee)}` : ''}</button>}
               {v.playWhy && !v.playing && !v.why && <p className="text-amber-200">{v.playWhy}</p>}
             </div>
           )}

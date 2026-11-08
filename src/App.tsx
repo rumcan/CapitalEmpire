@@ -75,7 +75,7 @@ import { RangeCard } from './ui/golf/RangeCard';
 import { ClubhouseCard } from './ui/golf/ClubhouseCard';
 import { StaffCard } from './ui/golf/StaffCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
-import { TalkCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
+import { TalkCard, TeeAskCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
 import { MatchResultCard, ReturnChallengeCard } from './ui/golf/MatchCards';
 import { EventCard } from './ui/golf/EventCard';
 import { RoundBar, ScoreCard } from './ui/golf/YourRound';
@@ -488,7 +488,7 @@ export default function App() {
             <div className="pointer-events-auto ml-auto flex items-center gap-2">
               <div className="glass flex items-center gap-1 px-2 py-1.5">
                 <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
-                {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''}`} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
+                {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''} disabled:opacity-40`} disabled={game.paceLock && k > WATCH_SPEED} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
                 {game.golfMode && (game.golfWatch
                   ? <button className="chip chip-on" onClick={() => game.stopWatching()} data-tip="Stop watching: back to the speed before (Esc)" data-testid="watch-stop">Watching {game.golfWatch.label} ✕</button>
                   : <button className="chip" onClick={() => game.watchNearest()} data-tip="Follow the golf group nearest the middle of the screen at the watching speed" data-testid="watch-golf">Watch golf</button>)}
@@ -843,8 +843,9 @@ export default function App() {
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
           {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} />}
-          {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
-          {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.playEvent(ev.id)} />; })()}
+          {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onStart={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onTourney={() => game.tournamentStart()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
+          {(() => { const ta = game.teeAskView(); return ta && <TeeAskCard tee={ta.tee} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onPlay={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onClose={() => game.closeTeeAsk()} />; })()}
+          {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.eventStart(ev.id)} />; })()}
           {(() => { const rv = game.yourRoundView(); if (!rv) return null;
             // T328 (#936): the bar starts right of the left rail and stops left of a right-hand card (event, tee, talk, challenge: 320 px at most)
             const side = game.panel ? '19.5rem' : '0.75rem', card = !!game.youTalk || !!game.youTeeView() || !!game.eventCard() || !!game.challengeView();
