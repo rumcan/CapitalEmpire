@@ -157,7 +157,12 @@ import { normalizeGolfSave, stampWeather, weatherOn, type GolfPlaySave, type Gol
 import { courseSlopeAt, createCourseHeightField, sampleCourseGrid, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
-import { loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, type OsmCourseSpec } from './golf/osm';
+import { loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, OSM_CREDIT, OSM_LICENCE, type OsmCourseSpec } from './golf/osm';
+import { previewOfKept, realDeps } from './golf/osm/find';
+import { RealPlacer, realInfoOf, type RealInfo, type RealView } from './golf/osm/placer';
+import { cutSpan, goesPhrase, type PlacePlan, type PlaceWorld } from './golf/osm/place';
+import { placeDiff, scratchOf } from './golf/osm/placegrid';
+import { boundsOf, inRects } from './golf/osm/rotate';
 import { planOsmGame } from './golf/osm/start';
 import { specMarkers } from './golf/osm/raster';
 import { RANGE_CAM_ZOOM, RANGE_LOT, planRangeStart } from './golf/rangestart';
@@ -186,7 +191,7 @@ import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { bizName, inSentence, inTheWay, overlaps, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
-import { buyAdjacentBlock, blockOnRoad, blockOnWater, playInWay, polyInParcels, startWhy, type LandRoad, type ParcelLandClass } from './golf/parcels';
+import { buyAdjacentBlock, blockOnRoad, blockOnWater, mergeParcelBounds, playInWay, polyInParcels, startWhy, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
@@ -199,13 +204,13 @@ import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, pa
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
 import { ADDRESS_PACE, AT_ADDRESS, jumpAlpha, livePuffs, puffAt, stepToward, type Puff } from './golf/play/jumpfx';
-import { carryFor, kitOf, pickText, readShape, shapeEffect, shapeLines, type ClubKit, type ShapeFx, type ShotShape } from './golf/play';
+import { CLUB_NAME, LEVEL_NAME, addVoucher, bagView, carryFor, fitPart, kitOf, levelOf, partWhy, pickText, readShape, setThird, shapeEffect, shapeLines, clubUpgradeWhy, upgradeClub, voucherWhy, type BagSave, type BagView, type ClubKit, type PartKind, type ShapeFx, type ShopCtx, type ShotShape } from './golf/play';
 import { CALM_MPH, NO_WIND, dailyWind, envOf, lieKindFor, lieView, previewShot, slopeLines, windAt, windNote, windText, windToward, windView, type Conditions, type LieView, type ShotEnv, type ShotPreview, type Slope, type Wind, type WindNow, type WindView } from './golf/play';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { missingParts, missingWhy, practicePick, realHoleCount, type PracticeScope } from './golf/play/practice';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
-import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
+import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, gearOf, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withBag, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -1448,6 +1453,134 @@ export class Game {
     p.polys(s).forEach((pts, i) => drawGhostPoly(gv, pts, v.bad ? 'invalid' : 'valid', { lineWidthPx: i ? 1.2 : 2, cross: i === 0 }));
     const gm = this.ghostMouse; if (gm) drawGhostHint(gv, gm.mx, gm.my, v.label, v.bad);
   }
+  // ---------- T356 (#998): a real course placed into the game under way (golf/osm/placer.ts, place.ts, placegrid.ts)
+  /** the real course in hand: its outline and the faint drawing of its holes follow the pointer (green where it may go and the money holds, red where it
+   *  may not or is short), R turns it, a click asks (the pop-up lists what goes), Place it lays it. Nothing while none is in hand (real.active) */
+  readonly real: RealPlacer = new RealPlacer({
+    map: MAP, world: fresh => this.realWorld(fresh), revision: () => this.realRevision(), centre: () => tileOf(this.cam.X, this.cam.Y),
+    toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
+    enter: () => { this.setTool('select'); if (this.range.cardOpen) this.openRangeCard(false); if (this.landMode) this.closeLandSale(); },
+    holes: () => new Set((this.golf?.pins ?? []).map(p => p.hole)).size,
+    lay: c => this.layRealCourse(c),
+    // (T358's library: a downloaded course read back from the browser's IndexedDB, converted as a new game would, scaled to the map when it must be)
+    kept: async id => { const p = await previewOfKept(id, await realDeps()); return p && p.spec.holes.length ? { info: realInfoOf(p.spec), spec: p.spec } : null; },
+  });
+  /** Course > Place a real course > (a course): takes it in hand (a golf game only; a course too big for the map in every turn is refused, the map cannot grow) */
+  startRealPlace(id: string): Promise<boolean> { return this.golf ? this.real.start(id) : Promise.resolve(false); }
+  /** the new-game card's search, after a course is found and previewed (T358): "Place it in my map" takes that course in hand over this game's map, as the menu's courses
+   *  are, instead of starting a new game on it (Build this course); Esc or Cancel puts it down and the card is there again */
+  startRealPlaceSpec(spec: OsmCourseSpec): Promise<boolean> { return this.golf ? this.real.startSpec(spec) : Promise.resolve(false); }
+  /** the placing mode's view for the card and the pop-up (null: none in hand) */
+  realView(): RealView | null { return this.real.view(); }
+  /** what a plan reads: changes with the roads, the lots, the land, the club's buildings, the money and the round */
+  private realRevision(): string {
+    const g = this.golf, t = this.traffic;
+    return `${this.net.version}|${t.lots.size}|${t.built}|${g?.parcels?.length ?? 0}|${this.bizDefs.length}|${this.parkDefs.length}|${Math.floor(this.money / 100)}|${t.round.stage}|${g?.structures?.length ?? 0}`;
+  }
+  /** what the planner's kept work (the lots' boxes, the land classes, the road graph) is for: the roads, the lots, the club's buildings, and a couple of seconds
+   *  (a lot's level can change with no count changing) */
+  private realPrepRevision(): string { const t = this.traffic; return `${this.net.version}|${t.lots.size}|${t.built}|${this.bizDefs.length}|${this.parkDefs.length}|${Math.floor(performance.now() / 2000)}`; }
+  /** the club's own things a real course cannot cover: its buildings, car parks, driving range, practice area and a tournament's structures, and the iconic places */
+  private realKeep(): { name: string; rect: Rect }[] {
+    const g = this.golf, out: { name: string; rect: Rect }[] = [];
+    if (!g) return out;
+    const NAMES: Record<string, string> = { clubhouse: 'clubhouse', halfway: 'halfway house', prooffice: "pro's office", teachhut: 'teaching hut' };
+    for (const d of this.bizDefs) out.push(d.type === 'range' ? { name: 'driving range', rect: plotOfFront([d.x, d.y, d.w, d.h], g.dir) } : { name: NAMES[d.type] ?? 'building', rect: [d.x, d.y, d.w, d.h] });
+    for (const p of this.parkDefs) out.push({ name: 'car park', rect: [p.x, p.y, p.w, p.h] });
+    if (g.practiceLot) out.push({ name: 'practice area', rect: g.practiceLot });
+    const pts = this.range.scene?.practice?.pts;
+    if (pts && pts.length >= 6) { const b = ptsBox(pts); out.push({ name: 'practice area', rect: [b[0]!, b[1]!, b[2]! - b[0]!, b[3]! - b[1]!] }); }
+    for (const s of g.structures ?? []) out.push({ name: STRUCTURE[s.typeId]?.name?.toLowerCase() ?? 'tournament structure', rect: structureRect(s) });
+    for (const b of this.placeBoxes()) out.push({ name: 'landmark', rect: [b[0], b[1], b[2] - b[0], b[3] - b[1]] });
+    return out.filter(k => k.rect[2] > 0 && k.rect[3] > 0);
+  }
+  /** the world as the planner reads it, from the game's live collections (nothing copied but the small lists) */
+  private realWorld(fresh = false): PlaceWorld {
+    const g = this.golf, cls = this.terrain.cls, lots = this.traffic.lots, net = this.net, farms = this.farmMap.farms;
+    const entries: Pt[] = [...(g?.exits ?? []), this.terrain.highway];
+    const targets: { name: string; x: number; y: number }[] = [];
+    if (g?.town) targets.push({ name: 'the town', x: g.town.x, y: g.town.y });
+    if (g?.clubhouse && this.bizDefs.some(d => d.type === 'clubhouse')) targets.push({ name: 'the clubhouse', x: g.clubhouse.x, y: g.clubhouse.y });
+    return {
+      map: MAP, ...(fresh ? {} : { revision: this.realPrepRevision(), owner: this.traffic }), owned: g ? this.golfLand() : [], river: (x, y) => { const tx = Math.floor(x), ty = Math.floor(y); return tx >= 0 && ty >= 0 && tx < MAP && ty < MAP && cls[ty * MAP + tx] === TC.WATER; },
+      lots: { [Symbol.iterator]: () => lots.values() }, farms: { *[Symbol.iterator]() { for (const f of farms.values()) yield { x: f.p.o.x, y: f.p.o.y }; } },
+      segs: net.segs, segsNear: (x, y, r) => net.segsNear({ x, y }, r),
+      isCourseRoad: s => isCourseClass(s.cls.id as ClassId), endMargin: s => this.realEndMargin(s as Seg), valuePerTile: s => { const q = s as Seg; return q.cls.cost * STRUCT_COST[q.kind]!; }, compensation: l => compensation(l as LotView),
+      pop: this.traffic.pop, townCentre: g?.town ?? null, entries, targets, keep: this.realKeep(), money: this.money, roundLive: this.traffic.round.stage !== 'free',
+      props: r => { let n = 0; for (const p of this.propGrid.query([r[0], r[1], r[0] + r[2], r[1] + r[3]])) if (this.realPropGoes(p) && inRects([r], (p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2)) n++; return n; },
+    };
+  }
+  /** how far back from the course's edge a cut road piece ends: the dead end's turning circle and verge (as the lots keep off a dead end: lots.ts endReach) */
+  private realEndMargin(s: { cls: RoadClass }): number { return s.cls.h + s.cls.bulb + s.cls.walk; }
+  /** whether a placed prop goes with a real course laid over it: the player's or the starter's own (not the roads', lots', farms' automatic ones), no tree
+   *  (the grid's playing surfaces clear those), and not a hole's pin or tee marker or a tournament structure, which are laid again */
+  private realPropGoes(p: Prop): boolean {
+    if (p.auto || !this.props.has(p) || LIBRARY[p.item]?.kind === 'tree') return false;
+    for (const q of this.golfProps.values()) if (q === p) return false;
+    for (const q of this.golfStructureProps.values()) if (q === p) return false;
+    return true;
+  }
+  /** Place it: lays the real course as the plan worked out. Buys the land (the cover's rects join the player's), buys out the lots under it and the lots it
+   *  leaves with no road (the city worker clears them; their compensation is paid there), takes the road pieces inside it away (the ends outside it are
+   *  dead ends, trimmed as the bulldozer trims them), takes the player's placed items away, paints the course into the grid as one diff through the
+   *  grid's own pipeline (the workers, the ground that re-bakes itself, the trees that go), puts the tee markers, pins and aim points (the old holes' go),
+   *  and keeps the course's credit. True when it did */
+  private layRealCourse(c: { id: string; info: RealInfo; spec: OsmCourseSpec; turned: OsmCourseSpec; plan: PlacePlan; deg: number }): boolean {
+    const g = this.golf; if (!g) return false;
+    const { plan, turned } = c;
+    if (!plan.ok || plan.total > this.money) return false;
+    // the buildings go, bought out (the worker pays their compensation); the land, the roads taken and the course are paid here
+    for (const key of [...plan.lots.keys, ...plan.orphans.keys]) this.traffic.buyLot(key);
+    this.traffic.spend('construction', plan.land.price + plan.roads.value + plan.build);
+    // the land: the cover's rects join the player's (and are kept apart for Land for sale and the survey lines), the course grid grows to hold them; the
+    // city worker hears of it before the roads change, so no new lot starts on it
+    const parcels = g.parcels ?? [g.parcel], own = plan.cover.map(r => [...r] as Rect);
+    g.parcels = [...parcels, ...own]; g.parcel = mergeParcelBounds(g.parcels); g.courseRects = [...(g.courseRects ?? []), ...own];
+    this.fitCourseGrid(); this.sendGolf();
+    // the roads inside the cover: each piece's stretch inside goes, the ends outside stay as dead ends (tidyEnds trims the stubs)
+    const ends: Pt[] = [];
+    for (const s of [...this.net.segs]) {
+      if (s.kind === SK.TUNNEL) continue;
+      const sp = cutSpan(plan.cover, s, this.realEndMargin(s)); if (!sp) continue;
+      const d = sub(s.b, s.a), L = vlen(d), at = (t: number): Pt => add(s.a, mul(d, t));
+      const p0 = sp[0] * L < 0.05 ? s.a : at(sp[0]), p1 = (1 - sp[1]) * L < 0.05 ? s.b : at(sp[1]);
+      this.edit.removePiece({ seg: s, p0: { x: p0.x, y: p0.y }, p1: { x: p1.x, y: p1.y } });
+      ends.push({ x: s.a.x, y: s.a.y }, { x: s.b.x, y: s.b.y }, { x: p0.x, y: p0.y }, { x: p1.x, y: p1.y });
+    }
+    if (ends.length) { this.tidyEnds(ends); this.commitNetwork(); }
+    // what the player placed there goes
+    for (const r of plan.cover) for (const p of [...this.propGrid.query([r[0], r[1], r[0] + r[2], r[1] + r[3]])]) if (this.realPropGoes(p) && inRects([r], (p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2)) this.removeProp(p);
+    // the course: one diff on the grid, through the grid's own pipeline
+    const grid = this.courseGrid!;
+    const cls = this.terrain.cls, diff = placeDiff(grid, scratchOf(turned, plan.ox, plan.oy), plan.cover, true, (x, y) => { const tx = Math.floor(x), ty = Math.floor(y); return tx >= 0 && ty >= 0 && tx < MAP && ty < MAP && cls[ty * MAP + tx] === TC.WATER; });
+    this.gaDirty = null; this.gaRev++; this.caCache = null; this.holeCache = null; this.cardCache = null;
+    applyDiff(grid, diff, false); this.courseGridChanged(diff, true);
+    // the holes: the old markers go, the real course's are laid (tee sets, pins, aim points)
+    for (const p of [...g.pins]) this.removeGolfMarker(p.hole, 'pin');
+    for (const t of [...g.tees]) this.removeGolfMarker(t.hole, t.kind);
+    g.aims = []; g.plans = undefined; g.teeBoxes = undefined;
+    const mk = specMarkers(turned, plan.ox, plan.oy);
+    for (const t of mk.tees) this.setGolfMarker(t.hole, t.kind, t.x, t.y);
+    for (const p of mk.pins) this.setGolfMarker(p.hole, 'pin', p.x, p.y);
+    g.aims = mk.aims;
+    // (a game that was laid on the flat map for a map-data course keeps that: its entry road and no `placed`, so a load lays the flat map again; any other game keeps its own map)
+    const was = g.osm, flat = !!was && !was.placed;
+    g.osm = { id: c.id, name: c.info.name, place: c.info.place, credit: OSM_CREDIT, licence: OSM_LICENCE, source: c.spec.source, holes: c.spec.holes.length, par: c.spec.gameParTotal, mappedPar: c.spec.parTotal, ...(c.spec.scale < 1 ? { scale: c.spec.scale } : {}), ...(c.spec.derived ? { derived: true } : {}), turn: c.deg, ...(flat ? (was!.entry ? { entry: was!.entry } : {}) : { placed: true as const }) };
+    this.surveySig = ''; this.syncCourseGates(); this.syncCourseMarkers(undefined, true); this.paint.clearHistory(); this.paint.newGame();
+    // the camera over the whole land, as a new map-data game has it
+    { const o = plan.outline, xs: number[] = [], ys: number[] = []; for (let i = 0; i < o.length; i += 2) { xs.push(worldX(o[i]!, o[i + 1]!)); ys.push(worldY(o[i]!, o[i + 1]!)); }
+      const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      this.camEase = null; this.cam.X = (x0 + x1) / 2; this.cam.Y = (y0 + y1) / 2; this.cam.z = clampZoom(Math.min((this.cssW || 1280) * 0.9 / (x1 - x0), (this.cssH || 800) * 0.8 / (y1 - y0))); this.clampCam(); }
+    // the chunk pictures held are the old place's (the camera has left it): the ones the next frame does not draw go, so the first bakes over the new land have the memory
+    this.ground.purgeUnused();
+    this.scheduleSave();
+    const goes = goesPhrase(plan);
+    this.toast(`Placed ${c.info.name}: ${plan.land.ha >= 10 ? Math.round(plan.land.ha) : plan.land.ha} ha bought${goes ? `, ${goes} cleared` : ''} ($${plan.total.toLocaleString()})`, 'good');
+    this.emit();
+    return true;
+  }
+  private drawRealPlace(ctx: CanvasRenderingContext2D) { if (this.real.active) this.real.draw(ctx, this.ghostView(ctx), this.ghostMouse); }
+
   /** what the placements check a rect against: the player's land, water, and the course's holes (a surface laid with a hole) */
   private landCheck(): LandCheck {
     const cls = this.terrain.cls, g = this.courseGrid;
@@ -3843,7 +3976,7 @@ export class Game {
     const want = new Map<string, LotPatch[]>();
     if (g) {
       // (adjacent empty blocks pegged out as one plot: surveyBlocks leaves out the sides they share)
-      const empty = (g.parcels ?? []).slice(1).filter(r => !this.builtOn([r[0], r[1], r[0] + r[2], r[1] + r[3]]));
+      const placed = new Set((g.courseRects ?? []).map(r => r.join(','))), empty = (g.parcels ?? []).slice(1).filter(r => !placed.has(r.join(',')) && !this.builtOn([r[0], r[1], r[0] + r[2], r[1] + r[3]])); // (T356: a real course's land is no bought block, never pegged out)
       for (const s of surveyBlocks(empty, LAND_SURVEY_INSET)) if (s) want.set(`survey:${s.lines!.join(',')}`, [s]);
       // T239: the practice area for sale is pegged out too (Land for sale shows its price)
       if (g.practiceLot) { const s = surveyPatch(rectPlot(g.practiceLot), LAND_SURVEY_INSET); if (s) want.set(`survey:practice:${g.practiceLot.join(',')}`, [s]); }
@@ -4479,7 +4612,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.teePlace = null; /* T268 */ this.placing = null; /* T288 */ this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (t !== 'road') this.estateStreet = null; /* T353: an estate street not drawn is no longer wanted */ if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; this.estateOff(); } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
+  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.teePlace = null; /* T268 */ this.placing = null; /* T288 */ this.real.cancel(false); /* T356 */ this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (t !== 'road') this.estateStreet = null; /* T353: an estate street not drawn is no longer wanted */ if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; this.estateOff(); } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -5505,6 +5638,8 @@ export class Game {
   if (this.shot && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, aim: this.tileAt(mx, my) }; return; }
   // T268: a tee set in hand: a click lays it there, a right click puts it down (the middle button and Space still pan)
   if (this.teePlace && !this.teePlace.drag && !this.keys.has(' ') && (e.button === 0 || e.button === 2)) { this.hover = this.tileAt(mx, my); if (e.button === 0) this.placeTeeAt(); else this.cancelTeePlace(); return; }
+  // T356: a real course in hand: a click asks (the pop-up), a right click puts it down (the pop-up open: back to the course in hand); the middle button and Space still pan
+  if (this.real.active && !this.keys.has(' ') && (e.button === 0 || e.button === 2)) { this.hover = this.tileAt(mx, my); this.real.move(this.hover); if (this.real.confirming) { if (e.button === 2) this.real.closePopup(); } else if (e.button === 0) this.real.click(); else this.real.cancel(); return; }
   // T288: a build in hand: a click builds it there, a right click puts it down
   if (this.placing && !this.keys.has(' ') && (e.button === 0 || e.button === 2)) { this.hover = this.tileAt(mx, my); if (e.button === 0) this.placeAt(); else this.cancelPlacing(); return; }
   // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
@@ -5602,6 +5737,7 @@ export class Game {
   this.ghostMouse = { mx, my };
   if (this.badgeDrag) { const b = this.badgeDrag; b.mx = mx; b.my = my; if (Math.hypot(mx - b.sx, my - b.sy) > 4) b.moved = true; } // T174
   this.hover = this.tileAt(mx, my);
+  if (this.real.active) this.real.move(this.hover); // T356
   // T200: the overlay's block under the pointer (a refused one too: its reason shows by the pointer)
   if (this.landMode && this.golf && this.hover) this.land.move(this.hover.x, this.hover.y);
   else if (this.landMode) this.land.hover = null;
@@ -5669,6 +5805,8 @@ export class Game {
   wheel(e: WheelEvent) {
     this.youAlt.other();
     e.preventDefault();
+    // T356: a real course in hand: the wheel with Shift (or Ctrl) turns it a step, with Alt freely (the browser gives Shift's wheel as a sideways one)
+    if (this.real.active && (e.shiftKey || e.altKey || e.ctrlKey)) { const d = e.deltaY || e.deltaX; if (d) { if (e.altKey) this.real.turnBy(d * 0.05); else this.real.turn(d > 0 ? 1 : -1); } return; }
     const f = Math.exp(-e.deltaY * 0.0014);
     this.zoomAt(clampZoom(this.cam.z * f), e.offsetX, e.offsetY);
   }
@@ -5752,6 +5890,11 @@ export class Game {
     // T326: C calls your cart, in your round (at your ball's address too) or in the Walk cursor (elsewhere C stays the course tool's key)
     if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.youCart && ((this.youKeysOn() && (this.youWalkMode || this.yourRound())) || this.shot?.mine)) { e.preventDefault(); this.youCartCall(); return; }
     if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.youKeysOn() && this.youCart && (this.youInCart || this.youNearCart())) { e.preventDefault(); this.youCartToggle(); return; } // T317
+    // T356: a real course in hand: R turns it 15 degrees (Shift+R back, Alt: one degree), Enter in the pop-up places it
+    if (this.real.active && !e.ctrlKey && !e.metaKey) {
+      if (e.key === 'r' || e.key === 'R') { e.preventDefault(); this.real.turn(e.shiftKey ? -1 : 1, e.altKey); return; }
+      if (e.key === 'Enter' && this.real.confirming) { e.preventDefault(); this.real.confirm(); return; }
+    }
     // T268: the tee set in hand: R turns it (Shift+R back), [ ] size it
     if (this.teePlace && !e.ctrlKey && !e.metaKey && !e.altKey) {
       if (e.key === 'r' || e.key === 'R') { this.turnTeePlace(e.shiftKey); return; }
@@ -5848,6 +5991,7 @@ export class Game {
    *  junction picked, the car watched, the bus stop picked, the route, the selection, the pin or tee picked, the Land or Holes switch);
    *  true when it did (else Esc puts the tool down for Select) */
   private escHand(e: KeyboardEvent): boolean {
+    if (this.real.active) { if (this.real.confirming) this.real.closePopup(); else this.real.cancel(); return true; } // T356: the real course in hand (the pop-up first)
     if (this.teePlace) { this.cancelTeePlace(); return true; } // T268: the tee set in hand first
     if (this.placing) { this.cancelPlacing(); return true; } // T288: the build in hand
     if (this.tool === 'greenkeeping' && this.grassAction) { this.grassAction = null; this.emit(); return true; } // T175: the care in hand first
@@ -6938,7 +7082,7 @@ export class Game {
   landMode = false;
   /** T200 (#524): Land for sale: the blocks for sale next to your land, the one under the pointer and the card's (golf/land-sale.ts) */
   readonly land: LandSale = new LandSale({
-    parcels: () => (this.golf ? this.golf.parcels ?? [this.golf.parcel] : []), map: MAP,
+    parcels: () => this.landSaleParcels(), map: MAP,
     classOf: r => this.blockLandClass(r), onRoad: r => this.blockOnPublicRoad(r), pop: () => this.traffic.pop,
     version: () => { let n = 0; for (const l of this.traffic.lots.values()) if (l.level >= 1) n++; return `${this.net.version}|${n}`; },
     special: () => { const q = this.golf?.practiceLot; return q ? [{ rect: q, name: PRACTICE_LOT_NAME }] : []; }, // T239
@@ -6996,10 +7140,20 @@ export class Game {
   }
   /** what a closed side mode leaves behind: the land block under the pointer, the picked pin or tee, the structure in hand, the armed grass care */
   private tidySideModes() {
+  if (this.landMode || this.holesTool || this.eventTool || this.grassPanel) this.real.cancel(false); // T356: a side mode opening puts a real course in hand down
   if (!this.landMode) { this.land.hover = null; this.land.cancel(); }
   if (!this.holesTool && !this.markerDrag) this.selectedGolfMarker = null;
   if (!this.eventTool) this.eventStructurePending = null;
   if (!this.grassPanel) this.grassAction = null;
+  }
+  /** T356: the land Land for sale looks at: the player's rects, a real course's strips (golf.courseRects) taken for the one box round them: the sale's search for
+   *  blocks grows with the square of the rects, and a staircase of strips is no land for blocks to be bought next to one by one */
+  private landSaleParcels(): Rect[] {
+    const g = this.golf; if (!g) return [];
+    const all = g.parcels ?? [g.parcel], cr = g.courseRects;
+    if (!cr?.length) return all;
+    const placed = new Set(cr.map(r => r.join(','))), box = boundsOf(cr);
+    return [...all.filter(r => !placed.has(r.join(','))), ...(box ? [box] : [])];
   }
   private blockLandClass(r: [number, number, number, number]): { landClass: ParcelLandClass; houses: number; buildings: number } {
   const [bx, by, bw, bh] = r;
@@ -7379,7 +7533,7 @@ export class Game {
       this.themeFor(d.theme === 'desert');
       // T340: a map-data game is laid on the flat map whatever its seed (the save's golf state says so)
       const osm = (d.golf as { osm?: { id?: unknown; entry?: { x?: unknown; y?: unknown; edge?: unknown } } } | undefined)?.osm, en = osm?.entry;
-      if (osm?.id) this.useTerrain(typeof en?.x === 'number' && typeof en.y === 'number' && (en.edge === 'N' || en.edge === 'E' || en.edge === 'S' || en.edge === 'W') ? { ...flatTerrain(), highway: { x: en.x, y: en.y, edge: en.edge } } : flatTerrain(), d.seed);
+      if (osm?.id && !(osm as { placed?: unknown }).placed) this.useTerrain(typeof en?.x === 'number' && typeof en.y === 'number' && (en.edge === 'N' || en.edge === 'E' || en.edge === 'S' || en.edge === 'W') ? { ...flatTerrain(), highway: { x: en.x, y: en.y, edge: en.edge } } : flatTerrain(), d.seed);
       else this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
@@ -8030,6 +8184,59 @@ export class Game {
   playerCard(): PlayerCardView | null { const p = this.playerCardOpen ? this.playerNow() : null; return p ? playerCardView(p, this.youRoundState()) : null; }
   openPlayerCard(open = !this.playerCardOpen) { this.playerCardOpen = open && !!this.golf; this.emit(); }
 
+  // ---------- T335 (#961): your bag (golf/play/bag.ts): 14 clubs, their upgrades, the putter's shaft and head ----------
+  /** your bag card is open */
+  bagCardOpen = false;
+  openBagCard(open = !this.bagCardOpen) { this.bagCardOpen = open && !!this.golf; this.emit(); }
+  /** the pro shop as the bag buys from it: open with a clubhouse, a pro's office or a range (the shack is a shop too), with your money */
+  private bagShop(): ShopCtx {
+    const g = this.golf, shop = !!g && (this.hasClubhouse || this.bizCount('prooffice') > 0 || (g.start === 'range' && !!g.range && g.range.built !== false));
+    return { shop, shopWhy: shop ? null : 'Build a clubhouse, a range or a pro’s office first: that is where the pro shop is', money: this.money };
+  }
+  /** why your bag cannot change now (null: it can): out on the course (your round, the tournament, an open shot) nothing changes in it */
+  private bagBusy(): string | null { return this.yourRound() || this.play?.own || this.shot ? 'You are out on the course: your bag changes when the round is over' : null; }
+  /** the bag card's view (play/bag.ts bagView: the 14 clubs with their carry, launch, spin and forgiveness for your game, what each upgrade adds and costs, the putter's parts); null while closed */
+  bagCard(): (BagView & { busy: string | null }) | null {
+    const p = this.bagCardOpen ? this.playerNow() : null; if (!p) return null;
+    return { ...bagView(p.bag, gameSkills(p.skills, 0, gearOf(p)), this.bagShop()), busy: this.bagBusy() };
+  }
+  /** the profile with a new bag: a round booked today and not begun plays with your new clubs (rebook, as a practice session does) */
+  private setBag(p: PlayerProfile, bag: BagSave | null) {
+    const at = this.townNow(); this.setPlayer(rebook(withBag(p, bag), at.day, at.dayMin));
+  }
+  /** pays `cost` at the pro shop (the range's counter, or the clubhouse's door): booked as a running cost, floated over the place */
+  private payShop(cost: number) {
+    if (cost <= 0) return;
+    const c = this.golf?.clubhouse, at = this.rangeSpot() ?? (c ? { x: c.x, y: c.y, group: 'clubhouse' as const, gx: c.x, gy: c.y } : null);
+    this.spendAt(at, 'upkeep', cost);
+  }
+  /** a club one level up: bought at the shop (the price) or with a sponsor's voucher (free, up to Tour). A toast says why not, or what it is now */
+  upgradeBagClub(club: Club, voucher = false) {
+    const p = this.playerNow(); if (!p) return;
+    const why = this.bagBusy() ?? (voucher ? voucherWhy(p.bag, club) : clubUpgradeWhy(p.bag, club, this.bagShop()));
+    if (why) { this.toast(why, 'warn'); return; }
+    const { bag, cost } = upgradeClub(p.bag, club, voucher), lv = bag?.lv?.[club] ?? 0;
+    this.setBag(p, bag); this.payShop(cost);
+    this.toast(`${LEVEL_NAME[lv]} ${club === 'putter' ? 'putter' : CLUB_NAME[club].toLowerCase()}${voucher ? ' (a sponsor’s voucher)' : ` (-$${cost.toLocaleString()})`}`, 'good');
+    this.emit();
+  }
+  /** a putter part fitted: one you own for free, a new one bought first (its price). A toast says why not, or what is on the putter now */
+  fitBagPart(kind: PartKind, id: string) {
+    const p = this.playerNow(); if (!p) return;
+    const why = this.bagBusy() ?? partWhy(p.bag, kind, id, this.bagShop());
+    if (why) { if (why !== 'Fitted') this.toast(why, 'warn'); return; }
+    const { bag, cost } = fitPart(p.bag, kind, id);
+    this.setBag(p, bag); this.payShop(cost);
+    this.toast(`Putter fitted: ${id}${cost > 0 ? ` (-$${cost.toLocaleString()})` : ''}`, 'good');
+    this.emit();
+  }
+  /** the third wood's slot: the 5-wood or the hybrid (each keeps its level) */
+  setBagThird(which: 'wood5' | 'hybrid') {
+    const p = this.playerNow(); if (!p) return;
+    const busy = this.bagBusy(); if (busy) { this.toast(busy, 'warn'); return; }
+    this.setBag(p, setThird(p.bag, which)); this.toast(`${which === 'hybrid' ? 'Hybrid' : '5-wood'} in the bag`, 'info'); this.emit();
+  }
+
   // ---------- T240 (#704): your character: point-and-click and the keys (golf/you.ts) ----------
   /** your character in the world (null: none yet, or not a golf game); the golf save it was placed for (a load or a new game starts again) */
   you: YouChar | null = null; private youFor: GolfSave | null = null;
@@ -8055,7 +8262,7 @@ export class Game {
   youControls(): boolean { return this.youWalkMode && this.youKeysOn(); }
   /** whether WASD (and E, the cart) move your character: Select in hand in either cursor, no side mode, no shot or tee set in hand (T323) */
   youKeysOn(): boolean {
-    return !!this.you && this.tool === 'select' && !this.landMode && !this.holesTool && !this.eventTool && !this.grassPanel && !this.shot && !this.teePlace && !this.placing; // (T288: nor a build in hand)
+    return !!this.you && this.tool === 'select' && !this.landMode && !this.holesTool && !this.eventTool && !this.grassPanel && !this.shot && !this.teePlace && !this.placing && !this.real.active; // (T288: nor a build in hand; T356: nor a real course)
   }
   /** your look (an index into GOLFER_PEOPLE): the saved one, else the owner's art for your sex */
   youArt(): number { const p = this.golf?.player; const l = p?.you?.look; return l !== undefined && l < GOLFER_PEOPLE.length ? l : ownerArt(p?.sex ?? 'm'); }
@@ -8541,7 +8748,7 @@ export class Game {
   private yourSkills(): ShotSkill {
     // T246: a competition round (your Club Championship, the Mayor's Cup; T244's money match) plays at its pressure
     const p = this.playerNow(), r = p?.round, pr = r?.mode === 'match' ? PRESSURE.match : isCompetition(r) ? PRESSURE.tournament : PRESSURE.everyday;
-    return p ? gameSkills(p.skills, pr) : OWNER_SKILL;
+    return p ? gameSkills(p.skills, pr, gearOf(p)) : OWNER_SKILL; // (T335: your bag's clubs, upgrades and putter fitting are in your game)
   }
   /** the course your round is played on: the everyday course (each hole once), null with none */
   private yrView(): CourseView | null { const c = this.dayCourseOf(performance.now()); return c && c.view.holes.length ? c.view : null; }
@@ -8744,7 +8951,7 @@ export class Game {
     const y0 = this.you ? { x: this.you.x, y: this.you.y } : null;
     this.yourAddress();
     const s = this.shot as ShotState | null, li = this.yrLastInput;
-    if (s?.mine && li && allowedClubs(s.turn.lie, s.turn.lie === 'tee').includes(li.club)) this.shot = { ...s, input: { club: li.club, aim: { x: li.aim.x, y: li.aim.y }, power: li.power } };
+    if (s?.mine && li && this.shotClubs().includes(li.club)) this.shot = { ...s, input: { club: li.club, aim: { x: li.aim.x, y: li.aim.y }, power: li.power } };
     if (y0) { this.yourFace(true); this.youJumped(y0); } // (T333: back at the shot's place at once: a jump, with its puff)
     const left = mulligansLeft(n);
     this.toast(`Mulligan: hit it again (stroke ${rowOf(n).strokes + 1})${left === Infinity ? '' : left ? ` · ${left} left` : ' · none left on this nine'}`, 'info');
@@ -8897,7 +9104,8 @@ export class Game {
     if (res.won) {
       g.rep = Math.min(100, Math.max(0, g.rep + res.rep));
       if (res.money > 0) { this.traffic.spend('business', -res.money); const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: res.money, kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
-      const p = this.playerNow(); if (p) this.setPlayer(withTitle(p, res, d.holes));
+      // (T335: a title's prize also brings a sponsor's voucher: one club of your bag upgraded free, up to Tour)
+      const p = this.playerNow(); if (p) { const t = withTitle(p, res, d.holes); this.setPlayer(withBag(t, addVoucher(t.bag))); this.toast('A sponsor’s voucher: upgrade a club free (your bag)', 'good'); }
     }
     this.eventCardOpen = d.id; this.evBoardCache = null; this.scheduleSave();
     this.toast(`${CLUB_EVENTS[d.id].name}: ${resultLine(res)}`, res.won ? 'good' : 'info'); this.emit();
@@ -10496,7 +10704,7 @@ export class Game {
   joinTournament(sex: Sex, tees: TeeKind = 'middle') {
     const pl = this.play; if (!pl || !this.canJoinTournament()) return;
     // T254: from the tee set he chose; T241: with your skills under the tournament's pressure (golf/player.ts), kept in the save for the replay
-    const me = this.playerNow(), skills = me ? gameSkills(me.skills, PRESSURE.tournament) : undefined;
+    const me = this.playerNow(), skills = me ? gameSkills(me.skills, PRESSURE.tournament, gearOf(me)) : undefined; // (T335: with your bag, saved with him)
     const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null, tees, ...(skills ? { skills } : {}) });
     if (!built) return;
     this.play = built; this.saveOwner(); this.emit();
@@ -10549,7 +10757,7 @@ export class Game {
     // the caddie's club: the shortest whose carry in these conditions reaches the aimed distance (the longest the lie allows when none does)
     let suggest: Club | null = null;
     if (on && !putting && env) {
-      const sk = this.shotSk(), clubs = allowedClubs(t.lie, t.lie === 'tee').filter(c => c !== 'putter').reverse();
+      const sk = this.shotSk(), clubs = this.shotClubs().filter(c => c !== 'putter' && c !== 'lw').reverse(); // (the caddie never reaches for the lob wedge)
       if (sk !== null) suggest = clubs.find(c => carryFor(sk, c) * previewShot(c, 100, ux, uy, env, s.shape ? shapeEffect(readShape(s.shape), c, aimedM, kitOf(sk, c).skill, kitOf(sk, c)) : null).carryM / 100 >= aimedM) ?? clubs[clubs.length - 1] ?? null;
     }
     return { on, putting, wind: windView(on && !putting ? this.windNow() : null, on ? this.worldWind() : null, ux, uy), day: on ? this.worldWind() : null, lie: lieView(kind, club), slope: env?.slope ?? { up: 0, across: 0 },
@@ -10565,6 +10773,10 @@ export class Game {
   }
   /** T334 part 2: the open shot's club's kit: the carry, the scatter, the sweet spot and the marker's speed his stats and mods make of it (play/mods.ts applyMods); null with no shot */
   shotKit(): ClubKit | null { const s = this.shot, sk = this.shotSk(); return s && sk !== null ? kitOf(sk, s.input.club) : null; }
+  /** T335: the clubs the open shot may be played with: the ones in your bag that the lie allows (the driver only off the tee, the putter on the green), longest first; the model's original seven for a golfer with no bag. Empty with no shot */
+  shotClubs(): Club[] { const s = this.shot, sk = this.shotSk(); return s ? allowedClubs(s.turn.lie, s.turn.lie === 'tee', sk !== null && typeof sk === 'object' ? sk.clubs : undefined) : []; }
+  /** T335: a club's upgrade level in your bag (0 Garage-sale .. 3 Prototype): the shot panel marks the upgraded clubs */
+  clubLevel(club: Club): number { return levelOf(this.golf?.player?.bag, club); }
   /** T334 part 2: the open shot club's full carry for him, in metres (his power and mods in it); 0 with no shot */
   shotCarry(): number { const s = this.shot, sk = this.shotSk(); return s && sk !== null ? carryFor(sk, s.input.club) : 0; }
   /** the shape of the open shot at an aimed carry (metres): its effect on the flight (play/shape.ts), none when straight and normal or a putt */
@@ -10603,17 +10815,20 @@ export class Game {
     if (this.spinAir && !this.spinAir.mine && !this.play?.own) this.spinAir = null; // (the day's play is gone)
     const a = this.spinAir;
     if (a) {
-      const e = spinEffect(a.input.spin, a.input.club, a.lie);
-      return { air: true, x: a.input.spin.x, y: a.input.spin.y, pump: a.input.spin.pump, club: a.input.club, lie: a.lie, amount: e.amount, cap: e.cap, room: spinRoom(a.input.spin, a.input.club, a.lie), text: spinText(e) };
+      const k = this.spinK(a.mine, a.input.club), e = spinEffect(a.input.spin, a.input.club, a.lie, a.input.env?.lie, k);
+      return { air: true, x: a.input.spin.x, y: a.input.spin.y, pump: a.input.spin.pump, club: a.input.club, lie: a.lie, amount: e.amount, cap: e.cap, room: spinRoom(a.input.spin, a.input.club, a.lie, a.input.env?.lie, k), text: spinText(e) };
     }
     const s = this.shot; if (!s || s.input.club === 'putter') return null;
-    const d = s.spin ?? { x: 0, y: 0 }, e = spinEffect({ x: d.x, y: d.y, pump: 0 }, s.input.club, s.turn.lie), u = Math.hypot(d.x, d.y);
-    const cap = u > 1e-3 ? e.cap : spinEffect({ x: 0, y: -1, pump: 0 }, s.input.club, s.turn.lie).cap;
+    const k = this.spinK(!!s.mine, s.input.club), kind = this.shotEnv()?.lie;
+    const d = s.spin ?? { x: 0, y: 0 }, e = spinEffect({ x: d.x, y: d.y, pump: 0 }, s.input.club, s.turn.lie, kind, k), u = Math.hypot(d.x, d.y);
+    const cap = u > 1e-3 ? e.cap : spinEffect({ x: 0, y: -1, pump: 0 }, s.input.club, s.turn.lie, kind, k).cap;
     return { air: false, x: d.x, y: d.y, pump: 0, club: s.input.club, lie: s.turn.lie, amount: e.amount, cap, room: e.amount < cap - 1e-9, text: spinText(e) };
   }
+  /** T335: the factor your clubs put on the spin of a shot with `club` (play/mods.ts ClubKit.spin: the grooves of a Tour wedge): your round's skills, or the tournament owner's; 1 for a plain skill */
+  private spinK(mine: boolean, club: Club): number { const sk = mine ? this.yourSkills() : this.play?.own?.skill; return sk === undefined || typeof sk === 'number' ? 1 : kitOf(sk, club).spin; }
   /** T318: a click on the spin ball (or the F key) while the ball is in the air: one more click of the chosen spin, up to the club's and the lie's cap */
   spinPump() {
-    const a = this.spinAir; if (!a || !spinRoom(a.input.spin, a.input.club, a.lie)) return;
+    const a = this.spinAir; if (!a || !spinRoom(a.input.spin, a.input.club, a.lie, a.input.env?.lie, this.spinK(a.mine, a.input.club))) return;
     if (a.mine ? !this.yrFlight || this.yrFlight.t >= this.yrFlight.air : !a.seen) return; // (only while the ball flies)
     a.input.spin = { ...a.input.spin, pump: a.input.spin.pump + 1 }; this.emit();
   }
@@ -10640,7 +10855,7 @@ export class Game {
     const n = flightOf(shot.from, shot.landing?.at ?? null, shot.to, round.holed, up, rowOf(round), shot.penalty > 0, { ...(f.aim ? { aim: f.aim } : {}), ...flightSpin(shot.landing) });
     n.t = f.t; this.yrFlight = n;
     this.lastShot = shotReport(shot, a.input.swing ? swingEffect(a.input.swing, skillFor(sk, a.input.club), false, kitOf(sk, a.input.club).sweet) : null);
-    this.toast(`${spinText(spinEffect(a.input.spin, a.input.club, a.lie))}: ${this.lastShot.text}`, 'info');
+    this.toast(`${spinText(spinEffect(a.input.spin, a.input.club, a.lie, a.input.env?.lie, kitOf(sk, a.input.club).spin))}: ${this.lastShot.text}`, 'info');
   }
   /** T318: the tournament owner's spun shot with its clicks: the day rebuilt from the saved inputs (the last with them), its latches kept */
   private spinLandOwner(a: SpinAir) {
@@ -10654,7 +10869,7 @@ export class Game {
     if (DEV_LOG_SPIN) console.info(`[T318] spin rebuild ${(performance.now() - t0).toFixed(1)} ms`);
     built.finish = pl.finish; built.waves = pl.waves; this.play = built; this.saveOwner();
     const own = built.own, s = built.plan.shots.find(x => x.golfer === own.id && x.hole === last.holeIdx && x.stroke === last.stroke);
-    if (s) { this.lastShot = shotReport(s, a.input.swing ? swingEffect(a.input.swing, skillFor(own.skill, a.input.club), false, kitOf(own.skill, a.input.club).sweet) : null); this.toast(`${spinText(spinEffect(a.input.spin, a.input.club, a.lie))}: ${this.lastShot.text}`, 'info'); }
+    if (s) { this.lastShot = shotReport(s, a.input.swing ? swingEffect(a.input.swing, skillFor(own.skill, a.input.club), false, kitOf(own.skill, a.input.club).sweet) : null); this.toast(`${spinText(spinEffect(a.input.spin, a.input.club, a.lie, a.input.env?.lie, kitOf(own.skill, a.input.club).spin))}: ${this.lastShot.text}`, 'info'); }
     if (!own.turn) this.ownerDone(built);
   }
   /** T316: the owner's swing on the 3-click meter (swing.ts): plays the open shot with the club and aim of the panel and the meter's outcome (its power,
@@ -10666,7 +10881,7 @@ export class Game {
   /** the owner's club for the open shot: one his lie allows (allowedClubs; the driver only from the tee). The power resets to what carries the distance to
    *  the aim (powerFor) */
   setShotClub(c: Club) {
-    const s = this.shot, sk = this.shotSk(); if (!s || sk === null || !allowedClubs(s.turn.lie, s.turn.lie === 'tee').includes(c)) return;
+    const s = this.shot, sk = this.shotSk(); if (!s || sk === null || !this.shotClubs().includes(c)) return;
     const dM = Math.hypot(s.input.aim.x - s.turn.ball.x, s.input.aim.y - s.turn.ball.y) * TILE_M;
     this.shot = { ...s, input: { club: c, aim: s.input.aim, power: powerFor(c, dM, sk) } }; this.emit();
   }
@@ -10756,10 +10971,10 @@ export class Game {
     ctx.save();
     if (i.club !== 'putter') {
       const L = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) || 1, ux = (i.aim.x - t.ball.x) / L, uy = (i.aim.y - t.ball.y) / L;
-      const sk = skillFor(sk0, i.club), k = 1 - sk; // (T241: his club's part of the game)
+      const kit = kitOf(sk0, i.club), k = 1 - kit.skill; // (T241: his club's part of the game; T335: and the scatter his club and its upgrades have: kit.spread)
       // T334: where the shot is expected to land in its conditions: the carry after the lie, the slope and the wind, off the aim by the wind's drift and the slope's pull, as wide as the lie's scatter
       const aimed = carryFor(sk0, i.club) * i.power, pv = previewShot(i.club, aimed, ux, uy, this.shotEnv(), this.shotShapeFx(aimed)), carry = pv.carryM / TILE_M, side = pv.sideM / TILE_M;
-      const px = t.ball.x + ux * carry - uy * side, py = t.ball.y + uy * carry + ux * side, A = 2 * (0.03 + 0.07 * k) * carry * pv.spread, B = 2 * carry * Math.tan((1.5 + 5 * k) * Math.PI / 180) * pv.spread;
+      const px = t.ball.x + ux * carry - uy * side, py = t.ball.y + uy * carry + ux * side, A = 2 * (0.03 + 0.07 * k) * carry * pv.spread * kit.spread, B = 2 * carry * Math.tan((1.5 + 5 * k) * Math.PI / 180) * pv.spread * kit.spread;
       const c = this.screen(px, py), e1 = this.screen(px + ux * A, py + uy * A), e2 = this.screen(px - uy * B, py + ux * B);
       // the unit circle through the spread's axes (their screen vectors from the landing point), filled faint
       ctx.save(); ctx.transform(e1.x - c.x, e1.y - c.y, e2.x - c.x, e2.y - c.y, c.x, c.y); ctx.beginPath(); ctx.arc(0, 0, 1, 0, Math.PI * 2); ctx.restore();
@@ -11468,6 +11683,7 @@ export class Game {
     this.drawEventGhosts(ctx);
     this.drawTeeGhost(ctx); // T268
     this.drawPlacing(ctx); // T288
+    this.drawRealPlace(ctx); // T356
     this.drawDecorGhost(ctx);
     this.drawPracticeGhost(ctx);
     this.drawBusPreview(ctx);

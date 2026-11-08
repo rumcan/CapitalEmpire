@@ -24,7 +24,9 @@ export interface GameSkills { driving: number; irons: number; short: number; put
   /** T334 part 2: the stats beyond the four parts of the game (each 0..1, nerve already in them; absent: 0.5, which changes nothing: mods.ts NEUTRAL) */
   power?: number; accuracy?: number; touch?: number;
   /** T334 part 2: the modifiers stacked on the stats (cards, clubs and shafts: T335, T336; mods.ts applyMods); absent: none */
-  mods?: readonly Mod[] }
+  mods?: readonly Mod[];
+  /** T335 (#961): the clubs in his bag (any order; bag.ts bagGear): the shot panel offers these and the caddie (chooseShot) picks among them. Absent: the original seven clubs, as before the bag */
+  clubs?: readonly Club[] }
 /** a golfer: a unique id (0..size-1), name, sex, whether a pro, skill (0..1), look (0..4, the art variant), and the owner's golfer. T213 (entourage.ts):
  *  the cart he rides (an index shared by the two golfers of a cart; absent: he walks) and whether a caddie walks with him */
 export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skill: number; look: number; owner?: boolean; cart?: number; caddie?: boolean;
@@ -36,8 +38,9 @@ export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skil
   skills?: GameSkills }
 /** a tee time: the game minute and the golfer ids in the group */
 export interface Group { tee: number; players: number[] }
-/** a club, or the putter */
-export type Club = 'driver' | 'wood3' | 'iron4' | 'iron6' | 'iron8' | 'pw' | 'sw' | 'putter';
+/** a club, or the putter. T335 (#961): the bag of 14 (bag.ts): the driver, the 3-wood, a 5-wood or a hybrid (one slot), the 4- to 9-irons, the pitching, gap, sand and lob wedges, the putter. The first
+ *  eight are the model's original clubs (the field plays them; their numbers are exactly what they were before the bag) */
+export type Club = 'driver' | 'wood3' | 'wood5' | 'hybrid' | 'iron4' | 'iron5' | 'iron6' | 'iron7' | 'iron8' | 'iron9' | 'pw' | 'gw' | 'sw' | 'lw' | 'putter';
 /** one stroke: the golfer, hole index (0..17), stroke number (1-based), the minute struck, from and to (tiles), the club, the lie where it came
  *  to rest, the penalty stroke (water or out of bounds), and whether it went in */
 export interface Shot { golfer: number; hole: number; stroke: number; t: number; from: Pt; to: Pt; club: Club; lie: Lie; penalty: 0 | 1; holed: boolean;

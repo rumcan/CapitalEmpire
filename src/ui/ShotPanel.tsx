@@ -9,7 +9,8 @@
 // The meter is a plain canvas (no atlas page): a labelled stand-in until meter art exists.
 import { useEffect, useRef, useState } from 'react';
 import type { Game, ShotState } from '../game/engine';
-import { BOOST, CLUB_NAME, METER, SwingMeter, allowedClubs, compassOf, meterMark, pickText, shapeText, sweetSpot, swingEffect, type Lie, type SwingPhase } from '../game/golf/play';
+import { BOOST, CLUB_GROUPS, CLUB_NAME, CLUB_SHORT, LEVEL_NAME, METER, SwingMeter, allowedClubs, compassOf, meterMark, pickText, shapeText, sweetSpot, swingEffect, type Lie, type SwingPhase } from '../game/golf/play';
+import { LEVEL_COLOR } from './golf/ClubIcon';
 import { TILE_M } from '../game/golf/types';
 
 /** the lies as the panel names them */
@@ -116,7 +117,9 @@ function ConditionsBox({ game }: { game: Game }) {
 
 /** the panel for one open turn */
 function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
-  const t = s.turn, i = s.input, putting = i.club === 'putter', clubs = allowedClubs(t.lie, t.lie === 'tee'), skill = game.shotSkill();
+  // (T335: the clubs of your bag that the lie allows, and each one's upgrade level; a stand-in game without a bag offers the original seven)
+  const t = s.turn, i = s.input, putting = i.club === 'putter', clubs = typeof game.shotClubs === 'function' ? game.shotClubs() : allowedClubs(t.lie, t.lie === 'tee'), skill = game.shotSkill();
+  const levelOf = (c: typeof i.club): number => (typeof game.clubLevel === 'function' ? game.clubLevel(c) : 0);
   const aimM = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) * TILE_M, fullM = putting ? t.distM : game.shotCarry(), kit = game.shotKit(), cond = game.shotConditions(), playsM = cond?.on && !putting ? cond.playsLikeM : aimM, suggested = cond?.suggest ?? t.suggested.club;
   const meter = useRef<SwingMeter | null>(null), canvas = useRef<HTMLCanvasElement | null>(null), fired = useRef(false);
   const [phase, setPhase] = useState<SwingPhase>('ready');
@@ -197,11 +200,20 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
           <p className="mt-1 text-xs tabular-nums text-slate-300">
             To the pin {putting ? t.distM.toFixed(1) : Math.round(t.distM)} m ({Math.round(t.distM * YARDS)} yd) · to the aim {putting ? aimM.toFixed(1) : Math.round(aimM)} m · {LIE_NAME[t.lie]}
           </p>
-          <div className="mt-2 flex flex-wrap gap-1" onWheel={e => { if (e.deltaY) cycle(e.deltaY > 0 ? 1 : -1); }} title="Q / E or the mouse wheel change the club">
-            {clubs.map(c => (
-              <button key={c} disabled={busy} className={`chip ${c === i.club ? 'chip-on' : ''} ${c === suggested ? 'ring-1 ring-amber-300/70' : ''}`}
-                title={c === suggested ? 'The suggested club' : undefined} onClick={() => game.setShotClub(c)}>{CLUB_NAME[c]}</button>
-            ))}
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1" onWheel={e => { if (e.deltaY) cycle(e.deltaY > 0 ? 1 : -1); }} title="Q / E or the mouse wheel change the club" data-testid="club-strip">
+            {CLUB_GROUPS.map(g => {
+              const list = clubs.filter(c => g.clubs.includes(c));
+              return list.length ? (
+                <span key={g.name} className="flex items-center gap-1" data-testid={`club-group-${g.name.toLowerCase()}`}>
+                  {list.map(c => (
+                    <button key={c} disabled={busy} className={`chip ${c === i.club ? 'chip-on' : ''} !px-1.5 ${c === suggested ? 'ring-1 ring-amber-300/70' : ''}`} aria-label={CLUB_NAME[c]}
+                      title={`${levelOf(c) > 0 ? `${LEVEL_NAME[levelOf(c)]} ${CLUB_NAME[c].toLowerCase()}` : CLUB_NAME[c]}${c === suggested ? ' · the suggested club' : ''}`} onClick={() => game.setShotClub(c)}>
+                      {CLUB_SHORT[c]}{levelOf(c) > 0 && <span className="ml-0.5 inline-block h-1.5 w-1.5 rounded-full" style={{ background: LEVEL_COLOR[levelOf(c)] }} />}
+                    </button>
+                  ))}
+                </span>
+              ) : null;
+            })}
           </div>
           {!putting && (
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1" data-testid="shot-shape" title="Shape the shot before the swing: a draw curves left, a fade right; a high flight lands soft and catches more wind, a low one runs on and shrugs it. It is harder to pull off (a bigger miss on a bad accuracy click) the less skilled you are">
@@ -215,7 +227,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
           )}
           {!putting && cond && cond.shape.lines.length > 0 && <p className="mt-1 text-[11px] text-amber-200" data-testid="shape-lines">{pickText(cond.shape.pick)}:{cond.shape.lines.join(' · ')}</p>}
           <p className="mt-1 text-xs tabular-nums text-slate-300">
-            {CLUB_NAME[i.club]}{i.club === suggested ? ' (suggested)' : ''}: {putting ? `putting scale, 100% is the hole (${t.distM.toFixed(1)} m)` : `full carry ${Math.round(fullM)} m (${Math.round(fullM * YARDS)} yd)`}
+            {levelOf(i.club) > 0 ? `${LEVEL_NAME[levelOf(i.club)]} ` : ''}{levelOf(i.club) > 0 ? CLUB_NAME[i.club].toLowerCase() : CLUB_NAME[i.club]}{i.club === suggested ? ' (suggested)' : ''}: {putting ? `putting scale, 100% is the hole (${t.distM.toFixed(1)} m)` : `full carry ${Math.round(fullM)} m (${Math.round(fullM * YARDS)} yd)`}
             {!putting && Math.abs(playsM - aimM) >= 3 ? <span className="text-cyan-200"> · the aim plays like {Math.round(playsM)} m</span> : null}
           </p>
           <p className="mt-1 min-h-[4.5em] text-[12px] text-slate-400">

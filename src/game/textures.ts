@@ -274,6 +274,7 @@ export class Textures {
       drop: (u, what) => { if (what === 'tile') bump(this.tileStats.drops, TILE_FAMILY.get(u) ?? '?'); else if (what === 'source') this.tileStats.sourceDrops = (this.tileStats.sourceDrops ?? 0) + 1; },
       scale: ms => { this.tileStats.scaleMs += ms; this.tileStats.scales++; },
     };
+    c.pinOf = () => this.tilePinned; // (T356: a mip or a copy a bake makes while it draws trims the cache within its budget at once, the bake in hand's tiles kept)
     return c;
   }
   /** T194: the pictures the bake in hand lays (its tile set band, at the px it lays them, its painted pictures), never trimmed from the caches

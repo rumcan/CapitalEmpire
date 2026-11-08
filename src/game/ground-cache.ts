@@ -427,13 +427,25 @@ export class GroundCache {
   /** drop the least recently used pictures above the pixel budget (planner pieces too: one is asked for first whenever a chunk on screen has
    *  no picture, so each new place the camera goes keeps one, T134; one not drawn for a while is baked again in a millisecond or two) */
   evict(now: number) {
+    // (T356: asked for after a course was laid and the camera moved to it: every picture the frame did not draw goes now, oldest or not)
+    if (this.purgeNext) { this.purgeNext = false; for (const t of this.tiles.values()) if (t.tex && t.used !== now) this.release(t); }
     let px = 0, held = 0; for (const t of this.tiles.values()) { px += (t.tex ? t.px : 0) + t.fadePx; if (t.prev && t.prev !== t.tex) held += t.px; }
     this.residentPx = px + held; this.peakPx = Math.max(this.peakPx, this.residentPx);
     this.syncTileBudget();
     if (px <= this.budgetPx) return;
     const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now).sort((a, b) => a.used - b.used);
-    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.dropPicture(t.tex!); t.tex = null; if (t.shade) { this.gl.deleteTexture(t.shade); t.shade = null; } if (t.prev) { this.dropPicture(t.prev); t.prev = null; } if (t.fadeFrom) { this.dropPicture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
+    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.release(t); }
   }
+  /** a chunk's picture dropped, with its shade mask, its build reveal picture and its crossfade picture (the chunk is asked for again when it is drawn) */
+  private release(t: Tile) {
+    this.dropPicture(t.tex!); t.tex = null; if (t.shade) { this.gl.deleteTexture(t.shade); t.shade = null; } if (t.prev) { this.dropPicture(t.prev); t.prev = null; } if (t.fadeFrom) { this.dropPicture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; }
+  }
+  /** T356: set when a course is laid over the town and the camera has gone to it: the chunk pictures held are the ground of the old place, kept only because the
+   *  budget is not full. The next evict drops every picture the frame does not draw, so the first bakes over the new land (a chunk of a course lays a dozen tile
+   *  sets: 150 MB of tile pictures pinned in the ground worker at once, which the 192 MB of GAME-PLAN 2.3 shares with the chunk pictures) do not meet the old
+   *  town's pictures beside them: the tile caches take what the chunk pictures leave (syncTileBudget), and what comes back is baked again when it is looked at */
+  private purgeNext = false;
+  purgeUnused(): void { this.purgeNext = true; }
   /** release reveal pictures whose animation is over */
   settle(now: number) { for (const t of this.tiles.values()) {
     if (t.prev && now > t.prevUntil && !t.stale) { if (t.prev !== t.tex) this.dropPicture(t.prev); t.prev = null; }

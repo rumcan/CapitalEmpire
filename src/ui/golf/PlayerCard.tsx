@@ -8,7 +8,7 @@ const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')
 const hcp = (h: number) => h < 0 ? `+${(-h).toFixed(1)}` : h.toFixed(1);
 const toPar = (d: number) => d === 0 ? 'E' : d > 0 ? `+${d}` : `${d}`;
 
-export function PlayerCard({ view, onClose, onBook, onCancel, right = 'right-3' }: { view: PlayerCardView; onClose: () => void; onBook: () => void; onCancel: () => void; right?: string }) {
+export function PlayerCard({ view, onClose, onBook, onCancel, onBag, right = 'right-3' }: { view: PlayerCardView; onClose: () => void; onBook: () => void; onCancel: () => void; /** T335: opens the bag card (the 14 clubs and their upgrades) */ onBag?: () => void; right?: string }) {
   const r = view.round;
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[320px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="player-card">
@@ -32,6 +32,7 @@ export function PlayerCard({ view, onClose, onBook, onCancel, right = 'right-3' 
           </div>
         ))}
         <p className="pt-1 text-[11px] text-slate-400" data-testid="player-skills-note">Power, accuracy and touch shape your swing meter, your carry and your scatter (50 changes nothing); practice raises them.</p>
+        {onBag && <button className="chip mt-1" onClick={onBag} title="Your 14 clubs, their upgrades, and the putter's shaft and head" data-testid="player-bag">Your bag</button>}
       </div>
       <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs" data-testid="player-round">
         <div className="mb-1 text-[12px] uppercase text-slate-400">Your round today</div>
