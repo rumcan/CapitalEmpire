@@ -189,6 +189,9 @@ export function benchGame(g: Game, scene: BenchScene) {
     const at = townTimeOf(g.traffic.town, g.traffic.simTime(performance.now())), clock = `${String(at.hour).padStart(2, '0')}:${String(at.minute).padStart(2, '0')}`;
     const info = { scene, ...(scene === 'golf' ? { golfersOut: g.dayOutNow() } : {}), heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0), clock, carsAtStart: g.perf.simActive };
     console.log('[bench] scene', info);
+    // T356 (#998): ?realplace=<id> (bench.mjs --realplace <id>, with --start town or --fixture range20, and --money 1): a real course in hand over the town, its placing mode's frames
+    // against the same frames without it (realPlaceStage); ?realplace=<id>,laid: the course laid there, then the scene's own tour (the game after placing)
+    { const rp = new URLSearchParams(location.search).get('realplace'); if ((scene === 'golf' || scene === 'fixture') && rp) { void realPlaceBench(g, rp, info, scene, r => { const out = { ...info, realplace: rp, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; } }
     // T251: ?ballRoll=ab (bench.mjs --ballRoll ab), the balls' bounce and roll on and off by turns over the action (rollStage)
     // T312: ?spacing=ab (bench.mjs --spacing ab), the people stepping round each other on and off by turns over the action (spaceStage)
     if (new URLSearchParams(location.search).get('spacing') === 'ab') { spaceStage(g, scene, r => { const out = { ...info, spacing: 'ab', stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
@@ -207,6 +210,66 @@ export function benchGame(g: Game, scene: BenchScene) {
     if (farms) { farmStage(g, farms, (r, month) => { const out = { ...info, farms: farms.n, month, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     startTour(g, info, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
   };
+}
+
+/** T356 (#998, "dont screw performance"): a real course placed into the grown town. ?realplace=<id>: the course in hand over the town (the pose that takes the
+ *  most buildings and may go there), the main-thread ms a frame (Game.perf.cpuMs) at 30% and 15% in three states, by turns, three times each: off (no course in
+ *  hand), hand (in hand, the pointer still: the plan is kept and only the outline and the faint holes are drawn each frame) and move (in hand, the pose
+ *  moved a tile every frame: the plan worked out again every frame, the worst a moving pointer can do). Each run settles 1 s, then 4 s of frames; pooled per
+ *  zoom and state, with the delta from off. ?realplace=<id>,laid: the course is laid there (as Place it does) and the scene's own tour runs over the new
+ *  game (compare with the same run on lead/live, which has no course placed: the cost the placed course adds to the game) */
+async function realPlaceBench(g: Game, spec: string, info: Record<string, unknown>, scene: BenchScene, done: (r: Record<string, unknown>[]) => void) {
+  const [id, mode] = spec.split(',') as [string, string | undefined];
+  // (the bench forces the game's own money: a real course costs more than its treasury, so the sandbox's unlimited money is on for this run)
+  g.traffic.sandbox(1, true);
+  const ok = await g.startRealPlace(id);
+  if (!ok) { console.log('[bench] real course not in hand'); done([{ stage: 'real course', error: 'not in hand' }]); return; }
+  // the pose that takes the most buildings and may go (the whole valid range every 16 tiles; turned 15 degrees on until one may: the river can refuse every pose at one angle)
+  let best: { x: number; y: number; n: number } | null = null;
+  for (let k = 0; k < 24 && !best; k++) { best = g.real.best(16); if (!best) g.real.turn(1); }
+  if (!best) { g.real.cancel(); done([{ stage: 'real course', error: 'no pose may go there at any turn' }]); return; }
+  g.real.at = { x: best.x, y: best.y };
+  console.log('[bench] real course pose', JSON.stringify({ id, ...best, plan: { total: g.real.plan()!.total, ha: g.real.plan()!.land.ha, roadM: g.real.plan()!.roads.m } }));
+  if (mode === 'laid') {
+    g.real.click(); const t0 = performance.now(), laid = g.real.confirm(); const ms = Math.round(performance.now() - t0);
+    console.log('[bench] real course laid', laid, `${ms} ms on the main thread`);
+    // (the main-thread ms of the first frames after the lay: the camera's move to the new land, the chunk pictures of the old place dropped (GroundCache.purgeUnused), the first bakes)
+    const after: number[] = []; g.onFrame = () => { if (after.length < 12) after.push(+g.perf.cpuMs.toFixed(2)); };
+    await new Promise(r => setTimeout(r, 6000));
+    g.onFrame = null;
+    console.log('[bench] first frames after the lay (main-thread ms)', JSON.stringify(after));
+    g.lookAt(best.x, best.y, 0.3);
+    startTour(g, { ...info, realplace: spec, laid, layMs: ms, afterLayFramesMs: after }, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
+    return;
+  }
+  const zooms = [0.3, 0.15], states = ['off', 'hand', 'move'] as const, runs: { z: number; st: (typeof states)[number] }[] = [];
+  for (const z of zooms) for (let r = 0; r < 3; r++) for (let k = 0; k < 3; k++) runs.push({ z, st: states[(k + r) % 3]! });
+  const frames = new Map<string, number[]>(), q = (a: number[], p: number) => { const x = [...a].sort((u, v) => u - v); return x[Math.min(x.length - 1, Math.floor(p * x.length))] ?? 0; }, avg = (a: number[]) => a.reduce((p, v) => p + v, 0) / Math.max(1, a.length);
+  let k = 0, t = 0, n = 0;
+  const next = async () => {
+    if (k >= runs.length) {
+      g.onFrame = null; g.real.cancel();
+      const out: Record<string, unknown>[] = [];
+      for (const z of zooms) {
+        const tag = `${Math.round(z * 100)}%`, r: Record<string, unknown> = { stage: `real course ${tag}` }, m: Record<string, number> = {};
+        for (const st of states) { const f = frames.get(`${tag} ${st}`) ?? []; m[st] = avg(f); r[st] = { frames: f.length, cpuAvgMs: +avg(f).toFixed(3), cpuP95Ms: +q(f, 0.95).toFixed(3) }; }
+        r.delta = { handAvgMs: +(m.hand! - m.off!).toFixed(3), moveAvgMs: +(m.move! - m.off!).toFixed(3) };
+        out.push(r);
+      }
+      done(out); return;
+    }
+    const r = runs[k]!, tag = `${Math.round(r.z * 100)}% ${r.st}`;
+    g.onFrame = null;
+    if (r.st === 'off') g.real.cancel(); else if (!g.real.active) { await g.startRealPlace(id); g.real.at = { x: best!.x, y: best!.y }; }
+    g.lookAt(best!.x, best!.y, r.z); t = 0; n = 0;
+    g.onFrame = (_now, dt) => {
+      t += dt; if (t < 1) return;
+      if (r.st === 'move' && g.real.active) g.real.at = { x: best!.x + (n++ & 1), y: best!.y };
+      const v = frames.get(tag) ?? []; frames.set(tag, v); v.push(g.perf.cpuMs);
+      if (t >= 5) { k++; void next(); }
+    };
+  };
+  void next();
 }
 
 /** T251 (#728, "dont screw performance"): the balls' bounce and roll A/B on one page (the PC's other load falls alike on both): at 30% and 15%, on (the
@@ -369,6 +432,8 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
   let plantMax = 0, plantFrames = 0, along = 0; const bake0 = g.ground.baked;
   /** T272: the stage's first bake and the tile caches' counts at its start (tileStage) */
   let sb0 = g.ground.baked, ss0 = tileTotals(g), sumPeak = 0; g.ground.setTileStats(true);
+  /** T356: when in the stage its chunk-pictures-plus-tile-caches peak came (s), and what it was made of then (MB of 1e6 bytes: the chunk pictures, the tile caches) */
+  let peakAt: { atS: number; groundMB: number; tilesMB: number } | null = null;
   /** the sim worker's tick time: the max per stage, and the average and max over the whole tour */
   let stageSim = 0, simSum = 0, simN = 0, simMax = 0;
   const startX = g.cam.X, startY = g.cam.Y;
@@ -384,12 +449,14 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
     else { g.cam.X += st.vx * dt * dir; g.cam.Y += st.vy * dt * dir; }
     const pm = (g.perf as { plantMs?: number }).plantMs ?? 0; if (t > 1 && pm > 0) { plantMax = Math.max(plantMax, pm); plantFrames++; }
     if (st.z < PLANNER_Z / 3) { g.cam.X = 0; g.cam.Y = MAP * 32; }
-    up = Math.max(up, g.ground.uploadsThisSecond); sumPeak = Math.max(sumPeak, g.ground.residentPx * 4 + tileTotals(g).bytes);
+    up = Math.max(up, g.ground.uploadsThisSecond);
+    { const gb = g.ground.residentPx * 4, tb = tileTotals(g).bytes; if (gb + tb > sumPeak) { sumPeak = gb + tb; peakAt = { atS: +t.toFixed(1), groundMB: +(gb / 1e6).toFixed(1), tilesMB: +(tb / 1e6).toFixed(1) }; } }
     if (t > 1) { frames.push(g.perf.frameMs); cpu.push(g.perf.cpuMs); inst = Math.max(inst, g.perf.instances); draws = Math.max(draws, g.perf.draws); upload = Math.max(upload, g.perf.uploadKB); }
     if (t >= st.secs) {
       const sorted = [...cpu].sort((a, b) => a - b), q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
       const fAvg = frames.reduce((a, b) => a + b, 0) / Math.max(1, frames.length);
-      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}), tiles: tileStage(g, sb0, ss0, sumPeak) });
+      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}), tiles: { ...tileStage(g, sb0, ss0, sumPeak), peakAt } });
+      peakAt = null;
       sb0 = g.ground.baked; ss0 = tileTotals(g); sumPeak = 0; g.ground.setTileStats(true); // (the next stage's working set counted afresh)
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY; plantMax = 0; plantFrames = 0; along = 0;
       if (s >= stages.length) {
@@ -404,7 +471,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
   };
   function finish(tourBakes?: Record<string, number>) {
     const trees = { forest: g.perf.forest, townTrees: g.perf.townTrees, belt: (g.perf as { belt?: number }).belt ?? 0 };
-    const out = { ...info, ...(tourBakes ? { tourBakes, trees } : {}), cars: info.scene ? g.perf.simActive : BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), shineMB: +(g.ground.shineBytes / 1048576).toFixed(2), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
+    const out = { ...info, ...(tourBakes ? { tourBakes, trees } : {}), cars: info.scene ? g.perf.simActive : BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, groundProvisional: g.ground.provisional, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), shineMB: +(g.ground.shineBytes / 1048576).toFixed(2), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
     (window as unknown as { __bench: unknown }).__bench = out;
     console.log('[bench] results', JSON.stringify(out, null, 1));
     g.toast('Benchmark finished: results in the console', 'good');

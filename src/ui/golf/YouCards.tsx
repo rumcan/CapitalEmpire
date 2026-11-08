@@ -1,7 +1,7 @@
 // Your character's cards (T240, #704; docs/plans/P28.md section 1): the "Who are you?" card at a new game (your name, your look, your starting
 // handicap), the talk card when you walk up to a person (T243 brings the portraits), the first tee's "Start a round" card (T317 builds the round you
 // play yourself on it), and the cursors that say what a click does (walk / talk / look / use), as the point-and-click adventure games do.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LIBRARY } from '../../game/library';
 import type { RoundState } from '../../game/golf/player';
 import type { Verb } from '../../game/golf/you';
@@ -36,14 +36,18 @@ const THEMES: readonly { desert: boolean; name: string; note: string; ids: reado
   { desert: true, name: 'Desert', note: 'Palms, cacti and rocks on desert sand', ids: ['newprop:desert-date-palm-pair', 'newprop:desert-saguaro', 'newprop:desert-agave-clump'] },
 ];
 const BY_ID = new Map(LIBRARY.map(it => [it.id, it] as const));
-export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, course }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void;
+export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, course, hidden }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void;
+  /** T356: a real course is in hand over the map (the picker's Place it in my map): the card is out of the way, kept mounted so the picker is as it was when the course is placed or put down */ hidden?: boolean;
   /** T342: the game's look (desert or autumn) and the choice (the world changes behind the card at once) */ desert?: boolean; onTheme?: (desert: boolean) => void;
   /** T340 (#967), T358 (#1003): "Your course": build your own, one of the featured real courses, one you downloaded, or one you found (a new game starts on it); current:
    *  the game's now (its id and the name it shows; null: your own) */
-  course?: { featured: Featured[]; current: string | null; currentName: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec) => void } }) {
+  course?: { featured: Featured[]; current: string | null; currentName: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec) => void;
+    /** T356: place a found course on this game's map instead of starting a new game on it */ onPlace?: (spec: OsmCourseSpec) => void } }) {
   const [n, setN] = useState(name), [l, setL] = useState(look), [pick, setPick] = useState(false);
+  // (T356: a course placed on this map is the game's course now: the picker closes and the row names it)
+  useEffect(() => { setPick(false); }, [course?.current]);
   return (
-    <div className="pointer-events-none absolute inset-0 z-30 flex flex-wrap items-center justify-center gap-3 overflow-y-auto p-4">
+    <div className="pointer-events-none absolute inset-0 z-30 flex flex-wrap items-center justify-center gap-3 overflow-y-auto p-4" style={hidden ? { display: 'none' } : undefined} data-hidden={hidden || undefined}>
       <div className="pointer-events-auto w-[460px] max-w-full space-y-3 rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur" data-testid="who-card">
         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">A new game · You</div>
         <div className="font-display text-xl font-bold leading-tight text-[var(--gold-hi)]">Who are you?</div>
@@ -90,7 +94,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
         <p className="text-xs text-slate-400">You stand beside the shack. With Walk (the walking figure on the left; Alt swaps it with Select) click the ground to walk, a person to talk, a building to look, the range to hit a bucket. WASD walk too; the arrows pan. C calls your golf cart, E gets in.</p>
         <button className="btn-gold w-full py-2 text-sm" onClick={() => onDone(n, l)} data-testid="who-go"><Icon name="people" size={18} />That's me</button>
       </div>
-      {course && pick && <CoursePicker featured={course.featured} current={course.current} onOwn={course.onOwn} onFeatured={course.onFeatured} onBuild={course.onBuild} onClose={() => setPick(false)} />}
+      {course && pick && <CoursePicker featured={course.featured} current={course.current} onOwn={course.onOwn} onFeatured={course.onFeatured} onBuild={course.onBuild} onPlace={course.onPlace} onClose={() => setPick(false)} />}
     </div>
   );
 }

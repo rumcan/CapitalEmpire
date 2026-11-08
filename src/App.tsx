@@ -86,6 +86,9 @@ import { PlaceCard } from './ui/PlaceCard';
 import { SceneCard } from './ui/SceneCard';
 import { LandPanel } from './ui/golf/LandPanel';
 import { WelcomeCard } from './ui/golf/WelcomeCard';
+import { RealPlaceDialog, RealPlaceHud } from './ui/course/RealPlaceCard';
+import { OSM_COURSES } from './game/golf/osm';
+import { keptCourses, refreshKept, watchKept } from './game/golf/osm/kept';
 import { RangeGuideCard } from './ui/golf/RangeGuideCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
@@ -124,6 +127,11 @@ function menuCtx(game: Game): MenuCtx {
     // T206: Facilities ▸ Practice: the range's practice area's facilities (no range: locked with why)
     practice: [{ id: 'putting', name: 'Putting green' }, { id: 'chipping', name: 'Chipping green and bunker' }].map(f => ({ ...f, why: game.range.scene ? null : 'Comes with a driving range (its practice area)' })),
     newHoleWhy: ui?.newHoleLock ?? null,
+    // T356: Course > Place a real course: the shipped map-data courses, then the player's downloaded ones (T358: kept in this browser)
+    real: [
+      ...OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par })),
+      ...keptCourses().map(r => ({ id: r.id, name: r.name, place: r.place || 'Downloaded', holes: r.holes ?? 0, par: r.par ?? 0, kept: true })),
+    ],
     // T288: the placements still to make first (the range, its car park, the practice area: a click takes it in hand), then the card's sections
     range: [
       ...game.rangePlaces().filter(q => !q.done).map(q => ({ id: q.id, name: `Place ${q.name.replace(/^The /, 'the ')}`, place: true, why: q.why || null })),
@@ -148,6 +156,8 @@ export default function App() {
   const [boot] = useState(() => bootFor(location.search, import.meta.env.DEV));
   const lab = boot.kind === 'lab';
   const [, bump] = useReducer((x: number) => x + 1, 0);
+  // T356: the downloaded courses (T358's library) the Course flyout offers under Place a real course: listed when the page starts and each time that flyout opens (openFly); a change draws the menu again
+  useEffect(() => { void refreshKept(); return watchKept(bump); }, []);
   const [help, setHelp] = useState(false);
   /** T202: the Help card's tab: the keys (Help › Keys: the ? button, ? and F1) or how it works */
   const [helpTab, setHelpTab] = useState<'keys' | 'how'>('keys');
@@ -289,6 +299,7 @@ export default function App() {
   /** T193: opens a rail item's flyout beside its button (T250: a town footer item's above its button) */
   const openFly = (r: RailItem, el: HTMLElement | undefined, keyboard: boolean, path: number[] = []) => {
     const s = currentUiScale() || 1;
+    if (r.id === 'course') void refreshKept(); // (T356: the downloaded courses under Place a real course, as the library has them now)
     if (drawerOf(r) === 'footer') {
       const box = footBox.current, left = el && box ? (el.getBoundingClientRect().left - box.getBoundingClientRect().left) / s : 0;
       setFly({ item: r.id, path, keyboard, top: 0, left: Math.max(0, Math.round(left)) }); return;
@@ -322,6 +333,8 @@ export default function App() {
     if (act?.k === 'event') { if (!game.eventTool) game.toggleEventTool(); game.emit(); return; }
     // T200: Course › Land for sale: the overlay (a side mode in Select: another tool closes it)
     if (act?.k === 'land') { activeRail.current = itemId; if (game.range.cardOpen) game.openRangeCard(false); game.openLandSale(); return; }
+    // T356: Course > Place a real course > (a course): in hand over the map, Select under it
+    if (act?.k === 'real') { activeRail.current = itemId; void game.startRealPlace(act.id); return; }
     // T256: Range › Build (and Facilities › Build on your property): the holes' painting tools on your property
     if (act?.k === 'build') { activeRail.current = itemId; game.openPropertyPaint(); return; }
     if (act?.k === 'newHole' || act?.k === 'holes' || act?.k === 'surface') game.paint.setProperty(false); // the Holes panel's tools paint holes
@@ -849,7 +862,7 @@ export default function App() {
           {game.shotState() && <ShotPanel game={game} />}
           {game.spinView() && <SpinBall game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
-          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: spec => { void game.startRealCourse(spec); } }} />; })()}
+          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard hidden={game.real.active} name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: spec => { void game.startRealCourse(spec); }, onPlace: spec => { void game.startRealPlaceSpec(spec); } }} />; })()}
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
           {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} onMachine={() => game.openVending(true)} />}
@@ -907,6 +920,8 @@ export default function App() {
             return <SceneCard view={sc} padRight={`${side ? base + 22 : Math.max(1, base + 0.75)}rem`} onView={v => game.sceneView(v)} onClose={() => game.closeScene()} />;
           })()}
           {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
+          {game.real.active && <RealPlaceHud game={game} />}
+          {game.real.active && <RealPlaceDialog game={game} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />

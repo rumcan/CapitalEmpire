@@ -103,6 +103,7 @@ function fakeGame(o: { cur?: number; open?: number; editing?: number; hand?: num
     holeCardView: () => (o.open ? card(o.open, !hand.includes(o.open)) : null),
     paint: { brushHole: o.cur ?? 1, brushKind: 'fairway', editingHole: o.editing ?? 0, hasPlan: (n: number) => n <= 2 && !hand.includes(n), nextFreeHole: () => 3 },
     editHole: () => true,
+    holePlayWhy: () => null, // (T349: the card's Play button asks why it is off; null: it is on)
   } as unknown as Game;
   return { game };
 }
