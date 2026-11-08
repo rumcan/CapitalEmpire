@@ -178,3 +178,39 @@ test('the swamp\'s pre-scaled copies live in the same budget, with their tile', 
   const before = cache.bytes; cache.exact(u!, 687, 384, make); assert.equal(cache.bytes - before, picBytes({ width: 688, height: 385 }), 'counted');
   cache.budget = 0; cache.trim(); assert.equal(cache.size, 0, 'dropped with the tile'); assert.equal(cache.bytes, 0);
 });
+
+test('a mip or a copy a bake makes while it draws trims the cache at once, never the bake in hand\'s tiles; the same tiles go as after the bake (T356: the first pass over a placed course held 9 MB past the budget)', async () => {
+  /** a cache of 1000 x 500 px tiles (a 500 px mip is 0.5 MB, a 250 px one 0.125 MB), the budget 2.2 MB; the three tiles o1..o3 no bake in hand draws, then the bake in hand's p1 and p2 */
+  const make = async (pin: boolean) => {
+    const { cache } = fakeCache(() => [1000, 500]), pinned = new Set(['p1', 'p2']); cache.budget = 2.2 * MB;
+    if (pin) cache.pinOf = () => pinned;
+    await cache.prepare(new Map([['o1', 500], ['o2', 500], ['o3', 500]])); cache.afterBake();
+    await cache.prepare(new Map([['p1', 500], ['p2', 500]]));
+    return cache;
+  };
+  const alone = await make(false), cache = await make(true);
+  // preparing trims as it always did (the bake's two kept, the oldest other gone); the draw's own mips are not a preparation's
+  for (const c of [alone, cache]) { assert.deepEqual(['o1', 'o2', 'o3', 'p1', 'p2'].map(u => c.has(u)), [false, true, true, true, true]); assert.equal(c.bytes, 2 * MB); }
+  // the bake draws p1 and p2 at 250 px: two quarter-size mips of 0.125 MB, the second past the budget
+  for (const c of [alone, cache]) { assert.ok(c.image('p1', 250)); assert.ok(c.image('p2', 250)); }
+  assert.ok(alone.bytes > alone.budget, 'before: past the budget until the bake is over');
+  assert.ok(cache.bytes <= cache.budget, `now: ${(cache.bytes / MB).toFixed(3)} MB within ${(cache.budget / MB).toFixed(1)} MB at once`);
+  assert.deepEqual(['o2', 'o3', 'p1', 'p2'].map(u => cache.has(u)), [false, true, true, true], 'the least recently used of the others went; the bake\'s tiles stayed');
+  assert.ok(cache.image('p1', 250) && cache.image('p2', 250) && cache.image('p1', 500) && cache.image('p2', 500), 'every picture the bake draws is there');
+  // a pre-scaled copy (the swamp's) is the same: counted at once, the others trimmed for it
+  const copy = cache.exact('p1', 400, 300, () => ({ width: 400, height: 300, name: 'copy' }));
+  assert.ok(copy && cache.bytes <= cache.budget, `${(cache.bytes / MB).toFixed(3)} MB after a copy`);
+  assert.ok(cache.has('p1') && cache.has('p2'), 'never the bake in hand\'s');
+  // after the bake both caches hold the same tiles: the draw-time trim only did sooner what the one after the bake does
+  alone.exact('p1', 400, 300, () => ({ width: 400, height: 300, name: 'copy' }));
+  alone.afterBake(); cache.afterBake();
+  assert.deepEqual(['o1', 'o2', 'o3', 'p1', 'p2'].map(u => alone.has(u)), ['o1', 'o2', 'o3', 'p1', 'p2'].map(u => cache.has(u)));
+  assert.equal(alone.bytes, cache.bytes);
+  // a preparation never trims by a stale pin: the tiles it is making ready stay, whatever the last bake pinned
+  const { cache: c3 } = fakeCache(() => [1000, 500]); c3.budget = 0.6 * MB; c3.pinOf = () => new Set(['old']);
+  await c3.prepare(new Map([['n1', 500], ['n2', 500]]));
+  assert.ok(c3.image('n1', 500) && c3.image('n2', 500), 'prepared tiles kept for the bake that asked');
+  // and a cache told nothing (the tests above, a prewarm) trims only after a bake, as before
+  const { cache: c4 } = fakeCache(() => [1000, 500]); c4.budget = 0.6 * MB;
+  await c4.prepare(new Map([['a', 500], ['b', 500]])); assert.ok(c4.bytes > c4.budget); c4.image('a', 250); assert.ok(c4.bytes > c4.budget); c4.afterBake(); assert.ok(c4.bytes <= c4.budget);
+});

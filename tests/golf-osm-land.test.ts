@@ -15,7 +15,7 @@ import {
   tileText, tileXY, tilesFor, unpackGrid, type DemTiles, type HeightGrid,
 } from '../src/game/golf/osm/terrarium';
 import {
-  GREEN_TILT, PAD, SKIRT_T, addLandPatch, createLandField, designGreens, greenTilts, groundAt, groundField, groundRect, landAt, landOfHeight, landRelief, landWindow, layLand, packLand, specToMetres, unpackLand,
+  GREEN_TILT, PAD, SKIRT_T, addLandPatch, clearLandIn, createLandField, designGreens, greenTilts, groundAt, groundField, groundRect, landAt, landOfHeight, landRelief, landWindow, layLand, packLand, patchBox, specToMetres, turnedFrame, unpackLand,
   type LandField, type LandPatch,
 } from '../src/game/golf/osm/land';
 import { DEM_GAP_MS, DemUnavailable, fetchLand, tilesKept, tilesOfCourse } from '../src/game/golf/osm/dem';
@@ -28,6 +28,7 @@ import { generateOldNine } from '../src/game/golf/coursegen';
 import { buildCourseStatsPanel } from '../src/game/golf/coursestats';
 import type { Need } from '../src/game/golf/tour';
 import { MAP } from '../src/game/iso';
+import { rotateSpec } from '../src/game/golf/osm/rotate';
 
 const ronde = rondeboschJson as unknown as OsmCourseJson, magnolia = magnoliaJson as unknown as OsmCourseJson, woodhill = woodhillJson as unknown as OsmCourseJson;
 
@@ -266,6 +267,24 @@ describe('the land laid under a course (T357)', () => {
     assert.notDeepEqual(Array.from(shifted.data), Array.from(a.data));
     assert.deepEqual(landWindow(spec).map(Math.round), [-100 - 400, 80 - 160 - 400, 100 + 400, 80 + 400]);
     assert.equal(layLand(synth({ w: 10, h: 10 }), land, { x: 5000, y: 5000 }).w, 0, 'a land off the map lays nothing');
+  });
+  it('a course placed turned (T356) reads the same ground turned with it: the rise from tee to pin is the same at 60 degrees, and the window for a course to be turned holds any turn', () => {
+    const grid = gridOfFn(hill), land = { grid, src: 't', label: 't', credit: 't', fetched: '' }, base = synth({}, [GREEN, TEE, POND]), A0 = { x: 400, y: 400 };
+    const deg = 60, turned = rotateSpec(base, deg), A1 = { x: 380, y: 360 };
+    const f0 = fieldOf(layLand(base, land, A0)), f1 = fieldOf(layLand(turned, land, A1, { frame: turnedFrame(base, turned, deg) }));
+    const rise = (spec: OsmCourseSpec, f: LandField, A: { x: number; y: number }) => { const h = spec.holes[0]!; return landAt(f, h.pin.x + A.x, h.pin.y + A.y) - landAt(f, h.tees[0]!.x + A.x, h.tees[0]!.y + A.y); };
+    assert.ok(Math.abs(rise(base, f0, A0) - rise(turned, f1, A1)) < 0.25, `rise ${rise(base, f0, A0).toFixed(2)} m unturned, ${rise(turned, f1, A1).toFixed(2)} m turned`);
+    assert.ok(Math.abs(rise(base, f0, A0)) > 1, 'a rise worth comparing');
+    // no turn: the frame is the plain map
+    const [x, y] = turnedFrame(base, base, 0)(33, 21), [x2, y2] = specToMetres(base, 33, 21); assert.ok(Math.abs(x - x2) < 1e-9 && Math.abs(y - y2) < 1e-9);
+    // the window that holds any turn: a square about the land's middle, at least the land's own box and its skirt
+    const w = landWindow(base), all = landWindow(base, SKIRT_T, true);
+    assert.ok(all[0] <= w[0] && all[1] <= w[1] && all[2] >= w[2] && all[3] >= w[3] && Math.abs((all[2] - all[0]) - (all[3] - all[1])) < 1e-6, `${all.map(Math.round)} holds ${w.map(Math.round)}`);
+    // placed over an older course's land, the new rect replaces it (the skirts add): clearLandIn zeroes the samples inside a box
+    const f = fieldOf(layLand(base, land, A0)); assert.notEqual(landAt(f, A0.x + 50, A0.y + 40), 0); const rev = f.rev;
+    clearLandIn(f, [A0.x, A0.y, A0.x + 100, A0.y + 80]); assert.equal(landAt(f, A0.x + 50, A0.y + 40), 0); assert.ok(f.rev > rev);
+    assert.notEqual(landAt(f, A0.x - 60, A0.y + 40), 0, 'the skirt outside the box is left');
+    const p = layLand(base, land, A0), b = patchBox(p); assert.equal(b[0], p.i0 * CH_STEP); assert.equal(b[3], (p.j0 + p.h) * CH_STEP);
   });
   it('Woodhill: the NE hill is under holes 5 and 6, and the land has the real relief at the map\'s scale', async () => {
     const land = (await loadOsmLand('woodhill'))!, spec = specOf(woodhill, { id: 'woodhill', name: 'Woodhill', place: '' }), plan = planOsmGame(spec)!;

@@ -35,9 +35,9 @@ export async function tilesKept(keys: readonly TileKey[], cache: AnswerCache): P
 }
 
 /** the tiles a course's land needs: its window (land and skirt) and a few pixels' margin for the smoothing */
-export function tilesOfCourse(spec: Pick<OsmCourseSpec, 'originM' | 'scale' | 'w' | 'h'>, json: Pick<OsmCourseJson, 'meta'>): TileKey[] {
+export function tilesOfCourse(spec: Pick<OsmCourseSpec, 'originM' | 'scale' | 'w' | 'h'>, json: Pick<OsmCourseJson, 'meta'>, anyTurn = false): TileKey[] {
   const c = json.meta?.centre; if (!c) return [];
-  const [x0, y0, x1, y1] = landWindow(spec), m = 3 * 25 + 20;
+  const [x0, y0, x1, y1] = landWindow(spec, undefined, anyTurn), m = 3 * 25 + 20;
   return tilesFor(c, [x0 - m, y0 - m, x1 + m, y1 + m], DEM_ZOOM);
 }
 
@@ -63,12 +63,13 @@ async function tileFor(k: TileKey, d: DemDeps, gate: Gate, signal?: AbortSignal)
 }
 
 /** the course's real ground: the tiles (kept ones first, the rest one at a time), sampled at 4 m over the window, smoothed by the source's sigma, cropped and kept at the
- *  step the source needs (the same steps as a fixture's: scripts/dev/osm-height.mjs and osm-trim-fixture.mjs). `onStep` gets the progress words. Throws what tileFor
+ *  step the source needs (the same steps as a fixture's: scripts/dev/osm-height.mjs and osm-trim-fixture.mjs). `onStep` gets the progress words; anyTurn: the window
+ *  that holds the land however the placing mode turns it (landWindow). Throws what tileFor
  *  does (a missing tile is DemUnavailable: the course is built flat) */
-export async function fetchLand(spec: OsmCourseSpec, json: OsmCourseJson, d: DemDeps, o: { signal?: AbortSignal; onStep?: (text: string) => void } = {}): Promise<OsmLand> {
+export async function fetchLand(spec: OsmCourseSpec, json: OsmCourseJson, d: DemDeps, o: { signal?: AbortSignal; onStep?: (text: string) => void; anyTurn?: boolean } = {}): Promise<OsmLand> {
   const c = json.meta?.centre;
   if (!c) throw new DemUnavailable('this course has no position to read the ground at');
-  const keys = tilesOfCourse(spec, json);
+  const keys = tilesOfCourse(spec, json, o.anyTurn);
   if (!keys.length || keys.length > DEM_MAX_TILES) throw new DemUnavailable(keys.length ? 'the course needs too many elevation tiles' : 'no elevation tiles for this course');
   const gate = new Gate(DEM_GAP_MS, d.net), tiles: DemTiles = new Map(), sources: string[] = [];
   let fresh = 0;
@@ -82,7 +83,7 @@ export async function fetchLand(spec: OsmCourseSpec, json: OsmCourseJson, d: Dem
   }
   o.onStep?.('Working out the ground...');
   await new Promise<void>(r => setTimeout(r, 0)); // (the card paints its line before the sampling holds the page for a moment)
-  const src = demSourceOf(sources.join(',')), sigma = src.sigma, win = landWindow(spec);
+  const src = demSourceOf(sources.join(',')), sigma = src.sigma, win = landWindow(spec, undefined, o.anyTurn);
   let raw;
   try { raw = sampleTiles(tiles, c, [win[0] - 3 * sigma, win[1] - 3 * sigma, win[2] + 3 * sigma, win[3] + 3 * sigma], 4, DEM_ZOOM); }
   catch (e) { if (e instanceof MissingTile) throw new DemUnavailable('an elevation tile is missing'); throw e; }

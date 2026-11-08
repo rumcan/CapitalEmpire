@@ -78,12 +78,19 @@ export interface OsmCourseSpec {
   parTotal: number; gameParTotal: number; lengthM: number;
   /** how many polygons of each map kind the spec uses (for the tests and the card) */
   counts: Record<string, number>;
+  /** T356 (#998): a spec turned by the placing mode (rotate.ts rotateSpec): the turn, degrees clockwise (absent: as converted), and the land's outline in
+   *  the frame, the four corners of the oriented rectangle the land is, flat x, y (absent: the frame itself); w and h are then the box round it. A turned spec
+   *  keeps the unturned `originM` (the preview, which reads it, only ever sees the spec as converted) */
+  rot?: number; outline?: number[];
 }
 
 /** what a map-data game saves of its course: the shipped id (the engine lays the flat map for it), the name the game shows, the place, the credit the
  *  course card and the credits show, the OSM id it came from, its holes, and its par as the game works it out (par) and as the map has it (mappedPar) */
 export interface OsmGolfInfo { id: string; name: string; place: string; credit: string; licence: string; source: string; holes: number; par: number; mappedPar: number; scale?: number;
   /** the holes were worked out from the fairways (the map had no hole lines) */ derived?: boolean;
-  /** where the entry road meets the map's edge (the flat map's highway enters there: the clubhouse parcel is on that side of the land); absent: the middle of the west edge */ entry?: OsmEntry }
+  /** where the entry road meets the map's edge (the flat map's highway enters there: the clubhouse parcel is on that side of the land); absent: the middle of the west edge */ entry?: OsmEntry;
+  /** T356 (#998): the course was placed into a game already under way (Course › Place a real course), on that game's own map: the loader keeps the save's
+   *  seed and terrain and does not lay the flat map. `turn` is how far it was turned, degrees */
+  placed?: true; turn?: number }
 /** a point on the map's edge: tiles, and the edge it lies on */
 export interface OsmEntry { x: number; y: number; edge: 'N' | 'E' | 'S' | 'W' }

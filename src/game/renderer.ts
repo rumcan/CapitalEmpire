@@ -20,8 +20,9 @@ import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
-import { cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, type StripeLook } from './course-stripes';
-import { LIP, collarToneOf, finishMow, finishOf, finishStripeLook, greenStripeLook, lipRuns, tonedCollar, type CourseFinish } from './course-finish';
+import { cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, turnStripeLegs, type StripeLook } from './course-stripes';
+import { LIP, collarToneOf, finishMow, finishOf, lipRuns, mowSpec, tonedCollar, type CourseFinish } from './course-finish';
+import type { MowKind } from './mow-lines';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
 import { BunkerStageRegistry } from './ext/bunker-look/stage-registry';
 import { SHINE_TEXEL, SHINE_TEXEL_PX, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
@@ -252,6 +253,8 @@ const paintZ = (p: LotPatch) => p.course ? -1e300 : p.paint!.z; // the course un
 const COURSE_DIRT = true;
 /** T218: the fairways' stripe look, the range outfield preset's (course-stripes fairwayStripeLook; the presets are fixed at build) */
 const FAIRWAY_STRIPES: StripeLook = fairwayStripeLook();
+/** T359: the surfaces that lay mowing lines (course-finish mowSpec), by surface id: the fairway's bands, the green's fine stripes, and the tee's and the rough's where a look turns them on */
+const MOW_OF_SURF: Readonly<Record<number, MowKind>> = { [SURF.fairway]: 'fairway', [SURF.green]: 'green', [SURF.tee]: 'tee', [SURF.rough]: 'rough' };
 /** the strokes of a course surface's outward feather (a linear fade in this many steps) */
 const FEATHER_STEPS = 4;
 /** the soil seeded course cells show while they grow in (plan P21 3.4; a seeded-soil photo is in the art queue) */
@@ -2562,7 +2565,7 @@ export class GroundPainter {
     const teeSand = replacements.flatMap(value => value.teeSand);
     const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
     // T227: the course finish (course-finish.ts): the greens' fine stripes, the collar's tone, the bunkers' lips (the bands: step 8)
-    const fin = this.finish(), green = greenStripeLook(fin, FAIRWAY_STRIPES), collarTone = collarToneOf(fin), bowl = fin.on ? fin.bowl : 0, lip = fin.on && !(bowl > 0) ? fin.lip : 0, roll = fin.on ? fin.roll : 0;
+    const fin = this.finish(), collarTone = collarToneOf(fin), bowl = fin.on ? fin.bowl : 0, lip = fin.on && !(bowl > 0) ? fin.lip : 0, roll = fin.on ? fin.roll : 0;
     /** a course texture as a fill style on g: painted (its look, composed over the part `need` of the chunk), the photo or preset in tile space
      *  (turned and scaled about the origin), else the screen texture */
     const style = (g: C2D, t: CourseTex, need?: BBox) => {
@@ -2950,9 +2953,13 @@ export class GroundPainter {
           if (joints.length) { const up = ringsOfCode(code), down = ringsOfCode(code | 1); this.courseJointShade(ctx, joints, L, M, up, down); this.onShadeMask(m => this.courseJointShade(m, joints, L, M, up, down)); }
         }
         rims(code);                                                                                // 7
-        // 8 (T218; T227 the finish's bands; T271: a custom grass with its stripes on, as the fairway's)
-        if (this.stripes && (s === SURF.fairway || (s >= CUSTOM0 && ls.some(q => q.l.stripes)))) { const fl = finishStripeLook(fin, FAIRWAY_STRIPES); for (const { c, l } of ls) if (s === SURF.fairway || l.stripes) this.courseStripes(ctx, c, l, r, M, lite, fl ?? FAIRWAY_STRIPES, !!fl); }
-        if (this.stripes && s === SURF.green && green) for (const { c, l } of ls) this.courseStripes(ctx, c, l, r, M, lite, green, true); // 8 (T227: the greens' fine stripes)
+        // 8 (T218; T227 the finish's bands and the greens' fine stripes; T271: a custom grass with its stripes on, as the fairway's; T359: each
+        // surface's lines as its look sets them: the fairway's, the green's, and the tee's and the rough's where a look turns them on)
+        if (this.stripes) {
+          const kind = MOW_OF_SURF[s];
+          if (kind) { for (const { c, l } of ls) this.courseStripes(ctx, c, l, r, M, lite, kind); }
+          else if (s >= CUSTOM0 && ls.some(q => q.l.stripes)) for (const { c, l } of ls) if (l.stripes) this.courseStripes(ctx, c, l, r, M, lite, 'fairway');
+        }
         if (s === SURF.fairway && !lite && this.rugged) spill();                                                   // 9: the tall grass's spill (T204)
       }
       if (!lite && code === 12) this.bunkerStages.draw(ctx, 'floor', box, L, X0, Y0, originalCourses);
@@ -3646,14 +3653,18 @@ export class GroundPainter {
    *  moved by the same wobble as its rings (courseOwnBox), so two chunks never stripe the same ground twice. In world tiles: the bands of
    *  neighbouring chunks meet. look: T218's (FAIRWAY_STRIPES), or T227's course finish (its bands, or a green's fine stripes), laid textured
    *  (mowBands) when `textured` */
-  private courseStripes(ctx: C2D, c: CoursePatch, l: CourseLayer, r: readonly number[], M: DOMMatrix, lite: boolean, look: StripeLook = FAIRWAY_STRIPES, textured = false) {
+  private courseStripes(ctx: C2D, c: CoursePatch, l: CourseLayer, r: readonly number[], M: DOMMatrix, lite: boolean, kind: MowKind) {
     const st = l.stripes; if (!st?.length || !l.fill.length) return;
+    const fin = this.finish();
     const S = c.size, x0 = c.cx * S, y0 = c.cy * S, pad = RUGGED.limit + 0.2;
     const b = [Math.max(r[0]!, x0 - pad), Math.max(r[1]!, y0 - pad), Math.min(r[2]!, x0 + S + pad), Math.min(r[3]!, y0 + S + pad)];
     if (b[2]! <= b[0]! || b[3]! <= b[1]!) return;
     const rings = new Path2D(); for (const q of l.fill) ringPath(rings, q);
     ctx.save(); ctx.setTransform(M); ctx.clip(this.courseOwnBox(c, lite)); ctx.clip(rings, 'evenodd');
     for (const e of st) {
+      // (T359: this hole's lines: the finish's, with the look's own settings over them; none: this hole lays no lines)
+      const spec = mowSpec(kind, e.m, fin, FAIRWAY_STRIPES); if (!spec) continue;
+      const look = spec.look, textured = spec.textured, along = spec.pattern === 'along';
       let eb = b;
       if (e.runs) {
         // this hole's share of the chunk (rows of cells merged into boxes): clipped to it, the bands only over its box
@@ -3667,9 +3678,12 @@ export class GroundPainter {
         ctx.save(); ctx.clip(p);
       }
       // a green is mown one way, along the approach: its hole's last leg alone (no chevron where an aim point lies near it)
-      const all = holeStripeLegs(e.line, look, e.a), legs = l.s === SURF.green ? [{ m: all[all.length - 1]!.m, cut: null }] : all;
-      // T269: the grounds crew's cut (e.f): the hole's bands the other way, and today's fresh stripes behind the mower
-      const f = l.s === SURF.green ? undefined : e.f;
+      // (T359: straight is one direction over the whole hole, its angle, from the tee; a checkerboard or a diamond follows the hole's line, its
+      // squares across it, turned by the angle)
+      const all = along ? holeStripeLegs(e.line, look, e.a) : spec.pattern === 'straight' ? holeStripeLegs(e.line, look, spec.angle) : turnStripeLegs(holeStripeLegs(e.line, { ...look, across: true }), spec.angle);
+      const legs = l.s === SURF.green ? [{ m: all[all.length - 1]!.m, cut: null }] : all;
+      // T269: the grounds crew's cut (e.f): the hole's bands the other way, and today's fresh stripes behind the mower (the bands along the hole only)
+      const f = l.s === SURF.green || !along ? undefined : e.f;
       if (legs.length === 1 && !f) this.layBands(ctx, legs[0]!.m, eb, M, textured);
       else for (let i = 0; i < legs.length; i++) {
         const q0 = legArea(legs, i, eb); if (!q0.length) continue;
@@ -3869,16 +3883,41 @@ export class GroundPainter {
       g.fillStyle = gr; g.fillRect(k * w, t0, w, t1 - t0);
     };
     const rgbOf = (hex: string) => `${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)}`;
+    // T359: a checkerboard (m.c): a second family of bands crosses the first, along (-uy, ux) (j: its band index, from t0), and a cell is light
+    // where its two bands are both even or both odd and dark where they differ: the families XOR (soft edges and all) into one mask
+    const j0 = Math.floor(t0 / w), j1 = Math.ceil(t1 / w), chk = m.c === 1;
+    const cross = (g: C2D, j: number, rgb: string, a: number) => {
+      const gr = g.createLinearGradient(0, j * w, 0, (j + 1) * w);
+      gr.addColorStop(0, `rgba(${rgb},0)`); gr.addColorStop(e, `rgba(${rgb},${a.toFixed(3)})`); gr.addColorStop(1 - e, `rgba(${rgb},${a.toFixed(3)})`); gr.addColorStop(1, `rgba(${rgb},0)`);
+      g.fillStyle = gr; g.fillRect(s0, j * w, s1 - s0, w);
+    };
+    const box = chk || m.l > 0 ? this.cacheBox(M, r[0]!, r[1]!, r[2]!, r[3]!, ctx) : null;
     if (m.k > 0) {
-      ctx.save(); ctx.transform(m.ux, m.uy, -m.uy, m.ux, m.ox, m.oy); ctx.globalCompositeOperation = 'multiply';
-      const dc = rgbOf(m.dc); for (let k = k0; k < k1; k++) if (k & 1) band(ctx, k, dc, Math.min(1, m.k));
-      ctx.restore();
+      if (!chk) {
+        ctx.save(); ctx.transform(m.ux, m.uy, -m.uy, m.ux, m.ox, m.oy); ctx.globalCompositeOperation = 'multiply';
+        const dc = rgbOf(m.dc); for (let k = k0; k < k1; k++) if (k & 1) band(ctx, k, dc, Math.min(1, m.k));
+        ctx.restore();
+      } else if (box) {
+        // the dark cells (the families differ: one odd, one even) as a mask, tinted with the dark colour, multiplied on
+        const D = this.bufferKeep('bandDark', ctx.canvas.width, ctx.canvas.height), d = ctx2d(D);
+        d.save(); d.setTransform(1, 0, 0, 1, 0, 0); d.clearRect(box[0], box[1], box[2], box[3]); d.setTransform(M); d.transform(m.ux, m.uy, -m.uy, m.ux, m.ox, m.oy);
+        for (let k = k0; k < k1; k++) if (k & 1) band(d, k, '255,255,255', 1);
+        d.globalCompositeOperation = 'xor';
+        for (let j = j0; j < j1; j++) if (j & 1) cross(d, j, '255,255,255', 1);
+        d.restore();
+        d.save(); d.setTransform(1, 0, 0, 1, 0, 0); d.beginPath(); d.rect(box[0], box[1], box[2], box[3]); d.clip();
+        d.globalCompositeOperation = 'source-in'; d.fillStyle = `rgba(${rgbOf(m.dc)},${Math.min(1, m.k).toFixed(3)})`; d.fillRect(box[0], box[1], box[2], box[3]);
+        d.restore();
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply';
+        ctx.drawImage(D as CanvasImageSource, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]);
+        ctx.restore();
+      }
     }
-    if (!(m.l > 0)) return;
-    const box = this.cacheBox(M, r[0]!, r[1]!, r[2]!, r[3]!, ctx); if (!box) return;
+    if (!(m.l > 0) || !box) return;
     const B = this.bufferKeep('bandMask', ctx.canvas.width, ctx.canvas.height), g = ctx2d(B);
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(box[0], box[1], box[2], box[3]); g.setTransform(M); g.transform(m.ux, m.uy, -m.uy, m.ux, m.ox, m.oy);
     for (let k = k0; k < k1; k++) if (!(k & 1)) band(g, k, '255,255,255', 1);
+    if (chk) { g.globalCompositeOperation = 'xor'; for (let j = j0; j < j1; j++) if (j & 1) cross(g, j, '255,255,255', 1); }
     g.restore();
     this.shine(ctx, box, m.lc, m.l, a => { a.setTransform(1, 0, 0, 1, 0, 0); a.drawImage(B, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]); }, false);
   }

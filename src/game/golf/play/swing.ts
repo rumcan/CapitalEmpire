@@ -138,7 +138,7 @@ export function shapeText(e: Pick<SwingEffect, 'shape' | 'deg'>): string {
 }
 
 /** the clubs as the player reads them */
-export const CLUB_NAME: Readonly<Record<Club, string>> = { driver: 'Driver', wood3: '3-wood', iron4: '4-iron', iron6: '6-iron', iron8: '8-iron', pw: 'Pitching wedge', sw: 'Sand wedge', putter: 'Putter' };
+export const CLUB_NAME: Readonly<Record<Club, string>> = { driver: 'Driver', wood3: '3-wood', wood5: '5-wood', hybrid: 'Hybrid', iron4: '4-iron', iron5: '5-iron', iron6: '6-iron', iron7: '7-iron', iron8: '8-iron', iron9: '9-iron', pw: 'Pitching wedge', gw: 'Gap wedge', sw: 'Sand wedge', lw: 'Lob wedge', putter: 'Putter' };
 
 /** a played shot as the player reads it after the swing: the club, the miss, its carry and total (metres; null where there is none: a putt has no carry,
  *  a penalty no total) and one line of text: "Driver: Hook, 7° left · carry 182 m, total 195 m" */

@@ -17,6 +17,7 @@
 import { CH_SIZE, CH_STEP, clampCourseHeightM, sampleCourseGrid, type CourseHeightField, type CourseTileBox } from '../../ext/course-height';
 import type { Pt } from '../../network';
 import { heightAtM, packGrid, unpackGrid, type HeightGrid, type HeightPack, type OsmHeight } from './terrarium';
+import { cosSin } from './rotate';
 import type { OsmCourseSpec, SpecArea } from './types';
 
 /** the skirt: how far (tiles) beyond the land the heights fade to the plain (400 m) */
@@ -43,10 +44,22 @@ export async function landOfHeight(h: OsmHeight): Promise<OsmLand> {
 export function specToMetres(spec: Pick<OsmCourseSpec, 'originM' | 'scale'>, u: number, v: number): [number, number] {
   return [(spec.originM[0] + 2 * u) / spec.scale, (spec.originM[1] - 2 * v) / spec.scale];
 }
-/** the metres box (the stage-1 frame) the land and its skirt cover: the grid a download needs to hold it */
-export function landWindow(spec: Pick<OsmCourseSpec, 'originM' | 'scale' | 'w' | 'h'>, skirtT = SKIRT_T): [number, number, number, number] {
+/** the metres box (the stage-1 frame) the land and its skirt cover: the grid a download needs to hold it. anyTurn (a course to be placed, T356: the player turns it
+ *  before it is laid): the square about the land's middle that holds it however it is turned, and its skirt */
+export function landWindow(spec: Pick<OsmCourseSpec, 'originM' | 'scale' | 'w' | 'h'>, skirtT = SKIRT_T, anyTurn = false): [number, number, number, number] {
+  if (anyTurn) {
+    const [cx, cy] = specToMetres(spec, spec.w / 2, spec.h / 2), half = Math.hypot(spec.w, spec.h) / spec.scale + (2 * skirtT) / spec.scale; // (the land is 2w x 2h m at the map's scale: half its diagonal is hypot(w, h) m, and a tile of the skirt is 2 m, both at 1 / scale in true metres)
+    return [cx - half, cy - half, cx + half, cy + half];
+  }
   const a = specToMetres(spec, -skirtT, spec.h + skirtT), b = specToMetres(spec, spec.w + skirtT, -skirtT);
   return [a[0], a[1], b[0], b[1]];
+}
+
+/** the map from a tile of a turned spec's frame (T356's rotateSpec: about the middle of its land, the frame grown to the box round it) to the stage-1 metres, for layLand's
+ *  `frame`: the turned frame's tile is turned back by `deg` about the frame's middle and read in the base spec's frame. base is the spec as converted, turned the spec turned by deg */
+export function turnedFrame(base: Pick<OsmCourseSpec, 'originM' | 'scale' | 'w' | 'h'>, turned: Pick<OsmCourseSpec, 'w' | 'h'>, deg: number): (x: number, y: number) => [number, number] {
+  const { c, s } = cosSin(deg), cx = base.w / 2, cy = base.h / 2, dx = turned.w / 2 - cx, dy = turned.h / 2 - cy;
+  return (X, Y) => { const a = X - dx - cx, b = Y - dy - cy; return specToMetres(base, cx + c * a + s * b, cy - s * a + c * b); };
 }
 
 /** the land as a patch of the course height's lattice: samples (i0..i0+w-1, j0..j0+h-1), metres relative to base (the elevation, m above the datum, that
@@ -151,9 +164,22 @@ export function addLandPatch(f: LandField, p: LandPatch, info: LandInfo): void {
   if (!p.w || !p.h) return;
   const d = f.data ?? (f.data = new Float32Array(CH_SIZE * CH_SIZE));
   for (let j = 0; j < p.h; j++) { const row = (p.j0 + j) * CH_SIZE + p.i0; for (let i = 0; i < p.w; i++) d[row + i] = d[row + i]! + p.data[j * p.w + i]!; }
-  const b: CourseTileBox = [p.i0 * CH_STEP, p.j0 * CH_STEP, (p.i0 + p.w) * CH_STEP, (p.j0 + p.h) * CH_STEP];
+  const b = patchBox(p);
   f.box = f.box ? [Math.min(f.box[0], b[0]), Math.min(f.box[1], b[1]), Math.max(f.box[2], b[2]), Math.max(f.box[3], b[3])] : b;
   f.base = f.info ? f.base : p.base; f.info = info; f.rev++;
+}
+
+/** the tile box a patch covers */
+export function patchBox(p: LandPatch): CourseTileBox { return [p.i0 * CH_STEP, p.j0 * CH_STEP, (p.i0 + p.w) * CH_STEP, (p.j0 + p.h) * CH_STEP]; }
+
+/** the land inside tile box b taken away (a course placed over land an older one laid: the new course's own ground replaces it; the skirts round it simply add). Bumps the field's rev
+ *  when it changed anything */
+export function clearLandIn(f: LandField, b: readonly number[]): void {
+  if (!f.data) return;
+  const i0 = Math.max(0, Math.ceil(b[0]! / CH_STEP - 0.5)), i1 = Math.min(CH_SIZE - 1, Math.floor(b[2]! / CH_STEP - 0.5)), j0 = Math.max(0, Math.ceil(b[1]! / CH_STEP - 0.5)), j1 = Math.min(CH_SIZE - 1, Math.floor(b[3]! / CH_STEP - 0.5));
+  let any = false;
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const k = j * CH_SIZE + i; if (f.data[k] !== 0) { f.data[k] = 0; any = true; } }
+  if (any) f.rev++;
 }
 
 /** the land's height (metres, relative) at tile (x, y): 0 with no land */

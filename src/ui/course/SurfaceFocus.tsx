@@ -15,6 +15,7 @@ import { LookDisc } from './MyLooks';
 import { lookName } from './CoursePanel';
 import { SurfaceMark } from './SurfaceMark';
 import { grassPuckImage } from './swatch-puck';
+import { MowingLines, hasMowing } from './MowingLines';
 
 export function SurfaceFocus({ game, kind, onBack, pickGrass }: { game: Game; kind: BrushKind; onBack: () => void; pickGrass: (k: number) => void }) {
   const p = game.paint, s = p.style, b = SURFACE_BRUSHES.find(x => x.kind === kind), name = b?.name ?? kind, owner = p.lookOwner;
@@ -44,6 +45,8 @@ export function SurfaceFocus({ game, kind, onBack, pickGrass }: { game: Game; ki
         <button className="chip" title={`Give every hole and the course default this ${name.toLowerCase()} look`} onClick={() => { const n = p.applyLookToAll(kind); setDone(n.length ? `On holes ${n.join(', ')} and the default` : 'On the course default'); }}>Apply to all holes</button>
         {done && <span className="sub-line" role="status">{done}</span>}
       </div>
+      {/* T359 (#1006): the surface's mowing lines (the fairway's bands, the green's stripes, the tee's and the rough's if turned on), of the look above */}
+      {hasMowing(kind) && <MowingLines game={game} kind={kind} />}
       {own && p.grasses.length > 0 && (
         <div className="mt-2" data-focus-saved>
           <div className="text-[12px] text-slate-400">Your saved grasses</div>

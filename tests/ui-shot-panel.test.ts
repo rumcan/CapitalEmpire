@@ -7,7 +7,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { ShotPanel } from '../src/ui/ShotPanel';
 import type { Game, ShotConditions, ShotState } from '../src/game/engine';
-import { carryFor, kitOf, lieView, previewShot, shapeEffect, shapeLines, slopeLines, windView } from '../src/game/golf/play';
+import { allowedClubs, carryFor, clubsOf, kitOf, lieView, previewShot, shapeEffect, shapeLines, slopeLines, windView } from '../src/game/golf/play';
 import type { Club, OwnerTurn } from '../src/game/golf/play';
 
 const turn = (lie: OwnerTurn['lie']): OwnerTurn => ({ golfer: -1, holeIdx: 0, hole: 1, par: 4, stroke: 1, t: 0, lie, ball: { x: 10, y: 10 }, pin: { x: 90, y: 10 }, distM: 160, suggested: { club: 'iron6', aim: { x: 80, y: 10 }, power: 1 } });
@@ -43,9 +43,9 @@ test('shot panel: a putt shows the green and no wind; the caddie’s ring follow
   const putt = html(game({ ...state('putter', 'green'), input: { club: 'putter', aim: { x: 90, y: 10 }, power: 1 } }, { putting: true, lie: lieView('green', 'putter') }));
   assert.ok(/On the green/.test(putt) && !/aria-label="Wind dial"/.test(putt), 'a putt: no wind');
   const ring = html(game(state('iron6'), { suggest: 'wood3' }));
-  assert.ok(/ring-amber-300\/70[^>]*>3-wood|3-wood<\/button>/.test(ring) || /3-wood/.test(ring), 'the 3-wood is among the chips');
+  assert.ok(/aria-label="3-wood"/.test(ring), 'the 3-wood is among the chips');
   const i6 = (ring.match(/<button[^>]*ring-1 ring-amber-300\/70[^>]*>([^<]*)<\/button>/) ?? [])[1];
-  assert.equal(i6, '3-wood', 'the ring is on the conditions’ club');
+  assert.equal(i6, '3W', 'the ring is on the conditions’ club');
   const none = html(game(state('iron6'), null)), off = html(game(state('iron6'), { on: false }));
   assert.ok(!/data-testid="shot-conditions"/.test(none) && !/data-testid="shot-conditions"/.test(off), 'no box without conditions or with the weather off');
   assert.equal(html(game(null, null)), '', 'no shot, no panel');
@@ -60,4 +60,23 @@ test('shot panel (part 2): the shaping row (curve and flight, the pick marked) f
   assert.equal((picked.match(/chip chip-on/g) ?? []).length, 3, 'the club and the two picks are marked on');
   const putt = html(game({ ...state('putter', 'green'), input: { club: 'putter', aim: { x: 90, y: 10 }, power: 1 } }, { putting: true, lie: lieView('green', 'putter') }));
   assert.ok(!putt.includes('data-testid="shot-shape"'), 'a putt has no shape');
+});
+
+test('shot panel (T335): the club strip is your bag: the woods, irons, wedges and putter in groups with short names, the upgraded clubs marked, only what the lie allows; a stand-in game without a bag shows the original seven', () => {
+  const clubs = (lie: OwnerTurn['lie'], tee: boolean, third: Club = 'wood5'): Club[] => allowedClubs(lie, tee, clubsOf(third === 'hybrid' ? { v: 1, third: 'hybrid' } : null));
+  const bag = (s: ShotState, list: Club[], lv: Partial<Record<Club, number>> = {}): Game => ({ ...game(s, {}), shotClubs: () => list, clubLevel: (c: Club) => lv[c] ?? 0 }) as unknown as Game;
+  const fair = html(bag(state('iron7', 'fairway'), clubs('fairway', false), { iron7: 2, driver: 3 }));
+  assert.ok(fair.includes('data-testid="club-strip"') && fair.includes('data-testid="club-group-woods"') && fair.includes('data-testid="club-group-irons"') && fair.includes('data-testid="club-group-wedges"'), 'the groups');
+  assert.ok(!fair.includes('data-testid="club-group-putter"'), 'no putter off the green');
+  const labels = [...fair.matchAll(/<button[^>]*aria-label="([^"]+)"[^>]*>([^<]*)/g)].map(m => `${m[1]}=${m[2]}`);
+  assert.deepEqual(labels.slice(0, 12), ['3-wood=3W', '5-wood=5W', '4-iron=4', '5-iron=5', '6-iron=6', '7-iron=7', '8-iron=8', '9-iron=9', 'Pitching wedge=PW', 'Gap wedge=GW', 'Sand wedge=SW', 'Lob wedge=LW'], 'the bag off the deck, longest first, 12 clubs (the driver is for the tee)');
+  assert.ok(/aria-label="7-iron"[^>]*title="Tour 7-iron"/.test(fair), 'an upgraded club says its level'); assert.ok(/Tour 7-iron: full carry/.test(fair), 'and the line under the strip names it with its level');
+  const tee = html(bag(state('driver', 'tee'), clubs('tee', true), { driver: 3 }));
+  assert.ok(/aria-label="Driver"[^>]*title="Prototype driver"/.test(tee) && tee.includes('background:#fbbf24'), 'the Prototype driver’s dot is gold');
+  const hy = html(bag(state('hybrid', 'fairway'), clubs('fairway', false, 'hybrid')));
+  assert.ok(/aria-label="Hybrid"[^>]*>Hy/.test(hy) && !/aria-label="5-wood"/.test(hy), 'the hybrid in the third wood’s slot');
+  const green = html(bag({ ...state('putter', 'green'), input: { club: 'putter', aim: { x: 90, y: 10 }, power: 1 } }, clubs('green', false)));
+  assert.ok(green.includes('data-testid="club-group-putter"') && /aria-label="Putter"[^>]*>Putter/.test(green), 'the putter on the green');
+  const old = html(game(state('iron6'), {}));
+  assert.ok(/aria-label="Sand wedge"/.test(old) && !/aria-label="7-iron"/.test(old), 'no bag in the stand-in game: the original seven');
 });

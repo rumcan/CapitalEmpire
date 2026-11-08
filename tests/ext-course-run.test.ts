@@ -30,8 +30,9 @@ function world(o: { ownX?: number; cash?: number; n?: number; changed?: (g: Grid
     ownedAt: (x: number) => x < ownX, landWhy: (x: number) => (x < ownX ? '' : 'off'), money: () => money.cash, spend: (n: number) => { money.cash -= n; },
   });
   tool.course = true; tool.setBrush('fairway'); tool.setBrushCells(o.n ?? 2); tool.setBrushRun(true);
+  const base = tool.undoLabel; // (T359: the brush's size is an undo step itself; "no ground step yet" is this label still on top)
   const cur = new CourseCursor({ canvas: mockCanvases(), why: () => tool.brushSkipWhy(), cost: () => tool.brushCellCost(), rev: () => g.rev * 64 + tool.brushHole * 2 + (tool.rubOut ? 1 : 0), money: () => money.cash, zone: o.zone ?? null });
-  return { g, tool, cur, money, toasts };
+  return { g, tool, cur, money, toasts, base };
 }
 /** a move to tile (x, y) (Shift held or not), then a click there */
 function click(tool: PaintTool, x: number, y: number, shift = false) { tool.pointerMove({ x, y }, 0, 0, shift); tool.pointerDown({ x, y }, 0, 0); tool.pointerUp(0.5); }
@@ -72,12 +73,12 @@ const view = (z = 0.3): CursorView => ({ ze: z, camX: 0, camY: 0, cw: 1600, ch: 
 // ---- the strip ----
 
 test('a straight run of 40 m by 2 cells lays 80 cells: two clicks 38 m apart (their squares make the 40 m), finished with Enter', () => {
-  const { g, tool, money } = world();
+  const { g, tool, money, base } = world();
   const before = g.surf.slice(), cash = money.cash;
   click(tool, 50.3, 60.2);
   click(tool, 69.3, 60.2); // the squares' middles 19 tiles (38 m) apart: the strip runs from the first square's far edge to the last's
   assert.equal(runLength(tool.runPts, 2), 40);
-  assert.equal(tool.canUndo, false, 'nothing is laid while the run is drawn');
+  assert.equal(tool.undoLabel, base, 'nothing is laid while the run is drawn');
   assert.equal(press(tool, 'Enter'), true);
   const got = changed(g, before);
   assert.equal(got.length, 80, '40 m by 2 cells');
@@ -179,13 +180,13 @@ test('one undo step per run (on the same stack as the Props tool\'s steps): undo
 });
 
 test('Esc drops the run in progress first (Run stays in hand), then leaves (the engine\'s, out to Select)', () => {
-  const { g, tool } = world(), before = g.surf.slice();
+  const { g, tool, base } = world(), before = g.surf.slice();
   click(tool, 30, 30); click(tool, 50, 30);
   assert.equal(press(tool, 'Escape'), true, 'the run goes');
   assert.equal(tool.runPts.length, 0); assert.equal(tool.runOn(), true, 'still Run');
   assert.equal(press(tool, 'Escape'), false, 'nothing in hand: the engine puts the tool down');
   assert.deepEqual(g.surf, before, 'nothing laid');
-  assert.equal(tool.canUndo, false);
+  assert.equal(tool.undoLabel, base);
 });
 
 test('a double-click, Enter or a right-click finishes the run; a right-drag pans and keeps it; switching surface keeps the bends', () => {
@@ -248,7 +249,7 @@ test('the footprint is what the run lays: the cells, the kept and refused ones, 
   const wb = w.g.surf.slice();
   assert.equal(w.tool.finishRun(), false);
   assert.deepEqual(w.g.surf, wb); assert.equal(w.money.cash, 50); assert.match(w.toasts.at(-1)!, /^Not enough money: Fairway run · \$[\d,]+ · you have \$50$/);
-  assert.equal(w.tool.runPts.length, 4); assert.equal(w.tool.canUndo, false);
+  assert.equal(w.tool.runPts.length, 4); assert.equal(w.tool.undoLabel, w.base);
   // Erase: the run rubs out to rough, free, dashed
   const e = world();
   click(e.tool, 30, 30); click(e.tool, 50, 30); press(e.tool, 'Enter');

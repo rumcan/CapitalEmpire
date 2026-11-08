@@ -3,6 +3,7 @@ import { MAP } from './iso';
 import { isPhotoTex, type GrassTex } from './grass-art';
 import { PRESETS, presetTex, surfacePreset } from './paint-presets';
 import type { BunkerLookFields } from './ext/bunker-look/look-settings';
+import { clampMow, type MowOpts } from './mow-lines';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the photo textures of grass-art.ts PHOTO_TEX) */
 export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}` | `upload:${string}`;
@@ -35,6 +36,9 @@ export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: nu
    *  the fill's (ox, oy), the blend's (mox, moy) and the border's (box, boy) offsets, tiles; the blend's own scale and angle (mscale, mangle:
    *  absent, the fill's). Absent: 0 (or the fill's), as every look before */
   ox?: number; oy?: number; mox?: number; moy?: number; mscale?: number; mangle?: number; box?: number; boy?: number;
+  /** T359 (#1006): a course surface's mowing lines (mow-lines.ts: on or off, the pattern, the band width, how light and dark, the angle); every field
+   *  absent is the course finish's own. Of the grass looks on the course grid (fairway, green, tee, rough); a painted area has none */
+  mow?: MowOpts;
 }
 /** T253: the Smoothness a Round off starts at */
 export const SMOOTH_DEFAULT = 0.5;
@@ -297,7 +301,7 @@ const fin = (v: number, d: number) => Number.isFinite(v) ? v : d;
 const offset = (k: string, v: number | undefined): Record<string, number> => (typeof v === 'number' && Number.isFinite(v) && Math.abs(v) >= 0.005 ? { [k]: Math.round(v * 100) / 100 } : {});
 export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
   // the blend's fields are kept only with a known texture (they are left out, not undefined, without one); the edge shade only above 0
-  const { mtex, mshare, msoft, mpatch, mscale, mangle, mox, moy, ox, oy, box, boy, shadow, round, smooth, ...rest } = st, s = rest as T, sh = Math.round(Math.min(1, Math.max(0, fin(shadow ?? 0, 0))) * 1000) / 1000;
+  const { mtex, mshare, msoft, mpatch, mscale, mangle, mox, moy, ox, oy, box, boy, shadow, round, smooth, mow, ...rest } = st, s = rest as T, sh = Math.round(Math.min(1, Math.max(0, fin(shadow ?? 0, 0))) * 1000) / 1000;
   const tone = Math.min(2, Math.max(0, Math.round(fin(s.tone, 0)))) as 0 | 1 | 2, btone = Math.min(2, Math.max(0, Math.round(fin(s.btone, 0)))) as 0 | 1 | 2;
   return {
     ...s,
@@ -326,6 +330,8 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
     // box is kept as false, so a bunker (rounded by default since 2026-10-29) the player unticked stays square across a reload
     ...(round === true ? { round: true } : round === false ? { round: false } : {}),
     ...(typeof smooth === 'number' && Number.isFinite(smooth) ? { smooth: Math.round(Math.min(1, Math.max(0, smooth)) * 100) / 100 } : {}),
+    // T359: the mowing lines when any field is set (left out otherwise, so a look with none is the finish's, exactly as every look before)
+    ...(clampMow(mow) ? { mow: clampMow(mow)! } : {}),
   };
 }
 /** copies a (clamped) style onto an area: its optional fields that the style leaves out (the blend, the edge shade) go from the area too */
@@ -336,6 +342,7 @@ export function assignStyle(a: PaintArea, st: Omit<PaintArea, 'id' | 'pts'>): Pa
   if (!st.shadow) delete a.shadow;
   if (!st.round) delete a.round;
   if (st.smooth === undefined) delete a.smooth;
+  if (!st.mow) delete a.mow;
   return a;
 }
 

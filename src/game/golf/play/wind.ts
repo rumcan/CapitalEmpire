@@ -22,7 +22,7 @@ export const CALM_MPH = 2.5;
 
 /** how a club feels the wind (1: the driver's long, high flight; the wedges fly short, so less of it), and the multiplier of a shot's flight (a low shot 0.6,
  *  a high one 1.3: T334 part 2's shaping; a bunker shot comes out high: lies.ts high) */
-export const WIND_CLUB: Readonly<Record<Club, number>> = { driver: 1, wood3: 1, iron4: 0.95, iron6: 0.85, iron8: 0.75, pw: 0.65, sw: 0.55, putter: 0 };
+export const WIND_CLUB: Readonly<Record<Club, number>> = { driver: 1, wood3: 1, wood5: 0.98, hybrid: 0.96, iron4: 0.95, iron5: 0.9, iron6: 0.85, iron7: 0.8, iron8: 0.75, iron9: 0.7, pw: 0.65, gw: 0.6, sw: 0.55, lw: 0.5, putter: 0 };
 /** the wind's numbers, per mph and per unit of exposure: the sideways drift as a share of the carry (0.6%: a 10 mph crosswind moves a 200 m drive 12 m), the
  *  carry lost to a headwind (0.9% a mph: 10 mph costs a driver 9%) and gained from a tailwind (half of that) */
 export const WIND_K = { cross: 0.006, head: 0.009, tail: 0.0045 } as const;

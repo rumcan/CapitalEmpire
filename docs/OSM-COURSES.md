@@ -261,9 +261,13 @@ flat ground, exactly as before. The library keeps the raw tiles (like the raw Ov
    A course with no elevation data still gets its greens' tilt.
 7. `?land=0` (dev, and the bench's `--land 0`) leaves the land and the tilt out: the flat plain as before T357.
 
-For T356 (placing a course into a running game): `layLand(spec, land, at, { frame })` returns a patch (`LandPatch`) of the lattice, with the skirt fading it into the ground round it,
-that `addLandPatch` adds into the field (a second course's skirt may overlap the first's and the two add). A turned spec passes `frame`: the map from a tile of its (turned) frame to the
-stage-1 metres (the inverse of `rotateSpec`); `landWindow(spec)` is the metres box a download must cover (a turned land needs its bounding box). `designGreens(spec, at, field)` takes the same `at`.
+**A course placed into a running game (T356, `layRealCourse`)** gets its ground too (`Game.layPlacedLand`): `layLand(turned, land, { x: plan.ox, y: plan.oy }, { frame: turnedFrame(spec, turned, deg) })`
+reads the land through the turn (the turned frame's tile is turned back about the middle of the frame and read in the converted spec's frame: the heights turn with the course; tested: the rise from tee to pin is
+the same at 60 degrees), `clearLandIn` takes away what an older course laid inside the new rectangle (the skirts round it simply add), `addLandPatch` adds the new patch, and `designGreens` tilts its greens. The
+land comes with the course: a shipped one from its fixture (`startRealPlace` loads it), a downloaded one from the picker's **Real ground height** box (**Place it in my map** goes through the same step as Build
+this course, with the window that holds the land however it is turned: `landWindow(spec, SKIRT_T, true)`, a square about the land's middle, up to 16 tiles), and a downloaded one chosen from the menu's list only when the
+library already holds every tile it needs (nothing is asked for from a menu). Without a land it is placed flat, with its greens' tilt. The patch's box and the greens' go to the workers (`courseHeightChanged`), the
+save keeps the sum (`golf.land`).
 
 ## What reads it, and what does not
 | reads land + course height | reads the course height alone |
@@ -361,5 +365,115 @@ model against the script's) and `node scripts/dev/osm-search-shots.mjs` (a headl
 Outline only, a 429, the library across a reload, Delete). The fixtures in `tests/fixtures/osm/` are real answers (ODbL data, credit above).
 
 ## Still to do
-Place an imported course into the current map instead of starting a new game (T356, #998); estate streets and house lots on imported courses (T354, T353); choose which of two full courses of one
+Estate streets and house lots on imported courses (T354, T353); choose which of two full courses of one
 boundary to build (the converter builds the fullest; the others are named in the warnings); a Par 3 course of a boundary; cropping a too-big course instead of scaling it.
+
+---
+
+# Placing a real course into a game under way (T356, #998)
+
+The owner, 2026-11-08: "add a way for the user to place the golf course he imported into his map, seeing a outline and then having to rotate the course to fit.
+it should auto buy any property or expand the map size so he can place the course. the placing highlight can turn red if you cant place it coz you dont have
+enough money. It should auto build over other roads and buildings by buying the land and destroying everything under it. Add a notification pop up."
+
+**Use:** Course › *Place a real course…* › Rondebosch / Magnolia National / Woodhill (*Featured*) and, under *Downloaded courses*, every course the player fetched with the
+new-game card's search (T358, kept in this browser's IndexedDB: the list is read when the page starts and again each time the Course flyout opens, so a course downloaded on the
+card is there at once; none downloaded: no caption, the three alone). The course's outline follows the pointer; R / Shift+R (or Shift+wheel) turn it
+15 degrees, Alt+R one degree, Alt+wheel freely; a click asks (the pop-up), *Place it* lays it, *Cancel* (or Esc, or a right click) leaves everything as it was.
+A map-data game (`?osmcourse=`, the new-game card) is unchanged: it still lays the course on a new flat map.
+**From the new-game card's search** (T358): the preview that opens after a name is searched or a downloaded course is opened has **Place it in my map** under **Build this course** (the owner, 2026-11-08:
+"place the imported course with the placing mode, and back out if they decide not to use it, rather than starting a new game straight away"). Build starts a new game on the course, as before. Place keeps
+the game's map: the card hides (it stays mounted, so the picker is as it was), the course goes in hand (`Game.startRealPlaceSpec`, `RealPlacer.startSpec`), and Esc, a right click or the placing
+card's Cancel puts it down and brings the card back on the same preview, nothing bought and no new game; Place it lays it on the game's own map, the card returns with its Your course row naming the
+course and the picker closed. (On the card the game is the one just started: its money may not cover a course; the outline is red then, and the price says so.)
+A downloaded course is read back from the library and converted as a new game would convert it (`previewOfKept`: scaled to the map when it must be; holes worked out from the fairways
+marked as a guess in the saved game's note, `derived`); it goes through the same plan, pop-up and laying, saved with its library id (`way/4261725`) and `placed`.
+
+| piece | file |
+| --- | --- |
+| the turn: `rotateSpec(spec, deg)` (about the middle of the land, before rasterising; never a mirror; the holes' order, lengths and pars untouched; `rot` and `outline` on the turned spec), `coverStrips` (the land bought), `coverOutline`, `firstFittingAngle` | `src/game/golf/osm/rotate.ts` |
+| the plan of a pose: `planPlace(world, turnedSpec, pose, build)`: land, demolition, refusals, price; `popupText`, `priceLines`, `placeLabel` | `src/game/golf/osm/place.ts` |
+| the grid diff that lays the painted course into the game's course grid and clears the old holes; the build price from the painted spec | `src/game/golf/osm/placegrid.ts` |
+| the mode (state, keys, drawing of the outline and the faint holes, the pop-up's view; `RealInfo`, `realInfoOf`, the host's `kept` for a downloaded course) | `src/game/golf/osm/placer.ts` |
+| the downloaded courses for the menu (the library's list kept for the flyout, `refreshKept`, `keptCourses`, `watchKept`) | `src/game/golf/osm/kept.ts` |
+| the engine's host: the world the planner reads, the lay (`Game.layRealCourse`), the pointer, keys, wheel, Esc | `src/game/engine.ts` (`real`, `realWorld`, `layRealCourse`) |
+| the Course menu entry; the card over the map and the pop-up | `src/ui/flyout-menu.ts`, `src/ui/course/RealPlaceCard.tsx`, `src/App.tsx` |
+| tests | `tests/golf-osm-place.test.ts`, `tests/golf-osm-placer.test.ts`, `tests/golf-osm-kept.test.ts`, `tests/ui-course-picker.test.ts` (Place it in my map), `tests/tile-cache.test.ts` (the draw-time trim) |
+| shots; bench | `scripts/dev/real-place-shots.mjs`; `scripts/dev/real-place-kept-shots.mjs` (a downloaded course on the menu and from the new-game card); `scripts/perf/bench.mjs --realplace <id>[,laid]` |
+
+## How it decides (planPlace)
+- **The land bought is a cover of the turned land**: the game's ownership is a list of axis-aligned rects (and the build grid's shader takes 32 of them), so a turned
+  land is covered by at most 18 horizontal strips as wide as the land is in each (rounded outward); an unturned land (0, 90, 180, 270 degrees) is one rect, exactly itself.
+  The outline shown is the cover, so what you see is the land you get (about 6 to 10% more than the oriented rectangle at 15 to 45 degrees). The strips join `golf.parcels`
+  and are kept apart in `golf.courseRects`: Land for sale sees them as one box (its search for blocks grows with the square of the rects) and the survey lines leave them be.
+- **Price** = land + demolition + the course laid. Land: each piece of the cover, cut at the 40-tile blocks Land for sale uses, less what you own, at the rate of its block's
+  class (farm 1, open 1.25, town 2, industrial 3, commercial 4 dollars a m2, `golf/parcels.ts`), plus the town's growth (5% a thousand people above the first). The
+  buildings under it are bought out at their compensation (`budget.ts compensation`, the bulldozer's price), the public roads at their value (length x class cost x kind) as
+  compensation too; the club's own cart paths and drives go free. The course laid: its painted surfaces at the paint tool's seed price (`golf/costs.ts unitBuildCost`).
+- **A lot with no road is cleared too and counted**: a built lot outside the cover whose frontage lost its road (the piece it fronted lies in the cover), or whose road no longer
+  reaches the county road (the cut stranded it), is bought out with the rest and listed in the pop-up.
+- **Red (the outline hatched, the reason by the pointer)**, in the order they are told: off the map (4 tiles to spare; "the map cannot grow"), a tournament under way, over the club's own
+  buildings, car parks, range, practice area, tournament structures or an iconic place, within 26 tiles of the town's centre, a cut that leaves the town's centre or the clubhouse with no
+  way to the county road, and last the river: a hole's green with a corner or its middle on the river, a tee marker or a pin on it, or a hole whose line runs more than a quarter of its
+  length along it ("The river runs over hole 7's green"). Short of money: red too, "Not enough money: $X (short $Y)".
+- **The river**: a generated valley has water (`TC.WATER`, about 3% of the map) in every 700-tile window, so "red over any river tile" (`RIVER_RULE = 'cover'` in place.ts) would never let
+  a course be placed. The default (`'features'`) lets the river run through the course: the cells on river tiles are left unpainted (`placeDiff`'s `wet`), so the map's river keeps flowing
+  across the fairways and roughs, and only what a hole cannot do without (its green, its tee marker, its pin, a fairway along the water) refuses. Creeks and banks are painted over.
+- **Over what is there**: the player's own placed items go for nothing; town trees and forest go as the course grid's new surfaces take their ground; a tunnel is left
+  (it runs under the land).
+
+## Laying it (Place it)
+Buys out the lots (the worker pays their compensation), pays the land, the roads and the course, cuts the road pieces inside the cover (`NetEditor.removePiece`; the ends outside
+are dead ends, trimmed by the bulldozer's `tidyEnds`), removes the player's placed items, adds the cover to the land (`fitCourseGrid`, `sendGolf`), applies **one `GridDiff`**
+through the grid's own pipeline (`applyDiff`, `courseGridChanged`: the workers' cells, the ground that re-bakes itself, the trees that go), clears the old course's holes,
+puts the tee sets, pins and aim points, and saves `golf.osm` with `placed: true` and `turn` (the loader then keeps the game's own map and seed; a new-game map-data
+course has no `placed` and is laid on the flat map as before). Your previous holes are **replaced** by the course's (the pop-up says so); the land they stood on stays yours.
+The camera then goes over the whole land, and the ground cache drops the chunk pictures the next frame does not draw (`GroundCache.purgeUnused`): they are the old place's ground, and the first
+bakes over the new land need the memory (see Performance).
+
+## Performance (the bench, T356)
+`node scripts/perf/bench.mjs http://localhost:5189/ --start town --seed 7 --stamp 1 --money 1 --size 1 [--realplace rondebosch | --realplace rondebosch,laid] [--zooms 30,30]` on a dev server, 1600 x 900,
+RTX 3080, the merged branch, the old start's town at pop 933 (372 built lots, 129 road pieces, 9 holes of its own). **Use `--seed 7` (or 2, 5, 10, 12, 13): `--seed 1` gives no old start, so the game
+takes a random map (the T340 table above says `--seed 1`).** The budget is 8 ms of main thread a frame. Main-thread ms a frame, average / p95:
+
+| | 30% pan | 15% pan |
+| --- | --- | --- |
+| no course placed (the game as it is) | 0.86 / 1.2 (55.6 fps) | 0.91 / 1.3 (59.2 fps) |
+| in hand, A/B on one page: off (no course) | 0.68 / 0.9 | 0.84 / 1.1 |
+| in hand, the pointer still (the outline and faint holes drawn, the plan kept) | 0.75 / 1.0 (+0.07 ms) | 0.87 / 1.1 (+0.02 ms) |
+| in hand, the pose moved a tile every frame (a replan every frame: the worst a pointer can do) | 1.42 / 1.9 (+0.73 ms) | 1.44 / 1.8 (+0.60 ms) |
+| Rondebosch placed, the first pass over it (two runs) | 1.05 / 1.6 (26.4 fps), 1.07 / 1.8 (26.9 fps) | 1.15 / 1.8 (49.5 fps), 1.15 / 1.7 (50.7 fps) |
+| the game as it is, the same day (the base run that goes with them) | 0.80 / 1.2 (58.8 fps) | 0.81 / 1.2 (59.1 fps) |
+
+**Memory: the chunk pictures plus the tile caches** (`groundPlusTilesPeakMB` of the bench, MB of 1e6 bytes; GAME-PLAN 2.3's budget is 192; the most over the frames of a stage), the same command:
+
+| | 30% pan | 15% pan |
+| --- | --- | --- |
+| placed, before the fix (two runs) | 198, 198 | 191, 195 |
+| placed, after (two runs) | **185, 185** | **185, 186** |
+| the game as it is (before / after: nothing placed, the cache change only) | 185 / 186 | 189 / 185 |
+
+- **The main thread is nowhere near the budget.** What costs frames after placing is the ground, off the main thread: the first pass over the new course bakes its chunks (median bake 56 to 62 ms
+  against 37) and decodes its textures (109 to 124 tile pictures against 16 to 24 as it is; 18 in the 15% pass), as T340's new-game courses do.
+- **Two things held the first pass over 192 MB, both fixed.** (1) The old town's chunk pictures (about 46 MB, mostly the ground of the place the camera had left) stayed resident beside the first bakes over the
+  new land, and a chunk of a course lays a dozen tile sets: its bake pins about 150 MB of tile pictures in the one ground worker at once (198 MB = 46 + 151.7). `layRealCourse` now calls
+  `GroundCache.purgeUnused()`: the next frame drops every chunk picture it does not draw (a few dozen `deleteTexture` calls once; the frame costs are below), the tile budget
+  (what the chunk pictures leave of the 192) grows by as much, and the first pass redecodes less (109 to 124 decodes, 101 to 116 of them redecodes, against 158 to 179 and 150 to 177).
+  (2) The mips and pre-scaled copies (the swamp's) a bake makes while it draws were counted after the bake, so a full cache stood up to 9 MB past its budget at the end of a bake (145 MB against 136):
+  `TileCache.pinOf` (wired to `Textures.tilePinned`, the bake in hand's tiles) now trims the least recently used pictures of the other tiles at once when a draw makes one, the same pictures
+  the trim after the bake would have dropped (`tests/tile-cache.test.ts`). No bake lost a tile to it: `groundProvisional` (bakes that fell back to a placeholder for a tile not ready) stays 0.
+- **What is left.** The sum is the chunk pictures plus the tile caches, the second held to what the first leaves less 8 MB (`TILE_SLACK`), so a full cache sits at about 184 MB and a bake whose
+  pinned tiles alone are bigger than its share (a chunk with every surface of a course on it) can still reach past it for the length of that bake, more when the chunk pictures have filled
+  their own 128 MB budget in a long session (the floor of the tile budget is what that budget leaves, 64 MB). That is the design of T272, the same in the game as it is (185 to 189 MB above); a
+  bound on the tiles one bake may pin (two passes by layer, or the chunk pictures giving way to the overflow) is a ticket of its own.
+- **Laying it** costs 268 ms of main thread in the bench (about 750 ms from the click to the next frame in the shots: the grid diff of every painted cell of the course, then the ground's re-bake in the workers).
+- **The plan** (`planPlace`) on a synthetic town: 3,750 lots and 1,250 road pieces 1.3 to 2.1 ms a pose, 12,150 lots and 4,050 pieces 3.6 to 5 ms (the lots' boxes, the land classes and the road graph are kept
+  between poses; `output/plan-bench` is not committed). It runs when the pose changes, never for a pointer that holds still.
+
+## Left out, and for the lead to decide
+- **The map cannot grow.** `MAP = 1024` is a compile-time constant of the engine (typed arrays, the terrain, the workers), so "expand the map" is not offered: a course that fits
+  in no turn is refused with a message that suggests a smaller or a scaled course (`specOf` already scales Woodhill to 90%; true size needs 1079 tiles). Woodhill at 90% is 976 x 529 tiles: it fits the 1016 usable tiles only at 0, 90, 180 and 270 degrees (and within 4 degrees of them); Rondebosch and Magnolia fit at every turn.
+- **Rerouting around the course** is not done: a cut road ends at the boundary (and the lots it leaves roadless are cleared and counted, the way to the county road is kept by refusing a
+  cut that would lose it). A detour needs the road builder's snap and crossing rules on public land; the pop-up's text says what happens.
+- **Estate streets (T354)** are not in lead/live's converter, so none are laid.
+- The cover's extra land and the rect budget (18 strips, 32 in the shader) are choices: a finer cover costs rects the build grid cannot take.

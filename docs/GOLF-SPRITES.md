@@ -451,3 +451,24 @@ at 145°, nothing mirrored, each picture in the four views:
 | --- | --- | --- | --- | --- |
 | Pin flag sheet (`golf:pin-flag-wind`, 8 frames x 4 wind directions: S, W, N, E; strengths limp, light, firm) | 0.1 m / 2.2 m | `business:golf-pin-red` with the shader's ripple | a red flagstick cloth in four wind directions, each as limp, a light breeze and a firm wind (8 frames of the ripple loop), the white pole and the black base the same in every frame | P2 |
 | Tree sway sheet (`golf:tree-sway`, 4 frames) for the common trees | as each tree | the shader's shear | the same tree with its crown leaning left, upright and right in a gust (4 frames loop), the trunk fixed | P3 |
+
+## Your bag's club icons (T335, #961: art requests)
+The bag card (`src/ui/golf/BagCard.tsx`) and the shot panel's club strip draw each club as a small SVG stand-in (`src/ui/golf/ClubIcon.tsx`, labelled "Stand In for club icons" on the card): a shaft
+and a head by the club's family, the head tinted by its upgrade level (Garage-sale slate, Club sky, Tour green, Prototype gold). The real pictures, one square icon each on the owner's gold-on-charcoal UI
+style, the sun at the upper right, nothing mirrored, 64 x 64 px, the club standing at 20 degrees with the head at the lower left:
+| Sprite (id to use) | Today | Prompt (short) | P |
+| --- | --- | --- | --- |
+| Driver, 3-wood, 5-wood icons (`ui:club-driver`, `ui:club-wood3`, `ui:club-wood5`) | `ClubIcon` wood | a golf wood with a large rounded head, a black graphite shaft and a leather grip, lit from the upper right, on a charcoal square | P2 |
+| Hybrid icon (`ui:club-hybrid`) | `ClubIcon` hybrid | a hybrid rescue club, a small rounded wood-iron head | P2 |
+| Irons icon (`ui:club-iron`, one drawing for the 4- to 9-iron, the number is the tile's text) | `ClubIcon` iron | a cavity-back iron with a steel head and shaft | P2 |
+| Wedges icon (`ui:club-wedge`, for the PW, GW, SW and LW) | `ClubIcon` wedge | a wedge with a rounded toe and grooves on the face | P2 |
+| Putter icon (`ui:club-putter`) | `ClubIcon` putter | a blade putter, flat head, vertical shaft | P2 |
+| Level frames (`ui:club-level-0..3`: Garage-sale, Club, Tour, Prototype) | the tile's border colour | four tile frames: worn slate, sky steel, emerald enamel, gold foil | P3 |
+| Putter shafts and heads (`ui:putter-shaft-*`, `ui:putter-head-*`: stock steel, whippy graphite, stiff counter-balanced; blade, mallet, lie-angle balanced) | text only | six small parts icons | P3 |
+
+## Place a real course (T356, #998: an art request)
+Course › *Place a real course…* is a row of the Course flyout with the generic trophy glyph today (no tile art; its three courses are rows with the pin glyph). Same tile rules as
+the Course flyout's other tiles (`ui/tool-tiles.ts ROW_TILE`, art 174: the 4:3 illustrated square, the sun at the upper right, shadows at 145°):
+| Sprite (id to use) | Size | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Course flyout tile "Place a real course" (`ROW_TILE.real`) | 4:3 tile | the trophy glyph | an aerial view of a real golf course's outline laid over a town's streets, a green dashed boundary and a few fairways and greens drawn faintly inside it, a small rotate arrow at one corner | P3 |
