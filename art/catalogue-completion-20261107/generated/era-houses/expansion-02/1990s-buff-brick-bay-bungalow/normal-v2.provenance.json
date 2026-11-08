@@ -1,0 +1,21 @@
+{
+  "key": "1990s-buff-brick-bay-bungalow",
+  "family": "normal",
+  "condition": "modern-era",
+  "version": 2,
+  "target": "generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/normal-v2.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/normal-v1.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\normal-world-v1.png"
+  ],
+  "prompt": "PRECISE architectural opening correction to REFERENCE1 four-view finished house sheet. ONLY the TWO REAR views TOP-RIGHT and BOTTOM-LEFT: replace the erroneous broad rear patio sliding-glass-door opening with the single normal-width kitchen/service door and THREE fixed rear windows in the exact positions shown in reference2. REFERENCE2 rear facade is architectural authority. Preserve the front bay window, front door, chimney, roof and all other walls. The rear has THREE window units, one ordinary single door; no broad patio slider. Keep exact four cameras, building silhouettes, fine painted materials, window frames, wall textures, lightsOFF, scale, colors and all alreadycorrect cells unchanged. Reference2 is technical position guide only; do not make the finished picture lowpoly. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT. Genuinezeroalphatransparentbackground/gutters, complete sprites and broad margins. No additional scenery, groundplate, labels or UI.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0d4ea2ae-ed7c-4252-87f6-2f99eaeb2d80.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/normal-v1.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\normal-world-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+  "native_bytes_preserved": true
+}

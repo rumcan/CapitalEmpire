@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:static-shop_brick_rear-04db4dfa-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-static-shop_brick_rear-04db4dfa-plain-1/NE.png",
+  "sourceSha256": "a31bc0d0ee945170f771973c3c7de655c550599f3a493c1dbb08a49744686487",
+  "output": "identity-references/variation-static-shop-brick-rear-04db4dfa-plain-1-e77cbcf9/source.png",
+  "outputSha256": "a31bc0d0ee945170f771973c3c7de655c550599f3a493c1dbb08a49744686487",
+  "width": 537,
+  "height": 522,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      537,
+      522
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-static-shop_brick_rear-04db4dfa-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "blocked",
+    "integrationReason": "Rear C has upper sash and boarded lower window on SE RIGHT, but SW LEFT is blank. SW needs actual opposite rear corner retaining C features."
+  },
+  "sourceRegistration": {
+    "id": "variation:static-shop_brick_rear-04db4dfa-plain:1",
+    "version": "variation-static-shop_brick_rear-04db4dfa-plain-1-4views-v1",
+    "files": {
+      "NE": "a31bc0d0ee945170f771973c3c7de655c550599f3a493c1dbb08a49744686487",
+      "SE": "7f3cefec56c8e49dc739e846115f0cba59bd04ff1c79bb8e485d8a6c6707ad41",
+      "SW": "8cb3d673999351cae9fcd1ebd021f898502a84495fbf60306ae725ce3e27a192",
+      "NW": "9d4ec09d4ed3295089aba08c4cc1f2b37ae21496cce430292770798e5f2a614c"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.179688,
+      0.171875,
+      0.31543,
+      0.311523
+    ],
+    "crop": {
+      "left": 368,
+      "top": 352,
+      "width": 278,
+      "height": 286
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-static-shop_brick_rear-04db4dfa-plain-1.native.png",
+    "nativeSha256": "230d9ddfc949f66a8b37f3aeeb9b1a290f5bab47a29cb525e599f0b44e50d4a3"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

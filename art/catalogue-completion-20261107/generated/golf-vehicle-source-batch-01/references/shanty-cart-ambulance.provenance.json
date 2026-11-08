@@ -1,0 +1,25 @@
+{
+  "runtimeSubjectId": "newprop:shanty-cart-ambulance",
+  "runtimeName": "Shanty cart ambulance",
+  "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shanty-cart-ambulance.source.png",
+  "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+  "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+  "sourceSheetSHA256": "2ae188510ab3dc9ac7e769c01de83b3fdfdac8d9a58bce0168b413cbd062fbf6",
+  "cropRectXYWH": [
+    663,
+    150,
+    582,
+    513
+  ],
+  "sourceCell": "top right",
+  "pngSHA256": "71e858d3ada858ddca62181c1ccf6f619c1927dd94b92c5a91ac643c323123a2",
+  "rgbaSHA256": "7cf534f52e181f1ccdb24964b56dc9a86da5354942d053a304c4149d6f3ce96e",
+  "cropPixels": [
+    582,
+    513
+  ],
+  "sourceMetadataCutOff": false,
+  "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+  "visualInspection": "inspected native crop",
+  "actualIdentityNotes": "Deferred ninth variant: same actual medical stretcher-cart role as cart-ambulance but raw-board rear bed and canopy alterations. Ordinary-budget redesign remains needed for this exact ID; not counted complete."
+}

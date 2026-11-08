@@ -1,0 +1,44 @@
+[
+  {
+    "key": "town-school-shuttle-bus",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-3c2e6938-0611-4ff9-a918-f2b7b4e39986.png",
+    "target": "generated/vehicles/town-school-shuttle-bus/right-elevated-v1.png",
+    "prompt": "Paint EXACT camera view fromREFERENCE1 as the exact yellow schoolbus inREFERENCE2. ONE SINGLE bus only, nose exactly SCREEN RIGHT, longaxis horizontal, orthographic30degreesDOWNfromABOVEside so roof appearsasbroadplane and wheelsellipses0.866height/width. Do notturnnose diagonallytowardcamera. Reference2iscorrectsamephysicalsideidentity andpaintedstyle; preserveconventionalfrontbonnet/bodylength/blackrubrails/passengerwindows/roofvents/wheels. This rightward-facing view shows DRIVER LEFT SIDE, with exactlyONE red STOPpaddle nearfront and NO passengerentrydoor. NeverputdoorandSTOPpaddleonthesameside. No occupants/brands, no groundplate, road, haze, UIorgrid. Natural late-afternoonDAYTIME sunlightSCREENUPPERRIGHT, shadowsLOWERLEFT, unlitlamplenses. Onecompleteopaquehandpaintedminiaturebus centredwithamplemargin on TRUEzeroalpha transparentbackground. Do notcopyboxshapeofthetechnicalproxy: itprovidescameraonly.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/camera-calibration-refs/right-camera-only.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/camera-calibration-refs/right-corner-identity.png"
+    ],
+    "status": "isolated view correction candidate; independent QA pending",
+    "runtime_imported": false,
+    "sha256": "cf2ce10402ac69ed838c290af5f75603dd6c9675b84c4f5f18dff69b56a9b6a4",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-school-shuttle-bus",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-ce1f01fe-d896-43c2-8f4a-4131dabc6740.png",
+    "target": "generated/vehicles/town-school-shuttle-bus/left-elevated-v1.png",
+    "prompt": "Paint EXACT camera view fromREFERENCE1 as the exact yellow schoolbus inREFERENCE2. ONE SINGLE bus only, nose exactly SCREEN LEFT, longaxis horizontal, orthographic30degreesDOWNfromABOVEside so roof appearsasbroadplane and wheelsellipses0.866height/width. Do notturnnose diagonallytowardcamera. Reference2iscorrectsamephysicalsideidentity andpaintedstyle; preserveconventionalfrontbonnet/bodylength/blackrubrails/passengerwindows/roofvents/wheels. This leftward-facing view shows PASSENGER RIGHT SIDE, with exactlyONE folding frontpassengerentrancedoor bybonnet and NO STOPpaddle. NeverputdoorandSTOPpaddleonthesameside. No occupants/brands, no groundplate, road, haze, UIorgrid. Natural late-afternoonDAYTIME sunlightSCREENUPPERRIGHT, shadowsLOWERLEFT, unlitlamplenses. Onecompleteopaquehandpaintedminiaturebus centredwithamplemargin on TRUEzeroalpha transparentbackground. Do notcopyboxshapeofthetechnicalproxy: itprovidescameraonly.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/camera-calibration-refs/left-camera-only.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/camera-calibration-refs/left-corner-identity.png"
+    ],
+    "status": "isolated view correction candidate; independent QA pending",
+    "runtime_imported": false,
+    "sha256": "1f18d9a5ac7a8999f077186a74e6117bdba4910623e02c345c008e00aa6886b1",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "2010s-brick-white-clad-townhouse-pair",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-5c9f6340-1cd5-4c35-b958-e57efd1a240f.png",
+    "target": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-W-v2.png",
+    "prompt": "Paint ONLY the exact SINGLE house view in REFERENCE1 using the identity/materials of REFERENCE2. A2010sattachedtownhousePAIR, brickgroundfloor/whiteuppercladding, darkgable roof withTWOsmallvents, two smallwindowsstackedonthisprimaryGABLEface. Reference1definesEXACT30degree-downcamera/8degreeoffset and visiblewalls: thinSCREENRIGHTside is the REARwithglasspatiodoors, NOTthefront. NO frontdoors/entranceawnings on thatRIGHTsliver. Frontawningsonlyprojectasverysmallhiddenleft-edgeprotrusionswhereguide1shows. Reference2showscorrectwindowedgableplusrearidentitywithtwoglasspatiodoors, nofrontentrances, so preserveit. Samegeometry/roofproportions/framecountasguide1, keepgroundbottomedgetilt0.07027slope. Detailedhandpaintedminiaturematerials, lateafternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, opaquespriteonTRUEzeroalpha transparentbackground, no scenery/people/cars/grass/groundplate/labels/text/haze.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/repair-references/W-camera-only.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/repair-references/rear-gable-identity-only.png"
+    ],
+    "status": "isolated view correction candidate; independent QA pending",
+    "runtime_imported": false,
+    "sha256": "25aff37c8e06d14e3d73b3eb4f91db0e52b978e6b4ca26096c6ee3cccaefd706",
+    "native_bytes_preserved": true
+  }
+]

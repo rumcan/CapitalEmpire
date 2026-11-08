@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-corner-shop-2ffc6ab7-plain-1/NE.png",
+  "sourceSha256": "c4d8525a59a289a3eca87dbd871fde20cd32ca35d4d9756057f5fe7723dbcef8",
+  "output": "identity-references/variation-ref-building-corner-shop-2ffc6ab7-plain-1-3a76fc47/source.png",
+  "outputSha256": "c4d8525a59a289a3eca87dbd871fde20cd32ca35d4d9756057f5fe7723dbcef8",
+  "width": 499,
+  "height": 457,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      499,
+      457
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-corner-shop-2ffc6ab7-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Native edge re-review shows complete physical silhouette; original boundary warning concerns antialias fringe only. Exact-pixel component extraction adds ample transparent padding, preserving all nonzero source RGBA tuples. All4 views, magenta post-repack composite, theme and clean alpha audit reviewed."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+    "version": "variation-ref-building-corner-shop-2ffc6ab7-plain-1-4views-v2",
+    "files": {
+      "NE": "c4d8525a59a289a3eca87dbd871fde20cd32ca35d4d9756057f5fe7723dbcef8",
+      "SE": "cb0a202678ce28a29847f869668ac1f1183b91619e1fc398bf27979f5ee85c89",
+      "SW": "ef3e0b6855434468b1177ba69e72fd3d0a578249f9bc5f0afb0d0d75a9a7ab15",
+      "NW": "91b054c7c6275507984881580dbbab07efc72479827d127917b9aa121777f105"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.765625,
+      0.429688,
+      0.937988,
+      0.615723
+    ],
+    "crop": {
+      "left": 1568,
+      "top": 880,
+      "width": 353,
+      "height": 381
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-corner-shop-2ffc6ab7-plain-1.native.png",
+    "nativeSha256": "905df8fda71c117bcf86658de463f02825b313a3fa1dfb9dddaacf8c9cb9c1e1"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

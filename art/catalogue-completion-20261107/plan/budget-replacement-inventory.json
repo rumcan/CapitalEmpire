@@ -1,0 +1,2489 @@
+{
+  "date": "2026-11-07",
+  "scope": "read-only golf facility audit",
+  "counts": {
+    "shantyNamedNewprops": 21,
+    "broadBudgetNewprops": 54,
+    "broadBudgetHardProps": 53,
+    "broadBudgetCharacters": 1,
+    "separateNonplantBudgetAssets": 7,
+    "rawShantySheetsIncludingV2": 29
+  },
+  "selectedBudgetNewprops": [
+    {
+      "id": "newprop:tarp-market-stall",
+      "name": "Tarp market stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/tarp-market-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        28,
+        84,
+        640,
+        574
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shack-stall",
+      "name": "Shack stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shack-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        657,
+        12,
+        581,
+        690
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:cooler-drinks-stall",
+      "name": "Cooler drinks stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/cooler-drinks-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        46,
+        683,
+        608,
+        511
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:course-worker",
+      "name": "Course worker",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/course-worker.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-27a57f45-a13b-4b8f-8165-4420f80adb1a.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        856,
+        693,
+        217,
+        528
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "character",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Person: preserve established appearance/wardrobe; contextual full-body art and portrait. Not a building.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shack-map-board",
+      "name": "Shack map board",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shack-map-board.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        50,
+        51,
+        541,
+        576
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Straight manufactured painted timber/steel fixtures, period manual board or analog instrument, restrained wear; preserve reading direction and real front/back.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:tool-stall",
+      "name": "Tool stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/tool-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        637,
+        31,
+        605,
+        601
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:toilet-booth",
+      "name": "Toilet booth",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/toilet-booth.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        50,
+        628,
+        561,
+        576
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Clean but old ordinary cabin, canvas service tent, galvanized water equipment or period utility vehicle. Plain square manufactured geometry and usable access.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:water-tank-stall",
+      "name": "Water tank stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/water-tank-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        710,
+        683,
+        507,
+        516
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Clean but old ordinary cabin, canvas service tent, galvanized water equipment or period utility vehicle. Plain square manufactured geometry and usable access.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:tarp-seating",
+      "name": "Tarp seating",
+      "category": "New: Seating",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/tarp-seating.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-46837a48-e6e7-40d3-9a02-15a10247bf2d.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        32,
+        1,
+        653,
+        646
+      ],
+      "currentHx": 1.5,
+      "currentHy": 1.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shirt-stall",
+      "name": "Shirt stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shirt-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        30,
+        79,
+        602,
+        550
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:cap-stall",
+      "name": "Cap stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/cap-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        664,
+        44,
+        569,
+        636
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:tarp-counter",
+      "name": "Tarp counter",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/tarp-counter.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        33,
+        640,
+        619,
+        549
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:club-badge-stall",
+      "name": "Club badge stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/club-badge-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-58c655f1-c155-4e0e-90c4-b1c3f55242c9.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        688,
+        641,
+        555,
+        552
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-hut",
+      "name": "Shanty hut",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-hut.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        71,
+        15,
+        793,
+        510
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:gate-arch",
+      "name": "Gate arch",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/gate-arch.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        888,
+        35,
+        608,
+        504
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-stall",
+      "name": "Shanty stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        99,
+        515,
+        739,
+        484
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-counter",
+      "name": "Shanty counter",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-counter.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        932,
+        538,
+        535,
+        466
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-range-bay",
+      "name": "Shanty range bay",
+      "category": "New: Range",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-range-bay.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        13,
+        26,
+        668,
+        568
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:snack-shack",
+      "name": "Snack shack",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/snack-shack.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        48,
+        29,
+        600,
+        617
+      ],
+      "currentHx": 1.8,
+      "currentHy": 1.8,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:drinks-cart",
+      "name": "Drinks cart",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/drinks-cart.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        724,
+        44,
+        465,
+        614
+      ],
+      "currentHx": 1.8,
+      "currentHy": 1.8,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:snack-stall",
+      "name": "Snack stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/snack-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        57,
+        638,
+        599,
+        582
+      ],
+      "currentHx": 1.8,
+      "currentHy": 1.8,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:snack-trolley",
+      "name": "Snack trolley",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/snack-trolley.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        739,
+        656,
+        489,
+        566
+      ],
+      "currentHx": 1.8,
+      "currentHy": 1.8,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:wooden-bleacher",
+      "name": "Wooden bleacher",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/wooden-bleacher.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-9e6854dc-a046-457b-a771-df820116dab8.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        101,
+        81,
+        525,
+        460
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:small-bleacher",
+      "name": "Small bleacher",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/small-bleacher.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-9e6854dc-a046-457b-a771-df820116dab8.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        764,
+        81,
+        394,
+        485
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:bleacher-platform",
+      "name": "Bleacher platform",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/bleacher-platform.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-9e6854dc-a046-457b-a771-df820116dab8.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        75,
+        685,
+        526,
+        484
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:bleacher-tower",
+      "name": "Bleacher tower",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/bleacher-tower.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-9e6854dc-a046-457b-a771-df820116dab8.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        801,
+        663,
+        403,
+        494
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-shed",
+      "name": "Shanty shed",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-shed.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        21,
+        29,
+        619,
+        598
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:flag-stall",
+      "name": "Flag stall",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/flag-stall.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        672,
+        54,
+        569,
+        652
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:tarp-shelter",
+      "name": "Tarp shelter",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/tarp-shelter.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        26,
+        609,
+        604,
+        607
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:market-tents",
+      "name": "Market tents",
+      "category": "New: Stalls (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/market-tents.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-a3d71b69-0852-4cd2-b282-f9e8ef7e8672.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        642,
+        709,
+        596,
+        534
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-medical-tent",
+      "name": "Shanty medical tent",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-medical-tent.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        27,
+        28,
+        652,
+        609
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Clean but old ordinary cabin, canvas service tent, galvanized water equipment or period utility vehicle. Plain square manufactured geometry and usable access.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-cart-ambulance",
+      "name": "Shanty cart ambulance",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-cart-ambulance.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        663,
+        150,
+        582,
+        513
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Clean but old ordinary cabin, canvas service tent, galvanized water equipment or period utility vehicle. Plain square manufactured geometry and usable access.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-toilet",
+      "name": "Shanty toilet",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-toilet.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        60,
+        643,
+        647,
+        566
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Clean but old ordinary cabin, canvas service tent, galvanized water equipment or period utility vehicle. Plain square manufactured geometry and usable access.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-weather-mast",
+      "name": "Shanty weather mast",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-weather-mast.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        789,
+        629,
+        348,
+        593
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Straight manufactured painted timber/steel fixtures, period manual board or analog instrument, restrained wear; preserve reading direction and real front/back.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-camera-tower",
+      "name": "Shanty camera tower",
+      "category": "New: Media",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-camera-tower.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        59,
+        32,
+        495,
+        616
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Old maintained real-world broadcast equipment and bolted scaffold, repainted period van bodies, cable reels; no fantasy scrap construction. 1985 setting.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-broadcast-van",
+      "name": "Shanty broadcast van",
+      "category": "New: Media",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-broadcast-van.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        604,
+        104,
+        633,
+        550
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Old maintained real-world broadcast equipment and bolted scaffold, repainted period van bodies, cable reels; no fantasy scrap construction. 1985 setting.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-satellite-van",
+      "name": "Shanty satellite van",
+      "category": "New: Media",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-satellite-van.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        51,
+        608,
+        638,
+        626
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Old maintained real-world broadcast equipment and bolted scaffold, repainted period van bodies, cable reels; no fantasy scrap construction. 1985 setting.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-camera",
+      "name": "Shanty camera",
+      "category": "New: Media",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-camera.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        782,
+        657,
+        395,
+        561
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Old maintained real-world broadcast equipment and bolted scaffold, repainted period van bodies, cable reels; no fantasy scrap construction. 1985 setting.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:scaffold-stand",
+      "name": "Scaffold stand",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/scaffold-stand.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        82,
+        52,
+        522,
+        600
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:scaffold-booth",
+      "name": "Scaffold booth",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/scaffold-booth.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        669,
+        140,
+        554,
+        507
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:scaffold-counter",
+      "name": "Scaffold counter",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/scaffold-counter.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        68,
+        665,
+        567,
+        531
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:scaffold-tower",
+      "name": "Scaffold tower",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/scaffold-tower.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        708,
+        675,
+        487,
+        531
+      ],
+      "currentHx": 2.5,
+      "currentHy": 2.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:wooden-bleacher-big",
+      "name": "Wooden bleacher big",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/wooden-bleacher-big.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        25,
+        0,
+        650,
+        551
+      ],
+      "currentHx": 3.5,
+      "currentHy": 3.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:covered-bleacher",
+      "name": "Covered bleacher",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/covered-bleacher.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        712,
+        0,
+        525,
+        605
+      ],
+      "currentHx": 3.5,
+      "currentHy": 3.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:bleacher-deck",
+      "name": "Bleacher deck",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/bleacher-deck.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        17,
+        576,
+        682,
+        633
+      ],
+      "currentHx": 3.5,
+      "currentHy": 3.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:bleacher-stairs",
+      "name": "Bleacher stairs",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/bleacher-stairs.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-dff4a354-7633-4c13-89c2-c77c613ae361.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        742,
+        559,
+        510,
+        636
+      ],
+      "currentHx": 3.5,
+      "currentHy": 3.5,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Worn 1950s bolted tube-steel frame, faded planed bench seats, straight painted railings and proper stairs; simple fixed corrugated roof if covered. Preserve functional layout, remove rope-lashed logs and scrap-village construction.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-ticket-hut",
+      "name": "Shanty ticket hut",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-ticket-hut.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        25,
+        61,
+        602,
+        622
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-booth",
+      "name": "Shanty booth",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-booth.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        706,
+        61,
+        534,
+        583
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-turnstiles",
+      "name": "Shanty turnstiles",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-turnstiles.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        33,
+        712,
+        642,
+        477
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-counter-2",
+      "name": "Shanty counter 2",
+      "category": "New: Event structures (shabby)",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-counter-2.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        716,
+        650,
+        508,
+        568
+      ],
+      "currentHx": 2,
+      "currentHy": 2,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Low-budget old 1950s painted clapboard, rendered brick or prefabricated timber cabin/stall, ordinary corrugated pitched roof or faded canvas awning, serving hatch/door as appropriate; no log lashings, scrap palisades or patchwork blue-tarp village.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-leaderboard",
+      "name": "Shanty leaderboard",
+      "category": "New: Course props",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-leaderboard.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
+      "sourceSheetExists": true,
+      "cell": "top left",
+      "sourceCrop": [
+        57,
+        34,
+        684,
+        612
+      ],
+      "currentHx": 0.6,
+      "currentHy": 0.6,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Straight manufactured painted timber/steel fixtures, period manual board or analog instrument, restrained wear; preserve reading direction and real front/back.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-hole-sign",
+      "name": "Shanty hole sign",
+      "category": "New: Course props",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-hole-sign.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
+      "sourceSheetExists": true,
+      "cell": "top right",
+      "sourceCrop": [
+        800,
+        13,
+        409,
+        646
+      ],
+      "currentHx": 0.6,
+      "currentHy": 0.6,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Straight manufactured painted timber/steel fixtures, period manual board or analog instrument, restrained wear; preserve reading direction and real front/back.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-clock",
+      "name": "Shanty clock",
+      "category": "New: Course props",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-clock.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
+      "sourceSheetExists": true,
+      "cell": "bottom left",
+      "sourceCrop": [
+        194,
+        628,
+        362,
+        596
+      ],
+      "currentHx": 0.6,
+      "currentHy": 0.6,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Straight manufactured painted timber/steel fixtures, period manual board or analog instrument, restrained wear; preserve reading direction and real front/back.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    },
+    {
+      "id": "newprop:shanty-signpost",
+      "name": "Shanty signpost",
+      "category": "New: Course props",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-signpost.webp",
+      "imageExists": true,
+      "sourceSheet": "E:/Repos/CapitalEmpire/All Generated Images/exec-ff2636a6-6113-47c0-9ca4-993877f7a9a2.png",
+      "sourceSheetExists": true,
+      "cell": "bottom right",
+      "sourceCrop": [
+        752,
+        640,
+        448,
+        595
+      ],
+      "currentHx": 0.6,
+      "currentHy": 0.6,
+      "kind": "prop",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "budgetReplacementBrief": "Straight manufactured painted timber/steel fixtures, period manual board or analog instrument, restrained wear; preserve reading direction and real front/back.",
+      "keepCompatibilityId": true,
+      "status": "identified; not generated or visually approved by this audit"
+    }
+  ],
+  "starterClubhouse": {
+    "id": "golf:clubhouse-shanty",
+    "original": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf/clubhouse-shanty.png",
+    "acceptedCornersSource": {
+      "id": "golf:clubhouse-shanty",
+      "version": "golf-clubhouse-shanty-4views-v3",
+      "files": {
+        "NE": "fbd77aaed5ea2a0c50c05f21161c17bf2e3e2c63b545e4f3e2f963c3497abfcc",
+        "SE": "ada37ea1a6baf3c88e052da94160e8b7b48af5af3d77d7a093c9ec4f952e43f0",
+        "SW": "bf15a229ecd2426db8d895a911881ce9d36899861ead7c7938651c18b4c1c8fc",
+        "NW": "4ce772b865eefb814feb4e7723ecc2d659ce91ceee75eabce2a67354ee2cfb6a"
+      }
+    },
+    "cornersFolder": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/golf-clubhouse-shanty",
+    "axisFolder": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/golf-clubhouse-shanty",
+    "newBrief": "Old1950s plain manufactured pro-shop cabin,12x8m, low corrugated roof, serving hatch and window, faded cream/green paint. No fantasy scrap architecture. Keep compatibility ID."
+  },
+  "separateBudgetProps": [
+    {
+      "sourceId": "white-popup-gazebo-4views",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/grass-management/budget-props/white-popup-gazebo-4views.png",
+      "existingViews": [
+        {
+          "direction": "NE",
+          "file": "budget-props/individual/white-popup-gazebo-NE.png",
+          "sourceRect": {
+            "left": 203,
+            "top": 30,
+            "width": 446,
+            "height": 449
+          },
+          "alpha": {
+            "clear": 293944,
+            "partial": 99272
+          },
+          "estimatedAnchor": {
+            "x": 223,
+            "y": 448
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "budget-props/individual/white-popup-gazebo-SE.png",
+          "sourceRect": {
+            "left": 885,
+            "top": 30,
+            "width": 447,
+            "height": 449
+          },
+          "alpha": {
+            "clear": 293211,
+            "partial": 100005
+          },
+          "estimatedAnchor": {
+            "x": 223.5,
+            "y": 448
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "budget-props/individual/white-popup-gazebo-SW.png",
+          "sourceRect": {
+            "left": 201,
+            "top": 530,
+            "width": 443,
+            "height": 451
+          },
+          "alpha": {
+            "clear": 295054,
+            "partial": 98162
+          },
+          "estimatedAnchor": {
+            "x": 221.5,
+            "y": 450
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "budget-props/individual/white-popup-gazebo-NW.png",
+          "sourceRect": {
+            "left": 886,
+            "top": 530,
+            "width": 448,
+            "height": 454
+          },
+          "alpha": {
+            "clear": 294604,
+            "partial": 98612
+          },
+          "estimatedAnchor": {
+            "x": 224,
+            "y": 453
+          },
+          "touchesCellEdge": false
+        }
+      ],
+      "note": "Existing budget prop, not automatically fantasy-styled; inspect and complete missing turns instead of automatic redesign."
+    },
+    {
+      "sourceId": "timber-picnic-table-4views",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/grass-management/budget-props/timber-picnic-table-4views.png",
+      "existingViews": [
+        {
+          "direction": "NE",
+          "file": "budget-props/individual/timber-picnic-table-NE.png",
+          "sourceRect": {
+            "left": 135,
+            "top": 78,
+            "width": 573,
+            "height": 366
+          },
+          "alpha": {
+            "clear": 281414,
+            "partial": 111802
+          },
+          "estimatedAnchor": {
+            "x": 286.5,
+            "y": 365
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "budget-props/individual/timber-picnic-table-SE.png",
+          "sourceRect": {
+            "left": 825,
+            "top": 84,
+            "width": 582,
+            "height": 377
+          },
+          "alpha": {
+            "clear": 270223,
+            "partial": 122993
+          },
+          "estimatedAnchor": {
+            "x": 291,
+            "y": 376
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "budget-props/individual/timber-picnic-table-SW.png",
+          "sourceRect": {
+            "left": 129,
+            "top": 552,
+            "width": 560,
+            "height": 368
+          },
+          "alpha": {
+            "clear": 283828,
+            "partial": 109388
+          },
+          "estimatedAnchor": {
+            "x": 280,
+            "y": 367
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "budget-props/individual/timber-picnic-table-NW.png",
+          "sourceRect": {
+            "left": 848,
+            "top": 557,
+            "width": 590,
+            "height": 382
+          },
+          "alpha": {
+            "clear": 274606,
+            "partial": 118610
+          },
+          "estimatedAnchor": {
+            "x": 295,
+            "y": 381
+          },
+          "touchesCellEdge": false
+        }
+      ],
+      "note": "Existing budget prop, not automatically fantasy-styled; inspect and complete missing turns instead of automatic redesign."
+    },
+    {
+      "sourceId": "white-plastic-chair-4views",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/grass-management/budget-props/white-plastic-chair-4views.png",
+      "existingViews": [
+        {
+          "direction": "NE",
+          "file": "budget-props/individual/white-plastic-chair-NE.png",
+          "sourceRect": {
+            "left": 268,
+            "top": 35,
+            "width": 372,
+            "height": 459
+          },
+          "alpha": {
+            "clear": 294544,
+            "partial": 98672
+          },
+          "estimatedAnchor": {
+            "x": 186,
+            "y": 458
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "budget-props/individual/white-plastic-chair-SE.png",
+          "sourceRect": {
+            "left": 911,
+            "top": 42,
+            "width": 355,
+            "height": 450
+          },
+          "alpha": {
+            "clear": 310186,
+            "partial": 83030
+          },
+          "estimatedAnchor": {
+            "x": 177.5,
+            "y": 449
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "budget-props/individual/white-plastic-chair-SW.png",
+          "sourceRect": {
+            "left": 300,
+            "top": 537,
+            "width": 373,
+            "height": 402
+          },
+          "alpha": {
+            "clear": 308468,
+            "partial": 84748
+          },
+          "estimatedAnchor": {
+            "x": 186.5,
+            "y": 401
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "budget-props/individual/white-plastic-chair-NW.png",
+          "sourceRect": {
+            "left": 892,
+            "top": 539,
+            "width": 358,
+            "height": 408
+          },
+          "alpha": {
+            "clear": 322211,
+            "partial": 71005
+          },
+          "estimatedAnchor": {
+            "x": 179,
+            "y": 407
+          },
+          "touchesCellEdge": false
+        }
+      ],
+      "note": "Existing budget prop, not automatically fantasy-styled; inspect and complete missing turns instead of automatic redesign."
+    },
+    {
+      "sourceId": "green-litter-bin-4views",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/grass-management/budget-props/green-litter-bin-4views.png",
+      "existingViews": [
+        {
+          "direction": "NE",
+          "file": "budget-props/individual/green-litter-bin-NE.png",
+          "sourceRect": {
+            "left": 289,
+            "top": 55,
+            "width": 271,
+            "height": 402
+          },
+          "alpha": {
+            "clear": 299779,
+            "partial": 93437
+          },
+          "estimatedAnchor": {
+            "x": 135.5,
+            "y": 401
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "budget-props/individual/green-litter-bin-SE.png",
+          "sourceRect": {
+            "left": 987,
+            "top": 62,
+            "width": 264,
+            "height": 394
+          },
+          "alpha": {
+            "clear": 302517,
+            "partial": 90699
+          },
+          "estimatedAnchor": {
+            "x": 132,
+            "y": 393
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "budget-props/individual/green-litter-bin-SW.png",
+          "sourceRect": {
+            "left": 285,
+            "top": 556,
+            "width": 266,
+            "height": 393
+          },
+          "alpha": {
+            "clear": 300620,
+            "partial": 92596
+          },
+          "estimatedAnchor": {
+            "x": 133,
+            "y": 392
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "budget-props/individual/green-litter-bin-NW.png",
+          "sourceRect": {
+            "left": 985,
+            "top": 549,
+            "width": 268,
+            "height": 399
+          },
+          "alpha": {
+            "clear": 300207,
+            "partial": 93009
+          },
+          "estimatedAnchor": {
+            "x": 134,
+            "y": 398
+          },
+          "touchesCellEdge": false
+        }
+      ],
+      "note": "Existing budget prop, not automatically fantasy-styled; inspect and complete missing turns instead of automatic redesign."
+    },
+    {
+      "sourceId": "timber-entrance-sign-4views",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/grass-management/budget-props/timber-entrance-sign-4views.png",
+      "existingViews": [
+        {
+          "direction": "NE",
+          "file": "budget-props/individual/timber-entrance-sign-NE.png",
+          "sourceRect": {
+            "left": 305,
+            "top": 37,
+            "width": 318,
+            "height": 442
+          },
+          "alpha": {
+            "clear": 308556,
+            "partial": 84660
+          },
+          "estimatedAnchor": {
+            "x": 159,
+            "y": 441
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "budget-props/individual/timber-entrance-sign-SE.png",
+          "sourceRect": {
+            "left": 918,
+            "top": 37,
+            "width": 318,
+            "height": 442
+          },
+          "alpha": {
+            "clear": 309274,
+            "partial": 83942
+          },
+          "estimatedAnchor": {
+            "x": 159,
+            "y": 441
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "budget-props/individual/timber-entrance-sign-SW.png",
+          "sourceRect": {
+            "left": 299,
+            "top": 513,
+            "width": 328,
+            "height": 441
+          },
+          "alpha": {
+            "clear": 309932,
+            "partial": 83284
+          },
+          "estimatedAnchor": {
+            "x": 164,
+            "y": 440
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "budget-props/individual/timber-entrance-sign-NW.png",
+          "sourceRect": {
+            "left": 915,
+            "top": 515,
+            "width": 322,
+            "height": 440
+          },
+          "alpha": {
+            "clear": 312730,
+            "partial": 80486
+          },
+          "estimatedAnchor": {
+            "x": 161,
+            "y": 439
+          },
+          "touchesCellEdge": false
+        }
+      ],
+      "note": "Existing budget prop, not automatically fantasy-styled; inspect and complete missing turns instead of automatic redesign."
+    },
+    {
+      "sourceId": "single-red-timber-tee-marker-4views",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/grass-management/budget-props/single-red-timber-tee-marker-4views.png",
+      "existingViews": [
+        {
+          "direction": "NE",
+          "file": "budget-props/individual/single-red-timber-tee-marker-NE.png",
+          "sourceRect": {
+            "left": 208,
+            "top": 108,
+            "width": 443,
+            "height": 355
+          },
+          "alpha": {
+            "clear": 304327,
+            "partial": 88889
+          },
+          "estimatedAnchor": {
+            "x": 221.5,
+            "y": 354
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "budget-props/individual/single-red-timber-tee-marker-SE.png",
+          "sourceRect": {
+            "left": 883,
+            "top": 110,
+            "width": 443,
+            "height": 357
+          },
+          "alpha": {
+            "clear": 303802,
+            "partial": 89414
+          },
+          "estimatedAnchor": {
+            "x": 221.5,
+            "y": 356
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "budget-props/individual/single-red-timber-tee-marker-SW.png",
+          "sourceRect": {
+            "left": 216,
+            "top": 579,
+            "width": 437,
+            "height": 359
+          },
+          "alpha": {
+            "clear": 305231,
+            "partial": 87985
+          },
+          "estimatedAnchor": {
+            "x": 218.5,
+            "y": 358
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "budget-props/individual/single-red-timber-tee-marker-NW.png",
+          "sourceRect": {
+            "left": 890,
+            "top": 581,
+            "width": 436,
+            "height": 357
+          },
+          "alpha": {
+            "clear": 305697,
+            "partial": 87519
+          },
+          "estimatedAnchor": {
+            "x": 218,
+            "y": 356
+          },
+          "touchesCellEdge": false
+        }
+      ],
+      "note": "Existing budget prop, not automatically fantasy-styled; inspect and complete missing turns instead of automatic redesign."
+    },
+    {
+      "sourceId": "single-white-distance-stake-4views",
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/grass-management/budget-props/single-white-distance-stake-4views.png",
+      "existingViews": [
+        {
+          "direction": "NE",
+          "file": "budget-props/individual/single-white-distance-stake-NE.png",
+          "sourceRect": {
+            "left": 349,
+            "top": 86,
+            "width": 97,
+            "height": 399
+          },
+          "alpha": {
+            "clear": 356643,
+            "partial": 36129
+          },
+          "estimatedAnchor": {
+            "x": 48.5,
+            "y": 398
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "budget-props/individual/single-white-distance-stake-SE.png",
+          "sourceRect": {
+            "left": 1002,
+            "top": 86,
+            "width": 97,
+            "height": 399
+          },
+          "alpha": {
+            "clear": 357518,
+            "partial": 35313
+          },
+          "estimatedAnchor": {
+            "x": 48.5,
+            "y": 398
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "budget-props/individual/single-white-distance-stake-SW.png",
+          "sourceRect": {
+            "left": 348,
+            "top": 615,
+            "width": 102,
+            "height": 402
+          },
+          "alpha": {
+            "clear": 355157,
+            "partial": 37884
+          },
+          "estimatedAnchor": {
+            "x": 51,
+            "y": 401
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "budget-props/individual/single-white-distance-stake-NW.png",
+          "sourceRect": {
+            "left": 999,
+            "top": 615,
+            "width": 101,
+            "height": 402
+          },
+          "alpha": {
+            "clear": 354807,
+            "partial": 38297
+          },
+          "estimatedAnchor": {
+            "x": 50.5,
+            "y": 401
+          },
+          "touchesCellEdge": false
+        }
+      ],
+      "note": "Existing budget prop, not automatically fantasy-styled; inspect and complete missing turns instead of automatic redesign."
+    }
+  ],
+  "rawShantySheets": [
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/01-clubhouse-and-arrival-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/01-clubhouse-and-arrival-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/02-greens-and-tees-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/02-greens-and-tees-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/03-hazards-and-water-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/03-hazards-and-water-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/04-bridges-and-gardens-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/04-bridges-and-gardens-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/05-leaderboards-and-course-signs-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/05-leaderboards-and-course-signs-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/06-grandstands-and-viewing-shanty-v2.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/06-grandstands-and-viewing-shanty-v2.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/06-grandstands-and-viewing-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/06-grandstands-and-viewing-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/07-ropes-crossings-and-marshals-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/07-ropes-crossings-and-marshals-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/08-players-and-caddies-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/08-players-and-caddies-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/09-practice-and-fitting-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/09-practice-and-fitting-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/10-carts-and-player-transport-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/10-carts-and-player-transport-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/11-groundskeeping-machines-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/11-groundskeeping-machines-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/12-maintenance-yard-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/12-maintenance-yard-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/13-concessions-and-refreshments-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/13-concessions-and-refreshments-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/14-hospitality-and-picnic-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/14-hospitality-and-picnic-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/15-patron-services-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/15-patron-services-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/16-entry-security-and-tickets-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/16-entry-security-and-tickets-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/17-medical-sanitation-and-weather-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/17-medical-sanitation-and-weather-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/18-broadcast-and-camera-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/18-broadcast-and-camera-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/19-media-and-scoring-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/19-media-and-scoring-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/20-volunteers-and-operations-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/20-volunteers-and-operations-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/21-retail-and-fan-experiences-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/21-retail-and-fan-experiences-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/22-parking-and-arrivals-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/22-parking-and-arrivals-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/23-utilities-and-recycling-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/23-utilities-and-recycling-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/24-trophies-and-tournament-details-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/24-trophies-and-tournament-details-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/25-spectator-galleries-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/25-spectator-galleries-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/26-small-course-fixtures-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/26-small-course-fixtures-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/27-tournament-service-vehicles-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/27-tournament-service-vehicles-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    },
+    {
+      "image": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/28-staff-and-celebration-shanty.png",
+      "prompt": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/golf-tournament/shanty/28-staff-and-celebration-shanty.prompt.txt",
+      "note": "Four different subjects, not four turns. Contains excluded ground/plants/people in some sheets."
+    }
+  ]
+}

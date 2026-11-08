@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-foundry-606f1084:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-foundry-606f1084-1/NE.png",
+  "sourceSha256": "0987eddfede2e1a48567e3fdfa7c04e72c036f7c740bee051ee9acb7504e013d",
+  "output": "identity-references/variation-industrial-foundry-606f1084-1-deb6e050/source.png",
+  "outputSha256": "0987eddfede2e1a48567e3fdfa7c04e72c036f7c740bee051ee9acb7504e013d",
+  "width": 495,
+  "height": 457,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      495,
+      457
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-foundry-606f1084-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-foundry-606f1084:1",
+    "version": "variation-industrial-foundry-606f1084-1-4views-v2",
+    "files": {
+      "NE": "0987eddfede2e1a48567e3fdfa7c04e72c036f7c740bee051ee9acb7504e013d",
+      "SE": "7ddb5b54398eed7838f78854b9da71f5f0f14d9e3270e6a1cd027b20eb54c687",
+      "SW": "e72d9190bbffbe9a50ba9a8fb2ba8964c70b8596cbad7ac4bf068e9810d89b4a",
+      "NW": "784a60fc8ae48c9614ea03ee8c1169c15378f6d55f38401eb3ef78ff9c9a1e57"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.257813,
+      0.21875,
+      0.444336,
+      0.408691
+    ],
+    "crop": {
+      "left": 528,
+      "top": 448,
+      "width": 382,
+      "height": 389
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-foundry-606f1084-1.native.png",
+    "nativeSha256": "8ca38b9de7a35ef92dde0ac441bc7dd553fcdeb553599cbd502efa471f0e2374"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

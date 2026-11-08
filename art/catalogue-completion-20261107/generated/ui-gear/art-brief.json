@@ -1,0 +1,34 @@
+{
+  "purpose": "Source-only painted golf UI equipment art; five period-inspired visual tiers, not gameplay/technology-history assertions",
+  "layout": {
+    "columns": 4,
+    "rows": 2,
+    "top": [
+      "driver",
+      "iron",
+      "wedge",
+      "putter"
+    ],
+    "bottom": [
+      "tee-pegs-pack",
+      "mens-outfit",
+      "womens-outfit",
+      "golf-bag"
+    ]
+  },
+  "common_requirements": [
+    "Native transparent RGBA PNG; complete shafts/grips/heads and readable silhouettes.",
+    "Same detailed hand-painted game inventory style; daytime light from screen upper right, shadows lower left.",
+    "No brands, words, dates, logos, UI frames, grid lines, scene grounds or opaque background wash.",
+    "Clothing is unoccupied polo+trousers/skirt+shoes flat-lays, never new characters.",
+    "Period inspiration only; no claims that any material/technology was invented in a specific decade, and no gameplay statistics."
+  ],
+  "era_appearance_briefs": {
+    "1980s": "Warm wood-grain driver, restrained chrome clubs and simple blade putter; plain paper tee pack; pastel polos, pleated/straight bottoms and classic leather-look shoes; dark bag with brown trim.",
+    "1990s": "Dark compact metalwood appearance, clear cavity-back iron, silver blade putter; simple coloured tee pack; block-colour polos and conservative bottoms; padded two-tone bag.",
+    "2000s": "Larger silvery metal driver appearance, broader cavity iron and rounded mallet; bolder packaged tees; sporty panel/stripe apparel details and clean neutral bottoms; structured carry/stand bag.",
+    "2010s": "Black/white aerodynamic-looking driver, clean geometric iron inset and broad mallet; bright accent tee pack; blue/coral sport polos with coordinated shoes; blue/white bag with restrained bright trim.",
+    "2020s": "Sleek matte-black/carbon-look forms, restrained muted accents and clean premium club silhouettes; coordinated modern tee pack, streamlined outfit flat-lays and contemporary carry-bag styling."
+  },
+  "status": "Allfive era source designs generated and selected as source candidates;2010v2chosen after native transparency correction; no game integration."
+}

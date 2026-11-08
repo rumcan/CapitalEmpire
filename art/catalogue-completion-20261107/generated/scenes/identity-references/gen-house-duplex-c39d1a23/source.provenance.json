@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "gen:house-duplex",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/gen-house-duplex/NE.png",
+  "sourceSha256": "3a26467971eefdb541488318ec100967e29ae2cf916ec2572036985dc4ca9c85",
+  "output": "identity-references/gen-house-duplex-c39d1a23/source.png",
+  "outputSha256": "3a26467971eefdb541488318ec100967e29ae2cf916ec2572036985dc4ca9c85",
+  "width": 570,
+  "height": 556,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      570,
+      556
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\gen-house-duplex\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "gen:house-duplex",
+    "version": "gen-house-duplex-4views-v2",
+    "files": {
+      "NE": "3a26467971eefdb541488318ec100967e29ae2cf916ec2572036985dc4ca9c85",
+      "SE": "25f2b6b5b59680d421dc30388c31e31d82431cd704b16c5ae644d8432bf5d0e2",
+      "SW": "9abde949302b294e7f75dc7019d6ba7b7a905b6e59bce3105dee97f64a5f3abd",
+      "NW": "8d5ea4b97997a5262351c2579609021368223bedc2de8f3994ca351dbd4ec815"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-3-0.webp",
+    "atlasSha256": "2fc83a268c62030dfbfbd7b95621bbee98621258acf3580154f943542c867e7d",
+    "runtimePage": 3,
+    "localPage": 3,
+    "uv": [
+      0.664063,
+      0.273438,
+      0.911621,
+      0.51123
+    ],
+    "crop": {
+      "left": 1360,
+      "top": 560,
+      "width": 507,
+      "height": 487
+    },
+    "native": "art/theme-consistency/exports/buildings/gen-house-duplex.native.png",
+    "nativeSha256": "11aca33f7fffcddab580c11c0a8677903e22fa590df5e175f64f2a7ca3163080"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "zip": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\Modern-houses-1990s-2020s-source-v2.zip",
+  "zipSHA256": "9dd48f893bb228d85fbd70a64002e00f8c9e4da088d5aa75f515331006ca330e",
+  "zipBytes": 17875151,
+  "zipEntries": 76,
+  "zipPNGCount": 64,
+  "zipAllEntriesCRCPassed": true,
+  "all64PNGHashesVerifiedInsideZIP": true,
+  "all64RGBAHashesVerifiedInsideZIP": true,
+  "inherited32PNGBytesUnchanged": true,
+  "new32PNGNativeCropPixelsExact": true,
+  "v1BundleAllFilesUnchanged": true,
+  "v1ZipUnchanged": true,
+  "v1ZipSHA256": "e7a5db7a1577bc82080e5e807d0f3d87e5688fa27abf169c40bf35232677e1d3",
+  "selectedNewRawSourcesUnchanged": true,
+  "nativeExact8DegreeCertified": false,
+  "nativeCameraScaleAndGroundAnchorsApproved": false,
+  "runtimeIntegrated": false,
+  "nativeSourcePixelsChanged": false,
+  "runtimeCodeChanged": false
+}

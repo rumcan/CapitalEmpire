@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "asOfUTC": "2026-11-07T15:35:34.316489+00:00",
+  "archive": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/Golf-event-facilities-and-practice-176-source-candidates.zip",
+  "bytes": 67035318,
+  "sha256": "31c95365543b60a7b2b01be9966a283831a1846442d33911a63bd0e0f950a1a5",
+  "archiveEntryCount": 181,
+  "PNGCount": 176,
+  "CRCAllEntriesValid": true,
+  "allArchivedPNGHashesMatchIndex": true,
+  "allArchivedDecodedRGBAHashesMatchNativeSourceCrops": true,
+  "allOriginalNativeSourceHashesUnchangedAfterExport": true,
+  "sourceOnly": true,
+  "nativeGenerationCount": 0,
+  "runtimeIntegrated": false,
+  "cameraAndScaleApproved": false
+}

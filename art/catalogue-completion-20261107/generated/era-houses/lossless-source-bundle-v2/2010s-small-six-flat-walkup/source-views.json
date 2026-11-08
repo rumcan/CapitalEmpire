@@ -1,0 +1,241 @@
+{
+  "key": "2010s-small-six-flat-walkup",
+  "name": "Small affordable six-flat walk-up",
+  "sourceViews": [
+    {
+      "sourceCameraKey": "normalSE",
+      "nominalCameraFamily": "normal",
+      "file": "2010s-small-six-flat-walkup/normalSE.png",
+      "fileRelativeToBundle": "2010s-small-six-flat-walkup/normalSE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.png",
+      "sourceFileSHA256": "30cbd2974e46fc5ec7123f5bdd55cff22280990122073e1d024aba2b9a4fdf52",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "sourceCell": 0,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "70e3df6cb12786a7784d4ade079e44fc5c3b1e52d77072b126e40e747f856581",
+      "rgbaSHA256": "db351dfc29442778aa93fc6650425608e1839d18db9c5713dd256937faf368b6",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "nominalCameraFamily": "normal",
+      "file": "2010s-small-six-flat-walkup/normalSW.png",
+      "fileRelativeToBundle": "2010s-small-six-flat-walkup/normalSW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.png",
+      "sourceFileSHA256": "30cbd2974e46fc5ec7123f5bdd55cff22280990122073e1d024aba2b9a4fdf52",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "sourceCell": 1,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "3859c0d2199971c0781645d30da7d8bab16990cd35dd799a1b1c4b178b03c223",
+      "rgbaSHA256": "2076446264caa937a971a1714a553ba581b6dde243c352c832ae1be13bf4e407",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "nominalCameraFamily": "normal",
+      "file": "2010s-small-six-flat-walkup/normalNW.png",
+      "fileRelativeToBundle": "2010s-small-six-flat-walkup/normalNW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.png",
+      "sourceFileSHA256": "30cbd2974e46fc5ec7123f5bdd55cff22280990122073e1d024aba2b9a4fdf52",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "sourceCell": 2,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "aa767db518a3caa50293c5efbec97a090d26158d530d3c7725add55bcd6ee901",
+      "rgbaSHA256": "edca0c17de11d521087df4e8dc40e4a804d1a16e6f74584c73070cd3e5a4fa39",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "nominalCameraFamily": "normal",
+      "file": "2010s-small-six-flat-walkup/normalNE.png",
+      "fileRelativeToBundle": "2010s-small-six-flat-walkup/normalNE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.png",
+      "sourceFileSHA256": "30cbd2974e46fc5ec7123f5bdd55cff22280990122073e1d024aba2b9a4fdf52",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "sourceCell": 3,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "027efbc68ebb22b7dc351f14c0d6ae9f49ed7db3e32f22c9b3509206c6aa7015",
+      "rgbaSHA256": "4cd67e699a9ec2154b8607459769618eea0075a2bd3efff540d52a1b0f32d130",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8N",
+      "nominalCameraFamily": "yaw8",
+      "file": "2010s-small-six-flat-walkup/yaw8N.png",
+      "fileRelativeToBundle": "2010s-small-six-flat-walkup/yaw8N.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.png",
+      "sourceFileSHA256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "sourceCell": 0,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "bfde3a158470f090ce7f8e64b91c69d3aa3f824912bc28e8db2b5559159ffac0",
+      "rgbaSHA256": "6f319d6db2185f4142ad94c43ac3bf6efb16800f6e356c08fbed44ac7be5f56b",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8E",
+      "nominalCameraFamily": "yaw8",
+      "file": "2010s-small-six-flat-walkup/yaw8E.png",
+      "fileRelativeToBundle": "2010s-small-six-flat-walkup/yaw8E.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.png",
+      "sourceFileSHA256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "sourceCell": 1,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "d935def7fc0c6fabe481002ef0272dabc051617e0c957b814969ed8266e66a6b",
+      "rgbaSHA256": "7033d5259092071f09f6ff111af5b5f11f09f0a20dba8bd2da6e04b797a735dc",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8S",
+      "nominalCameraFamily": "yaw8",
+      "file": "2010s-small-six-flat-walkup/yaw8S.png",
+      "fileRelativeToBundle": "2010s-small-six-flat-walkup/yaw8S.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.png",
+      "sourceFileSHA256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "sourceCell": 2,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "d155ebf1b630230c2f73167d912557a75566d68b8344b2278c52add4533ca16f",
+      "rgbaSHA256": "266e049662eef108fe8de75865cc6f24210d0fc169388ba70a89b0cbc3a5366b",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8W",
+      "nominalCameraFamily": "yaw8",
+      "file": "2010s-small-six-flat-walkup/yaw8W.png",
+      "fileRelativeToBundle": "2010s-small-six-flat-walkup/yaw8W.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.png",
+      "sourceFileSHA256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "sourceCell": 3,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "42aa2fba5579d5dd617df197bd7b2b690a7fe24a8be2f5b7ce40093506f15d16",
+      "rgbaSHA256": "539156545843a29593392f067976ae9a0d63aec22f0b6933118c2a62b3b2c206",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    }
+  ],
+  "inheritedFromV1": false,
+  "identityReview": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\four-source-repairs-and-house-package-readiness.json",
+  "identityReviewSHA256": "61e31b1639323266023e92cbcfa99ea54a9349b07a86c9ebb16f5bae9dae721d"
+}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:town-grocery-46d5dc39-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-grocery-46d5dc39-plain-1/NE.png",
+  "sourceSha256": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+  "output": "identity-references/variation-town-grocery-46d5dc39-plain-1-4103b212/source.png",
+  "outputSha256": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+  "width": 567,
+  "height": 566,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      567,
+      566
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-town-grocery-46d5dc39-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "blocked",
+    "integrationReason": "SE/SW keep the same rear/side corner orientation, with blank rear plane RIGHT in both. SW must reveal the opposite back corner."
+  },
+  "sourceRegistration": {
+    "id": "variation:town-grocery-46d5dc39-plain:1",
+    "version": "variation-town-grocery-46d5dc39-plain-1-4views-v1",
+    "files": {
+      "NE": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+      "SE": "9a2cc8bac4187a6d011a7ea49fee9ef3e6404ff18dc996460813c91449a04ac5",
+      "SW": "33f228cf7242f9afd98de8d6586b00bb683a9e9971721216a9e24fac93ca976a",
+      "NW": "ac9bfbdb6ac36d6c50d12ba1787ec5e3486987a1ce90574aea4d9b1ccb1a0c1b"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.71875,
+      0.21875,
+      0.921875,
+      0.407715
+    ],
+    "crop": {
+      "left": 1472,
+      "top": 448,
+      "width": 416,
+      "height": 387
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-town-grocery-46d5dc39-plain-1.native.png",
+    "nativeSha256": "7a0b4fe3854627eaa235e06d37b0bf11dfa671996c316fe93585a54d5211a6da"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

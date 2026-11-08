@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-printing-works-2be751ae:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-printing-works-2be751ae-1/NE.png",
+  "sourceSha256": "ca2ee10857acb3a4c5a5ee7a6d77e97baf1ec3d4a9f1edc12c30f1da85b8a9e6",
+  "output": "identity-references/variation-industrial-printing-works-2be751ae-1-f04f80e7/source.png",
+  "outputSha256": "ca2ee10857acb3a4c5a5ee7a6d77e97baf1ec3d4a9f1edc12c30f1da85b8a9e6",
+  "width": 487,
+  "height": 471,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      487,
+      471
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-printing-works-2be751ae-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-printing-works-2be751ae:1",
+    "version": "variation-industrial-printing-works-2be751ae-1-4views-v2",
+    "files": {
+      "NE": "ca2ee10857acb3a4c5a5ee7a6d77e97baf1ec3d4a9f1edc12c30f1da85b8a9e6",
+      "SE": "7507ffaa42982f3d80ec618d0d7521817c57bb52272e1acb182556cb5a58b68f",
+      "SW": "4084673b0ae00ae277bd0c2846f1f115d3ab18558d133743b3a9e6ee816dde54",
+      "NW": "136646570686559b925e74cc44db70949126a047db62aedccf2eeef020bfc509"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-1-0.webp",
+    "atlasSha256": "958733a68cd3ea18895adf4ca7e28b7f475bc3a9eb0484aa8bfa457db925ce64",
+    "runtimePage": 1,
+    "localPage": 1,
+    "uv": [
+      0.289063,
+      0.601563,
+      0.533691,
+      0.863281
+    ],
+    "crop": {
+      "left": 592,
+      "top": 1232,
+      "width": 501,
+      "height": 536
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-printing-works-2be751ae-1.native.png",
+    "nativeSha256": "9d913a89a710167a3465d221a5d362edaed06fd891d7a195fe880b539606178d"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

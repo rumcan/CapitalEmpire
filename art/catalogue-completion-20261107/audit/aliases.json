@@ -1,0 +1,4851 @@
+[
+  {
+    "id": "view:ce:parking-entry:n",
+    "subject": "ce:parking-entry",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-entry:e",
+    "subject": "ce:parking-entry",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-entry:s",
+    "subject": "ce:parking-entry",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-entry:w",
+    "subject": "ce:parking-entry",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-2storey:e",
+    "subject": "ce:parking-garage-2storey",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-2storey:s",
+    "subject": "ce:parking-garage-2storey",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-2storey:w",
+    "subject": "ce:parking-garage-2storey",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-3storey:e",
+    "subject": "ce:parking-garage-3storey",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-3storey:s",
+    "subject": "ce:parking-garage-3storey",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-3storey:w",
+    "subject": "ce:parking-garage-3storey",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-4storey:e",
+    "subject": "ce:parking-garage-4storey",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-4storey:s",
+    "subject": "ce:parking-garage-4storey",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-4storey:w",
+    "subject": "ce:parking-garage-4storey",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-5storey:e",
+    "subject": "ce:parking-garage-5storey",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-5storey:s",
+    "subject": "ce:parking-garage-5storey",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-5storey:w",
+    "subject": "ce:parking-garage-5storey",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-6storey:e",
+    "subject": "ce:parking-garage-6storey",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-6storey:s",
+    "subject": "ce:parking-garage-6storey",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-6storey:w",
+    "subject": "ce:parking-garage-6storey",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:dormer-rear:n",
+    "subject": "expansion:dormer-rear",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:dormer-rear:e",
+    "subject": "expansion:dormer-rear",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:dormer-rear:s",
+    "subject": "expansion:dormer-rear",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:dormer-rear:w",
+    "subject": "expansion:dormer-rear",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-bbq-deck:n",
+    "subject": "gen:back-bbq-deck",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-bbq-deck:e",
+    "subject": "gen:back-bbq-deck",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-bbq-deck:s",
+    "subject": "gen:back-bbq-deck",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-bbq-deck:w",
+    "subject": "gen:back-bbq-deck",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:clubhouse-shanty:n",
+    "subject": "golf:clubhouse-shanty",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:clubhouse-shanty:e",
+    "subject": "golf:clubhouse-shanty",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:clubhouse-shanty:s",
+    "subject": "golf:clubhouse-shanty",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:clubhouse-shanty:w",
+    "subject": "golf:clubhouse-shanty",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-deep-green:e",
+    "subject": "landscape:bush-deep-green",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-deep-green:s",
+    "subject": "landscape:bush-deep-green",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-deep-green:w",
+    "subject": "landscape:bush-deep-green",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-golden-russet:e",
+    "subject": "landscape:bush-golden-russet",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-golden-russet:s",
+    "subject": "landscape:bush-golden-russet",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-golden-russet:w",
+    "subject": "landscape:bush-golden-russet",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-sage-round:e",
+    "subject": "landscape:bush-sage-round",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-sage-round:s",
+    "subject": "landscape:bush-sage-round",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-sage-round:w",
+    "subject": "landscape:bush-sage-round",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:flowerbed-daisies:e",
+    "subject": "landscape:flowerbed-daisies",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:flowerbed-daisies:s",
+    "subject": "landscape:flowerbed-daisies",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:flowerbed-daisies:w",
+    "subject": "landscape:flowerbed-daisies",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:flowerbed-lavender:e",
+    "subject": "landscape:flowerbed-lavender",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:flowerbed-lavender:s",
+    "subject": "landscape:flowerbed-lavender",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:flowerbed-lavender:w",
+    "subject": "landscape:flowerbed-lavender",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:flowerbed-marigolds:e",
+    "subject": "landscape:flowerbed-marigolds",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:flowerbed-marigolds:s",
+    "subject": "landscape:flowerbed-marigolds",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:flowerbed-marigolds:w",
+    "subject": "landscape:flowerbed-marigolds",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:hydrangea-pale:e",
+    "subject": "landscape:hydrangea-pale",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:hydrangea-pale:s",
+    "subject": "landscape:hydrangea-pale",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:hydrangea-pale:w",
+    "subject": "landscape:hydrangea-pale",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:pickup_n:n",
+    "subject": "static:pickup_n",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:pickup_n:e",
+    "subject": "static:pickup_n",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:pickup_n:s",
+    "subject": "static:pickup_n",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:pickup_n:w",
+    "subject": "static:pickup_n",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:bakery:n",
+    "subject": "town:bakery",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:bakery:e",
+    "subject": "town:bakery",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:bakery:s",
+    "subject": "town:bakery",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:bakery:w",
+    "subject": "town:bakery",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:firestation:n",
+    "subject": "town:firestation",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:firestation:e",
+    "subject": "town:firestation",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:firestation:s",
+    "subject": "town:firestation",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:firestation:w",
+    "subject": "town:firestation",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:grocery:n",
+    "subject": "town:grocery",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:grocery:e",
+    "subject": "town:grocery",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:grocery:s",
+    "subject": "town:grocery",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:grocery:w",
+    "subject": "town:grocery",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:pharmacy:n",
+    "subject": "town:pharmacy",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:pharmacy:e",
+    "subject": "town:pharmacy",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:pharmacy:s",
+    "subject": "town:pharmacy",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:pharmacy:w",
+    "subject": "town:pharmacy",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-boarded-store-rear-d09a309a:1:n",
+    "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-boarded-store-rear-d09a309a:1:e",
+    "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-boarded-store-rear-d09a309a:1:s",
+    "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-boarded-store-rear-d09a309a:1:w",
+    "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-cottage-rear-e52a10bb-plain:1:n",
+    "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-cottage-rear-e52a10bb-plain:1:e",
+    "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-cottage-rear-e52a10bb-plain:1:s",
+    "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-cottage-rear-e52a10bb-plain:1:w",
+    "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-derelict-two-storey-012bed48:1:n",
+    "subject": "variation:expansion-derelict-two-storey-012bed48:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-derelict-two-storey-012bed48:1:e",
+    "subject": "variation:expansion-derelict-two-storey-012bed48:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-derelict-two-storey-012bed48:1:s",
+    "subject": "variation:expansion-derelict-two-storey-012bed48:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-derelict-two-storey-012bed48:1:w",
+    "subject": "variation:expansion-derelict-two-storey-012bed48:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-dormer-rear-55d3cd77-plain:1:n",
+    "subject": "variation:expansion-dormer-rear-55d3cd77-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-dormer-rear-55d3cd77-plain:1:e",
+    "subject": "variation:expansion-dormer-rear-55d3cd77-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-dormer-rear-55d3cd77-plain:1:s",
+    "subject": "variation:expansion-dormer-rear-55d3cd77-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-dormer-rear-55d3cd77-plain:1:w",
+    "subject": "variation:expansion-dormer-rear-55d3cd77-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-garage-rear-91bcbe45:1:n",
+    "subject": "variation:expansion-garage-rear-91bcbe45:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-garage-rear-91bcbe45:1:e",
+    "subject": "variation:expansion-garage-rear-91bcbe45:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-garage-rear-91bcbe45:1:s",
+    "subject": "variation:expansion-garage-rear-91bcbe45:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-garage-rear-91bcbe45:1:w",
+    "subject": "variation:expansion-garage-rear-91bcbe45:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:n",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:e",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:s",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:w",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-north-24ae3116-plain:1:n",
+    "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-north-24ae3116-plain:1:e",
+    "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-north-24ae3116-plain:1:s",
+    "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-north-24ae3116-plain:1:w",
+    "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-bbq-deck-b546df1a-plain:1:n",
+    "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-bbq-deck-b546df1a-plain:1:e",
+    "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-bbq-deck-b546df1a-plain:1:s",
+    "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-bbq-deck-b546df1a-plain:1:w",
+    "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:n",
+    "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:e",
+    "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:s",
+    "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:w",
+    "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-screened-porch-8c31c391-plain:1:n",
+    "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-screened-porch-8c31c391-plain:1:e",
+    "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-screened-porch-8c31c391-plain:1:s",
+    "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-screened-porch-8c31c391-plain:1:w",
+    "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:n",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:e",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:s",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:w",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain:1:n",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain:1:e",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain:1:s",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain:1:w",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:n",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:e",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:s",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:w",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:n",
+    "subject": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:e",
+    "subject": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:s",
+    "subject": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:w",
+    "subject": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-auto-body-shop-63875699:1:n",
+    "subject": "variation:industrial-auto-body-shop-63875699:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-auto-body-shop-63875699:1:e",
+    "subject": "variation:industrial-auto-body-shop-63875699:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-auto-body-shop-63875699:1:s",
+    "subject": "variation:industrial-auto-body-shop-63875699:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-auto-body-shop-63875699:1:w",
+    "subject": "variation:industrial-auto-body-shop-63875699:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-brick-machine-shop-34206b23:1:n",
+    "subject": "variation:industrial-brick-machine-shop-34206b23:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-brick-machine-shop-34206b23:1:e",
+    "subject": "variation:industrial-brick-machine-shop-34206b23:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-brick-machine-shop-34206b23:1:s",
+    "subject": "variation:industrial-brick-machine-shop-34206b23:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-brick-machine-shop-34206b23:1:w",
+    "subject": "variation:industrial-brick-machine-shop-34206b23:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-corrugated-warehouse-69aeee07:1:n",
+    "subject": "variation:industrial-corrugated-warehouse-69aeee07:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-corrugated-warehouse-69aeee07:1:e",
+    "subject": "variation:industrial-corrugated-warehouse-69aeee07:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-corrugated-warehouse-69aeee07:1:s",
+    "subject": "variation:industrial-corrugated-warehouse-69aeee07:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-corrugated-warehouse-69aeee07:1:w",
+    "subject": "variation:industrial-corrugated-warehouse-69aeee07:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-store-a89c59c0-plain:1:n",
+    "subject": "variation:ref-building-corner-store-a89c59c0-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-store-a89c59c0-plain:1:e",
+    "subject": "variation:ref-building-corner-store-a89c59c0-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-store-a89c59c0-plain:1:s",
+    "subject": "variation:ref-building-corner-store-a89c59c0-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-store-a89c59c0-plain:1:w",
+    "subject": "variation:ref-building-corner-store-a89c59c0-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:n",
+    "subject": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:e",
+    "subject": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:s",
+    "subject": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:w",
+    "subject": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-north-304e5431-plain:1:n",
+    "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-north-304e5431-plain:1:e",
+    "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-north-304e5431-plain:1:s",
+    "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-north-304e5431-plain:1:w",
+    "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-north-a7184edf-plain:1:n",
+    "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-north-a7184edf-plain:1:e",
+    "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-north-a7184edf-plain:1:s",
+    "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-north-a7184edf-plain:1:w",
+    "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-north-24d21776-plain:1:n",
+    "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-north-24d21776-plain:1:e",
+    "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-north-24d21776-plain:1:s",
+    "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-north-24d21776-plain:1:w",
+    "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:n",
+    "subject": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:e",
+    "subject": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:s",
+    "subject": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:w",
+    "subject": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_timber-v2-22fab891-plain:1:n",
+    "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_timber-v2-22fab891-plain:1:e",
+    "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_timber-v2-22fab891-plain:1:s",
+    "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_timber-v2-22fab891-plain:1:w",
+    "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-arcade-f5b7f5eb-plain:1:n",
+    "subject": "variation:world-arcade-f5b7f5eb-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-arcade-f5b7f5eb-plain:1:e",
+    "subject": "variation:world-arcade-f5b7f5eb-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-arcade-f5b7f5eb-plain:1:s",
+    "subject": "variation:world-arcade-f5b7f5eb-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-arcade-f5b7f5eb-plain:1:w",
+    "subject": "variation:world-arcade-f5b7f5eb-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-diner-c9878d46-plain:1:n",
+    "subject": "variation:world-diner-c9878d46-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-diner-c9878d46-plain:1:e",
+    "subject": "variation:world-diner-c9878d46-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-diner-c9878d46-plain:1:s",
+    "subject": "variation:world-diner-c9878d46-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-diner-c9878d46-plain:1:w",
+    "subject": "variation:world-diner-c9878d46-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain-corner:1:n",
+    "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain-corner:1:e",
+    "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain-corner:1:s",
+    "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain-corner:1:w",
+    "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain:1:n",
+    "subject": "variation:world-house_1-ba13ed2e-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain:1:e",
+    "subject": "variation:world-house_1-ba13ed2e-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain:1:s",
+    "subject": "variation:world-house_1-ba13ed2e-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain:1:w",
+    "subject": "variation:world-house_1-ba13ed2e-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-north-2521eca8-plain:1:n",
+    "subject": "variation:world-house_1-north-2521eca8-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-north-2521eca8-plain:1:e",
+    "subject": "variation:world-house_1-north-2521eca8-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-north-2521eca8-plain:1:s",
+    "subject": "variation:world-house_1-north-2521eca8-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-north-2521eca8-plain:1:w",
+    "subject": "variation:world-house_1-north-2521eca8-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_3-north-2638a034-plain:1:n",
+    "subject": "variation:world-house_3-north-2638a034-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_3-north-2638a034-plain:1:e",
+    "subject": "variation:world-house_3-north-2638a034-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_3-north-2638a034-plain:1:s",
+    "subject": "variation:world-house_3-north-2638a034-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_3-north-2638a034-plain:1:w",
+    "subject": "variation:world-house_3-north-2638a034-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_4-north-630f880a-plain:1:n",
+    "subject": "variation:world-house_4-north-630f880a-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_4-north-630f880a-plain:1:e",
+    "subject": "variation:world-house_4-north-630f880a-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_4-north-630f880a-plain:1:s",
+    "subject": "variation:world-house_4-north-630f880a-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_4-north-630f880a-plain:1:w",
+    "subject": "variation:world-house_4-north-630f880a-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-video-bf85dfb9-plain:1:n",
+    "subject": "variation:world-video-bf85dfb9-plain:1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-video-bf85dfb9-plain:1:e",
+    "subject": "variation:world-video-bf85dfb9-plain:1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-video-bf85dfb9-plain:1:s",
+    "subject": "variation:world-video-bf85dfb9-plain:1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-video-bf85dfb9-plain:1:w",
+    "subject": "variation:world-video-bf85dfb9-plain:1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:bench:n",
+    "subject": "world:bench",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:bench:e",
+    "subject": "world:bench",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:bench:s",
+    "subject": "world:bench",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:bench:w",
+    "subject": "world:bench",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:gazebo:n",
+    "subject": "world:gazebo",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:gazebo:e",
+    "subject": "world:gazebo",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:gazebo:s",
+    "subject": "world:gazebo",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:gazebo:w",
+    "subject": "world:gazebo",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_0:n",
+    "subject": "world:house_0",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_0:e",
+    "subject": "world:house_0",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_0:s",
+    "subject": "world:house_0",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_0:w",
+    "subject": "world:house_0",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_1:n",
+    "subject": "world:house_1",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_1:e",
+    "subject": "world:house_1",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_1:s",
+    "subject": "world:house_1",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_1:w",
+    "subject": "world:house_1",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_3:n",
+    "subject": "world:house_3",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_3:e",
+    "subject": "world:house_3",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_3:s",
+    "subject": "world:house_3",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_3:w",
+    "subject": "world:house_3",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:streetlamp:n",
+    "subject": "world:streetlamp",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:streetlamp:e",
+    "subject": "world:streetlamp",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:streetlamp:s",
+    "subject": "world:streetlamp",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:streetlamp:w",
+    "subject": "world:streetlamp",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:trashcan:n",
+    "subject": "world:trashcan",
+    "direction": "n",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:trashcan:e",
+    "subject": "world:trashcan",
+    "direction": "e",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:trashcan:s",
+    "subject": "world:trashcan",
+    "direction": "s",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:trashcan:w",
+    "subject": "world:trashcan",
+    "direction": "w",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "east:ref:building-gas-canopy",
+    "subject": "ref:building-gas-canopy",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:town:bakery",
+    "subject": "town:bakery",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:town:barber",
+    "subject": "town:barber",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:town:fish_tackle",
+    "subject": "town:fish_tackle",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:town:grocery",
+    "subject": "town:grocery",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:town:laundromat",
+    "subject": "town:laundromat",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:town:pharmacy",
+    "subject": "town:pharmacy",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:town:postoffice",
+    "subject": "town:postoffice",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:world:diner",
+    "subject": "world:diner",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:world:snack_bar",
+    "subject": "world:snack_bar",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "east:world:video",
+    "subject": "world:video",
+    "type": "east-registration-alias; historical sources may be mirrored"
+  },
+  {
+    "id": "view:ce:parking-garage-2storey:ne",
+    "subject": "ce:parking-garage-2storey",
+    "direction": "ne",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-2storey:nw",
+    "subject": "ce:parking-garage-2storey",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-2storey:se",
+    "subject": "ce:parking-garage-2storey",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-2storey:sw",
+    "subject": "ce:parking-garage-2storey",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-4storey:ne",
+    "subject": "ce:parking-garage-4storey",
+    "direction": "ne",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-4storey:nw",
+    "subject": "ce:parking-garage-4storey",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-4storey:se",
+    "subject": "ce:parking-garage-4storey",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-4storey:sw",
+    "subject": "ce:parking-garage-4storey",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-6storey:ne",
+    "subject": "ce:parking-garage-6storey",
+    "direction": "ne",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-6storey:nw",
+    "subject": "ce:parking-garage-6storey",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-6storey:se",
+    "subject": "ce:parking-garage-6storey",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-6storey:sw",
+    "subject": "ce:parking-garage-6storey",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-3storey:ne",
+    "subject": "ce:parking-garage-3storey",
+    "direction": "ne",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-3storey:nw",
+    "subject": "ce:parking-garage-3storey",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-3storey:se",
+    "subject": "ce:parking-garage-3storey",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-3storey:sw",
+    "subject": "ce:parking-garage-3storey",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-deep-green:ne",
+    "subject": "landscape:bush-deep-green",
+    "direction": "ne",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-deep-green:nw",
+    "subject": "landscape:bush-deep-green",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-deep-green:se",
+    "subject": "landscape:bush-deep-green",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-deep-green:sw",
+    "subject": "landscape:bush-deep-green",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-sage-round:ne",
+    "subject": "landscape:bush-sage-round",
+    "direction": "ne",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-sage-round:nw",
+    "subject": "landscape:bush-sage-round",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-sage-round:se",
+    "subject": "landscape:bush-sage-round",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-sage-round:sw",
+    "subject": "landscape:bush-sage-round",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:hydrangea-pale:ne",
+    "subject": "landscape:hydrangea-pale",
+    "direction": "ne",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:hydrangea-pale:nw",
+    "subject": "landscape:hydrangea-pale",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:hydrangea-pale:se",
+    "subject": "landscape:hydrangea-pale",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:hydrangea-pale:sw",
+    "subject": "landscape:hydrangea-pale",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-5storey:ne",
+    "subject": "ce:parking-garage-5storey",
+    "direction": "ne",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-5storey:nw",
+    "subject": "ce:parking-garage-5storey",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-5storey:se",
+    "subject": "ce:parking-garage-5storey",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-garage-5storey:sw",
+    "subject": "ce:parking-garage-5storey",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-golden-russet:ne",
+    "subject": "landscape:bush-golden-russet",
+    "direction": "ne",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-golden-russet:nw",
+    "subject": "landscape:bush-golden-russet",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-golden-russet:se",
+    "subject": "landscape:bush-golden-russet",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:landscape:bush-golden-russet:sw",
+    "subject": "landscape:bush-golden-russet",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:buscompany:se",
+    "subject": "business:buscompany",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:buscompany:sw",
+    "subject": "business:buscompany",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:buscompany:nw",
+    "subject": "business:buscompany",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:casino:se",
+    "subject": "business:casino",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:casino:sw",
+    "subject": "business:casino",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:casino:nw",
+    "subject": "business:casino",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:diner:se",
+    "subject": "business:diner",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:diner:sw",
+    "subject": "business:diner",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:diner:nw",
+    "subject": "business:diner",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:estate-villa:se",
+    "subject": "business:estate-villa",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:estate-villa:sw",
+    "subject": "business:estate-villa",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:estate-villa:nw",
+    "subject": "business:estate-villa",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-boathouse:se",
+    "subject": "business:fishing-boathouse",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-boathouse:sw",
+    "subject": "business:fishing-boathouse",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-boathouse:nw",
+    "subject": "business:fishing-boathouse",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-cabin:se",
+    "subject": "business:fishing-cabin",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-cabin:sw",
+    "subject": "business:fishing-cabin",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-cabin:nw",
+    "subject": "business:fishing-cabin",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-lodge:se",
+    "subject": "business:fishing-lodge",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-lodge:sw",
+    "subject": "business:fishing-lodge",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-lodge:nw",
+    "subject": "business:fishing-lodge",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-rental-kiosk:se",
+    "subject": "business:fishing-rental-kiosk",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-rental-kiosk:sw",
+    "subject": "business:fishing-rental-kiosk",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:fishing-rental-kiosk:nw",
+    "subject": "business:fishing-rental-kiosk",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-cart-garage:se",
+    "subject": "business:golf-cart-garage",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-cart-garage:sw",
+    "subject": "business:golf-cart-garage",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-cart-garage:nw",
+    "subject": "business:golf-cart-garage",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-clubhouse:se",
+    "subject": "business:golf-clubhouse",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-clubhouse:sw",
+    "subject": "business:golf-clubhouse",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-clubhouse:nw",
+    "subject": "business:golf-clubhouse",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-driving-range:se",
+    "subject": "business:golf-driving-range",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-driving-range:sw",
+    "subject": "business:golf-driving-range",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-driving-range:nw",
+    "subject": "business:golf-driving-range",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-halfway-pavilion:se",
+    "subject": "business:golf-halfway-pavilion",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-halfway-pavilion:sw",
+    "subject": "business:golf-halfway-pavilion",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-halfway-pavilion:nw",
+    "subject": "business:golf-halfway-pavilion",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-pro-shop:se",
+    "subject": "business:golf-pro-shop",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-pro-shop:sw",
+    "subject": "business:golf-pro-shop",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:golf-pro-shop:nw",
+    "subject": "business:golf-pro-shop",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:hotel:se",
+    "subject": "business:hotel",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:hotel:sw",
+    "subject": "business:hotel",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:hotel:nw",
+    "subject": "business:hotel",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:motel:se",
+    "subject": "business:motel",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:motel:sw",
+    "subject": "business:motel",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:motel:nw",
+    "subject": "business:motel",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:sportsbar:se",
+    "subject": "business:sportsbar",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:sportsbar:sw",
+    "subject": "business:sportsbar",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:sportsbar:nw",
+    "subject": "business:sportsbar",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:stadium:se",
+    "subject": "business:stadium",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:stadium:sw",
+    "subject": "business:stadium",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:stadium:nw",
+    "subject": "business:stadium",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:tackle:se",
+    "subject": "business:tackle",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:tackle:sw",
+    "subject": "business:tackle",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:tackle:nw",
+    "subject": "business:tackle",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:taxi:se",
+    "subject": "business:taxi",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:taxi:sw",
+    "subject": "business:taxi",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:business:taxi:nw",
+    "subject": "business:taxi",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-kiosk:se",
+    "subject": "ce:parking-kiosk",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-kiosk:sw",
+    "subject": "ce:parking-kiosk",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ce:parking-kiosk:nw",
+    "subject": "ce:parking-kiosk",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:backyard-tent:se",
+    "subject": "expansion:backyard-tent",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:backyard-tent:sw",
+    "subject": "expansion:backyard-tent",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:backyard-tent:nw",
+    "subject": "expansion:backyard-tent",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:boarded-store-rear:se",
+    "subject": "expansion:boarded-store-rear",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:boarded-store-rear:sw",
+    "subject": "expansion:boarded-store-rear",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:boarded-store-rear:nw",
+    "subject": "expansion:boarded-store-rear",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:derelict-two-storey:se",
+    "subject": "expansion:derelict-two-storey",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:derelict-two-storey:sw",
+    "subject": "expansion:derelict-two-storey",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:derelict-two-storey:nw",
+    "subject": "expansion:derelict-two-storey",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:dormer-rear:se",
+    "subject": "expansion:dormer-rear",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:dormer-rear:sw",
+    "subject": "expansion:dormer-rear",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:dormer-rear:nw",
+    "subject": "expansion:dormer-rear",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:duplex-rear:se",
+    "subject": "expansion:duplex-rear",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:duplex-rear:sw",
+    "subject": "expansion:duplex-rear",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:duplex-rear:nw",
+    "subject": "expansion:duplex-rear",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:glasshouse:se",
+    "subject": "expansion:glasshouse",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:glasshouse:sw",
+    "subject": "expansion:glasshouse",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:glasshouse:nw",
+    "subject": "expansion:glasshouse",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:lean-to-shed:se",
+    "subject": "expansion:lean-to-shed",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:lean-to-shed:sw",
+    "subject": "expansion:lean-to-shed",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:lean-to-shed:nw",
+    "subject": "expansion:lean-to-shed",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:outhouse:se",
+    "subject": "expansion:outhouse",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:outhouse:sw",
+    "subject": "expansion:outhouse",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:outhouse:nw",
+    "subject": "expansion:outhouse",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:rundown-house:se",
+    "subject": "expansion:rundown-house",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:rundown-house:sw",
+    "subject": "expansion:rundown-house",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:rundown-house:nw",
+    "subject": "expansion:rundown-house",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:treehouse:se",
+    "subject": "expansion:treehouse",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:treehouse:sw",
+    "subject": "expansion:treehouse",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:expansion:treehouse:nw",
+    "subject": "expansion:treehouse",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-bbq-deck:se",
+    "subject": "gen:back-bbq-deck",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-bbq-deck:sw",
+    "subject": "gen:back-bbq-deck",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-bbq-deck:nw",
+    "subject": "gen:back-bbq-deck",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-patio-pool:se",
+    "subject": "gen:back-patio-pool",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-patio-pool:sw",
+    "subject": "gen:back-patio-pool",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-patio-pool:nw",
+    "subject": "gen:back-patio-pool",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-screened-porch:se",
+    "subject": "gen:back-screened-porch",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-screened-porch:sw",
+    "subject": "gen:back-screened-porch",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-screened-porch:nw",
+    "subject": "gen:back-screened-porch",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-shed-garden:se",
+    "subject": "gen:back-shed-garden",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-shed-garden:sw",
+    "subject": "gen:back-shed-garden",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-shed-garden:nw",
+    "subject": "gen:back-shed-garden",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-swingset:se",
+    "subject": "gen:back-swingset",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-swingset:sw",
+    "subject": "gen:back-swingset",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:back-swingset:nw",
+    "subject": "gen:back-swingset",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-duplex:se",
+    "subject": "gen:house-duplex",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-duplex:sw",
+    "subject": "gen:house-duplex",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-duplex:nw",
+    "subject": "gen:house-duplex",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-farmhouse-wrap:se",
+    "subject": "gen:house-farmhouse-wrap",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-farmhouse-wrap:sw",
+    "subject": "gen:house-farmhouse-wrap",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-farmhouse-wrap:nw",
+    "subject": "gen:house-farmhouse-wrap",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-l-shape:se",
+    "subject": "gen:house-l-shape",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-l-shape:sw",
+    "subject": "gen:house-l-shape",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-l-shape:nw",
+    "subject": "gen:house-l-shape",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-ranch-long:se",
+    "subject": "gen:house-ranch-long",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-ranch-long:sw",
+    "subject": "gen:house-ranch-long",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-ranch-long:nw",
+    "subject": "gen:house-ranch-long",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-splitlevel:se",
+    "subject": "gen:house-splitlevel",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-splitlevel:sw",
+    "subject": "gen:house-splitlevel",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:gen:house-splitlevel:nw",
+    "subject": "gen:house-splitlevel",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:clubhouse-shanty:se",
+    "subject": "golf:clubhouse-shanty",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:clubhouse-shanty:sw",
+    "subject": "golf:clubhouse-shanty",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:clubhouse-shanty:nw",
+    "subject": "golf:clubhouse-shanty",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:food-tent:se",
+    "subject": "golf:food-tent",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:food-tent:sw",
+    "subject": "golf:food-tent",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:food-tent:nw",
+    "subject": "golf:food-tent",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:grandstand-s:se",
+    "subject": "golf:grandstand-s",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:grandstand-s:sw",
+    "subject": "golf:grandstand-s",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:grandstand-s:nw",
+    "subject": "golf:grandstand-s",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:leaderboard:se",
+    "subject": "golf:leaderboard",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:leaderboard:sw",
+    "subject": "golf:leaderboard",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:leaderboard:nw",
+    "subject": "golf:leaderboard",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:toilet-block:se",
+    "subject": "golf:toilet-block",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:toilet-block:sw",
+    "subject": "golf:toilet-block",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:golf:toilet-block:nw",
+    "subject": "golf:toilet-block",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:building-gas-canopy:sw",
+    "subject": "ref:building-gas-canopy",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:building-gas-canopy:nw",
+    "subject": "ref:building-gas-canopy",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-fountain-v2:se",
+    "subject": "ref:landmark-fountain-v2",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-fountain-v2:sw",
+    "subject": "ref:landmark-fountain-v2",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-fountain-v2:nw",
+    "subject": "ref:landmark-fountain-v2",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-silo:se",
+    "subject": "ref:landmark-silo",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-silo:sw",
+    "subject": "ref:landmark-silo",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-silo:nw",
+    "subject": "ref:landmark-silo",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-water-tower:se",
+    "subject": "ref:landmark-water-tower",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-water-tower:sw",
+    "subject": "ref:landmark-water-tower",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-water-tower:nw",
+    "subject": "ref:landmark-water-tower",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-windmill:se",
+    "subject": "ref:landmark-windmill",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-windmill:sw",
+    "subject": "ref:landmark-windmill",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:ref:landmark-windmill:nw",
+    "subject": "ref:landmark-windmill",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:garage_brick:se",
+    "subject": "static:garage_brick",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:garage_brick:sw",
+    "subject": "static:garage_brick",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:garage_brick:nw",
+    "subject": "static:garage_brick",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:garage_brick-v2:se",
+    "subject": "static:garage_brick-v2",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:garage_brick-v2:sw",
+    "subject": "static:garage_brick-v2",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:garage_brick-v2:nw",
+    "subject": "static:garage_brick-v2",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:garage_timber:se",
+    "subject": "static:garage_timber",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:garage_timber:sw",
+    "subject": "static:garage_timber",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:garage_timber:nw",
+    "subject": "static:garage_timber",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_brick_rear:se",
+    "subject": "static:shop_brick_rear",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_brick_rear:sw",
+    "subject": "static:shop_brick_rear",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_brick_rear:nw",
+    "subject": "static:shop_brick_rear",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_brick_rear-v2:se",
+    "subject": "static:shop_brick_rear-v2",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_brick_rear-v2:sw",
+    "subject": "static:shop_brick_rear-v2",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_brick_rear-v2:nw",
+    "subject": "static:shop_brick_rear-v2",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_market_rear:se",
+    "subject": "static:shop_market_rear",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_market_rear:sw",
+    "subject": "static:shop_market_rear",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_market_rear:nw",
+    "subject": "static:shop_market_rear",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_market_rear-v2:se",
+    "subject": "static:shop_market_rear-v2",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_market_rear-v2:sw",
+    "subject": "static:shop_market_rear-v2",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:static:shop_market_rear-v2:nw",
+    "subject": "static:shop_market_rear-v2",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:bakery:sw",
+    "subject": "town:bakery",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:bakery:nw",
+    "subject": "town:bakery",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:barber:sw",
+    "subject": "town:barber",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:barber:nw",
+    "subject": "town:barber",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:bus_stop:se",
+    "subject": "town:bus_stop",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:bus_stop:sw",
+    "subject": "town:bus_stop",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:bus_stop:nw",
+    "subject": "town:bus_stop",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:firestation:se",
+    "subject": "town:firestation",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:firestation:sw",
+    "subject": "town:firestation",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:firestation:nw",
+    "subject": "town:firestation",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:fish_tackle:sw",
+    "subject": "town:fish_tackle",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:fish_tackle:nw",
+    "subject": "town:fish_tackle",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:grocery:sw",
+    "subject": "town:grocery",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:grocery:nw",
+    "subject": "town:grocery",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:laundromat:sw",
+    "subject": "town:laundromat",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:laundromat:nw",
+    "subject": "town:laundromat",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:pharmacy:sw",
+    "subject": "town:pharmacy",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:pharmacy:nw",
+    "subject": "town:pharmacy",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:phone_booth:se",
+    "subject": "town:phone_booth",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:phone_booth:sw",
+    "subject": "town:phone_booth",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:phone_booth:nw",
+    "subject": "town:phone_booth",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:postoffice:sw",
+    "subject": "town:postoffice",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:town:postoffice:nw",
+    "subject": "town:postoffice",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-backyard-tent-a621b6c8:1:se",
+    "subject": "variation:expansion-backyard-tent-a621b6c8:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-backyard-tent-a621b6c8:1:sw",
+    "subject": "variation:expansion-backyard-tent-a621b6c8:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-backyard-tent-a621b6c8:1:nw",
+    "subject": "variation:expansion-backyard-tent-a621b6c8:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-boarded-store-rear-d09a309a:1:se",
+    "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-boarded-store-rear-d09a309a:1:sw",
+    "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-boarded-store-rear-d09a309a:1:nw",
+    "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-cottage-rear-e52a10bb-plain:1:se",
+    "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-cottage-rear-e52a10bb-plain:1:sw",
+    "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-cottage-rear-e52a10bb-plain:1:nw",
+    "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-derelict-two-storey-012bed48:1:se",
+    "subject": "variation:expansion-derelict-two-storey-012bed48:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-derelict-two-storey-012bed48:1:sw",
+    "subject": "variation:expansion-derelict-two-storey-012bed48:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-derelict-two-storey-012bed48:1:nw",
+    "subject": "variation:expansion-derelict-two-storey-012bed48:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-dormer-rear-55d3cd77-plain:1:se",
+    "subject": "variation:expansion-dormer-rear-55d3cd77-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-dormer-rear-55d3cd77-plain:1:sw",
+    "subject": "variation:expansion-dormer-rear-55d3cd77-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-dormer-rear-55d3cd77-plain:1:nw",
+    "subject": "variation:expansion-dormer-rear-55d3cd77-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-garage-rear-91bcbe45:1:se",
+    "subject": "variation:expansion-garage-rear-91bcbe45:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-garage-rear-91bcbe45:1:sw",
+    "subject": "variation:expansion-garage-rear-91bcbe45:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-garage-rear-91bcbe45:1:nw",
+    "subject": "variation:expansion-garage-rear-91bcbe45:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1:se",
+    "subject": "variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1:sw",
+    "subject": "variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1:nw",
+    "subject": "variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-lean-to-shed-0b83bbf7-plain:1:se",
+    "subject": "variation:expansion-lean-to-shed-0b83bbf7-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-lean-to-shed-0b83bbf7-plain:1:sw",
+    "subject": "variation:expansion-lean-to-shed-0b83bbf7-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-lean-to-shed-0b83bbf7-plain:1:nw",
+    "subject": "variation:expansion-lean-to-shed-0b83bbf7-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:se",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:sw",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:nw",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain:1:se",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain:1:sw",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-a7c17683-plain:1:nw",
+    "subject": "variation:expansion-rundown-house-a7c17683-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-north-24ae3116-plain:1:se",
+    "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-north-24ae3116-plain:1:sw",
+    "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-rundown-house-north-24ae3116-plain:1:nw",
+    "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-treehouse-north-1d02f68a-plain:1:se",
+    "subject": "variation:expansion-treehouse-north-1d02f68a-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-treehouse-north-1d02f68a-plain:1:sw",
+    "subject": "variation:expansion-treehouse-north-1d02f68a-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:expansion-treehouse-north-1d02f68a-plain:1:nw",
+    "subject": "variation:expansion-treehouse-north-1d02f68a-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-bbq-deck-b546df1a-plain:1:se",
+    "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-bbq-deck-b546df1a-plain:1:sw",
+    "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-bbq-deck-b546df1a-plain:1:nw",
+    "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:se",
+    "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:sw",
+    "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:nw",
+    "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-screened-porch-8c31c391-plain:1:se",
+    "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-screened-porch-8c31c391-plain:1:sw",
+    "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-screened-porch-8c31c391-plain:1:nw",
+    "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-shed-garden-ac94c81e-plain-corner:1:se",
+    "subject": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-shed-garden-ac94c81e-plain-corner:1:sw",
+    "subject": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-shed-garden-ac94c81e-plain-corner:1:nw",
+    "subject": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-shed-garden-ac94c81e-plain:1:se",
+    "subject": "variation:gen-back-shed-garden-ac94c81e-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-shed-garden-ac94c81e-plain:1:sw",
+    "subject": "variation:gen-back-shed-garden-ac94c81e-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-shed-garden-ac94c81e-plain:1:nw",
+    "subject": "variation:gen-back-shed-garden-ac94c81e-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:se",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:sw",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:nw",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain:1:se",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain:1:sw",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-back-swingset-a10c81b7-plain:1:nw",
+    "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-duplex-c39d1a23-plain-corner:1:se",
+    "subject": "variation:gen-house-duplex-c39d1a23-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-duplex-c39d1a23-plain-corner:1:sw",
+    "subject": "variation:gen-house-duplex-c39d1a23-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-duplex-c39d1a23-plain-corner:1:nw",
+    "subject": "variation:gen-house-duplex-c39d1a23-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-duplex-north-521714ac-plain:1:se",
+    "subject": "variation:gen-house-duplex-north-521714ac-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-duplex-north-521714ac-plain:1:sw",
+    "subject": "variation:gen-house-duplex-north-521714ac-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-duplex-north-521714ac-plain:1:nw",
+    "subject": "variation:gen-house-duplex-north-521714ac-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1:se",
+    "subject": "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1:sw",
+    "subject": "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1:nw",
+    "subject": "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain:1:se",
+    "subject": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain:1:sw",
+    "subject": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain:1:nw",
+    "subject": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-farmhouse-wrap-north-446969e5-plain:1:se",
+    "subject": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-farmhouse-wrap-north-446969e5-plain:1:sw",
+    "subject": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-farmhouse-wrap-north-446969e5-plain:1:nw",
+    "subject": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:se",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:sw",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:nw",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain:1:se",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain:1:sw",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-18552ce5-plain:1:nw",
+    "subject": "variation:gen-house-l-ranch-18552ce5-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:se",
+    "subject": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:sw",
+    "subject": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:nw",
+    "subject": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-shape-e0e3b328-plain-corner:1:se",
+    "subject": "variation:gen-house-l-shape-e0e3b328-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-shape-e0e3b328-plain-corner:1:sw",
+    "subject": "variation:gen-house-l-shape-e0e3b328-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-shape-e0e3b328-plain-corner:1:nw",
+    "subject": "variation:gen-house-l-shape-e0e3b328-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-shape-e0e3b328-plain:1:se",
+    "subject": "variation:gen-house-l-shape-e0e3b328-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-shape-e0e3b328-plain:1:sw",
+    "subject": "variation:gen-house-l-shape-e0e3b328-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-shape-e0e3b328-plain:1:nw",
+    "subject": "variation:gen-house-l-shape-e0e3b328-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-shape-north-79eba705-plain:1:se",
+    "subject": "variation:gen-house-l-shape-north-79eba705-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-shape-north-79eba705-plain:1:sw",
+    "subject": "variation:gen-house-l-shape-north-79eba705-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-l-shape-north-79eba705-plain:1:nw",
+    "subject": "variation:gen-house-l-shape-north-79eba705-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-ranch-long-a4ddd58c-plain-corner:1:se",
+    "subject": "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-ranch-long-a4ddd58c-plain-corner:1:sw",
+    "subject": "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-ranch-long-a4ddd58c-plain-corner:1:nw",
+    "subject": "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-ranch-long-a4ddd58c-plain:1:se",
+    "subject": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-ranch-long-a4ddd58c-plain:1:sw",
+    "subject": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-ranch-long-a4ddd58c-plain:1:nw",
+    "subject": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-splitlevel-8b6b4aa4-plain:1:se",
+    "subject": "variation:gen-house-splitlevel-8b6b4aa4-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-splitlevel-8b6b4aa4-plain:1:sw",
+    "subject": "variation:gen-house-splitlevel-8b6b4aa4-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-splitlevel-8b6b4aa4-plain:1:nw",
+    "subject": "variation:gen-house-splitlevel-8b6b4aa4-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-splitlevel-north-63bc759e-plain:1:se",
+    "subject": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-splitlevel-north-63bc759e-plain:1:sw",
+    "subject": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:gen-house-splitlevel-north-63bc759e-plain:1:nw",
+    "subject": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-auto-body-shop-63875699:1:se",
+    "subject": "variation:industrial-auto-body-shop-63875699:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-auto-body-shop-63875699:1:sw",
+    "subject": "variation:industrial-auto-body-shop-63875699:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-auto-body-shop-63875699:1:nw",
+    "subject": "variation:industrial-auto-body-shop-63875699:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-bottling-plant-13e91e4e:1:se",
+    "subject": "variation:industrial-bottling-plant-13e91e4e:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-bottling-plant-13e91e4e:1:sw",
+    "subject": "variation:industrial-bottling-plant-13e91e4e:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-bottling-plant-13e91e4e:1:nw",
+    "subject": "variation:industrial-bottling-plant-13e91e4e:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-brick-machine-shop-34206b23:1:se",
+    "subject": "variation:industrial-brick-machine-shop-34206b23:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-brick-machine-shop-34206b23:1:sw",
+    "subject": "variation:industrial-brick-machine-shop-34206b23:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-brick-machine-shop-34206b23:1:nw",
+    "subject": "variation:industrial-brick-machine-shop-34206b23:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-cold-storage-378b3489:1:se",
+    "subject": "variation:industrial-cold-storage-378b3489:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-cold-storage-378b3489:1:sw",
+    "subject": "variation:industrial-cold-storage-378b3489:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-cold-storage-378b3489:1:nw",
+    "subject": "variation:industrial-cold-storage-378b3489:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-corrugated-warehouse-69aeee07:1:se",
+    "subject": "variation:industrial-corrugated-warehouse-69aeee07:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-corrugated-warehouse-69aeee07:1:sw",
+    "subject": "variation:industrial-corrugated-warehouse-69aeee07:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-corrugated-warehouse-69aeee07:1:nw",
+    "subject": "variation:industrial-corrugated-warehouse-69aeee07:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-foundry-606f1084:1:se",
+    "subject": "variation:industrial-foundry-606f1084:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-foundry-606f1084:1:sw",
+    "subject": "variation:industrial-foundry-606f1084:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-foundry-606f1084:1:nw",
+    "subject": "variation:industrial-foundry-606f1084:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-freight-depot-a030c919:1:se",
+    "subject": "variation:industrial-freight-depot-a030c919:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-freight-depot-a030c919:1:sw",
+    "subject": "variation:industrial-freight-depot-a030c919:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-freight-depot-a030c919:1:nw",
+    "subject": "variation:industrial-freight-depot-a030c919:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-lumber-workshop-8a43a691:1:se",
+    "subject": "variation:industrial-lumber-workshop-8a43a691:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-lumber-workshop-8a43a691:1:sw",
+    "subject": "variation:industrial-lumber-workshop-8a43a691:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-lumber-workshop-8a43a691:1:nw",
+    "subject": "variation:industrial-lumber-workshop-8a43a691:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-printing-works-2be751ae:1:se",
+    "subject": "variation:industrial-printing-works-2be751ae:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-printing-works-2be751ae:1:sw",
+    "subject": "variation:industrial-printing-works-2be751ae:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-printing-works-2be751ae:1:nw",
+    "subject": "variation:industrial-printing-works-2be751ae:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-rail-repair-shed-fbe2c8d9:1:se",
+    "subject": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-rail-repair-shed-fbe2c8d9:1:sw",
+    "subject": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-rail-repair-shed-fbe2c8d9:1:nw",
+    "subject": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-textile-mill-eedf9576:1:se",
+    "subject": "variation:industrial-textile-mill-eedf9576:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-textile-mill-eedf9576:1:sw",
+    "subject": "variation:industrial-textile-mill-eedf9576:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-textile-mill-eedf9576:1:nw",
+    "subject": "variation:industrial-textile-mill-eedf9576:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-utility-substation-54820c2b:1:se",
+    "subject": "variation:industrial-utility-substation-54820c2b:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-utility-substation-54820c2b:1:sw",
+    "subject": "variation:industrial-utility-substation-54820c2b:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:industrial-utility-substation-54820c2b:1:nw",
+    "subject": "variation:industrial-utility-substation-54820c2b:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-barn-74bee205-plain:1:se",
+    "subject": "variation:ref-building-barn-74bee205-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-barn-74bee205-plain:1:sw",
+    "subject": "variation:ref-building-barn-74bee205-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-barn-74bee205-plain:1:nw",
+    "subject": "variation:ref-building-barn-74bee205-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-barn-v2-b96e34dc-plain:1:se",
+    "subject": "variation:ref-building-barn-v2-b96e34dc-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-barn-v2-b96e34dc-plain:1:sw",
+    "subject": "variation:ref-building-barn-v2-b96e34dc-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-barn-v2-b96e34dc-plain:1:nw",
+    "subject": "variation:ref-building-barn-v2-b96e34dc-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-church-1df07e15-plain:1:se",
+    "subject": "variation:ref-building-church-1df07e15-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-church-1df07e15-plain:1:sw",
+    "subject": "variation:ref-building-church-1df07e15-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-church-1df07e15-plain:1:nw",
+    "subject": "variation:ref-building-church-1df07e15-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-shop-2ffc6ab7-plain:1:se",
+    "subject": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-shop-2ffc6ab7-plain:1:sw",
+    "subject": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-shop-2ffc6ab7-plain:1:nw",
+    "subject": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-store-a89c59c0-plain:1:se",
+    "subject": "variation:ref-building-corner-store-a89c59c0-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-store-a89c59c0-plain:1:sw",
+    "subject": "variation:ref-building-corner-store-a89c59c0-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-corner-store-a89c59c0-plain:1:nw",
+    "subject": "variation:ref-building-corner-store-a89c59c0-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-diner-1e19ec22-plain:1:se",
+    "subject": "variation:ref-building-diner-1e19ec22-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-diner-1e19ec22-plain:1:sw",
+    "subject": "variation:ref-building-diner-1e19ec22-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-diner-1e19ec22-plain:1:nw",
+    "subject": "variation:ref-building-diner-1e19ec22-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-drive-in-screen-b0bccc2a-plain:1:se",
+    "subject": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-drive-in-screen-b0bccc2a-plain:1:sw",
+    "subject": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-drive-in-screen-b0bccc2a-plain:1:nw",
+    "subject": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farm-shed-0280794d-plain:1:se",
+    "subject": "variation:ref-building-farm-shed-0280794d-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farm-shed-0280794d-plain:1:sw",
+    "subject": "variation:ref-building-farm-shed-0280794d-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farm-shed-0280794d-plain:1:nw",
+    "subject": "variation:ref-building-farm-shed-0280794d-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-ef501a21-plain:1:se",
+    "subject": "variation:ref-building-farmhouse-ef501a21-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-ef501a21-plain:1:sw",
+    "subject": "variation:ref-building-farmhouse-ef501a21-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-ef501a21-plain:1:nw",
+    "subject": "variation:ref-building-farmhouse-ef501a21-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:se",
+    "subject": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:sw",
+    "subject": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:nw",
+    "subject": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-garage-0f7895a1-plain:1:se",
+    "subject": "variation:ref-building-garage-0f7895a1-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-garage-0f7895a1-plain:1:sw",
+    "subject": "variation:ref-building-garage-0f7895a1-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-garage-0f7895a1-plain:1:nw",
+    "subject": "variation:ref-building-garage-0f7895a1-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-gas-canopy-543306a0-plain:1:se",
+    "subject": "variation:ref-building-gas-canopy-543306a0-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-gas-canopy-543306a0-plain:1:sw",
+    "subject": "variation:ref-building-gas-canopy-543306a0-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-gas-canopy-543306a0-plain:1:nw",
+    "subject": "variation:ref-building-gas-canopy-543306a0-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-gas-shop-3326e70f-plain:1:se",
+    "subject": "variation:ref-building-gas-shop-3326e70f-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-gas-shop-3326e70f-plain:1:sw",
+    "subject": "variation:ref-building-gas-shop-3326e70f-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-gas-shop-3326e70f-plain:1:nw",
+    "subject": "variation:ref-building-gas-shop-3326e70f-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-grocery-79498713-plain:1:se",
+    "subject": "variation:ref-building-grocery-79498713-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-grocery-79498713-plain:1:sw",
+    "subject": "variation:ref-building-grocery-79498713-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-grocery-79498713-plain:1:nw",
+    "subject": "variation:ref-building-grocery-79498713-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-fc52ce66-plain:1:se",
+    "subject": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-fc52ce66-plain:1:sw",
+    "subject": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-fc52ce66-plain:1:nw",
+    "subject": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-north-304e5431-plain:1:se",
+    "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-north-304e5431-plain:1:sw",
+    "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-cottage-north-304e5431-plain:1:nw",
+    "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-dormer-b4413f08-plain:1:se",
+    "subject": "variation:ref-building-house-dormer-b4413f08-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-dormer-b4413f08-plain:1:sw",
+    "subject": "variation:ref-building-house-dormer-b4413f08-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-dormer-b4413f08-plain:1:nw",
+    "subject": "variation:ref-building-house-dormer-b4413f08-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:se",
+    "subject": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:sw",
+    "subject": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:nw",
+    "subject": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-a1d986d3-plain:1:se",
+    "subject": "variation:ref-building-house-garage-a1d986d3-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-a1d986d3-plain:1:sw",
+    "subject": "variation:ref-building-house-garage-a1d986d3-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-a1d986d3-plain:1:nw",
+    "subject": "variation:ref-building-house-garage-a1d986d3-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-north-a7184edf-plain:1:se",
+    "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-north-a7184edf-plain:1:sw",
+    "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-garage-north-a7184edf-plain:1:nw",
+    "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-20cb9f9e-plain:1:se",
+    "subject": "variation:ref-building-house-large-20cb9f9e-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-20cb9f9e-plain:1:sw",
+    "subject": "variation:ref-building-house-large-20cb9f9e-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-20cb9f9e-plain:1:nw",
+    "subject": "variation:ref-building-house-large-20cb9f9e-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-north-24d21776-plain:1:se",
+    "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-north-24d21776-plain:1:sw",
+    "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-house-large-north-24d21776-plain:1:nw",
+    "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-mausoleum-719fd618-plain:1:se",
+    "subject": "variation:ref-building-mausoleum-719fd618-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-mausoleum-719fd618-plain:1:sw",
+    "subject": "variation:ref-building-mausoleum-719fd618-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-mausoleum-719fd618-plain:1:nw",
+    "subject": "variation:ref-building-mausoleum-719fd618-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-shop-blue-941779e4-plain:1:se",
+    "subject": "variation:ref-building-shop-blue-941779e4-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-shop-blue-941779e4-plain:1:sw",
+    "subject": "variation:ref-building-shop-blue-941779e4-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-shop-blue-941779e4-plain:1:nw",
+    "subject": "variation:ref-building-shop-blue-941779e4-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:se",
+    "subject": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:sw",
+    "subject": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:nw",
+    "subject": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_brick-v2-be1ee461-plain:1:se",
+    "subject": "variation:static-garage_brick-v2-be1ee461-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_brick-v2-be1ee461-plain:1:sw",
+    "subject": "variation:static-garage_brick-v2-be1ee461-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_brick-v2-be1ee461-plain:1:nw",
+    "subject": "variation:static-garage_brick-v2-be1ee461-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_timber-v2-22fab891-plain:1:se",
+    "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_timber-v2-22fab891-plain:1:sw",
+    "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-garage_timber-v2-22fab891-plain:1:nw",
+    "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-shop_brick_rear-04db4dfa-plain:1:se",
+    "subject": "variation:static-shop_brick_rear-04db4dfa-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-shop_brick_rear-04db4dfa-plain:1:sw",
+    "subject": "variation:static-shop_brick_rear-04db4dfa-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-shop_brick_rear-04db4dfa-plain:1:nw",
+    "subject": "variation:static-shop_brick_rear-04db4dfa-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-shop_market_rear-f9272004-plain:1:se",
+    "subject": "variation:static-shop_market_rear-f9272004-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-shop_market_rear-f9272004-plain:1:sw",
+    "subject": "variation:static-shop_market_rear-f9272004-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:static-shop_market_rear-f9272004-plain:1:nw",
+    "subject": "variation:static-shop_market_rear-f9272004-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-bakery-af15d7f5-plain:1:se",
+    "subject": "variation:town-bakery-af15d7f5-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-bakery-af15d7f5-plain:1:sw",
+    "subject": "variation:town-bakery-af15d7f5-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-bakery-af15d7f5-plain:1:nw",
+    "subject": "variation:town-bakery-af15d7f5-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-barber-13c5ef06-plain:1:se",
+    "subject": "variation:town-barber-13c5ef06-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-barber-13c5ef06-plain:1:sw",
+    "subject": "variation:town-barber-13c5ef06-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-barber-13c5ef06-plain:1:nw",
+    "subject": "variation:town-barber-13c5ef06-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-fish_tackle-99c1401c-plain:1:se",
+    "subject": "variation:town-fish_tackle-99c1401c-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-fish_tackle-99c1401c-plain:1:sw",
+    "subject": "variation:town-fish_tackle-99c1401c-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-fish_tackle-99c1401c-plain:1:nw",
+    "subject": "variation:town-fish_tackle-99c1401c-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-grocery-46d5dc39-plain:1:se",
+    "subject": "variation:town-grocery-46d5dc39-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-grocery-46d5dc39-plain:1:sw",
+    "subject": "variation:town-grocery-46d5dc39-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-grocery-46d5dc39-plain:1:nw",
+    "subject": "variation:town-grocery-46d5dc39-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-hardware-bf36737f-plain:1:se",
+    "subject": "variation:town-hardware-bf36737f-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-hardware-bf36737f-plain:1:sw",
+    "subject": "variation:town-hardware-bf36737f-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-hardware-bf36737f-plain:1:nw",
+    "subject": "variation:town-hardware-bf36737f-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-laundromat-43183f9e-plain:1:se",
+    "subject": "variation:town-laundromat-43183f9e-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-laundromat-43183f9e-plain:1:sw",
+    "subject": "variation:town-laundromat-43183f9e-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-laundromat-43183f9e-plain:1:nw",
+    "subject": "variation:town-laundromat-43183f9e-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-pharmacy-d87b861c-plain:1:se",
+    "subject": "variation:town-pharmacy-d87b861c-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-pharmacy-d87b861c-plain:1:sw",
+    "subject": "variation:town-pharmacy-d87b861c-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-pharmacy-d87b861c-plain:1:nw",
+    "subject": "variation:town-pharmacy-d87b861c-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-postoffice-1c7025b8-plain:1:se",
+    "subject": "variation:town-postoffice-1c7025b8-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-postoffice-1c7025b8-plain:1:sw",
+    "subject": "variation:town-postoffice-1c7025b8-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:town-postoffice-1c7025b8-plain:1:nw",
+    "subject": "variation:town-postoffice-1c7025b8-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-arcade-f5b7f5eb-plain:1:se",
+    "subject": "variation:world-arcade-f5b7f5eb-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-arcade-f5b7f5eb-plain:1:sw",
+    "subject": "variation:world-arcade-f5b7f5eb-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-arcade-f5b7f5eb-plain:1:nw",
+    "subject": "variation:world-arcade-f5b7f5eb-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-barn-ae80f6c9-plain:1:se",
+    "subject": "variation:world-barn-ae80f6c9-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-barn-ae80f6c9-plain:1:sw",
+    "subject": "variation:world-barn-ae80f6c9-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-barn-ae80f6c9-plain:1:nw",
+    "subject": "variation:world-barn-ae80f6c9-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-church-44e76535-plain:1:se",
+    "subject": "variation:world-church-44e76535-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-church-44e76535-plain:1:sw",
+    "subject": "variation:world-church-44e76535-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-church-44e76535-plain:1:nw",
+    "subject": "variation:world-church-44e76535-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-diner-c9878d46-plain:1:se",
+    "subject": "variation:world-diner-c9878d46-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-diner-c9878d46-plain:1:sw",
+    "subject": "variation:world-diner-c9878d46-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-diner-c9878d46-plain:1:nw",
+    "subject": "variation:world-diner-c9878d46-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_0-51fa4b80-plain:1:se",
+    "subject": "variation:world-house_0-51fa4b80-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_0-51fa4b80-plain:1:sw",
+    "subject": "variation:world-house_0-51fa4b80-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_0-51fa4b80-plain:1:nw",
+    "subject": "variation:world-house_0-51fa4b80-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_0-north-1dde6f56-plain:1:se",
+    "subject": "variation:world-house_0-north-1dde6f56-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_0-north-1dde6f56-plain:1:sw",
+    "subject": "variation:world-house_0-north-1dde6f56-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_0-north-1dde6f56-plain:1:nw",
+    "subject": "variation:world-house_0-north-1dde6f56-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain-corner:1:se",
+    "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain-corner:1:sw",
+    "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain-corner:1:nw",
+    "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain:1:se",
+    "subject": "variation:world-house_1-ba13ed2e-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain:1:sw",
+    "subject": "variation:world-house_1-ba13ed2e-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-ba13ed2e-plain:1:nw",
+    "subject": "variation:world-house_1-ba13ed2e-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-north-2521eca8-plain:1:se",
+    "subject": "variation:world-house_1-north-2521eca8-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-north-2521eca8-plain:1:sw",
+    "subject": "variation:world-house_1-north-2521eca8-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_1-north-2521eca8-plain:1:nw",
+    "subject": "variation:world-house_1-north-2521eca8-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_2-north-332663ab-plain:1:se",
+    "subject": "variation:world-house_2-north-332663ab-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_2-north-332663ab-plain:1:sw",
+    "subject": "variation:world-house_2-north-332663ab-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_2-north-332663ab-plain:1:nw",
+    "subject": "variation:world-house_2-north-332663ab-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_3-north-2638a034-plain:1:se",
+    "subject": "variation:world-house_3-north-2638a034-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_3-north-2638a034-plain:1:sw",
+    "subject": "variation:world-house_3-north-2638a034-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_3-north-2638a034-plain:1:nw",
+    "subject": "variation:world-house_3-north-2638a034-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_4-north-630f880a-plain:1:se",
+    "subject": "variation:world-house_4-north-630f880a-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_4-north-630f880a-plain:1:sw",
+    "subject": "variation:world-house_4-north-630f880a-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_4-north-630f880a-plain:1:nw",
+    "subject": "variation:world-house_4-north-630f880a-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_5-d6198cb0-plain:1:se",
+    "subject": "variation:world-house_5-d6198cb0-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_5-d6198cb0-plain:1:sw",
+    "subject": "variation:world-house_5-d6198cb0-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_5-d6198cb0-plain:1:nw",
+    "subject": "variation:world-house_5-d6198cb0-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_5-north-bffd2c68-plain:1:se",
+    "subject": "variation:world-house_5-north-bffd2c68-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_5-north-bffd2c68-plain:1:sw",
+    "subject": "variation:world-house_5-north-bffd2c68-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-house_5-north-bffd2c68-plain:1:nw",
+    "subject": "variation:world-house_5-north-bffd2c68-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-video-bf85dfb9-plain:1:se",
+    "subject": "variation:world-video-bf85dfb9-plain:1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-video-bf85dfb9-plain:1:sw",
+    "subject": "variation:world-video-bf85dfb9-plain:1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:variation:world-video-bf85dfb9-plain:1:nw",
+    "subject": "variation:world-video-bf85dfb9-plain:1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:arcade:se",
+    "subject": "world:arcade",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:arcade:sw",
+    "subject": "world:arcade",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:arcade:nw",
+    "subject": "world:arcade",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:barn:se",
+    "subject": "world:barn",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:barn:sw",
+    "subject": "world:barn",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:barn:nw",
+    "subject": "world:barn",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:bleachers:se",
+    "subject": "world:bleachers",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:bleachers:sw",
+    "subject": "world:bleachers",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:bleachers:nw",
+    "subject": "world:bleachers",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:diner:sw",
+    "subject": "world:diner",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:diner:nw",
+    "subject": "world:diner",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:drivein_marquee:se",
+    "subject": "world:drivein_marquee",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:drivein_marquee:sw",
+    "subject": "world:drivein_marquee",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:drivein_marquee:nw",
+    "subject": "world:drivein_marquee",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:gazebo:se",
+    "subject": "world:gazebo",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:gazebo:sw",
+    "subject": "world:gazebo",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:gazebo:nw",
+    "subject": "world:gazebo",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_0:se",
+    "subject": "world:house_0",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_0:sw",
+    "subject": "world:house_0",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_0:nw",
+    "subject": "world:house_0",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_1:se",
+    "subject": "world:house_1",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_1:sw",
+    "subject": "world:house_1",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_1:nw",
+    "subject": "world:house_1",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_2:se",
+    "subject": "world:house_2",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_2:sw",
+    "subject": "world:house_2",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_2:nw",
+    "subject": "world:house_2",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_3:se",
+    "subject": "world:house_3",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_3:sw",
+    "subject": "world:house_3",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_3:nw",
+    "subject": "world:house_3",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_4:se",
+    "subject": "world:house_4",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_4:sw",
+    "subject": "world:house_4",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_4:nw",
+    "subject": "world:house_4",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_5:se",
+    "subject": "world:house_5",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_5:sw",
+    "subject": "world:house_5",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:house_5:nw",
+    "subject": "world:house_5",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:primary_school:se",
+    "subject": "world:primary_school",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:primary_school:sw",
+    "subject": "world:primary_school",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:primary_school:nw",
+    "subject": "world:primary_school",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:school:se",
+    "subject": "world:school",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:school:sw",
+    "subject": "world:school",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:school:nw",
+    "subject": "world:school",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:snack_bar:sw",
+    "subject": "world:snack_bar",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:snack_bar:nw",
+    "subject": "world:snack_bar",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:video:sw",
+    "subject": "world:video",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:video:nw",
+    "subject": "world:video",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:video_rental:se",
+    "subject": "world:video_rental",
+    "direction": "se",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:video_rental:sw",
+    "subject": "world:video_rental",
+    "direction": "sw",
+    "type": "heading-registration-not-an-independent-subject"
+  },
+  {
+    "id": "view:world:video_rental:nw",
+    "subject": "world:video_rental",
+    "direction": "nw",
+    "type": "heading-registration-not-an-independent-subject"
+  }
+]

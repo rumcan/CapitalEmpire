@@ -1,0 +1,26 @@
+{
+  "id": "newprop:leaderboard",
+  "name": "Leaderboard",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\leaderboard.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+  "sourceSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+  "referenceSHA256": "740f406bfa9da078fb51a32f188f79943ae2089011a9df4114d6935c39474b6a",
+  "sourcePixelRectXYWH": [
+    47,
+    6,
+    656,
+    642
+  ],
+  "originalCellLabel": "top left",
+  "referenceSize": [
+    656,
+    642
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Green/cream multi-hole scoreboard with clock, score rows and support legs. Correct scoreboard function but many baked numbers and ornate scrollwork. Secondary small-board reference; new faces blank for game data. Native crop contains detached neighbour gold fragment below.",
+  "sourceOnlyNotReleaseProof": true
+}

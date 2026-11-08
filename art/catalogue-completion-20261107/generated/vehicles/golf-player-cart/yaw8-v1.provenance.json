@@ -1,0 +1,13 @@
+{
+  "key": "golf-player-cart",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-4d78c1a3-5215-4f71-821a-8eee7582629a.png",
+  "target": "generated/vehicles/golf-player-cart/yaw8-v1.png",
+  "prompt": "Create four missing views of the exact dark-green two-seat golf cart in reference1. Preserve cream rigid canopy, single tan passenger bench, clear windshield, black supports, dark-green body/four wheels, and TWO golf bags mounted at the REAR, not a rear bench. Four near-cardinal views each turned8degrees from square-on, same2x2 order FRONT / RIGHT / REAR / LEFT. Very narrow second side, groundbase transverse slope0.07027, never broad45degree corner views. Match all physical attachments and opposite side visibility. Orthographic camera30degrees down, same scale across four views. Real rear shows backs of bags and taillamps; no front grille/steering wheel pasted at rear. Finely painted miniature materials,1980s golf-town game style. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT. No lamps on, no people, words, logos, grid, scenery, groundplate or haze. Genuinely transparent zero-alpha background, fully opaque sprite surfaces, generous transparent margins around each complete separate vehicle.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-player-cart/normal-v1.png"
+  ],
+  "status": "native correction candidate; independent QA pending",
+  "runtime_imported": false,
+  "sha256": "d4e90610b9dbd0462847b5273411057540e840c2db8d600050b79e2539aba475",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-hatch\\guides\\cardinal-world-v1.png",
+    "source_sha256": "5a1ce81b0dd297ab96f4b7d34356057a1adc590218b9bc036309ec3cc7b2dd0a",
+    "crop": [
+      800,
+      0,
+      1600,
+      800
+    ],
+    "target": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\vehicles\\town-red-hatchback\\camera-calibration-refs\\right-camera-only.png",
+    "lossless_native_crop": true
+  },
+  {
+    "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\vehicles\\town-red-hatchback\\traffic8-v1.png",
+    "source_sha256": "09e772f7de60d9352c404ce3c12d500a054a896a53aa1694a116a29aba11ac4f",
+    "crop": [
+      0,
+      0,
+      443,
+      443
+    ],
+    "target": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\vehicles\\town-red-hatchback\\camera-calibration-refs\\corner-identity-only.png",
+    "lossless_native_crop": true
+  }
+]

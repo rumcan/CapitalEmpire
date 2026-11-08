@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-cottage-north-304e5431-plain-1/NE.png",
+  "sourceSha256": "ceba58144cdf1058ce2c2f1ea1886e74685ecb7bfaa4c75979980ad6e77cec07",
+  "output": "identity-references/variation-ref-building-house-cottage-north-304e5431-plain-1-6b035341/source.png",
+  "outputSha256": "ceba58144cdf1058ce2c2f1ea1886e74685ecb7bfaa4c75979980ad6e77cec07",
+  "width": 366,
+  "height": 332,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      366,
+      332
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-house-cottage-north-304e5431-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+    "version": "variation-ref-building-house-cottage-north-304e5431-plain-1-4views-v4",
+    "files": {
+      "NE": "ceba58144cdf1058ce2c2f1ea1886e74685ecb7bfaa4c75979980ad6e77cec07",
+      "SE": "539d072941d4dc5664af9c133cea1acfac2b5e80802e90c41d1c11d12e588e9a",
+      "SW": "343739e2f38569536516ce061d07576f8301b499177848682a7f4978eab00fdc",
+      "NW": "8c15346149acbf9460f99ae4d8c0124e826740020945c200ee788cfb5b5e15b8"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.78125,
+      0.007813,
+      0.949707,
+      0.17627
+    ],
+    "crop": {
+      "left": 1600,
+      "top": 16,
+      "width": 345,
+      "height": 345
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-house-cottage-north-304e5431-plain-1.native.png",
+    "nativeSha256": "7d0b0e8374da376e62d60205308551a2555e16e4ffb458ee4f0e1c1bfc9974f1"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

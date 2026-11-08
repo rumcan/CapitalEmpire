@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:24:11.365118+00:00",
+  "review_result": "HOLD-real-alpha-haze-and-repeated-L-layouts",
+  "recommended_yaw_source_continuation": false,
+  "four_actual_corners_visually_verified": false,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v1.png",
+    "sha256": "a3a04f91908736370714392788f13950b3ad36f58efc228dd525d22ce2c0476b",
+    "bytes": 2631029
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v1.provenance.json",
+    "sha256": "5dd7a9e94034c7ee95c52e476bac6cbe693a67c36ed5535a40af982bc5644ab2",
+    "bytes": 2570
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "d4d3cd09dbc4f8537e73d2322d1ceac681f87676ba505193248568b2badd14b8",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/references/rope-barrier-corner.source.png",
+      "sha256": "c289149eb4e23dd5eaaf8b54cece8dd8ce9aedfe81ec1226d515014a5ff73d07",
+      "bytes": 170793
+    },
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.0,
+  "outer_border_alpha_p50p95max": [
+    4.0,
+    47.0,
+    53.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    16.0,
+    26.0,
+    31.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "true_clear_gutters_found": false,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 29,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 53,
+      "native_rgba_rectangle_sha256": "08b4b4da621a2a8c5c73a0f3e0547db195dd669355732c59c0d3a52a3c4a7fb2"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 27,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 49,
+      "native_rgba_rectangle_sha256": "3cbf82fb34dae55f9785baeade6e52569ff30a01422844ecf55a161d6a03334a"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 28,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 39,
+      "native_rgba_rectangle_sha256": "1bb5cb33f03395d862ef0d215a5c4f8952a296c0cd1359018d546b403af496d9"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 23,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 39,
+      "native_rgba_rectangle_sha256": "2e8b14203362a23e23239fb63ab3707d74c02eca1e1c11aa176080496cbe1be1"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Fiveposts/fourspans retained, but source only repeats V/Λ Lprojections, missing left/right-facing rigidquarterturn projections.",
+    "Actualalpha haze: zero fraction0; borderp95≈47/max53, centerp95≈26/max31. Native correction required; no codedkey/reconstruction."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

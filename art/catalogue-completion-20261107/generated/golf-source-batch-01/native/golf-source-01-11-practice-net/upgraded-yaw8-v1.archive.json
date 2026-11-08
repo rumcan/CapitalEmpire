@@ -1,0 +1,38 @@
+[
+  {
+    "key": "golf-source-01-11-practice-net",
+    "condition": "upgraded",
+    "runtimeTarget": {
+      "runtimeSubjectId": "business:golf-practice-net",
+      "name": "golf practice net",
+      "librarySource": "src/game/business-library.ts",
+      "baseBoxesInTiles": [
+        {
+          "hx": 1,
+          "hy": 1,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "baseBoxMetres": {
+        "width": 4,
+        "depth": 4
+      },
+      "dimensionsMeaning": "Generic base collision box only, not authored physical object measurement; placement/studio scale can change it. Proposed real object dimensions are explicit in functionalIdentity.",
+      "sourceDisplayPixels": {
+        "width": 508,
+        "height": 462
+      }
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-147c25dd-5e3c-4a78-aa3c-7ef6570dde11.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-yaw8-v1.png",
+    "prompt": "Create the missing FOUR near-cardinal views of the EXACT SAME upgraded golf item in reference1, not a redesign. Reference1 supplies its fixed physical identity, materials and normal corners. Functional design: Green tubular golf hitting cage with open front, netted left/right/back/top, diagonally braced posts and an internal rectangular hitting mat with a tee. Proposed physical net3m wide x3.5m deep x3m high, fitting a4x4m nominal base collision box before contextual scaling. The opening and tee face the same model front in every camera. Transparent mesh remains mesh, never an opaque shed wall. Four distinct2x2 main faces in order N E / S W: N OPEN hitting entrance with mat and tee; E LEFT net wall and brace; S REAR net wall and braces; W RIGHT net wall/brace. Netting remains transparent, no solid shed walls. Same single object rotated by quarter turns, each viewed8degrees off its cardinal, orthographic30degreesDOWN. Near-cardinal means subtlysloping main bases and a NARROWsecondaryside, not broad45degreecorners and not square-on elevation. Keep all attachments/roof/doors/windows/reels/pockets/handle locations fixed; reconstruct actual rear faces without pasting frontfeatures onto the back. Match reference1's detailed hand-painted miniature material style and upgraded condition exactly. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadows LOWER LEFT in all cells, lamps/screens OFF. Four complete separate equallyscaled opaque sprites, truly zero-alpha transparentbackground/gutters, generousmargins. Meshopenings stay transparent where applicable. No people/plants/groundplate/road/terrain, scenehaze, labels/text/grid/UI.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-normal-v1.png"
+    ],
+    "status": "native yaw4 candidate; source identity/alpha/actual main faces/camera review pending",
+    "runtime_imported": false,
+    "sha256": "52909b1a9366d948b03cc941e6f0d948599c4b6a19d36cfab2e37c61da32fee9",
+    "native_bytes_preserved": true
+  }
+]

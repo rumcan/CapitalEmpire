@@ -1,0 +1,206 @@
+{
+  "subject": "newprop:wheelchair-cart",
+  "key": "wheelchair-cart",
+  "views": {
+    "normalSE": {
+      "nominalCameraKey": "normalSE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png",
+      "sourceFileSHA256": "33c5fb7c37e5249e74690d98040cffaa39bedd8c2b919eea8727c314a16e5c8c",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "1e1a06b77e0c74d300bc991ea04ee12901a8dd12701b5fbb885017d5306625e1",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "wheelchair-cart/normalSE.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "7848260e5e689ba9f174501388db36bc4c2bc199e65b15a44da3b11ba45dde10",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalSW": {
+      "nominalCameraKey": "normalSW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png",
+      "sourceFileSHA256": "33c5fb7c37e5249e74690d98040cffaa39bedd8c2b919eea8727c314a16e5c8c",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "f86a8787bba242718e40f5c5b1aaca33d51f49c5b1c35818b6f632f6af903a4f",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "wheelchair-cart/normalSW.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "4a640f1ead6874a3695d166910051dce1e2b69a7429d9a3c3c3da6f944bbf73b",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalNW": {
+      "nominalCameraKey": "normalNW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png",
+      "sourceFileSHA256": "33c5fb7c37e5249e74690d98040cffaa39bedd8c2b919eea8727c314a16e5c8c",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "f42cdfd71e8d5f68a6a0084f4dab74abe24b5e602bc9327a170e08fd208779e7",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "wheelchair-cart/normalNW.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "ad6dcc0f9facdbeb32d4033548be9f1be3750a68ed72af0d258c24a1556f3e88",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalNE": {
+      "nominalCameraKey": "normalNE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png",
+      "sourceFileSHA256": "33c5fb7c37e5249e74690d98040cffaa39bedd8c2b919eea8727c314a16e5c8c",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "45c696b8c095265b38996aaf930d1151ae0be8974b4062f138371901cf64857c",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "wheelchair-cart/normalNE.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "61e867e9364ab5706da6ef16eaa6818fbe3c3e2f37592748c31fffcccd41302a",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "yaw8N": {
+      "nominalCameraKey": "yaw8N",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/yaw8-v1.png",
+      "sourceFileSHA256": "c1e39b5a9d22a99184453752fe638a97f92fdcf915c54d7ce0aa77d321922029",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "f0f280afbecd5635befa2ef0834bac7a483fb11999720e0017587f0690a084c0",
+      "file": "wheelchair-cart/yaw8N.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "4a8fe4e5885d9d0332779caea69646f15fd0c1efb272ca364643bed04c4b1bbf",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8E": {
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/yaw8-v1.png",
+      "sourceFileSHA256": "c1e39b5a9d22a99184453752fe638a97f92fdcf915c54d7ce0aa77d321922029",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "6c79b4a154db4a00b5b2bd008fcb189717a1da72c759f8f485badc06e278b6f7",
+      "file": "wheelchair-cart/yaw8E.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "d407ef83b5c2ca5c88650ee160eb0866d822737e34024f5a01b5803a15a6749e",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8S": {
+      "nominalCameraKey": "yaw8S",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/yaw8-v1.png",
+      "sourceFileSHA256": "c1e39b5a9d22a99184453752fe638a97f92fdcf915c54d7ce0aa77d321922029",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "819f1ebc2148d058d099c43bc6c0723c23456caaebb4767cc9e6e9541efc9acc",
+      "file": "wheelchair-cart/yaw8S.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "49f92e904f8433b26d2ccfe33a08a73c2b14276ae4bd02f36046701d8ba4b829",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8W": {
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/yaw8-v1.png",
+      "sourceFileSHA256": "c1e39b5a9d22a99184453752fe638a97f92fdcf915c54d7ce0aa77d321922029",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "fc8eadb5cbfd866e83745f1f9fbaac365b1507729e34a8b209646f34e1f24553",
+      "file": "wheelchair-cart/yaw8W.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "6923bbd04dc2e5dad6e1182c21febd184d5dc0949704de78a2f834ff290f3093",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    }
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "key": "1990s-buff-brick-bay-bungalow",
+  "name": "Affordable buff-brick bay-window bungalow",
+  "sourceViews": [
+    {
+      "sourceCameraKey": "normalSE",
+      "nominalCameraFamily": "normal",
+      "file": "1990s-buff-brick-bay-bungalow/normalSE.png",
+      "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/normalSE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.png",
+      "sourceFileSHA256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "sourceCell": 0,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "d494dc53557e901670aee7c2a1754f8577204a6fe6c139b1171f3c3aa551db4b",
+      "rgbaSHA256": "5898de60279ac957f8d3efc58a330019f135230854f745b82721d23eb5ec9421",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "nominalCameraFamily": "normal",
+      "file": "1990s-buff-brick-bay-bungalow/normalSW.png",
+      "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/normalSW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.png",
+      "sourceFileSHA256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "sourceCell": 1,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "5ae1262ef0a15b8df0aa72940dd9e9c81f88ec3ade323736e1a1e985cdc06405",
+      "rgbaSHA256": "ff2e93685110de5d5664e3654db60b0e631383d3229b19e8c76f0f9898e9f9e4",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "nominalCameraFamily": "normal",
+      "file": "1990s-buff-brick-bay-bungalow/normalNW.png",
+      "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/normalNW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.png",
+      "sourceFileSHA256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "sourceCell": 2,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "6549e7223fcae2e4c1b18990b150d6bd3aaecc84bbb82f4daad63d65f16b8ee5",
+      "rgbaSHA256": "9abaaaf438cdb0491f1102f954d099d650bd9ea8bf5779b011bce78e8a669842",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "nominalCameraFamily": "normal",
+      "file": "1990s-buff-brick-bay-bungalow/normalNE.png",
+      "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/normalNE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.png",
+      "sourceFileSHA256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "sourceCell": 3,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "5047a6fd256a4d0c930c59c0a455868a262db4110c830f64d293af074aa7988c",
+      "rgbaSHA256": "3e6e937cc449dfb8bf724e784a01afddf201f6ab5a2b7ab7e3a56bad2e3879f4",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8N",
+      "nominalCameraFamily": "yaw8",
+      "file": "1990s-buff-brick-bay-bungalow/yaw8N.png",
+      "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/yaw8N.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.png",
+      "sourceFileSHA256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "sourceCell": 0,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "0fee9498446c6f4b5e09fdfbd32620381c9e3c8e3553f2b5d0a59788a024076f",
+      "rgbaSHA256": "2e63415f062176116375b643da7c91db72dd0c1ad7c8a2e02d01c998d162079a",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8E",
+      "nominalCameraFamily": "yaw8",
+      "file": "1990s-buff-brick-bay-bungalow/yaw8E.png",
+      "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/yaw8E.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.png",
+      "sourceFileSHA256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "sourceCell": 1,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "d30d42ef67969ee62182055742490a34c711fc3d567fc6fd099fa3907325794c",
+      "rgbaSHA256": "e003715646ec306e0c8169c80aa63fe5720bbfbb20e6a9ae9d2dddf7c9c68aa0",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8S",
+      "nominalCameraFamily": "yaw8",
+      "file": "1990s-buff-brick-bay-bungalow/yaw8S.png",
+      "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/yaw8S.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.png",
+      "sourceFileSHA256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "sourceCell": 2,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "570953085b64898f0234feb6604b58fbfc580348a4a77f81573f63976ed1355a",
+      "rgbaSHA256": "321166cb647affcec5fc65f0a351c5ce6eb28bf12287773aecb09a351db697b2",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8W",
+      "nominalCameraFamily": "yaw8",
+      "file": "1990s-buff-brick-bay-bungalow/yaw8W.png",
+      "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/yaw8W.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.png",
+      "sourceFileSHA256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "sourceCell": 3,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "dfc64a4a236408d42e0f47826df12608a2819f0cec34cc7395c6cf5f3bdb5f48",
+      "rgbaSHA256": "29581fb7433e8ca4bf4f629e42f3aac1d7d40e26c3b5b03a33545b3212142a7a",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    }
+  ],
+  "inheritedFromV1": false,
+  "identityReview": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\four-source-repairs-and-house-package-readiness.json",
+  "identityReviewSHA256": "61e31b1639323266023e92cbcfa99ea54a9349b07a86c9ebb16f5bae9dae721d"
+}

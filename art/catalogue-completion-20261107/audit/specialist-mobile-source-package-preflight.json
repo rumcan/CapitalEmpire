@@ -1,0 +1,404 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "normalSelectionFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/normal-source-candidates-v2.json",
+  "normalSelectionFileSHA256": "9da67bc76c1e6bc06b02cdfd1421efc4ae41ad6212bd7826a07e4b5657bcb0df",
+  "unchangedSelectionCount": 32,
+  "allNormalSourceRGBAAndProvenanceChecksPassed": true,
+  "all8NormalFamiliesPracticalCandidates": true,
+  "yawReview": "art/catalogue-completion-20261107/audit/specialist-mobile-yaw-v1-review.json",
+  "readyFor64ViewBundle": true,
+  "reason": "All9 targeted yaw repairs passed practical functional review;64source bundle completed and verified.",
+  "checks": [
+    {
+      "subject": "newprop:cart-ambulance",
+      "view": "normalSE",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/cart-ambulance/normal-SE-v2.png",
+      "sourceSHA256": "e4867c26cf150a42ea6feb8f26f13bf78955c31d968c16cbdda4842b18caa71d",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:cart-ambulance",
+      "view": "normalSW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/cart-ambulance/normal-v1.png",
+      "sourceSHA256": "925e7252dd08fc110c26f81b3cd5198f56c1eb9c47fe529ad44fb3f98e235699",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:cart-ambulance",
+      "view": "normalNW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/cart-ambulance/normal-v1.png",
+      "sourceSHA256": "925e7252dd08fc110c26f81b3cd5198f56c1eb9c47fe529ad44fb3f98e235699",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:cart-ambulance",
+      "view": "normalNE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/cart-ambulance/normal-v1.png",
+      "sourceSHA256": "925e7252dd08fc110c26f81b3cd5198f56c1eb9c47fe529ad44fb3f98e235699",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:wheelchair-cart",
+      "view": "normalSE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png",
+      "sourceSHA256": "33c5fb7c37e5249e74690d98040cffaa39bedd8c2b919eea8727c314a16e5c8c",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:wheelchair-cart",
+      "view": "normalSW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png",
+      "sourceSHA256": "33c5fb7c37e5249e74690d98040cffaa39bedd8c2b919eea8727c314a16e5c8c",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:wheelchair-cart",
+      "view": "normalNW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png",
+      "sourceSHA256": "33c5fb7c37e5249e74690d98040cffaa39bedd8c2b919eea8727c314a16e5c8c",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:wheelchair-cart",
+      "view": "normalNE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png",
+      "sourceSHA256": "33c5fb7c37e5249e74690d98040cffaa39bedd8c2b919eea8727c314a16e5c8c",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:shuttle-cart",
+      "view": "normalSE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shuttle-cart/normal-v1.png",
+      "sourceSHA256": "5bd46bc2e3e3e1f0b2e5d630a929233e896d40acc6f4e64a3d5c87e40d3ef40f",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:shuttle-cart",
+      "view": "normalSW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shuttle-cart/normal-v1.png",
+      "sourceSHA256": "5bd46bc2e3e3e1f0b2e5d630a929233e896d40acc6f4e64a3d5c87e40d3ef40f",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:shuttle-cart",
+      "view": "normalNW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shuttle-cart/normal-v1.png",
+      "sourceSHA256": "5bd46bc2e3e3e1f0b2e5d630a929233e896d40acc6f4e64a3d5c87e40d3ef40f",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:shuttle-cart",
+      "view": "normalNE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shuttle-cart/normal-v1.png",
+      "sourceSHA256": "5bd46bc2e3e3e1f0b2e5d630a929233e896d40acc6f4e64a3d5c87e40d3ef40f",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:ice-cream-cart",
+      "view": "normalSE",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-SE-v2.png",
+      "sourceSHA256": "f33d7f9e4e47f58a62a3295a88526aedb5950a0f15a1d37ed992f3aae9fef33d",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:ice-cream-cart",
+      "view": "normalSW",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-SW-v2.png",
+      "sourceSHA256": "b9618a547aab75ed736897611543174f2cb8d8362b26993f499547e2e6ddb8ef",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:ice-cream-cart",
+      "view": "normalNW",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-NW-v2.png",
+      "sourceSHA256": "c45d8ecab2ea805fd7a0d31dab13e208bb7dc7a4148258590c812eb7a6aec676",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:ice-cream-cart",
+      "view": "normalNE",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-NE-v2.png",
+      "sourceSHA256": "c0834956a97a5c6c82c6d3fac864230c1a41b80d60f1a6d0284a33a8d0ea6bed",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:drinks-cart-green",
+      "view": "normalSE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png",
+      "sourceSHA256": "f0df89d1e3e1c24035c9494a2f0937966907eddab9ed95b88528482c420737eb",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:drinks-cart-green",
+      "view": "normalSW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png",
+      "sourceSHA256": "f0df89d1e3e1c24035c9494a2f0937966907eddab9ed95b88528482c420737eb",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:drinks-cart-green",
+      "view": "normalNW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png",
+      "sourceSHA256": "f0df89d1e3e1c24035c9494a2f0937966907eddab9ed95b88528482c420737eb",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:drinks-cart-green",
+      "view": "normalNE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png",
+      "sourceSHA256": "f0df89d1e3e1c24035c9494a2f0937966907eddab9ed95b88528482c420737eb",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:supply-cart",
+      "view": "normalSE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/supply-cart/normal-v1.png",
+      "sourceSHA256": "0f5a192799dfb43f71bc1c0b9069400d00143ab35ea6195994128d02b627014b",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:supply-cart",
+      "view": "normalSW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/supply-cart/normal-v1.png",
+      "sourceSHA256": "0f5a192799dfb43f71bc1c0b9069400d00143ab35ea6195994128d02b627014b",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:supply-cart",
+      "view": "normalNW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/supply-cart/normal-v1.png",
+      "sourceSHA256": "0f5a192799dfb43f71bc1c0b9069400d00143ab35ea6195994128d02b627014b",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:supply-cart",
+      "view": "normalNE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/supply-cart/normal-v1.png",
+      "sourceSHA256": "0f5a192799dfb43f71bc1c0b9069400d00143ab35ea6195994128d02b627014b",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:satellite-van",
+      "view": "normalSE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-v1.png",
+      "sourceSHA256": "85dc8d224bdac96ba595dded5b1fbef4e962a116d95c1abbfbeb9d89df5bd754",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:satellite-van",
+      "view": "normalSW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-v1.png",
+      "sourceSHA256": "85dc8d224bdac96ba595dded5b1fbef4e962a116d95c1abbfbeb9d89df5bd754",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:satellite-van",
+      "view": "normalNW",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-NW-v2.png",
+      "sourceSHA256": "ec7f14759eeae13bf003303b3d344b732229fd8cf5b651be48f069985055ed6d",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:satellite-van",
+      "view": "normalNE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-v1.png",
+      "sourceSHA256": "85dc8d224bdac96ba595dded5b1fbef4e962a116d95c1abbfbeb9d89df5bd754",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:shanty-broadcast-van",
+      "view": "normalSE",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-SE-v2.png",
+      "sourceSHA256": "d59fd64c712f03510a74cb9fcf5417abefd598ed3d4e037da0ff540f69546fca",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:shanty-broadcast-van",
+      "view": "normalSW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-v1.png",
+      "sourceSHA256": "3552bec92c1d80ebc58a9c17c711394404d2251ecde32a0811632c471540cc88",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:shanty-broadcast-van",
+      "view": "normalNW",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-v1.png",
+      "sourceSHA256": "3552bec92c1d80ebc58a9c17c711394404d2251ecde32a0811632c471540cc88",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    },
+    {
+      "subject": "newprop:shanty-broadcast-van",
+      "view": "normalNE",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-v1.png",
+      "sourceSHA256": "3552bec92c1d80ebc58a9c17c711394404d2251ecde32a0811632c471540cc88",
+      "normalSelectionExact": true,
+      "provenanceHashMatches": true
+    }
+  ],
+  "finalYawReview": "art/catalogue-completion-20261107/audit/specialist-mobile-yaw-repairs-v2-review.json",
+  "completedZip": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/Specialist-golf-vehicles-source-v1.zip",
+  "completedZipSHA256": "ef3a0650957cee9dda42740616aef22b2485dea6465d124f3856d2d0339bdd8c",
+  "completedPNGCount": 64,
+  "finalSourceOnly": true,
+  "runtimeReady": false
+}

@@ -1,0 +1,13 @@
+{
+  "key": "era-1990s-teal-sedan",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0d0cdbf0-6f5f-4ab5-858f-c4f8c7581a70.png",
+  "target": "generated/vehicles/era-1990s-teal-sedan/traffic8-v2.png",
+  "prompt": "Precise background-extraction edit of this eight-direction vehicle atlas. Preserve the exact same eight vehicle designs, viewing directions, positions, proportions, body/glass/wheels and material details. Remove ALL pale-grey/white cloudy background wash and ALL external ground shadows/haze around and between the eight vehicles. Background truly alpha0, fully transparent in outerborder and gutters. Keep vehicle opaque, only actual edge antialiasing. Do not paint a checkerboard, white backdrop, grey matte or vignette. No labels/words/UI. Same4x2 layout and native resolution. The task is ONLY clean transparent isolation of all eight existing complete vehicle sprites.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/era-1990s-teal-sedan/traffic8-v1.png"
+  ],
+  "status": "native correction candidate; alpha/direction/identity QA pending",
+  "runtime_imported": false,
+  "sha256": "efa3c3bd1b0a643c0d11f45b23675066800aefd90bb1cd8dd255c72f4179d0a0",
+  "native_bytes_preserved": true
+}

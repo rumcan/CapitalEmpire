@@ -1,0 +1,16 @@
+{
+  "id": "business:golf-practice-net",
+  "name": "golf practice net",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-practice-net.source.png",
+  "originalSource": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\src\\assets\\businesses\\capital-v1\\png\\golf-practice-net.png",
+  "sourceSHA256": "ac1c8162bf7b832ff78f5992d68b0d6a07753ab5ad03841f900280d8c7fdf42a",
+  "referenceSHA256": "ac1c8162bf7b832ff78f5992d68b0d6a07753ab5ad03841f900280d8c7fdf42a",
+  "referenceSize": [
+    508,
+    462
+  ],
+  "operation": "byte-for-byte copy of retained native PNG master",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Standalone square green tubular hitting cage, rear/side/roof netting, open front, internal green hitting mat and tee. Preserve open side and real net transparency across all views; mat is equipment, not a generic terrain plate.",
+  "sourceOnlyNotReleaseProof": true
+}

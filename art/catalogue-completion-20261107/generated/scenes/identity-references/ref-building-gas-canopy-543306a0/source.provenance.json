@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "ref:building-gas-canopy",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/ref-building-gas-canopy/NE.png",
+  "sourceSha256": "25272bdd2857bc3b2153d7e6eab54bc909720df4f3f14723c2b289c499824c65",
+  "output": "identity-references/ref-building-gas-canopy-543306a0/source.png",
+  "outputSha256": "25272bdd2857bc3b2153d7e6eab54bc909720df4f3f14723c2b289c499824c65",
+  "width": 616,
+  "height": 481,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      616,
+      481
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\ref-building-gas-canopy\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Slate roof, cream columns, red business trim, weathered pumps and warm practical light fit master; original floor/background/dividers removed.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "ref:building-gas-canopy",
+    "version": "ref-building-gas-canopy-4views-v3",
+    "files": {
+      "NE": "25272bdd2857bc3b2153d7e6eab54bc909720df4f3f14723c2b289c499824c65",
+      "SE": "33d54749f057974eec0e8ccf324f9e7a945f089ded9b7964b6c1a43419de44a2",
+      "SW": "897245882c820182dfeb6b18e031456e30021dedbf268027b99c0dce6171709a",
+      "NW": "cb689376ecd337e4c5baba2ca344179306478ee083ee5c2489001cf6e57523c6"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.515625,
+      0.007813,
+      0.762695,
+      0.191406
+    ],
+    "crop": {
+      "left": 1056,
+      "top": 16,
+      "width": 506,
+      "height": 376
+    },
+    "native": "art/theme-consistency/exports/buildings/ref-building-gas-canopy.native.png",
+    "nativeSha256": "0bbf0c1480b745bb3d6eda5d3908c4fdf7486b123de4f0d4abf19fa62a8f368a"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

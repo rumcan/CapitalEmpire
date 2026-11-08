@@ -1,0 +1,143 @@
+{
+  "id": "golf:clubhouse-shanty",
+  "variant": "1950s-budget-redesign",
+  "version": 1,
+  "kind": "normal-corners",
+  "raw": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v1.png",
+    "sha256": "cc79c216a66ca7e557f12eddd1d6c60cf987f4afc1def7ad24f026046091b52a",
+    "bytes": 3134380
+  },
+  "source_mode": "RGBA",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "alpha_extrema": [
+    0,
+    253
+  ],
+  "true_zero_alpha_fraction": 0.0015958150227864583,
+  "alpha_le24_fraction": 0.39241600036621094,
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "cells": [
+    {
+      "view": "SE",
+      "cell_box": [
+        0,
+        0,
+        768,
+        512
+      ],
+      "subject_bbox_alpha_gt24": [
+        17,
+        16,
+        733,
+        486
+      ],
+      "margins_px_alpha_gt24": [
+        17,
+        16,
+        35,
+        26
+      ],
+      "true_zero_alpha_fraction": 8.138020833333333e-05,
+      "alpha_le24_fraction": 0.3733876546223958
+    },
+    {
+      "view": "SW",
+      "cell_box": [
+        768,
+        0,
+        1536,
+        512
+      ],
+      "subject_bbox_alpha_gt24": [
+        32,
+        28,
+        750,
+        474
+      ],
+      "margins_px_alpha_gt24": [
+        32,
+        28,
+        18,
+        38
+      ],
+      "true_zero_alpha_fraction": 0.0025355021158854165,
+      "alpha_le24_fraction": 0.4101613362630208
+    },
+    {
+      "view": "NW",
+      "cell_box": [
+        0,
+        512,
+        768,
+        1024
+      ],
+      "subject_bbox_alpha_gt24": [
+        29,
+        36,
+        737,
+        494
+      ],
+      "margins_px_alpha_gt24": [
+        29,
+        36,
+        31,
+        18
+      ],
+      "true_zero_alpha_fraction": 0.00021616617838541666,
+      "alpha_le24_fraction": 0.40033213297526044
+    },
+    {
+      "view": "NE",
+      "cell_box": [
+        768,
+        512,
+        1536,
+        1024
+      ],
+      "subject_bbox_alpha_gt24": [
+        34,
+        10,
+        740,
+        493
+      ],
+      "margins_px_alpha_gt24": [
+        34,
+        10,
+        28,
+        19
+      ],
+      "true_zero_alpha_fraction": 0.0035502115885416665,
+      "alpha_le24_fraction": 0.3857828776041667
+    }
+  ],
+  "distinct_cell_hashes": 4,
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "native_pixels_unchanged": true,
+  "pixel_reconstruction_performed": false,
+  "exact_prompt": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v1.prompt.txt",
+    "sha256": "632de3c60aace200dc98c28475022c4f527dfafa8ad6fcb8e0bbde8a8a78ba7b",
+    "bytes": 2159
+  },
+  "status": "held-matte-and-layout-requires-review",
+  "findings": [
+    "RGBA, not an opaque RGB image: hidden backdrop samples have alpha 1–4.",
+    "Very little exact zero alpha and substantial low-alpha matte residue; original hidden RGB makes naive viewers look opaque.",
+    "Strong-alpha cell margins are clear but do not meet the requested 60 pixels.",
+    "Preserve historical v1. V2 is the native transparency-correction candidate."
+  ]
+}

@@ -1,0 +1,245 @@
+{
+  "purpose": "technical single-world geometry only, never final sprites",
+  "model": "molded-chair-1985-cream-green",
+  "settings": {
+    "guide_version": 1,
+    "scale_px_per_metre": 600,
+    "capacity_validated": false,
+    "release_anchors_authored": false,
+    "purpose": "close technical view of ONE molded shell/mount assembly; row beam belongs to pavilion/bleacher model",
+    "heading_filename_labels_provisional": false,
+    "guide_to_game_handedness_proof": {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\pavilion-guide-handedness-proof.json",
+      "sha256": "c07f415b3c6be0f9ecec4b9ec95185f8ce8fbb0f4dba07633a4283f649368ba0"
+    }
+  },
+  "kind": "normal",
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "camera_down_degrees": 30,
+  "camera_horizontal_offset_degrees": -45,
+  "runtime_cardinal_yaw_metadata": null,
+  "basis": {
+    "screen_right": [
+      0.7071067811865476,
+      -0.7071067811865476,
+      0.0
+    ],
+    "screen_down": [
+      -0.35355339059327373,
+      -0.35355339059327373,
+      -0.8660254037844387
+    ],
+    "toward_camera": [
+      -0.6123724356957946,
+      -0.6123724356957946,
+      0.49999999999999994
+    ]
+  },
+  "coordinate_system": "metres; front y=-depth/2; right x=+width/2; z up; ONE model rotated0/90/180/270 about z",
+  "depth_handling": "orthographic triangle rasterization, barycentric per-pixel depth, keep nearest; no average-depth painter guess",
+  "svg_form": "self-contained exact technical z-buffer raster; editable full world mesh is stored separately",
+  "views": [
+    {
+      "view": "SE",
+      "object_rotation_degrees_about_Z": 0,
+      "cell_box": [
+        0,
+        0,
+        800,
+        800
+      ],
+      "scale_px_per_metre": 600,
+      "local_offset_px": [
+        425.0080098279642,
+        754.5078995052717
+      ],
+      "object_bbox_local_px": [
+        193,
+        126,
+        607,
+        674
+      ],
+      "projected_anchors": {},
+      "main_wall_bottom_slope": -0.4999999999999999,
+      "main_wall_bottom_angle_screen_degrees": -26.565051177077986,
+      "visible_body_walls": [
+        "front",
+        "left-gable-end"
+      ],
+      "dominant_wall": "front",
+      "secondary_wall": "left-gable-end",
+      "front_details_belong_on_visible_secondary_wall": false,
+      "rear_vents_belong_on_visible_secondary_wall": false,
+      "projected_front_focus_direction": [
+        0.7071067811865476,
+        0.35355339059327373
+      ],
+      "runtime_heading_degrees_verified": 270,
+      "runtime_local_basis": "(guide x, -guide y, guide z)",
+      "runtime_projection_max_residual_normalized": 0,
+      "runtime_projection_max_residual_at_guide_pixels": 0
+    },
+    {
+      "view": "SW",
+      "object_rotation_degrees_about_Z": 90,
+      "cell_box": [
+        800,
+        0,
+        1600,
+        800
+      ],
+      "scale_px_per_metre": 600,
+      "local_offset_px": [
+        425.00800982796426,
+        710.9516269483803
+      ],
+      "object_bbox_local_px": [
+        193,
+        208,
+        607,
+        592
+      ],
+      "projected_anchors": {},
+      "main_wall_bottom_slope": -0.4999999999999999,
+      "main_wall_bottom_angle_screen_degrees": -26.565051177077986,
+      "visible_body_walls": [
+        "back",
+        "left-gable-end"
+      ],
+      "dominant_wall": "back",
+      "secondary_wall": "left-gable-end",
+      "front_details_belong_on_visible_secondary_wall": false,
+      "rear_vents_belong_on_visible_secondary_wall": false,
+      "projected_front_focus_direction": [
+        0.7071067811865476,
+        -0.35355339059327373
+      ],
+      "runtime_heading_degrees_verified": 180,
+      "runtime_local_basis": "(guide x, -guide y, guide z)",
+      "runtime_projection_max_residual_normalized": 0,
+      "runtime_projection_max_residual_at_guide_pixels": 0
+    },
+    {
+      "view": "NW",
+      "object_rotation_degrees_about_Z": 180,
+      "cell_box": [
+        0,
+        800,
+        800,
+        1600
+      ],
+      "scale_px_per_metre": 600,
+      "local_offset_px": [
+        374.99199017203574,
+        710.9516269483803
+      ],
+      "object_bbox_local_px": [
+        193,
+        208,
+        607,
+        592
+      ],
+      "projected_anchors": {},
+      "main_wall_bottom_slope": -0.4999999999999999,
+      "main_wall_bottom_angle_screen_degrees": -26.565051177077986,
+      "visible_body_walls": [
+        "back",
+        "right-gable-end"
+      ],
+      "dominant_wall": "back",
+      "secondary_wall": "right-gable-end",
+      "front_details_belong_on_visible_secondary_wall": false,
+      "rear_vents_belong_on_visible_secondary_wall": false,
+      "projected_front_focus_direction": [
+        -0.7071067811865475,
+        -0.3535533905932738
+      ],
+      "runtime_heading_degrees_verified": 90,
+      "runtime_local_basis": "(guide x, -guide y, guide z)",
+      "runtime_projection_max_residual_normalized": 0,
+      "runtime_projection_max_residual_at_guide_pixels": 0
+    },
+    {
+      "view": "NE",
+      "object_rotation_degrees_about_Z": 270,
+      "cell_box": [
+        800,
+        800,
+        1600,
+        1600
+      ],
+      "scale_px_per_metre": 600,
+      "local_offset_px": [
+        374.9919901720358,
+        754.5078995052717
+      ],
+      "object_bbox_local_px": [
+        193,
+        126,
+        607,
+        674
+      ],
+      "projected_anchors": {},
+      "main_wall_bottom_slope": -0.4999999999999999,
+      "main_wall_bottom_angle_screen_degrees": -26.565051177077986,
+      "visible_body_walls": [
+        "right-gable-end",
+        "front"
+      ],
+      "dominant_wall": "right-gable-end",
+      "secondary_wall": "front",
+      "front_details_belong_on_visible_secondary_wall": false,
+      "rear_vents_belong_on_visible_secondary_wall": false,
+      "projected_front_focus_direction": [
+        -0.7071067811865477,
+        0.3535533905932737
+      ],
+      "runtime_heading_degrees_verified": 0,
+      "runtime_local_basis": "(guide x, -guide y, guide z)",
+      "runtime_projection_max_residual_normalized": 0,
+      "runtime_projection_max_residual_at_guide_pixels": 0
+    }
+  ],
+  "mesh_file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seating-reference-models\\molded-chair-1985-cream-green-v1.json",
+  "guide_code": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_world_geometry_guides.py",
+    "sha256": "2231e62f5ae7fcd5d7fa8102a6aec4e477aa754875912c21fefa714ee762379e"
+  },
+  "outputs": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\molded-chair-1985-cream-green\\guides\\normal-world-v1.png",
+      "sha256": "806595f7b256f50b260814a04e67e42bcfa1a65c30bc54bc9c21e06b09d5892d"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\molded-chair-1985-cream-green\\guides\\normal-world-v1.svg",
+      "sha256": "1f49f6418bb8e818031a67329178b482543a76b85e69aee3b3cb8f2137a45356"
+    }
+  ],
+  "capacity_validated": false,
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "seating_guide_code": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_seating_geometry_guides.py",
+    "sha256": "9c322f51fabff9fc3a1a83988cadadda4096e461c007730dcb9766ada58ddd07"
+  },
+  "release_anchors_authored": false,
+  "heading_filename_labels_provisional": false,
+  "runtime_projection_status": "runtime projection verified for this technical geometry only",
+  "guide_to_game_handedness_proof": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\pavilion-guide-handedness-proof.json",
+    "sha256": "c07f415b3c6be0f9ecec4b9ec95185f8ce8fbb0f4dba07633a4283f649368ba0"
+  },
+  "technical_projection_anchors_verified": 0,
+  "native_art_correspondence_verified": false,
+  "verticalPixelsPerMetreAfterCameraScaling": 39.191835884530846,
+  "gameCameraPixelsPerMetre": 45.25483399593904
+}

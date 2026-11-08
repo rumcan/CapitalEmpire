@@ -1,0 +1,37 @@
+[
+  {
+    "vehicle": "sedan",
+    "cardinal_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-sedan\\guides\\cardinal-world-v1.png",
+    "traffic8_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-sedan\\guides\\traffic8-camera-world-v1.png",
+    "cardinal_metadata": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-sedan\\guides\\cardinal-world-v1.calibration.json",
+    "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-sedan\\guides\\technical-vehicle-sedan-world-model-v1.json"
+  },
+  {
+    "vehicle": "hatch",
+    "cardinal_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-hatch\\guides\\cardinal-world-v1.png",
+    "traffic8_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-hatch\\guides\\traffic8-camera-world-v1.png",
+    "cardinal_metadata": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-hatch\\guides\\cardinal-world-v1.calibration.json",
+    "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-hatch\\guides\\technical-vehicle-hatch-world-model-v1.json"
+  },
+  {
+    "vehicle": "pickup",
+    "cardinal_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-pickup\\guides\\cardinal-world-v1.png",
+    "traffic8_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-pickup\\guides\\traffic8-camera-world-v1.png",
+    "cardinal_metadata": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-pickup\\guides\\cardinal-world-v1.calibration.json",
+    "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-pickup\\guides\\technical-vehicle-pickup-world-model-v1.json"
+  },
+  {
+    "vehicle": "van",
+    "cardinal_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-van\\guides\\cardinal-world-v1.png",
+    "traffic8_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-van\\guides\\traffic8-camera-world-v1.png",
+    "cardinal_metadata": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-van\\guides\\cardinal-world-v1.calibration.json",
+    "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-van\\guides\\technical-vehicle-van-world-model-v1.json"
+  },
+  {
+    "vehicle": "bus",
+    "cardinal_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-bus\\guides\\cardinal-world-v1.png",
+    "traffic8_png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-bus\\guides\\traffic8-camera-world-v1.png",
+    "cardinal_metadata": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-bus\\guides\\cardinal-world-v1.calibration.json",
+    "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\technical-vehicle-bus\\guides\\technical-vehicle-bus-world-model-v1.json"
+  }
+]

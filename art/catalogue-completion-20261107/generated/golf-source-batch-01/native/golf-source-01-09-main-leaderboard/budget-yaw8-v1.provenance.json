@@ -1,0 +1,47 @@
+{
+  "key": "golf-source-01-09-main-leaderboard",
+  "family": "yaw8",
+  "condition": "budget",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v2.png"
+  ],
+  "runtimeTarget": {
+    "eventTypeId": "leaderboard",
+    "eventName": "Main leaderboard",
+    "currentSpriteSubjectId": "golf:leaderboard",
+    "newArtSubjectProposal": "golf:event-main-leaderboard",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 4,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 8,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 4,
+        "hy": 1.5,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "prompt": "Paint the FOUR exact technical camera views of REFERENCE1 as finished game sprite art. Reference1 is geometry/camera/occlusion authority; REFERENCE2 is matching identity, material, detailed painterly miniature style and budget condition only. Do not copy the corner camera from reference2. Render the same one fixed physical assembly in all four cells, ordered N E / S W exactly as guide. All are orthographic 30 degrees down, nominal8-degree yaw away from each cardinal, small side slivers; follow projected roof/base edges in guide. Fixed model requirements: Front grid-Y; rear slats/braces+Y; one staircase permanently+X; front deck-Y; three rain caps and exactly2flags.. Preserve guide's exact layout, all physical attachments and their world positions even if naturally hidden behind another part. Do not turn cameras/dishes/cases to face the viewer in every cell. Keep the full assembly including outer feet within each cell, equal physical scale. Late-afternoon DAYTIME, sunlight fixed SCREEN UPPER RIGHT, shadows LOWER LEFT, lamps/screens off. Ordinary worn steel/timber/cream-green practical1950s equipment in reference2, no invented fantasy ornament or added roof/slab. Zero-alpha transparent background/gutters, generous clear margins, no text labels/grid/people/landscape/haze. Intrinsic blank scoreboard grids and sign panels permitted. Preserve fine native painted material detail.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-ff75529c-a561-45c4-80af-c55cd5adaaf1.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v2.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "8cd4549a54aa38f164dad9add6fccd0371bdf608a97c82ce8dc49655eb0376eb",
+  "native_bytes_preserved": true
+}

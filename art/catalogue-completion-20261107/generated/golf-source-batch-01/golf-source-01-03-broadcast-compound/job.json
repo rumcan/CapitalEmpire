@@ -1,0 +1,111 @@
+{
+  "jobId": "golf-source-01-03-broadcast-compound",
+  "priority": 3,
+  "status": "brief-ready-for-root-native-generation",
+  "sourceOnly": true,
+  "nativeGeneratedByThisJob": false,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "action": "New compound layout replacing a golf-cart garage stand-in.",
+  "requiresOrdinary1950sBudgetRedesign": true,
+  "functionalIdentity": "A30x20m event broadcast compound consisting of one period box broadcast truck, one uplink van with a roof dish, a generator box, cable reels and a small practical equipment workbench. Arrange truck left, van rear-right, generator front-right, with one open service gap at model front; fixed component layout rotates as one object. Separate physical feet/wheels and no painted ground slab. It must read as support vehicles, not a garage.",
+  "referenceImages": [
+    {
+      "runtimeSubjectId": "newprop:broadcast-truck",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\broadcast-truck.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Long cream/green three-axle broadcast truck, roof HVAC/vents, cable reels over cab and equipment doors. Cab styling is later than1985; keep functional equipment layout but use period body in event compound.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\broadcast-truck.provenance.json"
+    },
+    {
+      "runtimeSubjectId": "newprop:satellite-van",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\satellite-van.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Cream/green modern panel van with large roof satellite dish, HVAC and antennas. Later-era cab unsuitable for base1985set. Native crop contains a small neighbouring gold foot at its upper edge: ignore fragment; reference is van only.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\satellite-van.provenance.json"
+    }
+  ],
+  "conditions": {
+    "budget": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Tired1950s/1960struck bodies with repainted cream/green panels, repair patches and older cable equipment. Use ordinary working equipment, not fantasy shanties."
+    },
+    "upgraded": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Maintained period1980sbroadcast truck and uplink van with tidy antennas/HVAC and cable boxes. Reject the source modernMercedes-like cabs."
+    }
+  },
+  "sourceSheetsPerCondition": [
+    {
+      "kind": "normal",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+    },
+    {
+      "kind": "yaw8",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+    }
+  ],
+  "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+  "generationConstraints": [
+    "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+    "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+    "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+    "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+    "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+    "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+  ],
+  "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+  "runtimeTarget": {
+    "eventTypeId": "broadcast",
+    "eventName": "Broadcast compound",
+    "currentSpriteSubjectId": "business:golf-cart-garage",
+    "newArtSubjectProposal": "golf:event-broadcast-compound",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 15.0,
+      "depth": 10.0
+    },
+    "footprintMetres": {
+      "width": 30.0,
+      "depth": 20.0
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "existingFourCorners": {
+    "usableCorrectTargetCornersFound": false,
+    "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+  },
+  "promptCore": "A30x20m event broadcast compound consisting of one period box broadcast truck, one uplink van with a roof dish, a generator box, cable reels and a small practical equipment workbench. Arrange truck left, van rear-right, generator front-right, with one open service gap at model front; fixed component layout rotates as one object. Separate physical feet/wheels and no painted ground slab. It must read as support vehicles, not a garage. For budget: Tired1950s/1960struck bodies with repainted cream/green panels, repair patches and older cable equipment. Use ordinary working equipment, not fantasy shanties. For upgraded: Maintained period1980sbroadcast truck and uplink van with tidy antennas/HVAC and cable boxes. Reject the source modernMercedes-like cabs. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+}

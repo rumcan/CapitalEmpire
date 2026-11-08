@@ -1,0 +1,103 @@
+{
+  "jobId": "golf-source-01-06-four-lane-entrance",
+  "priority": 6,
+  "status": "brief-ready-for-root-native-generation",
+  "sourceOnly": true,
+  "nativeGeneratedByThisJob": false,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "action": "New pedestrian admission structure replacing a single vehicle parking boom.",
+  "requiresOrdinary1950sBudgetRedesign": true,
+  "functionalIdentity": "A12x6m nominal event entrance arrangement with exactly four pedestrian admission lanes across the width: three simple manual turnstiles and one visibly wider accessible swing gate, supported by low dividers and a restrained blank overhead sign frame. Keep queues/ground surface outside the artwork. Front and back must remain genuinely different.",
+  "referenceImages": [
+    {
+      "runtimeSubjectId": "newprop:shanty-turnstiles",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-turnstiles.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Four primitive timber admission lanes with tarps, ropes and arrow boards. Preserve four-lane function, replace fantasy build with practical manual turnstiles plus one wide accessible gate. Arrows/text are not identity-critical.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-turnstiles.provenance.json"
+    },
+    {
+      "runtimeSubjectId": "newprop:gate-arch",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\gate-arch.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Rope-lashed log arch with crossed-club board, scrap-corrugated side fences, baked brown background and grass base. Reject as architecture/style; only conceptual pedestrian entrance reference for ordinary1950sreplacement.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\gate-arch.provenance.json"
+    }
+  ],
+  "conditions": {
+    "budget": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Faded1950ssawn timber/painted steel ticket gates, ordinary bolts and worn handrails. No log arch, ropes, scrap-metal fortress, blue tarp or brown background."
+    },
+    "upgraded": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Neat period modular metal turnstiles, clean green/cream sign frame and wide accessible gate. Still four physical lanes; not a highway toll plaza."
+    }
+  },
+  "sourceSheetsPerCondition": [
+    {
+      "kind": "normal",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+    },
+    {
+      "kind": "yaw8",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+    }
+  ],
+  "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+  "generationConstraints": [
+    "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+    "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+    "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+    "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+    "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+    "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+  ],
+  "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+  "runtimeTarget": {
+    "eventTypeId": "gate",
+    "eventName": "Entrance gate",
+    "currentSpriteSubjectId": "ce:parking-entry",
+    "newArtSubjectProposal": "golf:event-four-lane-entrance",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 6.0,
+      "depth": 3.0
+    },
+    "footprintMetres": {
+      "width": 12.0,
+      "depth": 6.0
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "existingFourCorners": {
+    "usableCorrectTargetCornersFound": false,
+    "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+  },
+  "promptCore": "A12x6m nominal event entrance arrangement with exactly four pedestrian admission lanes across the width: three simple manual turnstiles and one visibly wider accessible swing gate, supported by low dividers and a restrained blank overhead sign frame. Keep queues/ground surface outside the artwork. Front and back must remain genuinely different. For budget: Faded1950ssawn timber/painted steel ticket gates, ordinary bolts and worn handrails. No log arch, ropes, scrap-metal fortress, blue tarp or brown background. For upgraded: Neat period modular metal turnstiles, clean green/cream sign frame and wide accessible gate. Still four physical lanes; not a highway toll plaza. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+}

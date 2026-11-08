@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:town-postoffice-1c7025b8-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-postoffice-1c7025b8-plain-1/NE.png",
+  "sourceSha256": "c0686b817b349a1c1f10b76ef8117db2b93212a4ba0ef5a70f030326fa2181ee",
+  "output": "identity-references/variation-town-postoffice-1c7025b8-plain-1-5b066b5c/source.png",
+  "outputSha256": "c0686b817b349a1c1f10b76ef8117db2b93212a4ba0ef5a70f030326fa2181ee",
+  "width": 589,
+  "height": 533,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      589,
+      533
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-town-postoffice-1c7025b8-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Post office clock/pediment/front steps occur in opposite front corners; rear sash wall and side wall are distinct with chimney following turns. Slight stylized foreshortening stays in the master miniature family; not a frontal elevation."
+  },
+  "sourceRegistration": {
+    "id": "variation:town-postoffice-1c7025b8-plain:1",
+    "version": "variation-town-postoffice-1c7025b8-plain-1-4views-v2",
+    "files": {
+      "NE": "c0686b817b349a1c1f10b76ef8117db2b93212a4ba0ef5a70f030326fa2181ee",
+      "SE": "3ce94cf8b454af4b3abc27e963f157c0167de9464cd8f891461728df36af9d12",
+      "SW": "6e76e0cd8dbbb20de0706688b439433390503de85ea6b06636a247a39153527f",
+      "NW": "3b4eb9f42fc31d7ad0f051a72bf191e5a194e1a3cafaaa787a4ef9b1d33682ab"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.773438,
+      0.757813,
+      0.952148,
+      0.916992
+    ],
+    "crop": {
+      "left": 1584,
+      "top": 1552,
+      "width": 366,
+      "height": 326
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-town-postoffice-1c7025b8-plain-1.native.png",
+    "nativeSha256": "c0c9ebbeb90a5aa3d4e853304e58f8df2e2b86aca1e1777489bb881f6c7b2c01"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

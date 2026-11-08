@@ -1,0 +1,93 @@
+{
+  "jobId": "golf-source-02-01-ball-washer",
+  "runtimeSubjectId": "newprop:ball-washer",
+  "runtimeName": "Ball washer",
+  "displayName": "Ball washer",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-washer.source.png",
+  "sourceProvenance": {
+    "id": "newprop:ball-washer",
+    "name": "Ball washer",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-washer.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+    "originalSheetSHA256": "252ee9747b1f9513b0fda88f9781d4e5edf7fdcdf52fe7211f8c9d84841484b8",
+    "referenceSHA256": "3733415ef6c52354fae9c19f30b386d51a9ec30caba2b982138b0658a0700941",
+    "sourceRectXYWH": [
+      95,
+      5,
+      449,
+      600
+    ],
+    "sourceCell": "top left",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      449,
+      600
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.4,
+        "hy": 0.4,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      51.2,
+      68.42
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.4,
+      0.4
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed pedestal washer with hand crank and towel; two features on opposite sides make reliable turning identity cues.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "sourceDimensions": {
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.4,
+        "hy": 0.4,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.4,
+      0.4
+    ],
+    "sourceCropPixels": [
+      449,
+      600
+    ],
+    "newPhysicalDimensionsProposal": "Proposed object about0.45m wide x0.5m deep x1.1m high; not accepted runtime scale.",
+    "notRuntimeBalanceOrGeometryChange": true
+  },
+  "functionalBrief": "One dark-green pedestal ball washer with round base, cylindrical brush cup, hinged lid, ball opening, wooden-grip hand crank on model right and white towel hanging model left. Keep lid/crank/towel on those same physical sides across8views; no person.",
+  "ordinary1950sRedesignRequired": false,
+  "conditionBrief": "Identity-preserving cast-metal equipment. Worn green enamel and modest brass fittings are plausible; avoid turning it into a fantasy urn.",
+  "visualNotes": "Confirmed pedestal washer with hand crank and towel; two features on opposite sides make reliable turning identity cues.",
+  "existingNormalFourReferences": {
+    "candidateCount": 0,
+    "usableCount": 0,
+    "paths": [],
+    "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+  },
+  "existingYaw8Candidates": 0,
+  "historicallyApprovedEightSet": false,
+  "generationPlan": {
+    "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+    "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+    "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+  },
+  "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+  "approvalClaimed": false,
+  "runtimeIntegrated": false,
+  "nativeGeneratedHere": false,
+  "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+}

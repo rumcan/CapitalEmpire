@@ -1,0 +1,72 @@
+[
+  {
+    "key": "2020s-white-charcoal-asymmetric-solar-home",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-8ca9934e-c5c2-42d7-b26d-3cd3e2aae03a.png",
+    "target": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+    "prompt": "Paint the four exact technical models of reference1 as the exact modern2020s house in reference2. Preserve guide1 viewingdirections, full outlines, proportions, roofsteps, windows/doors andSIXsolarpanels in theirfixedpositions. HigherWHITEvolume andlowerCHARCOALentryvolume, timberfrontdoor, reflectiveglazedrear SLIDING PATIO DOOR, NO GARAGE orshutter. Match reference2finishedmaterials/brushwork/colours but camera comesfromreference1:orthographic30degreesdown, fournearcardinalviews8degreeoffset, layout N E / S W, subtlyslantingbases/narrowsides. Native2x2spritesheet, samephysicalscale, completebuildingineachquarter, generousmargins. Late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, windowsunlit, nopeople/trees/cars/groundplate/technicaltext/labels/grid/haze. Completelytransparentzeroalphabackgroundwithopaquebuildings.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png"
+    ],
+    "status": "native correction candidate; independent review pending",
+    "runtime_imported": false,
+    "sha256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-school-shuttle-bus",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-addd47aa-16e2-4d3c-ad4d-c6ec78dff24c.png",
+    "target": "generated/vehicles/town-school-shuttle-bus/traffic8-v3.png",
+    "prompt": "Paint EIGHT vehicle views matching the EXACT CAMERA and noseheadings in reference1, using reference2aspaintedBUSidentityonly. Keep reference2yellow conventional bonnet-frontschoolbus, exactaxle/wheelbase/windowcount/bonnet/frontRIGHTpassengerentrydoor andLEFTonlySTOPpaddle; realflatREARemergencydoor/redlenses. Do not copy boxshapeoffirsttechnicalproxy, itprovides30degree-downorthographiccamera andheadingsonly. ToprowNOSElowerleft,DOWN,lowerright,RIGHT; bottomrowupperright,UP,upperleft,LEFT. SideheadingsmustkeeplengthhorizontalbutshowroofwideplanefromABOVE, nevereyelevelor45degreecorner. LIGHTSOFF/lateafternoondaylightsunUPPERRIGHT, shadowsLOWERLEFT. CRITICAL: reference2hasUNWANTEDOPAQUEWHITEBACKGROUND; removeit entirely. TRUEzeroalphatransparentbackgroundinallgutters/outerborderandaroundcars, no white/greybackdropwash, haze, groundshadowpuddleorparkingplate. Busopaquebody/glass, antialiasonlyattrueedges. Samepaintedminiaturematerialstyle, nopeople, gridorUI.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-bus/guides/traffic8-camera-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/traffic8-v2.png"
+    ],
+    "status": "native correction candidate; independent review pending",
+    "runtime_imported": false,
+    "sha256": "2346f2399e0dc571be66b5861f69b5d2e6995717e509e0b55f37e9b5bad1dceb",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "budget-1950-shanty-hut",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-35487452-da29-46f0-80c6-20add49da67e.png",
+    "target": "generated/budget-1950-shanty-hut/yaw8-v2.png",
+    "prompt": "Precisely correct reference2's BOTTOM-RIGHT sprite to match the same BOTTOM-RIGHT TECHNICAL CAMERA ofreference1. Main visible face is the windowedgableend. Its narrow SCREENRIGHT wall is the REAR WALL, so it must have NO greenfrontdoor/tooldoors, no frontwindow, no frontawning. Preserveonlythecorrecthighrearventsliverfromguide1wherevisible. The frontdoorwall is ontheoppositeside and is occluded in thiscamera. Repaint thisviewfromthecorrectyawSIGN/side, do notjusthideadoorwhilekeepingwronggeometry. Small ordinary1950s cream-painted clapboard caretaker cabin. One green front door at left and one small front window at right; one right-side window and one high rear vent. Straight manufactured lumber, grey corrugated gable roof, modest peeling paint and age. Keepotherthreecells/identity/materials unchanged, mainbases shouldslant0.07027rise/runfor8degreeyaw/30degreedown. Correct N E / S W cellsasguide1, samebuilding scale. Finelyhand-paintedminiature, lateafternoonDAYTIME sunlightUPPERRIGHT/shadowsLOWERLEFT. FullyopaquebuildingsonTRUEzeroalphatransparentbackground, nomattehaze/groundplate/labels/extraobjects.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-hut\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/budget-1950-shanty-hut/yaw8-v1.png"
+    ],
+    "status": "native correction candidate; independent review pending",
+    "runtime_imported": false,
+    "sha256": "fba19474e1670ff198c67198088b0d19766766c77b830e953cf14abd3d4e27f5",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "budget-1950-shanty-shed",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-05561186-2b17-47fa-b055-1e46375e9bd8.png",
+    "target": "generated/budget-1950-shanty-shed/yaw8-v2.png",
+    "prompt": "Precisely correct reference2's BOTTOM-RIGHT sprite to match the same BOTTOM-RIGHT TECHNICAL CAMERA ofreference1. Main visible face is the windowedgableend. Its narrow SCREENRIGHT wall is the REAR WALL, so it must have NO greenfrontdoor/tooldoors, no frontwindow, no frontawning. Preserveonlythecorrecthighrearventsliverfromguide1wherevisible. The frontdoorwall is ontheoppositeside and is occluded in thiscamera. Repaint thisviewfromthecorrectyawSIGN/side, do notjusthideadoorwhilekeepingwronggeometry. Cheap old1950s garden maintenance shed, faded brown horizontal timber siding, paired green front tool doors, one small right-side window and one high rear vent, grey corrugated gable roof, restrained rust and weathering. Keepotherthreecells/identity/materials unchanged, mainbases shouldslant0.07027rise/runfor8degreeyaw/30degreedown. Correct N E / S W cellsasguide1, samebuilding scale. Finelyhand-paintedminiature, lateafternoonDAYTIME sunlightUPPERRIGHT/shadowsLOWERLEFT. FullyopaquebuildingsonTRUEzeroalphatransparentbackground, nomattehaze/groundplate/labels/extraobjects.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-shed\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/budget-1950-shanty-shed/yaw8-v1.png"
+    ],
+    "status": "native correction candidate; independent review pending",
+    "runtime_imported": false,
+    "sha256": "5fd10aa2beae60c9959b3d06572b8859df457c2aafeb1e1ea5013eecec388f8e",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-red-hatchback",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b09530c1-c852-457f-a21c-441c6b0fac13.png",
+    "target": "generated/vehicles/town-red-hatchback/right-elevated-v1.png",
+    "prompt": "Paint the exact projected car in REFERENCE1 as the red three-door hatchback from REFERENCE2. Produce ONE SINGLE vehicle sprite only. The orientation, orthographic camera and plane visibility come EXCLUSIVELY from reference1: car nose points EXACTLY SCREEN RIGHT, longitudinal axis exactly horizontal, camera looks DOWN30degrees from ABOVE the side. The roof and bonnet show their full upper surfaces as broad planes at this projection; wheel discs are ellipses0.866height/width. No front-facing grille plane visible except thin endedge; do not turn nose diagonallytowardtheviewer. Reference2givescaridentity/paint/trim/detailsONLY: redpaint/goldstripe, blackbumpers, two side doors total plusrearhatch, roundheadlamps, steelwheels, rearwiper. Do not copy reference2'sdiagonal orientation. Applythevehicle'scorrectshapeoverreference1proxywhilepreservingthe exactcamera/projection. Detailedhandpaintedminiature, naturalupperrightdaylightsun, shadowdownleft, lampsoff. OnefullyopaquecompletecarcentredwithamplemarginonTRUEzeroalpha transparentbackground. No groundplate, text, grid orhaze.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-red-hatchback/camera-calibration-refs/right-camera-only.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-red-hatchback/camera-calibration-refs/corner-identity-only.png"
+    ],
+    "status": "single-view calibration visually improves30degree side camera; independent measurement pending",
+    "runtime_imported": false,
+    "sha256": "b1df50553e453843857650872d59cc96b3c21dd67548beda07b9347f3a8974e7",
+    "native_bytes_preserved": true
+  }
+]

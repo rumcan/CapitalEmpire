@@ -1,0 +1,67 @@
+{
+  "priority": 3,
+  "jobId": "golf-vehicle-01-03-shuttle-cart",
+  "runtimeSubjectId": "newprop:shuttle-cart",
+  "runtimeName": "Shuttle cart",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shuttle-cart.source.png",
+  "sourceProvenance": {
+    "runtimeSubjectId": "newprop:shuttle-cart",
+    "runtimeName": "Shuttle cart",
+    "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shuttle-cart.source.png",
+    "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+    "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+    "sourceSheetSHA256": "7cc4f106aa4a8a0aeec4a14bbcc3ff9a0b79c92c8a1053fddcdb5f319bfeb765",
+    "cropRectXYWH": [
+      647,
+      66,
+      597,
+      545
+    ],
+    "sourceCell": "top right",
+    "pngSHA256": "372e0bb76bdee79e4ad0870c76d089ed58f55282a4ace113c1bbf502c7b1711e",
+    "rgbaSHA256": "1221054db0e233e9795eeed925e6f4da889f4febdef7ebb32706b81e55968b56",
+    "cropPixels": [
+      597,
+      545
+    ],
+    "sourceMetadataCutOff": false,
+    "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+    "visualInspection": "inspected native crop",
+    "actualIdentityNotes": "Confirmed three passenger bench rows under long canopy, open sides and four wheels; not a bus.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 1.4,
+      "hy": 1.4,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "sourceDisplayPixels": [
+    179.2,
+    163.59
+  ],
+  "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+  "functionalBrief": "Long cream/green four-wheel open-sided passenger shuttle cart with three transverse two-place bench rows, full-length cream canopy, front steering wheel/windshield and fixed rear rail. Preserve exactly three bench rows and long wheelbase; no front row copied to rear, no people or side doors added.",
+  "conditionAndEraBrief": "Identity-preserving six-place-looking passenger body, different from generated two-place player cart and schoolbus. Seating shown is source geometry, not an accepted runtime capacity. Source rounded nose is later-era styling; timeline binding remains separate.",
+  "ordinaryBudgetRedesignRequired": false,
+  "originalAuditCounts": {
+    "normal": 0,
+    "yaw8": 0
+  },
+  "nativeGeneratedByThisBrief": false,
+  "exactEightImagesAlreadyProvenForThisStableID": false,
+  "existingNormal4UsableRefs": 0,
+  "generatedCoreReuseClaimed": false,
+  "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+  "sourcePlan": {
+    "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+    "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+    "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+    "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+  },
+  "ownerApproved": false,
+  "runtimeIntegrated": false
+}

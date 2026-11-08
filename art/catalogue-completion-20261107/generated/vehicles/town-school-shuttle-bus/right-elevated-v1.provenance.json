@@ -1,0 +1,14 @@
+{
+  "key": "town-school-shuttle-bus",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-3c2e6938-0611-4ff9-a918-f2b7b4e39986.png",
+  "target": "generated/vehicles/town-school-shuttle-bus/right-elevated-v1.png",
+  "prompt": "Paint EXACT camera view fromREFERENCE1 as the exact yellow schoolbus inREFERENCE2. ONE SINGLE bus only, nose exactly SCREEN RIGHT, longaxis horizontal, orthographic30degreesDOWNfromABOVEside so roof appearsasbroadplane and wheelsellipses0.866height/width. Do notturnnose diagonallytowardcamera. Reference2iscorrectsamephysicalsideidentity andpaintedstyle; preserveconventionalfrontbonnet/bodylength/blackrubrails/passengerwindows/roofvents/wheels. This rightward-facing view shows DRIVER LEFT SIDE, with exactlyONE red STOPpaddle nearfront and NO passengerentrydoor. NeverputdoorandSTOPpaddleonthesameside. No occupants/brands, no groundplate, road, haze, UIorgrid. Natural late-afternoonDAYTIME sunlightSCREENUPPERRIGHT, shadowsLOWERLEFT, unlitlamplenses. Onecompleteopaquehandpaintedminiaturebus centredwithamplemargin on TRUEzeroalpha transparentbackground. Do notcopyboxshapeofthetechnicalproxy: itprovidescameraonly.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/camera-calibration-refs/right-camera-only.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/camera-calibration-refs/right-corner-identity.png"
+  ],
+  "status": "isolated view correction candidate; independent QA pending",
+  "runtime_imported": false,
+  "sha256": "cf2ce10402ac69ed838c290af5f75603dd6c9675b84c4f5f18dff69b56a9b6a4",
+  "native_bytes_preserved": true
+}

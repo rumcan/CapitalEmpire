@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+    "sha256": "071878c1d0f2214d891b51ba03fda869ad12acbca11b5a310624ec7eb5351d28",
+    "bytes": 732435
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.provenance.json",
+    "sha256": "c5a7687dca6f431d8b81ae675390b316defc9c2bfa35e0c32593a84ae3d7a404",
+    "bytes": 2782
+  },
+  "exact_prompt_utf8_sha256": "f1ebd89154f72e6c27e90c4644f9569a131df03817db611ce4647fb614c05592",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v1/rope-barrier-corner/guides/yaw8-world-v1.png",
+      "sha256": "a8df18627c574404cdcf45b22f7246146f727c7a28dd4e0216e6924816edbf4d",
+      "bytes": 42630
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+      "sha256": "5b2bc88fb3c87a6e1304d33460d54b615ac0228ae6b8c2afddbfc2716e67d98d",
+      "bytes": 935658
+    }
+  ],
+  "zero_alpha_fraction": 0.8188266446891478,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 0,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N L narrow-left/long-right",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 61,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "1b2ef7f6ccb086d34f9c21933876651fd4ffa92fad840294281ce87794484769",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E L long-left/narrow-far-right",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 23,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "8c52606c0af0a34af145eaa806689b24ab4415f1eb34e7bacb74be464ace4ad1",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S L long-left/narrow-near-right",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 50,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "7ef1c93779e3376d3b67acf9687ba72d0c197bb023b7cf08776935d041f76262",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W L narrow-near-left/long-right",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 24,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "2345749539a4c64274a82391433911b09ac15b22cff1bebe63f62f1e88513071",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Five posts/four rope spans per cell and four L placements match guide, no missing corner post or span."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false
+}

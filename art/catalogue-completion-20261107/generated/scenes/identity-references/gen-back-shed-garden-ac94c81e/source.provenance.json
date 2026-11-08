@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "gen:back-shed-garden",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/gen-back-shed-garden/NE.png",
+  "sourceSha256": "6aa93bc46b2c467e04f1594e98f5ff54c01f3633a9118ff28f74ece7de1a6dc4",
+  "output": "identity-references/gen-back-shed-garden-ac94c81e/source.png",
+  "outputSha256": "6aa93bc46b2c467e04f1594e98f5ff54c01f3633a9118ff28f74ece7de1a6dc4",
+  "width": 574,
+  "height": 471,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      574,
+      471
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\gen-back-shed-garden\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "gen:back-shed-garden",
+    "version": "gen-back-shed-garden-4views-v1",
+    "files": {
+      "NE": "6aa93bc46b2c467e04f1594e98f5ff54c01f3633a9118ff28f74ece7de1a6dc4",
+      "SE": "fba4d71076082b4c9ac820c82359ee96bcd4a7707572255bd3738fb904450e0a",
+      "SW": "bcccd94f94400c63c6b83ed2ce4f7c5bf83f2b60c807494f283d90a35664498b",
+      "NW": "ce88dcafc74545c221c5a784fbdfeb5cdffd811304d4ed9b9f04727d9a667a04"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.507813,
+      0.640625,
+      0.73877,
+      0.825195
+    ],
+    "crop": {
+      "left": 1040,
+      "top": 1312,
+      "width": 473,
+      "height": 378
+    },
+    "native": "art/theme-consistency/exports/buildings/gen-back-shed-garden.native.png",
+    "nativeSha256": "4624b5dd751a55b893c1f201aecdb302d8bc845d562416fe613470a1ca466b38"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

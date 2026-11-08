@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "runtimeSubjectId": "newprop:park-bench",
+  "technicalOnly": true,
+  "nativeGeneratedHere": false,
+  "runtimeIntegrated": false,
+  "oldGuidesRetained": true,
+  "nativeIdentityReference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\park-bench\\normal-v2.png",
+    "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c"
+  },
+  "change": "Only replace the straight map top bar with a curved arch cap and two gold ball finials atop the two existing map uprights. Same bench and map placement, same cameras, scale and exact cell offsets.",
+  "retainedNonCapFaceCount": 195,
+  "allRetainedFacesEqualV1": true,
+  "allRetainedAnchorsProjectToSamePixels": true,
+  "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\park-bench-world-model-v2.json",
+  "meshSHA256": "a21ed0c01ac9deec63908bcb5d07696679cca8252d246a268df3f694d72be0e8",
+  "guides": {
+    "normal": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\normal-world-v2.png",
+      "sha256": "906eaeb8112bf842a2f34ee6af7d0e976c1fe4124c0d74f6029f08116b83f3bc",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\normal-world-v2.calibration.json",
+      "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\normal-world-v2.svg"
+    },
+    "yaw8": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\yaw8-world-v2.png",
+      "sha256": "0448bd833c2b26d460e752a996785c92e757e3266ceeb5cf0c93eaf52bbc2373",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\yaw8-world-v2.calibration.json",
+      "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\yaw8-world-v2.svg"
+    }
+  },
+  "inspection": [
+    {
+      "kind": "normal",
+      "cells": [
+        {
+          "sourceCameraKey": "SE",
+          "alphaBoundsLTRB": [
+            20,
+            22,
+            591,
+            662
+          ],
+          "notClipped": true,
+          "cameraScaleAndOffsetsEqualV1": true,
+          "allRetainedAnchorPixelsEqualV1": true
+        },
+        {
+          "sourceCameraKey": "SW",
+          "alphaBoundsLTRB": [
+            20,
+            22,
+            609,
+            652
+          ],
+          "notClipped": true,
+          "cameraScaleAndOffsetsEqualV1": true,
+          "allRetainedAnchorPixelsEqualV1": true
+        },
+        {
+          "sourceCameraKey": "NW",
+          "alphaBoundsLTRB": [
+            21,
+            22,
+            588,
+            593
+          ],
+          "notClipped": true,
+          "cameraScaleAndOffsetsEqualV1": true,
+          "allRetainedAnchorPixelsEqualV1": true
+        },
+        {
+          "sourceCameraKey": "NE",
+          "alphaBoundsLTRB": [
+            21,
+            22,
+            612,
+            593
+          ],
+          "notClipped": true,
+          "cameraScaleAndOffsetsEqualV1": true,
+          "allRetainedAnchorPixelsEqualV1": true
+        }
+      ],
+      "visuallyInspected": true,
+      "visualFindings": "Arch remains curved on front and rear; exactly two spherical gold finials remain on the two fixed map uprights across every camera. Bench and map side/position unchanged; no clipping."
+    },
+    {
+      "kind": "yaw8",
+      "cells": [
+        {
+          "sourceCameraKey": "N",
+          "alphaBoundsLTRB": [
+            21,
+            22,
+            656,
+            583
+          ],
+          "notClipped": true,
+          "cameraScaleAndOffsetsEqualV1": true,
+          "allRetainedAnchorPixelsEqualV1": true
+        },
+        {
+          "sourceCameraKey": "E",
+          "alphaBoundsLTRB": [
+            21,
+            22,
+            480,
+            684
+          ],
+          "notClipped": true,
+          "cameraScaleAndOffsetsEqualV1": true,
+          "allRetainedAnchorPixelsEqualV1": true
+        },
+        {
+          "sourceCameraKey": "S",
+          "alphaBoundsLTRB": [
+            20,
+            22,
+            653,
+            586
+          ],
+          "notClipped": true,
+          "cameraScaleAndOffsetsEqualV1": true,
+          "allRetainedAnchorPixelsEqualV1": true
+        },
+        {
+          "sourceCameraKey": "W",
+          "alphaBoundsLTRB": [
+            20,
+            22,
+            480,
+            604
+          ],
+          "notClipped": true,
+          "cameraScaleAndOffsetsEqualV1": true,
+          "allRetainedAnchorPixelsEqualV1": true
+        }
+      ],
+      "visuallyInspected": true,
+      "visualFindings": "Arch remains curved on front and rear; exactly two spherical gold finials remain on the two fixed map uprights across every camera. Bench and map side/position unchanged; no clipping."
+    }
+  ],
+  "use": "Use v2 guide for camera/arched architecture first; native normal-v2 supplies painterly identity and materials. Keep exactly two gold spherical finials in every visible view, never lose the arch when editing isolated SE/SW.",
+  "finalStyle": "Established painterly style; late-afternoon upper-right sun/lower-left shadows; transparent. Native art approval remains separate.",
+  "inspectedAtUTC": "2026-11-07T14:03:19.149605+00:00",
+  "baselineFilesRetained": [
+    {
+      "file": "normal-world-v1.calibration.json",
+      "sha256": "fb0e8b8076df0b49818f6053a0d81a24339db4b4ca901ff5c35d81dff12d8ef6"
+    },
+    {
+      "file": "normal-world-v1.png",
+      "sha256": "24a6d201dd35f002348d0f0a6ff153e5c74cdf7e3d3949f1abd1401057945d37"
+    },
+    {
+      "file": "normal-world-v1.svg",
+      "sha256": "ce39c3768018613f625b04fc22e1378e412eab3410039080dc6f4d85957b37ed"
+    },
+    {
+      "file": "park-bench-world-model-v1.json",
+      "sha256": "f43e47942f7e6185f8dee032fb3f4db2990ee998ebb2ee2e05bf32069fe44cfa"
+    },
+    {
+      "file": "yaw8-world-v1.calibration.json",
+      "sha256": "b132d584b86a354dcb70eed0a148d388342328ddf3a36ec4cd4189620e49d5ab"
+    },
+    {
+      "file": "yaw8-world-v1.png",
+      "sha256": "b9c08866e7bda10f0f9887d18c4422ee3e96c843aa3cc4c18003c8133260d168"
+    },
+    {
+      "file": "yaw8-world-v1.svg",
+      "sha256": "c532ad803140a789a2b63a6f1bbb76d8aeb30a1357427b8650f32c142393f0b6"
+    }
+  ]
+}

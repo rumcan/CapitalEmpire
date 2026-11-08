@@ -1,0 +1,99 @@
+{
+  "purpose": "Compact TECHNICAL ONLY camera reference, not final sprite art.",
+  "model": "technical-vehicle-bus",
+  "camera_down_degrees": 30,
+  "cell_pixels": [
+    400,
+    400
+  ],
+  "layout": [
+    4,
+    2
+  ],
+  "camera_pixels_per_metre": 34.5,
+  "cardinal_horizontal_offset_degrees": 0,
+  "corner_horizontal_offset_degrees": -45,
+  "cell_order": [
+    [
+      "LOWER LEFT",
+      "DOWN",
+      "LOWER RIGHT",
+      "RIGHT"
+    ],
+    [
+      "UPPER RIGHT",
+      "UP",
+      "UPPER LEFT",
+      "LEFT"
+    ]
+  ],
+  "source_cells": [
+    {
+      "cell": 0,
+      "source_family": "normal",
+      "source_cell": 3,
+      "actual_nose_screen": "LOWER LEFT"
+    },
+    {
+      "cell": 1,
+      "source_family": "cardinal",
+      "source_cell": 0,
+      "actual_nose_screen": "DOWN"
+    },
+    {
+      "cell": 2,
+      "source_family": "normal",
+      "source_cell": 0,
+      "actual_nose_screen": "LOWER RIGHT"
+    },
+    {
+      "cell": 3,
+      "source_family": "cardinal",
+      "source_cell": 1,
+      "actual_nose_screen": "RIGHT"
+    },
+    {
+      "cell": 4,
+      "source_family": "normal",
+      "source_cell": 1,
+      "actual_nose_screen": "UPPER RIGHT"
+    },
+    {
+      "cell": 5,
+      "source_family": "cardinal",
+      "source_cell": 2,
+      "actual_nose_screen": "UP"
+    },
+    {
+      "cell": 6,
+      "source_family": "normal",
+      "source_cell": 2,
+      "actual_nose_screen": "UPPER LEFT"
+    },
+    {
+      "cell": 7,
+      "source_family": "cardinal",
+      "source_cell": 3,
+      "actual_nose_screen": "LEFT"
+    }
+  ],
+  "sources": {
+    "normal": {
+      "png": "normal-world-v1.png",
+      "sha256": "704c710c645cdff8ba5556b116d8d613a2c94639d392079502692740a0ceebf6"
+    },
+    "cardinal": {
+      "png": "cardinal-world-v1.png",
+      "sha256": "346e3c74427675b41e5740479416353ac51ea579294ff448f6236c3d6d150ea1"
+    }
+  },
+  "output": {
+    "png": "traffic8-camera-world-v1.png",
+    "sha256": "769728cef6bd36d0640588d3e6be60ff5f3ee3525cff16273d30630de95d69d9"
+  },
+  "mesh_file": "technical-vehicle-bus-world-model-v1.json",
+  "mesh_sha256": "0dc4c08d559e0983029debbb1d9d47814409a143183224b4edc9785f6796fdf7",
+  "technical_only": true,
+  "final_native_art_approved": false,
+  "runtime_integrated": false
+}

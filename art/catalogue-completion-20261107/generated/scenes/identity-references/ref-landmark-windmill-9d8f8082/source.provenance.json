@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "ref:landmark-windmill",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/ref-landmark-windmill/NE.png",
+  "sourceSha256": "953092625c9fb7349cdd4a34999365cae5f05ab434ffdb349cb8d0f93468ff92",
+  "output": "identity-references/ref-landmark-windmill-9d8f8082/source.png",
+  "outputSha256": "953092625c9fb7349cdd4a34999365cae5f05ab434ffdb349cb8d0f93468ff92",
+  "width": 326,
+  "height": 575,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      326,
+      575
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\ref-landmark-windmill\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Weathered dark steel, warm rim and cool shadow metal surfaces fit master; isolated lattice structure with no ground tile.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-3.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "ref:landmark-windmill",
+    "version": "ref-landmark-windmill-4views-v1",
+    "files": {
+      "NE": "953092625c9fb7349cdd4a34999365cae5f05ab434ffdb349cb8d0f93468ff92",
+      "SE": "8b409e2cb4250fddcd6cad14a36c1ec4d495b358815ca8f0d4366036c9536866",
+      "SW": "74022a8ce72ed3cc842f9a2095b458d506f6c9985101496e6561f24957c82af9",
+      "NW": "1daf4d13164b65a1ce761aa1b6c744f6477430f6498d817638dcb80ba96c9612"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.882813,
+      0.007813,
+      0.971191,
+      0.197266
+    ],
+    "crop": {
+      "left": 1808,
+      "top": 16,
+      "width": 181,
+      "height": 388
+    },
+    "native": "art/theme-consistency/exports/buildings/ref-landmark-windmill.native.png",
+    "nativeSha256": "0f071d5c77ab4d55c32f461b65035cde2060be6eb5b726fbd55ba3ed6ad90cc3"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

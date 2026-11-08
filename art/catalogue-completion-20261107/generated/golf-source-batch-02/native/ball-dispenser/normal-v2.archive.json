@@ -1,0 +1,24 @@
+[
+  {
+    "key": "newprop:ball-dispenser",
+    "slug": "ball-dispenser",
+    "family": "normal",
+    "version": 2,
+    "condition": "base",
+    "target": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-dispenser\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-dispenser/normal-v1.png"
+    ],
+    "prompt": "Paint FOUR real corner views of the one fixed physical golf prop in REFERENCE1 as finished game art, matching material identity and detailed painterly miniature style of REFERENCE2. Reference1 is the projected geometry/side/occlusion/camera authority. Reference2 supplies material texture/color only; its earlier duplicate cameras and state mistakes must NOT be copied. Fixed object: Only physicalFRONT-Yhas ball window/coin controls/chute and the single wire basket. PhysicalREAR+Yis plain latched service panel. Sloping hood is lower at front, higher at rear. Fronts must not be repeated for rear views.. Preserve exactly the guide's four quarterturns SE SW / NW NE, orthographic30degreesDOWN,45degreecorners, equal physical scale. Source assembly identity: One green upright coin-operated golf-ball dispenser: sloping top hood, upper front window showing golf balls, coin slot/button panel below, lower ball chute and one green wire basket on front. Back is plain service panel; basket never moves to rear in turned views. . Ordinary practical golf equipment, no inventedornament. Keep ALL apparatus on fixed physical sides while the whole object rotates; true rear and opposite corner views, never repeat a front corner. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadowsLOWERLEFT,lampsOFF. Four complete separatedsprites with broad zeroalpha transparent margins/gutters, no haze/white/grey background, no groundtile, plants, people, UI/captions/grid. Retain functional mesh/holes/ball/brass/castmetal textures.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-72d4e614-6fa3-4c16-bcbd-f594c5c7a89a.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-dispenser\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-dispenser/normal-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+    "native_bytes_preserved": true
+  }
+]

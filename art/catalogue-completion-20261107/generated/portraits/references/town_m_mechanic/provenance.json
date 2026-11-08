@@ -1,0 +1,93 @@
+{
+  "look_id": "person:3d:town_m_mechanic",
+  "actual_runtime_look": {
+    "id": "person:3d:town_m_mechanic",
+    "size": "adult",
+    "w": 80,
+    "h": 137.5,
+    "ax": 40,
+    "ay": 132.5,
+    "m": 1.8,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "person:3d:town_m_mechanic",
+  "runtime_namespace_differs_from_source_grid": false,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_mechanic\\preview.png",
+    "sha256": "65d45c66a821d99fc7331fef1768f9afa8146efc5195241becb8d59b3bd8553b",
+    "bytes": 2033608
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_mechanic\\sheet.json",
+    "sha256": "17f4fd48379157c47a4a3f5cb34566b696ac1112d1ad9795b429cd14ab1e3eb8",
+    "bytes": 667
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 275
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_mechanic\\identity-idle-pair.native.png",
+    "sha256": "da2d5c1f12a5b45a91cf8c8d20103d428b521b9b18000b3f2cd775636e5afff4",
+    "bytes": 53164
+  },
+  "dimensions": [
+    320,
+    275
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        275
+      ],
+      "dimensions": [
+        160,
+        275
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_mechanic\\idle-S.native.png",
+        "sha256": "3179eea16b622d7a5b2eb93909732771d12a070c9a34f1af6c3afe46f36eaf45",
+        "bytes": 28796
+      },
+      "pixel_sha256": "5d79b45d67aa94333b32ce4a5c3f0392b53fecce5bbf681dd30dd09876d81e79"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        275,
+        160,
+        550
+      ],
+      "dimensions": [
+        160,
+        275
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_mechanic\\idle-SW.native.png",
+        "sha256": "3ed54dc2fec01d8fdccec40e44caf672e8c6e443dfac18756be4eb21e956ffc1",
+        "bytes": 25556
+      },
+      "pixel_sha256": "1891f45d8c3cb15d4c4c708a98cb111aa6f79b64028089f2b455d59bfc538e67"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

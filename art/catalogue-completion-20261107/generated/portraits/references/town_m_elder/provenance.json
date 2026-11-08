@@ -1,0 +1,93 @@
+{
+  "look_id": "person:3d:town_m_elder",
+  "actual_runtime_look": {
+    "id": "person:3d:town_m_elder",
+    "size": "adult",
+    "w": 80,
+    "h": 132.5,
+    "ax": 40,
+    "ay": 127.5,
+    "m": 1.72,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "person:3d:town_m_elder",
+  "runtime_namespace_differs_from_source_grid": false,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_elder\\preview.png",
+    "sha256": "8187b5134a8de325e4c4a09e6a466888b3f29eeab00075423f7213e6a8408f90",
+    "bytes": 2117811
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_elder\\sheet.json",
+    "sha256": "cc73e5deac96e85350fde0b72e656616df85bb1b8406bbd5340d61ea10bc5080",
+    "bytes": 662
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 265
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_elder\\identity-idle-pair.native.png",
+    "sha256": "62b2a3f8eadf74d244e4e491ff0c7e5d40a5f8649eecf30c036f42ab2a6b07ab",
+    "bytes": 50673
+  },
+  "dimensions": [
+    320,
+    265
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        265
+      ],
+      "dimensions": [
+        160,
+        265
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_elder\\idle-S.native.png",
+        "sha256": "532215b2192e4e3ee36e447a0da6075ebfd9bed044c8294435f78cef2af95a2f",
+        "bytes": 27309
+      },
+      "pixel_sha256": "d2669b81a8ecf872211d13ed470d99a1e6215e38c4127fb979ee83750b03a923"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        265,
+        160,
+        530
+      ],
+      "dimensions": [
+        160,
+        265
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_elder\\idle-SW.native.png",
+        "sha256": "62df8410e608cc491d0585d278735054dc26debc992bc4166108162a84626d23",
+        "bytes": 24421
+      },
+      "pixel_sha256": "e425939a53834a126c773c30a3f9af51e6365f874635d27b418e353fda33ed65"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

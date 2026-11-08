@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-farmhouse-north-408a9ca6-plain-1/NE.png",
+  "sourceSha256": "a6c4d433378374b742318f5c496611d31e77d442850923ea368b7a205bba22ca",
+  "output": "identity-references/variation-ref-building-farmhouse-north-408a9ca6-plain-1-879e8f2e/source.png",
+  "outputSha256": "a6c4d433378374b742318f5c496611d31e77d442850923ea368b7a205bba22ca",
+  "width": 433,
+  "height": 376,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      433,
+      376
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-farmhouse-north-408a9ca6-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+    "version": "variation-ref-building-farmhouse-north-408a9ca6-plain-1-4views-v3",
+    "files": {
+      "NE": "a6c4d433378374b742318f5c496611d31e77d442850923ea368b7a205bba22ca",
+      "SE": "b08c1e0b9d399eee427b70d95319f79ae7a17fe2e08a6a73d053d6537d2951e0",
+      "SW": "e403dc598255a4eb283b4ec90373d2455adba2e88c0de73b4fc1196185e6e37c",
+      "NW": "4786ed3ed9b8ea9d853b9de2f518ac54947c7e03a0b4efdd6d0120c500aff499"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.007813,
+      0.007813,
+      0.219238,
+      0.191406
+    ],
+    "crop": {
+      "left": 16,
+      "top": 16,
+      "width": 433,
+      "height": 376
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-farmhouse-north-408a9ca6-plain-1.native.png",
+    "nativeSha256": "b8acb85f0ad3d4a3fc62127dbf62283bb70ef450e39df88188a9e4dc3f9ab94b"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

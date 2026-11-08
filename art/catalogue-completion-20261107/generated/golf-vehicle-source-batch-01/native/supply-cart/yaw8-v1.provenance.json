@@ -1,0 +1,22 @@
+{
+  "key": "newprop:supply-cart",
+  "slug": "supply-cart",
+  "family": "yaw8",
+  "condition": "ordinary-budget-redesign",
+  "version": 1,
+  "target": "generated/golf-vehicle-source-batch-01/native/supply-cart/yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/supply-cart/normal-v1.png"
+  ],
+  "prompt": "Paint FOUR missing nearcardinal views of ONE exact specialist golf mobileprop from REFERENCE1 fixedworldguide. Guide controls allcameras/physicalattachments/occlusion. REFERENCE2 supplies finishedsubjectidentity/finepaintedmaterialsONLY; nevercopyitscornercamera. Functionalidentity: Four-wheel supply/refreshment golf utility with front cream bench/windshield/canopy and rear cargo bed carrying two orange water coolers, two white-lid coolboxes and bottled water crate. Preserve load distribution and rear-bed sideboards as fixed geometry; no people.. Fixedstate: FRONTbench/canopy/controls, REARloadedbed. EXACT load:2orange round jugs,2rectangular white-lid coolboxes,1bottle crate. Fixed cargo positions across8views; no passengers or loose cargo movement. Older plain bolted-board/metal utility, intact canopy; no rope/tarp shack..  Matchreference2's ordinaryolderpracticalredesign, boltedsteel/paintedtimber/intactcanopy; no ropes/tarp/shackscaffolding. FourgenuineMAINfacesN E / S W asguide, eachnominal8degreesoffcardinal, orthographic30degreesDOWN. Fixedroofequipment/cargo, wheellayout, seatrowcount, canopy/bench positions neverchange.  Finepainterlyminiaturegameartmatchreference2wood/enamel/metals/glass, notlowpolyguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lights/beaconsOFF. CompleteisolatedequallyscaledopaqueobjectswithwideZEROALPHAtransparentgutters/margins, smallcontactshadowonly. Nopeopledrivers/patients, road/groundplate, scenery, plants, captions/UI/grid/halo. Intrinsiccross/accesssymbolsretained wherephysicalbodyhas them.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-78aa0f8a-dcd1-4941-8470-38ebf79e75c4.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/supply-cart/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "a96aa8be29ccbd812accec8f2809d76f1b43a7dad46e1b7c23b9bdbb35293bf9",
+  "native_bytes_preserved": true
+}

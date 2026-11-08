@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:42:37.359837+00:00",
+  "reviews": [
+    {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v2.png",
+        "sha256": "b8022ef2aa96119ff82eb02e6559e0cbcd340a5a1a8abde1f9d0b387f0462005",
+        "bytes": 1746264
+      },
+      "review_result": "PASS-W;HOLD-E-regression-select-v1-E",
+      "visual_observations": [
+        "W front map removed; plain vertical backing now correct.",
+        "N map/seat, S plain back retained. E front map also erased unintentionally: retain previously accepted v1 E instead."
+      ],
+      "outer_4px_border_alpha_p50p95max": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "distant_background_alpha_p50p95max": [
+        0.0,
+        0.0,
+        84.0
+      ]
+    },
+    {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.png",
+        "sha256": "d0f9d58c7a62a0409232d5ce6f4e25174129eb8ad8e5b0949466d56185eba5c6",
+        "bytes": 822577
+      },
+      "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+      "visual_observations": [
+        "W printed symbols removed, plain green arrow backs correct. N/E pictograms and S plain backs retained; four boards/top finial/base preserved."
+      ],
+      "outer_4px_border_alpha_p50p95max": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "distant_background_alpha_p50p95max": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "selected_source_slots": 96,
+  "subject_count": 12,
+  "selected_functional_holds": 0,
+  "notes": [
+    "Bench and signpost yaw N/E/S remain v1; W uses v2. Bench v2 E was rejected because native edit also erased front map.",
+    "Washer yaw labels remapped by actual fixed attachments: N=TL,E=BR,S=BL,W=TR.",
+    "Bench and dispenser normals use explicit selected original quarters plus native corrected singles; native dimensions retained, no scaling."
+  ],
+  "completion": {
+    "path": "generated/golf-source-batch-02/Golf-course-props-batch02-96-source-views.completion.json",
+    "sha256": "7f1c754a47d3dba14ce8ac8ebb34c458b7118d6a9e1b4311b724ea1396297b04",
+    "bytes": 2119
+  }
+}

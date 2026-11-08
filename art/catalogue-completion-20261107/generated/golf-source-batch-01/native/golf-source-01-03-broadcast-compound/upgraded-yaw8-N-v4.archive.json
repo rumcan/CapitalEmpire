@@ -1,0 +1,21 @@
+[
+  {
+    "key": "golf-source-01-03-broadcast-compound",
+    "family": "yaw8-N",
+    "condition": "upgraded",
+    "version": 4,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-N-v4.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-N-v3.png"
+    ],
+    "prompt": "REMOVE BACKGROUND ONLY. Make this exact vehicle/equipment assembly a clean transparent cutout PNG with a genuine alpha channel: alpha0 everywhere outside the vehicles, generator, table, cases, reel and cables, and in the gaps between them. Remove the entire black/brown/grey studio backdrop, atmospheric glow, floor and broad ground shadows. Do not replace them with black, white, checkerboard, coloured background or a new scene. Preserve the foreground drawing, exact camera, arrangement, shapes, colors, details and existing daylight shading. Keep TWO roof HVAC units on the LARGE truck and exactly ONE FRONT roof HVAC on the SMALL satellite van; retain every current antenna, dish angle/front-back face, doors, wheels and staircase state exactly. Do not add, remove, rotate or move any foreground object. Preserve black rubber tires and dark windows as opaque object detail. Generous fully transparent margins and transparent gaps; finely painted sprite detail unchanged. ONE isolated assembly only, no text/UI/grid.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-62f04782-dd72-48ce-8a2f-0056809e1c4c.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-N-v3.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "b0cb1a52bb97dea4bf36654ee4394252cbfe0fecc913cfd0e948da7f996919a8",
+    "native_bytes_preserved": true
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "key": "golf-source-01-06-four-lane-entrance",
+    "condition": "budget",
+    "runtimeTarget": {
+      "eventTypeId": "gate",
+      "eventName": "Entrance gate",
+      "currentSpriteSubjectId": "ce:parking-entry",
+      "newArtSubjectProposal": "golf:event-four-lane-entrance",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 6,
+        "depth": 3
+      },
+      "footprintMetres": {
+        "width": 12,
+        "depth": 6
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0fa4234d-0197-4a80-a37f-aac14eed251d.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v1.png",
+    "prompt": "Generate a high-detail2x2 sheet of ONE SAME golf-event item in FOUR genuinely different orthographic45degree CORNER views, camera30degrees down. Reference1 is painted miniature materials/brushwork ONLY, do not copy its building. This is a new role-specific design; follow the functional brief. Functional identity: A12x6m nominal event entrance arrangement with exactly four pedestrian admission lanes across the width: three simple manual turnstiles and one visibly wider accessible swing gate, supported by low dividers and a restrained blank overhead sign frame. Keep queues/ground surface outside the artwork. Front and back must remain genuinely different. Condition: Faded1950ssawn timber/painted steel ticket gates, ordinary bolts and worn handrails. No log arch, ropes, scrap-metal fortress, blue tarp or brown background. It is1985; budget means ordinary old1950smanufactured equipment stillusednow, no fantasyarchitecture/rope-lashedlogs/patchworkblueplastic/ornatebrassfinials. Four camera cells: TOP LEFT FRONT+LEFT sides, TOP RIGHT REAR+LEFT sides, BOTTOM LEFT REAR+RIGHT sides, BOTTOM RIGHT FRONT+RIGHT sides, corresponding SE SW / NW NE. Reconstruct real REAR faces, don't pastefront servicehatches/screens/lenses onto theback. Keep ALL doors/windows/vents/equipment/ladder/stair/camera/servingcounter positions fixed in localphysicalspace across the four turns. Structuralbodies andfunctionalattachments are same in every view. Finely hand-painted miniature game style consistent with source authority, realistic materials and readable silhouettes. LATE-AFTERNOON DAYTIME sunfixedSCREEN UPPER RIGHT, shadowsLOWER LEFT; all electriclamps/screensoff. Nopeople, plants, groundplate/roads/terrain, UI/captions/grid/text orhaze. Equipment's owndeck/mat is allowed onlyifpartofbrief. Fullyopaqueobjects on genuinelyzeroalpha transparentbackground includingallgutters; netting/railopeningsremaintransparent. Four complete separate sprites, equal physicalscale, centredwithgenerouscellmargins.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png"
+    ],
+    "status": "native normal4 candidate; yaw4 and independent identity/alpha/geometry review pending",
+    "runtime_imported": false,
+    "sha256": "15852897f25cb3fe0d6728a35092f5560e5facde45cebd68f0d084b5ab577149",
+    "native_bytes_preserved": true
+  }
+]

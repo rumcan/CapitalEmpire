@@ -1,0 +1,4 @@
+key,source,guide_corner,review_result,outer_border_alpha_max,zero_alpha_fraction,minimum_core_margin_px,core_boundaries_clear,qa
+park-bench,generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.png,SE,PASS-source-candidate-corrected-component-identity-and-pose,1,0.8445446660002187,193,True,generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.independent-qa.json
+park-bench,generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.png,SW,PASS-source-candidate-corrected-component-identity-and-pose,0,0.8356531825431347,119,True,generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.independent-qa.json
+ball-dispenser,generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.png,SW,PASS-source-candidate-corrected-component-identity-and-pose,1,0.80494443299782,246,True,generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.independent-qa.json

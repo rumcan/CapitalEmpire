@@ -1,0 +1,74 @@
+[
+  {
+    "key": "golf-source-01-03-broadcast-compound",
+    "family": "normal",
+    "condition": "budget",
+    "version": 3,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v3.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v2.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v1.png"
+    ],
+    "prompt": "TARGETED satellite dish correction to REFERENCE1 only. It is one physical broadcast compound in four views. In the two rear views TOP-RIGHT and BOTTOM-LEFT the small uplink van's roof dish was wrongly replaced by a rectangular slatted Yagi aerial. Replace that wrong roof object with the SAME SINGLE solid smooth circular PARABOLIC SATELLITE DISH from the other two views, mounted at exactly the same fixed roof position and pointing in the same fixed world direction. Use REFERENCE2 only for the dish's world position, inclination and occlusion. Its back is a smooth convex curved bowl with a central mount, not flat bars, rungs, antenna rods, ladder, grating, solar panel or rectangular plate. Keep all vehicles, their headings, shapes, doors, wheels, roof vents, material wear, workbench, generator, cable reel and exact four cameras/layout unchanged. Retain the two alreadycorrect dish views. Maintain equal scale and generous gutters; late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT. Preserve highquality painterly miniature detail. Genuinezeroalpha transparent background. No new objects, ground or scenery."
+  },
+  {
+    "key": "golf-source-01-03-broadcast-compound",
+    "family": "yaw8",
+    "condition": "budget",
+    "version": 2,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-yaw8-v2.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-yaw8-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\yaw8-world-v1.png"
+    ],
+    "prompt": "TARGETED satellite dish correction to REFERENCE1 only. It is one physical broadcast compound in four views. In TOP-RIGHT and BOTTOM-LEFT views the small uplink van's roof dish was wrongly replaced by a rectangular slatted Yagi aerial. Replace that wrong roof object with the SAME SINGLE solid smooth circular PARABOLIC SATELLITE DISH from the other two views, mounted at exactly the same fixed roof position and pointing in the same fixed world direction. Use REFERENCE2 only for the dish's world position, inclination and occlusion. Its back is a smooth convex curved bowl with a central mount, not flat bars, rungs, antenna rods, ladder, grating, solar panel or rectangular plate. Keep all vehicles, their headings, shapes, doors, wheels, roof vents, material wear, workbench, generator, cable reel and exact four cameras/layout unchanged. Retain the two alreadycorrect dish views. Maintain equal scale and generous gutters; late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT. Preserve highquality painterly miniature detail. Genuinezeroalpha transparent background. No new objects, ground or scenery."
+  },
+  {
+    "key": "1990s-buff-brick-bay-bungalow",
+    "family": "normal",
+    "condition": "modern-era",
+    "version": 1,
+    "target": "generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/normal-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png"
+    ],
+    "prompt": "Redraw the FOUR exact technical house views in REFERENCE1 as finished native painterly miniature game sprites. REFERENCE1 controls building geometry, camera, fixeddoors/windows/balconies/chimneys/solar positions and which face is seen in each cell; REFERENCE2 is detailed hand-painted game-material STYLE ONLY, never geometry. Subject: A modest low buff-brick bungalow with one small projecting front bay window, one front door to its right, a shallow grey-brown tiled hip roof and one rear-left chimney. No garage, no extra wings, no columns. Different low compact silhouette from the first1990sredbrick garage house.. Ordinary affordable residential town architecture appropriate to the stated decade. Preserve every guide opening, all floor counts, roof shape and physical side of features. Glazed patio sliders at rear must remain GLASS with narrow frames, never become garage shutters. Painted brick, render, tile, timber and glass with fine believable material detail in the established style. No lowpoly flat unfinished technical colors. Four different45-degreecorners in same SE SW / NW NE cells asguide, cameraorthographic30degreesDOWN. One fixed building quarterturned, no mirroring, noinventedreardoor onfront. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadowsLOWERLEFT, windowslampsOFF. Four equallyscaled complete sprites with generous genuinely zero-alpha transparent margins/gutters. Buildingonly, no people, plants, fencing, pavementslab, scenery, labels, technicaltext, UI or grid. No lawn/groundplate. Retain small intrinsic doorsteps."
+  },
+  {
+    "key": "2000s-redbrick-single-storey-duplex",
+    "family": "normal",
+    "condition": "modern-era",
+    "version": 1,
+    "target": "generated/era-houses/expansion-02/2000s-redbrick-single-storey-duplex/normal-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png"
+    ],
+    "prompt": "Redraw the FOUR exact technical house views in REFERENCE1 as finished native painterly miniature game sprites. REFERENCE1 controls building geometry, camera, fixeddoors/windows/balconies/chimneys/solar positions and which face is seen in each cell; REFERENCE2 is detailed hand-painted game-material STYLE ONLY, never geometry. Subject: Two compact side-by-side one-storey redbrick homes under one shared charcoal pitched roof. Exactly two front doors near the middle, two broad outer front living windows, separate rear GLASS patio sliders, two roof vents. No upstairs floor or garage. An ordinary affordable duplex, distinct from the two-storey2010stownhouse pair.. Ordinary affordable residential town architecture appropriate to the stated decade. Preserve every guide opening, all floor counts, roof shape and physical side of features. Glazed patio sliders at rear must remain GLASS with narrow frames, never become garage shutters. Painted brick, render, tile, timber and glass with fine believable material detail in the established style. No lowpoly flat unfinished technical colors. Four different45-degreecorners in same SE SW / NW NE cells asguide, cameraorthographic30degreesDOWN. One fixed building quarterturned, no mirroring, noinventedreardoor onfront. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadowsLOWERLEFT, windowslampsOFF. Four equallyscaled complete sprites with generous genuinely zero-alpha transparent margins/gutters. Buildingonly, no people, plants, fencing, pavementslab, scenery, labels, technicaltext, UI or grid. No lawn/groundplate. Retain small intrinsic doorsteps."
+  },
+  {
+    "key": "2010s-small-six-flat-walkup",
+    "family": "normal",
+    "condition": "modern-era",
+    "version": 1,
+    "target": "generated/era-houses/expansion-02/2010s-small-six-flat-walkup/normal-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png"
+    ],
+    "prompt": "Redraw the FOUR exact technical house views in REFERENCE1 as finished native painterly miniature game sprites. REFERENCE1 controls building geometry, camera, fixeddoors/windows/balconies/chimneys/solar positions and which face is seen in each cell; REFERENCE2 is detailed hand-painted game-material STYLE ONLY, never geometry. Subject: A modest rectangular three-storey six-flat walk-up: brick lower storey, cream upper render, shallow flat parapet roof, ONE shared central front entrance, two small balconies per floor (six total) with plain metal rails, fixed rear/end window grids, one rear service door. No tower, lifts in glass shafts, luxury roof terraces or giant glazing. Dwelling count is an art/design proposal, never game population balance.. Ordinary affordable residential town architecture appropriate to the stated decade. Preserve every guide opening, all floor counts, roof shape and physical side of features. Glazed patio sliders at rear must remain GLASS with narrow frames, never become garage shutters. Painted brick, render, tile, timber and glass with fine believable material detail in the established style. No lowpoly flat unfinished technical colors. Four different45-degreecorners in same SE SW / NW NE cells asguide, cameraorthographic30degreesDOWN. One fixed building quarterturned, no mirroring, noinventedreardoor onfront. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadowsLOWERLEFT, windowslampsOFF. Four equallyscaled complete sprites with generous genuinely zero-alpha transparent margins/gutters. Buildingonly, no people, plants, fencing, pavementslab, scenery, labels, technicaltext, UI or grid. No lawn/groundplate. Retain small intrinsic doorsteps."
+  },
+  {
+    "key": "2020s-compact-gabled-solar-family-home",
+    "family": "normal",
+    "condition": "modern-era",
+    "version": 1,
+    "target": "generated/era-houses/expansion-02/2020s-compact-gabled-solar-family-home/normal-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png"
+    ],
+    "prompt": "Redraw the FOUR exact technical house views in REFERENCE1 as finished native painterly miniature game sprites. REFERENCE1 controls building geometry, camera, fixeddoors/windows/balconies/chimneys/solar positions and which face is seen in each cell; REFERENCE2 is detailed hand-painted game-material STYLE ONLY, never geometry. Subject: Affordable compact two-storey family infill home: white lower walls, charcoal upper front/rear cladding, one ordinary pitched gable roof, timber front door with a narrow side-light, broad front living window, rear GLASS patio slider and FOUR solar modules in two rows of two ONLY on the fixed front roof slope. Rear roof does not acquire the solar panels when turned. No garage, flat-roof sci-fi shapes or mansion scale.. Ordinary affordable residential town architecture appropriate to the stated decade. Preserve every guide opening, all floor counts, roof shape and physical side of features. Glazed patio sliders at rear must remain GLASS with narrow frames, never become garage shutters. Painted brick, render, tile, timber and glass with fine believable material detail in the established style. No lowpoly flat unfinished technical colors. Four different45-degreecorners in same SE SW / NW NE cells asguide, cameraorthographic30degreesDOWN. One fixed building quarterturned, no mirroring, noinventedreardoor onfront. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadowsLOWERLEFT, windowslampsOFF. Four equallyscaled complete sprites with generous genuinely zero-alpha transparent margins/gutters. Buildingonly, no people, plants, fencing, pavementslab, scenery, labels, technicaltext, UI or grid. No lawn/groundplate. Retain small intrinsic doorsteps."
+  }
+]

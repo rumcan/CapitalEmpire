@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:world-house_2-north-332663ab-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-world-house_2-north-332663ab-plain-1/NE.png",
+  "sourceSha256": "4003b054ceb6c8a9182a4e53e310f0c87c9e16ef4a6d337a2b17de82d8a21a0e",
+  "output": "identity-references/variation-world-house-2-north-332663ab-plain-1-cc89e61c/source.png",
+  "outputSha256": "4003b054ceb6c8a9182a4e53e310f0c87c9e16ef4a6d337a2b17de82d8a21a0e",
+  "width": 557,
+  "height": 533,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      557,
+      533
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-world-house_2-north-332663ab-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "blocked",
+    "integrationReason": "Both rear views retain long rear wall LEFT and gabled end RIGHT; need an actual opposite rear corner."
+  },
+  "sourceRegistration": {
+    "id": "variation:world-house_2-north-332663ab-plain:1",
+    "version": "variation-world-house_2-north-332663ab-plain-1-4views-v1",
+    "files": {
+      "NE": "4003b054ceb6c8a9182a4e53e310f0c87c9e16ef4a6d337a2b17de82d8a21a0e",
+      "SE": "84422fb880b118456d550af15e0e3674ba1665f2a4b3a42165f0c061f35adf10",
+      "SW": "bc1fd3b1b9b98794d6b8c53ea39b36f6c66badcfd64b2a9bbefe3f4c4039e1b1",
+      "NW": "2904f786841ac69e453ecbd52576ea2578a0b766215130106ba0dd1f464b5c37"
+    },
+    "cropsBy": "prep-views (four-view-cells.mjs)"
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-6-0.webp",
+    "atlasSha256": "5bf555ea578c014fa9e9f4e6119ae5f09128a07573eed569e85b1c5554f2ac51",
+    "runtimePage": 6,
+    "localPage": 6,
+    "uv": [
+      0.671875,
+      0.007813,
+      0.868652,
+      0.211426
+    ],
+    "crop": {
+      "left": 1376,
+      "top": 16,
+      "width": 403,
+      "height": 417
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-world-house_2-north-332663ab-plain-1.native.png",
+    "nativeSha256": "f91505397b6f00cb2eac71d698080107977141a30939b82d9b33f08a536f6846"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

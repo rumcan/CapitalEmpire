@@ -1,5 +1,60 @@
 > **2026-11-08: read `docs/HANDOVER-2026-11-08.md` first** (the lead moved to another Claude account; the state, the queue and the owner's rules are there). The 2026-11-03 handover still holds for the art pipeline.
 
+## Latest source-art checkpoint — five reviewed packs (2026-11-07)
+
+Owned branch `lead/eight-facing-runtime-20261107`, F worktree. Latest owner asks later-era cars/houses as town renews; continue image generation over implementation. **Modern source art delivered: eight1990s–2020s dwelling designs/64views and ten1980s–2020s road-vehicle designs/80views.** Decade-labelled source packs; no gameplay era-unlock implementation claimed.
+
+Three additional golf source packs are complete: batch01 ten event-role models in budget/upgraded condition plus practice net/trolley,22condition sets/176views; batch02 twelve exact baseline props/96views; eight specialist mobile props/64views. All five ZIPs registered in root chat,480 selected source views total. Selected native crops/bytecopies, actual face/attachment/state checks, alpha/core margins, original hashes and ZIP CRCs verified; originals/rejected drafts retained. Exact numerical camera/scale/anchors/final import masks remain separate holds. Files and evidence are indexed in each pack and `art/catalogue-completion-20261107/audit/source-bundle-handoff.json`.
+
+Compound final source selections: upgraded normalv2, yawN/Wv4(full native1536x1024 alpha-repaired), yawE/Sv2(full native1536x1024); budgetnormalv4SE/SW/NW plusv3NE,yawv3. TVupgradednormalSWsinglev2+other3normalv2, upgradedyawquad v2(material-only from correct budgetyaw). Bench/dispenser normal isolatedv2 selections; bench/signpostyaw v1N/E/S+v2W; washer yaw actualE=BR,W=TR. All final selection manifests preserve these overrides and authored gutter cuts.
+
+Native inventory273 archived original versions includes held retries (not273acceptedsubjects):167map,84vehicle,11portrait sources,5scene sheets,6UI sheets; zero provenance hash issues. Exports, reference crops and technical guides excluded. Earlier40portrait looks/UIgear/seating/corevehicle work retained.
+
+**Next action for continuation:** the full1,208-eligible building/prop catalogue and206golf-priority baseline remain unfinished. Continue exact remaining baseline IDs from audit reports, budget1950s replacements, seating capacity/shape holds and missing click-through scenes. Do not silently alias a newly designed event role to an old baseline subject. User optional8compass-versus-literal8degree clarification remains unanswered. New source cohorts are not automatically runtime-approved. No new runtime imports/code/tests/builds/servers/commits in this generation pass; owner-live checkout and background LLM untouched. Preserve source originals on C and exact project copies on F. Do not declare whole catalogue finished or installed in game.
+
+## Source-art continuation checkpoint — modern town renewal and golf rotations
+
+Branch/worktree: `lead/eight-facing-runtime-20261107`, owned F worktree. Owner prioritizes native image generation over implementation. No owner-live changes, runtime imports, tests, builds, services or commits in this continuation; preserve background LLM.
+
+- Modern houses: 8 designs (2 per decade 1990s/2000s/2010s/2020s), 64 lossless source views in `generated/era-houses/Modern-houses-1990s-2020s-source-v2.zip` (SHA256 9dd48f893bb228d85fbd70a64002e00f8c9e4da088d5aa75f515331006ca330e). Registered. Four new expansion houses corrected rear openings/one missing gable window; old ZIP/32 originals preserved. Camera/scale/anchor release holds separate.
+- Road cars: 10 models/80 source views in registered Town-vehicles ZIP; existing private/live road traffic still has old stand-ins. Era artwork is source-only, no gameplay timeline wiring claimed.
+- Golf batch01: all12 primary normal/yaw source families generated; holeboard opposite-edge yaw held and now being repaired. Seven upgraded normal/yaw event condition pairs passed limited visual/alpha checks. Upgraded tower SW camera still points toward viewer; isolated guide-first single repair now active. Budget compound has explicit per-cell source selection (normalv4 SE/SW/NW plusv3NE, yawv3) resolving dish front/back; upgraded compound still needed.
+- Golf batch02:12 primary normal sheets, five guided corrections. Washer/hopper/ropeL now source candidates; bench lacksSE/SW, dispenser lacksSW. Three isolated repairs plus hole12/walkway guide corrections and water-station invented-sign removal are active in root exec127, 9nativejobs total (also towerSW and budget/upgraded holeboardyaw). Exact guide/identity refs and prompts retained.
+- Specialist golf vehicles:8new primary normal sheets generated, all32cores clear. Wheelchair/shuttle/drinks/supply source candidates. Ambulance missingSE, icecream caster/poses drift, satelliteNW dishback wrong, broadcastSE extra hatch. Isolated repair refs/queue prepared under `generated/golf-vehicle-source-batch-01/isolated-repairs-v1/`; satellite technicalguidev2 adopts consistent native LEFT cargo door. Native remaining4yawfaces for these8stillneeded.
+
+**Next action:** collect/inspect exec127; QA concrete poses/attachments/alpha, select native repairs, finish batch02 remaining4views and specialist mobile8 remaining4views; complete upgraded tower/compound/holeboard condition art. Continue remaining206golfpriority then baseline1,208eligible subjects. File presence/raw version counts never equal accepted/selectable8-view coverage. No mirroring, synthetic facings, alpha keying or creative pixel edits; native imagegen originals preserved on C and exact copies/provenance on F. Optional owner clarification (8 compass vs specifically8degreeyaw) remains unanswered.
+
+## Active golf-source generation checkpoint (2026-11-07)
+
+Owner says the full catalogue is unfinished; continue generating images beyond UI/road cars. Ten road models now have80 lossless source exports in the registered Town-vehicles ZIP. Four1990s–2020s houses have normal/yaw source pairs plus8exterior/interior illustrations; source camera/detail holds remain recorded.
+
+- Golf batch01:12primary normal4 sheets finished;8simple yaw4 sheets finished;5guided normal corrections finished (TVtower/mainleaderboard/entrance/broadcast/foodtruck). Rotation guides pin fixed ladders/stairs/compound layout and remove the entrance slab. Independent QA still required before choosing these corrections.
+- Golf batch02:12exact baseline golf-prop normal4 jobs are RUNNING in root exec87,3nativecalls at once; outputs autoarchive immediately with prompt/ref provenance. Sources/briefs: generated/golf-source-batch-02/compact.json and active-normal-generation.json.
+- Root exec81 (8simpleyaw) and85 (5guidedfixes) have emitted allresults; wait tools may still need final collection. Source/generator originals are preserved. Native source copies stay on F, originals on C.
+- Next: inspect/QA the5guided corrections and finish their4yaw directions; create matching upgraded facility condition art; review batch02 then fill its remaining views. Continue206golfpriority then remainder of1,208baseline subjects. File presence is not release or runtime completion.
+- Optional user clarification pending:8compass rotations versus4corners+4views specifically tilted8degrees. Continue missingvehicle sides/source work independently; do not treat silence as an answer.
+- SOURCE ART phase only: no runtime changes, tests/builds/servers/pushes/owner-live edits. Do not stop the background LLM. Existing game still uses stand-ins until a later reviewed import.
+
+## Active continuation — owner says the larger art request is unfinished (2026-11-07)
+
+Continue source-image generation beyond the completed UI gear. Current native calls: compact-bleacher-60-upgraded four corners plus four near-cardinal turned views; next property scene batches exterior-03 (four houses) and exterior-04 (four shops). Root handles image calls and native source archiving; art_import handles source-only coverage/QA. Use late-afternoon daytime, sun upper right. No runtime work, tests, build, servers or owner-live changes. The full 1,208-subject request remains open.
+
+## Latest owner steering: SOURCE IMAGE GENERATION, UI gear packaged (2026-11-07)
+
+Owner now prioritises generating source images over further implementation. No more runtime work in this phase. Five era gear sheets (1980s/1990s/2000s/2010s/2020s) are packaged as **40 lossless native icon PNGs**, source-only, with exact crop/hash provenance and alpha QA. The 2010s native cleanup v2 is selected; hazy v1 is preserved and held. [ZIP](../art/catalogue-completion-20261107/generated/ui-gear/UI-gear-1980s-2020s.zip), [completion report](../art/catalogue-completion-20261107/generated/ui-gear/completion-report.json), [current art handoff](../art/catalogue-completion-20261107/NOW.md).
+
+Portraits are 40/40 source/private-branch imports; golf exteriors have four upgraded imports and four rundown source-only candidates. New seating batches remain source candidates pending geometry/capacity/8-degree QA. All owned 5188 preview servers are stopped. The overall 1,208-subject request is not complete or deployed. Earlier implementation notes below are historical and do not override this generation-first steering.
+
+## Current owner request: complete the whole eight-facing catalogue (2026-11-07)
+- Branch: `lead/eight-facing-runtime-20261107`, isolated checkout on F: from live `0e4bb33`; owner's E: live checkout and LLM untouched.
+- Scope: audit all 1,208 eligible building/prop subjects (203 buildings, 1,005 props), prioritise 206 golf subjects; exclude plants/decals. Add four genuine corners plus four genuinely yawed 8-degree cardinals, player controls, selected rotation, saved orientation, click-through scenes and actual-look character portraits. Replace fantasy shanties with ordinary worn 1950s manufactured buildings. Expand tournament facility sizes and exactly two condition tiers.
+- Audit completed: 199/206 golf subjects lack at least one required view. File candidates do not imply correct or runtime selectable art. Read `art/catalogue-completion-20261107/audit/audit-summary.json` and `plan/GOLF-FACILITIES.md` once copied here.
+- Current source-only image candidate: `generated/old-clubhouse-1950/normal-v1.png`; geometry, alpha, anchors and matching yaw8 remain under review. Nothing claimed complete by file existence.
+- Two coding agents: eight-facing importer/registry/Props+Events rotation in this checkout; character identity/portraits and property scenes in child details-identity-20261107 branch. One heavy check at a time. Native image generator used directly, no browser automation.
+- Next action: finish source normal/yaw8 clubhouse pair, reject spacing/alpha/geometry defects; create matched scenes/portraits, review agent diffs and focused checks, merge locally and browser-test in isolated preview. Preserve old asset options and save IDs. No push or owner-live writes.
+- All newly generated art uses late-afternoon daylight, sun upper right, shadows lower left, consistent painted miniature style. Retain original native PNG/provenance; do not synthesize missing views by mirroring.
+
+
 # NOW: the live work log
 
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
@@ -936,3 +991,15 @@ Review the open PRs as they land, and the full-suite runs (one heavy run at a ti
 - 2026-10-23: **M2.2 Galleries landed** on main. Browser-checked on a test copy (5181, fresh golf game, Skip to tournament at 8x): 18 spots (9 greens, 9 tees), 102 of the 168 fans in standing at them while the rest still walked, drawn as rings of standing fans with `n watching` (15 by a green, 12 by a tee).
 - 2026-10-23: **M2.1 Course gates landed** on main. Browser-checked on a test copy (port 5181, a fresh golf game, a gate placed by script between the car park and the clubhouse plot, Skip to tournament at 8x): the fans walked to the gate (stage 2 walkers seen), the gate admitted all 168 who arrived (`last.gates`: admitted 168, wait 0: a 4-lane gate admits 40 a second and they came about one a second, so no queue at tier 1); 168 of 360 fans arrived at all: the round's stuck list blames the town's 4-arm junctions (M3's job).
 - 2026-10-23: M2 findings and design written (above). M1 Living town landed on main (4c90e25).
+
+
+### Native art bulk memory follow-up (2026-11-07, Codex)
+Parent-authorized scoped work on lead/eight-facing-runtime-20261107: bound alpha-mask decode concurrency, cap full-page preview image residency, defer offscreen thumbnail decoding and enforce atlas array-layer/budget limits. Existing GPU cell streaming remains. Files: engine.ts, Thumb.tsx, atlas-gl.ts and focused residency/visibility helpers/tests. Preserve picking alpha and source images; no full build, benchmark or server. Next: implement and run focused checks plus typecheck only.
+
+
+Verified native-art memory follow-up: alpha decoder concurrency2; preview LRU2pages; visible thumbnails with2source tasks; explicit GPU array-layer/coarse-budget guards. Targeted residency/atlas/thumbnail tests23/23 and typecheck clean. No server/build/benchmark. Shared batch packing and the existing streaming decoder's transient working set remain documented limitations. Parent source art/portrait changes preserved.
+
+
+Native clubhouse reviewed import (2026-11-07, Codex): parent approved normal-v5/yaw8-v4 for NEW golf:clubhouse-1950-budget only, no legacy alias/event binding. Next: hash-bound input/review manifests; measured per-view scale/anchors and proven handedness; model-derived body/bench/steps/crate collision bounds; native cut and versioned runtime import; verify old indices/native pixels and focused importer/typecheck. No server, owner-live changes, or full build/suite. Scoped source/runtime commit only.
+
+Native clubhouse import verified: separate golf:clubhouse-1950-budget v1 adds8rows at9118–9125 and1atlas page (89total); prior9118rows/88atlas references unchanged. All native crops exactRGBA; original hashes unchanged. Proven headings, measured camera ppm/anchors, four model-derived body/bench/steps/crate boxes per facing. Lead review approved with0.337–4.564px painterly fit RMS and E depth limit recorded. No alias/event capacity. First-import generated-array literal typing fixed; importer4/4 including generated semantic compile, TypeScript clean. Runtime alpha exact, existing Sharp atlas edge RGB rounding max1/255 explicitly recorded; nativePNG unchanged. No server/fullsuite/build. Next: parent standalone browser alignment review, then consider old10x7m clubhouse binding.

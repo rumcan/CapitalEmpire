@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:house_2",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-house_2/NE.png",
+  "sourceSha256": "23dfe3330487bc0f70bf0e04455c1a8e4618b93fe07f516225cceb9d1b91f899",
+  "output": "identity-references/world-house-2-e2dddf71/source.png",
+  "outputSha256": "23dfe3330487bc0f70bf0e04455c1a8e4618b93fe07f516225cceb9d1b91f899",
+  "width": 523,
+  "height": 487,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      523,
+      487
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-house_2\\provenance.json",
+  "sourceReview": {},
+  "sourceRegistration": {
+    "id": "world:house_2",
+    "version": "world-house_2-4views-v2",
+    "files": {
+      "NE": "23dfe3330487bc0f70bf0e04455c1a8e4618b93fe07f516225cceb9d1b91f899",
+      "SE": "413bef1ab7dead24dca0b26108b49bc6ad47d94517aa1d40295a853e517cd77c",
+      "SW": "6ef6e749399e8b3adaac180afa690ade9cbff9967a81728e41a92927d354769f",
+      "NW": "3c47a4b5add65b3e871d47bac165142ed1fc1d0cf00b19aa07b97e20c690aebc"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.007813,
+      0.71875,
+      0.221191,
+      0.927734
+    ],
+    "crop": {
+      "left": 16,
+      "top": 1472,
+      "width": 437,
+      "height": 428
+    },
+    "native": "art/theme-consistency/exports/buildings/world-house_2.native.png",
+    "nativeSha256": "59bcc6db495ff0503e86061c662b6c8095f8950bd74aede968630d49a25a4a0d"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,179 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:24.253978+00:00",
+  "review_result": "HOLD-camera-consistency",
+  "identity_direction_alpha_result": "PASS candidate subject to separate camera hold",
+  "source": {
+    "path": "generated/vehicles/era-2010s-blue-crossover/traffic8-v1.png",
+    "sha256": "1bb715a34b7c6c243c9f8101a8e701bc47eb1cd866413150097d1d02e7a25c81",
+    "bytes": 1452110
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.5618771202220728,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    2.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "actual_screen_nose": "lower-left",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "native_core_margin_pixels": 12,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "e237d463acabcffa5623de3ffca9654e4b74c163f9e999f9fd1b640311390d3b"
+    },
+    {
+      "cell": 1,
+      "actual_screen_nose": "down",
+      "reference_rect_ltrb": [
+        443,
+        0,
+        875,
+        443
+      ],
+      "native_core_margin_pixels": 51,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 3,
+      "rgba_rectangle_sha256": "4007d8ab4cdb9a777de9cc15f0846e74ed4c742b9cc1caaa7c196a1f10bfb75c"
+    },
+    {
+      "cell": 2,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        875,
+        0,
+        1325,
+        443
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 7,
+      "rgba_rectangle_sha256": "ed6b7e1b299b3d2ac0a0770a4dea451544a14cad315c54a813b3c5b1b64a4fb8"
+    },
+    {
+      "cell": 3,
+      "actual_screen_nose": "right",
+      "reference_rect_ltrb": [
+        1325,
+        0,
+        1774,
+        443
+      ],
+      "native_core_margin_pixels": 1,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "3c8ec0ce305e2d6d09c47463740b97f9afb536463310867b1a4b230c333fac89"
+    },
+    {
+      "cell": 4,
+      "actual_screen_nose": "upper-right",
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "native_core_margin_pixels": 17,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "7f9ad948a0c0bee08430d970031e33b489e968f4fc6fb0bf76b4e125ef32a161"
+    },
+    {
+      "cell": 5,
+      "actual_screen_nose": "up",
+      "reference_rect_ltrb": [
+        443,
+        443,
+        877,
+        887
+      ],
+      "native_core_margin_pixels": 76,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 4,
+      "rgba_rectangle_sha256": "d93f3c3408f48b2091e0f24859b950faa5573cfed9f90bbe592d5a19ad97194b"
+    },
+    {
+      "cell": 6,
+      "actual_screen_nose": "upper-left",
+      "reference_rect_ltrb": [
+        877,
+        443,
+        1318,
+        887
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "5592cae2511629879d4ee20e3b22f8cc00bdf52b78df623e1e5bbabbfd0c0a75"
+    },
+    {
+      "cell": 7,
+      "actual_screen_nose": "left",
+      "reference_rect_ltrb": [
+        1318,
+        443,
+        1774,
+        887
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "365ebc8d2e63eb9aec93d62e980df6508cb2bb7a2374db0ac7525b27307f069d"
+    }
+  ],
+  "all_eight_distinct_nose_directions_present": true,
+  "side_cell_order_is_remappable": false,
+  "native_core_clipped_at_canvas_border": false,
+  "actual_clear_gutter_crops_reference_only": [
+    [
+      0,
+      443,
+      875,
+      1325,
+      1774
+    ],
+    [
+      0,
+      443,
+      877,
+      1318,
+      1774
+    ]
+  ],
+  "source_crops_performed": false,
+  "notes": [
+    "HOLD visually inconsistent elevation: col4 side profiles show nearly level body/roof and near-circular side wheels; diagonal/front/rear cells show substantially more top planes. Need shared fixed30degree camera proof or native correction, not relabelling."
+  ],
+  "camera_measurement_scope": "Visual inconsistency established; exact percell camera degrees not numerically certified. Do not present approximate appearance as an8degree/30degree measured proof.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_only": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/era-2010s-blue-crossover/traffic8-v1.prompt.txt",
+    "sha256": "f16bc8cace1142175222037b3bbf3d4892ff63f08fee4e94abf3b54c02341d6a",
+    "bytes": 1774
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/era-2010s-blue-crossover/traffic8-v1.provenance.json",
+    "sha256": "35305d77bf024f881fd95924c58549ed74e18f989bcfc26ce1505ae6180a17cc",
+    "bytes": 2466
+  }
+}

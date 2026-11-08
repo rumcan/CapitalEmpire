@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:40:14.741147+00:00",
+  "review_result": "PASS-source-candidate-four-rigid-L-projections",
+  "four_actual_corners_visually_verified": true,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+    "sha256": "5b2bc88fb3c87a6e1304d33460d54b615ac0228ae6b8c2afddbfc2716e67d98d",
+    "bytes": 935658
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.provenance.json",
+    "sha256": "1a34f60682adcb750c7731ef85d0b2f216b637cd4e3c2251f327558c6824cc7c",
+    "bytes": 2886
+  },
+  "exact_prompt_utf8_sha256": "8753356cdc201d78484e7e8cd9c2c06870e7ba6f79a1eb11f9b2540bafde4c92",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v1/rope-barrier-corner/guides/normal-world-v1.png",
+      "sha256": "018f6355dc932fc7e90b34b9c573cb8c5b471ec488ff481f7723880d21e0ef19",
+      "bytes": 44525
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v1.png",
+      "sha256": "a3a04f91908736370714392788f13950b3ad36f58efc228dd525d22ce2c0476b",
+      "bytes": 2631029
+    }
+  ],
+  "zero_alpha_fraction": 0.6818353517547675,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    6.0
+  ],
+  "nominal_10px_center_gap_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": "TL",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 33,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "97411f274d36814323cfa0335af0e8e7d9d5163abc117be09985773c06984b4b"
+    },
+    {
+      "cell": "TR",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 103,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "7064add1740f0f8ab516bd0b63cd793e0922c91c2f6ac66e06c3d44656d94462"
+    },
+    {
+      "cell": "BL",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 33,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 3,
+      "native_rgba_rectangle_sha256": "b3295928b533cf69ce191aed99d181ed897cf6e15351015978ddaabcc6d99312"
+    },
+    {
+      "cell": "BR",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 106,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "ec51f9d89f0e4d08e9237347a5c290a13b6f81f779e108dd07ab7472762476a8"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Five posts/four rope spans in each cell; four distinct V/right-chevron/inverted-V/left-chevron projections. Prior visible haze removed. Native drop shadows approach outer left canvas edge; report their measured alpha separately from core clipping."
+  ],
+  "alpha_policy": "Actual alpha measured. Hidden RGB at zero/very low alpha is not visible haze. No alpha reconstruction, keying or pixel edits.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

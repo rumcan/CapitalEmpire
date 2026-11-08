@@ -1,0 +1,345 @@
+{
+  "schema": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-07T07:35:27.134208+00:00",
+  "batch_id": "exterior-01",
+  "version": 1,
+  "prepared_batch_record": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\batches\\exterior-01\\batch.json",
+    "sha256": "ee9f5d4cb55c53a4e8ea7f169b1374361f29ff42ef9f631e8ed1aee3f9d2d32c",
+    "bytes": 6569
+  },
+  "full_original_source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-36e7bc6e-cb60-4f05-8e59-0255ebbbd115.png",
+    "sha256": "da619ce939a1c0e45f4552a04b7ee3c4ea88b86db8cb02c4a9613ea87e6fbb3a",
+    "bytes": 3521769
+  },
+  "archived_full_sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\batches\\exterior-01\\source-v1.png",
+    "sha256": "da619ce939a1c0e45f4552a04b7ee3c4ea88b86db8cb02c4a9613ea87e6fbb3a",
+    "bytes": 3521769
+  },
+  "exact_actual_prompt": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\batches\\exterior-01\\actual-prompt-v1.txt",
+    "sha256": "c1b2d50f528b90275a42a93183443da02cefe7a5a9e15e50acae14fd9601b508",
+    "bytes": 3741
+  },
+  "prepared_references_historical_only": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\style-authority.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2",
+      "bytes": 3572212
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\business-golf-clubhouse-343e3275\\source.png",
+      "sha256": "80145907925e5693b77ffb2250948d30a48dc050fd973c5d6de52b50041e9fb3",
+      "bytes": 700713
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\business-golf-pro-shop-16c46388\\source.png",
+      "sha256": "aa38b47e5916b68862216e3d6f6d6c7ce81f6fb801bed21d972fde009bfd46ca",
+      "bytes": 727618
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\business-golf-cart-garage-1a3cdb4c\\source.png",
+      "sha256": "24a447b9e44c0dac40426aa87b668108c65dbfe33bab3f9b4ac6b5ec20c5acdb",
+      "bytes": 522710
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\business-golf-halfway-pavilion-d89d56ad\\source.png",
+      "sha256": "0783e2307c1fcc4df9d131edec709e4800efe8e2dd86abfd929bb7fafd60f15b",
+      "bytes": 628838
+    }
+  ],
+  "actual_generation_references_in_order": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-pro-m1\\source.png",
+      "sha256": "1e4b798feb936b78de7fb9f38e24bcf723181366741b29c6660cfc5065b68832",
+      "bytes": 3337751
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\business-golf-clubhouse-343e3275\\source.png",
+      "sha256": "80145907925e5693b77ffb2250948d30a48dc050fd973c5d6de52b50041e9fb3",
+      "bytes": 700713
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\business-golf-pro-shop-16c46388\\source.png",
+      "sha256": "aa38b47e5916b68862216e3d6f6d6c7ce81f6fb801bed21d972fde009bfd46ca",
+      "bytes": 727618
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\business-golf-cart-garage-1a3cdb4c\\source.png",
+      "sha256": "24a447b9e44c0dac40426aa87b668108c65dbfe33bab3f9b4ac6b5ec20c5acdb",
+      "bytes": 522710
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\business-golf-halfway-pavilion-d89d56ad\\source.png",
+      "sha256": "0783e2307c1fcc4df9d131edec709e4800efe8e2dd86abfd929bb7fafd60f15b",
+      "bytes": 628838
+    }
+  ],
+  "prepared_style_reference_replaced": true,
+  "identity_reference_files_unchanged_from_prepared": true,
+  "dimensions": [
+    1672,
+    941
+  ],
+  "mode": "RGB",
+  "split_x": 836,
+  "split_y": 470,
+  "split_rule": "explicit native coordinate if supplied; otherwise floor half with right/bottom remainder retained",
+  "central_RGB_transition_measurements": {
+    "x": [
+      {
+        "split_before_coordinate": 832,
+        "mean_absolute_RGB_difference": 9.521431101664895
+      },
+      {
+        "split_before_coordinate": 833,
+        "mean_absolute_RGB_difference": 10.00389656393907
+      },
+      {
+        "split_before_coordinate": 834,
+        "mean_absolute_RGB_difference": 9.745660644704214
+      },
+      {
+        "split_before_coordinate": 835,
+        "mean_absolute_RGB_difference": 13.033652143110166
+      },
+      {
+        "split_before_coordinate": 836,
+        "mean_absolute_RGB_difference": 68.33227063407723
+      },
+      {
+        "split_before_coordinate": 837,
+        "mean_absolute_RGB_difference": 23.354587318455543
+      },
+      {
+        "split_before_coordinate": 838,
+        "mean_absolute_RGB_difference": 15.47113000354233
+      },
+      {
+        "split_before_coordinate": 839,
+        "mean_absolute_RGB_difference": 16.724760892667376
+      },
+      {
+        "split_before_coordinate": 840,
+        "mean_absolute_RGB_difference": 15.545873184555438
+      }
+    ],
+    "y": [
+      {
+        "split_before_coordinate": 466,
+        "mean_absolute_RGB_difference": 13.996411483253588
+      },
+      {
+        "split_before_coordinate": 467,
+        "mean_absolute_RGB_difference": 14.14433811802233
+      },
+      {
+        "split_before_coordinate": 468,
+        "mean_absolute_RGB_difference": 17.59031100478469
+      },
+      {
+        "split_before_coordinate": 469,
+        "mean_absolute_RGB_difference": 29.975478468899524
+      },
+      {
+        "split_before_coordinate": 470,
+        "mean_absolute_RGB_difference": 49.736642743221694
+      },
+      {
+        "split_before_coordinate": 471,
+        "mean_absolute_RGB_difference": 20.06120414673046
+      },
+      {
+        "split_before_coordinate": 472,
+        "mean_absolute_RGB_difference": 9.970693779904307
+      },
+      {
+        "split_before_coordinate": 473,
+        "mean_absolute_RGB_difference": 8.031897926634768
+      },
+      {
+        "split_before_coordinate": 474,
+        "mean_absolute_RGB_difference": 8.024521531100477
+      }
+    ]
+  },
+  "exact_native_reconstruction_verified": true,
+  "records": [
+    {
+      "cell_index": 0,
+      "subject": "business:golf-clubhouse",
+      "view": "outside",
+      "state": "upgraded",
+      "source_crop_box": [
+        0,
+        0,
+        836,
+        470
+      ],
+      "dimensions": [
+        836,
+        470
+      ],
+      "mode": "RGB",
+      "native_source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\batches\\exterior-01\\native-v1\\scene-business-golf-clubhouse-343e3275-outside-upgraded-v1.png",
+        "sha256": "f032ccd77435adab311a3e5db24fe33a5a3306eb2340e674dd7ffceb1748ddc6",
+        "bytes": 832525
+      },
+      "pixel_sha256": "018714bd91049436b34f01dcefc05f6534f6c1cd3f7e16ad932a054f43220d69",
+      "manifest_record": {
+        "slug": "property-business-golf-clubhouse-outside",
+        "subject": "business:golf-clubhouse",
+        "state": "upgraded",
+        "view": "outside",
+        "file": "scene-business-golf-clubhouse-343e3275-outside-upgraded-v1.png",
+        "w": 836,
+        "h": 470,
+        "bytes": 832525
+      },
+      "operation": "lossless native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approval_inferred": false,
+      "runtime_integrated": true,
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\scenes\\scene-business-golf-clubhouse-343e3275-outside-upgraded-v1.png",
+        "sha256": "f032ccd77435adab311a3e5db24fe33a5a3306eb2340e674dd7ffceb1748ddc6",
+        "bytes": 832525
+      }
+    },
+    {
+      "cell_index": 1,
+      "subject": "business:golf-pro-shop",
+      "view": "outside",
+      "state": "upgraded",
+      "source_crop_box": [
+        836,
+        0,
+        1672,
+        470
+      ],
+      "dimensions": [
+        836,
+        470
+      ],
+      "mode": "RGB",
+      "native_source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\batches\\exterior-01\\native-v1\\scene-business-golf-pro-shop-16c46388-outside-upgraded-v1.png",
+        "sha256": "2688082ef81239ade2a76ac3f90e5c6739e050e7cc62f69b145152becf7a7c30",
+        "bytes": 838310
+      },
+      "pixel_sha256": "71768611c774d12dd15dbc8e130bf7c62f3c9978c1a2d63a5385de020de83ef3",
+      "manifest_record": {
+        "slug": "property-business-golf-pro-shop-outside",
+        "subject": "business:golf-pro-shop",
+        "state": "upgraded",
+        "view": "outside",
+        "file": "scene-business-golf-pro-shop-16c46388-outside-upgraded-v1.png",
+        "w": 836,
+        "h": 470,
+        "bytes": 838310
+      },
+      "operation": "lossless native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approval_inferred": false,
+      "runtime_integrated": true,
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\scenes\\scene-business-golf-pro-shop-16c46388-outside-upgraded-v1.png",
+        "sha256": "2688082ef81239ade2a76ac3f90e5c6739e050e7cc62f69b145152becf7a7c30",
+        "bytes": 838310
+      }
+    },
+    {
+      "cell_index": 2,
+      "subject": "business:golf-cart-garage",
+      "view": "outside",
+      "state": "upgraded",
+      "source_crop_box": [
+        0,
+        470,
+        836,
+        941
+      ],
+      "dimensions": [
+        836,
+        471
+      ],
+      "mode": "RGB",
+      "native_source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\batches\\exterior-01\\native-v1\\scene-business-golf-cart-garage-1a3cdb4c-outside-upgraded-v1.png",
+        "sha256": "8a6a95ec6f371247452c66431058c053866da145541dde16bfb0fe8ee61749b9",
+        "bytes": 801569
+      },
+      "pixel_sha256": "214cae9f488f7d3c60717e45e758d8652d50a7b28de1827882ab5f5d34a2cc73",
+      "manifest_record": {
+        "slug": "property-business-golf-cart-garage-outside",
+        "subject": "business:golf-cart-garage",
+        "state": "upgraded",
+        "view": "outside",
+        "file": "scene-business-golf-cart-garage-1a3cdb4c-outside-upgraded-v1.png",
+        "w": 836,
+        "h": 471,
+        "bytes": 801569
+      },
+      "operation": "lossless native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approval_inferred": false,
+      "runtime_integrated": true,
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\scenes\\scene-business-golf-cart-garage-1a3cdb4c-outside-upgraded-v1.png",
+        "sha256": "8a6a95ec6f371247452c66431058c053866da145541dde16bfb0fe8ee61749b9",
+        "bytes": 801569
+      }
+    },
+    {
+      "cell_index": 3,
+      "subject": "business:golf-halfway-pavilion",
+      "view": "outside",
+      "state": "upgraded",
+      "source_crop_box": [
+        836,
+        470,
+        1672,
+        941
+      ],
+      "dimensions": [
+        836,
+        471
+      ],
+      "mode": "RGB",
+      "native_source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\batches\\exterior-01\\native-v1\\scene-business-golf-halfway-pavilion-d89d56ad-outside-upgraded-v1.png",
+        "sha256": "0b062269fd8d12e012141256fdb15c1b27bd87dfb3281e78f0a1ad924ac91330",
+        "bytes": 818819
+      },
+      "pixel_sha256": "b983f4e412014bd7790ceb1cfb80ee476b6546fac37e43bf72dbc513c32c8f3f",
+      "manifest_record": {
+        "slug": "property-business-golf-halfway-pavilion-outside",
+        "subject": "business:golf-halfway-pavilion",
+        "state": "upgraded",
+        "view": "outside",
+        "file": "scene-business-golf-halfway-pavilion-d89d56ad-outside-upgraded-v1.png",
+        "w": 836,
+        "h": 471,
+        "bytes": 818819
+      },
+      "operation": "lossless native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approval_inferred": false,
+      "runtime_integrated": true,
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\scenes\\scene-business-golf-halfway-pavilion-d89d56ad-outside-upgraded-v1.png",
+        "sha256": "0b062269fd8d12e012141256fdb15c1b27bd87dfb3281e78f0a1ad924ac91330",
+        "bytes": 818819
+      }
+    }
+  ],
+  "parent_reviewed": true,
+  "owner_approval_inferred": false,
+  "runtime_integrated": true,
+  "replaced_reviewed_records_files_preserved": [],
+  "overall_property_or_catalogue_completion_claimed": false
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "key": "golf-source-01-05-info-will-call-booth",
+    "condition": "budget",
+    "runtimeTarget": {
+      "eventTypeId": "info",
+      "eventName": "Info and will-call booth",
+      "currentSpriteSubjectId": "ce:parking-kiosk",
+      "newArtSubjectProposal": "golf:event-info-will-call-booth",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 2,
+        "depth": 2
+      },
+      "footprintMetres": {
+        "width": 4,
+        "depth": 4
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f5b12848-eac5-4960-9d2f-ab76d80b90d1.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-yaw8-v1.png",
+    "prompt": "Create the missing FOUR near-cardinal views of the EXACT SAME budget golf item in reference1, not a redesign. Reference1 supplies its fixed physical identity, materials and normal corners. Functional design: A4x4m information and will-call booth with two front counter windows, shallow practical roof, one paper-ticket pickup shelf, folded-map rack on the left counter and a blank information panel on the right side; one rear staff door. It serves spectators on foot, not parking-car drivers. No plants/queues/people baked in. Four distinct2x2 main faces in order N E / S W: N two front serving windows with map rack/ticket shelf; E left wall; S rear staff door; W blank side information panel. Same single object rotated by quarter turns, each viewed8degrees off its cardinal, orthographic30degreesDOWN. Near-cardinal means subtlysloping main bases and a NARROWsecondaryside, not broad45degreecorners and not square-on elevation. Keep all attachments/roof/doors/windows/reels/pockets/handle locations fixed; reconstruct actual rear faces without pasting frontfeatures onto the back. Match reference1's detailed hand-painted miniature material style and budget condition exactly. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadows LOWER LEFT in all cells, lamps/screens OFF. Four complete separate equallyscaled opaque sprites, truly zero-alpha transparentbackground/gutters, generousmargins. Meshopenings stay transparent where applicable. No people/plants/groundplate/road/terrain, scenehaze, labels/text/grid/UI.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.png"
+    ],
+    "status": "native yaw4 candidate; source identity/alpha/actual main faces/camera review pending",
+    "runtime_imported": false,
+    "sha256": "23ca3680fc214a8ab6ccb81be40e5cf4dc2820b44b68ad09b8dfe7c3b3febba2",
+    "native_bytes_preserved": true
+  }
+]

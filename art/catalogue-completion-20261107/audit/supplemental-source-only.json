@@ -1,0 +1,1909 @@
+[
+  {
+    "source_id": "golf:entrance-gate",
+    "runtime_id": null,
+    "name": "Entrance gate complex",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\entrance-gate.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:drinks-tent",
+    "runtime_id": null,
+    "name": "Drinks tent (beer garden)",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\drinks-tent.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:merch-tent",
+    "runtime_id": null,
+    "name": "Merchandise tent",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\merch-tent.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:concession-kiosk",
+    "runtime_id": null,
+    "name": "Concession kiosk (hot dogs)",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\concession-kiosk.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:first-aid-tent",
+    "runtime_id": null,
+    "name": "First aid tent",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\first-aid-tent.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:shuttle-stop",
+    "runtime_id": null,
+    "name": "Shuttle stop shelter",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\shuttle-stop.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:hole-scoreboard",
+    "runtime_id": null,
+    "name": "Hole scoreboard",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\hole-scoreboard.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:picnic-set",
+    "runtime_id": null,
+    "name": "Picnic tables and parasols",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\picnic-set.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:flagstick",
+    "runtime_id": null,
+    "name": "Flagstick and cup (red)",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\flagstick.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:bins",
+    "runtime_id": null,
+    "name": "Trash and recycling bins",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\bins.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:comfort-station",
+    "runtime_id": null,
+    "name": "On-course comfort station",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\comfort-station.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "golf:ball-washer-bench",
+    "runtime_id": null,
+    "name": "Ball washer and bench set",
+    "catalogue": "art/golf/items.json",
+    "reason": "manifest design exists but no active runtime registration",
+    "file": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\ball-washer-bench.png",
+    "file_exists": false
+  },
+  {
+    "source_id": "white-popup-gazebo-4views",
+    "runtime_id": null,
+    "name": "white-popup-gazebo-4views",
+    "catalogue": "art/grass-management/budget-props/manifest.json",
+    "reason": "four-view source set lacks authoritative stable runtime-ID mapping",
+    "corner_files": [
+      {
+        "direction": "NE",
+        "file": "budget-props/individual/white-popup-gazebo-NE.png",
+        "sourceRect": {
+          "left": 203,
+          "top": 30,
+          "width": 446,
+          "height": 449
+        },
+        "alpha": {
+          "clear": 293944,
+          "partial": 99272
+        },
+        "estimatedAnchor": {
+          "x": 223,
+          "y": 448
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SE",
+        "file": "budget-props/individual/white-popup-gazebo-SE.png",
+        "sourceRect": {
+          "left": 885,
+          "top": 30,
+          "width": 447,
+          "height": 449
+        },
+        "alpha": {
+          "clear": 293211,
+          "partial": 100005
+        },
+        "estimatedAnchor": {
+          "x": 223.5,
+          "y": 448
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SW",
+        "file": "budget-props/individual/white-popup-gazebo-SW.png",
+        "sourceRect": {
+          "left": 201,
+          "top": 530,
+          "width": 443,
+          "height": 451
+        },
+        "alpha": {
+          "clear": 295054,
+          "partial": 98162
+        },
+        "estimatedAnchor": {
+          "x": 221.5,
+          "y": 450
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "NW",
+        "file": "budget-props/individual/white-popup-gazebo-NW.png",
+        "sourceRect": {
+          "left": 886,
+          "top": 530,
+          "width": 448,
+          "height": 454
+        },
+        "alpha": {
+          "clear": 294604,
+          "partial": 98612
+        },
+        "estimatedAnchor": {
+          "x": 224,
+          "y": 453
+        },
+        "touchesCellEdge": false
+      }
+    ],
+    "cardinal_files": [],
+    "review": "pending"
+  },
+  {
+    "source_id": "timber-picnic-table-4views",
+    "runtime_id": null,
+    "name": "timber-picnic-table-4views",
+    "catalogue": "art/grass-management/budget-props/manifest.json",
+    "reason": "four-view source set lacks authoritative stable runtime-ID mapping",
+    "corner_files": [
+      {
+        "direction": "NE",
+        "file": "budget-props/individual/timber-picnic-table-NE.png",
+        "sourceRect": {
+          "left": 135,
+          "top": 78,
+          "width": 573,
+          "height": 366
+        },
+        "alpha": {
+          "clear": 281414,
+          "partial": 111802
+        },
+        "estimatedAnchor": {
+          "x": 286.5,
+          "y": 365
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SE",
+        "file": "budget-props/individual/timber-picnic-table-SE.png",
+        "sourceRect": {
+          "left": 825,
+          "top": 84,
+          "width": 582,
+          "height": 377
+        },
+        "alpha": {
+          "clear": 270223,
+          "partial": 122993
+        },
+        "estimatedAnchor": {
+          "x": 291,
+          "y": 376
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SW",
+        "file": "budget-props/individual/timber-picnic-table-SW.png",
+        "sourceRect": {
+          "left": 129,
+          "top": 552,
+          "width": 560,
+          "height": 368
+        },
+        "alpha": {
+          "clear": 283828,
+          "partial": 109388
+        },
+        "estimatedAnchor": {
+          "x": 280,
+          "y": 367
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "NW",
+        "file": "budget-props/individual/timber-picnic-table-NW.png",
+        "sourceRect": {
+          "left": 848,
+          "top": 557,
+          "width": 590,
+          "height": 382
+        },
+        "alpha": {
+          "clear": 274606,
+          "partial": 118610
+        },
+        "estimatedAnchor": {
+          "x": 295,
+          "y": 381
+        },
+        "touchesCellEdge": false
+      }
+    ],
+    "cardinal_files": [],
+    "review": "pending"
+  },
+  {
+    "source_id": "white-plastic-chair-4views",
+    "runtime_id": null,
+    "name": "white-plastic-chair-4views",
+    "catalogue": "art/grass-management/budget-props/manifest.json",
+    "reason": "four-view source set lacks authoritative stable runtime-ID mapping",
+    "corner_files": [
+      {
+        "direction": "NE",
+        "file": "budget-props/individual/white-plastic-chair-NE.png",
+        "sourceRect": {
+          "left": 268,
+          "top": 35,
+          "width": 372,
+          "height": 459
+        },
+        "alpha": {
+          "clear": 294544,
+          "partial": 98672
+        },
+        "estimatedAnchor": {
+          "x": 186,
+          "y": 458
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SE",
+        "file": "budget-props/individual/white-plastic-chair-SE.png",
+        "sourceRect": {
+          "left": 911,
+          "top": 42,
+          "width": 355,
+          "height": 450
+        },
+        "alpha": {
+          "clear": 310186,
+          "partial": 83030
+        },
+        "estimatedAnchor": {
+          "x": 177.5,
+          "y": 449
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SW",
+        "file": "budget-props/individual/white-plastic-chair-SW.png",
+        "sourceRect": {
+          "left": 300,
+          "top": 537,
+          "width": 373,
+          "height": 402
+        },
+        "alpha": {
+          "clear": 308468,
+          "partial": 84748
+        },
+        "estimatedAnchor": {
+          "x": 186.5,
+          "y": 401
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "NW",
+        "file": "budget-props/individual/white-plastic-chair-NW.png",
+        "sourceRect": {
+          "left": 892,
+          "top": 539,
+          "width": 358,
+          "height": 408
+        },
+        "alpha": {
+          "clear": 322211,
+          "partial": 71005
+        },
+        "estimatedAnchor": {
+          "x": 179,
+          "y": 407
+        },
+        "touchesCellEdge": false
+      }
+    ],
+    "cardinal_files": [],
+    "review": "pending"
+  },
+  {
+    "source_id": "green-litter-bin-4views",
+    "runtime_id": null,
+    "name": "green-litter-bin-4views",
+    "catalogue": "art/grass-management/budget-props/manifest.json",
+    "reason": "four-view source set lacks authoritative stable runtime-ID mapping",
+    "corner_files": [
+      {
+        "direction": "NE",
+        "file": "budget-props/individual/green-litter-bin-NE.png",
+        "sourceRect": {
+          "left": 289,
+          "top": 55,
+          "width": 271,
+          "height": 402
+        },
+        "alpha": {
+          "clear": 299779,
+          "partial": 93437
+        },
+        "estimatedAnchor": {
+          "x": 135.5,
+          "y": 401
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SE",
+        "file": "budget-props/individual/green-litter-bin-SE.png",
+        "sourceRect": {
+          "left": 987,
+          "top": 62,
+          "width": 264,
+          "height": 394
+        },
+        "alpha": {
+          "clear": 302517,
+          "partial": 90699
+        },
+        "estimatedAnchor": {
+          "x": 132,
+          "y": 393
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SW",
+        "file": "budget-props/individual/green-litter-bin-SW.png",
+        "sourceRect": {
+          "left": 285,
+          "top": 556,
+          "width": 266,
+          "height": 393
+        },
+        "alpha": {
+          "clear": 300620,
+          "partial": 92596
+        },
+        "estimatedAnchor": {
+          "x": 133,
+          "y": 392
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "NW",
+        "file": "budget-props/individual/green-litter-bin-NW.png",
+        "sourceRect": {
+          "left": 985,
+          "top": 549,
+          "width": 268,
+          "height": 399
+        },
+        "alpha": {
+          "clear": 300207,
+          "partial": 93009
+        },
+        "estimatedAnchor": {
+          "x": 134,
+          "y": 398
+        },
+        "touchesCellEdge": false
+      }
+    ],
+    "cardinal_files": [],
+    "review": "pending"
+  },
+  {
+    "source_id": "timber-entrance-sign-4views",
+    "runtime_id": null,
+    "name": "timber-entrance-sign-4views",
+    "catalogue": "art/grass-management/budget-props/manifest.json",
+    "reason": "four-view source set lacks authoritative stable runtime-ID mapping",
+    "corner_files": [
+      {
+        "direction": "NE",
+        "file": "budget-props/individual/timber-entrance-sign-NE.png",
+        "sourceRect": {
+          "left": 305,
+          "top": 37,
+          "width": 318,
+          "height": 442
+        },
+        "alpha": {
+          "clear": 308556,
+          "partial": 84660
+        },
+        "estimatedAnchor": {
+          "x": 159,
+          "y": 441
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SE",
+        "file": "budget-props/individual/timber-entrance-sign-SE.png",
+        "sourceRect": {
+          "left": 918,
+          "top": 37,
+          "width": 318,
+          "height": 442
+        },
+        "alpha": {
+          "clear": 309274,
+          "partial": 83942
+        },
+        "estimatedAnchor": {
+          "x": 159,
+          "y": 441
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SW",
+        "file": "budget-props/individual/timber-entrance-sign-SW.png",
+        "sourceRect": {
+          "left": 299,
+          "top": 513,
+          "width": 328,
+          "height": 441
+        },
+        "alpha": {
+          "clear": 309932,
+          "partial": 83284
+        },
+        "estimatedAnchor": {
+          "x": 164,
+          "y": 440
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "NW",
+        "file": "budget-props/individual/timber-entrance-sign-NW.png",
+        "sourceRect": {
+          "left": 915,
+          "top": 515,
+          "width": 322,
+          "height": 440
+        },
+        "alpha": {
+          "clear": 312730,
+          "partial": 80486
+        },
+        "estimatedAnchor": {
+          "x": 161,
+          "y": 439
+        },
+        "touchesCellEdge": false
+      }
+    ],
+    "cardinal_files": [],
+    "review": "pending"
+  },
+  {
+    "source_id": "single-red-timber-tee-marker-4views",
+    "runtime_id": null,
+    "name": "single-red-timber-tee-marker-4views",
+    "catalogue": "art/grass-management/budget-props/manifest.json",
+    "reason": "four-view source set lacks authoritative stable runtime-ID mapping",
+    "corner_files": [
+      {
+        "direction": "NE",
+        "file": "budget-props/individual/single-red-timber-tee-marker-NE.png",
+        "sourceRect": {
+          "left": 208,
+          "top": 108,
+          "width": 443,
+          "height": 355
+        },
+        "alpha": {
+          "clear": 304327,
+          "partial": 88889
+        },
+        "estimatedAnchor": {
+          "x": 221.5,
+          "y": 354
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SE",
+        "file": "budget-props/individual/single-red-timber-tee-marker-SE.png",
+        "sourceRect": {
+          "left": 883,
+          "top": 110,
+          "width": 443,
+          "height": 357
+        },
+        "alpha": {
+          "clear": 303802,
+          "partial": 89414
+        },
+        "estimatedAnchor": {
+          "x": 221.5,
+          "y": 356
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SW",
+        "file": "budget-props/individual/single-red-timber-tee-marker-SW.png",
+        "sourceRect": {
+          "left": 216,
+          "top": 579,
+          "width": 437,
+          "height": 359
+        },
+        "alpha": {
+          "clear": 305231,
+          "partial": 87985
+        },
+        "estimatedAnchor": {
+          "x": 218.5,
+          "y": 358
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "NW",
+        "file": "budget-props/individual/single-red-timber-tee-marker-NW.png",
+        "sourceRect": {
+          "left": 890,
+          "top": 581,
+          "width": 436,
+          "height": 357
+        },
+        "alpha": {
+          "clear": 305697,
+          "partial": 87519
+        },
+        "estimatedAnchor": {
+          "x": 218,
+          "y": 356
+        },
+        "touchesCellEdge": false
+      }
+    ],
+    "cardinal_files": [],
+    "review": "pending"
+  },
+  {
+    "source_id": "single-white-distance-stake-4views",
+    "runtime_id": null,
+    "name": "single-white-distance-stake-4views",
+    "catalogue": "art/grass-management/budget-props/manifest.json",
+    "reason": "four-view source set lacks authoritative stable runtime-ID mapping",
+    "corner_files": [
+      {
+        "direction": "NE",
+        "file": "budget-props/individual/single-white-distance-stake-NE.png",
+        "sourceRect": {
+          "left": 349,
+          "top": 86,
+          "width": 97,
+          "height": 399
+        },
+        "alpha": {
+          "clear": 356643,
+          "partial": 36129
+        },
+        "estimatedAnchor": {
+          "x": 48.5,
+          "y": 398
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SE",
+        "file": "budget-props/individual/single-white-distance-stake-SE.png",
+        "sourceRect": {
+          "left": 1002,
+          "top": 86,
+          "width": 97,
+          "height": 399
+        },
+        "alpha": {
+          "clear": 357518,
+          "partial": 35313
+        },
+        "estimatedAnchor": {
+          "x": 48.5,
+          "y": 398
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "SW",
+        "file": "budget-props/individual/single-white-distance-stake-SW.png",
+        "sourceRect": {
+          "left": 348,
+          "top": 615,
+          "width": 102,
+          "height": 402
+        },
+        "alpha": {
+          "clear": 355157,
+          "partial": 37884
+        },
+        "estimatedAnchor": {
+          "x": 51,
+          "y": 401
+        },
+        "touchesCellEdge": false
+      },
+      {
+        "direction": "NW",
+        "file": "budget-props/individual/single-white-distance-stake-NW.png",
+        "sourceRect": {
+          "left": 999,
+          "top": 615,
+          "width": 101,
+          "height": 402
+        },
+        "alpha": {
+          "clear": 354807,
+          "partial": 38297
+        },
+        "estimatedAnchor": {
+          "x": 50.5,
+          "y": 401
+        },
+        "touchesCellEdge": false
+      }
+    ],
+    "cardinal_files": [],
+    "review": "pending"
+  },
+  {
+    "source_id": "01-clubhouse-and-arrival",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Grand southern golf clubhouse, white clapboard two-story building with deep green shutters, wraparound veranda, brick chimneys, modest cupola, flower tubs, compact entrance steps. 2) Tournament arrival gateway, two brick-and-stone pillars supporting an elegant green arch with a small crossed-golf-clubs emblem, short decorative fence returns and flower pots. 3) Professional golf shop pavilion with green pitched roof, broad porch, open display window showing caps and golf bags. 4) Open-sided starter's pavilion with green roof, wooden desk, small brass clock, pair of golf bags tucked beside the desk. Each entire building or structure is one sprite; no people.",
+    "sheet_record": {
+      "id": 1,
+      "name": "01-clubhouse-and-arrival",
+      "subject": "1) Grand southern golf clubhouse, white clapboard two-story building with deep green shutters, wraparound veranda, brick chimneys, modest cupola, flower tubs, compact entrance steps. 2) Tournament arrival gateway, two brick-and-stone pillars supporting an elegant green arch with a small crossed-golf-clubs emblem, short decorative fence returns and flower pots. 3) Professional golf shop pavilion with green pitched roof, broad porch, open display window showing caps and golf bags. 4) Open-sided starter's pavilion with green roof, wooden desk, small brass clock, pair of golf bags tucked beside the desk. Each entire building or structure is one sprite; no people.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right): 1) Grand southern golf clubhouse, white clapboard two-story building with deep green shutters, wraparound veranda, brick chimneys, modest cupola, flower tubs, compact entrance steps. 2) Tournament arrival gateway, two brick-and-stone pillars supporting an elegant green arch with a small crossed-golf-clubs emblem, short decorative fence returns and flower pots. 3) Professional golf shop pavilion with green pitched roof, broad porch, open display window showing caps and golf bags. 4) Open-sided starter's pavilion with green roof, wooden desk, small brass clock, pair of golf bags tucked beside the desk. Each entire building or structure is one sprite; no people.",
+      "editPrompt": "Edit this sprite sheet. Preserve all four subjects and their detailed illustrated materials, green/cream colors, and isometric view. Make it a clean production sprite atlas. EXACTLY four opaque cutout assets in a strict 2 by 2 grid on a fully transparent PNG background. Remove ALL glow, murky gradients, fog, ambient backdrop and soft floor/shadow haze outside the silhouettes. Transparent space must be alpha 0. Resize and reposition each asset to fit entirely in its own quadrant: on a 1536x1024 canvas keep each asset within x=60..700 or x=836..1476, and y=35..465 or y=559..989. Thus a clear transparent horizontal and vertical gutter separates every asset, plus outer transparent margins. All four assets fully visible and not cropped. Top left: white clubhouse. Top right: brick tournament gateway. Bottom left: golf shop pavilion. Bottom right: starter gazebo. Do not add labels, frames, lines, objects, checkerboards, floors or backgrounds."
+    }
+  },
+  {
+    "source_id": "02-greens-and-tees",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Kidney-shaped tournament putting green with finely mown collar, hole and yellow flagstick, slight contour ridges, compact irregular turf footprint. 2) Elevated tee box with two brass tee markers and short stair cut into its low grassy side. 3) Long softly curving striped fairway segment with a narrow rough border, organically feathered footprint. 4) Practice putting green with three tiny cups and short numbered practice flags, compact irregular turf footprint. No people, trees, buildings or loose extras.",
+    "sheet_record": {
+      "id": 2,
+      "name": "02-greens-and-tees",
+      "subject": "1) Kidney-shaped tournament putting green with finely mown collar, hole and yellow flagstick, slight contour ridges, compact irregular turf footprint. 2) Elevated tee box with two brass tee markers and short stair cut into its low grassy side. 3) Long softly curving striped fairway segment with a narrow rough border, organically feathered footprint. 4) Practice putting green with three tiny cups and short numbered practice flags, compact irregular turf footprint. No people, trees, buildings or loose extras.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Kidney-shaped tournament putting green with finely mown collar, hole and yellow flagstick, slight contour ridges, compact irregular turf footprint. 2) Elevated tee box with two brass tee markers and short stair cut into its low grassy side. 3) Long softly curving striped fairway segment with a narrow rough border, organically feathered footprint. 4) Practice putting green with three tiny cups and short numbered practice flags, compact irregular turf footprint. No people, trees, buildings or loose extras."
+    }
+  },
+  {
+    "source_id": "03-hazards-and-water",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Crescent-shaped white-sand bunker inset into a low grassy rim with one rake inside. 2) Deep small pot bunker with layered turf face and clean sand bowl. 3) Compact clear-blue golf-course pond with natural grassy edge, reeds and a small stone spillway. 4) Shallow winding creek segment edged with smooth stones and closely cut grass. Each terrain feature has its own independent irregular footprint; no surrounding landscape.",
+    "sheet_record": {
+      "id": 3,
+      "name": "03-hazards-and-water",
+      "subject": "1) Crescent-shaped white-sand bunker inset into a low grassy rim with one rake inside. 2) Deep small pot bunker with layered turf face and clean sand bowl. 3) Compact clear-blue golf-course pond with natural grassy edge, reeds and a small stone spillway. 4) Shallow winding creek segment edged with smooth stones and closely cut grass. Each terrain feature has its own independent irregular footprint; no surrounding landscape.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Crescent-shaped white-sand bunker inset into a low grassy rim with one rake inside. 2) Deep small pot bunker with layered turf face and clean sand bowl. 3) Compact clear-blue golf-course pond with natural grassy edge, reeds and a small stone spillway. 4) Shallow winding creek segment edged with smooth stones and closely cut grass. Each terrain feature has its own independent irregular footprint; no surrounding landscape."
+    }
+  },
+  {
+    "source_id": "04-bridges-and-gardens",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Elegant low arched stone footbridge with grassy abutments, detached without a connecting river. 2) Short wooden golf-cart bridge with white railings and plank deck. 3) Lush curved azalea bed of pink, crimson and white blossoms with pine-straw mulch and small dark-green shrubs. 4) Mature southern magnolia tree with glossy leaves, white flowers and visible trunk ending at a tiny mulch ring. Entire objects visible.",
+    "sheet_record": {
+      "id": 4,
+      "name": "04-bridges-and-gardens",
+      "subject": "1) Elegant low arched stone footbridge with grassy abutments, detached without a connecting river. 2) Short wooden golf-cart bridge with white railings and plank deck. 3) Lush curved azalea bed of pink, crimson and white blossoms with pine-straw mulch and small dark-green shrubs. 4) Mature southern magnolia tree with glossy leaves, white flowers and visible trunk ending at a tiny mulch ring. Entire objects visible.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Elegant low arched stone footbridge with grassy abutments, detached without a connecting river. 2) Short wooden golf-cart bridge with white railings and plank deck. 3) Lush curved azalea bed of pink, crimson and white blossoms with pine-straw mulch and small dark-green shrubs. 4) Mature southern magnolia tree with glossy leaves, white flowers and visible trunk ending at a tiny mulch ring. Entire objects visible."
+    }
+  },
+  {
+    "source_id": "05-leaderboards-and-course-signs",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Large traditional dark-green freestanding manual leaderboard with white score-grid slats, tiny red and black score marks, side ladder and clock on top. 2) Freestanding dark-green hole information monument with a small illustrated hole map and simple hole numeral 12. 3) Brass-rimmed analog course clock mounted on an ornate green post with a little flower planter at its base. 4) Elegant multi-arm green wayfinding fingerpost with small cream golf, food, restroom and exit pictograms. No captions outside these four objects; signage text minimal.",
+    "sheet_record": {
+      "id": 5,
+      "name": "05-leaderboards-and-course-signs",
+      "subject": "1) Large traditional dark-green freestanding manual leaderboard with white score-grid slats, tiny red and black score marks, side ladder and clock on top. 2) Freestanding dark-green hole information monument with a small illustrated hole map and simple hole numeral 12. 3) Brass-rimmed analog course clock mounted on an ornate green post with a little flower planter at its base. 4) Elegant multi-arm green wayfinding fingerpost with small cream golf, food, restroom and exit pictograms. No captions outside these four objects; signage text minimal.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Large traditional dark-green freestanding manual leaderboard with white score-grid slats, tiny red and black score marks, side ladder and clock on top. 2) Freestanding dark-green hole information monument with a small illustrated hole map and simple hole numeral 12. 3) Brass-rimmed analog course clock mounted on an ornate green post with a little flower planter at its base. 4) Elegant multi-arm green wayfinding fingerpost with small cream golf, food, restroom and exit pictograms. No captions outside these four objects; signage text minimal."
+    }
+  },
+  {
+    "source_id": "06-grandstands-and-viewing",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Straight six-row temporary spectator grandstand with green seats, silver scaffold legs, end stairs and green fabric skirt. 2) Small roofed VIP viewing grandstand with cream canopy and green seat rows. 3) Accessible raised viewing deck with shallow switchback ramp, handrails and two empty wheelchair spaces. 4) Compact elevated observation tower on green-clad scaffold with side stair and an open platform beneath a cream sun canopy. No spectators, no surrounding course.",
+    "sheet_record": {
+      "id": 6,
+      "name": "06-grandstands-and-viewing",
+      "subject": "1) Straight six-row temporary spectator grandstand with green seats, silver scaffold legs, end stairs and green fabric skirt. 2) Small roofed VIP viewing grandstand with cream canopy and green seat rows. 3) Accessible raised viewing deck with shallow switchback ramp, handrails and two empty wheelchair spaces. 4) Compact elevated observation tower on green-clad scaffold with side stair and an open platform beneath a cream sun canopy. No spectators, no surrounding course.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Straight six-row temporary spectator grandstand with green seats, silver scaffold legs, end stairs and green fabric skirt. 2) Small roofed VIP viewing grandstand with cream canopy and green seat rows. 3) Accessible raised viewing deck with shallow switchback ramp, handrails and two empty wheelchair spaces. 4) Compact elevated observation tower on green-clad scaffold with side stair and an open platform beneath a cream sun canopy. No spectators, no surrounding course."
+    }
+  },
+  {
+    "source_id": "07-ropes-crossings-and-marshals",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) One short straight tournament gallery rope segment made of three dark-green stakes with cream rope sagging naturally. 2) Corner gallery rope segment with five dark-green posts turning ninety degrees. 3) Controlled spectator crossing assembly consisting of two hinged rope gates beside a short textured pedestrian crossing mat. 4) Single standing course marshal in green polo, khaki trousers and sun hat holding a small rectangular quiet paddle upright. Exactly four assets; the marshal is one character sprite; compact assemblies count as one each.",
+    "sheet_record": {
+      "id": 7,
+      "name": "07-ropes-crossings-and-marshals",
+      "subject": "1) One short straight tournament gallery rope segment made of three dark-green stakes with cream rope sagging naturally. 2) Corner gallery rope segment with five dark-green posts turning ninety degrees. 3) Controlled spectator crossing assembly consisting of two hinged rope gates beside a short textured pedestrian crossing mat. 4) Single standing course marshal in green polo, khaki trousers and sun hat holding a small rectangular quiet paddle upright. Exactly four assets; the marshal is one character sprite; compact assemblies count as one each.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) One short straight tournament gallery rope segment made of three dark-green stakes with cream rope sagging naturally. 2) Corner gallery rope segment with five dark-green posts turning ninety degrees. 3) Controlled spectator crossing assembly consisting of two hinged rope gates beside a short textured pedestrian crossing mat. 4) Single standing course marshal in green polo, khaki trousers and sun hat holding a small rectangular quiet paddle upright. Exactly four assets; the marshal is one character sprite; compact assemblies count as one each."
+    }
+  },
+  {
+    "source_id": "08-players-and-caddies",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Adult male professional golfer at the balanced finish of a right-handed iron swing, pale polo and navy trousers, entire club visible within cell. 2) Adult female professional golfer addressing a ball with an iron, white cap and green skirt, compact stance. 3) Caddie in white coveralls and green cap carrying a large white-and-green tour bag over one shoulder. 4) Walking score standard bearer in green polo and cream trousers holding an upright compact score paddle, no readable names. Four separate individual human sprites, realistic readable city-game proportions, no diorama bases.",
+    "sheet_record": {
+      "id": 8,
+      "name": "08-players-and-caddies",
+      "subject": "1) Adult male professional golfer at the balanced finish of a right-handed iron swing, pale polo and navy trousers, entire club visible within cell. 2) Adult female professional golfer addressing a ball with an iron, white cap and green skirt, compact stance. 3) Caddie in white coveralls and green cap carrying a large white-and-green tour bag over one shoulder. 4) Walking score standard bearer in green polo and cream trousers holding an upright compact score paddle, no readable names. Four separate individual human sprites, realistic readable city-game proportions, no diorama bases.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Adult male professional golfer at the balanced finish of a right-handed iron swing, pale polo and navy trousers, entire club visible within cell. 2) Adult female professional golfer addressing a ball with an iron, white cap and green skirt, compact stance. 3) Caddie in white coveralls and green cap carrying a large white-and-green tour bag over one shoulder. 4) Walking score standard bearer in green polo and cream trousers holding an upright compact score paddle, no readable names. Four separate individual human sprites, realistic readable city-game proportions, no diorama bases."
+    }
+  },
+  {
+    "source_id": "09-practice-and-fitting",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Two-bay golf driving-range shelter with green roof, open front, two hitting mats and a pair of small ball baskets. 2) Compact three-sided mesh practice cage with taut dark net, green metal frame and one hitting mat. 3) Small professional club-fitting workbench station beneath a cream pop-up canopy with golf shafts and neat equipment cabinet. 4) Range ball dispenser cabinet with a green sloped hood, token panel and one attached collection basket. Each complete assembly stays inside its own cell.",
+    "sheet_record": {
+      "id": 9,
+      "name": "09-practice-and-fitting",
+      "subject": "1) Two-bay golf driving-range shelter with green roof, open front, two hitting mats and a pair of small ball baskets. 2) Compact three-sided mesh practice cage with taut dark net, green metal frame and one hitting mat. 3) Small professional club-fitting workbench station beneath a cream pop-up canopy with golf shafts and neat equipment cabinet. 4) Range ball dispenser cabinet with a green sloped hood, token panel and one attached collection basket. Each complete assembly stays inside its own cell.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Two-bay golf driving-range shelter with green roof, open front, two hitting mats and a pair of small ball baskets. 2) Compact three-sided mesh practice cage with taut dark net, green metal frame and one hitting mat. 3) Small professional club-fitting workbench station beneath a cream pop-up canopy with golf shafts and neat equipment cabinet. 4) Range ball dispenser cabinet with a green sloped hood, token panel and one attached collection basket. Each complete assembly stays inside its own cell."
+    }
+  },
+  {
+    "source_id": "10-carts-and-player-transport",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Cream-roofed dark-green two-seat golf cart with golf bags strapped at the rear, facing southeast. 2) White six-seat passenger golf shuttle with cream canopy and green seat cushions, facing southeast. 3) Green open-bed utility cart carrying neatly secured water coolers and ice chests, facing southeast. 4) White-and-green accessible electric passenger shuttle with a folded wheelchair ramp and clear open side door, facing southeast. Four vehicles only, no drivers or detached wheels.",
+    "sheet_record": {
+      "id": 10,
+      "name": "10-carts-and-player-transport",
+      "subject": "1) Cream-roofed dark-green two-seat golf cart with golf bags strapped at the rear, facing southeast. 2) White six-seat passenger golf shuttle with cream canopy and green seat cushions, facing southeast. 3) Green open-bed utility cart carrying neatly secured water coolers and ice chests, facing southeast. 4) White-and-green accessible electric passenger shuttle with a folded wheelchair ramp and clear open side door, facing southeast. Four vehicles only, no drivers or detached wheels.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Cream-roofed dark-green two-seat golf cart with golf bags strapped at the rear, facing southeast. 2) White six-seat passenger golf shuttle with cream canopy and green seat cushions, facing southeast. 3) Green open-bed utility cart carrying neatly secured water coolers and ice chests, facing southeast. 4) White-and-green accessible electric passenger shuttle with a folded wheelchair ramp and clear open side door, facing southeast. Four vehicles only, no drivers or detached wheels."
+    }
+  },
+  {
+    "source_id": "11-groundskeeping-machines",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Compact green triplex greens mower with three visible cutting reels and black operator seat. 2) Compact green bunker rake tractor with wide rear sand-smoothing rake. 3) Green turf utility vehicle with small mounted water tank and neatly coiled hose reel. 4) Wide fairway mower with five folded-out reel cutting heads and turf tires. Isolated professional golf-course machines, facing southeast, no drivers.",
+    "sheet_record": {
+      "id": 11,
+      "name": "11-groundskeeping-machines",
+      "subject": "1) Compact green triplex greens mower with three visible cutting reels and black operator seat. 2) Compact green bunker rake tractor with wide rear sand-smoothing rake. 3) Green turf utility vehicle with small mounted water tank and neatly coiled hose reel. 4) Wide fairway mower with five folded-out reel cutting heads and turf tires. Isolated professional golf-course machines, facing southeast, no drivers.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Compact green triplex greens mower with three visible cutting reels and black operator seat. 2) Compact green bunker rake tractor with wide rear sand-smoothing rake. 3) Green turf utility vehicle with small mounted water tank and neatly coiled hose reel. 4) Wide fairway mower with five folded-out reel cutting heads and turf tires. Isolated professional golf-course machines, facing southeast, no drivers."
+    }
+  },
+  {
+    "source_id": "12-maintenance-yard",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Small green-roofed groundskeeper equipment shed with open door revealing rakes and hand tools. 2) Turf-care workbench with hole-cutter tool, neatly arranged cups, flagsticks and a turf plug tray as one cohesive station. 3) Compact covered charging rack holding three golf trolley batteries, charger cabinets and neatly wound cables. 4) Neat course-supply station with divided bins of bunker sand, seed mix and topdressing, plus one small shovel attached to the rack. Four cohesive structures, no surrounding yard.",
+    "sheet_record": {
+      "id": 12,
+      "name": "12-maintenance-yard",
+      "subject": "1) Small green-roofed groundskeeper equipment shed with open door revealing rakes and hand tools. 2) Turf-care workbench with hole-cutter tool, neatly arranged cups, flagsticks and a turf plug tray as one cohesive station. 3) Compact covered charging rack holding three golf trolley batteries, charger cabinets and neatly wound cables. 4) Neat course-supply station with divided bins of bunker sand, seed mix and topdressing, plus one small shovel attached to the rack. Four cohesive structures, no surrounding yard.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Small green-roofed groundskeeper equipment shed with open door revealing rakes and hand tools. 2) Turf-care workbench with hole-cutter tool, neatly arranged cups, flagsticks and a turf plug tray as one cohesive station. 3) Compact covered charging rack holding three golf trolley batteries, charger cabinets and neatly wound cables. 4) Neat course-supply station with divided bins of bunker sand, seed mix and topdressing, plus one small shovel attached to the rack. Four cohesive structures, no surrounding yard."
+    }
+  },
+  {
+    "source_id": "13-concessions-and-refreshments",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Long championship sandwich concession hut with green awning, serving counter, wrapped sandwiches in display shelves and small drinks cooler. 2) Small lemonade-and-iced-tea kiosk with cream canopy, clear beverage dispensers and green cups. 3) Golf-course halfway house snack pavilion with green pitched roof and one open serving hatch. 4) Compact ice-cream pushcart with green-and-cream striped parasol and freezer lid. Four separate buildings or carts, no people, no large text.",
+    "sheet_record": {
+      "id": 13,
+      "name": "13-concessions-and-refreshments",
+      "subject": "1) Long championship sandwich concession hut with green awning, serving counter, wrapped sandwiches in display shelves and small drinks cooler. 2) Small lemonade-and-iced-tea kiosk with cream canopy, clear beverage dispensers and green cups. 3) Golf-course halfway house snack pavilion with green pitched roof and one open serving hatch. 4) Compact ice-cream pushcart with green-and-cream striped parasol and freezer lid. Four separate buildings or carts, no people, no large text.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Long championship sandwich concession hut with green awning, serving counter, wrapped sandwiches in display shelves and small drinks cooler. 2) Small lemonade-and-iced-tea kiosk with cream canopy, clear beverage dispensers and green cups. 3) Golf-course halfway house snack pavilion with green pitched roof and one open serving hatch. 4) Compact ice-cream pushcart with green-and-cream striped parasol and freezer lid. Four separate buildings or carts, no people, no large text."
+    }
+  },
+  {
+    "source_id": "14-hospitality-and-picnic",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Luxury cream double-peaked hospitality marquee with open green-trimmed entrance and a short deck. 2) Small VIP garden lounge assembly on a compact wooden deck with cream sofas, low table and green parasol. 3) Four-seat patio table under a green-and-cream golf umbrella, matching wooden chairs tucked closely around table. 4) Long timber picnic table with attached benches and one small napkin dispenser centered on table. No people or unrelated scenery.",
+    "sheet_record": {
+      "id": 14,
+      "name": "14-hospitality-and-picnic",
+      "subject": "1) Luxury cream double-peaked hospitality marquee with open green-trimmed entrance and a short deck. 2) Small VIP garden lounge assembly on a compact wooden deck with cream sofas, low table and green parasol. 3) Four-seat patio table under a green-and-cream golf umbrella, matching wooden chairs tucked closely around table. 4) Long timber picnic table with attached benches and one small napkin dispenser centered on table. No people or unrelated scenery.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Luxury cream double-peaked hospitality marquee with open green-trimmed entrance and a short deck. 2) Small VIP garden lounge assembly on a compact wooden deck with cream sofas, low table and green parasol. 3) Four-seat patio table under a green-and-cream golf umbrella, matching wooden chairs tucked closely around table. 4) Long timber picnic table with attached benches and one small napkin dispenser centered on table. No people or unrelated scenery."
+    }
+  },
+  {
+    "source_id": "15-patron-services",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Green-and-cream patron information kiosk with a large illustrated course map mounted on its front and small information pictogram. 2) Wooden checkstand and lost-and-found hut with numbered storage cubbies and a luggage counter, green roof. 3) Compact green-painted bank of three public telephone booths beneath one cream weather hood. 4) Water refill station with two drinking fountains at different heights and one bottle-filling tap, green housing and tiny paved base. Four distinct independent service structures.",
+    "sheet_record": {
+      "id": 15,
+      "name": "15-patron-services",
+      "subject": "1) Green-and-cream patron information kiosk with a large illustrated course map mounted on its front and small information pictogram. 2) Wooden checkstand and lost-and-found hut with numbered storage cubbies and a luggage counter, green roof. 3) Compact green-painted bank of three public telephone booths beneath one cream weather hood. 4) Water refill station with two drinking fountains at different heights and one bottle-filling tap, green housing and tiny paved base. Four distinct independent service structures.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Green-and-cream patron information kiosk with a large illustrated course map mounted on its front and small information pictogram. 2) Wooden checkstand and lost-and-found hut with numbered storage cubbies and a luggage counter, green roof. 3) Compact green-painted bank of three public telephone booths beneath one cream weather hood. 4) Water refill station with two drinking fountains at different heights and one bottle-filling tap, green housing and tiny paved base. Four distinct independent service structures."
+    }
+  },
+  {
+    "source_id": "16-entry-security-and-tickets",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Two-window tournament ticket and credentials booth with green roof and brass queue posts closely attached. 2) Compact bag-check security canopy with one inspection table and an upright walk-through screening frame. 3) One green turnstile entrance module with three lanes and cream sun canopy. 4) Small green-and-white security command hut with roof radio antenna, front window and amber beacon. No people or weapons; no long text.",
+    "sheet_record": {
+      "id": 16,
+      "name": "16-entry-security-and-tickets",
+      "subject": "1) Two-window tournament ticket and credentials booth with green roof and brass queue posts closely attached. 2) Compact bag-check security canopy with one inspection table and an upright walk-through screening frame. 3) One green turnstile entrance module with three lanes and cream sun canopy. 4) Small green-and-white security command hut with roof radio antenna, front window and amber beacon. No people or weapons; no long text.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Two-window tournament ticket and credentials booth with green roof and brass queue posts closely attached. 2) Compact bag-check security canopy with one inspection table and an upright walk-through screening frame. 3) One green turnstile entrance module with three lanes and cream sun canopy. 4) Small green-and-white security command hut with roof radio antenna, front window and amber beacon. No people or weapons; no long text."
+    }
+  },
+  {
+    "source_id": "17-medical-sanitation-and-weather",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Cream first-aid tent with green trim and a green medical cross, open entrance showing one treatment cot. 2) Small white golf-course medical electric cart with green medical emblem and a neatly secured rear stretcher. 3) Premium portable restroom trailer with green skirt, two doors and compact entry steps. 4) Weather-monitoring station with a slim anemometer mast, white instrument shelter, small solar panel and a green warning beacon. Four separate assets on transparent background.",
+    "sheet_record": {
+      "id": 17,
+      "name": "17-medical-sanitation-and-weather",
+      "subject": "1) Cream first-aid tent with green trim and a green medical cross, open entrance showing one treatment cot. 2) Small white golf-course medical electric cart with green medical emblem and a neatly secured rear stretcher. 3) Premium portable restroom trailer with green skirt, two doors and compact entry steps. 4) Weather-monitoring station with a slim anemometer mast, white instrument shelter, small solar panel and a green warning beacon. Four separate assets on transparent background.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Cream first-aid tent with green trim and a green medical cross, open entrance showing one treatment cot. 2) Small white golf-course medical electric cart with green medical emblem and a neatly secured rear stretcher. 3) Premium portable restroom trailer with green skirt, two doors and compact entry steps. 4) Weather-monitoring station with a slim anemometer mast, white instrument shelter, small solar panel and a green warning beacon. Four separate assets on transparent background."
+    }
+  },
+  {
+    "source_id": "18-broadcast-and-camera",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Temporary television camera tower with dark-green scaffold skirt, side ladder, one roofless camera platform and a large broadcast camera. 2) White-and-green outside-broadcast production truck with roof ventilation and neatly rolled cable drums attached behind cab. 3) Compact satellite uplink van with a roof-mounted dish angled upward. 4) Single professional broadcast camera on a heavy tripod with rain cover folded back. Four isolated technical assets, no TV brand logos or crew.",
+    "sheet_record": {
+      "id": 18,
+      "name": "18-broadcast-and-camera",
+      "subject": "1) Temporary television camera tower with dark-green scaffold skirt, side ladder, one roofless camera platform and a large broadcast camera. 2) White-and-green outside-broadcast production truck with roof ventilation and neatly rolled cable drums attached behind cab. 3) Compact satellite uplink van with a roof-mounted dish angled upward. 4) Single professional broadcast camera on a heavy tripod with rain cover folded back. Four isolated technical assets, no TV brand logos or crew.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Temporary television camera tower with dark-green scaffold skirt, side ladder, one roofless camera platform and a large broadcast camera. 2) White-and-green outside-broadcast production truck with roof ventilation and neatly rolled cable drums attached behind cab. 3) Compact satellite uplink van with a roof-mounted dish angled upward. 4) Single professional broadcast camera on a heavy tripod with rain cover folded back. Four isolated technical assets, no TV brand logos or crew."
+    }
+  },
+  {
+    "source_id": "19-media-and-scoring",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Small two-story broadcast commentary booth with glass upper windows, green cladding and cream canopy. 2) Low cream media-center pavilion with green roof, accessible entry and a tiny microphone pictogram over the door. 3) Scoring and scorecard verification tent with open front, one wooden table, two chairs and compact tablet terminals. 4) Compact interview backdrop station with dark-green blank backdrop panel, small platform and one standing microphone. No readable sponsor logos, no people.",
+    "sheet_record": {
+      "id": 19,
+      "name": "19-media-and-scoring",
+      "subject": "1) Small two-story broadcast commentary booth with glass upper windows, green cladding and cream canopy. 2) Low cream media-center pavilion with green roof, accessible entry and a tiny microphone pictogram over the door. 3) Scoring and scorecard verification tent with open front, one wooden table, two chairs and compact tablet terminals. 4) Compact interview backdrop station with dark-green blank backdrop panel, small platform and one standing microphone. No readable sponsor logos, no people.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Small two-story broadcast commentary booth with glass upper windows, green cladding and cream canopy. 2) Low cream media-center pavilion with green roof, accessible entry and a tiny microphone pictogram over the door. 3) Scoring and scorecard verification tent with open front, one wooden table, two chairs and compact tablet terminals. 4) Compact interview backdrop station with dark-green blank backdrop panel, small platform and one standing microphone. No readable sponsor logos, no people."
+    }
+  },
+  {
+    "source_id": "20-volunteers-and-operations",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Volunteer headquarters cream tent with green trim, check-in counter and tidy radio charging rack inside the opening. 2) Small tournament operations trailer with green lower panels, roof antenna and front steps. 3) Sheltered refreshment distribution station with an orderly rack of water coolers and ice boxes beneath a green canopy. 4) Single tournament official in a green blazer and cream trousers holding a clipboard and wearing a lanyard. Exactly four assets, only the fourth is a person.",
+    "sheet_record": {
+      "id": 20,
+      "name": "20-volunteers-and-operations",
+      "subject": "1) Volunteer headquarters cream tent with green trim, check-in counter and tidy radio charging rack inside the opening. 2) Small tournament operations trailer with green lower panels, roof antenna and front steps. 3) Sheltered refreshment distribution station with an orderly rack of water coolers and ice boxes beneath a green canopy. 4) Single tournament official in a green blazer and cream trousers holding a clipboard and wearing a lanyard. Exactly four assets, only the fourth is a person.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Volunteer headquarters cream tent with green trim, check-in counter and tidy radio charging rack inside the opening. 2) Small tournament operations trailer with green lower panels, roof antenna and front steps. 3) Sheltered refreshment distribution station with an orderly rack of water coolers and ice boxes beneath a green canopy. 4) Single tournament official in a green blazer and cream trousers holding a clipboard and wearing a lanyard. Exactly four assets, only the fourth is a person."
+    }
+  },
+  {
+    "source_id": "21-retail-and-fan-experiences",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Large elegant tournament merchandise tent with cream peaked roof, green entrance, visible neatly folded apparel shelving. 2) Outdoor cap-and-souvenir kiosk with a green awning and rows of white and green golf caps. 3) Compact junior autograph station with a curved green barrier, low signing table and two empty stools. 4) Patron photo spot assembly with a sculpted crossed-clubs crest on a green frame, small flower urns and a short cream bench. No people, no real logos, no large text.",
+    "sheet_record": {
+      "id": 21,
+      "name": "21-retail-and-fan-experiences",
+      "subject": "1) Large elegant tournament merchandise tent with cream peaked roof, green entrance, visible neatly folded apparel shelving. 2) Outdoor cap-and-souvenir kiosk with a green awning and rows of white and green golf caps. 3) Compact junior autograph station with a curved green barrier, low signing table and two empty stools. 4) Patron photo spot assembly with a sculpted crossed-clubs crest on a green frame, small flower urns and a short cream bench. No people, no real logos, no large text.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Large elegant tournament merchandise tent with cream peaked roof, green entrance, visible neatly folded apparel shelving. 2) Outdoor cap-and-souvenir kiosk with a green awning and rows of white and green golf caps. 3) Compact junior autograph station with a curved green barrier, low signing table and two empty stools. 4) Patron photo spot assembly with a sculpted crossed-clubs crest on a green frame, small flower urns and a short cream bench. No people, no real logos, no large text."
+    }
+  },
+  {
+    "source_id": "22-parking-and-arrivals",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Elegant tournament shuttle shelter with cream roof, green posts, short bench and small bus pictogram. 2) Parking attendant booth with green pitched roof and attached raised white boom barrier, compact footprint. 3) Rideshare-and-taxi pickup island with one short curb, green shelter and a small car pictogram sign, no vehicle. 4) White-and-green tournament minibus with tinted windows, passenger door and a small crossed-clubs emblem, facing southeast. Four individual placeable assets.",
+    "sheet_record": {
+      "id": 22,
+      "name": "22-parking-and-arrivals",
+      "subject": "1) Elegant tournament shuttle shelter with cream roof, green posts, short bench and small bus pictogram. 2) Parking attendant booth with green pitched roof and attached raised white boom barrier, compact footprint. 3) Rideshare-and-taxi pickup island with one short curb, green shelter and a small car pictogram sign, no vehicle. 4) White-and-green tournament minibus with tinted windows, passenger door and a small crossed-clubs emblem, facing southeast. Four individual placeable assets.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Elegant tournament shuttle shelter with cream roof, green posts, short bench and small bus pictogram. 2) Parking attendant booth with green pitched roof and attached raised white boom barrier, compact footprint. 3) Rideshare-and-taxi pickup island with one short curb, green shelter and a small car pictogram sign, no vehicle. 4) White-and-green tournament minibus with tinted windows, passenger door and a small crossed-clubs emblem, facing southeast. Four individual placeable assets."
+    }
+  },
+  {
+    "source_id": "23-utilities-and-recycling",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Compact green sound-insulated towable event generator with visible tow hitch and neatly attached cable reel. 2) Portable green communications mast trailer with antenna panels, stabilizer feet and a small equipment cabinet. 3) Coordinated three-bin recycling station with green timber enclosure, cream bin lids and clear recycling, waste and compost pictograms. 4) Compact outdoor handwashing station with two stainless basins, soap pumps and a green water tank housing. No wires or pipes extending outside cell.",
+    "sheet_record": {
+      "id": 23,
+      "name": "23-utilities-and-recycling",
+      "subject": "1) Compact green sound-insulated towable event generator with visible tow hitch and neatly attached cable reel. 2) Portable green communications mast trailer with antenna panels, stabilizer feet and a small equipment cabinet. 3) Coordinated three-bin recycling station with green timber enclosure, cream bin lids and clear recycling, waste and compost pictograms. 4) Compact outdoor handwashing station with two stainless basins, soap pumps and a green water tank housing. No wires or pipes extending outside cell.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Compact green sound-insulated towable event generator with visible tow hitch and neatly attached cable reel. 2) Portable green communications mast trailer with antenna panels, stabilizer feet and a small equipment cabinet. 3) Coordinated three-bin recycling station with green timber enclosure, cream bin lids and clear recycling, waste and compost pictograms. 4) Compact outdoor handwashing station with two stainless basins, soap pumps and a green water tank housing. No wires or pipes extending outside cell."
+    }
+  },
+  {
+    "source_id": "24-trophies-and-tournament-details",
+    "runtime_id": null,
+    "catalogue": "art/golf-tournament/prompts.json",
+    "reason": "multi-subject facility design/source sheet has no per-subject stable runtime IDs",
+    "subject_description": "1) Small championship awards stage with dark-green backdrop, central silver trophy on wooden plinth and three short front steps. 2) Elegant green champions blazer displayed on a wooden standing mannequin with brass pedestal. 3) Compact course bench and upright golf-bag rest assembly in varnished wood with brass details. 4) Traditional white golf bag on a green two-wheel push trolley, clubs neatly visible. Exactly four independently usable prop assemblies, no people, no surrounding scene.",
+    "sheet_record": {
+      "id": 24,
+      "name": "24-trophies-and-tournament-details",
+      "subject": "1) Small championship awards stage with dark-green backdrop, central silver trophy on wooden plinth and three short front steps. 2) Elegant green champions blazer displayed on a wooden standing mannequin with brass pedestal. 3) Compact course bench and upright golf-bag rest assembly in varnished wood with brass details. 4) Traditional white golf bag on a green two-wheel push trolley, clubs neatly visible. Exactly four independently usable prop assemblies, no people, no surrounding scene.",
+      "prompt": "Use case: stylized-concept. Asset type: Capital Empire isometric city-builder GAME SPRITE SHEET, transparent PNG. Create EXACTLY FOUR isolated independently usable assets in a rigid 2x2 grid, one asset wholly inside each quadrant. Generous empty transparent outer margins and a wide transparent cross-shaped gutter. NO fifth asset, NO sheet title, NO captions, NO borders, NO background, NO checkerboard painted in, NO ground plane connecting assets. True alpha transparency outside object silhouettes and small local bases. Each object fills its cell but never touches neighboring cells. Consistent orthographic isometric camera: 45-degree azimuth, 30-degree elevation, vertical verticals, no perspective convergence; see front and right side. Style: richly detailed hand-painted 3D-like isometric game illustration, crisp readable silhouettes, realistic proportions with slightly charming stylization, fine material textures, polished Capital Empire / classic premium city-builder asset quality, NOT pixel art, NOT flat vectors, NOT a photograph. Soft daylight from upper left; subtle contained contact shadows only. Cohesive championship golf palette of deep tournament green, cream canvas, white trim, warm wood and brass, vivid maintained turf when needed. Masters-inspired championship atmosphere. No real sponsor logos, watermarks or large text. Do not add unrelated scenery. All four assets use the same rendering style. Sheet subjects in reading order (top-left, top-right, bottom-left, bottom-right):  CUTOUT REQUIREMENT: background pixels must be entirely clear, alpha=0, like isolated inventory icons. NO soft glowing backdrop, NO atmosphere, NO floor, NO vignette, NO ambient fog, NO blurry shadow halos. Objects are opaque. Use a square canvas if possible for four square cells.  Important layout: every asset SMALL ENOUGH to fit entirely in its own quadrant, with at least 12 percent empty space around it. Four equally spaced inventory icons. 1) Small championship awards stage with dark-green backdrop, central silver trophy on wooden plinth and three short front steps. 2) Elegant green champions blazer displayed on a wooden standing mannequin with brass pedestal. 3) Compact course bench and upright golf-bag rest assembly in varnished wood with brass details. 4) Traditional white golf bag on a green two-wheel push trolley, clubs neatly visible. Exactly four independently usable prop assemblies, no people, no surrounding scene."
+    }
+  },
+  {
+    "source_id": "golf:range-coffee-kiosk",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\buildings\\golf-range-coffee-kiosk-2views-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\buildings\\golf-range-coffee-kiosk-view1-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "golf:range-deck",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\buildings\\golf-range-deck-2views-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "golf:range-distance-post",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\buildings\\golf-range-distance-post-1view-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "variation:world-snack_bar-04875b6f-plain:1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\buildings\\variation-world-snack_bar-04875b6f-plain-1-4views-v2.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\buildings\\variation-world-snack_bar-04875b6f-plain-1-screen-axis-4views-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "world:watertower",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\buildings\\world-watertower-4views-v2.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\buildings\\world-watertower-screen-axis-4views-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\buildings\\world-watertower-screen-axis-4views-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:far:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\far-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:far:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\far-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:far:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\far-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:far:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\far-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:mid:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\mid-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:mid:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\mid-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:mid:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\mid-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:mid:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\mid-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:near:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\near-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:near:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\near-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:near:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\near-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fairway:near:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fairway\\near-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:far:repair-north-south-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\far-v1\\full-north-south-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:far:repair-west-east-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\far-v1\\full-west-east-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:far:matched-variant-1-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\far-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:far:matched-variant-2-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\far-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:far:matched-variant-3-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\far-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:far:matched-variant-4-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\far-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:mid:repair-north-south-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\mid-v1\\full-north-south-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:mid:repair-west-east-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\mid-v1\\full-west-east-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:mid:matched-variant-1-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\mid-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:mid:matched-variant-2-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\mid-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:mid:matched-variant-3-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\mid-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:mid:matched-variant-4-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\mid-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:near:repair-north-south-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\near-v1\\full-north-south-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:near:repair-west-east-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\near-v1\\full-west-east-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:near:matched-variant-1-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\near-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:near:matched-variant-2-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\near-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:near:matched-variant-3-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\near-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:fringe:near:matched-variant-4-v1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\fringe\\near-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "ground-background:golden-fescue",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\far-v2\\tile-01-v2.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\far-v2\\tile-02-v2.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\far-v3\\full-north-south-repair-v3.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\far-v3\\tile-03-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\far-v3\\tile-04-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\far-v4\\full-west-east-repair-v4.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\mid-v1\\tile-01-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\mid-v1\\tile-02-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\mid-v1\\tile-03-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\mid-v1\\tile-04-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\mid-v2\\full-north-south-repair-v2.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\mid-v2\\full-west-east-repair-v2.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\full-north-south-repair-v2.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\full-west-east-repair-v2.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\tile-01-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\tile-02-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\tile-03-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\tile-04-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\tile-05-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\tile-06-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\tile-07-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\golden-fescue\\near-v1\\tile-08-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\scene-backgrounds\\golden-fescue\\near-background-anchored-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:far:repair-north-south-seam",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\far-v1\\full-north-south-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:far:repair-west-east-seam",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\far-v1\\full-west-east-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:far:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\far-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:far:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\far-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:far:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\far-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:far:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\far-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:mid:repair-north-south-seam",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\mid-v1\\full-north-south-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:mid:repair-west-east-seam",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\mid-v1\\full-west-east-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:mid:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\mid-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:mid:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\mid-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:mid:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\mid-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:mid:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\mid-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:near:repair-north-south-seam",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\near-v1\\full-north-south-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:near:repair-west-east-seam",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\near-v1\\full-west-east-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:near:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\near-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:near:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\near-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:near:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\near-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:lake:near:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\lake\\near-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:far:repair-north-south-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\far-v2\\full-north-south-repair-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:far:repair-west-east-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\far-v2\\full-west-east-repair-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:far:matched-variant-1-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\far-v2\\tile-01-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:far:matched-variant-2-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\far-v2\\tile-02-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:far:matched-variant-3-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\far-v2\\tile-03-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:far:matched-variant-4-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\far-v2\\tile-04-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:mid:repair-north-south-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\mid-v2\\full-north-south-repair-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:mid:repair-west-east-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\mid-v2\\full-west-east-repair-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:mid:matched-variant-1-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\mid-v2\\tile-01-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:mid:matched-variant-2-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\mid-v2\\tile-02-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:mid:matched-variant-3-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\mid-v2\\tile-03-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:mid:matched-variant-4-v2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\mid-v2\\tile-04-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:near:repair-north-south-seam",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\near-v1\\full-north-south-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:near:repair-west-east-seam",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\near-v1\\full-west-east-repair-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:near:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\near-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:near:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\near-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:near:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\near-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:putting-green:near:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\putting-green\\near-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:far:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\far-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:far:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\far-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:far:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\far-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:far:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\far-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:mid:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\mid-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:mid:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\mid-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:mid:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\mid-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:mid:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\mid-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:near:independent-variant-1",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\near-v1\\tile-01-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:near:independent-variant-2",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\near-v1\\tile-02-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:near:independent-variant-3",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\near-v1\\tile-03-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "material-texture:sand-ripples:near:independent-variant-4",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ground\\eight-tiles\\sand-ripples\\near-v1\\tile-04-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "golf:stone-border-run",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\landscaping\\golf-stone-border-run-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\landscaping\\golf-stone-border-run-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": "golf:stone-boulders-grey",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\landscaping\\golf-stone-boulders-grey-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "golf:range-ball-dispenser",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\props\\golf-range-ball-dispenser-2views-v1.alpha.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\props\\golf-range-ball-dispenser-2views-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "golf:range-sign",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\props\\golf-range-sign-2views-v1.native.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\props\\golf-range-sign-2views-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "golf:range-yardage-board",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\props\\golf-range-yardage-board-2views-v1.alpha.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\props\\golf-range-yardage-board-2views-v1.provenance.json"
+    ]
+  },
+  {
+    "source_id": "golf:build-tool-tiles",
+    "runtime_id": null,
+    "catalogue": "art/theme-consistency/generated",
+    "reason": "generated source ID is not registered in active static library modules",
+    "provenance": [
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ui\\golf-build-tool-tiles-sheet-v1.provenance.json",
+      "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\generated\\ui\\golf-build-tool-tiles-sheet-v2.provenance.json"
+    ]
+  },
+  {
+    "source_id": null,
+    "runtime_id": null,
+    "name": "Hospitality tent",
+    "catalogue": "art/new-props/manifest.json",
+    "source_sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
+    "category": "Event structures",
+    "reason": "manifest subject has no cutout in items.json or runtime item; this sheet was not cut successfully"
+  },
+  {
+    "source_id": null,
+    "runtime_id": null,
+    "name": "Trophy pavilion",
+    "catalogue": "art/new-props/manifest.json",
+    "source_sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
+    "category": "Event structures",
+    "reason": "manifest subject has no cutout in items.json or runtime item; this sheet was not cut successfully"
+  },
+  {
+    "source_id": null,
+    "runtime_id": null,
+    "name": "Club tent",
+    "catalogue": "art/new-props/manifest.json",
+    "source_sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
+    "category": "Event structures",
+    "reason": "manifest subject has no cutout in items.json or runtime item; this sheet was not cut successfully"
+  },
+  {
+    "source_id": null,
+    "runtime_id": null,
+    "name": "Club arch sign",
+    "catalogue": "art/new-props/manifest.json",
+    "source_sheet": "exec-f1d3b7f0-6a6e-4d1d-8dc1-2175b52d82bf.png",
+    "category": "Event structures",
+    "reason": "manifest subject has no cutout in items.json or runtime item; this sheet was not cut successfully"
+  }
+]

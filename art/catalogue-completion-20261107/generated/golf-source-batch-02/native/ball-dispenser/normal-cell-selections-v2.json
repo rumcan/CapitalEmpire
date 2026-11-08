@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "version": 2,
+  "as_of_utc": "2026-11-07T14:10:53.936532+00:00",
+  "subject": "newprop:ball-dispenser",
+  "intended_cell_layout": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "selected_source_cells": [
+    {
+      "guide_corner": "SE",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+        "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+        "bytes": 1167889
+      },
+      "cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "16d068d494ee559bc4a8964067380a74a77b09f07d06471e75d63444bc834355",
+      "status": "limited-source-main-component-identity-and-pose-pass"
+    },
+    {
+      "guide_corner": "SW",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.png",
+        "sha256": "c8b2025139ed0235a0a50530453dc40818783cb2b440df742846dc2a2022c7c6",
+        "bytes": 729955
+      },
+      "cell": "single",
+      "rectangle_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "native_rgba_rectangle_sha256": "1b2b252b8226396e55e3515cc6a2f013608e3227b9a5e8c40d973b5d0f05a892",
+      "status": "limited-source-main-component-identity-and-pose-pass"
+    },
+    {
+      "guide_corner": "NW",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+        "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+        "bytes": 1167889
+      },
+      "cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "9fde9692b75cb9d989325e505f9d94e8f04879683c8b2faa0aac8b0be3fa0252",
+      "status": "limited-source-main-component-identity-and-pose-pass"
+    },
+    {
+      "guide_corner": "NE",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+        "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+        "bytes": 1167889
+      },
+      "cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "44f578b772259cc060d12fa8a65163d790d5400486c6983a4e6e349b9c2b91c9",
+      "status": "limited-source-main-component-identity-and-pose-pass"
+    }
+  ],
+  "four_distinct_main_component_identity_and_pose_source_candidates": true,
+  "composition_created": false,
+  "mixed_resolution_and_scale_hold": "Native corrected single images1254x1254 and original quarters627x627 retained untouched. A pasted atlas would suggest inconsistent physical scale. No resized/painted composition created. Runtime anchors/scale pending.",
+  "historical_holds_retained": "normal-cell-candidates-v1.json and earlier native versions/reviews remain unchanged; these selections supersede their held pose candidates only.",
+  "future_yaw_reference_policy": "Use updated fixed-world yaw guide first as camera/occlusion authority and original normal-v2 material identity plus these corrected native singles as needed. Avoid teaching repeated source cameras or a mixed-scale composed atlas.",
+  "fine_detail_review_pending": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

@@ -1,0 +1,27 @@
+{
+  "id": "newprop:shanty-medical-tent",
+  "name": "Shanty medical tent",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-medical-tent.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+  "sourceSheetSHA256": "2ae188510ab3dc9ac7e769c01de83b3fdfdac8d9a58bce0168b413cbd062fbf6",
+  "referenceSHA256": "23ed4651ee755b012b2dcbe04d85604bc898835cb5ac6106b6bbcc051e5d2470",
+  "sourcePixelRectXYWH": [
+    27,
+    28,
+    652,
+    609
+  ],
+  "originalCellLabel": "top left",
+  "referenceSize": [
+    652,
+    609
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Blue tarp/log-and-rope fantasy shack containing medical cot, bottles and first-aid box. Reject architectural treatment; retain only practical medical equipment/function in a worn1950sreal-world shelter.",
+  "sourceOnlyNotReleaseProof": true
+}

@@ -1,0 +1,736 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "status": "five-candidate-three-held",
+  "reviewScope": "Functional identity, distinct actual main faces, fixed attachments and alpha margins. Not exact-angle/scale certification.",
+  "nativeCameraCertified": false,
+  "runtimeReady": false,
+  "sets": [
+    {
+      "key": "shuttle-cart",
+      "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shuttle-cart/yaw8-v1.png",
+      "sourceSHA256": "7232d36c497ecc1f0cd6af41bc30e7ee53ec8cf5f88fe0980005a85d760c3d14",
+      "size": [
+        1254,
+        1254
+      ],
+      "provenanceHashMatches": true,
+      "views": [
+        {
+          "key": "yaw8N",
+          "rectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alphaGT128BBox": [
+            43,
+            65,
+            590,
+            575
+          ],
+          "coreMinMargin": 37,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "b0691a9502037c7ff06dd3403ba2d41fa66c6cac7cd3b676dbc749908622732e"
+        },
+        {
+          "key": "yaw8E",
+          "rectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alphaGT128BBox": [
+            72,
+            62,
+            595,
+            544
+          ],
+          "coreMinMargin": 32,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "02cc6d499e3398f2801676f4ff2ce869e6186ead3ef4b0a777075c7fe6b06f2f"
+        },
+        {
+          "key": "yaw8S",
+          "rectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alphaGT128BBox": [
+            41,
+            66,
+            541,
+            550
+          ],
+          "coreMinMargin": 41,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "52871985ace79ab5d3a09eaf4d3bf027848bd72208883c93a4a2689937065730"
+        },
+        {
+          "key": "yaw8W",
+          "rectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alphaGT128BBox": [
+            32,
+            67,
+            594,
+            595
+          ],
+          "coreMinMargin": 32,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "55d1737100007b43fdf3027de7f805b71a70985f7fe036ece6796211381be08f"
+        }
+      ],
+      "status": "held-targeted-repair",
+      "observation": {
+        "cells": [
+          "yaw8N",
+          "yaw8E",
+          "yaw8S",
+          "yaw8W"
+        ],
+        "reason": "All four are diagonal corner views, with long side exposed in nominal front/rear cells. Missing near-front, near-rear and dominant-side camera family. Three seat rows and basic body identity remain correct.",
+        "repair": "Paint guide-controlled main faces N E / S W; do not copy identity corner camera."
+      },
+      "alphaAssessment": "No alpha>128 pixels touch any cell boundary."
+    },
+    {
+      "key": "wheelchair-cart",
+      "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/yaw8-v1.png",
+      "sourceSHA256": "c1e39b5a9d22a99184453752fe638a97f92fdcf915c54d7ce0aa77d321922029",
+      "size": [
+        1254,
+        1254
+      ],
+      "provenanceHashMatches": true,
+      "views": [
+        {
+          "key": "yaw8N",
+          "rectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alphaGT128BBox": [
+            38,
+            65,
+            490,
+            591
+          ],
+          "coreMinMargin": 36,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "f0f280afbecd5635befa2ef0834bac7a483fb11999720e0017587f0690a084c0"
+        },
+        {
+          "key": "yaw8E",
+          "rectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alphaGT128BBox": [
+            43,
+            104,
+            590,
+            575
+          ],
+          "coreMinMargin": 37,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "6c79b4a154db4a00b5b2bd008fcb189717a1da72c759f8f485badc06e278b6f7"
+        },
+        {
+          "key": "yaw8S",
+          "rectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alphaGT128BBox": [
+            87,
+            48,
+            529,
+            555
+          ],
+          "coreMinMargin": 48,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "819f1ebc2148d058d099c43bc6c0723c23456caaebb4767cc9e6e9541efc9acc"
+        },
+        {
+          "key": "yaw8W",
+          "rectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alphaGT128BBox": [
+            19,
+            115,
+            567,
+            513
+          ],
+          "coreMinMargin": 19,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "fc8eadb5cbfd866e83745f1f9fbaac365b1507729e34a8b209646f34e1f24553"
+        }
+      ],
+      "status": "practical-source-candidate",
+      "observation": "Four actual main faces; physical LEFT ramp remains deployed, opposite RIGHT side plain, one driver seat/rear bench and empty bay.",
+      "alphaAssessment": "No alpha>128 pixels touch any cell boundary."
+    },
+    {
+      "key": "ice-cream-cart",
+      "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/yaw8-v1.png",
+      "sourceSHA256": "9d47ed8c3bc77801ae9e6fd77c6f90946daf15ff6e418a987d7a7d03b56bdca7",
+      "size": [
+        1254,
+        1254
+      ],
+      "provenanceHashMatches": true,
+      "views": [
+        {
+          "key": "yaw8N",
+          "rectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alphaGT128BBox": [
+            166,
+            34,
+            507,
+            572
+          ],
+          "coreMinMargin": 34,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "f3a3b18fdc18959ac88259b5fcab278b11d8194a1bc939522c9600201bb22f01"
+        },
+        {
+          "key": "yaw8E",
+          "rectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alphaGT128BBox": [
+            98,
+            32,
+            485,
+            591
+          ],
+          "coreMinMargin": 32,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "acb5a215419f68f7c8d975bb87822a2e88af552bb419417f7f2372bca7b71760"
+        },
+        {
+          "key": "yaw8S",
+          "rectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alphaGT128BBox": [
+            154,
+            15,
+            479,
+            583
+          ],
+          "coreMinMargin": 15,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "3e42bc4cc02a517403ab250885b5ca492672b2ca6730e647032253456102e173"
+        },
+        {
+          "key": "yaw8W",
+          "rectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alphaGT128BBox": [
+            117,
+            10,
+            489,
+            564
+          ],
+          "coreMinMargin": 10,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "bf6997696d8848f0b4595641d40dbf54fbbdf1c04982e2bc144ffe2479965259"
+        }
+      ],
+      "status": "practical-source-candidate",
+      "observation": "Distinct front/rear/opposite sides; handle/rack/cup stack/caster remain together at rear; two large wheels, four freezer compartments, one umbrella.",
+      "alphaAssessment": "No alpha>128 pixels touch any cell boundary."
+    },
+    {
+      "key": "cart-ambulance",
+      "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/cart-ambulance/yaw8-v1.png",
+      "sourceSHA256": "e42d04ef4ff05d50f37ba6455790eb6bddefeb48f7beb91a9cbfdfe4c1c0bcac",
+      "size": [
+        1254,
+        1254
+      ],
+      "provenanceHashMatches": true,
+      "views": [
+        {
+          "key": "yaw8N",
+          "rectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alphaGT128BBox": [
+            135,
+            121,
+            447,
+            562
+          ],
+          "coreMinMargin": 65,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "52cd565cca98f83a51c8c4b43efbdc356d44f50cce83aaa33e0d0065aed705ea"
+        },
+        {
+          "key": "yaw8E",
+          "rectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alphaGT128BBox": [
+            35,
+            122,
+            562,
+            536
+          ],
+          "coreMinMargin": 35,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "fb3eb39a0a83b80b707579efc79b0dd24035495037ce0ec482d1235d3ea52b0c"
+        },
+        {
+          "key": "yaw8S",
+          "rectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alphaGT128BBox": [
+            141,
+            60,
+            433,
+            524
+          ],
+          "coreMinMargin": 60,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "92f44c726688e878ba21a2c8180ca4ee575ca49f0322f3b9dc86ba1d29b0360a"
+        },
+        {
+          "key": "yaw8W",
+          "rectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alphaGT128BBox": [
+            4,
+            80,
+            549,
+            491
+          ],
+          "coreMinMargin": 4,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "61484ce78bfb475301cc21a4d91dd40fe21d9fca6121223560d0dd9fb7e6a386"
+        }
+      ],
+      "status": "practical-source-candidate",
+      "observation": "Four actual main faces; one front bench/canopy and beacon, rear orange lengthwise stretcher with two black transverse straps.",
+      "alphaAssessment": "No alpha>128 pixels touch any cell boundary."
+    },
+    {
+      "key": "drinks-cart-green",
+      "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/yaw8-v1.png",
+      "sourceSHA256": "775c38c890ce27d253a87424f5291e4a0b994b1523d880d1d7b54ccf108fc062",
+      "size": [
+        1254,
+        1254
+      ],
+      "provenanceHashMatches": true,
+      "views": [
+        {
+          "key": "yaw8N",
+          "rectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alphaGT128BBox": [
+            128,
+            91,
+            462,
+            555
+          ],
+          "coreMinMargin": 72,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "5b58e36f31620a495b3e4ea63cc624e3e6cae4b87d5d0499d368e77654d89292"
+        },
+        {
+          "key": "yaw8E",
+          "rectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alphaGT128BBox": [
+            81,
+            124,
+            559,
+            498
+          ],
+          "coreMinMargin": 68,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "4a24628e15859f51e85a58cdb8694e08372d50391a0049f3fef81d2d8d8c7ec1"
+        },
+        {
+          "key": "yaw8S",
+          "rectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alphaGT128BBox": [
+            165,
+            60,
+            456,
+            508
+          ],
+          "coreMinMargin": 60,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "5599429db9e09ac2e6ab5cfc533a29e825c97b182e9d0b0f1ec6f18360c47d37"
+        },
+        {
+          "key": "yaw8W",
+          "rectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alphaGT128BBox": [
+            56,
+            84,
+            553,
+            465
+          ],
+          "coreMinMargin": 56,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "f717af7bfb431d1e05bdd7580a613aef446bdc4921dbca14e2d317551e6cc9a4"
+        }
+      ],
+      "status": "practical-source-candidate",
+      "observation": "Four main faces; two orange jugs, two lidded coolboxes and one bottle crate remain in rear bed, front bench and short canopy fixed.",
+      "alphaAssessment": "No alpha>128 pixels touch any cell boundary."
+    },
+    {
+      "key": "satellite-van",
+      "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/yaw8-v1.png",
+      "sourceSHA256": "75c05cb5db7f078b7d025b81f77ed214d9b06a985110d74fc2c9b5d5b2403d9d",
+      "size": [
+        1254,
+        1254
+      ],
+      "provenanceHashMatches": true,
+      "views": [
+        {
+          "key": "yaw8N",
+          "rectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alphaGT128BBox": [
+            117,
+            61,
+            493,
+            579
+          ],
+          "coreMinMargin": 48,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "def39d60c0610bfe4812eb6180848e9423d4979a8471b032173bf4dd7aec9c22"
+        },
+        {
+          "key": "yaw8E",
+          "rectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alphaGT128BBox": [
+            69,
+            120,
+            556,
+            527
+          ],
+          "coreMinMargin": 69,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "763f62a3951613a80037cf95dd545cb701e65ac09e6c964c614370ffabd2370c"
+        },
+        {
+          "key": "yaw8S",
+          "rectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alphaGT128BBox": [
+            142,
+            57,
+            437,
+            524
+          ],
+          "coreMinMargin": 57,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "cafb2b069602e9a7276caf439baca8593b67f16d7e82773ac53dcbee64def6d2"
+        },
+        {
+          "key": "yaw8W",
+          "rectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alphaGT128BBox": [
+            47,
+            82,
+            537,
+            498
+          ],
+          "coreMinMargin": 47,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "d9c06f5e8a4180150b50b65c4cd31dabb73013eaf11eff72b716041b79b3f2aa"
+        }
+      ],
+      "status": "held-targeted-repair",
+      "observation": {
+        "cells": [
+          "yaw8E",
+          "yaw8W"
+        ],
+        "reason": "Nominal W shows sliding-door vertical seams and handle on physical RIGHT, which must be plain after explicit LEFT-door adoption; nominal E does not clearly carry the required LEFT sliding handle/rail. Dish front/back classes are otherwise coherent.",
+        "repair": "E primary LEFT side has one sliding door/handle/rail; W primary RIGHT side plain. Preserve dish and all other equipment."
+      },
+      "alphaAssessment": "No alpha>128 pixels touch any cell boundary."
+    },
+    {
+      "key": "supply-cart",
+      "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/supply-cart/yaw8-v1.png",
+      "sourceSHA256": "a96aa8be29ccbd812accec8f2809d76f1b43a7dad46e1b7c23b9bdbb35293bf9",
+      "size": [
+        1254,
+        1254
+      ],
+      "provenanceHashMatches": true,
+      "views": [
+        {
+          "key": "yaw8N",
+          "rectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alphaGT128BBox": [
+            147,
+            104,
+            456,
+            522
+          ],
+          "coreMinMargin": 104,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "c1f60d8772311f1c2c4beda4549dd567ebc38a912646902ff6f5721f1cd6f86b"
+        },
+        {
+          "key": "yaw8E",
+          "rectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alphaGT128BBox": [
+            61,
+            123,
+            557,
+            497
+          ],
+          "coreMinMargin": 61,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "805ceb371d4dacfc8437fd96a350e5fedd50ce8a0d2bfd73b91010b4c8c09631"
+        },
+        {
+          "key": "yaw8S",
+          "rectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alphaGT128BBox": [
+            156,
+            84,
+            452,
+            525
+          ],
+          "coreMinMargin": 84,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "750b9bbbf850ac5c1f552fa21e902c5c82e0870e4d733d1c5afed52ef583eead"
+        },
+        {
+          "key": "yaw8W",
+          "rectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alphaGT128BBox": [
+            40,
+            108,
+            547,
+            495
+          ],
+          "coreMinMargin": 40,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "c822d8f0deb903cc3e10c68f81316ed1771cc272e7b448e04599c63397a58e47"
+        }
+      ],
+      "status": "practical-source-candidate",
+      "observation": "Four main faces; two jugs, two coolboxes and bottle crate remain in ordinary intact rear bed; no fantasy construction.",
+      "alphaAssessment": "No alpha>128 pixels touch any cell boundary."
+    },
+    {
+      "key": "shanty-broadcast-van",
+      "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/yaw8-v1.png",
+      "sourceSHA256": "e17b9c05095ff723e2f8dbd937f5dfea941918f2c7863d7bbeedbf7ad2857c10",
+      "size": [
+        1254,
+        1254
+      ],
+      "provenanceHashMatches": true,
+      "views": [
+        {
+          "key": "yaw8N",
+          "rectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "alphaGT128BBox": [
+            124,
+            96,
+            463,
+            545
+          ],
+          "coreMinMargin": 82,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "300d0ab7f6ca7ca454eb97c5e781586989c6b06e84db223e5b0f6f422ee7446c"
+        },
+        {
+          "key": "yaw8E",
+          "rectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "alphaGT128BBox": [
+            33,
+            84,
+            550,
+            510
+          ],
+          "coreMinMargin": 33,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "091e762e5dc51bad99724869185adb63a1c30f4a0f06645eeb6a2f0a21386b8a"
+        },
+        {
+          "key": "yaw8S",
+          "rectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "alphaGT128BBox": [
+            165,
+            4,
+            460,
+            483
+          ],
+          "coreMinMargin": 4,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "7ee5047ad39565bc4bcd6fcc9f1358286da9f6e365806a827239548eb5e4c722"
+        },
+        {
+          "key": "yaw8W",
+          "rectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "alphaGT128BBox": [
+            40,
+            64,
+            544,
+            448
+          ],
+          "coreMinMargin": 40,
+          "opaqueBoundaryPixels": 0,
+          "rgbaSHA256": "eda1c7aec2a1ae9214a14d4fbd7ed3d75fb6f82a6c81eee6506ae979540a2f7d"
+        }
+      ],
+      "status": "held-targeted-repair",
+      "observation": {
+        "cells": [
+          "yaw8E",
+          "yaw8S",
+          "yaw8W"
+        ],
+        "reason": "Roof cable-reel axis changes relative to van: S rear shows circular end disc; E/W dominant sides show coiled barrel. Fixed transverse-X axle requires N/S barrel and E/W circular end discs. N is consistent.",
+        "repair": "Keep transverse-X axle. S rear sees barrel with discs left/right; E/W side sees circular reel end faces. HVAC, front aerial and RIGHT-only equipment hatch stay fixed."
+      },
+      "alphaAssessment": "No alpha>128 pixels touch any cell boundary."
+    }
+  ],
+  "unapproved": [
+    "Exact painted camera angles",
+    "Native pixels-per-metre and anchors",
+    "Cross-view scale, especially isolated1254 vs sheet627 crops",
+    "Final zero-exterior alpha cleanup"
+  ]
+}

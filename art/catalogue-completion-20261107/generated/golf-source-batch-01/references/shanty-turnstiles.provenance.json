@@ -1,0 +1,27 @@
+{
+  "id": "newprop:shanty-turnstiles",
+  "name": "Shanty turnstiles",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-turnstiles.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+  "sourceSheetSHA256": "55e349d7c48c5558d128dd79e889687014df8a87f51b6d541580dbddca24c8cb",
+  "referenceSHA256": "a12f90b950a19079aa4da8ac04ab57227caee8baf0d61488e4bec8312b94971d",
+  "sourcePixelRectXYWH": [
+    33,
+    712,
+    642,
+    477
+  ],
+  "originalCellLabel": "bottom left",
+  "referenceSize": [
+    642,
+    477
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Four primitive timber admission lanes with tarps, ropes and arrow boards. Preserve four-lane function, replace fantasy build with practical manual turnstiles plus one wide accessible gate. Arrows/text are not identity-critical.",
+  "sourceOnlyNotReleaseProof": true
+}

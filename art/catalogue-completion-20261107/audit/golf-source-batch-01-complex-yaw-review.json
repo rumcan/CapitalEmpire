@@ -1,0 +1,425 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "scope": "Source-only functional/layout/occlusion/alpha QA of4complex budget yaw sheets, checked against fixed technical guide and budget-normal-v2 identity. No exact-angle metrology.",
+  "complete": true,
+  "sheetsReviewed": 4,
+  "sourceViews": 16,
+  "practicalSourceCandidates": 3,
+  "targetedRepairFamilies": 1,
+  "targetedRepairFrames": [
+    {
+      "jobId": "golf-source-01-03-broadcast-compound",
+      "yaw8": [
+        "E",
+        "S"
+      ],
+      "normalV2": [
+        "SW",
+        "NW"
+      ],
+      "repair": "Keep smooth curved parabolic dish and one fixed mount/aim; no rectangular aerial arrays. Preserve rest of compound."
+    }
+  ],
+  "sourceAlphaPolicy": "True RGBA and zero-alpha areas present. Low-alpha1–8exterior residue can persist; individual contact shadows remain. These are source candidates, not final alpha masks or runtime approvals.",
+  "rows": [
+    {
+      "jobId": "golf-source-01-02-tv-camera-tower",
+      "review": "PASS-practical-source-candidate",
+      "notes": [
+        "N shows front lens; S shows plain camera rear; E/W show distinct opposite side ends with fixed aim.",
+        "Ladder stays front/right with natural thin far-edge appearances; case stays rear/right, not moved for visibility.",
+        "One tall four-leg tower with unchanged platform/guardrail identity across poses."
+      ],
+      "repairFrames": [],
+      "nativeSource": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-yaw8-v1.png",
+        "sha256": "6ccf159eb2ca3eb25d46d9da525815b3f789267b62271d6deaab2f863ae36ca7",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "originalHashMatchesProvenance": true,
+        "zeroAlphaFraction": 0.7085613119357768,
+        "faintAlpha1to8Fraction": 0.06161845094103971,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "N",
+            "sourceRect": {
+              "left": 0,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              201,
+              61,
+              423,
+              562
+            ],
+            "minimumCoreMargin": 61,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "E",
+            "sourceRect": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              202,
+              65,
+              419,
+              558
+            ],
+            "minimumCoreMargin": 65,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "S",
+            "sourceRect": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              199,
+              46,
+              423,
+              560
+            ],
+            "minimumCoreMargin": 46,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "W",
+            "sourceRect": {
+              "left": 627,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              203,
+              56,
+              424,
+              558
+            ],
+            "minimumCoreMargin": 56,
+            "coreBoundaryPixels": 0
+          }
+        ]
+      },
+      "referenceAuthority": "guides/yaw8-world-v1.png",
+      "numericalAngleCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-03-broadcast-compound",
+      "review": "HOLD-targeted-dish-identity-repair-E-S;layout-pass",
+      "notes": [
+        "Two period vehicles and generator/bench/reel maintain fixed compound layout; truck/van fronts and rears remain distinct.",
+        "N/W preserve smooth parabolic dish; E/S instead draw rectangular lattice/Yagi-like aerial panels and rods. An oblique smooth dish can be thin but cannot become this hardware.",
+        "Preserve all vehicles, door/steps, HVAC, generator, bench/reel positions; correct ONLY E/S roof dish shape while keeping guide camera/aim/mount.",
+        "Closer detail review also identifies the same hardware substitution in normal-v2 SW/NW; prior edge-on interpretation is superseded."
+      ],
+      "repairFrames": [
+        "E",
+        "S"
+      ],
+      "nativeSource": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-yaw8-v1.png",
+        "sha256": "968167fcd5a050444a7ea6e17c7f024bd1f5a38be1c966b4a508fbae3e2178d7",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "originalHashMatchesProvenance": true,
+        "zeroAlphaFraction": 0.7181097044481582,
+        "faintAlpha1to8Fraction": 0.06676879599317273,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "N",
+            "sourceRect": {
+              "left": 0,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              75,
+              151,
+              519,
+              457
+            ],
+            "minimumCoreMargin": 75,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "E",
+            "sourceRect": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              104,
+              162,
+              513,
+              480
+            ],
+            "minimumCoreMargin": 104,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "S",
+            "sourceRect": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              107,
+              185,
+              527,
+              458
+            ],
+            "minimumCoreMargin": 100,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "W",
+            "sourceRect": {
+              "left": 627,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              80,
+              158,
+              526,
+              471
+            ],
+            "minimumCoreMargin": 80,
+            "coreBoundaryPixels": 0
+          }
+        ]
+      },
+      "referenceAuthority": "guides/yaw8-world-v1.png",
+      "numericalAngleCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-06-four-lane-entrance",
+      "review": "PASS-practical-source-candidate",
+      "notes": [
+        "Exactly three manual turnstiles and one wider accessible gate, with side poses naturally occluding some lane hardware.",
+        "Accessible gate remains same physical end: right in N and left in S; rear sign backing genuinely differs from front blank face.",
+        "No concrete slab, no added shelter body; only real posts/feet and transparent lane openings."
+      ],
+      "repairFrames": [],
+      "nativeSource": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-yaw8-v1.png",
+        "sha256": "d5af8e9c0d367357beb653cce9d76b3d0b0ee8058118c4e0f3af7dcb1d1fdc4d",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "originalHashMatchesProvenance": true,
+        "zeroAlphaFraction": 0.36156706831599805,
+        "faintAlpha1to8Fraction": 0.46537523306599105,
+        "outerBorderAlphaMax": 4,
+        "cells": [
+          {
+            "view": "N",
+            "sourceRect": {
+              "left": 0,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              23,
+              187,
+              605,
+              455
+            ],
+            "minimumCoreMargin": 22,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "E",
+            "sourceRect": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              160,
+              101,
+              460,
+              560
+            ],
+            "minimumCoreMargin": 67,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "S",
+            "sourceRect": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              25,
+              196,
+              603,
+              445
+            ],
+            "minimumCoreMargin": 24,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "W",
+            "sourceRect": {
+              "left": 627,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              154,
+              93,
+              453,
+              549
+            ],
+            "minimumCoreMargin": 78,
+            "coreBoundaryPixels": 0
+          }
+        ]
+      },
+      "referenceAuthority": "guides/yaw8-world-v2.png",
+      "numericalAngleCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-09-main-leaderboard",
+      "review": "PASS-practical-source-candidate",
+      "notes": [
+        "N is scoregrid/front deck; S is rear backing/braces; E/W show distinct narrow sides.",
+        "One +Xstair stays fixed: front/right N, far end E, naturally mostly hidden S, near end W. It does not teleport to visible end.",
+        "Three-part cap and two green flags remain consistent; no copied front grid on rear."
+      ],
+      "repairFrames": [],
+      "nativeSource": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-yaw8-v1.png",
+        "sha256": "8cd4549a54aa38f164dad9add6fccd0371bdf608a97c82ce8dc49655eb0376eb",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "originalHashMatchesProvenance": true,
+        "zeroAlphaFraction": 0.5528967590790809,
+        "faintAlpha1to8Fraction": 0.2039877495682079,
+        "outerBorderAlphaMax": 2,
+        "cells": [
+          {
+            "view": "N",
+            "sourceRect": {
+              "left": 0,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              95,
+              115,
+              555,
+              532
+            ],
+            "minimumCoreMargin": 72,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "E",
+            "sourceRect": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              170,
+              72,
+              454,
+              575
+            ],
+            "minimumCoreMargin": 52,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "S",
+            "sourceRect": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              101,
+              108,
+              553,
+              492
+            ],
+            "minimumCoreMargin": 74,
+            "coreBoundaryPixels": 0
+          },
+          {
+            "view": "W",
+            "sourceRect": {
+              "left": 627,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              160,
+              46,
+              465,
+              548
+            ],
+            "minimumCoreMargin": 46,
+            "coreBoundaryPixels": 0
+          }
+        ]
+      },
+      "referenceAuthority": "guides/yaw8-world-v1.png",
+      "numericalAngleCertification": false,
+      "runtimeReady": false
+    }
+  ],
+  "priorReviewCorrection": {
+    "file": "audit/golf-guided-normal-v2-and-era-house-package-review.json",
+    "reason": "Magnified native E roof detail versus technical guide resolves earlier edge-on ambiguity: hardware changed to rectangular lattice/Yagi. Normal compound SW/NW needs same targeted correction. Other four normal-v2 candidate decisions and four era-house package checks unchanged."
+  },
+  "runtimeModified": false,
+  "sourcePixelsChanged": false,
+  "testsRun": false,
+  "buildRun": false,
+  "serverStarted": false,
+  "commitCreated": false
+}

@@ -1,0 +1,183 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "CONDITIONAL-PASS-one-two-faced-corner-fridge-identity",
+  "recommended_continue_yaw_source_generation": true,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-normal-v1.png",
+    "sha256": "5cbb134479d066212c2d2ae6d8d194dd9ca2389e20caafd3bdc582c35d3796a6",
+    "bytes": 1829591
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "kiosk",
+    "eventName": "Concession kiosk",
+    "currentSpriteSubjectId": "business:fishing-rental-kiosk",
+    "newArtSubjectProposal": "golf:event-concession-kiosk",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 2,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 4,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-normal-v1.provenance.json",
+    "sha256": "cc0924d8eb65a910b4ed7d9822908c963247e269a28a97f3834c2906ae058ec6",
+    "bytes": 3810
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-normal-v1.archive.json",
+    "sha256": "75bbf68ff404c477d2fe9b36ef7a1e0cdcc2159a3b0c5caf58027b5aa75bea4a",
+    "bytes": 3898
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "9505c5f9ddf6898417ff892280d6d5a6f355372131585bfdc1398e0ba4de5ede",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    },
+    {
+      "path": "generated/golf-source-batch-01/references/green-food-kiosk.source.png",
+      "sha256": "c441fad79cf91121e2db9e58d8d0838081ea97702caded23b8e8e7f0638882e6",
+      "bytes": 652041
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.5468745628025407,
+  "outer_border_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "center_gutter_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        68,
+        85,
+        572,
+        571
+      ],
+      "minimum_core_margin_px": 55,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "8164730bca9edff31524e3c36b80e87cb072b1b2e18363318774afabc783a134",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "47b0959f9ed6e568007f8466aa37ba11737ce4b77598a5b525e86e5e64222854"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        54,
+        87,
+        559,
+        565
+      ],
+      "minimum_core_margin_px": 54,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "837defa49ececeb1d38446cf3415140d2a093681831b775af61f277d5adc7a58",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "53fc2a75ca46e8287b373a5b74fe663839d4f1e510d16f10f5ff2b6e65ad1215"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        72,
+        65,
+        564,
+        546
+      ],
+      "minimum_core_margin_px": 63,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "a290dd2ac0bdc8d7e8c86810a9e9b75b0654a84b5a972ddc3f36918ae626e190",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "efd1983899a620f3991ab70633c956976ad548b919e227f811323e0b4eb46360"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        64,
+        62,
+        561,
+        553
+      ],
+      "minimum_core_margin_px": 62,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "5606e48f147c4c50db08536bbf43fe85966d91935a09f7abadabe804d37a36d5",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "0a45b59dc2427d96363956c6c7f34a358237ee9365dc1bdc8d949de4c319ffb3"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "FrontTL/BR show snack counter and shelves; rearTR/BL show staff door.",
+    "Right-end glazing plus servingface glazing can represent ONE two-faced corner drinks fridge, and the four face combinations are consistent with that arrangement. This is not proven duplicate hardware.",
+    "Future pose prompt should explicitly retain a single corner appliance with intended glazing; verify fridge construction at release."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-normal-v1.prompt.txt",
+    "sha256": "b2fdf6fe283162ba4d7f722a467e7d19b7d1e03f020ce158d9fc36cceda57028",
+    "bytes": 2076
+  }
+}

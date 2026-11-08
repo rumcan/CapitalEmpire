@@ -293,7 +293,7 @@ export function objectScene(f: { key: string; subject: string; name: string; goo
       const condition = pic.state === 'upgraded' ? 'Upgraded' : pic.state === 'rundown' ? 'Run-down' : pic.state;
       views.push({ id: f.good === undefined ? `${id}:${pic.state}` : id, label: `${id === 'outside' ? 'Outside' : 'Inside'}${f.good === undefined && pic.state !== 'one' ? ` · ${condition}` : ''}`,
         slug: pic.slug, state: pic.state, good: pic.state === 'upgraded', pic, tiles: f.tiles ?? [],
-        line: f.good === undefined ? 'An illustrated view. This placed item has no tracked repair or upgrade condition.' : lineOf(pic.slug, pic.state) });
+        line: f.good === undefined ? 'An illustrated look at this building.' : lineOf(pic.slug, pic.state) });
     }
   }
   return card(f.name, f.good === undefined ? 'Illustrated property views' : 'Set the scene', views, want);

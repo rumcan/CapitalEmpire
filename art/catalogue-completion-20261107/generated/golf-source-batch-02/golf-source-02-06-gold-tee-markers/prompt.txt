@@ -1,0 +1,4 @@
+Exactly two gold dimpled golf-ball tee markers on small round individual mounting feet, separated by a fixed gap and aligned as one paired object. Preserve two markers and their physical relative positions across8views. Remove the baked grass/soil rectangle; no new plants or ground tile.
+Identity-preserving physical tee markers; restrained metallic finish with light wear, no fantasy decoration.
+Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.
+Keep one fixed physical object and all its feature positions across all eight source-camera views.

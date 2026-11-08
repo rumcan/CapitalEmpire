@@ -1,0 +1,56 @@
+[
+  {
+    "key": "golf-player-cart",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-5a9d1ab3-d4ac-4352-968e-1a30d0b4286d.png",
+    "target": "generated/vehicles/golf-player-cart/cardinal-v1.png",
+    "prompt": "Create four missing views of the exact dark-green two-seat golf cart in reference1. Preserve cream rigid canopy, single tan passenger bench, clear windshield, black supports, dark-green body/four wheels, and TWO golf bags mounted at the REAR, not a rear bench. Four true screen-cardinal headings in2x2: TOP LEFT FRONT(noseDOWN),TOP RIGHT RIGHT profile(noseRIGHT),BOTTOM LEFT REAR(noseUP),BOTTOM RIGHT LEFT profile(noseLEFT). Front/rear transverse axles horizontal, no diagonal corners. Orthographic camera30degrees down, same scale across four views. Real rear shows backs of bags and taillamps; no front grille/steering wheel pasted at rear. Finely painted miniature materials,1980s golf-town game style. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT. No lamps on, no people, words, logos, grid, scenery, groundplate or haze. Genuinely transparent zero-alpha background, fully opaque sprite surfaces, generous transparent margins around each complete separate vehicle.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-player-cart/normal-v1.png"
+    ],
+    "status": "native correction candidate; independent QA pending",
+    "runtime_imported": false,
+    "sha256": "8ba8796301702ac5b40e6dace1cc74eece9801e0f3eba229e3abbf87c4a43e5e",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "golf-player-cart",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-4d78c1a3-5215-4f71-821a-8eee7582629a.png",
+    "target": "generated/vehicles/golf-player-cart/yaw8-v1.png",
+    "prompt": "Create four missing views of the exact dark-green two-seat golf cart in reference1. Preserve cream rigid canopy, single tan passenger bench, clear windshield, black supports, dark-green body/four wheels, and TWO golf bags mounted at the REAR, not a rear bench. Four near-cardinal views each turned8degrees from square-on, same2x2 order FRONT / RIGHT / REAR / LEFT. Very narrow second side, groundbase transverse slope0.07027, never broad45degree corner views. Match all physical attachments and opposite side visibility. Orthographic camera30degrees down, same scale across four views. Real rear shows backs of bags and taillamps; no front grille/steering wheel pasted at rear. Finely painted miniature materials,1980s golf-town game style. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT. No lamps on, no people, words, logos, grid, scenery, groundplate or haze. Genuinely transparent zero-alpha background, fully opaque sprite surfaces, generous transparent margins around each complete separate vehicle.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-player-cart/normal-v1.png"
+    ],
+    "status": "native correction candidate; independent QA pending",
+    "runtime_imported": false,
+    "sha256": "d4e90610b9dbd0462847b5273411057540e840c2db8d600050b79e2539aba475",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-blue-sedan",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b9219601-de19-458b-82a6-73c920936f95.png",
+    "target": "generated/vehicles/town-blue-sedan/traffic8-v2.png",
+    "prompt": "Edit ONLY the background of this eight-direction blue sedan sprite atlas: remove ALL cloudy grey-blue backdrop, all external ground shadows, haze, coloured wash and alpha noise between or around the cars. Background must be genuinely completely transparent with alpha0, including the gutters and outer border. Keep the SAME EIGHT blue sedan sprites exactly in their existing4x2 positions, same viewing directions, same shapes/paint/windows/wheels/grilles/frontvsrear and native detail. Fully opaque car body/glass; antialias only at actual car edges. Do not redesign cars, move cells, change lighting, add UI or paint a checkerboard. Return a true transparent RGBA sprite sheet.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-blue-sedan/traffic8-v1.png"
+    ],
+    "status": "native correction candidate; independent QA pending",
+    "runtime_imported": false,
+    "sha256": "479f9dc347debd301d5c76aa2f25c8add753065ebb6157162bd8ba2f5c18f5c2",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "compact-bleacher-60-upgraded",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-ce2c18cb-75e4-4ef4-9e94-f93171f86093.png",
+    "target": "generated/compact-bleacher-60-upgraded/yaw8-v2.png",
+    "prompt": "Correct the third reference's4-view bleacher sheet to the exact first reference's technical model. Reference1 defines camera/geometry and EXACT SIX ROWS OF TEN CHAIRS=60SEATS. Reference2 defines the correct same-model normal45degree painted appearance. Reference3 is an erroneous edit target with only FIVE rows in its front view: that must be replaced by SIX clearly separate unobscured rows of TEN cream molded chairs each. There are SIX real seating terraces, not five, not seven. Side/back views must correspond to this same six-terrace object with wide side stair, twelve half-riser treads, six landings, darkgreen steel frame/guardrails. No roof/no people. Preserve the guide1 near-cardinal8degree yaw cameras/30degree down and2x2 order N E / S W. Finely hand-painted illustrated miniature materials matching reference2, daylight sun SCREEN UPPER RIGHT/shadows LOWER LEFT. Four complete separate sprites centred in their own quarters, same physical scale, generous margins. Fully opaque objects on genuinely zero-alpha transparent background. No groundplate, haze, outside shadow puddle, labels, text or technical lines. Count the six ten-chair rows in the front view before finishing.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/compact-bleacher-60-upgraded/guides/yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/compact-bleacher-60-upgraded/normal-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/compact-bleacher-60-upgraded/yaw8-v1.png"
+    ],
+    "status": "native correction candidate; independent QA pending",
+    "runtime_imported": false,
+    "sha256": "adad4d41642586f1cf610342b4fd6c69649dbfdf2245b8bc7e68de711cf72b36",
+    "native_bytes_preserved": true
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "id": "newprop:park-bench",
+  "name": "Park bench",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\park-bench.source.png",
+  "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+  "originalSheetSHA256": "cb1440cc480d50703ec0decdc2a284a059f2a5a20828240edc8c001c759c0c6f",
+  "referenceSHA256": "7f47f7f13847a5858b4feb068973c5ca3523bd2a5043de1a867bf1bcc82dba29",
+  "sourceRectXYWH": [
+    665,
+    96,
+    562,
+    494
+  ],
+  "sourceCell": "top right",
+  "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+  "sourceCropSize": [
+    562,
+    494
+  ],
+  "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+  "sourceMetadataCutOff": false,
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 1,
+      "hy": 1,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "runtimeDisplayPixels": [
+    128,
+    112.51
+  ],
+  "manifestHalfExtentsMetresFirstGuess": [
+    1,
+    1
+  ],
+  "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+  "visualInspection": "inspected",
+  "visualNotes": "Confirmed bench with attached tall hole-map panel. Name alone understates combined object.",
+  "sourceOnlyNotReleaseProof": true
+}

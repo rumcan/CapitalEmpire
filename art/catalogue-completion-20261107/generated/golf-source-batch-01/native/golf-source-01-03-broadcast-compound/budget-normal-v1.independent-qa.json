@@ -1,0 +1,178 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "HOLD-fixed-compound-layout-heading-drift",
+  "recommended_continue_yaw_source_generation": false,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v1.png",
+    "sha256": "cf28104d7ee1e2240c964b9b640ed80b912becfb46267cf90b8602fe6b6be87c",
+    "bytes": 1936552
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "broadcast",
+    "eventName": "Broadcast compound",
+    "currentSpriteSubjectId": "business:golf-cart-garage",
+    "newArtSubjectProposal": "golf:event-broadcast-compound",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 15,
+      "depth": 10
+    },
+    "footprintMetres": {
+      "width": 30,
+      "depth": 20
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v1.provenance.json",
+    "sha256": "4635e8a036a479788496a3965a8f98ee524014f632b630703f8ab4aec1e1dcb2",
+    "bytes": 3675
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v1.archive.json",
+    "sha256": "782db028c9f56feacb2b55a5c2226a29412a29100fe0cdbee8f1a0f969eff445",
+    "bytes": 3761
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "53f76b4d51678f91f540bf671af9c0eaa92206a158c85d7d0ef14c5f18ab1705",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.4876172961038234,
+  "outer_border_alpha_p95max": [
+    1.0,
+    1.0
+  ],
+  "center_gutter_alpha_p95max": [
+    1.0,
+    1.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        31,
+        109,
+        592,
+        563
+      ],
+      "minimum_core_margin_px": 31,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "a09fcf73dbdd72e0e3efdb60c2a5938529624b033344bc9e789d9c401750b8d8",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "5840a8392041c8f6748f4c1aa2a3149d028294efb5aa7b1b6fbbb8dde8511fb5"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        36,
+        139,
+        562,
+        561
+      ],
+      "minimum_core_margin_px": 36,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "8085459c3743b20faba0b5a70328c9752706c47b501da9a4ed76842e6d0ea4ab",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "167040f2652df6aa9085586b326dd5ddad336a7d8ae057c6c19f439db5166227"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        39,
+        74,
+        596,
+        530
+      ],
+      "minimum_core_margin_px": 31,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9683a87b4f32d4ad0841455540dad9be30f5cb01091b0a9ff97664f895e5fbaf",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "a47026793b4589e0422a937768bfd09086e8b65e9f3dc5b8fdce480111d37297"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        26,
+        82,
+        570,
+        563
+      ],
+      "minimum_core_margin_px": 26,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "30951ce53e4f41a178be86cb230c9e1acc0452f34d86e4118bf89f54519d58d8",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "19173af7510b778f13044620c9518078c5bc4924e9f9b7a97ffaf1571a33bc1e"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "Four source views show support trucks/van/generator/workbench/reel function with real vehicle rear doors.",
+    "TL large truck nose points lowerLEFT but small van nose lowerRIGHT; inBR both cabs read lowerLEFT, and rear panels similarly imply parallel headings. Relative parked vehicle heading/layout is inconsistent across rotations.",
+    "Generator/bench/reel layout also needs one-world authority; wait for root guide before further poses."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v1.prompt.txt",
+    "sha256": "e2bd6c0716dd3db640c422fb622edb56b768e849680a30ec6ab8efb806c3adb2",
+    "bytes": 2095
+  }
+}

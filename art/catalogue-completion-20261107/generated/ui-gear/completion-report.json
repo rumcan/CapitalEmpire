@@ -1,0 +1,28 @@
+{
+  "status": "40 source-only icons packaged; actual native silhouettes/alpha checks pass",
+  "selected_versions": {
+    "1980s": 1,
+    "1990s": 1,
+    "2000s": 1,
+    "2010s": 2,
+    "2020s": 1
+  },
+  "source_atlases_preserved": 6,
+  "lossless_icon_crops": 40,
+  "zip_members": 41,
+  "zip": {
+    "file": "UI-gear-1980s-2020s.zip",
+    "sha256": "0ff6d9090b3b4ebd2c98c3b50b73a98d1c618d146447d0469889b384b5f4e812",
+    "bytes": 6445692
+  },
+  "zip_includes": "40nativePNGicons +manifest only; rawatlases remain archived outside ZIP",
+  "held_source": "2010s/source-v1.png visible haze; preserved/excluded",
+  "selected_2010_cleanup": "source-v2.png native edit, no coded alpha manipulation",
+  "all_original_hashes_preserved": true,
+  "actual_cell_rectangles_recorded": true,
+  "all5atlases_reconstruct_exactly": true,
+  "runtime_imported": false,
+  "source_only": true,
+  "gameplay_stats_authored": false,
+  "owner_approval_inferred": false
+}

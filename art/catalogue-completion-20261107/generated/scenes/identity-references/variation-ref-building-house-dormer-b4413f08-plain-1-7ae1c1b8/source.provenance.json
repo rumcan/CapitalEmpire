@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-house-dormer-b4413f08-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-dormer-b4413f08-plain-1/NE.png",
+  "sourceSha256": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
+  "output": "identity-references/variation-ref-building-house-dormer-b4413f08-plain-1-7ae1c1b8/source.png",
+  "outputSha256": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
+  "width": 558,
+  "height": 507,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      558,
+      507
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-house-dormer-b4413f08-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Three dormer/porch front and plain rear gable are distinct; chimney and side windows follow quarter turns. Pixel-preserving v2 layout inspected on magenta; alpha audit passes with zero crop/split warnings."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+    "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+    "files": {
+      "NE": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
+      "SE": "6124db69e157512a2ba23eb83cda6d185407c48df695497c927b266ac38ad718",
+      "SW": "6832664a93a7944d9ac3a99f7b25de01e97d51e3cd0891e1bbb7866604e45172",
+      "NW": "2a98bde47db9192f330a059bca4ed56bcc789785d0fc976dfdf0b6c2e769f470"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.335938,
+      0.171875,
+      0.470703,
+      0.310547
+    ],
+    "crop": {
+      "left": 688,
+      "top": 352,
+      "width": 276,
+      "height": 284
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-house-dormer-b4413f08-plain-1.native.png",
+    "nativeSha256": "64ccedb77c98afd7f2bfae8c4702c32ca3c62c3c44be879fbb61a6f23159dff9"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

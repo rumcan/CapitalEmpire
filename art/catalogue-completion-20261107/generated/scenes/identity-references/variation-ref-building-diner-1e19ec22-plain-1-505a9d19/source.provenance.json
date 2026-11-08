@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-diner-1e19ec22-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-diner-1e19ec22-plain-1/NE.png",
+  "sourceSha256": "3d97ef887b307f5bcdf5f9632b8a5da7c3f239d799dbe92254fb3bae5f444bb5",
+  "output": "identity-references/variation-ref-building-diner-1e19ec22-plain-1-505a9d19/source.png",
+  "outputSha256": "3d97ef887b307f5bcdf5f9632b8a5da7c3f239d799dbe92254fb3bae5f444bb5",
+  "width": 654,
+  "height": 447,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      654,
+      447
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-diner-1e19ec22-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Native edge re-review shows complete physical silhouette; original boundary warning concerns antialias fringe only. Exact-pixel component extraction adds ample transparent padding, preserving all nonzero source RGBA tuples. All4 views, magenta post-repack composite, theme and clean alpha audit reviewed."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-diner-1e19ec22-plain:1",
+    "version": "variation-ref-building-diner-1e19ec22-plain-1-4views-v2",
+    "files": {
+      "NE": "3d97ef887b307f5bcdf5f9632b8a5da7c3f239d799dbe92254fb3bae5f444bb5",
+      "SE": "431cfda3f32d1d096471e7daa7f1a18f00777925b4ba8718b25a87cae6d0a700",
+      "SW": "5d9adbf0596d08418d0267fb9618f5e59cafe982f64db92b1352ba502019b832",
+      "NW": "7fc99993eb3190928994f1ca6a68bf4c231b9ceb9a9d50b51c4623e3750583cc"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.625,
+      0.414063,
+      0.805664,
+      0.593262
+    ],
+    "crop": {
+      "left": 1280,
+      "top": 848,
+      "width": 370,
+      "height": 367
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-diner-1e19ec22-plain-1.native.png",
+    "nativeSha256": "a55825b383ae81a2c22c15794dedd57687890c1c9a5ae5d28d9a20ef24009bc2"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

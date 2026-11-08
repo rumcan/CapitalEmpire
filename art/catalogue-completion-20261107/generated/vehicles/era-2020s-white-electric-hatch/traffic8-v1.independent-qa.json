@@ -1,0 +1,179 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:24.342574+00:00",
+  "review_result": "HOLD-camera-consistency",
+  "identity_direction_alpha_result": "PASS candidate subject to separate camera hold",
+  "source": {
+    "path": "generated/vehicles/era-2020s-white-electric-hatch/traffic8-v1.png",
+    "sha256": "664d479618cc67c1b2e5983c7ebea0ba2adc7d7642fc9cf5c02e46048892c58c",
+    "bytes": 1379614
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.6146454677294098,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "actual_screen_nose": "lower-left",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "native_core_margin_pixels": 21,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "88b42487bcb303bf2afb8d8765869981fe8916280f6b11f43c8dfaaaef5be4c2"
+    },
+    {
+      "cell": 1,
+      "actual_screen_nose": "down",
+      "reference_rect_ltrb": [
+        443,
+        0,
+        883,
+        443
+      ],
+      "native_core_margin_pixels": 56,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 5,
+      "rgba_rectangle_sha256": "40bed94153aa38be4777908e6e354cf83647a7c908c12154a3393d43edbb9dac"
+    },
+    {
+      "cell": 2,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        883,
+        0,
+        1327,
+        443
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "ca9875d8f3e2150e6a21d10875408b7d88e23e0fffa8e20d619baa97a9c32690"
+    },
+    {
+      "cell": 3,
+      "actual_screen_nose": "right",
+      "reference_rect_ltrb": [
+        1327,
+        0,
+        1774,
+        443
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 7,
+      "rgba_rectangle_sha256": "3c6f72e0485782cf4dbba3bd3b29f16939f4729883b74511df1b994292d1f0f3"
+    },
+    {
+      "cell": 4,
+      "actual_screen_nose": "upper-right",
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "native_core_margin_pixels": 19,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "807ae7badf839c68a49b74483ea2f07f87341cdc06502101b66e95190cff3ffc"
+    },
+    {
+      "cell": 5,
+      "actual_screen_nose": "up",
+      "reference_rect_ltrb": [
+        443,
+        443,
+        879,
+        887
+      ],
+      "native_core_margin_pixels": 79,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 2,
+      "rgba_rectangle_sha256": "70bc3f2b22fb50b1daa3db31c451a083797067e20bfd832fbb38319ff112fdde"
+    },
+    {
+      "cell": 6,
+      "actual_screen_nose": "upper-left",
+      "reference_rect_ltrb": [
+        879,
+        443,
+        1330,
+        887
+      ],
+      "native_core_margin_pixels": 3,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 5,
+      "rgba_rectangle_sha256": "d1c474a85284091c34d62627b68c337acd907dfccb2b17d26233acf9a3ebe457"
+    },
+    {
+      "cell": 7,
+      "actual_screen_nose": "left",
+      "reference_rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "native_core_margin_pixels": 3,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 4,
+      "rgba_rectangle_sha256": "be86a9b0a43f181d220e0b9a085ed32b83895ea6f41500bd413c97d4a7afc1f5"
+    }
+  ],
+  "all_eight_distinct_nose_directions_present": true,
+  "side_cell_order_is_remappable": false,
+  "native_core_clipped_at_canvas_border": false,
+  "actual_clear_gutter_crops_reference_only": [
+    [
+      0,
+      443,
+      883,
+      1327,
+      1774
+    ],
+    [
+      0,
+      443,
+      879,
+      1330,
+      1774
+    ]
+  ],
+  "source_crops_performed": false,
+  "notes": [
+    "HOLD visually inconsistent elevation: col4 side profiles show nearly level body/roof and near-circular side wheels; diagonal/front/rear cells show substantially more top planes. Need shared fixed30degree camera proof or native correction, not relabelling."
+  ],
+  "camera_measurement_scope": "Visual inconsistency established; exact percell camera degrees not numerically certified. Do not present approximate appearance as an8degree/30degree measured proof.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_only": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/era-2020s-white-electric-hatch/traffic8-v1.prompt.txt",
+    "sha256": "07298b9bda02a4fb1a1c58cec422675acc74c4909afe28a1aa8836d6e0bc89d2",
+    "bytes": 1829
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/era-2020s-white-electric-hatch/traffic8-v1.provenance.json",
+    "sha256": "cdb384d19379b6f4151771bb2c147b70aaf21c3fcea06cc4ca033069445c505b",
+    "bytes": 2533
+  }
+}

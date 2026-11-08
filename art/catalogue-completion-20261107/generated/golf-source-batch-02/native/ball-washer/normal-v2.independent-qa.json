@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:40:14.741147+00:00",
+  "review_result": "PASS-source-candidate-open-lid-fixed-sides",
+  "four_actual_corners_visually_verified": true,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+    "sha256": "cd8d39dbb650303dd4e705561625566c2ff55fb415ecbb95f90fb86f025ed9aa",
+    "bytes": 1126333
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.provenance.json",
+    "sha256": "2fa90931eb156278354309a4c7500ad4d964e2c4cfafe032db2ed31ede031f12",
+    "bytes": 2715
+  },
+  "exact_prompt_utf8_sha256": "873460e0993034cbe8654bb1bafb16779748b9558f6643e9d427c43de6c736e6",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-washer/guides/normal-world-v1.png",
+      "sha256": "708837111f417beef86df77de7f417880f9eb760b603e2d3581ee8bc9b60534b",
+      "bytes": 36706
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/ball-washer/normal-v1.png",
+      "sha256": "bf6e8489caa34c7090034ad957fb8a88de49e1e3fd80337d6d51d04961ae2172",
+      "bytes": 1262352
+    }
+  ],
+  "zero_alpha_fraction": 0.7266285366889749,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "nominal_10px_center_gap_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": "TL",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 22,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "4bfabba5dae0694e4daef6455d41733387852c4d674cea0a2414309d923ca1e9"
+    },
+    {
+      "cell": "TR",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 32,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "891d4efa9739697c6f07db59dd3f29656a17fa837a6e93925e5048edbd46f7d5"
+    },
+    {
+      "cell": "BL",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 20,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "1986efde32d05902ff844b061c952f838c1595a2d682267dcc482ee93ddb4795"
+    },
+    {
+      "cell": "BR",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 17,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "e7ae530654bb49adae99a1064b3bdf47709723da708ac0168f6e8c774a38b111"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Open lid remains open in all four cells; crank and towel occur on opposite fixed physical sides. Four main orientations visually distinguishable. Numerical camera angle remains unverified."
+  ],
+  "alpha_policy": "Actual alpha measured. Hidden RGB at zero/very low alpha is not visible haze. No alpha reconstruction, keying or pixel edits.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

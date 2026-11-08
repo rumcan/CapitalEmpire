@@ -1,0 +1,67 @@
+{
+  "priority": 7,
+  "jobId": "golf-vehicle-01-07-satellite-van",
+  "runtimeSubjectId": "newprop:satellite-van",
+  "runtimeName": "Satellite van",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\satellite-van.source.png",
+  "sourceProvenance": {
+    "runtimeSubjectId": "newprop:satellite-van",
+    "runtimeName": "Satellite van",
+    "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\satellite-van.source.png",
+    "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "sourceSheetSHA256": "0841140a75a9e5e3b1b7a66bfed4c684cb97cb67614672042402223bf4882f80",
+    "cropRectXYWH": [
+      44,
+      598,
+      566,
+      629
+    ],
+    "sourceCell": "bottom left",
+    "pngSHA256": "a54c9edffaa4b6981591114eada2d9942b5b1ecaaf953e6ee1527b096a158f16",
+    "rgbaSHA256": "dd2d9985d8093273f5c3a8a27c28de56f642c4e8dd4969590820c78bc3b779ae",
+    "cropPixels": [
+      566,
+      629
+    ],
+    "sourceMetadataCutOff": false,
+    "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+    "visualInspection": "inspected native crop",
+    "actualIdentityNotes": "Confirmed roof-dish panel van with modern later-era cab. Raw native crop contains small detached neighbour gold foot near upper edge; ignore that fragment.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 2.5,
+      "hy": 2.5,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "sourceDisplayPixels": [
+    320,
+    355.62
+  ],
+  "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+  "functionalBrief": "One cream/green uplink PANEL VAN with large fixed roof satellite dish on rear roof, roof HVAC box just forward of dish, two roof antennas, sliding cargo side door and twin rear cargo doors. Dish azimuth/elevation fixed to the vehicle, never turned toward viewer independently. No driver, stairs or cable compound included.",
+  "conditionAndEraBrief": "Preserve actual later-era rounded panel-van identity for later-era source art. For a1985-specific variant, request separate older boxy cab design rather than calling this modern van period-correct. Ignore tiny detached gold neighbour fragment at upper source edge.",
+  "ordinaryBudgetRedesignRequired": false,
+  "originalAuditCounts": {
+    "normal": 0,
+    "yaw8": 0
+  },
+  "nativeGeneratedByThisBrief": false,
+  "exactEightImagesAlreadyProvenForThisStableID": false,
+  "existingNormal4UsableRefs": 0,
+  "generatedCoreReuseClaimed": false,
+  "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+  "sourcePlan": {
+    "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+    "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+    "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+    "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+  },
+  "ownerApproved": false,
+  "runtimeIntegrated": false
+}

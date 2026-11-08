@@ -1,0 +1,2186 @@
+{
+  "looks": [
+    {
+      "look_id": "person:3d:base_kid",
+      "actual_runtime_look": {
+        "id": "person:3d:base_kid",
+        "size": "adult",
+        "w": 80,
+        "h": 110.5,
+        "ax": 40,
+        "ay": 105.5,
+        "m": 1.38,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:base_kid",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\base_kid\\preview.png",
+        "sha256": "bf5c73c3836654cb419df2fb99d22ba5e41b465fccb79804665ec82610de8a7f",
+        "bytes": 1441048
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\base_kid\\sheet.json",
+        "sha256": "be6aa862190880959385eeaee5ec279d3f23cb17864715ac087d4d15a0f2f737",
+        "bytes": 647
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 221
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_kid\\identity-idle-pair.native.png",
+        "sha256": "bf55da29bac67cbc67461380800f5668a83e15ecd44bcd17a59acd5f52ec5c6f",
+        "bytes": 37707
+      },
+      "dimensions": [
+        320,
+        221
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            221
+          ],
+          "dimensions": [
+            160,
+            221
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_kid\\idle-S.native.png",
+            "sha256": "0b2ebcf284fd9ffe1e275edf954279de83f986e67f84740fd37f45d99cfba133",
+            "bytes": 20338
+          },
+          "pixel_sha256": "9d40c23acc41c17e8090929b139f53b8e7e23c8ea010cf50c27f08e959b3efbb"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            221,
+            160,
+            442
+          ],
+          "dimensions": [
+            160,
+            221
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_kid\\idle-SW.native.png",
+            "sha256": "f477ecc490c91152a6039a949a0515cd0f98514404dc80eacf5799dc28598fa9",
+            "bytes": 18436
+          },
+          "pixel_sha256": "0f0194de920dc9d86b27a325e5c6b4783e4b98b5cb60a82b412bc0f21d41fd9f"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "person:3d:base_man",
+      "actual_runtime_look": {
+        "id": "person:3d:base_man",
+        "size": "adult",
+        "w": 80,
+        "h": 136,
+        "ax": 40,
+        "ay": 131,
+        "m": 1.78,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:base_man",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\base_man\\preview.png",
+        "sha256": "f66d57a29ff518d9e4a6221db17f67fb6bc2a016094e1743615d8a2219cc183a",
+        "bytes": 1836760
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\base_man\\sheet.json",
+        "sha256": "816bc686da587aa1545497952a6da30c37be54fb779a28bd196b4e2b6675ef26",
+        "bytes": 647
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 272
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_man\\identity-idle-pair.native.png",
+        "sha256": "9533869d840d8d03cddd086b2a244cee29e2ccae21a306e15cf0507b44b7f6e6",
+        "bytes": 47374
+      },
+      "dimensions": [
+        320,
+        272
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            272
+          ],
+          "dimensions": [
+            160,
+            272
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_man\\idle-S.native.png",
+            "sha256": "af1f02fc8a78efdcf3a681c3479464a6c5b4f3ba61fcc97273f85c0fbd414019",
+            "bytes": 25513
+          },
+          "pixel_sha256": "3a344fa6ae82e1b1ea09727c80949e5cb42a7f12d53d12f0a077e93a8cf61c02"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            272,
+            160,
+            544
+          ],
+          "dimensions": [
+            160,
+            272
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_man\\idle-SW.native.png",
+            "sha256": "7f8315ef5381ac908f0b6756a61b02963363ea8d2582bd961591481cdc3947e1",
+            "bytes": 23114
+          },
+          "pixel_sha256": "ba088490618bb27014507c5f2a4f1b5bc9a20600a9fcbf828bb7ad3418f37fbf"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "person:3d:base_woman",
+      "actual_runtime_look": {
+        "id": "person:3d:base_woman",
+        "size": "adult",
+        "w": 80,
+        "h": 128,
+        "ax": 40,
+        "ay": 123,
+        "m": 1.65,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:base_woman",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\base_woman\\preview.png",
+        "sha256": "cb84ca591fcc44a1182fff3b3c94069e2f0f36fc259278c508ad236e8d02a5df",
+        "bytes": 1547856
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\base_woman\\sheet.json",
+        "sha256": "fd691b4a7f556b5b7af4d643c8ea48c0571f85f96fedd26a5ba157a138ca4576",
+        "bytes": 653
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 256
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_woman\\identity-idle-pair.native.png",
+        "sha256": "1534eb2dab80e3e198b61e9a3eab40b4f8d836a737f6cff579f793fbaaae7729",
+        "bytes": 41422
+      },
+      "dimensions": [
+        320,
+        256
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            256
+          ],
+          "dimensions": [
+            160,
+            256
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_woman\\idle-S.native.png",
+            "sha256": "262ff7f3785ce43436a1b4eed7c2f529d8d1c6c30b94b01b970643133f544588",
+            "bytes": 22588
+          },
+          "pixel_sha256": "2f63f60a3f1f4c452b3a5b3f37f3adff6e143bf08877f9f22774cddbf964e87f"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            256,
+            160,
+            512
+          ],
+          "dimensions": [
+            160,
+            256
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_woman\\idle-SW.native.png",
+            "sha256": "f51c5481a089f64ce5069fa2c14a51c2c4554410f694cda0d5cc00f041db1d16",
+            "bytes": 20062
+          },
+          "pixel_sha256": "46e87ec50254d1cbc173d45e555c62163176c504672170d332067b8f398d1627"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "person:3d:town_k_boy",
+      "actual_runtime_look": {
+        "id": "person:3d:town_k_boy",
+        "size": "adult",
+        "w": 80,
+        "h": 108.5,
+        "ax": 40,
+        "ay": 103.5,
+        "m": 1.35,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_k_boy.png",
+        "sha256": "85cb55a7ca3b71451440c631e9fcb9f71228d6b082855ac2dfccd4a8e023fafa",
+        "bytes": 1059490
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_k_boy\\identity-source.png",
+        "sha256": "85cb55a7ca3b71451440c631e9fcb9f71228d6b082855ac2dfccd4a8e023fafa",
+        "bytes": 1059490
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "person:3d:town_k_girl",
+      "actual_runtime_look": {
+        "id": "person:3d:town_k_girl",
+        "size": "adult",
+        "w": 80,
+        "h": 104,
+        "ax": 40,
+        "ay": 99,
+        "m": 1.28,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_k_girl.png",
+        "sha256": "ad0120a78c99ee7763d0939580e938462fc6ea8032604632d941d90ca817e55f",
+        "bytes": 999124
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_k_girl\\identity-source.png",
+        "sha256": "ad0120a78c99ee7763d0939580e938462fc6ea8032604632d941d90ca817e55f",
+        "bytes": 999124
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "person:3d:town_m_business",
+      "actual_runtime_look": {
+        "id": "person:3d:town_m_business",
+        "size": "adult",
+        "w": 80,
+        "h": 136,
+        "ax": 40,
+        "ay": 131,
+        "m": 1.78,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:town_m_business",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_business\\preview.png",
+        "sha256": "6c1297dbdb4efb73dc77a7f489c220d49b66851693cfdd444ff00d6334daa22f",
+        "bytes": 1856277
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_business\\sheet.json",
+        "sha256": "81cf06d53ff5f0b2a8255eca9250f566a4d6e4b38eaadec9a83aac94287f501d",
+        "bytes": 668
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 272
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_business\\identity-idle-pair.native.png",
+        "sha256": "429d24f86097c5d7369751871654b0c138d55844f17816381be0b8d0843f6dc4",
+        "bytes": 48306
+      },
+      "dimensions": [
+        320,
+        272
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            272
+          ],
+          "dimensions": [
+            160,
+            272
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_business\\idle-S.native.png",
+            "sha256": "94088fe6441561d8f9af84d3a68963ce99654fdc1c6656ed85990cb1f822cc8b",
+            "bytes": 25846
+          },
+          "pixel_sha256": "04c3dbea2087e4d5991195103eaf47100ea89f121b315c02b6ec830aa182b567"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            272,
+            160,
+            544
+          ],
+          "dimensions": [
+            160,
+            272
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_business\\idle-SW.native.png",
+            "sha256": "0f05a3ac8d31be2f06f1f856d23b6e74e773210fed03879e7525ab6ef715021c",
+            "bytes": 23596
+          },
+          "pixel_sha256": "bae2499651bf8126e5da38d39bff9acdd6bda2a7e7206082cb719863523b923f"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "person:3d:town_m_elder",
+      "actual_runtime_look": {
+        "id": "person:3d:town_m_elder",
+        "size": "adult",
+        "w": 80,
+        "h": 132.5,
+        "ax": 40,
+        "ay": 127.5,
+        "m": 1.72,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:town_m_elder",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_elder\\preview.png",
+        "sha256": "8187b5134a8de325e4c4a09e6a466888b3f29eeab00075423f7213e6a8408f90",
+        "bytes": 2117811
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_elder\\sheet.json",
+        "sha256": "cc73e5deac96e85350fde0b72e656616df85bb1b8406bbd5340d61ea10bc5080",
+        "bytes": 662
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 265
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_elder\\identity-idle-pair.native.png",
+        "sha256": "62b2a3f8eadf74d244e4e491ff0c7e5d40a5f8649eecf30c036f42ab2a6b07ab",
+        "bytes": 50673
+      },
+      "dimensions": [
+        320,
+        265
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            265
+          ],
+          "dimensions": [
+            160,
+            265
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_elder\\idle-S.native.png",
+            "sha256": "532215b2192e4e3ee36e447a0da6075ebfd9bed044c8294435f78cef2af95a2f",
+            "bytes": 27309
+          },
+          "pixel_sha256": "d2669b81a8ecf872211d13ed470d99a1e6215e38c4127fb979ee83750b03a923"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            265,
+            160,
+            530
+          ],
+          "dimensions": [
+            160,
+            265
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_elder\\idle-SW.native.png",
+            "sha256": "62df8410e608cc491d0585d278735054dc26debc992bc4166108162a84626d23",
+            "bytes": 24421
+          },
+          "pixel_sha256": "e425939a53834a126c773c30a3f9af51e6365f874635d27b418e353fda33ed65"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "person:3d:town_m_jogger",
+      "actual_runtime_look": {
+        "id": "person:3d:town_m_jogger",
+        "size": "adult",
+        "w": 80,
+        "h": 138.5,
+        "ax": 40,
+        "ay": 133.5,
+        "m": 1.82,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_m_jogger.png",
+        "sha256": "82a64f9be091ced0da00ad77f748ba23f35abd5cc4431fc572d550962ce7d0ec",
+        "bytes": 985998
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_jogger\\identity-source.png",
+        "sha256": "82a64f9be091ced0da00ad77f748ba23f35abd5cc4431fc572d550962ce7d0ec",
+        "bytes": 985998
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "person:3d:town_m_mechanic",
+      "actual_runtime_look": {
+        "id": "person:3d:town_m_mechanic",
+        "size": "adult",
+        "w": 80,
+        "h": 137.5,
+        "ax": 40,
+        "ay": 132.5,
+        "m": 1.8,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:town_m_mechanic",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_mechanic\\preview.png",
+        "sha256": "65d45c66a821d99fc7331fef1768f9afa8146efc5195241becb8d59b3bd8553b",
+        "bytes": 2033608
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_mechanic\\sheet.json",
+        "sha256": "17f4fd48379157c47a4a3f5cb34566b696ac1112d1ad9795b429cd14ab1e3eb8",
+        "bytes": 667
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 275
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_mechanic\\identity-idle-pair.native.png",
+        "sha256": "da2d5c1f12a5b45a91cf8c8d20103d428b521b9b18000b3f2cd775636e5afff4",
+        "bytes": 53164
+      },
+      "dimensions": [
+        320,
+        275
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            275
+          ],
+          "dimensions": [
+            160,
+            275
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_mechanic\\idle-S.native.png",
+            "sha256": "3179eea16b622d7a5b2eb93909732771d12a070c9a34f1af6c3afe46f36eaf45",
+            "bytes": 28796
+          },
+          "pixel_sha256": "5d79b45d67aa94333b32ce4a5c3f0392b53fecce5bbf681dd30dd09876d81e79"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            275,
+            160,
+            550
+          ],
+          "dimensions": [
+            160,
+            275
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_mechanic\\idle-SW.native.png",
+            "sha256": "3ed54dc2fec01d8fdccec40e44caf672e8c6e443dfac18756be4eb21e956ffc1",
+            "bytes": 25556
+          },
+          "pixel_sha256": "1891f45d8c3cb15d4c4c708a98cb111aa6f79b64028089f2b455d59bfc538e67"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "person:3d:town_m_postman",
+      "actual_runtime_look": {
+        "id": "person:3d:town_m_postman",
+        "size": "adult",
+        "w": 80,
+        "h": 136,
+        "ax": 40,
+        "ay": 131,
+        "m": 1.78,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_m_postman.png",
+        "sha256": "2b9adaf99e4280aa01b4b4c65932cdae0088b0ce525e4487d816bd9bb6d98bde",
+        "bytes": 1012133
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_postman\\identity-source.png",
+        "sha256": "2b9adaf99e4280aa01b4b4c65932cdae0088b0ce525e4487d816bd9bb6d98bde",
+        "bytes": 1012133
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "person:3d:town_w_elder",
+      "actual_runtime_look": {
+        "id": "person:3d:town_w_elder",
+        "size": "adult",
+        "w": 80,
+        "h": 123.5,
+        "ax": 40,
+        "ay": 118.5,
+        "m": 1.58,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_w_elder.png",
+        "sha256": "c0fd9851e742dacd9aa84eecf0dec86c78ddbe1f2e2eca766e1318fa6217fecb",
+        "bytes": 985075
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_elder\\identity-source.png",
+        "sha256": "c0fd9851e742dacd9aa84eecf0dec86c78ddbe1f2e2eca766e1318fa6217fecb",
+        "bytes": 985075
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "person:3d:town_w_nurse",
+      "actual_runtime_look": {
+        "id": "person:3d:town_w_nurse",
+        "size": "adult",
+        "w": 80,
+        "h": 128,
+        "ax": 40,
+        "ay": 123,
+        "m": 1.65,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:town_w_nurse",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_w_nurse\\preview.png",
+        "sha256": "3df7cb261aa0d2e3ec8fe0f1751153912703ea49aae9d5e533e4a858881d0d81",
+        "bytes": 1378586
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_w_nurse\\sheet.json",
+        "sha256": "d7bce7814edd1b54121fad13a8f4ad8fdbe37d2af5e0a9f083e52946e7c7d6bc",
+        "bytes": 659
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 256
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_nurse\\identity-idle-pair.native.png",
+        "sha256": "a9023482c70d0113b886aaeb217ca3b40a418d11bb5976e807a66a056834807b",
+        "bytes": 35045
+      },
+      "dimensions": [
+        320,
+        256
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            256
+          ],
+          "dimensions": [
+            160,
+            256
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_nurse\\idle-S.native.png",
+            "sha256": "7efd724343e1e744595025b7d5897d6869e8c6f2bbef7bbe890b416320c41830",
+            "bytes": 18399
+          },
+          "pixel_sha256": "b6276250ebda35869626543a27bb04976e86ca3c78dce98b8288c04e6554e35e"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            256,
+            160,
+            512
+          ],
+          "dimensions": [
+            160,
+            256
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_nurse\\idle-SW.native.png",
+            "sha256": "01d1a2865c5ff8d8cf0da45c86138a8ae2610020abc27dcf0966c3b4f42acf15",
+            "bytes": 17820
+          },
+          "pixel_sha256": "d6c68180f07909d7008ca6ee5f2354b53ef371c8927a861932f4d4b21f717a8a"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "person:3d:town_w_shopper",
+      "actual_runtime_look": {
+        "id": "person:3d:town_w_shopper",
+        "size": "adult",
+        "w": 80,
+        "h": 126.5,
+        "ax": 40,
+        "ay": 121.5,
+        "m": 1.63,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:town_w_shopper",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_w_shopper\\preview.png",
+        "sha256": "a3bd44bc0be67bf6a4c80486cdc5a2cbe332fc4e4a3931b037f45fd10d3aaecb",
+        "bytes": 1683137
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_w_shopper\\sheet.json",
+        "sha256": "e5e4f88ad724f9d40b551e23a5db600e3588b5e94ef807a99acd499a3d715c65",
+        "bytes": 668
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 253
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_shopper\\identity-idle-pair.native.png",
+        "sha256": "770d91f774a216a62b0176b51dc140e2b7aedd087d7e0748f0acd45781ccf5fd",
+        "bytes": 41386
+      },
+      "dimensions": [
+        320,
+        253
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            253
+          ],
+          "dimensions": [
+            160,
+            253
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_shopper\\idle-S.native.png",
+            "sha256": "a10c4ee24ce490275a97c683da4c129d1073b4454d130988060f5efd0b51b38f",
+            "bytes": 21626
+          },
+          "pixel_sha256": "e2de5ade3fd37f9ab182b7b10c122f25c15deac3ad59d5f33ede46dae3d2d2c0"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            253,
+            160,
+            506
+          ],
+          "dimensions": [
+            160,
+            253
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_shopper\\idle-SW.native.png",
+            "sha256": "04f3aefe1da016af10a5874e26064d345acc4aa7a163bfa51133e82a4ff1abc8",
+            "bytes": 20826
+          },
+          "pixel_sha256": "1516a5b4e01fac6c53537b83ceccbd0e652b21cf4ebaa6c7b528ed76c825fcfa"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "person:3d:town_w_student",
+      "actual_runtime_look": {
+        "id": "person:3d:town_w_student",
+        "size": "adult",
+        "w": 80,
+        "h": 127,
+        "ax": 40,
+        "ay": 122,
+        "m": 1.64,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_w_student.png",
+        "sha256": "eb5466af7f70551b74df6e60d1590c01a970191a3198159230a2f57687a16aec",
+        "bytes": 1206660
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_student\\identity-source.png",
+        "sha256": "eb5466af7f70551b74df6e60d1590c01a970191a3198159230a2f57687a16aec",
+        "bytes": 1206660
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "person:3d:town_w_waitress",
+      "actual_runtime_look": {
+        "id": "person:3d:town_w_waitress",
+        "size": "adult",
+        "w": 80,
+        "h": 128.5,
+        "ax": 40,
+        "ay": 123.5,
+        "m": 1.66,
+        "fps": 5.7
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_w_waitress.png",
+        "sha256": "0ff0f27a08d7374aab3af760c3c003b95df772118a1781369d4592d4b52c601a",
+        "bytes": 987341
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_waitress\\identity-source.png",
+        "sha256": "0ff0f27a08d7374aab3af760c3c003b95df772118a1781369d4592d4b52c601a",
+        "bytes": 987341
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "spectator:spec_k_boy_cap",
+      "actual_runtime_look": {
+        "id": "spectator:spec_k_boy_cap",
+        "w": 80,
+        "h": 110.5,
+        "ax": 40,
+        "ay": 105.5,
+        "m": 1.38,
+        "seat": 0.34
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_k_boy_cap.png",
+        "sha256": "16e8788a95e066f74a0182f5e18351764ca596eadb7c77f67778e514f4fbb2db",
+        "bytes": 1033964
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_k_boy_cap\\identity-source.png",
+        "sha256": "16e8788a95e066f74a0182f5e18351764ca596eadb7c77f67778e514f4fbb2db",
+        "bytes": 1033964
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "spectator:spec_k_girl_pigtails",
+      "actual_runtime_look": {
+        "id": "spectator:spec_k_girl_pigtails",
+        "w": 80,
+        "h": 104,
+        "ax": 40,
+        "ay": 99,
+        "m": 1.28,
+        "seat": 0.32
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_k_girl_pigtails.png",
+        "sha256": "f8da791aad287dd1f06519d8acfc8d8412e558ad587e028446ade4fe89ecd686",
+        "bytes": 966046
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_k_girl_pigtails\\identity-source.png",
+        "sha256": "f8da791aad287dd1f06519d8acfc8d8412e558ad587e028446ade4fe89ecd686",
+        "bytes": 966046
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "spectator:spec_m_bucket_hat",
+      "actual_runtime_look": {
+        "id": "spectator:spec_m_bucket_hat",
+        "w": 80,
+        "h": 135,
+        "ax": 40,
+        "ay": 130,
+        "m": 1.76,
+        "seat": 0.64
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "spectator:spec_m_bucket_hat",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_bucket_hat\\preview.png",
+        "sha256": "b10121ec1a81f9330cfc3ee1c7440fa616f0a014c98f57483b4827a151e12717",
+        "bytes": 2141856
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_bucket_hat\\sheet.json",
+        "sha256": "45bb9da9c55d6b3d5d244cce498d5e633a5bfecc01db8c183a3e2047eba16430",
+        "bytes": 676
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 270
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_bucket_hat\\identity-idle-pair.native.png",
+        "sha256": "1f0674830c2763a35e16c6646a2c92dadec745ffb3c086d9f10ee4c706ff8bf6",
+        "bytes": 52917
+      },
+      "dimensions": [
+        320,
+        270
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            270
+          ],
+          "dimensions": [
+            160,
+            270
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_bucket_hat\\idle-S.native.png",
+            "sha256": "5b9b55b48c776452af16d486e63f273b02cd4d385285f16aca42d8d24b5fe5c6",
+            "bytes": 28088
+          },
+          "pixel_sha256": "7fb2e07009d90059d847dadaf50699f32f2cac8073da59b42b851a99b17c5145"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            270,
+            160,
+            540
+          ],
+          "dimensions": [
+            160,
+            270
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_bucket_hat\\idle-SW.native.png",
+            "sha256": "283901081481d4bc26b33b8a826a11c8995bfb2838336737382c2aa7d0993c2a",
+            "bytes": 25994
+          },
+          "pixel_sha256": "c746b0421de74dba2a145041a00763421a00ac687e8ecd11be636fae34f0a3b8"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "spectator:spec_m_dad",
+      "actual_runtime_look": {
+        "id": "spectator:spec_m_dad",
+        "w": 80,
+        "h": 136,
+        "ax": 40,
+        "ay": 131,
+        "m": 1.78,
+        "seat": 0.65
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:spec_m_dad",
+      "runtime_namespace_differs_from_source_grid": true,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_dad\\preview.png",
+        "sha256": "440e03f1aaa26d30b8e84870f6aed2b264a51ef20f90d940635346b862cea1ba",
+        "bytes": 2101312
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_dad\\sheet.json",
+        "sha256": "7b4112b4fe694f47460530b1ff3f5dad5be7ab9015cdada961b58e48150d8d6d",
+        "bytes": 656
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 272
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_dad\\identity-idle-pair.native.png",
+        "sha256": "0d42e3469f58231927c3e8afdff09d537e5b37e2a01ce56be1e67eaac350e19d",
+        "bytes": 49179
+      },
+      "dimensions": [
+        320,
+        272
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            272
+          ],
+          "dimensions": [
+            160,
+            272
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_dad\\idle-S.native.png",
+            "sha256": "e02a9bad92214ab4b52fc869227c7ad8580087f85c3637db4645ee40262b074a",
+            "bytes": 26226
+          },
+          "pixel_sha256": "9044416de55bee0f8b024769389effb5f0e8c753b1dd7d186f20161cfaa17dd4"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            272,
+            160,
+            544
+          ],
+          "dimensions": [
+            160,
+            272
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_dad\\idle-SW.native.png",
+            "sha256": "266fa4670a9fc1195bd2a3c68c81e42774043d9f37f5c9c4408ad0941d4fbef2",
+            "bytes": 24160
+          },
+          "pixel_sha256": "a19eadd00b0fbcf175eb3118f85474896059f1292414ae225fe194586e139801"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "spectator:spec_m_plaid",
+      "actual_runtime_look": {
+        "id": "spectator:spec_m_plaid",
+        "w": 80,
+        "h": 133.5,
+        "ax": 40,
+        "ay": 128.5,
+        "m": 1.74,
+        "seat": 0.64
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_m_plaid.png",
+        "sha256": "ebc1ece9031c65cdb64329b851ba91f61256861e7b2f1da583551beaf726cc7d",
+        "bytes": 1066028
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_plaid\\identity-source.png",
+        "sha256": "ebc1ece9031c65cdb64329b851ba91f61256861e7b2f1da583551beaf726cc7d",
+        "bytes": 1066028
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "spectator:spec_m_polo_visor",
+      "actual_runtime_look": {
+        "id": "spectator:spec_m_polo_visor",
+        "w": 80,
+        "h": 137.5,
+        "ax": 40,
+        "ay": 132.5,
+        "m": 1.8,
+        "seat": 0.66
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "spectator:spec_m_polo_visor",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_polo_visor\\preview.png",
+        "sha256": "d2397321ed183ec729745fd3dff36b76244002308fdbf195f2a9567cf0d13033",
+        "bytes": 1898293
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_polo_visor\\sheet.json",
+        "sha256": "c5ce723ed239e126f2f50abefef3cb2c5b7fe7088263ec570d3f97c73c64523d",
+        "bytes": 675
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 275
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_polo_visor\\identity-idle-pair.native.png",
+        "sha256": "22339cc2bb3b585ac034ad3f0a97adb5c13e60b3b1f1d4c0971fa4affb4a16ab",
+        "bytes": 46787
+      },
+      "dimensions": [
+        320,
+        275
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            275
+          ],
+          "dimensions": [
+            160,
+            275
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_polo_visor\\idle-S.native.png",
+            "sha256": "8b718e024032ff45a2d91883a3766c55c7c7dd1e439a3156f67876b06f195add",
+            "bytes": 24867
+          },
+          "pixel_sha256": "8b56801571bc205c83beaa359fa25db2effe9ea319ed541fb1f1092ee0bcbad9"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            275,
+            160,
+            550
+          ],
+          "dimensions": [
+            160,
+            275
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_polo_visor\\idle-SW.native.png",
+            "sha256": "84fc1c4a550f611fbaa41c829462e321f59cf7d33f9a1f7ddb9ba480153d3f79",
+            "bytes": 23050
+          },
+          "pixel_sha256": "ef358a065a0b67f4de4f3ce105942536f4ad9ccf8cb8431c7fa07c5fd86d0515"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "spectator:spec_m_sun_hat",
+      "actual_runtime_look": {
+        "id": "spectator:spec_m_sun_hat",
+        "w": 80,
+        "h": 132.5,
+        "ax": 40,
+        "ay": 127.5,
+        "m": 1.72,
+        "seat": 0.63
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:spec_m_sun_hat",
+      "runtime_namespace_differs_from_source_grid": true,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_sun_hat\\preview.png",
+        "sha256": "2e9ab85013dfe18fb88e4242bd106bdd4011dfe6504972c006d8f5b126e719d7",
+        "bytes": 1935443
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_sun_hat\\sheet.json",
+        "sha256": "9b122d48ac6bb0c597179a27f61e5bf4b75fef8dfae16f3cf830dcaa279dae51",
+        "bytes": 668
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 265
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_sun_hat\\identity-idle-pair.native.png",
+        "sha256": "25f3d8e096b6d6a382c26edf4208ec3ec94b1a330cee29123a2dfbc5bc357091",
+        "bytes": 45497
+      },
+      "dimensions": [
+        320,
+        265
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            265
+          ],
+          "dimensions": [
+            160,
+            265
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_sun_hat\\idle-S.native.png",
+            "sha256": "ce3b1ac46d9a336003814d5503886e5bd47f794c7b99b7d57add2398b25bd194",
+            "bytes": 24066
+          },
+          "pixel_sha256": "4dad2e5a66802a1c12ad35429f77427b7d852fed2655659952d857151891bfcf"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            265,
+            160,
+            530
+          ],
+          "dimensions": [
+            160,
+            265
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_sun_hat\\idle-SW.native.png",
+            "sha256": "c73eca26c6e8d22024acf336c9fc83bf7cbd6dcbb1d9dbb37ef976cc00e52c4f",
+            "bytes": 22640
+          },
+          "pixel_sha256": "68719d7d1b6068d3679b580f97cf4545540b0cd4880eb189279cc4b71cf69ebc"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "spectator:spec_m_young_cap",
+      "actual_runtime_look": {
+        "id": "spectator:spec_m_young_cap",
+        "w": 80,
+        "h": 138.5,
+        "ax": 40,
+        "ay": 133.5,
+        "m": 1.82,
+        "seat": 0.67
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:spec_m_young_cap",
+      "runtime_namespace_differs_from_source_grid": true,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_young_cap\\preview.png",
+        "sha256": "6a5412c7cf2b9fff85cb7c3440e129d5c1fcc5b90a1bcff9749d3a80cadbdec7",
+        "bytes": 1902785
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_young_cap\\sheet.json",
+        "sha256": "a8cf89e9b8e66e9afdaab6062b673d6502547ffd21f889b3d8b0b8359c45ad95",
+        "bytes": 674
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 277
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_young_cap\\identity-idle-pair.native.png",
+        "sha256": "8f5332de1ff7178b431a503e6057293b3b28e6471839df942a8abcb8a923ea76",
+        "bytes": 47432
+      },
+      "dimensions": [
+        320,
+        277
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            277
+          ],
+          "dimensions": [
+            160,
+            277
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_young_cap\\idle-S.native.png",
+            "sha256": "b0d98bd60d9334c0f589ec61c29d8c2a645860553777fc853ab3c730cfd9cf1e",
+            "bytes": 25170
+          },
+          "pixel_sha256": "c8b8966ea7f8c10ededc368b0ee2271436461d9ad61a4cb0c9483b073d26fd7f"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            277,
+            160,
+            554
+          ],
+          "dimensions": [
+            160,
+            277
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_young_cap\\idle-SW.native.png",
+            "sha256": "e8438f868940b35208ef8e29cef0928a85970e93b1d05a74e37c9900d73ec45f",
+            "bytes": 23599
+          },
+          "pixel_sha256": "6f74ccb9c555d3c5d0b95411bbb3b70ef03fc60992b4477d0d97cff9c263530c"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "spectator:spec_teen_boy",
+      "actual_runtime_look": {
+        "id": "spectator:spec_teen_boy",
+        "w": 80,
+        "h": 130,
+        "ax": 40,
+        "ay": 125,
+        "m": 1.68,
+        "seat": 0.62
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_teen_boy.png",
+        "sha256": "51c61dde7d3c06f2b281aecbcdc72b24d9bdc0193886baf0e39c9a4f132965a6",
+        "bytes": 1005565
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_teen_boy\\identity-source.png",
+        "sha256": "51c61dde7d3c06f2b281aecbcdc72b24d9bdc0193886baf0e39c9a4f132965a6",
+        "bytes": 1005565
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "spectator:spec_teen_girl",
+      "actual_runtime_look": {
+        "id": "spectator:spec_teen_girl",
+        "w": 80,
+        "h": 126,
+        "ax": 40,
+        "ay": 121,
+        "m": 1.62,
+        "seat": 0.67
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_teen_girl.png",
+        "sha256": "428b20833d227f76c985ebb590cdd5bff2c3f84097a7f8be17f7337b0d1a452b",
+        "bytes": 1040182
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_teen_girl\\identity-source.png",
+        "sha256": "428b20833d227f76c985ebb590cdd5bff2c3f84097a7f8be17f7337b0d1a452b",
+        "bytes": 1040182
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "spectator:spec_w_older_cardigan",
+      "actual_runtime_look": {
+        "id": "spectator:spec_w_older_cardigan",
+        "w": 80,
+        "h": 123.5,
+        "ax": 40,
+        "ay": 118.5,
+        "m": 1.58,
+        "seat": 0.67
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "person:3d:spec_w_older_cardigan",
+      "runtime_namespace_differs_from_source_grid": true,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_older_cardigan\\preview.png",
+        "sha256": "17804bef302a824a783a10346efe33521171fbc543efac0bfdd19d0f9547edf9",
+        "bytes": 1647450
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_older_cardigan\\sheet.json",
+        "sha256": "87fc915cefbd004c8c4bb1067c19b33cccf72708ab2e04082ada6b847bbc34c3",
+        "bytes": 689
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 247
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_older_cardigan\\identity-idle-pair.native.png",
+        "sha256": "3f481b9e498824f4d98783acf8cf5273d55043c7311693e55255912bcbbe9a36",
+        "bytes": 41718
+      },
+      "dimensions": [
+        320,
+        247
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            247
+          ],
+          "dimensions": [
+            160,
+            247
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_older_cardigan\\idle-S.native.png",
+            "sha256": "6d938fba55bac6af77ba210fdad27467c88580705266eef51d8655ab26a72e39",
+            "bytes": 21896
+          },
+          "pixel_sha256": "97c0034621a12233a7ab3c64c9e00db62fd7b340fde7c57c50ea67179dc0660f"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            247,
+            160,
+            494
+          ],
+          "dimensions": [
+            160,
+            247
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_older_cardigan\\idle-SW.native.png",
+            "sha256": "3d24b1c306092ea9d58fef9592c2a12150a1febefd2e6585c0b2a64fe9f85270",
+            "bytes": 21041
+          },
+          "pixel_sha256": "d2cdc656caedcc622afa4c5a9fd9b71cb379e32a7330531381f8101027268634"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "spectator:spec_w_sunhat_dress",
+      "actual_runtime_look": {
+        "id": "spectator:spec_w_sunhat_dress",
+        "w": 80,
+        "h": 127,
+        "ax": 40,
+        "ay": 122,
+        "m": 1.64,
+        "seat": 0.67
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "spectator:spec_w_sunhat_dress",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_sunhat_dress\\preview.png",
+        "sha256": "d84cd169dbd77863cfb3dbd2897567e7d0969214a324b424e69debac163b763e",
+        "bytes": 1843175
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_sunhat_dress\\sheet.json",
+        "sha256": "47b48b3603960efdd0a0d5a5c5af5f95013873beeb5748ac7b277ab8d037337a",
+        "bytes": 682
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 254
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_sunhat_dress\\identity-idle-pair.native.png",
+        "sha256": "480e7cb38c614ad89de81214529a2303bf5021db8bd4116e94dd09e4900d0291",
+        "bytes": 43082
+      },
+      "dimensions": [
+        320,
+        254
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            254
+          ],
+          "dimensions": [
+            160,
+            254
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_sunhat_dress\\idle-S.native.png",
+            "sha256": "83f5f5a902ddef6df12a0b25f7c171a7e3cac7705a8bbefcf81db91069e9d0a6",
+            "bytes": 22787
+          },
+          "pixel_sha256": "0b929cb0b7b991d38933e70fcf1a090c32db63471f61fde103b947acaec2571d"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            254,
+            160,
+            508
+          ],
+          "dimensions": [
+            160,
+            254
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_sunhat_dress\\idle-SW.native.png",
+            "sha256": "841727ab6a863df5b44560157ee0738cbb980ac923a078b74a92cd386fa5f8b6",
+            "bytes": 21548
+          },
+          "pixel_sha256": "d5aa967949475ce69d8637ec4848aa7fe23006c4ae21a86d4aa38a1ffb230a60"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "spectator:spec_w_visor_pastel",
+      "actual_runtime_look": {
+        "id": "spectator:spec_w_visor_pastel",
+        "w": 80,
+        "h": 128.5,
+        "ax": 40,
+        "ay": 123.5,
+        "m": 1.66,
+        "seat": 0.68
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "spectator:spec_w_visor_pastel",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_visor_pastel\\preview.png",
+        "sha256": "e628a9c4b965da05ee75ef0ae907a8e9a2ec6425b73b27d8ede24c847fff2af7",
+        "bytes": 1547728
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_visor_pastel\\sheet.json",
+        "sha256": "def1a0e736f22f561f71e20256c86f6a533f9c0e749e1413acb1f8434c4b22b7",
+        "bytes": 682
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 257
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_visor_pastel\\identity-idle-pair.native.png",
+        "sha256": "d1b567293917cb92e6ecac39db698d13396ce05d5855490b59ab6e97b5b321ef",
+        "bytes": 37605
+      },
+      "dimensions": [
+        320,
+        257
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            257
+          ],
+          "dimensions": [
+            160,
+            257
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_visor_pastel\\idle-S.native.png",
+            "sha256": "e04ae48fa77baf88b44f8c93e8b49bbed1b9ace123500fadb0164a8356c62acd",
+            "bytes": 19779
+          },
+          "pixel_sha256": "30db8d453adbab5ad86f1819bdf23476c5aec4b7f3d916b0a1cd85fc3a08e884"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            257,
+            160,
+            514
+          ],
+          "dimensions": [
+            160,
+            257
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_visor_pastel\\idle-SW.native.png",
+            "sha256": "6fd6f23ab31cad0c5797d53e004f02ae1c1608e73231364b29c03d42a01a349e",
+            "bytes": 18995
+          },
+          "pixel_sha256": "a4987a34c74996506b40a817f0ba0c4db07e778368fc3a703cd0ea25317d1b61"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "spectator:spec_w_windbreaker",
+      "actual_runtime_look": {
+        "id": "spectator:spec_w_windbreaker",
+        "w": 80,
+        "h": 126,
+        "ax": 40,
+        "ay": 121,
+        "m": 1.62,
+        "seat": 0.67
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "source_grid_id": "spectator:spec_w_windbreaker",
+      "runtime_namespace_differs_from_source_grid": false,
+      "method": "lossless-native-preview-idle-crops",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_windbreaker\\preview.png",
+        "sha256": "8040a55255c5531c00230f7564098f4c31bb32136d4595486952d55b28f3e1ff",
+        "bytes": 1702178
+      },
+      "source_grid_metadata": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_windbreaker\\sheet.json",
+        "sha256": "914a8bb7cd5d7b45e2187a6debb82b2527b16105c1b4ceb46eb59113ee980ae1",
+        "bytes": 679
+      },
+      "source_grid": {
+        "columns": 9,
+        "rows": 8,
+        "frame_width": 160,
+        "frame_height": 252
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_windbreaker\\identity-idle-pair.native.png",
+        "sha256": "ea4f882b539cc18cc460b5050d5cbe21d04cc2a3a94abcde31b7c9c09ea328a5",
+        "bytes": 42639
+      },
+      "dimensions": [
+        320,
+        252
+      ],
+      "crop_records": [
+        {
+          "direction": "S",
+          "column": 0,
+          "row": 0,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            0,
+            160,
+            252
+          ],
+          "dimensions": [
+            160,
+            252
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_windbreaker\\idle-S.native.png",
+            "sha256": "7c09c568c29ae06245d04d1c756603a63f35ae2da13d039b7438f241ea5c155b",
+            "bytes": 22874
+          },
+          "pixel_sha256": "2d0cd41edfde62dace3c5d206222b9e39fda6da1738d87c2fa82405cc1bdb067"
+        },
+        {
+          "direction": "SW",
+          "column": 0,
+          "row": 1,
+          "frame": "idle",
+          "source_crop_box": [
+            0,
+            252,
+            160,
+            504
+          ],
+          "dimensions": [
+            160,
+            252
+          ],
+          "native_file": {
+            "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_windbreaker\\idle-SW.native.png",
+            "sha256": "efabb6445b96d1ee287cdec2aa0bbfb1f7c875bea8f245ee538701b037482c6b",
+            "bytes": 20828
+          },
+          "pixel_sha256": "13afcd5db19855238e7008e6d31429988dfe3fb54a8eb7751ce1a2194195ccd3"
+        }
+      ],
+      "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+      "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+    },
+    {
+      "look_id": "spectator:spec_w_young_shorts",
+      "actual_runtime_look": {
+        "id": "spectator:spec_w_young_shorts",
+        "w": 80,
+        "h": 130,
+        "ax": 40,
+        "ay": 125,
+        "m": 1.68,
+        "seat": 0.69
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_w_young_shorts.png",
+        "sha256": "0920decabd108d9ada2563b454a2be48ea741d3ee4ea8fd149fcad82d7241ed9",
+        "bytes": 931064
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_young_shorts\\identity-source.png",
+        "sha256": "0920decabd108d9ada2563b454a2be48ea741d3ee4ea8fd149fcad82d7241ed9",
+        "bytes": 931064
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    },
+    {
+      "look_id": "golfer:golf_am_m3",
+      "actual_runtime_look": {
+        "id": "golfer:golf_am_m3",
+        "w": 80,
+        "h": 134,
+        "ax": 40,
+        "ay": 129,
+        "m": 1.75
+      },
+      "animation_files_changed": false,
+      "resized": false,
+      "repainted": false,
+      "source_style_changed": false,
+      "method": "original-pics-native-PNG-copy",
+      "source": {
+        "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golfers\\pics\\golf_am_m3.png",
+        "sha256": "b5a40924ff218d46c3c98d244df430bd57afb3e4100c18fa92e23ce343d2afb6",
+        "bytes": 1032899
+      },
+      "primary_reference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\golf_am_m3\\identity-source.png",
+        "sha256": "b5a40924ff218d46c3c98d244df430bd57afb3e4100c18fa92e23ce343d2afb6",
+        "bytes": 1032899
+      },
+      "dimensions": [
+        848,
+        1264
+      ],
+      "mode": "RGB",
+      "crop_records": []
+    }
+  ],
+  "batches": [
+    {
+      "batch": 1,
+      "look_ids": [
+        "person:3d:base_kid",
+        "person:3d:base_man",
+        "person:3d:base_woman",
+        "person:3d:town_k_boy"
+      ],
+      "reference_paths": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_kid\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_man\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_woman\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_k_boy\\identity-source.png"
+      ],
+      "attachment_order": "Use these identity references in listed order, then add the reviewed portrait style reference separately.",
+      "count": 4
+    },
+    {
+      "batch": 2,
+      "look_ids": [
+        "person:3d:town_k_girl",
+        "person:3d:town_m_business",
+        "person:3d:town_m_elder",
+        "person:3d:town_m_jogger"
+      ],
+      "reference_paths": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_k_girl\\identity-source.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_business\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_elder\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_jogger\\identity-source.png"
+      ],
+      "attachment_order": "Use these identity references in listed order, then add the reviewed portrait style reference separately.",
+      "count": 4
+    },
+    {
+      "batch": 3,
+      "look_ids": [
+        "person:3d:town_m_mechanic",
+        "person:3d:town_m_postman",
+        "person:3d:town_w_elder",
+        "person:3d:town_w_nurse"
+      ],
+      "reference_paths": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_mechanic\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_postman\\identity-source.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_elder\\identity-source.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_nurse\\identity-idle-pair.native.png"
+      ],
+      "attachment_order": "Use these identity references in listed order, then add the reviewed portrait style reference separately.",
+      "count": 4
+    },
+    {
+      "batch": 4,
+      "look_ids": [
+        "person:3d:town_w_shopper",
+        "person:3d:town_w_student",
+        "person:3d:town_w_waitress",
+        "spectator:spec_k_boy_cap"
+      ],
+      "reference_paths": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_shopper\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_student\\identity-source.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_waitress\\identity-source.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_k_boy_cap\\identity-source.png"
+      ],
+      "attachment_order": "Use these identity references in listed order, then add the reviewed portrait style reference separately.",
+      "count": 4
+    },
+    {
+      "batch": 5,
+      "look_ids": [
+        "spectator:spec_k_girl_pigtails",
+        "spectator:spec_m_bucket_hat",
+        "spectator:spec_m_dad",
+        "spectator:spec_m_plaid"
+      ],
+      "reference_paths": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_k_girl_pigtails\\identity-source.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_bucket_hat\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_dad\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_plaid\\identity-source.png"
+      ],
+      "attachment_order": "Use these identity references in listed order, then add the reviewed portrait style reference separately.",
+      "count": 4
+    },
+    {
+      "batch": 6,
+      "look_ids": [
+        "spectator:spec_m_polo_visor",
+        "spectator:spec_m_sun_hat",
+        "spectator:spec_m_young_cap",
+        "spectator:spec_teen_boy"
+      ],
+      "reference_paths": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_polo_visor\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_sun_hat\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_young_cap\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_teen_boy\\identity-source.png"
+      ],
+      "attachment_order": "Use these identity references in listed order, then add the reviewed portrait style reference separately.",
+      "count": 4
+    },
+    {
+      "batch": 7,
+      "look_ids": [
+        "spectator:spec_teen_girl",
+        "spectator:spec_w_older_cardigan",
+        "spectator:spec_w_sunhat_dress",
+        "spectator:spec_w_visor_pastel"
+      ],
+      "reference_paths": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_teen_girl\\identity-source.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_older_cardigan\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_sunhat_dress\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_visor_pastel\\identity-idle-pair.native.png"
+      ],
+      "attachment_order": "Use these identity references in listed order, then add the reviewed portrait style reference separately.",
+      "count": 4
+    },
+    {
+      "batch": 8,
+      "look_ids": [
+        "spectator:spec_w_windbreaker",
+        "spectator:spec_w_young_shorts",
+        "golfer:golf_am_m3"
+      ],
+      "reference_paths": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_windbreaker\\identity-idle-pair.native.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_young_shorts\\identity-source.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\golf_am_m3\\identity-source.png"
+      ],
+      "attachment_order": "Use these identity references in listed order, then add the reviewed portrait style reference separately.",
+      "count": 3
+    }
+  ],
+  "count": 31,
+  "native_pic_count": 14,
+  "preview_crop_pair_count": 17,
+  "all_originals_preserved": true,
+  "animation_files_changed": false,
+  "no_resize_or_repaint": true
+}

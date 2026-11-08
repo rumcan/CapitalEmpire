@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "PASS-main-wall-opening-identity-and-alpha;HOLD-exact8-certification",
+  "source": {
+    "path": "generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.png",
+    "sha256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+    "bytes": 1067257
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "is_opaque_scene": false,
+  "zero_alpha_fraction": 0.7339149490370845,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "rgba_rectangle_sha256": "63203d7595b6e57d1223a7acd6c67fead271cbc4171ef0888d3b77e1e221376a",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 102
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "rgba_rectangle_sha256": "1617eba03393e4dd7598693ce00e2e833f1c5637facf564a428adf997bb957a8",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 143
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "rgba_rectangle_sha256": "615dcea5fc70971988efbd8c07761dd6cb794cf6ab987e57d24342a9d3cdfcf3",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 107
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "rgba_rectangle_sha256": "cbcb7cd467c36332dca010976755ae9bd4e00dd828664757d1266324604cee07",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 120
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      627,
+      1254
+    ],
+    [
+      0,
+      627,
+      1254
+    ]
+  ],
+  "notes": [
+    "Main front/rear/side openings and garage/partywall identity remain coherent with normal source.",
+    "Exact8 camera is not established by technical guide labels; independent native measurement remains pending."
+  ],
+  "source_crops_performed": false,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.prompt.txt",
+    "sha256": "7a5cfafc6a43bceb13d52d5e38cb4cc53ee066b1699e516212d06d347a05bc4a",
+    "bytes": 1159
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.provenance.json",
+    "sha256": "285c77fb635a0683f8cb1430297e9a337abf6bc5959714624ef8f332c735c971",
+    "bytes": 2036
+  }
+}

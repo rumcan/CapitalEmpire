@@ -1,0 +1,28 @@
+{
+  "id": "newprop:white-tent-booth",
+  "name": "White tent booth",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\white-tent-booth.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+  "sourceSheetSHA256": "1a726bd22fc3d14f4a1a9cbccb248011e743fbe1ec00d61c0487953ca5be24fc",
+  "referenceSHA256": "dc089ef7286bd65b246f7817618630c7b229be2673075728bc427a2e53436105",
+  "sourcePixelRectXYWH": [
+    681,
+    56,
+    534,
+    588
+  ],
+  "originalCellLabel": "top right",
+  "referenceSize": [
+    534,
+    588
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "MISLABELLED FOR MEDIA USE: canopy shelter contains security scanner arch, inspection table and baggage trays. Security function only; excluded as media-centre architectural identity.",
+  "sourceOnlyNotReleaseProof": true,
+  "excludedFromJobReferenceSets": true
+}

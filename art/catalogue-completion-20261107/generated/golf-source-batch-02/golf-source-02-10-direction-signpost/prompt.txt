@@ -1,0 +1,4 @@
+One green pedestal fingerpost with exactly four arrow boards: upper-left golf icon, upper-right food icon, lower-left toilets icon, lower-right exit icon. Keep arrows physically attached to fixed sides; backs may be plain. No captions or invented destination text; small intrinsic pictograms allowed. Ignore detached neighbour fragment at source top.
+Identity-preserving course wayfinding; plain worn green/cream boards and practical fittings, not an ornate fantasy totem.
+Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.
+Keep one fixed physical object and all its feature positions across all eight source-camera views.

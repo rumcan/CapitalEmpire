@@ -1,0 +1,21 @@
+{
+  "key": "newprop:shuttle-cart",
+  "family": "yaw8-N",
+  "condition": "base",
+  "version": 2,
+  "target": "generated/golf-vehicle-source-batch-01/native/shuttle-cart/yaw8-N-v2.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shuttle-cart/yaw8N-guide.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/references/shuttle-cart.source.png"
+  ],
+  "prompt": "Render ONE SINGLE missing nearcardinal sprite, exactcamera/occlusioninREFERENCE1. Reference2isfinishednativeidentityandpaintedmaterialsonly, notcamera. Longcream/greenpassengershuttle withEXACTLY3fixedtwo-placebenchrows/fullcanopy/fourwheels. Missing nearFRONT, nosealmoststraightSCREEN DOWN, canopyandfrontrowocclude fartherrows; onlyTHINlongside visible. NEVERa45degreecornerpose. Preservevehiclebodyproportions fromreference2butcameraONLYfromsingleviewguide. Rearseatsstayforwardfacing, steeringfrontonly. Followguideprojectedbase/roofedges, cameraorthographic30degreesDOWNandnominal8degreesoffcardinal\u2014broadmainface+narrowsecondaryface. Believabledetailedhandpaintedminiaturegameart, samefinecream/forestgreenpaint/metal/glass/rubberasreference2, noflatlowpoly. ONEcompletevehiclecentredwithbroadZEROALPHAtransparentmargins, nogreyhalo/groundplate/road/scene/people/plants/labelsUI/grid. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lightsOFF. No2Dmirroring, noindependentswivellingequipment, nootherperspectivesintheimage.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-07f28448-e4be-493b-adfe-5fb9d6c8a80b.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shuttle-cart/yaw8N-guide.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/references/shuttle-cart.source.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "7dca9b9dcd77645e20c6d41b41f9a0a2cd2db040c2ebb473d5b85bdd136fef8c",
+  "native_bytes_preserved": true
+}

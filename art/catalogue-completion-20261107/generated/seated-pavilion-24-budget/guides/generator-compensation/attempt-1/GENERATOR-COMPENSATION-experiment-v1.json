@@ -1,0 +1,5843 @@
+{
+  "purpose": "GENERATOR-COMPENSATION prompt/reference experiment ONLY; explicitly NOT an8degree geometry proof",
+  "model_identity": "original seated-pavilion-24-budget-v1, no feature/normal/world-coordinate changes",
+  "input_world_model": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\seated-pavilion-24-budget-world-model-v1.json",
+    "sha256": "cab587ff0fa79610a1d9b9978c0d713019bcf20e6acd0ae0323a4b5fac70c017",
+    "bytes": 94075
+  },
+  "measured_previous_native_source": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\yaw8-v1.png",
+    "sha256": "6415514479ccdcbddb4f3f2b4792389144b0eca72a99f39936fd73dc22deb2db",
+    "bytes": 1238112
+  },
+  "review_source": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\qa-normal-v2-yaw8-v1\\review.json",
+    "sha256": "6718bd9edff560a28cbbf7dc8e6c1d1dd9ed6633235dcd41680f153c5ce7987d",
+    "bytes": 218452
+  },
+  "unchanged_ideal8degree_calibration": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.calibration.json",
+    "sha256": "139a89cfc97e2910d0e0f9f42d4001ccb474579d733a892c14a9126f8f66c1be",
+    "bytes": 219674
+  },
+  "unchanged_draft_game_projection_proof": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\pavilion-guide-handedness-proof.json",
+    "sha256": "c07f415b3c6be0f9ecec4b9ec95185f8ce8fbb0f4dba07633a4283f649368ba0",
+    "bytes": 6933
+  },
+  "formula": {
+    "beta_new": "atan(tan(8 degrees) * targetSlope / observedSlope)",
+    "targetSlope": "sin(30 degrees)*tan(8 degrees)",
+    "targetSlope_value": 0.07027041735119571,
+    "assumption": "multiplicative generator under-rotation response; an experiment, not physical artifact calibration"
+  },
+  "cell_order": [
+    [
+      "N",
+      "E"
+    ],
+    [
+      "S",
+      "W"
+    ]
+  ],
+  "cells": [
+    {
+      "source_label": "N",
+      "cell_index": 0,
+      "object_rotation_degrees_about_Z": 0,
+      "observed_previous_native_clean_deck_slope": 0.05839230790804673,
+      "target_FINAL_native_slope": 0.07027041735119571,
+      "target_FINAL_native_camera_offset_degrees": 8,
+      "generator_response_gain_assumption": 0.8309657194181036,
+      "actual_compensation_reference_camera_offset_degrees": 9.599564518004764,
+      "actual_compensation_reference_ground_edge_slope": 0.08456476086691475,
+      "camera_down_degrees": 30,
+      "basis": {
+        "screen_right": [
+          0.985997304583669,
+          0.16676125255508098,
+          0.0
+        ],
+        "screen_down": [
+          0.08338062627754048,
+          -0.4929986522918344,
+          -0.8660254037844387
+        ],
+        "toward_camera": [
+          0.14441948107961278,
+          -0.8538987138324401,
+          0.49999999999999994
+        ]
+      },
+      "scale_px_per_metre": 56,
+      "local_offset_px": [
+        400.0,
+        472.1644341728208
+      ],
+      "cell_box": [
+        0,
+        0,
+        800,
+        800
+      ],
+      "projected_model_anchors_for_reference_only": {
+        "raised-deck": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.125
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            400.0,
+            466.10225634632974
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-0-0": {
+          "original_world_metres_unchanged": [
+            -3.75,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -3.75,
+            -2.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            167.25933314394703,
+            460.98249365936226
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-0-1": {
+          "original_world_metres_unchanged": [
+            -3.75,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -3.75,
+            2.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            218.62179893091198,
+            309.13890875347727
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-1-0": {
+          "original_world_metres_unchanged": [
+            0,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            0.0,
+            -2.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            374.3187671065175,
+            478.49242517764577
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-1-1": {
+          "original_world_metres_unchanged": [
+            0,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            0.0,
+            2.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            425.6812328934825,
+            326.6488402717608
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-2-0": {
+          "original_world_metres_unchanged": [
+            3.75,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            3.75,
+            -2.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            581.378201069088,
+            496.0023566959293
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-2-1": {
+          "original_world_metres_unchanged": [
+            3.75,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            3.75,
+            2.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            632.7406668560529,
+            344.1587717900443
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "roof-support-beam--2.75": {
+          "original_world_metres_unchanged": [
+            0,
+            -2.75,
+            2.7
+          ],
+          "rotated_world_metres": [
+            0.0,
+            -2.75,
+            2.7
+          ],
+          "compensation_reference_pixel": [
+            374.3187671065175,
+            417.14318557355614
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "roof-support-beam-2.75": {
+          "original_world_metres_unchanged": [
+            0,
+            2.75,
+            2.7
+          ],
+          "rotated_world_metres": [
+            0.0,
+            2.75,
+            2.7
+          ],
+          "compensation_reference_pixel": [
+            425.6812328934825,
+            265.29960066767114
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.4,
+            0.66
+          ],
+          "rotated_world_metres": [
+            0.0,
+            -1.4,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            386.92591779968166,
+            478.80722958862776
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-back": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.14,
+            0.98
+          ],
+          "rotated_world_metres": [
+            0.0,
+            -1.14,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            389.35396163688364,
+            456.1099939754415
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -2.35,
+            -1.4,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            257.1686725164708,
+            478.74625925818737
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            0.0,
+            -1.4,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            386.92591779968166,
+            489.7191496763117
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            2.35,
+            -1.4,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            516.6831630828925,
+            500.692040094436
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            261.3098611957222,
+            466.24464089639196
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            261.3098611957222,
+            426.47675435461053
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.625,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            297.20016308256777,
+            469.27969569289445
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.625,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            297.20016308256777,
+            429.51180915111297
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            333.09046496941335,
+            472.3147504893969
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            333.09046496941335,
+            432.54686394761546
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.325,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            368.98076685625887,
+            475.3498052858994
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.325,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            368.98076685625887,
+            435.58191874411796
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.325,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            404.87106874310444,
+            478.3848600824019
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.325,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            404.87106874310444,
+            438.6169735406204
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            440.76137062994997,
+            481.4199148789043
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            440.76137062994997,
+            441.6520283371229
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.625,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            476.65167251679554,
+            484.4549696754068
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.625,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            476.65167251679554,
+            444.6870831336254
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            2.275,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            512.541974403641,
+            487.4900244719093
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            2.275,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            512.541974403641,
+            447.7221379301278
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.66
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            400.0,
+            440.1561352489479
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-back": {
+          "original_world_metres_unchanged": [
+            0,
+            0.26,
+            0.98
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.26,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            402.428043837202,
+            417.45889963576167
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -2.35,
+            0.0,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            270.24275471678914,
+            440.0951649185075
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            400.0,
+            451.06805533663186
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            2.35,
+            0.0,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            529.7572452832109,
+            462.0409457547562
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            0.0,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            274.3839433960406,
+            427.5935465567121
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            0.0,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            274.3839433960406,
+            387.8256600149307
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.625,
+            0.0,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            310.2742452828861,
+            430.6286013532146
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.625,
+            0.0,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            310.2742452828861,
+            390.8607148114332
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000001,
+            0.0,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            346.1645471697317,
+            433.6636561497171
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000001,
+            0.0,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            346.1645471697317,
+            393.8957696079357
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.325,
+            0.0,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            382.0548490565772,
+            436.69871094621953
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.325,
+            0.0,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            382.0548490565772,
+            396.9308244044381
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.325,
+            0.0,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            417.9451509434228,
+            439.733765742722
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.325,
+            0.0,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            417.9451509434228,
+            399.9658792009406
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.9750000000000001,
+            0.0,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            453.8354528302683,
+            442.7688205392245
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.9750000000000001,
+            0.0,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            453.8354528302683,
+            403.0009339974431
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.625,
+            0.0,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            489.7257547171139,
+            445.80387533572696
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.625,
+            0.0,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            489.7257547171139,
+            406.03598879394553
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            2.275,
+            0.0,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            525.6160566039595,
+            448.83893013222945
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            2.275,
+            0.0,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            525.6160566039595,
+            409.071043590448
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            1.4,
+            0.66
+          ],
+          "rotated_world_metres": [
+            0.0,
+            1.4,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            413.07408220031834,
+            401.50504090926813
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-back": {
+          "original_world_metres_unchanged": [
+            0,
+            1.66,
+            0.98
+          ],
+          "rotated_world_metres": [
+            0.0,
+            1.66,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            415.5021260375203,
+            378.8078052960819
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -2.35,
+            1.4,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            283.3168369171075,
+            401.44407057882773
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            0.0,
+            1.4,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            413.07408220031834,
+            412.41696099695207
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            2.35,
+            1.4,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            542.8313274835292,
+            423.38985141507635
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            287.45802559635894,
+            388.9424522170323
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            287.45802559635894,
+            349.1745656752509
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.625,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            323.34832748320446,
+            391.9775070135348
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.625,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            323.34832748320446,
+            352.20962047175334
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            359.23862937005003,
+            395.01256181003725
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            359.23862937005003,
+            355.24467526825583
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.325,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            395.12893125689556,
+            398.04761660653975
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.325,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            395.12893125689556,
+            358.2797300647583
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.325,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            431.01923314374113,
+            401.08267140304224
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.325,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            431.01923314374113,
+            361.3147848612608
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            466.90953503058665,
+            404.1177261995447
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            466.90953503058665,
+            364.34983965776325
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.625,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            502.79983691743223,
+            407.15278099604717
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.625,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            502.79983691743223,
+            367.38489445426575
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            2.275,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            538.6901388042778,
+            410.1878357925496
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            2.275,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            538.6901388042778,
+            370.41994925076824
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-lower--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.6,
+            0.0625
+          ],
+          "rotated_world_metres": [
+            -3.1,
+            3.6,
+            0.0625
+          ],
+          "compensation_reference_pixel": [
+            262.44993643937937,
+            355.2699402357604
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-upper--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.22,
+            0.125
+          ],
+          "rotated_world_metres": [
+            -3.1,
+            3.22,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            258.9012569850073,
+            362.72986264328506
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-entry--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.0,
+            0.25
+          ],
+          "rotated_world_metres": [
+            -3.1,
+            3.0,
+            0.25
+          ],
+          "compensation_reference_pixel": [
+            256.8467583535287,
+            362.74142821302945
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-lower-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.6,
+            0.0625
+          ],
+          "rotated_world_metres": [
+            3.1,
+            3.6,
+            0.0625
+          ],
+          "compensation_reference_pixel": [
+            604.7882005908293,
+            384.21969367932246
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-upper-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.22,
+            0.125
+          ],
+          "rotated_world_metres": [
+            3.1,
+            3.22,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            601.2395211364571,
+            391.67961608684715
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-entry-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.0,
+            0.25
+          ],
+          "rotated_world_metres": [
+            3.1,
+            3.0,
+            0.25
+          ],
+          "compensation_reference_pixel": [
+            599.1850225049785,
+            391.6911816565915
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "eave-fascia--1": {
+          "original_world_metres_unchanged": [
+            0,
+            -3.3,
+            2.69
+          ],
+          "rotated_world_metres": [
+            0.0,
+            -3.3,
+            2.69
+          ],
+          "compensation_reference_pixel": [
+            369.18252052782105,
+            432.81251829026394
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "eave-fascia-1": {
+          "original_world_metres_unchanged": [
+            0,
+            3.3,
+            2.69
+          ],
+          "rotated_world_metres": [
+            0.0,
+            3.3,
+            2.69
+          ],
+          "compensation_reference_pixel": [
+            430.81747947217895,
+            250.60021640320196
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "ridge-center": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            3.5999999999999996
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            3.5999999999999996
+          ],
+          "compensation_reference_pixel": [
+            400.0,
+            297.57371276987794
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "audience-focus": {
+          "original_world_metres_unchanged": [
+            0,
+            -6,
+            0
+          ],
+          "rotated_world_metres": [
+            0.0,
+            -6.0,
+            0.0
+          ],
+          "compensation_reference_pixel": [
+            343.9682191414928,
+            637.8119813428772
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        }
+      },
+      "runtime_heading_degrees": null,
+      "runtime_import_permitted": false
+    },
+    {
+      "source_label": "E",
+      "cell_index": 1,
+      "object_rotation_degrees_about_Z": 90,
+      "observed_previous_native_clean_deck_slope": 0.045742471443406596,
+      "target_FINAL_native_slope": 0.07027041735119571,
+      "target_FINAL_native_camera_offset_degrees": 8,
+      "generator_response_gain_assumption": 0.6509491926708793,
+      "actual_compensation_reference_camera_offset_degrees": 12.183234939764644,
+      "actual_compensation_reference_ground_edge_slope": 0.10795069437427589,
+      "camera_down_degrees": 30,
+      "basis": {
+        "screen_right": [
+          0.9774776872408414,
+          0.21103879014602023,
+          0.0
+        ],
+        "screen_down": [
+          0.1055193950730101,
+          -0.48873884362042064,
+          -0.8660254037844387
+        ],
+        "toward_camera": [
+          0.1827649534503866,
+          -0.846520508783029,
+          0.49999999999999994
+        ]
+      },
+      "scale_px_per_metre": 56,
+      "local_offset_px": [
+        414.29130511766004,
+        482.5371378017501
+      ],
+      "cell_box": [
+        800,
+        0,
+        1600,
+        800
+      ],
+      "projected_model_anchors_for_reference_only": {
+        "raised-deck": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.125
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            1214.2913051176602,
+            476.474959975259
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-0-0": {
+          "original_world_metres_unchanged": [
+            -3.75,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            2.7499999999999996,
+            -3.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1320.5047230220853,
+            531.8284803551645
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-0-1": {
+          "original_world_metres_unchanged": [
+            -3.75,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -2.7500000000000004,
+            -3.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1019.4415953519062,
+            499.32850667267735
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-1-0": {
+          "original_world_metres_unchanged": [
+            0,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            2.75,
+            -1.6838893488276108e-16,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1364.8228689527496,
+            429.19332319487614
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-1-1": {
+          "original_world_metres_unchanged": [
+            0,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -2.75,
+            1.6838893488276108e-16,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1063.7597412825705,
+            396.69334951238903
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-2-0": {
+          "original_world_metres_unchanged": [
+            3.75,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            2.7500000000000004,
+            3.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1409.1410148834138,
+            326.55816603458777
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-2-1": {
+          "original_world_metres_unchanged": [
+            3.75,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -2.7499999999999996,
+            3.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1108.0778872132348,
+            294.0581923521007
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "roof-support-beam--2.75": {
+          "original_world_metres_unchanged": [
+            0,
+            -2.75,
+            2.7
+          ],
+          "rotated_world_metres": [
+            2.75,
+            -1.6838893488276108e-16,
+            2.7
+          ],
+          "compensation_reference_pixel": [
+            1364.8228689527496,
+            367.8440835907865
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "roof-support-beam-2.75": {
+          "original_world_metres_unchanged": [
+            0,
+            2.75,
+            2.7
+          ],
+          "rotated_world_metres": [
+            -2.75,
+            1.6838893488276108e-16,
+            2.7
+          ],
+          "compensation_reference_pixel": [
+            1063.7597412825705,
+            335.3441099082994
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.4,
+            0.66
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -8.572527594031472e-17,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            1290.925555797342,
+            458.80155945160124
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-back": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.14,
+            0.98
+          ],
+          "rotated_world_metres": [
+            1.14,
+            -6.980486755139913e-17,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            1276.6934806711154,
+            441.74602182352106
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            1.3999999999999997,
+            -2.35,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1263.1528510141256,
+            534.0315113597325
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -8.572527594031472e-17,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1290.925555797342,
+            469.7134795392851
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            1.4000000000000001,
+            2.35,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1318.6982605805583,
+            405.3954477188378
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.3999999999999997,
+            -2.275,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1264.0392139327391,
+            519.1269912243656
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.3999999999999997,
+            -2.275,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1264.0392139327391,
+            479.35910468258425
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -1.625,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1271.721025894054,
+            501.33689731658234
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -1.625,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1271.721025894054,
+            461.5690107748009
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -0.9750000000000002,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1279.4028378553694,
+            483.54680340879906
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -0.9750000000000002,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1279.4028378553694,
+            443.77891686701764
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -0.3250000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1287.0846498166843,
+            465.75670950101573
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -0.3250000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1287.0846498166843,
+            425.9888229592343
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4,
+            0.3249999999999999,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1294.7664617779997,
+            447.9666155932324
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4,
+            0.3249999999999999,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1294.7664617779997,
+            408.198729051451
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4,
+            0.975,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1302.4482737393146,
+            430.17652168544913
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4,
+            0.975,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1302.4482737393146,
+            390.40863514366765
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4,
+            1.625,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1310.13008570063,
+            412.3864277776658
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4,
+            1.625,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1310.13008570063,
+            372.6185412358844
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4000000000000001,
+            2.275,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1317.8118976619448,
+            394.59633386988247
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4000000000000001,
+            2.275,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1317.8118976619448,
+            354.82844732810105
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.66
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            1214.2913051176602,
+            450.5288388778772
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-back": {
+          "original_world_metres_unchanged": [
+            0,
+            0.26,
+            0.98
+          ],
+          "rotated_world_metres": [
+            -0.26,
+            1.5920408388915593e-17,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            1200.0592299914333,
+            433.47330124979703
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -1.4389599889981402e-16,
+            -2.35,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1186.5186003344438,
+            525.7587907860085
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1214.2913051176602,
+            461.44075896556114
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            1.4389599889981402e-16,
+            2.35,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1242.0640099008763,
+            397.1227271451138
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.3930357340301143e-16,
+            -2.275,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1187.404963253057,
+            510.8542706506417
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.3930357340301143e-16,
+            -2.275,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1187.404963253057,
+            471.0863841088603
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -9.950255243072244e-17,
+            -1.625,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1195.0867752143722,
+            493.06417674285836
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -9.950255243072244e-17,
+            -1.625,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1195.0867752143722,
+            453.29629020107694
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -5.970153145843348e-17,
+            -0.9750000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1202.7685871756873,
+            475.27408283507503
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -5.970153145843348e-17,
+            -0.9750000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1202.7685871756873,
+            435.5061962932936
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.9900510486144492e-17,
+            -0.325,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1210.4503991370025,
+            457.48398892729176
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.9900510486144492e-17,
+            -0.325,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1210.4503991370025,
+            417.71610238551034
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.9900510486144492e-17,
+            0.325,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1218.1322110983176,
+            439.69389501950843
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.9900510486144492e-17,
+            0.325,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1218.1322110983176,
+            399.926008477727
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            5.970153145843348e-17,
+            0.9750000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1225.8140230596327,
+            421.9038011117251
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            5.970153145843348e-17,
+            0.9750000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1225.8140230596327,
+            382.1359145699437
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            9.950255243072244e-17,
+            1.625,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1233.4958350209479,
+            404.1137072039418
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            9.950255243072244e-17,
+            1.625,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1233.4958350209479,
+            364.34582066216035
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.3930357340301143e-16,
+            2.275,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1241.177646982263,
+            386.3236132961585
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.3930357340301143e-16,
+            2.275,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1241.177646982263,
+            346.555726754377
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            1.4,
+            0.66
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            8.572527594031472e-17,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            1137.657054437978,
+            442.25611830415323
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-back": {
+          "original_world_metres_unchanged": [
+            0,
+            1.66,
+            0.98
+          ],
+          "rotated_world_metres": [
+            -1.66,
+            1.0164568432923031e-16,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            1123.4249793117515,
+            425.20058067607306
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000001,
+            -2.35,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1109.8843496547618,
+            517.4860702122845
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            8.572527594031472e-17,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1137.657054437978,
+            453.1680383918372
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999997,
+            2.35,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1165.4297592211942,
+            388.8500065713898
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000001,
+            -2.275,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1110.770712573375,
+            502.58155007691767
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000001,
+            -2.275,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1110.770712573375,
+            462.81366353513624
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            -1.625,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1118.4525245346904,
+            484.7914561691344
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            -1.625,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1118.4525245346904,
+            445.0235696273529
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            -0.975,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1126.1343364960053,
+            467.00136226135106
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            -0.975,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1126.1343364960053,
+            427.23347571956964
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            -0.3249999999999999,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1133.8161484573207,
+            449.21126835356773
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            -0.3249999999999999,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1133.8161484573207,
+            409.4433818117863
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            0.3250000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1141.4979604186356,
+            431.42117444578446
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            0.3250000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1141.4979604186356,
+            391.65328790400304
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            0.9750000000000002,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1149.179772379951,
+            413.63108053800113
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            0.9750000000000002,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1149.179772379951,
+            373.8631939962197
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            1.625,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1156.8615843412658,
+            395.8409866302178
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            1.625,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1156.8615843412658,
+            356.0731000884364
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999997,
+            2.275,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1164.5433963025812,
+            378.05089272243447
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999997,
+            2.275,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1164.5433963025812,
+            338.28300618065305
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-lower--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.6,
+            0.0625
+          ],
+          "rotated_world_metres": [
+            -3.6,
+            -3.1,
+            0.0625
+          ],
+          "compensation_reference_pixel": [
+            980.5954694005572,
+            543.0784020942907
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-upper--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.22,
+            0.125
+          ],
+          "rotated_world_metres": [
+            -3.22,
+            -3.1,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            1001.3961945850424,
+            542.2927659081988
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-entry--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.0,
+            0.25
+          ],
+          "rotated_world_metres": [
+            -3.0,
+            -3.1,
+            0.25
+          ],
+          "compensation_reference_pixel": [
+            1013.4387196918495,
+            537.5305870290073
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-lower-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.6,
+            0.0625
+          ],
+          "rotated_world_metres": [
+            -3.6,
+            3.1,
+            0.0625
+          ],
+          "compensation_reference_pixel": [
+            1053.8681373392556,
+            373.3882755892807
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-upper-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.22,
+            0.125
+          ],
+          "rotated_world_metres": [
+            -3.22,
+            3.1,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            1074.6688625237407,
+            372.6026394031888
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-entry-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.0,
+            0.25
+          ],
+          "rotated_world_metres": [
+            -3.0,
+            3.1,
+            0.25
+          ],
+          "compensation_reference_pixel": [
+            1086.711387630548,
+            367.8404605239972
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "eave-fascia--1": {
+          "original_world_metres_unchanged": [
+            0,
+            -3.3,
+            2.69
+          ],
+          "rotated_world_metres": [
+            3.3,
+            -2.0206672185931328e-16,
+            2.69
+          ],
+          "compensation_reference_pixel": [
+            1394.9291817197675,
+            371.5790551851545
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "eave-fascia-1": {
+          "original_world_metres_unchanged": [
+            0,
+            3.3,
+            2.69
+          ],
+          "rotated_world_metres": [
+            -3.3,
+            2.0206672185931328e-16,
+            2.69
+          ],
+          "compensation_reference_pixel": [
+            1033.6534285155526,
+            332.57908676616995
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "ridge-center": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            3.5999999999999996
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            3.5999999999999996
+          ],
+          "compensation_reference_pixel": [
+            1214.2913051176602,
+            307.9464163988073
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "audience-focus": {
+          "original_world_metres_unchanged": [
+            0,
+            -6,
+            0
+          ],
+          "rotated_world_metres": [
+            6.0,
+            -3.6739403974420594e-16,
+            0.0
+          ],
+          "compensation_reference_pixel": [
+            1542.7238080305829,
+            517.9916545462814
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        }
+      },
+      "runtime_heading_degrees": null,
+      "runtime_import_permitted": false
+    },
+    {
+      "source_label": "S",
+      "cell_index": 2,
+      "object_rotation_degrees_about_Z": 180,
+      "observed_previous_native_clean_deck_slope": 0.05299001440385835,
+      "target_FINAL_native_slope": 0.07027041735119571,
+      "target_FINAL_native_camera_offset_degrees": 8,
+      "generator_response_gain_assumption": 0.7540870881558338,
+      "actual_compensation_reference_camera_offset_degrees": 10.557216382545915,
+      "actual_compensation_reference_ground_edge_slope": 0.09318607685359835,
+      "camera_down_degrees": 30,
+      "basis": {
+        "screen_right": [
+          0.9830724343336685,
+          0.18321732683694253,
+          0.0
+        ],
+        "screen_down": [
+          0.09160866341847125,
+          -0.4915362171668342,
+          -0.8660254037844387
+        ],
+        "toward_camera": [
+          0.15867085945426862,
+          -0.8513657018931664,
+          0.49999999999999994
+        ]
+      },
+      "scale_px_per_metre": 56,
+      "local_offset_px": [
+        400.0,
+        459.354480493703
+      ],
+      "cell_box": [
+        0,
+        800,
+        800,
+        1600
+      ],
+      "projected_model_anchors_for_reference_only": {
+        "raised-deck": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.125
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            400.0,
+            1253.292302667212
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-0-0": {
+          "original_world_metres_unchanged": [
+            -3.75,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            3.7500000000000004,
+            2.7499999999999996,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            634.6606795429595,
+            1133.3019209197719
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-0-1": {
+          "original_world_metres_unchanged": [
+            -3.75,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            3.7499999999999996,
+            -2.7500000000000004,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            578.2297428771813,
+            1284.695075807157
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-1-0": {
+          "original_world_metres_unchanged": [
+            0,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            3.3677786976552215e-16,
+            2.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            428.21546833288915,
+            1114.064101601893
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-1-1": {
+          "original_world_metres_unchanged": [
+            0,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -3.3677786976552215e-16,
+            -2.75,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            371.78453166711085,
+            1265.457256489278
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-2-0": {
+          "original_world_metres_unchanged": [
+            3.75,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -3.7499999999999996,
+            2.7500000000000004,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            221.77025712281878,
+            1094.826282284014
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-2-1": {
+          "original_world_metres_unchanged": [
+            3.75,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -3.7500000000000004,
+            -2.7499999999999996,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            165.33932045704046,
+            1246.219437171399
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "roof-support-beam--2.75": {
+          "original_world_metres_unchanged": [
+            0,
+            -2.75,
+            2.7
+          ],
+          "rotated_world_metres": [
+            3.3677786976552215e-16,
+            2.75,
+            2.7
+          ],
+          "compensation_reference_pixel": [
+            428.21546833288915,
+            1052.7148619978034
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "roof-support-beam-2.75": {
+          "original_world_metres_unchanged": [
+            0,
+            2.75,
+            2.7
+          ],
+          "rotated_world_metres": [
+            -3.3677786976552215e-16,
+            -2.75,
+            2.7
+          ],
+          "compensation_reference_pixel": [
+            371.78453166711085,
+            1204.1080168851884
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.4,
+            0.66
+          ],
+          "rotated_world_metres": [
+            1.7145055188062944e-16,
+            1.4,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            414.3642384240163,
+            1188.8097421439504
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-back": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.14,
+            0.98
+          ],
+          "rotated_world_metres": [
+            1.3960973510279825e-16,
+            1.14,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            411.6965941452704,
+            1180.4473342300823
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            2.35,
+            1.3999999999999997,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            543.7365707823271,
+            1211.777362337505
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            1.7145055188062944e-16,
+            1.4,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            414.3642384240163,
+            1199.7216622316344
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -2.35,
+            1.4000000000000001,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            284.9919060657055,
+            1187.6659621257636
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            2.275,
+            1.3999999999999997,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            539.6076665581256,
+            1198.5407889589865
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            2.275,
+            1.3999999999999997,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            539.6076665581256,
+            1158.772902417205
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.6250000000000002,
+            1.3999999999999997,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            503.82382994838014,
+            1195.2062336105541
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.6250000000000002,
+            1.3999999999999997,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            503.82382994838014,
+            1155.4383470687726
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.9750000000000003,
+            1.3999999999999997,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            468.03999333863464,
+            1191.8716782621218
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.9750000000000003,
+            1.3999999999999997,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            468.03999333863464,
+            1152.1037917203403
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.3250000000000002,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            432.2561567288891,
+            1188.5371229136895
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.3250000000000002,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            432.2561567288891,
+            1148.769236371908
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.32499999999999984,
+            1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            396.47232011914355,
+            1185.2025675652571
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.32499999999999984,
+            1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            396.47232011914355,
+            1145.4346810234756
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.9749999999999999,
+            1.4000000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            360.688483509398,
+            1181.8680122168248
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.9749999999999999,
+            1.4000000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            360.688483509398,
+            1142.1001256750433
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.6249999999999998,
+            1.4000000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            324.90464689965245,
+            1178.5334568683925
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.6249999999999998,
+            1.4000000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            324.90464689965245,
+            1138.765570326611
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            1.4000000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            289.1208102899069,
+            1175.19890151996
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            1.4000000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            289.1208102899069,
+            1135.4310149781786
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.66
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            400.0,
+            1227.3461815698302
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-back": {
+          "original_world_metres_unchanged": [
+            0,
+            0.26,
+            0.98
+          ],
+          "rotated_world_metres": [
+            -3.1840816777831187e-17,
+            -0.26,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            397.3323557212541,
+            1218.983773655962
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            2.35,
+            -2.8779199779962803e-16,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            529.3723323583108,
+            1250.3138017633848
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            400.0,
+            1238.258101657514
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -2.35,
+            2.8779199779962803e-16,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            270.62766764168924,
+            1226.2024015516433
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            2.275,
+            -2.7860714680602287e-16,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            525.2434281341093,
+            1237.0772283848662
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            2.275,
+            -2.7860714680602287e-16,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            525.2434281341093,
+            1197.309341843085
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.625,
+            -1.9900510486144489e-16,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            489.4595915243638,
+            1233.7426730364339
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.625,
+            -1.9900510486144489e-16,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            489.4595915243638,
+            1193.9747864946526
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.9750000000000001,
+            -1.1940306291686696e-16,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            453.6757549146183,
+            1230.4081176880015
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.9750000000000001,
+            -1.1940306291686696e-16,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            453.6757549146183,
+            1190.6402311462202
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.325,
+            -3.9801020972288984e-17,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            417.8919183048728,
+            1227.0735623395692
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.325,
+            -3.9801020972288984e-17,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            417.8919183048728,
+            1187.305675797788
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.325,
+            3.9801020972288984e-17,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            382.1080816951272,
+            1223.7390069911369
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.325,
+            3.9801020972288984e-17,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            382.1080816951272,
+            1183.9711204493556
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000001,
+            1.1940306291686696e-16,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            346.3242450853817,
+            1220.4044516427045
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000001,
+            1.1940306291686696e-16,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            346.3242450853817,
+            1180.636565100923
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.625,
+            1.9900510486144489e-16,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            310.5404084756362,
+            1217.0698962942722
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.625,
+            1.9900510486144489e-16,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            310.5404084756362,
+            1177.3020097524907
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            2.7860714680602287e-16,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            274.75657186589063,
+            1213.7353409458397
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            2.7860714680602287e-16,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            274.75657186589063,
+            1173.9674544040583
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            1.4,
+            0.66
+          ],
+          "rotated_world_metres": [
+            -1.7145055188062944e-16,
+            -1.4,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            385.6357615759837,
+            1265.8826209957099
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-back": {
+          "original_world_metres_unchanged": [
+            0,
+            1.66,
+            0.98
+          ],
+          "rotated_world_metres": [
+            -2.0329136865846063e-16,
+            -1.66,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            382.9681172972378,
+            1257.520213081842
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            2.35,
+            -1.4000000000000001,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            515.0080939342945,
+            1288.8502411892646
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -1.7145055188062944e-16,
+            -1.4,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            385.6357615759837,
+            1276.7945410833938
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -2.35,
+            -1.3999999999999997,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            256.2634292176729,
+            1264.738840977523
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            2.275,
+            -1.4000000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            510.8791897100931,
+            1275.613667810746
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            2.275,
+            -1.4000000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            510.8791897100931,
+            1235.8457812689646
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.6249999999999998,
+            -1.4000000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            475.09535310034755,
+            1272.2791124623136
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.6249999999999998,
+            -1.4000000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            475.09535310034755,
+            1232.5112259205323
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.9749999999999999,
+            -1.4000000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            439.311516490602,
+            1268.9445571138813
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.9749999999999999,
+            -1.4000000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            439.311516490602,
+            1229.1766705721
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            0.32499999999999984,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            403.52767988085645,
+            1265.610001765449
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            0.32499999999999984,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            403.52767988085645,
+            1225.8421152236676
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.3250000000000002,
+            -1.4,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            367.7438432711109,
+            1262.2754464170166
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.3250000000000002,
+            -1.4,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            367.7438432711109,
+            1222.507559875235
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000003,
+            -1.3999999999999997,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            331.96000666136536,
+            1258.9408910685843
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -0.9750000000000003,
+            -1.3999999999999997,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            331.96000666136536,
+            1219.1730045268027
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.6250000000000002,
+            -1.3999999999999997,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            296.17617005161986,
+            1255.606335720152
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.6250000000000002,
+            -1.3999999999999997,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            296.17617005161986,
+            1215.8384491783704
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            -1.3999999999999997,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            260.39233344187437,
+            1252.2717803717196
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -2.275,
+            -1.3999999999999997,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            260.39233344187437,
+            1212.503893829938
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-lower--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.6,
+            0.0625
+          ],
+          "rotated_world_metres": [
+            3.0999999999999996,
+            -3.6000000000000005,
+            0.0625
+          ],
+          "compensation_reference_pixel": [
+            533.7247615099973,
+            1371.320356930738
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-upper--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.22,
+            0.125
+          ],
+          "rotated_world_metres": [
+            3.0999999999999996,
+            -3.2200000000000006,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            537.6236262250874,
+            1357.8293773161822
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-entry--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.0,
+            0.25
+          ],
+          "rotated_world_metres": [
+            3.0999999999999996,
+            -3.0000000000000004,
+            0.25
+          ],
+          "compensation_reference_pixel": [
+            539.8808636917186,
+            1345.7114732941957
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-lower-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.6,
+            0.0625
+          ],
+          "rotated_world_metres": [
+            -3.1000000000000005,
+            -3.5999999999999996,
+            0.0625
+          ],
+          "compensation_reference_pixel": [
+            192.4020123093475,
+            1339.5138289918445
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-upper-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.22,
+            0.125
+          ],
+          "rotated_world_metres": [
+            -3.1000000000000005,
+            -3.2199999999999998,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            196.30087702443763,
+            1326.0228493772888
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-entry-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.0,
+            0.25
+          ],
+          "rotated_world_metres": [
+            -3.1000000000000005,
+            -2.9999999999999996,
+            0.25
+          ],
+          "compensation_reference_pixel": [
+            198.55811449106878,
+            1313.9049453553025
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "eave-fascia--1": {
+          "original_world_metres_unchanged": [
+            0,
+            -3.3,
+            2.69
+          ],
+          "rotated_world_metres": [
+            4.0413344371862655e-16,
+            3.3,
+            2.69
+          ],
+          "compensation_reference_pixel": [
+            433.858561999467,
+            1038.0605207351841
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "eave-fascia-1": {
+          "original_world_metres_unchanged": [
+            0,
+            3.3,
+            2.69
+          ],
+          "rotated_world_metres": [
+            -4.0413344371862655e-16,
+            -3.3,
+            2.69
+          ],
+          "compensation_reference_pixel": [
+            366.141438000533,
+            1219.732306600046
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "ridge-center": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            3.5999999999999996
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            3.5999999999999996
+          ],
+          "compensation_reference_pixel": [
+            400.0,
+            1084.7637590907602
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "audience-focus": {
+          "original_world_metres_unchanged": [
+            0,
+            -6,
+            0
+          ],
+          "rotated_world_metres": [
+            7.347880794884119e-16,
+            6.0,
+            0.0
+          ],
+          "compensation_reference_pixel": [
+            461.5610218172127,
+            1094.1983115256467
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        }
+      },
+      "runtime_heading_degrees": null,
+      "runtime_import_permitted": false
+    },
+    {
+      "source_label": "W",
+      "cell_index": 3,
+      "object_rotation_degrees_about_Z": 270,
+      "observed_previous_native_clean_deck_slope": 0.042856346895849225,
+      "target_FINAL_native_slope": 0.07027041735119571,
+      "target_FINAL_native_camera_offset_degrees": 8,
+      "generator_response_gain_assumption": 0.6098775062294401,
+      "actual_compensation_reference_camera_offset_degrees": 12.9767648124167,
+      "actual_compensation_reference_ground_edge_slope": 0.11522054286875026,
+      "camera_down_degrees": 30,
+      "basis": {
+        "screen_right": [
+          0.9744612091820308,
+          0.22455589905298484,
+          0.0
+        ],
+        "screen_down": [
+          0.11227794952649241,
+          -0.48723060459101536,
+          -0.8660254037844387
+        ],
+        "toward_camera": [
+          0.19447111314953885,
+          -0.8439081621541407,
+          0.49999999999999994
+        ]
+      },
+      "scale_px_per_metre": 56,
+      "local_offset_px": [
+        386.01066193243764,
+        481.95675001981056
+      ],
+      "cell_box": [
+        800,
+        800,
+        1600,
+        1600
+      ],
+      "projected_model_anchors_for_reference_only": {
+        "raised-deck": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.125
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            1186.0106619324376,
+            1275.8945721933196
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-0-0": {
+          "original_world_metres_unchanged": [
+            -3.75,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -2.749999999999999,
+            3.7500000000000004,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1083.1003745195317,
+            1092.7537173805
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-0-1": {
+          "original_world_metres_unchanged": [
+            -3.75,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            2.750000000000001,
+            3.7499999999999996,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1383.2344269475973,
+            1127.3353258346597
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-1-0": {
+          "original_world_metres_unchanged": [
+            0,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -2.75,
+            5.051668046482832e-16,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1035.943635718405,
+            1195.0721443446132
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-1-1": {
+          "original_world_metres_unchanged": [
+            0,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            2.75,
+            -5.051668046482832e-16,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1336.0776881464703,
+            1229.653752798773
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-2-0": {
+          "original_world_metres_unchanged": [
+            3.75,
+            -2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            -2.750000000000001,
+            -3.7499999999999996,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            988.786896917278,
+            1297.3905713087265
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "post-2-1": {
+          "original_world_metres_unchanged": [
+            3.75,
+            2.75,
+            1.435
+          ],
+          "rotated_world_metres": [
+            2.749999999999999,
+            -3.7500000000000004,
+            1.435
+          ],
+          "compensation_reference_pixel": [
+            1288.9209493453436,
+            1331.972179762886
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "roof-support-beam--2.75": {
+          "original_world_metres_unchanged": [
+            0,
+            -2.75,
+            2.7
+          ],
+          "rotated_world_metres": [
+            -2.75,
+            5.051668046482832e-16,
+            2.7
+          ],
+          "compensation_reference_pixel": [
+            1035.943635718405,
+            1133.7229047405235
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "roof-support-beam-2.75": {
+          "original_world_metres_unchanged": [
+            0,
+            2.75,
+            2.7
+          ],
+          "rotated_world_metres": [
+            2.75,
+            -5.051668046482832e-16,
+            2.7
+          ],
+          "compensation_reference_pixel": [
+            1336.0776881464703,
+            1168.3045131946833
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.4,
+            0.66
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            2.5717582782094415e-16,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            1109.6129031325663,
+            1241.1458598530608
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-back": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.14,
+            0.98
+          ],
+          "rotated_world_metres": [
+            -1.14,
+            2.0941460265419738e-16,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            1123.8010583382568,
+            1227.2614515623493
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999995,
+            2.3500000000000005,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1139.1644594479394,
+            1187.938232376567
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            2.5717582782094415e-16,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1109.6129031325663,
+            1252.0577799407447
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-0-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            -1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000004,
+            -2.3499999999999996,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1080.0613468171937,
+            1316.1773275049222
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999995,
+            2.2750000000000004,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1138.2213246719166,
+            1177.1327839236883
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999995,
+            2.2750000000000004,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1138.2213246719166,
+            1137.3648973819068
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999997,
+            1.6250000000000002,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1130.047489946388,
+            1194.867977930801
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999997,
+            1.6250000000000002,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1130.047489946388,
+            1155.1000913890198
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999997,
+            0.9750000000000003,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1121.8736552208593,
+            1212.603171937914
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.3999999999999997,
+            0.9750000000000003,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1121.8736552208593,
+            1172.8352853961328
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            0.3250000000000003,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1113.6998204953306,
+            1230.3383659450271
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            0.3250000000000003,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1113.6998204953306,
+            1190.5704794032456
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            -0.32499999999999973,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1105.525985769802,
+            1248.07355995214
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4,
+            -0.32499999999999973,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1105.525985769802,
+            1208.3056734103586
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000001,
+            -0.9749999999999999,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1097.3521510442733,
+            1265.808753959253
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000001,
+            -0.9749999999999999,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1097.3521510442733,
+            1226.0408674174714
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000001,
+            -1.6249999999999998,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1089.1783163187447,
+            1283.543947966366
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000001,
+            -1.6249999999999998,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1089.1783163187447,
+            1243.7760614245844
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-0-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            -1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000004,
+            -2.2749999999999995,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1081.004481593216,
+            1301.279141973479
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-0-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            -1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.4000000000000004,
+            -2.2749999999999995,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1081.004481593216,
+            1261.5112554316975
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.66
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            1186.0106619324376,
+            1249.9484510959378
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-back": {
+          "original_world_metres_unchanged": [
+            0,
+            0.26,
+            0.98
+          ],
+          "rotated_world_metres": [
+            0.26,
+            -4.7761225166746774e-17,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            1200.198817138128,
+            1236.0640428052263
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            4.31687996699442e-16,
+            2.35,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1215.5622182478105,
+            1196.740823619444
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1186.0106619324376,
+            1260.8603711836217
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-1-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            0,
+            0.435
+          ],
+          "rotated_world_metres": [
+            -4.31687996699442e-16,
+            -2.35,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1156.4591056170648,
+            1324.9799187477993
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            4.1791072020903423e-16,
+            2.275,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1214.619083471788,
+            1185.9353751665653
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            4.1791072020903423e-16,
+            2.275,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1214.619083471788,
+            1146.1674886247838
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            2.985076572921673e-16,
+            1.625,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1206.4452487462593,
+            1203.6705691736781
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            2.985076572921673e-16,
+            1.625,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1206.4452487462593,
+            1163.9026826318968
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.791045943753004e-16,
+            0.9750000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1198.2714140207306,
+            1221.4057631807912
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.791045943753004e-16,
+            0.9750000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1198.2714140207306,
+            1181.6378766390098
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            5.970153145843347e-17,
+            0.325,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1190.097579295202,
+            1239.140957187904
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            5.970153145843347e-17,
+            0.325,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1190.097579295202,
+            1199.3730706461226
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -5.970153145843347e-17,
+            -0.325,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1181.9237445696733,
+            1256.876151195017
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -5.970153145843347e-17,
+            -0.325,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1181.9237445696733,
+            1217.1082646532357
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -1.791045943753004e-16,
+            -0.9750000000000001,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1173.7499098441447,
+            1274.61134520213
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -1.791045943753004e-16,
+            -0.9750000000000001,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1173.7499098441447,
+            1234.8434586603485
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -2.985076572921673e-16,
+            -1.625,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1165.576075118616,
+            1292.346539209243
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -2.985076572921673e-16,
+            -1.625,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1165.576075118616,
+            1252.5786526674615
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-1-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            0,
+            0.7
+          ],
+          "rotated_world_metres": [
+            -4.1791072020903423e-16,
+            -2.275,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1157.4022403930874,
+            1310.081733216356
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-1-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            0,
+            1.52
+          ],
+          "rotated_world_metres": [
+            -4.1791072020903423e-16,
+            -2.275,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1157.4022403930874,
+            1270.3138466745745
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-seat": {
+          "original_world_metres_unchanged": [
+            0,
+            1.4,
+            0.66
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -2.5717582782094415e-16,
+            0.66
+          ],
+          "compensation_reference_pixel": [
+            1262.408420732309,
+            1258.7510423388148
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-back": {
+          "original_world_metres_unchanged": [
+            0,
+            1.66,
+            0.98
+          ],
+          "rotated_world_metres": [
+            1.66,
+            -3.049370529876909e-16,
+            0.98
+          ],
+          "compensation_reference_pixel": [
+            1276.5965759379992,
+            1244.8666340481034
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg--2.35": {
+          "original_world_metres_unchanged": [
+            -2.35,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            1.4000000000000004,
+            2.3499999999999996,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1291.9599770476816,
+            1205.543414862321
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg-0": {
+          "original_world_metres_unchanged": [
+            0,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -2.5717582782094415e-16,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1262.408420732309,
+            1269.6629624264988
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "bench-row-2-leg-2.35": {
+          "original_world_metres_unchanged": [
+            2.35,
+            1.4,
+            0.435
+          ],
+          "rotated_world_metres": [
+            1.3999999999999995,
+            -2.3500000000000005,
+            0.435
+          ],
+          "compensation_reference_pixel": [
+            1232.8568644169359,
+            1333.7825099906763
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4000000000000004,
+            2.2749999999999995,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1291.0168422716592,
+            1194.7379664094422
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-0": {
+          "original_world_metres_unchanged": [
+            -2.275,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4000000000000004,
+            2.2749999999999995,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1291.0168422716592,
+            1154.9700798676608
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4000000000000001,
+            1.6249999999999998,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1282.8430075461306,
+            1212.4731604165552
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-1": {
+          "original_world_metres_unchanged": [
+            -1.625,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4000000000000001,
+            1.6249999999999998,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1282.8430075461306,
+            1172.7052738747739
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4000000000000001,
+            0.9749999999999999,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1274.669172820602,
+            1230.2083544236682
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-2": {
+          "original_world_metres_unchanged": [
+            -0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4000000000000001,
+            0.9749999999999999,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1274.669172820602,
+            1190.4404678818867
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4,
+            0.32499999999999973,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1266.4953380950733,
+            1247.943548430781
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-3": {
+          "original_world_metres_unchanged": [
+            -0.325,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4,
+            0.32499999999999973,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1266.4953380950733,
+            1208.1756618889997
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -0.3250000000000003,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1258.3215033695446,
+            1265.678742437894
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-4": {
+          "original_world_metres_unchanged": [
+            0.325,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.4,
+            -0.3250000000000003,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1258.3215033695446,
+            1225.9108558961125
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.3999999999999997,
+            -0.9750000000000003,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1250.147668644016,
+            1283.413936445007
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-5": {
+          "original_world_metres_unchanged": [
+            0.9750000000000001,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.3999999999999997,
+            -0.9750000000000003,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1250.147668644016,
+            1243.6460499032255
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.3999999999999997,
+            -1.6250000000000002,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1241.9738339184873,
+            1301.14913045212
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-6": {
+          "original_world_metres_unchanged": [
+            1.625,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.3999999999999997,
+            -1.6250000000000002,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1241.9738339184873,
+            1261.3812439103385
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-2-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            1.4,
+            0.7
+          ],
+          "rotated_world_metres": [
+            1.3999999999999995,
+            -2.2750000000000004,
+            0.7
+          ],
+          "compensation_reference_pixel": [
+            1233.7999991929587,
+            1318.884324459233
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "seat-head-2-7": {
+          "original_world_metres_unchanged": [
+            2.275,
+            1.4,
+            1.52
+          ],
+          "rotated_world_metres": [
+            1.3999999999999995,
+            -2.2750000000000004,
+            1.52
+          ],
+          "compensation_reference_pixel": [
+            1233.7999991929587,
+            1279.1164379174515
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-lower--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.6,
+            0.0625
+          ],
+          "rotated_world_metres": [
+            3.6000000000000005,
+            3.0999999999999996,
+            0.0625
+          ],
+          "compensation_reference_pixel": [
+            1421.4449457791334,
+            1216.9776627741057
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-upper--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.22,
+            0.125
+          ],
+          "rotated_world_metres": [
+            3.2200000000000006,
+            3.0999999999999996,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            1400.7084112477396,
+            1211.5572990949363
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-entry--3.1": {
+          "original_world_metres_unchanged": [
+            -3.1,
+            3.0,
+            0.25
+          ],
+          "rotated_world_metres": [
+            3.0000000000000004,
+            3.0999999999999996,
+            0.25
+          ],
+          "compensation_reference_pixel": [
+            1388.703049150617,
+            1204.111856930279
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-lower-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.6,
+            0.0625
+          ],
+          "rotated_world_metres": [
+            3.5999999999999996,
+            -3.1000000000000005,
+            0.0625
+          ],
+          "compensation_reference_pixel": [
+            1343.4791376279368,
+            1386.1441286881063
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-step-upper-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.22,
+            0.125
+          ],
+          "rotated_world_metres": [
+            3.2199999999999998,
+            -3.1000000000000005,
+            0.125
+          ],
+          "compensation_reference_pixel": [
+            1322.7426030965432,
+            1380.7237650089369
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "rear-entry-3.1": {
+          "original_world_metres_unchanged": [
+            3.1,
+            3.0,
+            0.25
+          ],
+          "rotated_world_metres": [
+            2.9999999999999996,
+            -3.1000000000000005,
+            0.25
+          ],
+          "compensation_reference_pixel": [
+            1310.7372409994207,
+            1373.2783228442795
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "eave-fascia--1": {
+          "original_world_metres_unchanged": [
+            0,
+            -3.3,
+            2.69
+          ],
+          "rotated_world_metres": [
+            -3.3,
+            6.062001655779398e-16,
+            2.69
+          ],
+          "compensation_reference_pixel": [
+            1005.9302304755984,
+            1130.749718121227
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "eave-fascia-1": {
+          "original_world_metres_unchanged": [
+            0,
+            3.3,
+            2.69
+          ],
+          "rotated_world_metres": [
+            3.3,
+            -6.062001655779398e-16,
+            2.69
+          ],
+          "compensation_reference_pixel": [
+            1366.091093389277,
+            1172.2476482662184
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "ridge-center": {
+          "original_world_metres_unchanged": [
+            0,
+            0,
+            3.5999999999999996
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            3.5999999999999996
+          ],
+          "compensation_reference_pixel": [
+            1186.0106619324376,
+            1107.3660286168679
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        },
+        "audience-focus": {
+          "original_world_metres_unchanged": [
+            0,
+            -6,
+            0
+          ],
+          "rotated_world_metres": [
+            -6.0,
+            1.102182119232618e-15,
+            0.0
+          ],
+          "compensation_reference_pixel": [
+            858.5916956472753,
+            1244.2313589789092
+          ],
+          "NOT_a_final_native_or_runtime_anchor": true
+        }
+      },
+      "runtime_heading_degrees": null,
+      "runtime_import_permitted": false
+    }
+  ],
+  "required_final_native_verification": [
+    "Independently remeasure the NEW native deck edges against ORIGINAL ideal8degree model, not against this compensation reference.",
+    "Final desired slope magnitude remains0.07027041735119574 at30degrees down; use measured edge fitting and uncertainty, not filename or nominal instructions.",
+    "Verify actual source pixel scale/origin, all24seat/entry geometry, visibility and sixposts separately before release.",
+    "Never register these compensation camera angles as artifact headings or release anchors."
+  ],
+  "original_input_sha256_preserved": {
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.calibration.json": "2dad57d8d1f955c9ed2e98ba0c962416293ba62022f605b1dda8b1eabd31acfa",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.png": "114ddf3bd68ae5b61ac222ba9837ea177490288cdbc538afb26bfb24b9287ecc",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.svg": "286b25c4419548a525f9cf6ecf12ba5d8b1b8d7122a9d3912f34a3d9348425af",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\seated-pavilion-24-budget-world-model-v1.json": "cab587ff0fa79610a1d9b9978c0d713019bcf20e6acd0ae0323a4b5fac70c017",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.calibration.json": "139a89cfc97e2910d0e0f9f42d4001ccb474579d733a892c14a9126f8f66c1be",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.png": "d21c4533b420b870067b65efe4dcf676b003e36b01733c4bb5da848a440efedd",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.svg": "c7eeb5ae7bfce9cea091ccd8c5d46113562203e71278bfc80de774f9a5f9d2ad",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\qa-normal-v2-yaw8-v1\\review.json": "6718bd9edff560a28cbbf7dc8e6c1d1dd9ed6633235dcd41680f153c5ce7987d",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\pavilion-guide-handedness-proof.json": "c07f415b3c6be0f9ecec4b9ec95185f8ce8fbb0f4dba07633a4283f649368ba0",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\pavilion-guide-handedness-proof.md": "2083d9b1d37c1dc1a41e89c6bc4f0e6854f94378b6cee398d061b50068907e36",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\normal-v2.png": "f10c20797a4bab35af85445d4cf479a49d622f884d3503649e9e332dc947d01e",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\yaw8-v1.png": "6415514479ccdcbddb4f3f2b4792389144b0eca72a99f39936fd73dc22deb2db"
+  },
+  "outputs": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\generator-compensation\\attempt-1\\GENERATOR-COMPENSATION-reference-v1.png",
+      "sha256": "0d0eaa0479af389b9d8af34e498015fb65e75773a014b9441eacdae949b91810",
+      "bytes": 53484
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\generator-compensation\\attempt-1\\GENERATOR-COMPENSATION-reference-v1.svg",
+      "sha256": "e0686a7234ed8e9265f3918832fc7e10bd292c107ed8dc489e0e91cce4637a89",
+      "bytes": 71521
+    }
+  ],
+  "runtime_import_permitted": false,
+  "runtime_headings_from_compensation_permitted": false,
+  "final_native8degree_verified": false,
+  "capacity_validated": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_edited": false,
+  "guide_code": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_pavilion_generator_compensation.py",
+    "sha256": "890d343a6d394f4e3aebc0fba8882c27c448154c8576c8e1c10b65e8d050a66b",
+    "bytes": 9101
+  }
+}

@@ -1,0 +1,787 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "scope": "Next8 exact existing golf parked/mobile-prop source jobs from28subject audit",
+  "sourceOnly": true,
+  "nativeImagegenByRootOnly": true,
+  "jobCount": 8,
+  "styleAuthorityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\style-authority.png",
+  "coreModelsExcluded": [
+    "golf-reel-mower",
+    "golf-player-cart",
+    "golf-walkbehind-mower",
+    "golf-rotary-tractor",
+    "golf-range-ball-picker",
+    "golf-maintenance-utility",
+    "town-school-shuttle-bus"
+  ],
+  "auditInput": "art/catalogue-completion-20261107/audit/golf-vehicle-prop-sources.csv",
+  "auditCountsAreBaselineNotCurrentReleaseProof": true,
+  "noCompletenessInference": "Core images or a broadcast-compound rendering do not prove full8views for another exact old stable ID. All old-ID coverage holds remain until explicit source-camera/identity review and mapping.",
+  "audit28SubjectDisposition": [
+    {
+      "runtimeSubjectId": "business:golf-cart-se",
+      "name": "golf cart se",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-source-reference",
+      "reason": "golf-player-cart source. Source family excluded by request; exact stable-ID mapping is not claimed."
+    },
+    {
+      "runtimeSubjectId": "business:golf-cart-sw",
+      "name": "golf cart sw",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-source-reference",
+      "reason": "golf-player-cart source; generic maintenance utility also references it. Source family excluded by request; exact stable-ID mapping is not claimed."
+    },
+    {
+      "runtimeSubjectId": "business:golf-mower",
+      "name": "golf mower",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-source-reference",
+      "reason": "golf-reel-mower source. Source family excluded by request; exact stable-ID mapping is not claimed."
+    },
+    {
+      "runtimeSubjectId": "newprop:golf-cart",
+      "name": "Golf cart",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-other-parked-cart-or-van-variant",
+      "reason": "Distinct baseline ID remains to do; avoid duplicating generic player/utility/shuttle families ahead of functional gaps. No completion or alias inferred."
+    },
+    {
+      "runtimeSubjectId": "newprop:golf-cart-2",
+      "name": "Golf cart 2",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-other-parked-cart-or-van-variant",
+      "reason": "Distinct baseline ID remains to do; avoid duplicating generic player/utility/shuttle families ahead of functional gaps. No completion or alias inferred."
+    },
+    {
+      "runtimeSubjectId": "newprop:ride-mower-2",
+      "name": "Ride mower 2",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-mower-family-variant",
+      "reason": "Seven core models already include reel/walkbehind/rotary mower families. This exact old ID is still not proven complete; defer separate source variant."
+    },
+    {
+      "runtimeSubjectId": "newprop:cart-ambulance",
+      "name": "Cart ambulance",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "selected-next8-source-job",
+      "reason": "Exact existing mobile-object subject; no full8set proven yet."
+    },
+    {
+      "runtimeSubjectId": "newprop:shanty-cart-ambulance",
+      "name": "Shanty cart ambulance",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-next-medical-budget-variant",
+      "reason": "Deferred ninth variant: same actual medical stretcher-cart role as cart-ambulance but raw-board rear bed and canopy alterations. Ordinary-budget redesign remains needed for this exact ID; not counted complete."
+    },
+    {
+      "runtimeSubjectId": "newprop:satellite-van",
+      "name": "Satellite van",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "selected-next8-source-job",
+      "reason": "Exact existing mobile-object subject; no full8set proven yet."
+    },
+    {
+      "runtimeSubjectId": "newprop:shanty-broadcast-van",
+      "name": "Shanty broadcast van",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "selected-next8-source-job",
+      "reason": "Exact existing mobile-object subject; no full8set proven yet."
+    },
+    {
+      "runtimeSubjectId": "newprop:shanty-satellite-van",
+      "name": "Shanty satellite van",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-other-parked-cart-or-van-variant",
+      "reason": "Distinct baseline ID remains to do; avoid duplicating generic player/utility/shuttle families ahead of functional gaps. No completion or alias inferred."
+    },
+    {
+      "runtimeSubjectId": "newprop:ice-cream-cart",
+      "name": "Ice cream cart",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "selected-next8-source-job",
+      "reason": "Exact existing mobile-object subject; no full8set proven yet."
+    },
+    {
+      "runtimeSubjectId": "newprop:drinks-cart",
+      "name": "Drinks cart",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-not-actually-mobile",
+      "reason": "MISLABELLED AS VEHICLE: actual picture is a stationary trestle table, two drinks jars and patched umbrella; no wheels. Excluded from this mobile-object batch, deferred as a refreshment-table prop."
+    },
+    {
+      "runtimeSubjectId": "newprop:drinks-cart-green",
+      "name": "Drinks cart green",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "selected-next8-source-job",
+      "reason": "Exact existing mobile-object subject; no full8set proven yet."
+    },
+    {
+      "runtimeSubjectId": "newprop:gang-mower",
+      "name": "Gang mower",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-mower-family-variant",
+      "reason": "Seven core models already include reel/walkbehind/rotary mower families. This exact old ID is still not proven complete; defer separate source variant."
+    },
+    {
+      "runtimeSubjectId": "newprop:green-gang-mower",
+      "name": "Green gang mower",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-mower-family-variant",
+      "reason": "Seven core models already include reel/walkbehind/rotary mower families. This exact old ID is still not proven complete; defer separate source variant."
+    },
+    {
+      "runtimeSubjectId": "newprop:green-golf-cart",
+      "name": "Green golf cart",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-other-parked-cart-or-van-variant",
+      "reason": "Distinct baseline ID remains to do; avoid duplicating generic player/utility/shuttle families ahead of functional gaps. No completion or alias inferred."
+    },
+    {
+      "runtimeSubjectId": "newprop:green-greens-mower",
+      "name": "Green greens mower",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-mower-family-variant",
+      "reason": "Seven core models already include reel/walkbehind/rotary mower families. This exact old ID is still not proven complete; defer separate source variant."
+    },
+    {
+      "runtimeSubjectId": "newprop:green-ride-mower",
+      "name": "Green ride mower",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-mower-family-variant",
+      "reason": "Seven core models already include reel/walkbehind/rotary mower families. This exact old ID is still not proven complete; defer separate source variant."
+    },
+    {
+      "runtimeSubjectId": "newprop:greens-mower",
+      "name": "Greens mower",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-mower-family-variant",
+      "reason": "Seven core models already include reel/walkbehind/rotary mower families. This exact old ID is still not proven complete; defer separate source variant."
+    },
+    {
+      "runtimeSubjectId": "newprop:ride-mower",
+      "name": "Ride mower",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-mower-family-variant",
+      "reason": "Seven core models already include reel/walkbehind/rotary mower families. This exact old ID is still not proven complete; defer separate source variant."
+    },
+    {
+      "runtimeSubjectId": "newprop:roofed-cart",
+      "name": "Roofed cart",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-other-parked-cart-or-van-variant",
+      "reason": "Distinct baseline ID remains to do; avoid duplicating generic player/utility/shuttle families ahead of functional gaps. No completion or alias inferred."
+    },
+    {
+      "runtimeSubjectId": "newprop:shuttle-cart",
+      "name": "Shuttle cart",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "selected-next8-source-job",
+      "reason": "Exact existing mobile-object subject; no full8set proven yet."
+    },
+    {
+      "runtimeSubjectId": "newprop:shuttle-cart-white",
+      "name": "Shuttle cart white",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-other-parked-cart-or-van-variant",
+      "reason": "Distinct baseline ID remains to do; avoid duplicating generic player/utility/shuttle families ahead of functional gaps. No completion or alias inferred."
+    },
+    {
+      "runtimeSubjectId": "newprop:supply-cart",
+      "name": "Supply cart",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "selected-next8-source-job",
+      "reason": "Exact existing mobile-object subject; no full8set proven yet."
+    },
+    {
+      "runtimeSubjectId": "newprop:utility-cart",
+      "name": "Utility cart",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-other-parked-cart-or-van-variant",
+      "reason": "Distinct baseline ID remains to do; avoid duplicating generic player/utility/shuttle families ahead of functional gaps. No completion or alias inferred."
+    },
+    {
+      "runtimeSubjectId": "newprop:utility-cart-green",
+      "name": "Utility cart green",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "deferred-core-source-reference",
+      "reason": "used as reference for new range-ball-picker design; not an approved identity alias. Source family excluded by request; exact stable-ID mapping is not claimed."
+    },
+    {
+      "runtimeSubjectId": "newprop:wheelchair-cart",
+      "name": "Wheelchair cart",
+      "auditBaselineNormalCount": 0,
+      "auditBaselineYaw8Count": 0,
+      "status": "selected-next8-source-job",
+      "reason": "Exact existing mobile-object subject; no full8set proven yet."
+    }
+  ],
+  "jobs": [
+    {
+      "priority": 1,
+      "jobId": "golf-vehicle-01-01-cart-ambulance",
+      "runtimeSubjectId": "newprop:cart-ambulance",
+      "runtimeName": "Cart ambulance",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\cart-ambulance.source.png",
+      "sourceProvenance": {
+        "runtimeSubjectId": "newprop:cart-ambulance",
+        "runtimeName": "Cart ambulance",
+        "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\cart-ambulance.source.png",
+        "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+        "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+        "sourceSheetSHA256": "a99d9e88357e720c6a7bf66e7139bb5a84e1818632b82f62d8d7ac8f1cfcde5c",
+        "cropRectXYWH": [
+          659,
+          126,
+          580,
+          510
+        ],
+        "sourceCell": "top right",
+        "pngSHA256": "233dfad803b1ceb32714f2b7725f491518dbd6d7e8452b6506bbbf85cfd2f70b",
+        "rgbaSHA256": "6a234ab986e9fe3be62382b458df51a5a97781bf7803371caf51fe63e19c9530",
+        "cropPixels": [
+          580,
+          510
+        ],
+        "sourceMetadataCutOff": false,
+        "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+        "visualInspection": "inspected native crop",
+        "actualIdentityNotes": "Confirmed actual medical golf cart: orange strapped stretcher at rear and green roof beacon.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "runtimeLibrarySource": "src/game/new-props-library.ts",
+      "runtimeBaseBoxesInTiles": [
+        {
+          "hx": 2,
+          "hy": 2,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "sourceDisplayPixels": [
+        256,
+        225.1
+      ],
+      "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+      "functionalBrief": "Cream compact medical golf cart with four wheels, front two-person cream bench/steering wheel, short cab canopy with green beacon and one fixed orange stretcher strapped lengthwise on rear medical platform. Keep stretcher at rear, cab at front, cross markings on fixed hood/side panels. No patient, driver or extra benches.",
+      "conditionAndEraBrief": "Identity-preserving medical utility. Source is an actual stretcher cart, distinct from generated basic player cart. Later-style body can be preserved as a later-era model; do not assign an unverified release year.",
+      "ordinaryBudgetRedesignRequired": false,
+      "originalAuditCounts": {
+        "normal": 0,
+        "yaw8": 0
+      },
+      "nativeGeneratedByThisBrief": false,
+      "exactEightImagesAlreadyProvenForThisStableID": false,
+      "existingNormal4UsableRefs": 0,
+      "generatedCoreReuseClaimed": false,
+      "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+      "sourcePlan": {
+        "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+        "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+        "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+        "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+      },
+      "ownerApproved": false,
+      "runtimeIntegrated": false
+    },
+    {
+      "priority": 2,
+      "jobId": "golf-vehicle-01-02-wheelchair-cart",
+      "runtimeSubjectId": "newprop:wheelchair-cart",
+      "runtimeName": "Wheelchair cart",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\wheelchair-cart.source.png",
+      "sourceProvenance": {
+        "runtimeSubjectId": "newprop:wheelchair-cart",
+        "runtimeName": "Wheelchair cart",
+        "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\wheelchair-cart.source.png",
+        "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+        "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+        "sourceSheetSHA256": "eae0daeb83966cdc4004902ed719d9997dce86f2b2fdfaa1ffea68788e308b8c",
+        "cropRectXYWH": [
+          649,
+          639,
+          601,
+          551
+        ],
+        "sourceCell": "bottom right",
+        "pngSHA256": "60cb3c06c513598a454e72d9ff7a70e789dcf3f18fd88ee93eb4c99fe4877a77",
+        "rgbaSHA256": "6d38a785bfce99aa09e8989ed7bd20a0f064310c6bb3f7d7d44edb9c35400418",
+        "cropPixels": [
+          601,
+          551
+        ],
+        "sourceMetadataCutOff": false,
+        "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+        "visualInspection": "inspected native crop",
+        "actualIdentityNotes": "Confirmed accessible cart/ramp function, but improvised rope/tarp/wood body must be replaced with ordinary practical construction.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "runtimeLibrarySource": "src/game/new-props-library.ts",
+      "runtimeBaseBoxesInTiles": [
+        {
+          "hx": 1.3,
+          "hy": 1.3,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "sourceDisplayPixels": [
+        166.4,
+        152.56
+      ],
+      "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+      "functionalBrief": "Actual four-wheel accessible transport cart with driver seat/control at front, a clear wheelchair bay at middle/rear, folding SIDE access ramp, handrails and one small rear passenger bench under a full canopy. Ramp stays on the SAME physical side and deployed at fixed angle in every source view. Empty wheelchair space; no person.",
+      "conditionAndEraBrief": "Replace source rope-lashed posts, blue patched tarp, scrap wood and corrugated bonnet with an ordinary sound older metal transport-cart chassis, simple canopy and practical side ramp. Preserve access role, not fantasy construction. Geometry/clearances remain design proposals, not accessibility certification.",
+      "ordinaryBudgetRedesignRequired": true,
+      "originalAuditCounts": {
+        "normal": 0,
+        "yaw8": 0
+      },
+      "nativeGeneratedByThisBrief": false,
+      "exactEightImagesAlreadyProvenForThisStableID": false,
+      "existingNormal4UsableRefs": 0,
+      "generatedCoreReuseClaimed": false,
+      "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+      "sourcePlan": {
+        "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+        "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+        "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+        "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+      },
+      "ownerApproved": false,
+      "runtimeIntegrated": false
+    },
+    {
+      "priority": 3,
+      "jobId": "golf-vehicle-01-03-shuttle-cart",
+      "runtimeSubjectId": "newprop:shuttle-cart",
+      "runtimeName": "Shuttle cart",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shuttle-cart.source.png",
+      "sourceProvenance": {
+        "runtimeSubjectId": "newprop:shuttle-cart",
+        "runtimeName": "Shuttle cart",
+        "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shuttle-cart.source.png",
+        "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+        "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+        "sourceSheetSHA256": "7cc4f106aa4a8a0aeec4a14bbcc3ff9a0b79c92c8a1053fddcdb5f319bfeb765",
+        "cropRectXYWH": [
+          647,
+          66,
+          597,
+          545
+        ],
+        "sourceCell": "top right",
+        "pngSHA256": "372e0bb76bdee79e4ad0870c76d089ed58f55282a4ace113c1bbf502c7b1711e",
+        "rgbaSHA256": "1221054db0e233e9795eeed925e6f4da889f4febdef7ebb32706b81e55968b56",
+        "cropPixels": [
+          597,
+          545
+        ],
+        "sourceMetadataCutOff": false,
+        "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+        "visualInspection": "inspected native crop",
+        "actualIdentityNotes": "Confirmed three passenger bench rows under long canopy, open sides and four wheels; not a bus.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "runtimeLibrarySource": "src/game/new-props-library.ts",
+      "runtimeBaseBoxesInTiles": [
+        {
+          "hx": 1.4,
+          "hy": 1.4,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "sourceDisplayPixels": [
+        179.2,
+        163.59
+      ],
+      "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+      "functionalBrief": "Long cream/green four-wheel open-sided passenger shuttle cart with three transverse two-place bench rows, full-length cream canopy, front steering wheel/windshield and fixed rear rail. Preserve exactly three bench rows and long wheelbase; no front row copied to rear, no people or side doors added.",
+      "conditionAndEraBrief": "Identity-preserving six-place-looking passenger body, different from generated two-place player cart and schoolbus. Seating shown is source geometry, not an accepted runtime capacity. Source rounded nose is later-era styling; timeline binding remains separate.",
+      "ordinaryBudgetRedesignRequired": false,
+      "originalAuditCounts": {
+        "normal": 0,
+        "yaw8": 0
+      },
+      "nativeGeneratedByThisBrief": false,
+      "exactEightImagesAlreadyProvenForThisStableID": false,
+      "existingNormal4UsableRefs": 0,
+      "generatedCoreReuseClaimed": false,
+      "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+      "sourcePlan": {
+        "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+        "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+        "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+        "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+      },
+      "ownerApproved": false,
+      "runtimeIntegrated": false
+    },
+    {
+      "priority": 4,
+      "jobId": "golf-vehicle-01-04-ice-cream-cart",
+      "runtimeSubjectId": "newprop:ice-cream-cart",
+      "runtimeName": "Ice cream cart",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\ice-cream-cart.source.png",
+      "sourceProvenance": {
+        "runtimeSubjectId": "newprop:ice-cream-cart",
+        "runtimeName": "Ice cream cart",
+        "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\ice-cream-cart.source.png",
+        "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+        "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+        "sourceSheetSHA256": "d471a7b9201c45fdc5e7f72a57d2eee3ea749bbe21950133443deb5f0df94617",
+        "cropRectXYWH": [
+          763,
+          652,
+          444,
+          570
+        ],
+        "sourceCell": "bottom right",
+        "pngSHA256": "42278282306fd77bf5902dfa93468be869f0f97659dc2c7a955147cdc7da1bf6",
+        "rgbaSHA256": "e509b22b72f84e1d060a94ecadc60c7592f4dcfafd5d777f5e43bfc785e163f8",
+        "cropPixels": [
+          444,
+          570
+        ],
+        "sourceMetadataCutOff": false,
+        "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+        "visualInspection": "inspected native crop",
+        "actualIdentityNotes": "Confirmed manual vending chest with large spoked wheels, caster/handles and fixed umbrella/cone rack.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "runtimeLibrarySource": "src/game/new-props-library.ts",
+      "runtimeBaseBoxesInTiles": [
+        {
+          "hx": 2,
+          "hy": 2,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "sourceDisplayPixels": [
+        256,
+        328.65
+      ],
+      "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+      "functionalBrief": "One manually pushed green/cream ice-cream chest cart: two large spoked axle wheels, small caster at handle end, transparent top freezer lids with tubs below, cone/cup rack at handle end and one fixed striped umbrella above. Handle, caster and cone rack remain on same end; no engine, cab or extra wheels.",
+      "conditionAndEraBrief": "Identity-preserving mobile vending pushcart. Repair gratuitous tarp holes into ordinary worn intact umbrella; keep old enamel/timber chest and restrained metalwork, with no gold fantasy filigree.",
+      "ordinaryBudgetRedesignRequired": false,
+      "originalAuditCounts": {
+        "normal": 0,
+        "yaw8": 0
+      },
+      "nativeGeneratedByThisBrief": false,
+      "exactEightImagesAlreadyProvenForThisStableID": false,
+      "existingNormal4UsableRefs": 0,
+      "generatedCoreReuseClaimed": false,
+      "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+      "sourcePlan": {
+        "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+        "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+        "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+        "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+      },
+      "ownerApproved": false,
+      "runtimeIntegrated": false
+    },
+    {
+      "priority": 5,
+      "jobId": "golf-vehicle-01-05-drinks-cart-green",
+      "runtimeSubjectId": "newprop:drinks-cart-green",
+      "runtimeName": "Drinks cart green",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\drinks-cart-green.source.png",
+      "sourceProvenance": {
+        "runtimeSubjectId": "newprop:drinks-cart-green",
+        "runtimeName": "Drinks cart green",
+        "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\drinks-cart-green.source.png",
+        "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+        "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+        "sourceSheetSHA256": "7cc4f106aa4a8a0aeec4a14bbcc3ff9a0b79c92c8a1053fddcdb5f319bfeb765",
+        "cropRectXYWH": [
+          26,
+          723,
+          609,
+          468
+        ],
+        "sourceCell": "bottom left",
+        "pngSHA256": "26fe8734ed4508c700d3c907ea5c7f525c9dd46de6063149cceaf9867d7f15ec",
+        "rgbaSHA256": "59a122e331b8f357f6c6772ed0318963e59c98239e5dcd785d2abf7809e5cb4d",
+        "cropPixels": [
+          609,
+          468
+        ],
+        "sourceMetadataCutOff": false,
+        "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+        "visualInspection": "inspected native crop",
+        "actualIdentityNotes": "Confirmed powered utility with two front seats and loaded rear refreshment bed, not a simple passenger cart.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "runtimeLibrarySource": "src/game/new-props-library.ts",
+      "runtimeBaseBoxesInTiles": [
+        {
+          "hx": 1.4,
+          "hy": 1.4,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "sourceDisplayPixels": [
+        179.2,
+        137.71
+      ],
+      "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+      "functionalBrief": "Green four-wheel motorized beverage utility cart with cream two-place front bench/short canopy and open rear cargo tray. Fixed load: two orange cylindrical drink coolers, two rectangular green/white coolboxes and one crate of bottled water. Keep driver/canopy at front and all refreshment cargo at rear; no people.",
+      "conditionAndEraBrief": "Identity-preserving loaded beverage-service vehicle. Distinct actual load from generic maintenance utility core. Match its source later-style nose if producing a later-era model; no invented runtime upgrade or capacity.",
+      "ordinaryBudgetRedesignRequired": false,
+      "originalAuditCounts": {
+        "normal": 0,
+        "yaw8": 0
+      },
+      "nativeGeneratedByThisBrief": false,
+      "exactEightImagesAlreadyProvenForThisStableID": false,
+      "existingNormal4UsableRefs": 0,
+      "generatedCoreReuseClaimed": false,
+      "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+      "sourcePlan": {
+        "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+        "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+        "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+        "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+      },
+      "ownerApproved": false,
+      "runtimeIntegrated": false
+    },
+    {
+      "priority": 6,
+      "jobId": "golf-vehicle-01-06-supply-cart",
+      "runtimeSubjectId": "newprop:supply-cart",
+      "runtimeName": "Supply cart",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\supply-cart.source.png",
+      "sourceProvenance": {
+        "runtimeSubjectId": "newprop:supply-cart",
+        "runtimeName": "Supply cart",
+        "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\supply-cart.source.png",
+        "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+        "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+        "sourceSheetSHA256": "eae0daeb83966cdc4004902ed719d9997dce86f2b2fdfaa1ffea68788e308b8c",
+        "cropRectXYWH": [
+          22,
+          715,
+          632,
+          488
+        ],
+        "sourceCell": "bottom left",
+        "pngSHA256": "703b02a80bf03c0dc399cc3d95ac055f50da12e3c4227ccd6702a30d249107c3",
+        "rgbaSHA256": "6752066fdd1540970b99d4a4537ef979fe8b0f3cd845031dfe84db9f32c9857f",
+        "cropPixels": [
+          632,
+          488
+        ],
+        "sourceMetadataCutOff": false,
+        "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+        "visualInspection": "inspected native crop",
+        "actualIdentityNotes": "Confirmed another loaded utility; source cargo matches drinks-cart-green, but wood/tarp/rope construction is distinct and requires ordinary-budget redesign.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "runtimeLibrarySource": "src/game/new-props-library.ts",
+      "runtimeBaseBoxesInTiles": [
+        {
+          "hx": 1.3,
+          "hy": 1.3,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "sourceDisplayPixels": [
+        166.4,
+        128.49
+      ],
+      "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+      "functionalBrief": "Four-wheel supply/refreshment golf utility with front cream bench/windshield/canopy and rear cargo bed carrying two orange water coolers, two white-lid coolboxes and bottled water crate. Preserve load distribution and rear-bed sideboards as fixed geometry; no people.",
+      "conditionAndEraBrief": "Ordinary older-utility redesign: replace rope-lashed raw timber and patched blue tarp with simple bolted metal/painted-board cargo sides and intact practical canopy. This source shares beverage load with drinks-cart-green but remains a separate exact catalogue ID; never claim one file completes both.",
+      "ordinaryBudgetRedesignRequired": true,
+      "originalAuditCounts": {
+        "normal": 0,
+        "yaw8": 0
+      },
+      "nativeGeneratedByThisBrief": false,
+      "exactEightImagesAlreadyProvenForThisStableID": false,
+      "existingNormal4UsableRefs": 0,
+      "generatedCoreReuseClaimed": false,
+      "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+      "sourcePlan": {
+        "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+        "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+        "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+        "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+      },
+      "ownerApproved": false,
+      "runtimeIntegrated": false
+    },
+    {
+      "priority": 7,
+      "jobId": "golf-vehicle-01-07-satellite-van",
+      "runtimeSubjectId": "newprop:satellite-van",
+      "runtimeName": "Satellite van",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\satellite-van.source.png",
+      "sourceProvenance": {
+        "runtimeSubjectId": "newprop:satellite-van",
+        "runtimeName": "Satellite van",
+        "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\satellite-van.source.png",
+        "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+        "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+        "sourceSheetSHA256": "0841140a75a9e5e3b1b7a66bfed4c684cb97cb67614672042402223bf4882f80",
+        "cropRectXYWH": [
+          44,
+          598,
+          566,
+          629
+        ],
+        "sourceCell": "bottom left",
+        "pngSHA256": "a54c9edffaa4b6981591114eada2d9942b5b1ecaaf953e6ee1527b096a158f16",
+        "rgbaSHA256": "dd2d9985d8093273f5c3a8a27c28de56f642c4e8dd4969590820c78bc3b779ae",
+        "cropPixels": [
+          566,
+          629
+        ],
+        "sourceMetadataCutOff": false,
+        "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+        "visualInspection": "inspected native crop",
+        "actualIdentityNotes": "Confirmed roof-dish panel van with modern later-era cab. Raw native crop contains small detached neighbour gold foot near upper edge; ignore that fragment.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "runtimeLibrarySource": "src/game/new-props-library.ts",
+      "runtimeBaseBoxesInTiles": [
+        {
+          "hx": 2.5,
+          "hy": 2.5,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "sourceDisplayPixels": [
+        320,
+        355.62
+      ],
+      "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+      "functionalBrief": "One cream/green uplink PANEL VAN with large fixed roof satellite dish on rear roof, roof HVAC box just forward of dish, two roof antennas, sliding cargo side door and twin rear cargo doors. Dish azimuth/elevation fixed to the vehicle, never turned toward viewer independently. No driver, stairs or cable compound included.",
+      "conditionAndEraBrief": "Preserve actual later-era rounded panel-van identity for later-era source art. For a1985-specific variant, request separate older boxy cab design rather than calling this modern van period-correct. Ignore tiny detached gold neighbour fragment at upper source edge.",
+      "ordinaryBudgetRedesignRequired": false,
+      "originalAuditCounts": {
+        "normal": 0,
+        "yaw8": 0
+      },
+      "nativeGeneratedByThisBrief": false,
+      "exactEightImagesAlreadyProvenForThisStableID": false,
+      "existingNormal4UsableRefs": 0,
+      "generatedCoreReuseClaimed": false,
+      "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+      "sourcePlan": {
+        "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+        "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+        "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+        "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+      },
+      "ownerApproved": false,
+      "runtimeIntegrated": false
+    },
+    {
+      "priority": 8,
+      "jobId": "golf-vehicle-01-08-shanty-broadcast-van",
+      "runtimeSubjectId": "newprop:shanty-broadcast-van",
+      "runtimeName": "Shanty broadcast van",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shanty-broadcast-van.source.png",
+      "sourceProvenance": {
+        "runtimeSubjectId": "newprop:shanty-broadcast-van",
+        "runtimeName": "Shanty broadcast van",
+        "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shanty-broadcast-van.source.png",
+        "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+        "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+        "sourceSheetSHA256": "ac18eba54cddd39aa23b3d0c6476eeab33a5c7b33aaccbfb1bbd452e3451e9f6",
+        "cropRectXYWH": [
+          604,
+          104,
+          633,
+          550
+        ],
+        "sourceCell": "top right",
+        "pngSHA256": "8002f99b4eda67e9472e6203f1c6988d1541f0fa54ddf477ebdfa2afe2435d6c",
+        "rgbaSHA256": "10efdf2a87b86a735ef4100fb8c552f7d00809ef7b22a0a3bbbeb97b94e23905",
+        "cropPixels": [
+          633,
+          550
+        ],
+        "sourceMetadataCutOff": false,
+        "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+        "visualInspection": "inspected native crop",
+        "actualIdentityNotes": "Confirmed older cab van with roof cable reel and HVAC, plus inappropriate pallet/tarp/rope roof additions; no satellite dish.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "runtimeLibrarySource": "src/game/new-props-library.ts",
+      "runtimeBaseBoxesInTiles": [
+        {
+          "hx": 2.5,
+          "hy": 2.5,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "sourceDisplayPixels": [
+        320,
+        278.04
+      ],
+      "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+      "functionalBrief": "One older boxy cream/green broadcast van with one roof cable reel, one compact roof HVAC/generator box, aerial at front roof and fixed side equipment panel. Rebuild the roof equipment on a proper bolted steel rack; rear has cargo/service doors, front windshield/cab stays front. No driver, dish or multiple vehicles.",
+      "conditionAndEraBrief": "Ordinary old-budget redesign: retain worn working van, reel, aerial and cooling equipment; remove wooden pallet scaffolding, rope bindings, corrugated patch roof and blue tarp. This is a single broadcast van, not batch01broadcast-compound or the satellite-dish van.",
+      "ordinaryBudgetRedesignRequired": true,
+      "originalAuditCounts": {
+        "normal": 0,
+        "yaw8": 0
+      },
+      "nativeGeneratedByThisBrief": false,
+      "exactEightImagesAlreadyProvenForThisStableID": false,
+      "existingNormal4UsableRefs": 0,
+      "generatedCoreReuseClaimed": false,
+      "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+      "sourcePlan": {
+        "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+        "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+        "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+        "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+      },
+      "ownerApproved": false,
+      "runtimeIntegrated": false
+    }
+  ],
+  "sourceCopyPolicy": "Copied original PNG sheets and pixel-exact native RGBA identity crops. No resize, recolour, alpha editing, native synthesis, runtime code/import, services, tests, build or commit.",
+  "ownerApprovalClaimed": false
+}

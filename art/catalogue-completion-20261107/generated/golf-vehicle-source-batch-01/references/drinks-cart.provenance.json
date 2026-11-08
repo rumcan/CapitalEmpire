@@ -1,0 +1,25 @@
+{
+  "runtimeSubjectId": "newprop:drinks-cart",
+  "runtimeName": "Drinks cart",
+  "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\drinks-cart.source.png",
+  "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+  "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-72d8f62f-557f-4c64-ae83-b0b81c2e9d56.png",
+  "sourceSheetSHA256": "227816f60cab2ba3ba0d46b45daf6a96d4b63baa61b039a6e7196bb55dedd6f2",
+  "cropRectXYWH": [
+    724,
+    44,
+    465,
+    614
+  ],
+  "sourceCell": "top right",
+  "pngSHA256": "6f16119e4656488cc7d01276a1b6dc59293eacd8be856523b3d73bddea2893ad",
+  "rgbaSHA256": "139fd7f9886e79f87222bbd5f94e79ac1edd2b1807bd0b369bf82d314c2df714",
+  "cropPixels": [
+    465,
+    614
+  ],
+  "sourceMetadataCutOff": false,
+  "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+  "visualInspection": "inspected native crop",
+  "actualIdentityNotes": "MISLABELLED AS VEHICLE: actual picture is a stationary trestle table, two drinks jars and patched umbrella; no wheels. Excluded from this mobile-object batch, deferred as a refreshment-table prop."
+}

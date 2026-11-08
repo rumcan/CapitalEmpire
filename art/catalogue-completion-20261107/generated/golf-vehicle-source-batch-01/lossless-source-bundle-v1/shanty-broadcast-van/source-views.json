@@ -1,0 +1,206 @@
+{
+  "subject": "newprop:shanty-broadcast-van",
+  "key": "shanty-broadcast-van",
+  "views": {
+    "normalSE": {
+      "nominalCameraKey": "normalSE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-SE-v2.png",
+      "sourceFileSHA256": "d59fd64c712f03510a74cb9fcf5417abefd598ed3d4e037da0ff540f69546fca",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "bb0154b5ba0025004bf0e0bf6748d64089aad460d91b30c1b7512f3ee1f9ddd4",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy",
+      "file": "shanty-broadcast-van/normalSE.png",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "d59fd64c712f03510a74cb9fcf5417abefd598ed3d4e037da0ff540f69546fca",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true
+    },
+    "normalSW": {
+      "nominalCameraKey": "normalSW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-v1.png",
+      "sourceFileSHA256": "3552bec92c1d80ebc58a9c17c711394404d2251ecde32a0811632c471540cc88",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "6020c1eea0de3a9519645daaa5abab82094bdd0e15b2663c4a1e415221c2c8b2",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "shanty-broadcast-van/normalSW.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "2a7ba8c02f28b1ee4756a1c969ec59706450bf81bad9969d36190e23d1b539c3",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalNW": {
+      "nominalCameraKey": "normalNW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-v1.png",
+      "sourceFileSHA256": "3552bec92c1d80ebc58a9c17c711394404d2251ecde32a0811632c471540cc88",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "cecf4d569475bb1df7c8ca193148df78c52426a78383eac0cdc90639717f178d",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "shanty-broadcast-van/normalNW.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "fb5ab67141e65e10e20f66ae831d05c6da9718c157d78a6eb18e86f9d979ab66",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalNE": {
+      "nominalCameraKey": "normalNE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-v1.png",
+      "sourceFileSHA256": "3552bec92c1d80ebc58a9c17c711394404d2251ecde32a0811632c471540cc88",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "4f17f2359f3a32a73e26e0343a4e0bf2c9b258bdfbe90b6d30303e804ae799bc",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "shanty-broadcast-van/normalNE.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "3e09f23ed2669a19612bb043a6cfc97eb6df1e146b705b7aa96cb3f02ee6c8e1",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "yaw8N": {
+      "nominalCameraKey": "yaw8N",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/yaw8-v1.png",
+      "sourceFileSHA256": "e17b9c05095ff723e2f8dbd937f5dfea941918f2c7863d7bbeedbf7ad2857c10",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "300d0ab7f6ca7ca454eb97c5e781586989c6b06e84db223e5b0f6f422ee7446c",
+      "file": "shanty-broadcast-van/yaw8N.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "ba63cb3aca132991e0a65ac0b84b90396b12fd87bb3b9baab067923461464e8e",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8E": {
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/yaw8-E-v2.png",
+      "sourceFileSHA256": "b82f621bf52f309ecf6b8591dc8e2c1ce9e401c67a18467e03bc23a3a6aba63d",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "a25637f157899e12c7ad7d3c8d2957a0dafa5a1789b6b01678dfdeb18a0078fe",
+      "file": "shanty-broadcast-van/yaw8E.png",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "b82f621bf52f309ecf6b8591dc8e2c1ce9e401c67a18467e03bc23a3a6aba63d",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy"
+    },
+    "yaw8S": {
+      "nominalCameraKey": "yaw8S",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/yaw8-S-v2.png",
+      "sourceFileSHA256": "13d2236908d14376d52d9f16a9ddbc492037230d9d9d7d5f9f02f4444df0ea26",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "119137ab23e78ad0a10cc4f4027b08522a772f40eb8b3b53067970c1b1482446",
+      "file": "shanty-broadcast-van/yaw8S.png",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "13d2236908d14376d52d9f16a9ddbc492037230d9d9d7d5f9f02f4444df0ea26",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy"
+    },
+    "yaw8W": {
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/yaw8-W-v2.png",
+      "sourceFileSHA256": "4b5e6fbe67b578881bdca469204d5674b231b8948e4e7a36301d7039a4d8609d",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "1bbfa3e21768993071494d6a34aa6bfd5a74bef9f9ed4e89a63dc840bf3ed1ba",
+      "file": "shanty-broadcast-van/yaw8W.png",
+      "nativeSize": [
+        1536,
+        1024
+      ],
+      "pngSHA256": "4b5e6fbe67b578881bdca469204d5674b231b8948e4e7a36301d7039a4d8609d",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy"
+    }
+  }
+}

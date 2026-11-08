@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-expansion-rundown-house-north-24ae3116-plain-1/NE.png",
+  "sourceSha256": "58b1bf7481cc1810db9d963ba66f984de93172c88fa2c4147b54f7599a1208aa",
+  "output": "identity-references/variation-expansion-rundown-house-north-24ae3116-plain-1-ba967ad6/source.png",
+  "outputSha256": "58b1bf7481cc1810db9d963ba66f984de93172c88fa2c4147b54f7599a1208aa",
+  "width": 383,
+  "height": 342,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      383,
+      342
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-expansion-rundown-house-north-24ae3116-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+    "version": "variation-expansion-rundown-house-north-24ae3116-plain-1-4views-v5",
+    "files": {
+      "NE": "58b1bf7481cc1810db9d963ba66f984de93172c88fa2c4147b54f7599a1208aa",
+      "SE": "899f7d4d088f3a45bd0c25c93164dd1d0be4e56dac7266752a9ebd4726e7f449",
+      "SW": "1efd7d8b1a437e2b874b8fa5e65282fede87488513071e52cefca4a980f32d61",
+      "NW": "ec031e36fffa71712918d53f37937e75d67bbfe01feb6ce0032452210b1bffb2"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-10-0.webp",
+    "atlasSha256": "6ca370227e33f5f4eab6c0abe7cfcf952ed2ff26a21472925e105f582f2922ac",
+    "runtimePage": 10,
+    "localPage": 10,
+    "uv": [
+      0.648438,
+      0.007813,
+      0.803223,
+      0.165039
+    ],
+    "crop": {
+      "left": 1328,
+      "top": 16,
+      "width": 317,
+      "height": 322
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-expansion-rundown-house-north-24ae3116-plain-1.native.png",
+    "nativeSha256": "29acf600dcd6d243d5adea7458eb603e4963f230727d0c62dc2750aae61c7616"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,4100 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "task": "Read-only explicit native camera-angle QA; no runtime edits, tests, imports, server or commit.",
+  "disposition": "hold-exact-eight-degree-certification-and-legacy-replacement",
+  "recommendedRuntimeDisposition": "Recommend lead holds this set from the exact-eight-degree-approved selectable group until correction or an explicit geometric tolerance is accepted. Preserve all appended source/runtime rows. This report does not change current runtime selectability.",
+  "approvalScopeCorrection": "Earlier independent review checked coherent identity, silhouette and guide-fitted anchors; it did not prove painted8degree camera. Source/guide naming and eight working runtime IDs do not establish native geometry.",
+  "sources": {
+    "normal": {
+      "file": "normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6"
+    },
+    "yaw8": {
+      "file": "yaw8-v4.png",
+      "sha256": "091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862"
+    }
+  },
+  "target": {
+    "projection": "Orthographic,30degreesdown",
+    "yawDegrees": 8,
+    "shallowSlope": 0.07027041735119573,
+    "orthogonalSteepSlope": -3.5576848611921044,
+    "formula": "shallow=sin(pitch)*tan(yaw), steep=-sin(pitch)/tan(yaw); at30degrees sin(pitch)=0.5. Equivalent yaw from shallow atan(2*abs(slope)); from steep atan(0.5/abs(slope))."
+  },
+  "measurementMethod": {
+    "coordinates": "Native1254x1254sheet divided into627x627cells; all ranges/points are cell-local pixels.",
+    "alphaMethod": "For each x in inspected unobstructed foundation run, take the lowest y with alpha>threshold. Fit y=m*x+b by unweighted least squares.",
+    "thresholds": [
+      8,
+      64,
+      128,
+      192,
+      240
+    ],
+    "rangeSensitivity": "Also repeat after trimming15percent from each end; primary uses alpha>128 and full selected run.",
+    "uncertainty": "Numerical regression standard errors measure raster line fit only; neighboring pixels are correlated and do not capture painterly edge choice, shadow/thickness or camera departures. Threshold/subrange ranges are sensitivity diagnostics, not confidence intervals. Illustrative endpoint band allows±2px at EACH endpoint, changing slope by±4/span; this is a systematic-placement scenario, not measured statistical noise.",
+    "edgeSelection": "Avoid bench, steps, crate, occluded far edges, roof pitch slopes and eave corners. Foundation outlines can still include painted contact/shadow thickness. Separate eave transition provides independent feature diagnostic."
+  },
+  "conclusions": [
+    "Yaw shallow alpha>128 slopes N0.059884,E0.063168,S0.059724,W0.058116 imply6.83,7.20,6.81,6.63degrees at30down, below target0.0702704/8degrees.",
+    "The long S390px foundation run falls4.11px short of target rise; W255px falls3.10px short. Measured line RMS is0.31–0.32px, but systematic painted boundary uncertainty is larger; do not substitute tiny fit errors for physical confidence.",
+    "Steep foundation edges N/S/W imply8.17/8.46/8.04degrees at30down. Paired slopes fit a lower effective pitch rather than the exact requested8degree/30degree camera.",
+    "Independent eave transition N7.74degrees and S7.81degrees is closer to8, but inconsistent with same-view shallow foundations; source is painterly and nonuniform, not a certified ideal camera.",
+    "NormalSE/SW/NW clean sides are broadly near45degrees; normalNE short front-side run gives40.36degrees while its other side gives45.46. Treat this as a further base/trim geometry ambiguity, not clean mathematical normal-camera approval.",
+    "House retains coherent realistic1950s identity/daylight, but exact normal+yaw8 camera requirement remains unverified. Regenerate against detailed guides and repeat native straight-edge measurements, or record an explicit lead/owner tolerance before restoring exact-camera approval. No additional implementation is needed for this read-only result."
+  ],
+  "views": [
+    {
+      "key": "normalSE",
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "segments": [
+        {
+          "edge": "Visible outer foundation edge; normal-view sanity diagnostic.",
+          "primary": {
+            "rangeCellPixels": [
+              80,
+              235
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": 0.5063915537924168,
+            "intercept": 367.9548687392328,
+            "rmsPixels": 0.3429277134803289,
+            "maximumResidualPixels": 0.7218551943228135,
+            "numericalSlopeStandardError": 0.0006136449592398783,
+            "first": [
+              80,
+              409
+            ],
+            "last": [
+              235,
+              487
+            ],
+            "samples": 156,
+            "equivalentYawAssumingThirtyDegreePitch": 45.363878385038326
+          },
+          "expectedSlope": 0.5,
+          "observedMinusTargetRisePixels": 0.9906908378246115,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            45.363878385038326,
+            45.53213968026757
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            43.86573191919687,
+            46.7866841423012
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                80,
+                235
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.5081601365554518,
+              "intercept": 368.7083682361061,
+              "rmsPixels": 0.34369967907382637,
+              "maximumResidualPixels": 0.687584622760312,
+              "numericalSlopeStandardError": 0.0006150263372286933,
+              "first": [
+                80,
+                410
+              ],
+              "last": [
+                235,
+                488
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.46374693673957
+            },
+            {
+              "rangeCellPixels": [
+                80,
+                235
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.5067582304689351,
+              "intercept": 368.24327100883505,
+              "rmsPixels": 0.3328362237607927,
+              "maximumResidualPixels": 0.8172259012817449,
+              "numericalSlopeStandardError": 0.0005955869500613064,
+              "first": [
+                80,
+                409
+              ],
+              "last": [
+                235,
+                488
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.38461296361174
+            },
+            {
+              "rangeCellPixels": [
+                80,
+                235
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.5063915537924168,
+              "intercept": 367.9548687392328,
+              "rmsPixels": 0.3429277134803289,
+              "maximumResidualPixels": 0.7218551943228135,
+              "numericalSlopeStandardError": 0.0006136449592398783,
+              "first": [
+                80,
+                409
+              ],
+              "last": [
+                235,
+                487
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.363878385038326
+            },
+            {
+              "rangeCellPixels": [
+                80,
+                235
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.5072260593320794,
+              "intercept": 367.4516392449411,
+              "rmsPixels": 0.29661355881374285,
+              "maximumResidualPixels": 0.577502594658938,
+              "numericalSlopeStandardError": 0.0005307690456423122,
+              "first": [
+                80,
+                408
+              ],
+              "last": [
+                235,
+                487
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.411045361123726
+            },
+            {
+              "rangeCellPixels": [
+                80,
+                235
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.5081032384504749,
+              "intercept": 366.62758609789637,
+              "rmsPixels": 0.5563447587965464,
+              "maximumResidualPixels": 1.6590981650361414,
+              "numericalSlopeStandardError": 0.000995539711183506,
+              "first": [
+                80,
+                408
+              ],
+              "last": [
+                235,
+                486
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.46053950333148
+            },
+            {
+              "rangeCellPixels": [
+                103,
+                212
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.5093749295584158,
+              "intercept": 368.4552667763677,
+              "rmsPixels": 0.32320909859033836,
+              "maximumResidualPixels": 0.6697473119491519,
+              "numericalSlopeStandardError": 0.0009794619853518381,
+              "first": [
+                103,
+                421
+              ],
+              "last": [
+                212,
+                477
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.53213968026757
+            },
+            {
+              "rangeCellPixels": [
+                103,
+                212
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.5067195636002976,
+              "intercept": 368.20985055113493,
+              "rmsPixels": 0.31378744384339136,
+              "maximumResidualPixels": 0.6169916371750901,
+              "numericalSlopeStandardError": 0.0009509103365771211,
+              "first": [
+                103,
+                420
+              ],
+              "last": [
+                212,
+                476
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.38242717338719
+            },
+            {
+              "rangeCellPixels": [
+                103,
+                212
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.5071027658183622,
+              "intercept": 367.7585871108807,
+              "rmsPixels": 0.3233064693665201,
+              "maximumResidualPixels": 0.7498320672632417,
+              "numericalSlopeStandardError": 0.0009797570605034045,
+              "first": [
+                103,
+                420
+              ],
+              "last": [
+                212,
+                476
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.40408165966581
+            },
+            {
+              "rangeCellPixels": [
+                103,
+                212
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.5077203976286545,
+              "intercept": 367.324946464396,
+              "rmsPixels": 0.2853278596054604,
+              "maximumResidualPixels": 0.5614904312151907,
+              "numericalSlopeStandardError": 0.0008646656083143722,
+              "first": [
+                103,
+                420
+              ],
+              "last": [
+                212,
+                475
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.43894868771557
+            },
+            {
+              "rangeCellPixels": [
+                103,
+                212
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.5065888240200164,
+              "intercept": 366.7849874895747,
+              "rmsPixels": 0.5914419872078062,
+              "maximumResidualPixels": 1.5302752293578123,
+              "numericalSlopeStandardError": 0.001792322510528208,
+              "first": [
+                103,
+                419
+              ],
+              "last": [
+                212,
+                475
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.3750353747146
+            }
+          ]
+        },
+        {
+          "edge": "Visible outer foundation edge; normal-view sanity diagnostic.",
+          "primary": {
+            "rangeCellPixels": [
+              503,
+              552
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": -0.4952220888355342,
+            "intercept": 636.5696518607442,
+            "rmsPixels": 0.3348820365313038,
+            "maximumResidualPixels": 0.6353901560623285,
+            "numericalSlopeStandardError": 0.003349490330382322,
+            "first": [
+              503,
+              387
+            ],
+            "last": [
+              552,
+              363
+            ],
+            "samples": 50,
+            "equivalentYawAssumingThirtyDegreePitch": 44.72493371626637
+          },
+          "expectedSlope": -0.5,
+          "observedMinusTargetRisePixels": 0.2341176470588241,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            44.72493371626637,
+            45.19108321502597
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            39.59683383855226,
+            49.08225773473027
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                503,
+                552
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -0.49762304921968786,
+              "intercept": 638.7161584633855,
+              "rmsPixels": 0.3506043487519044,
+              "maximumResidualPixels": 0.5739735894356954,
+              "numericalSlopeStandardError": 0.0035067449066493025,
+              "first": [
+                503,
+                388
+              ],
+              "last": [
+                552,
+                364
+              ],
+              "samples": 50,
+              "equivalentYawAssumingThirtyDegreePitch": 44.86348652407243
+            },
+            {
+              "rangeCellPixels": [
+                503,
+                552
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -0.4982472989195678,
+              "intercept": 638.585450180072,
+              "rmsPixels": 0.35250569372088564,
+              "maximumResidualPixels": 0.5529411764705969,
+              "numericalSlopeStandardError": 0.0035257621601702403,
+              "first": [
+                503,
+                388
+              ],
+              "last": [
+                552,
+                363
+              ],
+              "samples": 50,
+              "equivalentYawAssumingThirtyDegreePitch": 44.899401409277004
+            },
+            {
+              "rangeCellPixels": [
+                503,
+                552
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -0.4952220888355342,
+              "intercept": 636.5696518607442,
+              "rmsPixels": 0.3348820365313038,
+              "maximumResidualPixels": 0.6353901560623285,
+              "numericalSlopeStandardError": 0.003349490330382322,
+              "first": [
+                503,
+                387
+              ],
+              "last": [
+                552,
+                363
+              ],
+              "samples": 50,
+              "equivalentYawAssumingThirtyDegreePitch": 44.72493371626637
+            },
+            {
+              "rangeCellPixels": [
+                503,
+                552
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -0.4988235294117649,
+              "intercept": 638.0494117647061,
+              "rmsPixels": 0.3095347552470989,
+              "maximumResidualPixels": 0.6800000000000637,
+              "numericalSlopeStandardError": 0.0030959668077642647,
+              "first": [
+                503,
+                387
+              ],
+              "last": [
+                552,
+                363
+              ],
+              "samples": 50,
+              "equivalentYawAssumingThirtyDegreePitch": 44.93251383625825
+            },
+            {
+              "rangeCellPixels": [
+                503,
+                552
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -0.49738295318127257,
+              "intercept": 636.7295078031214,
+              "rmsPixels": 0.33387678787809366,
+              "maximumResidualPixels": 0.6348619447779811,
+              "numericalSlopeStandardError": 0.003339435832749564,
+              "first": [
+                503,
+                386
+              ],
+              "last": [
+                552,
+                362
+              ],
+              "samples": 50,
+              "equivalentYawAssumingThirtyDegreePitch": 44.849661162843475
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                545
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -0.49665379665379666,
+              "intercept": 638.2348777348777,
+              "rmsPixels": 0.3518403740215809,
+              "maximumResidualPixels": 0.5552123552123476,
+              "numericalSlopeStandardError": 0.005808472719851958,
+              "first": [
+                510,
+                385
+              ],
+              "last": [
+                545,
+                368
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 44.807633694483286
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                545
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -0.5033462033462034,
+              "intercept": 641.2651222651223,
+              "rmsPixels": 0.35184037402158336,
+              "maximumResidualPixels": 0.5552123552123476,
+              "numericalSlopeStandardError": 0.005808472719851999,
+              "first": [
+                510,
+                385
+              ],
+              "last": [
+                545,
+                367
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 45.19108321502597
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                545
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -0.4965250965250965,
+              "intercept": 637.2503217503217,
+              "rmsPixels": 0.3416906009132652,
+              "maximumResidualPixels": 0.6163449163449286,
+              "numericalSlopeStandardError": 0.005640911846895624,
+              "first": [
+                510,
+                384
+              ],
+              "last": [
+                545,
+                367
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 44.80020925005766
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                545
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -0.4996138996138996,
+              "intercept": 638.435220935221,
+              "rmsPixels": 0.3251058120475947,
+              "maximumResidualPixels": 0.6421707421707765,
+              "numericalSlopeStandardError": 0.005367116396448421,
+              "first": [
+                510,
+                384
+              ],
+              "last": [
+                545,
+                366
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 44.97786953392669
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                545
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -0.4965250965250965,
+              "intercept": 636.2503217503217,
+              "rmsPixels": 0.3416906009132652,
+              "maximumResidualPixels": 0.6163449163449286,
+              "numericalSlopeStandardError": 0.005640911846895624,
+              "first": [
+                510,
+                383
+              ],
+              "last": [
+                545,
+                366
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 44.80020925005766
+            }
+          ]
+        }
+      ],
+      "pairedEdgeCameraDiagnostic": {
+        "assumption": "Two measured edges are orthogonal ground-parallel lines of one ideal orthographic object. A diagnostic fit, not a model certificate.",
+        "effectivePitchDegrees": 30.051331948149745,
+        "effectiveYawDegrees": 45.319472718199904,
+        "targetPitchDegrees": 30,
+        "targetYawDegrees": 45
+      }
+    },
+    {
+      "key": "normalSW",
+      "cellRect": {
+        "left": 627,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "segments": [
+        {
+          "edge": "Visible outer foundation edge; normal-view sanity diagnostic.",
+          "primary": {
+            "rangeCellPixels": [
+              85,
+              340
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": 0.4812392710002289,
+            "intercept": 326.84602991245134,
+            "rmsPixels": 0.37428232922844296,
+            "maximumResidualPixels": 1.0236642395284434,
+            "numericalSlopeStandardError": 0.0003177872262381224,
+            "first": [
+              85,
+              368
+            ],
+            "last": [
+              340,
+              490
+            ],
+            "samples": 256,
+            "equivalentYawAssumingThirtyDegreePitch": 43.9046711907451
+          },
+          "expectedSlope": 0.5,
+          "observedMinusTargetRisePixels": -4.783985894941631,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            43.902075632321875,
+            43.99296773690099
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            42.95678619317911,
+            44.82330404819893
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                85,
+                340
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.48210688944838637,
+              "intercept": 327.6382234922179,
+              "rmsPixels": 0.39772458985867953,
+              "maximumResidualPixels": 1.0724590152208293,
+              "numericalSlopeStandardError": 0.00033769105391225,
+              "first": [
+                85,
+                368
+              ],
+              "last": [
+                340,
+                491
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 43.95623753681911
+            },
+            {
+              "rangeCellPixels": [
+                85,
+                340
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.48119563973449303,
+              "intercept": 327.2693640564202,
+              "rmsPixels": 0.3723486669305112,
+              "maximumResidualPixels": 0.9510990072099048,
+              "numericalSlopeStandardError": 0.00031614543572290436,
+              "first": [
+                85,
+                368
+              ],
+              "last": [
+                340,
+                490
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 43.902075632321875
+            },
+            {
+              "rangeCellPixels": [
+                85,
+                340
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.4812392710002289,
+              "intercept": 326.84602991245134,
+              "rmsPixels": 0.37428232922844296,
+              "maximumResidualPixels": 1.0236642395284434,
+              "numericalSlopeStandardError": 0.0003177872262381224,
+              "first": [
+                85,
+                368
+              ],
+              "last": [
+                340,
+                490
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 43.9046711907451
+            },
+            {
+              "rangeCellPixels": [
+                85,
+                340
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.48129005493247884,
+              "intercept": 326.41336332684824,
+              "rmsPixels": 0.3831676002202183,
+              "maximumResidualPixels": 1.0519820038910552,
+              "numericalSlopeStandardError": 0.00032533133239101244,
+              "first": [
+                85,
+                367
+              ],
+              "last": [
+                340,
+                489
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 43.90769196553741
+            },
+            {
+              "rangeCellPixels": [
+                85,
+                340
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.48177929732204167,
+              "intercept": 325.80158681906613,
+              "rmsPixels": 0.4030169185620174,
+              "maximumResidualPixels": 1.1247686112382667,
+              "numericalSlopeStandardError": 0.0003421845453961817,
+              "first": [
+                85,
+                367
+              ],
+              "last": [
+                340,
+                489
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 43.93677781526307
+            },
+            {
+              "rangeCellPixels": [
+                123,
+                302
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.4825539882918197,
+              "intercept": 327.66838859909944,
+              "rmsPixels": 0.3520713904086555,
+              "maximumResidualPixels": 0.8787291102948984,
+              "numericalSlopeStandardError": 0.0005078618078968048,
+              "first": [
+                123,
+                387
+              ],
+              "last": [
+                302,
+                473
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 43.98277567787905
+            },
+            {
+              "rangeCellPixels": [
+                123,
+                302
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.48151794808481746,
+              "intercept": 327.3163249208652,
+              "rmsPixels": 0.32721032545858064,
+              "maximumResidualPixels": 0.7347452424800736,
+              "numericalSlopeStandardError": 0.0004719998045197916,
+              "first": [
+                123,
+                386
+              ],
+              "last": [
+                302,
+                472
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 43.92124393335762
+            },
+            {
+              "rangeCellPixels": [
+                123,
+                302
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.48146547732954725,
+              "intercept": 326.9108082896934,
+              "rmsPixels": 0.32839168818998005,
+              "maximumResidualPixels": 0.7590271990562201,
+              "numericalSlopeStandardError": 0.0004737039163246561,
+              "first": [
+                123,
+                386
+              ],
+              "last": [
+                302,
+                472
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 43.918124237419555
+            },
+            {
+              "rangeCellPixels": [
+                123,
+                302
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.4821352510879966,
+              "intercept": 326.34070358824516,
+              "rmsPixels": 0.3336889302465064,
+              "maximumResidualPixels": 0.7854145018193321,
+              "numericalSlopeStandardError": 0.00048134517034581297,
+              "first": [
+                123,
+                385
+              ],
+              "last": [
+                302,
+                472
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 43.95792168386665
+            },
+            {
+              "rangeCellPixels": [
+                123,
+                302
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.4827258042943713,
+              "intercept": 325.71521103189053,
+              "rmsPixels": 0.3584501475929319,
+              "maximumResidualPixels": 0.9469184577027363,
+              "numericalSlopeStandardError": 0.0005170631438871594,
+              "first": [
+                123,
+                385
+              ],
+              "last": [
+                302,
+                471
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 43.99296773690099
+            }
+          ]
+        },
+        {
+          "edge": "Visible outer foundation edge; normal-view sanity diagnostic.",
+          "primary": {
+            "rangeCellPixels": [
+              390,
+              548
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": -0.5097265345115835,
+            "intercept": 686.4013673274421,
+            "rmsPixels": 0.33619521058617086,
+            "maximumResidualPixels": 0.8143897778840028,
+            "numericalSlopeStandardError": 0.0005845797729205865,
+            "first": [
+              390,
+              488
+            ],
+            "last": [
+              548,
+              407
+            ],
+            "samples": 159,
+            "equivalentYawAssumingThirtyDegreePitch": 45.55190402693649
+          },
+          "expectedSlope": -0.5,
+          "observedMinusTargetRisePixels": -1.5367924528301853,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            45.55190402693649,
+            45.84552709555219
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            44.09269313543309,
+            46.93909704510491
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -0.5109266778122762,
+              "intercept": 688.0019703845236,
+              "rmsPixels": 0.34900442206842436,
+              "maximumResidualPixels": 0.7873178887031145,
+              "numericalSlopeStandardError": 0.0006068525647504637,
+              "first": [
+                390,
+                489
+              ],
+              "last": [
+                548,
+                408
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.6192616720847
+            },
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -0.5109565321232385,
+              "intercept": 687.3618840060504,
+              "rmsPixels": 0.33283068843206,
+              "maximumResidualPixels": 0.8095991561181108,
+              "numericalSlopeStandardError": 0.0005787295063644177,
+              "first": [
+                390,
+                488
+              ],
+              "last": [
+                548,
+                408
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.62093517577143
+            },
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -0.5097265345115835,
+              "intercept": 686.4013673274421,
+              "rmsPixels": 0.33619521058617086,
+              "maximumResidualPixels": 0.8143897778840028,
+              "numericalSlopeStandardError": 0.0005845797729205865,
+              "first": [
+                390,
+                488
+              ],
+              "last": [
+                548,
+                407
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.55190402693649
+            },
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -0.5103982565082397,
+              "intercept": 686.3642036860122,
+              "rmsPixels": 0.30465688865613383,
+              "maximumResidualPixels": 0.6945028262080655,
+              "numericalSlopeStandardError": 0.000529740606592154,
+              "first": [
+                390,
+                487
+              ],
+              "last": [
+                548,
+                407
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.5896241178983
+            },
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -0.5120730833532363,
+              "intercept": 686.5396345832339,
+              "rmsPixels": 0.3928203254481907,
+              "maximumResidualPixels": 1.4789467399093041,
+              "numericalSlopeStandardError": 0.0006830401190091791,
+              "first": [
+                390,
+                487
+              ],
+              "last": [
+                548,
+                406
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.68345253328509
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -0.5118687204737506,
+              "intercept": 688.4646599906846,
+              "rmsPixels": 0.34104189530165435,
+              "maximumResidualPixels": 0.7573191829130224,
+              "numericalSlopeStandardError": 0.0009923741199512062,
+              "first": [
+                413,
+                477
+              ],
+              "last": [
+                525,
+                419
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.67202038546897
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -0.5132909707898063,
+              "intercept": 688.4768281322775,
+              "rmsPixels": 0.3021830717716294,
+              "maximumResidualPixels": 0.796510080511041,
+              "numericalSlopeStandardError": 0.000879301528770469,
+              "first": [
+                413,
+                477
+              ],
+              "last": [
+                525,
+                419
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.75148490052711
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -0.5119352585002329,
+              "intercept": 687.4604680950164,
+              "rmsPixels": 0.32583178592798706,
+              "maximumResidualPixels": 0.7183278993945805,
+              "numericalSlopeStandardError": 0.0009481152792867659,
+              "first": [
+                413,
+                476
+              ],
+              "last": [
+                525,
+                419
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.67574306430794
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -0.5113863197817553,
+              "intercept": 686.8490335351654,
+              "rmsPixels": 0.30342118075615154,
+              "maximumResidualPixels": 0.6009381861734369,
+              "numericalSlopeStandardError": 0.0008829042160967053,
+              "first": [
+                413,
+                476
+              ],
+              "last": [
+                525,
+                418
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.64501614723916
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -0.5149793732117904,
+              "intercept": 687.9235561248253,
+              "rmsPixels": 0.38902868451313694,
+              "maximumResidualPixels": 1.4039107725064923,
+              "numericalSlopeStandardError": 0.0011320075443752291,
+              "first": [
+                413,
+                475
+              ],
+              "last": [
+                525,
+                418
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.84552709555219
+            }
+          ]
+        }
+      ],
+      "pairedEdgeCameraDiagnostic": {
+        "assumption": "Two measured edges are orthogonal ground-parallel lines of one ideal orthographic object. A diagnostic fit, not a model certificate.",
+        "effectivePitchDegrees": 29.68809220323952,
+        "effectiveYawDegrees": 44.176346525388844,
+        "targetPitchDegrees": 30,
+        "targetYawDegrees": 45
+      }
+    },
+    {
+      "key": "normalNW",
+      "cellRect": {
+        "left": 0,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "segments": [
+        {
+          "edge": "Visible outer foundation edge; normal-view sanity diagnostic.",
+          "primary": {
+            "rangeCellPixels": [
+              85,
+              240
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": 0.5109481436993251,
+            "intercept": 367.40682408475715,
+            "rmsPixels": 0.3015991423545264,
+            "maximumResidualPixels": 0.6955324450906346,
+            "numericalSlopeStandardError": 0.0005396903957939868,
+            "first": [
+              85,
+              411
+            ],
+            "last": [
+              240,
+              490
+            ],
+            "samples": 156,
+            "equivalentYawAssumingThirtyDegreePitch": 45.62046496706036
+          },
+          "expectedSlope": 0.5,
+          "observedMinusTargetRisePixels": 1.6969622733953849,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            45.5752027921586,
+            45.70423902021811
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            44.13590725328816,
+            47.030375971439426
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                85,
+                240
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.5121572284300866,
+              "intercept": 368.2167580724186,
+              "rmsPixels": 0.30981868858911893,
+              "maximumResidualPixels": 0.6890913688736191,
+              "numericalSlopeStandardError": 0.0005543986941199142,
+              "first": [
+                85,
+                412
+              ],
+              "last": [
+                240,
+                491
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.688158287769824
+            },
+            {
+              "rangeCellPixels": [
+                85,
+                240
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.5113906845158129,
+              "intercept": 367.7451676123343,
+              "rmsPixels": 0.2888012431493635,
+              "maximumResidualPixels": 0.5336489070821813,
+              "numericalSlopeStandardError": 0.0005167894577029663,
+              "first": [
+                85,
+                411
+              ],
+              "last": [
+                240,
+                490
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.64526059684051
+            },
+            {
+              "rangeCellPixels": [
+                85,
+                240
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.5109481436993251,
+              "intercept": 367.40682408475715,
+              "rmsPixels": 0.3015991423545264,
+              "maximumResidualPixels": 0.6955324450906346,
+              "numericalSlopeStandardError": 0.0005396903957939868,
+              "first": [
+                85,
+                411
+              ],
+              "last": [
+                240,
+                490
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.62046496706036
+            },
+            {
+              "rangeCellPixels": [
+                85,
+                240
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.5107758688814781,
+              "intercept": 367.0950751529137,
+              "rmsPixels": 0.31083794205767445,
+              "maximumResidualPixels": 0.7049896477059292,
+              "numericalSlopeStandardError": 0.0005562225763218487,
+              "first": [
+                85,
+                411
+              ],
+              "last": [
+                240,
+                490
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.61080644790869
+            },
+            {
+              "rangeCellPixels": [
+                85,
+                240
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.5124448799608036,
+              "intercept": 366.2725788012412,
+              "rmsPixels": 0.39174498696098775,
+              "maximumResidualPixels": 1.4175077576351214,
+              "numericalSlopeStandardError": 0.0007010000274296625,
+              "first": [
+                85,
+                410
+              ],
+              "last": [
+                240,
+                489
+              ],
+              "samples": 156,
+              "equivalentYawAssumingThirtyDegreePitch": 45.70423902021811
+            },
+            {
+              "rangeCellPixels": [
+                108,
+                217
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.5121204607443139,
+              "intercept": 368.2349705835944,
+              "rmsPixels": 0.2993143363997024,
+              "maximumResidualPixels": 0.6348894348894873,
+              "numericalSlopeStandardError": 0.000907050622810295,
+              "first": [
+                108,
+                423
+              ],
+              "last": [
+                217,
+                480
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.686102178085804
+            },
+            {
+              "rangeCellPixels": [
+                108,
+                217
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.5118048824470843,
+              "intercept": 367.72261569325786,
+              "rmsPixels": 0.28778727540042665,
+              "maximumResidualPixels": 0.5169578252147176,
+              "numericalSlopeStandardError": 0.0008721186914356383,
+              "first": [
+                108,
+                423
+              ],
+              "last": [
+                217,
+                479
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.66844830104287
+            },
+            {
+              "rangeCellPixels": [
+                108,
+                217
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.5104884701214976,
+              "intercept": 367.51835087798395,
+              "rmsPixels": 0.28750444975765627,
+              "maximumResidualPixels": 0.5391790456010881,
+              "numericalSlopeStandardError": 0.0008712616086159267,
+              "first": [
+                108,
+                423
+              ],
+              "last": [
+                217,
+                478
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.59468614387895
+            },
+            {
+              "rangeCellPixels": [
+                108,
+                217
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.510141333994545,
+              "intercept": 367.147487771341,
+              "rmsPixels": 0.29758515759607257,
+              "maximumResidualPixels": 0.5980614476027313,
+              "numericalSlopeStandardError": 0.0009018104705020265,
+              "first": [
+                108,
+                422
+              ],
+              "last": [
+                217,
+                478
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.5752027921586
+            },
+            {
+              "rangeCellPixels": [
+                108,
+                217
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.51195816333431,
+              "intercept": 366.40679845817465,
+              "rmsPixels": 0.3492262340175819,
+              "maximumResidualPixels": 1.3343056150395682,
+              "numericalSlopeStandardError": 0.001058305047721919,
+              "first": [
+                108,
+                422
+              ],
+              "last": [
+                217,
+                477
+              ],
+              "samples": 110,
+              "equivalentYawAssumingThirtyDegreePitch": 45.67702443259436
+            }
+          ]
+        },
+        {
+          "edge": "Visible outer foundation edge; normal-view sanity diagnostic.",
+          "primary": {
+            "rangeCellPixels": [
+              285,
+              550
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": -0.4987884168764076,
+            "intercept": 630.0411565271032,
+            "rmsPixels": 0.33784079510314524,
+            "maximumResidualPixels": 0.7075272450790067,
+            "numericalSlopeStandardError": 0.00027078349068970623,
+            "first": [
+              285,
+              488
+            ],
+            "last": [
+              550,
+              355
+            ],
+            "samples": 266,
+            "equivalentYawAssumingThirtyDegreePitch": 44.93049722615077
+          },
+          "expectedSlope": -0.5,
+          "observedMinusTargetRisePixels": 0.3210695277519793,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            44.88039061256328,
+            45.01030910359335
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            44.05033991670365,
+            45.784482865337715
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                285,
+                550
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -0.4996469337430921,
+              "intercept": 631.320639950523,
+              "rmsPixels": 0.36161122842373095,
+              "maximumResidualPixels": 1.0384866129708143,
+              "numericalSlopeStandardError": 0.00028983578100825677,
+              "first": [
+                285,
+                489
+              ],
+              "last": [
+                550,
+                356
+              ],
+              "samples": 266,
+              "equivalentYawAssumingThirtyDegreePitch": 44.97976364965939
+            },
+            {
+              "rangeCellPixels": [
+                285,
+                550
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -0.4990746954305417,
+              "intercept": 630.5140612821008,
+              "rmsPixels": 0.35364436784462905,
+              "maximumResidualPixels": 0.8157105717441482,
+              "numericalSlopeStandardError": 0.00028345024572442944,
+              "first": [
+                285,
+                488
+              ],
+              "last": [
+                550,
+                356
+              ],
+              "samples": 266,
+              "equivalentYawAssumingThirtyDegreePitch": 44.94693486715458
+            },
+            {
+              "rangeCellPixels": [
+                285,
+                550
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -0.4987884168764076,
+              "intercept": 630.0411565271032,
+              "rmsPixels": 0.33784079510314524,
+              "maximumResidualPixels": 0.7075272450790067,
+              "numericalSlopeStandardError": 0.00027078349068970623,
+              "first": [
+                285,
+                488
+              ],
+              "last": [
+                550,
+                355
+              ],
+              "samples": 266,
+              "equivalentYawAssumingThirtyDegreePitch": 44.93049722615077
+            },
+            {
+              "rangeCellPixels": [
+                285,
+                550
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -0.49870903674280037,
+              "intercept": 629.5756844942545,
+              "rmsPixels": 0.31941524164236096,
+              "maximumResidualPixels": 0.7844233224570303,
+              "numericalSlopeStandardError": 0.00025601518633949386,
+              "first": [
+                285,
+                488
+              ],
+              "last": [
+                550,
+                355
+              ],
+              "samples": 266,
+              "equivalentYawAssumingThirtyDegreePitch": 44.92593768332334
+            },
+            {
+              "rangeCellPixels": [
+                285,
+                550
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -0.500179960182415,
+              "intercept": 629.6634792408199,
+              "rmsPixels": 0.34205855376913746,
+              "maximumResidualPixels": 0.6112907879195859,
+              "numericalSlopeStandardError": 0.0002741640753645541,
+              "first": [
+                285,
+                487
+              ],
+              "last": [
+                550,
+                354
+              ],
+              "samples": 266,
+              "equivalentYawAssumingThirtyDegreePitch": 45.01030910359335
+            },
+            {
+              "rangeCellPixels": [
+                324,
+                511
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -0.4993019773995994,
+              "intercept": 631.2032564153966,
+              "rmsPixels": 0.36629902268682757,
+              "maximumResidualPixels": 1.018232567043583,
+              "numericalSlopeStandardError": 0.0004949008565826498,
+              "first": [
+                324,
+                469
+              ],
+              "last": [
+                511,
+                376
+              ],
+              "samples": 188,
+              "equivalentYawAssumingThirtyDegreePitch": 44.95997832146071
+            },
+            {
+              "rangeCellPixels": [
+                324,
+                511
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -0.4982544919966697,
+              "intercept": 630.2127397703117,
+              "rmsPixels": 0.35105728978349343,
+              "maximumResidualPixels": 0.7817753793973452,
+              "numericalSlopeStandardError": 0.000474307990638497,
+              "first": [
+                324,
+                468
+              ],
+              "last": [
+                511,
+                375
+              ],
+              "samples": 188,
+              "equivalentYawAssumingThirtyDegreePitch": 44.89981498648563
+            },
+            {
+              "rangeCellPixels": [
+                324,
+                511
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -0.49791676825469067,
+              "intercept": 629.7206762782482,
+              "rmsPixels": 0.32255428488557775,
+              "maximumResidualPixels": 0.783124468355993,
+              "numericalSlopeStandardError": 0.0004357980283795526,
+              "first": [
+                324,
+                468
+              ],
+              "last": [
+                511,
+                375
+              ],
+              "samples": 188,
+              "equivalentYawAssumingThirtyDegreePitch": 44.88039061256328
+            },
+            {
+              "rangeCellPixels": [
+                324,
+                511
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -0.4979826875947025,
+              "intercept": 629.3279848367457,
+              "rmsPixels": 0.2898995931522001,
+              "maximumResidualPixels": 0.5804423639216907,
+              "numericalSlopeStandardError": 0.00039167878724221577,
+              "first": [
+                324,
+                468
+              ],
+              "last": [
+                511,
+                375
+              ],
+              "samples": 188,
+              "equivalentYawAssumingThirtyDegreePitch": 44.88418303163507
+            },
+            {
+              "rangeCellPixels": [
+                324,
+                511
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -0.4999214385947803,
+              "intercept": 629.6214559324696,
+              "rmsPixels": 0.31809922782413025,
+              "maximumResidualPixels": 0.6615222491317354,
+              "numericalSlopeStandardError": 0.0004297788707534621,
+              "first": [
+                324,
+                467
+              ],
+              "last": [
+                511,
+                374
+              ],
+              "samples": 188,
+              "equivalentYawAssumingThirtyDegreePitch": 44.995498409406274
+            }
+          ]
+        }
+      ],
+      "pairedEdgeCameraDiagnostic": {
+        "assumption": "Two measured edges are orthogonal ground-parallel lines of one ideal orthographic object. A diagnostic fit, not a model certificate.",
+        "effectivePitchDegrees": 30.32017892511217,
+        "effectiveYawDegrees": 45.34499982207702,
+        "targetPitchDegrees": 30,
+        "targetYawDegrees": 45
+      }
+    },
+    {
+      "key": "normalNE",
+      "cellRect": {
+        "left": 627,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "segments": [
+        {
+          "edge": "Short front-side base/trim below serving hatch; foreground/base ambiguity, lower confidence.",
+          "primary": {
+            "rangeCellPixels": [
+              270,
+              345
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": 0.4249760765550239,
+            "intercept": 347.2277511961722,
+            "rmsPixels": 0.29779048677146186,
+            "maximumResidualPixels": 0.6037320574163232,
+            "numericalSlopeStandardError": 0.001578009409464652,
+            "first": [
+              270,
+              462
+            ],
+            "last": [
+              345,
+              494
+            ],
+            "samples": 76,
+            "equivalentYawAssumingThirtyDegreePitch": 40.36294499714058
+          },
+          "expectedSlope": 0.5,
+          "observedMinusTargetRisePixels": -5.626794258373208,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            40.35217235673489,
+            40.70042685287777
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            36.6228865582854,
+            43.72987454065133
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                270,
+                345
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.4261244019138756,
+              "intercept": 347.9799043062201,
+              "rmsPixels": 0.31674695355480237,
+              "maximumResidualPixels": 0.6881339712919043,
+              "numericalSlopeStandardError": 0.0016784608485909548,
+              "first": [
+                270,
+                463
+              ],
+              "last": [
+                345,
+                495
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 40.43925591734442
+            },
+            {
+              "rangeCellPixels": [
+                270,
+                345
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.42508544087491457,
+              "intercept": 347.6151742993848,
+              "rmsPixels": 0.31954786699210586,
+              "maximumResidualPixels": 0.7615857826384058,
+              "numericalSlopeStandardError": 0.0016933030546233887,
+              "first": [
+                270,
+                463
+              ],
+              "last": [
+                345,
+                494
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 40.37022015944912
+            },
+            {
+              "rangeCellPixels": [
+                270,
+                345
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.4249760765550239,
+              "intercept": 347.2277511961722,
+              "rmsPixels": 0.29779048677146186,
+              "maximumResidualPixels": 0.6037320574163232,
+              "numericalSlopeStandardError": 0.001578009409464652,
+              "first": [
+                270,
+                462
+              ],
+              "last": [
+                345,
+                494
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 40.36294499714058
+            },
+            {
+              "rangeCellPixels": [
+                270,
+                345
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.4251811346548189,
+              "intercept": 346.75680109364316,
+              "rmsPixels": 0.30366565285281427,
+              "maximumResidualPixels": 0.593930280246127,
+              "numericalSlopeStandardError": 0.0016091422621593615,
+              "first": [
+                270,
+                461
+              ],
+              "last": [
+                345,
+                493
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 40.376584638256034
+            },
+            {
+              "rangeCellPixels": [
+                270,
+                345
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.427053998632946,
+              "intercept": 345.6677375256323,
+              "rmsPixels": 0.3737595353116191,
+              "maximumResidualPixels": 1.3993711551606793,
+              "numericalSlopeStandardError": 0.001980573892716417,
+              "first": [
+                270,
+                460
+              ],
+              "last": [
+                345,
+                493
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 40.500904811616266
+            },
+            {
+              "rangeCellPixels": [
+                281,
+                334
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.4282447112635792,
+              "intercept": 347.29623276793086,
+              "rmsPixels": 0.31378265532658345,
+              "maximumResidualPixels": 0.6608855854138938,
+              "numericalSlopeStandardError": 0.0027918919434909996,
+              "first": [
+                281,
+                468
+              ],
+              "last": [
+                334,
+                490
+              ],
+              "samples": 54,
+              "equivalentYawAssumingThirtyDegreePitch": 40.57970516667509
+            },
+            {
+              "rangeCellPixels": [
+                281,
+                334
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.4300743281875357,
+              "intercept": 346.02992186011056,
+              "rmsPixels": 0.29088023701219223,
+              "maximumResidualPixels": 0.5177053554411941,
+              "numericalSlopeStandardError": 0.0025881168906224457,
+              "first": [
+                281,
+                467
+              ],
+              "last": [
+                334,
+                490
+              ],
+              "samples": 54,
+              "equivalentYawAssumingThirtyDegreePitch": 40.70042685287777
+            },
+            {
+              "rangeCellPixels": [
+                281,
+                334
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.4274442538593482,
+              "intercept": 346.4497808271393,
+              "rmsPixels": 0.29355427108710724,
+              "maximumResidualPixels": 0.5458357156470584,
+              "numericalSlopeStandardError": 0.00261190920056579,
+              "first": [
+                281,
+                467
+              ],
+              "last": [
+                334,
+                489
+              ],
+              "samples": 54,
+              "equivalentYawAssumingThirtyDegreePitch": 40.52675199798808
+            },
+            {
+              "rangeCellPixels": [
+                281,
+                334
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.4276348389555937,
+              "intercept": 346.002287021155,
+              "rmsPixels": 0.2944665886410141,
+              "maximumResidualPixels": 0.5756432246998884,
+              "numericalSlopeStandardError": 0.0026200265773086407,
+              "first": [
+                281,
+                466
+              ],
+              "last": [
+                334,
+                489
+              ],
+              "samples": 54,
+              "equivalentYawAssumingThirtyDegreePitch": 40.53936749291325
+            },
+            {
+              "rangeCellPixels": [
+                281,
+                334
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.4248141795311607,
+              "intercept": 346.38815831268664,
+              "rmsPixels": 0.325020399476272,
+              "maximumResidualPixels": 0.8061114287529563,
+              "numericalSlopeStandardError": 0.0028918801576957457,
+              "first": [
+                281,
+                466
+              ],
+              "last": [
+                334,
+                488
+              ],
+              "samples": 54,
+              "equivalentYawAssumingThirtyDegreePitch": 40.35217235673489
+            }
+          ]
+        },
+        {
+          "edge": "Visible outer foundation edge; normal-view sanity diagnostic.",
+          "primary": {
+            "rangeCellPixels": [
+              390,
+              548
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": -0.5080964891330308,
+            "intercept": 683.6117188121965,
+            "rmsPixels": 0.3203678215353029,
+            "maximumResidualPixels": 0.6829392564286536,
+            "numericalSlopeStandardError": 0.0005570589421474466,
+            "first": [
+              390,
+              485
+            ],
+            "last": [
+              548,
+              405
+            ],
+            "samples": 159,
+            "equivalentYawAssumingThirtyDegreePitch": 45.46015900974646
+          },
+          "expectedSlope": -0.5,
+          "observedMinusTargetRisePixels": -1.279245283018874,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            45.46015900974646,
+            45.596529479872856
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            43.99618386208708,
+            46.85187735156209
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -0.5092458801050872,
+              "intercept": 685.1822297189715,
+              "rmsPixels": 0.3205768393828276,
+              "maximumResidualPixels": 0.7180867367247288,
+              "numericalSlopeStandardError": 0.0005574223845820646,
+              "first": [
+                390,
+                487
+              ],
+              "last": [
+                548,
+                406
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.52488209162754
+            },
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -0.5082397898256509,
+              "intercept": 684.0437067112491,
+              "rmsPixels": 0.31622467845694013,
+              "maximumResidualPixels": 0.8151421065202271,
+              "numericalSlopeStandardError": 0.0005498548013278794,
+              "first": [
+                390,
+                486
+              ],
+              "last": [
+                548,
+                405
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.46823650068202
+            },
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -0.5080964891330308,
+              "intercept": 683.6117188121965,
+              "rmsPixels": 0.3203678215353029,
+              "maximumResidualPixels": 0.6829392564286536,
+              "numericalSlopeStandardError": 0.0005570589421474466,
+              "first": [
+                390,
+                485
+              ],
+              "last": [
+                548,
+                405
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.46015900974646
+            },
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -0.5085920706950082,
+              "intercept": 683.4479201496696,
+              "rmsPixels": 0.3092812468821654,
+              "maximumResidualPixels": 0.7394654088050743,
+              "numericalSlopeStandardError": 0.0005377814893785675,
+              "first": [
+                390,
+                485
+              ],
+              "last": [
+                548,
+                404
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.48808382917031
+            },
+            {
+              "rangeCellPixels": [
+                390,
+                548
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -0.5092458801050873,
+              "intercept": 683.2514121089087,
+              "rmsPixels": 0.3266880005174367,
+              "maximumResidualPixels": 1.1846698113208163,
+              "numericalSlopeStandardError": 0.0005680485359246792,
+              "first": [
+                390,
+                484
+              ],
+              "last": [
+                548,
+                403
+              ],
+              "samples": 159,
+              "equivalentYawAssumingThirtyDegreePitch": 45.52488209162755
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -0.5105213254374875,
+              "intercept": 685.7619352585002,
+              "rmsPixels": 0.3059220658722179,
+              "maximumResidualPixels": 0.648571095881266,
+              "numericalSlopeStandardError": 0.0008901813679667423,
+              "first": [
+                413,
+                475
+              ],
+              "last": [
+                525,
+                418
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.596529479872856
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -0.5090159025883292,
+              "intercept": 684.3656264555193,
+              "rmsPixels": 0.302652804959901,
+              "maximumResidualPixels": 0.7414997671169203,
+              "numericalSlopeStandardError": 0.0008806683727440243,
+              "first": [
+                413,
+                474
+              ],
+              "last": [
+                525,
+                417
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.51194378438703
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -0.5086000399228159,
+              "intercept": 683.8343036795529,
+              "rmsPixels": 0.3102592439308465,
+              "maximumResidualPixels": 0.6721172400025921,
+              "numericalSlopeStandardError": 0.0009028018211084194,
+              "first": [
+                413,
+                474
+              ],
+              "last": [
+                525,
+                417
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.48853264978732
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -0.5082590325370957,
+              "intercept": 683.3026897997208,
+              "rmsPixels": 0.3009190790183426,
+              "maximumResidualPixels": 0.6082906380996747,
+              "numericalSlopeStandardError": 0.0008756235240635746,
+              "first": [
+                413,
+                474
+              ],
+              "last": [
+                525,
+                417
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.469320986490985
+            },
+            {
+              "rangeCellPixels": [
+                413,
+                525
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -0.5083255705635771,
+              "intercept": 682.8294713553796,
+              "rmsPixels": 0.30156998241042865,
+              "maximumResidualPixels": 0.7671751280856824,
+              "numericalSlopeStandardError": 0.0008775175426278431,
+              "first": [
+                413,
+                473
+              ],
+              "last": [
+                525,
+                416
+              ],
+              "samples": 113,
+              "equivalentYawAssumingThirtyDegreePitch": 45.473070632528746
+            }
+          ]
+        }
+      ],
+      "pairedEdgeCameraDiagnostic": {
+        "assumption": "Two measured edges are orthogonal ground-parallel lines of one ideal orthographic object. A diagnostic fit, not a model certificate.",
+        "effectivePitchDegrees": 27.689608163536505,
+        "effectiveYawDegrees": 42.444587649447236,
+        "targetPitchDegrees": 30,
+        "targetYawDegrees": 45
+      }
+    },
+    {
+      "key": "yaw8N",
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "segments": [
+        {
+          "edge": "Unobstructed front foundation to right of service hatch/crate, excluding front steps and bench.",
+          "primary": {
+            "rangeCellPixels": [
+              385,
+              490
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": 0.0598836184094516,
+            "intercept": 420.6122377005819,
+            "rmsPixels": 0.3122962866122189,
+            "maximumResidualPixels": 0.6557926291658873,
+            "numericalSlopeStandardError": 0.001000815989519605,
+            "first": [
+              385,
+              444
+            ],
+            "last": [
+              490,
+              450
+            ],
+            "samples": 106,
+            "equivalentYawAssumingThirtyDegreePitch": 6.829626020185869
+          },
+          "expectedSlope": 0.07027041735119573,
+          "observedMinusTargetRisePixels": -1.0906138888831336,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            5.968131018287967,
+            7.582842775516981
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            2.4951858700282052,
+            11.087062284523883
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                385,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.052270952464921784,
+              "intercept": 425.5748545230118,
+              "rmsPixels": 0.35026689886520834,
+              "maximumResidualPixels": 0.7918230596770286,
+              "numericalSlopeStandardError": 0.001122500420310893,
+              "first": [
+                385,
+                446
+              ],
+              "last": [
+                490,
+                451
+              ],
+              "samples": 106,
+              "equivalentYawAssumingThirtyDegreePitch": 5.968131018287967
+            },
+            {
+              "rangeCellPixels": [
+                385,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.05397889009245031,
+              "intercept": 423.8748016222888,
+              "rmsPixels": 0.32687271500668885,
+              "maximumResidualPixels": 0.7267400559236421,
+              "numericalSlopeStandardError": 0.0010475290733206542,
+              "first": [
+                385,
+                445
+              ],
+              "last": [
+                490,
+                450
+              ],
+              "samples": 106,
+              "equivalentYawAssumingThirtyDegreePitch": 6.1616613049425455
+            },
+            {
+              "rangeCellPixels": [
+                385,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.0598836184094516,
+              "intercept": 420.6122377005819,
+              "rmsPixels": 0.3122962866122189,
+              "maximumResidualPixels": 0.6557926291658873,
+              "numericalSlopeStandardError": 0.001000815989519605,
+              "first": [
+                385,
+                444
+              ],
+              "last": [
+                490,
+                450
+              ],
+              "samples": 106,
+              "equivalentYawAssumingThirtyDegreePitch": 6.829626020185869
+            },
+            {
+              "rangeCellPixels": [
+                385,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.06387888253520417,
+              "intercept": 418.1567624757538,
+              "rmsPixels": 0.320646674619345,
+              "maximumResidualPixels": 0.77834597072831,
+              "numericalSlopeStandardError": 0.0010275764801001468,
+              "first": [
+                385,
+                443
+              ],
+              "last": [
+                490,
+                449
+              ],
+              "samples": 106,
+              "equivalentYawAssumingThirtyDegreePitch": 7.28054058170544
+            },
+            {
+              "rangeCellPixels": [
+                385,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.0647001032823639,
+              "intercept": 416.8257802856639,
+              "rmsPixels": 0.31788778458205813,
+              "maximumResidualPixels": 0.7410232511272739,
+              "numericalSlopeStandardError": 0.0010187350644925654,
+              "first": [
+                385,
+                442
+              ],
+              "last": [
+                490,
+                449
+              ],
+              "samples": 106,
+              "equivalentYawAssumingThirtyDegreePitch": 7.373115035663472
+            },
+            {
+              "rangeCellPixels": [
+                400,
+                475
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.05525632262474368,
+              "intercept": 424.32535885167465,
+              "rmsPixels": 0.35031887683323054,
+              "maximumResidualPixels": 0.7486534518113217,
+              "numericalSlopeStandardError": 0.0018563604564714505,
+              "first": [
+                400,
+                446
+              ],
+              "last": [
+                475,
+                450
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 6.306318122268207
+            },
+            {
+              "rangeCellPixels": [
+                400,
+                475
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.05640464798359535,
+              "intercept": 422.84928229665076,
+              "rmsPixels": 0.33608777892592445,
+              "maximumResidualPixels": 0.6558168147641368,
+              "numericalSlopeStandardError": 0.0017809490266161505,
+              "first": [
+                400,
+                445
+              ],
+              "last": [
+                475,
+                449
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 6.436285999204362
+            },
+            {
+              "rangeCellPixels": [
+                400,
+                475
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.06228298017771701,
+              "intercept": 419.61961722488036,
+              "rmsPixels": 0.29920028676185473,
+              "maximumResidualPixels": 0.6539029391660733,
+              "numericalSlopeStandardError": 0.0015854800230306607,
+              "first": [
+                400,
+                445
+              ],
+              "last": [
+                475,
+                449
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 7.100528996954937
+            },
+            {
+              "rangeCellPixels": [
+                400,
+                475
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.06563226247436774,
+              "intercept": 417.4306220095694,
+              "rmsPixels": 0.3215433315139383,
+              "maximumResidualPixels": 0.7066985645932959,
+              "numericalSlopeStandardError": 0.0017038771391948717,
+              "first": [
+                400,
+                444
+              ],
+              "last": [
+                475,
+                448
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 7.478148429909976
+            },
+            {
+              "rangeCellPixels": [
+                400,
+                475
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.06656185919343814,
+              "intercept": 415.99760765550235,
+              "rmsPixels": 0.3221915971308363,
+              "maximumResidualPixels": 0.6873410799726116,
+              "numericalSlopeStandardError": 0.0017073123370562543,
+              "first": [
+                400,
+                443
+              ],
+              "last": [
+                475,
+                448
+              ],
+              "samples": 76,
+              "equivalentYawAssumingThirtyDegreePitch": 7.582842775516981
+            }
+          ]
+        },
+        {
+          "edge": "Visible right-side steep foundation edge, excluding corner/eave ends.",
+          "primary": {
+            "rangeCellPixels": [
+              505,
+              540
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": -3.480823680823681,
+            "intercept": 2194.674817674818,
+            "rmsPixels": 0.5941906986784041,
+            "maximumResidualPixels": 1.395795795795948,
+            "numericalSlopeStandardError": 0.009809392890912483,
+            "first": [
+              505,
+              437
+            ],
+            "last": [
+              540,
+              316
+            ],
+            "samples": 36,
+            "equivalentYawAssumingThirtyDegreePitch": 8.17428848330764
+          },
+          "expectedSlope": -3.5576848611921044,
+          "observedMinusTargetRisePixels": 2.690141312894818,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            8.022690904486776,
+            8.191917128033111
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": null,
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -3.5474903474903474,
+              "intercept": 2233.8414843414844,
+              "rmsPixels": 1.3510310168971533,
+              "maximumResidualPixels": 4.188631488631472,
+              "numericalSlopeStandardError": 0.022303940606997037,
+              "first": [
+                505,
+                446
+              ],
+              "last": [
+                540,
+                320
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.022690904486776
+            },
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -3.4732303732303733,
+              "intercept": 2192.4573144573146,
+              "rmsPixels": 0.5677648110707506,
+              "maximumResidualPixels": 1.2255255255256543,
+              "numericalSlopeStandardError": 0.009373132419970866,
+              "first": [
+                505,
+                439
+              ],
+              "last": [
+                540,
+                318
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.191917128033111
+            },
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -3.480823680823681,
+              "intercept": 2194.674817674818,
+              "rmsPixels": 0.5941906986784041,
+              "maximumResidualPixels": 1.395795795795948,
+              "numericalSlopeStandardError": 0.009809392890912483,
+              "first": [
+                505,
+                437
+              ],
+              "last": [
+                540,
+                316
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.17428848330764
+            },
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -3.474002574002574,
+              "intercept": 2189.4719004719004,
+              "rmsPixels": 0.5467873053662617,
+              "maximumResidualPixels": 1.3025311025310202,
+              "numericalSlopeStandardError": 0.009026818356515521,
+              "first": [
+                505,
+                436
+              ],
+              "last": [
+                540,
+                314
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.190120935895608
+            },
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -3.474131274131274,
+              "intercept": 2187.455812955813,
+              "rmsPixels": 0.5742728559862852,
+              "maximumResidualPixels": 1.2179751179753566,
+              "numericalSlopeStandardError": 0.009480572623377242,
+              "first": [
+                505,
+                434
+              ],
+              "last": [
+                540,
+                312
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.189821646594352
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -3.517948717948718,
+              "intercept": 2218.051282051282,
+              "rmsPixels": 0.9607689228305261,
+              "maximumResidualPixels": 2.353846153846007,
+              "numericalSlopeStandardError": 0.026148818018424624,
+              "first": [
+                510,
+                423
+              ],
+              "last": [
+                535,
+                335
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.08917262781978
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -3.4864957264957264,
+              "intercept": 2199.3094017094018,
+              "rmsPixels": 0.572179932435747,
+              "maximumResidualPixels": 1.1278632478631607,
+              "numericalSlopeStandardError": 0.015572765283641491,
+              "first": [
+                510,
+                421
+              ],
+              "last": [
+                535,
+                334
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.16116933657802
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -3.506666666666667,
+              "intercept": 2208.117948717949,
+              "rmsPixels": 0.5789196222223273,
+              "maximumResidualPixels": 1.38871794871784,
+              "numericalSlopeStandardError": 0.015756196405883372,
+              "first": [
+                510,
+                419
+              ],
+              "last": [
+                535,
+                332
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.114851947405908
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -3.4885470085470085,
+              "intercept": 2196.919658119658,
+              "rmsPixels": 0.5120763831912645,
+              "maximumResidualPixels": 1.1018803418805874,
+              "numericalSlopeStandardError": 0.013936953868316783,
+              "first": [
+                510,
+                417
+              ],
+              "last": [
+                535,
+                331
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.156435120134333
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -3.500854700854701,
+              "intercept": 2201.3504273504273,
+              "rmsPixels": 0.5191911982389024,
+              "maximumResidualPixels": 1.0974358974360712,
+              "numericalSlopeStandardError": 0.014130594606994432,
+              "first": [
+                510,
+                416
+              ],
+              "last": [
+                535,
+                329
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.128143992755604
+            }
+          ]
+        }
+      ],
+      "pairedEdgeCameraDiagnostic": {
+        "assumption": "Two measured edges are orthogonal ground-parallel lines of one ideal orthographic object. A diagnostic fit, not a model certificate.",
+        "effectivePitchDegrees": 27.16516078657982,
+        "effectiveYawDegrees": 7.472458229143843,
+        "targetPitchDegrees": 30,
+        "targetYawDegrees": 8
+      }
+    },
+    {
+      "key": "yaw8E",
+      "cellRect": {
+        "left": 627,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "segments": [
+        {
+          "edge": "Near-facing gable foundation below two windows. Far/depth edge obscured by front furniture; not measured.",
+          "primary": {
+            "rangeCellPixels": [
+              160,
+              405
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": 0.06316756780721569,
+            "intercept": 471.7405279481201,
+            "rmsPixels": 0.32326586126319745,
+            "maximumResidualPixels": 0.7548847997774715,
+            "numericalSlopeStandardError": 0.00029142314053522356,
+            "first": [
+              160,
+              482
+            ],
+            "last": [
+              405,
+              497
+            ],
+            "samples": 246,
+            "equivalentYawAssumingThirtyDegreePitch": 7.200324679612471
+          },
+          "expectedSlope": 0.07027041735119573,
+          "observedMinusTargetRisePixels": -1.7401981382751088,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            7.142565330278012,
+            7.258571411150601
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            5.351967075433032,
+            9.033743004865359
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                160,
+                405
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.06275001360275521,
+              "intercept": 473.3950723767339,
+              "rmsPixels": 0.4110597770118741,
+              "maximumResidualPixels": 1.0558277226166979,
+              "numericalSlopeStandardError": 0.0003705690749292459,
+              "first": [
+                160,
+                483
+              ],
+              "last": [
+                405,
+                498
+              ],
+              "samples": 246,
+              "equivalentYawAssumingThirtyDegreePitch": 7.153223298487196
+            },
+            {
+              "rangeCellPixels": [
+                160,
+                405
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.06288866094477687,
+              "intercept": 472.4372053156209,
+              "rmsPixels": 0.3796272104096993,
+              "maximumResidualPixels": 0.8442243373107203,
+              "numericalSlopeStandardError": 0.0003422327166188016,
+              "first": [
+                160,
+                482
+              ],
+              "last": [
+                405,
+                498
+              ],
+              "samples": 246,
+              "equivalentYawAssumingThirtyDegreePitch": 7.168864220321949
+            },
+            {
+              "rangeCellPixels": [
+                160,
+                405
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.06316756780721569,
+              "intercept": 471.7405279481201,
+              "rmsPixels": 0.32326586126319745,
+              "maximumResidualPixels": 0.7548847997774715,
+              "numericalSlopeStandardError": 0.00029142314053522356,
+              "first": [
+                160,
+                482
+              ],
+              "last": [
+                405,
+                497
+              ],
+              "samples": 246,
+              "equivalentYawAssumingThirtyDegreePitch": 7.200324679612471
+            },
+            {
+              "rangeCellPixels": [
+                160,
+                405
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.06283263774552973,
+              "intercept": 471.18067414583095,
+              "rmsPixels": 0.3262136350624011,
+              "maximumResidualPixels": 0.7472016949369049,
+              "numericalSlopeStandardError": 0.00029408054919196984,
+              "first": [
+                160,
+                481
+              ],
+              "last": [
+                405,
+                497
+              ],
+              "samples": 246,
+              "equivalentYawAssumingThirtyDegreePitch": 7.162544325856768
+            },
+            {
+              "rangeCellPixels": [
+                160,
+                405
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.06328485378549563,
+              "intercept": 470.1830044153536,
+              "rmsPixels": 0.3588963572739788,
+              "maximumResidualPixels": 0.8389820705610305,
+              "numericalSlopeStandardError": 0.00032354391878788147,
+              "first": [
+                160,
+                481
+              ],
+              "last": [
+                405,
+                496
+              ],
+              "samples": 246,
+              "equivalentYawAssumingThirtyDegreePitch": 7.213553136785297
+            },
+            {
+              "rangeCellPixels": [
+                196,
+                369
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.06368404567328227,
+              "intercept": 473.2678777869529,
+              "rmsPixels": 0.34723080287047786,
+              "maximumResidualPixels": 0.8325795153620561,
+              "numericalSlopeStandardError": 0.0005271115932668955,
+              "first": [
+                196,
+                486
+              ],
+              "last": [
+                369,
+                497
+              ],
+              "samples": 174,
+              "equivalentYawAssumingThirtyDegreePitch": 7.258571411150601
+            },
+            {
+              "rangeCellPixels": [
+                196,
+                369
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.06339360460149776,
+              "intercept": 472.41314578053664,
+              "rmsPixels": 0.3373015724834935,
+              "maximumResidualPixels": 0.7891963514526878,
+              "numericalSlopeStandardError": 0.0005120385859013891,
+              "first": [
+                196,
+                485
+              ],
+              "last": [
+                369,
+                496
+              ],
+              "samples": 174,
+              "equivalentYawAssumingThirtyDegreePitch": 7.225818238901092
+            },
+            {
+              "rangeCellPixels": [
+                196,
+                369
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.06265554258378656,
+              "intercept": 471.94348738099984,
+              "rmsPixels": 0.3085686943578611,
+              "maximumResidualPixels": 0.6432491433886867,
+              "numericalSlopeStandardError": 0.0004684208162716737,
+              "first": [
+                196,
+                484
+              ],
+              "last": [
+                369,
+                495
+              ],
+              "samples": 174,
+              "equivalentYawAssumingThirtyDegreePitch": 7.142565330278012
+            },
+            {
+              "rangeCellPixels": [
+                196,
+                369
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.06279335971980979,
+              "intercept": 471.23214024696983,
+              "rmsPixels": 0.3209716255109239,
+              "maximumResidualPixels": 0.7908121909317742,
+              "numericalSlopeStandardError": 0.0004872490099319844,
+              "first": [
+                196,
+                483
+              ],
+              "last": [
+                369,
+                494
+              ],
+              "samples": 174,
+              "equivalentYawAssumingThirtyDegreePitch": 7.1581133252262195
+            },
+            {
+              "rangeCellPixels": [
+                196,
+                369
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.06355647939861614,
+              "intercept": 470.0740302020748,
+              "rmsPixels": 0.3682731399663003,
+              "maximumResidualPixels": 0.8590259783403553,
+              "numericalSlopeStandardError": 0.0005590547841962308,
+              "first": [
+                196,
+                483
+              ],
+              "last": [
+                369,
+                494
+              ],
+              "samples": 174,
+              "equivalentYawAssumingThirtyDegreePitch": 7.244186290213801
+            }
+          ]
+        }
+      ],
+      "pairedEdgeCameraDiagnostic": null
+    },
+    {
+      "key": "yaw8S",
+      "cellRect": {
+        "left": 0,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "segments": [
+        {
+          "edge": "Long unobstructed rear foundation below two high vents.",
+          "primary": {
+            "rangeCellPixels": [
+              100,
+              490
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": 0.059723688806626304,
+            "intercept": 420.58355783785083,
+            "rmsPixels": 0.3158314178696357,
+            "maximumResidualPixels": 0.7076248559624787,
+            "numericalSlopeStandardError": 0.00014187171390824392,
+            "first": [
+              100,
+              426
+            ],
+            "last": [
+              490,
+              450
+            ],
+            "samples": 391,
+            "equivalentYawAssumingThirtyDegreePitch": 6.811557918409689
+          },
+          "expectedSlope": 0.07027041735119573,
+          "observedMinusTargetRisePixels": -4.113224132382075,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            6.722089931368219,
+            6.863109545597541
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            5.650145811632038,
+            7.967373740874143
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                100,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.05956509694178677,
+              "intercept": 421.9960713382343,
+              "rmsPixels": 0.33605120107186404,
+              "maximumResidualPixels": 0.8365740945207563,
+              "numericalSlopeStandardError": 0.0001509544559517771,
+              "first": [
+                100,
+                428
+              ],
+              "last": [
+                490,
+                451
+              ],
+              "samples": 391,
+              "equivalentYawAssumingThirtyDegreePitch": 6.793639603801977
+            },
+            {
+              "rangeCellPixels": [
+                100,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.05980258324065412,
+              "intercept": 421.125501371117,
+              "rmsPixels": 0.3150562497005308,
+              "maximumResidualPixels": 0.7080594779718012,
+              "numericalSlopeStandardError": 0.00014152350777517508,
+              "first": [
+                100,
+                427
+              ],
+              "last": [
+                490,
+                450
+              ],
+              "samples": 391,
+              "equivalentYawAssumingThirtyDegreePitch": 6.820471214516335
+            },
+            {
+              "rangeCellPixels": [
+                100,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.059723688806626304,
+              "intercept": 420.58355783785083,
+              "rmsPixels": 0.3158314178696357,
+              "maximumResidualPixels": 0.7076248559624787,
+              "numericalSlopeStandardError": 0.00014187171390824392,
+              "first": [
+                100,
+                426
+              ],
+              "last": [
+                490,
+                450
+              ],
+              "samples": 391,
+              "equivalentYawAssumingThirtyDegreePitch": 6.811557918409689
+            },
+            {
+              "rangeCellPixels": [
+                100,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.059821855163470085,
+              "intercept": 420.0072841845768,
+              "rmsPixels": 0.3194250792694944,
+              "maximumResidualPixels": 0.7395891466954367,
+              "numericalSlopeStandardError": 0.00014348598935127248,
+              "first": [
+                100,
+                426
+              ],
+              "last": [
+                490,
+                449
+              ],
+              "samples": 391,
+              "equivalentYawAssumingThirtyDegreePitch": 6.822648457831516
+            },
+            {
+              "rangeCellPixels": [
+                100,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.05930653197733944,
+              "intercept": 419.36390810504804,
+              "rmsPixels": 0.32996904129948584,
+              "maximumResidualPixels": 0.7747854994840964,
+              "numericalSlopeStandardError": 0.0001482223451409165,
+              "first": [
+                100,
+                425
+              ],
+              "last": [
+                490,
+                448
+              ],
+              "samples": 391,
+              "equivalentYawAssumingThirtyDegreePitch": 6.764423085003046
+            },
+            {
+              "rangeCellPixels": [
+                158,
+                432
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.06018002942788725,
+              "intercept": 421.81416404604596,
+              "rmsPixels": 0.3465638357251932,
+              "maximumResidualPixels": 0.8309269784484172,
+              "numericalSlopeStandardError": 0.0002642181934097621,
+              "first": [
+                158,
+                432
+              ],
+              "last": [
+                432,
+                448
+              ],
+              "samples": 275,
+              "equivalentYawAssumingThirtyDegreePitch": 6.863109545597541
+            },
+            {
+              "rangeCellPixels": [
+                158,
+                432
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.06006924208764896,
+              "intercept": 421.0468463114163,
+              "rmsPixels": 0.31747380991443874,
+              "maximumResidualPixels": 0.7413825336834066,
+              "numericalSlopeStandardError": 0.00024204013189945615,
+              "first": [
+                158,
+                431
+              ],
+              "last": [
+                432,
+                447
+              ],
+              "samples": 275,
+              "equivalentYawAssumingThirtyDegreePitch": 6.850595207525707
+            },
+            {
+              "rangeCellPixels": [
+                158,
+                432
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.05929142263639249,
+              "intercept": 420.7199394131733,
+              "rmsPixels": 0.3149438029222628,
+              "maximumResidualPixels": 0.7138911168171944,
+              "numericalSlopeStandardError": 0.00024011126971627998,
+              "first": [
+                158,
+                430
+              ],
+              "last": [
+                432,
+                446
+              ],
+              "samples": 275,
+              "equivalentYawAssumingThirtyDegreePitch": 6.762715697287157
+            },
+            {
+              "rangeCellPixels": [
+                158,
+                432
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.05937393612417415,
+              "intercept": 420.1355979342777,
+              "rmsPixels": 0.32489435162275504,
+              "maximumResidualPixels": 0.700926112922275,
+              "numericalSlopeStandardError": 0.00024769750846960644,
+              "first": [
+                158,
+                429
+              ],
+              "last": [
+                432,
+                446
+              ],
+              "samples": 275,
+              "equivalentYawAssumingThirtyDegreePitch": 6.7720397501269405
+            },
+            {
+              "rangeCellPixels": [
+                158,
+                432
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.05893194079801506,
+              "intercept": 419.4732592827674,
+              "rmsPixels": 0.3337506599310706,
+              "maximumResidualPixels": 0.740352557629592,
+              "numericalSlopeStandardError": 0.00025444950489937385,
+              "first": [
+                158,
+                429
+              ],
+              "last": [
+                432,
+                445
+              ],
+              "samples": 275,
+              "equivalentYawAssumingThirtyDegreePitch": 6.722089931368219
+            }
+          ]
+        },
+        {
+          "edge": "Right-side steep gable foundation edge.",
+          "primary": {
+            "rangeCellPixels": [
+              505,
+              540
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": -3.362934362934363,
+            "intercept": 2136.7998712998715,
+            "rmsPixels": 0.5072405812757784,
+            "maximumResidualPixels": 1.4665379665377714,
+            "numericalSlopeStandardError": 0.008373948234154306,
+            "first": [
+              505,
+              439
+            ],
+            "last": [
+              540,
+              321
+            ],
+            "samples": 36,
+            "equivalentYawAssumingThirtyDegreePitch": 8.456767115066764
+          },
+          "expectedSlope": -3.5576848611921044,
+          "observedMinusTargetRisePixels": 6.816267439020944,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            8.29468874530423,
+            8.477647209249294
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": null,
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -3.4296010296010295,
+              "intercept": 2175.9109824109823,
+              "rmsPixels": 1.5445672756540705,
+              "maximumResidualPixels": 5.896739596739735,
+              "numericalSlopeStandardError": 0.02549899769053348,
+              "first": [
+                505,
+                447
+              ],
+              "last": [
+                540,
+                325
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.29468874530423
+            },
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -3.375289575289575,
+              "intercept": 2144.922136422136,
+              "rmsPixels": 0.5731927935258595,
+              "maximumResidualPixels": 1.2307593307593834,
+              "numericalSlopeStandardError": 0.009462742056448804,
+              "first": [
+                505,
+                441
+              ],
+              "last": [
+                540,
+                323
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.426256428768268
+            },
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -3.362934362934363,
+              "intercept": 2136.7998712998715,
+              "rmsPixels": 0.5072405812757784,
+              "maximumResidualPixels": 1.4665379665377714,
+              "numericalSlopeStandardError": 0.008373948234154306,
+              "first": [
+                505,
+                439
+              ],
+              "last": [
+                540,
+                321
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.456767115066764
+            },
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -3.3736164736164738,
+              "intercept": 2140.7423852423854,
+              "rmsPixels": 0.49068859688060534,
+              "maximumResidualPixels": 1.1534963534963936,
+              "numericalSlopeStandardError": 0.00810069434711495,
+              "first": [
+                505,
+                437
+              ],
+              "last": [
+                540,
+                320
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.430375283298062
+            },
+            {
+              "rangeCellPixels": [
+                505,
+                540
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -3.384169884169884,
+              "intercept": 2144.256542256542,
+              "rmsPixels": 0.8755739403174788,
+              "maximumResidualPixels": 2.4939939939940814,
+              "numericalSlopeStandardError": 0.01445470083042663,
+              "first": [
+                505,
+                436
+              ],
+              "last": [
+                540,
+                319
+              ],
+              "samples": 36,
+              "equivalentYawAssumingThirtyDegreePitch": 8.404461531771746
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -3.365811965811966,
+              "intercept": 2142.059829059829,
+              "rmsPixels": 0.7878098202942245,
+              "maximumResidualPixels": 1.6256410256410163,
+              "numericalSlopeStandardError": 0.021441467489717352,
+              "first": [
+                510,
+                425
+              ],
+              "last": [
+                535,
+                341
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.44964141570213
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -3.3661538461538463,
+              "intercept": 2140.123076923077,
+              "rmsPixels": 0.5534186384186234,
+              "maximumResidualPixels": 1.2061538461539385,
+              "numericalSlopeStandardError": 0.015062147536349447,
+              "first": [
+                510,
+                423
+              ],
+              "last": [
+                535,
+                339
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.44879562253166
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -3.3545299145299143,
+              "intercept": 2132.434188034188,
+              "rmsPixels": 0.5620943273802922,
+              "maximumResidualPixels": 1.4030769230766964,
+              "numericalSlopeStandardError": 0.015298269882162614,
+              "first": [
+                510,
+                421
+              ],
+              "last": [
+                535,
+                337
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.477647209249294
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -3.384273504273504,
+              "intercept": 2146.3213675213674,
+              "rmsPixels": 0.4999934253348198,
+              "maximumResidualPixels": 1.1907692307693196,
+              "numericalSlopeStandardError": 0.013608097409074087,
+              "first": [
+                510,
+                420
+              ],
+              "last": [
+                535,
+                335
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.404207878149098
+            },
+            {
+              "rangeCellPixels": [
+                510,
+                535
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -3.4123076923076923,
+              "intercept": 2158.8923076923074,
+              "rmsPixels": 0.8735427425586728,
+              "maximumResidualPixels": 2.1323076923074495,
+              "numericalSlopeStandardError": 0.02377482208644617,
+              "first": [
+                510,
+                418
+              ],
+              "last": [
+                535,
+                332
+              ],
+              "samples": 26,
+              "equivalentYawAssumingThirtyDegreePitch": 8.336136380733093
+            }
+          ]
+        }
+      ],
+      "pairedEdgeCameraDiagnostic": {
+        "assumption": "Two measured edges are orthogonal ground-parallel lines of one ideal orthographic object. A diagnostic fit, not a model certificate.",
+        "effectivePitchDegrees": 26.625653978701372,
+        "effectiveYawDegrees": 7.590762183238562,
+        "targetPitchDegrees": 30,
+        "targetYawDegrees": 8
+      }
+    },
+    {
+      "key": "yaw8W",
+      "cellRect": {
+        "left": 627,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "segments": [
+        {
+          "edge": "Rear-facing gable foundation below two windows.",
+          "primary": {
+            "rangeCellPixels": [
+              165,
+              420
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": 0.05811648832684825,
+            "intercept": 468.3642084143969,
+            "rmsPixels": 0.31351704786363793,
+            "maximumResidualPixels": 0.660864542801562,
+            "numericalSlopeStandardError": 0.0002661940071398348,
+            "first": [
+              165,
+              478
+            ],
+            "last": [
+              420,
+              493
+            ],
+            "samples": 256,
+            "equivalentYawAssumingThirtyDegreePitch": 6.629908891813683
+          },
+          "expectedSlope": 0.07027041735119573,
+          "observedMinusTargetRisePixels": -3.0992519012086066,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            6.586275163011044,
+            6.743242992892418
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": [
+            4.8505232812718395,
+            8.396544357614736
+          ],
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                165,
+                420
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.05792908846417945,
+              "intercept": 469.8252728742275,
+              "rmsPixels": 0.34092265423875584,
+              "maximumResidualPixels": 0.8716303788052073,
+              "numericalSlopeStandardError": 0.000289462943323052,
+              "first": [
+                165,
+                480
+              ],
+              "last": [
+                420,
+                494
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 6.6087197942149505
+            },
+            {
+              "rangeCellPixels": [
+                165,
+                420
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.05773060196841383,
+              "intercept": 469.03567392423895,
+              "rmsPixels": 0.31178138578341796,
+              "maximumResidualPixels": 0.7460095273518164,
+              "numericalSlopeStandardError": 0.0002647203301984285,
+              "first": [
+                165,
+                479
+              ],
+              "last": [
+                420,
+                493
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 6.586275163011044
+            },
+            {
+              "rangeCellPixels": [
+                165,
+                420
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.05811648832684825,
+              "intercept": 468.3642084143969,
+              "rmsPixels": 0.31351704786363793,
+              "maximumResidualPixels": 0.660864542801562,
+              "numericalSlopeStandardError": 0.0002661940071398348,
+              "first": [
+                165,
+                478
+              ],
+              "last": [
+                420,
+                493
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 6.629908891813683
+            },
+            {
+              "rangeCellPixels": [
+                165,
+                420
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.058037093728542,
+              "intercept": 467.85618133440147,
+              "rmsPixels": 0.3101067109003941,
+              "maximumResidualPixels": 0.7003079222934616,
+              "numericalSlopeStandardError": 0.0002632984348954259,
+              "first": [
+                165,
+                477
+              ],
+              "last": [
+                420,
+                492
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 6.620932053436376
+            },
+            {
+              "rangeCellPixels": [
+                165,
+                420
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.05831032558937972,
+              "intercept": 466.98719851510646,
+              "rmsPixels": 0.33613047300415716,
+              "maximumResidualPixels": 0.8548777609292415,
+              "numericalSlopeStandardError": 0.00028539410580856705,
+              "first": [
+                165,
+                477
+              ],
+              "last": [
+                420,
+                492
+              ],
+              "samples": 256,
+              "equivalentYawAssumingThirtyDegreePitch": 6.651823942701235
+            },
+            {
+              "rangeCellPixels": [
+                203,
+                382
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": 0.0591191086144634,
+              "intercept": 469.40766073026947,
+              "rmsPixels": 0.3270141892763455,
+              "maximumResidualPixels": 0.7836538164758053,
+              "numericalSlopeStandardError": 0.000471716878730257,
+              "first": [
+                203,
+                482
+              ],
+              "last": [
+                382,
+                492
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 6.743242992892418
+            },
+            {
+              "rangeCellPixels": [
+                203,
+                382
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": 0.058781649639392156,
+              "intercept": 468.67303414714445,
+              "rmsPixels": 0.29424682337079017,
+              "maximumResidualPixels": 0.6035731555500661,
+              "numericalSlopeStandardError": 0.00042445006256125337,
+              "first": [
+                203,
+                481
+              ],
+              "last": [
+                382,
+                491
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 6.705103209643744
+            },
+            {
+              "rangeCellPixels": [
+                203,
+                382
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": 0.05879708221447164,
+              "intercept": 468.1296312300448,
+              "rmsPixels": 0.3123733998997856,
+              "maximumResidualPixels": 0.6993727515595651,
+              "numericalSlopeStandardError": 0.0004505975888237822,
+              "first": [
+                203,
+                480
+              ],
+              "last": [
+                382,
+                491
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 6.706847537569985
+            },
+            {
+              "rangeCellPixels": [
+                203,
+                382
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": 0.05873535191415373,
+              "intercept": 467.6032428984434,
+              "rmsPixels": 0.2979443207345845,
+              "maximumResidualPixels": 0.6379939710073472,
+              "numericalSlopeStandardError": 0.0004297836901919752,
+              "first": [
+                203,
+                480
+              ],
+              "last": [
+                382,
+                490
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 6.699870150958805
+            },
+            {
+              "rangeCellPixels": [
+                203,
+                382
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": 0.058049116742286286,
+              "intercept": 467.02063335288125,
+              "rmsPixels": 0.33645511161191594,
+              "maximumResidualPixels": 0.9207022850499698,
+              "numericalSlopeStandardError": 0.0004853353777511257,
+              "first": [
+                203,
+                479
+              ],
+              "last": [
+                382,
+                489
+              ],
+              "samples": 180,
+              "equivalentYawAssumingThirtyDegreePitch": 6.622291469819061
+            }
+          ]
+        },
+        {
+          "edge": "Right side long-wall steep foundation edge; front furniture protrudes at opposite left edge.",
+          "primary": {
+            "rangeCellPixels": [
+              440,
+              490
+            ],
+            "alphaStrictlyGreaterThan": 128,
+            "slope": -3.538823529411765,
+            "intercept": 2029.4156862745099,
+            "rmsPixels": 0.5217602478606471,
+            "maximumResidualPixels": 1.2196078431372825,
+            "numericalSlopeStandardError": 0.0050638041084188805,
+            "first": [
+              440,
+              472
+            ],
+            "last": [
+              490,
+              296
+            ],
+            "samples": 51,
+            "equivalentYawAssumingThirtyDegreePitch": 8.04208227890288
+          },
+          "expectedSlope": -3.5576848611921044,
+          "observedMinusTargetRisePixels": 0.943066589016972,
+          "thresholdAndTrimSensitivityYawDegrees": [
+            8.029742667278787,
+            8.096014153237801
+          ],
+          "illustrativeTwoPixelPerEndpointSystematicYawBand": null,
+          "allThresholdAndTrimFits": [
+            {
+              "rangeCellPixels": [
+                440,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -3.5422624434389145,
+              "intercept": 2035.4853695324284,
+              "rmsPixels": 0.9085300803005919,
+              "maximumResidualPixels": 2.4130920060333665,
+              "numericalSlopeStandardError": 0.008817494955033478,
+              "first": [
+                440,
+                477
+              ],
+              "last": [
+                490,
+                301
+              ],
+              "samples": 51,
+              "equivalentYawAssumingThirtyDegreePitch": 8.034376825169884
+            },
+            {
+              "rangeCellPixels": [
+                440,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -3.524886877828054,
+              "intercept": 2024.6214177978884,
+              "rmsPixels": 0.5292162087849835,
+              "maximumResidualPixels": 1.3242835595776796,
+              "numericalSlopeStandardError": 0.005136165936894072,
+              "first": [
+                440,
+                474
+              ],
+              "last": [
+                490,
+                298
+              ],
+              "samples": 51,
+              "equivalentYawAssumingThirtyDegreePitch": 8.07346054869828
+            },
+            {
+              "rangeCellPixels": [
+                440,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -3.538823529411765,
+              "intercept": 2029.4156862745099,
+              "rmsPixels": 0.5217602478606471,
+              "maximumResidualPixels": 1.2196078431372825,
+              "numericalSlopeStandardError": 0.0050638041084188805,
+              "first": [
+                440,
+                472
+              ],
+              "last": [
+                490,
+                296
+              ],
+              "samples": 51,
+              "equivalentYawAssumingThirtyDegreePitch": 8.04208227890288
+            },
+            {
+              "rangeCellPixels": [
+                440,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -3.531945701357466,
+              "intercept": 2024.5508295625943,
+              "rmsPixels": 0.509947769472494,
+              "maximumResidualPixels": 1.2511613876320098,
+              "numericalSlopeStandardError": 0.004949161268459722,
+              "first": [
+                440,
+                471
+              ],
+              "last": [
+                490,
+                294
+              ],
+              "samples": 51,
+              "equivalentYawAssumingThirtyDegreePitch": 8.05753731831679
+            },
+            {
+              "rangeCellPixels": [
+                440,
+                490
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -3.541085972850679,
+              "intercept": 2026.3304675716442,
+              "rmsPixels": 0.8518012180758493,
+              "maximumResidualPixels": 1.8497134238309627,
+              "numericalSlopeStandardError": 0.008266928201860086,
+              "first": [
+                440,
+                469
+              ],
+              "last": [
+                490,
+                292
+              ],
+              "samples": 51,
+              "equivalentYawAssumingThirtyDegreePitch": 8.037011250151169
+            },
+            {
+              "rangeCellPixels": [
+                447,
+                483
+              ],
+              "alphaStrictlyGreaterThan": 8,
+              "slope": -3.544333807491702,
+              "intercept": 2036.4395448079658,
+              "rmsPixels": 0.9907366370419985,
+              "maximumResidualPixels": 2.4096728307254125,
+              "numericalSlopeStandardError": 0.01568453961554822,
+              "first": [
+                447,
+                452
+              ],
+              "last": [
+                483,
+                323
+              ],
+              "samples": 37,
+              "equivalentYawAssumingThirtyDegreePitch": 8.029742667278787
+            },
+            {
+              "rangeCellPixels": [
+                447,
+                483
+              ],
+              "alphaStrictlyGreaterThan": 64,
+              "slope": -3.51896633475581,
+              "intercept": 2021.9409672830734,
+              "rmsPixels": 0.5373960219287066,
+              "maximumResidualPixels": 1.2802275960170846,
+              "numericalSlopeStandardError": 0.008507618351880441,
+              "first": [
+                447,
+                449
+              ],
+              "last": [
+                483,
+                321
+              ],
+              "samples": 37,
+              "equivalentYawAssumingThirtyDegreePitch": 8.086864343676494
+            },
+            {
+              "rangeCellPixels": [
+                447,
+                483
+              ],
+              "alphaStrictlyGreaterThan": 128,
+              "slope": -3.5346135609293503,
+              "intercept": 2027.5412517780937,
+              "rmsPixels": 0.5285961007567991,
+              "maximumResidualPixels": 1.073257467994381,
+              "numericalSlopeStandardError": 0.008368305130713438,
+              "first": [
+                447,
+                448
+              ],
+              "last": [
+                483,
+                320
+              ],
+              "samples": 37,
+              "equivalentYawAssumingThirtyDegreePitch": 8.051535420447548
+            },
+            {
+              "rangeCellPixels": [
+                447,
+                483
+              ],
+              "alphaStrictlyGreaterThan": 192,
+              "slope": -3.520862968231389,
+              "intercept": 2019.5256045519202,
+              "rmsPixels": 0.4583214646578414,
+              "maximumResidualPixels": 0.9677572309151401,
+              "numericalSlopeStandardError": 0.007255774037532907,
+              "first": [
+                447,
+                446
+              ],
+              "last": [
+                483,
+                318
+              ],
+              "samples": 37,
+              "equivalentYawAssumingThirtyDegreePitch": 8.082565655871434
+            },
+            {
+              "rangeCellPixels": [
+                447,
+                483
+              ],
+              "alphaStrictlyGreaterThan": 240,
+              "slope": -3.5149359886201985,
+              "intercept": 2014.3371266002841,
+              "rmsPixels": 0.7556382711842183,
+              "maximumResidualPixels": 1.6230440967283357,
+              "numericalSlopeStandardError": 0.01196265279418634,
+              "first": [
+                447,
+                444
+              ],
+              "last": [
+                483,
+                315
+              ],
+              "samples": 37,
+              "equivalentYawAssumingThirtyDegreePitch": 8.096014153237801
+            }
+          ]
+        }
+      ],
+      "pairedEdgeCameraDiagnostic": {
+        "assumption": "Two measured edges are orthogonal ground-parallel lines of one ideal orthographic object. A diagnostic fit, not a model certificate.",
+        "effectivePitchDegrees": 26.968586829567723,
+        "effectiveYawDegrees": 7.3026788971016625,
+        "targetPitchDegrees": 30,
+        "targetYawDegrees": 8
+      }
+    }
+  ],
+  "independentTrimDiagnostics": [
+    {
+      "key": "yaw8N",
+      "feature": "Lower eave trim to wall lightness transition, independent of outer foundation alpha.",
+      "rangeCellPixels": [
+        110,
+        480
+      ],
+      "searchBandCellPixels": {
+        "intercept": 316.3,
+        "slope": 0.068,
+        "halfWidth": 3
+      },
+      "method": "Choose maximum RGB-sum rise across two vertical pixels within the inspected narrow eave band at each x; fit line to transition midpoint. N is clean; S limited to left run to avoid right high vent.",
+      "slope": 0.06794262308565413,
+      "intercept": 316.27768090671316,
+      "rmsPixels": 0.3166156083992775,
+      "maximumResidualPixels": 0.8939596321823728,
+      "numericalSlopeStandardError": 0.00015389957790642444,
+      "first": [
+        110,
+        324
+      ],
+      "last": [
+        480,
+        349
+      ],
+      "samples": 371,
+      "equivalentYawAssumingThirtyDegreePitch": 7.738254938557239,
+      "limitation": "Sharp eave run supports near8degree (~7.74) independently, but differs from same-view foundation (~6.83); not a single consistent camera proof."
+    },
+    {
+      "key": "yaw8S",
+      "feature": "Lower eave trim to wall lightness transition, independent of outer foundation alpha.",
+      "rangeCellPixels": [
+        110,
+        310
+      ],
+      "searchBandCellPixels": {
+        "intercept": 332,
+        "slope": 0.068,
+        "halfWidth": 3
+      },
+      "method": "Choose maximum RGB-sum rise across two vertical pixels within the inspected narrow eave band at each x; fit line to transition midpoint. N is clean; S limited to left run to avoid right high vent.",
+      "slope": 0.06860351706812473,
+      "intercept": 331.7972415151963,
+      "rmsPixels": 0.6974978005984555,
+      "maximumResidualPixels": 3.503051081227568,
+      "numericalSlopeStandardError": 0.0008521503854230247,
+      "first": [
+        110,
+        340
+      ],
+      "last": [
+        310,
+        353
+      ],
+      "samples": 201,
+      "equivalentYawAssumingThirtyDegreePitch": 7.812601617765452,
+      "limitation": "Several painted transition outliers (max3.50px); supporting diagnostic only."
+    }
+  ],
+  "sourceArtModified": false,
+  "runtimeModified": false,
+  "testsRun": false,
+  "serverStarted": false,
+  "commitCreated": false
+}

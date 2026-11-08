@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "PASS-source-candidate-front-rear-function-alpha",
+  "recommended_continue_yaw_source_generation": true,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.png",
+    "sha256": "81b8f49b4323c45a0fd7d73a5c2368f6045e2ce78c301623b9e5db5b36f560fa",
+    "bytes": 1768900
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "media",
+    "eventName": "Media centre",
+    "currentSpriteSubjectId": "business:golf-clubhouse",
+    "newArtSubjectProposal": "golf:event-media-centre",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 12,
+      "depth": 8
+    },
+    "footprintMetres": {
+      "width": 24,
+      "depth": 16
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.provenance.json",
+    "sha256": "3b8814c85fb3fa3a7c95c3d8bb0e663f19f42f9eadcf933d32a2ca39e259d271",
+    "bytes": 3640
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.archive.json",
+    "sha256": "954c8fe76de3e88631c8d3117a4dc2bf09797fb8fadb99eec5b7704a67364534",
+    "bytes": 3726
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "05738fb5a27fc38da78f3af9fa5858f9ca731fb1fc713e6b3664d24f4b0ff64b",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.5848849868618189,
+  "outer_border_alpha_p95max": [
+    1.0,
+    1.0
+  ],
+  "center_gutter_alpha_p95max": [
+    1.0,
+    1.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        34,
+        103,
+        596,
+        529
+      ],
+      "minimum_core_margin_px": 31,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "93da7003344717ce6234c639cde3c74bedbda5e0ac8329f239e0a41028a1e725",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "1cb17ec55bb6eb77cfd2f31432d5b4b7d74d5cee21ec7a0c91e8b9d4aa20867d"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        30,
+        100,
+        594,
+        527
+      ],
+      "minimum_core_margin_px": 30,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "66517c2e63ef038b3f4febca9e08763d9bb1ec8db8de1dc0e299a1408a94a475",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "8366aaa28fe20111b83e2537189a02867a7a283a6f0ddbf09aa09a383493a63d"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        33,
+        92,
+        597,
+        516
+      ],
+      "minimum_core_margin_px": 30,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "af8199b6eeeaf46546c16cb47c3808389dc973ee84cf11a1224293d8095f9dd8",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "f1f711a5d7d2f5fa344fe0a68aa3d9a32eb69e279d3efdfee57bb2f1682d9811"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        22,
+        95,
+        596,
+        522
+      ],
+      "minimum_core_margin_px": 22,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "bd577d6a33f2cc5e7e6fd9d065046b063b0d9202cc9e698181ece152cada80db",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "9cb2daa330d2e1b988a56483dc3af015e170c7f821d9c495c6fb6a36474c19f5"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "TL/BR show central double front door, three window groups eachside;TR/BL show rear service door and two vents.",
+    "Two small rooftop antenna masts and end windows retained; practical prefabricated press building stays recognisable."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.prompt.txt",
+    "sha256": "01a3eae99904c2a814f768ed3e87b63c988f37f74d99eb6ef131d794af58d9bd",
+    "bytes": 2091
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "asOfUTC": "2026-11-07T15:25:51.555119+00:00",
+  "sourceOnly": true,
+  "subject": "golf:event-broadcast-compound",
+  "condition": "upgraded",
+  "review": "HVAC/geometry PASS; transparent-cutout alpha HOLD N/W v3",
+  "rows": [
+    {
+      "view": "yaw8N",
+      "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-N-v3.png",
+      "sha256": "58c8aa683d645e61890474e3f9815bb7d8848cf09bc8a7848e31a95492deeb6e",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "functionalGeometryAndHVACCountsPass": true,
+      "alphaCutoutPass": false,
+      "alphaMinMax": [
+        0,
+        254
+      ],
+      "zeroAlphaFraction": 0.06405448913574219,
+      "wholeImageAlphaGT128Fraction": 0.5121040344238281,
+      "borderAlphaMax": 250,
+      "borderPixelsAlphaGT128": 3345,
+      "review": "HOLD-dark-background-alpha-regression"
+    },
+    {
+      "view": "yaw8W",
+      "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-W-v3.png",
+      "sha256": "34d4fa38fbefeb5982a58afe91f2ba12acbfc8880e9efc3118d473d6ec2d915f",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "functionalGeometryAndHVACCountsPass": true,
+      "alphaCutoutPass": false,
+      "alphaMinMax": [
+        3,
+        253
+      ],
+      "zeroAlphaFraction": 0.0,
+      "wholeImageAlphaGT128Fraction": 0.6308097839355469,
+      "borderAlphaMax": 226,
+      "borderPixelsAlphaGT128": 2852,
+      "review": "HOLD-dark-background-alpha-regression"
+    }
+  ],
+  "nativeCameraCertified": false,
+  "runtimeReady": false,
+  "runtimeIntegrated": false,
+  "notes": [
+    "This is high-opacity alpha across image borders, not low-alpha hidden-RGB speckle.",
+    "Original E/S v2 have border alpha max1 and large true-zero transparency; keep them unchanged.",
+    "N/W v3 corrected van HVAC counts and retained truck two-HVAC, main faces, stair sides, dish and layout. Preserve those native foreground features in a transparency-only correction.",
+    "No alpha cleanup, keying, painting or native pixel alteration performed here. Grey/white composites are diagnostics only."
+  ],
+  "diagnostics": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/qa-isolated-yaw-v3"
+}

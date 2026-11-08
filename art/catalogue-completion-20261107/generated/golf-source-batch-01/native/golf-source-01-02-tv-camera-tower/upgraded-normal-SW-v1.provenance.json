@@ -1,0 +1,21 @@
+{
+  "key": "golf-source-01-02-tv-camera-tower",
+  "family": "normal-SW",
+  "condition": "upgraded",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-SW-v1.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/camera-calibration-refs/SW-camera-only.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/camera-calibration-refs/rear-identity-only.png"
+  ],
+  "prompt": "Create ONE isolated SW rear-corner view of this exact upgraded golf TV camera tower. REFERENCE1 controls the entire fixed-world single-view projection/occlusion; REFERENCE2 supplies clean galvanizedsteel/greenwindscreen/timber/material identity and the camera's plainback housing. Match the exact singleview geometry in reference1, not the differentcamera inreference2. Fourleg tallslender2x2m scaffold, platform4m up, frontfixedladder naturally hiddenaroundfar edge in thisSWview; onefixedtripodcamera pointsAWAYfromviewer, onecaseatfixedrear-right. The near visible CAMERA END is a PLAIN FLAT GREY REAR PANEL with small controls. NO circular iris, NO blackglass, NO greenlens onthisnearend. Front optical lens is wholly on its far end, hidden fromthiscamera. Never pan or swivelcamera. Render believable finelypainted miniature gameart, clean upgradedmetal/soundgreencloth/neatdeck. Orthographic30degreesDOWN/45degreecorner matchingguideexactly. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT. Onecomplete object centered, generouszeroalpha transparentbackground, no greyhalo, no label/grid/UI/people/plant/scene/groundplate.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-a8b23839-7190-4e9f-babe-4c282c3053da.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/camera-calibration-refs/SW-camera-only.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/camera-calibration-refs/rear-identity-only.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "1a694bb99ead8260b78989da08a844a54275ee3eaeb7bcdce505fab491474daf",
+  "native_bytes_preserved": true
+}

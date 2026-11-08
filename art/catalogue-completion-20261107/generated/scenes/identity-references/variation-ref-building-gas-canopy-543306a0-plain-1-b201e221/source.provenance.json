@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-gas-canopy-543306a0-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-gas-canopy-543306a0-plain-1/NE.png",
+  "sourceSha256": "997fb209a41894f3ec65758758c042cdb091e795bbbdac4583c5fef84e0bf172",
+  "output": "identity-references/variation-ref-building-gas-canopy-543306a0-plain-1-b201e221/source.png",
+  "outputSha256": "997fb209a41894f3ec65758758c042cdb091e795bbbdac4583c5fef84e0bf172",
+  "width": 651,
+  "height": 463,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      651,
+      463
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-gas-canopy-543306a0-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Fuel-pump/shop front changes slant NE/NW; rear utilities follow opposite turns SE/SW. True alpha clean on magenta, no floor. Repack clear gaps before crop delivery. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-gas-canopy-543306a0-plain:1",
+    "version": "variation-ref-building-gas-canopy-543306a0-plain-1-4views-v2",
+    "files": {
+      "NE": "997fb209a41894f3ec65758758c042cdb091e795bbbdac4583c5fef84e0bf172",
+      "SE": "9cb2b92c5c9ffafc15ddddee7ac2041a596173d784d109cb2e6cc057b6f2c92c",
+      "SW": "435fdc5898beef04ca4fa6097513ff2797874ba0b5860b89f72192f0d00d6103",
+      "NW": "deade37ea190e4e93962d3051704b477bcabf3c46663fc981770a8075e4e3c0c"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.28125,
+      0.640625,
+      0.491699,
+      0.825684
+    ],
+    "crop": {
+      "left": 576,
+      "top": 1312,
+      "width": 431,
+      "height": 379
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-gas-canopy-543306a0-plain-1.native.png",
+    "nativeSha256": "8c7611002e3c312ef0db818a67621be3cefdfecd151eff46b1b49bfe28efca67"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

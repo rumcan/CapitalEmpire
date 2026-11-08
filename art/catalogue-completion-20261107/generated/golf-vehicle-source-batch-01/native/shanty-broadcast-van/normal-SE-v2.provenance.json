@@ -1,0 +1,21 @@
+{
+  "key": "newprop:shanty-broadcast-van",
+  "family": "normal-SE",
+  "condition": "base",
+  "version": 2,
+  "target": "generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-SE-v2.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\shanty-broadcast-van\\guide-normalSE.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\shanty-broadcast-van\\target-normalSE-extra-hatch.png"
+  ],
+  "prompt": "Generate ONE SINGLE SE front/left corner of this worn ordinary broadcast van, nose SCREEN LOWER RIGHT. Reference1 controls exact camera and fixed assembly. Reference2 supplies the target vehicle/body/material identity, but its vented equipment hatch on the visible LEFT side is WRONG. Remove ONLY that extra visible hatch, hinges and vent markings; restore plain cream/green painted cargo panel matching guide. The ONE real equipment hatch stays on physical RIGHT+X, hidden on the opposite side in this SE view. Preserve the existing boxy cab, wheels, paint wear, windows, one roof cable reel on transverseX axle, fixed HVAC front/right of reel, front roof aerial and bolted steel rack. No roof dish or other redesign, no mirroring. Detailed painterly miniature finish; late-afternoon DAYTIME sun UPPER RIGHT/shadows LOWER LEFT, opaque object on true zero-alpha background with broad margins, no people, ground plate, scenery, text or UI. Source-only candidate, no camera/scale/runtime approval.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-dcae50f5-eac3-4dae-875d-7b0d117f64cf.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\shanty-broadcast-van\\guide-normalSE.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\shanty-broadcast-van\\target-normalSE-extra-hatch.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "d59fd64c712f03510a74cb9fcf5417abefd598ed3d4e037da0ff540f69546fca",
+  "native_bytes_preserved": true
+}

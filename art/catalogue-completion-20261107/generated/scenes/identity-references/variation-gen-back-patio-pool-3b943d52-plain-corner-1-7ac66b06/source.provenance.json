@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-back-patio-pool-3b943d52-plain-corner-1/NE.png",
+  "sourceSha256": "ad7dbaa147de13c26d99f1df8043b8b063032bf1705341054e2f507498c522d9",
+  "output": "identity-references/variation-gen-back-patio-pool-3b943d52-plain-corner-1-7ac66b06/source.png",
+  "outputSha256": "ad7dbaa147de13c26d99f1df8043b8b063032bf1705341054e2f507498c522d9",
+  "width": 593,
+  "height": 589,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      593,
+      589
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-back-patio-pool-3b943d52-plain-corner-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+    "version": "variation-gen-back-patio-pool-3b943d52-plain-corner-1-4views-v5",
+    "files": {
+      "NE": "ad7dbaa147de13c26d99f1df8043b8b063032bf1705341054e2f507498c522d9",
+      "SE": "0304622192f3795b5f5ef279c4e8e87baf3cc3f8c758d4ac264c7beadaa37cfe",
+      "SW": "e18989bc28233c10398891574ac420e432a946ec6937eb668ec39fc7bad5ce3c",
+      "NW": "e059abc0b64793db6033d78ce35b22f3bc13859592fe097b8e2923840d8392f8"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-1-0.webp",
+    "atlasSha256": "958733a68cd3ea18895adf4ca7e28b7f475bc3a9eb0484aa8bfa457db925ce64",
+    "runtimePage": 1,
+    "localPage": 1,
+    "uv": [
+      0.007813,
+      0.007813,
+      0.297363,
+      0.296387
+    ],
+    "crop": {
+      "left": 16,
+      "top": 16,
+      "width": 593,
+      "height": 591
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-back-patio-pool-3b943d52-plain-corner-1.native.png",
+    "nativeSha256": "8deb853d51a571eb4c8ab672a5eeb2dc0d1e9bfc6c99b97cf58ca954c4f3e0dc"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

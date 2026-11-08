@@ -1,0 +1,94 @@
+{
+  "id": "ball-dispenser-normal-SW-isolated-repair-v1",
+  "subject": "newprop:ball-dispenser",
+  "target_guide_corner": "SW",
+  "target_intended_geometry": "orthographic 30 degrees down, 45 degree corner; technical guide is camera authority, not a native result certificate",
+  "state": "prepared-native-generation-not-run",
+  "technical_calibration": {
+    "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-dispenser/guides/normal-world-v1.calibration.json",
+    "sha256": "22ccb492a4a4d861384ecff1b3293278b42d0be4c546acb17e34d166c960218f",
+    "bytes": 498817
+  },
+  "source_native_identity_cell": "BL",
+  "source_native_identity_actual_guide_corner": "NW",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-world-guide-single-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png"
+  ],
+  "reference_records": [
+    {
+      "role": "technical-camera-and-fixed-world-authority",
+      "source": {
+        "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-dispenser/guides/normal-world-v1.png",
+        "sha256": "47cec4bf76113066ab2461546ef48ab7d0505d31ab9bf3845009ac293d60456a",
+        "bytes": 62523
+      },
+      "source_dimensions": [
+        1600,
+        1600
+      ],
+      "rectangle_ltrb": [
+        800,
+        0,
+        1600,
+        800
+      ],
+      "crop": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-world-guide-single-v1.png",
+        "sha256": "1489790a6c39135ae68bc9c0374ef093b04f11f2bdd725f3d7d21d55650e57d0",
+        "bytes": 12769
+      },
+      "crop_dimensions": [
+        800,
+        800
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "4be4a25071adc749abdabacdaeab9e006be7e4e5f2987aff986603605048ff0b",
+      "pixel_identity_verified": true,
+      "resized": false,
+      "repainted": false,
+      "alpha_modified": false
+    },
+    {
+      "role": "native-material-identity-only-do-not-copy-input-camera",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+        "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+        "bytes": 1167889
+      },
+      "source_dimensions": [
+        1254,
+        1254
+      ],
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "crop": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png",
+        "sha256": "f0fe7d4003cf361348c4391d1057fe7dfccd31dac9cfd15d521f71238bd8503f",
+        "bytes": 283002
+      },
+      "crop_dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "9fde9692b75cb9d989325e505f9d94e8f04879683c8b2faa0aac8b0be3fa0252",
+      "pixel_identity_verified": true,
+      "resized": false,
+      "repainted": false,
+      "alpha_modified": false
+    }
+  ],
+  "repair_instruction": "Rear service door must be on LEFT plane, blank side on RIGHT; basket stays physically at front, visible behind RIGHT edge.",
+  "fixed_identity": "Only physicalFRONT-Yhas ball window/coin controls/chute and the single wire basket. PhysicalREAR+Yis plain latched service panel. Sloping hood is lower at front, higher at rear. Fronts must not be repeated for rear views.",
+  "lighting": "late-afternoon daytime, sun screen upper-right, shadows lower-left, lamps off",
+  "target_output": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.png",
+  "owner_approved": false,
+  "runtime_imported": false,
+  "lossless_reference_crops_visually_inspected": true,
+  "reference_visual_review": "Guide label, complete subject, desired opposite projection, and correct identity-source physical side inspected; native source camera is not target camera authority."
+}

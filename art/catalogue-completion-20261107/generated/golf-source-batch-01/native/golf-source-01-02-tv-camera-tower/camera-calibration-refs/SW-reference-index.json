@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "referenceOrder": [
+    "SW-camera-only.png",
+    "rear-identity-only.png"
+  ],
+  "references": [
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\camera-calibration-refs\\SW-camera-only.png",
+      "purpose": "Technical SW camera/object geometry ONLY; source top-right cell, not finished art.",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\normal-world-v1.png",
+      "sourceSHA256": "43e9a9613d8770d661f5632fb9de6241ab58503281bbb56d785d413fba388548",
+      "sourceSize": [
+        1600,
+        1600
+      ],
+      "cropRectLTRB": [
+        800,
+        0,
+        1600,
+        800
+      ],
+      "nativeCropSize": [
+        800,
+        800
+      ],
+      "pngSHA256": "729c5641e5866c8b19790a39186fd3c9deaa418e5de4119eaffc0c0b31255d0e",
+      "rgbaSHA256": "7b678c5db6272e22e1eed5d52f4d6349ae7e2c05d3a1f7b192f862d9093219d5",
+      "sourcePixelEquality": true,
+      "operation": "lossless native RGBA cell crop only; no resize, trim, key, alpha cleanup or painting",
+      "countsAsNativeGeneration": false
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\camera-calibration-refs\\rear-identity-only.png",
+      "purpose": "Finished correct rear camera/platform/equipment/material identity ONLY; source bottom-left cell. Its camera is not the requested SW guide camera.",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\upgraded-normal-v2.png",
+      "sourceSHA256": "f9eeb1a8be99b8c1a7bbe0825810b32dc6b2a6555dc337eb0e29aa24872a77ac",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "cropRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "nativeCropSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "af57375616589843af12641072ef635571b8bc45a4f45bf61c50b421ca5e456c",
+      "rgbaSHA256": "e835ec79c3fea6c85da174f701d0850864afbcacbf1102be3ad3cf799d2bb046",
+      "sourcePixelEquality": true,
+      "operation": "lossless native RGBA cell crop only; no resize, trim, key, alpha cleanup or painting",
+      "countsAsNativeGeneration": false
+    }
+  ],
+  "instruction": "Generate isolated SW override. Reference1 controls camera and exact world-side view. Reference2 supplies correct REAR identity/materials only; do not copy reference2camera or re-pan a full sheet. Keep camera platform/rear case/ladder on their fixed world sides.",
+  "nativeGenerated": false,
+  "runtimeIntegrated": false
+}

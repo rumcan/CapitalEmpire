@@ -18,3 +18,5 @@ art/theme-consistency/reviews/sw-road-repairs-20261029/**.json -text whitespace=
 # Reviewed clubhouse registration uses SHA256 of the original geometry/review bytes.
 art/catalogue-completion-20261107/generated/old-clubhouse-1950/**/*.json -text whitespace=cr-at-eol
 art/catalogue-completion-20261107/plan/pavilion-guide-handedness-proof.json -text whitespace=cr-at-eol
+# T375: the catalogue workspace (the other lead's source-art provenance and audit files) keeps its bytes exactly: they are checked against SHA256s, and many were written with CRLF
+art/catalogue-completion-20261107/** -text

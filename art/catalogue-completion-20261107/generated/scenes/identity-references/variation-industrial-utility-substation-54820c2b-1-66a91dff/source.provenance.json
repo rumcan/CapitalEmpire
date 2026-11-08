@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-utility-substation-54820c2b:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-utility-substation-54820c2b-1/NE.png",
+  "sourceSha256": "71c46547a85f66dfcf840ae61dd08945f6ce64065a58801a7a3b61f73f4dcf38",
+  "output": "identity-references/variation-industrial-utility-substation-54820c2b-1-66a91dff/source.png",
+  "outputSha256": "71c46547a85f66dfcf840ae61dd08945f6ce64065a58801a7a3b61f73f4dcf38",
+  "width": 428,
+  "height": 442,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      428,
+      442
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-utility-substation-54820c2b-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-utility-substation-54820c2b:1",
+    "version": "variation-industrial-utility-substation-54820c2b-1-4views-v2",
+    "files": {
+      "NE": "71c46547a85f66dfcf840ae61dd08945f6ce64065a58801a7a3b61f73f4dcf38",
+      "SE": "810bec1459130ca2da8c86bf888b8dfc1079bce881cc750de996504a60417d54",
+      "SW": "735f2fc2b83677c945b0d50b32aa033d5a14cd06b2a7ec913ef496cec975ea87",
+      "NW": "60a81fd07b7571736289647fac1527a3967f56efcb99b038fe0d747f63060b3c"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.78125,
+      0.328125,
+      0.893066,
+      0.461426
+    ],
+    "crop": {
+      "left": 1600,
+      "top": 672,
+      "width": 229,
+      "height": 273
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-utility-substation-54820c2b-1.native.png",
+    "nativeSha256": "f1295abdb198ae256772bdfec264cb9228b48fc28d4680962de9b2e698b065fe"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,180 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:24.751381+00:00",
+  "review_result": "HOLD-camera-consistency;background-alpha",
+  "identity_direction_alpha_result": "HOLD",
+  "source": {
+    "path": "generated/vehicles/golf-range-ball-picker/traffic8-v1.png",
+    "sha256": "a3b7f3e3be1bda34916773e9aa081f0beec441de96f08b988534b8bbc8dd147b",
+    "bytes": 2808415
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.017472091554191892,
+  "outer_border_alpha_p50p95max": [
+    1.0,
+    12.0,
+    24.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    4.0,
+    13.0,
+    18.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "actual_screen_nose": "lower-left",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "native_core_margin_pixels": 18,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 13,
+      "rgba_rectangle_sha256": "b6875675881f47d2e2118cbbad35599468d6f21cd73c84609229e3d7f7537725"
+    },
+    {
+      "cell": 1,
+      "actual_screen_nose": "down",
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "native_core_margin_pixels": 16,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 24,
+      "rgba_rectangle_sha256": "8548031db152dc3cc16c09bd242a53b80fb6a948320b79d652bb7c82c7ebbb89"
+    },
+    {
+      "cell": 2,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1328,
+        443
+      ],
+      "native_core_margin_pixels": 9,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 17,
+      "rgba_rectangle_sha256": "927911803346fb3438e7b87fc201aa2a0ef786ce1e4f38800b61529d4b5e570b"
+    },
+    {
+      "cell": 3,
+      "actual_screen_nose": "right",
+      "reference_rect_ltrb": [
+        1328,
+        0,
+        1774,
+        443
+      ],
+      "native_core_margin_pixels": 4,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "b4d0b0369cb40ccc4c5e4a1ee5ebbd784ed12fed87053588e0d786732fbd512f"
+    },
+    {
+      "cell": 4,
+      "actual_screen_nose": "upper-right",
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "native_core_margin_pixels": 28,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 14,
+      "rgba_rectangle_sha256": "1c5ae5c3920742200ba087fb8015a83de63971e72d9962b4fd1132bda128ab8a"
+    },
+    {
+      "cell": 5,
+      "actual_screen_nose": "up",
+      "reference_rect_ltrb": [
+        443,
+        443,
+        877,
+        887
+      ],
+      "native_core_margin_pixels": 29,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 16,
+      "rgba_rectangle_sha256": "a0192da34c9edaca6768ae9266caecc1f9ce474fa72cef010f190e97430d5d05"
+    },
+    {
+      "cell": 6,
+      "actual_screen_nose": "upper-left",
+      "reference_rect_ltrb": [
+        877,
+        443,
+        1322,
+        887
+      ],
+      "native_core_margin_pixels": 5,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 13,
+      "rgba_rectangle_sha256": "f298fa67475007a5f56f92340aa7400969ca6b2182b975d52d10ac27f98c7d19"
+    },
+    {
+      "cell": 7,
+      "actual_screen_nose": "left",
+      "reference_rect_ltrb": [
+        1322,
+        443,
+        1774,
+        887
+      ],
+      "native_core_margin_pixels": 10,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "734d1d424ea0f93ba78af6f849b0e0d35962cee820d37dacbbe718f7d68cc6c0"
+    }
+  ],
+  "all_eight_distinct_nose_directions_present": true,
+  "side_cell_order_is_remappable": false,
+  "native_core_clipped_at_canvas_border": false,
+  "actual_clear_gutter_crops_reference_only": [
+    [
+      0,
+      443,
+      887,
+      1328,
+      1774
+    ],
+    [
+      0,
+      443,
+      877,
+      1322,
+      1774
+    ]
+  ],
+  "source_crops_performed": false,
+  "notes": [
+    "HOLD actual alpha haze/background wash; native cleanup required. No coded alpha reconstruction permitted.",
+    "HOLD visually inconsistent elevation: col4 side profiles show nearly level body/roof and near-circular side wheels; diagonal/front/rear cells show substantially more top planes. Need shared fixed30degree camera proof or native correction, not relabelling."
+  ],
+  "camera_measurement_scope": "Visual inconsistency established; exact percell camera degrees not numerically certified. Do not present approximate appearance as an8degree/30degree measured proof.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_only": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/golf-range-ball-picker/traffic8-v1.prompt.txt",
+    "sha256": "d46017f28d62388e9d04ac540540c2679b204f21c384c5fba258c5c9f053179f",
+    "bytes": 1987
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-range-ball-picker/traffic8-v1.provenance.json",
+    "sha256": "3007000f0daa6aac5ef498e675c3f402c87984f1aa3d3e743fcbe783286701db",
+    "bytes": 2681
+  }
+}

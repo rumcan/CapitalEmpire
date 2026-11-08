@@ -1,0 +1,1971 @@
+{
+  "schema": 1,
+  "created_utc": "2026-11-07T09:10:15.606051+00:00",
+  "asset_count": 40,
+  "eras": [
+    "1980s",
+    "1990s",
+    "2000s",
+    "2010s",
+    "2020s"
+  ],
+  "layout": {
+    "columns": 4,
+    "rows": 2,
+    "top": [
+      "driver",
+      "iron",
+      "wedge",
+      "putter"
+    ],
+    "bottom": [
+      "tee-pegs-pack",
+      "mens-outfit",
+      "womens-outfit",
+      "golf-bag"
+    ]
+  },
+  "selected_atlases": [
+    {
+      "era": "1980s",
+      "selected_version": 1,
+      "source": {
+        "file": "1980s/source-v1.png",
+        "sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+        "bytes": 1363749
+      },
+      "exact_prompt": {
+        "file": "1980s/prompt-v1.txt",
+        "sha256": "fab60af671749498071e9eba0ec52df270407e9b61413a10d15b5c04ebb339fd",
+        "bytes": 2295
+      },
+      "references": [],
+      "actual_column_boundaries_by_row": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ]
+      ],
+      "row_boundaries": [
+        0,
+        443,
+        887
+      ]
+    },
+    {
+      "era": "1990s",
+      "selected_version": 1,
+      "source": {
+        "file": "1990s/source-v1.png",
+        "sha256": "b0cde46479e6aa9c1e24d5e789a69fda6c0cf76e33e0a371b8a88381f7d1fe07",
+        "bytes": 1396176
+      },
+      "exact_prompt": {
+        "file": "1990s/prompt-v1.txt",
+        "sha256": "aecc6e53524471fcb91407dcc978a88cbb24b6c7766464940ef308ea603348d8",
+        "bytes": 2029
+      },
+      "references": [
+        {
+          "file": "1980s/source-v1.png",
+          "sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+          "bytes": 1363749
+        }
+      ],
+      "actual_column_boundaries_by_row": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          441,
+          887,
+          1330,
+          1774
+        ]
+      ],
+      "row_boundaries": [
+        0,
+        443,
+        887
+      ]
+    },
+    {
+      "era": "2000s",
+      "selected_version": 1,
+      "source": {
+        "file": "2000s/source-v1.png",
+        "sha256": "c44f6aefcce23844a4e327ac5eee4f5a0cac10bb3b9a41054a2480002a72da02",
+        "bytes": 1417373
+      },
+      "exact_prompt": {
+        "file": "2000s/prompt-v1.txt",
+        "sha256": "146cc2d0b0b8e431ac4f306d439c218d9d271a5b671aa37d8804bbf903cd8632",
+        "bytes": 2018
+      },
+      "references": [
+        {
+          "file": "1980s/source-v1.png",
+          "sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+          "bytes": 1363749
+        }
+      ],
+      "actual_column_boundaries_by_row": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          431,
+          887,
+          1330,
+          1774
+        ]
+      ],
+      "row_boundaries": [
+        0,
+        443,
+        887
+      ]
+    },
+    {
+      "era": "2010s",
+      "selected_version": 2,
+      "source": {
+        "file": "2010s/source-v2.png",
+        "sha256": "2254ebadaa775c210da0a801d3a019c62bed4c53657b1c13a2e43c7f0818e1f3",
+        "bytes": 1472751
+      },
+      "exact_prompt": {
+        "file": "2010s/prompt-v2.txt",
+        "sha256": "c07aea251f47d0f288b1bffa951a3a9cc3fcb27fcbc24ebe79dca0f1aa1ce3d8",
+        "bytes": 854
+      },
+      "references": [
+        {
+          "file": "2010s/source-v1.png",
+          "sha256": "64ea7bb2abe09561acb9e9351fc83168e7f78fb795f3636aff09e0e55fbb6667",
+          "bytes": 2909360
+        }
+      ],
+      "actual_column_boundaries_by_row": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          434,
+          887,
+          1333,
+          1774
+        ]
+      ],
+      "row_boundaries": [
+        0,
+        443,
+        887
+      ]
+    },
+    {
+      "era": "2020s",
+      "selected_version": 1,
+      "source": {
+        "file": "2020s/source-v1.png",
+        "sha256": "d0f197cbcf57d3af1ac505f96dfbb6bde02f74342b61bb948075d09b80ab280e",
+        "bytes": 1266581
+      },
+      "exact_prompt": {
+        "file": "2020s/prompt-v1.txt",
+        "sha256": "099282452f29399943945dc3b4d53807df1a5d0890adbd9107a42eb946754f0e",
+        "bytes": 2226
+      },
+      "references": [
+        {
+          "file": "1980s/source-v1.png",
+          "sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+          "bytes": 1363749
+        }
+      ],
+      "actual_column_boundaries_by_row": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ]
+      ],
+      "row_boundaries": [
+        0,
+        443,
+        887
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "source_asset_id": "ui-gear:1980s:driver",
+      "era": "1980s",
+      "item": "driver",
+      "label": "Driver",
+      "file": "icons/1980s/driver.png",
+      "sha256": "1e5c23a544503226fe1f5b417dca66434fc6e83794373e465836887965383bac",
+      "bytes": 81116,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1980s/source-v1.png",
+      "source_atlas_sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+      "source_version": 1,
+      "source_cell_index": 0,
+      "source_cell_rectangle_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "source_pixel_sha256": "7d0e99459bbfdd851e43a205118b55e5f128ac1619c4564ab3f41eecfdade791",
+      "core_margins_alpha_gt128_px": [
+        28,
+        19,
+        16,
+        15
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1980s:iron",
+      "era": "1980s",
+      "item": "iron",
+      "label": "Iron",
+      "file": "icons/1980s/iron.png",
+      "sha256": "cb610f1dab1e4b503b49726093e3fb215a5dfcd1e3c0e1fdad75e272558f2059",
+      "bytes": 73829,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1980s/source-v1.png",
+      "source_atlas_sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+      "source_version": 1,
+      "source_cell_index": 1,
+      "source_cell_rectangle_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "source_pixel_sha256": "7cf8e464ac8339538173e919ca5359e2891ad79a7fb6bb559ba5ee082b3acb4f",
+      "core_margins_alpha_gt128_px": [
+        25,
+        17,
+        22,
+        28
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1980s:wedge",
+      "era": "1980s",
+      "item": "wedge",
+      "label": "Wedge",
+      "file": "icons/1980s/wedge.png",
+      "sha256": "a207d8b505dd7e7f121259f94e2bfadd1349df38bf138e95354dec65e7ff5b1c",
+      "bytes": 74662,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1980s/source-v1.png",
+      "source_atlas_sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+      "source_version": 1,
+      "source_cell_index": 2,
+      "source_cell_rectangle_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "source_pixel_sha256": "bea94a103d0a12af6a24eb5a1752e10a8652d6b7f35147c4bd5cd4ceea00c7cb",
+      "core_margins_alpha_gt128_px": [
+        28,
+        17,
+        20,
+        17
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1980s:putter",
+      "era": "1980s",
+      "item": "putter",
+      "label": "Putter",
+      "file": "icons/1980s/putter.png",
+      "sha256": "92797dbbe44ab07f9d90ea081c7c94132c55d5d2d0bde5211303eb7d1e1c4833",
+      "bytes": 63977,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1980s/source-v1.png",
+      "source_atlas_sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+      "source_version": 1,
+      "source_cell_index": 3,
+      "source_cell_rectangle_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "source_pixel_sha256": "0ae5d5b9b2dd3186e5d63cfafed9077c28245e96b79b59d0ca20b10d8f3c8330",
+      "core_margins_alpha_gt128_px": [
+        30,
+        16,
+        21,
+        21
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1980s:tee-pegs-pack",
+      "era": "1980s",
+      "item": "tee-pegs-pack",
+      "label": "Tee pegs pack",
+      "file": "icons/1980s/tee-pegs-pack.png",
+      "sha256": "49603d7629cb86d731021b9d5214163e8ae8aad6e5401c893c6837008e182b38",
+      "bytes": 180908,
+      "dimensions": [
+        443,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1980s/source-v1.png",
+      "source_atlas_sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+      "source_version": 1,
+      "source_cell_index": 4,
+      "source_cell_rectangle_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "source_pixel_sha256": "b639b8c2f6007d7d21d2d3cc5eaefa44f487998b97deb60b0da8a4b8d9545e8c",
+      "core_margins_alpha_gt128_px": [
+        47,
+        68,
+        39,
+        60
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1980s:mens-outfit",
+      "era": "1980s",
+      "item": "mens-outfit",
+      "label": "Men’s golf outfit flat-lay",
+      "file": "icons/1980s/mens-outfit.png",
+      "sha256": "37348c6ed7c618839362b8bb9ea4759f7265c5e02df9a314c528527586f3a248",
+      "bytes": 302629,
+      "dimensions": [
+        444,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1980s/source-v1.png",
+      "source_atlas_sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+      "source_version": 1,
+      "source_cell_index": 5,
+      "source_cell_rectangle_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "source_pixel_sha256": "58ea918eab9e40fbb1b55785d4ec9383e55c56cf1052ea788c53b4007a916d61",
+      "core_margins_alpha_gt128_px": [
+        7,
+        27,
+        26,
+        18
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1980s:womens-outfit",
+      "era": "1980s",
+      "item": "womens-outfit",
+      "label": "Women’s golf outfit flat-lay",
+      "file": "icons/1980s/womens-outfit.png",
+      "sha256": "d64d9a4b3c25ad3d77719a6c3ecaf540a9fd4f72d244663c7450eae8cdcf5dad",
+      "bytes": 280847,
+      "dimensions": [
+        443,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1980s/source-v1.png",
+      "source_atlas_sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+      "source_version": 1,
+      "source_cell_index": 6,
+      "source_cell_rectangle_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "source_pixel_sha256": "0656f49d036cc4002aa3eec952f620652f9b3ad06a534f7ae21a10edba02ea27",
+      "core_margins_alpha_gt128_px": [
+        16,
+        29,
+        3,
+        20
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1980s:golf-bag",
+      "era": "1980s",
+      "item": "golf-bag",
+      "label": "Golf bag",
+      "file": "icons/1980s/golf-bag.png",
+      "sha256": "689215681f91bda668df8faf3d697e2b76ec2394400e8f03987953bd55d69577",
+      "bytes": 202702,
+      "dimensions": [
+        444,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1980s/source-v1.png",
+      "source_atlas_sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+      "source_version": 1,
+      "source_cell_index": 7,
+      "source_cell_rectangle_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "source_pixel_sha256": "ea0667791d63d7fea3c76becb600095dc4a405d848e1f0a2ef4429de14e45415",
+      "core_margins_alpha_gt128_px": [
+        109,
+        15,
+        69,
+        18
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1990s:driver",
+      "era": "1990s",
+      "item": "driver",
+      "label": "Driver",
+      "file": "icons/1990s/driver.png",
+      "sha256": "e7b72903ee5e8c726512a9a382e4814253ad3f8dd117189f40dae3547bc8430b",
+      "bytes": 80627,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1990s/source-v1.png",
+      "source_atlas_sha256": "b0cde46479e6aa9c1e24d5e789a69fda6c0cf76e33e0a371b8a88381f7d1fe07",
+      "source_version": 1,
+      "source_cell_index": 0,
+      "source_cell_rectangle_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "source_pixel_sha256": "a187affb942d697c7985465e8c2a1f9b45cf46130f1beb9ea28591834a340c27",
+      "core_margins_alpha_gt128_px": [
+        35,
+        13,
+        12,
+        8
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1990s:iron",
+      "era": "1990s",
+      "item": "iron",
+      "label": "Iron",
+      "file": "icons/1990s/iron.png",
+      "sha256": "496eb87ee4a403729235b019481ef45ce181d592d77fb4dc2cf4abb6c3f2caa1",
+      "bytes": 81060,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1990s/source-v1.png",
+      "source_atlas_sha256": "b0cde46479e6aa9c1e24d5e789a69fda6c0cf76e33e0a371b8a88381f7d1fe07",
+      "source_version": 1,
+      "source_cell_index": 1,
+      "source_cell_rectangle_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "source_pixel_sha256": "966887c526f2c113c6f9a57b62aa5adc3c2463494ffaa9648906a3a212433bef",
+      "core_margins_alpha_gt128_px": [
+        19,
+        13,
+        20,
+        15
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1990s:wedge",
+      "era": "1990s",
+      "item": "wedge",
+      "label": "Wedge",
+      "file": "icons/1990s/wedge.png",
+      "sha256": "1ca4b52a91d58d755b56e0e706f1ed941b5bb50f6e6c9508d90557ddefc3eb67",
+      "bytes": 79284,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1990s/source-v1.png",
+      "source_atlas_sha256": "b0cde46479e6aa9c1e24d5e789a69fda6c0cf76e33e0a371b8a88381f7d1fe07",
+      "source_version": 1,
+      "source_cell_index": 2,
+      "source_cell_rectangle_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "source_pixel_sha256": "a2e0d49745f34ea054b8129c7d44066702485b9904a156e37c1333c5415e8678",
+      "core_margins_alpha_gt128_px": [
+        19,
+        13,
+        19,
+        13
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1990s:putter",
+      "era": "1990s",
+      "item": "putter",
+      "label": "Putter",
+      "file": "icons/1990s/putter.png",
+      "sha256": "fbc36cb074b646a17d74f15f098ec4a4d76aedde2f76d0f3d3b02d6d63642673",
+      "bytes": 72303,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1990s/source-v1.png",
+      "source_atlas_sha256": "b0cde46479e6aa9c1e24d5e789a69fda6c0cf76e33e0a371b8a88381f7d1fe07",
+      "source_version": 1,
+      "source_cell_index": 3,
+      "source_cell_rectangle_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "source_pixel_sha256": "ee215d48d8f945591c6109134c6e186c5cdeee13f4804a0b01af0c65b287ba71",
+      "core_margins_alpha_gt128_px": [
+        28,
+        13,
+        19,
+        17
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1990s:tee-pegs-pack",
+      "era": "1990s",
+      "item": "tee-pegs-pack",
+      "label": "Tee pegs pack",
+      "file": "icons/1990s/tee-pegs-pack.png",
+      "sha256": "68c0a114028f86cd4ba00da6b04a106c736273047903d1d5a62597b9839ec9de",
+      "bytes": 178520,
+      "dimensions": [
+        441,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1990s/source-v1.png",
+      "source_atlas_sha256": "b0cde46479e6aa9c1e24d5e789a69fda6c0cf76e33e0a371b8a88381f7d1fe07",
+      "source_version": 1,
+      "source_cell_index": 4,
+      "source_cell_rectangle_ltrb": [
+        0,
+        443,
+        441,
+        887
+      ],
+      "source_pixel_sha256": "9bba01ce49caa9418c8b8612beb95db3b9044ddaaacfcb4815165b7271d43e27",
+      "core_margins_alpha_gt128_px": [
+        49,
+        65,
+        42,
+        60
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1990s:mens-outfit",
+      "era": "1990s",
+      "item": "mens-outfit",
+      "label": "Men’s golf outfit flat-lay",
+      "file": "icons/1990s/mens-outfit.png",
+      "sha256": "bb5b20cc98f4bd2aeaac7bcfc70aa2bb8027a3f299ad5b2a70ae9947e72c94ec",
+      "bytes": 317028,
+      "dimensions": [
+        446,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1990s/source-v1.png",
+      "source_atlas_sha256": "b0cde46479e6aa9c1e24d5e789a69fda6c0cf76e33e0a371b8a88381f7d1fe07",
+      "source_version": 1,
+      "source_cell_index": 5,
+      "source_cell_rectangle_ltrb": [
+        441,
+        443,
+        887,
+        887
+      ],
+      "source_pixel_sha256": "bec5f257c6c25f749cc349560d6ac8eac45f8504baa43c80682de0ca73f565d1",
+      "core_margins_alpha_gt128_px": [
+        2,
+        23,
+        22,
+        17
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1990s:womens-outfit",
+      "era": "1990s",
+      "item": "womens-outfit",
+      "label": "Women’s golf outfit flat-lay",
+      "file": "icons/1990s/womens-outfit.png",
+      "sha256": "fb39f33f2fa65267f65d19dcd4bf2fa367455d0257acf0681017115068e9abea",
+      "bytes": 281097,
+      "dimensions": [
+        443,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1990s/source-v1.png",
+      "source_atlas_sha256": "b0cde46479e6aa9c1e24d5e789a69fda6c0cf76e33e0a371b8a88381f7d1fe07",
+      "source_version": 1,
+      "source_cell_index": 6,
+      "source_cell_rectangle_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "source_pixel_sha256": "018d05d31b1f06523c8632efe9162948f7df583a127907a8f974994da22f630b",
+      "core_margins_alpha_gt128_px": [
+        17,
+        31,
+        11,
+        19
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:1990s:golf-bag",
+      "era": "1990s",
+      "item": "golf-bag",
+      "label": "Golf bag",
+      "file": "icons/1990s/golf-bag.png",
+      "sha256": "620fb8f1c6314db4cb6d47ddbb15d60d891e2983250e50c245d48c576a1d0218",
+      "bytes": 231317,
+      "dimensions": [
+        444,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "1990s/source-v1.png",
+      "source_atlas_sha256": "b0cde46479e6aa9c1e24d5e789a69fda6c0cf76e33e0a371b8a88381f7d1fe07",
+      "source_version": 1,
+      "source_cell_index": 7,
+      "source_cell_rectangle_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "source_pixel_sha256": "41d3a103e9873ab7db4ef97629a74bcd0418921cd900c82d3284f8e4c5aac237",
+      "core_margins_alpha_gt128_px": [
+        104,
+        8,
+        48,
+        13
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2000s:driver",
+      "era": "2000s",
+      "item": "driver",
+      "label": "Driver",
+      "file": "icons/2000s/driver.png",
+      "sha256": "c665e90c77ea52e4600a5041ed1a5bd44f7df0a87b3e427950a70fd9e5186989",
+      "bytes": 111786,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2000s/source-v1.png",
+      "source_atlas_sha256": "c44f6aefcce23844a4e327ac5eee4f5a0cac10bb3b9a41054a2480002a72da02",
+      "source_version": 1,
+      "source_cell_index": 0,
+      "source_cell_rectangle_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "source_pixel_sha256": "0e0d1bba9c4fcaba4598fe2286a246da6b4500738b95c65621211fc4eabe3186",
+      "core_margins_alpha_gt128_px": [
+        27,
+        15,
+        13,
+        10
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2000s:iron",
+      "era": "2000s",
+      "item": "iron",
+      "label": "Iron",
+      "file": "icons/2000s/iron.png",
+      "sha256": "779269644770b5eecfa3cb13bf46b6b38b08d2fd836e89f81bfc83ef48291a2c",
+      "bytes": 85367,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2000s/source-v1.png",
+      "source_atlas_sha256": "c44f6aefcce23844a4e327ac5eee4f5a0cac10bb3b9a41054a2480002a72da02",
+      "source_version": 1,
+      "source_cell_index": 1,
+      "source_cell_rectangle_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "source_pixel_sha256": "024d8594bd962d0cf4898efa37f4a2fa449e0b09aa2a14483e917f9e2816a0ce",
+      "core_margins_alpha_gt128_px": [
+        27,
+        15,
+        19,
+        17
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2000s:wedge",
+      "era": "2000s",
+      "item": "wedge",
+      "label": "Wedge",
+      "file": "icons/2000s/wedge.png",
+      "sha256": "ec910eb0849706dfcc238b55662b7f8daa3c642d9f79f6de983d62c2787b02e0",
+      "bytes": 85514,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2000s/source-v1.png",
+      "source_atlas_sha256": "c44f6aefcce23844a4e327ac5eee4f5a0cac10bb3b9a41054a2480002a72da02",
+      "source_version": 1,
+      "source_cell_index": 2,
+      "source_cell_rectangle_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "source_pixel_sha256": "f3c20c04ba94f20807c41bacd503d17f3c64b73a06fbbb59a9686a24470f443d",
+      "core_margins_alpha_gt128_px": [
+        34,
+        17,
+        24,
+        9
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2000s:putter",
+      "era": "2000s",
+      "item": "putter",
+      "label": "Putter",
+      "file": "icons/2000s/putter.png",
+      "sha256": "8371b347747ef78e00369c8ab3292678f50e3e1e8e29c7eeb8387ee5f70fcd77",
+      "bytes": 79725,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2000s/source-v1.png",
+      "source_atlas_sha256": "c44f6aefcce23844a4e327ac5eee4f5a0cac10bb3b9a41054a2480002a72da02",
+      "source_version": 1,
+      "source_cell_index": 3,
+      "source_cell_rectangle_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "source_pixel_sha256": "e017cf032f4f20547a4f8eface9229e08041d59f12fc6b85e2ca02dce704b3e2",
+      "core_margins_alpha_gt128_px": [
+        60,
+        17,
+        21,
+        12
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2000s:tee-pegs-pack",
+      "era": "2000s",
+      "item": "tee-pegs-pack",
+      "label": "Tee pegs pack",
+      "file": "icons/2000s/tee-pegs-pack.png",
+      "sha256": "78a336ec5a37b55e2dc1a34a326000eb56ae86582ceea3df2f02d038aa029d53",
+      "bytes": 195167,
+      "dimensions": [
+        431,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2000s/source-v1.png",
+      "source_atlas_sha256": "c44f6aefcce23844a4e327ac5eee4f5a0cac10bb3b9a41054a2480002a72da02",
+      "source_version": 1,
+      "source_cell_index": 4,
+      "source_cell_rectangle_ltrb": [
+        0,
+        443,
+        431,
+        887
+      ],
+      "source_pixel_sha256": "8c849aecbff10d6ba376779a3028fb1da2d5d9f5e809fde0d794258b34cb3508",
+      "core_margins_alpha_gt128_px": [
+        48,
+        55,
+        33,
+        42
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2000s:mens-outfit",
+      "era": "2000s",
+      "item": "mens-outfit",
+      "label": "Men’s golf outfit flat-lay",
+      "file": "icons/2000s/mens-outfit.png",
+      "sha256": "02a3fd3ace5e5b649c050554a47cbbd4be06f8613bf20c778133d7977758d7e0",
+      "bytes": 277716,
+      "dimensions": [
+        456,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2000s/source-v1.png",
+      "source_atlas_sha256": "c44f6aefcce23844a4e327ac5eee4f5a0cac10bb3b9a41054a2480002a72da02",
+      "source_version": 1,
+      "source_cell_index": 5,
+      "source_cell_rectangle_ltrb": [
+        431,
+        443,
+        887,
+        887
+      ],
+      "source_pixel_sha256": "4d4155031deccb9f66cb76fda95e131d6263dca320ea58050a5fe9879b71a5bd",
+      "core_margins_alpha_gt128_px": [
+        2,
+        27,
+        31,
+        16
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2000s:womens-outfit",
+      "era": "2000s",
+      "item": "womens-outfit",
+      "label": "Women’s golf outfit flat-lay",
+      "file": "icons/2000s/womens-outfit.png",
+      "sha256": "1c4bbc9bee5bd6c415d1f4aef0c0dd698db5595f6355918609cfd7ece239c16e",
+      "bytes": 280673,
+      "dimensions": [
+        443,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2000s/source-v1.png",
+      "source_atlas_sha256": "c44f6aefcce23844a4e327ac5eee4f5a0cac10bb3b9a41054a2480002a72da02",
+      "source_version": 1,
+      "source_cell_index": 6,
+      "source_cell_rectangle_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "source_pixel_sha256": "0225b21d4928df04f663d19fd9d081691e3a3efa66eaef9a8f2c7c10cff81448",
+      "core_margins_alpha_gt128_px": [
+        16,
+        30,
+        8,
+        16
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2000s:golf-bag",
+      "era": "2000s",
+      "item": "golf-bag",
+      "label": "Golf bag",
+      "file": "icons/2000s/golf-bag.png",
+      "sha256": "5b4971b20c605bffd8e10747a63ea240fa19c0f58ae84439e777c6621538d26e",
+      "bytes": 210517,
+      "dimensions": [
+        444,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2000s/source-v1.png",
+      "source_atlas_sha256": "c44f6aefcce23844a4e327ac5eee4f5a0cac10bb3b9a41054a2480002a72da02",
+      "source_version": 1,
+      "source_cell_index": 7,
+      "source_cell_rectangle_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "source_pixel_sha256": "0b907f6671a4b0ef952863cd9e098280c41728a6d248ceea64ef66c6bc3aefbc",
+      "core_margins_alpha_gt128_px": [
+        50,
+        27,
+        25,
+        25
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2010s:driver",
+      "era": "2010s",
+      "item": "driver",
+      "label": "Driver",
+      "file": "icons/2010s/driver.png",
+      "sha256": "e8d345e2c60581b75a6eee05987fe437e1481b4942f618f26d6a277e1ef828da",
+      "bytes": 104789,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2010s/source-v2.png",
+      "source_atlas_sha256": "2254ebadaa775c210da0a801d3a019c62bed4c53657b1c13a2e43c7f0818e1f3",
+      "source_version": 2,
+      "source_cell_index": 0,
+      "source_cell_rectangle_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "source_pixel_sha256": "f32598d3d4eec3cef296eaf9bf40e5a42078b74f4654b9e36ab721a19342e450",
+      "core_margins_alpha_gt128_px": [
+        22,
+        12,
+        41,
+        5
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2010s:iron",
+      "era": "2010s",
+      "item": "iron",
+      "label": "Iron",
+      "file": "icons/2010s/iron.png",
+      "sha256": "c23a3ae9cb056d5959473b992f417d25532ac6d1ad5763ff5331e31e678accf5",
+      "bytes": 92122,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2010s/source-v2.png",
+      "source_atlas_sha256": "2254ebadaa775c210da0a801d3a019c62bed4c53657b1c13a2e43c7f0818e1f3",
+      "source_version": 2,
+      "source_cell_index": 1,
+      "source_cell_rectangle_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "source_pixel_sha256": "f0852bf48ba11f484c0d05b75afb5eec77c7b2b3f7701f3c96d68a26f3f70fb0",
+      "core_margins_alpha_gt128_px": [
+        6,
+        12,
+        40,
+        13
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2010s:wedge",
+      "era": "2010s",
+      "item": "wedge",
+      "label": "Wedge",
+      "file": "icons/2010s/wedge.png",
+      "sha256": "cc90db24d63bd03cae6132ffd9cf7e99d85f61c5d1ae51f66c3ebefc0d1c6147",
+      "bytes": 91853,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2010s/source-v2.png",
+      "source_atlas_sha256": "2254ebadaa775c210da0a801d3a019c62bed4c53657b1c13a2e43c7f0818e1f3",
+      "source_version": 2,
+      "source_cell_index": 2,
+      "source_cell_rectangle_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "source_pixel_sha256": "c408e907c7b2bfc2bbd18e9be2892ed36520fa24fe22a3177f519531b49e25af",
+      "core_margins_alpha_gt128_px": [
+        6,
+        12,
+        34,
+        10
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2010s:putter",
+      "era": "2010s",
+      "item": "putter",
+      "label": "Putter",
+      "file": "icons/2010s/putter.png",
+      "sha256": "ffa8797c60efc0bfbecb58104c07c3326f2a6f7fa0df49d824d0dff534079703",
+      "bytes": 87788,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2010s/source-v2.png",
+      "source_atlas_sha256": "2254ebadaa775c210da0a801d3a019c62bed4c53657b1c13a2e43c7f0818e1f3",
+      "source_version": 2,
+      "source_cell_index": 3,
+      "source_cell_rectangle_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "source_pixel_sha256": "cf9488b7d002eb8940a55ededa376eae373b0800bc8d1057fea22b44c09138db",
+      "core_margins_alpha_gt128_px": [
+        42,
+        12,
+        30,
+        7
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2010s:tee-pegs-pack",
+      "era": "2010s",
+      "item": "tee-pegs-pack",
+      "label": "Tee pegs pack",
+      "file": "icons/2010s/tee-pegs-pack.png",
+      "sha256": "a2b1426565fd4331ca2a21948ec663e4bdaeb3df306bdea5123ab79f4bb42b67",
+      "bytes": 185473,
+      "dimensions": [
+        434,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2010s/source-v2.png",
+      "source_atlas_sha256": "2254ebadaa775c210da0a801d3a019c62bed4c53657b1c13a2e43c7f0818e1f3",
+      "source_version": 2,
+      "source_cell_index": 4,
+      "source_cell_rectangle_ltrb": [
+        0,
+        443,
+        434,
+        887
+      ],
+      "source_pixel_sha256": "94d0eef71781cba6ec428bf9d2274a46e77633cd853fc7fd697fb0bdb9cf6655",
+      "core_margins_alpha_gt128_px": [
+        46,
+        58,
+        46,
+        50
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2010s:mens-outfit",
+      "era": "2010s",
+      "item": "mens-outfit",
+      "label": "Men’s golf outfit flat-lay",
+      "file": "icons/2010s/mens-outfit.png",
+      "sha256": "983c3ac6333b38d902fe38e1dce0845cacc5f9725e8dc448a44e375df1c7e672",
+      "bytes": 293770,
+      "dimensions": [
+        453,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2010s/source-v2.png",
+      "source_atlas_sha256": "2254ebadaa775c210da0a801d3a019c62bed4c53657b1c13a2e43c7f0818e1f3",
+      "source_version": 2,
+      "source_cell_index": 5,
+      "source_cell_rectangle_ltrb": [
+        434,
+        443,
+        887,
+        887
+      ],
+      "source_pixel_sha256": "e7fcf86658393c1fa4974fa4ef2e6ad0697c017a04c49510745beee0fe36dfad",
+      "core_margins_alpha_gt128_px": [
+        2,
+        22,
+        37,
+        20
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2010s:womens-outfit",
+      "era": "2010s",
+      "item": "womens-outfit",
+      "label": "Women’s golf outfit flat-lay",
+      "file": "icons/2010s/womens-outfit.png",
+      "sha256": "b7befcaadfa97a313ff5063309c6d3dc47ddebd53462f1c965e0e5e493eaf282",
+      "bytes": 278414,
+      "dimensions": [
+        446,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2010s/source-v2.png",
+      "source_atlas_sha256": "2254ebadaa775c210da0a801d3a019c62bed4c53657b1c13a2e43c7f0818e1f3",
+      "source_version": 2,
+      "source_cell_index": 6,
+      "source_cell_rectangle_ltrb": [
+        887,
+        443,
+        1333,
+        887
+      ],
+      "source_pixel_sha256": "86b3429416f660e8f1424868cdfdf709cfba254adf58d2d8cd7deeef6b1e2cf4",
+      "core_margins_alpha_gt128_px": [
+        8,
+        25,
+        2,
+        17
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2010s:golf-bag",
+      "era": "2010s",
+      "item": "golf-bag",
+      "label": "Golf bag",
+      "file": "icons/2010s/golf-bag.png",
+      "sha256": "3af27c6ceeee893f6752c54de5338e9ed263facd829478c515dca77afd61f401",
+      "bytes": 240941,
+      "dimensions": [
+        441,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2010s/source-v2.png",
+      "source_atlas_sha256": "2254ebadaa775c210da0a801d3a019c62bed4c53657b1c13a2e43c7f0818e1f3",
+      "source_version": 2,
+      "source_cell_index": 7,
+      "source_cell_rectangle_ltrb": [
+        1333,
+        443,
+        1774,
+        887
+      ],
+      "source_pixel_sha256": "5cbcb8a8916d1bf82cf94c38c6dfff88ae8f0c696b403d8de3ebfe33261604c3",
+      "core_margins_alpha_gt128_px": [
+        53,
+        17,
+        20,
+        26
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2020s:driver",
+      "era": "2020s",
+      "item": "driver",
+      "label": "Driver",
+      "file": "icons/2020s/driver.png",
+      "sha256": "c1d6735b4ba27cabf0514c98d2ab546e586afa1c2ac13a89178a93fc2073bb95",
+      "bytes": 90697,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2020s/source-v1.png",
+      "source_atlas_sha256": "d0f197cbcf57d3af1ac505f96dfbb6bde02f74342b61bb948075d09b80ab280e",
+      "source_version": 1,
+      "source_cell_index": 0,
+      "source_cell_rectangle_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "source_pixel_sha256": "594b7e54eb42b83676d0e7ac537c90c29fa346e99d3d21cbb35879f665fccbb1",
+      "core_margins_alpha_gt128_px": [
+        25,
+        17,
+        21,
+        8
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2020s:iron",
+      "era": "2020s",
+      "item": "iron",
+      "label": "Iron",
+      "file": "icons/2020s/iron.png",
+      "sha256": "7543e0f16a44c7add78de948944a832322835407e930f1bab1393a75f71f7443",
+      "bytes": 74509,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2020s/source-v1.png",
+      "source_atlas_sha256": "d0f197cbcf57d3af1ac505f96dfbb6bde02f74342b61bb948075d09b80ab280e",
+      "source_version": 1,
+      "source_cell_index": 1,
+      "source_cell_rectangle_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "source_pixel_sha256": "47e3acc699fffc77aefa8c450c497f85c0cfe6ba93ea7feb039c6ab3ebbd5ac5",
+      "core_margins_alpha_gt128_px": [
+        35,
+        17,
+        22,
+        18
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2020s:wedge",
+      "era": "2020s",
+      "item": "wedge",
+      "label": "Wedge",
+      "file": "icons/2020s/wedge.png",
+      "sha256": "f5442f10d1f0e402066fb25c07875f5ea88f7ddd0d84a52bd2e54f68080b0f43",
+      "bytes": 75198,
+      "dimensions": [
+        443,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2020s/source-v1.png",
+      "source_atlas_sha256": "d0f197cbcf57d3af1ac505f96dfbb6bde02f74342b61bb948075d09b80ab280e",
+      "source_version": 1,
+      "source_cell_index": 2,
+      "source_cell_rectangle_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "source_pixel_sha256": "46848bb5e6674e2ab507e68577982f9987808846467eaa22de54cf3f904d25e4",
+      "core_margins_alpha_gt128_px": [
+        42,
+        17,
+        20,
+        12
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2020s:putter",
+      "era": "2020s",
+      "item": "putter",
+      "label": "Putter",
+      "file": "icons/2020s/putter.png",
+      "sha256": "79bbf08a64528f52bcf596dfddb5f6436c4828d93afa2087a8214532474e8ca4",
+      "bytes": 73772,
+      "dimensions": [
+        444,
+        443
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2020s/source-v1.png",
+      "source_atlas_sha256": "d0f197cbcf57d3af1ac505f96dfbb6bde02f74342b61bb948075d09b80ab280e",
+      "source_version": 1,
+      "source_cell_index": 3,
+      "source_cell_rectangle_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "source_pixel_sha256": "735f1ffe3ce5f684a8619a209f413e83c899e9d2570660d5c4a27300b560cea8",
+      "core_margins_alpha_gt128_px": [
+        62,
+        17,
+        21,
+        16
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2020s:tee-pegs-pack",
+      "era": "2020s",
+      "item": "tee-pegs-pack",
+      "label": "Tee pegs pack",
+      "file": "icons/2020s/tee-pegs-pack.png",
+      "sha256": "e00d1fbbb9bbed41e01067480d431760bb38335218ed22be16003b97f086a74b",
+      "bytes": 160782,
+      "dimensions": [
+        443,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2020s/source-v1.png",
+      "source_atlas_sha256": "d0f197cbcf57d3af1ac505f96dfbb6bde02f74342b61bb948075d09b80ab280e",
+      "source_version": 1,
+      "source_cell_index": 4,
+      "source_cell_rectangle_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "source_pixel_sha256": "781dea981f83829ad4a98f681dd38a3cbe02bd7aadd53b1238909aac22bfa9e9",
+      "core_margins_alpha_gt128_px": [
+        39,
+        69,
+        46,
+        51
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2020s:mens-outfit",
+      "era": "2020s",
+      "item": "mens-outfit",
+      "label": "Men’s golf outfit flat-lay",
+      "file": "icons/2020s/mens-outfit.png",
+      "sha256": "2389910bbbb93c3f495a5c6ff3fefb197991948588af744a0c47b04840db5b7e",
+      "bytes": 262396,
+      "dimensions": [
+        444,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2020s/source-v1.png",
+      "source_atlas_sha256": "d0f197cbcf57d3af1ac505f96dfbb6bde02f74342b61bb948075d09b80ab280e",
+      "source_version": 1,
+      "source_cell_index": 5,
+      "source_cell_rectangle_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "source_pixel_sha256": "03d08408b7e7c74f76acd5f7f18e2aaf3c4bffca0bea70caaf64f2be22558639",
+      "core_margins_alpha_gt128_px": [
+        3,
+        25,
+        34,
+        23
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2020s:womens-outfit",
+      "era": "2020s",
+      "item": "womens-outfit",
+      "label": "Women’s golf outfit flat-lay",
+      "file": "icons/2020s/womens-outfit.png",
+      "sha256": "acd56cdcb9acb7ffa2c422cbf754e285a013d355ed176b48e2d729110d521351",
+      "bytes": 225681,
+      "dimensions": [
+        443,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2020s/source-v1.png",
+      "source_atlas_sha256": "d0f197cbcf57d3af1ac505f96dfbb6bde02f74342b61bb948075d09b80ab280e",
+      "source_version": 1,
+      "source_cell_index": 6,
+      "source_cell_rectangle_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "source_pixel_sha256": "1f6eb399b6d70acf3516347432cf0876f6b9e8ecfd134b7e5a5aa9d40a695049",
+      "core_margins_alpha_gt128_px": [
+        31,
+        30,
+        6,
+        19
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    },
+    {
+      "source_asset_id": "ui-gear:2020s:golf-bag",
+      "era": "2020s",
+      "item": "golf-bag",
+      "label": "Golf bag",
+      "file": "icons/2020s/golf-bag.png",
+      "sha256": "595934d952e4cd032546b6db374a84822f79b301630bc7b2fa3fed1787143bb1",
+      "bytes": 193281,
+      "dimensions": [
+        444,
+        444
+      ],
+      "mode": "RGBA",
+      "source_atlas": "2020s/source-v1.png",
+      "source_atlas_sha256": "d0f197cbcf57d3af1ac505f96dfbb6bde02f74342b61bb948075d09b80ab280e",
+      "source_version": 1,
+      "source_cell_index": 7,
+      "source_cell_rectangle_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "source_pixel_sha256": "db316fa35df17a36687954d7b17529a6b62751338fd97110b48f4f68ca6f1c35",
+      "core_margins_alpha_gt128_px": [
+        66,
+        19,
+        23,
+        18
+      ],
+      "core_boundary_pixel_count": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": true,
+      "source_only": true,
+      "runtime_imported": false,
+      "resized": false,
+      "repainted": false,
+      "alpha_reconstructed": false
+    }
+  ],
+  "era_briefs": {
+    "1980s": "Warm wood-grain driver, restrained chrome clubs and simple blade putter; plain paper tee pack; pastel polos, pleated/straight bottoms and classic leather-look shoes; dark bag with brown trim.",
+    "1990s": "Dark compact metalwood appearance, clear cavity-back iron, silver blade putter; simple coloured tee pack; block-colour polos and conservative bottoms; padded two-tone bag.",
+    "2000s": "Larger silvery metal driver appearance, broader cavity iron and rounded mallet; bolder packaged tees; sporty panel/stripe apparel details and clean neutral bottoms; structured carry/stand bag.",
+    "2010s": "Black/white aerodynamic-looking driver, clean geometric iron inset and broad mallet; bright accent tee pack; blue/coral sport polos with coordinated shoes; blue/white bag with restrained bright trim.",
+    "2020s": "Sleek matte-black/carbon-look forms, restrained muted accents and clean premium club silhouettes; coordinated modern tee pack, streamlined outfit flat-lays and contemporary carry-bag styling."
+  },
+  "alpha_policy": "Native pixels unchanged;2010v1 held for visible haze and excluded.2010v2selected. No keying or alpha reconstruction.",
+  "cell_policy": "Actual clear-gutter rectangles may differ a few pixels from equal nominal columns; every selected atlas reconstructs exactly from its eight crops.",
+  "raw_sources_in_zip": false,
+  "source_atlases_external_to_package": true,
+  "source_only": true,
+  "runtime_imported": false,
+  "owner_approval_inferred": false,
+  "overall_catalogue_complete": false
+}

@@ -1,0 +1,2283 @@
+{
+  "date": "2026-11-07",
+  "runtimeEdited": false,
+  "scope": "proposed golf-event expansion; actual per-asset generation state is tracked elsewhere",
+  "style": "match theme-authoritative painterly material rendering, 1985 setting, late-afternoon daylight, upper-right sun, lower-left shadows",
+  "tiers": {
+    "budget-worn": "ordinary inexpensive1950s manufactured facilities still operating in1985, faded paint and small restrained wear, proper manufactured structure, no fantasy scrap village",
+    "upgraded": "attractive clean1985 green/cream event facilities, painted steel, finished timber or period seats, neat roofs and railings"
+  },
+  "tierIsNotTourTier": true,
+  "views": [
+    "NE",
+    "SE",
+    "SW",
+    "NW",
+    "N-turned8",
+    "E-turned8",
+    "S-turned8",
+    "W-turned8"
+  ],
+  "seatingDesigns": [
+    {
+      "proposalKey": "golf-event-compact-bleacher-compact-budget-worn",
+      "family": "compact-bleacher",
+      "size": "compact",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        8,
+        4
+      ],
+      "capacity": 60,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:small-bleacher",
+        "newprop:wooden-bleacher"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-compact-bleacher-compact-upgraded",
+      "family": "compact-bleacher",
+      "size": "compact",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        8,
+        4
+      ],
+      "capacity": 60,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:small-bleacher",
+        "newprop:wooden-bleacher"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-grandstand-small-budget-worn",
+      "family": "grandstand",
+      "size": "small",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        16,
+        8
+      ],
+      "capacity": 200,
+      "capacityUnit": "seats",
+      "capacityStatus": "existing standS",
+      "existingIdentityAnchors": [
+        "standS",
+        "golf:grandstand-s",
+        "newprop:grandstand-small"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-grandstand-small-upgraded",
+      "family": "grandstand",
+      "size": "small",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        16,
+        8
+      ],
+      "capacity": 200,
+      "capacityUnit": "seats",
+      "capacityStatus": "existing standS",
+      "existingIdentityAnchors": [
+        "standS",
+        "golf:grandstand-s",
+        "newprop:grandstand-small"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-grandstand-medium-budget-worn",
+      "family": "grandstand",
+      "size": "medium",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        40,
+        12
+      ],
+      "capacity": 1000,
+      "capacityUnit": "seats",
+      "capacityStatus": "existing standM",
+      "existingIdentityAnchors": [
+        "standM",
+        "newprop:grandstand-wide"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-grandstand-medium-upgraded",
+      "family": "grandstand",
+      "size": "medium",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        40,
+        12
+      ],
+      "capacity": 1000,
+      "capacityUnit": "seats",
+      "capacityStatus": "existing standM",
+      "existingIdentityAnchors": [
+        "standM",
+        "newprop:grandstand-wide"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-grandstand-horseshoe-large-budget-worn",
+      "family": "grandstand-horseshoe",
+      "size": "large",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        80,
+        20
+      ],
+      "capacity": 4000,
+      "capacityUnit": "seats",
+      "capacityStatus": "existing standL",
+      "existingIdentityAnchors": [
+        "standL"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-grandstand-horseshoe-large-upgraded",
+      "family": "grandstand-horseshoe",
+      "size": "large",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        80,
+        20
+      ],
+      "capacity": 4000,
+      "capacityUnit": "seats",
+      "capacityStatus": "existing standL",
+      "existingIdentityAnchors": [
+        "standL"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-grandstand-practice-range-budget-worn",
+      "family": "grandstand-practice",
+      "size": "range",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        24,
+        8
+      ],
+      "capacity": 600,
+      "capacityUnit": "seats",
+      "capacityStatus": "existing rangeStand",
+      "existingIdentityAnchors": [
+        "rangeStand"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-grandstand-practice-range-upgraded",
+      "family": "grandstand-practice",
+      "size": "range",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        24,
+        8
+      ],
+      "capacity": 600,
+      "capacityUnit": "seats",
+      "capacityStatus": "existing rangeStand",
+      "existingIdentityAnchors": [
+        "rangeStand"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-covered-grandstand-small-budget-worn",
+      "family": "covered-grandstand",
+      "size": "small",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        16,
+        8
+      ],
+      "capacity": 200,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal inheriting standS capacity",
+      "existingIdentityAnchors": [
+        "newprop:covered-grandstand",
+        "newprop:covered-bleacher"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-covered-grandstand-small-upgraded",
+      "family": "covered-grandstand",
+      "size": "small",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        16,
+        8
+      ],
+      "capacity": 200,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal inheriting standS capacity",
+      "existingIdentityAnchors": [
+        "newprop:covered-grandstand",
+        "newprop:covered-bleacher"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-covered-grandstand-medium-budget-worn",
+      "family": "covered-grandstand",
+      "size": "medium",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        40,
+        12
+      ],
+      "capacity": 1000,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal inheriting standM capacity",
+      "existingIdentityAnchors": [
+        "newprop:covered-grandstand"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-covered-grandstand-medium-upgraded",
+      "family": "covered-grandstand",
+      "size": "medium",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        40,
+        12
+      ],
+      "capacity": 1000,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal inheriting standM capacity",
+      "existingIdentityAnchors": [
+        "newprop:covered-grandstand"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-seated-pavilion-small-budget-worn",
+      "family": "seated-pavilion",
+      "size": "small",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        8,
+        6
+      ],
+      "capacity": 24,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:pavilion",
+        "newprop:tarp-seating"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-seated-pavilion-small-upgraded",
+      "family": "seated-pavilion",
+      "size": "small",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        8,
+        6
+      ],
+      "capacity": 24,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:pavilion",
+        "newprop:tarp-seating"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-seated-pavilion-medium-budget-worn",
+      "family": "seated-pavilion",
+      "size": "medium",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        12,
+        8
+      ],
+      "capacity": 60,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:dining-pavilion"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-seated-pavilion-medium-upgraded",
+      "family": "seated-pavilion",
+      "size": "medium",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        12,
+        8
+      ],
+      "capacity": 60,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:dining-pavilion"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-seated-pavilion-large-budget-worn",
+      "family": "seated-pavilion",
+      "size": "large",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        18,
+        10
+      ],
+      "capacity": 120,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:pavilion"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-seated-pavilion-large-upgraded",
+      "family": "seated-pavilion",
+      "size": "large",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        18,
+        10
+      ],
+      "capacity": 120,
+      "capacityUnit": "seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:pavilion"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-accessible-viewing-deck-small-budget-worn",
+      "family": "accessible-viewing-deck",
+      "size": "small",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        6,
+        5
+      ],
+      "capacity": 8,
+      "capacityUnit": "4 wheelchair spaces + 4 companion seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:bleacher-platform"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-accessible-viewing-deck-small-upgraded",
+      "family": "accessible-viewing-deck",
+      "size": "small",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        6,
+        5
+      ],
+      "capacity": 8,
+      "capacityUnit": "4 wheelchair spaces + 4 companion seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:bleacher-platform"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-accessible-viewing-deck-medium-budget-worn",
+      "family": "accessible-viewing-deck",
+      "size": "medium",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        10,
+        6
+      ],
+      "capacity": 20,
+      "capacityUnit": "10 wheelchair spaces + 10 companion seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:bleacher-deck"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-accessible-viewing-deck-medium-upgraded",
+      "family": "accessible-viewing-deck",
+      "size": "medium",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        10,
+        6
+      ],
+      "capacity": 20,
+      "capacityUnit": "10 wheelchair spaces + 10 companion seats",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:bleacher-deck"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-observation-deck-small-budget-worn",
+      "family": "observation-deck",
+      "size": "small",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        4,
+        4
+      ],
+      "capacity": 12,
+      "capacityUnit": "standing places",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:bleacher-tower",
+        "newprop:scaffold-stand"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-observation-deck-small-upgraded",
+      "family": "observation-deck",
+      "size": "small",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        4,
+        4
+      ],
+      "capacity": 12,
+      "capacityUnit": "standing places",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:bleacher-tower",
+        "newprop:scaffold-stand"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-observation-deck-medium-budget-worn",
+      "family": "observation-deck",
+      "size": "medium",
+      "conditionTier": "budget-worn",
+      "footprintMetres": [
+        6,
+        5
+      ],
+      "capacity": 24,
+      "capacityUnit": "standing places",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:scaffold-stand"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    },
+    {
+      "proposalKey": "golf-event-observation-deck-medium-upgraded",
+      "family": "observation-deck",
+      "size": "medium",
+      "conditionTier": "upgraded",
+      "footprintMetres": [
+        6,
+        5
+      ],
+      "capacity": 24,
+      "capacityUnit": "standing places",
+      "capacityStatus": "proposal",
+      "existingIdentityAnchors": [
+        "newprop:scaffold-stand"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "largeClickThroughImages": [
+        "exterior-viewing-experience"
+      ],
+      "emptySprite": true,
+      "runtimeSeatingMetadataRequired": [
+        "frontFocusVectorByFacing",
+        "seatRowsByFacing",
+        "aislesAndAccessPoints",
+        "rampBoundsWherePresent"
+      ],
+      "status": "brief only; not generated"
+    }
+  ],
+  "seatingModules": [
+    {
+      "proposalKey": "golf-event-horseshoe-straight-budget-worn",
+      "conditionTier": "budget-worn",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-horseshoe-straight-upgraded",
+      "conditionTier": "upgraded",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-horseshoe-left-corner-budget-worn",
+      "conditionTier": "budget-worn",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-horseshoe-left-corner-upgraded",
+      "conditionTier": "upgraded",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-horseshoe-right-corner-budget-worn",
+      "conditionTier": "budget-worn",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-horseshoe-right-corner-upgraded",
+      "conditionTier": "upgraded",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-horseshoe-end-stair-budget-worn",
+      "conditionTier": "budget-worn",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-horseshoe-end-stair-upgraded",
+      "conditionTier": "upgraded",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-stand-aisle-2m-budget-worn",
+      "conditionTier": "budget-worn",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-stand-aisle-2m-upgraded",
+      "conditionTier": "upgraded",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-stand-stair-bay-4m-budget-worn",
+      "conditionTier": "budget-worn",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-stand-stair-bay-4m-upgraded",
+      "conditionTier": "upgraded",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-stand-end-rail-budget-worn",
+      "conditionTier": "budget-worn",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    },
+    {
+      "proposalKey": "golf-event-stand-end-rail-upgraded",
+      "conditionTier": "upgraded",
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "capacity": null,
+      "capacityStatus": "part of parent stand; never additive without explicit design",
+      "status": "brief only; dimensions must be authored against accepted parent geometry"
+    }
+  ],
+  "eventInfrastructureFamilies": [
+    {
+      "family": "Admission and security",
+      "variantsAndSizeBrief": "Single 2-lane entry (**proposed**), existing 12x6 m 4-lane complex; detached bag-check table and barrier gate",
+      "existingAnchorsBrief": "`gate`, `newprop:gate-arch`, `newprop:shanty-turnstiles`, `newprop:ticket-booth`",
+      "clickThroughBrief": "Entry with period paper-ticket admission and queue.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Tickets, info, accreditation",
+      "variantsAndSizeBrief": "Existing 4x4 m info/will-call; 3x2.5 m ticket hut; 4x3 m staff/accreditation cabin",
+      "existingAnchorsBrief": "`info`, `newprop:shanty-ticket-hut`, `newprop:shanty-booth`, `newprop:green-booth`",
+      "clickThroughBrief": "Hatch/desk view with identity matching the sprite.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Arrival/parking controls",
+      "variantsAndSizeBrief": "Attendant booth, lift barrier, transport sign; 8x3 m shuttle shelter and larger paired shelter",
+      "existingAnchorsBrief": "`rideshare`, `coach`, `interchange`, `newprop:shuttle-bus`, `ce:parking-entry`, `ce:parking-kiosk`",
+      "clickThroughBrief": "Small arrival hub; paved/turf car parks remain terrain, not new sprite sets.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Queues, route control and exits",
+      "variantsAndSizeBrief": "3 m straight barrier/left corner/right corner, 4 m opening/crossing, exit gate",
+      "existingAnchorsBrief": "`newprop:rope-barrier`, `newprop:rope-barrier-corner`, `newprop:rope-walkway`, `newprop:shanty-signpost`",
+      "clickThroughBrief": "Entry/exit operations shared with admission, not duplicate scene per barrier.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Food concessions",
+      "variantsAndSizeBrief": "Existing 8x8 m food tent; small 4x3 m kiosk in burger/coffee/ice-cream variants; period food truck",
+      "existingAnchorsBrief": "`foodTent`, `kiosk`, `foodTruck`, `newprop:green-food-kiosk`, `newprop:snack-shack`, `newprop:ice-cream-cart`",
+      "clickThroughBrief": "One counter scene per distinct vendor design.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Drinks / beer garden",
+      "variantsAndSizeBrief": "Existing 10x8 m drinks tent; water/soft-drink counter variant",
+      "existingAnchorsBrief": "`drinksTent`, `newprop:drinks-stand-with-canopy`, `newprop:cooler-drinks-stall`",
+      "clickThroughBrief": "Working counter plus seating.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Merchandise / bag check",
+      "variantsAndSizeBrief": "Existing 12x10 m tent and 30x20 m pavilion; 4x3 m compact stall; 4x3 m cloakroom/bag-check cabin",
+      "existingAnchorsBrief": "`merchTent`, `merchPavilion`, `newprop:shirt-stall`, `newprop:cap-stall`, `newprop:club-badge-stall`",
+      "clickThroughBrief": "Interior racks/checkout preserving the building's facade.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Hospitality / dining",
+      "variantsAndSizeBrief": "Existing 10x10 m chalet/60 guests and 40x24 m village/500; proposed 15x10 m dining pavilion",
+      "existingAnchorsBrief": "`chalet`, `village`, `newprop:hospitality-marquee`, `newprop:dining-pavilion`, `newprop:food-pavilion`",
+      "clickThroughBrief": "Terrace/interior; existing guests are not relabelled seats.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Generic marquee / staff catering",
+      "variantsAndSizeBrief": "10x10,15x10,20x12 m; kitchen trailer",
+      "existingAnchorsBrief": "`newprop:marquee`, `newprop:catering-tent`, `newprop:catering-trailer`, `newprop:buffet-tent`",
+      "clickThroughBrief": "Shared staff/hospitality scene plus distinct marquee identity.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Sanitation",
+      "variantsAndSizeBrief": "Existing 8x2 m/12-cubicle toilet block; proposed 4x3 m basic comfort cabin and 9x3 m upgraded trailer; detached wash trough",
+      "existingAnchorsBrief": "`toilets`, `golf:toilet-block`, `newprop:shanty-toilet`, `newprop:toilet-booth`, `newprop:wash-station`",
+      "clickThroughBrief": "Exterior entrance and wash area, no occupants in private spaces.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Drinking water",
+      "variantsAndSizeBrief": "2x1 m refill unit and 3x2 m sheltered multi-tap station",
+      "existingAnchorsBrief": "`newprop:water-tank-stall`; art-list117",
+      "clickThroughBrief": "Patron refill scene; old clean galvanized tank vs upgraded tidy enclosed unit.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "First aid / evacuation",
+      "variantsAndSizeBrief": "Existing 6x6 m first-aid tent; proposed 6x4 m clinic cabin and stretcher/evacuation cart",
+      "existingAnchorsBrief": "`firstAid`, `newprop:medical-tent`, `newprop:first-aid-trailer`, `newprop:shanty-cart-ambulance`",
+      "clickThroughBrief": "Staff-ready interior/exterior, period kit.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Weather/rain shelter",
+      "variantsAndSizeBrief": "4x4 and8x4 m shelter; weather mast and separate public warning board",
+      "existingAnchorsBrief": "`newprop:shanty-weather-mast`, `newprop:weather-station`; art-list81",
+      "clickThroughBrief": "Sheltered waiting view; storm effects aren't baked into sprites.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Course control / marshals",
+      "variantsAndSizeBrief": "Starter hut3x2.5 m, marshal crossing post, referee/scoring cabin4x3 m",
+      "existingAnchorsBrief": "`newprop:starter-hut`, `newprop:shack-map-board`, `newprop:shanty-hole-sign`",
+      "clickThroughBrief": "First-tee starter or scorer at desk.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Scoreboards / clocks / wayfinding",
+      "variantsAndSizeBrief": "Existing8x3 m main board and2x1 m hole board; small course map, direction post and analog clock",
+      "existingAnchorsBrief": "`leaderboard`, `holeBoard`, `golf:leaderboard`, `newprop:leaderboard`, `newprop:shanty-clock`",
+      "clickThroughBrief": "Scorekeeper/board scene; names and scores remain runtime overlays.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Media / TV / photography",
+      "variantsAndSizeBrief": "Tower6/10/15 m, tripod camera, low photographers' deck,24x16 m media centre,30x20 m broadcast compound",
+      "existingAnchorsBrief": "`tvTower`, `broadcast`, `media`, `newprop:shanty-camera-tower`, `newprop:tv-camera`, `newprop:broadcast-truck`",
+      "clickThroughBrief": "Press desk/broadcast operations in 1985.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Player / caddie services",
+      "variantsAndSizeBrief": "Bag-drop counter3x1 m, rack3x0.6 m, player rest canopy6x4 m, scoring cabin above",
+      "existingAnchorsBrief": "`newprop:bag-stand-stall`, `newprop:club-rack-stall`, `newprop:equipment-stall`",
+      "clickThroughBrief": "Bag room/player lounge; caddies get separate character portrait.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Range / practice",
+      "variantsAndSizeBrief": "Existing shop/range-deck identity; basic single bay and four-bay module; cage, ball dispenser, yardage board",
+      "existingAnchorsBrief": "`golf:clubhouse-shanty`, `golf:range-deck`, `newprop:shanty-range-bay`, `newprop:practice-cage`, `newprop:ball-dispenser`",
+      "clickThroughBrief": "Counter, teaching bay and practice scene; no new grass/decal work.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Cart staging / transport",
+      "variantsAndSizeBrief": "Cart canopy10x5/20x5 m, bag trolley; existing fleet cart, player shuttle, utility cart, ambulance cart",
+      "existingAnchorsBrief": "`newprop:roofed-cart`, `newprop:wheelchair-cart`, `newprop:utility-cart`, `business:golf-cart-garage`",
+      "clickThroughBrief": "Cart garage/staging scene; actual moving vehicles keep heading system.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Maintenance / storage",
+      "variantsAndSizeBrief": "Existing20x12 m barn/yard, small6x4 m toolshed, fuel/oil cabinet, sand-bin module",
+      "existingAnchorsBrief": "`newprop:garden-shed`, `newprop:shanty-shed`, `newprop:tool-stall`; art-list12/67",
+      "clickThroughBrief": "Workshop/yard scene; neat functional wear instead of scrap village.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Utilities / waste",
+      "variantsAndSizeBrief": "Towed generator, light tower, cable protector, bins2/3-unit cluster, recycling station",
+      "existingAnchorsBrief": "`newprop:shanty-weather-mast`; art-list114/126; existing budget bin",
+      "clickThroughBrief": "Back-of-house scene shared with maintenance, no duplicate scene for every bin.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Staff / volunteer / security HQ",
+      "variantsAndSizeBrief": "8x6 m HQ tent or cabin, police/radio cabin4x3 m",
+      "existingAnchorsBrief": "art-list125; `newprop:shanty-booth`, `newprop:scaffold-booth`",
+      "clickThroughBrief": "Volunteer briefing room with lockers/radios.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Trophy / sponsor / presentation",
+      "variantsAndSizeBrief": "Existing10x6 m stage; trophy desk,6x4 m sponsor-car plinth; existing video trailer",
+      "existingAnchorsBrief": "`sponsorDisplay`, `screen`, `newprop:stage`; art-list121/124",
+      "clickThroughBrief": "Ceremony view, consistent period clothing and faces.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    },
+    {
+      "family": "Course bridges / furniture",
+      "variantsAndSizeBrief": "Footbridge/cart bridge6/9/12 m, bench, picnic table, parasol-table, ball washer",
+      "existingAnchorsBrief": "`newprop:wooden-footbridge`, `newprop:plank-bridge`, `newprop:stone-bridge`, `newprop:park-bench`, `newprop:picnic-table`, `newprop:ball-washer`",
+      "clickThroughBrief": "Bridge/rest-area scene shared by family; every hard prop still gets eight views.",
+      "conditionTiers": [
+        "budget-worn",
+        "upgraded"
+      ],
+      "requiredViews": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-turned8",
+        "E-turned8",
+        "S-turned8",
+        "W-turned8"
+      ],
+      "status": "brief only; reuse existing identity rather than duplicate equivalent assets"
+    }
+  ],
+  "existingRuntimeStructures": [
+    {
+      "runtimeId": "foodTent",
+      "name": "Food tent",
+      "kind": "food",
+      "footprintTiles": [
+        4.0,
+        4.0
+      ],
+      "footprintMetres": [
+        8.0,
+        8.0
+      ],
+      "capacity": 300.0,
+      "capacityUnit": "per hour",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "drinksTent",
+      "name": "Drinks tent",
+      "kind": "drink",
+      "footprintTiles": [
+        5.0,
+        4.0
+      ],
+      "footprintMetres": [
+        10.0,
+        8.0
+      ],
+      "capacity": 400.0,
+      "capacityUnit": "per hour",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "kiosk",
+      "name": "Concession kiosk",
+      "kind": "snack",
+      "footprintTiles": [
+        2.0,
+        2.0
+      ],
+      "footprintMetres": [
+        4.0,
+        4.0
+      ],
+      "capacity": 120.0,
+      "capacityUnit": "per hour",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "foodTruck",
+      "name": "Food truck",
+      "kind": "food",
+      "footprintTiles": [
+        3.0,
+        2.0
+      ],
+      "footprintMetres": [
+        6.0,
+        4.0
+      ],
+      "capacity": 150.0,
+      "capacityUnit": "per hour",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "merchTent",
+      "name": "Merchandise tent",
+      "kind": "merch",
+      "footprintTiles": [
+        6.0,
+        5.0
+      ],
+      "footprintMetres": [
+        12.0,
+        10.0
+      ],
+      "capacity": 200.0,
+      "capacityUnit": "per hour",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "merchPavilion",
+      "name": "Merchandise pavilion",
+      "kind": "merch",
+      "footprintTiles": [
+        15.0,
+        10.0
+      ],
+      "footprintMetres": [
+        30.0,
+        20.0
+      ],
+      "capacity": 1200.0,
+      "capacityUnit": "per hour",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "chalet",
+      "name": "Hospitality chalet",
+      "kind": "hospitality",
+      "footprintTiles": [
+        5.0,
+        5.0
+      ],
+      "footprintMetres": [
+        10.0,
+        10.0
+      ],
+      "capacity": 60.0,
+      "capacityUnit": "guests",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "village",
+      "name": "Corporate hospitality village",
+      "kind": "hospitality",
+      "footprintTiles": [
+        20.0,
+        12.0
+      ],
+      "footprintMetres": [
+        40.0,
+        24.0
+      ],
+      "capacity": 500.0,
+      "capacityUnit": "guests",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "standS",
+      "name": "Grandstand S",
+      "kind": "grandstand",
+      "footprintTiles": [
+        8.0,
+        4.0
+      ],
+      "footprintMetres": [
+        16.0,
+        8.0
+      ],
+      "capacity": 200.0,
+      "capacityUnit": "seats",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "standM",
+      "name": "Grandstand M",
+      "kind": "grandstand",
+      "footprintTiles": [
+        20.0,
+        6.0
+      ],
+      "footprintMetres": [
+        40.0,
+        12.0
+      ],
+      "capacity": 1000.0,
+      "capacityUnit": "seats",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "standL",
+      "name": "Grandstand L",
+      "kind": "grandstand",
+      "footprintTiles": [
+        40.0,
+        10.0
+      ],
+      "footprintMetres": [
+        80.0,
+        20.0
+      ],
+      "capacity": 4000.0,
+      "capacityUnit": "seats",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "leaderboard",
+      "name": "Main leaderboard",
+      "kind": "board",
+      "footprintTiles": [
+        4.0,
+        2.0
+      ],
+      "footprintMetres": [
+        8.0,
+        4.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "holeBoard",
+      "name": "Hole scoreboard",
+      "kind": "board",
+      "footprintTiles": [
+        1.0,
+        1.0
+      ],
+      "footprintMetres": [
+        2.0,
+        2.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "screen",
+      "name": "Video screen",
+      "kind": "display",
+      "footprintTiles": [
+        3.0,
+        1.0
+      ],
+      "footprintMetres": [
+        6.0,
+        2.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "tvTower",
+      "name": "TV camera tower",
+      "kind": "tv",
+      "footprintTiles": [
+        1.0,
+        1.0
+      ],
+      "footprintMetres": [
+        2.0,
+        2.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "broadcast",
+      "name": "Broadcast compound",
+      "kind": "tv",
+      "footprintTiles": [
+        15.0,
+        10.0
+      ],
+      "footprintMetres": [
+        30.0,
+        20.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "media",
+      "name": "Media centre",
+      "kind": "media",
+      "footprintTiles": [
+        12.0,
+        8.0
+      ],
+      "footprintMetres": [
+        24.0,
+        16.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "gate",
+      "name": "Entrance gate",
+      "kind": "gate",
+      "footprintTiles": [
+        6.0,
+        3.0
+      ],
+      "footprintMetres": [
+        12.0,
+        6.0
+      ],
+      "capacity": 4.0,
+      "capacityUnit": "lanes",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "toilets",
+      "name": "Toilet block",
+      "kind": "toilet",
+      "footprintTiles": [
+        4.0,
+        1.0
+      ],
+      "footprintMetres": [
+        8.0,
+        2.0
+      ],
+      "capacity": 12.0,
+      "capacityUnit": "cubicles",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "firstAid",
+      "name": "First aid tent",
+      "kind": "firstaid",
+      "footprintTiles": [
+        3.0,
+        3.0
+      ],
+      "footprintMetres": [
+        6.0,
+        6.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "info",
+      "name": "Info and will-call booth",
+      "kind": "info",
+      "footprintTiles": [
+        2.0,
+        2.0
+      ],
+      "footprintMetres": [
+        4.0,
+        4.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "rideshare",
+      "name": "Ride-share drop-off zone",
+      "kind": "transport",
+      "footprintTiles": [
+        4.0,
+        8.0
+      ],
+      "footprintMetres": [
+        8.0,
+        16.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "coach",
+      "name": "Coach terminal",
+      "kind": "transport",
+      "footprintTiles": [
+        20.0,
+        10.0
+      ],
+      "footprintMetres": [
+        40.0,
+        20.0
+      ],
+      "capacity": 20.0,
+      "capacityUnit": "lanes",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "rangeStand",
+      "name": "Practice range grandstand",
+      "kind": "grandstand",
+      "footprintTiles": [
+        12.0,
+        4.0
+      ],
+      "footprintMetres": [
+        24.0,
+        8.0
+      ],
+      "capacity": 600.0,
+      "capacityUnit": "seats",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "sponsorDisplay",
+      "name": "Sponsor display",
+      "kind": "display",
+      "footprintTiles": [
+        3.0,
+        3.0
+      ],
+      "footprintMetres": [
+        6.0,
+        6.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "helipad",
+      "name": "Helipad",
+      "kind": "helipad",
+      "footprintTiles": [
+        10.0,
+        10.0
+      ],
+      "footprintMetres": [
+        20.0,
+        20.0
+      ],
+      "capacity": 0.0,
+      "capacityUnit": "",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "hotel",
+      "name": "Resort hotel",
+      "kind": "info",
+      "footprintTiles": [
+        16.0,
+        10.0
+      ],
+      "footprintMetres": [
+        32.0,
+        20.0
+      ],
+      "capacity": 120.0,
+      "capacityUnit": "rooms",
+      "source": "src/game/golf/tents.ts"
+    },
+    {
+      "runtimeId": "interchange",
+      "name": "Highway interchange",
+      "kind": "transport",
+      "footprintTiles": [
+        24.0,
+        14.0
+      ],
+      "footprintMetres": [
+        48.0,
+        28.0
+      ],
+      "capacity": 4.0,
+      "capacityUnit": "lanes",
+      "source": "src/game/golf/tents.ts"
+    }
+  ],
+  "completionCriteria": [
+    "eight distinct physically coherent views",
+    "empty sprites with people kept as runtime layers",
+    "large identity-matched click-through art",
+    "same scale and fixed light across views",
+    "authored footprint/ramp/stair bounds",
+    "runtime orientation and seating metadata mapped and checked"
+  ],
+  "notes": [
+    "Capacity design proposals are not implemented or approved economy numbers. Existing runtime capacities are stated separately.",
+    "Existing large stand IDs currently share small stand art; do not infer unique large images from catalogue entries.",
+    "No plants, terrain or decals are art expansion deliverables here.",
+    "Horseshoe piece capacities are not separately additive."
+  ]
+}

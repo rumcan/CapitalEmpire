@@ -1,0 +1,228 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "allNineRepairsPracticalCandidates": true,
+  "selectedSourceFamilies": 8,
+  "selectedNormalViews": 32,
+  "selectedYawViews": 32,
+  "sourceSelectionPolicy": "Preserve accepted normal32. Replace shuttle yaw all4, satellite E/W, broadcast E/S/W only. Keep remaining23 yaw original half-cells.",
+  "normalSourceSelection": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/normal-source-candidates-v2.json",
+  "originalYawReview": "art/catalogue-completion-20261107/audit/specialist-mobile-yaw-v1-review.json",
+  "rows": [
+    {
+      "key": "shuttle-cart",
+      "subject": "newprop:shuttle-cart",
+      "nominalCameraKey": "yaw8N",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shuttle-cart/yaw8-N-v2.png",
+      "sourceSHA256": "7dca9b9dcd77645e20c6d41b41f9a0a2cd2db040c2ebb473d5b85bdd136fef8c",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "rgbaSHA256": "ca2a6727e9864092cbf12c6129d86e5d4e88b8c969427f7424ef2c787fea8c59",
+      "sourceProvenanceMatches": true,
+      "status": "practical-source-candidate",
+      "observation": "Actual front view, three rows occlude naturally under long canopy.",
+      "alphaGT128BBox": [
+        313,
+        47,
+        941,
+        1210
+      ],
+      "coreMinMargin": 44,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "key": "shuttle-cart",
+      "subject": "newprop:shuttle-cart",
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shuttle-cart/yaw8-E-v2.png",
+      "sourceSHA256": "279330f508518d8db77d94821de5623f87c01ece0fcb310f0a4cc57a32fdc0da",
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "rgbaSHA256": "e8aebb5307de63b70350c73b5a3c4e17acbcaf156a490d6fd12f904db57ef652",
+      "sourceProvenanceMatches": true,
+      "status": "practical-source-candidate",
+      "observation": "Dominant LEFT side, exactly three transverse benches all face front.",
+      "alphaGT128BBox": [
+        73,
+        124,
+        1473,
+        903
+      ],
+      "coreMinMargin": 63,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "key": "shuttle-cart",
+      "subject": "newprop:shuttle-cart",
+      "nominalCameraKey": "yaw8S",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shuttle-cart/yaw8-S-v2.png",
+      "sourceSHA256": "eb851c0ab2831efeff28d215cf78eaa2ae876e89c758dcc2611b2a5bb96e6cd6",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "rgbaSHA256": "8f0d46f5c3eda87855c7bc35e57f747137f36659df4c117733a57f57649a5934",
+      "sourceProvenanceMatches": true,
+      "status": "practical-source-candidate",
+      "observation": "Actual rear view with rear bench back and rear rail; three row positions visible down side.",
+      "alphaGT128BBox": [
+        302,
+        14,
+        993,
+        1191
+      ],
+      "coreMinMargin": 14,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "key": "shuttle-cart",
+      "subject": "newprop:shuttle-cart",
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shuttle-cart/yaw8-W-v2.png",
+      "sourceSHA256": "065027d4e1f189bb7dba9472c859d788851dbd331490c2d0cfe324b36d7837f3",
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "rgbaSHA256": "9570a22e1d4510ecd18da0ad95e4affe3a5a854a35551641aa619e4f63647cc6",
+      "sourceProvenanceMatches": true,
+      "status": "practical-source-candidate",
+      "observation": "Dominant RIGHT side, three fixed front-facing bench rows.",
+      "alphaGT128BBox": [
+        59,
+        25,
+        1714,
+        870
+      ],
+      "coreMinMargin": 17,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "key": "satellite-van",
+      "subject": "newprop:satellite-van",
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/yaw8-E-v2.png",
+      "sourceSHA256": "0ff6c9c084a670cdb110084c679beeae5973085bffbe76dc6f78deb4f8a1e927",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "rgbaSHA256": "6873a6001063b4abd4e6d4fb6f9bdbb5c3ce7cc54f0910336995131a0e2c48d8",
+      "sourceProvenanceMatches": true,
+      "status": "practical-source-candidate",
+      "observation": "Required physical LEFT sliding door now has handle, vertical seam and rail; concave oblique dish, rear mount and front HVAC/aerials remain.",
+      "alphaGT128BBox": [
+        127,
+        218,
+        1163,
+        1028
+      ],
+      "coreMinMargin": 91,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "key": "satellite-van",
+      "subject": "newprop:satellite-van",
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/yaw8-W-v2.png",
+      "sourceSHA256": "bca20d06a8df734f45da9dcbaa83ea13dd3facab5a1f9b4b8e7a1c23dc67d60f",
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "rgbaSHA256": "0e867b3999c518433df1efed356b7173cfc9173ce641051112f583cbffb2d267",
+      "sourceProvenanceMatches": true,
+      "status": "practical-source-candidate",
+      "observation": "Physical RIGHT side plain except stamped body recess; no cargo sliding handle/seam/rail. Fixed concave dish and forward HVAC/aerials.",
+      "alphaGT128BBox": [
+        164,
+        56,
+        1343,
+        979
+      ],
+      "coreMinMargin": 45,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "key": "shanty-broadcast-van",
+      "subject": "newprop:shanty-broadcast-van",
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/yaw8-E-v2.png",
+      "sourceSHA256": "b82f621bf52f309ecf6b8591dc8e2c1ce9e401c67a18467e03bc23a3a6aba63d",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "rgbaSHA256": "a25637f157899e12c7ad7d3c8d2957a0dafa5a1789b6b01678dfdeb18a0078fe",
+      "sourceProvenanceMatches": true,
+      "status": "practical-source-candidate",
+      "observation": "Plain physical LEFT body and visible circular reel end disc; transverse axle restored.",
+      "alphaGT128BBox": [
+        110,
+        186,
+        1159,
+        1031
+      ],
+      "coreMinMargin": 95,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "key": "shanty-broadcast-van",
+      "subject": "newprop:shanty-broadcast-van",
+      "nominalCameraKey": "yaw8S",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/yaw8-S-v2.png",
+      "sourceSHA256": "13d2236908d14376d52d9f16a9ddbc492037230d9d9d7d5f9f02f4444df0ea26",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "rgbaSHA256": "119137ab23e78ad0a10cc4f4027b08522a772f40eb8b3b53067970c1b1482446",
+      "sourceProvenanceMatches": true,
+      "status": "practical-source-candidate",
+      "observation": "Rear twin doors, coiled cable barrel with flanges left/right, HVAC/aerial forward; transverse axle restored.",
+      "alphaGT128BBox": [
+        329,
+        70,
+        983,
+        1156
+      ],
+      "coreMinMargin": 70,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "key": "shanty-broadcast-van",
+      "subject": "newprop:shanty-broadcast-van",
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/yaw8-W-v2.png",
+      "sourceSHA256": "4b5e6fbe67b578881bdca469204d5674b231b8948e4e7a36301d7039a4d8609d",
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "rgbaSHA256": "1bbfa3e21768993071494d6a34aa6bfd5a74bef9f9ed4e89a63dc840bf3ed1ba",
+      "sourceProvenanceMatches": true,
+      "status": "practical-source-candidate",
+      "observation": "Physical RIGHT equipment hatch and circular reel end disc; transverse axle restored.",
+      "alphaGT128BBox": [
+        163,
+        39,
+        1373,
+        953
+      ],
+      "coreMinMargin": 39,
+      "opaqueBoundaryPixels": 0
+    }
+  ],
+  "nativeCameraCertified": false,
+  "runtimeReady": false,
+  "separateHolds": [
+    "Painted exact normal/yaw angles unmeasured, guide metadata does not certify native angles.",
+    "Native physical scale and ground anchors unapproved.",
+    "Original sheet half-crops627px and variable-size isolated repairs remain unscaled.",
+    "Final exterior alpha cleanup unapproved; source native alpha preserved."
+  ]
+}

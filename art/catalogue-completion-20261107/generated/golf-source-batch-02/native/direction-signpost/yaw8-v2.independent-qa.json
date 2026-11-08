@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:42:37.359837+00:00",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.png",
+    "sha256": "d0f9d58c7a62a0409232d5ce6f4e25174129eb8ad8e5b0949466d56185eba5c6",
+    "bytes": 822577
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.provenance.json",
+    "sha256": "3a5db24ee42086d6fbc2d53213baf5e1d620ff15225a2a27ed9efc6c3ba6741c",
+    "bytes": 1697
+  },
+  "exact_prompt_utf8_sha256": "b16f7761cbce701d7ecad84f21cb3c3706ad4170ef6f2a275027384db2ab4719",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+      "sha256": "55a005747397a2283c22b449a5042bfa596d4bad251ebdcd35862af96c5ae08e",
+      "bytes": 831140
+    }
+  ],
+  "zero_alpha_fraction": 0.7780245161257501,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "distant_background_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "proper_grey_composite": {
+    "path": "generated/golf-source-batch-02/native/direction-signpost/qa/yaw8-v2-on-grey.diagnostic.png",
+    "sha256": "eb35406452a5e1756c6d6ebaa7f6176534a5dddb3cf8b621ce1c60e3f1af7e24",
+    "bytes": 639291
+  },
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cells": [
+    {
+      "cell": "TL",
+      "direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "7e760865a847c0f889d5304ad5fa2a552aeed1e8e67599c8c38b6728bfe32a34",
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "minimum_core_margin_px": 21,
+      "functional_hold": false,
+      "review": "limited-source-main-face-component-pass"
+    },
+    {
+      "cell": "TR",
+      "direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "9c17d52f34d6499bcc80ebd30e220dfbdaf855bfb4b1ae6bcaebf9adf9c0e3a3",
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "minimum_core_margin_px": 21,
+      "functional_hold": false,
+      "review": "limited-source-main-face-component-pass"
+    },
+    {
+      "cell": "BL",
+      "direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "native_rgba_rectangle_sha256": "420f24c765d389355c3ac57a268ef1461466b7f889c6cc86a790598abd353fc2",
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "minimum_core_margin_px": 17,
+      "functional_hold": false,
+      "review": "limited-source-main-face-component-pass"
+    },
+    {
+      "cell": "BR",
+      "direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "native_rgba_rectangle_sha256": "58fb65ccbd4c991dc39fa3312667859c101e38284fbce71b83b8815c8a08e89d",
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "minimum_core_margin_px": 17,
+      "functional_hold": false,
+      "review": "limited-source-main-face-component-pass"
+    }
+  ],
+  "visual_observations": [
+    "W printed symbols removed, plain green arrow backs correct. N/E pictograms and S plain backs retained; four boards/top finial/base preserved."
+  ],
+  "selection_policy": "Keep accepted v1 N/E/S, select only corrected v2 W; no native atlas repaint/composition.",
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

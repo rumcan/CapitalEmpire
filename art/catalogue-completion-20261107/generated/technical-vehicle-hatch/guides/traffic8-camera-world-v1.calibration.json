@@ -1,0 +1,99 @@
+{
+  "purpose": "Compact TECHNICAL ONLY camera reference, not final sprite art.",
+  "model": "technical-vehicle-hatch",
+  "camera_down_degrees": 30,
+  "cell_pixels": [
+    400,
+    400
+  ],
+  "layout": [
+    4,
+    2
+  ],
+  "camera_pixels_per_metre": 62.5,
+  "cardinal_horizontal_offset_degrees": 0,
+  "corner_horizontal_offset_degrees": -45,
+  "cell_order": [
+    [
+      "LOWER LEFT",
+      "DOWN",
+      "LOWER RIGHT",
+      "RIGHT"
+    ],
+    [
+      "UPPER RIGHT",
+      "UP",
+      "UPPER LEFT",
+      "LEFT"
+    ]
+  ],
+  "source_cells": [
+    {
+      "cell": 0,
+      "source_family": "normal",
+      "source_cell": 3,
+      "actual_nose_screen": "LOWER LEFT"
+    },
+    {
+      "cell": 1,
+      "source_family": "cardinal",
+      "source_cell": 0,
+      "actual_nose_screen": "DOWN"
+    },
+    {
+      "cell": 2,
+      "source_family": "normal",
+      "source_cell": 0,
+      "actual_nose_screen": "LOWER RIGHT"
+    },
+    {
+      "cell": 3,
+      "source_family": "cardinal",
+      "source_cell": 1,
+      "actual_nose_screen": "RIGHT"
+    },
+    {
+      "cell": 4,
+      "source_family": "normal",
+      "source_cell": 1,
+      "actual_nose_screen": "UPPER RIGHT"
+    },
+    {
+      "cell": 5,
+      "source_family": "cardinal",
+      "source_cell": 2,
+      "actual_nose_screen": "UP"
+    },
+    {
+      "cell": 6,
+      "source_family": "normal",
+      "source_cell": 2,
+      "actual_nose_screen": "UPPER LEFT"
+    },
+    {
+      "cell": 7,
+      "source_family": "cardinal",
+      "source_cell": 3,
+      "actual_nose_screen": "LEFT"
+    }
+  ],
+  "sources": {
+    "normal": {
+      "png": "normal-world-v1.png",
+      "sha256": "ef878b675cb242e0733d1dc95ba6e05ef687d1d1cb9067eb2bd8e59c18bfcebe"
+    },
+    "cardinal": {
+      "png": "cardinal-world-v1.png",
+      "sha256": "5a1ce81b0dd297ab96f4b7d34356057a1adc590218b9bc036309ec3cc7b2dd0a"
+    }
+  },
+  "output": {
+    "png": "traffic8-camera-world-v1.png",
+    "sha256": "f30a7a8e1d5eaff2ce677469fb562da64164ad01dd4c5ceb81b0d5276d423539"
+  },
+  "mesh_file": "technical-vehicle-hatch-world-model-v1.json",
+  "mesh_sha256": "658526610ff788308274a906b5f7daba32f216c2a485f4213dfecee24d155d85",
+  "technical_only": true,
+  "final_native_art_approved": false,
+  "runtime_integrated": false
+}

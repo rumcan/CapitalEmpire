@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:10:53.936532+00:00",
+  "sources_reviewed": 3,
+  "limited_source_passes": 3,
+  "held": 0,
+  "scope": "Three batch02 isolated v2 detail corrections only; component identity/actual pose/alpha, not exact numerical angle or release review.",
+  "records": [
+    {
+      "key": "park-bench",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.png",
+      "guide_corner": "SE",
+      "review_result": "PASS-source-candidate-corrected-component-identity-and-pose",
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.8445446660002187,
+      "minimum_core_margin_px": 193,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.independent-qa.json"
+    },
+    {
+      "key": "park-bench",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.png",
+      "guide_corner": "SW",
+      "review_result": "PASS-source-candidate-corrected-component-identity-and-pose",
+      "outer_border_alpha_max": 0,
+      "zero_alpha_fraction": 0.8356531825431347,
+      "minimum_core_margin_px": 119,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.independent-qa.json"
+    },
+    {
+      "key": "ball-dispenser",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.png",
+      "guide_corner": "SW",
+      "review_result": "PASS-source-candidate-corrected-component-identity-and-pose",
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.80494443299782,
+      "minimum_core_margin_px": 246,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.independent-qa.json"
+    }
+  ],
+  "normal_cell_selections": [
+    "generated/golf-source-batch-02/native/park-bench/normal-cell-selections-v2.json",
+    "generated/golf-source-batch-02/native/ball-dispenser/normal-cell-selections-v2.json"
+  ]
+}

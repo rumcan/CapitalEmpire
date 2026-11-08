@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "asOfUTC": "2026-11-07T14:43:55.556491+00:00",
+  "subject": "golf:event-broadcast-compound",
+  "condition": "upgraded",
+  "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v1.png",
+  "sourceSHA256": "a64ac7d5d8a2cee011fc8953c76f87a63ad6f76ff8f68ad6f1483945c5937d52",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "sourceMode": "RGBA",
+  "review": "HOLD-SE-extra-service-stair; other main identity practical candidate",
+  "sourceOnly": true,
+  "nativeCameraCertified": false,
+  "nativeScaleAndAnchorsApproved": false,
+  "runtimeReady": false,
+  "runtimeIntegrated": false,
+  "views": [
+    {
+      "key": "normalSE",
+      "practicalGeometry": "Four-corner front view; two tidy cream/green square-cab vehicles, concave roof dish and front feed remain distinct.",
+      "hold": "Extra visible fold-out stair appears on truck physical -X side. Fixed guide has service steps only on +X; selected budget SE has no stair on this visible side. Remove only the extra SE stair before selecting all four as one fixed identity."
+    },
+    {
+      "key": "normalSW",
+      "practicalGeometry": "Genuine rear corner, convex ribbed dish back; rear doors, generator/table/reel fixed. No extra stair on -X side.",
+      "hold": null
+    },
+    {
+      "key": "normalNW",
+      "practicalGeometry": "Opposite rear corner; dish thin oblique bowl and rear mounting, single physical +X service step visible, two vehicles remain distinct.",
+      "hold": null
+    },
+    {
+      "key": "normalNE",
+      "practicalGeometry": "Opposite front corner, broad concave dish/feed, fixed physical +X service step and generator/table/reel layout.",
+      "hold": null
+    }
+  ],
+  "referenceEvidence": [
+    "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/guides/normal-world-v2.png",
+    "audit/build_golf_complex_world_guides.py fixed-right-service-step on +X",
+    "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/source-candidate-selection-v1.json"
+  ],
+  "pixelsChanged": false,
+  "newNativeGenerated": false,
+  "notes": [
+    "No numerical angle certification; practical four distinct corners only.",
+    "1980s square-cab upgrade is coherent, ordinary and tidy; no futuristic vehicle substitution.",
+    "Final alpha/scale/anchor approval is separate from this geometry inspection."
+  ]
+}

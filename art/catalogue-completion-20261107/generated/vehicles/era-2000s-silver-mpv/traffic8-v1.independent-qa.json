@@ -1,0 +1,179 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:24.138400+00:00",
+  "review_result": "HOLD-camera-consistency",
+  "identity_direction_alpha_result": "PASS candidate subject to separate camera hold",
+  "source": {
+    "path": "generated/vehicles/era-2000s-silver-mpv/traffic8-v1.png",
+    "sha256": "db5c0b607e2b0661b089d767d16de9c67a16a4215be08870bce6e0fc2ae7ae60",
+    "bytes": 1744209
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.5341453463468947,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "actual_screen_nose": "lower-left",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "native_core_margin_pixels": 11,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "e397764b5fb0ea71351f7ce88679b63e529471049573735dd59a125d3a472900"
+    },
+    {
+      "cell": 1,
+      "actual_screen_nose": "down",
+      "reference_rect_ltrb": [
+        443,
+        0,
+        856,
+        443
+      ],
+      "native_core_margin_pixels": 42,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 2,
+      "rgba_rectangle_sha256": "302278f6e6f1bb796231fa5d1f83b7d8c0ceee04cd0b3683405283603f091369"
+    },
+    {
+      "cell": 2,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        856,
+        0,
+        1286,
+        443
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 5,
+      "rgba_rectangle_sha256": "46e09f54bed1b2bb8e37cfe092215a080c6bb40a65a16ed21cf5951b03a85fc1"
+    },
+    {
+      "cell": 3,
+      "actual_screen_nose": "right",
+      "reference_rect_ltrb": [
+        1286,
+        0,
+        1774,
+        443
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "18cbbd2efb9ea38a710d112162bbdd4c3ad8843b9d144f0be597e89970f925f7"
+    },
+    {
+      "cell": 4,
+      "actual_screen_nose": "upper-right",
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "native_core_margin_pixels": 9,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "d2a7b8174b02326b0fe645e261a9753af8402709b495238e194e950f1d0e4977"
+    },
+    {
+      "cell": 5,
+      "actual_screen_nose": "up",
+      "reference_rect_ltrb": [
+        443,
+        443,
+        848,
+        887
+      ],
+      "native_core_margin_pixels": 57,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 3,
+      "rgba_rectangle_sha256": "9ae3745f1f316aff742b2502d1078bc2cefd187de4082954073ab405f3232560"
+    },
+    {
+      "cell": 6,
+      "actual_screen_nose": "upper-left",
+      "reference_rect_ltrb": [
+        848,
+        443,
+        1283,
+        887
+      ],
+      "native_core_margin_pixels": 3,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 7,
+      "rgba_rectangle_sha256": "98b8febda5a94a6ee6b92164ad6a2776f9af1c8c5fcbd0d92e1c6708fc2e841c"
+    },
+    {
+      "cell": 7,
+      "actual_screen_nose": "left",
+      "reference_rect_ltrb": [
+        1283,
+        443,
+        1774,
+        887
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "bb151f75cd6070faedc633c3851de5cc268ea5ab7b5efae9f970448456da49a2"
+    }
+  ],
+  "all_eight_distinct_nose_directions_present": true,
+  "side_cell_order_is_remappable": false,
+  "native_core_clipped_at_canvas_border": false,
+  "actual_clear_gutter_crops_reference_only": [
+    [
+      0,
+      443,
+      856,
+      1286,
+      1774
+    ],
+    [
+      0,
+      443,
+      848,
+      1283,
+      1774
+    ]
+  ],
+  "source_crops_performed": false,
+  "notes": [
+    "HOLD visually inconsistent elevation: col4 side profiles show nearly level body/roof and near-circular side wheels; diagonal/front/rear cells show substantially more top planes. Need shared fixed30degree camera proof or native correction, not relabelling."
+  ],
+  "camera_measurement_scope": "Visual inconsistency established; exact percell camera degrees not numerically certified. Do not present approximate appearance as an8degree/30degree measured proof.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_only": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/era-2000s-silver-mpv/traffic8-v1.prompt.txt",
+    "sha256": "939a80e6820fef302f7a4bc09742c6015ef3b613faa6fd282d448cb8c091a15f",
+    "bytes": 1767
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/era-2000s-silver-mpv/traffic8-v1.provenance.json",
+    "sha256": "dc3ac2631c650622c2859d2122ff4b520cb21112b1104e52c781283438ecac09",
+    "bytes": 2451
+  }
+}

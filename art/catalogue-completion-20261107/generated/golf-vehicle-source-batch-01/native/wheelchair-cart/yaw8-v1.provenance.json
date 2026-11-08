@@ -1,0 +1,22 @@
+{
+  "key": "newprop:wheelchair-cart",
+  "slug": "wheelchair-cart",
+  "family": "yaw8",
+  "condition": "ordinary-budget-redesign",
+  "version": 1,
+  "target": "generated/golf-vehicle-source-batch-01/native/wheelchair-cart/yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png"
+  ],
+  "prompt": "Paint FOUR missing nearcardinal views of ONE exact specialist golf mobileprop from REFERENCE1 fixedworldguide. Guide controls allcameras/physicalattachments/occlusion. REFERENCE2 supplies finishedsubjectidentity/finepaintedmaterialsONLY; nevercopyitscornercamera. Functionalidentity: Actual four-wheel accessible transport cart with driver seat/control at front, a clear wheelchair bay at middle/rear, folding SIDE access ramp, handrails and one small rear passenger bench under a full canopy. Ramp stays on the SAME physical side and deployed at fixed angle in every source view. Empty wheelchair space; no person.. Fixedstate: Ramp ALWAYS deployed on physicalLEFT-X, same angle; one front driver seat, empty central wheelchair bay, one rear bench. Four wheels, intact simple canopy. No wheelchair user; technical dimensions are not accessibility certification..  Matchreference2's ordinaryolderpracticalredesign, boltedsteel/paintedtimber/intactcanopy; no ropes/tarp/shackscaffolding. FourgenuineMAINfacesN E / S W asguide, eachnominal8degreesoffcardinal, orthographic30degreesDOWN. Fixedroofequipment/cargo, wheellayout, seatrowcount, canopy/bench positions neverchange.  Finepainterlyminiaturegameartmatchreference2wood/enamel/metals/glass, notlowpolyguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lights/beaconsOFF. CompleteisolatedequallyscaledopaqueobjectswithwideZEROALPHAtransparentgutters/margins, smallcontactshadowonly. Nopeopledrivers/patients, road/groundplate, scenery, plants, captions/UI/grid/halo. Intrinsiccross/accesssymbolsretained wherephysicalbodyhas them.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-816ad785-2d14-497e-ae89-5fe534305a5c.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "c1e39b5a9d22a99184453752fe638a97f92fdcf915c54d7ce0aa77d321922029",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "HOLD-W-front-features-on-back",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+    "sha256": "55a005747397a2283c22b449a5042bfa596d4bad251ebdcd35862af96c5ae08e",
+    "bytes": 831140
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.provenance.json",
+    "sha256": "29255fd5c940711008b71627cfd417c6b629f155090391cb05359e80b6632597",
+    "bytes": 2823
+  },
+  "exact_prompt_utf8_sha256": "1ffc61f83da6bda0378c720824e0b3b42b69d86a0389e1cbf6cdd4131f5e72a5",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v2/direction-signpost/guides/yaw8-world-v1.png",
+      "sha256": "bd7bda4ceddb309a7377caeb658bc477ff5f8579206730e1312d387a42d31fb8",
+      "bytes": 30828
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+      "sha256": "317b54ad6750cd145f7a7772b7fcc7a1e5cf6b5773aca951fea839e0d1c1ee00",
+      "bytes": 1147434
+    }
+  ],
+  "zero_alpha_fraction": 0.79027240422355,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 0,
+    "vertical_bottom": 0
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N four pictogram boards",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 22,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "fab64af31060d15c670945280c7a4d5030076c498bb5dee6effe6ca54cd48a21",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E pictogram side profile",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 22,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "native_rgba_rectangle_sha256": "7640b1f5b7a9977417c6a0e9f1e89399b1f2740f46baa6c619573b010f4f7323",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S four blank board backs",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 17,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "d97d6e0e331886762c191f77a87dfa3bc388a2bfbdbbfd26923e856d16dc938a",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W pose; INCORRECT repeated pictogram faces",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 17,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "native_rgba_rectangle_sha256": "1b042667b51721b8ebc6cc4041c1752c46bc2821b728f29d42340b5b252e2ae2",
+      "functional_hold": true
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Four arrow boards retained, front pictograms and plain rear correct. W/BR repeats pictogram-facing E profile; W guide requires blank arrow backs. Hold W only."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false
+}

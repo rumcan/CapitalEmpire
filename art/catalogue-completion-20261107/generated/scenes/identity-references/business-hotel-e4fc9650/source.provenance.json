@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:hotel",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-hotel/NE.png",
+  "sourceSha256": "7bba6ef2d932abd6a492a29b3dfb05ae209fcaf39f61033fac50bec9f9c3d9fc",
+  "output": "identity-references/business-hotel-e4fc9650/source.png",
+  "outputSha256": "7bba6ef2d932abd6a492a29b3dfb05ae209fcaf39f61033fac50bec9f9c3d9fc",
+  "width": 491,
+  "height": 606,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      491,
+      606
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-hotel\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "business:hotel",
+    "version": "business-hotel-4views-v1",
+    "files": {
+      "NE": "7bba6ef2d932abd6a492a29b3dfb05ae209fcaf39f61033fac50bec9f9c3d9fc",
+      "SE": "f5072405d6220dd06baf4ab365923b824a617ab43d63dde8737cb231035e8885",
+      "SW": "d207a45cf86c0d52b7d975a6200658adc00eb3c307d2f5bd7bc3bca44a465176",
+      "NW": "3638ab6d2c2e0f719a2cbc01484e924b55c90110808f4758912dbd3bf17fc6c3"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-1-0.webp",
+    "atlasSha256": "aa782da3ea205d00d59b9d94528cd5fc11a02dbc97cd18a4e6336792ea6899ff",
+    "runtimePage": 19,
+    "localPage": 1,
+    "uv": [
+      0.5234375,
+      0.0078125,
+      0.71630859375,
+      0.2578125
+    ],
+    "crop": {
+      "left": 1072,
+      "top": 16,
+      "width": 395,
+      "height": 512
+    },
+    "native": "art/theme-consistency/exports/buildings/business-hotel.native.png",
+    "nativeSha256": "a6d35b031cb2b1bbc5b93bdf4e0b8900eccd7bd150c5abdee61901b65afbaa7d"
+  },
+  "originalBusinessSourceCell": {
+    "id": "hotel",
+    "sourceSheet": "sliced/builtin/business-tourism.png",
+    "sourceCrop": [
+      746,
+      68,
+      497,
+      648
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

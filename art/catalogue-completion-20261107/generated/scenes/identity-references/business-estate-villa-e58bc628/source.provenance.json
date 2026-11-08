@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:estate-villa",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-estate-villa/NE.png",
+  "sourceSha256": "2be38cb179cde97825c68fada101e669198f91cff1b537d39bd363792e04f434",
+  "output": "identity-references/business-estate-villa-e58bc628/source.png",
+  "outputSha256": "2be38cb179cde97825c68fada101e669198f91cff1b537d39bd363792e04f434",
+  "width": 657,
+  "height": 594,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      657,
+      594
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-estate-villa\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review",
+    "integrationStatus": "ready",
+    "integrationReason": "2026-10-25 source review: all4physicalcorners inspected atvisible-boundzoom overmagenta, correctclockwisefacadecycle/fixed2:1camera, coherent MapleBeanmattepalette/detail/upper-rightdusk, no surroundingfloor/haze. Singleassembly preservesunchanged3nativePNGhashes, canonicalreassignments preserveall4nativebytes. Runtime scale stillrequires placementcheck."
+  },
+  "sourceRegistration": {
+    "id": "business:estate-villa",
+    "version": "business-estate-villa-4views-v4",
+    "files": {
+      "NE": "2be38cb179cde97825c68fada101e669198f91cff1b537d39bd363792e04f434",
+      "SE": "83e93bbbb0d4ceaa6d5e6e20984fa2dbf488b63d9be854e937c39e8eccc1bbcd",
+      "SW": "302bdff7285d22a704413d4ea838e867ca54896a937ddd92b8ea35549fa2a5e3",
+      "NW": "ded8a3f017a9517a9e6dbc8d97234f8f653d4f3f02aae6c04ef8420e52c17810"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-1-0.webp",
+    "atlasSha256": "aa782da3ea205d00d59b9d94528cd5fc11a02dbc97cd18a4e6336792ea6899ff",
+    "runtimePage": 19,
+    "localPage": 1,
+    "uv": [
+      0.0078125,
+      0.265625,
+      0.2578125,
+      0.458984375
+    ],
+    "crop": {
+      "left": 16,
+      "top": 544,
+      "width": 512,
+      "height": 396
+    },
+    "native": "art/theme-consistency/exports/buildings/business-estate-villa.native.png",
+    "nativeSha256": "ef2516fefa534f16b6a78546233870c5f3d05959ae60c8cd22124745b7bd48fc"
+  },
+  "originalBusinessSourceCell": {
+    "id": "estate-villa",
+    "sourceSheet": "sliced/builtin/business-tourism.png",
+    "sourceCrop": [
+      643,
+      750,
+      603,
+      464
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

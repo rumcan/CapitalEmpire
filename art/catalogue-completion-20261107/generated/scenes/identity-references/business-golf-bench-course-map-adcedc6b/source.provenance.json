@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-bench-course-map",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/golf-bench-course-map.png",
+  "sourceSha256": "e966bf5a63a4419e1fc6bed8b4d0b36f290d558a4e4a34c5cb0a0b93ae7c4659",
+  "output": "identity-references/business-golf-bench-course-map-adcedc6b/source.png",
+  "outputSha256": "e966bf5a63a4419e1fc6bed8b4d0b36f290d558a4e4a34c5cb0a0b93ae7c4659",
+  "width": 562,
+  "height": 494,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      562,
+      494
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "golf-bench-course-map",
+    "sourceSheet": "sliced/builtin/golf-furniture.png",
+    "sourceCrop": [
+      669,
+      100,
+      554,
+      486
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

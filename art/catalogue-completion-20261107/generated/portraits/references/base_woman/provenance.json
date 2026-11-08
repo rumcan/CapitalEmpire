@@ -1,0 +1,93 @@
+{
+  "look_id": "person:3d:base_woman",
+  "actual_runtime_look": {
+    "id": "person:3d:base_woman",
+    "size": "adult",
+    "w": 80,
+    "h": 128,
+    "ax": 40,
+    "ay": 123,
+    "m": 1.65,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "person:3d:base_woman",
+  "runtime_namespace_differs_from_source_grid": false,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\base_woman\\preview.png",
+    "sha256": "cb84ca591fcc44a1182fff3b3c94069e2f0f36fc259278c508ad236e8d02a5df",
+    "bytes": 1547856
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\base_woman\\sheet.json",
+    "sha256": "fd691b4a7f556b5b7af4d643c8ea48c0571f85f96fedd26a5ba157a138ca4576",
+    "bytes": 653
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 256
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_woman\\identity-idle-pair.native.png",
+    "sha256": "1534eb2dab80e3e198b61e9a3eab40b4f8d836a737f6cff579f793fbaaae7729",
+    "bytes": 41422
+  },
+  "dimensions": [
+    320,
+    256
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        256
+      ],
+      "dimensions": [
+        160,
+        256
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_woman\\idle-S.native.png",
+        "sha256": "262ff7f3785ce43436a1b4eed7c2f529d8d1c6c30b94b01b970643133f544588",
+        "bytes": 22588
+      },
+      "pixel_sha256": "2f63f60a3f1f4c452b3a5b3f37f3adff6e143bf08877f9f22774cddbf964e87f"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        256,
+        160,
+        512
+      ],
+      "dimensions": [
+        160,
+        256
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\base_woman\\idle-SW.native.png",
+        "sha256": "f51c5481a089f64ce5069fa2c14a51c2c4554410f694cda0d5cc00f041db1d16",
+        "bytes": 20062
+      },
+      "pixel_sha256": "46e87ec50254d1cbc173d45e555c62163176c504672170d332067b8f398d1627"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

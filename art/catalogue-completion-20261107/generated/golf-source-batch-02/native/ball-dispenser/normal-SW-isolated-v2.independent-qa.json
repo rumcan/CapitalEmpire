@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:10:53.936532+00:00",
+  "review_result": "PASS-source-candidate-corrected-component-identity-and-pose",
+  "guide_corner": "SW",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.png",
+    "sha256": "c8b2025139ed0235a0a50530453dc40818783cb2b440df742846dc2a2022c7c6",
+    "bytes": 729955
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.provenance.json",
+    "sha256": "a3fea441a14dccb47c2e1f71cb431e7a314d69fd3a00ed3bdcf959cdc8872486",
+    "bytes": 2378
+  },
+  "exact_prompt_utf8_sha256": "d0b50f5ab7581067f14403f1bfe625a7b57730062c88ad69bd411a6e95590f25",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.png",
+      "sha256": "3bf081c4a8a3ce1c0cd439169e403ed76efca35c9f6712f8ec908de1a9ac6c1d",
+      "bytes": 830541
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png",
+      "sha256": "f0fe7d4003cf361348c4391d1057fe7dfccd31dac9cfd15d521f71238bd8503f",
+      "bytes": 283002
+    }
+  ],
+  "zero_alpha_fraction": 0.80494443299782,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "minimum_core_margin_px": 246,
+  "boundary_core_pixels_alpha_gt128": 0,
+  "native_rgba_pixels_sha256": "1b2b252b8226396e55e3515cc6a2f013608e3227b9a5e8c40d973b5d0f05a892",
+  "all_cores_complete": true,
+  "visual_observations": [
+    "Visible rear on LEFT plane is now solid rectangular service door with handle and hinges. Round ball window, coin controls and chute removed from rear.",
+    "Blank side on RIGHT and single front basket peeking behind far RIGHT edge retained, matching SW fixed-world guide. No duplicated rear apparatus."
+  ],
+  "main_component_identity_and_pose_pass": true,
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

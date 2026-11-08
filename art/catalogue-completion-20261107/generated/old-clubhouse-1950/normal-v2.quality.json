@@ -1,0 +1,143 @@
+{
+  "id": "golf:clubhouse-shanty",
+  "variant": "1950s-budget-redesign",
+  "version": 2,
+  "kind": "normal-corners",
+  "raw": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v2.png",
+    "sha256": "9087e51bbc73b445381427a4627b54308aca0089f7b1f8712a487729eae99f74",
+    "bytes": 1672193
+  },
+  "source_mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "alpha_extrema": [
+    0,
+    255
+  ],
+  "true_zero_alpha_fraction": 0.6289029809553607,
+  "alpha_le24_fraction": 0.6405168532466442,
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "cells": [
+    {
+      "view": "SE",
+      "cell_box": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "subject_bbox_alpha_gt24": [
+        48,
+        146,
+        593,
+        502
+      ],
+      "margins_px_alpha_gt24": [
+        48,
+        146,
+        34,
+        125
+      ],
+      "true_zero_alpha_fraction": 0.6234950868544422,
+      "alpha_le24_fraction": 0.6345067395180717
+    },
+    {
+      "view": "SW",
+      "cell_box": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "subject_bbox_alpha_gt24": [
+        31,
+        156,
+        585,
+        505
+      ],
+      "margins_px_alpha_gt24": [
+        31,
+        156,
+        42,
+        122
+      ],
+      "true_zero_alpha_fraction": 0.6386656797132748,
+      "alpha_le24_fraction": 0.6501784401557759
+    },
+    {
+      "view": "NW",
+      "cell_box": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "subject_bbox_alpha_gt24": [
+        48,
+        123,
+        590,
+        481
+      ],
+      "margins_px_alpha_gt24": [
+        48,
+        123,
+        37,
+        146
+      ],
+      "true_zero_alpha_fraction": 0.6341633407863576,
+      "alpha_le24_fraction": 0.6448494005784361
+    },
+    {
+      "view": "NE",
+      "cell_box": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "subject_bbox_alpha_gt24": [
+        35,
+        97,
+        579,
+        480
+      ],
+      "margins_px_alpha_gt24": [
+        35,
+        97,
+        48,
+        147
+      ],
+      "true_zero_alpha_fraction": 0.6192878164673682,
+      "alpha_le24_fraction": 0.6325328327342933
+    }
+  ],
+  "distinct_cell_hashes": 4,
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "native_pixels_unchanged": true,
+  "pixel_reconstruction_performed": false,
+  "exact_prompt": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v2.prompt.txt",
+    "sha256": "2a77815f9f4787e2f33322474014521ed4c12d486b4de5310b0ab92fe4581b9f",
+    "bytes": 1339
+  },
+  "status": "candidate-needs-owner-and-registration-review",
+  "validation_errors": [],
+  "findings": [
+    "Four enclosed cream/green manufactured 1950s cabin views with matching corrugated roof, door, hatch and chimney identity.",
+    "Native transparency is assessed from alpha, not a rendered backdrop; tiny low-alpha RGB fringes must not be mistaken for opaque content.",
+    "No owner approval, runtime import, perspective guarantee or large-scene completion is implied."
+  ]
+}

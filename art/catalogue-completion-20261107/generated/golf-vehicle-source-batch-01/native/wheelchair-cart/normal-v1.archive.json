@@ -1,0 +1,24 @@
+[
+  {
+    "key": "newprop:wheelchair-cart",
+    "slug": "wheelchair-cart",
+    "family": "normal",
+    "condition": "ordinary-budget-redesign",
+    "version": 1,
+    "target": "generated/golf-vehicle-source-batch-01/native/wheelchair-cart/normal-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\normal-world-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\wheelchair-cart.source.png"
+    ],
+    "prompt": "Create a native2x2 sheet of FOUR actual corner views of ONE specialist golf vehicle or mobile vending prop. REFERENCE1 is fixed-world assembly/camera/occlusion authority. REFERENCE2 is subject identity and detailed painterly miniature MATERIALS/BODY DETAIL only; never repeat its one camera. Preserve recognizable vehicle shape, wheels, restrained cream-green finishes and fine metal/glass/canvas texture, not flatlowpolyguide surfaces. Function: Actual four-wheel accessible transport cart with driver seat/control at front, a clear wheelchair bay at middle/rear, folding SIDE access ramp, handrails and one small rear passenger bench under a full canopy. Ramp stays on the SAME physical side and deployed at fixed angle in every source view. Empty wheelchair space; no person.. Fixedphysicalrules: Ramp ALWAYS deployed on physicalLEFT-X, same angle; one front driver seat, empty central wheelchair bay, one rear bench. Four wheels, intact simple canopy. No wheelchair user; technical dimensions are not accessibility certification.. Replace source rope-lashed posts, blue patched tarp, scrap wood and corrugated bonnet with an ordinary sound older metal transport-cart chassis, simple canopy and practical side ramp. Preserve access role, not fantasy construction. Geometry/clearances remain design proposals, not accessibility certification.. REDESIGN cheap construction as ordinary sound old steel/timberbody with bolted hardware/intactplaincanopy; no ropebindings, scrapwoodshack, blueplasticpatchtarp, corrugatedhood, logposts or fantasyvillage ornaments. Worn, faded and lightlyrusted workingequipment is fine. Fourdistinct45degreecorner poses in exact SE SW / NW NE cellsasguide, orthographic30degreesDOWN; equalphysicalscale. Rearmustshowtrueback, no inventedfrontheadlights/steering onrear. Allroofequipment/seatrows/ramps/cargo/stretcher stayonfixedworldside; nooperatingstatechanges. Satellitebowlbackconvexwhenviewedfromrear, neverrepanaimingtofaceviewer. Late-afternoon DAYTIME sunlightfixedSCREENUPPERRIGHT/shadowsLOWERLEFT, allheadlamps/beaconsOFF. CompleteisolatedopaqueobjectswithgenerousZEROALPHAtransparentmargins/gutters, smallcontactshadowonly; no broadgreyhalo/scenery/groundtile/road/people/plants/labels/UI/grid. Intrinsicmedicalcross/accesssymbolallowed, no extrabrands/text.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-9d49d8e3-be5c-4aa0-833b-27961e3f6e80.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\normal-world-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\wheelchair-cart.source.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "33c5fb7c37e5249e74690d98040cffaa39bedd8c2b919eea8727c314a16e5c8c",
+    "native_bytes_preserved": true
+  }
+]

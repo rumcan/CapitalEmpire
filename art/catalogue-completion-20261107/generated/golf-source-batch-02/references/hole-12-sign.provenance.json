@@ -1,0 +1,44 @@
+{
+  "id": "newprop:hole-12-sign",
+  "name": "Hole 12 sign",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\hole-12-sign.source.png",
+  "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+  "originalSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+  "referenceSHA256": "1b694824de74d4a7ce7c55266cd5dc579934a337c8bfbeecd89f467ce2bd1de7",
+  "sourceRectXYWH": [
+    749,
+    20,
+    476,
+    627
+  ],
+  "sourceCell": "top right",
+  "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+  "sourceCropSize": [
+    476,
+    627
+  ],
+  "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+  "sourceMetadataCutOff": false,
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 0.6,
+      "hy": 0.6,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "runtimeDisplayPixels": [
+    76.8,
+    101.16
+  ],
+  "manifestHalfExtentsMetresFirstGuess": [
+    0.6,
+    0.6
+  ],
+  "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+  "visualInspection": "inspected",
+  "visualNotes": "Confirmed tee hole-map sign with12and five dots; unrelated detached neighbouring gold finial below crop must be ignored.",
+  "sourceOnlyNotReleaseProof": true
+}

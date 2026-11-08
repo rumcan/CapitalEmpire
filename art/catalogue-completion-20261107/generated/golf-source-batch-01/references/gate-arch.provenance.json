@@ -1,0 +1,27 @@
+{
+  "id": "newprop:gate-arch",
+  "name": "Gate arch",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\gate-arch.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+  "sourceSheetSHA256": "2d7f99feed2b2b468b46a9c6712e127aaad27425e37c8a73f84e5c9d126779c0",
+  "referenceSHA256": "5ecacae9412c4cfbac98ef29a056b607b4e399e071bcbc315991adaab9087ed9",
+  "sourcePixelRectXYWH": [
+    888,
+    35,
+    608,
+    504
+  ],
+  "originalCellLabel": "top right",
+  "referenceSize": [
+    608,
+    504
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Rope-lashed log arch with crossed-club board, scrap-corrugated side fences, baked brown background and grass base. Reject as architecture/style; only conceptual pedestrian entrance reference for ordinary1950sreplacement.",
+  "sourceOnlyNotReleaseProof": true
+}

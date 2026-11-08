@@ -1,0 +1,93 @@
+{
+  "look_id": "person:3d:town_w_nurse",
+  "actual_runtime_look": {
+    "id": "person:3d:town_w_nurse",
+    "size": "adult",
+    "w": 80,
+    "h": 128,
+    "ax": 40,
+    "ay": 123,
+    "m": 1.65,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "person:3d:town_w_nurse",
+  "runtime_namespace_differs_from_source_grid": false,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_w_nurse\\preview.png",
+    "sha256": "3df7cb261aa0d2e3ec8fe0f1751153912703ea49aae9d5e533e4a858881d0d81",
+    "bytes": 1378586
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_w_nurse\\sheet.json",
+    "sha256": "d7bce7814edd1b54121fad13a8f4ad8fdbe37d2af5e0a9f083e52946e7c7d6bc",
+    "bytes": 659
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 256
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_nurse\\identity-idle-pair.native.png",
+    "sha256": "a9023482c70d0113b886aaeb217ca3b40a418d11bb5976e807a66a056834807b",
+    "bytes": 35045
+  },
+  "dimensions": [
+    320,
+    256
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        256
+      ],
+      "dimensions": [
+        160,
+        256
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_nurse\\idle-S.native.png",
+        "sha256": "7efd724343e1e744595025b7d5897d6869e8c6f2bbef7bbe890b416320c41830",
+        "bytes": 18399
+      },
+      "pixel_sha256": "b6276250ebda35869626543a27bb04976e86ca3c78dce98b8288c04e6554e35e"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        256,
+        160,
+        512
+      ],
+      "dimensions": [
+        160,
+        256
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_nurse\\idle-SW.native.png",
+        "sha256": "01d1a2865c5ff8d8cf0da45c86138a8ae2610020abc27dcf0966c3b4f42acf15",
+        "bytes": 17820
+      },
+      "pixel_sha256": "d6c68180f07909d7008ca6ee5f2354b53ef371c8927a861932f4d4b21f717a8a"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

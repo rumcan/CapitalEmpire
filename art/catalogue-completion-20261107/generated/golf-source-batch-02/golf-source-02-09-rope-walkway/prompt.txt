@@ -1,0 +1,4 @@
+Actual source is a pedestrian access assembly: four green posts, two short open swing-gate leaves with diagonal rails/rope, and one rectangular perforated metal threshold/ramp with yellow edge strips. Preserve gate/ramp geometry; do not generate a long generic rope corridor. Gate leaves remain fixed open at the same angles.
+Identity-preserving access equipment. Practical green/cream hardware and intact ramp; no decorative ground slab beyond the functional ramp.
+Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.
+Keep one fixed physical object and all its feature positions across all eight source-camera views.

@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:fishing-boathouse",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-fishing-boathouse/NE.png",
+  "sourceSha256": "e2c1875a18f53205ddf8c99e7b7a6d906b29934b04ac3660d4f6f0bbb102dd1c",
+  "output": "identity-references/business-fishing-boathouse-646c429f/source.png",
+  "outputSha256": "e2c1875a18f53205ddf8c99e7b7a6d906b29934b04ac3660d4f6f0bbb102dd1c",
+  "width": 590,
+  "height": 506,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      590,
+      506
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-fishing-boathouse\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "business:fishing-boathouse",
+    "version": "business-fishing-boathouse-4views-v1",
+    "files": {
+      "NE": "e2c1875a18f53205ddf8c99e7b7a6d906b29934b04ac3660d4f6f0bbb102dd1c",
+      "SE": "00e1e2d25a50172f968241faee2e0d03fb7ced511f6ebd7be013420305463591",
+      "SW": "a368e348b79ac6f856b1d201493a5b65b717eca34b94c6ef2fd16f0cb4036ad3",
+      "NW": "d1a484a88a374a6a9ce58b8e5cedd48fda1a47fb99cf5d04a66cf3e43dafe94a"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-1-0.webp",
+    "atlasSha256": "aa782da3ea205d00d59b9d94528cd5fc11a02dbc97cd18a4e6336792ea6899ff",
+    "runtimePage": 19,
+    "localPage": 1,
+    "uv": [
+      0.265625,
+      0.5009765625,
+      0.515625,
+      0.7021484375
+    ],
+    "crop": {
+      "left": 544,
+      "top": 1026,
+      "width": 512,
+      "height": 412
+    },
+    "native": "art/theme-consistency/exports/buildings/business-fishing-boathouse.native.png",
+    "nativeSha256": "0ef3f00d8b5d77a4ad14046507de75dd779c80a3044d78bbf7eb87ab0d9e5873"
+  },
+  "originalBusinessSourceCell": {
+    "id": "fishing-boathouse",
+    "sourceSheet": "sliced/builtin/fishing-buildings.png",
+    "sourceCrop": [
+      642,
+      711,
+      594,
+      476
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

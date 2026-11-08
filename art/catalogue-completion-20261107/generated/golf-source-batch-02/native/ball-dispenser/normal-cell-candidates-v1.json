@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:57:01.992280+00:00",
+  "subject": "newprop:ball-dispenser",
+  "cell_layout": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "candidates": [
+    {
+      "guide_corner": "SE",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+        "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+        "bytes": 1167889
+      },
+      "cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "16d068d494ee559bc4a8964067380a74a77b09f07d06471e75d63444bc834355",
+      "status": "limited-source-identity-pose-pass"
+    },
+    {
+      "guide_corner": "SW",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.png",
+        "sha256": "3bf081c4a8a3ce1c0cd439169e403ed76efca35c9f6712f8ec908de1a9ac6c1d",
+        "bytes": 830541
+      },
+      "cell": "single",
+      "rectangle_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "native_rgba_rectangle_sha256": "f198e6e0adc722f6c250b140c9458428a046f8e7c143c6c1d11e61c198894814",
+      "status": "held-rear-apparatus-invention"
+    },
+    {
+      "guide_corner": "NW",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+        "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+        "bytes": 1167889
+      },
+      "cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "9fde9692b75cb9d989325e505f9d94e8f04879683c8b2faa0aac8b0be3fa0252",
+      "status": "limited-source-identity-pose-pass"
+    },
+    {
+      "guide_corner": "NE",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+        "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+        "bytes": 1167889
+      },
+      "cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "44f578b772259cc060d12fa8a65163d790d5400486c6983a4e6e349b9c2b91c9",
+      "status": "limited-source-identity-pose-pass"
+    }
+  ],
+  "all_four_matching_assembly_pass": false,
+  "composed_sheet_created": false,
+  "composition_hold": "New native singles are 1254x1254 while original cells are627x627; unchanged-pixel composition would suggest inconsistent physical scale. Further identity holds also remain. Do not resize native finals to conceal this.",
+  "future_yaw_references": "Use fixed-world yaw guide first, unchanged normal-v2 native sheet for material style only; do not copy repeated cameras. Correct held components before claiming complete matching four-view reference.",
+  "owner_approved": false,
+  "runtime_ready": false
+}

@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "PASS-eight-directions-and-separated-side-features;HOLD-heavy-background-alpha-and-camera",
+  "source": {
+    "path": "generated/vehicles/town-school-shuttle-bus/traffic8-v2.png",
+    "sha256": "bbb25651d1225cd3aa89ac829febc75a550120c679ddb4943be5bea9c6fdf032",
+    "bytes": 2778387
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "is_opaque_scene": false,
+  "zero_alpha_fraction": 0.0,
+  "outer_border_alpha_p50p95max": [
+    95.0,
+    110.0,
+    123.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    101.0,
+    116.0,
+    125.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "rgba_rectangle_sha256": "31f0658a0eeca5c7c51efd0614fa363a1ccf2755fb47d61f09efeb301b1e4d6e",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 42,
+      "actual_screen_nose": "lower-left"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "rgba_rectangle_sha256": "68f99a291bb34dc8de423cdd3957cb327988dd1fcb397c7ce2a85ab9e346d6f2",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 41,
+      "actual_screen_nose": "down"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "rgba_rectangle_sha256": "0cf9e3709dd413be5db07dee6238c0a832391a9be906b293c3eb63e38264e73a",
+      "core_boundary_pixels": 130,
+      "minimum_core_margin_px": 0,
+      "actual_screen_nose": "lower-right"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "rgba_rectangle_sha256": "bb11adbd83c692512a998aa5474aa88b9a8c09f3b57bc31e91546e3e3a248012",
+      "core_boundary_pixels": 135,
+      "minimum_core_margin_px": 0,
+      "actual_screen_nose": "right"
+    },
+    {
+      "cell": 4,
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "rgba_rectangle_sha256": "b490d6cd7a0aee9cdf6ec5b8027550e114a69c88d43c2a91a8e70e37232e6700",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 24,
+      "actual_screen_nose": "upper-right"
+    },
+    {
+      "cell": 5,
+      "reference_rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "rgba_rectangle_sha256": "6f4a85c7911929b2082042bb1c5a42694e8b3391c94cc3e0935342d9c4d4e5c4",
+      "core_boundary_pixels": 28,
+      "minimum_core_margin_px": 0,
+      "actual_screen_nose": "up"
+    },
+    {
+      "cell": 6,
+      "reference_rect_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "rgba_rectangle_sha256": "ad3b3a22bc12a1173cfe3c7534f0784428f05c1e494e7ce78bfe730b82207807",
+      "core_boundary_pixels": 119,
+      "minimum_core_margin_px": 0,
+      "actual_screen_nose": "upper-left"
+    },
+    {
+      "cell": 7,
+      "reference_rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "rgba_rectangle_sha256": "4537d63440ee896654fd082626160d4d86c1dbc2f86bba0a726acad59cdd14bb",
+      "core_boundary_pixels": 84,
+      "minimum_core_margin_px": 0,
+      "actual_screen_nose": "left"
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ],
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ]
+  ],
+  "notes": [
+    "All eight distinct nose directions now exist; TL genuinely lowerLEFT rather than repeating lowerRIGHT.",
+    "Entry doors and stop-arm now confined to different physical sides, preserving other source styling.",
+    "HOLD alpha: every pixel has nonzeroalpha; known empty border/gap alpha≈95–125. White wash is real, not hiddenRGB. Root planned nativev3; no key/reconstruction.",
+    "Uniform30degree camera still held."
+  ],
+  "source_crops_performed": false,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/vehicles/town-school-shuttle-bus/traffic8-v2.prompt.txt",
+    "sha256": "5a9df4fe2579689a0606bb7bf80ff8683cea6e563450762dbd8cddc361f840d1",
+    "bytes": 1120
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-school-shuttle-bus/traffic8-v2.provenance.json",
+    "sha256": "01f934122893f4c69f8a1a53054f6d1c5c551ffa1c9ec1ad9fade6f89f04ffb7",
+    "bytes": 1789
+  }
+}

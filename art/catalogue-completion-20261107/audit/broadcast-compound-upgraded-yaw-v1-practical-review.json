@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "asOfUTC": "2026-11-07T15:00:02.711827+00:00",
+  "subject": "golf:event-broadcast-compound",
+  "condition": "upgraded",
+  "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-v1.png",
+  "sourceSHA256": "20e8c4f0459c7e711a2eee0a0d0bf9fa9f57ce65852b1f884c0684111c2bb21d",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "sourceMode": "RGBA",
+  "review": "HOLD-all-four-corner-family-cameras-plus-stair-side-regression",
+  "sourceOnly": true,
+  "nativeCameraCertified": false,
+  "nativeScaleAndAnchorsApproved": false,
+  "runtimeReady": false,
+  "runtimeIntegrated": false,
+  "cells": [
+    {
+      "view": "yaw8N",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "rgbaSHA256": "e8d8d89553716a04564f35fbbaf284eb442fb54f4e49345b29d17a54afa50395",
+      "coreBBoxAlphaGT128": [
+        64,
+        96,
+        607,
+        550
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "visuallyInspected": true,
+      "dishSurface": "broad concave front/feed",
+      "guideVisibleWorldFaces": [
+        "front -Y",
+        "right +X"
+      ],
+      "stairDisposition": "remove extra near-side -X stair; legitimate small far-side +X sliver only if actually exposed"
+    },
+    {
+      "view": "yaw8E",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "rgbaSHA256": "5bf9d1edb66b1c1dde5fc69b8e8ac89a000e74891a32b577b007b93c2286ce3d",
+      "coreBBoxAlphaGT128": [
+        43,
+        128,
+        587,
+        491
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "visuallyInspected": true,
+      "dishSurface": "oblique concave front/feed",
+      "guideVisibleWorldFaces": [
+        "left -X",
+        "front -Y"
+      ],
+      "stairDisposition": "extra opposite-side stair must be removed"
+    },
+    {
+      "view": "yaw8S",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "rgbaSHA256": "f68877a804851dbf82868a842a6e601028fa6ec35c83eb488ac9cf111fd06fa1",
+      "coreBBoxAlphaGT128": [
+        34,
+        65,
+        530,
+        532
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "visuallyInspected": true,
+      "dishSurface": "convex ribbed back",
+      "guideVisibleWorldFaces": [
+        "rear +Y",
+        "left -X"
+      ],
+      "stairDisposition": "extra opposite-side stair must be removed"
+    },
+    {
+      "view": "yaw8W",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "rgbaSHA256": "c207b098804e825927ce49e695370818abadbbbc46431f2472c41a4229d3a61f",
+      "coreBBoxAlphaGT128": [
+        31,
+        76,
+        598,
+        529
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "visuallyInspected": true,
+      "dishSurface": "broad concave front/feed",
+      "guideVisibleWorldFaces": [
+        "right +X",
+        "rear +Y"
+      ],
+      "stairDisposition": "retain legitimate +X stair"
+    }
+  ],
+  "observations": [
+    "Dish front N/E/W and convex back S are distinct and coherent; true curved dish retained.",
+    "Two tidy cream/green period square-cab vehicles and large-truck two-HVAC identity remain.",
+    "Truck stairs are visible in every native cell. The guide has ONE physical +X stair: E/S must hide it, N may show only the correct small right-side exposure, W shows it.",
+    "Native poses are broad oblique approximations, not certified nominal 8-degree cameras. Fixed-side stair regression is separate from that numerical camera hold.",
+    "Lead review confirms all four poses repeat the corner-camera family rather than the required front/long-side/rear/opposite-long-side cardinal main faces. N/S retain broad sidewalls; W includes a broad cab/front quarter instead of its guide rear sliver. Four fresh isolated guide-authority poses are required; stair-only edits are insufficient."
+  ],
+  "proposedTargetedRepair": "Generate four isolated native views from the corresponding camera guide FIRST and one accepted upgraded normal-v2 identity crop SECOND. Correct main faces/compound layout and stair visibility together. All four existing yaw cells remain held.",
+  "nativeSourcePixelsChanged": false,
+  "newNativeGenerationPerformed": false,
+  "runtimeModified": false,
+  "allFourYawSlotsHeld": true,
+  "isolatedCameraRepairQueue": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/job-queue.json"
+}

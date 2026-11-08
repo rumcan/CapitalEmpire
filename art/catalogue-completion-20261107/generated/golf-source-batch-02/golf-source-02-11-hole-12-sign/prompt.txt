@@ -1,0 +1,4 @@
+One two-upright green tee-information board with arched top marked12, a single hole map and five small coloured yardage dots/rows on its front. Rear shows backing and braces. Preserve board architecture and fixed12identity, but tiny yardage numerals may stay blank for data. Remove baked grass/soil apron and ignore detached bottom neighbour fragment.
+Identity-preserving physical tee board; restrained green/cream frame, ordinary supports. Not the separate event hole scoreboard from batch01.
+Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.
+Keep one fixed physical object and all its feature positions across all eight source-camera views.

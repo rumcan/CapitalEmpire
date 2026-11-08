@@ -1,0 +1,4 @@
+Cream compact medical golf cart with four wheels, front two-person cream bench/steering wheel, short cab canopy with green beacon and one fixed orange stretcher strapped lengthwise on rear medical platform. Keep stretcher at rear, cab at front, cross markings on fixed hood/side panels. No patient, driver or extra benches.
+Identity-preserving medical utility. Source is an actual stretcher cart, distinct from generated basic player cart. Later-style body can be preserved as a later-era model; do not assign an unverified release year.
+All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.
+Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos.

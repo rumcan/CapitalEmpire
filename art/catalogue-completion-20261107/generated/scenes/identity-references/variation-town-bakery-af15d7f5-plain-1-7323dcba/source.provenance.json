@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:town-bakery-af15d7f5-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-bakery-af15d7f5-plain-1/NE.png",
+  "sourceSha256": "29b411b0e050769e6ece08db9d7cf8e015e966076ae66430e632bf42b135ff48",
+  "output": "identity-references/variation-town-bakery-af15d7f5-plain-1-7323dcba/source.png",
+  "outputSha256": "29b411b0e050769e6ece08db9d7cf8e015e966076ae66430e632bf42b135ff48",
+  "width": 535,
+  "height": 472,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      535,
+      472
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-town-bakery-af15d7f5-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Parent explicitly approved proven physical-identity reuse from clean selected existing base; no generation/pixel changes."
+  },
+  "sourceRegistration": {
+    "id": "variation:town-bakery-af15d7f5-plain:1",
+    "version": "variation-town-bakery-af15d7f5-plain-1-4views-v1",
+    "files": {
+      "NE": "29b411b0e050769e6ece08db9d7cf8e015e966076ae66430e632bf42b135ff48",
+      "SE": "070344cd20832110b8536aaa4682d6aa46066071c7e4bb5e7984accfc58013f2",
+      "SW": "d0a73d6fb0a1931af4fc168af50a7652efadc0067f4e1c9cbfd6f16776a9ad64",
+      "NW": "273e69694cbbe4a0d10fbde9853e35d6e6110a4033c1323f05ccb809f3780180"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-12-0.webp",
+    "atlasSha256": "31dde0992d4d538ce56a04bf6d0c60db791aca99c04fad6259f266ba9c973a58",
+    "runtimePage": 12,
+    "localPage": 12,
+    "uv": [
+      0.007813,
+      0.148438,
+      0.124023,
+      0.265137
+    ],
+    "crop": {
+      "left": 16,
+      "top": 304,
+      "width": 238,
+      "height": 239
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-town-bakery-af15d7f5-plain-1.native.png",
+    "nativeSha256": "8f895a44506fdaae13f62b1f261bb7eb4c86b3f7f7296f5cf309fe0fb2821c5d"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

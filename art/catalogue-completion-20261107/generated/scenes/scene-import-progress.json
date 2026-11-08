@@ -1,0 +1,61 @@
+{
+  "updated_utc": "2026-11-07T07:35:27.154566+00:00",
+  "manifest": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\scenes\\manifest.json",
+    "sha256": "a81fe6201e65457743ca66734e453341cfa38f59af88d223408b109f4cc30147",
+    "bytes": 8778
+  },
+  "total_runtime_scene_files": 21,
+  "exact_subject_scene_files": 4,
+  "exact_subjects": [
+    "business:golf-cart-garage",
+    "business:golf-clubhouse",
+    "business:golf-halfway-pavilion",
+    "business:golf-pro-shop"
+  ],
+  "legacy_unscoped_scene_files": 17,
+  "records": [
+    {
+      "slug": "property-business-golf-clubhouse-outside",
+      "subject": "business:golf-clubhouse",
+      "state": "upgraded",
+      "view": "outside",
+      "file": "scene-business-golf-clubhouse-343e3275-outside-upgraded-v1.png",
+      "w": 836,
+      "h": 470,
+      "bytes": 832525
+    },
+    {
+      "slug": "property-business-golf-pro-shop-outside",
+      "subject": "business:golf-pro-shop",
+      "state": "upgraded",
+      "view": "outside",
+      "file": "scene-business-golf-pro-shop-16c46388-outside-upgraded-v1.png",
+      "w": 836,
+      "h": 470,
+      "bytes": 838310
+    },
+    {
+      "slug": "property-business-golf-cart-garage-outside",
+      "subject": "business:golf-cart-garage",
+      "state": "upgraded",
+      "view": "outside",
+      "file": "scene-business-golf-cart-garage-1a3cdb4c-outside-upgraded-v1.png",
+      "w": 836,
+      "h": 471,
+      "bytes": 801569
+    },
+    {
+      "slug": "property-business-golf-halfway-pavilion-outside",
+      "subject": "business:golf-halfway-pavilion",
+      "state": "upgraded",
+      "view": "outside",
+      "file": "scene-business-golf-halfway-pavilion-d89d56ad-outside-upgraded-v1.png",
+      "w": 836,
+      "h": 471,
+      "bytes": 818819
+    }
+  ],
+  "overall_catalogue_complete": false,
+  "owner_approval_inferred": false
+}

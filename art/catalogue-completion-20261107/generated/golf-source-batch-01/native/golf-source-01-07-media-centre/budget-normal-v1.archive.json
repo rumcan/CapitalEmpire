@@ -1,0 +1,42 @@
+[
+  {
+    "key": "golf-source-01-07-media-centre",
+    "condition": "budget",
+    "runtimeTarget": {
+      "eventTypeId": "media",
+      "eventName": "Media centre",
+      "currentSpriteSubjectId": "business:golf-clubhouse",
+      "newArtSubjectProposal": "golf:event-media-centre",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 12,
+        "depth": 8
+      },
+      "footprintMetres": {
+        "width": 24,
+        "depth": 16
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+      "currentSpriteBaseBoxesInTiles": [
+        {
+          "hx": 1,
+          "hy": 1,
+          "dx": 0,
+          "dy": 0
+        }
+      ]
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-d83b2194-09e9-450a-a1c2-a9852de9e92c.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.png",
+    "prompt": "Generate a high-detail2x2 sheet of ONE SAME golf-event item in FOUR genuinely different orthographic45degree CORNER views, camera30degrees down. Reference1 is painted miniature materials/brushwork ONLY, do not copy its building. This is a new role-specific design; follow the functional brief. Functional identity: A24x16m low single-storey modular press centre: plain joined prefab units under one shallow gabled/corrugated roof, double central front entrance, three window groups on each side of the entrance, rear service door, two rear vents and two small roof antenna masts. Practical press-work building, not grand clubhouse or tiny microphone shack. No media staff/vehicles baked in. Condition: Older1950scommunity-event prefab: faded cream boards, patched corrugated roof and basic windows; structurally ordinary and believable. Source shack is function-only reference; reject its laptop/log/tarp architecture. It is1985; budget means ordinary old1950smanufactured equipment stillusednow, no fantasyarchitecture/rope-lashedlogs/patchworkblueplastic/ornatebrassfinials. Four camera cells: TOP LEFT FRONT+LEFT sides, TOP RIGHT REAR+LEFT sides, BOTTOM LEFT REAR+RIGHT sides, BOTTOM RIGHT FRONT+RIGHT sides, corresponding SE SW / NW NE. Reconstruct real REAR faces, don't pastefront servicehatches/screens/lenses onto theback. Keep ALL doors/windows/vents/equipment/ladder/stair/camera/servingcounter positions fixed in localphysicalspace across the four turns. Structuralbodies andfunctionalattachments are same in every view. Finely hand-painted miniature game style consistent with source authority, realistic materials and readable silhouettes. LATE-AFTERNOON DAYTIME sunfixedSCREEN UPPER RIGHT, shadowsLOWER LEFT; all electriclamps/screensoff. Nopeople, plants, groundplate/roads/terrain, UI/captions/grid/text orhaze. Equipment's owndeck/mat is allowed onlyifpartofbrief. Fullyopaqueobjects on genuinelyzeroalpha transparentbackground includingallgutters; netting/railopeningsremaintransparent. Four complete separate sprites, equal physicalscale, centredwithgenerouscellmargins.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png"
+    ],
+    "status": "native normal4 candidate; yaw4 and independent identity/alpha/geometry review pending",
+    "runtime_imported": false,
+    "sha256": "81b8f49b4323c45a0fd7d73a5c2368f6045e2ce78c301623b9e5db5b36f560fa",
+    "native_bytes_preserved": true
+  }
+]

@@ -1,0 +1,1480 @@
+{
+  "schema": 2,
+  "as_of_utc": "2026-11-07T15:38:41.687218+00:00",
+  "scope": "Current F isolated source-art generation checkpoint; exhaustive baseline catalogue retained separately. Read-only runtime manifests as coverage evidence.",
+  "overall_request_complete": false,
+  "owner_current_priority": "Continue source image generation across original full catalogue; completed UIpack is one deliverable, not whole request. No further implementation.",
+  "baseline_audit": {
+    "source": "audit/catalogue-audit.json",
+    "counts": {
+      "eligible_runtime_subjects": 1208,
+      "eligible_buildings": 203,
+      "eligible_props": 1005,
+      "golf_priority_subjects": 206,
+      "candidate_four_corners": 185,
+      "candidate_four_yawed8_cardinals": 160,
+      "candidate_full_eight": 160,
+      "runtime_eight_player_selectable": 0,
+      "golf_missing_any_eight_views": 199,
+      "explicit_alias_records": 810,
+      "excluded_runtime_subjects": 506,
+      "supplemental_source_or_design_records": 137,
+      "excluded_source_only_records": 2,
+      "runtime_registered_corners_and_yawed8_cardinals": 32
+    },
+    "rescan_performed": false,
+    "not_current_native_geometry_approval": true
+  },
+  "current_saved_native_map_sources": {
+    "raw_sheet_count": 150,
+    "raw_file_versions_including_single_repairs": 167,
+    "unique_native_original_hashes": 167,
+    "families_with_any_native_sheets": 45,
+    "families_with_normal_and_yaw8_sources": 45,
+    "families": [
+      {
+        "family": "1990s-buff-brick-bay-bungalow",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png",
+          "yaw8-v2.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "modern-era"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "1990s-redbrick-family-single-garage",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "2000s-cream-stucco-two-storey-garage",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "2000s-redbrick-single-storey-duplex",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "modern-era"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "2010s-brick-white-clad-townhouse-pair",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [
+          "yaw8-W-v2.png"
+        ],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "2010s-small-six-flat-walkup",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "modern-era"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "2020s-compact-gabled-solar-family-home",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "modern-era"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "2020s-white-charcoal-asymmetric-solar-home",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "ball-bucket-stand",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "base"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "ball-dispenser",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [
+          "normal-SW-isolated-v1.png",
+          "normal-SW-isolated-v2.png"
+        ],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "base"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "ball-washer",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "base"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "budget-1950-shanty-hut",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png",
+          "yaw8-v2.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "budget-1950-shanty-shed",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png",
+          "yaw8-v2.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "budget-1950-shanty-ticket-hut",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "budget-1950-shanty-toilet",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "compact-bleacher-60-budget",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "compact-bleacher-60-upgraded",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png",
+          "yaw8-v2.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "course-map-board",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "direction-signpost",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png",
+          "yaw8-v2.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "gold-tee-markers",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-01-food-truck",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "budget-normal-v2.png",
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-02-tv-camera-tower",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "budget-normal-v2.png",
+          "upgraded-normal-v1.png",
+          "upgraded-normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "upgraded-yaw8-v1.png",
+          "upgraded-yaw8-v2.png"
+        ],
+        "single_direction_repairs": [
+          "upgraded-normal-SW-v1.png",
+          "upgraded-normal-SW-v2.png"
+        ],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-03-broadcast-compound",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "budget-normal-v2.png",
+          "budget-normal-v3.png",
+          "budget-normal-v4.png",
+          "upgraded-normal-v1.png",
+          "upgraded-normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "budget-yaw8-v2.png",
+          "budget-yaw8-v3.png",
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [
+          "upgraded-yaw8-E-v2.png",
+          "upgraded-yaw8-N-v2.png",
+          "upgraded-yaw8-N-v3.png",
+          "upgraded-yaw8-N-v4.png",
+          "upgraded-yaw8-S-v2.png",
+          "upgraded-yaw8-W-v2.png",
+          "upgraded-yaw8-W-v3.png",
+          "upgraded-yaw8-W-v4.png"
+        ],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-04-first-aid-tent",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-05-info-will-call-booth",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-06-four-lane-entrance",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "budget-normal-v2.png",
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-07-media-centre",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-08-hole-scoreboard",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "budget-yaw8-v2.png",
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-09-main-leaderboard",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "budget-normal-v2.png",
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-10-concession-kiosk",
+        "normal_versions": [
+          "budget-normal-v1.png",
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "budget-yaw8-v1.png",
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "budget",
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-11-practice-net",
+        "normal_versions": [
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "golf-source-01-12-bag-trolley",
+        "normal_versions": [
+          "upgraded-normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "upgraded-yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "upgraded"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "hole-12-sign",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "base"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "old-clubhouse-1950",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png",
+          "normal-v3.png",
+          "normal-v4.png",
+          "normal-v5.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png",
+          "yaw8-v2.png",
+          "yaw8-v3.png",
+          "yaw8-v4.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "park-bench",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png",
+          "yaw8-v2.png"
+        ],
+        "single_direction_repairs": [
+          "normal-SE-isolated-v1.png",
+          "normal-SE-isolated-v2.png",
+          "normal-SW-isolated-v1.png",
+          "normal-SW-isolated-v2.png"
+        ],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "base"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "rope-barrier",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "rope-barrier-corner",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "base"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "rope-walkway",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "base"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "seated-pavilion-120-budget",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "seated-pavilion-120-upgraded",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "seated-pavilion-24-budget",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png",
+          "normal-v3.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png",
+          "yaw8-v2.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "seated-pavilion-24-upgraded",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "seated-pavilion-60-budget",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "seated-pavilion-60-upgraded",
+        "normal_versions": [
+          "normal-v1.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "source-default"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      },
+      {
+        "family": "water-tank-stall",
+        "normal_versions": [
+          "normal-v1.png",
+          "normal-v2.png"
+        ],
+        "yaw8_versions": [
+          "yaw8-v1.png"
+        ],
+        "single_direction_repairs": [],
+        "normal_and_yaw8_source_presence": true,
+        "conditionsWithSomeNormalAndYaw8": [
+          "base"
+        ],
+        "source_presence_only": true,
+        "geometry_approval_inferred": false
+      }
+    ],
+    "not_accepted_eight_view_sets": true
+  },
+  "current_portraits": {
+    "manifest_records": 40,
+    "distinct_looks": 40,
+    "files_present": 40,
+    "target": 40,
+    "remaining": 0,
+    "private_branch_imports": true,
+    "deployed_claimed": false
+  },
+  "current_scenes": {
+    "manifest_records": 21,
+    "legacy_unscoped_records": 17,
+    "exact_subject_imported_records": 4,
+    "exact_subjects_imported": 4,
+    "batches": [
+      {
+        "batch": "exterior-01",
+        "view": "outside",
+        "condition": "upgraded",
+        "subjects": [
+          "business:golf-clubhouse",
+          "business:golf-pro-shop",
+          "business:golf-cart-garage",
+          "business:golf-halfway-pavilion"
+        ],
+        "source_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-01/source-v1.png",
+            "sha256": "da619ce939a1c0e45f4552a04b7ee3c4ea88b86db8cb02c4a9613ea87e6fbb3a",
+            "bytes": 3521769
+          }
+        ],
+        "archived_source_present": true,
+        "prepared_status_field": "prepared-not-generated",
+        "actual_prompt_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-01/actual-prompt-v1.txt",
+            "sha256": "c1b2d50f528b90275a42a93183443da02cefe7a5a9e15e50acae14fd9601b508",
+            "bytes": 3741
+          }
+        ],
+        "provenance_files": [],
+        "source_presence_not_approval": true
+      },
+      {
+        "batch": "exterior-02",
+        "view": "outside",
+        "condition": "rundown",
+        "subjects": [
+          "business:golf-clubhouse",
+          "business:golf-pro-shop",
+          "business:golf-cart-garage",
+          "business:golf-halfway-pavilion"
+        ],
+        "source_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-02/source-v1.png",
+            "sha256": "300d53eb01fdb3210fbf79ebd6ce8402f2d7cbc9eca6450d28f4279866f8172b",
+            "bytes": 3498121
+          }
+        ],
+        "archived_source_present": true,
+        "prepared_status_field": "prepared-not-generated",
+        "actual_prompt_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-02/actual-prompt-v1.txt",
+            "sha256": "e011e2bc10a803a74c4ba71d3270416c4af61d092f1d8be2f3cf7d16804dac9f",
+            "bytes": 4388
+          }
+        ],
+        "provenance_files": [],
+        "source_presence_not_approval": true
+      },
+      {
+        "batch": "exterior-03",
+        "view": "outside",
+        "condition": "rundown",
+        "subjects": [
+          "world:house_0",
+          "world:house_1",
+          "gen:house-duplex",
+          "gen:house-farmhouse-wrap"
+        ],
+        "source_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-03/source-v1.png",
+            "sha256": "7dca765931bf2453e6b291d232506f9992fe68c838de18a9afd1000c6a5cb709",
+            "bytes": 3662294
+          }
+        ],
+        "archived_source_present": true,
+        "prepared_status_field": "prepared-not-generated",
+        "actual_prompt_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-03/source-v1.prompt.txt",
+            "sha256": "872f0145446657b30580be7d88c5ed622af5de00e38daa83a70cb2d065c82894",
+            "bytes": 3101
+          }
+        ],
+        "provenance_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-03/source-v1.provenance.json",
+            "sha256": "29421a728e050b1a3e9cb59971afd431e41b124ef26b4e6e891278e2a5b8397a",
+            "bytes": 8886
+          }
+        ],
+        "source_presence_not_approval": true
+      },
+      {
+        "batch": "exterior-04",
+        "view": "outside",
+        "condition": "upgraded",
+        "subjects": [
+          "world:video_rental",
+          "world:arcade",
+          "town:grocery",
+          "town:bakery"
+        ],
+        "source_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-04/source-v1.png",
+            "sha256": "ab92a671005b4271cd0ad1c4f1692daf72bc85f24bb2c0b697fb944031238a12",
+            "bytes": 3424114
+          }
+        ],
+        "archived_source_present": true,
+        "prepared_status_field": "prepared-not-generated",
+        "actual_prompt_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-04/source-v1.prompt.txt",
+            "sha256": "cb5f5f11005d57567aa70717ae85dffa871f82ce42810c349f1c4f5f762c8e40",
+            "bytes": 3146
+          }
+        ],
+        "provenance_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-04/source-v1.provenance.json",
+            "sha256": "72c80258b4171b8ae7e8883f38d490d22316e1c7cdecb2d3fb2d39b1100d5a82",
+            "bytes": 9049
+          }
+        ],
+        "source_presence_not_approval": true
+      },
+      {
+        "batch": "era-home-exteriors-01",
+        "view": "outside",
+        "condition": "maintained sourceillustration",
+        "subjects_are_unregistered_source_design_keys": true,
+        "subjects": [
+          "1990s-redbrick-family-single-garage",
+          "2000s-cream-stucco-two-storey-garage",
+          "2010s-brick-white-clad-townhouse-pair",
+          "2020s-white-charcoal-asymmetric-solar-home"
+        ],
+        "source_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/era-home-exteriors-01/source-v1.png",
+            "sha256": "aa389be44b02746ab801d55145299f3681db049a11beea6ae0c2ef4611738ced"
+          }
+        ],
+        "archived_source_present": true,
+        "source_presence_not_approval": true
+      },
+      {
+        "batch": "era-home-interiors-01",
+        "view": "inside",
+        "condition": "maintained sourceillustration",
+        "subjects_are_unregistered_source_design_keys": true,
+        "subjects": [
+          "1990s-redbrick-family-single-garage",
+          "2000s-cream-stucco-two-storey-garage",
+          "2010s-brick-white-clad-townhouse-pair",
+          "2020s-white-charcoal-asymmetric-solar-home"
+        ],
+        "source_files": [
+          {
+            "path": "art/catalogue-completion-20261107/generated/scenes/batches/era-home-interiors-01/source-v1.png",
+            "sha256": "7636918e44e0627ec3d9bb8bda7306b821b592616422787d79efee4153bcf214"
+          }
+        ],
+        "archived_source_present": true,
+        "source_presence_not_approval": true
+      }
+    ],
+    "prepared_cohort": {
+      "cohortRecords": 203,
+      "nativeIdentityPNGsCopied": 203,
+      "priorityGroups": {
+        "golf": 20,
+        "businesses-and-other-facilities": 94,
+        "homes": 89
+      },
+      "referenceSelection": {
+        "retained exact-ID business source master PNG": 16,
+        "registered corner NE native PNG for this exact subject": 173,
+        "retained exact-ID native original / atlas export": 14
+      },
+      "existingSceneFiles": 17,
+      "existingSceneFilesPresent": 17,
+      "exactCohortSubjectConditionCoverageProven": 0,
+      "requestedSceneSlotsIncludingNonbuildingExceptions": 812,
+      "sceneGenerationsRequested": 770,
+      "nonbuildingInteriorExceptions": 42,
+      "preparedExteriorBatches": 4,
+      "preparedExteriorCells": 16,
+      "supplementalNewpropBuildingRecords": 8
+    },
+    "source_scenes_do_not_count_as_map_angles": true,
+    "saved_native_source_atlases": 6,
+    "nominal_distinct_property_scene_cells": 24,
+    "era_home_lossless_source_illustrations_extracted": 8,
+    "era_home_crops_manifest": "generated/scenes/era-home-source-crops.manifest.json",
+    "era_home_runtime_imported": false
+  },
+  "ui_gear": {
+    "status": "40 source-only icons packaged; actual native silhouettes/alpha checks pass",
+    "selected_versions": {
+      "1980s": 1,
+      "1990s": 1,
+      "2000s": 1,
+      "2010s": 2,
+      "2020s": 1
+    },
+    "source_atlases_preserved": 6,
+    "lossless_icon_crops": 40,
+    "zip_members": 41,
+    "zip": {
+      "file": "UI-gear-1980s-2020s.zip",
+      "sha256": "0ff6d9090b3b4ebd2c98c3b50b73a98d1c618d146447d0469889b384b5f4e812",
+      "bytes": 6445692
+    },
+    "zip_includes": "40nativePNGicons +manifest only; rawatlases remain archived outside ZIP",
+    "held_source": "2010s/source-v1.png visible haze; preserved/excluded",
+    "selected_2010_cleanup": "source-v2.png native edit, no coded alpha manipulation",
+    "all_original_hashes_preserved": true,
+    "actual_cell_rectangles_recorded": true,
+    "all5atlases_reconstruct_exactly": true,
+    "runtime_imported": false,
+    "source_only": true,
+    "gameplay_stats_authored": false,
+    "owner_approval_inferred": false
+  },
+  "known_holds": [
+    "Additional clubhouse normal-v5/yaw8-v4 identity/style review does not override independent-camera-angle-check-v1.json exact8 hold; legacy replacement unverified.",
+    "Pavilion24-budget yaw8-v1 under-rotated; yaw8-v2 is a compensation experiment, requiring independent final8measurement.",
+    "2010 UIv1 visible haze held; native-cleaned v2 selected and packaged.",
+    "All new seating source pairs require independent camera, exact seat-count and access QA; no approvals inferred.",
+    "Compact bleacher60upgraded yaw8-v1 N/top-left has5x10=50 chairs, not required6x10=60; source alpha/gutters pass, capacity mismatch held.",
+    "Road traffic atlases have visibly near-level side profiles vs elevated corners/front/rear: identity/alpha pass is not fixed30degree camera approval.",
+    "Playercart yaw8-v1 duplicates nearLEFT side in both right cells; nearRIGHT is absent.",
+    "Schoolbus traffic8-v1 repeats lowerRIGHT in top-left, missing lowerLEFT; stoparm/entrydoor physical side identity wrong.",
+    "Walkbehind mower traffic8-v1 has invented car-like rear lamps.",
+    "1990teal and ballpicker traffic8-v1 true alpha haze require native cleanup.",
+    "2020solarhome normal-v1 rearpatio opening inTR+BL is a garage shutter instead of glass; root repair pending.",
+    "Cabin yaw native baseline slopes under target for hut/ticket, shedslightlylower, toilet Nclose/Sunder; exactyaw held, hut/shedBR reveal front doors on wrong narrow side."
+  ],
+  "active_historical_runtime_eight_subjects_prior_verified": 24,
+  "runtime_baseline_not_reaudited_this_source_checkpoint": true,
+  "in_flight_not_counted_as_saved": [
+    "Only archived PNGs with source provenance or prior verified native lineage are counted. Root reports active120new8normal wave; any pending or later-arriving output is excluded from this snapshot."
+  ],
+  "next_golf_native_shortlist": [
+    {
+      "id": "golf:clubhouse-shanty",
+      "name": "Starter clubhouse (a tin and tarp shack)",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 4,
+      "baseline_yaw8_candidate_count": 4,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\clubhouse-shanty.png",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 0,
+      "action": "resolve exact8 camera hold of additional1950candidate; do not claim legacy replacement",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-ticket-hut",
+      "name": "Shanty ticket hut",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-ticket-hut.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 1,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-toilet",
+      "name": "Shanty toilet",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-toilet.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 2,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-medical-tent",
+      "name": "Shanty medical tent",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-medical-tent.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 3,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-range-bay",
+      "name": "Shanty range bay",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-range-bay.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 4,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-shed",
+      "name": "Shanty shed",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-shed.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 5,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-stall",
+      "name": "Shanty stall",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-stall.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 6,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-hut",
+      "name": "Shanty hut",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-hut.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 7,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-counter",
+      "name": "Shanty counter",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-counter.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 8,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:cap-stall",
+      "name": "Cap stall",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\cap-stall.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 9,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:club-badge-stall",
+      "name": "Club badge stall",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\club-badge-stall.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 10,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:cooler-drinks-stall",
+      "name": "Cooler drinks stall",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\cooler-drinks-stall.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 11,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-leaderboard",
+      "name": "Shanty leaderboard",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-leaderboard.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 12,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    },
+    {
+      "id": "newprop:shanty-camera-tower",
+      "name": "Shanty camera tower",
+      "requires_1950s_budget_redesign": true,
+      "baseline_normal_candidate_count": 0,
+      "baseline_yaw8_candidate_count": 0,
+      "source_reference": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-camera-tower.webp",
+      "future_lighting": "late-afternoon daytime; upper-right sun; lower-left shadows",
+      "owner_approved": false,
+      "priority": 13,
+      "action": "generate paired normal+yaw8 native 1950s redesign",
+      "alias_to_new_seating_inferred": false
+    }
+  ],
+  "next_queue_file": "audit/next-golf-native-sets.json",
+  "source_inventory": "audit/current-native-source-inventory.json",
+  "owner_approval_inferred": false,
+  "no_runtime_changes_tests_build_servers_commits": true,
+  "parent_in_progress_subjects_do_not_duplicate": [
+    "newprop:shanty-hut",
+    "newprop:shanty-shed",
+    "newprop:shanty-ticket-hut",
+    "newprop:shanty-toilet"
+  ],
+  "new_owner_vehicle_and_era_priority": {
+    "audit": "audit/vehicle-and-standin-audit.json",
+    "era_source_queue": "plan/later-era-town-art-source-queue.json",
+    "golf_vehicle_views_target": "8 exact-moving headings plus4additionalyaw8 where requested; 12independentviews total, do not confuse screen-nose labels with buildingcorners",
+    "root_generating": "reelmower/playercart sourceviews;6distinct1980stowncar8heading sheets; ordinary1950scabins",
+    "no_runtime_work": true
+  },
+  "current_vehicle_generation": {
+    "raw_sheet_versions": 46,
+    "raw_file_versions_including_single_repairs": 84,
+    "families": 25,
+    "raw_view_cells_across_versions": 306,
+    "single_profile_raw_versions": 38,
+    "inventory": "audit/current-vehicle-native-source-inventory.json",
+    "not_runtime_integrated_by_source_phase": true,
+    "uniform30degree_camera_not_certified": true
+  },
+  "current_saved_map_and_vehicle_raw_versions_combined": 251,
+  "resolved_source_defects_not_full_geometry_approval": [
+    "Blue sedan traffic8-v2 native alpha cleanup passes proper greycomposite; v1 remains held.",
+    "Bleacher60upgraded yaw8-v2 visiblefront6x10 count corrected; exact8 camera/access unapproved."
+  ],
+  "latest_building_qa": {
+    "batch6": "audit/cabin-and-era-house-native-batch-6-review.json",
+    "native_yaw_measurements": "audit/cabin-native-yaw-baseline-measurements-v1.json",
+    "modern_house_normal_sources": 4,
+    "modern_house_normal_opening_passes": 3,
+    "modern2020rear_opening_hold": true,
+    "budget_cabin_source_pairs_present": 4,
+    "budget_cabin_yaw_geometry_approval": false,
+    "modern2020_selected_normal_version": "normal-v2",
+    "modern2020_v1_rear_opening_hold_retained": true,
+    "modern2020_rear_opening_hold_on_selected_normal_v2": false,
+    "camera_and_cross_view_scale_holds_retained": true
+  },
+  "latest_reviewed_batch": 10,
+  "latest_native_qa": "audit/native-batch-10-review.json",
+  "latest_limited_corrections": {
+    "teal_picker_alpha": "v2pass:border/knownemptygapmax1; sourcecamera hold persists",
+    "cart_yaw": "v2 nowall4neardirections and corrected rearbagcolours; exact8 unverified",
+    "walkbehind": "v2 carlike rear lamps removed; camera hold persists",
+    "bus": "v2 nowall8directions/correctseparatefeature sides but heavy backgroundalpha\u224895\u2013125; nativev3 required",
+    "2020house": "normalv2 real patio glass corrected",
+    "2010house": "yawBRwrong frontsliver held pending source-guide review",
+    "not_global_art_approval": true,
+    "single_sides": "20nativeprofiles across10cars materially improve elevatedcamera; truealpha pass; not exact30certificate or release",
+    "bus_v3": "alpha clean/all8noses; sideentry/STOPregression remains held",
+    "hut_shed_v2": "BRrearventslivers repaired; under-yaw baseline holds persist",
+    "2020home_yaw": "mainidentity/glasspatio andalpha pass; exact8 unverified",
+    "bus_isolated_sides": "RIGHTSTOPonly/LEFTentryonly now correct, elevatedcamera/alpha sourcepasses; fullsetreleasepending",
+    "2010house_Wsingle": "rearpatiosliver restored; exact8 uncertified"
+  },
+  "production_cohorts_separate_from_baseline": {
+    "baseline_eligible_subjects": 1208,
+    "new_car_source_designs": 10,
+    "new_era_home_source_designs": 4,
+    "new_seating_source_condition_designs": 8,
+    "additional_clubhouse_designs": 1,
+    "existing_baseline_cabin_replacement_targets": [
+      "newprop:shanty-hut",
+      "newprop:shanty-shed",
+      "newprop:shanty-ticket-hut",
+      "newprop:shanty-toilet"
+    ],
+    "additional_designs_do_not_relabel_or_complete_baseline_ids": true,
+    "no_baseline_alias_replacement_verified_in_this_source_QA": true
+  },
+  "road_source_bundle": {
+    "schema": 1,
+    "as_of_utc": "2026-11-07T11:36:22.036160+00:00",
+    "status": "80 source-only native views packaged and verified",
+    "models": 10,
+    "actual_screen_nose_views_each": 8,
+    "png_files": 80,
+    "zip_members": 81,
+    "zip": {
+      "path": "generated/vehicles/Town-vehicles-1980s-2020s-source.zip",
+      "sha256": "12addd95a227b10cd671804252123fcfc3d50ebe593612b981cf7ff7e8e94160",
+      "bytes": 34687497
+    },
+    "manifest": {
+      "path": "generated/vehicles/source-views-1980s-2020s-v1/manifest.json",
+      "sha256": "e1fd797b9b2b9e593c2f7e8dbdfb66c6fcb2b312ce93d413d4bdf1c69b178b66"
+    },
+    "atlas_native_crops": 60,
+    "single_source_byte_identical_copies": 20,
+    "all80_exports_native_pixels_exact": true,
+    "all80_source_silhouettes_clear_of_export_boundaries": true,
+    "all80_file_hashes_distinct": true,
+    "old_raw_sources_preserved": true,
+    "held_calibration_views_included": 0,
+    "runtime_integrated": false,
+    "owner_approved": false,
+    "exact30degree_certified": false,
+    "whole_catalogue_complete": false
+  },
+  "source_exports_do_not_increase_native_generation_raw_version_counts": true,
+  "latest_golf_normal_source_review": "audit/golf-source-batch-01-primary-normal-review.json",
+  "golf_source_batch01_primary": {
+    "normal_sheets": 12,
+    "normal_view_cells": 48,
+    "conditions": {
+      "budget_event_role_designs": 10,
+      "upgraded_existing_prop_candidates": 2
+    },
+    "continue_yaw_candidates": [
+      "golf-source-01-04-first-aid-tent",
+      "golf-source-01-05-info-will-call-booth",
+      "golf-source-01-07-media-centre",
+      "golf-source-01-08-hole-scoreboard",
+      "golf-source-01-10-concession-kiosk",
+      "golf-source-01-11-practice-net",
+      "golf-source-01-12-bag-trolley"
+    ],
+    "hold_or_targeted_review": [
+      "golf-source-01-01-food-truck",
+      "golf-source-01-02-tv-camera-tower",
+      "golf-source-01-03-broadcast-compound",
+      "golf-source-01-06-four-lane-entrance",
+      "golf-source-01-09-main-leaderboard"
+    ],
+    "existing_prop_runtime_targets": [
+      "business:golf-practice-net",
+      "business:golf-bag-trolley"
+    ],
+    "no_automatic_baseline_completion_from_role_proposals": true,
+    "all12_native_alpha_and_core_boundaries_pass": true
+  },
+  "native_generation_counts_by_category": {
+    "map_objects": {
+      "archivedNativeFileVersions": 167,
+      "uniqueNativeSHA256": 167,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 617,
+      "families": 45
+    },
+    "vehicles": {
+      "archivedNativeFileVersions": 84,
+      "uniqueNativeSHA256": 84,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 306,
+      "families": 25
+    },
+    "portraits": {
+      "archivedNativeFileVersions": 11,
+      "uniqueNativeSHA256": 11,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 41,
+      "families": 11
+    },
+    "scenes": {
+      "archivedNativeFileVersions": 5,
+      "uniqueNativeSHA256": 5,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 20,
+      "families": 5
+    },
+    "ui_gear": {
+      "archivedNativeFileVersions": 6,
+      "uniqueNativeSHA256": 6,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 48,
+      "families": 5
+    }
+  },
+  "archived_native_file_versions_all_categories": 273,
+  "unique_native_generation_hashes_all_categories": 273,
+  "technical_guides_crops_exports_not_native_generation": {
+    "technical_geometry_guides": 130,
+    "lossless_exports_and_import_crops": 568,
+    "existing_identity_sources_and_copies": 364,
+    "diagnostic_overlays": 50,
+    "other_crops_exports_or_unproven_source": 45,
+    "isolated_reference_crops": 65,
+    "selected_source_reference_atlases": 1
+  },
+  "disk_checkpoint_only_not_live_completion": true,
+  "sourceVerificationIssues": [],
+  "arrived_after_snapshot_not_counted": [],
+  "source_bundle_checkpoint": {
+    "file": "audit/source-bundle-handoff.json",
+    "asOfUTC": "2026-11-07T15:40:31.721909+00:00",
+    "currentSourcePackages": 6,
+    "currentExportedPNGCount": 520,
+    "newGolfEventPracticePNGs": 176,
+    "newGolfArchiveSHA256": "31c95365543b60a7b2b01be9966a283831a1846442d33911a63bd0e0f950a1a5",
+    "sourceOnlyNotRuntimeOrWholeCatalogueCompletion": true
+  }
+}

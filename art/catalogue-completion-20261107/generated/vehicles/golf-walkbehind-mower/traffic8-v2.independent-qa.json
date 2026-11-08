@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "PASS-invented-rear-lamp-removal;HOLD-uniform30degree-camera",
+  "source": {
+    "path": "generated/vehicles/golf-walkbehind-mower/traffic8-v2.png",
+    "sha256": "59db959882a394f33ab7db6aefebc52494f36d0daf9630e6e63a0e3c4f4f122b",
+    "bytes": 1310447
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "is_opaque_scene": false,
+  "zero_alpha_fraction": 0.689861954398305,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "rgba_rectangle_sha256": "5718a864aca4f3b94e9256521f82354945ce652a56ab0193331d75f7ad288a37",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 14,
+      "actual_screen_nose": "lower-left"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "rgba_rectangle_sha256": "a67607dd1013200e5b1d9ea087b3bcc94a3c829de59bc2f07bdffe73ba84e818",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 16,
+      "actual_screen_nose": "down"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "rgba_rectangle_sha256": "2d251c474f659ceba27ae99833acdd6339876587fa27856044f03ebc4c74cd86",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 14,
+      "actual_screen_nose": "lower-right"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "rgba_rectangle_sha256": "bca8cb075cb2daa93341bfec5931662abdc09662ae05969895db188b4c7561e8",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 16,
+      "actual_screen_nose": "left"
+    },
+    {
+      "cell": 4,
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "rgba_rectangle_sha256": "7d6033caf7024e7f7ff98c62d7387d7afc6abe7939e8f01c62d3b0fc52a9edc6",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 16,
+      "actual_screen_nose": "upper-right"
+    },
+    {
+      "cell": 5,
+      "reference_rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "rgba_rectangle_sha256": "51a4966e5f2951227f714d2f8b493ad8a5b8492c0a9b2aa2fb52a67df0d4bcc4",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 51,
+      "actual_screen_nose": "up"
+    },
+    {
+      "cell": 6,
+      "reference_rect_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "rgba_rectangle_sha256": "249c8d75f20ee7185b7e6074e37f9799f5ab78ebad1f32ed9b61aa520956007e",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 23,
+      "actual_screen_nose": "upper-left"
+    },
+    {
+      "cell": 7,
+      "reference_rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "rgba_rectangle_sha256": "6f2d58be9c991fe62f0bfdb6097c0b23a71cac3986664fc38fe4f986e0cfe08c",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 18,
+      "actual_screen_nose": "right"
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ],
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ]
+  ],
+  "notes": [
+    "Invented rear red car lamps removed; plain hinged discharge safety flap now visible. Core mower/handle/engine/wheels remain coherent.",
+    "Side profiles still topLEFT/bottomRIGHT opposite prompt order, remappable without missing a direction.",
+    "Side camera elevation inconsistency remains held until guided correction."
+  ],
+  "source_crops_performed": false,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/vehicles/golf-walkbehind-mower/traffic8-v2.prompt.txt",
+    "sha256": "0571624f66270143dc0a58372d6f4c981f13cec636051a660992bfbe50c7770f",
+    "bytes": 728
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-walkbehind-mower/traffic8-v2.provenance.json",
+    "sha256": "1a76c7635cfc27c0afc633f940fcd38eaf3c8d5d4bc7e704261f8e5bc5b8edb9",
+    "bytes": 1391
+  }
+}

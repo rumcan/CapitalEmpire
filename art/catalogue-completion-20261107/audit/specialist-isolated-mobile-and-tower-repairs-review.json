@@ -1,0 +1,284 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "scope": "Only7isolated mobile repairs plus corrected towerSW. Practical identity/side-state/actual-camera-face presence and alpha; no exact-angle metrology.",
+  "sourceOnly": true,
+  "sourcesReviewed": 8,
+  "practicalSourceCornerCandidates": 8,
+  "remainingFunctionalRepairHolds": [],
+  "rows": [
+    {
+      "key": "tower-upgraded-SW",
+      "nominalCameraKey": "normalSW",
+      "review": "PASS-practical-source-corner-candidate",
+      "notes": [
+        "Plain near camera rear and case foreground LEFT now match the fixed SW guide; ladder remains naturally far-side hidden."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-SW-v2.png",
+        "sha256": "f2fcc31ac8e67544bc9c12246a01bec99945c1969f92ba02f9b20d7a9cfcfc89",
+        "hashMatchesProvenance": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "rgbaSHA256": "59e33ba0f1fe1c434b9f7fa27ca12621b02d0999f5b5fc5fdc2300631583a358",
+        "coreBBoxExclusive": [
+          367,
+          117,
+          888,
+          1114
+        ],
+        "minimumCoreMargin": 117,
+        "coreBoundaryPixels": 0,
+        "trueZeroAlphaFraction": 0.753246389861852,
+        "faintAlpha1to8Fraction": 0.008232666631054946,
+        "outerBorderAlphaMax": 1
+      },
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "key": "cart-ambulance",
+      "nominalCameraKey": "normalSE",
+      "review": "PASS-practical-source-corner-candidate",
+      "notes": [
+        "Genuinely missing opposite front corner now present: nose lower-right, stretcher rear upper-left, two straps, one front bench, four wheels."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/cart-ambulance/normal-SE-v2.png",
+        "sha256": "e4867c26cf150a42ea6feb8f26f13bf78955c31d968c16cbdda4842b18caa71d",
+        "hashMatchesProvenance": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "rgbaSHA256": "807ff09ed111382c6a969e9b1e1201d87af9fe409d5bc5f34692ddb2cc4a5112",
+        "coreBBoxExclusive": [
+          131,
+          170,
+          1159,
+          1133
+        ],
+        "minimumCoreMargin": 95,
+        "coreBoundaryPixels": 0,
+        "trueZeroAlphaFraction": 0.4831925398533306,
+        "faintAlpha1to8Fraction": 0.08597750356753127,
+        "outerBorderAlphaMax": 1
+      },
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "key": "satellite-van",
+      "nominalCameraKey": "normalNW",
+      "review": "PASS-practical-source-corner-candidate",
+      "notes": [
+        "NW now has concave front dish class and visible RIGHT cargo body remains plain after adopting the LEFT sliding door.",
+        "Painted aperture is broader than the thin proxy; exact component pose, camera and physical scale remain unverified separately, not numerically certified by this practical review."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-NW-v2.png",
+        "sha256": "ec7f14759eeae13bf003303b3d344b732229fd8cf5b651be48f069985055ed6d",
+        "hashMatchesProvenance": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "rgbaSHA256": "1d509dc18449200c93c1acdcdc48b7e93995f5c7a4db7955ddce94515f19d708",
+        "coreBBoxExclusive": [
+          87,
+          125,
+          1119,
+          1112
+        ],
+        "minimumCoreMargin": 87,
+        "coreBoundaryPixels": 0,
+        "trueZeroAlphaFraction": 0.5815241307560622,
+        "faintAlpha1to8Fraction": 0.009213260787171641,
+        "outerBorderAlphaMax": 1
+      },
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "key": "shanty-broadcast-van",
+      "nominalCameraKey": "normalSE",
+      "review": "PASS-practical-source-corner-candidate",
+      "notes": [
+        "Extra visible LEFT hatch removed. Roof reel, front HVAC/aerial and ordinary steel rack retained; real RIGHT hatch stays on hidden opposite side."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-SE-v2.png",
+        "sha256": "d59fd64c712f03510a74cb9fcf5417abefd598ed3d4e037da0ff540f69546fca",
+        "hashMatchesProvenance": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "rgbaSHA256": "bb0154b5ba0025004bf0e0bf6748d64089aad460d91b30c1b7512f3ee1f9ddd4",
+        "coreBBoxExclusive": [
+          121,
+          188,
+          1164,
+          1112
+        ],
+        "minimumCoreMargin": 90,
+        "coreBoundaryPixels": 0,
+        "trueZeroAlphaFraction": 0.6017929229336936,
+        "faintAlpha1to8Fraction": 0.009938213665234567,
+        "outerBorderAlphaMax": 1
+      },
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "key": "ice-cream-cart-SE",
+      "nominalCameraKey": "normalSE",
+      "review": "PASS-practical-source-corner-candidate",
+      "notes": [
+        "Rear handle/rack projects far upper-left; caster naturally hidden behind body.",
+        "Four genuinely distinct corners now follow one chassis state, two large axle wheels, one rear caster, four freezer compartments and one umbrella."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-SE-v2.png",
+        "sha256": "f33d7f9e4e47f58a62a3295a88526aedb5950a0f15a1d37ed992f3aae9fef33d",
+        "hashMatchesProvenance": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "rgbaSHA256": "7b6a08dfe7dbf912a13af08a5614cdffd0bf755c06aabb9213536ba6f5747cba",
+        "coreBBoxExclusive": [
+          165,
+          21,
+          1087,
+          1204
+        ],
+        "minimumCoreMargin": 21,
+        "coreBoundaryPixels": 0,
+        "trueZeroAlphaFraction": 0.5803260507365267,
+        "faintAlpha1to8Fraction": 0.01898677024589893,
+        "outerBorderAlphaMax": 1
+      },
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "key": "ice-cream-cart-SW",
+      "nominalCameraKey": "normalSW",
+      "review": "PASS-practical-source-corner-candidate",
+      "notes": [
+        "Rear handle/rack and small caster together at near lower-left.",
+        "Four genuinely distinct corners now follow one chassis state, two large axle wheels, one rear caster, four freezer compartments and one umbrella."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-SW-v2.png",
+        "sha256": "b9618a547aab75ed736897611543174f2cb8d8362b26993f499547e2e6ddb8ef",
+        "hashMatchesProvenance": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "rgbaSHA256": "9f48a21b557b3a2be1713462ab087b44144ec18bad0e3f5f21935298fe044ab9",
+        "coreBBoxExclusive": [
+          192,
+          19,
+          1040,
+          1207
+        ],
+        "minimumCoreMargin": 19,
+        "coreBoundaryPixels": 0,
+        "trueZeroAlphaFraction": 0.5714231206550522,
+        "faintAlpha1to8Fraction": 0.019163557000373924,
+        "outerBorderAlphaMax": 1
+      },
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "key": "ice-cream-cart-NW",
+      "nominalCameraKey": "normalNW",
+      "review": "PASS-practical-source-corner-candidate",
+      "notes": [
+        "Rear handle/rack and small caster together at near lower-right.",
+        "Four genuinely distinct corners now follow one chassis state, two large axle wheels, one rear caster, four freezer compartments and one umbrella."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-NW-v2.png",
+        "sha256": "c45d8ecab2ea805fd7a0d31dab13e208bb7dc7a4148258590c812eb7a6aec676",
+        "hashMatchesProvenance": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "rgbaSHA256": "4eb416afa7b198777f8b65a87d19038b1075d3b63602e50825d6dd564f73a5be",
+        "coreBBoxExclusive": [
+          98,
+          25,
+          1079,
+          1184
+        ],
+        "minimumCoreMargin": 25,
+        "coreBoundaryPixels": 0,
+        "trueZeroAlphaFraction": 0.5498665832334934,
+        "faintAlpha1to8Fraction": 0.020051306314212383,
+        "outerBorderAlphaMax": 1
+      },
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "key": "ice-cream-cart-NE",
+      "nominalCameraKey": "normalNE",
+      "review": "PASS-practical-source-corner-candidate",
+      "notes": [
+        "Rear handle/rack projects far upper-right; caster naturally hidden on that far end.",
+        "Four genuinely distinct corners now follow one chassis state, two large axle wheels, one rear caster, four freezer compartments and one umbrella."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-NE-v2.png",
+        "sha256": "c0834956a97a5c6c82c6d3fac864230c1a41b80d60f1a6d0284a33a8d0ea6bed",
+        "hashMatchesProvenance": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "rgbaSHA256": "2474af5e6e1be26be62e7111a3ac21d809d7d1393b6f4db52f04350eee3870ac",
+        "coreBBoxExclusive": [
+          169,
+          38,
+          1069,
+          1201
+        ],
+        "minimumCoreMargin": 38,
+        "coreBoundaryPixels": 0,
+        "trueZeroAlphaFraction": 0.5283303953664065,
+        "faintAlpha1to8Fraction": 0.06836178455417942,
+        "outerBorderAlphaMax": 2
+      },
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    }
+  ],
+  "mobileNormalSourceSelection": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/normal-source-candidates-v2.json",
+  "mobileSubjectsWithFourCandidateNormalViews": 8,
+  "mobileSelectedNormalViews": 32,
+  "towerUpgradedNormalSourceSelection": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-source-selection-v1.json",
+  "cameraAndScaleHoldsRemain": true,
+  "nativeSourcePixelsChanged": false,
+  "runtimeModified": false,
+  "importsRun": false,
+  "testsRun": false,
+  "buildRun": false,
+  "serverStarted": false,
+  "commitCreated": false
+}

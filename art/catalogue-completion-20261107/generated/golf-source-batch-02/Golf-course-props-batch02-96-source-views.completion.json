@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "created_utc": "2026-11-07T14:42:37.359837+00:00",
+  "subject_count": 12,
+  "png_count": 96,
+  "zip_member_count": 97,
+  "zip": {
+    "path": "generated/golf-source-batch-02/Golf-course-props-batch02-96-source-views.zip",
+    "sha256": "a8fb23903722dbe0721508dd5e5e48ad341d44e55fa9415d460653a75335b078",
+    "bytes": 30004525
+  },
+  "manifest": {
+    "path": "generated/golf-source-batch-02/source-views-eight-facing-v1/manifest.json",
+    "sha256": "3db6517aaf7f536f61288d612ed6de7bcc59b50d5041401cf8b94f8351ce8bb7",
+    "bytes": 176406
+  },
+  "export_directory": "generated/golf-source-batch-02/source-views-eight-facing-v1",
+  "distinct_native_png_sha256_count": 96,
+  "native_single_byte_copies": 3,
+  "lossless_rectangle_crops": 93,
+  "verification": {
+    "zip_crc_pass": true,
+    "every_zip_file_hash_matches": true,
+    "all96_native_pixel_rectangles_match": true,
+    "all_sources_unchanged": true,
+    "all96_rgba_with_true_zero_alpha": true,
+    "all96_core_boundaries_clear": true,
+    "functional_selected_holds": 0
+  },
+  "source_only": true,
+  "exact_camera_scale_owner_and_runtime_approval": false,
+  "known_limits": [
+    "Exact native yaw8 and30degree elevation not numerically certified.",
+    "Physical scale, release anchors/footprints and game handedness/integration remain unapproved.",
+    "Mixed native resolutions retained: new single views and different canvases do not imply equal physical scale.",
+    "Fine ornament/stroke identity and owner art approval remain pending.",
+    "Straight rope and paired gold markers have intrinsic180degree symmetry; similar silhouettes are not duplicated runtime aliases."
+  ],
+  "repair_reviews": [
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v2.independent-qa.json",
+      "sha256": "92d2ae9a98b815bbeb693f49cdd9c3a4ea6cb07468b27d48ef326218a04a7ff0",
+      "bytes": 3802
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.independent-qa.json",
+      "sha256": "1ae2144040c22d417b791c452520c7f30228e5cc30416e369a2fb638547a11aa",
+      "bytes": 3807
+    }
+  ]
+}

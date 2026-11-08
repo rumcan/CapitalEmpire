@@ -172,7 +172,7 @@ test('manually placed Arcade has exact illustrated states, no simulated conditio
   const c = objectScene(f, 'inside:rundown', m)!;
   assert.equal(c.at, 1); assert.equal(c.kicker, 'Illustrated property views');
   assert.deepEqual(c.views.map(v => v.label), ['Outside · Upgraded', 'Inside · Run-down']);
-  assert.ok(c.views.every(v => v.tiles.length === 0 && v.line.includes('no tracked repair')));
+  assert.ok(c.views.every(v => v.tiles.length === 0 && v.line.includes('illustrated')));
   assert.equal(objectScene({ ...f, subject: 'world:video' }, undefined, m), null);
   assert.equal(objectScene(f, undefined, { v: 1, pictures: [picture({ slug: 'arcade-outside' })] }), null);
 });

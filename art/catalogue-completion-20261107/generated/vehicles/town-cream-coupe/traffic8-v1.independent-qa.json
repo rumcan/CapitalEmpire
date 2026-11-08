@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:35:58.180647+00:00",
+  "review_result": "PASS-source-candidate-identity-direction-alpha",
+  "source": {
+    "path": "generated/vehicles/town-cream-coupe/traffic8-v1.png",
+    "sha256": "d52e18524de018f629aa82aee44148b5b8bf4ae6e9f0bbf673cc39b35cca20b3",
+    "bytes": 1442097
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "prompt": {
+    "path": "generated/vehicles/town-cream-coupe/traffic8-v1.prompt.txt",
+    "sha256": "63cb6e5df35fa40a383356b14a01f22bbafc7c101ba116d2586b0cff0bda6e27",
+    "bytes": 1681
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-cream-coupe/traffic8-v1.provenance.json",
+    "sha256": "e1148347acf126e4f2dc550c1906cad8cd0e175590c3df946f9e048ae4b43c98",
+    "bytes": 2292
+  },
+  "identity_observation": "Long two-door cream coupe, brown landau roof and separate boot preserved across views.",
+  "actual_cell_mapping": [
+    {
+      "cell": 0,
+      "rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "core_margin": 12,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "lower-left",
+      "rgba_crop_sha256": "8f166fc76ead7d8f23d0b7622001ac58df535792d526af17e704fc5b69e08dcc",
+      "core_trim_dimensions": [
+        405,
+        272
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "0f85a2bf1d318cf63cdbc040d09acd942d5af552423c36eac013a6ef26768a15"
+    },
+    {
+      "cell": 1,
+      "rect_ltrb": [
+        443,
+        0,
+        886,
+        443
+      ],
+      "core_margin": 67,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 2,
+      "actual_screen_nose": "down",
+      "rgba_crop_sha256": "262b2f22fdc39fc5721d1fe36a2d09dbe85d51e3d6a351874688943bf49af45a",
+      "core_trim_dimensions": [
+        221,
+        288
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "bd5b4a32b08df17eeb6c106e2fc9067f25993429593e11ea1ccff351a28f4654"
+    },
+    {
+      "cell": 2,
+      "rect_ltrb": [
+        886,
+        0,
+        1322,
+        443
+      ],
+      "core_margin": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 7,
+      "actual_screen_nose": "lower-right",
+      "rgba_crop_sha256": "31f064e1bc2d2ee469a4dfd054a6dd7129f5b8dbe2802b2d75828936f9cdb7ab",
+      "core_trim_dimensions": [
+        395,
+        272
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "51192512e839de2c7bf50eb842f9cbed6baa8e6ff40778a7fc4437f545180b25"
+    },
+    {
+      "cell": 3,
+      "rect_ltrb": [
+        1322,
+        0,
+        1774,
+        443
+      ],
+      "core_margin": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 5,
+      "actual_screen_nose": "right",
+      "rgba_crop_sha256": "81cfd137501da6a2b8cad2b301e4abbab568c20c7f0dbc74fa4406cca5c1fa36",
+      "core_trim_dimensions": [
+        438,
+        153
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "10979bfa3c0213cc8ebac84a31817ef032f5c21364ce262950ccc931f3589db0"
+    },
+    {
+      "cell": 4,
+      "rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "core_margin": 12,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "upper-right",
+      "rgba_crop_sha256": "a242e87d2f56ebdc58569c7d46b41192584f78b56f60e8c20f8021cc60d07bde",
+      "core_trim_dimensions": [
+        396,
+        267
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "58ec3c4f2cda2cad8a3a8384665d628cba2724134c46fa59e584cb9b94706e9c"
+    },
+    {
+      "cell": 5,
+      "rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "core_margin": 81,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 3,
+      "actual_screen_nose": "up",
+      "rgba_crop_sha256": "a0860ac9b96eb9f2c922d8daf0aea04b4ad330a13837528f4a90cf6663b8d895",
+      "core_trim_dimensions": [
+        215,
+        279
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "08a1e74ccd897896ce3ab9b16cb45f298280110a0b97a0e5ae8d7fc8dbc3c56c"
+    },
+    {
+      "cell": 6,
+      "rect_ltrb": [
+        887,
+        443,
+        1321,
+        887
+      ],
+      "core_margin": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 6,
+      "actual_screen_nose": "upper-left",
+      "rgba_crop_sha256": "bee7da02c0461bb03cad8809121e989f2f626b22b64817d7b90d5e6e47de90b3",
+      "core_trim_dimensions": [
+        395,
+        267
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "689ef8f795ec0667dfff3931c7c5ceea13792e8f3d903cd4e02a0bd130e29b1a"
+    },
+    {
+      "cell": 7,
+      "rect_ltrb": [
+        1321,
+        443,
+        1774,
+        887
+      ],
+      "core_margin": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 4,
+      "actual_screen_nose": "left",
+      "rgba_crop_sha256": "dca545f223ae0103d9b4d9da7d9ffac0e48f21703c5bd45c360e4c60f3b79ebd",
+      "core_trim_dimensions": [
+        442,
+        151
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "645cd24a1b9bacebf46967b2e11504857dfc6ea07951610e384ee9e4ceacdb8b"
+    }
+  ],
+  "background": {
+    "zero_alpha_fraction": 0.5689942028727619,
+    "outer_border_p50max": [
+      0.0,
+      3.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      1.0,
+      2.0
+    ]
+  },
+  "canvas_dimensions": [
+    1774,
+    887
+  ],
+  "actual_clear_gutter_crops_needed": true,
+  "crop_operation_performed": false,
+  "all_cells_core_clear_of_accepted_cut_boundaries": true,
+  "partition_covers_all_pixels": true,
+  "no_duplicate_core_cell_hashes": true,
+  "exact_duplicate_core_pairs": [],
+  "exact_mirrored_core_pairs": [],
+  "mirror_limit": "Only exact pixel duplicate/mirror detection; conceptual/model mirroring needs visual judgment. All cells visually inspected.",
+  "notes": [
+    "Use recorded actual clear-gutter rectangles; equal-width column cuts would truncate some native body/bumper pixels. Artwork itself is complete and separated; no regeneration required for nominal-grid placement alone."
+  ],
+  "source_only": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "vehicle_physical_scale_calibration_pending": true,
+  "camera_followup_hold": "Sideprofiles nearly level vs30degree corners/front/rear; source identity/alpha result is not camera approval.",
+  "uniform30degree_camera_certified": false
+}

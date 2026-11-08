@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "town:pharmacy",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/town-pharmacy/NE.png",
+  "sourceSha256": "3f0ec1ce93afe9001456e642e6dc68ff0ea68643c7c1741f881cfc077ccbc421",
+  "output": "identity-references/town-pharmacy-d87b861c/source.png",
+  "outputSha256": "3f0ec1ce93afe9001456e642e6dc68ff0ea68643c7c1741f881cfc077ccbc421",
+  "width": 521,
+  "height": 524,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      521,
+      524
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\town-pharmacy\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "town:pharmacy",
+    "version": "town-pharmacy-4views-v1",
+    "files": {
+      "NE": "3f0ec1ce93afe9001456e642e6dc68ff0ea68643c7c1741f881cfc077ccbc421",
+      "SE": "5226bdae4f6f40ef4ccb442f146cc5fa46ac39c845fba3e4df4b8b8ee60d7e33",
+      "SW": "d7af845c39a93fb82445c4b70865c257412805734edb4e7ea4ac7f0915eee8be",
+      "NW": "ae53097c94959f93fd9a3764a391d07971e7533896c8e7521e2f7c73c6bc787e"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.726563,
+      0.007813,
+      0.944824,
+      0.226074
+    ],
+    "crop": {
+      "left": 1488,
+      "top": 16,
+      "width": 447,
+      "height": 447
+    },
+    "native": "art/theme-consistency/exports/buildings/town-pharmacy.native.png",
+    "nativeSha256": "5d4f6807985bc6bfea173c8735c5d7e37e154a3bd7c832733861996ceda51608"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

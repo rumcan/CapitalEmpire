@@ -1,0 +1,21 @@
+{
+  "key": "golf-source-01-08-hole-scoreboard",
+  "family": "yaw8",
+  "condition": "budget",
+  "version": 2,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-yaw8-v2.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-scoreboard\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.png"
+  ],
+  "prompt": "Paint FOUR exact fixed-world nominal8degreeoffcardinal views inREFERENCE1 as finished detailedpainterlygameartmatchingidentity/materials inREFERENCE2. Reference1controls ALLcameras/sidegeometry/attachments/occlusion; reference2styleONLY, donotcopyduplicateposes. Exactly2uprights,7blank cream name rows+2small score cells per row on FRONT-Ygreen face. REAR+Yhas plain backing slats/centralspine and2diagonal braces reaching rear feet. No clock, map, hole12, roof, copied front edge or floor plate.. Retainbelievableordinarywear/materials matchingnativeidentity, nofantasychanges. Onefixedassemblyrotatedfourquarterturns; EandWoppositesides MUSTbeoppositephysicaledges withcorrect front scoringface versusrearbraces, neverrepeatEforW. Orthographic30degreesDOWN, same4cellsasguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lampsOFF. Completeequallyscaledobjects,broadgenuinelyzeroalpha transparentgutters/margins; nopavement/groundplate/plants/people/haze/UI/captions/grid. Functionalrampretainedwhenpresentinguide. Keep7blankscorerows orintrinsichole12/map/dots ONLYasfixedidentityrequires.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-38f159ec-0d57-4010-bb04-e92a476e320d.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-scoreboard\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "22e46186b368808d5b64c811cc516025263e57f853d8817927abe86372aa2446",
+  "native_bytes_preserved": true
+}

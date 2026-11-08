@@ -1,0 +1,16 @@
+{
+  "id": "golf:food-tent",
+  "name": "food-tent",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-food-tent.source.png",
+  "originalSource": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\food-tent.png",
+  "sourceSHA256": "b720170e46f767719ec3cc5e4427649659b78b9590eb65bb9c77c9e39af290fb",
+  "referenceSHA256": "b720170e46f767719ec3cc5e4427649659b78b9590eb65bb9c77c9e39af290fb",
+  "referenceSize": [
+    1024,
+    1024
+  ],
+  "operation": "byte-for-byte copy of retained native PNG master",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Food-service marquee with white peaked roof, counters, grill and fridge. CURRENT WRONG foodTruck stand-in only: never use it as the vehicle silhouette or claim new foodTruck art completes this tent.",
+  "sourceOnlyNotReleaseProof": true
+}
