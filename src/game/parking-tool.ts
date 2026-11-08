@@ -30,6 +30,8 @@ export interface ParkingHost {
   tollKeys(): Set<string>;
   /** '' if the quad (x0 y0 ... x3 y3, tiles) is free of the town's buildings and the stadium, else the reason (optional: tests leave it out) */
   occupied?(quad: number[]): string;
+  /** T387: whether woodland takes a bay row (a golf game's: its owner's woodland is open ground once its trees come off; optional: tests leave it out) */
+  woodland?(): boolean;
 }
 
 /** the most a car pays ($) */
@@ -181,7 +183,7 @@ export class ParkingTool {
   /** reads row d into the preview: its bay count, its cost, and why it cannot go ('' if it can) */
   private aim(d: BayRowDef) {
     this.count = rowBays(d).length; this.cost = this.count * ROW_BAY_COST;
-    this.why = rowCheck(d, this.host.terrain(), this.roads(d), this.rows, this.host.mapSize) || (this.host.occupied?.(rowQuad(d)) ?? '') || (this.cost > this.host.money() ? 'not enough money' : '');
+    this.why = rowCheck(d, this.host.terrain(), this.roads(d), this.rows, this.host.mapSize, this.host.woodland?.() ?? false) || (this.host.occupied?.(rowQuad(d)) ?? '') || (this.cost > this.host.money() ? 'not enough money' : '');
   }
 
   /** the row whose paving holds tile t, or null */

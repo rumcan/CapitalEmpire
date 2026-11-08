@@ -1,8 +1,7 @@
 // Bay rows (docs/PARKING.md section 1): a drag lays a row of bays along its front line (the aisle side), at 90, 60 or 45 degrees. Rows that sit
 // close together form a lot, which the City and the sim read as one car park (lotPark). Pure TS, no DOM. Tiles of 2 m.
-import { TC } from '../terrain/types';
 import { SK, add, dot, mul, norm, perp, sub, vlen, type Pt, type RoadNetwork, type Seg } from '../network';
-import type { Bay, CarPark } from './carpark';
+import { parkClassWhy, type Bay, type CarPark } from './carpark';
 import { BAY_D, BAY_W } from './config';
 
 /** rows within this many tiles of each other form one lot */
@@ -138,8 +137,9 @@ function quadDist(A: Pt[], B: Pt[]): number {
 }
 
 /** '' or the reason row d cannot go, in order: fewer than 2 bays, too long, too close to the map's edge, a tile under the paving not buildable ground
- *  (only TC.GROUND and TC.PATCH are), a road (centre line a–b, half width hw) within hw of the paving, another row's bays overlapping this row's */
-export function rowCheck(d: BayRowDef, cls: Uint8Array, roads: { a: Pt; b: Pt; hw: number }[], others: BayRowDef[], mapSize: number): string {
+ *  (only TC.GROUND and TC.PATCH are; T387: parkClassWhy names water, a creek, the river bank or woodland, and `woodland` lets woodland through, as a
+ *  golf game's car parks have it), a road (centre line a–b, half width hw) within hw of the paving, another row's bays overlapping this row's */
+export function rowCheck(d: BayRowDef, cls: Uint8Array, roads: { a: Pt; b: Pt; hw: number }[], others: BayRowDef[], mapSize: number, woodland = false): string {
   const G = rowGeom(d);
   if (G.count < 2) return 'too short: at least 2 bays';
   if (G.len > ROW_MAX) return 'too long (240 m max)';
@@ -149,8 +149,8 @@ export function rowCheck(d: BayRowDef, cls: Uint8Array, roads: { a: Pt; b: Pt; h
   for (const p of Q) { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
   for (let y = Math.floor(y0); y < y1; y++) for (let x = Math.floor(x0); x < x1; x++) {
     if (!inQuad(Q, { x: x + 0.5, y: y + 0.5 })) continue;
-    const c = cls[y * mapSize + x];
-    if (c !== TC.GROUND && c !== TC.PATCH) return 'not on buildable ground';
+    const why = parkClassWhy(cls[y * mapSize + x], woodland);
+    if (why) return why;
   }
   for (const r of roads) if (segQuadDist(r.a, r.b, Q) < r.hw) return 'a road runs over it';
   const R = quadOf(d, 0);
