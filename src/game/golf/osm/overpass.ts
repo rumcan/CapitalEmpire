@@ -6,12 +6,13 @@
 import type { OsmRef } from './query';
 import { BUSY_STATUS, Cancelled, ServerBusy, ServerDown, retryAfterOf, type Net } from './polite';
 
-/** the public Overpass servers, the main one first (on 2026-11-08 only the main one answered; the mirrors are tried in this order when it does not) */
-export const OVERPASS_SERVERS: readonly string[] = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
+/** the public Overpass servers, the main one first, then the mirrors in the order they are tried when it does not answer (T378: on the evening of 2026-11-08
+ *  the main one gave 502, kumi and private.coffee hung, and maps.mail.ru answered in about 14 s from the browser, CORS allowed) */
+export const OVERPASS_SERVERS: readonly string[] = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
 
 /** how long each server is given before the next is tried, ms: the main server a long while (a big course can take a minute), a mirror less (a mirror that is
  *  down hangs: on 2026-11-08 one held a request for the whole 130 s and gave nothing) */
-export const SERVER_TIMEOUT_MS: readonly number[] = [130000, 45000, 45000];
+export const SERVER_TIMEOUT_MS: readonly number[] = [130000, 60000, 45000, 45000];
 /** a server that timed out is left alone this long, ms; one that was busy or refused, a minute */
 const HUNG_MS = 5 * 60_000, BUSY_MS = 60_000;
 
