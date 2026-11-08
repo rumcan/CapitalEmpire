@@ -7,7 +7,7 @@ import { ANIMALS, ANIMAL_CLIPS, ANIMAL_DIRS, ANIMAL_FRAMES, animalItem } from '.
 import { hasVectorShadow } from '../src/game/shadow-vector';
 import { CAR_DIRECTIONS } from '../src/game/ext/car-art';
 import {
-  ANIMAL_GRAZE, ANIMAL_LOOKUP, ANIMAL_MARGIN, ANIMAL_ROW, ANIMAL_WALK, ANIMALS_PER_FARM_MAX, animalAt, animalHeading, animalKind, farmAnimalFields, farmAnimals,
+  ANIMAL_GRAZE, ANIMAL_LOOKUP, ANIMAL_MARGIN, ANIMAL_ROW, ANIMAL_SEP, ANIMAL_WALK, ANIMALS_PER_FARM_MAX, HERD, animalAt, animalHeading, animalKind, farmAnimalFields, farmAnimals,
   type AnimalView, type FarmParcel,
 } from '../src/game/ext/farms';
 
@@ -88,6 +88,30 @@ test('the animals never leave their field (never through its fence), and walk th
     }
   }
   assert.ok(checked > 10000 && walking > 100, `${checked} moments, ${walking} walking`);
+});
+
+test('the herds are the owner\'s sizes, and the animals of a field keep a little apart (never closer than twice ANIMAL_SEP) at every moment', () => {
+  const arts = ANIMALS.map(a => ({ id: a.id }));
+  let herds = 0, pairs = 0;
+  for (const p of parcels()) for (const model of [1, 2] as const) {
+    const groups = new Map<string, ReturnType<typeof farmAnimals>>();
+    for (const a of farmAnimals(p, SEED, arts, model)) { const k = a.f.join(); const g = groups.get(k) ?? []; g.push(a); groups.set(k, g); }
+    for (const g of groups.values()) {
+      const [, hi] = HERD[g[0]!.kind];
+      assert.ok(g.length >= 1 && g.length <= hi, `${p.key}: ${g.length} ${g[0]!.kind}s, at most ${hi}`);
+      assert.ok(g.every(a => a.kind === g[0]!.kind), 'a field holds one kind');
+      herds++;
+      const views = g.map((): AnimalView => ({ x: 0, y: 0, art: 0, row: 0, frame: 0, moving: false }));
+      for (let t = 0; t < 1500; t += 2.3) {
+        g.forEach((a, i) => animalAt(a, t, views[i]!));
+        for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++) {
+          const d = Math.hypot(views[i]!.x - views[j]!.x, views[i]!.y - views[j]!.y);
+          assert.ok(d >= 2 * ANIMAL_SEP - 1e-6, `${p.key} at ${t.toFixed(1)}s: ${d.toFixed(2)} tiles apart`); pairs++;
+        }
+      }
+    }
+  }
+  assert.ok(herds >= 10 && pairs > 1000, `${herds} herds, ${pairs} pairs checked`);
 });
 
 test('placement and motion are deterministic', () => {
