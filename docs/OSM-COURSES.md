@@ -250,8 +250,10 @@ below 30% (`MIN_SCALE` in `grade.ts`: its holes would be under a third of their 
 - **Nominatim** (usage policy: at most one request a second, no autocomplete, cache results, identify the app): a search runs only on Search or Enter (never as you type); `Gate` keeps requests at
   least 1.1 s apart; answers are kept 7 days (IndexedDB); the request carries `X-Requested-With: CapitalEmpire-golf` (Nominatim's CORS answer allows that header; the browser adds the page's origin
   as the Referer; a browser cannot set User-Agent); a search already made sends nothing.
-- **Overpass**: one query to look near a place and one query per import; a course already kept is never fetched again, Refresh is the only refetch; the main server, then the two mirrors, a 130 s
-  limit each for a course (70 s for the look near a place); a simple POST (no custom header, so no preflight); the player can Cancel.
+- **Overpass**: one query to look near a place and one query per import; a course already kept is never fetched again, Refresh is the only refetch; the main server (130 s) and then the two mirrors
+  (45 s each: a mirror that is down hangs; for the look near a place 70 s and 30 s), a simple POST (no custom header, so no preflight); a server that timed out is left alone for 5 minutes and one that was
+  busy for a minute, so a retry does not wait on it again; the card says which server it is asking and why the last was given up on; the player can Cancel. (Seen on 2026-11-08 in a real run: the main
+  server answered 502 at once, the first mirror held the request until the limit.)
 - **A 429, a refusal (403) or a busy server** (502, 503, 504, 509, an Overpass "timed out" remark on every server): the card says "The map servers are busy: try again in a minute.", and for the
   minute (or the server's Retry-After) nothing more is sent (`Cooldown`). No network: "Could not reach the map servers: are you online?".
 - **If the game ships widely**, the public servers' policies stop being enough (they are for light, interactive use): a self-hosted Overpass or a small proxy with its own cache would be needed.
