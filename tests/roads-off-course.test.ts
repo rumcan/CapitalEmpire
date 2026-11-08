@@ -2,12 +2,14 @@
 // drives"): the road tool's checkLegs refuses a town road whose corridor reaches into the course land, with the reason; the course's cart
 // paths and drives stay allowed there; a town road may end on the land's edge where a drive meets it; the roads already on the land stay but
 // are not extended onto it; the bulldozer still takes them up. Headless: npm test (no DOM, no canvas).
+// T355 (#997): the rule now holds for the town roads BIGGER than a street (streetOnCourseOk: only the Small classes, the streets, are built on
+// the land: tests/streets-on-course.test.ts); every refusal below is of such a class (BIG), and the streets' side is checked there.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASS, RoadNetwork, type Leg, type RoadClass } from '../src/game/network';
+import { CLASS, CLASSES, RoadNetwork, isCourseClass, type Leg, type RoadClass } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { checkLegs, snapPoint, type Snap } from '../src/game/snap';
-import { COURSE_LAND_MSG, legsOnLand, pointInLand } from '../src/game/golf/parcels';
+import { COURSE_LAND_MSG, legsOnLand, pointInLand, streetOnCourseOk } from '../src/game/golf/parcels';
 import type { Rect } from '../src/game/golf/mode';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -15,7 +17,8 @@ import type { Rect } from '../src/game/golf/mode';
 const leg = (ax: number, ay: number, bx: number, by: number): Leg => ({ a: { x: ax, y: ay }, b: { x: bx, y: by } });
 /** the course land: the course (x 100..180, y 100..180) and a block bought on its east side (x 180..220) */
 const COURSE: Rect = [100, 100, 80, 80], BLOCK: Rect = [180, 100, 40, 80], LAND: Rect[] = [COURSE, BLOCK];
-const TOWN: RoadClass[] = [CLASS.gravel!, CLASS.lane!, CLASS.street!, CLASS.road!, CLASS.avenue!, CLASS.boulevard!];
+/** the town classes bigger than a street (T355: every class the course land still refuses): the rural road, the medium, large and divided classes and their variants */
+const BIG: RoadClass[] = CLASSES.filter(c => !isCourseClass(c.id) && !streetOnCourseOk(c));
 const COURSE_ROADS: RoadClass[] = [CLASS['cart-walk']!, CLASS['cart-dirt']!, CLASS['cart-slab']!, CLASS.cart!, CLASS['drive-gravel']!, CLASS.drive!, CLASS['drive-avenue']!];
 /** a committed network of the given legs per class */
 function netOf(...parts: [RoadClass, Leg[]][]): RoadNetwork {
@@ -32,24 +35,25 @@ function why(net: RoadNetwork, legs: Leg[], cls: RoadClass, land: readonly Rect[
   return checkLegs(net, legs, from, to, cls, undefined, land);
 }
 
-test('a town road in the course land, or across it, is refused with the reason (every town class, the course and a bought block)', () => {
+test('a town road bigger than a street, in the course land or across it, is refused with the reason (every such class, the course and a bought block)', () => {
   const empty = new RoadNetwork();
   assert.equal(COURSE_LAND_MSG, 'Course land: build cart paths and drives with Course › Paths & drives');
-  for (const cls of TOWN) {
+  for (const id of ['road', 'avenue', 'arterial', 'boulevard', 'six', 'grand', 'divided', 'avenue.gr', 'arterial.tl.tr']) assert.ok(BIG.some(c => c.id === id), `${id} is a bigger class`);
+  for (const cls of BIG) {
     assert.equal(why(empty, [leg(120, 140, 160, 140)], cls), COURSE_LAND_MSG, `${cls.id}: inside the course`);
     assert.equal(why(empty, [leg(60, 140, 240, 140)], cls), COURSE_LAND_MSG, `${cls.id}: across the course and the block`);
     assert.equal(why(empty, [leg(190, 120, 210, 120)], cls), COURSE_LAND_MSG, `${cls.id}: inside the bought block`);
     assert.equal(why(empty, [leg(60, 60, 140, 60), leg(140, 60, 140, 120)], cls), COURSE_LAND_MSG, `${cls.id}: a bend into the land`);
   }
   // the seam between the course and the block is land too (a road along it lies on both)
-  assert.equal(why(empty, [leg(180, 60, 180, 220)], CLASS.street!), COURSE_LAND_MSG);
+  assert.equal(why(empty, [leg(180, 60, 180, 220)], CLASS.avenue!), COURSE_LAND_MSG);
   // the same routes without course land (no golf game): the rule is off
-  assert.equal(why(empty, [leg(120, 140, 160, 140)], CLASS.street!, []), '');
-  assert.equal(why(empty, [leg(60, 140, 240, 140)], CLASS.street!, []), '');
+  assert.equal(why(empty, [leg(120, 140, 160, 140)], CLASS.avenue!, []), '');
+  assert.equal(why(empty, [leg(60, 140, 240, 140)], CLASS.avenue!, []), '');
 });
 
 test('a town road beside the land keeps its corridor outside: touching the edge is fine, reaching over it is refused', () => {
-  const empty = new RoadNetwork(), s = CLASS.street!, hw = s.h + s.walk;
+  const empty = new RoadNetwork(), s = CLASS.avenue!, hw = s.h + s.walk;
   // along the course's north edge (y 100): the corridor's edge on the boundary is off the land, a hair closer is on it
   assert.equal(why(empty, [leg(60, 100 - hw, 240, 100 - hw)], s), '');
   assert.equal(why(empty, [leg(60, 100 - hw + 0.5, 240, 100 - hw + 0.5)], s), COURSE_LAND_MSG);
@@ -80,9 +84,11 @@ test('a town road ending on the land\'s edge joins a course drive there, and is 
   assert.deepEqual(n.segs.map(q => q.cls.id).sort(), ['drive-gravel', 'street']);
   // the street did not go on past the edge: it ends at the drive
   assert.ok([...e.net.segs].every(q => q.cls.id !== 'street' || Math.max(q.a.x, q.b.x) <= 100));
-  // the junction's corner seen from the town: an L that runs along the edge to the drive is refused (its corridor lies half on the land)
+  // the junction's corner seen from the town: an L that runs along the edge to the drive is refused (its corridor lies half on the land) for a
+  // class bigger than a street; a street is built on the land (T355), so the land does not refuse it
   const along = [leg(100, 60, 100, 140)];
-  assert.equal(checkLegs(e.net, along, ...snaps(e.net, along), CLASS.street!, undefined, LAND), COURSE_LAND_MSG);
+  assert.equal(checkLegs(e.net, along, ...snaps(e.net, along), CLASS.avenue!, undefined, LAND), COURSE_LAND_MSG);
+  assert.notEqual(checkLegs(e.net, along, ...snaps(e.net, along), CLASS.street!, undefined, LAND), COURSE_LAND_MSG);
   // a start on the edge is fine, inside the land it is not (the road tool refuses that first click)
   assert.equal(pointInLand(LAND, 100, 140), false);
   assert.equal(pointInLand(LAND, 100.5, 140), true);
@@ -109,11 +115,11 @@ test('a road already crossing the land stays, but is not extended further onto i
   // an old save: a street from the town (x 60) into the course, a dead end at (140, 140); the county road across the block
   const e = new NetEditor(netOf([CLASS.street!, [leg(60, 140, 140, 140)]], [CLASS.road!, [leg(200, 60, 200, 240)]]));
   const before = [...e.net.segs].length;
-  // on from its dead end inside the land, or a branch off it there: refused
-  assert.equal(why(e.net, [leg(140, 140, 170, 140)], CLASS.street!), COURSE_LAND_MSG);
-  assert.equal(why(e.net, [leg(120, 140, 120, 170)], CLASS.street!), COURSE_LAND_MSG);
-  // the county road neither goes on nor gets a side road on the land
-  assert.equal(why(e.net, [leg(200, 160, 160, 160)], CLASS.street!), COURSE_LAND_MSG);
+  // on from its dead end inside the land, or a branch off it there: refused (a class bigger than the street; T355: a street may go on)
+  assert.equal(why(e.net, [leg(140, 140, 170, 140)], CLASS.avenue!), COURSE_LAND_MSG);
+  assert.equal(why(e.net, [leg(120, 140, 120, 170)], CLASS.avenue!), COURSE_LAND_MSG);
+  // the county road neither goes on nor gets a (bigger) side road on the land
+  assert.equal(why(e.net, [leg(200, 160, 160, 160)], CLASS.avenue!), COURSE_LAND_MSG);
   assert.equal(why(e.net, [leg(200, 240, 200, 280)], CLASS.road!), ''); // off the land, outside: fine
   // a branch off the old street outside the land is fine; a course drive off it on the land too
   assert.equal(why(e.net, [leg(70, 140, 70, 180)], CLASS.street!), '');

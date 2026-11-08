@@ -141,7 +141,8 @@ import { LotMap, ringClear } from './lots/lots';
 import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
-import { FARM_MODEL, FarmMap, claimedLots, composeFarm, farmSeason, farmStandIns, parcelCorners, type FarmModel, type FarmParcel } from './ext/farms';
+import { FARM_MODEL, FarmMap, animalAt, animalBox, claimedLots, composeFarm, farmAnimals, farmSeason, farmStandIns, parcelCorners, type AnimalView, type FarmAnimal, type FarmModel, type FarmParcel } from './ext/farms';
+import { ANIMALS, animalItem } from './animals-library';
 import { SIG, shown, sigKey } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
@@ -180,7 +181,7 @@ import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { bizName, inSentence, inTheWay, overlaps, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
-import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
+import { buyAdjacentBlock, blockOnRoad, blockOnWater, playInWay, polyInParcels, startWhy, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
@@ -940,6 +941,9 @@ export class Game {
   private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
   /** the crowd's movers (crowdMovers) and its scratch people: the spectators, the golfers */
   private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
+  /** T309: the farm animals by farm key (ext/farms/animals.ts: stateless, a function of the time), each farm's box (the union of its fields), their
+   *  reused movers and scratch view */
+  private animalsOff = false; private farmAnimals = new Map<string, { box: number[]; list: FarmAnimal[] }>(); private animalDraw: Drawable[] = []; private animalView: AnimalView = { x: 0, y: 0, art: 0, row: 0, frame: 0, moving: false };
   /** the day's golf round (updatePlay, docs/GOLF-PLAY.md P2): built once per tournament; playTried is the key last tried, so a round with no holes is not rebuilt every frame */
   private play: GolfPlay | null = null; private playTried = -1;
   /** T208 everyday golf: the town days' play (the save, the booking: golf/everyday.ts DayBook), the day's playback (its town day and course key; null:
@@ -1011,7 +1015,7 @@ export class Game {
   private grassVisible = false;
   private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
   private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, /** T265: the belt trees planted, and the most ms a frame's planting took (plantForest) */ belt: 0, plantMs: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0, /** T312: the people spacer's ms this frame and the people it spaced */ spaceMs: 0, spaced: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, /** T265: the belt trees planted, and the most ms a frame's planting took (plantForest) */ belt: 0, plantMs: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0, /** T312: the people spacer's ms this frame and the people it spaced */ spaceMs: 0, spaced: 0, /** T309: the farm animals drawn this frame and their ms */ animals: 0, animalMs: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -2781,7 +2785,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; { const wd = q.get('wind'); if (import.meta.env.DEV && wd) { const [a, b, c] = wd.split(',').map(Number); this.devWind = wd === 'off' ? NO_WIND : { mph: a! >= 0 ? a! : 8, from: Number.isFinite(b) ? b! : 270, gusty: Number.isFinite(c) ? c! : 0.5, seed: 7 }; } } /* (T334: ?wind=off | mph,from,gusty) */ const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('animals') === '0') this.animalsOff = true; /* T309: ?animals=0, no farm animals (dev; the bench's before) */ if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; { const wd = q.get('wind'); if (import.meta.env.DEV && wd) { const [a, b, c] = wd.split(',').map(Number); this.devWind = wd === 'off' ? NO_WIND : { mph: a! >= 0 ? a! : 8, from: Number.isFinite(b) ? b! : 270, gusty: Number.isFinite(c) ? c! : 0.5, seed: 7 }; } } /* (T334: ?wind=off | mph,from,gusty) */ const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
     this.osmId = osmCourseInfo(q.get('osmcourse'))?.id ?? null; // T340: ?osmcourse=rondebosch | magnolia-national, a new game on that real course (saving off for the session, as a fixture)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
@@ -4141,7 +4145,7 @@ export class Game {
     const ps = this.farmProps.get(key);
     if (ps) { for (const p of ps) if (this.props.has(p)) this.removeProp(p); this.farmProps.delete(key); }
     this.setLotGround('farm:' + key, null);
-    this.farmGround.delete(key); this.farmSeasons.delete(key); this.farmLabels.delete(key);
+    this.farmGround.delete(key); this.farmSeasons.delete(key); this.farmLabels.delete(key); this.farmAnimals.delete(key);
   }
   /** every farm goes (a reset, the farms switched off) */
   private dropAllFarms() {
@@ -4175,6 +4179,9 @@ export class Game {
     this.farmProps.set(key, ps);
     const gs = JSON.stringify(c.ground); if (this.farmGround.get(key) !== gs) { this.setLotGround(pk, c.ground); this.farmGround.set(key, gs); }
     this.farmSeasons.set(key, fp ? '' : farmSeason(f.p, f.seed, model, month));
+    // T309: its animals (none on a farm drawn from a lot preset: it has no paddock of ours)
+    const herd = fp || this.animalsOff ? [] : farmAnimals(f.p, f.seed, ANIMALS, model, undefined, c.props.filter(q => q.id === 'ref:halloween-hay-bales' || LIBRARY[LIB_INDEX.get(q.id) ?? -1]?.kind === 'bush'));
+    if (herd.length) { const bs = herd.map(animalBox); this.farmAnimals.set(key, { box: [Math.min(...bs.map(b => b[0]!)) - 1, Math.min(...bs.map(b => b[1]!)) - 1, Math.max(...bs.map(b => b[2]!)) + 1, Math.max(...bs.map(b => b[3]!)) + 1], list: herd }); } else this.farmAnimals.delete(key);
     // T259: the model 2 farm's stand-in labels ("Stand In for <art>": the windbreak's and the orchard's first tree, each crop state's biggest field, the lane)
     if (fp || model !== 2) { this.farmLabels.delete(key); return; }
     const labels: { p: Drawable; text: string; box: number[] }[] = [], at = LIB_INDEX.get('world:mailbox') ?? 0;
@@ -4448,9 +4455,10 @@ export class Game {
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
   private cursorSnap(): Snap | null { return this.hover ? snapPoint(this.net, this.hover, this.snapRadius(), this.roadStep()) : null; }
-  /** why the preview route cannot be built ('' when it can): see checkLegs; before the first click, a town road's start inside the course land */
+  /** why the preview route cannot be built ('' when it can): see checkLegs; before the first click, a town road's start inside the course land (T124),
+   *  or a street's on a hole's playing surface (T355) */
   routeBlock(legs: Leg[] = this.previewLegs()): string {
-    if (!legs.length) { const cs = this.route.length ? null : this.cursorSnap(); return cs && this.startOnLand(cs.p) ? COURSE_LAND_MSG : ''; }
+    if (!legs.length) { const cs = this.route.length ? null : this.cursorSnap(); return cs ? this.startBlock(cs.p) : ''; }
     // judged exactly as a click at the cursor would be (roadClick refuses such a point), or, with the cursor on the last point, as finishing does
     const c0 = this.cursorSnap(), last = this.route[this.route.length - 1], cs = c0 && last ? this.aim(last, c0) : c0, onLast = !!cs && !!last && cs.p.x === last.x && cs.p.y === last.y;
     return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls, new Set(this.routeCuts(legs).map(c => c.seg)), this.golfLand()) || (this.routeInWay(legs)?.why ?? '');
@@ -4484,12 +4492,14 @@ export class Game {
   routeInWay(legs: Leg[]): { why: string; outline: readonly number[] } | null {
     if (!legs.length) return null;
     const hw = this.cls.h + this.cls.walk, o = inTheWay(legs, hw, this.routeObstacles()); if (o) return o;
+    const play = playInWay(this.courseGrid, this.cls, legs); if (play) return play; // T355: a street never covers a hole's tee, fairway, green, bunker or water hazard
     const p = this.propsNearLegs(legs, hw).find(q => !q.auto && LIBRARY[q.item].big && LIBRARY[q.item].kind !== 'car');
     return p ? { why: `${LIBRARY[p.item].name} is in the way — bulldoze it first`, outline: rectPoly(p.x0, p.y0, p.x1, p.y1) } : null;
   }
-  /** whether a route of the class in hand may not start at p (T124): a town road inside the course land, where only the course's cart paths
-   *  and drives are built (a point on the land's edge is fine: a town road may meet a course drive there) */
-  private startOnLand(p: Pt): boolean { return !isCourseClass(this.cls.id) && pointInLand(this.golfLand(), p.x, p.y); }
+  /** why a route of the class in hand may not start at p, '' when it may (golf/parcels.ts startWhy): T124, a town road bigger than a street inside the
+   *  course land, where only the course's cart paths and drives are built (a point on the land's edge is fine: a town road may meet a course drive
+   *  there); T355, a street on a hole's playing surface */
+  private startBlock(p: Pt): string { return startWhy(this.golfLand(), this.courseGrid, this.cls, p.x, p.y); }
   /** the road pieces the route bulldozes: with Replace on, those it clashes with (see replaceCuts); always, the hidden stubs inside a ring it joins (see ringStubs) */
   private routeCuts(legs: Leg[]): PieceSel[] {
     if (!legs.length) return [];
@@ -4582,7 +4592,7 @@ export class Game {
     if (routeAct('click', this.route.length, second) === 'none') return;
     let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius(), this.roadStep());
     if (this.route.length) s = this.aim(this.route[this.route.length - 1]!, s);
-    if (!this.route.length) { if (this.startOnLand(s.p)) { this.toast(COURSE_LAND_MSG, 'warn'); return; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
+    if (!this.route.length) { const why = this.startBlock(s.p); if (why) { this.toast(why, 'warn'); return; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
     // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
     const legs: Leg[] = []; for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1]!, b: this.route[i]! });
@@ -7726,6 +7736,22 @@ export class Game {
     return out;
   }
 
+  /** T309: the farm animals in a tile box as movers (the street tier): a farm whose fields' box misses it is skipped whole, then each animal's
+   *  place and frame at `now` (seconds; ext/farms/animals.ts animalAt), culled by its point. Reused Drawables: no allocation once warm */
+  private animalMovers(x0: number, y0: number, x1: number, y1: number, now: number): Drawable[] {
+    const out = this.animalDraw, v = this.animalView; let m = 0;
+    for (const f of this.farmAnimals.values()) {
+      const b = f.box; if (b[0]! > x1 || b[2]! < x0 || b[1]! > y1 || b[3]! < y0) continue;
+      for (const a of f.list) {
+        animalAt(a, now, v);
+        if (v.x < x0 - 1 || v.x > x1 + 1 || v.y < y0 - 1 || v.y > y1 + 1) continue;
+        const d = out[m] ?? (out[m] = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: true }); m++;
+        d.item = animalItem(v.art, v.row, v.frame); d.x = v.x; d.y = v.y; d.x0 = v.x - 0.35; d.y0 = v.y - 0.35; d.x1 = v.x + 0.35; d.y1 = v.y + 0.35;
+      }
+    }
+    out.length = m;
+    return out;
+  }
   /** the crowd as movers in a tile box (the street tier, with the townspeople): each gallery spot's fans, each queue at a stop or gate (its block
    *  1.5 tiles behind the kerb toward the stop's car park, as drawWalkers had it) and each walking party, every person its 3D frame (crowdview.ts;
    *  `now` in seconds), then the golfers of the day (playMovers). A spot, a party or a queue is culled by its point to the box padded by 4 tiles, the
@@ -10681,7 +10707,8 @@ export class Game {
         if (!this.spacingOff) spacePeople(this.spacer, [peds, crowd, range], this.spaceAt ? (now - this.spaceAt) / 1000 : 0, this.spaceRefs);
         this.perf.spaceMs = performance.now() - s0; this.perf.spaced = this.spacingOff ? 0 : this.spaceRefs.length;
         this.spaceAt = now;
-        movers = cars.concat(peds, crowd, range, this.dayCarOut, this.golfCartOut, this.crewOut);
+        const a0 = performance.now(), animals = this.animalMovers(bx0, by0, bx1, by1, now / 1000); this.perf.animalMs = performance.now() - a0; this.perf.animals = animals.length;
+        movers = cars.concat(peds, crowd, range, this.dayCarOut, this.golfCartOut, this.crewOut, animals);
       } else this.spaceAt = 0;
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
       // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)
