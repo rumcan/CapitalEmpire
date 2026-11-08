@@ -624,7 +624,7 @@ export class City {
     return earnedTarget(b.earned, g.success);
   }
   /** spends n $ on kind (see Budget.spend); a negative construction n gives it back */
-  spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep', n: number): void { this.budget.spend(kind, n); }
+  spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots', n: number): void { this.budget.spend(kind, n); }
   /** takes a loan unit (true: borrow, if the town can hold one) or repays one (false); false if the books refuse */
   loan(take: boolean): boolean { this.upkeepC = null; return take ? this.budget.borrow(this.town.pop) : this.budget.repay(); }
 

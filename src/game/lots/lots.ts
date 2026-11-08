@@ -23,7 +23,7 @@ export interface Lot {
 /** the town's street lattice (roads.ts BLOCK) and the half width kept free of lots around its points, tiles */
 export const BRANCH = 40, RESERVE = 4;
 // the widths 25% over the first ones (the owner, 2026-10-22: the house lots were too small; the same houses, more yard)
-const SIZE: Record<string, [number, number]> = { gravel: [10, 15], lane: [10, 15], street: [10, 15], road: [12.5, 16], avenue: [15, 18], arterial: [16.5, 19], boulevard: [20, 20], six: [16.5, 19], grand: [20, 20], divided: [12.5, 16] };
+export const SIZE: Record<string, [number, number]> = { gravel: [10, 15], lane: [10, 15], street: [10, 15], road: [12.5, 16], avenue: [15, 18], arterial: [16.5, 19], boulevard: [20, 20], six: [16.5, 19], grand: [20, 20], divided: [12.5, 16] };
 /** the shallowest lot kept; the clearance added to another road's h + walk; the share of bad terrain allowed; the overlap tolerance */
 const MIN_D = 6, CLEAR = 0.5, TOL = 0.25;
 /** the share of a lot's samples allowed on bad terrain (exported for the block lots) */
@@ -43,7 +43,7 @@ const hund = (v: number) => Math.round(v * 100);
 const isBad = (c: number) => c === TC.WATER || c === TC.CREEK || c === TC.BANK;
 const isJunction = (n: Node) => n.arms.length >= 3 || (n.type === 'roundabout' && n.arms.length >= 2);
 /** how far a seg's usable span is cut back at one end: a junction's reach, a dead end's bulb, else nothing */
-function endReach(n: Node, cls: RoadClass): number {
+export function endReach(n: Node, cls: RoadClass): number {
   if (isJunction(n)) { let m = 0; for (const a of n.arms) m = Math.max(m, a.h + a.walk); return m + 2 + (n.type === 'roundabout' ? n.rb : 0); }
   return n.arms.length === 1 ? cls.h + cls.bulb + cls.walk : 0;
 }

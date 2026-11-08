@@ -41,8 +41,10 @@ export function holeFrom(h: PlayHole, want: TeeKind | undefined): PlayHole {
 
 /** the course a round is played on: the holes with a line of two points or more, in order, played out to 18 (see PLAYED; PlayHole.n is the hole's own
  *  number, so a 9-hole course shows its numbers twice). lieAt is the lie of the surface at the point (surfAt; a surface of null is no painted course),
- *  and off the course rough within OUT_TILES of a played line, else out of bounds. No holes: an empty course, every point out of bounds */
-export function makeCourseView(holes: Hole[], surfAt: (x: number, y: number) => GolfSurface | null): CourseView {
+ *  and off the course rough within OUT_TILES of a played line, else out of bounds. No holes: an empty course, every point out of bounds.
+ *  T353 (#995): lotAt(x, y) is true where a house lot lies (golf/estate.ts): private land, so a ball that comes to rest on it is out of bounds, whatever the
+ *  course grid says there (the lots stand off the painted course; the check comes first so a lot laid over unpainted land is out all the same) */
+export function makeCourseView(holes: Hole[], surfAt: (x: number, y: number) => GolfSurface | null, lotAt?: (x: number, y: number) => boolean): CourseView {
   const lines = holes.filter(h => h.line.length >= 2), N = lines.length, played: PlayHole[] = [];
   for (let i = 0; N > 0 && i < PLAYED; i++) {
     const h = lines[i % N]!, line = h.line;
@@ -53,6 +55,7 @@ export function makeCourseView(holes: Hole[], surfAt: (x: number, y: number) => 
   return {
     holes: played,
     lieAt(x: number, y: number): Lie {
+      if (lotAt?.(x, y)) return 'out';
       const s = surfAt(x, y);
       if (s) return LIE[s];
       for (const L of plines) if (lineDist(L, x, y) <= OUT_TILES) return 'rough';
@@ -60,6 +63,7 @@ export function makeCourseView(holes: Hole[], surfAt: (x: number, y: number) => 
     },
     // T334: the finer lie: the surface's own kind (lies.ts lieKindOfSurface), and a rough one within FIRST_CUT_TILES of a fairway, fringe, tee or green as the first cut
     kindAt(x: number, y: number): LieKind {
+      if (lotAt?.(x, y)) return 'out';
       const s = surfAt(x, y);
       if (!s) { for (const L of plines) if (lineDist(L, x, y) <= OUT_TILES) return 'rough'; return 'out'; }
       const k = lieKindOfSurface(s);
