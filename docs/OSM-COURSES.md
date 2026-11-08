@@ -176,6 +176,20 @@ tournament comes with the season, the clubhouse and car park are already placed)
 | warnings | 20 close-hole pairs | 15 close-hole pairs; the Par 3 Course (5 holes in the box) named and left out | 2 close-hole pairs, the scale, 1 par difference |
 | fixture | 36 kB: 34 tees, 18 greens, 21 fairways, 41 bunkers, 4 water | 97 kB: 36 tees, 34 greens, 23 fairways, 55 bunkers, 6 water, 14 rough, 1 creek | 60 kB: 35 tees, 21 greens, 20 fairways, 43 bunkers, 8 water, 23 rough, 5 waterways |
 
+### Performance (the bench)
+`node scripts/perf/bench.mjs http://localhost:5189/ --start town --osmcourse <id> --size 1` on a dev server (`--seed 1` instead of `--osmcourse` for the hand-made nine, which comes with its stamped town),
+1600 x 900, RTX 3080, run on the merged branch. The budget is 8 ms of main thread a frame (GAME-PLAN 2.3). Main-thread time a frame while the camera pans (average / p95):
+
+| | 30% pan | 15% pan | props | heap |
+| --- | --- | --- | --- | --- |
+| hand-made nine with its town (pop 1001) | 1.19 / 1.6 ms | 1.52 / 2.1 ms | 12930 | 351 MB |
+| Rondebosch | 1.04 / 1.5 ms | 1.38 / 2.1 ms | 33 | 201 MB |
+| Woodhill (90%) | 1.18 / 1.8 ms | 1.33 / 1.9 ms | 33 | 262 MB |
+
+A second run with `--zooms 30,30` (the 30% pan twice): Rondebosch 1.60 / 2.3 ms, then 1.66 / 2.5 ms; Woodhill 1.48 / 2.2 ms, then 1.29 / 1.9 ms. The ground cache peaked at 47 to 59 MB and the ground plus the
+tile pictures at 183 to 188 MB on all three (the hand-made nine too: the tile cache sits at its cap). **Frames a second swing from run to run** (the PC is shared with other agents' browsers and servers; the lock orders only the heavy jobs): Rondebosch 40 fps (30%) and 51 fps (15%) on the first run, 19 and 47 fps in the 30% pass twice on the second; Woodhill 30 and 45, then 19.5 and 41; the nine 54 and 53. The first pass over the
+course after the fitted overview decodes about 90 tile pictures (the near ground textures; the nine's settle had already done most of its own) and the second pass none (the warm pass held 47 fps on Rondebosch and 41 on Woodhill with the main thread at 1.3 to 1.7 ms: what limits the frame rate there is not the main thread).
+
 ### Woodhill Country Club, Pretoria (OSM relation/5974410)
 - The club has **no `leisure=golf_course` polygon** in OpenStreetMap: the course area is the "Woodhill Golf Estate" `landuse=residential` multipolygon (2277 x 1535 m, 198.7 ha), found with
   `--osm relation/5974410`. **That boundary includes the estate's housing. It is kept as course land for now** (the rough is laid over it, houses and all) and is not cut out; a later
