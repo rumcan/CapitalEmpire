@@ -99,7 +99,9 @@ export interface YourRound { v: 1; day: number; holes: number[]; at: number; car
    *  Championship, the Mayor's Cup, or a money match. Every mode but casual is a competition: COMPETITION_RULES, the tournament's pressure */
   mode?: RoundMode;
   /** T244: a money match's other side (play/match.ts: the opponent, the stake, their ball, each hole's result); present with mode 'match' */
-  match?: MatchPlay }
+  match?: MatchPlay;
+  /** T349 (#992): a practice round from the hole card's Play: free, not an event, not recorded (no handicap, reputation or money); absent: your round as before */
+  practice?: true }
 /** T246/T244: a round's mode (YourRound.mode) */
 export type RoundMode = 'casual' | 'championship' | 'mayors-cup' | 'match';
 export const ROUND_MODES: readonly RoundMode[] = ['casual', 'championship', 'mayors-cup', 'match'];
@@ -239,6 +241,7 @@ export function normalizeYourRound(x: unknown): YourRound | undefined {
   const ru = o.rules as Partial<RoundRules> | undefined;
   if (ru && typeof ru === 'object' && MULL_RULES.some(m => m.id === ru.mull)) base.rules = { mull: ru.mull!, ...(GIMME_RULES.some(g => g.id === ru.gimme) ? { gimme: ru.gimme! } : {}) };
   if (n(o.mk) && o.mk >= 1) base.mk = Math.round(o.mk);
+  if (o.practice === true && !o.mode) base.practice = true; // T349: a casual round that is practice (a competition or a match never is)
   if (o.mode && ROUND_MODES.includes(o.mode) && o.mode !== 'casual') { base.mode = o.mode; base.rules = { ...COMPETITION_RULES }; } // (T246: a competition keeps its rules)
   if (base.mode === 'match') { const m = normalizeMatch(o.match, holes.length); if (m) base.match = m; else delete base.mode; } // (T244: a match without its other side is a casual round)
   if (o.undo && typeof o.undo === 'object') {

@@ -196,6 +196,7 @@ import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDeci
 import { ADDRESS_PACE, AT_ADDRESS, jumpAlpha, livePuffs, puffAt, stepToward, type Puff } from './golf/play/jumpfx';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
+import { missingParts, missingWhy, practicePick, realHoleCount, type PracticeScope } from './golf/play/practice';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
 import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
@@ -8654,6 +8655,12 @@ export class Game {
     this.yrFlight = null; this.yrCard = false;
     const t = cardTotals(r.card);
     const { round: _r, ...rest } = p; void _r;
+    // T349: a practice round (the hole card's Play) is free and not recorded: no handicap, nerve, rounds, reputation or money; back where you were
+    if (r.practice) {
+      this.setPlayer(rest);
+      this.toast(t.thru > 0 ? `${why ? why + '. ' : ''}Practice round: ${t.strokes} (${toParWord(t.toPar)}) over ${t.thru} hole${t.thru > 1 ? 's' : ''} · not recorded` : (why ?? 'Your practice round is called off'), 'info');
+      this.practiceReturn(); this.emit(); return;
+    }
     if (t.thru > 0) {
       const noHcp = noHandicapWhy(r); // (T325: mulligans: in your rounds, not toward your handicap)
       const kind = r.mode === 'match' ? 'match' : isCompetition(r) ? 'tournament' : 'everyday'; // (T246: a competition is a tournament round: more nerve)
@@ -8665,6 +8672,46 @@ export class Game {
     const eid = eventOfMode(r.mode), d = this.golf?.clubEvents?.today;
     if (eid && d && d.id === eid && d.day === r.day && !d.done) this.finishEvent({ name: p.name, strokes: t.strokes, thru: t.thru });
     this.emit();
+  }
+  // ---------- T349 (#992): the hole card's Play: a practice round on one hole or the whole course (golf/play/practice.ts) ----------
+  /** where you were before a practice round from the hole card: the camera, the tool, the side modes that were open, and the hole card; put back when it ends */
+  private practiceBack: { cam: { X: number; Y: number; z: number }; tool: Tool; side: SideMode[]; hole: number | null } | null = null;
+  /** how many holes the course really has (each once: a 9-hole course is 9, though it is played out to 18) */
+  practiceHoleCount(): number { const v = this.yrView(); return v ? realHoleCount(v) : 0; }
+  /** why hole n cannot be played as a practice round now (null: it can): what the hole lacks (a tee, a pin, a green), a round under way, or why a round cannot start */
+  holePlayWhy(n: number): string | null {
+    const g = this.golf; if (!g) return 'No course yet';
+    const c = this.holeCardView(), miss = missingParts({ tee: g.tees.some(t => t.hole === n), pin: g.pins.some(p => p.hole === n), green: !!c?.areas.some(a => a.surface === 'green') });
+    if (miss.length) return missingWhy(n, miss);
+    if (this.yourRound()) return 'Finish or quit the round you are playing first';
+    if (!this.hasClubhouse) return 'Build the clubhouse first: your golfer starts from it';
+    const why = this.yourChoices().why; if (why) return why;
+    const v = this.yrView(); return v && v.holes.some(h => h.n === n) ? null : 'The course is still being set up: try again in a moment';
+  }
+  /** the Play button's choice: a practice round on just hole n (from your tee: the white one, else the first it has) or on every hole of the course from the first. Free, not an event, not
+   *  recorded (yourRoundEnd); when it ends the camera, the tool, the side modes and the hole card come back as they were */
+  practiceStart(n: number, scope: PracticeScope) {
+    const why = this.holePlayWhy(n); if (why) { this.toast(why, 'warn'); return; }
+    const p = this.playerNow(), v = this.yrView(); if (!p || !v) return;
+    const at = this.townNow(), b = p.booked;
+    if (b && b.day === at.day && at.dayMin >= b.tee - BOOK_LEAD && !(b.result && at.dayMin >= b.result.done)) { this.toast('You are out on the course in your booked round', 'warn'); return; }
+    const holes = practicePick(v, n, scope), r = holes.length ? startRound(v, holes, at.day) : null;
+    if (!r) { this.toast('That hole cannot be played yet', 'warn'); return; }
+    this.practiceBack = { cam: { X: this.cam.X, Y: this.cam.Y, z: this.cam.z }, tool: this.tool, side: SIDE_MODES.filter(k => this[k]), hole: this.holeCardHole };
+    this.closeHoleCard();
+    this.setYourRound({ ...r, practice: true }); this.youTeeOpen = false; this.yrCard = false; this.yrFlight = null;
+    this.shutToolsForRound();
+    const h = holeOf(v, holes[0]!)!; this.youCartBring(h.tee);
+    this.toast(scope === 'hole' ? `Practice: hole ${h.n}, par ${h.par}. Free, and not recorded` : `Practice round: ${holes.length} holes. Free, and not recorded`, 'good');
+    this.yourJump(); this.emit();
+  }
+  /** a practice round has ended (or was quit): back where you were, as you were: the camera, the tool and the side modes, and the hole card */
+  private practiceReturn() {
+    const b = this.practiceBack; if (!b) return; this.practiceBack = null;
+    if (b.side.length) { for (const k of b.side) if (!this[k]) this.toggleSideMode(k); } // (a side mode in hand means Select in hand)
+    else if (this.tool !== b.tool) this.setTool(b.tool);
+    if (b.hole !== null) this.openHoleCard(b.hole);
+    this.camEase = { a: { ...this.cam }, b: { ...b.cam }, t0: performance.now(), ms: CAM_EASE_MS };
   }
   // ---------- T246 (#708): your Club Championship and the Mayor's Cup (golf/clubevents.ts) ----------
   /** the event card open (the announcement, the day's entry, the result and the presentation); null: closed */
