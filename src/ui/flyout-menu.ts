@@ -16,7 +16,9 @@ export type LeafAct =
   | { k: 'road'; id: string } | { k: 'junction'; id: string } | { k: 'surface'; id: string } | { k: 'newHole' } | { k: 'holes' }
   | { k: 'club' } | { k: 'halfway' } | { k: 'care'; id: string } | { k: 'event' } | { k: 'props'; group: string | null }
   | { k: 'paint'; tex: string } | { k: 'plant'; id: string } | { k: 'paintMode'; id: string } | { k: 'range'; section: string | null } | { k: 'land' }
-  | { k: 'practice'; id: string } | { k: 'build' } | { k: 'place'; id: string } | { k: 'pro'; id: 'prooffice' | 'teachhut' };
+  | { k: 'practice'; id: string } | { k: 'build' } | { k: 'place'; id: string } | { k: 'pro'; id: 'prooffice' | 'teachhut' }
+  /** T356 (#998): Course > Place a real course > (a course): takes that map-data course in hand */
+  | { k: 'real'; id: string };
 /** T256 (#743): Build, the holes' painting tools on your property (Range › Build, Facilities › Build on your property): the course tool's
  *  entry with the property's brush */
 const BUILD_TOOL: RailTool = { id: 'course', label: 'Build', key: '', icon: 'terrain' };
@@ -45,6 +47,8 @@ export interface MenuCtx {
   plants: { id: string; name: string; col?: string }[];
   /** T206: the practice facilities (Facilities ▸ Practice) with their own lock besides the tool's (no practice area: not a range start) */
   practice?: { id: string; name: string; why: string | null }[];
+  /** T356: the real courses the game ships (Course > Place a real course): the id and the name the menu shows, with its place, holes and par */
+  real?: { id: string; name: string; place: string; holes: number; par: number }[];
   /** New hole's lock (null: open) */
   newHoleWhy: string | null;
   /** the range card's sections (a game with a range); T288: place, a placement (the range, its car park, the practice area: a click takes it in
@@ -105,6 +109,8 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       ] : [], h), ROW_TILE.holes));
       const b = byId('buildings');
       if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice)], b), ROW_TILE.buildings));
+      // T356 (#998, the owner: "add a way for the user to place the golf course he imported into his map"): the real courses, each placed with its outline in hand
+      if (c.golf && c.real?.length) rows.push(group('real', 'Place a real course…', 'trophy', c.real.map((x): MenuRow => ({ key: `real:${x.id}`, label: x.name, icon: 'pin', note: `${x.place} · ${x.holes} holes · par ${x.par}`, leaf: { item: item.id, entry: { id: 'select', label: x.name, key: '', icon: 'pin' }, act: { k: 'real', id: x.id } } })), h));
       // (T288: Cart paths & roads is a rail button of its own, below Course)
       const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));

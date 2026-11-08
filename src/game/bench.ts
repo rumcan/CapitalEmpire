@@ -189,6 +189,9 @@ export function benchGame(g: Game, scene: BenchScene) {
     const at = townTimeOf(g.traffic.town, g.traffic.simTime(performance.now())), clock = `${String(at.hour).padStart(2, '0')}:${String(at.minute).padStart(2, '0')}`;
     const info = { scene, ...(scene === 'golf' ? { golfersOut: g.dayOutNow() } : {}), heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0), clock, carsAtStart: g.perf.simActive };
     console.log('[bench] scene', info);
+    // T356 (#998): ?realplace=<id> (bench.mjs --realplace <id>, with --start town and --money 1): a real course in hand over the town, its placing mode's frames
+    // against the same frames without it (realPlaceStage); ?realplace=<id>,laid: the course laid there, then the scene's own tour (the game after placing)
+    { const rp = new URLSearchParams(location.search).get('realplace'); if (scene === 'golf' && rp) { void realPlaceBench(g, rp, info, r => { const out = { ...info, realplace: rp, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; } }
     // T251: ?ballRoll=ab (bench.mjs --ballRoll ab), the balls' bounce and roll on and off by turns over the action (rollStage)
     // T312: ?spacing=ab (bench.mjs --spacing ab), the people stepping round each other on and off by turns over the action (spaceStage)
     if (new URLSearchParams(location.search).get('spacing') === 'ab') { spaceStage(g, scene, r => { const out = { ...info, spacing: 'ab', stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
@@ -207,6 +210,63 @@ export function benchGame(g: Game, scene: BenchScene) {
     if (farms) { farmStage(g, farms, (r, month) => { const out = { ...info, farms: farms.n, month, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     startTour(g, info, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
   };
+}
+
+/** T356 (#998, "dont screw performance"): a real course placed into the grown town. ?realplace=<id>: the course in hand over the town (the pose that takes the
+ *  most buildings and may go there), the main-thread ms a frame (Game.perf.cpuMs) at 30% and 15% in three states, by turns, three times each: off (no course in
+ *  hand), hand (in hand, the pointer still: the plan is kept and only the outline and the faint holes are drawn each frame) and move (in hand, the pose
+ *  moved a tile every frame: the plan worked out again every frame, the worst a moving pointer can do). Each run settles 1 s, then 4 s of frames; pooled per
+ *  zoom and state, with the delta from off. ?realplace=<id>,laid: the course is laid there (as Place it does) and the scene's own tour runs over the new
+ *  game (compare with the same run on lead/live, which has no course placed: the cost the placed course adds to the game) */
+async function realPlaceBench(g: Game, spec: string, info: Record<string, unknown>, done: (r: Record<string, unknown>[]) => void) {
+  const [id, mode] = spec.split(',') as [string, string | undefined], T = g.golf!.town;
+  const ok = await g.startRealPlace(id);
+  if (!ok) { console.log('[bench] real course not in hand'); done([{ stage: 'real course', error: 'not in hand' }]); return; }
+  let best: { x: number; y: number; n: number } | null = null;
+  for (let dx = -460; dx <= 460; dx += 40) for (let dy = -460; dy <= 460; dy += 40) {
+    g.real.at = { x: Math.round(T.x + dx), y: Math.round(T.y + dy) };
+    const p = g.real.plan(); if (!p || !p.ok) continue;
+    const n = p.lots.keys.length + p.orphans.keys.length; if (!best || n > best.n) best = { x: g.real.at.x, y: g.real.at.y, n };
+  }
+  if (!best) { g.real.cancel(); done([{ stage: 'real course', error: 'no pose may go there' }]); return; }
+  g.real.at = { x: best.x, y: best.y };
+  console.log('[bench] real course pose', JSON.stringify({ id, ...best, plan: { total: g.real.plan()!.total, ha: g.real.plan()!.land.ha, roadM: g.real.plan()!.roads.m } }));
+  if (mode === 'laid') {
+    g.real.click(); const t0 = performance.now(), laid = g.real.confirm(); const ms = Math.round(performance.now() - t0);
+    console.log('[bench] real course laid', laid, `${ms} ms on the main thread`);
+    await new Promise(r => setTimeout(r, 6000));
+    const c = g.golf?.osm ? { x: best.x, y: best.y } : T; g.lookAt(c.x, c.y, 0.3);
+    startTour(g, { ...info, realplace: spec, laid, layMs: ms }, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES.golf);
+    return;
+  }
+  const zooms = [0.3, 0.15], states = ['off', 'hand', 'move'] as const, runs: { z: number; st: (typeof states)[number] }[] = [];
+  for (const z of zooms) for (let r = 0; r < 3; r++) for (let k = 0; k < 3; k++) runs.push({ z, st: states[(k + r) % 3]! });
+  const frames = new Map<string, number[]>(), q = (a: number[], p: number) => { const x = [...a].sort((u, v) => u - v); return x[Math.min(x.length - 1, Math.floor(p * x.length))] ?? 0; }, avg = (a: number[]) => a.reduce((p, v) => p + v, 0) / Math.max(1, a.length);
+  let k = 0, t = 0, n = 0;
+  const next = async () => {
+    if (k >= runs.length) {
+      g.onFrame = null; g.real.cancel();
+      const out: Record<string, unknown>[] = [];
+      for (const z of zooms) {
+        const tag = `${Math.round(z * 100)}%`, r: Record<string, unknown> = { stage: `real course ${tag}` }, m: Record<string, number> = {};
+        for (const st of states) { const f = frames.get(`${tag} ${st}`) ?? []; m[st] = avg(f); r[st] = { frames: f.length, cpuAvgMs: +avg(f).toFixed(3), cpuP95Ms: +q(f, 0.95).toFixed(3) }; }
+        r.delta = { handAvgMs: +(m.hand! - m.off!).toFixed(3), moveAvgMs: +(m.move! - m.off!).toFixed(3) };
+        out.push(r);
+      }
+      done(out); return;
+    }
+    const r = runs[k]!, tag = `${Math.round(r.z * 100)}% ${r.st}`;
+    g.onFrame = null;
+    if (r.st === 'off') g.real.cancel(); else if (!g.real.active) { await g.startRealPlace(id); g.real.at = { x: best!.x, y: best!.y }; }
+    g.lookAt(best!.x, best!.y, r.z); t = 0; n = 0;
+    g.onFrame = (_now, dt) => {
+      t += dt; if (t < 1) return;
+      if (r.st === 'move' && g.real.active) g.real.at = { x: best!.x + (n++ & 1), y: best!.y };
+      const v = frames.get(tag) ?? []; frames.set(tag, v); v.push(g.perf.cpuMs);
+      if (t >= 5) { k++; void next(); }
+    };
+  };
+  void next();
 }
 
 /** T251 (#728, "dont screw performance"): the balls' bounce and roll A/B on one page (the PC's other load falls alike on both): at 30% and 15%, on (the

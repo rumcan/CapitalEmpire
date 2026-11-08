@@ -213,3 +213,59 @@ heights from a public DEM (T026), cropping a course to chosen holes instead of s
 holes), the Par 3 Course, a course picker that takes a name (the browser must never call Overpass or Nominatim: ship fixtures). **Parked** (the owner, not important for now): Wingate Park
 Country Club, Pretoria (OSM way/4261725), mapped with tees, fairways, greens and bunkers but no hole lines; holes worked out from the fairways (the green near one end, the tee beyond the
 other, numbered by walking) were built and tested, then taken out of this PR: they are on the branch `arena/T340-wingate-parked`.
+
+---
+
+# Placing a real course into a game under way (T356, #998)
+
+The owner, 2026-11-08: "add a way for the user to place the golf course he imported into his map, seeing a outline and then having to rotate the course to fit.
+it should auto buy any property or expand the map size so he can place the course. the placing highlight can turn red if you cant place it coz you dont have
+enough money. It should auto build over other roads and buildings by buying the land and destroying everything under it. Add a notification pop up."
+
+**Use:** Course › *Place a real course…* › Rondebosch / Magnolia National / Woodhill. The course's outline follows the pointer; R / Shift+R (or Shift+wheel) turn it
+15 degrees, Alt+R one degree, Alt+wheel freely; a click asks (the pop-up), *Place it* lays it, *Cancel* (or Esc, or a right click) leaves everything as it was.
+A map-data game (`?osmcourse=`, the new-game card) is unchanged: it still lays the course on a new flat map.
+
+| piece | file |
+| --- | --- |
+| the turn: `rotateSpec(spec, deg)` (about the middle of the land, before rasterising; never a mirror; the holes' order, lengths and pars untouched; `rot` and `outline` on the turned spec), `coverStrips` (the land bought), `coverOutline`, `firstFittingAngle` | `src/game/golf/osm/rotate.ts` |
+| the plan of a pose: `planPlace(world, turnedSpec, pose, build)`: land, demolition, refusals, price; `popupText`, `priceLines`, `placeLabel` | `src/game/golf/osm/place.ts` |
+| the grid diff that lays the painted course into the game's course grid and clears the old holes; the build price from the painted spec | `src/game/golf/osm/placegrid.ts` |
+| the mode (state, keys, drawing of the outline and the faint holes, the pop-up's view) | `src/game/golf/osm/placer.ts` |
+| the engine's host: the world the planner reads, the lay (`Game.layRealCourse`), the pointer, keys, wheel, Esc | `src/game/engine.ts` (`real`, `realWorld`, `layRealCourse`) |
+| the Course menu entry; the card over the map and the pop-up | `src/ui/flyout-menu.ts`, `src/ui/course/RealPlaceCard.tsx`, `src/App.tsx` |
+| tests | `tests/golf-osm-place.test.ts`, `tests/golf-osm-placer.test.ts` |
+| shots; bench | `scripts/dev/real-place-shots.mjs`; `scripts/perf/bench.mjs --realplace <id>[,laid]` |
+
+## How it decides (planPlace)
+- **The land bought is a cover of the turned land**: the game's ownership is a list of axis-aligned rects (and the build grid's shader takes 32 of them), so a turned
+  land is covered by at most 18 horizontal strips as wide as the land is in each (rounded outward); an unturned land (0, 90, 180, 270 degrees) is one rect, exactly itself.
+  The outline shown is the cover, so what you see is the land you get (about 6 to 10% more than the oriented rectangle at 15 to 45 degrees). The strips join `golf.parcels`
+  and are kept apart in `golf.courseRects`: Land for sale sees them as one box (its search for blocks grows with the square of the rects) and the survey lines leave them be.
+- **Price** = land + demolition + the course laid. Land: each piece of the cover, cut at the 40-tile blocks Land for sale uses, less what you own, at the rate of its block's
+  class (farm 1, open 1.25, town 2, industrial 3, commercial 4 dollars a m2, `golf/parcels.ts`), plus the town's growth (5% a thousand people above the first). The
+  buildings under it are bought out at their compensation (`budget.ts compensation`, the bulldozer's price), the public roads at their value (length x class cost x kind) as
+  compensation too; the club's own cart paths and drives go free. The course laid: its painted surfaces at the paint tool's seed price (`golf/costs.ts unitBuildCost`).
+- **A lot with no road is cleared too and counted**: a built lot outside the cover whose frontage lost its road (the piece it fronted lies in the cover), or whose road no longer
+  reaches the county road (the cut stranded it), is bought out with the rest and listed in the pop-up.
+- **Red (the outline hatched, the reason by the pointer)**: off the map (4 tiles to spare), over the river (`TC.WATER`), over the club's own buildings, car parks, range,
+  practice area, tournament structures or an iconic place, within 26 tiles of the town's centre, a cut that leaves the town's centre or the clubhouse with no way to the
+  county road, a tournament under way. Short of money: red too, "Not enough money: $X (short $Y)".
+- **Over what is there**: the player's own placed items go for nothing; town trees and forest go as the course grid's new surfaces take their ground; a tunnel is left
+  (it runs under the land).
+
+## Laying it (Place it)
+Buys out the lots (the worker pays their compensation), pays the land, the roads and the course, cuts the road pieces inside the cover (`NetEditor.removePiece`; the ends outside
+are dead ends, trimmed by the bulldozer's `tidyEnds`), removes the player's placed items, adds the cover to the land (`fitCourseGrid`, `sendGolf`), applies **one `GridDiff`**
+through the grid's own pipeline (`applyDiff`, `courseGridChanged`: the workers' cells, the ground that re-bakes itself, the trees that go), clears the old course's holes,
+puts the tee sets, pins and aim points, and saves `golf.osm` with `placed: true` and `turn` (the loader then keeps the game's own map and seed; a new-game map-data
+course has no `placed` and is laid on the flat map as before). Your previous holes are **replaced** by the course's (the pop-up says so); the land they stood on stays yours.
+
+## Left out, and for the lead to decide
+- **The map cannot grow.** `MAP = 1024` is a compile-time constant of the engine (typed arrays, the terrain, the workers), so "expand the map" is not offered: a course that fits
+  in no turn is refused with a message that suggests a smaller or a scaled course (`specOf` already scales Woodhill to 90%; true size needs 1079 tiles). Woodhill at 90% fits
+  only at 0 and 180 degrees (976 of the 1016 usable tiles).
+- **Rerouting around the course** is not done: a cut road ends at the boundary (and the lots it leaves roadless are cleared and counted, the way to the county road is kept by refusing a
+  cut that would lose it). A detour needs the road builder's snap and crossing rules on public land; the pop-up's text says what happens.
+- **Estate streets (T354)** are not in lead/live's converter, so none are laid.
+- The cover's extra land and the rect budget (18 strips, 32 in the shader) are choices: a finer cover costs rects the build grid cannot take.

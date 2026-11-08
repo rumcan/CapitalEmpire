@@ -480,6 +480,8 @@ export class PaintTool {
   /** a new game or a load is in (the engine's afterLoad, after the course grid and the plans): the New hole wizard waits for the tee of the
    *  game's first free hole number (1 in a new game) */
   newGame() { this.wizard.reset(this.nextFreeHole() || 1); this.pill = null; this.host.emit(); }
+  /** T356: a real course was placed over the course: the undo and redo steps name cells that are no longer there, so they go (the owner: "Undo is not needed") */
+  clearHistory() { this.undos = []; this.redos = []; }
 
   /** the areas as save tuples */
   save(): PaintTuple[] { return this.areas.map(a => toTuple(a)); }

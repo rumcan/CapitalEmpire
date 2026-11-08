@@ -83,6 +83,8 @@ import { PlaceCard } from './ui/PlaceCard';
 import { SceneCard } from './ui/SceneCard';
 import { LandPanel } from './ui/golf/LandPanel';
 import { WelcomeCard } from './ui/golf/WelcomeCard';
+import { RealPlaceDialog, RealPlaceHud } from './ui/course/RealPlaceCard';
+import { OSM_COURSES } from './game/golf/osm';
 import { RangeGuideCard } from './ui/golf/RangeGuideCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
@@ -120,6 +122,8 @@ function menuCtx(game: Game): MenuCtx {
     // T206: Facilities ▸ Practice: the range's practice area's facilities (no range: locked with why)
     practice: [{ id: 'putting', name: 'Putting green' }, { id: 'chipping', name: 'Chipping green and bunker' }].map(f => ({ ...f, why: game.range.scene ? null : 'Comes with a driving range (its practice area)' })),
     newHoleWhy: ui?.newHoleLock ?? null,
+    // T356: Course > Place a real course: the shipped map-data courses
+    real: OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par })),
     // T288: the placements still to make first (the range, its car park, the practice area: a click takes it in hand), then the card's sections
     range: [
       ...game.rangePlaces().filter(q => !q.done).map(q => ({ id: q.id, name: `Place ${q.name.replace(/^The /, 'the ')}`, place: true, why: q.why || null })),
@@ -317,6 +321,8 @@ export default function App() {
     if (act?.k === 'event') { if (!game.eventTool) game.toggleEventTool(); game.emit(); return; }
     // T200: Course › Land for sale: the overlay (a side mode in Select: another tool closes it)
     if (act?.k === 'land') { activeRail.current = itemId; if (game.range.cardOpen) game.openRangeCard(false); game.openLandSale(); return; }
+    // T356: Course > Place a real course > (a course): in hand over the map, Select under it
+    if (act?.k === 'real') { activeRail.current = itemId; void game.startRealPlace(act.id); return; }
     // T256: Range › Build (and Facilities › Build on your property): the holes' painting tools on your property
     if (act?.k === 'build') { activeRail.current = itemId; game.openPropertyPaint(); return; }
     if (act?.k === 'newHole' || act?.k === 'holes' || act?.k === 'surface') game.paint.setProperty(false); // the Holes panel's tools paint holes
@@ -880,6 +886,8 @@ export default function App() {
             return <SceneCard view={sc} padRight={`${side ? base + 22 : Math.max(1, base + 0.75)}rem`} onView={v => game.sceneView(v)} onClose={() => game.closeScene()} />;
           })()}
           {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
+          {game.real.active && <RealPlaceHud game={game} />}
+          {game.real.active && <RealPlaceDialog game={game} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />
