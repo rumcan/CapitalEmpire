@@ -23,6 +23,7 @@ import { readMods } from './play/mods';
 import { normalizeEvents, type ClubEventsSave } from './clubevents';
 import type { GameSkills } from './play/types';
 import type { OsmGolfInfo } from './osm/types';
+import { normalizeEstate, type EstateSave } from './estate';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -109,6 +110,8 @@ export interface GolfSave {
   *  course card and the credits carry ("© OpenStreetMap contributors"), where it came from, and its holes and par. The game is laid on the flat map
   *  (boot.ts flatTerrain) whatever its seed. Missing: an ordinary game */
  osm?: OsmGolfInfo;
+ /** T353 (#995): the house lots laid on the club's land (golf/estate.ts EstateSave): each lot's frame, stage, times, seed and price. Missing: none laid */
+ estate?: EstateSave;
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
@@ -148,7 +151,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, weather, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, weather, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, estate, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -193,5 +196,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (clubEvents) out.clubEvents = normalizeEvents(clubEvents); // T246
   // T340: a map-data course's credit and name, well formed only (the strings kept, the numbers finite)
   if (osm && typeof osm.id === 'string' && typeof osm.name === 'string') out.osm = { id: osm.id, name: osm.name, place: String(osm.place ?? ''), credit: String(osm.credit ?? ''), licence: String(osm.licence ?? ''), source: String(osm.source ?? ''), holes: Number.isFinite(osm.holes) ? osm.holes : 0, par: Number.isFinite(osm.par) ? osm.par : 0, mappedPar: Number.isFinite(osm.mappedPar) ? osm.mappedPar : Number.isFinite(osm.par) ? osm.par : 0, ...(typeof osm.scale === 'number' && osm.scale > 0 && osm.scale < 1 ? { scale: osm.scale } : {}), ...(osm.entry && Number.isFinite(osm.entry.x) && Number.isFinite(osm.entry.y) && ['N', 'E', 'S', 'W'].includes(osm.entry.edge) ? { entry: { x: osm.entry.x, y: osm.entry.y, edge: osm.entry.edge } } : {}), ...(osm.derived === true ? { derived: true } : {}) };
+  // T353: the house lots, well formed only (a save whose lots do not read has none: the field stays out)
+  if (estate && normalizeEstate(estate)) out.estate = estate;
   return out;
 }

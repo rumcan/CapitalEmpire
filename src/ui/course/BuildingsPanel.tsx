@@ -1,6 +1,7 @@
 import type { Game } from '../../game/engine';
 import { BUSINESS, CLUBHOUSE_RANGE_COST } from '../../game/business/catalogue';
 import { HALFWAY_COST, HALFWAY_TEE_REACH } from '../../game/golf/halfway';
+import { LAY_COST, LEVY } from '../../game/golf/estate';
 import { HUT_COST, HUT_MAX, HUT_REACH, HUT_UPKEEP, OFFICE_CLUB_REACH, OFFICE_COST, OFFICE_UPKEEP } from '../../game/golf/pros';
 import { LIBRARY } from '../../game/library';
 import { Thumb } from '../Thumb';
@@ -12,6 +13,8 @@ const CLUB_ART = LIBRARY.find(it => it.id === 'golf:clubhouse-shanty');
 const HALFWAY_ART = LIBRARY.find(it => it.id === 'business:golf-halfway-pavilion');
 /** T214: the pro's office's and the teaching hut's stand-ins (business/art.ts) */
 const OFFICE_ART = LIBRARY.find(it => it.id === 'business:golf-pro-shop'), HUT_ART = LIBRARY.find(it => it.id === 'expansion:lean-to-shed');
+/** T353: the House lots' picture (the classic game's golf estate villa) */
+const ESTATE_ART = LIBRARY.find(it => it.id === 'business:estate-villa');
 
 /** the Buildings panel (plan P23 4.8, P1-E; was the Course tool's Buildings tab): the houses of the course town. Phase 1 has the clubhouse,
  *  a card with its picture, price and "one only"; picking it arms its ghost (Buildings arms it on opening until it stands), placed as before:
@@ -37,6 +40,8 @@ export function BuildingsPanel({ game }: { game: Game }) {
       {/* T214 (P26 3.1): the pro's office by the clubhouse, the teaching huts at the range's mats and the practice greens */}
       <ProBuildingCard game={game} kind="prooffice" />
       <ProBuildingCard game={game} kind="teachhut" />
+      {/* T353 (#995): house lots beside the holes, sold to the townsfolk, who build on them */}
+      <EstateCard game={game} />
       {!built && game.clubDriveOffer && (
         <div className="mt-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-2" data-testid="club-drive-offer">
           <div className="flex items-center gap-1.5 text-amber-200"><span aria-hidden className="font-bold">!</span>No drive within reach of the spot you tried</div>
@@ -91,6 +96,38 @@ function ProBuildingCard({ game, kind }: { game: Game; kind: 'prooffice' | 'teac
       <p className="mt-1 leading-snug" data-testid={`${kind}-note`}>{placing
         ? (office ? `Click within ${OFFICE_CLUB_REACH * 2} m of the clubhouse, on your land, off the course; its front on a path, drive or road. R turns it, Esc puts it down.` : `Click within ${HUT_REACH * 2} m of the range's mats or a practice green, on your land, off the course. One hut a place.`)
         : n > 0 ? <>Its people are hired on the <button className="underline" onClick={() => game.openStaffCard(true)} data-testid={`${kind}-staff`}>Staff card</button>.</> : (office ? 'The head pro and the membership secretary work from here.' : 'Each hut takes one teaching pro.')}</p>
+    </>
+  );
+}
+
+/** T353 (#995, golf/estate.ts): the House lots card. Pick it and drag along a street on your land to lay a row of plots (a click lays one); the townsfolk buy them
+ *  (the club is paid: the books' Lot sales), build over a few months, and each finished house brings a member to the club and a small levy a month. The card
+ *  says where the lots stand and what they ask, and offers an estate street for the land that has none */
+function EstateCard({ game }: { game: Game }) {
+  const c = game.estateCard(); if (!c) return null;
+  const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`, building = c.sold + c.building;
+  return (
+    <>
+      <button className={`card mt-2 gap-1 ${c.placing ? 'card-on' : ''}`} data-card="estate" aria-pressed={c.placing} onClick={() => game.placeEstate(!c.placing)}
+        title={c.placing ? 'Laying house lots (click to put the tool down; Esc too)' : 'Lay house lots along a street on your land'}>
+        <div className="flex w-full items-center gap-3">
+          {ESTATE_ART && <div className="relative grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={ESTATE_ART} size={60} /><span className="absolute bottom-0 left-0 right-0 bg-black/60 text-center text-[9px] leading-tight text-slate-200">Stand In</span></div>}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">House lots</span><span className="text-amber-200">{money(LAY_COST)} a lot</span></div>
+            <div className="sub-line" data-testid="estate-counts">{c.total ? `${c.sale} for sale · ${building} sold, building · ${c.built} built` : '20 × 30 m plots beside a street'}</div>
+          </div>
+        </div>
+        <div className="sub-line leading-snug">Plots on your land beside the holes. The townsfolk buy them and build; each house brings a member and {money(LEVY)} a month.</div>
+      </button>
+      <p className="mt-1 leading-snug" data-testid="estate-note">{c.placing
+        ? 'Drag along a street to lay a row of lots (a click lays one): green is fine, red says why not. Lots keep 30 m from every hole, off the course, water and paths. Esc puts it down.'
+        : c.total
+          ? `A standard lot asks ${money(c.ask)} at reputation ${Math.round(c.rep)}, up to ${money(c.best)} on a green by water. About ${c.rate.toFixed(1)} lots a month sell.${c.takings ? ` Sales so far: ${money(c.takings)}.` : ''}`
+          : 'Pick House lots, then drag along a street on your land. A ball that lands on a lot is out of bounds.'}</p>
+      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+        <button className={`chip ${c.offer ? 'chip-on' : ''}`} onClick={() => game.drawEstateStreet()} data-testid="estate-draw-street" title="The road tool with a street in hand: draw it from a road to your land; House lots comes back to lay the plots along it">Draw an estate street</button>
+        {c.offer && <span className="text-amber-200" data-testid="estate-offer">No street within reach of that spot</span>}
+      </div>
     </>
   );
 }

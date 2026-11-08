@@ -9,6 +9,7 @@ import { isAngled } from '../src/game/lots/compose';
 import { NEAR_M } from '../src/game/ext/hole-wizard';
 import { SURF, makeGrid, paintDisc, fillPolygon, type Grid } from '../src/game/ext/course-grid';
 import { makeCourseView } from '../src/game/golf/play/courseview';
+import { normalizeGolfSave } from '../src/game/golf/mode';
 import { deriveHoles } from '../src/game/golf/holes';
 import {
   BUILD_MONTHS, LAY_COST, LEVY, MARKET_CAP, OFF_AXIS_DEG, RANGE_T, SOLD_MONTHS, ST,
@@ -342,4 +343,14 @@ test('a ball that lands on a lot is out of bounds: the played course reads the l
   // a lot laid over painted ground still reads out (the check comes first)
   assert.equal(makeCourseView(holes, () => 'fairway', () => true).lieAt(1, 1), 'out');
   assert.equal(makeCourseView(holes, surfAt, undefined).lieAt(125, 110), 'rough', 'no lots given: as before');
+});
+
+test('the golf save carries the estate: well-formed lots stay in it, a save with none or with junk has none', () => {
+  const e = estate3(); stepEstate(e, 2.2, stepEnv());
+  const base = { v: 1 as const, tier: 1, rep: 30, town: P(500, 500), course: [400, 400, 100, 100] as [number, number, number, number], parcel: [400, 400, 100, 100] as [number, number, number, number], dir: 0 as const, tees: [], pins: [], aims: [], clubhouse: P(450, 450) };
+  const g = normalizeGolfSave({ ...base, estate: JSON.parse(JSON.stringify(encodeEstate(e))) })!;
+  assert.ok(g.estate, 'the lots stay in the golf save');
+  assert.deepEqual(normalizeEstate(g.estate)!.lots.map(l => [l.id, l.st]), e.lots.map(l => [l.id, l.st]));
+  assert.equal(normalizeGolfSave({ ...base })!.estate, undefined, 'a save from before has none');
+  assert.equal(normalizeGolfSave({ ...base, estate: { v: 1, next: 1, t: 0, market: 0, lots: [[1, 2]] } as never })!.estate, undefined, 'junk lots: none');
 });

@@ -87,8 +87,8 @@ export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' |
 export const HOLE_COUNT = 18;
 /** why the course cannot take a cell of your land (PaintHost.landWhy): the brush footprint's reason, and the New hole wizard's for a
  *  refused tee or green and the cells it leaves out (ext/hole-wizard says it in its own words) */
-export type LandRefusal = 'off' | 'range';
-export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your land', range: 'The driving range stands here' };
+export type LandRefusal = 'off' | 'range' | 'estate';
+export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your land', range: 'The driving range stands here', estate: 'A house lot stands here (T353): the estate is not course land' };
 /** why Rub out leaves a cell as it is when the land rules let it (T125): nothing above the base there, or (rubHoleOnly) another hole's cell */
 /** T206: the Green and Bunker brushes in the practice area */
 export const PRACTICE_BRUSH_WHY = 'Practice greens are built with Facilities ▸ Practice';
