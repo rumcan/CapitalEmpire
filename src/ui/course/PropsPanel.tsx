@@ -1,5 +1,5 @@
 import type { Game } from '../../game/engine';
-import { DECOR, DECOR_GROUPS, PROPS_APPEAL_RADIUS, PROPS_DECAY, appealText, placeOf, sellBack, shownIn, sizeText, sizedPrice, type DecorItem } from '../../game/golf/decor';
+import { DECOR, PROPS_APPEAL_RADIUS, PROPS_DECAY, appealText, placeOf, placeableProps, propsCount, propsShown, sellBack, sizeText, sizedPrice, type DecorItem } from '../../game/golf/decor';
 import { PROPS_APPEAL_CAP } from '../../game/golf/rangesave';
 import { LIBRARY } from '../../game/library';
 import { Thumb } from '../Thumb';
@@ -17,9 +17,9 @@ export function PropsPanel({ game }: { game: Game }) {
   const t = game.decor, sel = t.selection(), range = game.golf?.start === 'range', appeal = range ? t.appeal() : 0, selSize = sel ? t.sizeOf(sel.p, sel.d) : 1;
   // T187: the catalogue by place: Decoration's the course's props, Town decoration's the town's (its Buildings their own view); All shows every item
   const town = t.where === 'town', buildings = town && t.group === 'buildings';
-  // T193: a group the toolbar's flyout opened (Props ▸ Plants) shows alone
-  const groups = DECOR_GROUPS.filter(g => (buildings ? g.id === 'buildings' : t.all || g.id !== 'buildings') && (buildings || !t.focus || g.id === t.focus));
-  const items = (g: string) => DECOR.filter(d => d.group === g && !d.hidden && (buildings || shownIn(d, t.where, t.all))); // T229: a frame tree is not sold here
+  // T193: a group the toolbar's flyout opened (Props ▸ Plants) shows alone. T369: All props shows every group (golf/decor.ts propsShown); the
+  // line under the box counts what is shown against every prop the tool can place (T229: a frame tree is not sold here)
+  const view = { where: t.where, group: t.group, all: t.all, focus: t.focus }, groups = propsShown(view), shown = propsCount(view), placeable = placeableProps().length;
   return (
     <div className="tp" data-panel="props" data-place={buildings ? 'town-buildings' : t.where}>
       {buildings
@@ -29,10 +29,15 @@ export function PropsPanel({ game }: { game: Game }) {
           : <ToolHead icon="leaf" title="Props" desc="Dress your venue: pot plants, fountains, statues, pillars and benches" />}
       {buildings && <p className="sub-line mb-2 leading-snug" data-testid="town-buildings-note">Decoration: the town has no land value or attractiveness for them to raise yet, so they add the look alone.</p>}
       {!buildings && (
-        <label className="mb-2 flex items-center gap-2 text-xs" data-testid="props-all">
-          <input type="checkbox" checked={t.all} onChange={e => { t.all = e.target.checked; game.emit(); }} />
-          All props (not only the {town ? "town's" : "course's"})
-        </label>
+        <div className="mb-2" data-testid="props-all-box">
+          <label className="flex items-center gap-2 text-xs" data-testid="props-all">
+            <input type="checkbox" checked={t.all} onChange={e => t.setAll(e.target.checked)} />
+            All props (not only the {town ? "town's" : "course's"})
+          </label>
+          <div className="sub-line mt-0.5" data-testid="props-count" data-shown={shown} data-placeable={placeable}>
+            {`Showing ${shown} of ${placeable} props${t.focus && !t.all ? ` (${groups[0]?.name ?? t.focus} only)` : ''}`}
+          </div>
+        </div>
       )}
       {range && !town && (
         <div className="mb-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5" data-testid="props-appeal">
@@ -53,14 +58,14 @@ export function PropsPanel({ game }: { game: Game }) {
           </div>
         </div>
       )}
-      {groups.map(g => { const list = items(g.id); return list.length > 0 && (
-        <div key={g.id} className="mb-2">
+      {groups.map(g => (
+        <div key={g.id} className="mb-2" data-group={g.id}>
           <div className="label-caps mb-1 text-slate-400">{g.name}</div>
           <div className="grid grid-cols-2 gap-1.5">
-            {list.map(d => <Card key={d.key} game={game} d={d} />)}
+            {g.items.map(d => <Card key={d.key} game={game} d={d} />)}
           </div>
         </div>
-      ); })}
+      ))}
       <p className="mt-1 leading-snug">{t.hand ? (kitHint(DECOR.find(d => d.key === t.hand)) ?? (placeOf(DECOR.find(d => d.key === t.hand) ?? { group: 'plants', id: '' }) === 'town' || (town && placeOf(DECOR.find(d => d.key === t.hand) ?? { group: 'plants', id: '' }) === 'both') ? 'Click in the town (off your land, off its lots) to place it; R turns it, Esc puts it down.' : 'Click on your land to place it; R turns it, Esc puts it down.')) : 'Pick a prop to place it, or click one on the map to move, turn or sell it.'}</p>
     </div>
   );

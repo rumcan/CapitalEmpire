@@ -87,6 +87,12 @@ export class PropsTool {
   where: 'course' | 'town' = 'course'; group: DecorGroup | null = null; all = false;
   /** T193: the group the toolbar's flyout opened (Props ▸ Plants): the panel shows its cards alone; null: every group */
   focus: DecorGroup | null = null;
+  /** T369: the panel's "All props" box: every group and every place. Ticked, it lets go of a group the flyout opened (it only widened the place
+   *  before, so the box named "All props" showed that group alone); unticked, the place's own props, every group of them */
+  setAll(on: boolean): void { this.all = on; if (on) this.focus = null; this.ctx.emit(); }
+  /** T369: the flyout's group (Props ▸ Plants: that group alone; null, All props: every group of the place). A group picked takes the "All props"
+   *  box off: the player chose that group, and a box ticked earlier would show every group instead */
+  setFocus(g: DecorGroup | null): void { this.focus = g; if (g) this.all = false; }
   /** opens the tool's view: its place and group (the item in hand goes down when the place changes) */
   setView(where: 'course' | 'town', group: DecorGroup | null = null): void {
     if (where !== this.where) { this.hand = null; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null; this.stroke = null; }
