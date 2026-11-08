@@ -2,7 +2,8 @@
 // game minute for the playback. Times are game minutes of the day; distances are tiles unless named M. Pure TS, no DOM.
 // The stepping (HoleRun, GroupRun) is shared by playRound and the owner's live group (live.ts), so both keep one time model.
 import { TILE_M } from '../types';
-import { carryM, chooseShot, hitShot, putt, rng, skillFor, type ShotSkill } from './shot';
+import { carryM, chooseShot, hitShot, luckyPutt, putt, rng, skillFor, type ShotSkill } from './shot';
+import { kitOf } from './mods';
 import { fieldEnv, type Conditions } from './conditions';
 import { CART_PACE } from './entourage';
 import type { Club, CourseView, Golfer, Group, GolferState, Landing, Lie, Pace, PlayHole, Pt, RoundPlan, Shot, Standing, Wait } from './types';
@@ -147,7 +148,9 @@ export class HoleRun {
     if (p.pend) return p.pend;
     const hole = holeFrom(this.c.view.holes[this.h]!, p.set), k = chooseShot(p.lie, p.ball, hole, p.sk, p.lie === 'tee'); // T254: his set's line
     if (k.club === 'putter') {
-      const from = p.ball, dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), o = putt(p.r, skillFor(p.sk, 'putter'), L * TILE_M, 1, !!this.c.cond); // (T334: a day with conditions putts by the second version, as the owner does)
+      const from = p.ball, dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), o0 = putt(p.r, skillFor(p.sk, 'putter'), L * TILE_M, 1, !!this.c.cond); // (T334: a day with conditions putts by the second version, as the owner does)
+      // (T335: a putter with luck, the owner's fitted putter played by the model: a lucky drop or a lip-out; a field golfer's number has none, and takes no draw)
+      const luck = typeof p.sk === 'number' ? 0 : kitOf(p.sk, 'putter').luck, o = luck > 0 ? luckyPutt(p.r, o0, L * TILE_M, luck) : o0;
       // a miss leaves the ball on the putt's line, on the far side of the pin
       const s = L > 0 ? o.leaveM / TILE_M / L : 0, to = o.holed ? { x: hole.pin.x, y: hole.pin.y } : { x: hole.pin.x + dx * s, y: hole.pin.y + dy * s };
       return p.pend = { club: 'putter', to, lie: o.holed ? 'green' : this.c.view.lieAt(to.x, to.y), penalty: 0, holed: o.holed, dur: PUTT_FLIGHT, green: true };

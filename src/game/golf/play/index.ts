@@ -21,3 +21,4 @@ export * from './lies';
 export * from './conditions';
 export * from './mods';
 export * from './shape';
+export * from './bag';
