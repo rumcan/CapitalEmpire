@@ -16,7 +16,7 @@ import GroundWorker from './ground.worker?worker';
 import type { GrassCellView } from './ext/grass-management';
 import { casterChange } from './living-ground';
 import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
-import { onPaintedSurfaces, paintedSurfaces, setPaintedSurfaces } from './painted-surfaces-live';
+import { baseSurfaces, onPaintedSurfaces, paintedSurfaces, setPaintedSurfaces } from './painted-surfaces-live';
 import { finishOf, type CourseFinish } from './course-finish';
 import { REFLECT, clampWaterLook, waterLookOf, type WaterLook } from './water-look';
 import type { PaintedLook } from './painted-families';
@@ -185,10 +185,10 @@ export class GroundCache {
   get waterLook(): WaterLook { return waterLookOf(paintedSurfaces()); }
   /** T230: sets some of the water look's knobs (the rest stay), as a studio save does: every chunk is baked again. The dev switch
    *  window.__game.ground.setWaterLook({ on: false }) compares the water before T230 and the bake times */
-  setWaterLook(f: Partial<WaterLook>) { const cur = paintedSurfaces(); setPaintedSurfaces({ ...cur, water: clampWaterLook({ ...waterLookOf(cur), ...f }) }); }
+  setWaterLook(f: Partial<WaterLook>) { const cur = baseSurfaces(); setPaintedSurfaces({ ...cur, water: clampWaterLook({ ...waterLookOf(cur), ...f }) }); }
   /** T230: a surface's painted look from the console, as a studio save does (window.__game.ground.setSurfaceLook('water', { family: 'lake' })
    *  with setWaterLook({ on: false }) brings back the water before T230) */
-  setSurfaceLook(key: string, look: Partial<PaintedLook>) { const cur = paintedSurfaces(), was = cur.surfaces[key]; setPaintedSurfaces({ ...cur, surfaces: { ...cur.surfaces, [key]: { ...(was ?? { family: '', version: null, scale: 1, tint: '#ffffff', tone: 0 }), ...look } } }); }
+  setSurfaceLook(key: string, look: Partial<PaintedLook>) { const cur = baseSurfaces(), was = cur.surfaces[key]; setPaintedSurfaces({ ...cur, surfaces: { ...cur.surfaces, [key]: { ...(was ?? { family: '', version: null, scale: 1, tint: '#ffffff', tone: 0 }), ...look } } }); }
   /** Ground variety or its debug view changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   /** T204: the rugged edges on or off (the dev switch: window.__game.ground.setRugged(false) compares the looks and the bake times) */
   rugged = true;
@@ -206,7 +206,7 @@ export class GroundCache {
   /** T227: sets some of the course finish's knobs (the rest stay), as a studio save does: every chunk is baked again, and the engine lays the
    *  collars again when their width changed. The dev switch window.__game.ground.setCourseFinish({ on: false }) compares the look before T227
    *  and the bake times */
-  setCourseFinish(f: Partial<CourseFinish>) { const cur = paintedSurfaces(); setPaintedSurfaces({ ...cur, course: { ...finishOf(cur), ...f } }); }
+  setCourseFinish(f: Partial<CourseFinish>) { const cur = baseSurfaces(); setPaintedSurfaces({ ...cur, course: { ...finishOf(cur), ...f } }); }
   /** T215: the street lamps' reflection pools as the camera specular (on: each chunk's pools go onto its reflection mask, lit on the GPU by the
    *  camera falloff, gl.ts FS_QUAD) or baked into the road picture as before (off, the default); the dev switch window.__game.specCam */
   specCam = false;

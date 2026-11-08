@@ -26,6 +26,7 @@
 import { HH, HW } from './iso';
 import { SUN_SCREEN } from './grass-shine';
 import type { WaterField } from './water-look';
+import { KEY as SWAMP_KEY, swampKey } from './swamp';
 
 // ---------- the knobs ----------
 /** the water motion's knobs (the gear menu's Water motion): the switch, the speed of everything that moves (the rivers' flow, the ponds'
@@ -76,13 +77,14 @@ export function motionMask(f: WaterField, ex: MotionExtras = {}): MotionMaskData
   const u0 = Math.max(0, iu0 - 1), v0 = Math.max(0, iv0 - 1), u1 = Math.min(W - 1, iu1 + 1), v1 = Math.min(H - 1, iv1 + 1), w = u1 - u0 + 1, h = v1 - v0 + 1;
   let anyWater = false;
   for (let v = v0; v <= v1 && !anyWater; v++) for (let u = u0; u <= u1; u++) if (site[v * W + u]) { anyWater = true; break; }
-  if (!anyWater) return null;
+  // (T343: a chunk with swamp but no water near still gets a mask: its pools move)
+  if (!anyWater && !(ex.bands ?? []).some(r => r && bandOver(r, x0 + u0 / res, y0 + v0 / res, x0 + (u1 + 1) / res, y0 + (v1 + 1) / res))) return null;
   // (the bank's distance over the crop and as far round it as the cap: no water farther off can be nearer)
   const cap = BANK_REACH + 1, mg = Math.ceil(cap * res) + 1;
   const out = f.bank(cap, [Math.max(0, u0 - mg), Math.max(0, v0 - mg), Math.min(W - 1, u1 + mg), Math.min(H - 1, v1 + mg)]), flow = f.flow, amp = f.amp, data = new Uint8Array(w * h * 4);
   const reach = BANK_REACH, R = Math.ceil(reach * res) + 1;
   // the exclusions over the crop (1: none; null: none at all)
-  let ex1: Float32Array | null = null;
+  let ex1: Float32Array | null = null, bridge1: Float32Array | null = null, pool: Float32Array | null = null;
   const exAt = () => (ex1 ??= new Float32Array(w * h).fill(1));
   for (const b of ex.bridges ?? []) {
     if (b.pts.length < 2) continue;
@@ -94,8 +96,9 @@ export function motionMask(f: WaterField, ex: MotionExtras = {}): MotionMaskData
       const px = x0 + (u + 0.5) / res, py = y0 + (v + 0.5) / res; let best = Infinity;
       // the deck, its shadow down the screen and the piers between (the line at three shifts down the screen)
       for (const t of [0, 0.5, 1]) for (let i = 0; i + 1 < b.pts.length; i++) best = Math.min(best, segDist(px - t * s, py - t * s, b.pts[i]!, b.pts[i + 1]!));
-      const e = smooth(b.hw + BRIDGE.clear[0], b.hw + BRIDGE.clear[1], best), k = (v - v0) * w + (u - u0), X = exAt();
+      const e = smooth(b.hw + BRIDGE.clear[0], b.hw + BRIDGE.clear[1], best), k = (v - v0) * w + (u - u0), X = exAt(), B = (bridge1 ??= new Float32Array(w * h).fill(1));
       if (e < X[k]!) X[k] = e;
+      if (e < B[k]!) B[k] = e;
     }
   }
   for (const r of ex.bands ?? []) {
@@ -106,8 +109,10 @@ export function motionMask(f: WaterField, ex: MotionExtras = {}): MotionMaskData
       for (let u = u0; u <= u1; u++) {
         const i = Math.floor((x0 + (u + 0.5) / res - bx) * br); if (i < 0 || i >= a.W) continue;
         const al = a.data[(j * a.W + i) * 4 + 3]! / 255; if (!(al > 0)) continue;
-        if (site[v * W + u]!) continue; // (the water itself moves, a creek's through its band and a river's where its band starts under it; the swamp past it does not)
+        if (site[v * W + u]!) continue; // (the water itself moves, a creek's through its band and a river's where its band starts under it)
+        // (the swamp past it: no waves from the open water; T343: past the bank's reach its own pools' weight, the band's cover)
         const k = (v - v0) * w + (u - u0), X = exAt(); X[k] = Math.min(X[k]!, 1 - al);
+        const P = (pool ??= new Float32Array(w * h)); if (al > P[k]!) P[k] = al;
       }
     }
   }
@@ -117,6 +122,12 @@ export function motionMask(f: WaterField, ex: MotionExtras = {}): MotionMaskData
     if (site[k]) { sd = d[k]!; if (flow) { fx = flow[2 * k]!; fy = flow[2 * k + 1]!; a = amp![k]!; } else a = LAP.pond[0]; }
     else {
       sd = -out[k]!;
+      if (out[k]! > reach && pool) {
+        // (T343: the swamp past the bank's reach: its pools' weight, the band's cover (none under a bridge), the signed distance far out, still)
+        const pw = pool[(v - v0) * w + (u - u0)]! * (bridge1 ? bridge1[(v - v0) * w + (u - u0)]! : 1);
+        data[o] = encodeSd(sd); data[o + 1] = 128; data[o + 2] = 128; data[o + 3] = Math.round(255 * clamp(pw, 0, 1));
+        continue;
+      }
       if (out[k]! <= reach) {
         // (the bank: the nearest water sample's strength and flow, carried out to the swash's reach)
         let bd = Infinity;
@@ -130,6 +141,12 @@ export function motionMask(f: WaterField, ex: MotionExtras = {}): MotionMaskData
     data[o] = encodeSd(sd); data[o + 1] = Math.round(128 + 127 * clamp(fx, -1, 1)); data[o + 2] = Math.round(128 + 127 * clamp(fy, -1, 1)); data[o + 3] = Math.round(255 * clamp(a * e, 0, 1));
   }
   return { w, h, data, box: [x0 + u0 / res, y0 + v0 / res, x0 + (u1 + 1) / res, y0 + (v1 + 1) / res] };
+}
+/** any cover of band r inside tile box (xa, ya, xb, yb) */
+function bandOver(r: BandRef, xa: number, ya: number, xb: number, yb: number): boolean {
+  const { a, x0, y0, res } = r, i0 = Math.max(0, Math.floor((xa - x0) * res)), i1 = Math.min(a.W - 1, Math.ceil((xb - x0) * res)), j0 = Math.max(0, Math.floor((ya - y0) * res)), j1 = Math.min(a.H - 1, Math.ceil((yb - y0) * res));
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) if (a.data[(j * a.W + i) * 4 + 3]! > 0) return true;
+  return false;
 }
 /** the distance from point (x, y) to segment a b */
 function segDist(x: number, y: number, a: { x: number; y: number }, b: { x: number; y: number }): number {
@@ -171,6 +188,20 @@ export const TAPS = { step: 0.1, n: 6 } as const;
  *  lies within a quarter tile of the picture's): a leaf or a dark fleck floating on the water is no bank. And a bank pixel with water on its
  *  far side too (a tap SPECK tiles away from the water) is such a speck */
 export const BANK_GATE = [0.05, 0.3] as const, SPECK = 0.12;
+/** T343 (#973): the swamp's pools (the owner, 2026-11-05: "can we have some of the water effects on the smap water too?"). The pools are the
+ *  swamp band's painted water, known by their colour (swamp.ts swampKey, T199's gloss key); the band's cover rides in the motion mask's alpha
+ *  where the signed distance lies past the open water's bank (sd at or under -0.7, which the open water's effects never read), so the same pass
+ *  and the same mask run them, gently: still, shallow water.
+ *  - far: the signed distance (tiles) the pools' weight rises over (whole from the first out: the open water's bank before the second);
+ *  - scale: the ripples this many times finer than the open water's; slow: their drift this share of its speed over the ground;
+ *  - shade: the ripples' light (the open water's RIPPLE.shade 0.14: more here, the pools are dark and small); the swamp's own colour and
+ *    texture stay (a multiply);
+ *  - sparkle, exp: the glint's strength and its exponent (the open water's 0.6 and 220: lower, a softer, dimmer glint, about two thirds as
+ *    many over the same water as a pond's); patch: where it glints (a little fewer patches than the open water's);
+ *  - tap: the picture's four taps round a pixel (tiles) that find a pool's edge (mud on any side), deep: the diagonal four further in (the
+ *    ripples and the glint rise toward a pool's open middle);
+ *  - shore: the soft pale rim's alpha at a pool's edge, its laps' rate (a share of the open water's waves), the share it keeps between laps */
+export const SWAMP_POOL = { far: [-1.5, -1], scale: 1.8, slow: 0.4, shade: 0.2, sparkle: 0.9, exp: 160, patch: [0.07, 0.6], tap: 0.12, deep: 0.3, shore: 0.3, rate: 0.5, floor: 0.35 } as const;
 
 /** the direction toward the sun along the ground (tiles, unit) and its elevation's sine: the screen's sun (grass-shine.ts SUN_SCREEN, the
  *  upper right) taken back through the iso projection (iso.ts: X = HW (x - y), Y = HH (x + y)) */
@@ -241,7 +272,8 @@ export const sampleOf = (r: number, g: number, b: number, a: number): MotionSamp
  *  the picture's waterline (tiles, at most TAPS.step x TAPS.n; the shader reads it off the picture; here given, default from the field), shade:
  *  the last frame's shadow there (0..1). No frame (null: the motion off or faded out): c itself */
 export function motionPixel(c: readonly number[], x: number, y: number, s: MotionSample, fr: MotionFrame | null, edge?: number, shade = 0): number[] {
-  if (!fr || !(fr.gain > 0) || s.sd <= -0.7) return [...c];
+  if (!fr || !(fr.gain > 0)) return [...c];
+  if (s.sd <= -0.7) { const pw = poolWeight(s); return pw > 0.004 ? swampPixel(c, x, y, pw, fr, 1, 1, shade) : [...c]; }
   const cmax = TAPS.step * TAPS.n, key = waterKey(c[0]!, c[1]!, c[2]!), sd = s.sd, A = s.amp, fl = Math.hypot(s.fx, s.fy), river = fl > 0.3;
   const col = c.map(v => v / 255);
   const off = noiseD(x * FLOW.offF + 31.7, y * FLOW.offF + 11.3)[0] * FLOW.offK;
@@ -277,6 +309,28 @@ export function motionPixel(c: readonly number[], x: number, y: number, s: Motio
     if (wet > 0) out = out.map((v, i) => v * (1 + (WET.mul[i]! - 1) * wet * WET.amount * bw));
     if (fe > 0) out = out.map((v, i) => v + (FOAM.col[i]! - v) * fe * bw);
   }
+  return out.map(v => clamp(v, 0, 1) * 255);
+}
+/** T343: the swamp's pools' weight a mask sample carries (0..1: the band's cover, past the open water's bank) */
+export const poolWeight = (s: MotionSample) => s.amp * (1 - smooth(SWAMP_POOL.far[0], SWAMP_POOL.far[1], s.sd));
+/** T343: the shader's swampPool's twin: the ground's pixel c (0..255) at tile point (x, y) in the swamp at the pools' weight wgt, in frame fr;
+ *  near: the least pool key of the four taps round it (0: a pool's edge), deep: of the eight (with the diagonal ones further in); shade: the
+ *  last frame's shadow there. Only the pool's own colour moves (swampKey): the mud, the reeds and the grass between stay */
+export function swampPixel(c: readonly number[], x: number, y: number, wgt: number, fr: MotionFrame | null, near = 1, deep = 1, shade = 0): number[] {
+  const k = swampKey(c[0]!, c[1]!, c[2]!) * wgt;
+  if (!fr || !(fr.gain > 0) || !(k >= 0.004)) return [...c];
+  const P = SWAMP_POOL, S = P.scale, m = S * P.slow;
+  const a = noiseD(x * RIPPLE.fa * S - fr.drift[0]! * m, y * RIPPLE.fa * S - fr.drift[1]! * m), b = noiseD(x * RIPPLE.fb * S - fr.drift[2]! * m, y * RIPPLE.fb * S - fr.drift[3]! * m);
+  const gx = a[1] * RIPPLE.fa * RIPPLE.ra + b[1] * RIPPLE.fb * RIPPLE.rb, gy = a[2] * RIPPLE.fa * RIPPLE.ra + b[2] * RIPPLE.fb * RIPPLE.rb;
+  const off = noiseD(x * FLOW.offF + 31.7, y * FLOW.offF + 11.3)[0] * FLOW.offK, lit = -(gx * SUN_TILE[0] + gy * SUN_TILE[1]);
+  const kk = 1 + fr.ripple * P.shade * clamp(lit, -2.5, 2.5) * k * (0.35 + 0.65 * deep);
+  let out = c.map(v => (v / 255) * kk);
+  const nx = -gx * SPARKLE.bump, ny = -gy * SPARKLE.bump, nl = Math.hypot(nx, ny, 1), nh = Math.max(0, (nx * HALF[0] + ny * HALF[1] + HALF[2]) / nl);
+  const sp = Math.pow(nh, P.exp) * fr.sparkle * P.sparkle * k * deep * smooth(P.patch[0], P.patch[1], off / FLOW.offK + 0.5 * a[0]) * (1 - clamp(shade, 0, 1));
+  if (sp > 0) out = out.map((v, i) => v + sp * (v * 1.6 * SPARKLE.own + SPARKLE.sky[i]! * (1 - SPARKLE.own)));
+  const q = fract(fr.wave * P.rate + off * 0.6), lap = smooth(0, 0.15, q) * (1 - smooth(0.15, 0.9, q));
+  const fo = fr.foam * P.shore * k * (1 - near) * (P.floor + (1 - P.floor) * lap) * smooth(FOAM.broken[0], FOAM.broken[1], 0.5 + 1.1 * b[0]) * (1 - smooth(FOAM.fadePx[0], FOAM.fadePx[1], fr.pxTile));
+  if (fo > 0) out = out.map((v, i) => v + ((v + FOAM.col[i]!) * 0.5 - v) * fo);
   return out.map(v => clamp(v, 0, 1) * 255);
 }
 /** the foam crests' alpha on the water sd tiles in from the field's shore, e from the picture's waterline, at the waves' strength A (the
@@ -350,10 +404,37 @@ float wEdge(vec2 p, vec2 w, bool toWater) {
   }
   return ${g(TAPS.step * TAPS.n)};
 }
+/** T343: the swamp's pools (swampPixel's twin): the pool key by colour, a pool's edge and its open middle from eight taps of the picture */
+float wSwampKey(vec3 c) { c *= 255.0; return smoothstep(${g(SWAMP_KEY.br[0])}, ${g(SWAMP_KEY.br[1])}, c.b - c.r) * smoothstep(${g(SWAMP_KEY.gr[0])}, ${g(SWAMP_KEY.gr[1])}, c.g - c.r); }
+vec3 swampPool(vec3 c, vec2 p, float wgt) {
+  float k = wSwampKey(c) * wgt;
+  if (k < 0.004) return c;
+  const float t = ${g(SWAMP_POOL.tap)}, t2 = ${g(SWAMP_POOL.deep)};
+  float near = min(min(wSwampKey(wPic(p + vec2(t, 0.0))), wSwampKey(wPic(p - vec2(t, 0.0)))), min(wSwampKey(wPic(p + vec2(0.0, t))), wSwampKey(wPic(p - vec2(0.0, t)))));
+  float deep = min(near, min(min(wSwampKey(wPic(p + vec2(t2, t2))), wSwampKey(wPic(p - vec2(t2, t2)))), min(wSwampKey(wPic(p + vec2(t2, -t2))), wSwampKey(wPic(p + vec2(-t2, t2))))));
+  vec3 a = wNoise(p * ${g(RIPPLE.fa * SWAMP_POOL.scale)} - uWaterDrift.xy * ${g(SWAMP_POOL.scale * SWAMP_POOL.slow)});
+  vec3 b = wNoise(p * ${g(RIPPLE.fb * SWAMP_POOL.scale)} - uWaterDrift.zw * ${g(SWAMP_POOL.scale * SWAMP_POOL.slow)});
+  vec2 gs = a.yz * ${g(RIPPLE.fa * RIPPLE.ra)} + b.yz * ${g(RIPPLE.fb * RIPPLE.rb)};
+  float off = wNoise(p * ${g(FLOW.offF)} + vec2(31.7, 11.3)).x * ${g(FLOW.offK)};
+  vec3 col = c * (1.0 + uWater.y * ${g(SWAMP_POOL.shade)} * clamp(-dot(gs, ${v2(SUN_TILE)}), -2.5, 2.5) * k * (0.35 + 0.65 * deep));
+  vec3 N = normalize(vec3(-gs * ${g(SPARKLE.bump)}, 1.0));
+  float sp = pow(max(dot(N, ${v3(HALF)}), 0.0), ${g(SWAMP_POOL.exp)}) * uWater.w * ${g(SWAMP_POOL.sparkle)} * k * deep * smoothstep(${g(SWAMP_POOL.patch[0])}, ${g(SWAMP_POOL.patch[1])}, off / ${g(FLOW.offK)} + 0.5 * a.x);
+  if (sp > 0.002 && uLayerCam.w > 0.5) {
+    vec2 q = (vW - uLayerCam.xy) * uLayerCam.z + 0.5 * uLayerScreen;
+    vec2 sb = textureLod(uShadeLayer, vec2(q.x / uLayerScreen.x, 1.0 - q.y / uLayerScreen.y), 0.0).rg;
+    sp *= 1.0 - clamp(max(sb.r, sb.g), 0.0, 1.0);
+  }
+  col += sp * (col * ${g(1.6 * SPARKLE.own)} + ${v3(SPARKLE.sky.map(v => v * (1 - SPARKLE.own)))});
+  // (the soft pale rim at the pool's edge, brightening as a lap arrives)
+  float q0 = fract(uWaterT.y * ${g(SWAMP_POOL.rate)} + off * 0.6), lap = smoothstep(0.0, 0.15, q0) * (1.0 - smoothstep(0.15, 0.9, q0));
+  float fo = uWater.z * ${g(SWAMP_POOL.shore)} * k * (1.0 - near) * mix(${g(SWAMP_POOL.floor)}, 1.0, lap) * smoothstep(${g(FOAM.broken[0])}, ${g(FOAM.broken[1])}, 0.5 + 1.1 * b.x) * (1.0 - smoothstep(${g(FOAM.fadePx[0])}, ${g(FOAM.fadePx[1])}, uWaterT.w));
+  col = mix(col, (col + ${v3(FOAM.col)}) * 0.5, fo);
+  return clamp(col, 0.0, 1.0);
+}
 vec3 waterMotion(vec3 c, vec2 p) {
   vec4 m = wMask(p);
   float sd = wSd(m);
-  if (sd <= -0.7) return c;
+  if (sd <= -0.7) { float pw = m.a * (1.0 - smoothstep(${g(SWAMP_POOL.far[0])}, ${g(SWAMP_POOL.far[1])}, sd)); return pw > 0.004 ? swampPool(c, p, pw) : c; }
   float key = wKey(c), A = m.a;
   vec2 F = m.gb * 2.0 - 1.0; float fl = length(F); bool river = fl > 0.3;
   float off = wNoise(p * ${g(FLOW.offF)} + vec2(31.7, 11.3)).x * ${g(FLOW.offK)};

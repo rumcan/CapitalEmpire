@@ -1,0 +1,34 @@
+{
+  "id": "spectator:staff_pro_m1:fist_pump",
+  "name": "staff_pro_m1 fist_pump",
+  "clip": "fist_pump",
+  "heightMetres": 1.83,
+  "frameWidth": 160,
+  "frameHeight": 279,
+  "anchor": {
+    "x": 80,
+    "y": 269
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "fist_pump1",
+    "fist_pump2",
+    "fist_pump3",
+    "fist_pump4"
+  ],
+  "fps": 2.6,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m1",
+  "clips": {
+    "fist_pump": "Armature|Victory_Fist_Pump|baselayer 1.53s, stride 1.50s, body turned 5 deg"
+  }
+}

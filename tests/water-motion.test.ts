@@ -7,7 +7,7 @@ import { HH, HW } from '../src/game/iso';
 import { DEFAULT_WATER_LOOK, SITE, WaterField, fieldPad } from '../src/game/water-look';
 import {
   BANK_REACH, FOAM, LAP, MOTION_RANGES, SD_RANGE, SUN_TILE, WATER_MOTION, WATER_MOTION_GLSL, ZOOM, bankAt, clampWaterMotion, decodeSd, encodeSd, foamAt,
-  motionFrame, motionMask, motionPixel, noiseD, phasesAt, pondLap, riverLap, sampleOf, stepPhases, waterKey, type MotionFrame, type MotionMaskData,
+  motionFrame, motionMask, motionPixel, noiseD, poolWeight, SWAMP_POOL, swampPixel, phasesAt, pondLap, riverLap, sampleOf, stepPhases, waterKey, type MotionFrame, type MotionMaskData,
 } from '../src/game/water-motion';
 
 /** the pond's and the lake's picture means (pond-concept-run, lake), the bank's (pond-bank-run) and a grass */
@@ -157,5 +157,105 @@ test('2026-11-01: the motion reaches the district zoom (it fades out only toward
   assert.ok(m, 'a mask');
   const at = (x: number, y: number) => { const u = Math.floor((x - m.box[0]) / (m.box[2] - m.box[0]) * m.w), v = Math.floor((y - m.box[1]) / (m.box[3] - m.box[1]) * m.h); return m.data[4 * (v * m.w + u) + 3]!; };
   assert.ok(at(10, 10) > 0, 'the creek\'s water moves');
-  assert.equal(at(10, 15), 0, 'the swamp past its bank is still');
+  // T343: the swamp past its bank: no waves from the creek, but its own pools' weight (the band's cover), the signed distance far out
+  const t = texel(m, 10.1, 15.1);
+  assert.equal(t.a, 255, "the swamp past its bank carries its pools' weight"); assert.ok(t.s.sd <= SWAMP_POOL.far[0], 'far past the open water');
+  assert.equal(t.g, 128); assert.equal(t.b, 128, 'still: no flow');
+  assert.equal(poolWeight(t.s), 1);
+  assert.equal(poolWeight(texel(m, 10.1, 11.1).s), 0, "none on the creek's own bank (its waves are kept off it as before)");
+});
+
+
+// ---------- T343 (#973): the swamp's pools get the water's motion, gently ----------
+/** the swamp tiles' pool water (dark teal: swamp.ts swampKey whole), their mud and their reeds */
+const POOL = [38, 72, 74], MUD = [92, 80, 52], REED = [96, 110, 50];
+const bandOf = (W: number, H: number, x0: number, y0: number, res: number, cover: (x: number, y: number) => number) => {
+  const data = new Uint8ClampedArray(W * H * 4);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) data[(j * W + i) * 4 + 3] = Math.round(255 * cover(x0 + (i + 0.5) / res, y0 + (j + 0.5) / res));
+  return { a: { data, W, H }, x0, y0, res };
+};
+
+test("T343: a swamp with no open water near still gets a mask, its pools' weight from the band's cover; none without swamp", () => {
+  const f = () => WaterField.over([0, 0, 20, 20], BANK_REACH + 2, 2).motion();
+  assert.equal(motionMask(f()), null, 'no water, no swamp: no mask');
+  const half = bandOf(60, 60, -10, -10, 2, x => (x < 10 ? 1 : 0));
+  const m = motionMask(f(), { bands: [half] })!;
+  assert.ok(m, 'the swamp alone makes a mask');
+  assert.equal(poolWeight(texel(m, 4.1, 8.1).s), 1, 'in the swamp: whole');
+  assert.equal(poolWeight(texel(m, 15.1, 8.1).s), 0, 'past the swamp: none');
+  // a bridge over the swamp keeps its pools still beneath it
+  const mb = motionMask(f(), { bands: [half], bridges: [{ pts: [{ x: 4, y: -5 }, { x: 4, y: 25 }], hw: 1.5 }] })!;
+  assert.equal(texel(mb, 4.1, 8.1).a, 0); assert.equal(texel(mb, 0.1, 2.1).a, texel(m, 0.1, 2.1).a);
+  // the swamp band far from the chunk: no mask
+  assert.equal(motionMask(f(), { bands: [bandOf(10, 10, 100, 100, 2, () => 1)] }), null);
+});
+
+test('T343: the swamp mask feeds the motion pass: the pools ripple, glint and lap at their edges, gently; the mud and reeds stay', () => {
+  const fr = frame(), sw = sampleOf(0, 128, 128, 255);
+  // the pool water moves (over a patch, some pixels lighter, some darker), the swamp's own colour kept (no wash: a multiply and small)
+  let lighter = 0, darker = 0, most = 0, sum = 0;
+  for (let i = 0; i < 400; i++) {
+    const x = 3 + (i % 20) * 0.37, y = 5 + Math.floor(i / 20) * 0.41, o = motionPixel(POOL, x, y, sw, fr), r = swampPixel(POOL, x, y, 1, frame({ sparkle: 0, foam: 0 }));
+    const d = r[1]! - POOL[1]!; if (d > 0.5) lighter++; if (d < -0.5) darker++; most = Math.max(most, Math.abs(d)); sum += Math.abs(d);
+    // (the same as the twin itself)
+    assert.deepEqual(o, swampPixel(POOL, x, y, 1, fr));
+  }
+  assert.ok(lighter > 40 && darker > 40, `ripples both ways: ${lighter} ${darker}`);
+  assert.ok(sum / 400 < 0.08 * POOL[1]! && most < 0.4 * POOL[1]!, `the ripples' light gentle (a multiply): mean ${sum / 400}, at most ${most}`);
+  // the mud and the reeds between the pools are untouched
+  for (const c of [MUD, REED, GRASS]) assert.deepEqual(motionPixel(c, 4.3, 6.1, sw, fr), c);
+  // no swamp weight there (the open water's far bank, as before): untouched
+  assert.deepEqual(motionPixel(POOL, 4.3, 6.1, sampleOf(0, 128, 128, 0), fr), POOL);
+  // the ripples move: the same pixel at another moment differs
+  const later = frame({ drift: phasesAt(9.1, WATER_MOTION).drift, wave: phasesAt(9.1, WATER_MOTION).wave });
+  let moved = 0; for (let i = 0; i < 50; i++) { const x = 2 + i * 0.29, y = 7.3; if (Math.abs(motionPixel(POOL, x, y, sw, fr)[1]! - motionPixel(POOL, x, y, sw, later)[1]!) > 0.3) moved++; }
+  assert.ok(moved > 20, `moved ${moved}`);
+  assert.ok(SWAMP_POOL.scale > 1 && SWAMP_POOL.slow < 1, 'finer and slower');
+  // the pool's edge (mud on a side: near 0) gets a soft pale rim, the open middle none
+  let rim = 0; for (let i = 0; i < 100; i++) { const x = 1 + i * 0.21; const e = swampPixel(POOL, x, 3, 1, fr, 0, 0), m = swampPixel(POOL, x, 3, 1, fr, 1, 0); rim = Math.max(rim, e[0]! - m[0]!); }
+  assert.ok(rim > 1 && rim < 30, `a gentle rim: ${rim}`);
+  // the motion off (no frame): untouched
+  assert.deepEqual(motionPixel(POOL, 4.3, 6.1, sw, null), POOL);
+});
+
+test("T343: the swamp pools' glint: fewer and softer than a pond's, none in a shadow", () => {
+  assert.ok(SWAMP_POOL.exp < 220, 'softer: a lower exponent than the open water');
+  // (the glint alone: no ripples' light, no rim; four moments over the same water, the pond's sparkle beside)
+  const count = (over: Partial<MotionFrame> = {}, shade = 0) => {
+    let sw = 0, pond = 0;
+    for (const t of [1.1, 3.7, 7.9, 12.3]) {
+      const fr = frame({ ...phasesAt(t, WATER_MOTION), ripple: 0, foam: 0, ...over });
+      for (let i = 0; i < 40000; i++) {
+        const x = (i % 200) * 0.05, y = Math.floor(i / 200) * 0.05;
+        if (swampPixel(POOL, x, y, 1, fr, 1, 1, shade)[0]! - POOL[0]! > 15) sw++;
+        if (motionPixel(LAKE, x, y, { sd: 3, fx: 0, fy: 0, amp: 0.4 }, fr, 1, shade)[0]! - LAKE[0]! > 15) pond++;
+      }
+    }
+    return { sw, pond };
+  };
+  const c = count(); assert.ok(c.sw > 0 && c.sw < c.pond, `a glint here and there, fewer than a pond's: ${c.sw} < ${c.pond}`);
+  assert.equal(count({}, 1).sw, 0, 'none in a shadow');
+});
+
+test('T343: the river is unchanged: its water and bank texels as before with the swamp laid, and its pixels drawn as before', () => {
+  const pts = [{ x: 0, y: 15, w: 8 }, { x: 40, y: 15, w: 8 }];
+  const mk = () => { const f = WaterField.over([5, 0, 35, 30], fieldPad(DEFAULT_WATER_LOOK), 2).motion(); f.waterway(pts, SITE.river, 1, riverLap); f.shore(7); return f; };
+  const m = motionMask(mk())!, ms = motionMask(mk(), { bands: [bandOf(80, 80, -5, -10, 2, (_x, y) => (y < 9 ? 1 : 0))] })!;
+  // every texel on the water or within the bank's reach is the same byte for byte; only the swamp past the reach (no waves before) differs
+  let diff = 0;
+  for (let k = 0; k < m.w * m.h; k++) {
+    const sd = decodeSd(m.data[4 * k]!);
+    if (sd > -BANK_REACH) { for (let c = 0; c < 4; c++) assert.equal(ms.data[4 * k + c], m.data[4 * k + c]); }
+    else if (ms.data[4 * k + 3] !== m.data[4 * k + 3]) { diff++; assert.equal(m.data[4 * k + 3], 0); }
+  }
+  assert.ok(diff > 0, 'the swamp past the reach carries its weight');
+  // the open water's pixels (sd over -0.7) never take the swamp's branch
+  const fr = frame();
+  for (const sd of [-0.6, 0, 1, 3]) {
+    const s = { sd, fx: 1, fy: 0, amp: 0.4 };
+    assert.equal(poolWeight(s), 0);
+    // (a pool-coloured pixel on the open water is drawn by the open water's effects, not the swamp's)
+    if (sd > 0) assert.notDeepEqual(motionPixel(POOL, 12.3, 14.1, s, fr), swampPixel(POOL, 12.3, 14.1, 1, fr));
+  }
+  assert.ok(WATER_MOTION_GLSL.includes('vec3 swampPool(vec3 c, vec2 p, float wgt)') && WATER_MOTION_GLSL.includes('swampPool(c, p, pw)'), 'the shader runs the pools');
 });

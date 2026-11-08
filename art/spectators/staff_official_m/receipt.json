@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/4G0mrT5UcCtD5KY8luXQ/6443a347-2cbf-42ac-ba12-2b3ce5cf0a49/model.compressed.glb",
+  "look": "Tournament director in his 60s, silver hair, a plain dark green blazer over a white shirt and a plain tie, grey trousers, black dress shoes. No logos, no lettering. Full-body figure standing on nothing: no ground, no grass, no base, nothing under the shoes.",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

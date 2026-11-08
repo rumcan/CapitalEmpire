@@ -1,0 +1,14 @@
+{
+  "generationId": "1480b386-a731-4a18-be11-2a16fb51905b",
+  "prompt": "The same man as the reference picture, same face, round glasses, straw boater hat, burgundy sweater vest over a white shirt, navy slacks and brown shoes, redrawn in a 3D-modelling A-pose: front view, BOTH ARMS POINTING DOWN AND OUT at about 40 degrees from the body, the hands BELOW the waist level, straight elbows, hands open and relaxed with fingers together, palms facing down toward the ground, a clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart. The whole figure in frame. Plain flat light grey background, standing on nothing: no floor, no shadow.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 1268210833,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/4G0mrT5UcCtD5KY8luXQ/OGeroRmBwlYVXlOowOJXkuea1bs1/28517d59-587f-4f7d-834a-5ee817e14573.png",
+  "requestPrompt": "The same man as the reference picture, same face, round glasses, straw boater hat, burgundy sweater vest over a white shirt, navy slacks and brown shoes, redrawn in a 3D-modelling A-pose: front view, BOTH ARMS POINTING DOWN AND OUT at about 40 degrees from the body, the hands BELOW the waist level, straight elbows, hands open and relaxed with fingers together, palms facing down toward the ground, a clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart. The whole figure in frame. Plain flat light grey background, standing on nothing: no floor, no shadow.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "3:4",
+  "gameId": "4G0mrT5UcCtD5KY8luXQ",
+  "outputPath": "art/spectators/staff_starter_m/apose.png",
+  "status": "saved",
+  "sha256": "6ce04ef14c6f9071aed4bb866d6352aef0e8ba930e0ddd750dc785d9e65e9ea3"
+}

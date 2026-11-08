@@ -1,0 +1,14 @@
+{
+  "generationId": "d3b63643-71ca-45b2-984a-18e426d1e597",
+  "prompt": "3D-modelling A-pose reference of ONE person: Tour caddie, an athletic woman in her 20s, a plain white caddie bib over a light blue polo, navy shorts, white sneakers, a plain white visor. No logos, no lettering. Front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open and empty with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart with a clear gap between them. The whole figure from head to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes. Realistic proportions for the age, clean painterly game-art finish.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 2013206637,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/4G0mrT5UcCtD5KY8luXQ/OGeroRmBwlYVXlOowOJXkuea1bs1/7bd0f486-a2d9-4aa3-89b4-6420db990326.png",
+  "requestPrompt": "3D-modelling A-pose reference of ONE person: Tour caddie, an athletic woman in her 20s, a plain white caddie bib over a light blue polo, navy shorts, white sneakers, a plain white visor. No logos, no lettering. Front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open and empty with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, legs slightly apart with a clear gap between them. The whole figure from head to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes. Realistic proportions for the age, clean painterly game-art finish.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "3:4",
+  "gameId": "4G0mrT5UcCtD5KY8luXQ",
+  "outputPath": "art/spectators/staff_caddie_w/apose.png",
+  "status": "saved",
+  "sha256": "1577d8b13ea3aea38772959f3dfb65ace1a2a10800d671869683e0cd62d20f0d"
+}

@@ -11,7 +11,7 @@ import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, growBand, riverStreams, swampStreams, type BandAlpha } from './swamp';
 import { RIVER_CUT, drawRiverCut } from './river-cut';
 import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
-import { motionMask, pondLap, riverLap, type BandRef, type MotionMaskData } from './water-motion';
+import { BANK_REACH, motionMask, pondLap, riverLap, type BandRef, type MotionMaskData } from './water-motion';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
 import { layOnGround } from './base-grass';
@@ -50,7 +50,7 @@ import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type 
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
 import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
-import { LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
+import { DAMP_TINT, DESERT_BLOT_M, LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 import { courseBlendG, courseTexG, paintedLay, type Aff } from './painted-turn';
 /** a DOMMatrix as painted-turn's plain affine */
 const affOf = (m: DOMMatrix): Aff => [m.a, m.b, m.c, m.d, m.e, m.f];
@@ -525,9 +525,11 @@ export class GroundPainter {
   /** T248: the motion mask over the chunk just baked: the chunk's water field (made now if no water site asked for it: a shore just past the
    *  chunk still wets its bank here) with the bridges over it and the swamp bands laid; null without water near, or with the motion off */
   private waterMotionMask(lite: boolean, net: FxView): MotionMaskData | null {
-    const w = this.waterField(lite); if (!w || !w.f.flow) return null;
-    const b = w.f.box, brs = net.bridges.filter(r => r.bbox[2] >= b[0] && r.bbox[0] <= b[2] && r.bbox[3] >= b[1] && r.bbox[1] <= b[3]);
-    return motionMask(w.f, { bridges: brs, bands: this.bandsNow });
+    // (T343: a chunk with swamp laid and no water near still gets one, over an empty field: its pools move)
+    const w = this.waterField(lite), c = this.chunkNow, f = w?.f.flow ? w.f : c && this.bandsNow.some(r => r) ? WaterField.over(c.box, BANK_REACH + 2, fieldRes(c.L, lite)).motion() : null;
+    if (!f) return null;
+    const b = f.box, brs = net.bridges.filter(r => r.bbox[2] >= b[0] && r.bbox[0] <= b[2] && r.bbox[3] >= b[1] && r.bbox[1] <= b[3]);
+    return motionMask(f, { bridges: brs, bands: this.bandsNow });
   }
   /** T262: the grass shine's weight mask over the chunk just baked (grass-shine.ts), a texel SHINE_TEXEL world px (or more), with a margin:
    *  the map's own grass first (its terrain: the ground, meadow and woodland floor in the map's grass weight, the water, creeks and banks none),
@@ -1654,9 +1656,12 @@ export class GroundPainter {
       const p = new Path2D(); let any = false; for (const w of rivers) any = waterShape(p, w.w.pts, 2, box) || any;
       if (any) { g.globalCompositeOperation = 'destination-out'; g.fill(p); g.globalCompositeOperation = 'source-over'; }
     };
-    if (tall) layer('golfFescue', ringOf(tall));
-    if (border) layer('dirt', ringOf(border));
-    this.ringNow = tall ? { a: tall, x0: tx0 - RP, y0: ty0 - RP, res: rres } : null;
+    // T342 follow-up: in the desert no fescue ring and no laid dirt border: the living ground's damp dirt (living-ground.ts desertBank) runs
+    // from the swamp band outward, whole and darkest at the water and breaking into blotches, so the ring is not kept off it either
+    const ringed = !this.tex.surfaces?.desert;
+    if (tall && ringed) layer('golfFescue', ringOf(tall));
+    if (border && ringed) layer('dirt', ringOf(border));
+    this.ringNow = tall && ringed ? { a: tall, x0: tx0 - RP, y0: ty0 - RP, res: rres } : null;
     const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, rv.box, lite) : null, rres) : null;
     // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
     //  painted look composed and laid as before)
@@ -2069,9 +2074,13 @@ export class GroundPainter {
       // (T247: dirt and desert with a soft edge wear no trampled band of their own: their band is the grass going over to them)
       if (waterTex(p.tex)) shores.push({ pts: p.pts, ring: true }); else if (!this.softTex(p.tex)) paths.push(p.pts);
     }
-    const waters = this.waters.filter(w => w.box[2] >= gb[0] - 4 && w.box[0] <= gb[2] + 4 && w.box[3] >= gb[1] - 4 && w.box[1] <= gb[3] + 4);
+    // T342: the desert theme's damp dirt reaches further from the world's water (living-ground.ts desertBank): the rivers, creeks and painted
+    // ponds within its reach count, so the chunks agree at their seams
+    const desert = !!this.tex.surfaces?.desert, wr = desert ? DESERT_BLOT_M / 2 + 4 : 4;
+    if (desert) for (const p of this.lotsIn([gb[0] - wr, gb[1] - wr, gb[2] + wr, gb[3] + wr])) if (!p.course && !p.top && !p.lawn && waterTex(p.tex) && !lots.includes(p)) shores.push({ pts: p.pts, ring: true });
+    const waters = this.waters.filter(w => w.box[2] >= gb[0] - wr && w.box[0] <= gb[2] + wr && w.box[3] >= gb[1] - wr && w.box[1] <= gb[3] + wr);
     const rivers: WaterLine[] = waters.map(w => ({ pts: w.w.pts, bank: w.w.kind === 'river' ? 2.6 : 0.4 }));
-    const src = { casters, roads, paths, rivers, shores }, ck = `${this.chunkNow!.key}:${livingSignature(res, src)}`;
+    const src = { casters, roads, paths, rivers, shores, desert }, ck = `${this.chunkNow!.key}:${livingSignature(res, src)}`;
     let made = this.livingMade.get(ck);
     if (made) { this.livingMade.delete(ck); this.livingMade.set(ck, made); }
     else { made = { grid: influence(box, res, src), masks: null }; this.livingMade.set(ck, made); trimLru(this.livingMade, new Set([ck]), LIVING_MADE); }
@@ -2163,6 +2172,12 @@ export class GroundPainter {
       else { lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'overlay'; lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'multiply'; lg.fillStyle = LUSH_TINT; lg.fillRect(0, 0, W, H); lg.globalCompositeOperation = 'source-over'; }
       // T204: the lush grass whole inside its region, its edge broken by its own tufts (no half-alpha cross-fade with the grass under it)
       if (!rugged(lb, 'lush')) { put(lg, m.lush, 'destination-in'); lay(lb, 'source-over'); }
+    }
+    // T342: the desert's damp dirt by the world's water, darker toward the bank: DAMP_TINT multiplied over the dirt through its mask
+    if (m.damp && (m.max.damp ?? 0) > T) {
+      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb);
+      lg.save(); lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'copy'; lg.fillStyle = DAMP_TINT; lg.fillRect(0, 0, W, H); lg.restore();
+      put(lg, m.damp, 'destination-in'); lay(lb, 'multiply');
     }
     // thin: patchy grass going over to soil, under trees, at doors and corners, on worn edges: the soil's colour on the grass's own strokes
     // (dry, thin turf that keeps its texture), then the soil in the grass's dark gaps (lighten: the lit tufts stay)

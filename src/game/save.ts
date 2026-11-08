@@ -55,6 +55,9 @@ export interface SaveV5 {
   /** Optional managed turf grid; older saves retain their existing base/lawn/paint choices. */
   grass?: GrassSave;
   version: number; map: number;
+  /** T342 (#970): the game's look, chosen when it started (the "Who are you?" card) or in the gear menu: 'desert' (desert-theme.ts), else
+   *  autumn (optional, no version bump: a save from before is autumn) */
+  theme?: 'autumn' | 'desert';
   /** the shipped lot model the town's house lots compose with (T160, lots/lot-models; optional, no version bump; missing = v1) */
   lotModel?: number;
   /** T259: the farm model the farms compose with (ext/farms FARM_MODEL: 2, the farmstead set back on its lane and the fields by the month;

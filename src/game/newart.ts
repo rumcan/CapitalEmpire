@@ -21,6 +21,7 @@ import { onStudioScales } from './lots/scales-live';
 import { CAR_SCALE, carOwnerScale } from './ext/car-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import type { LibItem } from './types';
+import { DESERT_CLASS, desertPick } from './desert-theme';
 
 const params = (() => { try { return new URLSearchParams(globalThis.location?.search ?? ''); } catch { return new URLSearchParams(); } })();
 /** the preview (?newart): buildings AND trees are drawn as new art (no old picture) */
@@ -164,11 +165,31 @@ const limitOf = (item: number, moving?: boolean) => Math.max(pixelsOf(item, movi
  *  soft at the closest zoom only; the lab says so) */
 export function softAt(item: number, scale: number, moving?: boolean): boolean { return !SWAP[item] && scale > pixelsOf(item, moving) * PIXEL_SLACK; }
 
+/** T341: the desert theme (desert-theme.ts; the engine sets it from the gear menu's switch): on, every world tree, bush, flower bed and hedge
+ *  piece is drawn as a palm, a desert plant or a rock picked by where it stands, never mirrored; keep(d), the engine's: a drawable the
+ *  course or the range owns (on the club's land, a decor or frame prop) keeps its own art. gen changes with every switch (the cache below) */
+export const DESERT_THEME: { on: boolean; gen: number; keep: ((d: { x: number; y: number; x0?: number; y0?: number; x1?: number; y1?: number }) => boolean) | null } = { on: false, gen: 0, keep: null };
+const desertCache = new WeakMap<object, { gen: number; src: number; scale: number; x: number; y: number; look: Look | null }>();
+/** a world plant's desert look (null: the course keeps it, or no desert picture): the picked picture at its scale (never past its pixels),
+ *  unmirrored, at the plant's own anchor (the desert props stand on their foot as the trees do) */
+function desertLook(d: Drawn): Look | null {
+  const c = desertCache.get(d);
+  if (c && c.gen === DESERT_THEME.gen && c.src === d.item && c.scale === d.scale && c.x === d.x && c.y === d.y) return c.look;
+  let look: Look | null = null;
+  if (!DESERT_THEME.keep?.(d)) {
+    const p = desertPick(d.item, d.x, d.y, d.scale);
+    if (p) look = { item: p.item, flip: false, scale: Math.min(p.scale, limitOf(p.item) * PIXEL_SLACK) };
+  }
+  desertCache.set(d, { gen: DESERT_THEME.gen, src: d.item, scale: d.scale, x: d.x, y: d.y, look });
+  return look;
+}
+
 type Drawn = Look & { x: number; y: number; x0?: number; y0?: number; x1?: number; y1?: number; moving?: boolean };
 const cache = new WeakMap<object, Look & { src: number; srcFlip: boolean; srcScale: number; srcX: number; srcY: number }>();
 /** what a drawable is drawn as: itself, unless its art is swapped for a stand-in (centred on its footprint) or it would be drawn past its pixels
  *  at the closest zoom (then at its limit, about its anchor). The same object when neither, no allocation */
 export function lookOf<T extends Drawn>(d: T): Look {
+  if (DESERT_THEME.on && DESERT_CLASS[d.item]) { const l = desertLook(d); if (l) return l; }
   if (!SWAP[d.item] && d.scale <= limitOf(d.item, d.moving) * PIXEL_SLACK) return d;
   const c = cache.get(d); if (c && c.src === d.item && c.srcFlip === d.flip && c.srcScale === d.scale && c.srcX === d.x && c.srcY === d.y) return c;
   const it = LIBRARY[d.item]!;

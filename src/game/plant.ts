@@ -1,11 +1,17 @@
 import { mulberry } from './iso';
 import { KIT_FLOWERS, KIT_PALM_IDS, KIT_SHRUBS } from './kit';
+import { desertPlantIds } from './desert-planting';
 
-/** The plant brushes (Paint → Golf brush row: Trees, Bushes, Flowers, Palms): a drag scatters props inside the brush circle, spaced apart and
+/** The plant brushes (Paint → Golf brush row: Trees, Bushes, Flowers; T342: the palms among the Trees): a drag scatters props inside the brush circle, spaced apart and
  *  skipping blocked spots; Rub out / Alt removes only props placed this way (Prop.plant), never lot, town or forest props. T231: Palms, the
  *  concept kit's palms (kit.ts), a brush of their own so the Trees brush stays autumn broadleaves and conifers; the kit's shrubs join Bushes
  *  and its flower clumps Flowers */
-export type PlantBrushKind = 'trees' | 'bushes' | 'flowers' | 'palms';
+export type PlantBrushKind = 'trees' | 'bushes' | 'flowers';
+/** T342 (#970; the owner, 2026-11-05: "palms in the facilities menu should just be part of trees. we dont need a palms section on its own.
+ *  just have a desert tree/bushes/flowers filter"): the palms are among the Trees (no Palms brush), and each brush's pool shows All, the Autumn
+ *  plants (the trees, bushes and flowers as before T289) or the Desert ones (desert-planting.ts desertPlantIds); a desert game starts on Desert */
+export type PlantFilter = 'all' | 'autumn' | 'desert';
+export const PLANT_FILTERS: { id: PlantFilter; name: string }[] = [{ id: 'all', name: 'All' }, { id: 'autumn', name: 'Autumn' }, { id: 'desert', name: 'Desert' }];
 /** a plant brush: radius r and spacing (tiles; one tile is 2 m), the size range (lo..hi times the sprite's map scale), and the sprites it
  *  picks from (null = every sprite of the kind) */
 export interface PlantSet { r: number; spacing: number; lo: number; hi: number; ids: string[] | null }
@@ -13,13 +19,11 @@ export const PLANT_KINDS: { kind: PlantBrushKind; name: string; col: string }[] 
   { kind: 'trees', name: 'Trees', col: '#4f8a3a' },
   { kind: 'bushes', name: 'Bushes', col: '#6fae4a' },
   { kind: 'flowers', name: 'Flowers', col: '#d98ab5' },
-  { kind: 'palms', name: 'Palms', col: '#8aa83a' },
 ];
 export const PLANT_DEFAULTS: Record<PlantBrushKind, PlantSet> = {
   trees: { r: 6, spacing: 4, lo: 0.85, hi: 1.15, ids: null },
   bushes: { r: 4, spacing: 2, lo: 0.85, hi: 1.15, ids: null },
   flowers: { r: 3, spacing: 1, lo: 0.85, hi: 1.15, ids: null },
-  palms: { r: 6, spacing: 4, lo: 0.9, hi: 1.1, ids: null },
 };
 export const PLANT_R: [number, number] = [0.5, 20], PLANT_SPACING: [number, number] = [0.5, 12], PLANT_SIZE: [number, number] = [0.4, 2.5];
 /** the flowers: the three flowering ground plants the golf hole preset uses */
@@ -33,13 +37,16 @@ export function clampPlant(s: Partial<PlantSet> | undefined, kind: PlantBrushKin
   return { r: clamp(fin(s?.r, D.r), PLANT_R[0], PLANT_R[1]), spacing: clamp(fin(s?.spacing, D.spacing), PLANT_SPACING[0], PLANT_SPACING[1]), lo: Math.min(lo, hi), hi: Math.max(lo, hi), ids: Array.isArray(s?.ids) ? s.ids.filter((x): x is string => typeof x === 'string') : null };
 }
 
-/** the sprites a kind can plant, from the library items (in library order): trees = kind tree, bushes = kind bush but the flowers and the kit's
- *  shrubs, flowers = FLOWER_IDS and the kit's flower clumps, palms = the kit's palms (T231) */
+/** the sprites a kind can plant, from the library items (in library order), through the filter (T342): Autumn, trees = kind tree, bushes =
+ *  kind bush but the flowers and the kit's shrubs, flowers = FLOWER_IDS and the kit's flower clumps; Desert, the kind's desert plants and (trees)
+ *  the kit's palms; All, both (the palms among the trees) */
 const KIT_BUSHES: ReadonlySet<string> = new Set(KIT_SHRUBS), KIT_BLOOMS: ReadonlySet<string> = new Set(KIT_FLOWERS), PALMS: ReadonlySet<string> = new Set(KIT_PALM_IDS);
-export function plantPool(items: readonly { id: string; name: string; kind: string }[], kind: PlantBrushKind): { id: string; name: string }[] {
-  const flowers = new Set(FLOWER_IDS);
-  return items.filter(it => kind === 'trees' ? it.kind === 'tree' : kind === 'bushes' ? (it.kind === 'bush' && !flowers.has(it.id)) || KIT_BUSHES.has(it.id)
-    : kind === 'palms' ? PALMS.has(it.id) : flowers.has(it.id) || KIT_BLOOMS.has(it.id)).map(it => ({ id: it.id, name: it.name }));
+const DESERT: Readonly<Record<PlantBrushKind, ReadonlySet<string>>> = { trees: new Set(desertPlantIds('trees')), bushes: new Set(desertPlantIds('bushes')), flowers: new Set(desertPlantIds('flowers')) };
+export function plantPool(items: readonly { id: string; name: string; kind: string }[], kind: PlantBrushKind, filter: PlantFilter = 'all'): { id: string; name: string }[] {
+  const flowers = new Set(FLOWER_IDS), desert = DESERT[kind];
+  const autumn = (it: { id: string; kind: string }) => !desert.has(it.id) && !PALMS.has(it.id) && (kind === 'trees' ? it.kind === 'tree' : kind === 'bushes' ? (it.kind === 'bush' && !flowers.has(it.id)) || KIT_BUSHES.has(it.id)
+    : flowers.has(it.id) || KIT_BLOOMS.has(it.id));
+  return items.filter(it => filter === 'autumn' ? autumn(it) : filter === 'desert' ? desert.has(it.id) : autumn(it) || desert.has(it.id)).map(it => ({ id: it.id, name: it.name }));
 }
 
 /** the candidate spots of one dab: about 1.5 x (the circle's area / spacing²) random points inside the circle (seeded); the engine keeps
