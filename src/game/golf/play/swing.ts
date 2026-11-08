@@ -143,15 +143,15 @@ export const CLUB_NAME: Readonly<Record<Club, string>> = { driver: 'Driver', woo
 /** a played shot as the player reads it after the swing: the club, the miss, its carry and total (metres; null where there is none: a putt has no carry,
  *  a penalty no total) and one line of text: "Driver: Hook, 7° left · carry 182 m, total 195 m" */
 export interface ShotReport { club: Club; shape: string; carryM: number | null; totalM: number | null; text: string }
-/** the report of a played shot (live.ts play's Shot) and its swing's effect (null: no meter) */
-export function shotReport(s: Shot, eff: Pick<SwingEffect, 'shape' | 'deg'> | null): ShotReport {
+/** the report of a played shot (live.ts play's Shot) and its swing's effect (null: no meter). T334: `note`, what the conditions did (conditions.ts windNote), ends the line */
+export function shotReport(s: Shot, eff: Pick<SwingEffect, 'shape' | 'deg'> | null, note?: string | null): ShotReport {
   const shape = eff ? shapeText(eff) : '', m = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(b.x - a.x, b.y - a.y) * TILE_M;
-  const head = `${CLUB_NAME[s.club]}${shape ? `: ${shape}` : ''}`;
+  const head = `${CLUB_NAME[s.club]}${shape ? `: ${shape}` : ''}`, tail = note ? ` · ${note}` : '';
   if (s.club === 'putter') {
     const totalM = s.penalty ? null : m(s.from, s.to);
     return { club: s.club, shape, carryM: null, totalM, text: `${head} · ${s.holed ? 'holed' : s.penalty ? 'off the green, +1' : `rolled ${totalM!.toFixed(1)} m`}` };
   }
   const carryM = s.landing ? m(s.from, s.landing.at) : null, totalM = s.penalty ? null : s.landing ? m(s.from, s.landing.rest) : m(s.from, s.to);
   const where = s.penalty ? (s.landing?.restLie === 'water' ? 'in the water, +1' : 'out of bounds, +1') : `total ${Math.round(totalM!)} m`;
-  return { club: s.club, shape, carryM, totalM, text: `${head} · ${carryM !== null ? `carry ${Math.round(carryM)} m, ` : ''}${where}${s.holed ? ', holed!' : ''}` };
+  return { club: s.club, shape, carryM, totalM, text: `${head} · ${carryM !== null ? `carry ${Math.round(carryM)} m, ` : ''}${where}${s.holed ? ', holed!' : ''}${tail}` };
 }

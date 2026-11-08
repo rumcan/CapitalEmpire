@@ -335,5 +335,7 @@ export interface YourRoundView { round: YourRound; hole: number; par: number; st
   canGimme: boolean;
   /** T244: a money match's bar (play/match.ts matchView); null or absent: not a match */
   match?: MatchView | null;
+  /** T334: the day's wind as the round's bar says it ("8 mph from the W", "Calm"); null: no weather (a day from before it) */
+  wind?: string | null;
   /** T326: your cart is out of reach (the Cart button calls it) */
   cartFar: boolean; card: boolean; flying: boolean; addressing: boolean }

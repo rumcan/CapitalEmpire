@@ -9,6 +9,7 @@
 //   JSON's name gets the tag (alternating runs); --boot k:v,... (T172's ?boot=, e.g. tileSources:24)
 // --golfPace main|daynight|walk|long|mix (T266, a dev server): everyday golf's pace option for the run (golf/pace.ts)
 // --golfMinute N (T269, with --start town): the course scene's town minute (default 660, 11:00; 390 is 06:30, the grounds crew at work before play)
+// --wind off|mph,from,gusty (T334, a dev server): the world's wind for the run (off: still, the trees stand and the flags hang: sway skipped; 14,270,0.6: a gusty 14 mph from the west)
 // --tracks on|off|stress (T322, a dev server): the tyre tracks for the run (stress: two-way tracks every 4 tiles over the whole map, the worst case)
 // --sun on|off (T310, a dev server): the sun patches for the run (sun-patches.ts)
 // --grassShine on|off (T262, a dev server): the grass shine for the run (grass-shine.ts; on by default, as the player left it otherwise; off: the ground as before)
@@ -48,7 +49,7 @@ const logs = [];
 page.on('console', m => { const t = m.text(); if (/\[bench\]|error|Error/.test(t)) { logs.push(t); console.log('[page]', t.slice(0, 300)); } });
 page.on('pageerror', e => console.log('[pageerror]', e.message));
 page.on('crash', () => console.log('[crash] the page crashed'));
-await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp", "golfPace", "golfMinute", "zooms", "boot", "farms", "farmMonth", "ballRoll", "rangeBalls", "tourney", "tracks", "spacing", "sun"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`, { timeout: +opt("gotoMs", "30000") }); // (T312: --gotoMs, a cold dev server loads slower than 30 s) --course: the old nine laid as a course grid under the tour (T077)
+await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp", "golfPace", "golfMinute", "zooms", "boot", "farms", "farmMonth", "ballRoll", "rangeBalls", "tourney", "tracks", "spacing", "sun", "wind"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`, { timeout: +opt("gotoMs", "30000") }); // (T312: --gotoMs, a cold dev server loads slower than 30 s) --course: the old nine laid as a course grid under the tour (T077)
 gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const d = gl?.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
 }
 console.log('GPU:', gpu);

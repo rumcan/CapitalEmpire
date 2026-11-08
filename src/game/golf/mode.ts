@@ -79,6 +79,9 @@ export interface GolfSave {
  founding?: number;
  /** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b; see GolfPlaySave). Missing: he is not in the day */
  play?: GolfPlaySave;
+ /** T334 (#960): the weather: the first tournament (its key: the round's count) played in the day's wind and the lie's kinds. A save from before it has none: the
+  *  engine stamps it on load with the next tournament's key, so a day in progress (and every day before) plays as it did; a new game has none and every day has it */
+ weather?: { from: number };
  /** the range business (range starts, plan P24, T129: golf/rangesave.ts): its upgrades, bucket price and counts; a range start's save without it
   *  loads as the starting range */
  range?: RangeBizSave;
@@ -130,7 +133,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, weather, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -155,6 +158,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (invited && Number.isFinite(invited.at)) out.invited = { at: invited.at };
   if (typeof founding === 'number' && Number.isFinite(founding) && founding > 0) out.founding = Math.floor(founding);
   const pl = normalizePlaySave(play); if (pl) out.play = pl;
+  if (weather && typeof weather.from === 'number' && Number.isFinite(weather.from) && weather.from >= 0) out.weather = { from: Math.floor(weather.from) }; // T334
   const ed = normalizeDaySave(everyday); if (ed) out.everyday = ed;
   // T231: the pond marks, finite pairs only (golf/ponds.ts normalizePondMarks: none kept means the field stays out)
   if (Array.isArray(ponds)) { const m: number[] = []; for (let k = 0; k + 1 < ponds.length; k += 2) { const x = ponds[k], y = ponds[k + 1]; if (Number.isFinite(x) && Number.isFinite(y)) m.push(x!, y!); } if (m.length) out.ponds = m; }

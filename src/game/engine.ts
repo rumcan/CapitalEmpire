@@ -184,12 +184,13 @@ import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin,
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, breakPinOf, type BreakTurn, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
-import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
+import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, MODEL_V, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
 import { FRAMES_PER_TILE, SWING_EVERY, doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
 import { ADDRESS_PACE, AT_ADDRESS, jumpAlpha, livePuffs, puffAt, stepToward, type Puff } from './golf/play/jumpfx';
+import { CALM_MPH, NO_WIND, dailyWind, envOf, lieKindFor, lieView, previewShot, slopeLines, windAt, windNote, windText, windToward, windView, type Conditions, type LieView, type ShotEnv, type ShotPreview, type Slope, type Wind, type WindNow, type WindView } from './golf/play';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { GOLFER_NAMES } from './golf/play/field';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
@@ -368,8 +369,14 @@ export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; powe
   spin?: { x: number; y: number };
   /** T317: the shot of your own round (play/yours.ts), not the tournament's: the sim runs on (no pause) and the hit plays your round */
   mine?: boolean }
+/** T334 (#960): what the open shot is up against, for the shot panel: whether the day's weather is on (a tournament from before it plays as it did), the wind now against the shot,
+ *  the lie and what it does, the slope under the ball, the flight the shot is expected to fly (the aimed distance after the lie, the slope and the wind) and what the aimed
+ *  distance plays like (the distance to ask the club for: the meter's aim mark) */
+export interface ShotConditions { on: boolean; putting: boolean; wind: WindView; day: Wind | null; lie: LieView; slope: Slope; slopeLines: string[]; preview: ShotPreview; aimedM: number; playsLikeM: number;
+  /** the caddie's club for the aimed distance in these conditions: the shortest the lie allows whose carry, after the lie, the slope and the wind, reaches it (null: a putt, or the weather is off) */
+  suggest: Club | null }
 /** T318: a spun ball in the air (Game.spinAir) */
-interface SpinAir { mine: boolean; input: { club: Club; aim: Pt; power: number; swing?: SwingOutcome; spin: SpinInput }; lie: Lie; prev: YourRound | null; seen: boolean; at: number }
+interface SpinAir { mine: boolean; input: { club: Club; aim: Pt; power: number; swing?: SwingOutcome; env?: ShotEnv; v?: number; spin: SpinInput }; lie: Lie; prev: YourRound | null; seen: boolean; at: number }
 /** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
  *  everyone is done (else null), whether everyone is done, the tournament's name, and the owner's group's tee time (null without him) */
 export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string | null; done: boolean; event: string; ownerTee: number | null;
@@ -2764,7 +2771,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; { const wd = q.get('wind'); if (import.meta.env.DEV && wd) { const [a, b, c] = wd.split(',').map(Number); this.devWind = wd === 'off' ? NO_WIND : { mph: a! >= 0 ? a! : 8, from: Number.isFinite(b) ? b! : 270, gusty: Number.isFinite(c) ? c! : 0.5, seed: 7 }; } } // (T334: ?wind=off | mph,from,gusty) const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
@@ -2873,6 +2880,8 @@ export class Game {
       // the tournament day under way at the save resumes (T209): the round in its surge or eval, its clocks, the crowd and the car parks (the worker checks it);
       // the sim waits at that moment until the day's play is built again (holdDay), so the field does not play on while the game boots
       if (loaded.tourney) { this.dayHold = { speed: this.speed || this.lastSpeed, at: 0 }; this.setSpeed(0); this.traffic.resumeDay(loaded.round, loaded.tourney); }
+      // T334: a save from before the weather has none: its tournament in progress (and every day before) plays as it did, the wind and the lie's kinds start with the next one
+      if (this.golf && !this.golf.weather) this.golf.weather = { from: (loaded.round?.runs ?? 0) + (loaded.tourney ? 1 : 0) };
     }
     else this.rangeMorning();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
@@ -8441,11 +8450,11 @@ export class Game {
   private yourHit(swing?: SwingOutcome) {
     const s = this.shot, r = this.yourRound(), v = this.yrView(); if (!s?.mine || !r || !v) return;
     const sk = this.yourSkills(), i = s.input;
-    const spin = this.shotSpin(), input = { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}) };
+    const spin = this.shotSpin(), env = this.shotEnv(), input = { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), v: MODEL_V };
     const { round, shot, up } = r.match ? playMatchYours(v, r, sk, input, this.seed) : playYours(v, r, sk, input, this.seed); // (T244: a match's hole is decided as it goes)
     this.yrLastInput = { club: i.club, aim: { x: i.aim.x, y: i.aim.y }, power: i.power }; // (T325: a mulligan opens the shot again on it)
     this.spinAir = spin ? { mine: true, input: { ...input, spin }, lie: r.lie, prev: r, seen: false, at: performance.now() } : null;
-    this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(sk, i.club), i.club === 'putter') : null);
+    this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(sk, i.club), i.club === 'putter') : null, windNote(env, i.club, shot.from, shot.landing?.at ?? shot.to));
     this.toast(this.lastShot.text, 'info');
     this.shot = null; this.setYourRound(round);
     if (this.you) { this.you.swing = 0; this.you.putt = shot.club === 'putter'; } // (the drive clip plays once; T212: a putt, the putt clip)
@@ -8477,7 +8486,9 @@ export class Game {
     const sk = this.yourSkills(); let up = false, r: YourRound = r0;
     for (let k = 0; k < 20 && !r.holed && !r.over && (!r.match || matchTurn(v, r) === 'you'); k++) { // (T244: in a match, until it is their turn)
       const t = yourTurn(v, r, sk); if (!t) break;
-      const go = { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power }, o: ReturnType<typeof playYours> = r.match ? playMatchYours(v, r, sk, go, this.seed) : playYours(v, r, sk, go, this.seed);
+      // (T334: the caddie's shots meet the same wind, lie and slope: each from its own ball)
+      const cenv = t.suggested.club === 'putter' ? null : envOf(this.windNow(), v.kindAt, this.ballHeight, t.ball, t.lie, t.suggested.aim);
+      const go = { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power, v: MODEL_V, ...(cenv ? { env: cenv } : {}) }, o: ReturnType<typeof playYours> = r.match ? playMatchYours(v, r, sk, go, this.seed) : playYours(v, r, sk, go, this.seed);
       r = o.round; up = o.up;
     }
     this.shot = null; this.setYourRound(r);
@@ -8718,7 +8729,7 @@ export class Game {
     const row = r.card[r.at]!, v = this.yrView(), h = v ? holeOf(v, row.i) : null, flying = !!this.yrFlight, addressing = !!this.shot?.mine;
     return { round: r, hole: row.n, par: row.par, stroke: row.strokes + 1, distM: h ? Math.hypot(h.pin.x - r.ball.x, h.pin.y - r.ball.y) * TILE_M : 0, lie: r.lie,
       match: r.match ? matchView(v, r) : null, // T244
-      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing && !(r.match && (this.mFlight || (v && matchTurn(v, r) !== 'you'))), inCart: this.youInCart, nearCart: this.youNearCart(), cartFar: this.youCartFar(), canMull: canMulligan(r), mullLeft: mulligansLeft(r), canGimme: !flying && !!v && canGimme(v, r), card: this.yrCard, flying, addressing };
+      totals: cardTotals(r.card), canJump: !r.holed && !r.over && !flying && !addressing && !(r.match && (this.mFlight || (v && matchTurn(v, r) !== 'you'))), inCart: this.youInCart, nearCart: this.youNearCart(), cartFar: this.youCartFar(), canMull: canMulligan(r), mullLeft: mulligansLeft(r), canGimme: !flying && !!v && canGimme(v, r), card: this.yrCard, flying, addressing, wind: this.windLine() };
   }
   // ---------- T244 (#706): money matches (golf/play/match.ts) ----------
   /** the opponent's ball in the air (as yours: a YourFlight), their figure (a You: its swing clip; it stands at their ball), the pause before their shot */
@@ -9948,7 +9959,7 @@ export class Game {
     const view = this.playCourse(g);
     if (!view.holes.length) return null;
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
-    const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
+    const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner, this.tourneyConditions(key));
     const art = golfers.map(p => p.owner ? (this.golf?.player?.you ? this.youArt() : ownerArt(p.sex)) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
     const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace(), height: this.ballHeight }), key, art, finish: new DayFinish(), own: null, waves: -1 };
     if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: owner.skills ?? OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}), ...(owner.skills ? { skills: owner.skills } : {}) };
@@ -10000,6 +10011,60 @@ export class Game {
     const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null, tees, ...(skills ? { skills } : {}) });
     if (!built) return;
     this.play = built; this.saveOwner(); this.emit();
+  }
+  // ---------- T334 (#960): the wind, and the lie that changes the flight (golf/play/wind.ts, lies.ts, conditions.ts) ----------
+  /** whether the day's weather plays in the tournament of key `key` (GolfSave.weather: a save from before it has its day in progress, and every day before, as it was; a new game has it from the first) */
+  private weatherOn(key: number): boolean { return key >= (this.golf?.weather?.from ?? 0); }
+  /** a tournament's wind (its key: the same after a reload, whatever town day it is then) */
+  private tourneyWind(key: number): Wind { return dailyWind(this.seed + 0x4f55, key); }
+  /** the model's golfers' conditions for the tournament of key `key`: its mean wind, the course's heights, and the lie's kinds (the view's); undefined before the weather */
+  private tourneyConditions(key: number): Conditions | undefined { return this.weatherOn(key) ? { wind: this.tourneyWind(key), height: this.ballHeight } : undefined; }
+  /** a town day's wind, kept for the day */
+  private dayWindMemo: { day: number; w: Wind } | null = null;
+  private dayWind(day: number): Wind { const m = this.dayWindMemo; if (m && m.day === day) return m.w; const w = dailyWind(this.seed, day); this.dayWindMemo = { day, w }; return w; }
+  /** a wind forced for a dev run or a capture (?wind=off, ?wind=14,270,0.6, or window.__game.devWind = {...}): null: the day's own */
+  devWind: Wind | null = null;
+  /** the day's wind the world is in (null: no golf): the tournament day's while one is on, else the day of your round, else today's */
+  worldWind(): Wind | null {
+    if (!this.golf) return null;
+    if (this.devWind) return this.devWind;
+    const pl = this.play; if (pl && this.weatherOn(pl.key)) return this.tourneyWind(pl.key);
+    const r = this.yourRound(); return this.dayWind(r ? r.day : this.townNow().day);
+  }
+  /** the day's wind as a line for the round's bar: its mean (the gusts are the shot panel's), or null without golf */
+  private windLine(): string | null { const w = this.worldWind(); return w ? windText({ mph: w.mph, from: w.from }) : null; }
+  /** the wind at this instant, its gusts in: the clock is real time (seconds), so it moves while the shot panel is open and the sim is paused */
+  windNow(): WindNow | null { const w = this.worldWind(); return w ? windAt(w, performance.now() / 1000) : null; }
+  /** the world's wind for the sprite shader's sway (and the flag's cloth): the time, the wind's direction on the screen and its strength (0: still: none without golf) */
+  private windForShader(now: number): { t: number; sx: number; sy: number; k: number } {
+    const n = this.windNow(); if (!n) return { t: now / 1000, sx: 0, sy: 0, k: 0 };
+    const a = n.from * Math.PI / 180, tx = Math.cos(a) - Math.sin(a), ty = Math.cos(a) + Math.sin(a); // the unit ground vector it blows toward, times sqrt 2
+    return { t: now / 1000, sx: (tx - ty) * 0.5, sy: (tx + ty) * 0.25, k: Math.min(1, n.mph / 22) };
+  }
+  /** the conditions the open shot is struck in right now: the wind with its gusts, the lie's kind under the ball, the slope under it along the aim (conditions.ts envOf). Null for a
+   *  putt (it never leaves the ground) and in a tournament that began before the weather (its day plays as it did) */
+  private shotEnv(): ShotEnv | null {
+    const s = this.shot; if (!s || s.input.club === 'putter') return null;
+    const v = s.mine ? this.yrView() : this.play?.view ?? null; if (!v) return null;
+    if (!s.mine && !(this.play && this.weatherOn(this.play.key))) return null;
+    return envOf(this.windNow(), v.kindAt, this.ballHeight, s.turn.ball, s.turn.lie, s.input.aim);
+  }
+  /** what the open shot is up against, for the shot panel (see ShotConditions); null with no shot */
+  shotConditions(): ShotConditions | null {
+    const s = this.shot; if (!s) return null;
+    const v = s.mine ? this.yrView() : this.play?.view ?? null, t = s.turn, club = s.input.club, putting = club === 'putter';
+    const on = s.mine || (!!this.play && this.weatherOn(this.play.key));
+    const dx = s.input.aim.x - t.ball.x, dy = s.input.aim.y - t.ball.y, L = Math.hypot(dx, dy), ux = L > 1e-6 ? dx / L : 1, uy = L > 1e-6 ? dy / L : 0, aimedM = L * TILE_M;
+    const env = on && !putting && v ? envOf(this.windNow(), v.kindAt, this.ballHeight, t.ball, t.lie, s.input.aim) : null;
+    const kind = env?.lie ?? lieKindFor(v?.kindAt, t.ball, t.lie), k = previewShot(club, 100, ux, uy, env).carryM / 100;
+    // the caddie's club: the shortest whose carry in these conditions reaches the aimed distance (the longest the lie allows when none does)
+    let suggest: Club | null = null;
+    if (on && !putting && env) {
+      const sk = this.shotSk(), clubs = allowedClubs(t.lie, t.lie === 'tee').filter(c => c !== 'putter').reverse();
+      if (sk !== null) suggest = clubs.find(c => carryM(c, skillFor(sk, c)) * previewShot(c, 100, ux, uy, env).carryM / 100 >= aimedM) ?? clubs[clubs.length - 1] ?? null;
+    }
+    return { on, putting, wind: windView(on && !putting ? this.windNow() : null, on ? this.worldWind() : null, ux, uy), day: on ? this.worldWind() : null, lie: lieView(kind, club), slope: env?.slope ?? { up: 0, across: 0 },
+      slopeLines: slopeLines(env?.slope), preview: previewShot(club, aimedM, ux, uy, env), aimedM, playsLikeM: putting || !(k > 0.2) ? aimedM : aimedM / k, suggest };
   }
   /** the owner's open shot for the shot panel, or null */
   shotState(): ShotState | null { return this.shot; }
@@ -10115,11 +10180,11 @@ export class Game {
     if (this.shot?.mine) { this.yourHit(swing); return; }
     const s = this.shot, pl = this.play, own = pl?.own; if (!s || !pl || !own) return;
     const i = s.input;
-    const spin = this.shotSpin();
-    const shot = own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}) });
-    this.spinAir = spin ? { mine: false, input: { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), spin }, lie: s.turn.lie, prev: null, seen: false, at: performance.now() } : null;
+    const spin = this.shotSpin(), env = this.shotEnv();
+    const shot = own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), v: MODEL_V });
+    this.spinAir = spin ? { mine: false, input: { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(env ? { env } : {}), v: MODEL_V, spin }, lie: s.turn.lie, prev: null, seen: false, at: performance.now() } : null;
     // T316: what the shot did (its miss, carry and total), toasted and kept for the panel's "Last shot" line
-    this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(own.skill, i.club), i.club === 'putter') : null);
+    this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(own.skill, i.club), i.club === 'putter') : null, windNote(env, i.club, shot.from, shot.landing?.at ?? shot.to));
     this.toast(this.lastShot.text, 'info');
     own.turn = own.live.advance();
     this.closeShot(); this.saveOwner();
@@ -10180,8 +10245,10 @@ export class Game {
     ctx.save();
     if (i.club !== 'putter') {
       const L = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) || 1, ux = (i.aim.x - t.ball.x) / L, uy = (i.aim.y - t.ball.y) / L;
-      const sk = skillFor(sk0, i.club), carry = carryM(i.club, sk) * i.power / TILE_M, k = 1 - sk; // (T241: his club's part of the game)
-      const px = t.ball.x + ux * carry, py = t.ball.y + uy * carry, A = 2 * (0.03 + 0.07 * k) * carry, B = 2 * carry * Math.tan((1.5 + 5 * k) * Math.PI / 180);
+      const sk = skillFor(sk0, i.club), k = 1 - sk; // (T241: his club's part of the game)
+      // T334: where the shot is expected to land in its conditions: the carry after the lie, the slope and the wind, off the aim by the wind's drift and the slope's pull, as wide as the lie's scatter
+      const pv = previewShot(i.club, carryM(i.club, sk) * i.power, ux, uy, this.shotEnv()), carry = pv.carryM / TILE_M, side = pv.sideM / TILE_M;
+      const px = t.ball.x + ux * carry - uy * side, py = t.ball.y + uy * carry + ux * side, A = 2 * (0.03 + 0.07 * k) * carry * pv.spread, B = 2 * carry * Math.tan((1.5 + 5 * k) * Math.PI / 180) * pv.spread;
       const c = this.screen(px, py), e1 = this.screen(px + ux * A, py + uy * A), e2 = this.screen(px - uy * B, py + ux * B);
       // the unit circle through the spread's axes (their screen vectors from the landing point), filled faint
       ctx.save(); ctx.transform(e1.x - c.x, e1.y - c.y, e2.x - c.x, e2.y - c.y, c.x, c.y); ctx.beginPath(); ctx.arc(0, 0, 1, 0, Math.PI * 2); ctx.restore();
@@ -10192,6 +10259,22 @@ export class Game {
     else { ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(a.x, a.y); ctx.stroke(); }
     ctx.beginPath(); ctx.arc(a.x, a.y, 6 * dpr, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(b.x, b.y, 3 * dpr, 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill(); ctx.stroke();
+    ctx.restore();
+    if (i.club !== 'putter') this.drawWindMark(ctx, b.x, b.y);
+  }
+  /** T334: the wind at the open shot: an arrow on the ground beside the ball pointing the way it blows (longer in a stronger wind) and its speed, so the eye need not leave the ball for
+   *  the panel. Not in a calm, and not in a tournament that began before the weather */
+  private drawWindMark(ctx: CanvasRenderingContext2D, bx: number, by: number) {
+    const s = this.shot, n = this.windNow(); if (!s || !n || n.mph < CALM_MPH || (!s.mine && !(this.play && this.weatherOn(this.play.key)))) return;
+    const dpr = this.dpr, t = windToward(n.from), dx = (t.x - t.y) * Math.SQRT1_2, dy = (t.x + t.y) * Math.SQRT1_2 * 0.5, m = Math.hypot(dx, dy) || 1, len = (16 + 2.4 * Math.min(n.mph, 25)) * dpr;
+    const ox = bx - 56 * dpr, oy = by - 40 * dpr, ex = ox + dx / m * len, ey = oy + dy / m * len, a = Math.atan2(ey - oy, ex - ox), h = 6 * dpr;
+    ctx.save();
+    ctx.fillStyle = 'rgba(15,23,42,0.55)'; ctx.beginPath(); ctx.ellipse((ox + ex) / 2, (oy + ey) / 2 - 8 * dpr, len / 2 + 22 * dpr, 17 * dpr, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#67e8f9'; ctx.fillStyle = '#67e8f9'; ctx.lineWidth = 2 * dpr; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex, ey); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - Math.cos(a - 0.5) * h, ey - Math.sin(a - 0.5) * h); ctx.lineTo(ex - Math.cos(a + 0.5) * h, ey - Math.sin(a + 0.5) * h); ctx.closePath(); ctx.fill();
+    ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#e0f2fe';
+    ctx.fillText(`${Math.round(n.mph)} mph`, (ox + ex) / 2, (oy + ey) / 2 - 15 * dpr);
     ctx.restore();
   }
 
@@ -10535,6 +10618,7 @@ export class Game {
         f.vec.forEach((v, k) => gl.drawVector(vAt[k]!, v.floats / VECTOR_STRIDE, far ? v.far : v.verts, sh.sx, sh.sy, this.shadowStrength, castMul, far, minPx));
       }
       gl.endShadows();
+      { const w = this.windForShader(now); gl.setWind(w.t, w.sx, w.sy, w.k); } // (T334: the trees sway and the pins' flags ripple in the world's wind)
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, minPx);
     }
     // T226: the scene laid on the screen through the grade (when graded), before the overlay and its night pass read the canvas
