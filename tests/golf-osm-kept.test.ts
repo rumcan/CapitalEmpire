@@ -141,6 +141,36 @@ describe('a downloaded course in hand (T356 with T358)', () => {
   });
 });
 
+describe('a course the search found, in hand from its spec (T356: Place it in my map on the new-game card)', () => {
+  it('takes the previewed spec in hand over the game map as a menu course is taken, Select in hand, and Cancel puts it down with nothing bought', async () => {
+    const lib = await library(), spec = (await previewOfKept(ID, { lib } as unknown as FindDeps))!.spec, { h, log } = host(), r = new RealPlacer(h);
+    let entered = 0; h.enter = () => { entered++; };
+    assert.equal(await r.startSpec(spec), true);
+    assert.equal(r.active, true); assert.equal(entered, 1, 'the cards that hide the map shut');
+    assert.equal(r.id, ID); assert.equal(r.view()!.name, 'Wingatepark Country Club'); assert.equal(r.view()!.holes, 3);
+    assert.equal(r.spec, spec, 'the very spec the preview built');
+    assert.match(log.toasts.at(-1)!, /Wingatepark Country Club: move it to a spot and click to place it · R turns it .* Esc puts it down/);
+    r.cancel();
+    assert.equal(r.active, false); assert.equal(log.laid.length, 0, 'nothing laid');
+  });
+  it('is placed through the same pop-up: the host is told the id the game will save', async () => {
+    const lib = await library(), spec = (await previewOfKept(ID, { lib } as unknown as FindDeps))!.spec, { h, log } = host(), r = new RealPlacer(h);
+    assert.equal(await r.startSpec(spec), true);
+    r.click(); assert.ok(r.confirming, 'the pop-up');
+    r.closePopup(); assert.equal(r.confirming, null); assert.equal(r.active, true, 'Cancel in the pop-up leaves the course in hand');
+    r.click(); assert.equal(r.confirm(), true);
+    assert.equal(log.laid.length, 1); assert.equal(log.laid[0]!.id, ID); assert.equal(log.laid[0]!.spec, spec);
+  });
+  it('replaces a course already in hand, and says why when the map holds it in no turn', async () => {
+    const lib = await library(), spec = (await previewOfKept(ID, { lib } as unknown as FindDeps))!.spec, a = host(), r = new RealPlacer(a.h);
+    assert.equal(await r.start('rondebosch'), true);
+    assert.equal(await r.startSpec(spec), true); assert.equal(r.id, ID, 'the later one is in hand');
+    const small = host(), s = new RealPlacer({ ...small.h, map: 100 });
+    assert.equal(await s.startSpec(spec), false); assert.equal(s.active, false);
+    assert.match(small.log.toasts.at(-1)!, /Wingatepark Country Club \(from map data\) is bigger than the map in every direction.*cannot grow/);
+  });
+});
+
 describe('Course › Place a real course lists the downloaded courses (T356 with T358)', () => {
   const rec = (id: string, name: string, holes: number, par: number): CourseRecord => ({ id, name, place: 'Pretoria, South Africa', credit: '', licence: '', fetchedAt: when, server: 's', bytes: 1, holes, par });
   const shipped = OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par }));

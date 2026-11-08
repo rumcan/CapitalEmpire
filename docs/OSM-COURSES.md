@@ -291,6 +291,11 @@ new-game card's search (T358, kept in this browser's IndexedDB: the list is read
 card is there at once; none downloaded: no caption, the three alone). The course's outline follows the pointer; R / Shift+R (or Shift+wheel) turn it
 15 degrees, Alt+R one degree, Alt+wheel freely; a click asks (the pop-up), *Place it* lays it, *Cancel* (or Esc, or a right click) leaves everything as it was.
 A map-data game (`?osmcourse=`, the new-game card) is unchanged: it still lays the course on a new flat map.
+**From the new-game card's search** (T358): the preview that opens after a name is searched or a downloaded course is opened has **Place it in my map** under **Build this course** (the owner, 2026-11-08:
+"place the imported course with the placing mode, and back out if they decide not to use it, rather than starting a new game straight away"). Build starts a new game on the course, as before. Place keeps
+the game's map: the card hides (it stays mounted, so the picker is as it was), the course goes in hand (`Game.startRealPlaceSpec`, `RealPlacer.startSpec`), and Esc, a right click or the placing
+card's Cancel puts it down and brings the card back on the same preview, nothing bought and no new game; Place it lays it on the game's own map, the card returns with its Your course row naming the
+course and the picker closed. (On the card the game is the one just started: its money may not cover a course; the outline is red then, and the price says so.)
 A downloaded course is read back from the library and converted as a new game would convert it (`previewOfKept`: scaled to the map when it must be; holes worked out from the fairways
 marked as a guess in the saved game's note, `derived`); it goes through the same plan, pop-up and laying, saved with its library id (`way/4261725`) and `placed`.
 
@@ -303,8 +308,8 @@ marked as a guess in the saved game's note, `derived`); it goes through the same
 | the downloaded courses for the menu (the library's list kept for the flyout, `refreshKept`, `keptCourses`, `watchKept`) | `src/game/golf/osm/kept.ts` |
 | the engine's host: the world the planner reads, the lay (`Game.layRealCourse`), the pointer, keys, wheel, Esc | `src/game/engine.ts` (`real`, `realWorld`, `layRealCourse`) |
 | the Course menu entry; the card over the map and the pop-up | `src/ui/flyout-menu.ts`, `src/ui/course/RealPlaceCard.tsx`, `src/App.tsx` |
-| tests | `tests/golf-osm-place.test.ts`, `tests/golf-osm-placer.test.ts`, `tests/golf-osm-kept.test.ts` |
-| shots; bench | `scripts/dev/real-place-shots.mjs`; `scripts/perf/bench.mjs --realplace <id>[,laid]` |
+| tests | `tests/golf-osm-place.test.ts`, `tests/golf-osm-placer.test.ts`, `tests/golf-osm-kept.test.ts`, `tests/ui-course-picker.test.ts` (Place it in my map), `tests/tile-cache.test.ts` (the draw-time trim) |
+| shots; bench | `scripts/dev/real-place-shots.mjs`; `scripts/dev/real-place-kept-shots.mjs` (a downloaded course on the menu and from the new-game card); `scripts/perf/bench.mjs --realplace <id>[,laid]` |
 
 ## How it decides (planPlace)
 - **The land bought is a cover of the turned land**: the game's ownership is a list of axis-aligned rects (and the build grid's shader takes 32 of them), so a turned

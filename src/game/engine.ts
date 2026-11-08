@@ -1465,6 +1465,9 @@ export class Game {
   });
   /** Course > Place a real course > (a course): takes it in hand (a golf game only; a course too big for the map in every turn is refused, the map cannot grow) */
   startRealPlace(id: string): Promise<boolean> { return this.golf ? this.real.start(id) : Promise.resolve(false); }
+  /** the new-game card's search, after a course is found and previewed (T358): "Place it in my map" takes that course in hand over this game's map, as the menu's courses
+   *  are, instead of starting a new game on it (Build this course); Esc or Cancel puts it down and the card is there again */
+  startRealPlaceSpec(spec: OsmCourseSpec): Promise<boolean> { return this.golf ? this.real.startSpec(spec) : Promise.resolve(false); }
   /** the placing mode's view for the card and the pop-up (null: none in hand) */
   realView(): RealView | null { return this.real.view(); }
   /** what a plan reads: changes with the roads, the lots, the land, the club's buildings, the money and the round */

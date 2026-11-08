@@ -109,7 +109,19 @@ export class RealPlacer {
     if (this.loading !== id) return false; // (put down, or another picked, while it loaded)
     this.loading = null;
     if (!src) { this.host.toast(osmCourseInfo(id) || !this.host.kept ? 'That course is not in this build' : 'That course is no longer kept in this browser: download it again on the new-game card (Your course)', 'warn'); return false; }
-    const { info, spec } = src;
+    return this.take(id, src.info, src.spec);
+  }
+
+  /** takes a spec in hand as it is (the owner, 2026-11-08: after "Build this course" in the new-game card's search the player may place the course it found with
+   *  this mode instead of starting a new game on it): the same as `start` for a course whose spec the caller already has. True when it is in hand */
+  startSpec(spec: OsmCourseSpec): Promise<boolean> {
+    this.cancel(false);
+    return Promise.resolve(this.take(spec.id, realInfoOf(spec), spec));
+  }
+
+  /** the course in hand: its turn that fits the map first, the price of painting it, the land's middle at the camera's, the hint; refused (and said) when it fits the
+   *  map in no turn. True when it is in hand */
+  private take(id: string, info: RealInfo, spec: OsmCourseSpec): boolean {
     const room = this.host.map - 2 * PLACE_EDGE, deg = firstFittingAngle(spec.w, spec.h, room);
     if (deg === null) {
       this.host.toast(`${osmDisplayName(info.name)} is bigger than the map in every direction (${spec.w} x ${spec.h} tiles; the map is ${this.host.map}): the map cannot grow, so pick a smaller or a scaled course`, 'warn');
