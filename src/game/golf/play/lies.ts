@@ -64,7 +64,7 @@ export const LIE_FX: Readonly<Record<LieKind, LieEffect>> = {
   out: { name: 'Out of bounds', carry: 1, spread: 1, spin: 0, run: 1, flier: 0, wild: 0, high: 1, note: 'Out of bounds' },
 };
 /** how much of a lie's flier chance each club has (the driver and the woods cannot get a flier out of grass; the short irons and the wedges are the clubs that do) */
-export const FLIER_CLUB: Readonly<Record<Club, number>> = { driver: 0.1, wood3: 0.3, iron4: 0.6, iron6: 0.9, iron8: 1.1, pw: 1.2, sw: 1, putter: 0 };
+export const FLIER_CLUB: Readonly<Record<Club, number>> = { driver: 0.1, wood3: 0.3, wood5: 0.2, hybrid: 0.5, iron4: 0.6, iron5: 0.75, iron6: 0.9, iron7: 1, iron8: 1.1, iron9: 1.15, pw: 1.2, gw: 1.1, sw: 1, lw: 0.9, putter: 0 };
 /** a flier: the ball jumps off the grass with no spin on it, so it flies this much further (a factor on the carry), runs on this much more, and is a little wilder */
 export const FLIER = { carry: 1.12, run: 1.8, spread: 1.15 } as const;
 

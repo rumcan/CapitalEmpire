@@ -13,7 +13,8 @@
 // Everything here runs on events (a click, a round's end), never per frame.
 import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, type DayRoster } from './everyday';
 import type { GameSkills, Golfer, Sex } from './play/types';
-import { readMods } from './play/mods';
+import { readGameSkills } from './play/mods';
+import { bagGear, normalizeBag, type BagSave, type Gear } from './play/bag';
 import type { TeeKind } from './types';
 import { normalizeYou, type YouSave } from './you';
 import { normalizeYourRound, type YourRound } from './play/yours';
@@ -53,12 +54,17 @@ export type RoundKind = keyof typeof PRESSURE;
 export const NERVE_LOSS = 0.3;
 
 /** your skills as the shot model plays them in a round of pressure p (0..1): each part of the game's skill / 100, less what the pressure takes
- *  (NERVE_LOSS, less with nerve) */
-export function gameSkills(sk: SkillsIn, pressure: number): GameSkills {
+ *  (NERVE_LOSS, less with nerve). T335: with `gear` (your bag's: gearOf(profile)) the clubs in the bag and its upgrades and putter fitting as mods (play/bag.ts); without, the game as it was */
+export function gameSkills(sk: SkillsIn, pressure: number, gear?: Gear): GameSkills {
   const f = 1 - NERVE_LOSS * Math.min(1, Math.max(0, pressure)) * (1 - clampSkill(sk.nerve) / 100), s = (v: number) => clampSkill(v) / 100 * f;
   // (T334 part 2: the new stats are in only when the skills have them: the older five play exactly as they did)
-  return { driving: s(sk.driving), irons: s(sk.irons), short: s(sk.short), putting: s(sk.putting), ...(sk.power !== undefined ? { power: s(sk.power) } : {}), ...(sk.accuracy !== undefined ? { accuracy: s(sk.accuracy) } : {}), ...(sk.touch !== undefined ? { touch: s(sk.touch) } : {}) };
+  return { driving: s(sk.driving), irons: s(sk.irons), short: s(sk.short), putting: s(sk.putting), ...(sk.power !== undefined ? { power: s(sk.power) } : {}), ...(sk.accuracy !== undefined ? { accuracy: s(sk.accuracy) } : {}), ...(sk.touch !== undefined ? { touch: s(sk.touch) } : {}),
+    ...(gear ? { ...(gear.mods.length ? { mods: gear.mods } : {}), clubs: gear.clubs } : {}) };
 }
+/** T335: your bag's gear for the shot model (the mods of its upgrades and putter fitting, the clubs in it): the default bag for a profile without one */
+export const gearOf = (p: Pick<PlayerProfile, 'bag'>): Gear => bagGear(p.bag);
+/** T335: the profile with a bag (null: the default bag, which is not saved); the profile passed in is not changed */
+export function withBag(p: PlayerProfile, bag: BagSave | null): PlayerProfile { const { bag: _old, ...rest } = p; void _old; return bag ? { ...rest, bag } : rest; }
 
 /** the handicap's weights: each part of the game's share of the strokes a better skill saves, measured on the shot model (output/t241-cal, 600
  *  rounds a point on the tests' synthetic course: +0.1 of driving saves about 2.1 strokes at a skill of 0.4, the irons 0.7, the short game 0.6,
@@ -135,6 +141,8 @@ export interface PlayerProfile {
   titles?: Title[];
   /** T214 (P26 3.2): a lesson booked with your pro (golf/pros.ts lessonWhy): the town day, the pro's name, and whether your session took it; absent: none */
   lesson?: { day: number; with: string; used: boolean };
+  /** T335 (#961): your bag (play/bag.ts): the upgrades of your clubs, the third wood's slot, the putter's shaft and head, the sponsor's vouchers; absent: the default bag (every club Garage-sale: the model's own) */
+  bag?: BagSave;
 }
 /** the practice log and the rounds keep this many (newest last) */
 export const LOG_MAX = 30, ROUNDS_MAX = 20;
@@ -171,8 +179,8 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
   const b = p.busy, bk = p.booked;
   let booked: Booking | null = null;
   if (bk && Number.isFinite(bk.day) && Number.isFinite(bk.tee)) {
-    const q = bk.skills, ok = q && [q.driving, q.irons, q.short, q.putting].every(v => typeof v === 'number' && Number.isFinite(v)), st = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? { v: Math.min(1, Math.max(0, v)) } : null;
-    booked = { day: bk.day, tee: bk.tee, skills: ok ? { driving: q.driving, irons: q.irons, short: q.short, putting: q.putting, ...(st(q.power) ? { power: st(q.power)!.v } : {}), ...(st(q.accuracy) ? { accuracy: st(q.accuracy)!.v } : {}), ...(st(q.touch) ? { touch: st(q.touch)!.v } : {}), ...(readMods(q.mods).length ? { mods: readMods(q.mods) } : {}) } : gameSkills(skills, PRESSURE.everyday) };
+    const q = readGameSkills(bk.skills); // (T334 part 2: the stats, mods and, T335, the bag's clubs as saved; a bad one takes the profile's game)
+    booked = { day: bk.day, tee: bk.tee, skills: q ?? gameSkills(skills, PRESSURE.everyday) };
     const r = bk.result;
     if (r && [r.strokes, r.par, r.holes, r.done].every(v => typeof v === 'number' && Number.isFinite(v))) booked.result = { strokes: r.strokes, par: r.par, holes: r.holes, done: r.done };
     if (bk.auto === true) booked.auto = true; // T350: the game plays it (you said so)
@@ -189,6 +197,7 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     ...(typeof p.chDay === 'number' && Number.isFinite(p.chDay) ? { chDay: Math.round(p.chDay) } : {}),
     ...(normalizeTitles(p.titles) ? { titles: normalizeTitles(p.titles) } : {}),
     ...(p.lesson && typeof p.lesson === 'object' && Number.isFinite(p.lesson.day) && typeof p.lesson.with === 'string' ? { lesson: { day: Math.round(p.lesson.day), with: p.lesson.with.slice(0, 40), used: p.lesson.used === true } } : {}),
+    ...(normalizeBag(p.bag) ? { bag: normalizeBag(p.bag)! } : {}),
   };
 }
 
@@ -251,7 +260,7 @@ export function playedRound(p: PlayerProfile, r: { day: number; kind: RoundKind;
 /** your golfer for a round (the shot model's, as a field golfer): id, your name and sex, your skills under the round's pressure (gameSkills), their
  *  average as his skill, look 0 (T240 gives the looks), the white tees unless you pick others. Money matches (T244) and the tournament (T246) take it */
 export function playerGolfer(p: PlayerProfile, id: number, pressure: number, tees: TeeKind = 'middle'): Golfer {
-  const skills = gameSkills(p.skills, pressure);
+  const skills = gameSkills(p.skills, pressure, gearOf(p));
   return { id, name: p.name, sex: p.sex, pro: false, skill: (skills.driving + skills.irons + skills.short + skills.putting) / 4, look: 0, tees, skills };
 }
 
@@ -268,11 +277,11 @@ export function freeTee(roster: Pick<DayRoster, 'groups'> | null, minute: number
 }
 
 /** your round booked at a tee time on a town day, played with your game as it is now */
-export function bookRound(p: PlayerProfile, day: number, tee: number): PlayerProfile { return { ...p, booked: { day, tee, skills: gameSkills(p.skills, PRESSURE.everyday) } }; }
+export function bookRound(p: PlayerProfile, day: number, tee: number): PlayerProfile { return { ...p, booked: { day, tee, skills: gameSkills(p.skills, PRESSURE.everyday, gearOf(p)) } }; }
 /** after a session: your round booked today and not begun (before its walk to the tee) plays with your game as it is now */
 export function rebook(p: PlayerProfile, day: number, minute: number): PlayerProfile {
   const b = p.booked; if (!b || b.day !== day || minute >= b.tee - BOOK_LEAD) return p;
-  return { ...p, booked: { day, tee: b.tee, skills: gameSkills(p.skills, PRESSURE.everyday), ...(b.auto ? { auto: true as const } : {}) } };
+  return { ...p, booked: { day, tee: b.tee, skills: gameSkills(p.skills, PRESSURE.everyday, gearOf(p)), ...(b.auto ? { auto: true as const } : {}) } };
 }
 /** your golfer in the everyday round you booked: as playerGolfer, with the booking's game */
 export function bookedGolfer(p: PlayerProfile, b: Booking): Golfer {

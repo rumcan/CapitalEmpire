@@ -75,6 +75,7 @@ import { RangeCard } from './ui/golf/RangeCard';
 import { ClubhouseCard } from './ui/golf/ClubhouseCard';
 import { StaffCard } from './ui/golf/StaffCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
+import { BagCard } from './ui/golf/BagCard';
 import { TalkCard, TeeAskCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
 import { MatchResultCard, ReturnChallengeCard } from './ui/golf/MatchCards';
 import { EventCard } from './ui/golf/EventCard';
@@ -460,6 +461,8 @@ export default function App() {
                   {game.hasClubhouse && <button className={`chip ${game.clubCardOpen ? 'chip-on' : ''}`} onClick={() => game.openClubCard()} data-tip="The clubhouse: today's members, visitors, green fees and waits" aria-label="Clubhouse" data-testid="club-chip"><Icon name="house" size={16} /><span className={WIDE}>Club</span></button>}
                   {/* T241: your golf (the profile card: your skills, handicap, practice and your tee time) */}
                   {game.golf && <button className={`chip ${game.playerCardOpen ? 'chip-on' : ''}`} onClick={() => game.openPlayerCard()} data-tip="Your golf: your skills, handicap, practice log and your round today" aria-label="You" data-testid="you-chip"><Icon name="people" size={16} /><span className={WIDE}>You</span></button>}
+                  {/* T335: your bag (the 14 clubs, their upgrades, the putter's shaft and head) */}
+                  {game.golf && <button className={`chip ${game.bagCardOpen ? 'chip-on' : ''}`} onClick={() => game.openBagCard()} data-tip="Your bag: the 14 clubs, their upgrades, and the putter's shaft and head" aria-label="Bag" data-testid="bag-chip"><Icon name="briefcase" size={16} /><span className={WIDE}>Bag</span></button>}
                   {/* T240: your character: Me frames you once (T323: the camera no longer follows; Walk and Select are the rail's two cursors) */}
                   {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character (once: it does not follow)" aria-label="Me" data-testid="me-chip"><Icon name="pin" size={16} /><span className={WIDE}>Me</span></button>}
                   {game.you && !game.yourRound() && game.youCartFar() && <button className="chip" onClick={() => game.youCartCall()} data-tip="Your cart: it drives to you (C in the Walk cursor); then E gets in" aria-label="Call your cart" data-testid="cart-chip"><Icon name="compass" size={16} /><span className={WIDE}>Cart</span></button>}
@@ -872,7 +875,13 @@ export default function App() {
           {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
             const pv = game.playerCard(); if (!pv) return null;
             const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace || game.holeCardHole !== null;
-            return <PlayerCard view={pv} right={side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} />;
+            return <PlayerCard view={pv} right={side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} onBag={() => game.openBagCard(true)} />;
+          })()}
+          {(() => { // T335: your bag, left of the profile card (and of the card on the right) when they are open; a club's detail opens to its left
+            const bv = game.bagCard(); if (!bv) return null;
+            const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace || game.holeCardHole !== null, me = game.playerCardOpen;
+            return <BagCard view={bv} right={me ? (side ? (game.panel ? 'right-[63rem]' : 'right-[45rem]') : game.panel ? 'right-[41rem]' : 'right-[23rem]') : side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'}
+              onClose={() => game.openBagCard(false)} onUpgrade={(c, v) => game.upgradeBagClub(c, v)} onFit={(k, id) => game.fitBagPart(k, id)} onThird={w => game.setBagThird(w)} />;
           })()}
           {(() => { const pc = game.placeCard(); return pc && <PlaceCard view={pc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closePlaceCard()} onScene={game.placeSceneArt(pc.id) ? () => game.openScene({ kind: 'place', id: pc.id }) : undefined} />; })()}
           {(() => { // T242: the set-the-scene card, centred left of the card on the right (the range's, the club's, a place's) and the side panel

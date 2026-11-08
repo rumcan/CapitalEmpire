@@ -5,7 +5,7 @@
 import { TILE_M } from '../types';
 import { appendShots, FLIGHT_TIME, liveField, PUTT_FLIGHT } from './round';
 import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
-import { PUTT_V2, carryFor, chooseShot, hitShot, putt, rng, skillFor, type ShotSkill } from './shot';
+import { PUTT_V2, carryFor, chooseShot, hitShot, luckyPutt, putt, rng, skillFor, type ShotSkill } from './shot';
 import { kitOf } from './mods';
 import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
@@ -130,13 +130,16 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     const distM = L * TILE_M, v2 = (input.v ?? 1) >= 2, deg = Math.abs(e) * 180 / Math.PI;
     // (T334: v2: the aim's tolerance is the cup's angle at this distance, and the power's error is in metres: shot.ts PUTT_V2)
     const tol = v2 ? Math.min(PUTT_V2.maxDeg, Math.max(PUTT_V2.minDeg, Math.atan(PUTT_V2.cupM / Math.max(distM, 0.25)) * 180 / Math.PI)) : AIM_DEG;
-    const factor = deg <= tol ? (v2 ? Math.max(0, 1 - Math.abs(pw - 1) * distM / PUTT_V2.windowM) : Math.max(0, 1 - 4 * Math.abs(pw - 1))) : 0;
-    const k = putt(r, skillFor(sk, 'putter'), distM, factor, v2);
+    // (T335: `feel`, the putter's distance control: the pace error counts for 1 / feel of what it was, in the window and in the leave; 1: as before)
+    const paceErr = Math.abs(pw - 1) / kit.feel;
+    const factor = deg <= tol ? (v2 ? Math.max(0, 1 - paceErr * distM / PUTT_V2.windowM) : Math.max(0, 1 - 4 * paceErr)) : 0;
+    let k = putt(r, skillFor(sk, 'putter'), distM, factor, v2);
+    k = luckyPutt(r, k, distM, kit.luck); // (T335: a lucky drop or a lip-out: one more draw, only for a putter with luck)
     k.leaveM *= kit.spread; // (T334 part 2: touch tightens the leave)
     if (k.holed) { to = { x: hole.pin.x, y: hole.pin.y }; lie = 'green'; holed = true; }
     else {
       // a miss: past the cup (short of it under 1) by the model's leave plus the power's error, and off the line by the aim's error
-      const leave = Math.max(0.3, k.leaveM + Math.abs(pw - 1) * distM) / TILE_M, s = pw < 1 ? -1 : 1, lat = distM * Math.sin(e) / TILE_M;
+      const leave = Math.max(0.3, k.leaveM + paceErr * distM) / TILE_M, s = pw < 1 ? -1 : 1, lat = distM * Math.sin(e) / TILE_M;
       to = { x: hole.pin.x + ux * s * leave - uy * lat, y: hole.pin.y + uy * s * leave + ux * lat };
       lie = view.lieAt(to.x, to.y);
       // a putt into water or out of bounds is a stroke and distance (hitShot's drop is for full shots)
@@ -156,7 +159,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     // (T241: his part of the game's skill; T316: a meter shot may carry past the club's full carry, with its spread, and keeps METER_ANG of the
     // model's direction spread, the meter's miss taking over the rest)
     // (T318: the spin, from the lie it is played from: the curve, the check, the release; none without it)
-    const sp = spin ? spinEffect(spin, input.club, plie, env?.lie) : null; // (T334: the lie's finer kind scales the spin)
+    const sp = spin ? spinEffect(spin, input.club, plie, env?.lie, kit.spin) : null; // (T334: the lie's finer kind scales the spin; T335: his clubs' grooves)
     const mod = eff || sp || env || shape ? { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(env ? { env } : {}), ...(shape ? { shape: fx } : {}) } : undefined;
     const o = hitShot(r, sk, plie, from, at, input.club, view, mod);
     to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
