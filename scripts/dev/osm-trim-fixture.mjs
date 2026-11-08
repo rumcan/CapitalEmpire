@@ -2,9 +2,14 @@
 // reads, only near the holes of the course to build, coordinates to 0.1 m, no names but the one the game shows. The fixture keeps the ODbL credit in its
 // header. A shipped course makes no request: the game ships these files (the search for other courses, T358, calls the servers on the player's own submit).
 //   node scripts/dev/osm-trim-fixture.mjs <stage-1.json> --id rondebosch --name "Rondebosch Golf Course" --place "Cape Town, South Africa" \
-//        [--course "Augusta National" --rename "Augusta National=Magnolia National"] [--reach 120] [--simplify 0.3] [--out src/game/golf/osm/data/<id>.json]
-// Plain Node 22, no installs.
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+//        [--course "Augusta National" --rename "Augusta National=Magnolia National"] [--reach 120] [--simplify 0.3] [--height <stage-1>.height.json | none]
+//        [--out src/game/golf/osm/data/<id>.json]
+// T357 (#999): the real ground height. The stage-1 run's `<name>.height.json` (scripts/dev/osm-height.mjs, or osm-course.mjs --height) beside the input is cropped
+// to the course's box and 440 m round it (the land, the skirt the game fades it out over, the margin), kept at the lattice step its source's smoothing needs
+// (terrarium.ts packStepOf: 16 m for SRTM, 8 m for 3DEP) and written as the fixture's `height` (16-bit, 1 cm units from a base, deflated, base64). `--height none`
+// leaves it out. The game reads that grid through a cubic, so the coarse lattice costs nothing.
+// Plain Node 22, no installs (the height part bundles terrarium.ts with the esbuild the repo already has).
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 const args = process.argv.slice(2), file = args.find(a => !a.startsWith('--') && a.endsWith('.json'));
@@ -89,6 +94,19 @@ for (const [kind, keys] of Object.entries(LINES)) {
 }
 
 const c = j.meta?.course ?? {};
+// the real ground height (T357): the stage-1 run's height file, cropped and kept at the step its source needs
+let height;
+{
+  const hf = opt('height', file.replace(/\.json$/, '.height.json'));
+  if (hf !== 'none' && existsSync(hf)) {
+    const { loadTerrarium } = await import('./osm-height.mjs'), T = await loadTerrarium(), hd = JSON.parse(readFileSync(hf, 'utf8'));
+    const g = await T.unpackGrid(hd.pack), m = +opt('height-margin', '440'), win = [box[0] - m, box[1] - m, box[2] + m, box[3] + m];
+    const crop = T.cropGrid(g, win), k = Math.max(1, Math.round(T.packStepOf(hd.meta.sigma) / g.step)), small = T.decimateGrid(crop, k), pk = await T.packGrid(small);
+    height = { ...pk, src: hd.meta.src, label: hd.meta.label, credit: hd.meta.credit, z: hd.meta.z, sigma: hd.meta.sigma, fetched: String(hd.meta.fetchedAt ?? '').slice(0, 10) };
+    const r = T.gridRange(small);
+    console.log(`height: ${hd.meta.label}, ${small.w} x ${small.h} samples at ${small.step} m over ${Math.round(win[2] - win[0])} x ${Math.round(win[3] - win[1])} m, ${r.min.toFixed(1)} to ${r.max.toFixed(1)} m, ${(JSON.stringify(height).length / 1024).toFixed(1)} kB`);
+  } else if (hf !== 'none') console.log(`no height file (${hf}): the fixture has no ground height; run scripts/dev/osm-height.mjs first`);
+}
 const fixture = {
   meta: {
     id, credit: '© OpenStreetMap contributors', licence: 'Data © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)',
@@ -97,6 +115,7 @@ const fixture = {
   },
   boundary: j.boundary ? { polys: polys(j.boundary) } : undefined,
   features,
+  ...(height ? { height } : {}),
 };
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(fixture) + '\n');

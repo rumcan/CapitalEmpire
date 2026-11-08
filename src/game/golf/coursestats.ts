@@ -2,7 +2,7 @@
 import { courseMonthlyUpkeep, growInShare } from './costs';
 import { evaluateCourseHeightQuality, type CourseHeightField } from '../ext/course-height';
 import { courseStats, deriveHoles, parFromLength, type CourseStats, type Hole } from './holes';
-import { courseTerrain } from './hole-terrain';
+import { courseTerrain, type HeightSampler } from './hole-terrain';
 import { missingFor, tierInfo, type CourseFacts, type Need } from './tour';
 import type { CourseLayout, TeeKind } from './types';
 import { TEE_KINDS, TEE_SET, teeSetsTerm } from './teesets';
@@ -158,8 +158,10 @@ export function courseQuality(layout: CourseLayout, holes: readonly Hole[], stat
   return { score: Math.max(0, Math.min(100, Math.round(score))), hints };
 }
 
-/** build the complete CourseStatsPanel from a CourseLayout, current tournament tier (1..5), and present venue Needs; height (optional) adds the course height's quality bonus and steep-green warnings */
-export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: ReadonlySet<Need> = new Set(), currentMonth = 7, height?: { field: CourseHeightField; areas: readonly { hole?: number; surface: string; pts: readonly number[] }[] }): CourseStatsPanel {
+/** build the complete CourseStatsPanel from a CourseLayout, current tournament tier (1..5), and present venue Needs; height (optional) adds the course height's quality bonus and steep-green warnings.
+ *  T357: height.ground (optional) is the ground the game reads under a real course, the land plus the course height: the rise and plays-like length of a hole come from it, while the
+ *  slope checks (steep fairways, the shaping bonus) judge the player's own course height alone (the land is the real hill, and the player cannot smooth it) */
+export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: ReadonlySet<Need> = new Set(), currentMonth = 7, height?: { field: CourseHeightField; areas: readonly { hole?: number; surface: string; pts: readonly number[] }[]; ground?: HeightSampler }): CourseStatsPanel {
  const holes = deriveHoles(layout.areas, layout.tees, layout.pins, layout.aims);
  const rows = holes.map(toHoleRow);
  const hq = height ? evaluateCourseHeightQuality(height.field, height.areas) : null;
@@ -179,17 +181,17 @@ export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: Read
  const steepGreenCost = hq ? Math.min(STEEP_GREEN_CAP, hq.steepGreenHoles.length * STEEP_GREEN_PENALTY) : 0;
  const slopeQuality = { steepGreens: steepGreenCost > 0 ? -steepGreenCost : 0, steepFairways: 0, shaped: 0 };
  if (height) {
-  const terr = courseTerrain(height.field, holes);
+  const terr = courseTerrain(height.field, holes), real = height.ground ? courseTerrain(height.ground, holes) : terr;
   const steepFair: number[] = [];
   let shapedN = 0;
   for (const r of rows) {
-   const t = terr.find(x => x.hole === r.hole);
-   if (!t) continue;
-   r.playsLikeM = Math.round(t.playsLikeM);
-   r.riseM = Math.round(t.riseM * 10) / 10 + 0;
+   const t = terr.find(x => x.hole === r.hole), g = real.find(x => x.hole === r.hole);
+   if (!t || !g) continue;
+   r.playsLikeM = Math.round(g.playsLikeM);
+   r.riseM = Math.round(g.riseM * 10) / 10 + 0;
    if (t.fairwayMaxSlope > FAIRWAY_MAX_SLOPE) { steepFair.push(r.hole); r.warnings.push('Fairway slope over 12% (smooth it)'); }
    if (Math.abs(t.riseM) >= SHAPED_RISE_M || t.reliefM >= SHAPED_RELIEF_M) shapedN++;
-   if (Math.abs(t.riseM) >= PLAYS_LIKE_SHOW_M && parFromLength(t.playsLikeM) !== r.par) qualityHints.push(`Hole ${r.hole} plays like a par ${parFromLength(t.playsLikeM)} (${t.riseM > 0 ? 'uphill' : 'downhill'})`);
+   if (Math.abs(g.riseM) >= PLAYS_LIKE_SHOW_M && parFromLength(g.playsLikeM) !== r.par) qualityHints.push(`Hole ${r.hole} plays like a par ${parFromLength(g.playsLikeM)} (${g.riseM > 0 ? 'uphill' : 'downhill'})`);
   }
   const fairCost = Math.min(STEEP_FAIRWAY_CAP, steepFair.length * STEEP_FAIRWAY_PENALTY);
   slopeQuality.steepFairways = fairCost > 0 ? -fairCost : 0;

@@ -154,15 +154,18 @@ import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } f
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import { normalizeGolfSave, stampWeather, weatherOn, type GolfPlaySave, type GolfSave, type GolfView, type Rect } from './golf/mode';
-import { courseSlopeAt, createCourseHeightField, sampleCourseGrid, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
+import { courseSlopeAt, createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
-import { loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, OSM_CREDIT, OSM_LICENCE, type OsmCourseSpec } from './golf/osm';
+import { loadOsmLand, loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, OSM_CREDIT, OSM_LICENCE, type OsmCourseJson, type OsmCourseSpec, type OsmLand } from './golf/osm';
 import { previewOfKept, realDeps } from './golf/osm/find';
 import { RealPlacer, realInfoOf, type RealInfo, type RealView } from './golf/osm/placer';
 import { cutSpan, goesPhrase, type PlacePlan, type PlaceWorld } from './golf/osm/place';
 import { placeDiff, scratchOf } from './golf/osm/placegrid';
 import { boundsOf, inRects } from './golf/osm/rotate';
+import { addLandPatch, clearLandIn, createLandField, designGreens, groundAt, layLand, packLand, patchBox, turnedFrame, unpackLand, type LandField, type LandSave } from './golf/osm/land';
+import { realNet, type AnswerCache } from './golf/osm/polite';
+import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
 import { specMarkers } from './golf/osm/raster';
 import { RANGE_CAM_ZOOM, RANGE_LOT, planRangeStart } from './golf/rangestart';
@@ -942,6 +945,10 @@ export class Game {
   /** T340 (#967): the map-data course the next new game is laid on (?osmcourse=<id> or the new-game card; golf/osm), and its spec once loaded. A new
    *  game on one is the old start's rules on the flat map, the real course in the middle (newOsmGame); it clears when that game is laid */
   private osmId: string | null = null; private osmSpec: OsmCourseSpec | null = null;
+  /** T357 (#999): the real ground height that goes with osmSpec (a shipped course's fixture, or a download's tiles): laid by newOsmGame; null: a flat course */
+  private osmLand: OsmLand | null = null;
+  /** T357: the real ground of each course the placing mode has in hand or has had (T356), by the course's id: layRealCourse lays it with the course */
+  private placeLands = new Map<string, OsmLand | null>();
   /** a Space press that panned (held with the drag) does not also pause on release */
   private spacePanned = false;
   // fx
@@ -1467,13 +1474,22 @@ export class Game {
     holes: () => new Set((this.golf?.pins ?? []).map(p => p.hole)).size,
     lay: c => this.layRealCourse(c),
     // (T358's library: a downloaded course read back from the browser's IndexedDB, converted as a new game would, scaled to the map when it must be)
-    kept: async id => { const p = await previewOfKept(id, await realDeps()); return p && p.spec.holes.length ? { info: realInfoOf(p.spec), spec: p.spec } : null; },
+    kept: async id => { const d = await realDeps(), p = await previewOfKept(id, d); if (p) this.placeLands.set(id, await this.keptLand(p.spec, p.json, d.lib.answers())); return p && p.spec.holes.length ? { info: realInfoOf(p.spec), spec: p.spec } : null; },
   });
   /** Course > Place a real course > (a course): takes it in hand (a golf game only; a course too big for the map in every turn is refused, the map cannot grow) */
-  startRealPlace(id: string): Promise<boolean> { return this.golf ? this.real.start(id) : Promise.resolve(false); }
+  async startRealPlace(id: string): Promise<boolean> { if (!this.golf) return false; if (osmCourseInfo(id)) this.placeLands.set(id, await loadOsmLand(id)); return this.real.start(id); }
   /** the new-game card's search, after a course is found and previewed (T358): "Place it in my map" takes that course in hand over this game's map, as the menu's courses
    *  are, instead of starting a new game on it (Build this course); Esc or Cancel puts it down and the card is there again */
-  startRealPlaceSpec(spec: OsmCourseSpec): Promise<boolean> { return this.golf ? this.real.startSpec(spec) : Promise.resolve(false); }
+  startRealPlaceSpec(spec: OsmCourseSpec, land: OsmLand | null = null): Promise<boolean> { if (!this.golf) return Promise.resolve(false); this.placeLands.set(spec.id, land); return this.real.startSpec(spec); }
+  /** T357: a downloaded course's ground for the placing mode from the menu, which has no Real ground height box: only when the library already holds every elevation tile it needs (nothing is
+   *  asked for from the menu); null otherwise (the course is placed on flat ground, with its greens' tilt) */
+  private async keptLand(spec: OsmCourseSpec, json: OsmCourseJson, cache: AnswerCache): Promise<OsmLand | null> {
+    try {
+      const keys = tilesOfCourse(spec, json, true);
+      if (!keys.length || await tilesKept(keys, cache) < keys.length) return null;
+      return await fetchLand(spec, json, { net: realNet, cache }, { anyTurn: true });
+    } catch { return null; }
+  }
   /** the placing mode's view for the card and the pop-up (null: none in hand) */
   realView(): RealView | null { return this.real.view(); }
   /** what a plan reads: changes with the roads, the lots, the land, the club's buildings, the money and the round */
@@ -1567,6 +1583,7 @@ export class Game {
     for (const t of mk.tees) this.setGolfMarker(t.hole, t.kind, t.x, t.y);
     for (const p of mk.pins) this.setGolfMarker(p.hole, 'pin', p.x, p.y);
     g.aims = mk.aims;
+    this.layPlacedLand(c.id, c.spec, turned, plan.ox, plan.oy, c.deg); // T357: the course's real ground, laid with it
     // (a game that was laid on the flat map for a map-data course keeps that: its entry road and no `placed`, so a load lays the flat map again; any other game keeps its own map)
     const was = g.osm, flat = !!was && !was.placed;
     g.osm = { id: c.id, name: c.info.name, place: c.info.place, credit: OSM_CREDIT, licence: OSM_LICENCE, source: c.spec.source, holes: c.spec.holes.length, par: c.spec.gameParTotal, mappedPar: c.spec.parTotal, ...(c.spec.scale < 1 ? { scale: c.spec.scale } : {}), ...(c.spec.derived ? { derived: true } : {}), turn: c.deg, ...(flat ? (was!.entry ? { entry: was!.entry } : {}) : { placed: true as const }) };
@@ -1582,6 +1599,22 @@ export class Game {
     this.toast(`Placed ${c.info.name}: ${plan.land.ha >= 10 ? Math.round(plan.land.ha) : plan.land.ha} ha bought${goes ? `, ${goes} cleared` : ''} ($${plan.total.toLocaleString()})`, 'good');
     this.emit();
     return true;
+  }
+  /** T357 (#999): the real ground of a course placed into the game under way, laid with it: the course's land (the turned spec read through turnedFrame, so its heights turn with it) replaces
+   *  what an older course laid inside its rectangle and fades out over its skirt into what is round it, and the greens have their own tilt; the workers are told, the save keeps it.
+   *  `?land=0` leaves both out */
+  private layPlacedLand(id: string, base: OsmCourseSpec, turned: OsmCourseSpec, ox: number, oy: number, deg: number) {
+    if (new URLSearchParams(location.search).get('land') === '0') return;
+    const land = this.placeLands.get(id) ?? null, at = { x: ox, y: oy };
+    let box: CourseTileBox | null = null;
+    if (land) {
+      clearLandIn(this.realLand, [ox, oy, ox + turned.w, oy + turned.h]);
+      const patch = layLand(turned, land, at, { frame: turnedFrame(base, turned, deg) });
+      addLandPatch(this.realLand, patch, { src: land.src, label: land.label, credit: land.credit, fetched: land.fetched, reliefM: Math.round(patch.reliefM * 10) / 10 });
+      this.landPack = packLand(this.realLand); box = patch.w && patch.h ? patchBox(patch) : null;
+    }
+    box = unionCourseBox(box, designGreens(turned, at, this.courseHeight)); this.chSave = null; this.breakGrids.clear();
+    if (box) this.courseHeightChanged(box);
   }
   private drawRealPlace(ctx: CanvasRenderingContext2D) { if (this.real.active) this.real.draw(ctx, this.ghostView(ctx), this.ghostMouse); }
 
@@ -3028,9 +3061,11 @@ export class Game {
     const benchScene = !opts.bench ? null : fixture ? 'fixture' as const : new URLSearchParams(location.search).get('start') === 'range' ? 'range' as const : new URLSearchParams(location.search).get('start') === 'town' ? 'golf' as const : null;
     if (benchScene) { this.benchMode = true; this.saveBlocked = true; }
     // T340 (#967): ?osmcourse=<id> is a new game on that real course in place of any stored save, which is neither read nor written over
-    if (this.osmId && !fixName) { this.osmSpec = await loadOsmSpec(this.osmId); if (this.dead) return; if (this.osmSpec) this.saveBlocked = true; }
+    if (this.osmId && !fixName) { this.osmSpec = await loadOsmSpec(this.osmId); this.osmLand = this.osmSpec ? await loadOsmLand(this.osmId) : null; if (this.dead) return; if (this.osmSpec) this.saveBlocked = true; }
     const read = opts.bench || fixName || this.osmSpec || !this.boot.save ? null : await readSave(); if (this.dead) return;
     const save = fixture ?? read?.save ?? null;
+    // T357: a saved game's real ground unpacks (the platform's inflate is async) before load() reads it; one that does not unpack is a flat course, not a failed load
+    this.landIn = save?.golf?.land ? await unpackLand(save.golf.land) : null; if (this.dead) return;
     // T042: an unreadable save is kept as a backup (then a new game starts); if the backup failed, the slot is never written over
     let readNote: { text: string; kind: Toast['kind'] } | null = null;
     if (read && (read.status === 'future' || read.status === 'otherMap' || read.status === 'corrupt')) {
@@ -3197,6 +3232,7 @@ export class Game {
     //  camera stays over the course)
     this.golf = plan.save; this.golf.progress = { ...emptyProgress() }; this.clubLegacy = false;
     this.courseGrid = plan.grid;
+    this.layOsmLand(spec, plan.at);
     const mk = specMarkers(spec, plan.at.x, plan.at.y);
     for (const t of mk.tees) this.setGolfMarker(t.hole, t.kind, t.x, t.y);
     for (const p of mk.pins) this.setGolfMarker(p.hole, 'pin', p.x, p.y);
@@ -3210,14 +3246,32 @@ export class Game {
     return true;
   }
   /** T340: the new-game card's real courses (the shipped ones, with the holes and par) and the one this game is laid on (null: an ordinary game) */
-  osmChoices(): { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number }[] { return OSM_COURSES.map(c => ({ id: c.id, name: osmDisplayName(c.name), place: c.place, holes: c.holes, par: c.par, mappedPar: c.mappedPar, ...(c.scale ? { scale: c.scale } : {}) })); }
+  osmChoices(): { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number; ground?: string }[] { return OSM_COURSES.map(c => ({ id: c.id, name: osmDisplayName(c.name), place: c.place, holes: c.holes, par: c.par, mappedPar: c.mappedPar, ...(c.scale ? { scale: c.scale } : {}), ...(c.ground ? { ground: c.ground } : {}) })); }
   osmGame(): GolfSave['osm'] | null { return this.golf?.osm ?? null; }
+  /** T357 (#999): the real ground under the course of a new map-data game: the land (golf/osm/land.ts layLand) round the spec's land at tile `at`, held level under
+   *  its greens, tees and ponds, and the greens' own gentle tilt (designGreens) in the course height. A course with no elevation data (osmLand null) has no land, but
+   *  its greens still have their tilt. `?land=0` (a dev switch, the A/B of the shots and the bench) leaves both out: the course as it was before the land */
+  private layOsmLand(spec: OsmCourseSpec, at: Pt) {
+    const land = this.osmLand; this.osmLand = null;
+    if (new URLSearchParams(location.search).get('land') === '0') return;
+    if (land) {
+      const patch = layLand(spec, land, at);
+      addLandPatch(this.realLand, patch, { src: land.src, label: land.label, credit: land.credit, fetched: land.fetched, reliefM: Math.round(patch.reliefM * 10) / 10 });
+      this.landPack = packLand(this.realLand);
+    }
+    designGreens(spec, at, this.courseHeight); this.chSave = null; this.breakGrids.clear();
+  }
+  /** T357: the ground's height at a tile point, metres relative to the course's own mean: the land plus the player's course height (what the ball reads); for the shots and the console */
+  groundHeightAt(x: number, y: number): number { return groundAt(this.realLand, this.courseHeight, x, y); }
+  /** T357: what the game's real ground is, for the new-game card, the course card and the credits (null: none: a hand-made course, or a map-data one built flat) */
+  landInfo(): { label: string; credit: string; src: string; fetched: string; reliefM: number } | null { const i = this.realLand.info; return this.realLand.data && i ? { label: i.label, credit: i.credit, src: i.src, fetched: i.fetched, reliefM: i.reliefM } : null; }
   /** T340: a new game on the real course `id` (null: the usual start), from the new-game card: the course loads, then a new game starts as the New game
    *  button's does (the map is replaced; the card comes again for the new game). T358: a spec built from a downloaded course (golf/osm/find.ts) starts the
    *  same way */
-  async startRealCourse(what: string | null | OsmCourseSpec): Promise<void> {
+  async startRealCourse(what: string | null | OsmCourseSpec, land: OsmLand | null = null): Promise<void> {
     const spec = typeof what === 'string' ? await loadOsmSpec(what) : what; if (this.dead) return;
     if (typeof what === 'string' && !spec) { this.toast('That course is not in this build', 'warn'); return; }
+    this.osmLand = typeof what === 'string' ? await loadOsmLand(what) : land; if (this.dead) return; // (T357: a shipped course's ground comes with its fixture, a download's with its tiles)
     this.osmSpec = spec; this.newTown();
     if (spec && !this.golf?.osm) this.toast('That course does not fit the map: a usual game started', 'warn');
   }
@@ -4422,14 +4476,14 @@ export class Game {
     return out;
   }
   /** the course height changed in box: save, and the workers take the new heights and re-bake the ground there */
-  private courseHeightChanged(box: CourseTileBox) { this.scheduleSave(); this.ground.courseHeight(this.courseHeight.data, box); }
+  private courseHeightChanged(box: CourseTileBox) { this.scheduleSave(); this.ground.courseHeight(this.courseHeight.data, box, this.realLand.data); }
   private afterLoad() {
     const ops = this.edit.commit(true); this.lanes.update(this.net);
     // the city worker gets the whole network (the bench commits its own edits before this, so `ops` can be empty)
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false); this.syncBlockLawns();
-    this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP]); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs); this.syncStopCuts();
+    this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP], this.realLand.data); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs); this.syncStopCuts();
     this.farmMonthNow = -1; this.farmsUpdate(true, true);
     this.syncPlaces();
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
@@ -7073,8 +7127,15 @@ export class Game {
   golf: GolfSave | null = null;
   /** the course's subtle height field (T027; saved in golf.height) */
   courseHeight: CourseHeightField = createCourseHeightField();
+  /** T357 (#999): the natural ground under a real course (golf/osm/land.ts): metres, the course height's lattice, laid when a map-data game starts and saved with
+   *  the game (golf.land). The player's course height lies on top of it; the Height tool, the hole shaping and the road flattening edit the course height alone */
+  realLand: LandField = createLandField();
+  /** the land packed for the save (made once, when it is laid; a loaded game keeps the save's own); null: no land */
+  private landPack: Promise<LandSave | null> = Promise.resolve(null);
+  /** the land a loaded save held, unpacked by init before load() reads it */
+  private landIn: LandField | null = null;
   /** T251: the course height (metres) at a tile point, the field as it is now (0 on a field never edited): the balls' rolls bend with it, putts break on it */
-  private ballHeight: HeightAt = (x, y) => { const f = this.courseHeight; return f.rev ? sampleCourseGrid(f.data, x, y) : 0; };
+  private ballHeight: HeightAt = (x, y) => groundAt(this.realLand, this.courseHeight, x, y); // (T357: the land and the course height: groundAt reads each only when it is not flat)
   /** T251 (dev, the bench's A/B): the balls bounce and roll after landing (on), or fly to where they end and lie there as before (off) */
   setBallRoll(on: boolean) { ballRoll.on = on; }
   /** T312: the people stepping round each other on or off (the bench's A/B; spacing.ts) */
@@ -7357,7 +7418,7 @@ export class Game {
   for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
   const gCards = this.golf.cards ?? this.traffic.round.cards;
   for (const n of parkRideNeedsWithCards(this.golf.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
-  const panel = buildCourseStatsPanel(layout, this.golf.tier, have, effectiveGrowInClockMonth(curM, gCards), { field: this.courseHeight, areas: this.courseAreaList() });
+  const panel = buildCourseStatsPanel(layout, this.golf.tier, have, effectiveGrowInClockMonth(curM, gCards), { field: this.courseHeight, areas: this.courseAreaList(), ...(this.realLand.data ? { ground: this.ballHeight as (x: number, y: number) => number } : {}) });
   return { ...panel, qualityScore: applyCourseConsultantQuality(panel.qualityScore, gCards) };
   }
   /** evaluates tournament day outcome and tour progression (null outside golf mode or without a finished round) */
@@ -7493,6 +7554,7 @@ export class Game {
     // the tournament day under way (T209): the worker's snapshot of it, asked for first (only while a golf round is in its surge or eval: every other save
     // is written at once, as before, without it)
     const rs = this.traffic.round.stage, tourney = this.golf && (rs === 'surge' || rs === 'eval') ? await this.traffic.daySave() : null;
+    const landSave = await this.landPack; // T357: the real ground, packed once (a few tens of kB: it never changes after the course is laid)
     if (this.saveBlocked) return 0;
     const d: SaveV5 = {
       version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(), theme: this.desertTheme ? 'desert' : 'autumn',
@@ -7517,7 +7579,7 @@ export class Game {
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
       speed: this.net.speedTier,
-      golf: this.golf ? { ...this.golf, bunkers: this.bunkers.serialize(), teeSets: 1 as const, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday, estate: ES.encodeEstate(this.estateRt) } : undefined,
+      golf: this.golf ? { ...this.golf, bunkers: this.bunkers.serialize(), teeSets: 1 as const, height: this.courseHeightChunks(), ...(landSave ? { land: landSave } : {}), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday, estate: ES.encodeEstate(this.estateRt) } : undefined,
     };
     try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
   }
@@ -7550,6 +7612,8 @@ export class Game {
       const lg = this.golf ? loadCourseGrid(this.golf.grid) : 'migrate';
       if (lg === 'bad') { console.error('load failed: the course grid does not decode'); this.golf = null; return false; }
       this.courseHeight = loadCourseHeight(this.golf?.height); this.chSave = null; this.breakGrids.clear(); // (T333: a new field's rev starts again: no stale grid)
+      // T357: the real ground the save held (unpacked by init), kept packed as it came so the next save writes the same bytes
+      this.realLand = this.landIn ?? createLandField(); this.landPack = Promise.resolve(this.landIn ? (this.golf?.land ?? null) : null); this.landIn = null; if (this.golf) delete this.golf.land;
       if (this.golf) this.golf.progress = normalizeProgress(this.golf.progress);
       if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
       if (this.golf?.town) { this.townPts = [this.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
@@ -7587,6 +7651,7 @@ export class Game {
   }
   private reset() {
     this.courseHeight = createCourseHeightField(); this.chSave = null; this.breakGrids.clear();
+    this.realLand = createLandField(); this.landPack = Promise.resolve(null); this.landIn = null; // T357
     this.grass.clear(); this.grassZones.clear(); this.grassSim = -1; this.grassElapsed = 0; this.grassTrafficT = -1; this.grassPedOut.fill(0); this.grassCarAlive.fill(0); this.grassTarget = null; this.grassAction = null;
     this.edit.clear(); this.snapshot = null; this.pondKey = ''; // T231: the ponds' edges are laid again for the loaded game
     for (const p of [...this.props]) this.removeProp(p);
@@ -9706,7 +9771,7 @@ export class Game {
   /** a green's break grid (cached; built once per pin, height edit and course grid change: a few hundred points) */
   private breakGridOf(pin: Pt): BreakGrid | null {
     const g = this.courseGrid; if (!g) return null;
-    const key = `${pin.x.toFixed(2)},${pin.y.toFixed(2)}|${this.courseHeight.rev}|${g.rev}|${this.net.version}`;
+    const key = `${pin.x.toFixed(2)},${pin.y.toFixed(2)}|${this.courseHeight.rev}|${this.realLand.rev}|${g.rev}|${this.net.version}`;
     let bg = this.breakGrids.get(key);
     if (!bg) {
       // on the green's cells and off any cart path or road crossing it (a path's half width and its verge)

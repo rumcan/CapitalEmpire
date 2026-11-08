@@ -2,7 +2,7 @@
 // course's centre) and a top-down preview PNG. Plain Node 22 (built-in fetch, fs, zlib, crypto), no installs, no game code.
 //   node scripts/dev/osm-course.mjs "<course name>" [--country za] [--list] [--pick 0] [--osm way/123] [--refresh]
 //        [--out E:/ClaudeTemp/T340] [--overpass https://mirror/api/interpreter,...] [--timeout 150 (seconds per Overpass attempt)]
-//        [--radius 1200 (only for a node-only course)] [--px 1700]
+//        [--radius 1200 (only for a node-only course)] [--px 1700] [--height [--height-margin 520 --sigma 25]]
 // What it does, with one Nominatim request and ONE Overpass query per course (both cached in <out>/raw/, so a rerun makes no request):
 //   1. Nominatim search for the name; takes the first leisure=golf_course hit (--list prints the hits and stops; --pick N takes the Nth
 //      golf-course hit; --osm way/ID or relation/ID skips the search).
@@ -12,6 +12,9 @@
 //      grouped by kind, with counts and an analysis of how well the holes can be ordered (hole lines, and the guess from tee/green pairs).
 //   4. <out>/<slug>.png: top-down preview of the polygons coloured per kind, hole lines numbered, the legend on the left (PNG encoded here
 //      with zlib; scanline polygon fill, drawn at 2x and averaged down).
+// --height (T357, #999): also the real ground height: the AWS Terrain Tiles over the boundary and a margin, sampled at 4 m, smoothed, packed into <out>/<slug>.height.json with a
+//   hillshade preview <out>/<slug>-height.png (scripts/dev/osm-height.mjs, which runs on its own too; the tiles are cached in <out>/dem/raw, a few per course).
+//   scripts/dev/osm-trim-fixture.mjs then writes it into the fixture.
 // Projection: a local equirectangular one, x = (lon - lon0) * cos(lat0) * R, y = (lat - lat0) * R (R = 6371008.8 m, lat0/lon0 = the centre).
 // Over a course (a few km at most) the error is well under 1 m per km, far below the data's own accuracy.
 // Public servers, politely: a descriptive User-Agent (no personal address), Nominatim at most one request a second (here: one request per
@@ -40,7 +43,7 @@ const log = (...a) => console.log(...a);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ---------------------------------------------------------------------------------------------------------------- command line
-const argv = process.argv.slice(2), FLAGS = new Set(['list', 'refresh', 'help']), opts = {}, words = [];
+const argv = process.argv.slice(2), FLAGS = new Set(['list', 'refresh', 'help', 'height']), opts = {}, words = [];
 for (let i = 0; i < argv.length; i++) {
   if (argv[i].startsWith('--')) { const k = argv[i].slice(2); opts[k] = FLAGS.has(k) ? true : argv[++i]; } else words.push(argv[i]);
 }
@@ -564,7 +567,7 @@ function writeJson(file, out) {
 
 async function main() {
   if (opts.help || (!queryName && !opts.osm)) {
-    log('usage: node scripts/dev/osm-course.mjs "<course name>" [--country za] [--list] [--pick N] [--osm way/ID] [--refresh] [--out DIR] [--overpass URL,URL] [--timeout S] [--radius M] [--px N]');
+    log('usage: node scripts/dev/osm-course.mjs "<course name>" [--country za] [--list] [--pick N] [--osm way/ID] [--refresh] [--out DIR] [--overpass URL,URL] [--timeout S] [--radius M] [--px N] [--height]');
     process.exitCode = opts.help ? 0 : 2; return;
   }
   mkdirSync(RAW, { recursive: true });
@@ -606,6 +609,7 @@ async function main() {
   const jsonFile = `${OUT}/${slug}.json`, pngFile = `${OUT}/${slug}.png`;
   writeJson(jsonFile, { meta, boundary, features: F });
   writeFileSync(pngFile, renderPreview({ boundary, F, title: name }, +(opts.px || 1700)));
+  if (opts.height) { const { makeHeight } = await import('./osm-height.mjs'); await makeHeight(jsonFile, { out: OUT, margin: opts['height-margin'], sigma: opts.sigma, z: opts.z, refresh: false }); }
 
   const A = analysis, H = A.holeLines, E = A.holeEnds, M = A.matching, G = A.guessFromPairs;
   log(`\n== ${name} (${src.type}/${src.id}) ==`);
