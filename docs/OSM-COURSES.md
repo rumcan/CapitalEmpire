@@ -248,9 +248,13 @@ A map-data game (`?osmcourse=`, the new-game card) is unchanged: it still lays t
   compensation too; the club's own cart paths and drives go free. The course laid: its painted surfaces at the paint tool's seed price (`golf/costs.ts unitBuildCost`).
 - **A lot with no road is cleared too and counted**: a built lot outside the cover whose frontage lost its road (the piece it fronted lies in the cover), or whose road no longer
   reaches the county road (the cut stranded it), is bought out with the rest and listed in the pop-up.
-- **Red (the outline hatched, the reason by the pointer)**: off the map (4 tiles to spare), over the river (`TC.WATER`), over the club's own buildings, car parks, range,
-  practice area, tournament structures or an iconic place, within 26 tiles of the town's centre, a cut that leaves the town's centre or the clubhouse with no way to the
-  county road, a tournament under way. Short of money: red too, "Not enough money: $X (short $Y)".
+- **Red (the outline hatched, the reason by the pointer)**, in the order they are told: off the map (4 tiles to spare; "the map cannot grow"), a tournament under way, over the club's own
+  buildings, car parks, range, practice area, tournament structures or an iconic place, within 26 tiles of the town's centre, a cut that leaves the town's centre or the clubhouse with no
+  way to the county road, and last the river: a hole's green with a corner or its middle on the river, a tee marker or a pin on it, or a hole whose line runs more than a quarter of its
+  length along it ("The river runs over hole 7's green"). Short of money: red too, "Not enough money: $X (short $Y)".
+- **The river**: a generated valley has water (`TC.WATER`, about 3% of the map) in every 700-tile window, so "red over any river tile" (`RIVER_RULE = 'cover'` in place.ts) would never let
+  a course be placed. The default (`'features'`) lets the river run through the course: the cells on river tiles are left unpainted (`placeDiff`'s `wet`), so the map's river keeps flowing
+  across the fairways and roughs, and only what a hole cannot do without (its green, its tee marker, its pin, a fairway along the water) refuses. Creeks and banks are painted over.
 - **Over what is there**: the player's own placed items go for nothing; town trees and forest go as the course grid's new surfaces take their ground; a tunnel is left
   (it runs under the land).
 
@@ -263,8 +267,7 @@ course has no `placed` and is laid on the flat map as before). Your previous hol
 
 ## Left out, and for the lead to decide
 - **The map cannot grow.** `MAP = 1024` is a compile-time constant of the engine (typed arrays, the terrain, the workers), so "expand the map" is not offered: a course that fits
-  in no turn is refused with a message that suggests a smaller or a scaled course (`specOf` already scales Woodhill to 90%; true size needs 1079 tiles). Woodhill at 90% fits
-  only at 0 and 180 degrees (976 of the 1016 usable tiles).
+  in no turn is refused with a message that suggests a smaller or a scaled course (`specOf` already scales Woodhill to 90%; true size needs 1079 tiles). Woodhill at 90% is 976 x 529 tiles: it fits the 1016 usable tiles only at 0, 90, 180 and 270 degrees (and within 4 degrees of them); Rondebosch and Magnolia fit at every turn.
 - **Rerouting around the course** is not done: a cut road ends at the boundary (and the lots it leaves roadless are cleared and counted, the way to the county road is kept by refusing a
   cut that would lose it). A detour needs the road builder's snap and crossing rules on public land; the pop-up's text says what happens.
 - **Estate streets (T354)** are not in lead/live's converter, so none are laid.

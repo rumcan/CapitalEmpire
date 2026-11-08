@@ -189,9 +189,9 @@ export function benchGame(g: Game, scene: BenchScene) {
     const at = townTimeOf(g.traffic.town, g.traffic.simTime(performance.now())), clock = `${String(at.hour).padStart(2, '0')}:${String(at.minute).padStart(2, '0')}`;
     const info = { scene, ...(scene === 'golf' ? { golfersOut: g.dayOutNow() } : {}), heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0), clock, carsAtStart: g.perf.simActive };
     console.log('[bench] scene', info);
-    // T356 (#998): ?realplace=<id> (bench.mjs --realplace <id>, with --start town and --money 1): a real course in hand over the town, its placing mode's frames
+    // T356 (#998): ?realplace=<id> (bench.mjs --realplace <id>, with --start town or --fixture range20, and --money 1): a real course in hand over the town, its placing mode's frames
     // against the same frames without it (realPlaceStage); ?realplace=<id>,laid: the course laid there, then the scene's own tour (the game after placing)
-    { const rp = new URLSearchParams(location.search).get('realplace'); if (scene === 'golf' && rp) { void realPlaceBench(g, rp, info, r => { const out = { ...info, realplace: rp, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; } }
+    { const rp = new URLSearchParams(location.search).get('realplace'); if ((scene === 'golf' || scene === 'fixture') && rp) { void realPlaceBench(g, rp, info, scene, r => { const out = { ...info, realplace: rp, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; } }
     // T251: ?ballRoll=ab (bench.mjs --ballRoll ab), the balls' bounce and roll on and off by turns over the action (rollStage)
     // T312: ?spacing=ab (bench.mjs --spacing ab), the people stepping round each other on and off by turns over the action (spaceStage)
     if (new URLSearchParams(location.search).get('spacing') === 'ab') { spaceStage(g, scene, r => { const out = { ...info, spacing: 'ab', stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
@@ -218,25 +218,24 @@ export function benchGame(g: Game, scene: BenchScene) {
  *  moved a tile every frame: the plan worked out again every frame, the worst a moving pointer can do). Each run settles 1 s, then 4 s of frames; pooled per
  *  zoom and state, with the delta from off. ?realplace=<id>,laid: the course is laid there (as Place it does) and the scene's own tour runs over the new
  *  game (compare with the same run on lead/live, which has no course placed: the cost the placed course adds to the game) */
-async function realPlaceBench(g: Game, spec: string, info: Record<string, unknown>, done: (r: Record<string, unknown>[]) => void) {
-  const [id, mode] = spec.split(',') as [string, string | undefined], T = g.golf!.town;
+async function realPlaceBench(g: Game, spec: string, info: Record<string, unknown>, scene: BenchScene, done: (r: Record<string, unknown>[]) => void) {
+  const [id, mode] = spec.split(',') as [string, string | undefined];
+  // (the bench forces the game's own money: a real course costs more than its treasury, so the sandbox's unlimited money is on for this run)
+  g.traffic.sandbox(1, true);
   const ok = await g.startRealPlace(id);
   if (!ok) { console.log('[bench] real course not in hand'); done([{ stage: 'real course', error: 'not in hand' }]); return; }
+  // the pose that takes the most buildings and may go (the whole valid range every 16 tiles; turned 15 degrees on until one may: the river can refuse every pose at one angle)
   let best: { x: number; y: number; n: number } | null = null;
-  for (let dx = -460; dx <= 460; dx += 40) for (let dy = -460; dy <= 460; dy += 40) {
-    g.real.at = { x: Math.round(T.x + dx), y: Math.round(T.y + dy) };
-    const p = g.real.plan(); if (!p || !p.ok) continue;
-    const n = p.lots.keys.length + p.orphans.keys.length; if (!best || n > best.n) best = { x: g.real.at.x, y: g.real.at.y, n };
-  }
-  if (!best) { g.real.cancel(); done([{ stage: 'real course', error: 'no pose may go there' }]); return; }
+  for (let k = 0; k < 24 && !best; k++) { best = g.real.best(16); if (!best) g.real.turn(1); }
+  if (!best) { g.real.cancel(); done([{ stage: 'real course', error: 'no pose may go there at any turn' }]); return; }
   g.real.at = { x: best.x, y: best.y };
   console.log('[bench] real course pose', JSON.stringify({ id, ...best, plan: { total: g.real.plan()!.total, ha: g.real.plan()!.land.ha, roadM: g.real.plan()!.roads.m } }));
   if (mode === 'laid') {
     g.real.click(); const t0 = performance.now(), laid = g.real.confirm(); const ms = Math.round(performance.now() - t0);
     console.log('[bench] real course laid', laid, `${ms} ms on the main thread`);
     await new Promise(r => setTimeout(r, 6000));
-    const c = g.golf?.osm ? { x: best.x, y: best.y } : T; g.lookAt(c.x, c.y, 0.3);
-    startTour(g, { ...info, realplace: spec, laid, layMs: ms }, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES.golf);
+    g.lookAt(best.x, best.y, 0.3);
+    startTour(g, { ...info, realplace: spec, laid, layMs: ms }, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
     return;
   }
   const zooms = [0.3, 0.15], states = ['off', 'hand', 'move'] as const, runs: { z: number; st: (typeof states)[number] }[] = [];

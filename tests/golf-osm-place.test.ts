@@ -7,7 +7,7 @@ import magnoliaJson from '../src/game/golf/osm/data/magnolia-national.json';
 import { osmCourseToSpec } from '../src/game/golf/osm';
 import type { OsmCourseJson, OsmCourseSpec } from '../src/game/golf/osm/types';
 import { ROT_STEP, boundsOf, coverStrips, inConvex, inRects, measuredLengthM, normDeg, outlineAt, originFor, rectsArea, rotateSpec, snapDeg, turnedSize } from '../src/game/golf/osm/rotate';
-import { PLACE_EDGE, TOWN_KEEP, goesPhrase, money, placeLabel, planPlace, popupText, priceLines, unionArea, type PlaceLot, type PlaceSeg, type PlaceWorld } from '../src/game/golf/osm/place';
+import { PLACE_EDGE, RIVER_RULE, TOWN_KEEP, cutSpan, goesPhrase, money, placeLabel, planPlace, popupText, priceLines, unionArea, type PlaceLot, type PlaceSeg, type PlaceSpec, type PlaceWorld } from '../src/game/golf/osm/place';
 import { compensation } from '../src/game/budget';
 import { LAND_PRICE_SQM } from '../src/game/golf/parcels';
 import { paintSpec } from '../src/game/golf/osm/raster';
@@ -235,6 +235,19 @@ describe('what goes (T356)', () => {
     assert.equal(t.roads.segs, 0);
   });
 
+  it('cuts a road back from the cover’s edge by the dead end’s turning circle and verge, so the end it leaves keeps off the course', () => {
+    const w = world({ segs: [seg(400, 500, 600, 500), seg(500, 400, 500, 478)], endMargin: () => 3, valuePerTile: () => 10 });
+    const p = planPlace(w, LAND, AT, 0);
+    // the first road: 100 tiles inside the cover (x 450..550) and 3 more at each end; the second ends 3 tiles inside the cover’s top (y 475): 3 + 3 tiles of it go
+    assert.equal(p.roads.m, (106 + 6) * 2, 'metres of road taken: 106 and 6 tiles');
+    assert.equal(p.roads.value, (106 + 6) * 10);
+    const sp = cutSpan([COVER], seg(400, 500, 600, 500), 3)!;
+    assert.ok(Math.abs(sp[0] - 47 / 200) < 1e-9 && Math.abs(sp[1] - 153 / 200) < 1e-9, `${sp}`);
+    assert.deepEqual(cutSpan([COVER], seg(445, 500, 452, 500), 10), [0, 1], 'never past the piece’s own ends');
+    assert.equal(cutSpan([COVER], seg(300, 300, 400, 300), 3), null, 'a road far from the cover is not cut');
+    assert.equal(cutSpan([COVER], seg(450, 450, 450, 474), 3), null, 'nor one that stops short of it, its margin or not');
+  });
+
   it('clears a lot whose road the course takes (it stands outside the cover, its street does not), and counts it with its compensation', () => {
     // a lane runs north-south at x 452, wholly inside the cover (x 450..550, y 475..525); a lot west of the cover fronts it: its front is on the lane’s verge
     const lane = [seg(452, 480, 452, 520)];
@@ -346,6 +359,44 @@ describe('red: can’t afford it, or can’t go there (T356)', () => {
     assert.equal(town.whyKind, 'town');
     assert.equal(planPlace(world({ townCentre: { x: 550 + TOWN_KEEP + 1, y: 500 } }), LAND, AT, 0).whyKind, '');
     assert.equal(planPlace(world({ roundLive: true }), LAND, AT, 0).whyKind, 'round');
+  });
+
+  it('lets a river cross the course, refusing only where it lies on a tee, a green or a pin or along a hole (the river rule), and the whole cover when the spec has no holes to read', () => {
+    assert.equal(RIVER_RULE, 'features');
+    // a hole: the tee at spec (10..14, 20..24), the green at (80..90, 20..30), the line between (12, 22) and (85, 25); the land is 100 x 50 at (450, 475)
+    const spec = {
+      w: 100, h: 50,
+      areas: [{ surf: 'tee', hole: 1, rings: [[10, 20, 14, 20, 14, 24, 10, 24]] }, { surf: 'green', hole: 1, rings: [[80, 20, 90, 20, 90, 30, 80, 30]] }, { surf: 'fairway', hole: 1, rings: [[15, 15, 75, 15, 75, 35, 15, 35]] }],
+      holes: [{ n: 1, tees: [{ kind: 'middle', x: 12, y: 22 }], pin: { x: 85, y: 25 }, aims: [], line: [12, 22, 85, 25] }],
+    } as unknown as PlaceSpec;
+    const at = (river: (x: number, y: number) => boolean) => planPlace(world({ river }), spec, AT, 0);
+    // a stream across the middle of the fairway, between the tee and the green: allowed (the course is laid round it)
+    const across = at(x => x >= 520 && x < 523);
+    assert.equal(across.whyKind, '', across.why); assert.ok(across.ok);
+    // the river over the green, over the tee: refused, naming the hole
+    assert.equal(at(x => x >= 534 && x < 537).why, "The river runs over hole 1's green");
+    assert.equal(at(x => x >= 460 && x < 463).why, "The river runs over hole 1's tee");
+    // the river only clipping a tee box (a corner of it, not its marker): a bitten box, allowed (the cells on the river are left unpainted)
+    assert.equal(at((x, y) => x >= 460 && x < 461 && y >= 495 && y < 496).whyKind, '');
+    // a practice green on the river is no hole's: allowed
+    const withPractice = { ...spec, areas: [...spec.areas!, { surf: 'green', hole: 0, rings: [[60, 5, 66, 5, 66, 11, 60, 11]] }] } as PlaceSpec;
+    assert.equal(planPlace(world({ river: (x, y) => x >= 510 && x < 517 && y >= 480 && y < 487 }), withPractice, AT, 0).whyKind, '');
+    // a river that runs along the hole (most of its line on the water, tee and green dry): refused
+    const along = at(x => x >= 470 && x < 520);
+    assert.equal(along.whyKind, 'river');
+    assert.equal(along.why, 'The river runs along hole 1: turn the course or move it');
+    // no river near: fine; a river beside the land: fine
+    assert.equal(at(() => false).whyKind, ''); assert.equal(at(x => x >= 600).whyKind, '');
+    // a spec without areas and holes (a made-up land) is judged by its cover, as before
+    assert.equal(planPlace(world({ river: x => x >= 520 && x < 523 }), LAND, AT, 0).whyKind, 'river');
+  });
+
+  it('tells the place’s own reasons before the river’s: the town’s centre or the club’s buildings first, the river after', () => {
+    const spec = { w: 100, h: 50, areas: [{ surf: 'green', hole: 1, rings: [[80, 20, 90, 20, 90, 30, 80, 30]] }], holes: [{ n: 1, tees: [{ kind: 'middle', x: 12, y: 22 }], pin: { x: 85, y: 25 }, aims: [], line: [12, 22, 85, 25] }] } as unknown as PlaceSpec;
+    const river = (x: number) => x >= 534 && x < 537; // over the green
+    assert.equal(planPlace(world({ river }), spec, AT, 0).whyKind, 'river');
+    assert.equal(planPlace(world({ river, townCentre: { x: 500, y: 500 } }), spec, AT, 0).whyKind, 'town');
+    assert.equal(planPlace(world({ river, keep: [{ name: 'clubhouse', rect: [500, 490, 10, 10] }] }), spec, AT, 0).whyKind, 'club');
   });
 
   it('tells the reason before the money, and an unaffordable pose that is also refused is told as refused', () => {

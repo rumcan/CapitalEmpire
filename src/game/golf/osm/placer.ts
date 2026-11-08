@@ -16,8 +16,8 @@ import type { OsmCourseSpec } from './types';
 export interface RealHost {
   /** the map's side, tiles */
   map: number;
-  /** the world as the planner reads it (the engine's live collections) */
-  world(): PlaceWorld;
+  /** the world as the planner reads it (the engine's live collections); fresh: worked out from the live state now, nothing kept from an earlier plan (a click and Place it plan so) */
+  world(fresh?: boolean): PlaceWorld;
   /** a key that changes whenever something a plan reads does (the roads, the lots, the land, the money, a tournament): plans are worked out again */
   revision(): string;
   /** the tile under the camera's middle: where a course in hand first stands */
@@ -147,18 +147,18 @@ export class RealPlacer {
   }
 
   /** the plan of the course where it stands (worked out again only when the pose or the world changes) */
-  plan(): PlacePlan | null {
+  plan(fresh = false): PlacePlan | null {
     const t = this.turned();
     if (!t || !this.at) return null;
     const key = `${this.id}|${this.deg}|${this.at.x},${this.at.y}|${this.host.revision()}`;
-    if (this.cache?.key !== key) this.cache = { key, plan: planPlace(this.host.world(), t, { x: this.at.x, y: this.at.y, deg: this.deg }, this.build) };
+    if (fresh || this.cache?.key !== key) this.cache = { key, plan: planPlace(this.host.world(fresh), t, { x: this.at.x, y: this.at.y, deg: this.deg }, this.build) };
     return this.cache.plan;
   }
 
   /** a click on the map: the pop-up when the course may go there and the money holds, else the toast says why (the outline is red then) */
   click(): void {
     if (this.confirming) return;
-    const p = this.plan();
+    const p = this.plan(true);
     if (!p) return;
     const l = placeLabel(p, this.info?.name ?? 'The course');
     if (l.bad) { this.host.toast(l.text, 'warn'); return; }
@@ -172,12 +172,29 @@ export class RealPlacer {
   confirm(): boolean {
     const t = this.turned();
     if (!this.confirming || !t || !this.at || !this.id || !this.info || !this.spec) return false;
-    const fresh = planPlace(this.host.world(), t, { x: this.at.x, y: this.at.y, deg: this.deg }, this.build);
+    const fresh = planPlace(this.host.world(true), t, { x: this.at.x, y: this.at.y, deg: this.deg }, this.build);
     const l = placeLabel(fresh, this.info.name);
     if (l.bad) { this.confirming = null; this.host.toast(l.text, 'warn'); this.host.emit(); return false; }
     const ok = this.host.lay({ id: this.id, info: this.info, spec: this.spec, turned: t, plan: fresh, deg: this.deg });
     if (ok) this.cancel(); else this.host.emit();
     return ok;
+  }
+
+  /** the pose, over the map's whole valid range every `step` tiles at the current turn, where the course may go and takes the most buildings (null: none may
+   *  go anywhere at this turn): the bench's and the shots' (it leaves the pose where it was) */
+  best(step = 16): { x: number; y: number; n: number; plan: PlacePlan } | null {
+    const t = this.turned(), was = this.at;
+    if (!t) return null;
+    let best: { x: number; y: number; n: number; plan: PlacePlan } | null = null;
+    for (let x = Math.ceil(PLACE_EDGE + t.w / 2); x <= this.host.map - PLACE_EDGE - t.w / 2; x += step) for (let y = Math.ceil(PLACE_EDGE + t.h / 2); y <= this.host.map - PLACE_EDGE - t.h / 2; y += step) {
+      this.at = { x, y };
+      const p = this.plan();
+      if (!p?.ok) continue;
+      const n = p.lots.keys.length + p.orphans.keys.length;
+      if (!best || n > best.n) best = { x, y, n, plan: p };
+    }
+    this.at = was; this.cache = null;
+    return best;
   }
 
   /** the card's and the pop-up's view of the mode (null: none in hand) */

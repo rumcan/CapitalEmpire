@@ -28,8 +28,9 @@ export function gridBuildCost(g: Grid): number {
 
 /** the cells of the course grid g to change: inside the cover (rects of tiles) each cell takes the scratch grid's surface, hole and month (the spec laid
  *  at the map position the scratch grid has) and loses its carve mark and custom grass; outside it, with clearHoles, every cell of a hole (1..18) is cleared
- *  (the old course goes: its holes are replaced). Cells that would not change are left out. The scratch grid must hold the cover */
-export function placeDiff(g: Grid, scratch: Grid, cover: readonly Rect[], clearHoles = true): GridDiff {
+ *  (the old course goes: its holes are replaced). `wet(x, y)` (tile point): a cell on the river takes none, not the scratch grid's surface. Cells that would
+ *  not change are left out. The scratch grid must hold the cover */
+export function placeDiff(g: Grid, scratch: Grid, cover: readonly Rect[], clearHoles = true, wet?: (x: number, y: number) => boolean): GridDiff {
   const gx = Math.round((g.x0 - scratch.x0) / CELL_T), gy = Math.round((g.y0 - scratch.y0) / CELL_T);
   const inCover = (cx: number, cy: number): boolean => {
     const x = g.x0 + (cx + 0.5) * CELL_T, y = g.y0 + (cy + 0.5) * CELL_T;
@@ -44,7 +45,9 @@ export function placeDiff(g: Grid, scratch: Grid, cover: readonly Rect[], clearH
       const sy = cy + gy; if (sy < 0 || sy >= scratch.h) continue;
       for (let cx = x0; cx < x1; cx++) {
         const sx = cx + gx; if (sx < 0 || sx >= scratch.w) continue;
-        const i = cy * g.w + cx, j = sy * scratch.w + sx, s1 = scratch.surf[j]!, h1 = scratch.hole[j]!, m1 = scratch.month[j]!;
+        const i = cy * g.w + cx, j = sy * scratch.w + sx;
+        // (a cell on the river is left as the land's own: the map's river runs through the course, round which the course is laid)
+        const dry = !wet || !wet(g.x0 + (cx + 0.5) * CELL_T, g.y0 + (cy + 0.5) * CELL_T), s1 = dry ? scratch.surf[j]! : 0, h1 = dry ? scratch.hole[j]! : 0, m1 = dry ? scratch.month[j]! : 0;
         if (differs(i, s1, h1, m1)) put(i, s1, h1, m1);
       }
     }

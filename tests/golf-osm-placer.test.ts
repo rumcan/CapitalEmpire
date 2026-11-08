@@ -3,7 +3,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { RealPlacer, type RealHost } from '../src/game/golf/osm/placer';
-import { type PlaceLot, type PlaceSeg, type PlaceWorld } from '../src/game/golf/osm/place';
+import { goesPhrase, popupText, planPlace, type PlaceLot, type PlaceSeg, type PlaceWorld } from '../src/game/golf/osm/place';
 import { compensation } from '../src/game/budget';
 import { OSM_COURSES, loadOsmSpec } from '../src/game/golf/osm';
 import { coverOutline, coverStrips, rectsArea, rotateSpec } from '../src/game/golf/osm/rotate';
@@ -12,7 +12,7 @@ import { SURF, applyDiff, makeGrid } from '../src/game/ext/course-grid';
 import { RAIL } from '../src/ui/rail-items';
 import { menuOf, leavesOf, type MenuCtx } from '../src/ui/flyout-menu';
 import { unitBuildCost } from '../src/game/golf/costs';
-import type { Rect } from '../src/game/golf/mode';
+import { normalizeGolfSave, type GolfSave, type Rect } from '../src/game/golf/mode';
 
 /** a host with a made-up world: an empty plain unless given lots or roads, the treasury as set, every call written down */
 function host(over: { map?: number; money?: number; lots?: PlaceLot[]; segs?: PlaceSeg[]; holes?: number; lay?: RealHost['lay'] } = {}) {
@@ -21,7 +21,7 @@ function host(over: { map?: number; money?: number; lots?: PlaceLot[]; segs?: Pl
   const lots = over.lots ?? [], segs = over.segs ?? [];
   const h: RealHost = {
     map: over.map ?? 1024,
-    world: (): PlaceWorld => ({
+    world: (_fresh?: boolean): PlaceWorld => ({
       map: over.map ?? 1024, owned: [], river: () => false, lots, farms: [], segs, pop: 0, townCentre: null, entries: [], targets: [], keep: [], money: state.money, roundLive: false,
       segsNear: (x, y, r) => segs.filter(s => Math.min(s.a.x, s.b.x) - r <= x && x <= Math.max(s.a.x, s.b.x) + r && Math.min(s.a.y, s.b.y) - r <= y && y <= Math.max(s.a.y, s.b.y) + r),
       isCourseRoad: () => false, valuePerTile: () => 10, compensation: l => compensation(l),
@@ -241,6 +241,19 @@ describe('the grid diff of a placed course (T356)', () => {
     assert.equal(g.surf[at(100, 100)], SURF.fairway); assert.equal(g.hole[at(100, 100)], 2); assert.equal(g.surf[at(30, 30)], SURF.tee); assert.equal(g.carve![at(31, 30)], 1);
   });
 
+  it('leaves the cells on the river unpainted (none), and clears what was there: the river runs through the course', () => {
+    const g = makeGrid(0, 0, 200, 160), scratch = makeGrid(10, 10, 80, 60);
+    scratch.surf.fill(SURF.fairway); scratch.hole.fill(5);
+    const row = 40 * g.w; // tile y 20: inside the cover
+    g.surf[row + 26] = SURF.rough; // an old cell on the river: cleared
+    const d = placeDiff(g, scratch, COVER, true, x => x >= 12 && x < 14); // tile x 12 to 14 (cells 24 to 27) is the river
+    applyDiff(g, d, false);
+    for (const cx of [24, 25, 26, 27]) assert.equal(g.surf[row + cx], SURF.none, `cell ${cx} is on the river`);
+    assert.equal(g.surf[row + 23], SURF.fairway, 'beside the river: the course');
+    assert.equal(g.surf[row + 28], SURF.fairway); assert.equal(g.hole[row + 28], 5);
+    assert.equal(g.surf[row + 50], SURF.fairway);
+  });
+
   it('keeps the old holes with clearHoles off, and leaves out the cells that would not change', () => {
     const g = makeGrid(0, 0, 200, 160), scratch = makeGrid(10, 10, 80, 60);
     g.surf[100 * g.w + 100] = SURF.fairway; g.hole[100 * g.w + 100] = 2;
@@ -299,5 +312,31 @@ describe('Course › Place a real course (T356)', () => {
     assert.ok(!menuOf(RAIL.find(r => r.id === 'course')!, ctx({ golf: false })).some(r => r.label === 'Place a real course…'));
     assert.ok(!menuOf(RAIL.find(r => r.id === 'course')!, ctx({ real: [] })).some(r => r.label === 'Place a real course…'));
     assert.ok(!menuOf(RAIL.find(r => r.id === 'course')!, ctx({ real: undefined })).some(r => r.label === 'Place a real course…'));
+  });
+});
+
+describe('what a placed course saves (T356)', () => {
+  const base = { v: 1, tier: 1, rep: 0, town: { x: 10, y: 10 }, course: [0, 0, 50, 50], parcel: [0, 0, 100, 100], dir: 0, tees: [], pins: [], aims: [], clubhouse: { x: 5, y: 5 } } as unknown as GolfSave;
+  const info = { id: 'rondebosch', name: 'Rondebosch Golf Course', place: 'Cape Town', credit: '© OpenStreetMap contributors', licence: 'ODbL', source: 'relation/1', holes: 18, par: 72, mappedPar: 72 };
+  it('keeps the land’s rects (well formed ones only) and the course’s credit, its turn and that it was placed', () => {
+    const g = normalizeGolfSave({ ...base, courseRects: [[10, 10, 40, 30], [0, 0, 0, 5], [1, 1, NaN, 2]] as Rect[], osm: { ...info, placed: true, turn: 30 } })!;
+    assert.deepEqual(g.courseRects, [[10, 10, 40, 30]]);
+    assert.equal(g.osm?.placed, true);
+    assert.equal(g.osm?.turn, 30);
+    assert.equal(g.osm?.credit, '© OpenStreetMap contributors');
+    // a map-data game laid on the flat map has no `placed` (the loader then lays the flat map again) and no rects
+    const flat = normalizeGolfSave({ ...base, osm: { ...info, entry: { x: 0, y: 512, edge: 'W' } } })!;
+    assert.equal(flat.osm?.placed, undefined);
+    assert.deepEqual(flat.osm?.entry, { x: 0, y: 512, edge: 'W' });
+    assert.equal(flat.courseRects, undefined);
+    // an ordinary game has neither
+    const plain = normalizeGolfSave(base)!;
+    assert.equal(plain.osm, undefined); assert.equal(plain.courseRects, undefined);
+  });
+  it('says only the hectares and the price in the pop-up when nothing stands on the land', () => {
+    const w = { map: 1024, owned: [], river: () => false, lots: [], farms: [], segs: [], segsNear: () => [], pop: 0, townCentre: null, entries: [], targets: [], keep: [], money: 1e9, roundLive: false, isCourseRoad: () => false, valuePerTile: () => 0, compensation: () => 0 } as unknown as PlaceWorld;
+    const p = planPlace(w, { w: 100, h: 50 }, { x: 500, y: 500, deg: 0 }, 1000);
+    assert.equal(goesPhrase(p), '');
+    assert.equal(popupText(p), 'This will buy 2 ha ($26,000).');
   });
 });

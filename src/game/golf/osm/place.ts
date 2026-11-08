@@ -20,6 +20,13 @@ import type { OsmCourseSpec } from './types';
 
 /** the land the course keeps from the map's edges, tiles */
 export const PLACE_EDGE = 4;
+/** the river rule. A generated valley has its river (and creeks) through every 700-tile window of the 2 km map (docs/OSM-COURSES.md, T340), so a course that
+ *  may not lie over any river tile could never be placed in the game. 'features': a tee, a green or a pin on the river, or a hole's line running mostly
+ *  along it, refuses the pose ("The river runs over hole 7's green"); the river elsewhere stays where it is and the course is laid round it (the cells
+ *  on river tiles are left unpainted: a stream across a fairway is a hazard, as on a real course). 'cover': any river tile under the land refuses */
+export const RIVER_RULE: 'features' | 'cover' = 'features';
+/** a hole's line with more than this share of its samples on the river is refused (the river runs along the hole, not across it) */
+const RIVER_ALONG = 0.25;
 /** the town's centre is kept clear this far round it, tiles (the course's land may not come nearer) */
 export const TOWN_KEEP = 26;
 /** a road end counts as an entry's (or a place's) own node within this, tiles */
@@ -65,6 +72,12 @@ export interface PlaceWorld {
   targets: readonly { name: string; x: number; y: number }[];
   /** the club's own things the course cannot cover: the clubhouse, the car parks, the range, the practice area, a tournament's structures */
   keep: readonly { name: string; rect: Rect }[];
+  /** how far back from the cover's edge a cut leaves the end of a road piece, tiles (its turning circle and verge, so the dead end stays off the course's land);
+   *  absent: 0 */
+  endMargin?(s: PlaceSeg): number;
+  /** a key that changes whenever the lots, the roads or the land do, and what it belongs to (the game): the planner keeps what it works out once for a state of the
+   *  world (the lots' boxes, the land classes, the road graph) and reads it again for the next pose; absent: worked out every time */
+  revision?: string; owner?: object;
   /** the treasury, and whether a tournament day is under way (the course cannot change under it) */
   money: number;
   roundLive: boolean;
@@ -156,6 +169,14 @@ export function spanIn(cover: readonly Rect[], s: { a: PlaceNode; b: PlaceNode }
   return hi > lo && (hi - lo) * L >= 0.04 ? [lo, hi] : null;
 }
 
+/** where a road piece is cut: spanIn widened at both ends by `margin` tiles (never past the piece's own ends), so the ends the cut leaves keep off the cover */
+export function cutSpan(cover: readonly Rect[], s: { a: PlaceNode; b: PlaceNode }, margin = 0): [number, number] | null {
+  const sp = spanIn(cover, s);
+  if (!sp) return null;
+  const L = Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y), m = L > 0 ? margin / L : 0;
+  return [Math.max(0, sp[0] - m), Math.min(1, sp[1] + m)];
+}
+
 /** the distance from a point to the part of segment A-B between parameters t0 and t1 */
 function distToPart(px: number, py: number, s: { a: PlaceNode; b: PlaceNode }, t0: number, t1: number): number {
   if (t1 <= t0) return Infinity;
@@ -165,24 +186,26 @@ function distToPart(px: number, py: number, s: { a: PlaceNode; b: PlaceNode }, t
 }
 
 const nodeKey = (n: PlaceNode): string => `${Math.round(n.x * 100)},${Math.round(n.y * 100)}`;
+/** the road graph: each road end's key to its neighbours (the road end across each piece, and the piece) */
+type Adj = Map<string, { to: string; seg: PlaceSeg }[]>;
+function adjacency(segs: readonly PlaceSeg[]): Adj {
+  const adj: Adj = new Map();
+  const add = (a: string, to: string, seg: PlaceSeg) => { const l = adj.get(a); if (l) l.push({ to, seg }); else adj.set(a, [{ to, seg }]); };
+  for (const s of segs) { const a = nodeKey(s.a), b = nodeKey(s.b); add(a, b, s); add(b, a, s); }
+  return adj;
+}
 /** the road ends joined to the starts by roads that are not cut (the pieces touching the cover are cut: a piece the cover takes any of is no way through) */
-function reachable(segs: readonly PlaceSeg[], starts: readonly PlaceNode[], cut: ReadonlySet<PlaceSeg>): Set<string> {
-  const adj = new Map<string, string[]>();
-  for (const s of segs) {
-    if (cut.has(s)) continue;
-    const a = nodeKey(s.a), b = nodeKey(s.b);
-    (adj.get(a) ?? adj.set(a, []).get(a)!).push(b); (adj.get(b) ?? adj.set(b, []).get(b)!).push(a);
-  }
+function reachable(adj: Adj, starts: readonly string[], cut: ReadonlySet<PlaceSeg>): Set<string> {
   const seen = new Set<string>(), todo: string[] = [];
-  for (const n of starts) { const k = nodeKey(n); if (!seen.has(k)) { seen.add(k); todo.push(k); } }
-  while (todo.length) for (const m of adj.get(todo.pop()!) ?? []) if (!seen.has(m)) { seen.add(m); todo.push(m); }
+  for (const k of starts) if (!seen.has(k)) { seen.add(k); todo.push(k); }
+  while (todo.length) for (const e of adj.get(todo.pop()!) ?? []) if (!seen.has(e.to) && !cut.has(e.seg)) { seen.add(e.to); todo.push(e.to); }
   return seen;
 }
-/** the road end nearest a point within NODE_NEAR tiles (null: none) */
-function nearestNode(segs: readonly PlaceSeg[], x: number, y: number): PlaceNode | null {
+/** the key of the road end nearest a point within NODE_NEAR tiles (null: none) */
+function nearestNode(segs: readonly PlaceSeg[], x: number, y: number): string | null {
   let best: PlaceNode | null = null, bd = NODE_NEAR;
   for (const s of segs) for (const n of [s.a, s.b]) { const d = Math.hypot(n.x - x, n.y - y); if (d < bd) { bd = d; best = n; } }
-  return best;
+  return best ? nodeKey(best) : null;
 }
 
 /** the lattice block (40 x 40 tiles from the map's corner) a tile lies in, as one key */
@@ -243,8 +266,10 @@ function onRiver(world: PlaceWorld, cover: readonly Rect[]): boolean {
 
 /** the words for a refusal */
 export const WHY = {
-  map: 'Off the map: move it inward or turn it',
+  map: 'Off the map (the map cannot grow): move it inward or turn it',
   river: 'The river is in the way',
+  riverOn: (hole: number, what: 'tee' | 'green') => (hole > 0 ? `The river runs over hole ${hole}'s ${what}` : `The river runs over a practice ${what}`),
+  riverAlong: (hole: number) => `The river runs along hole ${hole}: turn the course or move it`,
   town: "The town's centre is there: place the course beside the town",
   link: (name: string) => `That would cut ${name} off from the county road`,
   club: (name: string) => `Your ${name} is in the way`,
@@ -258,9 +283,60 @@ function tally(c: ReturnType<typeof empty>, l: PlaceLot, comp: number) {
   if (l.use === 1) c.houses++; else if (l.use === 2) c.shops++; else if (l.use === 3) c.works++; else c.others++;
 }
 
+/** the part of a (turned) spec the planner reads: its frame and outline, and, for the river rule, its areas and holes (a spec without them is judged by its cover) */
+export type PlaceSpec = Pick<OsmCourseSpec, 'w' | 'h' | 'outline'> & Partial<Pick<OsmCourseSpec, 'areas' | 'holes'>>;
+
+/** why the river forbids the spec at (ox, oy), or '' when it does not (RIVER_RULE 'features'): a hole's green with a corner or its middle on the river, a tee
+ *  marker or the pin on it, or a hole whose line runs more than RIVER_ALONG of its length along it (a tee box the river only clips is a bitten box: the cells
+ *  on the river are left unpainted; a practice green or tee is no hole's) */
+function riverOnFeatures(world: PlaceWorld, spec: PlaceSpec, ox: number, oy: number): string {
+  const wet = (x: number, y: number): boolean => world.river(Math.floor(ox + x), Math.floor(oy + y));
+  for (const a of spec.areas ?? []) {
+    if (a.surf !== 'green' || a.hole <= 0) continue;
+    const r = a.rings[0]; if (!r || r.length < 6) continue;
+    let sx = 0, sy = 0, n = 0, hit = false;
+    for (let i = 0; i + 1 < r.length; i += 2) { sx += r[i]!; sy += r[i + 1]!; n++; if (wet(r[i]!, r[i + 1]!)) hit = true; }
+    if (hit || wet(sx / n, sy / n)) return WHY.riverOn(a.hole, a.surf);
+  }
+  for (const h of spec.holes ?? []) {
+    for (const t of h.tees) if (wet(t.x, t.y)) return WHY.riverOn(h.n, 'tee');
+    if (wet(h.pin.x, h.pin.y)) return WHY.riverOn(h.n, 'green');
+    const l = h.line; let n = 0, w = 0;
+    for (let i = 0; i + 3 < l.length; i += 2) {
+      const dx = l[i + 2]! - l[i]!, dy = l[i + 3]! - l[i + 1]!, k = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 4));
+      for (let j = 0; j < k; j++) { n++; if (wet(l[i]! + (dx * j) / k, l[i + 1]! + (dy * j) / k)) w++; }
+    }
+    if (n && w / n > RIVER_ALONG) return WHY.riverAlong(h.n);
+  }
+  return '';
+}
+
+/** what the planner works out once for a state of the world, not for every pose: the lots with their boxes and fronts, the land classes of the 40-tile blocks, the
+ *  road graph and the road ends the county road reaches before any cut (a replan per pointer move then reads these, not the whole town) */
+interface Prep {
+  rev: string | undefined; owner: object | undefined;
+  lots: { l: PlaceLot; box: [number, number, number, number]; fx: number; fy: number }[];
+  classes: Map<number, ParcelLandClass>;
+  segs: PlaceSeg[]; adj: Adj; entries: string[]; targets: { name: string; key: string | null }[]; before: Set<string>;
+}
+let memo: Prep | null = null;
+function prep(world: PlaceWorld): Prep {
+  if (world.revision !== undefined && memo && memo.rev === world.revision && memo.owner === world.owner) return memo;
+  const lots: Prep['lots'] = [];
+  for (const l of world.lots) if (l.level >= 1) lots.push({ l, box: lotBox(l), fx: l.o[0]! + l.u[0]! * (l.w / 2), fy: l.o[1]! + l.u[1]! * (l.w / 2) });
+  const segs = [...world.segs], adj = adjacency(segs);
+  const entries = world.entries.map(e => nearestNode(segs, e.x, e.y)).filter((k): k is string => !!k);
+  const p: Prep = {
+    rev: world.revision, owner: world.owner, lots, classes: classTally(world.lots, world.farms), segs, adj, entries,
+    targets: world.targets.map(t => ({ name: t.name, key: nearestNode(segs, t.x, t.y) })), before: entries.length ? reachable(adj, entries, new Set()) : new Set(),
+  };
+  if (world.revision !== undefined) memo = p;
+  return p;
+}
+
 /** the plan of the spec (as it is converted, or already turned: `deg` turns it from there) with its land's middle at (pose.x, pose.y). `rotated` is the
  *  spec turned by the pose's angle (rotate.ts rotateSpec; the caller keeps it per angle) and `build` the price of its surfaces (the same at every angle) */
-export function planPlace(world: PlaceWorld, rotated: Pick<OsmCourseSpec, 'w' | 'h' | 'outline'>, pose: PlacePose, build: number): PlacePlan {
+export function planPlace(world: PlaceWorld, rotated: PlaceSpec, pose: PlacePose, build: number): PlacePlan {
   const { ox, oy } = originFor(rotated, pose.x, pose.y), outline = outlineAt(rotated, ox, oy), cover = coverStrips(outline), bounds = boundsOf(cover);
   // inside the map with PLACE_EDGE tiles to spare (the outline's corners; the cover, rounded outward, is on the map)
   const E = PLACE_EDGE, fits = !!bounds && outline.every(v => v >= E - 1e-6 && v <= world.map - E + 1e-6) && bounds[0] >= 0 && bounds[1] >= 0 && bounds[0] + bounds[2] <= world.map && bounds[1] + bounds[3] <= world.map;
@@ -274,28 +350,21 @@ export function planPlace(world: PlaceWorld, rotated: Pick<OsmCourseSpec, 'w' | 
 
   // ---- what stops it ----
   if (world.roundLive) refuse('round', WHY.round);
-  // the river: the cover sampled every 4 tiles
-  if (onRiver(world, cover)) refuse('river', WHY.river);
   for (const k of world.keep) if (cover.some(r => rectsOverlap(r, k.rect))) { refuse('club', WHY.club(k.name)); break; }
   const tc = world.townCentre;
   if (tc && cover.some(r => Math.hypot(Math.max(r[0] - tc.x, 0, tc.x - (r[0] + r[2])), Math.max(r[1] - tc.y, 0, tc.y - (r[1] + r[3]))) < TOWN_KEEP)) refuse('town', WHY.town);
 
   // ---- the land ----
-  const classes = classTally(world.lots, world.farms), L = landCost(cover, world.owned, classes, world.pop);
+  const P = prep(world), L = landCost(cover, world.owned, P.classes, world.pop);
   plan.land = { tiles: L.tiles, ha: Math.round((L.tiles * TILE_M * TILE_M) / 100) / 100, price: L.price, mine: L.mine };
 
-  // ---- the built lots under the cover ----
-  for (const l of world.lots) {
-    if (l.level < 1) continue;
-    if (lotOn(lotBox(l), cover)) tally(plan.lots, l, world.compensation(l));
-  }
-  const gone = new Set(plan.lots.keys);
-
   // ---- the roads under the cover ----
-  const segs = [...world.segs], cut = new Set<PlaceSeg>(), spans = new Map<PlaceSeg, [number, number]>();
-  for (const s of segs) {
+  const bx0 = bounds![0] - NEAR_COVER - 8, by0 = bounds![1] - NEAR_COVER - 8, bx1 = bounds![0] + bounds![2] + NEAR_COVER + 8, by1 = bounds![1] + bounds![3] + NEAR_COVER + 8;
+  const cut = new Set<PlaceSeg>(), spans = new Map<PlaceSeg, [number, number]>();
+  for (const s of P.segs) {
     if (s.kind === 2) continue; // (a tunnel runs under the land)
-    const sp = spanIn(cover, s);
+    if (Math.max(s.a.x, s.b.x) < bx0 || Math.min(s.a.x, s.b.x) > bx1 || Math.max(s.a.y, s.b.y) < by0 || Math.min(s.a.y, s.b.y) > by1) continue;
+    const sp = cutSpan(cover, s, world.endMargin?.(s) ?? 0);
     if (!sp) continue;
     cut.add(s); spans.set(s, sp);
     const m = (sp[1] - sp[0]) * Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
@@ -305,27 +374,35 @@ export function planPlace(world: PlaceWorld, rotated: Pick<OsmCourseSpec, 'w' | 
   if (world.props) for (const r of cover) plan.props += world.props(r);
 
   // ---- the way to the county road: kept for the town's centre and the clubhouse ----
-  const entryNodes = world.entries.map(e => nearestNode(segs, e.x, e.y)).filter((n): n is PlaceNode => !!n);
-  let before = new Set<string>(), after = new Set<string>();
-  if (entryNodes.length) {
-    before = reachable(segs, entryNodes, new Set());
-    after = reachable(segs, entryNodes, cut);
-    for (const t of world.targets) {
-      const n = nearestNode(segs, t.x, t.y);
-      if (n && before.has(nodeKey(n)) && !after.has(nodeKey(n))) { refuse('link', WHY.link(t.name)); break; }
-    }
+  const before = P.before;
+  let after = before;
+  if (P.entries.length && cut.size) {
+    after = reachable(P.adj, P.entries, cut);
+    for (const t of P.targets) if (t.key && before.has(t.key) && !after.has(t.key)) { refuse('link', WHY.link(t.name)); break; }
   }
 
-  // ---- the lots left with no road in front of them, or no way out: cleared too ----
-  const reachOf = (s: PlaceSeg) => s.cls.h + s.cls.walk + FRONT_SLACK;
-  // (only a lot within a road's reach of the cover can have lost the road in front of it, and only a lot beside a road the cut leaves with no way out
-  //  can have lost its way out: the pieces that hang on a road end the entries no longer reach)
+  // the river (RIVER_RULE) is looked at last: the place's own reasons come first (the club's buildings, the town's centre, the county road), the river's, which a
+  // turn or a move often cures, after
+  if (RIVER_RULE === 'features' && rotated.areas && rotated.holes) { const why = riverOnFeatures(world, rotated, ox, oy); if (why) refuse('river', why); }
+  else if (onRiver(world, cover)) refuse('river', WHY.river);
+
+  // ---- the built lots under the cover, and the lots left with no road in front of them or no way out: cleared too ----
+  // (only a lot within a road's reach of the cover can have lost the road in front of it, and only a lot beside a road the cut leaves with no way out can
+  //  have lost its way out: the pieces that hang on a road end the entries no longer reach)
   const padded: Rect[] = cover.map(r => [r[0] - NEAR_COVER, r[1] - NEAR_COVER, r[2] + 2 * NEAR_COVER, r[3] + 2 * NEAR_COVER]);
-  const stranded = segs.filter(s => !cut.has(s) && ((before.has(nodeKey(s.a)) && !after.has(nodeKey(s.a))) || (before.has(nodeKey(s.b)) && !after.has(nodeKey(s.b)))));
-  for (const l of world.lots) {
-    if (l.level < 1 || gone.has(l.key)) continue;
-    const fx = l.o[0]! + l.u[0]! * (l.w / 2), fy = l.o[1]! + l.u[1]! * (l.w / 2);
-    if (!lotOn(lotBox(l), padded) && !stranded.some(s => distToPart(fx, fy, s, 0, 1) <= reachOf(s))) continue;
+  const stranded = after === before ? [] : P.segs.filter(s => !cut.has(s) && ((before.has(nodeKey(s.a)) && !after.has(nodeKey(s.a))) || (before.has(nodeKey(s.b)) && !after.has(nodeKey(s.b)))));
+  const reachOf = (s: PlaceSeg) => s.cls.h + s.cls.walk + FRONT_SLACK;
+  const maybe: Prep['lots'] = [];
+  for (const pl of P.lots) {
+    const b = pl.box;
+    // (a lot well clear of the cover's box, with no stranded road in the town, has lost nothing)
+    const far = b[2] < bx0 || b[0] > bx1 || b[3] < by0 || b[1] > by1;
+    if (!far && lotOn(b, cover)) { tally(plan.lots, pl.l, world.compensation(pl.l)); continue; }
+    if (!far || stranded.length > 0) maybe.push(pl);
+  }
+  for (const pl of maybe) {
+    if (!lotOn(pl.box, padded) && !stranded.some(s => distToPart(pl.fx, pl.fy, s, 0, 1) <= reachOf(s))) continue;
+    const { fx, fy } = pl;
     let had = false, served = false;
     for (const s of world.segsNear(fx, fy, 14)) {
       const r = reachOf(s);
@@ -342,7 +419,7 @@ export function planPlace(world: PlaceWorld, rotated: Pick<OsmCourseSpec, 'w' | 
       }
       if (served) break;
     }
-    if (had && !served) tally(plan.orphans, l, world.compensation(l));
+    if (had && !served) tally(plan.orphans, pl.l, world.compensation(pl.l));
   }
 
   // ---- the price ----

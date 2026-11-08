@@ -3,7 +3,7 @@
 // down. A click on the map asks, and the pop-up lists what goes (the land bought, the buildings and roads taken down, the price line by line); Place it
 // lays the course, Cancel leaves everything as it was. The owner (2026-11-08): "Add a notification pop up and tell the user that, that will happen."
 import type { Game } from '../../game/engine';
-import { money } from '../../game/golf/osm/place';
+import { goesPhrase, money } from '../../game/golf/osm/place';
 import { Icon } from '../Icon';
 
 /** the card while a course is in hand (hidden while the pop-up is open) */
@@ -12,11 +12,12 @@ export function RealPlaceHud({ game }: { game: Game }) {
   if (!v || v.popup) return null;
   const bad = !!v.label?.bad;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-16 z-20 flex justify-center px-3" data-testid="real-place-hud">
-      <div className="pointer-events-auto flex max-w-[44rem] flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border border-white/10 bg-slate-950/90 px-4 py-2 text-slate-200 shadow-2xl backdrop-blur">
+    <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 flex justify-center px-3" data-testid="real-place-hud">
+      <div className="pointer-events-auto flex max-w-[31rem] flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border border-white/10 bg-slate-950/90 px-4 py-2 text-slate-200 shadow-2xl backdrop-blur">
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold text-sky-200">Placing {v.name} <span className="font-normal text-slate-400">(from map data{v.place ? ` · ${v.place}` : ''})</span></div>
           <div className={`text-xs font-semibold ${bad ? 'text-red-300' : 'text-emerald-300'}`} data-testid="real-place-verdict">{v.label ? v.label.text : 'Move over the map to place it'}</div>
+          {v.plan && v.plan.fits && <div className="text-[11px] text-slate-300" data-testid="real-place-takes">{v.plan.land.ha >= 10 ? Math.round(v.plan.land.ha) : v.plan.land.ha} ha of land{goesPhrase(v.plan) ? `, takes ${goesPhrase(v.plan)}` : ', nothing in the way'}{v.plan.orphans.keys.length ? ` (${v.plan.orphans.keys.length} left with no road)` : ''}</div>}
           <div className="text-[11px] text-slate-400">R turns it 15° (Shift+R back, Alt for any angle) · Shift+wheel turns it · click to place · Esc puts it down</div>
         </div>
         <div className="flex items-center gap-1.5">
