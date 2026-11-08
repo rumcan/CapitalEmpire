@@ -27,7 +27,11 @@ export interface Drawable { item: number; x: number; y: number; flip: boolean; s
    *  right after its picture in its tile's painter's order, so whatever is drawn nearer covers them like the car itself */
   lamps?: number[];
   /** T266: how visible a mover is (0..1; absent: 1), a watchable golfer fading out or in (golf/play/pacer.ts); under a half it casts no shadow */
-  alpha?: number }
+  alpha?: number;
+  /** T333: drawn over every prop of its tiles (your see-through copy, so a tree or a building in front never hides you); give it an alpha under a half */
+  top?: boolean;
+  /** T333: never moved by the people spacer (spacing.ts: you; the others step round you) */
+  pin?: boolean }
 /** every car is drawn this much smaller than its art, parked (props of kind car, about the middle of their footprint) and moving (SimClient.visible,
  *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
 export { CAR_SCALE };
@@ -301,6 +305,7 @@ export class SpriteTiles {
       else {
         // each mover goes after the last prop behind it that its picture overlaps
         const slot = mv.map(({ d: m, r }) => {
+          if (m.top) return { m, pos: nProps, depth: m.x1 + m.y1 }; // (T333: over every prop of the tile)
           let pos = 0;
           if (t) for (let gx = Math.floor(r[0] / BUCKET); gx <= Math.floor(r[2] / BUCKET); gx++) for (let gy = Math.floor(r[1] / BUCKET); gy <= Math.floor(r[3] / BUCKET); gy++) {
             const l = t.buckets.get(gx * 65536 + gy); if (!l) continue;

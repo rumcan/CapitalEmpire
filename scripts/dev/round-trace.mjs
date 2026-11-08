@@ -2,14 +2,14 @@
 // riding your cart), where your cart is drawn, and the camera. It plays the owner's flow (the round started, into the cart and driven to the tee,
 // the drive, walking to the ball, the second shot, Jump to ball, a held key walk at a watching speed) and reports every frame where you are
 // missing and every jump (a drawn move faster than a cart runs) that is not Jump to ball. A frame strip of the walk to the ball and the jump.
-//   node scripts/dev/round-trace.mjs --base http://127.0.0.1:5187/ --out F:/ClaudeTemp/T333 --headed
+//   node scripts/dev/round-trace.mjs --base http://localhost:5187/ --out E:/ClaudeTemp/T333/after --headed
 // Needs a dev server (vite) on --base. One Edge (--headed opens it off-screen), closed when done; saves are not written.
 import { chromium } from 'playwright-core';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
-const base = opt('base', 'http://127.0.0.1:5187/'), out = opt('out', 'output/round-trace'), W = 1366, H = 860;
+const base = opt('base', 'http://localhost:5187/'), out = opt('out', 'output/round-trace'), W = 1366, H = 860;
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: !args.includes('--headed'), args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', ...(args.includes('--headed') ? ['--window-position=-32000,-32000', '--window-size=1366,860', '--no-startup-window-focus'] : [])] });
 const log = (...a) => console.log(...a);
@@ -38,7 +38,7 @@ try {
       const y = g.you, c = g.youCart;
       T.push({ t: performance.now(), tag: window.__tag, z: g.cam.z, cx: g.cam.X, cy: g.cam.Y, inCart: g.youInCart,
         yx: y?.x, yy: y?.y, dx: lab ? lab.p.x : null, dy: lab ? lab.p.y : null, rx: cl ? cl.p.x : null, ry: cl ? cl.p.y : null, alpha: lab?.p.alpha ?? 1,
-        jump: g.yrJumpAt ?? 0 });
+        jump: Number.isFinite(g.youJumpAt) ? g.youJumpAt : 0, W: innerWidth, H: innerHeight });
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -58,8 +58,10 @@ try {
   await page.evaluate(() => window.__game.yourRoundStart('all'));
   await view(0.3); await page.waitForTimeout(800);
   await tag('cart-in');
-  await page.evaluate(() => { const g = window.__game, c = g.youCart, y = g.you; if (Math.hypot(c.x - y.x, c.y - y.y) > 2.5) { y.x = c.x + 1.5; y.y = c.y; } g.youCartToggle(); });
-  await page.waitForTimeout(600);
+  // (the script puts you beside your cart when it is far: its own move, marked as a jump so the trace leaves it out)
+  await page.evaluate(() => { const g = window.__game, c = g.youCart, y = g.you; if (Math.hypot(c.x - y.x, c.y - y.y) > 2.5) { y.x = c.x + 1.5; y.y = c.y; g.youJumpAt = performance.now(); } g.youCartToggle(); });
+  await page.waitForFunction(() => window.__game.youInCart, null, { timeout: 15000 }).catch(() => log('  not in the cart'));
+  await page.waitForTimeout(300);
   await tag('drive-to-tee');
   const tee = await page.evaluate(() => { const g = window.__game, r = g.yourRound(); return r.ball; });
   await page.evaluate(({ x, y }) => { const g = window.__game; g.lookAt(x, y, 0.25); }, tee);
@@ -71,7 +73,7 @@ try {
   await page.evaluate(() => window.__game.setSpeed(0.25)).catch(() => {});
   await tag('walk-to-ball');
   const ball = await page.evaluate(() => window.__game.yourRound().ball);
-  await page.evaluate(() => { const g = window.__game, y = g.you; y.x = g.yourRound().ball.x - 9; y.y = g.yourRound().ball.y - 3; }); // (a short walk: 9.5 tiles out)
+  await page.evaluate(() => { const g = window.__game, y = g.you; y.x = g.yourRound().ball.x - 9; y.y = g.yourRound().ball.y - 3; g.youJumpAt = performance.now(); }); // (a short walk: 9.5 tiles out; the script's move, marked)
   await page.waitForTimeout(200);
   await page.evaluate(({ x, y }) => { const g = window.__game; g.lookAt(x - 3, y - 1, 0.32); }, ball);
   await clickTile(ball.x, ball.y);
@@ -102,7 +104,9 @@ try {
   for (let k = 1; k < T.length; k++) {
     const a = T[k - 1], b = T[k], dt = Math.max(1 / 240, (b.t - a.t) / 1000);
     if (b.z < 0.12) continue;
-    const onScreen = b.yx !== undefined;
+    // (on screen: your point inside the view, with a margin; off screen while the camera chases the ball is not missing)
+    const sx = ((b.yx - b.yy) * 64 - b.cx) * b.z + b.W / 2, sy = ((b.yx + b.yy) * 32 - b.cy) * b.z + b.H / 2;
+    const onScreen = b.yx !== undefined && sx > 20 && sy > 40 && sx < b.W - 20 && sy < b.H - 20;
     if (onScreen && b.dx === null && !(b.inCart && b.rx !== null)) missing.push({ k, tag: b.tag, inCart: b.inCart });
     const pa = a.dx !== null ? [a.dx, a.dy] : a.inCart && a.rx !== null ? [a.rx, a.ry] : null, pb = b.dx !== null ? [b.dx, b.dy] : b.inCart && b.rx !== null ? [b.rx, b.ry] : null;
     if (pa && pb) { const v = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]) / dt, d = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]); if (v > JUMP_V && d > 0.15 && b.jump === a.jump) jumps.push({ k, tag: b.tag, d: +d.toFixed(2), inCart: [a.inCart, b.inCart] }); }

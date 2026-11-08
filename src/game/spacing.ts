@@ -219,7 +219,7 @@ export function spacePeople(sp: PeopleSpacer, lists: readonly (readonly Drawable
   sp.begin(); refs.length = 0;
   for (const list of lists) for (const d of list) {
     const look = personLook(d.item); if (look < 0 || refs.length >= SPACE_MAX) continue;
-    refs.push(d); sp.add(d.x, d.y, look, Math.round((d.lift ?? 0) / 8), personPinned(d.item));
+    refs.push(d); sp.add(d.x, d.y, look, Math.round((d.lift ?? 0) / 8), personPinned(d.item) || !!d.pin); // (T333: d.pin, you: never moved)
   }
   if (!refs.length) { sp.solve(dt); return; }
   sp.solve(dt);
