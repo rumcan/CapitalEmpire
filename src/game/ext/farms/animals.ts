@@ -26,6 +26,8 @@ export const WALK_FRAME_S: Readonly<Record<AnimalKind, number>> = { cow: 0.16, h
 export const ANIMAL_SPEED: Readonly<Record<AnimalKind, number>> = { cow: 0.28, horse: 0.40, sheep: 0.20 };
 export const ANIMAL_WANDER: Readonly<Record<AnimalKind, number>> = { cow: 3, horse: 3.5, sheep: 2.5 };
 export const ANIMAL_MARGIN = 1.6, ANIMAL_SEP = 0.8;
+/** how far past the bisector an animal keeps from a hay bale or a bush in its field (tiles): its cell ends well short of the thing */
+export const OBSTACLE_SEP = 1.1;
 /** the herd's size range by kind (the owner's: 3 to 8 cows, 2 to 4 horses, 6 to 12 sheep), the field's area (square tiles) each animal needs, and
  *  at most this many animals a farm (the paddock's herd plus the sheep) */
 export const HERD: Readonly<Record<AnimalKind, readonly [number, number]>> = { cow: [3, 8], horse: [2, 4], sheep: [6, 12] };
@@ -39,7 +41,8 @@ export interface FarmAnimal {
   /** the field it keeps to (a0, b0, a1, b1: parcel frame, already shrunk by ANIMAL_MARGIN) */
   f: [number, number, number, number];
   home: [number, number]; r: number;
-  /** the homes (a, b pairs) of the other animals of its field: its cell is the part of the field nearer its own home than any of these by ANIMAL_SEP */
+  /** the other animals' homes and the field's hay bales and bushes (a, b, sep triples): its cell is the part of the field nearer its own home than any of
+   *  these by their sep */
   nb: number[];
   seed: number; cycle: number; phase: number; speed: number;
   /** the waypoints of cycles ci - 1, ci, ci + 1 (a cache; ci starts at a cycle no time reaches) */
@@ -57,20 +60,21 @@ const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 /** the nearest painted heading to a world direction (CAR_DIRECTIONS order: carHeading) */
 export const animalHeading = (dx: number, dy: number) => ((Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8;
 
-/** is (x, y) inside the cell of the animal at (hx, hy): nearer it than every other home in nb by at least `sep` (distance past the bisector) */
-export function inCell(hx: number, hy: number, nb: number[], x: number, y: number, sep: number): boolean {
-  for (let k = 0; k < nb.length; k += 2) {
+/** is (x, y) inside the cell of the animal at (hx, hy): nearer it than every other home or thing in nb (a, b, sep) by at least its sep (the distance past the bisector) */
+export function inCell(hx: number, hy: number, nb: number[], x: number, y: number): boolean {
+  for (let k = 0; k < nb.length; k += 3) {
     const dx = hx - nb[k]!, dy = hy - nb[k + 1]!, d = Math.hypot(dx, dy);
     // the signed distance of the point from the bisector, positive on the animal's own side
-    if (((x - (hx + nb[k]!) / 2) * dx + (y - (hy + nb[k + 1]!) / 2) * dy) / d < sep) return false;
+    if (((x - (hx + nb[k]!) / 2) * dx + (y - (hy + nb[k + 1]!) / 2) * dy) / d < nb[k + 2]!) return false;
   }
   return true;
 }
 
 /** The animals of one farm (deterministic in parcel, seed and the art list): the paddock gets a herd of cows (3-8) or horses (2-4), each other
  *  pasture and, on half the farms, the largest fallow field a flock of sheep (6-12); no more than the field's area allows (one per ANIMAL_AREA square
- *  tiles) and ANIMALS_PER_FARM_MAX in all. arts: the animal art (ANIMALS), each picked by kind; none of a kind: that kind is left out */
-export function farmAnimals(p: FarmParcel, seed: number, arts: readonly AnimalArtRef[], model?: FarmModel, fields: AnimalField[] = farmAnimalFields(p, seed, model)): FarmAnimal[] {
+ *  tiles) and ANIMALS_PER_FARM_MAX in all. arts: the animal art (ANIMALS), each picked by kind; none of a kind: that kind is left out. obstacles: the
+ *  farm's hay bales and bushes (world tiles): the animals' homes keep clear of those in their field and their walks keep to their side of them */
+export function farmAnimals(p: FarmParcel, seed: number, arts: readonly AnimalArtRef[], model?: FarmModel, fields: AnimalField[] = farmAnimalFields(p, seed, model), obstacles: readonly Pt[] = []): FarmAnimal[] {
   const byKind: Record<AnimalKind, number[]> = { cow: [], horse: [], sheep: [] };
   arts.forEach((a, i) => byKind[animalKind(a.id)].push(i));
   const s0 = h32(seed, 0x7309), out: FarmAnimal[] = [];
@@ -79,6 +83,12 @@ export function farmAnimals(p: FarmParcel, seed: number, arts: readonly AnimalAr
   grazed.forEach((q, qi) => {
     const a0 = q.a0 + ANIMAL_MARGIN, b0 = q.b0 + ANIMAL_MARGIN, a1 = q.a1 - ANIMAL_MARGIN, b1 = q.b1 - ANIMAL_MARGIN;
     if (a1 - a0 < 2 || b1 - b0 < 2) return;
+    // the hay bales and bushes standing in this field (parcel frame)
+    const obs: [number, number][] = [];
+    for (const o of obstacles) {
+      const dx = o.x - p.o.x, dy = o.y - p.o.y, oa = dx * p.u.x + dy * p.u.y, ob = dx * p.n.x + dy * p.n.y;
+      if (oa > q.a0 && oa < q.a1 && ob > q.b0 && ob < q.b1) obs.push([oa, ob]);
+    }
     const kind: AnimalKind = q.kind === 'paddock' ? (u01(s0, 2, qi) < 0.6 ? 'cow' : 'horse') : 'sheep';
     const pool = byKind[kind].length ? byKind[kind] : null; if (!pool) return;
     const [lo, hi] = HERD[kind];
@@ -92,12 +102,13 @@ export function farmAnimals(p: FarmParcel, seed: number, arts: readonly AnimalAr
       for (let t = 0; t < 40; t++) {
         const s = h32(s0, 100 + qi, j * 64 + t), ang = u01(s, 1) * Math.PI * 2, rad = spread * Math.sqrt(u01(s, 2)) * (1 + t / 40);
         const h: [number, number] = [clamp(ca + Math.cos(ang) * rad, a0, a1), clamp(cb + Math.sin(ang) * rad, b0, b1)];
-        if (homes.every(g => Math.hypot(g[0] - h[0], g[1] - h[1]) >= 2.6)) { homes.push(h); break; }
+        if (homes.every(g => Math.hypot(g[0] - h[0], g[1] - h[1]) >= 2.6) && obs.every(g => Math.hypot(g[0] - h[0], g[1] - h[1]) >= 2 * OBSTACLE_SEP + 0.2)) { homes.push(h); break; }
       }
     }
     homes.forEach((home, j) => {
       const s = h32(s0, 100 + qi, j), nb: number[] = [];
-      homes.forEach((g, k) => { if (k !== j) nb.push(g[0], g[1]); });
+      homes.forEach((g, k) => { if (k !== j) nb.push(g[0], g[1], ANIMAL_SEP); });
+      for (const g of obs) nb.push(g[0], g[1], OBSTACLE_SEP);
       out.push({
         art: u01(s, 3) < 0.7 ? breedA : breedB, kind, o: p.o, u: p.u, n: p.n, f: [a0, b0, a1, b1], home, r: ANIMAL_WANDER[kind], nb,
         seed: s, cycle: 30 + 25 * u01(s, 4), phase: u01(s, 5) * 1000, speed: ANIMAL_SPEED[kind] * (0.85 + 0.3 * u01(s, 6)),
@@ -113,7 +124,7 @@ export function waypoint(a: FarmAnimal, i: number): [number, number] {
   for (let t = 0; t < 6; t++) {
     const ang = u01(a.seed, i, 11 + 2 * t) * Math.PI * 2, d = a.r * Math.sqrt(u01(a.seed, i, 12 + 2 * t));
     const x = clamp(a.home[0] + Math.cos(ang) * d, a.f[0], a.f[2]), y = clamp(a.home[1] + Math.sin(ang) * d, a.f[1], a.f[3]);
-    if (inCell(a.home[0], a.home[1], a.nb, x, y, ANIMAL_SEP)) return [x, y];
+    if (inCell(a.home[0], a.home[1], a.nb, x, y)) return [x, y];
   }
   return [a.home[0], a.home[1]];
 }

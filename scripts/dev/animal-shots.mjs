@@ -1,6 +1,6 @@
 // T309 (#894): the farm animals in the game: a farm's herd at street zoom (30%) and 20%, and what they cost (the movers drawn and their ms a frame,
 // the frame's CPU ms with and without them).
-//   node scripts/dev/animal-shots.mjs --base http://127.0.0.1:5186/ --out F:/ClaudeTemp/T309/shots [--start town] [--seed n]
+//   node scripts/dev/animal-shots.mjs --base http://127.0.0.1:5186/ --out F:/ClaudeTemp/T309/shots [--start town] [--seed n] [--dpr 2]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -9,7 +9,7 @@ import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const base = opt('base', 'http://127.0.0.1:5186/'), out = opt('out', 'output/animals'), start = opt('start', 'range'), seed = opt('seed', '');
-const W = 1280, H = 800;
+const W = 1280, H = 800, dpr = +opt('dpr', '1');
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
 const settle = async (page, ms = 900) => {
@@ -31,7 +31,7 @@ const perfMean = (page, keys, n = 120) => page.evaluate(([keys, n]) => new Promi
 }), [keys, n]);
 const report = {};
 try {
-  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: dpr });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
   page.on('console', m => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 300)); });

@@ -926,7 +926,7 @@ export class Game {
   private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
   /** T309: the farm animals by farm key (ext/farms/animals.ts: stateless, a function of the time), each farm's box (the union of its fields), their
    *  reused movers and scratch view */
-  private farmAnimals = new Map<string, { box: number[]; list: FarmAnimal[] }>(); private animalDraw: Drawable[] = []; private animalView: AnimalView = { x: 0, y: 0, art: 0, row: 0, frame: 0, moving: false };
+  private animalsOff = false; private farmAnimals = new Map<string, { box: number[]; list: FarmAnimal[] }>(); private animalDraw: Drawable[] = []; private animalView: AnimalView = { x: 0, y: 0, art: 0, row: 0, frame: 0, moving: false };
   /** the day's golf round (updatePlay, docs/GOLF-PLAY.md P2): built once per tournament; playTried is the key last tried, so a round with no holes is not rebuilt every frame */
   private play: GolfPlay | null = null; private playTried = -1;
   /** T208 everyday golf: the town days' play (the save, the booking: golf/everyday.ts DayBook), the day's playback (its town day and course key; null:
@@ -2768,7 +2768,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('animals') === '0') this.animalsOff = true; /* T309: ?animals=0, no farm animals (dev; the bench's before) */ if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
@@ -4105,7 +4105,7 @@ export class Game {
     const gs = JSON.stringify(c.ground); if (this.farmGround.get(key) !== gs) { this.setLotGround(pk, c.ground); this.farmGround.set(key, gs); }
     this.farmSeasons.set(key, fp ? '' : farmSeason(f.p, f.seed, model, month));
     // T309: its animals (none on a farm drawn from a lot preset: it has no paddock of ours)
-    const herd = fp ? [] : farmAnimals(f.p, f.seed, ANIMALS, model);
+    const herd = fp || this.animalsOff ? [] : farmAnimals(f.p, f.seed, ANIMALS, model, undefined, c.props.filter(q => q.id === 'ref:halloween-hay-bales' || LIBRARY[LIB_INDEX.get(q.id) ?? -1]?.kind === 'bush'));
     if (herd.length) { const bs = herd.map(animalBox); this.farmAnimals.set(key, { box: [Math.min(...bs.map(b => b[0]!)) - 1, Math.min(...bs.map(b => b[1]!)) - 1, Math.max(...bs.map(b => b[2]!)) + 1, Math.max(...bs.map(b => b[3]!)) + 1], list: herd }); } else this.farmAnimals.delete(key);
     // T259: the model 2 farm's stand-in labels ("Stand In for <art>": the windbreak's and the orchard's first tree, each crop state's biggest field, the lane)
     if (fp || model !== 2) { this.farmLabels.delete(key); return; }

@@ -42,7 +42,9 @@ for (const id of fs.readdirSync(ART).sort()) {
   const j = JSON.parse(fs.readFileSync(js, 'utf8'));
   if (j.directions.join(' ') !== DIRS.join(' ')) throw new Error(`${id}: rows ${j.directions}, expected ${DIRS}`);
   if (!clips) { clips = j.clips; nFrames = j.frames.length; }
-  if (j.frames.length !== nFrames || JSON.stringify(j.clips) !== JSON.stringify(clips)) throw new Error(`${id}: its frames or clips differ from the first animal's`);
+  // (the clips' frame ranges must agree; the walk's frame times differ by kind: a sheep's short legs step quicker, WALK_FRAME_S in ext/farms/animals.ts)
+  const shape = c => JSON.stringify(Object.entries(c).map(([k, v]) => [k, v.start, v.n, v.loop]));
+  if (j.frames.length !== nFrames || shape(j.clips) !== shape(clips)) throw new Error(`${id}: its frames or clips differ from the first animal's`);
   const fw = j.frameWidth, fh = j.frameHeight, W = Math.round(fw * K * MIP0), H = Math.round(fh * K * MIP0), sx = fw * K / W, sy = fh * K / H;
   const a = animals.length;
   animals.push({ id, w: +(fw * K).toFixed(2), h: +(fh * K).toFixed(2), ax: +(j.anchor.x * K).toFixed(2), ay: +(j.anchor.y * K).toFixed(2), m: j.heightMetres, len: j.lengthMetres, repainted: j.repainted ?? [] });
