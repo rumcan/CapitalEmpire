@@ -21,6 +21,7 @@ import { normalizeClubSave, type ClubSave } from './club';
 import { normalizePlayer, type PlayerProfile } from './player';
 import { normalizeEvents, type ClubEventsSave } from './clubevents';
 import type { GameSkills } from './play/types';
+import type { OsmGolfInfo } from './osm/types';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -100,6 +101,10 @@ export interface GolfSave {
  /** T246 (#708): the club's own events (golf/clubevents.ts): the Club Championship and the Mayor's Cup, the seasons held, entered and announced, the
   *  event day and the last result. Missing: an older save (none held yet) */
  clubEvents?: ClubEventsSave;
+ /** T340 (#967): this game's course is a real one built from map data (golf/osm): its shipped id, the name and place the game shows, the credit the
+  *  course card and the credits carry ("© OpenStreetMap contributors"), where it came from, and its holes and par. The game is laid on the flat map
+  *  (boot.ts flatTerrain) whatever its seed. Missing: an ordinary game */
+ osm?: OsmGolfInfo;
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
@@ -130,7 +135,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -172,5 +177,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   // T241: your golf, well formed (none: the engine starts the starting profile when it is first needed)
   const pp = normalizePlayer(player); if (pp) out.player = pp;
   if (clubEvents) out.clubEvents = normalizeEvents(clubEvents); // T246
+  // T340: a map-data course's credit and name, well formed only (the strings kept, the numbers finite)
+  if (osm && typeof osm.id === 'string' && typeof osm.name === 'string') out.osm = { id: osm.id, name: osm.name, place: String(osm.place ?? ''), credit: String(osm.credit ?? ''), licence: String(osm.licence ?? ''), source: String(osm.source ?? ''), holes: Number.isFinite(osm.holes) ? osm.holes : 0, par: Number.isFinite(osm.par) ? osm.par : 0 };
   return out;
 }
