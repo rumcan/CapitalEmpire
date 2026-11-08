@@ -8,7 +8,9 @@
 // --what stones (T344): a course pond beside the water with the Stones edge (T231), the boulders and plants round its shore.
 // --what fountain (T344): the Fountain pond as the Props tool lays it in town (a painted water area and its Stones edge): one over the water's edge,
 //   one a tile clear of it.
-// --what narrow (T344): water laid on both banks of the narrowest creek inside the course grid, so the outline joins across it.
+// --what narrow (T344): water laid on both banks of a narrow creek, so the outline joins across it. The map's narrow creeks (a channel under 5.7 tiles:
+//   its water under 4 m) lie outside the course grid on this seed, so the creek's channel is narrowed to 3 tiles (2.1 m of water) for 13 points
+//   about the spot, the terrain pushed to the ground workers again and the chunks round it baked anew.
 // Needs a dev server (vite) on --base. One headless Edge, closed when done.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -78,6 +80,16 @@ try {
   await page.evaluate(b => { const g = window.__game; g.camEase = null; g.lookAt(b.x - b.ux * 4, b.y - b.uy * 4, 0.3); }, b);
   await settle(page, 1500);
   await shot(page, `map-water-${what}-${b.kind}-30pct-bare`);
+  if (what === 'narrow') {
+    const w3 = await page.evaluate(b => {
+      const g = window.__game;
+      g.terrain.waters = g.terrain.waters.map((w, wi) => (wi !== b.wi ? w : { ...w, pts: w.pts.map((p, i) => (Math.abs(i - b.i) <= 6 ? { ...p, w: 3 } : p)) }));
+      g.ground.terrain(g.terrain); g.ground.invalidate([b.x - 60, b.y - 60, b.x + 60, b.y + 60]);
+      return g.terrain.waters[b.wi].pts[b.i].w;
+    }, b);
+    console.log('creek channel narrowed to', w3, 'tiles: water', w3 * 0.35, 'tiles');
+    await settle(page, 2500);
+  }
   const made = await page.evaluate(([b, what]) => {
     const g = window.__game, nx = -b.uy, ny = b.ux, k = b.kind === 'creek' ? 0.35 : 1, half = b.w / 2 * k, P = g.terrain.waters[b.wi].pts;
     /** the centreline point k's own normal */
@@ -101,11 +113,11 @@ try {
       area([...inner, ...outer]);
     } else if (what === 'fountain') {
       // the Fountain pond as the Props tool lays it in town (propstool.ts placePond): a painted water area and its Stones mark. One over the water's
-      // edge (half a tile in), one a tile and a bit clear of it, a centreline point apart
+      // edge (half a tile in), one a tile and a bit clear of it, one 0.4 tile clear of it (inside the join's reach), a centreline point apart
       const pond = (x, y) => { g.digPond(x, y, 3, 'town'); g.setPondMarks([...(g.golf?.ponds ?? []), Math.round(x * 2) / 2, Math.round(y * 2) / 2]); areas++; };
-      const f = norm(Math.min(P.length - 2, b.i + 1)), h = norm(Math.min(P.length - 2, b.i + 2));
-      const fx = f.x + f.mx * (f.hw + 2.5), fy = f.y + f.my * (f.hw + 2.5), hx = h.x - h.mx * (h.hw + 4.2), hy = h.y - h.my * (h.hw + 4.2);
-      pond(fx, fy); pond(hx, hy); view = { x: (fx + hx) / 2, y: (fy + hy) / 2 };
+      const f = norm(Math.min(P.length - 2, b.i + 1)), h = norm(Math.min(P.length - 2, b.i + 2)), c = norm(Math.min(P.length - 2, b.i + 3));
+      const fx = f.x + f.mx * (f.hw + 2.5), fy = f.y + f.my * (f.hw + 2.5), hx = h.x - h.mx * (h.hw + 4.2), hy = h.y - h.my * (h.hw + 4.2), cx = c.x + c.mx * (c.hw + 3.4), cy = c.y + c.my * (c.hw + 3.4);
+      pond(fx, fy); pond(hx, hy); pond(cx, cy); view = { x: (fx + hx + cx) / 3, y: (fy + hy + cy) / 3 };
     } else if (what === 'stones') {
       // a pond beside the water (as the course variant), edged with Stones (T231: the Props tool's Stone pond edge), and one across the water
       for (let q = b.i - 2; q >= Math.max(1, b.i - 6); q--) { const n = norm(q); dig(n.x + n.mx * (n.hw + 2.5), n.y + n.my * (n.hw + 2.5), 3); }

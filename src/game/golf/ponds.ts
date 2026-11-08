@@ -107,10 +107,11 @@ export interface ShoreRun { vx: number[]; vy: number[]; closed: boolean }
 export function shoreRuns(p: Pond): ShoreRun[] {
   const at = (cx: number, cy: number) => inPond(p, cx, cy);
   // T344: a side facing the map's water is no shore: the pond joins it there. A cell counts when the map's water lies in it or in a cell next to it
-  // (a one-cell gap of bank between the two is bridged, as the course's water bridges it: map-water.ts JOIN_REACH), so no stone is laid along the seam
+  // (a one-cell gap of bank between the two is bridged, as the course's water bridges it: map-water.ts JOIN_REACH), so no stone is laid along the seam.
+  // (The pond's own cells never count: its water may lie over a river the course has covered)
   const other = p.other, seam = (cx: number, cy: number) => {
     if (!other) return false;
-    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (other(cx + i, cy + j)) return true;
+    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!at(cx + i, cy + j) && other(cx + i, cy + j)) return true;
     return false;
   };
   // the cell sides, each from a to (a + d), the water on the right

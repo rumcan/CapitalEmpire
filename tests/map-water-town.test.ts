@@ -69,8 +69,12 @@ test('3. Stones edge: a pond bridged to a creek by a one-cell bank is joined too
 
 test('4. the seam fade keeps out of a creek too narrow to take it; a wider creek and the river take it, its middle left whole', () => {
   const box = [0, 0, 100, 100];
-  // the map makes creeks 3 to 8 tiles of channel, their water 0.35 of it: 1.05 to 2.8 tiles
-  for (const w of [3, 4, 5, 5.5]) assert.ok(0.35 * w < FADE_MIN_WIDTH, `a ${w}-tile channel is narrower than the fade's minimum`), assert.deepEqual(fadeBands(creekAt(20, w), box), [], `no fade in a creek with a ${w}-tile channel (${(0.35 * w * 2).toFixed(1)} m of water)`);
+  // the map makes creeks 3 to 8 tiles of channel, their water 0.35 of it: 1.05 to 2.8 tiles (2.1 to 5.6 m); water narrower than the fade's
+  // minimum (2 tiles: what the join spans from both banks) takes none
+  for (const w of [3, 4, 5, 5.5]) {
+    assert.ok(0.35 * w < FADE_MIN_WIDTH, `a ${w}-tile channel is narrower than the fade's minimum`);
+    assert.deepEqual(fadeBands(creekAt(20, w), box), [], `no fade in a creek with a ${w}-tile channel (${(0.35 * w * 2).toFixed(1)} m of water)`);
+  }
   for (const w of [6, 8]) assert.equal(fadeBands(creekAt(20, w), box).length, JOIN_FADE.length, `a ${w}-tile channel takes the fade`);
   assert.equal(fadeBands(river(), box).length, JOIN_FADE.length, 'the river takes it');
   // the bands are the T338 ones: JOIN_FADE's alphas, each reaching a step deeper than the last, inside JOIN_INSET
