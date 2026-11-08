@@ -70,8 +70,9 @@ export function buildStreet(g: Game, site: Site): void {
 }
 
 /** lays `n` lots (as many as sites allow): each street built, its lots laid; stages: 'sale' (all for sale), 'mix' (two for sale, two sold, two being built, the rest
- *  built: the shots), 'built' (all built: the bench). rangeSpot: with `range`, a short street is built where lots are refused for being in range of a hole */
-export function layEstateFixture(g: Game, n: number, o: { stages?: 'sale' | 'mix' | 'built'; len?: number; range?: boolean } = {}): Laid {
+ *  built: the shots), 'built' (all built: the bench). rangeSpot: with `range`, a short street is built where lots are refused for being in range of a hole; with `both`,
+ *  each street takes the lots the rules allow on both its sides (the most lots from the fewest streets) */
+export function layEstateFixture(g: Game, n: number, o: { stages?: 'sale' | 'mix' | 'built'; len?: number; range?: boolean; both?: boolean } = {}): Laid {
   const t0 = performance.now(), h = g as unknown as Hooks, e = h.estateMake(), sites: Site[] = [], now = h.golfMonthAt(performance.now());
   let rangeSpot: Pt | null = null;
   const build = (site: Site, side: 1 | -1 | 0): ES.PlaceResult => {
@@ -80,10 +81,13 @@ export function layEstateFixture(g: Game, n: number, o: { stages?: 'sale' | 'mix
     return ES.placeLots(e, { segs: h.estateStreets(mid, Math.hypot(site.b.x - site.a.x, site.b.y - site.a.y) / 2 + 10), side }, h.estateEnv(), now, g.seed);
   };
   const placed: ES.EstateLot[] = [];
-  for (let guard = 0; placed.length < n && guard < 8; guard++) {
-    const site = findSite(g, { want: Math.min(10, Math.max(4, n - placed.length)), len: o.len ?? 100 }); if (!site) break;
+  for (let guard = 0; placed.length < n && guard < 14; guard++) {
+    // the best street that gives ten lots, else eight, six, four, two (a scene's land may have no site for ten on one side: the bench asks for forty lots in all)
+    const need = Math.max(2, n - placed.length); let site: Site | null = null;
+    for (const w of [10, 8, 6, 4, 2]) { site = findSite(g, { want: Math.min(w, need), len: o.len ?? 100 }); if (site) break; }
+    if (!site) break;
     sites.push(site);
-    const r = build(site, site.side);
+    const r = build(site, o.both ? 0 : site.side); // (both: the lots of both sides of the street, the bench's forty)
     const keep: ES.EstateLot[] = [];
     for (const l of r.placed) { if (placed.length < n) { placed.push(l); keep.push(l); } else ES.removeLot(e, l.id); }
     h.estateLaid(keep); // (the course's ground under the lots goes, as when the tool lays them)

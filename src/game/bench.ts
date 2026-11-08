@@ -180,7 +180,7 @@ export function benchGame(g: Game, scene: BenchScene) {
   if (estateN > 0) void import('./dev/estate-fixture').then(m => {
     const lay = () => {
       if (!g.ready) { setTimeout(lay, 200); return; }
-      const r = m.layEstateFixture(g, estateN, { stages: 'built' });
+      const r = m.layEstateFixture(g, estateN, { stages: 'built', both: true });
       if (r.lots.length) { const c = r.lots.map(l => ({ x: l.o.x + l.u.x * l.w / 2 + l.n.x * l.d / 2, y: l.o.y + l.u.y * l.w / 2 + l.n.y * l.d / 2 })); estateAt = { x: c.reduce((a, q) => a + q.x, 0) / c.length, y: c.reduce((a, q) => a + q.y, 0) / c.length }; }
       console.log('[bench] estate', JSON.stringify({ asked: estateN, lots: r.lots.length, streets: r.sites.length, searchMs: r.searchMs }));
       estateReady = true;
