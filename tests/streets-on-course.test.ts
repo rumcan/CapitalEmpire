@@ -6,10 +6,13 @@
 // cart paths and drives are judged as before. Headless: npm test (no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { CLASS, CLASSES, ROAD_TYPES, RoadNetwork, VARIANTS, isCourseClass, type Leg, type RoadClass } from '../src/game/network';
 import { checkLegs, snapPoint, type Snap } from '../src/game/snap';
 import { COURSE_LAND_MSG, COURSE_STREET_FAMILIES, STREET_REFUSED_SURFACES, legsOnPlay, playAt, playInWay, playWhy, startWhy, streetOnCourseOk } from '../src/game/golf/parcels';
 import { CELL_T, SURF, fillPolygon, makeGrid, paintDisc, type Grid } from '../src/game/ext/course-grid';
+import { mulberry } from '../src/game/iso';
 import type { Rect } from '../src/game/golf/mode';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -188,4 +191,63 @@ test('a cell of playing surface at the corridor edge counts, a hair of overlap d
   assert.equal(legsOnPlay(g, [leg(x, 100, x, 120)], hw), null);
   assert.equal(legsOnPlay(g, [leg(x + CELL_T / 2, 100, x + CELL_T / 2, 120)], hw)?.why, "Hole 6's fairway is in the way");
   assert.equal(legsOnPlay(g, [leg(x + 0.005, 100, x + 0.005, 120)], hw), null, 'a hair (under the 0.01 tile the land rule also lets by)');
+});
+
+/** the reference: every refused cell of the grid against the corridor of leg l (half width hw, flat ends), by the separating axes of the two rectangles
+ *  (overlap deeper than eps on all four axes); the cells met first along the leg (by their centres: more than one when they tie), or null */
+function reference(g: Grid, l: Leg, hw: number, eps = 0.01): { t: number; cells: number[] } | null {
+  const dx = l.b.x - l.a.x, dy = l.b.y - l.a.y, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+  const quad = [[l.a.x + nx * hw, l.a.y + ny * hw], [l.b.x + nx * hw, l.b.y + ny * hw], [l.b.x - nx * hw, l.b.y - ny * hw], [l.a.x - nx * hw, l.a.y - ny * hw]];
+  const found: { i: number; t: number }[] = [];
+  for (let i = 0; i < g.surf.length; i++) {
+    if (!STREET_REFUSED_SURFACES[g.surf[i]!]) continue;
+    const cx = i % g.w, cy = (i - cx) / g.w, x0 = g.x0 + cx * CELL_T, y0 = g.y0 + cy * CELL_T;
+    const cell = [[x0, y0], [x0 + CELL_T, y0], [x0 + CELL_T, y0 + CELL_T], [x0, y0 + CELL_T]];
+    let over = true;
+    for (const [ax, ay] of [[ux, uy], [nx, ny], [1, 0], [0, 1]] as const) {
+      const pa = quad.map(p => p[0]! * ax + p[1]! * ay), pb = cell.map(p => p[0]! * ax + p[1]! * ay);
+      if (Math.min(Math.max(...pa), Math.max(...pb)) - Math.max(Math.min(...pa), Math.min(...pb)) <= eps) { over = false; break; }
+    }
+    if (!over) continue;
+    found.push({ i, t: (x0 + CELL_T / 2 - l.a.x) * ux + (y0 + CELL_T / 2 - l.a.y) * uy });
+  }
+  if (!found.length) return null;
+  const t = Math.min(...found.map(q => q.t));
+  return { t, cells: found.filter(q => q.t <= t + 1e-9).map(q => q.i) };
+}
+
+test('legsOnPlay agrees with a cell-by-cell reference on random grids and legs (every angle, three street widths)', () => {
+  const rnd = mulberry(355), kinds = [SURF.fairway, SURF.tee, SURF.green, SURF.bunker, SURF.water, SURF.rough, SURF.fescue, SURF.longGrass, SURF.waste];
+  let hits = 0, clear = 0;
+  for (let round = 0; round < 40; round++) {
+    const g = makeGrid(0, 0, 64, 64); // x 0..32, y 0..32
+    for (let k = 0; k < 7; k++) {
+      const x = rnd() * 28, y = rnd() * 28, w = 1 + rnd() * 9, h = 1 + rnd() * 9;
+      fillPolygon(g, rect(x, y, x + w, y + h), kinds[Math.floor(rnd() * kinds.length)]!, 1 + Math.floor(rnd() * 18), 0);
+    }
+    for (let n = 0; n < 12; n++) {
+      const hwR = [1.6, 2.65, 3.75][n % 3]!, ang = n < 4 ? (n * Math.PI) / 2 : n < 7 ? Math.PI / 4 + (n * Math.PI) / 2 : rnd() * Math.PI * 2, len = 2 + rnd() * 30;
+      const a = { x: -4 + rnd() * 40, y: -4 + rnd() * 40 }, l = leg(a.x, a.y, a.x + Math.cos(ang) * len, a.y + Math.sin(ang) * len);
+      const got = legsOnPlay(g, [l], hwR), want = reference(g, l, hwR);
+      assert.equal(!!got, !!want, `round ${round} leg ${n}: ${JSON.stringify(l)} hw ${hwR}`);
+      if (got && want) { hits++; assert.ok(want.cells.some(i => g.surf[i] === got.surf && g.hole[i] === got.hole), `round ${round} leg ${n}: the surface met first`); } else clear++;
+    }
+  }
+  assert.ok(hits > 40 && clear > 40, `both outcomes met (${hits} hits, ${clear} clear)`);
+});
+
+test('wiring: the preview, each click and Build judge a street by the playing surfaces; the first click and the ghost before it by startWhy', () => {
+  const eng = readFileSync(resolve('src/game/engine.ts'), 'utf8'), snap = readFileSync(resolve('src/game/snap.ts'), 'utf8');
+  // routeInWay (the red outline in the preview, each click, Build) asks playInWay, after the obstacles
+  const way = eng.slice(eng.indexOf('routeInWay(legs: Leg[])'), eng.indexOf('private startBlock'));
+  assert.match(way, /playInWay\(this\.courseGrid, this\.cls, legs\)/);
+  assert.ok(way.indexOf('inTheWay(') >= 0 && way.indexOf('inTheWay(') < way.indexOf('playInWay('), 'the obstacles first, then the playing surfaces');
+  // every checkLegs call of the road tool (the ghost, a click, Build) is followed by routeInWay
+  assert.equal([...eng.matchAll(/checkLegs\([^\n]*\|\| \(this\.routeInWay\(/g)].length, 3);
+  // the first point: the ghost before the first click, and the click itself
+  assert.match(eng, /private startBlock\(p: Pt\): string \{ return startWhy\(this\.golfLand\(\), this\.courseGrid, this\.cls, p\.x, p\.y\); \}/);
+  assert.match(eng, /if \(!legs\.length\) \{[^\n]*return cs \? this\.startBlock\(cs\.p\) : '';/);
+  assert.match(eng, /if \(!this\.route\.length\) \{ const why = this\.startBlock\(s\.p\); if \(why\) \{ this\.toast\(why, 'warn'\); return; \}/);
+  // the land rule of checkLegs skips the streets
+  assert.match(snap, /!isCourseClass\(cls\.id\) && !streetOnCourseOk\(cls\) && legsOnLand\(/);
 });

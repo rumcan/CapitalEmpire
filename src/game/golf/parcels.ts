@@ -221,17 +221,32 @@ export function legsOnPlay(g: Grid, legs: readonly { a: { x: number; y: number }
   for (const l of legs) {
     const dx = l.b.x - l.a.x, dy = l.b.y - l.a.y, L = Math.hypot(dx, dy); if (L < 1e-9) continue;
     const ux = dx / L, uy = dy / L, nx = -uy * hw, ny = ux * hw;
-    // the cells in the corridor's box (clipped to the grid), the playing ones tested exactly
-    const bx0 = Math.min(l.a.x, l.b.x) - Math.abs(nx), bx1 = Math.max(l.a.x, l.b.x) + Math.abs(nx), by0 = Math.min(l.a.y, l.b.y) - Math.abs(ny), by1 = Math.max(l.a.y, l.b.y) + Math.abs(ny);
-    const cx0 = Math.max(0, Math.floor((bx0 - g.x0) / CELL_T)), cx1 = Math.min(g.w - 1, Math.floor((bx1 - g.x0) / CELL_T));
-    const cy0 = Math.max(0, Math.floor((by0 - g.y0) / CELL_T)), cy1 = Math.min(g.h - 1, Math.floor((by1 - g.y0) / CELL_T));
-    const reach = (CELL_T / 2) * (Math.abs(ux) + Math.abs(uy)), hits: { t0: number; t1: number; i: number }[] = [];
-    for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0, i = cy * g.w + cx0; cx <= cx1; cx++, i++) {
-      if (!REFUSED[g.surf[i]!]) continue;
-      const x0 = g.x0 + cx * CELL_T, y0 = g.y0 + cy * CELL_T;
-      if (!legInRect([x0, y0, CELL_T, CELL_T], l.a.x, l.a.y, l.b.x, l.b.y, hw)) continue;
-      const t = (x0 + CELL_T / 2 - l.a.x) * ux + (y0 + CELL_T / 2 - l.a.y) * uy;
-      hits.push({ t0: t - reach, t1: t + reach, i });
+    // the cells the corridor can touch (clipped to the grid), row by row: in each row of cells only the span of the corridor within that row's band
+    // (a diagonal leg's box is mostly off its corridor), the playing cells among them tested exactly
+    const px = [l.a.x + nx, l.b.x + nx, l.b.x - nx, l.a.x - nx], py = [l.a.y + ny, l.b.y + ny, l.b.y - ny, l.a.y - ny];
+    const cx0 = Math.max(0, Math.floor((Math.min(...px) - g.x0) / CELL_T)), cx1 = Math.min(g.w - 1, Math.floor((Math.max(...px) - g.x0) / CELL_T));
+    const cy0 = Math.max(0, Math.floor((Math.min(...py) - g.y0) / CELL_T)), cy1 = Math.min(g.h - 1, Math.floor((Math.max(...py) - g.y0) / CELL_T));
+    const reach = (CELL_T / 2) * (Math.abs(ux) + Math.abs(uy)), near = CELL_T * Math.SQRT1_2, hits: { t0: number; t1: number; i: number }[] = [];
+    for (let cy = cy0; cy <= cy1; cy++) {
+      const Y0 = g.y0 + cy * CELL_T, Y1 = Y0 + CELL_T;
+      let lo = Infinity, hi = -Infinity; // the corridor's x span in the band: its four edges clipped to the band (the corridor is convex)
+      for (let k = 0; k < 4; k++) {
+        const ex = px[k]!, ey = py[k]!, fx = px[(k + 1) & 3]!, fy = py[(k + 1) & 3]!, ddy = fy - ey;
+        let t0 = 0, t1 = 1;
+        if (ddy === 0) { if (ey < Y0 || ey > Y1) continue; } else { const ta = (Y0 - ey) / ddy, tb = (Y1 - ey) / ddy; t0 = Math.max(0, Math.min(ta, tb)); t1 = Math.min(1, Math.max(ta, tb)); if (t0 > t1) continue; }
+        const xa = ex + (fx - ex) * t0, xb = ex + (fx - ex) * t1;
+        if (xa < lo) lo = xa; if (xb < lo) lo = xb; if (xa > hi) hi = xa; if (xb > hi) hi = xb;
+      }
+      if (lo > hi) continue;
+      const cxa = Math.max(cx0, Math.floor((lo - g.x0) / CELL_T)), cxb = Math.min(cx1, Math.floor((hi - g.x0) / CELL_T));
+      for (let cx = cxa, i = cy * g.w + cxa; cx <= cxb; cx++, i++) {
+        if (!REFUSED[g.surf[i]!]) continue;
+        const x0 = g.x0 + cx * CELL_T, mx = x0 + CELL_T / 2 - l.a.x, my = Y0 + CELL_T / 2 - l.a.y;
+        const t = mx * ux + my * uy, d = my * ux - mx * uy; // the cell's centre along the leg and across it
+        if (t < -near || t > L + near || d > hw + near || d < -hw - near) continue; // (farther than its half diagonal, `near`, past the corridor: no overlap)
+        if (!legInRect([x0, Y0, CELL_T, CELL_T], l.a.x, l.a.y, l.b.x, l.b.y, hw)) continue;
+        hits.push({ t0: t - reach, t1: t + reach, i });
+      }
     }
     if (!hits.length) continue;
     hits.sort((p, q) => p.t0 - q.t0 || p.i - q.i);
