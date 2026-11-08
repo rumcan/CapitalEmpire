@@ -44,6 +44,7 @@ test('bag: 14 clubs (a 5-wood or a hybrid in the third wood’s slot), and every
   for (const [name, table] of Object.entries({ CLUBS, FAMILY, PART_OF, WIND_CLUB, FLIER_CLUB, SPIN_BACK_CAP, CLUB_NAME, LOFT, CLUB_SHORT, KIND_OF })) assert.deepEqual(Object.keys(table).sort(), ids, `${name} has every club`);
   assert.deepEqual(CLUB_GROUPS.flatMap(g => g.clubs).sort(), ids, 'the groups hold every club once');
   assert.deepEqual(ORIGINAL.map(c => CLUBS[c]), [250, 225, 195, 170, 145, 120, 90, 0], 'the original clubs’ carries are what they were');
+  assert.deepEqual((['wood5', 'hybrid', 'iron5', 'iron7', 'iron9', 'gw', 'lw'] as Club[]).map(c => CLUBS[c]), [208, 202, 182.5, 157.5, 132.5, 105, 75], 'the new clubs’ carries at skill 1');
 });
 
 test('bag: the clubs form a ladder: each shorter than the one before, higher in loft, taking more spin and catching less wind; the 7-iron sits between the 6 and the 8', () => {

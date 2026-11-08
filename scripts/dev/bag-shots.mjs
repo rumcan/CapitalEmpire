@@ -1,4 +1,5 @@
 // T335 (#961): the bag's captures, in the real game (a headless Edge on the dev server, the old nine, ?start=town):
+//   0-top-bar.png / 0b-player-card-your-bag.png   the top bar's Bag chip, and the profile card's Your bag button (a real click opens the card)
 //   1-bag-card.png            the bag card at the start: 14 clubs in woods, irons, wedges and putter, all Garage-sale
 //   2-upgrade-driver.png      a real click on the driver tile, then Upgrade (a real click) twice: the Tour driver's flyout (carry, launch, spin, forgiveness, the Prototype offer and its price)
 //   3-bag-upgraded.png        the bag after a few upgrades (the driver, a 7-iron, the wedges): the tiles tinted by level
@@ -42,8 +43,16 @@ try {
   const hideToasts = () => page.evaluate(() => document.querySelectorAll('div.absolute.top-20.z-30.flex-col.items-center').forEach(e => { e.style.visibility = 'hidden'; }));
   const card = async name => { await sleep(500); await hideToasts(); await page.locator('[data-testid=bag-root]').screenshot({ path: join(out, name) }); log(name); };
 
-  // ---- 1. the bag card at the start
-  await page.evaluate(() => { const g = window.__game; g.eventCardOpen = null; g.openPlayerCard(false); g.openBagCard(true); });
+  // ---- 1. the bag card at the start (opened by the engine: the card's own click is in 2). The top bar's Bag chip is there, and the profile card has Your bag
+  expect(await page.locator('[data-testid=bag-chip]').isVisible(), 'the Bag chip is in the top bar');
+  await page.screenshot({ path: join(out, '0-top-bar.png'), clip: { x: 0, y: 0, width: 900, height: 90 } });
+  await page.evaluate(() => { const g = window.__game; g.eventCardOpen = null; g.openPlayerCard(true); });
+  await page.waitForSelector('[data-testid=player-bag]', { timeout: 20000 });
+  await page.locator('[data-testid=player-card]').screenshot({ path: join(out, '0b-player-card-your-bag.png') });
+  await page.click('[data-testid=player-bag]'); // (a real click on Your bag opens the bag card beside the profile card)
+  await page.waitForSelector('[data-testid=bag-card]', { timeout: 20000 });
+  expect(await page.evaluate(() => window.__game.bagCardOpen), 'a click on Your bag opens the bag card');
+  await page.evaluate(() => { const g = window.__game; g.openPlayerCard(false); g.openBagCard(true); });
   await page.waitForSelector('[data-testid=bag-card]', { timeout: 20000 });
   rep.start = await page.evaluate(() => { const v = window.__game.bagCard(); return { clubs: v.rows.length, shop: v.shop, shopWhy: v.shopWhy, money: v.money, carries: Object.fromEntries(v.rows.map(r => [r.club, Math.round(r.carryM)])) }; });
   log('start', JSON.stringify(rep.start));

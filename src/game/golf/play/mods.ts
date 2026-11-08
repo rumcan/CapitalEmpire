@@ -35,7 +35,7 @@ export interface Mod { id: string; name?: string; stats?: Partial<Record<StatId,
   spin?: number; feel?: number; line?: number; luck?: number }
 
 /** what a club plays at once the stats and the mods are applied: the part of the game's skill (0..1: what skillFor reads), the stats (after the mods), and the factors on the carry, the
- *  scatter (direction and distance), the sweet spot's width, the marker's speed and the roll, the extra chance of a mishit, and (T335) the factors on the spin and on the putt's pace window, and the putt's luck */
+ *  scatter (direction and distance), the sweet spot's width, the marker's speed and the roll, the extra chance of a mishit, and (T335) the factors on the spin, on the putt's pace window and on its aim window, and the putt's luck */
 export interface ClubKit { skill: number; stats: Stats; carry: number; spread: number; sweet: number; speed: number; roll: number; mishit: number; spin: number; feel: number; line: number; luck: number }
 
 /** T335: the character each club has of its own, on top of the golfer and his mods: the clubs added with the bag have one (a 5-wood and a hybrid forgive more and run on, the lob wedge lands soft and is harder to

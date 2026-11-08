@@ -4,7 +4,7 @@
 //   spin.ts SPIN_BACK_CAP) and its forgiveness (its own base scatter and sweet spot and the mishits it gives).
 // - Upgrades: a club is Garage-sale (the club the model has always played: no change at all), then Club, Tour and Prototype, bought at the shop (PRICES) or earned (a title's sponsor voucher: one free
 //   upgrade, up to Tour). A level raises what the club is for: a wood's carry and forgiveness, an iron's forgiveness and spin, a wedge's spin and forgiveness, the putter's forgiveness and feel (LEVEL_FX).
-// - The putter's fitting: a shaft and a head trade feel (distance control: the pace may be further out, the lag putt lands closer) against accuracy (the line: a wider sweet spot on the click) and luck (a bad
+// - The putter's fitting: a shaft and a head trade feel (distance control: the pace may be further out, the lag putt lands closer) against accuracy (the line: the angle a putt may be off and still drop, a wider sweet spot on the click) and luck (a bad
 //   putt may still drop, a good one may lip out): a whippy graphite shaft for feel and luck, a stiff counter-balanced one for the line, a lie-angle balanced head that keeps the face square (SHAFTS, HEADS).
 // - It all reaches the shot model as plain data and nothing else: `bagMods` turns the bag into `Mod`s (mods.ts) and `bagGear` into the `GameSkills.mods` and `GameSkills.clubs` your game carries, so
 //   `applyMods` (the one function the shot, the swing meter, the caddie and the panel read) is the only way a club or a shaft changes a shot. A bag at its default (every club Garage-sale, the stock shaft
@@ -55,7 +55,7 @@ export const CLUB_GROUPS: readonly { name: string; clubs: readonly Club[] }[] = 
 export interface PartDef { id: string; name: string; price: number; note: string; mod: Omit<Mod, 'id' | 'name' | 'clubs'> }
 /** the shafts. Feel is `feel` (the pace may be further out and the error counts for less) and `spread` (a closer lag putt); accuracy is `line` (the angle a putt may be off and still drop) and `sweet` (a wider sweet spot on the line
  *  click); luck is `luck`. Balanced on the scripted swinger (18 holes, 40 rounds, a club golfer's other skills): the whippy shaft takes 2 strokes off a golfer who misses the pace and costs 3 one who misses the line; the stiff one takes
- *  5 off a golfer who misses the line and costs 2 one who misses the pace */
+ *  3 off a golfer who misses the line and costs 2 one who misses the pace (docs/GOLF-PLAY.md has the table) */
 export const SHAFTS: readonly PartDef[] = [
   { id: 'stock', name: 'Stock steel shaft', price: 0, note: 'The shaft the putter came with.', mod: {} },
   { id: 'whip', name: 'Whippy graphite shaft', price: 450, note: 'Soft and whippy: you feel the pace, a lag putt dies at the cup and now and then a bad one drops anyway. The face wanders on the line.', mod: { feel: 1.2, spread: 0.9, sweet: 0.85, line: 0.8, luck: 0.25 } },
