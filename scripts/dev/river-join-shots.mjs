@@ -1,12 +1,14 @@
 // T338 (#965) and T344 (#982): the owner's case, water laid across and beside the map's river or creek: before the fix the painted pond drew its
 // own bank and surface on top of the map's water; after it the two join (one water, one shoreline, no bank where they meet).
-//   node scripts/dev/river-join-shots.mjs --base http://localhost:5186/ --out E:/ClaudeTemp/T344 --tag before [--what course|town|stones|narrow]
+//   node scripts/dev/river-join-shots.mjs --base http://localhost:5186/ --out E:/ClaudeTemp/T344 --tag before [--what course|town|stones|fountain|narrow]
 //     [--kind creek|river] [--seed 7] [--shift -8] [--zooms 0.3,0.12]
 // --what course (T338, the default): course water (a strip across the water and a pond beside it, by the Fountain pond's course digs).
 // --what town (T344): the town's painted water: the classic Paint's water area (a strip across and a long pond beside it, with the Water brush's
 //   dirt border) and the Fountain pond in town (one over the water's edge, one a tile from it).
 // --what stones (T344): a course pond beside the water with the Stones edge (T231), the boulders and plants round its shore.
-// --what narrow (T344): water laid on both banks of the narrowest creek near the course grid, so the outline joins across it.
+// --what fountain (T344): the Fountain pond as the Props tool lays it in town (a painted water area and its Stones edge): one over the water's edge,
+//   one a tile clear of it.
+// --what narrow (T344): water laid on both banks of the narrowest creek inside the course grid, so the outline joins across it.
 // Needs a dev server (vite) on --base. One headless Edge, closed when done.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -44,18 +46,19 @@ try {
   // with the least water inside the middle of the grid
   const spot = await page.evaluate(([kind, narrow]) => {
     const g = window.__game, gr = g.courseGrid; if (!gr) return null;
-    const cx = gr.x0 + gr.w * 0.25, cy = gr.y0 + gr.h * 0.25, x1 = gr.x0 + gr.w * 0.5, y1 = gr.y0 + gr.h * 0.5;
+    // (the grid is w x h cells of half a tile: its tile box x0..gx1, y0..gy1)
+    const cx = gr.x0 + gr.w * 0.25, cy = gr.y0 + gr.h * 0.25, gx1 = gr.x0 + gr.w * 0.5, gy1 = gr.y0 + gr.h * 0.5;
     let best = null, bd = Infinity;
     for (const w of g.terrain.waters) {
       if (kind !== 'any' && w.kind !== kind) continue;
       w.pts.forEach((p, i) => {
-        const inside = p.x > gr.x0 + 20 && p.y > gr.y0 + 20 && p.x < x1 * 2 - gr.x0 - 20 && p.y < y1 * 2 - gr.y0 - 20;
+        const inside = p.x > gr.x0 + 25 && p.y > gr.y0 + 25 && p.x < gx1 - 25 && p.y < gy1 - 25;
         // (narrow: the least width first, then the nearest)
-        const d = (narrow ? p.w * 1000 : 0) + Math.hypot(p.x - (gr.x0 + gr.w * 0.25), p.y - (gr.y0 + gr.h * 0.25)) + (inside ? 0 : 1e9);
+        const d = (narrow ? p.w * 1000 : 0) + Math.hypot(p.x - cx, p.y - cy) + (inside ? 0 : 1e9);
         if (d < bd && i > 0 && i < w.pts.length - 1) { bd = d; const a = w.pts[i - 1], b = w.pts[i + 1], l = Math.hypot(b.x - a.x, b.y - a.y); best = { wi: g.terrain.waters.indexOf(w), i, kind: w.kind, x: p.x, y: p.y, w: p.w, ux: (b.x - a.x) / l, uy: (b.y - a.y) / l }; }
       });
     }
-    return { grid: { x0: gr.x0, y0: gr.y0, w: gr.w, h: gr.h }, best, d: bd, cx, cy, creeks: g.terrain.waters.filter(w => w.kind === 'creek').map(w => [w.pts.length, Math.min(...w.pts.map(p => p.w)), Math.max(...w.pts.map(p => p.w))]) };
+    return { grid: { x0: gr.x0, y0: gr.y0, w: gr.w, h: gr.h, gx1, gy1 }, best, d: bd, cx, cy, creeks: g.terrain.waters.filter(w => w.kind === 'creek').map(w => [w.pts.length, Math.min(...w.pts.map(p => p.w)), Math.max(...w.pts.map(p => p.w))]) };
   }, [kind, what === 'narrow']);
   console.log('spot', JSON.stringify(spot));
   if (!spot?.best) throw new Error('no map water near the course grid');
@@ -82,7 +85,7 @@ try {
     // the course's water as the Fountain pond digs it (T338): r tiles round (x, y), on the course grid
     let cells = 0; const dig = (x, y, r) => { if (g.digPond(x, y, r, 'course')) cells++; };
     // the classic Paint's water area: the Water brush's dirt border (a step of 2: half a tile), straight corners
-    let areas = 0; const area = (pts, border = 2) => { g.paint.addArea(pts, { tex: 'waterDark', border, btex: 'dirt', radius: 0 }); areas++; };
+    let areas = 0, view = null; const area = (pts, border = 2) => { g.paint.addArea(pts, { tex: 'waterDark', border, btex: 'dirt', radius: 0 }); areas++; };
     if (what === 'course') {
       // across: from 8 tiles off one shore to 8 tiles off the other, 3 tiles wide
       for (let s = -(half + 8); s <= half + 8; s += 0.75) dig(b.x + b.ux * 6 + nx * s, b.y + b.uy * 6 + ny * s, 1.5);
@@ -96,9 +99,13 @@ try {
       const inner = [], outer = [];
       for (let q = b.i - 2; q >= Math.max(1, b.i - 6); q--) { const n = norm(q); inner.push(n.x + n.mx * (n.hw - 0.5), n.y + n.my * (n.hw - 0.5)); outer.unshift(n.x + n.mx * (n.hw + 5.5), n.y + n.my * (n.hw + 5.5)); }
       area([...inner, ...outer]);
-      // the Fountain pond in town: one over the water's edge (a tile in), one a tile clear of it
-      const f = norm(Math.min(P.length - 2, b.i + 2)); g.digPond(f.x + f.mx * (f.hw + 2.5), f.y + f.my * (f.hw + 2.5), 3, 'town'); areas++;
-      const h = norm(Math.min(P.length - 2, b.i + 3)); g.digPond(h.x - h.mx * (h.hw + 4.2), h.y - h.my * (h.hw + 4.2), 3, 'town'); areas++;
+    } else if (what === 'fountain') {
+      // the Fountain pond as the Props tool lays it in town (propstool.ts placePond): a painted water area and its Stones mark. One over the water's
+      // edge (half a tile in), one a tile and a bit clear of it, a centreline point apart
+      const pond = (x, y) => { g.digPond(x, y, 3, 'town'); g.setPondMarks([...(g.golf?.ponds ?? []), Math.round(x * 2) / 2, Math.round(y * 2) / 2]); areas++; };
+      const f = norm(Math.min(P.length - 2, b.i + 1)), h = norm(Math.min(P.length - 2, b.i + 2));
+      const fx = f.x + f.mx * (f.hw + 2.5), fy = f.y + f.my * (f.hw + 2.5), hx = h.x - h.mx * (h.hw + 4.2), hy = h.y - h.my * (h.hw + 4.2);
+      pond(fx, fy); pond(hx, hy); view = { x: (fx + hx) / 2, y: (fy + hy) / 2 };
     } else if (what === 'stones') {
       // a pond beside the water (as the course variant), edged with Stones (T231: the Props tool's Stone pond edge), and one across the water
       for (let q = b.i - 2; q >= Math.max(1, b.i - 6); q--) { const n = norm(q); dig(n.x + n.mx * (n.hw + 2.5), n.y + n.my * (n.hw + 2.5), 3); }
@@ -107,11 +114,11 @@ try {
       // on both banks of the creek: discs a tile and a half clear of the water, so that the join reaches across it
       for (let q = b.i - 3; q <= Math.min(P.length - 2, b.i + 3); q++) { const n = norm(q); for (const sg of [1, -1]) dig(n.x + sg * n.mx * (n.hw + 1.4), n.y + sg * n.my * (n.hw + 1.4), 1.5); }
     }
-    return { cells, areas, half };
+    return { cells, areas, half, view };
   }, [b, what]);
   console.log('made', JSON.stringify(made));
   for (const z of zooms) {
-    await page.evaluate(([b, z, what]) => { const sh = what === 'narrow' ? 0 : -4; window.__game.camEase = null; window.__game.lookAt(b.x + b.ux * sh, b.y + b.uy * sh, z); }, [b, z, what]);
+    await page.evaluate(([b, z, what, view]) => { const sh = what === 'narrow' ? 0 : -4; window.__game.camEase = null; window.__game.lookAt(view ? view.x : b.x + b.ux * sh, view ? view.y : b.y + b.uy * sh, z); }, [b, z, what, made.view]);
     await settle(page, 1800);
     await shot(page, `map-water-${what}-${b.kind}-${Math.round(z * 100)}pct-painted`);
   }
