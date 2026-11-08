@@ -114,6 +114,25 @@ test('the herds are the owner\'s sizes, and the animals of a field keep a little
   assert.ok(herds >= 10 && pairs > 1000, `${herds} herds, ${pairs} pairs checked`);
 });
 
+test('the animals keep clear of the hay bales and bushes of their paddock (given as obstacles): never within 2.2 tiles of one', () => {
+  const arts = ANIMALS.map(a => ({ id: a.id })), v: AnimalView = { x: 0, y: 0, art: 0, row: 0, frame: 0, moving: false };
+  let checked = 0;
+  for (const p of parcels()) {
+    const fields = farmAnimalFields(p, SEED, 2), q = fields.find(z => z.kind === 'paddock'); if (!q) continue;
+    // a bale at the paddock's middle and one near a corner (world tiles)
+    const at = (pa: number, pb: number) => ({ x: p.o.x + p.u.x * pa + p.n.x * pb, y: p.o.y + p.u.y * pa + p.n.y * pb });
+    const obs = [at((q.a0 + q.a1) / 2, (q.b0 + q.b1) / 2), at(q.a0 + 3, q.b0 + 3)];
+    for (const a of farmAnimals(p, SEED, arts, 2, fields, obs)) {
+      if (a.f[0] !== q.a0 + ANIMAL_MARGIN || a.f[1] !== q.b0 + ANIMAL_MARGIN) continue; // (an animal of the paddock)
+      for (let t = 0; t < 1200; t += 3.1) {
+        animalAt(a, t, v);
+        for (const o of obs) { const d = Math.hypot(v.x - o.x, v.y - o.y); assert.ok(d >= 2.2 - 1e-6, `${p.key} at ${t.toFixed(1)}s: ${d.toFixed(2)} tiles from a bale`); checked++; }
+      }
+    }
+  }
+  assert.ok(checked > 500, `${checked} animal-bale distances checked`);
+});
+
 test('placement and motion are deterministic', () => {
   const arts = ANIMALS.map(a => ({ id: a.id })), [p] = parcels().filter(q => farmAnimals(q, SEED, arts).length);
   assert.ok(p);
