@@ -74,7 +74,7 @@ log('== 1. book, Start round');
     await page.locator('[data-testid=tee-start]').click();
     await page.waitForTimeout(400);
     const s1 = await state(page); log('after Start round', JSON.stringify(s1));
-    check((!!s1.plan && s1.plan.min === tee && s1.speed === 20) || !!s1.round, 'the clock runs to the tee time at the fastest speed (or has got there)');
+    check((!!s1.plan && s1.plan.min === tee && s1.speed > 1) || !!s1.round, 'the clock runs to the tee time fast, slower as it nears (or has got there)');
     await waitFor(page, () => !!window.__game.yourRound(), null, 90000, 'the round to begin');
     await waitFor(page, () => window.__game.shotState()?.mine === true, null, 30000, 'the first shot');
     const s2 = await state(page); log('on the tee', JSON.stringify(s2));
