@@ -9,6 +9,8 @@ import { Icon } from '../Icon';
 import { Thumb } from '../Thumb';
 import { HoleChoiceBox } from './YourRound';
 import { ChallengeBox, type MatchOffer } from './MatchCards';
+import { CoursePicker, type Featured } from './CoursePicker';
+import type { OsmCourseSpec } from '../../game/golf/osm/types';
 import type { HoleChoice, RoundRules } from '../../game/golf/play/yours';
 import { bookingLine } from '../../game/golf/startround';
 
@@ -36,11 +38,12 @@ const THEMES: readonly { desert: boolean; name: string; note: string; ids: reado
 const BY_ID = new Map(LIBRARY.map(it => [it.id, it] as const));
 export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, course }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void;
   /** T342: the game's look (desert or autumn) and the choice (the world changes behind the card at once) */ desert?: boolean; onTheme?: (desert: boolean) => void;
-  /** T340 (#967): "Your course": build your own (null), or a real course built from map data (a new game starts on it); current: the game's now */
-  course?: { options: { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number }[]; current: string | null; onPick: (id: string | null) => void } }) {
-  const [n, setN] = useState(name), [l, setL] = useState(look);
+  /** T340 (#967), T358 (#1003): "Your course": build your own, one of the featured real courses, one you downloaded, or one you found (a new game starts on it); current:
+   *  the game's now (its id and the name it shows; null: your own) */
+  course?: { featured: Featured[]; current: string | null; currentName: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec) => void } }) {
+  const [n, setN] = useState(name), [l, setL] = useState(look), [pick, setPick] = useState(false);
   return (
-    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
+    <div className="pointer-events-none absolute inset-0 z-30 flex flex-wrap items-center justify-center gap-3 overflow-y-auto p-4">
       <div className="pointer-events-auto w-[460px] max-w-full space-y-3 rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur" data-testid="who-card">
         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">A new game · You</div>
         <div className="font-display text-xl font-bold leading-tight text-[var(--gold-hi)]">Who are you?</div>
@@ -71,20 +74,13 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
             </div>
           </div>
         )}
-        {course && course.options.length > 0 && (
+        {course && (
           <div>
-            <div className="mb-1 text-xs text-slate-400">Your course <span className="text-slate-500">(a real course starts a new game on it)</span></div>
-            <div className="flex flex-col gap-1" data-testid="who-course">
-              <button className={`rounded-lg border px-2 py-1 text-left text-xs ${course.current === null ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => course.current !== null && course.onPick(null)} data-testid="who-course-own">
-                <span className="font-semibold text-white">Build your own</span> <span className="text-slate-400">· a driving range and an empty plot</span>
-              </button>
-              {course.options.map(o => (
-                <button key={o.id} className={`rounded-lg border px-2 py-1 text-left text-xs ${course.current === o.id ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => course.current !== o.id && course.onPick(o.id)} data-testid={`who-course-${o.id}`}>
-                  <span className="font-semibold text-white">{o.name}</span> <span className="text-slate-400">· {o.holes} holes, par {o.par}{o.mappedPar !== o.par ? ` (${o.mappedPar} on the map)` : ''}{o.scale ? ` · scaled to ${Math.round(o.scale * 100)}%` : ''} · {o.place}</span>
-                </button>
-              ))}
-              <span className="text-[10px] leading-tight text-slate-500">Real courses are built from map data © OpenStreetMap contributors.</span>
-            </div>
+            <div className="mb-1 text-xs text-slate-400">Your course <span className="text-slate-500">(build your own, or play a real one)</span></div>
+            <button className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-left text-xs hover:bg-white/10" onClick={() => setPick(o => !o)} aria-expanded={pick} data-testid="who-course-open">
+              <span><span className="font-semibold text-white">{course.currentName ?? 'Build your own'}</span> <span className="text-slate-400">{course.currentName ? '(from map data)' : '· a driving range and an empty plot'}</span></span>
+              <span className="shrink-0 text-amber-300">{pick ? 'Close' : 'Change or find a course ›'}</span>
+            </button>
           </div>
         )}
         <div className="flex items-baseline justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5" title="Your skills as a mid-handicap amateur: practise at the range to lower it">
@@ -94,6 +90,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
         <p className="text-xs text-slate-400">You stand beside the shack. With Walk (the walking figure on the left; Alt swaps it with Select) click the ground to walk, a person to talk, a building to look, the range to hit a bucket. WASD walk too; the arrows pan. C calls your golf cart, E gets in.</p>
         <button className="btn-gold w-full py-2 text-sm" onClick={() => onDone(n, l)} data-testid="who-go"><Icon name="people" size={18} />That's me</button>
       </div>
+      {course && pick && <CoursePicker featured={course.featured} current={course.current} onOwn={course.onOwn} onFeatured={course.onFeatured} onBuild={course.onBuild} onClose={() => setPick(false)} />}
     </div>
   );
 }

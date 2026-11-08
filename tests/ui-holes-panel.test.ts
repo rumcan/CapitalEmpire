@@ -40,6 +40,8 @@ function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[];
     holeGrowLabel: (n: number) => growReadyLabel(o.growing?.[n]),
     // T329: Edit hole's Tee sets block (TeeSets.tsx EditTees) reads the hole's tee rows: none here, so it draws nothing
     teeSetRows: () => ({ tees: [], addable: [] }),
+    // T340: the course card's map-data note (OsmNote.tsx) asks the game which real course it is laid on: none here
+    osmGame: () => null,
   } as unknown as Game;
 }
 const render = (g: Game) => renderToStaticMarkup(createElement(CoursePanel, { game: g }));

@@ -20,7 +20,11 @@ export interface JFeature {
 }
 /** the stage-1 JSON, the parts the converter reads (a fixture is the same shape with less in it) */
 export interface OsmCourseJson {
-  meta?: { attribution?: string; credit?: string; licence?: string; id?: string; place?: string; course?: { osm?: string; name?: string } };
+  meta?: {
+    attribution?: string; credit?: string; licence?: string; id?: string; place?: string; course?: { osm?: string; name?: string; tags?: Record<string, string> | null };
+    /** (T358: what the browser's import writes besides) the projection's centre, the size m, the counts by kind, where the answer came from */
+    centre?: { lat: number; lon: number }; sizeM?: [number, number]; counts?: Record<string, number>; overpass?: { server: string | null; fetchedAt: string | null };
+  };
   boundary?: JFeature;
   /** the map's features by kind. The converter reads the golf kinds ('tee' 'fairway' 'green' 'bunker' 'water_hazard' 'lateral_water_hazard' 'rough' 'hole' 'pin' 'water'
    *  'waterway'); 'cartpath', 'path' and any other kind the stage-1 script writes (T354's estate streets: 'street', lines with their `highway` tag) ride along unread until
@@ -56,8 +60,10 @@ export interface SpecNote { code: string; hole: number; text: string }
 export interface OsmCourseSpec {
   id: string; name: string; credit: string; licence: string; source: string; place: string;
   /** the real coordinates were scaled by this (1: true size; below 1: the course is too big for the 2 km map) */ scale: number;
+  /** the holes were worked out from the fairways (the map has no hole lines): a guess, never mapped data */ derived: boolean;
   /** the land (the holes, their surfaces and a margin) in tiles: width and height; the frame's origin is its north-west corner */
   w: number; h: number;
+  /** the land's north-west corner in the JSON's metres (the JSON scaled by `scale`): tile (0, 0); a tile (x, y) is at (originM[0] + 2x, originM[1] - 2y) */ originM: [number, number];
   holes: SpecHole[]; areas: SpecArea[];
   /** warnings (the build is not refused for them) and fill-ins (what the map lacked and the converter made) */
   warnings: SpecNote[]; fills: SpecNote[];
@@ -73,6 +79,7 @@ export interface OsmCourseSpec {
 /** what a map-data game saves of its course: the shipped id (the engine lays the flat map for it), the name the game shows, the place, the credit the
  *  course card and the credits show, the OSM id it came from, its holes, and its par as the game works it out (par) and as the map has it (mappedPar) */
 export interface OsmGolfInfo { id: string; name: string; place: string; credit: string; licence: string; source: string; holes: number; par: number; mappedPar: number; scale?: number;
+  /** the holes were worked out from the fairways (the map had no hole lines) */ derived?: boolean;
   /** where the entry road meets the map's edge (the flat map's highway enters there: the clubhouse parcel is on that side of the land); absent: the middle of the west edge */ entry?: OsmEntry }
 /** a point on the map's edge: tiles, and the edge it lies on */
 export interface OsmEntry { x: number; y: number; edge: 'N' | 'E' | 'S' | 'W' }
