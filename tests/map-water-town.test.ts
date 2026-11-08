@@ -84,6 +84,10 @@ test('4. the seam fade keeps out of a creek too narrow to take it; a wider creek
   const bands = fadeBands(river(), box);
   assert.deepEqual(bands.map(b => b.alpha), [...JOIN_FADE]);
   assert.ok(bands.every(b => b.within.length > 0 && b.cut.length > 0));
+  // keep: the renderer leaves out the pieces a river the course covers lies under (hidden: no fade reaches into it)
+  assert.deepEqual(fadeBands(river(), box, () => false), [], 'every piece refused: no band');
+  const kept = fadeBands(river(), box, q => q.length === 8);
+  assert.ok(kept.length === JOIN_FADE.length && kept.every(b => b.within.length > 0 && b.within.every(q => q.length === 8) && b.cut.every(q => q.length === 8)), 'only the pieces kept');
   const inside = (q: readonly number[], x: number, y: number) => (q.length === 3 ? Math.hypot(x - q[0]!, y - q[1]!) <= q[2]! : (() => { let c = false; for (let i = 0, j = 3; i < 4; j = i++) { const xi = q[2 * i]!, yi = q[2 * i + 1]!, xj = q[2 * j]!, yj = q[2 * j + 1]!; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; })());
   const tinted = (bs: typeof bands, x: number, y: number) => bs.some(b => b.within.some(q => inside(q, x, y)) && !b.cut.some(q => inside(q, x, y)));
   // the narrowest water that takes the fade: the middle is cut out of every band (no tint), the fade lies near both banks

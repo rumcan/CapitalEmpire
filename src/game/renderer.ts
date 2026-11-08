@@ -142,6 +142,13 @@ function courseCovers(c: CoursePatch, x: number, y: number): boolean {
   }
   return false;
 }
+/** T344: whether a course chunk (as drawn) hides the piece q of the map's water (map-water.ts shapes) under a surface other than water: its middle lies
+ *  there. A river the course covers is not seen (T338: the course's water brush paints on it as before), so a painted water area is not cut off it */
+function courseHides(c: CoursePatch, q: readonly number[]): boolean {
+  const x = q.length === 3 ? q[0]! : (q[0]! + q[2]! + q[4]! + q[6]!) / 4, y = q.length === 3 ? q[1]! : (q[1]! + q[3]! + q[5]! + q[7]!) / 4;
+  const s = courseSurfAt(c, x, y);
+  return s > 0 && s !== COURSE_WATER;
+}
 /** T217: an area's spill over one chunk as laid (its blades' and its shade bands' paths; null: none there), kept by chunk, blade scale and area while the
  *  ground laid before the area (others) and the course chunks are the same objects: a re-bake of the chunk (a course edit re-stales many)
  *  lays it again without reading the ground round the outline or building paths */
@@ -1014,8 +1021,8 @@ export class GroundPainter {
   /** T338/T344: the seam softened: what `draw` lays (the water of a course layer, or of a painted area) laid again on a little way into the map's
    *  water, fading (map-water.ts fadeBands: bands, each further in fainter, and none into water too narrow to take them), so the two waters'
    *  pictures blend instead of meeting on a line. `r` is the tile rect of the chunk, `b` the box the seam lies in */
-  private fadeMapWater(ctx: C2D, M: DOMMatrix, r: readonly number[], b: readonly number[], draw: () => void) {
-    const bands = fadeBands(this.mapWater, b); if (!bands.length) return;
+  private fadeMapWater(ctx: C2D, M: DOMMatrix, r: readonly number[], b: readonly number[], draw: () => void, keep?: (q: readonly number[]) => boolean) {
+    const bands = fadeBands(this.mapWater, b, keep); if (!bands.length) return;
     const within = new Path2D(); for (const q of bands[0]!.within) GroundPainter.waterPiece(within, q);
     const T = ctx.getTransform(), A = ctx.globalAlpha;
     for (const band of bands) {
@@ -2466,16 +2473,18 @@ export class GroundPainter {
       // T344 (#982): a painted water area (the town's: the classic Paint's water, the Fountain pond in town) that meets the map's river or a creek is
       // drawn off the map's water, a hair inside its edge, as the course's water is (T338): the map's water there is the one body's, and the area
       // runs up to it. Its border band stops short of the water (drawPaint), and the area is faded on into it (the same fade, none into a narrow creek)
+      // (a river the course covers is hidden: only the pieces the course leaves seen are cut and faded, courseHides)
       const aj = !this.mapWater.empty && waterTex(p.tex) ? this.areaJoinOf(p) : null, jb = aj ? GroundPainter.boxIn(aj.box, rect) : null;
-      const joined = !!jb && this.mapWater.shapes(jb[0], jb[1], jb[2], jb[3], -JOIN_INSET).length > 0;
-      if (joined) { const T = ctx.getTransform(); ctx.save(); ctx.setTransform(M); this.cutMapWater(ctx, rect, jb!, -JOIN_INSET); ctx.setTransform(T); }
+      const seen = courses.length ? (q: readonly number[]) => !courses.some(c => courseHides(c, q)) : undefined;
+      const cuts = jb ? this.mapWater.shapes(jb[0], jb[1], jb[2], jb[3], -JOIN_INSET).filter(q => !seen || seen(q)) : [], joined = !!jb && cuts.length > 0;
+      if (joined) { const T = ctx.getTransform(); ctx.save(); ctx.setTransform(M); this.cutMapWater(ctx, rect, jb!, -JOIN_INSET, cuts); ctx.setTransform(T); }
       try {
       // T204: then the tall grass's spill over its edges where the map's grass meets them (a hard area's few tufts)
       const spill = () => { if (under) this.areaSpill(ctx, rf, drawn, courses, L, M, box, under); drawn.push(p); };
       const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null, sh = areaShadow(p.paint!.sh);
       // T230: a painted water area's depth, light edge and reflections (water-look.ts), clipped to its outline; with the glint on, its gloss
       // (T344: its gloss, on the gloss mask's own canvas, kept off the map's water as well)
-      const wet = (g: C2D) => { if (waterTex(p.tex)) this.waterOver(g, SITE.paint, () => polyPath(p.pts), p.tex, lite, joined ? m => this.cutMapWater(m, rect, jb!, -JOIN_INSET) : undefined); };
+      const wet = (g: C2D) => { if (waterTex(p.tex)) this.waterOver(g, SITE.paint, () => polyPath(p.pts), p.tex, lite, joined ? m => this.cutMapWater(m, rect, jb!, -JOIN_INSET, cuts) : undefined); };
       // T247: a dirt or desert area (the range's dirt tee, desert and yard; the Paint tool's dirt and waste) with no border, no Shadow and no
       // more of an edge than a flat feather: its soft band where it meets grass (the band stands in for the feather), else its hard outline
       if (softBand && this.softTex(p.tex) && !(p.paint!.b > 0) && !sh && (!look || look === EDGE_LOOKS.flat)) {
@@ -2520,7 +2529,7 @@ export class GroundPainter {
       spill();
       } finally {
         // (the area's picture laid again, its fill alone, a little way into the map's water, fading: the pictures blend, no line at the clip's edge)
-        if (joined) { ctx.restore(); if (!lite) { const plain = { ...p, paint: { ...p.paint!, b: 0 } }; this.fadeMapWater(ctx, M, rect, jb!, () => this.drawPaint(ctx, plain, L, X0, Y0, M, Minv, box, lite, 0, true)); } }
+        if (joined) { ctx.restore(); if (!lite) { const plain = { ...p, paint: { ...p.paint!, b: 0 } }; this.fadeMapWater(ctx, M, rect, jb!, () => this.drawPaint(ctx, plain, L, X0, Y0, M, Minv, box, lite, 0, true), seen); } }
       }
     }
   }

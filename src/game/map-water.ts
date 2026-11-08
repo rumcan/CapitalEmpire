@@ -237,11 +237,13 @@ export function joinEdges(g: Grid, edges: readonly (readonly number[])[], j: Joi
 export interface FadeBand { alpha: number; within: number[][]; cut: number[][] }
 /** T344: the seam's fade over a tile box: a band for each of JOIN_FADE, each reaching JOIN_FADE_STEP deeper into the map's water than the last. The
  *  fade is drawn only into water at least FADE_MIN_WIDTH wide (a narrower creek keeps its water whole: no tint of the pond across its middle);
- *  none when no piece of the map's water in the box is that wide. The pieces are those of MapWater.shapes */
-export function fadeBands(water: MapWater, box: readonly number[]): FadeBand[] {
-  const within = water.shapes(box[0]!, box[1]!, box[2]!, box[3]!, -JOIN_INSET, FADE_MIN_WIDTH);
+ *  none when no piece of the map's water in the box is that wide. The pieces are those of MapWater.shapes; keep, when given, leaves out the pieces it
+ *  refuses (the renderer: a river the course covers is hidden, no fade reaches into it) */
+export function fadeBands(water: MapWater, box: readonly number[], keep?: (q: readonly number[]) => boolean): FadeBand[] {
+  const some = (a: number[][]) => (keep ? a.filter(keep) : a);
+  const within = some(water.shapes(box[0]!, box[1]!, box[2]!, box[3]!, -JOIN_INSET, FADE_MIN_WIDTH));
   if (!within.length) return [];
-  return JOIN_FADE.map((alpha, k) => ({ alpha, within, cut: water.shapes(box[0]!, box[1]!, box[2]!, box[3]!, -JOIN_INSET - (k + 1) * JOIN_FADE_STEP) }));
+  return JOIN_FADE.map((alpha, k) => ({ alpha, within, cut: some(water.shapes(box[0]!, box[1]!, box[2]!, box[3]!, -JOIN_INSET - (k + 1) * JOIN_FADE_STEP)) }));
 }
 
 /** T344: how a painted water area (the town's: the classic Paint's water, the Fountain pond in town) meets the map's water. box: the area's tile box
