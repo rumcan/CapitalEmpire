@@ -106,7 +106,8 @@ export function SpinBall({ game, right }: { game: Game; right: string }) {
       <p className="mt-1 text-[11px] tabular-nums text-slate-200" data-testid="spin-text">{v.text}{v.air && v.pump > 0 ? ` (+${v.pump})` : ''}</p>
       <p className="text-[10px] leading-tight text-slate-400">
         {v.air ? (v.room ? 'Click the ball or press F for more spin!' : 'Full spin for this club and lie')
-          : `Click or drag on the ball to choose the spin; in the air click (or F) to add ${Math.round(SPIN.per * 100)}% a click. Right-click: none.`}
+          : v.pumpOk ? `Click or drag on the ball to choose the spin; in the air click (or F) to add ${Math.round(SPIN.per * 100)}% a click. Right-click: none.`
+            : 'Click or drag on the ball to choose the spin. Right-click: none. (Adding spin in the air is the Mid-Flight Whisper card’s.)'}
       </p>
     </div>
   );
