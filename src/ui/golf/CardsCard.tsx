@@ -31,12 +31,15 @@ export function PullBanner({ earn, onOpen }: { earn: Earn; onOpen?: () => void }
 }
 
 /** a card as a square-ish tile: its picture, its name and a bar in its rarity's colour; locked (a shape and a ?) when you have not won it */
-function Tile({ t, on, slot, onClick, testid }: { t: CardTile; on: boolean; slot?: number; onClick: () => void; testid: string }) {
+function Tile({ t, on, slot, onClick, testid, mark = false }: { t: CardTile; on: boolean; slot?: number; onClick: () => void; testid: string; /** the collection's tile of a card in play says so */ mark?: boolean }) {
   return (
     <button className={`group flex min-w-0 flex-col overflow-hidden rounded-lg border bg-slate-900/70 text-left ${on ? 'ring-2 ring-amber-300/80' : ''} ${t.owned ? 'hover:brightness-125' : 'opacity-80'}`}
       style={{ borderColor: t.owned ? t.color : `${t.color}44` }} onClick={onClick} data-testid={testid} aria-label={t.owned ? t.name : `${t.rarityName} card, not won yet`}
-      title={t.owned ? `${t.name} · ${t.rarityName}${slot !== undefined && slot >= 0 ? ' · in play' : ''}` : `${t.rarityName}: not won yet`}>
-      <CardArt glyph={t.glyph} art={t.art} color={t.color} locked={!t.owned} className="aspect-[16/10] w-full" />
+      title={t.owned ? `${t.name} · ${t.rarityName}${(slot ?? t.slot) >= 0 ? ' · in play' : ''}` : `${t.rarityName}: not won yet`}>
+      <div className="relative">
+        <CardArt glyph={t.glyph} art={t.art} color={t.color} locked={!t.owned} className="aspect-[16/10] w-full" />
+        {mark && t.slot >= 0 && <span className="absolute left-1 top-1 rounded bg-black/75 px-1 text-[9px] font-semibold uppercase leading-4 text-amber-200" data-testid={`cards-inplay-${t.id}`}>In play</span>}
+      </div>
       <span className="block min-h-[1.9rem] px-1 pt-0.5 text-[10px] font-semibold leading-tight text-slate-100">{t.owned ? t.name : '???'}</span>
       <span className="block h-[3px] w-full" style={{ background: t.color }} />
     </button>
@@ -115,7 +118,7 @@ export function CardsCard({ view, onClose, onEquip, onUnequip, onMachine, right 
         <div className="space-y-1">
           <div className="text-[11px] uppercase text-slate-400">Collection</div>
           <div className="grid grid-cols-4 gap-1.5" data-testid="cards-grid">
-            {view.tiles.map(c => <Tile key={c.id} t={c} on={sel === c.id} onClick={() => setSel(sel === c.id ? null : c.id)} testid={`cards-tile-${c.id}`} />)}
+            {view.tiles.map(c => <Tile key={c.id} t={c} on={sel === c.id} mark onClick={() => setSel(sel === c.id ? null : c.id)} testid={`cards-tile-${c.id}`} />)}
           </div>
         </div>
         <p className="text-[11px] text-slate-400">Win a title, finish in the top places or win a money match to earn a pull, then open it at the vending machine. Click a card for what it does. Cards swap between rounds, never in one.</p>

@@ -904,7 +904,7 @@ export default function App() {
               onClose={() => game.openBagCard(false)} onUpgrade={(c, v) => game.upgradeBagClub(c, v)} onFit={(k, id) => game.fitBagPart(k, id)} onThird={w => game.setBagThird(w)} />;
           })()}
           {(() => { // T336: your cards, where the bag card stands (one of the two is open at a time): left of the profile card and of the card on the right; a card's detail opens to its left
-            const cv = game.cardsCard(); if (!cv) return null;
+            const cv = game.vendingOpen ? null : game.cardsCard(); if (!cv) return null; // (not behind the machine: its collection would show the prize before the reel does)
             const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace || game.holeCardHole !== null, me = game.playerCardOpen;
             return <CardsCard view={cv} right={me ? (side ? (game.panel ? 'right-[63rem]' : 'right-[45rem]') : game.panel ? 'right-[41rem]' : 'right-[23rem]') : side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'}
               onClose={() => game.openCardsCard(false)} onEquip={(id, slot) => game.equipCard(id, slot)} onUnequip={slot => game.unequipCard(slot)} onMachine={() => game.openVending(true)} />;

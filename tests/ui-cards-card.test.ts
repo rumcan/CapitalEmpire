@@ -35,7 +35,8 @@ test('cards card: the 8 slots and the whole collection (what you have in colour,
   assert.equal((h.match(/data-testid="cards-slot-\d"/g) ?? []).length, 8, 'eight slots'); assert.equal((h.match(/data-testid="cards-tile-/g) ?? []).length, CARDS.length, 'every card of the catalogue is a tile');
   assert.ok(/3 of \d+ collected · 8 slots/.test(h), 'the count');
   assert.ok(h.includes('data-testid="pull-gold"') && /Gold ×1/.test(h) && /Bronze ×2/.test(h) && !h.includes('data-testid="pull-silver"'), 'the pulls waiting');
-  assert.ok(/In play · 2 of 8/.test(h), 'two in play'); assert.ok(/Power Mash/.test(h) && /Lie-Angle Balanced Flatstick/.test(h), 'the cards you have show their names');
+  assert.ok(/In play · 2 of 8/.test(h), 'two in play');
+  assert.ok(h.includes('data-testid="cards-inplay-power-mash"') && h.includes('data-testid="cards-inplay-flatstick"') && !h.includes('data-testid="cards-inplay-lead-tape"'), 'the collection marks the cards in play (and only those)'); assert.ok(/Power Mash/.test(h) && /Lie-Angle Balanced Flatstick/.test(h), 'the cards you have show their names');
   assert.equal((h.match(/\?\?\?/g) ?? []).length, CARDS.length - 3, 'the others are locked: no name, a ???');
   assert.ok(!h.includes('Long Drive Shaft'), 'a card you have not won shows no name'); assert.ok(/Stand In for card art/.test(h), 'labelled stand-ins');
   assert.ok(!/overflow-x-(auto|scroll)/.test(h) && /overflow-x-hidden/.test(h), 'never a sideways scrollbar');
@@ -98,6 +99,9 @@ test('vending machine: a spin lays the reel (the prize at the stop tile), and th
   const spinning = createSpin(1, 'gold', cardPrize(flat), r(2)), sp = machine(c, spinning);
   assert.equal((sp.match(/class="vm-tile/g) ?? []).length, spinning.reel.length); assert.ok(/The machine is choosing your prize/.test(sp) && !sp.includes('data-testid="vending-result"') && !sp.includes('vending-winner-tile'), 'turning: no result yet');
   assert.ok(/disabled=""[^>]*data-testid="vending-spin"|data-testid="vending-spin"[^>]*disabled=""/.test(sp) && /The machine is choosing/.test(sp), 'Spin is off while it turns');
+  // the prize is the player's the moment the pull is spent, but the tally and the odds wait for the reel: while it turns they do not count it
+  const turning = machine({ ...addCard(c, flat.id).cards, opened: 1 }, spinning, { initialOdds: true });
+  assert.ok(/0 of \d+ cards · 0 opened/.test(turning), 'turning: the tally does not count the prize yet'); assert.ok(/3 of 3 cards you do not have/.test(turning.replace(/\s+/g, ' ')) || /\d of 3 cards you do not have/.test(turning), 'nor do the odds');
   const landed = machine(addCard(c, flat.id).cards, won(cardPrize(flat))), tiles = landed.split('class="vm-tile');
   assert.ok(landed.includes('data-testid="vending-winner-tile"') && tiles[REEL_STOP + 1]!.includes('vm-winner'), 'the winning tile is the one at the stop');
   assert.ok(/You won: Lie-Angle Balanced Flatstick/.test(landed) && /data-testid="vending-result-name"[^>]*>Lie-Angle Balanced Flatstick/.test(landed) && /New epic card/.test(landed) && /Inspired by:/.test(landed) && /data-testid="vending-equip"/.test(landed), 'the card’s face and Equip');

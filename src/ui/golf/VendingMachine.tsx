@@ -131,9 +131,14 @@ export function VendingMachine({ v, onSpin, onSettle, onEquip, onClose, onBag, i
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // Escape leaves (not while the reel turns)
+  // Escape leaves (not while the reel turns); the game's own keys (pan, speed, the cart...) wait while the machine is open: a key that is not the machine's is not passed on (its default is untouched, so Tab, Enter and Space
+  // still work the buttons; key-ups pass, so a key held when it opened is let go of)
   useEffect(() => {
-    const keys = (e: KeyboardEvent) => { if (e.key === 'Escape' && !spinning) { e.preventDefault(); e.stopImmediatePropagation(); onClose(); } };
+    const keys = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); if (!spinning) onClose(); return; }
+      if (e.ctrlKey || e.metaKey || e.altKey || e.key === 'Tab' || e.key === 'Enter' || /^F\d+$/.test(e.key)) return;
+      e.stopImmediatePropagation();
+    };
     window.addEventListener('keydown', keys, true);
     return () => window.removeEventListener('keydown', keys, true);
   }, [spinning, onClose]);

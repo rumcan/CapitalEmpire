@@ -47,9 +47,12 @@ export interface VendingView {
 export function vendingView(c: CardsSave | undefined, spin: VendingSpin | null, ctx: { busy: string | null; vouchers: number }): VendingView {
   const own = new Set(c?.own ?? []), spinning = spin?.status === 'spinning', best = bestGrade(c);
   const w = spin && spin.status === 'won' && spin.winner.kind === 'card' ? spin.winner.card : null;
+  // (the prize is yours the moment the pull is spent, but the reel has not shown it: the tally and the odds wait with it, so they give nothing away)
+  const pw = spinning ? spin!.winner : null;
+  if (pw?.kind === 'card') own.delete(pw.card.id);
   return {
     spin, pulls: c ? { ...c.pulls } : { bronze: 0, silver: 0, gold: 0 }, pullTotal: pullCount(c), best, odds: Object.fromEntries(GRADES.map(g => [g, oddsView(own, g)])) as VendingView['odds'],
-    owned: own.size, total: CARDS.length, junk: c?.junk ?? 0, opened: c?.opened ?? 0, vouchers: ctx.vouchers,
+    owned: own.size, total: CARDS.length, junk: Math.max(0, (c?.junk ?? 0) - (pw?.kind === 'dud' ? 1 : 0)), opened: Math.max(0, (c?.opened ?? 0) - (pw ? 1 : 0)), vouchers: Math.max(0, ctx.vouchers - (pw?.kind === 'voucher' ? 1 : 0)),
     why: spinning ? 'The machine is choosing your prize' : best ? null : 'No pulls waiting: win a title, finish well or win a money match',
     won: w ? { tile: tileOf(w, c, ctx.busy), why: equipWhy(c, w.id, undefined, ctx.busy) } : null,
   };

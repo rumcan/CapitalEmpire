@@ -51,7 +51,7 @@ try {
   expect(await page.locator('[data-testid=cards-chip]').isVisible(), 'the Cards chip is in the top bar');
   rep.start = await page.evaluate(() => { const g = window.__game, p = g.playerNow(); return { cards: p.cards, pulls: g.cardsPulls() }; });
   expect(rep.start.cards && rep.start.cards.own.length === 0 && !rep.start.cards.legacy && rep.start.pulls === 0, 'a new game starts with empty cards (not legacy) and no pulls');
-  rep.frames.closed = await frames(2500);
+  rep.frames.warmup = await frames(2500); // (the game still settling after its load: not a baseline)
   await page.evaluate(() => { const g = window.__game; g.devPull('gold', 1); g.devPull('silver', 2); g.devPull('bronze', 3); });
   await sleep(400);
   expect(await page.locator('[data-testid=cards-badge]').textContent() === '6', 'the chip’s badge counts six pulls waiting');
@@ -65,6 +65,8 @@ try {
   expect(rep.shop.ok, 'the pro shop is open at the old nine: the machine can open');
   await sleep(300);
 
+  // the baseline: the game settled, the Cards card open, the machine closed
+  await sleep(4000); rep.frames.machineClosed = await frames(3000);
   // ---- 3 and 4 and 5: the machine. A real click on Spin (gold first: the best pull), the reel mid-way, then landed
   await page.click('[data-testid=cards-machine]'); await page.waitForSelector('[data-testid=vending-machine]', { timeout: 20000 });
   await sleep(400); await hideToasts();
@@ -97,12 +99,16 @@ try {
   await page.screenshot({ path: join(out, '5c-vending-odds.png') });
   await page.keyboard.press('Escape'); await sleep(300);
   expect(!(await page.evaluate(() => window.__game.vendingOpen)), 'Escape closes the machine');
+  await sleep(1500); rep.frames.machineClosedAfter = await frames(3000);
+  // the cost of the machine: the spinning reel against the same game with the machine closed (the frames over 25 ms, the 95th percentile)
+  { const a = rep.frames.machineClosed, b = rep.frames.spinning; expect(b.p95 <= Math.max(a.p95, 17.5) + 1 && b.over25 <= a.over25 + 1, `the spinning reel costs the game no frame: p95 ${b.p95} ms against ${a.p95} ms with the machine closed, ${b.over25} frames over 25 ms against ${a.over25}`); }
 
   // ---- 1b. the cards: eight in the slots, the rest in the collection
   await page.evaluate(() => { const g = window.__game; g.devCards(['long-drive-shaft', 'flatstick', 'wonder-wedge', 'lead-tape', 'hybrid-hero', 'tour-van-fitting', 'launch-monitor', 'pro-in-a-bottle', 'power-mash', 'hot-driver', 'range-rat'], false); });
   await sleep(300);
   rep.bagBefore = await page.evaluate(() => { const g = window.__game; g.openBagCard(true); const c = g.bagCard().rows.find(r => r.club === 'driver').carryM; g.openBagCard(false); return Math.round(c); });
-  // equip eight through the engine's own rules (the first free slot each time), skipping the ones that are already in
+  // equip eight through the engine's own rules (the first free slot each time), after the slots are cleared (the first spin's Equip put a card in one)
+  await page.evaluate(() => { const g = window.__game; for (let i = 0; i < 8; i++) if (g.golf.player.cards.slots[i]) g.unequipCard(i); });
   await page.evaluate(() => { const g = window.__game; for (const id of ['long-drive-shaft', 'flatstick', 'wonder-wedge', 'lead-tape', 'hybrid-hero', 'tour-van-fitting', 'launch-monitor', 'pro-in-a-bottle']) g.equipCard(id); });
   await sleep(300);
   rep.slots = await page.evaluate(() => window.__game.golf.player.cards.slots);
@@ -124,7 +130,7 @@ try {
   await sleep(800);
   rep.tee = await page.evaluate(() => { const g = window.__game; return { club: g.shotState().input.club, carry: Math.round(g.shotCarry()), can: g.shotCan(), cards: g.shotCards().map(c => c.name + (c.here ? '*' : '')) }; });
   log('tee', JSON.stringify(rep.tee));
-  expect(rep.tee.club === 'driver' && rep.tee.carry >= rep.bagAfter - 1 && rep.tee.cards.length === 8, 'the panel’s full carry is the card-boosted one, with eight chips');
+  expect(rep.tee.club === 'driver' && rep.tee.carry > rep.bagBefore * 1.15 && rep.tee.cards.length === 8, `the panel’s full carry (${rep.tee.carry} m, under a round's pressure) is the card-boosted one: ${rep.bagBefore} m without them; eight chips`);
   expect(!rep.tee.can.boost && !rep.tee.can.airspin, 'a new game without Power Mash or the Whisper: both moves are locked');
   const hint = await page.locator('[data-testid=shot-panel]').innerText();
   expect(!/Space during the swing/.test(hint), 'locked: the panel says nothing of Space');
