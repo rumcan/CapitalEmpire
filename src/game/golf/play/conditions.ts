@@ -55,11 +55,12 @@ export function fieldEnv(c: Conditions, kindAt: ((x: number, y: number) => LieKi
  *  after the lie, the slope and the wind; sideM where the landing is off the aim's line (+ right: the wind's drift and the slope's pull); windCarryM and windDriftM
  *  what the wind alone adds (metres); spread the factor on the scatter (the lie's and the slope's) */
 export interface ShotPreview { carryM: number; sideM: number; spread: number; windCarryM: number; windDriftM: number; wind: WindEffect }
-export function previewShot(club: Club, aimedM: number, ux: number, uy: number, env: ShotEnv | null | undefined, shape?: ShapeFx | null): ShotPreview {
-  const lx = LIE_FX[env?.lie ?? 'fairway'], sl = slopeEffect(env?.slope), carry0 = aimedM * lx.carry * sl.carry * (shape ? shape.carry : 1), pull = sl.deg * Math.PI / 180 + (shape ? shape.curve : 0), flight = shape ? shape.wind : 1;
+export function previewShot(club: Club, aimedM: number, ux: number, uy: number, env: ShotEnv | null | undefined, shape?: ShapeFx | null, windK = 1, slopeK = 1): ShotPreview {
+  // (T337: `windK` and `slopeK`, the factors his mods put on the wind and on the slope under the ball: the Wind Whisperer's and Slope Mode's halves; 1: as before)
+  const lx = LIE_FX[env?.lie ?? 'fairway'], sl = slopeEffect(slopeK !== 1 && env?.slope ? { up: env.slope.up * slopeK, across: env.slope.across * slopeK } : env?.slope), carry0 = aimedM * lx.carry * sl.carry * (shape ? shape.carry : 1), pull = sl.deg * Math.PI / 180 + (shape ? shape.curve : 0), flight = shape ? shape.wind : 1;
   // the wind meets the shot along the line it flies (the aim turned by the slope's pull)
   const c = Math.cos(pull), s = Math.sin(pull), vx = ux * c - uy * s, vy = ux * s + uy * c;
-  const wind = windEffect(env?.wind, club, vx, vy, lx.high * flight), carryM = carry0 * wind.carry, windDriftM = wind.drift * carryM;
+  const wind = windEffect(env?.wind, club, vx, vy, lx.high * flight * windK), carryM = carry0 * wind.carry, windDriftM = wind.drift * carryM;
   return { carryM, sideM: windDriftM + carryM * Math.sin(pull), spread: lx.spread * sl.spread * (shape ? shape.spread : 1), windCarryM: carryM - carry0, windDriftM, wind };
 }
 
@@ -88,10 +89,10 @@ export function lieView(kind: LieKind, club: Club): LieView {
 
 /** one line for what the wind did to a shot that was played (the report's tail): "wind -8 m, 5 m right"; null when there was none to speak of (a calm, a putt, under
  *  a metre each way). `from` and `at` are the strike and the landing (tiles) */
-export function windNote(env: ShotEnv | null | undefined, club: Club, from: Pt, at: Pt): string | null {
+export function windNote(env: ShotEnv | null | undefined, club: Club, from: Pt, at: Pt, windK = 1): string | null {
   if (!env?.wind || !(env.wind.mph >= CALM_MPH)) return null;
   const C = Math.hypot(at.x - from.x, at.y - from.y) * TILE_M; if (C < 5) return null;
-  const ux = (at.x - from.x) / (C / TILE_M), uy = (at.y - from.y) / (C / TILE_M), e = windEffect(env.wind, club, ux, uy, LIE_FX[env.lie ?? 'fairway'].high);
+  const ux = (at.x - from.x) / (C / TILE_M), uy = (at.y - from.y) / (C / TILE_M), e = windEffect(env.wind, club, ux, uy, LIE_FX[env.lie ?? 'fairway'].high * windK);
   const along = C - C / e.carry, side = e.drift * C, parts: string[] = [];
   if (Math.abs(along) >= 1) parts.push(`${along > 0 ? '+' : '-'}${Math.abs(Math.round(along))} m`);
   if (Math.abs(side) >= 1) parts.push(`${Math.abs(Math.round(side))} m ${side > 0 ? 'right' : 'left'}`);

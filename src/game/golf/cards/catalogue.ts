@@ -25,16 +25,23 @@ export type Rarity = 0 | 1 | 2 | 3 | 4;
 
 /** the pictures a card can have: a drawn glyph (CardArt), or a TrickOrTreat treat's painting (`art`) */
 export type Glyph = 'wedge' | 'driver' | 'putter' | 'hybrid' | 'bucket' | 'sticks' | 'coin' | 'tape' | 'button' | 'hoop' | 'whisper' | 'van' | 'monitor' | 'bottle' | 'flame' | 'star'
-  | 'tee' | 'retriever' | 'pencil' | 'divot' | 'ball' | 'visor' | 'sunscreen' | 'bag';
+  | 'tee' | 'retriever' | 'pencil' | 'divot' | 'ball' | 'visor' | 'sunscreen' | 'bag'
+  | 'flag' | 'beer' | 'dice' | 'wind' | 'slope' | 'robot' | 'mic' | 'trophy' | 'eye' | 'eraser' | 'heart' | 'laser';
+
+/** T337: the economy a card changes, each a factor (1: none): what a money match you win pays, how big a stake your opponents take (their purse), what a title's prize pays, what your pro's lesson adds to practice */
+export interface CardEco { matchPay: number; matchStake: number; prize: number; lesson: number }
+export const ECO_KEYS: readonly (keyof CardEco)[] = ['matchPay', 'matchStake', 'prize', 'lesson'];
 
 /** what a card does, as data */
 export interface CardFx {
-  /** stat changes and factors on the shot (the bag's own `Mod`s: stats added in 0..1 units, factors for the carry, scatter, sweet spot, marker, run, spin, feel, line, a mishit chance, luck), for every club or the listed ones */
+  /** stat changes and factors on the shot (the bag's own `Mod`s: stats added in 0..1 units, factors for the carry, scatter, sweet spot, marker, run, spin, feel, line, the wind, the swing's miss, the slope, a mishit chance, luck), for every club or the listed ones, and for a moment (`when`) */
   mods?: ReadonlyArray<Omit<Mod, 'id' | 'name'>>;
   /** the mechanics it unlocks (mods.ts MechId) */
   mech?: readonly MechId[];
   /** a factor on what your practice sessions gain (1.5: half as much again) */
   practice?: number;
+  /** T337: the economy (CardEco), the factors it changes */
+  eco?: Partial<CardEco>;
 }
 /** a card */
 export interface CardDef {
@@ -109,6 +116,111 @@ export const CARDS: readonly CardDef[] = [
   { id: 'hot-driver', name: 'Non-Conforming Driver', rarity: 4, glyph: 'flame', fx: { mods: [{ clubs: ['driver'], carry: 1.18, sweet: 1.15 }] }, banned: 'competition',
     text: 'A face hot as a pan: +18% driver carry and a wider sweet spot. Banned in competition: the Club Championship, the Mayor’s Cup and the tournament.', flavour: 'The ball leaves the face like a rifle shot. The rules officials leave the room.',
     inspiration: 'The "illegally hot driver" tests where a ball comes off the face like a rifle shot.' },
+  // ---- T337 (#963): the rest of the catalogue ----
+  // common
+  { id: 'putting-mirror', name: 'Putting Mirror', rarity: 0, glyph: 'putter', fx: { mods: [{ clubs: ['putter'], line: 1.15, sweet: 1.1 }] },
+    text: 'A little mirror on the green: your eyes are square to the line, so the aim window is wider.', flavour: 'Hello, handsome. Now hold still.',
+    inspiration: 'The putting-mirror training aids that sit on every practice green.' },
+  { id: 'routine-card', name: 'Pre-Shot Routine Card', rarity: 0, glyph: 'pencil', fx: { mods: [{ sweet: 1.1, speed: 0.95 }] },
+    text: 'Two practice swings, one deep breath, one waggle: a slower marker and a wider sweet spot on every club.', flavour: 'Breathe in. Waggle. Breathe out. Forget the water.',
+    inspiration: 'The pre-shot routine videos: count your breaths, count your waggles.' },
+  { id: 'tall-tees', name: 'Tall Tees', rarity: 0, glyph: 'tee', fx: { mods: [{ when: 'tee', carry: 1.04, spread: 0.97 }] },
+    text: 'Tee it high and let it fly: +4% carry and a tighter spread, but only off the tee.', flavour: 'Reaching for the sky since 1985.',
+    inspiration: 'The "tee it higher" driver tips, and the bags of a hundred extra-long tees.' },
+  { id: 'hackout-boots', name: 'Hack-Out Boots', rarity: 0, glyph: 'divot', fx: { mods: [{ when: 'rough', carry: 1.1, spread: 0.85 }] },
+    text: 'Heavy boots and a heavier swing: from the rough every club carries 10% further and scatters 15% less.', flavour: 'The long grass does not bite. It is bitten.',
+    inspiration: 'The "play it from the worst lie in the park" challenge videos.' },
+  { id: 'weighted-donut', name: 'Weighted Donut', rarity: 0, glyph: 'hoop', fx: { mods: [{ stats: { power: 0.06 } }] },
+    text: 'A lead ring on the club for practice swings: +6 power, and a strange look from the starter.', flavour: 'Heavier on the way up. Lighter on the way home.',
+    inspiration: 'The weighted-donut warm-up that every swing-speed video swears by.' },
+  // uncommon
+  { id: 'yardage-book', name: 'Tour Caddie’s Yardage Book', rarity: 1, glyph: 'pencil', fx: { mods: [{ stats: { accuracy: 0.06, short: 0.06 } }] },
+    text: 'Every sprinkler head and slope written in tiny pencil: +6 accuracy and +6 wedges.', flavour: 'Page 14 has a coffee ring and the answer.',
+    inspiration: 'The tour caddies’ yardage books, and the reviewers who photograph every page.' },
+  { id: 'persimmon', name: 'Dad’s Old Persimmon', rarity: 1, glyph: 'driver', fx: { mods: [{ clubs: ['wood'], carry: 0.97, sweet: 1.25, roll: 1.2 }] },
+    text: 'A wooden-headed driver from the garage: a little shorter, a much wider sweet spot, and it runs on.', flavour: 'It sounds like someone knocking. It never misses.',
+    inspiration: 'The classic wooden woods that dads keep in the garage, and the reviewers who finally try one.' },
+  { id: 'tour-balls', name: 'Tour Issue Balls', rarity: 1, glyph: 'ball', fx: { mods: [{ spin: 1.15, roll: 0.95, carry: 1.01 }] },
+    text: 'Soft covers by the dozen: every club takes 15% more spin, runs a little less and carries a touch further.', flavour: 'Twelve of them. Eleven will be lost by Tuesday.',
+    inspiration: 'The ball-testing videos with a robot, a hundred balls and one very small chart.' },
+  { id: 'rocket-balls', name: 'Two-Piece Rocket Balls', rarity: 1, glyph: 'ball', fx: { mods: [{ carry: 1.03, spin: 0.8, roll: 1.1 }] },
+    text: 'A hard cover and a hot core: +3% carry and more run, with less spin to hold the green.', flavour: 'Guaranteed not to cut. Not guaranteed to stop.',
+    inspiration: 'The "distance ball" reviews: a hundred yards past the pro, and none of it on the green.' },
+  { id: 'bunker-rake', name: 'Rake of Truth', rarity: 1, glyph: 'divot', fx: { mods: [{ when: 'bunker', carry: 1.15, spread: 0.8, mishit: -0.03 }] },
+    text: 'The sand tells the truth: from a bunker every club carries 15% further, scatters 20% less and mishits three in a hundred less.', flavour: 'Open the face. Trust the sand. Rake it after.',
+    inspiration: 'The bunker-escape lessons: open the face and splash it out.' },
+  { id: 'laser-rangefinder', name: 'Laser Rangefinder', rarity: 1, glyph: 'laser', fx: { mech: ['laser'] },
+    text: 'Unlocks the laser: the panel gives the distance to the pin to a tenth of a metre, and the carry to water, sand and the green along your line.', flavour: 'Beep. 143.6. Beep. Still 143.6.',
+    inspiration: 'The laser rangefinders every golf-gear review compares, and the pin-seeking jolt.' },
+  { id: 'fairway-finder', name: 'Fairway Finder', rarity: 1, glyph: 'flag', banned: 'competition', fx: { mech: ['finder'] },
+    text: 'A tee shot that ends up in the rough rolls back to the fairway three times in ten.', flavour: 'It is not luck. It is a very small magnet in the tee.',
+    inspiration: 'The magnetic tee gadgets that promise to find the short grass.' },
+  { id: 'cold-beer', name: 'Cold Beer, Hot Hands', rarity: 1, glyph: 'beer', fx: { mech: ['hands'] },
+    text: 'After a birdie or better in your own round your nerve is +20 for the next two holes.', flavour: 'One cold one on the 9th tee. Do not tell the pro.',
+    inspiration: 'The "one drink per birdie" challenge rounds.' },
+  { id: 'lesson-book', name: 'Lesson Voucher Book', rarity: 1, glyph: 'bag', fx: { eco: { lesson: 2 } },
+    text: 'A book of lesson vouchers: a lesson from your pro adds double to the next practice session.', flavour: 'Ten lessons for the price of eight. Five used.',
+    inspiration: 'The lesson packages that every driving range sells in a book of tickets.' },
+  { id: 'gamblers-dice', name: 'Gambler’s Dice', rarity: 1, glyph: 'dice', fx: { mods: [{ clubs: ['putter'], luck: 0.5, line: 0.95 }] },
+    text: 'Roll them on the green: now and then a bad putt drops anyway, and now and then a good one lips out.', flavour: 'Snake eyes. Putt drops anyway.',
+    inspiration: 'The skins-game bar bets, and the putt that always seems to drop on the 18th.' },
+  // rare
+  { id: 'slow-mo-app', name: 'Slow-Mo Swing App', rarity: 2, glyph: 'monitor', fx: { mods: [{ speed: 0.85, sweet: 1.05 }] },
+    text: 'Your swing in slow motion on your phone: the marker runs 15% slower on every club, with a slightly wider sweet spot.', flavour: 'Frame 41. There. That is where it all went wrong.',
+    inspiration: 'The swing-analysis apps with a drawn line and a free trial.' },
+  { id: 'stimp-nerd', name: 'Stimpmeter Nerd', rarity: 2, glyph: 'putter', fx: { mods: [{ clubs: ['putter'], feel: 1.25, sweet: 1.1 }] },
+    text: 'He measures every green before the round: the pace window is 25% wider and the leave 25% closer.', flavour: '"It is a ten today." He has said that before.',
+    inspiration: 'The green-speed nerds with a ramp, a ball and a notebook.' },
+  { id: 'wind-whisperer', name: 'Wind Whisperer', rarity: 2, glyph: 'wind', fx: { mods: [{ wind: 0.5 }] },
+    text: 'The wind affects your ball half as much: half the headwind, half the tailwind, half the drift.', flavour: 'It is not that the wind is kind. It is that you are not listening.',
+    inspiration: 'The links-golf videos where a pro plays a stinger into a gale.' },
+  { id: 'slope-mode', name: 'Slope Mode', rarity: 2, glyph: 'slope', banned: 'competition', fx: { mech: ['slope'], mods: [{ slope: 0.5 }] },
+    text: 'Unlocks plays-like with elevation: the panel gives the rise to the pin, and the slope under the ball costs you half as much.', flavour: 'The hill is a number now. Numbers are polite.',
+    inspiration: 'The slope-adjusted rangefinders, and the one switch that makes them illegal.' },
+  { id: 'pace-robot', name: 'Pace Putting Robot', rarity: 2, glyph: 'robot', fx: { mech: ['pace'], mods: [{ clubs: ['putter'], feel: 1.3 }] },
+    text: 'Unlocks the pace window: the putting meter shows where to stop the power so the putt can still drop, and your feel is 30% better.', flavour: 'BEEP. SPEED: PERFECT. BEEP. SPEED: YOU.',
+    inspiration: 'The putting robots that roll a thousand putts to find the perfect pace.' },
+  { id: 'mic-caddie', name: 'Mic’d-Up Caddie', rarity: 2, glyph: 'mic', fx: { mech: ['caddie'], mods: [{ when: 'follow', stats: { driving: 0.05, irons: 0.05, short: 0.05, putting: 0.05, power: 0.05, accuracy: 0.05, touch: 0.05 } }] },
+    text: 'Unlocks the caddie: he says the club and the line on the panel, and when you play his club on his line you are +5 on every skill and stat for that shot.', flavour: '"Trust me. I have seen this one break left all day."',
+    inspiration: 'The mic’d-up caddie videos: every doubt, every number, every "good shot".' },
+  { id: 'skins-hustler', name: 'Skins Hustler', rarity: 2, glyph: 'coin', fx: { eco: { matchPay: 2, matchStake: 2 } },
+    text: 'A money match you win pays double (the side bets), and your opponents carry twice the purse: they accept bigger stakes.', flavour: '"Loser buys. Winner takes the crowd."',
+    inspiration: 'The skins games with a hat full of notes and a lot of friendly trash talk.' },
+  { id: 'deck-driver', name: 'Driver Off the Deck', rarity: 2, glyph: 'driver', fx: { mech: ['deck'], mods: [{ clubs: ['driver'], when: 'deck', carry: 0.93, roll: 1.7, wind: 0.6, spread: 0.8, mishit: -0.02 }] },
+    text: 'Unlocks the driver off the fairway: a lower flight (7% less carry, the wind catches it 40% less), a long run and 20% less scatter.', flavour: 'Take a breath. Pick the club that scares you.',
+    inspiration: 'The "driver off the deck" challenge videos.' },
+  { id: 'scramble-captain', name: 'Scramble Captain', rarity: 2, glyph: 'star', banned: 'competition', fx: { mech: ['scramble'] },
+    text: 'Once on each nine, after a tee shot in your own round, hit a second ball: the better of the two stands. Not for competition.', flavour: '"We take the best one. We always take the best one."',
+    inspiration: 'The scramble format of every charity day.' },
+  { id: 'sponsor-tent', name: 'Sponsor Tent', rarity: 2, glyph: 'trophy', fx: { eco: { prize: 1.5 } },
+    text: 'A sponsor with a tent and a chequebook: a title’s prize money is half as much again.', flavour: 'A big cheque. A bigger photo.',
+    inspiration: 'The sponsor tents at every pro-am and their giant cardboard cheques.' },
+  // epic
+  { id: 'carbon-bag', name: 'Carbon Everything', rarity: 3, glyph: 'bag', fx: { mods: [{ carry: 1.04, sweet: 1.1, speed: 0.93 }] },
+    text: 'Carbon shafts, a carbon bag, a carbon fibre tee: every club carries 4% further, with a wider sweet spot and a slower marker.', flavour: 'Lighter by a pound. Heavier by a lot of money.',
+    inspiration: 'The all-carbon equipment reviews, and the wallet that reviewed them.' },
+  { id: 'putter-whisperer', name: 'The Hole-Whisperer’s Putter', rarity: 3, glyph: 'putter', fx: { mods: [{ clubs: ['putter'], feel: 1.3, line: 1.3, luck: 0.2 }] },
+    text: 'It talks to the hole: a wider pace window, a wider line window, and now and then a lucky drop.', flavour: 'The cup leans in. Slightly.',
+    inspiration: 'The putter-fitting videos where a stranger finds the one true putter.' },
+  { id: 'read-the-feet', name: 'Read the Feet', rarity: 3, glyph: 'eye', fx: { mech: ['read'], mods: [{ clubs: ['putter'], line: 1.3 }] },
+    text: 'Unlocks the read: on every putt the panel says how the green breaks (left to right or right to left) and whether it runs uphill or downhill, and the line window is 30% wider.', flavour: 'Stand, feel, lean. The green tells you where.',
+    inspiration: 'The foot-read green-reading method: feel the slope through your soles, find the aim point.' },
+  { id: 'trick-shot', name: 'Backyard Trick Shot', rarity: 3, glyph: 'star', art: 'yoyo', fx: { mech: ['trick'] },
+    text: 'Unlocks the flop and the bump-and-run from any lie: a wedge plays out of the rough, the sand or the fescue as if it sat on the fairway, and a short one now and then drops.', flavour: 'Do not try this at home. Try it at the club.',
+    inspiration: 'The trick-shot channels: flops over cars, bump-and-runs off the cart path.' },
+  // legendary
+  { id: 'snowman-eraser', name: 'The Snowman Eraser', rarity: 4, glyph: 'eraser', banned: 'competition', fx: { mech: ['eraser'] },
+    text: 'Once a round, in your own round, a double bogey or worse on a hole is rubbed out to a bogey.', flavour: 'There was no eight. Nobody saw an eight.',
+    inspiration: 'The "pencil-whipped" scorecards of every Saturday four-ball.' },
+  { id: 'self-correcting-ball', name: 'Self-Correcting Ball', rarity: 4, glyph: 'ball', banned: 'competition', fx: { mods: [{ miss: 0.5 }] },
+    text: 'The ball curls back to the line: every miss from the swing meter is half as big, hooks and slices included. Banned in competition.', flavour: 'It knows where you meant to hit it. It is judging you.',
+    inspiration: 'The anti-slice "self-correcting" balls from the late-night adverts.' },
+  { id: 'ace-magnet', name: 'Ace Magnet', rarity: 4, glyph: 'flag', banned: 'competition', fx: { mech: ['ace'] },
+    text: 'On a par 3, a tee shot that finishes within 6 m of the pin drops one time in five.', flavour: 'The cup has a rare-earth magnet. Do not tell the committee.',
+    inspiration: 'The hole-in-one insurance hats, and the grandmother who aced the 12th.' },
+  { id: 'clutch-gene', name: 'Clutch Gene', rarity: 4, glyph: 'heart', fx: { mods: [{ when: 'last', sweet: 2.4, spread: 0.85 }] },
+    text: 'On the last hole of the round, the 18th or a match’s last, the sweet spot of your swing is huge and the scatter is smaller.', flavour: 'Your hands know. Your hands have always known.',
+    inspiration: 'The last-hole pressure videos where the scratch golfer needs a par to win.' },
 ];
 
 /** a card by id (undefined: not a card, or a card since cut) */
@@ -134,12 +246,18 @@ const SCOPE_NAME: Readonly<Record<string, string>> = { driver: 'Driver', wood3: 
 export const scopeText = (clubs: readonly (Club | string)[] | undefined): string => clubs?.length ? clubs.map(c => SCOPE_NAME[c] ?? c).join(', ') : '';
 const STAT_NAME: Readonly<Record<StatId, string>> = { driving: 'driving', irons: 'irons', short: 'wedges', putting: 'putting', power: 'power', accuracy: 'accuracy', touch: 'touch' };
 /** the mechanics as the card writes them */
-export const MECH_NAME: Readonly<Record<MechId, string>> = { boost: 'Space power-spam', airspin: 'spin in the air' };
+export const MECH_NAME: Readonly<Record<MechId, string>> = {
+  boost: 'Space power-spam', airspin: 'spin in the air', deck: 'the driver off the fairway', finder: 'a tee shot in the rough rolls back to the fairway', trick: 'wedges from any lie, and short ones that drop', ace: 'par-3 tee shots that drop',
+  scramble: 'a second tee ball once a nine', eraser: 'a snowman rubbed out once a round', hands: 'nerve after a birdie', caddie: 'the caddie’s club and line', laser: 'the laser: exact distances and carries', slope: 'plays-like with elevation',
+  read: 'the green read', pace: 'the pace window on the putting meter',
+};
 const pct = (f: number): string => `${f >= 1 ? '+' : '-'}${Math.abs(Math.round((f - 1) * 1000) / 10)}%`;
+/** the moment a mod is for, as the card says it */
+const WHEN_NAME: Readonly<Record<string, string>> = { tee: 'off the tee', deck: 'off the deck', rough: 'from the rough', bunker: 'from a bunker', last: 'on the last hole', follow: 'when you follow him' };
 
 /** a mod's effect as lines: its stat changes ("+10 power"), its factors ("+10% carry", "scatter -20%", "marker speed -12%", "run +10%", "spin +40%"), a mishit chance and luck, each led by the clubs it is for */
 export function modLines(m: Omit<Mod, 'id' | 'name'>): string[] {
-  const lead = scopeText(m.clubs), out: string[] = [], tag = (s: string) => (lead ? `${lead}: ${s}` : s);
+  const where = [scopeText(m.clubs), m.when ? WHEN_NAME[m.when] ?? '' : ''].filter(Boolean).join(' '), lead = where ? where[0]!.toUpperCase() + where.slice(1) : '', out: string[] = [], tag = (s: string) => (lead ? `${lead}: ${s}` : s);
   if (m.stats) {
     const ks = STAT_IDS.filter(k => m.stats![k]), vals = ks.map(k => Math.round(m.stats![k]! * 100)), sign = (n: number) => `${n > 0 ? '+' : '-'}${Math.abs(n)}`;
     if (ks.length === STAT_IDS.length && vals.every(v => v === vals[0])) out.push(tag(`${sign(vals[0]!)} to every skill and stat`));
@@ -149,6 +267,9 @@ export function modLines(m: Omit<Mod, 'id' | 'name'>): string[] {
   const f = fxLines(m, m.clubs?.length === 1 && m.clubs[0] === 'putter' ? 'leave' : 'scatter');
   if (m.speed && m.speed !== 1) f.push(`marker speed ${pct(m.speed)}`);
   if (m.roll && m.roll !== 1) f.push(`run ${pct(m.roll)}`);
+  if (m.wind && m.wind !== 1) f.push(`wind ${pct(m.wind)}`);
+  if (m.miss && m.miss !== 1) f.push(`swing miss ${pct(m.miss)}`);
+  if (m.slope && m.slope !== 1) f.push(`slope ${pct(m.slope)}`);
   if (f.length) out.push(tag(f.join(' · ')));
   return out;
 }
@@ -158,6 +279,11 @@ export function cardLines(c: CardDef): string[] {
   for (const m of c.fx.mods ?? []) out.push(...modLines(m));
   for (const k of c.fx.mech ?? []) out.push(`Unlocks: ${MECH_NAME[k]}`);
   if (c.fx.practice && c.fx.practice !== 1) out.push(`Practice gains ${pct(c.fx.practice)}`);
+  const e = c.fx.eco;
+  if (e?.matchPay && e.matchPay !== 1) out.push(`Money matches you win pay x${e.matchPay}`);
+  if (e?.matchStake && e.matchStake !== 1) out.push(`Opponents take stakes up to x${e.matchStake}`);
+  if (e?.prize && e.prize !== 1) out.push(`Title prizes ${pct(e.prize)}`);
+  if (e?.lesson && e.lesson !== 1) out.push(`A lesson adds x${e.lesson}`);
   if (c.banned) out.push('Banned in competition');
   return out;
 }

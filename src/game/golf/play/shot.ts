@@ -6,7 +6,7 @@ import { SPIN, curveOf, spinRollM, type SpinEffect } from './spin';
 import { FLIER, LIE_FX, flierChance, kindOfLie, slopeEffect } from './lies';
 import { windEffect } from './wind';
 import type { ShotEnv } from './conditions';
-import { PART_OF, applyMods } from './mods';
+import { PART_OF, applyMods, type ModCtx } from './mods';
 import type { ShapeFx } from './shape';
 
 /** the full carry in metres of each club at skill 1 (the putter has none); a skill s carries base * (0.75 + 0.25 s) */
@@ -62,9 +62,9 @@ export type ShotSkill = number | GameSkills;
 export const CLUB_PART: Readonly<Record<Club, 'driving' | 'irons' | 'short' | 'putting'>> = PART_OF;
 /** T241: the skill (0..1) a shot with a club is played at: the golfer's one skill, or his part of the game's (CLUB_PART). A field golfer's is his skill,
  *  so the field plays exactly as before */
-export function skillFor(s: ShotSkill, club: Club): number { return typeof s === 'number' ? s : s.mods && s.mods.length ? applyMods(s, club).skill : s[CLUB_PART[club]]; }
-/** T334 part 2: the club's full carry for a golfer in metres: its plain carry at his skill for it, times what his power and his mods make of it (mods.ts applyMods; a field golfer's one number: 1) */
-export function carryFor(s: ShotSkill, club: Club): number { return typeof s === 'number' ? carryM(club, s) : carryM(club, skillFor(s, club)) * applyMods(s, club).carry; }
+export function skillFor(s: ShotSkill, club: Club, ctx?: ModCtx): number { return typeof s === 'number' ? s : s.mods && s.mods.length ? applyMods(s, club, ctx).skill : s[CLUB_PART[club]]; }
+/** T334 part 2: the club's full carry for a golfer in metres: its plain carry at his skill for it, times what his power and his mods make of it (mods.ts applyMods; a field golfer's one number: 1). T337: `ctx`, the moment of the shot (mods.ts ModCtx) */
+export function carryFor(s: ShotSkill, club: Club, ctx?: ModCtx): number { return typeof s === 'number' ? carryM(club, s) : carryM(club, skillFor(s, club, ctx)) * applyMods(s, club, ctx).carry; }
 
 /** the arc length (tiles) along a polyline to its point nearest p */
 function nearestArc(line: Pt[], p: Pt): number {
@@ -122,7 +122,9 @@ export interface HitMod { maxF?: number; spread?: number; angF?: number; roll?: 
    *  the slope take no draws; the flier takes one only from a lie that can give it */
   env?: ShotEnv;
   /** T334 part 2: the shot shape's effect (shape.ts shapeEffect: the curve, the carry, the run, the wind's multiplier, the scatter, the mishit chance); absent: none */
-  shape?: ShapeFx }
+  shape?: ShapeFx;
+  /** T337 (#963): the moment of the shot (mods.ts ModCtx: a tee shot, the driver off the deck, the rough, a bunker, the last hole, played as the caddie said): the mods for it apply; absent: only the mods for every shot, as before */
+  ctx?: ModCtx }
 
 /** a full shot or chip (not the putt) from a lie at an aim with a club: where the ball comes to rest and its lie. Water at the final point
  *  is a penalty and the ball drops where it last was out of the water (on the way back from the water to the stroke). Out of bounds is a
@@ -131,10 +133,11 @@ export interface HitMod { maxF?: number; spread?: number; angF?: number; roll?: 
  *  club's part of the game's (skillFor) */
 export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim: Pt, club: Club, view: CourseView, mod?: HitMod): { to: Pt; lie: Lie; penalty: 0 | 1; holed: false; landing: Landing } {
   // (T334 part 2: the golfer's kit for the club: his skill for it after the mods, and the factors his stats and mods put on the carry, the scatter and the roll, and a mishit's chance; a plain skill: none)
-  const kit = typeof sk === 'number' ? null : applyMods(sk, club), skill = typeof sk === 'number' ? sk : kit!.skill, dM = Math.hypot(aim.x - from.x, aim.y - from.y) * TILE_M, shape = mod?.shape;
+  const kit = typeof sk === 'number' ? null : applyMods(sk, club, mod?.ctx), skill = typeof sk === 'number' ? sk : kit!.skill, dM = Math.hypot(aim.x - from.x, aim.y - from.y) * TILE_M, shape = mod?.shape;
   const sand = lie === 'bunker' && (club === 'sw' || club === 'lw') && dM < SAND_M; // (T335: the lob wedge splashes out as the sand wedge does)
   // T334: the conditions (absent: the lie's old tables below and none of the rest, the same draws and numbers as before): the lie's kind and its effect, the slope's
-  const env = mod?.env, kind = env ? env.lie ?? kindOfLie(lie) : undefined, lx = kind ? LIE_FX[kind] : undefined, slope = env ? slopeEffect(env.slope) : undefined;
+  // (T337: his slope factor: Slope Mode's hill costs half as much)
+  const env = mod?.env, kind = env ? env.lie ?? kindOfLie(lie) : undefined, lx = kind ? LIE_FX[kind] : undefined, slope = env ? slopeEffect(kit && kit.slope !== 1 && env.slope ? { up: env.slope.up * kit.slope, across: env.slope.across * kit.slope } : env.slope) : undefined;
   // a mishit carries a share of the shot and is also off line (the amateurs' topped and sliced shots); T334: a wild lie (the fescue) adds to the chance
   const mis = r() < MISHIT.base + MISHIT.skillK * (1 - skill) ** 2 + (lx ? lx.wild : 0) + (kit ? kit.mishit : 0) + (shape ? shape.mishit : 0), mf = mis ? MISHIT.carry[0] + (MISHIT.carry[1] - MISHIT.carry[0]) * r() : 1;
   // T334: a flier: from the grass the ball may jump out with no spin on it (one draw, only from a lie and a club that can give it)
@@ -149,7 +152,7 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
   let flown = Math.max(0, carry + gauss(r) * sD);
   const cs = Math.cos(ang), sn = Math.sin(ang);
   // T334: the wind along the shot's line shortens or lengthens the carry, across it drifts the ball (a high flight, a bunker shot, feels more of it)
-  const wf = env?.wind ? windEffect(env.wind, club, cs, sn, (lx ? lx.high : 1) * (shape ? shape.wind : 1)) : null;
+  const wf = env?.wind ? windEffect(env.wind, club, cs, sn, (lx ? lx.high : 1) * (shape ? shape.wind : 1) * (kit ? kit.wind : 1)) : null; // (T337: his wind factor: the Wind Whisperer's half)
   let drift = 0;
   if (wf) { flown *= wf.carry; drift = wf.drift * flown; }
   const land = drift ? { x: from.x + (cs * flown - sn * drift) / TILE_M, y: from.y + (sn * flown + cs * drift) / TILE_M } : { x: from.x + cs * flown / TILE_M, y: from.y + sn * flown / TILE_M };

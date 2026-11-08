@@ -212,7 +212,7 @@ test('slots: eight; the first free one by default, a picked one swaps; a card is
 });
 
 test('slots: eight cards of the catalogue in play at once stack through applyMods without breaking the model (in order, nothing past the limits a save keeps)', () => {
-  let c = emptyCards(); for (const d of CARDS.slice(-8)) c = equipCard(addCard(c, d.id).cards, d.id);
+  let c = emptyCards(); for (const d of CARDS.filter(x => x.fx.mods?.length).slice(-8)) c = equipCard(addCard(c, d.id).cards, d.id);
   const mods = cardEffects(c).mods; assert.ok(mods.length >= 6 && mods.length <= 24, `${mods.length} mods`);
   assert.equal(readMods(JSON.parse(JSON.stringify(mods))).length, mods.length, 'every mod survives a save');
   const sk = base({ mods }); for (const club of CLUB_ORDER) { const k = applyMods(sk, club); for (const v of [k.carry, k.spread, k.sweet, k.speed, k.roll, k.spin, k.feel, k.line]) assert.ok(Number.isFinite(v) && v > 0, `${club}`); assert.ok(k.skill >= 0 && k.skill <= 1 && k.luck >= 0); }
