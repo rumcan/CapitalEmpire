@@ -9,15 +9,16 @@ export type { OsmCourseSpec, OsmCourseJson } from './types';
 export { osmCourseToSpec } from './convert';
 
 /** a shipped course: the id the URL (?osmcourse=) and the save use, the name the game shows (with the note that it comes from map data), the place and
- *  the holes and par for the new-game card (checked against the converter by tests/golf-osm-course.test.ts) */
-export interface OsmCourseInfo { id: string; name: string; place: string; holes: number; par: number; load: () => Promise<OsmCourseJson> }
+ *  the holes and par for the new-game card: par as the game works it out from the holes' lengths, and as the map has it (checked against the converter
+ *  by tests/golf-osm-course.test.ts) */
+export interface OsmCourseInfo { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; load: () => Promise<OsmCourseJson> }
 
 /** the course card's line about where the course comes from */
 export const OSM_NOTE = 'from map data';
 
 export const OSM_COURSES: readonly OsmCourseInfo[] = [
-  { id: 'rondebosch', name: 'Rondebosch Golf Course', place: 'Cape Town, South Africa', holes: 18, par: 72, load: async () => (await import('./data/rondebosch.json')).default as unknown as OsmCourseJson },
-  { id: 'magnolia-national', name: 'Magnolia National', place: 'Georgia, United States', holes: 18, par: 72, load: async () => (await import('./data/magnolia-national.json')).default as unknown as OsmCourseJson },
+  { id: 'rondebosch', name: 'Rondebosch Golf Course', place: 'Cape Town, South Africa', holes: 18, par: 72, mappedPar: 72, load: async () => (await import('./data/rondebosch.json')).default as unknown as OsmCourseJson },
+  { id: 'magnolia-national', name: 'Magnolia National', place: 'Georgia, United States', holes: 18, par: 75, mappedPar: 72, load: async () => (await import('./data/magnolia-national.json')).default as unknown as OsmCourseJson },
 ];
 
 /** the shipped course with this id, or undefined */

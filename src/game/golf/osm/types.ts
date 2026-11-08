@@ -65,5 +65,5 @@ export interface OsmCourseSpec {
 }
 
 /** what a map-data game saves of its course: the shipped id (the engine lays the flat map for it), the name the game shows, the place, the credit the
- *  course card and the credits show, the OSM id it came from, and its holes and par */
-export interface OsmGolfInfo { id: string; name: string; place: string; credit: string; licence: string; source: string; holes: number; par: number }
+ *  course card and the credits show, the OSM id it came from, its holes, and its par as the game works it out (par) and as the map has it (mappedPar) */
+export interface OsmGolfInfo { id: string; name: string; place: string; credit: string; licence: string; source: string; holes: number; par: number; mappedPar: number }

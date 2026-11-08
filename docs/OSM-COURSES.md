@@ -1,4 +1,4 @@
-# Real golf courses from OpenStreetMap (T340, #967): stage 1 findings, 2026-11-08
+# Real golf courses from OpenStreetMap (T340, #967): stage 1 findings and the stage 2 build, 2026-11-08
 
 > **Credit:** the data is © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright). The game must show
 > "© OpenStreetMap contributors" on its credits screen (and on the card of any real course it builds); a checked-in fixture of the data stays
@@ -114,3 +114,73 @@ within 60 m of each other), so the validity checks must warn on an imported cour
   Milnerton (a missing green). If the owner has a local club in mind, name it: the script needs only the name. Bloemfontein stays the "no holes mapped" test.
 - **Which famous course**: Augusta (18 clean holes plus the Par 3 Course, woods, creek) is easier for the game than the Old Course (double greens, 8 shared fairways).
 - **Land size**: whether the game's course land may be about 3 km across, or real courses are scaled.
+
+
+---
+
+# Stage 2 (built): Rondebosch and Magnolia National in the game
+
+**Read this first:** the map is **2 km** (`MAP = 1024` tiles of 2 m in `src/game/iso.ts`), not the 4 km CLAUDE.md and the stage 1 numbers above assume.
+Both courses still fit at 1:1 (no scaling, no crop): Rondebosch's land is 688 x 610 tiles (1376 x 1220 m), Magnolia National's 502 x 658. But **no generated
+valley can host them**: in 12 seeds there is no river-free 500 x 500 window, and every 700-tile window has about 30,000 water tiles (rivers, creeks, banks). So a
+map-data game is laid on the **flat plain** (`boot.ts flatTerrain()`; the save's `golf.osm` makes `load()` use it): the land in the middle of the map, 24+ tiles
+from every edge, the entry road from the west edge (where flatTerrain's highway enters), the clubhouse parcel, car park and drive on the land's west side. The range
+start cannot take a 700-tile course (its county road, parcel and town window need the middle of the map), so the game has the **old start's rules** (no `start`: the
+tournament comes with the season, the clubhouse and car park are already placed).
+
+## What was built
+| piece | file |
+| --- | --- |
+| the converter `osmCourseToSpec(json, opts)`: stage-1 JSON to a course spec, pure, deterministic | `src/game/golf/osm/convert.ts` (+ `geom.ts`, `types.ts`) |
+| the raster `paintSpec(grid, spec, ox, oy)`: the spec into the course grid's 1 m cells | `src/game/golf/osm/raster.ts` |
+| the plan `planOsmGame(spec)`: land, clubhouse parcel, car park, road, drive, golf state, grid | `src/game/golf/osm/start.ts` |
+| the shipped courses and their loader (a JSON chunk each; no network) | `src/game/golf/osm/index.ts`, `data/*.json` |
+| the fixtures' maker (stage-1 JSON to a trimmed fixture) | `scripts/dev/osm-trim-fixture.mjs` |
+| the engine: `?osmcourse=<id>` (a dev start: saving off), `newOsmGame`, `startRealCourse(id)`, `golf.osm` | `src/game/engine.ts`, `golf/mode.ts` |
+| the credit: the Holes panel's course card, the gear menu, the new-game card | `src/ui/course/OsmNote.tsx`, `src/App.tsx`, `src/ui/golf/YouCards.tsx` |
+| the "Your course" row on the Who-are-you card (Build your own / Rondebosch / Magnolia National): a real course starts a new game on it | `src/ui/golf/YouCards.tsx` |
+| the shots script | `scripts/dev/osm-course-shots.mjs` |
+
+## The converter's rules
+- **The course**: hole lines are grouped by `golf:course:name` / `course:name`; the group with the most holes numbered 1..18 is built (or `opts.course`); the others
+  are named in the spec and left out, and so are the features that belong to their holes (Magnolia: the Par 3 Course). One line per number 1..18, in order of `ref`;
+  a number mapped twice keeps the first; more than 18 are dropped; refs that are not 1..n are renumbered; every one is a warning.
+- **Orientation**: a line drawn green to tee is turned round. Tee = the line's start; aim points = the interior vertices that bend more than 10 degrees (at least 25 m
+  apart and from the ends, at most 4); green = the green polygon the line ends on (or is within 25 m of); pin = the `golf=pin` node on that green (the one that carries
+  the hole's number wins a tie), else the green's middle.
+- **Tees**: every tee polygon goes to the hole line whose start is nearest (within 80 m); the line's start tee gets the white (middle) marker, one farther from the pin the
+  back marker, nearer ones the senior and forward markers; `tee=` colours are kept when every tee of the hole has a different one. The game works par out from the
+  back tee's length (golf/holes.ts parFromLength: 3 up to 230 m, 4 up to 430 m, 5 beyond), so a marker is moved within its tee to the spot that gives the mapped par,
+  and a back set that would change it stays plain tee ground. Where no spot does, `par-differs` is a warning (Magnolia's holes 5, 10 and 11: 450 to 482 m "par 4s" the game
+  calls par 5, so the game's par is 75 where the map says 72; the new-game card says both).
+- **Fairways** go to the hole line they run along (the most samples inside), bunkers and water to the nearest line within 90 m (hole 0 beyond); features of another course's
+  holes are left out. Waterways become bands 2 to 6 m wide (a `width` tag wins) unless they run inside a mapped water polygon; a tunnelled or culverted one is not drawn.
+- **Fill-ins**, each listed in `spec.fills`: a green of about 400 m2 where a line ends on none, a tee of 14 x 8 m where it starts on none, a fairway band 28 m wide along a
+  par 4 or 5 whose line runs over (almost) no fairway (laid over rough only, so inside the boundary and under everything else), a pin at the green's middle (none mapped, or
+  the mapped one lies off its green), par from length (none tagged). **Rough** = the boundary under everything (and `golf=rough` polygons). Nothing is made up for a course
+  with no holes (Bloemfontein): the spec has none and says `no-holes`.
+- **Warnings, never refusals**: holes closer than the 60 m corridor guideline (the game's own `deriveHoles` rule), a long walk to the next tee, a double green (the
+  green belongs to its first hole), par differences, other courses, renumbering.
+- **Paint order** (a later surface over an earlier one): rough, fairway, bunker, water, tee, green. Water leaves greens and tees alone, so a pin or a tee marker is never
+  under water; the planting month stays 0 (established: the course is not growing in). Cart paths and woods are not imported (trees: the game's own Frame with trees).
+
+## Results
+| | Rondebosch | Magnolia National (the 18 of the Augusta National club boundary) |
+| --- | --- | --- |
+| holes, par as mapped / as the game works it out | 18, 72 / 72 | 18, 72 / 75 (holes 5, 10, 11) |
+| length (tee to pin along the aim points) | 5685 m | 6832 m |
+| land | 688 x 610 tiles | 502 x 658 tiles |
+| fill-ins | none needed | none needed |
+| warnings | 20 close-hole pairs | 15 close-hole pairs; the Par 3 Course (5 holes in the box) named and left out |
+| fixture | 36 kB: 34 tees, 18 greens, 21 fairways, 41 bunkers, 4 water | 97 kB: 36 tees, 34 greens, 23 fairways, 55 bunkers, 6 water, 14 rough, 1 creek |
+
+## Adding a course
+1. `node scripts/dev/osm-course.mjs "<name>" [--country za]` (stage 1: the JSON in `E:/ClaudeTemp/T340/`; one Overpass query, cached).
+2. `node scripts/dev/osm-trim-fixture.mjs <that json> --id <id> --name "<name the game shows>" --place "<city, country>" [--course "<course name tag>" --rename "<real>=<game name>"]`
+   writes `src/game/golf/osm/data/<id>.json` with the credit in its header. Real brand names stay out of the game: rename a famous club.
+3. Add it to `OSM_COURSES` in `src/game/golf/osm/index.ts` (holes and par: the test checks them against the converter) and run `tests/golf-osm-course.test.ts`.
+
+## Left for later
+Cart paths and `golf=path` lines (the Course's paths are the road tool's), trees from the data (`natural=wood`; today the game's own Frame with trees, `?frame=1` in dev),
+heights from a public DEM (T026), a course that does not fit the 2 km map at 1:1 (scale it, or crop to chosen holes), the Old Course's double greens (one green, two holes), the
+Par 3 Course, a course picker that takes a name (the browser must never call Overpass or Nominatim: ship fixtures).

@@ -4,12 +4,15 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import rondeboschJson from '../src/game/golf/osm/data/rondebosch.json';
 import magnoliaJson from '../src/game/golf/osm/data/magnolia-national.json';
-import { OSM_COURSES, osmCourseToSpec } from '../src/game/golf/osm';
+import { OSM_COURSES, loadOsmSpec, osmCourseInfo, osmCourseToSpec, osmDisplayName } from '../src/game/golf/osm';
 import { OSM_CREDIT, type OsmCourseJson, type OsmCourseSpec } from '../src/game/golf/osm/types';
 import { paintSpec, specMarkers, surfAtTile } from '../src/game/golf/osm/raster';
 import { SURF, makeGrid } from '../src/game/ext/course-grid';
 import { gridAreas } from '../src/game/ext/course-grid/areas';
 import { markerPlan } from '../src/game/golf/holeview';
+import { OSM_EDGE, osmFits, planOsmGame } from '../src/game/golf/osm/start';
+import { normalizeGolfSave } from '../src/game/golf/mode';
+import { MAP } from '../src/game/iso';
 import { deriveHoles, parFromLength } from '../src/game/golf/holes';
 
 const ronde = rondeboschJson as unknown as OsmCourseJson, magnolia = magnoliaJson as unknown as OsmCourseJson;
@@ -36,10 +39,24 @@ describe('the shipped fixtures (T340)', () => {
   it('are registered with the holes and par the converter finds', () => {
     const by = Object.fromEntries(OSM_COURSES.map(c => [c.id, c]));
     assert.equal(by.rondebosch!.holes, specR.holes.length);
-    assert.equal(by.rondebosch!.par, specR.parTotal);
+    assert.equal(by.rondebosch!.par, specR.gameParTotal);
+    assert.equal(by.rondebosch!.mappedPar, specR.parTotal);
     assert.equal(by['magnolia-national']!.holes, specM.holes.length);
-    assert.equal(by['magnolia-national']!.par, specM.parTotal);
+    assert.equal(by['magnolia-national']!.par, specM.gameParTotal);
+    assert.equal(by['magnolia-national']!.mappedPar, specM.parTotal);
     assert.ok(by['magnolia-national']!.name.startsWith('Magnolia'), 'a made-up name, not the club');
+  });
+});
+
+describe('the loader (T340)', () => {
+  it('loads a shipped course by its id (the same spec the converter makes), and null for any other', async () => {
+    const r = await loadOsmSpec('rondebosch');
+    assert.deepEqual(r, specR);
+    assert.equal((await loadOsmSpec('magnolia-national'))?.holes.length, 18);
+    assert.equal(await loadOsmSpec('augusta-national'), null, 'the real club is not a course the game ships');
+    assert.equal(osmCourseInfo('nope'), undefined);
+    assert.equal(osmCourseInfo(null), undefined);
+    assert.equal(osmDisplayName('Magnolia National'), 'Magnolia National (from map data)');
   });
 });
 
@@ -77,13 +94,15 @@ describe('Rondebosch (T340)', () => {
     assert.equal(mk.pins.length, 18);
     assert.ok(laid.rough > 100000 && laid.fairway > 20000 && laid.green > 3000 && laid.bunker > 500 && laid.water > 500 && laid.tee > 1000, JSON.stringify(laid));
   });
-  it('gives every par 4 and 5 fairway under its line, and the game finds no hole short of a pin or tee', () => {
+  it("gives every par 4 and 5 fairway under most of its line (the middle 70%), and the game's holes have a playing line, a pin and a tee", () => {
     const { g } = gridOf(specR);
     for (const h of specR.holes) {
       if (h.par < 4) continue;
       let on = 0, n = 0;
-      for (let k = 2; k + 3 < h.line.length; k += 2) { n++; if (surfAtTile(g, (h.line[k]! + h.line[k + 2]!) / 2 + 10, (h.line[k + 1]! + h.line[k + 3]!) / 2 + 10) === SURF.fairway) on++; }
-      assert.ok(n === 0 || h.made.includes('fairway') || on >= 0, `hole ${h.n}`);
+      for (let k = 0; k + 3 < h.line.length; k += 2) for (let t = 0.15; t < 0.85; t += 0.05) {
+        n++; if (surfAtTile(g, h.line[k]! + (h.line[k + 2]! - h.line[k]!) * t + 10, h.line[k + 1]! + (h.line[k + 3]! - h.line[k + 1]!) * t + 10) === SURF.fairway) on++;
+      }
+      assert.ok(on / n >= 0.6, `hole ${h.n} (par ${h.par}) runs over fairway for ${Math.round((100 * on) / n)}% of its line`);
     }
     const mk = specMarkers(specR, 10, 10), derived = deriveHoles([], mk.tees, mk.pins, mk.aims);
     assert.equal(derived.length, 18);
@@ -271,4 +290,38 @@ describe("the game's own course checks on the imported courses (T340)", () => {
       }
     });
   }
+});
+
+describe("a game on a map-data course: where everything goes (T340)", () => {
+  const rectsMeet = (a: number[], b: number[]) => a[0]! < b[0]! + b[2]! && b[0]! < a[0]! + a[2]! && a[1]! < b[1]! + b[3]! && b[1]! < a[1]! + a[3]!;
+  for (const [name, spec] of [['Rondebosch', specR], ['Magnolia National', specM]] as const) {
+    it(`${name}: the land is centred and clear of the map's edge, the clubhouse parcel, car park and road keep off it, the grid holds it all with its markers right`, () => {
+      const p = planOsmGame(spec)!;
+      assert.ok(p, 'it fits the 1024-tile map');
+      const [lx, ly, lw, lh] = p.land;
+      assert.ok(lx >= OSM_EDGE && ly >= OSM_EDGE && lx + lw <= MAP - OSM_EDGE && ly + lh <= MAP - OSM_EDGE, 'away from the map edge');
+      assert.ok(!rectsMeet(p.land, p.venue) && !rectsMeet(p.land, p.carpark) && !rectsMeet(p.venue, p.carpark), 'land, venue and car park apart');
+      const leg = p.road[0]!;
+      assert.equal(leg.a.x, 0, 'the road enters at the west edge');
+      assert.ok(leg.b.x < p.venue[0], 'and ends before the clubhouse parcel');
+      assert.ok(p.drive[0]!.b.x < p.venue[0] + 1 && p.drive[0]!.b.x > p.venue[0] - 8, 'the drive ends at the clubhouse door');
+      const g = p.grid, [px, py, pw, ph] = p.save.parcel;
+      assert.ok(g.x0 <= px && g.y0 <= py && g.x0 + g.w * 0.5 >= px + pw && g.y0 + g.h * 0.5 >= py + ph, 'the grid holds the parcel');
+      const mk = specMarkers(spec, p.at.x, p.at.y);
+      for (const q of mk.pins) assert.equal(surfAtTile(g, q.x, q.y), SURF.green, `hole ${q.hole}'s pin`);
+      for (const t of mk.tees) assert.equal(surfAtTile(g, t.x, t.y), SURF.tee, `hole ${t.hole}'s ${t.kind}`);
+      // the golf state reads back whole, with the credit
+      const n = normalizeGolfSave(JSON.parse(JSON.stringify(p.save)))!;
+      assert.equal(n.osm?.id, spec.id);
+      assert.equal(n.osm?.credit, '© OpenStreetMap contributors');
+      assert.equal(n.osm?.holes, 18);
+      assert.equal(n.start, undefined, "the old start's rules");
+    });
+  }
+  it('says no when the land does not fit the map', () => {
+    assert.equal(osmFits({ ...specR, w: 1000, h: 400 }), false);
+    assert.equal(osmFits({ ...specR, w: 400, h: 1000 }), false);
+    assert.equal(planOsmGame({ ...specR, w: 1000, h: 400 }), null);
+    assert.equal(osmFits(specR), true);
+  });
 });

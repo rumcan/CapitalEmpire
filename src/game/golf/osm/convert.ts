@@ -8,7 +8,7 @@
 import { deriveHoles, parFromLength } from '../holes';
 import { TILE_M, type AimPoint, type Pin, type TeeKind, type TeeMark } from '../types';
 import {
-  bandRings, bendDeg, boxOf, boxesMeet, circleRing, distToLine, distToPoly, inPoly, interiorPoint, lineLen, polyArea, sampleLine, sliceLine,
+  bandRings, bendDeg, boxOf, boxesMeet, circleRing, distToLine, distToPoly, distToRing, inPoly, interiorPoint, lineLen, polyArea, sampleLine, sliceLine,
   type Box, type P, type Poly,
 } from './geom';
 import {
@@ -175,7 +175,7 @@ export function osmCourseToSpec(json: OsmCourseJson, opt: ConvertOptions = {}): 
       w.made.push('green'); fill('green', w.n, `Hole ${w.n}: the line ends on no green; one of about ${GREEN_AREA} m2 made there`);
     }
   }
-  for (const [g, hs] of used) if (hs.length > 1) warn('double-green', hs[0]!, `Holes ${hs.join(' and ')} share one green (a double green): it belongs to hole ${hs[0]}`);
+  for (const hs of used.values()) if (hs.length > 1) warn('double-green', hs[0]!, `Holes ${hs.join(' and ')} share one green (a double green): it belongs to hole ${hs[0]}`);
 
   // pins
   const takenPins = new Set<unknown>();
@@ -242,15 +242,19 @@ export function osmCourseToSpec(json: OsmCourseJson, opt: ConvertOptions = {}): 
     const place = (a: Area): P | null => {
       if (par === null) return a.c;
       if (parFromLength(playLen(a.c, w.aims, w.pin)) === par) return a.c;
-      // a spot of the tee on a 2 m lattice, nearest to the middle, that gives the tagged par
-      let best: P | null = null, bd = Infinity;
+      // a spot of the tee on a 2 m lattice, nearest to the middle, that gives the tagged par: at least 1.2 m inside its edge where it can (the game's
+      // tee outline is the painted cells smoothed, and a marker on the rim would be moved back onto the tee), else anywhere on it
       const b = a.box;
-      for (let y = Math.ceil(b[1] / 2) * 2; y <= b[3]; y += 2) for (let x = Math.ceil(b[0] / 2) * 2; x <= b[2]; x += 2) {
-        if (!inPoly(a.poly, x, y)) continue;
-        const d = Math.hypot(x - a.c[0], y - a.c[1]);
-        if (d < bd && parFromLength(playLen([x, y], w.aims, w.pin)) === par) { bd = d; best = [x, y]; }
+      for (const edge of [1.2, 0]) {
+        let best: P | null = null, bd = Infinity;
+        for (let y = Math.ceil(b[1] / 2) * 2; y <= b[3]; y += 2) for (let x = Math.ceil(b[0] / 2) * 2; x <= b[2]; x += 2) {
+          if (!inPoly(a.poly, x, y) || (edge > 0 && distToRing(a.poly.outer, x, y) < edge)) continue;
+          const d = Math.hypot(x - a.c[0], y - a.c[1]);
+          if (d < bd && parFromLength(playLen([x, y], w.aims, w.pin)) === par) { bd = d; best = [x, y]; }
+        }
+        if (best) return best;
       }
-      return best;
+      return null;
     };
     // only the furthest-back marker decides the game's par (golf/holes.ts), so only it is checked, and dropped when no spot of its tee keeps the par
     while (marks.length) {

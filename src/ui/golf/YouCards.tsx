@@ -33,8 +33,10 @@ const THEMES: readonly { desert: boolean; name: string; note: string; ids: reado
   { desert: true, name: 'Desert', note: 'Palms, cacti and rocks on desert sand', ids: ['newprop:desert-date-palm-pair', 'newprop:desert-saguaro', 'newprop:desert-agave-clump'] },
 ];
 const BY_ID = new Map(LIBRARY.map(it => [it.id, it] as const));
-export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void;
-  /** T342: the game's look (desert or autumn) and the choice (the world changes behind the card at once) */ desert?: boolean; onTheme?: (desert: boolean) => void }) {
+export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, course }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void;
+  /** T342: the game's look (desert or autumn) and the choice (the world changes behind the card at once) */ desert?: boolean; onTheme?: (desert: boolean) => void;
+  /** T340 (#967): "Your course": build your own (null), or a real course built from map data (a new game starts on it); current: the game's now */
+  course?: { options: { id: string; name: string; place: string; holes: number; par: number; mappedPar: number }[]; current: string | null; onPick: (id: string | null) => void } }) {
   const [n, setN] = useState(name), [l, setL] = useState(look);
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
@@ -65,6 +67,22 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme }: { n
                   <span className="text-[11px] leading-tight text-slate-400">{t.note}</span>
                 </button>
               ))}
+            </div>
+          </div>
+        )}
+        {course && course.options.length > 0 && (
+          <div>
+            <div className="mb-1 text-xs text-slate-400">Your course <span className="text-slate-500">(a real course starts a new game on it)</span></div>
+            <div className="flex flex-col gap-1" data-testid="who-course">
+              <button className={`rounded-lg border px-2 py-1 text-left text-xs ${course.current === null ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => course.current !== null && course.onPick(null)} data-testid="who-course-own">
+                <span className="font-semibold text-white">Build your own</span> <span className="text-slate-400">· a driving range and an empty plot</span>
+              </button>
+              {course.options.map(o => (
+                <button key={o.id} className={`rounded-lg border px-2 py-1 text-left text-xs ${course.current === o.id ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => course.current !== o.id && course.onPick(o.id)} data-testid={`who-course-${o.id}`}>
+                  <span className="font-semibold text-white">{o.name}</span> <span className="text-slate-400">· {o.holes} holes, par {o.par}{o.mappedPar !== o.par ? ` (${o.mappedPar} on the map)` : ''} · {o.place}</span>
+                </button>
+              ))}
+              <span className="text-[10px] leading-tight text-slate-500">Real courses are built from map data © OpenStreetMap contributors.</span>
             </div>
           </div>
         )}
