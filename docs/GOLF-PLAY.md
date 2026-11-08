@@ -200,3 +200,53 @@ slider and Hit); `src/game/golf/play/swing.ts`, `tests/golf-play-swing.test.ts`,
 - **The save:** `OwnerInput.swing` keeps the meter's outcome (power, accuracy, boost), never the click times; the replay plays it through the same
   model. An input without it (a save from before T316) plays as before.
 - Left for T317-T319: the spin (a field next to `swing`), the cart and first tee, the break grid, tracers and holing.
+
+**The play pass, part 1 (T334 #960, 2026-11-08; the owner, 2026-11-04: "We want wind and diffrent flights based on fairway and rough"):** the wind, the lie that
+changes the flight, the slope under the ball, and the playtest's fixes. `play/wind.ts`, `play/lies.ts`, `play/conditions.ts`; `tests/golf-play-conditions.test.ts`,
+`tests/golf-play-putting-v2.test.ts`; the playtest's tools `scripts/dev/play-pass-playtest.mjs`, `play-pass-sim.ts`, `play-pass-shots.mjs`, `tests/helpers/swing-bot.ts`.
+- **The shape of it: one optional record per shot.** `ShotEnv { wind?: { mph, from }, lie?: LieKind, slope?: { up, across } }` (conditions.ts) is read when the shot is struck
+  (`Game.shotEnv`: the wind with its gusts at that instant, the lie's kind under the ball from the course, the height field under the stance along the aim) and saved with the
+  owner's input (`OwnerInput.env`; `readEnv` clamps it). `hitShot` takes it as `HitMod.env`. **No `env`: the model is exactly what it was** (the same draws, the same floats:
+  a golden test over `hitShot` x70, `shotOutcome`, a 3810-shot field round and an 18-hole live group, captured from the unchanged code). The wind and the slope take no draws;
+  a flier takes one, only from a lie that can give it. A saved input with `env` replays exactly, whatever the wind and the terrain do afterwards.
+- **The wind** (wind.ts). `dailyWind(seed, day)`: a mean speed (2 to 15 mph, a blustery day to 27, about one day in ten calm), the compass bearing it blows FROM (60% from the
+  west's quarter; 0 is north, the top of the screen), a gustiness. `windAt(wind, t)`: gusts on a clock in seconds (three slow waves, sharpened; smooth, no snaps), a direction
+  wobble of up to 12 degrees on a gusty day. On a shot (`windEffect`): the wind along the line is a headwind (-0.9% of the carry a mph) or a tailwind (+0.45%), the wind across
+  drifts the ball 0.6% of the carry a mph (a 10 mph crosswind moves a 200 m drive 12 m); times the club's exposure (`WIND_CLUB`: driver and woods 1, 4-iron 0.95, 6-iron 0.85,
+  8-iron 0.75, PW 0.65, SW 0.55, putter 0) and the lie's height (a bunker shot comes out high: x1.3). More on high, long shots, less on low, short ones, none on a putt (a putt
+  does not come through `hitShot`; `shotOutcome` reads no `env` for it). The tournament's wind is `dailyWind(seed, key)` (stable after a reload); your round's, its day's.
+- **The lie** (lies.ts). `LieKind`: tee, fairway, first cut, rough, deep rough, fescue, bunker, green. `makeCourseView` gives the view a `kindAt`: the surface's own kind
+  (long grass is deep rough, fescue is fescue, the waste area is sand) and a rough ball within 1.5 tiles (3 m) of a fairway, fringe, tee or green is first cut; a view
+  without `kindAt` (made by hand) gets the coarse lie's own. `LIE_FX` per kind: carry, spread, the share of the spin that gets on, the run after landing, the chance of a
+  flier, a wild streak, the height. Tee 1.03 carry (the most distance); fairway clean, full spin; first cut 0.98 / 1.1 / 85% of the spin; rough 0.88 / 1.3 / 45%, run x1.25,
+  a flier in 28% (times the club: a driver 10%, a wedge 120%); deep rough 0.74 / 1.55 / 25%, wild 8%; fescue 0.6 / 1.9 / 20%, wild 16%; bunker 0.7 / 1.4, high, no run. A flier
+  jumps off the grass with no spin: +12% carry, run x1.8. T318's spin takes the kind's spin share (`spinEffect(..., kind)`).
+- **The slope** (lies.ts `slopeAt` from the T026 height field, 1.5 tiles either side of the ball): uphill carries 1.1% less per 1% (at most 10%), downhill more, and runs on;
+  the ball above the feet (the ground higher to the right of the target line) pulls left 0.7 degrees per 1% (at most 6), below the feet pushes right; a cross slope adds scatter.
+  The town's course is flat (a height edit raises it: the Ground height tool); the lines on the panel say what the ground does.
+- **The model's golfers** play in the same weather when `playRound(..., { cond })` has the day's `Conditions` (the mean wind, no gusts: a model shot never depends on the
+  minute; the heights; the view's kinds): `dayRound(..., cond)`. The engine passes them for a tournament from `GolfSave.weather.from` on: a save from before the weather has
+  none, and the engine stamps it on load with the next tournament's key, so a day in progress and every day before play exactly as they did. Everyday golf and the money
+  matches' opponent are left as they were (see Left).
+- **The shot panel** (`ui/ShotPanel.tsx`, `Game.shotConditions`): under the meter, the wind dial (the arrow is the way it blows against the shot: up the line a tailwind), its
+  mph, "Into the wind / Helping / Left to right", the gusts' peak and what it adds to this shot ("-9 m, 5 m right"); the lie's name and effect lines ("carry -12% · scatter x1.3
+  · 45% of the spin · a flier in 3 of 10") and the slope's lines. The meter's aim mark is where to stop the power for the distance the aim PLAYS like in the conditions (the club
+  line says so), and the caddie's club (the ring) is the shortest that reaches that. Over the ball (the overlay): the faint ellipse of where the shot is expected to land is
+  shifted by the wind's drift and the slope's pull and as wide as the lie's scatter, and a wind arrow with its mph stands by the ball. The round's bar has a wind chip. The
+  report after the shot ends with what the wind did ("wind -9 m, 5 m right").
+- **The flags and the trees** (`gl.ts` VS_SPRITE / FS_SPRITE, `sprites.ts swayOf`): a uniform (`uWind`: time, the wind's direction on the screen, strength) and a sway code in the
+  sprite's cullable slot (bit 0 stays the cull flag): the top of a tree or a shrub leans downwind and breathes with the gusts (the picture sheared about its foot: four vertices
+  a sprite, no CPU per frame), and the pin's flag cloth ripples in the fragment shader, streams out in a breeze and hangs limp and drawn in toward the pole in a calm. Nothing
+  re-packs on a gust. `?wind=off` (a still day: the shader skips it) or `?wind=14,270,0.6` (mph, bearing, gustiness) force the wind in a dev build, `window.__game.devWind` for the capture
+  scripts; `npm run bench -- --start town --wind off|14,270,0.6` measures it.
+- **The playtest** (the town course, seed 2, and the 18-hole synthetic course; a person's clicks scripted in `tests/helpers/swing-bot.ts`: the timing error in seconds, so a faster
+  meter is harder; `scripts/dev/play-pass-sim.ts`): the findings are on #960. Fixed here: **putting** (the second version, `shot.ts PUTT_V2`, `OwnerInput.v` 2, written on every input
+  the engine plays; a saved input without it is version 1 and plays as before): a 0.5 m putt was missed one time in four and half the holes took three putts or more, because the make
+  chance fell from 0.3 m, the aim's tolerance was a flat 3 degrees (the cup's angle is 8 at half a metre and 1 at ten) and the power's error counted as 25% of the putt whatever its
+  length. Now the chance falls from 0.6 m, the aim's tolerance is the cup's angle at the distance (1.5 to 8 degrees) and the power's window is 0.9 m in metres. The field's days with
+  conditions and the money matches' opponents putt by it too. Measured (30 rounds a golfer, the scripted swinger's clicks): a 0.5 m putt 59-90% before, 92-99% after; 1 m 46-80% before,
+  86-96% after; 3+ putts on 16-55% of the holes before, 7-30% after; putts a round for a club golfer at the starting skills 40.8 before, 36.1 after, and his score +23.4 before, +18.0 after,
+  which is the handicap (18.5) the player card shows.
+- **Filed from the playtest:** T345 #987 (the meter's sweet spot is +-33 ms at the starting skill: make it a window in time), T346 #988 (a ball's roll does not depend on the club),
+  T347 #989 (everyday golfers and the money matches' opponents play without the wind, lie kinds and slope), T348 #990 (other cards stay open over the shot panel).
+- **Left:** the wind has no art but the shader's stand-in (docs/GOLF-SPRITES.md asks for a flag sheet).

@@ -2771,7 +2771,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; { const wd = q.get('wind'); if (import.meta.env.DEV && wd) { const [a, b, c] = wd.split(',').map(Number); this.devWind = wd === 'off' ? NO_WIND : { mph: a! >= 0 ? a! : 8, from: Number.isFinite(b) ? b! : 270, gusty: Number.isFinite(c) ? c! : 0.5, seed: 7 }; } } // (T334: ?wind=off | mph,from,gusty) const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; { const wd = q.get('wind'); if (import.meta.env.DEV && wd) { const [a, b, c] = wd.split(',').map(Number); this.devWind = wd === 'off' ? NO_WIND : { mph: a! >= 0 ? a! : 8, from: Number.isFinite(b) ? b! : 270, gusty: Number.isFinite(c) ? c! : 0.5, seed: 7 }; } } /* (T334: ?wind=off | mph,from,gusty) */ const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
@@ -10017,7 +10017,7 @@ export class Game {
   }
   // ---------- T334 (#960): the wind, and the lie that changes the flight (golf/play/wind.ts, lies.ts, conditions.ts) ----------
   /** whether the day's weather plays in the tournament of key `key` (GolfSave.weather: a save from before it has its day in progress, and every day before, as it was; a new game has it from the first) */
-  private weatherOn(key: number): boolean { return key >= (this.golf?.weather?.from ?? 0); }
+  private weatherOn(key: number): boolean { const g = this.golf; if (!g) return false; return key >= (g.weather ??= { from: 0 }).from; } // (a new game is stamped here, from the first tournament; a save from before is stamped on load)
   /** a tournament's wind (its key: the same after a reload, whatever town day it is then) */
   private tourneyWind(key: number): Wind { return dailyWind(this.seed + 0x4f55, key); }
   /** the model's golfers' conditions for the tournament of key `key`: its mean wind, the course's heights, and the lie's kinds (the view's); undefined before the weather */
@@ -10270,14 +10270,15 @@ export class Game {
   private drawWindMark(ctx: CanvasRenderingContext2D, bx: number, by: number) {
     const s = this.shot, n = this.windNow(); if (!s || !n || n.mph < CALM_MPH || (!s.mine && !(this.play && this.weatherOn(this.play.key)))) return;
     const dpr = this.dpr, t = windToward(n.from), dx = (t.x - t.y) * Math.SQRT1_2, dy = (t.x + t.y) * Math.SQRT1_2 * 0.5, m = Math.hypot(dx, dy) || 1, len = (16 + 2.4 * Math.min(n.mph, 25)) * dpr;
-    const ox = bx - 56 * dpr, oy = by - 40 * dpr, ex = ox + dx / m * len, ey = oy + dy / m * len, a = Math.atan2(ey - oy, ex - ox), h = 6 * dpr;
+    // (below and left of the ball: the golfer's name label stands above him and the aim runs off to the right)
+    const cx = bx - 84 * dpr, cy = by + 46 * dpr, ox = cx - dx / m * len / 2, oy = cy - dy / m * len / 2, ex = cx + dx / m * len / 2, ey = cy + dy / m * len / 2, a = Math.atan2(ey - oy, ex - ox), h = 6 * dpr;
     ctx.save();
-    ctx.fillStyle = 'rgba(15,23,42,0.55)'; ctx.beginPath(); ctx.ellipse((ox + ex) / 2, (oy + ey) / 2 - 8 * dpr, len / 2 + 22 * dpr, 17 * dpr, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(15,23,42,0.55)'; ctx.beginPath(); ctx.ellipse(cx, cy - 8 * dpr, len / 2 + 26 * dpr, 20 * dpr, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#67e8f9'; ctx.fillStyle = '#67e8f9'; ctx.lineWidth = 2 * dpr; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex, ey); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - Math.cos(a - 0.5) * h, ey - Math.sin(a - 0.5) * h); ctx.lineTo(ex - Math.cos(a + 0.5) * h, ey - Math.sin(a + 0.5) * h); ctx.closePath(); ctx.fill();
     ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#e0f2fe';
-    ctx.fillText(`${Math.round(n.mph)} mph`, (ox + ex) / 2, (oy + ey) / 2 - 15 * dpr);
+    ctx.fillText(`${Math.round(n.mph)} mph`, cx, cy - 17 * dpr);
     ctx.restore();
   }
 

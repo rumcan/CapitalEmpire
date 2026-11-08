@@ -106,7 +106,7 @@ function swayCode(it: LibItem): number {
   if (it.id === 'business:golf-pin-red' || it.id === 'business:golf-pin-yellow') return 3;
   return it.kind === 'tree' || it.kind === 'palm' ? 1 : it.kind === 'shrub' || it.kind === 'bush' ? 2 : 0;
 }
-function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: number, alpha = 1) {
+export function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: number, alpha = 1) {
   // the picture drawn for it (newart.ts: a stand-in on the same footprint for an old building, the drawable itself otherwise)
   const l = lookOf(d0), it = LIBRARY[l.item]!, t = it.tex;
   spriteRect(d0, out, o);
@@ -116,7 +116,7 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   // (a picture with a vector shadow casts its drawn shape instead: packVector)
   // (T176: 2 + alpha marks a tinted sprite; T228: 2 + 2 code + alpha a painted car, car-paint.ts paintCode; gl.ts decodes both)
   const pc = d0.paint ? paintCode(l.item, d0.paint) : 0;
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : packAlpha(alpha, !!d0.tint, pc); out[o + 10] = (it.big ? 0 : 1) + 2 * swayOf(l.item); // (T334: bit 0 the cull flag, the rest the wind's sway code: gl.ts VS_SPRITE) out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || alpha < 0.5 || d0.top || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : packAlpha(alpha, !!d0.tint, pc); out[o + 10] = (it.big ? 0 : 1) + 2 * swayOf(l.item); /* (T334: bit 0 the cull flag, the rest the wind's sway code: gl.ts VS_SPRITE) */ out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || alpha < 0.5 || d0.top || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0)
   // corners; business art's placeholder footprint (a 2 x 2 m box under a whole building) gives way to its picture's base (T141)

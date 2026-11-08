@@ -205,10 +205,11 @@ test('lies: each lie does what the table says: the carry, the spread (and the te
   const full = (lie: Lie, kind: ShotEnv['lie']) => mean(volley('driver', 400, lie, { lie: kind }, 120, 0.8).map(x => x.carry));
   assert.ok(full('tee', 'tee') > 1.02 * full('fairway', 'fairway') && full('tee', 'tee') < 1.05 * full('fairway', 'fairway'), `tee ${full('tee', 'tee').toFixed(0)} against fairway ${full('fairway', 'fairway').toFixed(0)}`);
   void tee;
-  // the spread: the rough, the deep rough and the fescue scatter more (the sideways spread of the landing)
-  const spreadOf = (lie: Lie, kind: ShotEnv['lie']) => sd(volley('iron6', 150, lie, { lie: kind }, 300, 0.6).map(x => x.side));
+  // the spread: the rough, the deep rough and the fescue scatter more (the sideways spread of the landing as a share of the carry: the angle; the fescue's carry is short, so its
+  // sideways metres are no more than the rough's, but off a ball that goes 60% as far they are a wild miss)
+  const spreadOf = (lie: Lie, kind: ShotEnv['lie']) => sd(volley('iron6', 150, lie, { lie: kind }, 300, 0.6).map(x => x.side / x.carry));
   const sf = spreadOf('fairway', 'fairway'), sr = spreadOf('rough', 'rough'), sdp = spreadOf('rough', 'deep'), ss = spreadOf('fescue', 'fescue');
-  assert.ok(sr > 1.15 * sf && sdp > sr && ss > sdp, `spread: fairway ${sf.toFixed(1)}, rough ${sr.toFixed(1)}, deep ${sdp.toFixed(1)}, fescue ${ss.toFixed(1)}`);
+  assert.ok(sr > 1.15 * sf && sdp > sr && ss > sdp, `spread (the miss as a share of the carry): fairway ${sf.toFixed(3)}, rough ${sr.toFixed(3)}, deep ${sdp.toFixed(3)}, fescue ${ss.toFixed(3)}`);
 });
 
 test('lies: a flier from the rough: the short irons get one now and then (it flies further, with no spin, and runs on); a driver almost never', () => {

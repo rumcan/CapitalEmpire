@@ -80,7 +80,7 @@ test('putting v2: the version is kept with the saved input, and an input without
     for (let k = 0; k < 60; k++) { const t = a.advance(); if (!t) break; const inp: Omit<OwnerInput, 'holeIdx' | 'stroke'> = { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power, swing, ...(ver === 2 ? { v: MODEL_V } : {}) }; a.play({ holeIdx: t.holeIdx, stroke: t.stroke, ...inp }); }
     assert.ok(a.inputs.length > 5 && a.inputs.every(i => (ver === 2 ? i.v === 2 : !('v' in i))), `version ${ver}: ${a.inputs.length} inputs keep it`);
     const pb = playRound(v, f, gs, 5, { live: gi }), b = new LiveGroup(pb, v, gi, 5);
-    b.replay(JSON.parse(JSON.stringify(a.inputs)) as OwnerInput[]);
+    b.replay(JSON.parse(JSON.stringify(a.inputs)) as OwnerInput[]); b.advance(); a.advance(); // (the day plays on to the end, or to the next turn, the same in both)
     assert.equal(JSON.stringify(pb.shots), JSON.stringify(pa.shots), `version ${ver}: the replay is the same round`);
   }
 });
