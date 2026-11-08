@@ -243,12 +243,15 @@ on the player's own submit and under the rules below; the shipped courses are st
 | **Partial** | no hole lines but fairways, greens and tees: holes worked out from them (a guess, drawn amber in the preview, `holes-derived`); or only some holes numbered | Wingate Park: 3 holes (`derive.ts`, back from `arena/T340-wingate-parked`) |
 | **Outline only** | nothing to build holes from: the game cannot build it and says so | Bloemfontein: a boundary and two streams |
 
+A graded course is built at true size when its land fits the 2 km map, else scaled by the largest whole percent at which it does (the card says the percent: Woodhill 90%). One that would have to shrink
+below 30% (`MIN_SCALE` in `grade.ts`: its holes would be under a third of their real length) is "too big for the 2 km map" and is not built.
+
 ## Being polite to the public servers (`polite.ts`)
 - **Nominatim** (usage policy: at most one request a second, no autocomplete, cache results, identify the app): a search runs only on Search or Enter (never as you type); `Gate` keeps requests at
   least 1.1 s apart; answers are kept 7 days (IndexedDB); the request carries `X-Requested-With: CapitalEmpire-golf` (Nominatim's CORS answer allows that header; the browser adds the page's origin
   as the Referer; a browser cannot set User-Agent); a search already made sends nothing.
 - **Overpass**: one query to look near a place and one query per import; a course already kept is never fetched again, Refresh is the only refetch; the main server, then the two mirrors, a 130 s
-  limit each; a simple POST (no custom header, so no preflight); the player can Cancel.
+  limit each for a course (70 s for the look near a place); a simple POST (no custom header, so no preflight); the player can Cancel.
 - **A 429, a refusal (403) or a busy server** (502, 503, 504, 509, an Overpass "timed out" remark on every server): the card says "The map servers are busy: try again in a minute.", and for the
   minute (or the server's Retry-After) nothing more is sent (`Cooldown`). No network: "Could not reach the map servers: are you online?".
 - **If the game ships widely**, the public servers' policies stop being enough (they are for light, interactive use): a self-hosted Overpass or a small proxy with its own cache would be needed.
