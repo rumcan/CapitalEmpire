@@ -5,7 +5,7 @@
 // while the camera pans (the bench's speeds), its draw time, its GPU time (EXT_disjoint_timer_query_webgl2; --amplify N draws every ground
 // chunk N times so the ground pass stands out), and the masks' GPU bytes.
 //   node scripts/dev/water-motion-shots.mjs --base http://127.0.0.1:5187/ --out E:/ClaudeTemp/T248 [--only shots,anim,numbers] [--modes off,on | main]
-//     [--png (the stills kept lossless too: the off-is-main pixel diff)] [--views river,pond,bridge] [--zooms 0.3,0.15] [--frames 16] [--tag v1] [--look '{"foam":1.5}'] [--amplify 20] [--rounds 3] [--parts bake,pan,draw,gpu]
+//     [--png (the stills kept lossless too: the off-is-main pixel diff)] [--views river,pond,bridge,swamp,creek (T343: the river's swamp band, a creek's)] [--desert] [--zooms 0.3,0.15] [--frames 16] [--tag v1] [--look '{"foam":1.5}'] [--amplify 20] [--rounds 3] [--parts bake,pan,draw,gpu]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game. On a build without the
 // motion (main) the switch does nothing: run it with --modes main.
 import { chromium } from 'playwright-core';
@@ -38,6 +38,8 @@ const open = async url => {
   await page.goto(url, { timeout: 240000, waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
+  // (T343: --desert, the desert theme)
+  if (args.includes('--desert')) { await page.evaluate(() => window.__game.setDesertTheme?.(true)); await page.waitForTimeout(500); }
   await page.evaluate(([look, clock]) => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; if (g.setWaterMotion) { g.setWaterMotion(look); g.waterClock = clock; } }, [look, CLOCK]);
   return { page, ctx };
 };
@@ -60,6 +62,25 @@ const riverSpot = page => page.evaluate(() => {
   // (the view: a third of the way from the shore into the water, so both the bank and the open river show)
   return { x: best.x + ux * best.w / 3, y: best.y + uy * best.w / 3, w: best.w };
 });
+/** T343: the swamp band beside the river (its far side from the town, out past the bank: the band reaches k x the half width there), or a
+ *  creek's band (side: 'creek'); the town side is cut short by lots and roads */
+const swampSpot = (page, side) => page.evaluate(side => {
+  const g = window.__game;
+  if (side === 'creek') {
+    const c = g.terrain.waters.filter(w => w.kind === 'creek').sort((a, b) => b.pts.length - a.pts.length)[0]; if (!c) return null;
+    const i = Math.floor(c.pts.length / 2), p = c.pts[i], q = c.pts[Math.min(c.pts.length - 1, i + 1)], l = Math.hypot(q.x - p.x, q.y - p.y) || 1;
+    return { x: p.x - (q.y - p.y) / l * 2.5, y: p.y + (q.x - p.x) / l * 2.5, w: p.w };
+  }
+  const river = g.terrain.waters.filter(w => w.kind === 'river').sort((a, b) => b.pts.length - a.pts.length)[0]; if (!river) return null;
+  const pts = [...(g.houseLots?.values?.() ?? [])].map(l => l.c ?? l.centre ?? l).filter(p => p && Number.isFinite(p.x));
+  let tx = 0, ty = 0, n = 0; for (const p of pts) { tx += p.x; ty += p.y; n++; }
+  if (!n) { const c = river.pts[Math.floor(river.pts.length / 2)]; tx = c.x + 50; ty = c.y; n = 1; }
+  tx /= n; ty /= n;
+  let best = null, bd = Infinity;
+  for (const p of river.pts) { const d = Math.hypot(p.x - tx, p.y - ty) - p.w / 2; if (d < bd) { bd = d; best = p; } }
+  const l = Math.hypot(tx - best.x, ty - best.y) || 1, ux = (tx - best.x) / l, uy = (ty - best.y) / l;
+  return { x: best.x - ux * (best.w / 2 + 3), y: best.y - uy * (best.w / 2 + 3), w: best.w };
+}, side);
 /** a bridge over the river (the road network's bridge segments: the longest), its middle */
 const bridgeSpot = page => page.evaluate(() => {
   const g = window.__game; let best = null, bl = 0;
@@ -82,7 +103,7 @@ const label = (w, t) => Buffer.from(`<svg width="${w}" height="24" xmlns="http:/
 try {
   for (const view of views) {
     const { page, ctx } = await open(view === 'pond' ? `${base}?start=town&seed=${seed}` : `${base}?fixture=range20`);
-    const at = view === 'river' ? await riverSpot(page) : view === 'bridge' ? await bridgeSpot(page) : await pondSpot(page);
+    const at = view === 'river' ? await riverSpot(page) : view === 'bridge' ? await bridgeSpot(page) : view === 'swamp' ? await swampSpot(page, 'river') : view === 'creek' ? await swampSpot(page, 'creek') : await pondSpot(page);
     report.views[view] = at; console.log(view, JSON.stringify(at));
     if (!at) { await ctx.close(); continue; }
     // ---- stills: each zoom, each mode, the same held clock; a side by side of the first and last mode, and a close crop of the shore

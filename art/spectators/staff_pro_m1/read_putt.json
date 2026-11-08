@@ -1,0 +1,32 @@
+{
+  "id": "spectator:staff_pro_m1:read_putt",
+  "name": "staff_pro_m1 read_putt",
+  "clip": "read_putt",
+  "heightMetres": 1.83,
+  "frameWidth": 160,
+  "frameHeight": 279,
+  "anchor": {
+    "x": 80,
+    "y": 269
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "read_putt1",
+    "read_putt2"
+  ],
+  "fps": 0.4,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m1",
+  "clips": {
+    "read_putt": "Armature|Squat_Stance|baselayer 4.77s, stride 4.67s, body turned 21 deg"
+  }
+}

@@ -13,9 +13,10 @@ export function WelcomeCard({ road, newHole, guide = false, onGo, onClose }: { r
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">Founding season · Welcome</div>
           <button className="btn-icon -mr-2 -mt-2" onClick={onClose} title="Close" aria-label="Close"><Icon name="close" size={18} /></button>
         </div>
-        <div className="font-display text-xl font-bold leading-tight text-[var(--gold-hi)]">Your driving range on {road}</div>
-        <p className="text-sm text-slate-300">Drivers stop to hit a bucket. Build a course behind it, and a town will grow around you.</p>
-        {guide ? <p className="text-xs text-slate-400">It is a bare start: dirt for the car park, no greens, no paths. The guide in the corner walks you through building it, step by step.</p>
+        {/* T288 (#873, the owner: "only his trailer and plot is there"): a guided start's land is bare: the player places the range himself */}
+        <div className="font-display text-xl font-bold leading-tight text-[var(--gold-hi)]">{guide ? `Your land on ${road}` : `Your driving range on ${road}`}</div>
+        <p className="text-sm text-slate-300">{guide ? 'Place a driving range and drivers stop to hit a bucket. Build a course behind it, and a town will grow around you.' : 'Drivers stop to hit a bucket. Build a course behind it, and a town will grow around you.'}</p>
+        {guide ? <p className="text-xs text-slate-400">It is a bare start: only your trailer on your plot. You place everything you buy (the range, its car park, the practice area, every upgrade); the guide in the corner walks you through it, step by step.</p>
           : !newHole && <p className="text-xs text-slate-400">Grow the range first: its upgrades open the practice area, and New hole opens when it takes ${RAMP_TAKINGS.toLocaleString('en-US')} in a season, or in season 2.</p>}
         <button className="btn-gold w-full py-2 text-sm" onClick={onGo} data-testid="welcome-go"><Icon name={guide ? 'income' : newHole ? 'pin' : 'income'} size={18} />{guide ? 'Show me the first step' : newHole ? 'Build the first hole' : 'Open the range'}</button>
       </div>

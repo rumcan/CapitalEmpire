@@ -1,0 +1,34 @@
+{
+  "id": "spectator:staff_pro_m1:fist_shout",
+  "name": "staff_pro_m1 fist_shout",
+  "clip": "fist_shout",
+  "heightMetres": 1.83,
+  "frameWidth": 160,
+  "frameHeight": 279,
+  "anchor": {
+    "x": 80,
+    "y": 269
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "fist_shout1",
+    "fist_shout2",
+    "fist_shout3",
+    "fist_shout4"
+  ],
+  "fps": 1.2,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m1",
+  "clips": {
+    "fist_shout": "retarget_clip 3.47s, stride 3.39s, body turned 14 deg"
+  }
+}

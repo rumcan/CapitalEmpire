@@ -57,7 +57,7 @@ describe('Help › Keys (T202)', () => {
     assert.deepEqual(KEY_PARTS.map(p => p.part), ['top', 'course', 'town', 'general', 'lab']);
     assert.deepEqual(s.filter(x => x.part === 'top').map(x => x.id), ['drawer', 'footer', 'anywhere'], 'T250: the two drawers and the keys that work anywhere first');
     for (const r of RAIL) for (const t of toolsIn(r, true)) {
-      const row = toolRows(s).find(x => x.tool === t.id); if (!t.key || !row || !r.section || t.id === 'props') continue;
+      const row = toolRows(s).find(x => x.tool === t.id); if (!t.key || t.alt || !row || !r.section || t.id === 'props') continue; // (T288: a second home, the road tool in Cart paths & roads, keeps its keys under its own group)
       assert.equal(s.find(x => x.rows.includes(row))!.part, r.section, `${t.id} under ${r.section}`);
     }
     // the general keys the issue names: the camera, the speed, Esc, Undo / Redo, Delete, this sheet
@@ -129,7 +129,7 @@ describe('Help › Keys (T202)', () => {
 
 describe('the number keys (T202)', () => {
   it('1. 1-6 open the rail\'s groups after Select, in the rail\'s order (the six with a driving range)', () => {
-    const order = (golf: boolean, range: boolean) => railEntries(null, golf, 'select', { range }).map(e => e.item.id).filter(id => id !== 'select' && id !== 'ground');
+    const order = (golf: boolean, range: boolean) => railEntries(null, golf, 'select', { range }).map(e => e.item.id).filter(id => id !== 'select' && id !== 'ground' && id !== 'paths'); // (T288: Cart paths & roads has no number)
     assert.deepEqual(numberedGroups(true, true).map(r => r.id), ['range', 'course', 'facilities', 'traffic', 'towndecor', 'bulldoze']);
     for (const g of GAMES) assert.deepEqual(numberedGroups(g.golf, g.range).map(r => r.id), order(g.golf, g.range).slice(0, 6), JSON.stringify(g));
     // T250: the sheet's drawer cards name them by number, as laid out: the course drawer's top to bottom, the town footer's left to right; the

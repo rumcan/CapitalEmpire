@@ -18,9 +18,12 @@ import { TownFooter } from '../src/ui/TownFooter';
 import type { Tool } from '../src/game/types';
 import { GREENKEEPING } from '../src/game/features';
 
-const GOLF_RAIL = ['select', 'course', 'facilities', 'ground', 'traffic', 'towndecor', 'bulldoze'];
+// T288 (#873, the owner 2026-10-31: "make cart paths and roads its own button above facilities in the main left menu"): Cart paths & roads
+// ('paths') between Course and Facilities. T288 too (the owner, 2026-11-04, asked whether to unlock the road tool from the start of a new game:
+// "Yes, unlock it"): the road tool (Traffic's Build) is open from stage 1, so Traffic is never locked in place; its other tools wait for stage 3
+const GOLF_RAIL = ['select', 'course', 'paths', 'facilities', 'ground', 'traffic', 'towndecor', 'bulldoze'];
 /** the classic town game: Facilities holds golf tools only, so it is not on its rail */
-const TOWN_RAIL = ['select', 'course', 'traffic', 'towndecor', 'bulldoze'];
+const TOWN_RAIL = ['select', 'course', 'paths', 'traffic', 'towndecor', 'bulldoze'];
 const course = (holes: number): CourseProgress => ({ holes, seasons: 0, invited: false });
 /** the unlocks of a golf game with this progress and holes */
 const uiOf = (p: GolfProgress, holes: number) => computeProgressiveUiState(progressFacts(p, course(holes)));
@@ -57,15 +60,20 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
     const town = RAIL.find(r => r.id === 'towndecor')!;
     assert.deepEqual(toolsIn(town, false).map(t => t.id), ['paint', 'business']);
     assert.deepEqual(toolsIn(town, true).map(t => t.id), ['paint', 'props', 'props'], 'T187: its Props and its Buildings (the Props tool town views)');
-    assert.deepEqual(toolsIn(RAIL.find(r => r.id === 'course')!, false).map(t => t.id), ['course', 'path'], 'T206: its cart paths and drives in Course');
+    assert.deepEqual(toolsIn(RAIL.find(r => r.id === 'course')!, false).map(t => t.id), ['course'], 'T288: its cart paths and drives on their own button');
+    assert.deepEqual(toolsIn(RAIL.find(r => r.id === 'paths')!, false).map(t => t.id), ['path', 'road']);
   });
   it('every tool is reachable from exactly one group (Props from Facilities and Town decoration, Paint from Town decoration and Facilities\' Plants), and the groups hold what the owner asked', () => {
     for (const t of ALL_TOOLS) {
       const n = railItemsOf(t).length;
-      assert.equal(n, t === 'props' || t === 'paint' || t === 'course' ? 2 : 1, t); // Course: Holes, and the footer's Ground height (its height brush)
+      // Course: Holes, and the footer's Ground height (its height brush); T288: the road tool in Traffic and in Cart paths & roads (a second home)
+      assert.equal(n, t === 'props' || t === 'paint' || t === 'course' || t === 'road' ? 2 : 1, t);
     }
     const tools = (id: string) => RAIL.find(r => r.id === id)!.tools.map(t => t.id);
-    assert.deepEqual(tools('course'), GREENKEEPING ? ['course', 'buildings', 'path', 'greenkeeping'] : ['course', 'buildings', 'path'], 'T206: Cart paths & roads directly below Buildings');
+    assert.deepEqual(tools('course'), GREENKEEPING ? ['course', 'buildings', 'greenkeeping'] : ['course', 'buildings'], 'T288: Cart paths & roads on its own button');
+    assert.deepEqual(tools('paths'), ['path', 'road'], 'T288: the cart paths and drives, and the town roads');
+    assert.equal(railItemOf('road')?.id, 'traffic', 'the road tool lights Traffic unless opened from Cart paths & roads');
+    assert.equal(railItemOf('road', 'paths')?.id, 'paths');
     assert.deepEqual(RAIL.find(r => r.id === 'course')!.extras?.map(x => x.id), ['event', 'land'], 'the tournament stuff: the Event catalogue; T200: Land for sale');
     assert.deepEqual(tools('facilities'), ['practice', 'paint', 'props'], 'T206: Practice, Plants, Decoration (Props)');
     assert.equal(RAIL.find(r => r.id === 'decor'), undefined, 'Decoration is no group of the rail');
@@ -77,7 +85,7 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
     const ui = uiOf(played(3), 3);
     const lit = (t: Tool, active?: string, rangeOpen = false) => railEntries(ui, true, t, { active, range: true, rangeOpen }).filter(e => e.on).map(e => e.item.id);
     assert.deepEqual(lit('course'), ['course']); assert.deepEqual(lit('buildings'), ['course']); assert.deepEqual(lit('greenkeeping'), GREENKEEPING ? ['course'] : [], 'hidden: no rail item holds it');
-    assert.deepEqual(lit('path'), ['course']); assert.deepEqual(lit('lane'), ['traffic']); assert.deepEqual(lit('toll'), ['traffic']); assert.deepEqual(lit('paint'), ['towndecor']);
+    assert.deepEqual(lit('path'), ['paths'], 'T288: its own button'); assert.deepEqual(lit('road', 'paths'), ['paths']); assert.deepEqual(lit('road'), ['traffic']); assert.deepEqual(lit('lane'), ['traffic']); assert.deepEqual(lit('toll'), ['traffic']); assert.deepEqual(lit('paint'), ['towndecor']);
     assert.deepEqual(lit('paint', 'facilities'), ['facilities'], 'T206: the plant brush opened from Facilities lights it'); assert.deepEqual(lit('practice'), ['facilities']);
     assert.deepEqual(lit('props'), ['facilities']); assert.deepEqual(lit('props', 'towndecor'), ['towndecor']); assert.deepEqual(lit('props', 'facilities'), ['facilities']);
     assert.deepEqual(lit('select', undefined, true), ['range']);
@@ -87,26 +95,31 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
 });
 
 describe("the ramp's locks per group and inside a group (T182)", () => {
-  it('stage 1: Traffic is locked in place with what unlocks it; Course, Facilities and Town decoration are open, their locked tools locked inside', () => {
+  it('stage 1: no group is locked (T288: the road tool is open, so Traffic is); Course, Facilities, Traffic and Town decoration are open, their locked tools locked inside', () => {
     const ui = uiOf(played(0), 0), es = railEntries(ui, true, 'course'), h = html(es);
-    assert.deepEqual(es.filter(e => e.locked).map(e => [e.item.id, e.locked]), [['traffic', WHY3]]);
+    assert.deepEqual(es.filter(e => e.locked).map(e => [e.item.id, e.locked]), []);
     const traffic = button(h, 'traffic');
-    assert.match(traffic, /class="[^"]*rail-tab-locked/); assert.match(traffic, /aria-disabled="true"/); assert.match(traffic, /class="rail-lock"/);
+    assert.doesNotMatch(traffic, /rail-tab-locked|aria-disabled/);
     assert.match(traffic, /data-tip="Traffic"/); assert.match(traffic, /data-tip-key="R"/);
+    assert.equal(toolLock(ui, 'road'), null, 'the road tool from the start (the owner, 2026-11-04: "Yes, unlock it")');
+    assert.equal(toolLock(ui, 'lane'), WHY3, 'Upgrade locked inside Traffic');
     assert.equal(toolLock(ui, 'paint'), STAGE_WHY[2], 'Paint locked inside Town decoration');
     assert.match(toolLock(ui, 'greenkeeping') ?? '', /^Unlocks when your first hole is grown in/, 'Greenkeeping locked inside Course');
     assert.equal(toolLock(ui, 'props'), null); assert.equal(toolLock(ui, 'course'), null); assert.equal(toolLock(ui, 'path'), null);
-    for (const id of ['select', 'course', 'facilities', 'towndecor', 'bulldoze']) assert.doesNotMatch(button(h, id), /rail-tab-locked|aria-disabled/, id);
+    for (const id of ['select', 'course', 'paths', 'facilities', 'towndecor', 'bulldoze']) assert.doesNotMatch(button(h, id), /rail-tab-locked|aria-disabled/, id);
     assert.equal(extraLock(ui, { id: 'event', label: 'Tournament', icon: 'calendar' }), WHY3, 'the Tournament opens with the town (its chip\'s stage)');
   });
   it('a click on a group opens its last tool, else its first open one; a click on a locked group says why and opens nothing', () => {
+    // (T288: no golf group is locked at stage 1 now; the classic Traffic lock is played by a stand-in lock on every tool)
     const s1 = uiOf(played(0), 0), s2 = uiOf(played(1), 1), town = RAIL.find(r => r.id === 'towndecor')!, traffic = RAIL.find(r => r.id === 'traffic')!;
     assert.equal(pickTool(town, true, s1), 'props', 'stage 1: Paint is locked, Props opens');
     assert.equal(pickTool(town, true, s2), 'paint'); assert.equal(pickTool(town, true, s2, 'props'), 'props', 'the last one used');
     assert.equal(pickTool(town, true, s1, 'paint'), 'props', 'a last one locked again is skipped');
-    assert.equal(pickTool(traffic, true, s1), null);
+    assert.equal(pickTool(traffic, true, s1), 'road', 'T288: Build is open at stage 1');
+    const all = toolsIn(traffic, true).map(t => ({ id: t.id, stage: 3 as const, why: WHY3 })), sLocked = { ...s1, lockedTools: [...s1.lockedTools.filter(t => !all.some(a => a.id === t.id)), ...all] };
+    assert.equal(pickTool(traffic, true, sLocked), null);
     let picked = '', said = '';
-    const tree = Rail({ entries: railEntries(s1, true, 'course'), onPick: r => { picked = r.id; }, onLocked: (r, why) => { said = `${r.id}: ${why}`; } });
+    const tree = Rail({ entries: railEntries(sLocked, true, 'course'), onPick: r => { picked = r.id; }, onLocked: (r, why) => { said = `${r.id}: ${why}`; } });
     const find = (id: string): ReactElement<{ onClick: () => void }> => {
       const walk = (n: unknown): ReactElement<{ onClick: () => void }> | null => {
         if (Array.isArray(n)) { for (const c of n) { const f = walk(c); if (f) return f; } return null; }
@@ -119,8 +132,8 @@ describe("the ramp's locks per group and inside a group (T182)", () => {
     find('traffic').props.onClick(); assert.equal(picked, ''); assert.equal(said, `traffic: ${WHY3}`);
     find('towndecor').props.onClick(); assert.equal(picked, 'towndecor');
   });
-  it('stage 2 opens Paint; Traffic stays locked; stage 3 and Show every tool now lock nothing', () => {
-    assert.deepEqual(railEntries(uiOf(played(1), 1), true, 'select').filter(e => e.locked).map(e => e.item.id), ['traffic']);
+  it('stage 2 opens Paint; no group is locked (T288: Traffic open with its Build); stage 3 and Show every tool now lock nothing', () => {
+    assert.deepEqual(railEntries(uiOf(played(1), 1), true, 'select').filter(e => e.locked).map(e => e.item.id), []);
     assert.equal(toolLock(uiOf(played(1), 1), 'paint'), null);
     assert.deepEqual(railEntries(uiOf(played(3), 3), true, 'select').filter(e => e.locked), []);
     const adv = played(0); adv.advanced = true;
@@ -133,7 +146,7 @@ describe('no key letters on the rail; the keys stay in the tooltip (T182)', () =
     const es = railEntries(uiOf(played(3), 3), true, 'select', { range: true }), h = html(es);
     assert.doesNotMatch(h, /rail-key/);
     for (const e of es) assert.equal(railTip(e).key, e.item.key || undefined, e.item.id);
-    assert.deepEqual(es.map(e => [e.item.id, e.item.key]), [['select', 'V'], ['range', ''], ['course', 'C'], ['facilities', 'Z'], ['ground', ''], ['traffic', 'R'], ['towndecor', 'A'], ['bulldoze', 'X']]);
+    assert.deepEqual(es.map(e => [e.item.id, e.item.key]), [['select', 'V'], ['range', ''], ['course', 'C'], ['paths', ''], ['facilities', 'Z'], ['ground', ''], ['traffic', 'R'], ['towndecor', 'A'], ['bulldoze', 'X']]);
     // the tools keep their keys (the engine's keys open them, as before)
     const keyOf = (t: Tool) => RAIL.flatMap(r => r.tools).find(x => x.id === t && !x.alt)!.key;
     assert.deepEqual(['course', 'props', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze', 'select'].map(t => keyOf(t as Tool)), ['C', 'Z', 'R', 'N', 'Y', 'J', 'U', 'P', 'T', 'A', 'X', 'V']);
@@ -154,10 +167,11 @@ describe('NEW per group; old saves (T117 seen ids, T182)', () => {
   it('stage 3: Traffic says NEW until one of its tools is opened; the row keeps the others\' own NEW until they are', () => {
     const p = played(3, ['paint', 'greenkeeping']);
     assert.deepEqual(railEntries(uiOf(p, 3), true, 'select').filter(e => e.isNew).map(e => e.item.id), ['traffic']);
-    advanceProgress(p, progressFacts(p, course(3)), 'road');
+    // (T288: the road tool is open from stage 1, so it carries no NEW: Upgrade, which opens now, is the one opened)
+    advanceProgress(p, progressFacts(p, course(3)), 'lane');
     const ui = uiOf(p, 3);
-    assert.deepEqual(railEntries(ui, true, 'road').filter(e => e.isNew).map(e => e.item.id), []);
-    assert.equal(toolNew(ui, 'road'), false); assert.equal(toolNew(ui, 'lane'), true); assert.equal(toolNew(ui, 'junction'), true);
+    assert.deepEqual(railEntries(ui, true, 'lane').filter(e => e.isNew).map(e => e.item.id), []);
+    assert.equal(toolNew(ui, 'road'), false); assert.equal(toolNew(ui, 'lane'), false); assert.equal(toolNew(ui, 'downgrade'), true); assert.equal(toolNew(ui, 'junction'), true);
   });
   it("an old save's seen ids (tools and the old groups) map to the new groups: nothing it opened says NEW again", () => {
     const p = played(3); p.seen.push('paint', 'greenkeeping', 'road', 'roads', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'transport');
@@ -176,7 +190,7 @@ describe('the rail keeps its icons; the tiles are the flyouts\' (T233)', () => {
     assert.equal((h.match(/<img /g) ?? []).length, es.length, 'one icon a group');
     // the rail's groups and their tools are as they were: the tiles add no tool and move none
     assert.deepEqual(RAIL.map(r => [r.id, r.tools.map(t => t.id).join(' ')]), [
-      ['select', 'select'], ['range', 'select'], ['course', `course buildings path${GREENKEEPING ? ' greenkeeping' : ''}`], ['facilities', 'practice paint props'],
+      ['select', 'select'], ['range', 'select'], ['course', `course buildings${GREENKEEPING ? ' greenkeeping' : ''}`], ['paths', 'path road'], ['facilities', 'practice paint props'],
       ['ground', 'course'], ['traffic', 'road lane downgrade junction bus park toll'], ['towndecor', 'paint props props business'], ['bulldoze', 'bulldoze'],
     ]);
   });
@@ -190,11 +204,11 @@ describe('the two drawers: the course drawer on the left, the town footer along 
   const draw = (es: RailEntry[], drawer: 'side' | 'footer', compact = false) => renderToStaticMarkup(createElement(Rail, { entries: drawerEntries(es, drawer), drawer, compact, onPick: () => {}, onLocked: () => {} }));
   it('golf: Select · Course: Driving range, Course, Facilities · Bulldoze on the left; Town: Traffic, Town decoration in the footer; the classic game alike', () => {
     const es = railEntries(null, true, 'select', { range: true });
-    assert.deepEqual(side(es), ['select', 'range', 'course', 'facilities', 'bulldoze']);
+    assert.deepEqual(side(es), ['select', 'range', 'course', 'paths', 'facilities', 'bulldoze']);
     assert.deepEqual(foot(es), ['ground', 'traffic', 'towndecor'], 'the owner, 2026-11-01: Ground height next to Traffic');
-    assert.deepEqual(side(railEntries(null, true, 'select')), ['select', 'course', 'facilities', 'bulldoze'], 'no range: the Course group first under Course');
+    assert.deepEqual(side(railEntries(null, true, 'select')), ['select', 'course', 'paths', 'facilities', 'bulldoze'], 'no range: the Course group first under Course');
     const town = railEntries(null, false, 'road');
-    assert.deepEqual(side(town), ['select', 'course', 'bulldoze'], 'the classic town game: its Course group on the left');
+    assert.deepEqual(side(town), ['select', 'course', 'paths', 'bulldoze'], 'the classic town game: its Course group on the left');
     assert.deepEqual(foot(town), ['traffic', 'towndecor'], 'the classic town game shows the footer with its town tools');
     assert.equal(drawerEntries(town, 'footer').find(e => e.on)?.item.id, 'traffic', 'the road in hand lights Traffic in the footer');
     // every group in exactly one drawer, by its section; the drawers together are the rail
@@ -230,8 +244,11 @@ describe('the two drawers: the course drawer on the left, the town footer along 
     // T255: the hint bar stands above the footer and above a town tool's panel docked on it (--foot-stack: TownFooter sets both)
     assert.match(readFileSync('src/App.tsx', 'utf8'), /bottom-\[calc\(var\(--foot-stack,0px\)\+0\.5rem\)\][^"]*z-20 flex flex-col items-center/, 'the hint bar stands above the footer');
   });
-  it('locks and NEW in the footer as on the rail: stage 1 Traffic locked in place with its why; stage 2 Town decoration says NEW', () => {
-    const f1 = draw(railEntries(uiOf(played(0), 0), true, 'course'), 'footer'), traffic = button(f1, 'traffic');
+  it('locks and NEW in the footer as on the rail: a locked Traffic locked in place with its why (T288: none at stage 1 now); stage 2 Town decoration says NEW', () => {
+    const s1 = uiOf(played(0), 0);
+    assert.doesNotMatch(button(draw(railEntries(s1, true, 'course'), 'footer'), 'traffic'), /rail-tab-locked/, 'T288: the road tool is open from the start');
+    const all = toolsIn(RAIL.find(r => r.id === 'traffic')!, true).map(t => ({ id: t.id, stage: 3 as const, why: WHY3 }));
+    const f1 = draw(railEntries({ ...s1, lockedTools: [...s1.lockedTools.filter(t => !all.some(a => a.id === t.id)), ...all] }, true, 'course'), 'footer'), traffic = button(f1, 'traffic');
     assert.match(traffic, /rail-tab-locked/); assert.match(traffic, /aria-disabled="true"/); assert.match(traffic, /class="rail-lock"/);
     assert.match(traffic, new RegExp(`data-tip-why="${WHY3.replace(/'/g, '&#x27;')}"`));
     const s2 = railEntries(uiOf(played(1), 1), true, 'course');

@@ -16,7 +16,7 @@ export type LeafAct =
   | { k: 'road'; id: string } | { k: 'junction'; id: string } | { k: 'surface'; id: string } | { k: 'newHole' } | { k: 'holes' }
   | { k: 'club' } | { k: 'halfway' } | { k: 'care'; id: string } | { k: 'event' } | { k: 'props'; group: string | null }
   | { k: 'paint'; tex: string } | { k: 'plant'; id: string } | { k: 'paintMode'; id: string } | { k: 'range'; section: string | null } | { k: 'land' }
-  | { k: 'practice'; id: string } | { k: 'build' } | { k: 'pro'; id: 'prooffice' | 'teachhut' };
+  | { k: 'practice'; id: string } | { k: 'build' } | { k: 'place'; id: string } | { k: 'pro'; id: 'prooffice' | 'teachhut' };
 /** T256 (#743): Build, the holes' painting tools on your property (Range › Build, Facilities › Build on your property): the course tool's
  *  entry with the property's brush */
 const BUILD_TOOL: RailTool = { id: 'course', label: 'Build', key: '', icon: 'terrain' };
@@ -47,8 +47,9 @@ export interface MenuCtx {
   practice?: { id: string; name: string; why: string | null }[];
   /** New hole's lock (null: open) */
   newHoleWhy: string | null;
-  /** the range card's sections (a game with a range) */
-  range: { id: string; name: string }[];
+  /** the range card's sections (a game with a range); T288: place, a placement (the range, its car park, the practice area: a click takes it in
+   *  hand) with its lock (why) */
+  range: { id: string; name: string; place?: boolean; why?: string | null }[];
 }
 
 /** the group's flyout rows: its sub-groups and tools (a single-tool group, Select or Bulldoze, has none: a click picks its tool) */
@@ -76,7 +77,10 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
   };
   const rows: (MenuRow | null)[] = [];
   if (item.action === 'range') {
-    for (const s of c.range) rows.push(leaf(item.tools[0], s.name, { k: 'range', section: s.id === 'card' ? null : s.id }, 'pin'));
+    for (const s of c.range) {
+      if (s.place) { const r = leaf(item.tools[0], s.name, { k: 'place', id: s.id }, 'house'); if (r) rows.push({ ...r, why: s.why ?? null, ...(s.why ? {} : { gold: true }) }); continue; }
+      rows.push(leaf(item.tools[0], s.name, { k: 'range', section: s.id === 'card' ? null : s.id }, 'pin'));
+    }
     // T256: Build, gold, last: the holes' painting tools on the range, the practice area and the rest of your land
     if (c.golf && c.range.length) { const b = leaf(BUILD_TOOL, 'Build', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, note: 'Paint your property, apart from the holes' }); }
     return rows.filter((r): r is MenuRow => !!r);
@@ -101,12 +105,21 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       ] : [], h), ROW_TILE.holes));
       const b = byId('buildings');
       if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice)], b), ROW_TILE.buildings));
-      // T206: the roads on your property (the course's cart paths and drives), directly below Buildings; town roads stay in Traffic
-      const p = byId('path');
-      if (p) { const r = group('paths', p.label, 'sidewalk', classes(p, c.paths), p); if (r) rows.push({ ...r, note: 'Roads and cart paths on your property', tile: ROW_TILE.paths }); }
+      // (T288: Cart paths & roads is a rail button of its own, below Course)
       const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));
       if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, tile: EXTRA_TILE[x.id], leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
+      break;
+    }
+    case 'paths': {
+      // T288 (#873, the owner: "make cart paths and roads its own button above facilities in the main left menu"): the course's cart paths and
+      // drives (the road tool on your property, its classes under their families), then the town's roads (Traffic › Build's classes), each with
+      // its own lock: the roads say when they open
+      // (two tiles: the cart paths with the T233 cart path tile, the roads on the navy square; each opens its classes as a list)
+      const p = byId('path');
+      if (p) { const r = group('paths', 'Cart paths & drives', 'sidewalk', classes(p, c.paths), p); if (r) rows.push({ ...r, note: 'Roads and cart paths on your property', tile: ROW_TILE.paths }); }
+      const rd = byId('road');
+      if (rd) { const r = group('roads', 'Roads', 'road', classes(rd, c.roads), rd); if (r) rows.push({ ...r, note: 'Town roads: they give the town new lots' }); }
       break;
     }
     case 'facilities': {

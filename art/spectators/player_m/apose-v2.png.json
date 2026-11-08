@@ -1,0 +1,14 @@
+{
+  "generationId": "c4ce9555-3dc3-4b2c-876c-be080ba132ff",
+  "prompt": "The same man as the reference picture, same face, cap, navy polo, belt, light grey slacks and white golf shoes, redrawn as a 3D-modelling A-pose reference: front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, the legs slightly apart with a clear gap between them. The whole figure from cap to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 1849185358,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/4G0mrT5UcCtD5KY8luXQ/OGeroRmBwlYVXlOowOJXkuea1bs1/5d31a05f-03cf-4217-a5cf-bb85f6c8a934.png",
+  "requestPrompt": "The same man as the reference picture, same face, cap, navy polo, belt, light grey slacks and white golf shoes, redrawn as a 3D-modelling A-pose reference: front view, facing the viewer straight on, BOTH ARMS RAISED OUT TO THE SIDES at about 40 degrees from the body, straight elbows, hands open with fingers together, a wide clear gap of background between each arm and the torso and between the hands and the hips, the legs slightly apart with a clear gap between them. The whole figure from cap to shoes in frame with a margin. Even soft studio light, plain flat light grey background, standing on nothing: no floor, no ground, no shadow under the shoes.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "3:4",
+  "gameId": "4G0mrT5UcCtD5KY8luXQ",
+  "outputPath": "art/spectators/player_m/apose-v2.png",
+  "status": "saved",
+  "sha256": "d68605875a1f8ffec310b9b4a8bd756a58d8e605f61da05e660338b293e1e826"
+}

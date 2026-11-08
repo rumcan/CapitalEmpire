@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { tipAttrs, tipPlace, tipText } from '../src/ui/tip';
-import { drawerEntries, railEntries, railTip } from '../src/ui/rail-items';
+import { RAIL, drawerEntries, railEntries, railTip } from '../src/ui/rail-items';
 import { Rail } from '../src/ui/Rail';
 import { computeProgressiveUiState, type PlayerProgressFacts } from '../src/game/ext/progressive-ui';
 import { UI_SCALES, UI_SCALE_KEY, clampUiScale, loadUiScale, saveUiScale } from '../src/ui/uiScale';
@@ -13,9 +13,13 @@ import { UI_SCALES, UI_SCALE_KEY, clampUiScale, loadUiScale, saveUiScale } from 
 const facts = (over: Partial<PlayerProgressFacts> = {}): PlayerProgressFacts => ({ advancedMode: false, playableHoles: 0, seasonsDone: 0, invited: false, elapsedSeconds: 30, roadsBuilt: 0, carParksBuilt: 0, eventStructuresPlaced: 0, ...over });
 
 test("a rail group's tooltip: its name and key; locked, what unlocks it (the stages' words)", () => {
-  const es = railEntries(computeProgressiveUiState(facts()), true, 'course');
+  // T288 (the owner, 2026-11-04: "Yes, unlock it"): the road tool is open from the start, so Traffic is no longer locked at stage 1: a stand-in
+  // lock on every Traffic tool plays the locked group
+  const why3 = "Unlocks with your third hole or the tour's invitation", s1 = computeProgressiveUiState(facts());
+  assert.deepEqual(railTip(railEntries(s1, true, 'course').find(e => e.item.id === 'traffic')!), { name: 'Traffic', key: 'R' }, 'T288: open at stage 1');
+  const tr = RAIL.find(r => r.id === 'traffic')!.tools.map(t => ({ id: t.id, stage: 3 as const, why: why3 }));
+  const es = railEntries({ ...s1, lockedTools: [...s1.lockedTools.filter(t => !tr.some(a => a.id === t.id)), ...tr] }, true, 'course');
   const traffic = es.find(e => e.item.id === 'traffic')!, course = es.find(e => e.item.id === 'course')!, town = es.find(e => e.item.id === 'towndecor')!;
-  const why3 = "Unlocks with your third hole or the tour's invitation";
   assert.deepEqual(railTip(traffic), { name: 'Traffic', key: 'R', why: why3 });
   assert.equal(tipText(railTip(traffic)), `Traffic (R) · ${why3}`);
   assert.deepEqual(railTip(course), { name: 'Course', key: 'C' }, 'an open group: no reason');

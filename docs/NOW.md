@@ -1,4 +1,4 @@
-> **2026-11-03: read `docs/HANDOVER-2026-11-03.md` first.** The previous lead's account ran out mid-work: the state, the art pipeline and the next steps are there.
+> **2026-11-08: read `docs/HANDOVER-2026-11-08.md` first** (the lead moved to another Claude account; the state, the queue and the owner's rules are there). The 2026-11-03 handover still holds for the art pipeline.
 
 # NOW: the live work log
 

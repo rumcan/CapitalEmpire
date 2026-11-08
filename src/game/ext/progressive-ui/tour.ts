@@ -20,7 +20,8 @@ export const TOWN_TOUR: readonly GuideStep[] = Object.freeze([
     id: 'tour-roads',
     n: 2,
     title: 'Roads are your job',
-    body: 'The town never lays a road of its own. Build one with the road tool (Traffic › Build) to give it new lots: paved roads sell their lots to the town and pay you. Build a short road to go on.',
+    // T288: the road tool is open from the start (the owner, 2026-11-04: "Yes, unlock it"): the step is done when you build a town road
+    body: 'The town never lays a road of its own. Build one with the road tool (Cart paths & roads › Roads, or Traffic › Build) to give it new lots: paved roads sell their lots to the town and pay you. Build a short road to go on.',
     done: 'auto',
     target: { ui: 'rail-traffic' },
   },
@@ -36,7 +37,7 @@ export const TOWN_TOUR: readonly GuideStep[] = Object.freeze([
     id: 'tour-golf',
     n: 4,
     title: 'Now your golf',
-    body: 'Your driving range is next: the guide in the corner walks you through building it, step by step.',
+    body: 'Your land is bare: only your trailer. Place your driving range next (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.',
     done: 'next',
     target: { ui: 'rail-range' },
   },
@@ -59,7 +60,7 @@ export function normalizeTour(x: unknown): TourSave | null {
 /** what the tutorial's steps read: the road tool's lock (its why; null: open) and the start (a range start's, or the old town start's) */
 export interface TourFacts { roadLock: string | null; start: 'range' | 'town' }
 
-/** a step as this game shows it: step 2 with the road tool still locked says when it opens and goes on with Next (it cannot wait for a road the
+/** a step as this game shows it: step 2 with the road tool still locked (T288: never in a golf game now; kept for a lock of another kind) says when it opens and goes on with Next (it cannot wait for a road the
  *  player cannot build); step 4 in the old town start points at the course (no range there) */
 export function tourStepFor(s: GuideStep, f: TourFacts): GuideStep {
   if (s.id === 'tour-roads' && f.roadLock) return { ...s, done: 'next', body: `The town never lays a road of its own. Build roads with the road tool (Traffic › Build) to give it new lots: paved roads sell their lots to the town and pay you. The road tool is locked for now: ${f.roadLock.replace(/^Unlocks/, 'it opens').replace(/\.$/, '')}.` };

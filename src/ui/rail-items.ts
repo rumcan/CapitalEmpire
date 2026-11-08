@@ -44,11 +44,16 @@ export const RAIL: readonly RailItem[] = [
   { id: 'course', label: 'Course', icon: 'trophy', key: 'C', section: 'course', group: 'course', tools: [
     { id: 'course', label: 'Holes', key: 'C', icon: 'trophy' },
     { id: 'buildings', label: 'Buildings', key: '', icon: 'house', only: 'golf' },
-    // T206: the roads on the player's own property (the course's cart paths and drives: the road tool on the course, T084), below Buildings
-    { id: 'path', label: 'Cart paths & roads', key: '', icon: 'sidewalk' },
     // Greenkeeping (plan P23-UX P2-5, T175): the Grass panel as a tool, its care armed like a brush; it opens with the first grown hole
     ...(GREENKEEPING ? [{ id: 'greenkeeping' as const, label: 'Greenkeeping', key: '', icon: 'trees' as const, only: 'golf' as const }] : []), // hidden for now (features.ts)
   ], extras: [{ id: 'event', label: 'Tournament', icon: 'calendar' }, { id: 'land', label: 'Land for sale', icon: 'terrain' }] },
+  // T288 (#873, the owner 2026-10-31: "make cart paths and roads its own button above facilities in the main left menu"): the roads on the
+  // player's own property (the course's cart paths and drives: the road tool on the course, T084; in Course since T206) and the town's roads
+  // (Traffic's Build, a second home: Traffic stays lit for it unless opened from here), each class with its lock
+  { id: 'paths', label: 'Cart paths & roads', icon: 'sidewalk', key: '', section: 'course', group: 'course', tools: [
+    { id: 'path', label: 'Cart paths & roads', key: '', icon: 'sidewalk' },
+    { id: 'road', label: 'Roads', key: 'R', icon: 'road', alt: true },
+  ] },
   // T206: the practice facilities' own building tools, the plant brush (Town decoration's, on the course side too) and Decoration's Props
   { id: 'facilities', label: 'Facilities', icon: 'leaf', key: 'Z', section: 'course', group: 'course', only: 'golf', tools: [
     { id: 'practice', label: 'Practice', key: '', icon: 'pin', only: 'golf', sub: 'Practice' },

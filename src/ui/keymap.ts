@@ -28,7 +28,8 @@ export const KEY_PARTS: readonly { part: KeyPart; heading: string }[] = [
  *  course drawer's 1-3 and Bulldoze's 6, the footer's 4 and 5 with a driving range) */
 export function numberedGroups(golf: boolean, range: boolean): RailItem[] {
   // (the footer's Ground height, 2026-11-01, has no number: the groups keep the numbers they had)
-  return railEntries(null, golf, 'select', { range }).map(e => e.item).filter(r => r.id !== 'select' && r.id !== 'ground').slice(0, 6);
+  // (T288: nor Cart paths & roads, its own button since T288: the others keep their numbers)
+  return railEntries(null, golf, 'select', { range }).map(e => e.item).filter(r => r.id !== 'select' && r.id !== 'ground' && r.id !== 'paths').slice(0, 6);
 }
 /** a group with one tool and no card (Bulldoze): its number picks the tool, no flyout */
 const menuless = (r: RailItem): boolean => !r.action && r.tools.length === 1;
@@ -89,7 +90,7 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
       const rows: KeyRow[] = [];
       for (const t of toolsIn(r, o.golf)) {
         shown.add(t.id);
-        if (!t.key || seen.has(t.id)) continue;
+        if (!t.key || t.alt || seen.has(t.id)) continue; // (T288: a second home's key, the road tool's in Cart paths & roads, is listed under its own group)
         seen.add(t.id); rows.push(toolRow(t, t.id === 'road' ? 'Roads (Build)' : t.label));
       }
       if (rows.length) out.push({ id: r.id, title: r.label, part, rows });

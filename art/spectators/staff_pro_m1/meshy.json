@@ -1,0 +1,98 @@
+{
+  "clips": {
+    "golf_drive": {
+      "action": 323,
+      "task": "01a1b795-bf60-72e0-99c1-2210451a4ec0",
+      "credits": 3
+    },
+    "chip": {
+      "action": "m:chip",
+      "task": "01a1b796-462c-71b7-876c-7f85e82461b5",
+      "credits": 3
+    },
+    "putt": {
+      "action": "m:putt",
+      "task": "01a1b796-cca7-7376-8b71-3d6870c5365e",
+      "credits": 3
+    },
+    "practice_swing": {
+      "action": "m:practice_swing",
+      "task": "01a1b797-5634-7307-b230-60db3c2f86dc",
+      "credits": 3
+    },
+    "read_putt": {
+      "action": 54,
+      "task": "01a1b797-9102-7344-93d6-1ded5df4488b",
+      "credits": 3
+    },
+    "fist_pump": {
+      "action": 403,
+      "task": "01a1b797-cadd-762f-bf05-e6399b7eaba7",
+      "credits": 3
+    },
+    "frustrated": {
+      "action": 588,
+      "task": "01a1b798-04a6-771f-bafc-e4eb5a60c6c6",
+      "credits": 3
+    },
+    "tip_cap": {
+      "action": "m:tip_cap",
+      "task": "01a1b798-8ca2-70d8-b4ca-a803c4f75c6c",
+      "credits": 3
+    },
+    "lift_trophy": {
+      "action": "m:lift_trophy",
+      "task": "01a1b799-1350-767c-b9b1-66d6e6bf742b",
+      "credits": 3
+    },
+    "receive_trophy": {
+      "action": "m:receive_trophy",
+      "task": "01a1b799-9a67-7349-b770-1bd2607d40be",
+      "credits": 3
+    },
+    "hug": {
+      "action": "m:hug",
+      "task": "01a1b79a-24c4-73b2-81db-1cc3bce45ad0",
+      "credits": 3
+    },
+    "handshake": {
+      "action": "m:handshake",
+      "task": "01a1b79a-abb0-77ac-b544-f98dc3b5adff",
+      "credits": 3
+    },
+    "club_throw": {
+      "action": "m:club_throw",
+      "task": "01a1b79b-36b7-714a-8396-d5d53cc76463",
+      "credits": 3
+    },
+    "club_slam": {
+      "action": 389,
+      "task": "01a1b79b-7284-76ba-832a-8d71b1a024f8",
+      "credits": 3
+    },
+    "angry_walk": {
+      "action": "m:angry_walk",
+      "task": "01a1b79b-f884-7258-9f63-1f0157dc9da6",
+      "credits": 3
+    },
+    "fist_shout": {
+      "action": "m:fist_shout",
+      "task": "01a1b79c-8040-77aa-b21f-05aae79de23e",
+      "credits": 3
+    },
+    "angry_stomp": {
+      "action": 26,
+      "task": "01a1b79c-bd59-715e-b01f-105f6f633c26",
+      "credits": 3
+    },
+    "shout_angry": {
+      "action": 51,
+      "task": "01a1b79c-f8d5-763d-be3c-032489a354f2",
+      "credits": 3
+    }
+  },
+  "remeshTask": "01a1b788-9818-7492-ad9e-4ae7caa6f8ad",
+  "remeshCredits": 5,
+  "rigTask": "01a1b789-b619-7578-b847-18f0e4ab8d82",
+  "rigCredits": 5
+}

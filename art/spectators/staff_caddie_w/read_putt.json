@@ -1,0 +1,32 @@
+{
+  "id": "spectator:staff_caddie_w:read_putt",
+  "name": "staff_caddie_w read_putt",
+  "clip": "read_putt",
+  "heightMetres": 1.68,
+  "frameWidth": 160,
+  "frameHeight": 260,
+  "anchor": {
+    "x": 80,
+    "y": 250
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "read_putt1",
+    "read_putt2"
+  ],
+  "fps": 0.4,
+  "loop": true,
+  "source": "art/spectators/staff_caddie_w",
+  "clips": {
+    "read_putt": "Armature|Squat_Stance|baselayer 4.77s, stride 4.67s, body turned 21 deg"
+  }
+}

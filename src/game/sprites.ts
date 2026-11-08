@@ -27,7 +27,11 @@ export interface Drawable { item: number; x: number; y: number; flip: boolean; s
    *  right after its picture in its tile's painter's order, so whatever is drawn nearer covers them like the car itself */
   lamps?: number[];
   /** T266: how visible a mover is (0..1; absent: 1), a watchable golfer fading out or in (golf/play/pacer.ts); under a half it casts no shadow */
-  alpha?: number }
+  alpha?: number;
+  /** T333: drawn over every prop of its tiles (your see-through copy, so a tree or a building in front never hides you); it casts no shadow */
+  top?: boolean;
+  /** T333: never moved by the people spacer (spacing.ts: you; the others step round you) */
+  pin?: boolean }
 /** every car is drawn this much smaller than its art, parked (props of kind car, about the middle of their footprint) and moving (SimClient.visible,
  *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
 export { CAR_SCALE };
@@ -105,7 +109,7 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   // (a picture with a vector shadow casts its drawn shape instead: packVector)
   // (T176: 2 + alpha marks a tinted sprite; T228: 2 + 2 code + alpha a painted car, car-paint.ts paintCode; gl.ts decodes both)
   const pc = d0.paint ? paintCode(l.item, d0.paint) : 0;
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : packAlpha(alpha, !!d0.tint, pc); out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || alpha < 0.5 || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : packAlpha(alpha, !!d0.tint, pc); out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || alpha < 0.5 || d0.top || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0)
   // corners; business art's placeholder footprint (a 2 x 2 m box under a whole building) gives way to its picture's base (T141)
@@ -218,6 +222,8 @@ export class SpriteTiles {
   clear() { this.tiles.clear(); this.where.clear(); this.count = 0; }
   /** re-pack every tile (the vector shadows turned on or off) */
   repack() { for (const t of this.tiles.values()) t.order = null; }
+  /** T341: every prop listed again in the tiles its picture touches (the desert theme changed what the plants are drawn as, and so their rects) */
+  relist() { const ps = [...this.where.keys()]; this.clear(); for (const p of ps) this.add(p); }
   /** the props of the tiles touching a world-px point, front-most first (for picking) */
   at(X: number, Y: number): Prop[] {
     const t = this.tiles.get(tkey(Math.floor(X / CHUNK_W), Math.floor(Y / CHUNK_H))); if (!t) return [];
@@ -289,16 +295,17 @@ export class SpriteTiles {
       const s = this.stream, ss = this.shadowStream, d: TileDraw = { i, j, shadows: 0, sprites: 0 };
       if (t) { ss.set(t.shadows, sat); sat += t.shadows.length; d.shadows += t.shadows.length / SHADOW_STRIDE; }
       // (a mover with a vector shadow packs no T141 shape: packVector below)
-      if (mv) for (const m of mv) { if ((VECTOR.on && vecOf(lookOf(m.d).item)) || (m.d.alpha ?? 1) < 0.5) continue; packShadow(m.d, ss, sat, i, j, m.r, m.h); sat += SHADOW_STRIDE; d.shadows++; }
+      if (mv) for (const m of mv) { if ((VECTOR.on && vecOf(lookOf(m.d).item)) || (m.d.alpha ?? 1) < 0.5 || m.d.top) continue; packShadow(m.d, ss, sat, i, j, m.r, m.h); sat += SHADOW_STRIDE; d.shadows++; }
       if (t) t.vsets.forEach((a, k) => { if (a.length) { vput(k, a, a.length); vmax[k] = Math.max(vmax[k]!, t.vmax[k]!); vfar[k] = Math.max(vfar[k]!, t.vfar[k]!); } });
       if (mv) for (const m of mv) {
-        if ((m.d.alpha ?? 1) < 0.5 || !packVector(m.d, vone, 0, i, j, m.r, m.h)) continue;
+        if ((m.d.alpha ?? 1) < 0.5 || m.d.top || !packVector(m.d, vone, 0, i, j, m.r, m.h)) continue;
         const c = vone[5]!, set = setOf(c); vput(set, vone, VECTOR_STRIDE); vmax[set] = Math.max(vmax[set]!, c); vfar[set] = Math.max(vfar[set]!, vone[7]!);
       }
       if (!mv) { if (t) { s.set(t.packed, at); at += t.packed.length; d.sprites = nProps; } }
       else {
         // each mover goes after the last prop behind it that its picture overlaps
         const slot = mv.map(({ d: m, r }) => {
+          if (m.top) return { m, pos: nProps, depth: m.x1 + m.y1 }; // (T333: over every prop of the tile)
           let pos = 0;
           if (t) for (let gx = Math.floor(r[0] / BUCKET); gx <= Math.floor(r[2] / BUCKET); gx++) for (let gy = Math.floor(r[1] / BUCKET); gy <= Math.floor(r[3] / BUCKET); gy++) {
             const l = t.buckets.get(gx * 65536 + gy); if (!l) continue;

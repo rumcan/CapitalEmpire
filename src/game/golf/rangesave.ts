@@ -49,7 +49,16 @@ export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; se
    *  leaves along the road; absent (a save from before T237): 0, the plot on the road edge and its car park on the plot's front */
   setback?: number;
   /** T237: the range's own car park's rect (x, y, w, h: the one its upgrades gravel and pave); absent: the car park on the range's plot */
-  lot?: [number, number, number, number] }
+  lot?: [number, number, number, number];
+  /** T288 (#873, the owner: "only his trailer and plot is there"): false while the driving range itself is not placed yet (a new game's bare
+   *  start: the player places it, golf/placing.ts); absent: built (every save from before T288) */
+  built?: false;
+  /** T288: the plot frame the player's home (the trailer and its yard) was laid in at the start (world rect, the range plot's size, turned with
+   *  golf.dir): the home stays there wherever the range is placed. Absent: the range's own plot (a save from before T288) */
+  home?: [number, number, number, number];
+  /** T288: the practice area's rect (world tiles) where the player placed it; null: not placed yet (a bare start's); absent: the range plot's
+   *  own spot beside the car park (a save from before T288) */
+  practiceAt?: [number, number, number, number] | null }
 /** the extras that keep their own counts (T133): the coffee kiosk (coffees sold) and the academy (lessons given) */
 export type ExtraId = 'kiosk' | 'academy';
 export const EXTRA_IDS: readonly ExtraId[] = ['kiosk', 'academy'];
@@ -145,6 +154,8 @@ export function rangeNewSeason(s: RangeBizSave): void {
   for (const id of PRACTICE_IDS) s.practice[id].season = { golfers: 0, takings: 0 };
   for (const id of EXTRA_IDS) s.extras[id].season = { golfers: 0, takings: 0 };
 }
+/** a world rect (x, y, w, h) with a size, all numbers */
+const isRect = (r: unknown): r is [number, number, number, number] => Array.isArray(r) && r.length === 4 && r.every(v => typeof v === 'number' && Number.isFinite(v)) && r[2] > 0 && r[3] > 0;
 /** a loaded golf.range made well formed (the migration: a range-start save without one gets the starting range); unknown upgrades are dropped,
  *  an upgrade whose prerequisite is missing is dropped, the price is clamped to the band. T223: a range saved before the desert start (no
  *  `desert` flag, or no range at all) keeps its grass: it owns the ground upgrades (GRASS_UPGRADES). T239: one saved before the guided start
@@ -163,7 +174,11 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   if (o.garage === true && owned.includes('parking')) out.garage = true;
   // T237: the set-back and the range's own lot (a save from before T237 has neither: its plot on the road, its lot on the plot)
   if (typeof o.setback === 'number' && Number.isFinite(o.setback) && o.setback > 0) out.setback = Math.round(o.setback);
-  if (Array.isArray(o.lot) && o.lot.length === 4 && o.lot.every(v => typeof v === 'number' && Number.isFinite(v)) && o.lot[2] > 0 && o.lot[3] > 0) out.lot = [o.lot[0], o.lot[1], o.lot[2], o.lot[3]];
+  if (isRect(o.lot)) out.lot = [o.lot[0], o.lot[1], o.lot[2], o.lot[3]];
+  // T288: the bare start's range not placed yet, the home's frame and the practice area's spot (none of them in a save from before T288)
+  if (o.built === false) out.built = false;
+  if (isRect(o.home)) out.home = [o.home[0], o.home[1], o.home[2], o.home[3]];
+  if (o.practiceAt === null) out.practiceAt = null; else if (isRect(o.practiceAt)) out.practiceAt = [o.practiceAt[0], o.practiceAt[1], o.practiceAt[2], o.practiceAt[3]];
   return out;
 }
 
@@ -252,6 +267,7 @@ export function priceFactor(price: number, ref: number): number { return Math.mi
 export function upgradeWhy(s: RangeBizSave, id: RangeUpgradeId, money: number): string {
   const u = BY_ID.get(id); if (!u) return 'Unknown upgrade';
   if (s.owned.includes(id)) return 'Built';
+  if (s.built === false) return 'Place your driving range first';
   const miss = needsOf(u).find(n => !s.owned.includes(n)); if (miss) return `Build ${BY_ID.get(miss)!.name} first`;
   if (u.cost > money) return `Not enough money: it costs $${u.cost.toLocaleString()}`;
   return '';

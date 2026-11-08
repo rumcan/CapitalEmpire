@@ -82,15 +82,15 @@ describe('the stage table (P23 4.2, T117): every "when" row', () => {
 describe('the stage table (P23 4.2, T117): every "open" row', () => {
   it('stage 1: Select, Holes (New hole only), Paths (walking, dirt, gravel drive), Buildings, Practice, Bulldoze; the rest locked in place', () => {
     const s = computeProgressiveUiState(f());
-    assert.deepEqual(s.visibleGroups, ['select', 'course', 'bulldoze']);
-    assert.deepEqual(s.visibleTools, ['select', 'course', 'path', 'buildings', 'props', 'practice', 'bulldoze']);
+    // T288: the road tool (and so Traffic) is open from the start (the owner, 2026-11-04: "Yes, unlock it")
+    assert.deepEqual(s.visibleGroups, ['select', 'course', 'roads', 'bulldoze']);
+    assert.deepEqual(s.visibleTools, ['select', 'course', 'path', 'buildings', 'props', 'practice', 'road', 'bulldoze']);
     assert.deepEqual(s.visibleCourseBrushes, []);
     assert.equal(s.shapeByHand, false);
     assert.deepEqual(s.lockedCourseClasses.map(c => c.id), ['cart-slab']);
     assert.deepEqual(s.visibleGolfChips, ['courseStats']);
     assert.deepEqual(s.visibleFineControls, []);
     assert.deepEqual(s.lockedGroups, [
-      { id: 'roads', stage: 3, why: "Unlocks with your third hole or the tour's invitation" },
       { id: 'junction', stage: 3, why: "Unlocks with your third hole or the tour's invitation" },
       { id: 'transport', stage: 3, why: "Unlocks with your third hole or the tour's invitation" },
       { id: 'paint', stage: 2, why: 'Unlocks with your first hole' },
@@ -101,14 +101,14 @@ describe('the stage table (P23 4.2, T117): every "open" row', () => {
 
   it('stage 2: Shape by hand (its surfaces, the Waste area with them), Paint, the cement slab path and the rest of the options open; the town tools stay locked', () => {
     const s = computeProgressiveUiState(f({ playableHoles: 1 }));
-    assert.deepEqual(s.visibleGroups, ['select', 'course', 'paint', 'bulldoze']);
+    assert.deepEqual(s.visibleGroups, ['select', 'course', 'roads', 'paint', 'bulldoze']);
     assert.ok(s.visibleTools.includes('paint'));
     assert.deepEqual([...s.visibleCourseBrushes].sort(), [...SHAPE_BY_HAND].sort());
     assert.equal(s.shapeByHand, true);
     assert.deepEqual(s.lockedCourseClasses, []);
     assert.deepEqual(s.visibleGolfChips, ['courseStats', 'skipTournament', 'grass']);
-    assert.deepEqual(s.lockedGroups.map(g => g.id), ['roads', 'junction', 'transport']);
-    assert.deepEqual(s.lockedTools.map(t => t.id), ['road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll']);
+    assert.deepEqual(s.lockedGroups.map(g => g.id), ['junction', 'transport']);
+    assert.deepEqual(s.lockedTools.map(t => t.id), ['lane', 'downgrade', 'junction', 'bus', 'park', 'toll']);
     assert.ok(s.lockedTools.every(t => t.stage === 3));
     assert.equal(s.stageLabel, 'Stage 2: Founding the club');
   });

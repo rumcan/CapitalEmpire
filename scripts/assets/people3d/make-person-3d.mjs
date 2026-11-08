@@ -2,7 +2,7 @@
 //   (an A-pose picture, or a text description) -> 3D model -> humanoid rig -> walk and idle clips  =>  art/people3d/<id>/
 // then `node scripts/assets/people3d/render-person-3d.mjs <id>` renders the walk template (8 facings, idle + 8 walk frames).
 // Every step spends RUN credits (about 1,800 a person), so each one's result is kept and a rerun skips what is already there.
-// The RUN game is TrickOrTreat's (its game.config.prod.json; TOT_REPO or ../TrickOrTreat), read only.
+// The RUN game is our own (art/run-game/game.config.prod.json, the owner's RUN account since 2026-10-29; RUN_GAME_DIR to change it).
 //
 //   node scripts/assets/people3d/make-person-3d.mjs <id> "<look>" [--image <A-pose png>] [--max-credits <n>] [--root <art dir>] [--clips <list>]
 //     without --image the model is made from the text (text-to-3d)
@@ -21,10 +21,10 @@ import { promisify } from 'node:util';
 
 const run = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const tot = process.env.TOT_REPO || path.resolve(root, '../TrickOrTreat');
+const gameDir = process.env.RUN_GAME_DIR || path.join(root, 'art/run-game');
 const [id, look] = process.argv.slice(2), arg = k => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
 if (!id || !look || !/^[a-z][a-z0-9_]*$/.test(id)) throw new Error('Usage: node scripts/assets/people3d/make-person-3d.mjs <id> "<look>" [--image <png>] [--max-credits <n>]');
-const game = JSON.parse(await fs.readFile(path.join(tot, 'game.config.prod.json'), 'utf8')).gameId;
+const game = JSON.parse(await fs.readFile(path.join(gameDir, 'game.config.prod.json'), 'utf8')).gameId;
 const dir = path.join(root, arg('--root') ?? 'art/people3d', id), image = arg('--image'), cap = arg('--max-credits') ?? '1500';
 await fs.mkdir(dir, { recursive: true });
 const have = f => fs.access(path.join(dir, f)).then(() => true, () => false);

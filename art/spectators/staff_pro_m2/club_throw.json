@@ -1,0 +1,36 @@
+{
+  "id": "spectator:staff_pro_m2:club_throw",
+  "name": "staff_pro_m2 club_throw",
+  "clip": "club_throw",
+  "heightMetres": 1.8,
+  "frameWidth": 160,
+  "frameHeight": 275,
+  "anchor": {
+    "x": 80,
+    "y": 265
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "club_throw1",
+    "club_throw2",
+    "club_throw3",
+    "club_throw4",
+    "club_throw5",
+    "club_throw6"
+  ],
+  "fps": 1.5,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m2",
+  "clips": {
+    "club_throw": "retarget_clip 3.97s, stride 1.29s, body turned 18 deg"
+  }
+}

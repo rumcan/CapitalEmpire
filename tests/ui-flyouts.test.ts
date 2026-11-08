@@ -55,21 +55,33 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     assert.deepEqual(labels(find(t, 'Junctions').children!), ['Select a junction', 'Plain', 'All-way stop', 'Roundabout']);
     assert.deepEqual(labels(find(t, 'Transport').children!), ['Bus route', 'Car park', 'Toll gate']);
   });
-  it('Course ▸ Holes ▸ New hole · Your holes · Shape by hand ▸ the surfaces; Buildings ▸ Clubhouse · Halfway house; Cart paths & roads ▸ the paths and drives; Greenkeeping ▸ the cares (while GREENKEEPING is on); Tournament', () => {
+  it('Course ▸ Holes ▸ New hole · Your holes · Shape by hand ▸ the surfaces; Buildings ▸ Clubhouse · Halfway house; Greenkeeping ▸ the cares (while GREENKEEPING is on); Tournament', () => {
     const c = menuOf(RAIL.find(r => r.id === 'course')!, ALL);
-    assert.deepEqual(labels(c), GREENKEEPING ? ['Holes', 'Buildings', 'Cart paths & roads', 'Greenkeeping', 'Tournament', 'Land for sale'] : ['Holes', 'Buildings', 'Cart paths & roads', 'Tournament', 'Land for sale'], 'T206: Cart paths & roads directly below Buildings; no Greenkeeping group while it is hidden (features.ts)');
-    assert.deepEqual(find(c, 'Cart paths & roads').children!.map(r => (r.caption ? `[${r.label}]` : r.label)), ['[Cart paths]', 'Walking path', '[Course drives]', 'Gravel drive']);
-    assert.equal(find(c, 'Cart paths & roads').note, 'Roads and cart paths on your property', 'its tooltip (the owner: "these are roads for on you property")');
-    assert.deepEqual(find(c, 'Cart paths & roads', 'Walking path').leaf?.act, { k: 'road', id: 'cart-walk' });
+    // T288 (#873, the owner: "make cart paths and roads its own button above facilities in the main left menu"): no longer in Course
+    assert.deepEqual(labels(c), GREENKEEPING ? ['Holes', 'Buildings', 'Greenkeeping', 'Tournament', 'Land for sale'] : ['Holes', 'Buildings', 'Tournament', 'Land for sale'], 'no Greenkeeping group while it is hidden (features.ts)');
     assert.deepEqual(find(c, 'Land for sale').leaf?.act, { k: 'land' }, 'T200: the land for sale');
     assert.deepEqual(labels(find(c, 'Holes').children!), ['New hole', 'Your holes', 'Shape by hand']);
-    assert.deepEqual(labels(find(c, 'Holes', 'Shape by hand').children!), ['Fairway', 'Green', 'Waste area']);
-    assert.deepEqual(find(c, 'Holes', 'Shape by hand', 'Green').leaf?.act, { k: 'surface', id: 'green' });
-    assert.deepEqual(find(c, 'Holes', 'Shape by hand', 'Waste area').leaf?.act, { k: 'surface', id: 'waste' }, 'T222: the Waste area brush');
-    assert.equal(find(c, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'its pebbles mark');
-    assert.deepEqual(labels(find(c, 'Buildings').children!), ['Clubhouse', 'Halfway house', "Pro's office"]); // (T214: the pro's office)
-    if (GREENKEEPING) assert.deepEqual(labels(find(c, 'Greenkeeping').children!), ['Grass care', 'Mow', 'Water']);
-    assert.deepEqual(find(c, 'Tournament').leaf?.act, { k: 'event' });
+  });
+  it('T288: Cart paths & roads, a rail button of its own: Cart paths & drives ▸ the paths and drives; Roads ▸ the town roads, locked with the road tool\'s why', () => {
+    const c = menuOf(RAIL.find(r => r.id === 'paths')!, ALL);
+    assert.deepEqual(labels(c), ['Cart paths & drives', 'Roads']);
+    assert.deepEqual(find(c, 'Cart paths & drives').children!.map(r => (r.caption ? `[${r.label}]` : r.label)), ['[Cart paths]', 'Walking path', '[Course drives]', 'Gravel drive']);
+    assert.equal(find(c, 'Cart paths & drives').note, 'Roads and cart paths on your property', 'its tooltip (the owner: "these are roads for on you property")');
+    assert.deepEqual(find(c, 'Cart paths & drives', 'Walking path').leaf?.act, { k: 'road', id: 'cart-walk' });
+    assert.equal(find(c, 'Cart paths & drives', 'Walking path').leaf?.entry.id, 'path');
+    const street = find(c, 'Roads').children!.find(r => !r.caption)!;
+    assert.equal(street.leaf?.entry.id, 'road'); assert.equal(street.leaf?.item, 'paths');
+    // a road tool locked: the Roads row says when it opens (the owner unlocked it from the start on 2026-11-04; the menu still honours a lock)
+    const lockedUi = { ...uiOf(played(0), 0), lockedTools: [{ id: 'road' as const, stage: 3 as const, why: 'Unlocks later' }] };
+    assert.equal(find(menuOf(RAIL.find(r => r.id === 'paths')!, ctx(true, lockedUi)), 'Roads').why, 'Unlocks later');
+    const k = menuOf(RAIL.find(r => r.id === 'course')!, ALL);
+    assert.deepEqual(labels(find(k, 'Holes', 'Shape by hand').children!), ['Fairway', 'Green', 'Waste area']);
+    assert.deepEqual(find(k, 'Holes', 'Shape by hand', 'Green').leaf?.act, { k: 'surface', id: 'green' });
+    assert.deepEqual(find(k, 'Holes', 'Shape by hand', 'Waste area').leaf?.act, { k: 'surface', id: 'waste' }, 'T222: the Waste area brush');
+    assert.equal(find(k, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'its pebbles mark');
+    assert.deepEqual(labels(find(k, 'Buildings').children!), ['Clubhouse', 'Halfway house', "Pro's office"]); // (T214: the pro's office)
+    if (GREENKEEPING) assert.deepEqual(labels(find(k, 'Greenkeeping').children!), ['Grass care', 'Mow', 'Water']);
+    assert.deepEqual(find(k, 'Tournament').leaf?.act, { k: 'event' });
   });
   it('Facilities ▸ Practice ▸ the facilities · Plants ▸ Trees, Bushes, Flowers · Decoration ▸ Props ▸ by group (T206); Town decoration ▸ Paint ▸ Areas ▸ the materials, Plants ▸ ... · Props ▸ · Buildings', () => {
     const d = menuOf(RAIL.find(r => r.id === 'facilities')!, ALL), td = menuOf(RAIL.find(r => r.id === 'towndecor')!, ALL);
@@ -224,15 +236,16 @@ describe('the town footer\'s flyouts open upward, their deeper levels to the sid
 describe('the tool tiles (T233)', () => {
   const tiles = (rows: readonly MenuRow[]) => rows.filter(r => !r.caption).map(r => `${r.label}${r.tile ? `=${r.tile}` : ''}`);
   const C = ctx(true, null, { surfaces: [{ id: 'fairway', name: 'Fairway' }, { id: 'green', name: 'Green' }, { id: 'tee', name: 'Tee' }, { id: 'rough', name: 'Rough' }, { id: 'bunker', name: 'Bunker' }, { id: 'water', name: 'Water' }, { id: 'waste', name: 'Waste area' }, { id: 'longGrass', name: 'Long grass' }], propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }] });
-  const courseRows = menuOf(RAIL.find(r => r.id === 'course')!, C), fac = menuOf(RAIL.find(r => r.id === 'facilities')!, C);
-  it('Course: Holes, Buildings, Cart paths & roads; New hole and Shape by hand; the surfaces (the Waste area keeps its mark); the Clubhouse', () => {
-    assert.deepEqual(tiles(courseRows), ['Holes=golf-hole', 'Buildings=clubhouse', 'Cart paths & roads=cart-path', 'Tournament=grandstand-scoreboard', 'Land for sale=land-plot']);
+  const courseRows = menuOf(RAIL.find(r => r.id === 'course')!, C), fac = menuOf(RAIL.find(r => r.id === 'facilities')!, C), pathRows = menuOf(RAIL.find(r => r.id === 'paths')!, C);
+  it('Course: Holes, Buildings; New hole and Shape by hand; the surfaces (the Waste area keeps its mark); the Clubhouse; T288: Cart paths & roads on its own button, its cart paths with the cart path tile', () => {
+    assert.deepEqual(tiles(courseRows), ['Holes=golf-hole', 'Buildings=clubhouse', 'Tournament=grandstand-scoreboard', 'Land for sale=land-plot']);
+    assert.deepEqual(tiles(pathRows), ['Cart paths & drives=cart-path', 'Roads']);
     assert.deepEqual(tiles(find(courseRows, 'Holes').children!), ['New hole=golf-hole', 'Your holes', 'Shape by hand=fairway']);
     assert.deepEqual(tiles(find(courseRows, 'Holes', 'Shape by hand').children!), ['Fairway=fairway', 'Green=green', 'Tee=tee', 'Rough=rough', 'Bunker=bunker', 'Water=pond', 'Waste area=waste-sand', 'Long grass=long-grass']); // T272: separate painted waste/long-grass art; gameplay brush IDs stay intact
     assert.equal(find(courseRows, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'the gameplay mark stays available with the new tile');
     assert.deepEqual(tiles(find(courseRows, 'Buildings').children!), ['Clubhouse=clubhouse', 'Halfway house=snack-hut', "Pro's office=clubhouse"]);
-    assert.deepEqual(tiles(find(courseRows, 'Cart paths & roads').children!), ['Walking path', 'Gravel drive'], 'the classes stay a list under their families');
-    assert.equal(find(courseRows, 'Cart paths & roads').note, 'Roads and cart paths on your property', 'its tooltip kept');
+    assert.deepEqual(tiles(find(pathRows, 'Cart paths & drives').children!), ['Walking path', 'Gravel drive'], 'the classes stay a list under their families');
+    assert.equal(find(pathRows, 'Cart paths & drives').note, 'Roads and cart paths on your property', 'its tooltip kept');
   });
   it("Facilities: Practice and its greens, Plants and its Trees and Flowers, Decoration and its Props' Stone (the rocks), Water and Plants", () => {
     assert.deepEqual(tiles(fac), ['Practice=range-bays', 'Plants=trees', 'Decoration=street-furniture', 'Build on your property=surveyor-turf']);
@@ -256,7 +269,7 @@ describe('the tool tiles (T233)', () => {
   });
   it('all twenty-four named tiles are used, each a small WebP in src/assets/ui/tiles', () => {
     const used = new Set<ToolTile>(), walk = (rs: readonly MenuRow[]) => { for (const r of rs) { if (r.tile) used.add(r.tile); walk(r.children ?? []); } };
-    walk(courseRows); walk(fac); walk(menuOf(RAIL.find(r => r.id === 'facilities')!, { ...C, plants: [...C.plants, { id: 'palms', name: 'Palms' }] }));
+    walk(courseRows); walk(pathRows); walk(fac); walk(menuOf(RAIL.find(r => r.id === 'facilities')!, { ...C, plants: [...C.plants, { id: 'palms', name: 'Palms' }] }));
     assert.deepEqual([...TOOL_TILES].sort(), [...used].sort(), 'every tile on a tool, and no tile that is not one');
     for (const t of TOOL_TILES) { const f = `src/assets/ui/tiles/${t}.webp`; assert.ok(existsSync(f), f); assert.ok(statSync(f).size < 12_000, `${f}: small`); }
   });
@@ -270,9 +283,9 @@ describe('the tool tiles (T233)', () => {
     // locked: dimmed, its lock on the picture and its reason under the name (and whole in the tooltip)
     const locked = menuOf(RAIL.find(r => r.id === 'facilities')!, ctx(true, null, { practice: [{ id: 'putting', name: 'Putting green', why: 'Comes with a driving range' }] }));
     assert.match(draw(locked, []), /data-tip="Practice: Comes with a driving range"[^>]*aria-disabled="true" class="flyout-row flyout-tile[^"]*flyout-row-locked"[\s\S]*?flyout-pic-lock[\s\S]*?flyout-why">Comes with a driving range</);
-    // the path classes: a list beside the Course grid
-    const paths = draw(courseRows, indicesOf(courseRows, ['paths']));
-    assert.equal((paths.match(/flyout-grid/g) ?? []).length, 1, 'the Course level is a grid, Cart paths & roads a list');
+    // the path classes: a list beside the Cart paths & roads grid (T288: its own rail button)
+    const paths = draw(pathRows, indicesOf(pathRows, ['paths']));
+    assert.equal((paths.match(/flyout-grid/g) ?? []).length, 1, 'the Cart paths & roads level is a grid, its classes a list');
     assert.match(paths, /class="flyout glass "[^>]*>[\s\S]*?flyout-caption" role="presentation">Cart paths</);
   });
   it('never sideways: a grid column is wider than a list, all narrow alike to fit the room, never under the narrowest; the grid shrinks its cells', () => {

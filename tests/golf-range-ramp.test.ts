@@ -30,8 +30,9 @@ test('the unlock order, step by step: the range card, the practice area, Props, 
   // minute zero: Select and Bulldoze; Holes and Paths wait for the first upgrade, Props for the putting green, Buildings for New hole
   const f0 = facts(p, course(), NONE), s0 = computeProgressiveUiState(f0);
   assert.equal(rampStep(f0), 0); assert.equal(s0.ramp, 0);
-  assert.deepEqual(locked(f0), { course: RAMP_WHY[1], path: RAMP_WHY[1], practice: RAMP_WHY[1], props: RAMP_WHY[2], buildings: RAMP_WHY[3], greenkeeping: 'Unlocks when your first hole is grown in', road: 'Unlocks with your third hole or the tour\'s invitation', lane: 'Unlocks with your third hole or the tour\'s invitation', downgrade: 'Unlocks with your third hole or the tour\'s invitation', junction: 'Unlocks with your third hole or the tour\'s invitation', bus: 'Unlocks with your third hole or the tour\'s invitation', park: 'Unlocks with your third hole or the tour\'s invitation', toll: 'Unlocks with your third hole or the tour\'s invitation', paint: 'Unlocks with your first hole' });
-  assert.deepEqual(visible(f0), ['select', 'bulldoze']);
+  // T288: the road tool is open from the start (the owner, 2026-11-04, asked whether to unlock it: "Yes, unlock it")
+  assert.deepEqual(locked(f0), { course: RAMP_WHY[1], path: RAMP_WHY[1], practice: RAMP_WHY[1], props: RAMP_WHY[2], buildings: RAMP_WHY[3], greenkeeping: 'Unlocks when your first hole is grown in', lane: 'Unlocks with your third hole or the tour\'s invitation', downgrade: 'Unlocks with your third hole or the tour\'s invitation', junction: 'Unlocks with your third hole or the tour\'s invitation', bus: 'Unlocks with your third hole or the tour\'s invitation', park: 'Unlocks with your third hole or the tour\'s invitation', toll: 'Unlocks with your third hole or the tour\'s invitation', paint: 'Unlocks with your first hole' });
+  assert.deepEqual(visible(f0), ['select', 'road', 'bulldoze']); // (T288: and the road tool, the owner 2026-11-04: "Yes, unlock it")
   assert.equal(s0.newHoleLock, RAMP_WHY[3]);
   assert.ok(s0.visibleGroups.includes('course'), 'the Course group stays on the rail, its tools locked in place');
   // the first upgrade: Holes (Shape by hand: Green and Bunker for the practice greens) and Paths open, with NEW badges; New hole still waits
