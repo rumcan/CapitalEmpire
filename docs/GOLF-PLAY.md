@@ -33,6 +33,16 @@ course. lets say tournaments are 1 day."* Until now the sim had no golf at all (
    first frames until a putt clip exists), the ball in flight and rolling, a live leaderboard (position, name, to par, thru; the owner
    highlighted), and at the end the champion ("Name wins at -4") in the day's result. The tee stand-in golfer goes.
 
+## Starting your own round (T350, #993)
+
+The owner, 2026-11-08: "it tells me what I shot. The game cannot play for me?? ... there should be a start round button and we move the time to the tee time and the round starts and time now slows down to the pace of play." The cause (on the issue): the first-tee card's **Book** made a booked everyday round that the day's playback plays with your skills (`golf/player.ts Booking`, `Game.updateEveryday`), scored at the end (`youRoundDone`), whether or not you were on the course. Now (`golf/startround.ts`, pure; the engine's T350 section):
+- **A booking is a tee time to play yourself.** The model plays it only when `Booking.auto` is set, which only **Let the game play it** does (the first-tee card, or the tee-time card). Playing by hand ends the booking (it used to stay and its simulated score arrived mid-round). A booking whose day is over lapses.
+- **Start round** (first-tee card for a booking; the event card for today's club event, at the next free tee time on the sheet; the first-tee card for the tournament you joined) runs the clock to the tee time (20x far off, slower as it nears and 1x for the last eight minutes, by what the sim has really done: the clock shown runs ahead of the sim between its frames and steps back when the speed drops, so a fast arrival would show a time past the tee time and then an earlier one; `ffSpeed`; touching the speed or the pause cancels it), then begins your round and puts you at the first tee with the first shot open.
+- **On the course the clock runs at the pace of play.** From the moment your own round exists (a booked round, an event, a money match, a practice round) until it ends, the clock is at the watching speed (`WATCH_SPEED`, watch reason `'round'`); the speed bar's faster speeds are off and `setSpeed` holds any faster request to it. A pause and the slower speeds go through. The speed before comes back when the round ends.
+- **If the tee time passes while you are away** (the booking is due, no round under way) the game pauses the clock and asks once a day: **Play now** or **Let the game play it**; closing the card leaves the booking and the clock running.
+- Not changed: the money match's **Skip to result** and the caddie's "finish the hole" are explicit choices already; the tournament's owner round keeps its own watching speed from two minutes before the tee time (`watchFor('own')`).
+- Tests: `tests/golf-start-round.test.ts` (the rules, the profile's `auto`), `tests/ui-start-round.test.ts` (the cards); `scripts/dev/start-round-check.mjs` (the real game: Start round, the clock at the tee time, the first shot open, no score before the last putt).
+
 ## Phases (each its own PR)
 - **P1, the round (pure, tested):** `src/game/golf/play/` (below). No engine change.
 - **P2, the day in the game:** the engine builds the `CourseView` from the course grid and the derived holes, plays the round at the

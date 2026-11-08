@@ -103,6 +103,7 @@ import { STRENGTH as TRACK_STRENGTH, TRACKS_KEY, TyreTracks, UPLOAD_MS as TRACK_
 import { CADDIE_CAP, CART_CAP, LONG_DAY_MIN, NIGHT_S, PACE_KEY, WALK_CAP, capped, dayNight, paceOf, paceOfSetting, settingOf, type GolfPace, type PaceSetting } from './golf/pace';
 import { Pacer, setPaceSpeed } from './golf/play/pacer';
 import { SPEEDS, WatchSpeed, type WatchWhy } from './golf/watch';
+import { bookingStep, ffSpeed, planStep, roundSpeed, type StartKind, type StartPlan } from './golf/startround';
 import type { PlayBall } from './golf/play/view';
 import { ballPuff, ballSplash } from './golf/ballfx';
 import { zoneOf } from './sim/routing';
@@ -383,7 +384,8 @@ export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string 
 /** T246: the event card's view (golf/clubevents.ts): the event, when, the phase (announced, today, the result), your handicap and whether it enters, entered,
  *  today's field and holes, why you cannot play it now, whether you play it, the result and its line, your name */
 export interface EventCardView { id: EventId; name: string; when: string; phase: 'soon' | 'today' | 'result'; hcp: number; hcpText: string; maxHcp: number | null;
-  why: string | null; entered: boolean; field: number | null; holes: number | null; playWhy: string | null; playing: boolean; result: EventResult | null; line: string | null; you: string }
+  why: string | null; entered: boolean; field: number | null; holes: number | null; playWhy: string | null; playing: boolean; result: EventResult | null; line: string | null; you: string;
+  /** T350: the minute your round in today's event would start (the next free tee time on the sheet): Start round runs the clock there; null: not today */ tee?: number | null }
 /** the leaderboard's rows shown (the top 8, and the owner's row below them) */
 const BOARD_ROWS = 8;
 /** T209: the longest a resumed tournament day waits for its play after the first frame (holdDay), ms */
@@ -5829,6 +5831,10 @@ export class Game {
   setSpeed(k: number) {
     // while the owner's shot is open the clock waits for it: only a pause goes through (closeShot clears the shot before it resumes)
     if (k > 0 && this.shot && !this.shot.mine) { this.toast(SHOT_HOLD, 'warn'); return; }
+    // T350: a Start round fast-forwarding to your tee time ends when you touch the speed (its own steps set ffSetting)
+    if (this.startPlan && !this.ffSetting) { this.startPlan = null; this.toast('Start round cancelled', 'info'); }
+    // T350: on the course the clock runs no faster than the pace of play (a pause and the slower speeds go through)
+    const cap = roundSpeed(k, this.watchSpeed.has('round')); if (cap !== k) { k = cap; this.toast('On the course the clock runs at the pace of play', 'info'); }
     if (k > 0) this.lastSpeed = k; this.speed = k; this.traffic.setSpeed(k); setPaceSpeed(k); this.emit();
   }
   // ---------- T320 (#908): watching golf at the watching speed (golf/watch.ts) ----------
@@ -7864,7 +7870,7 @@ export class Game {
     const course = this.dayCourseOf(now);
     if (!course || !course.view.holes.length) { this.dayPlay = null; this.dropCrew(); return; }
     // T241: your round booked today (golf/player.ts): you join the day's playback alone at your tee time, with your game as you booked it
-    const me = g.player, bk = me?.booked && me.booked.day === s.day ? me.booked : null;
+    const me = g.player, bk = me?.booked && me.booked.day === s.day && me.booked.auto ? me.booked : null; // (T350: the model plays your round only when you said so)
     if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key || this.dayPlay.you !== bk) {
       const base = this.dayBook.rosterOf()!, roster = bk && me ? withYou(base, bookedGolfer(me, bk), bk.tee) : base, plan = dayPlan(course.view, roster);
       const youId = bk ? roster.golfers.length - 1 : -1;
@@ -7927,8 +7933,10 @@ export class Game {
   private youRoundState(): RoundState {
     const p = this.golf?.player, at = this.townNow(), b = p?.booked;
     if (b && b.day === at.day) {
+      // T350: a booking is a tee time to play yourself (Start round); only one the game plays (auto) is out on the course and done on its own
+      if (!b.auto) return { k: 'booked', tee: b.tee, late: at.dayMin >= b.tee };
       if (b.result && at.dayMin >= b.result.done) return { k: 'done', strokes: b.result.strokes, par: b.result.par };
-      return at.dayMin < b.tee - BOOK_LEAD ? { k: 'booked', tee: b.tee } : { k: 'out', tee: b.tee };
+      return at.dayMin < b.tee - BOOK_LEAD ? { k: 'booked', tee: b.tee, auto: true } : { k: 'out', tee: b.tee };
     }
     const last = p?.rounds[p.rounds.length - 1];
     if (last && last.day === at.day && last.kind === 'everyday') return { k: 'done', strokes: last.strokes, par: last.par };
@@ -8224,9 +8232,9 @@ export class Game {
   closeYouTee() { this.youTeeOpen = false; this.emit(); }
   /** the first tee's card (Start a round): play in today's tournament when you can still join it; else your everyday round (book the next free
    *  tee time); T317 (#903) builds the round you play yourself on this */
-  youTeeView(): { join: boolean; round: RoundState; name: string } | null {
+  youTeeView(): { join: boolean; round: RoundState; name: string; start: number | null } | null {
     if (!this.youTeeOpen || !this.golf) return null;
-    return { join: this.canJoinTournament(), round: this.youRoundState(), name: this.playerNow()?.name ?? 'You' };
+    return { join: this.canJoinTournament(), round: this.youRoundState(), name: this.playerNow()?.name ?? 'You', start: this.tourneyStartTee() };
   }
   youTeeJoin() { const p = this.playerNow(); this.joinTournament(p?.sex ?? 'm', 'middle'); this.youTeeOpen = false; this.emit(); }
   /** a practice session from your character: the session (practise), then you walk to a mat (a bucket) or the practice area and swing */
@@ -8346,6 +8354,8 @@ export class Game {
   private youRoundDone(now: number) {
     const p = this.golf?.player, b = p?.booked; if (!p || !b) return;
     const tr = this.traffic, at = townTimeOf(tr.town, tr.simTime(now));
+    // T350: a booking is a tee time you play yourself: nothing is simulated for it unless you said "Let the game play it"; it lapses with its day
+    if (!b.auto) { if (b.day < at.day) { this.setPlayer({ ...p, booked: null }); this.emit(); } return; }
     if (b.day === at.day && !(b.result && at.dayMin >= b.result.done)) return;
     let next: PlayerProfile = { ...p, booked: null };
     if (b.result && Number.isFinite(b.result.done)) {
@@ -8353,6 +8363,82 @@ export class Game {
       this.toast(`Your round: ${b.result.strokes} (${toParWord(b.result.strokes - b.result.par)}) · handicap ${hcpText(next.rounds[next.rounds.length - 1]!.hcp)}`, 'good');
     }
     this.setPlayer(next); this.emit();
+  }
+  // ---------- T350 (#993): Start round: your own round at your tee time, never played for you unless you say so (golf/startround.ts) ----------
+  /** a Start round waiting for the sim to reach its minute (the clock runs meanwhile, fast far off and slower near: golf/startround.ts ffSpeed); null: none */
+  startPlan: StartPlan | null = null;
+  /** the Start round is setting the speed itself (setSpeed must not take that for the player's touch) */
+  private ffSetting = false;
+  /** the "play now or let the game play it?" card is open: your booked tee time has come and no round is under way; asked once a town day (teeAsked) */
+  teeAsk = false; private teeAsked = -1;
+  /** on the course the clock runs no faster than the pace of play: the speed bar's faster speeds are off (setSpeed holds them to it) */
+  get paceLock(): boolean { return this.watchSpeed.has('round'); }
+  /** the minute your round in today's event would start: the next free tee time on the day's sheet, else now */
+  private eventTeeTime(): number { const at = this.townNow(); return freeTee(this.dayPlay?.base ?? this.dayBook?.rosterOf() ?? null, at.dayMin) ?? at.dayMin; }
+  /** the tournament's tee time for the Start round, while it is ahead; null: you are not in it, or it has begun */
+  private tourneyStartTee(): number | null { const own = this.play?.own; return own && this.townNow().dayMin < own.tee - OWN_WATCH_LEAD ? own.tee : null; }
+  /** the town day and minute the sim has really got to (its last frame's time: the clock shown runs a little ahead of it between frames, and steps back when the speed drops) */
+  private simSeen() { const tr = this.traffic; return townTimeOf(tr.town, tr.stats.simT); }
+  /** Start round: the clock runs to `minute` of today (at once when it has come), then `kind` begins: your booked round, today's event, or the tournament's tee shot */
+  private startRoundAt(kind: StartKind, minute: number, id?: EventId) {
+    if (this.yourRound()) return;
+    const seen = this.simSeen(), plan: StartPlan = { kind, day: seen.day, min: minute, before: this.speed || this.lastSpeed, ...(id ? { id } : {}) };
+    if (planStep(plan, seen.day, seen.dayMin) === 'start') { this.beginPlanned(plan); return; }
+    this.startPlan = plan; this.ffSetting = true; this.setSpeed(ffSpeed(minute - seen.dayMin)); this.ffSetting = false;
+    this.toast(`Start round: the clock runs to ${clock(minute)}`, 'info'); this.emit();
+  }
+  /** each frame: a Start round waiting for its minute (the clock runs on, slower as it nears; the round begins when the sim has got there), and a booked tee time that has come with no round under
+   *  way (the game asks, once a day) */
+  private stepStartRound() {
+    if (!this.golf) return;
+    const sp = this.startPlan, at = this.townNow();
+    if (sp) {
+      const seen = this.simSeen(), s = planStep(sp, seen.day, seen.dayMin);
+      if (s === 'forward') { const k = ffSpeed(seen.day < sp.day ? Infinity : sp.min - seen.dayMin); if (this.speed !== k) { this.ffSetting = true; this.setSpeed(k); this.ffSetting = false; } return; }
+      this.startPlan = null;
+      if (s === 'start') this.beginPlanned(sp);
+      // (a round begun is at the pace of play from here; the speed it goes back to afterwards is the one you had before the Start round; with no round begun the clock goes back to it now)
+      if (this.yourRound()) { if (this.watchSpeed.before !== null) this.watchSpeed.before = sp.before; } else this.setSpeed(sp.before);
+      return;
+    }
+    if (!this.teeAsk && this.teeAsked !== at.day && !this.yourRound() && bookingStep(this.golf?.player?.booked, at.day, at.dayMin) === 'due') {
+      this.teeAsk = true; this.teeAsked = at.day; if (this.speed > 0) this.setSpeed(0); this.emit();
+    }
+  }
+  /** begins what a Start round was for, the clock at its minute: your round in the pace of play, you at the first tee with the shot open */
+  private beginPlanned(sp: StartPlan) {
+    this.teeAsk = false;
+    if (sp.kind === 'booked') this.yourRoundStart('all', []);
+    else if (sp.kind === 'event' && sp.id) this.playEvent(sp.id as EventId);
+    else if (sp.kind === 'tournament') this.toast('Your group tees off soon', 'info');
+    if (this.yourRound()) { this.watchFor('round', true); if (!this.shot) this.yourJump(); }
+    this.emit();
+  }
+  /** Start round on the first-tee card: your booked round (the clock runs to its tee time; when that has passed, it begins now) */
+  bookedStart() {
+    const b = this.golf?.player?.booked, at = this.townNow(); if (!b || b.auto || b.day !== at.day) return;
+    this.youTeeOpen = false; this.teeAsk = false; this.startRoundAt('booked', b.tee);
+  }
+  /** "Let the game play it": the model plays your booked round (the stand-in is your choice only) */
+  bookedAuto() {
+    const p = this.playerNow(), b = p?.booked; if (!p || !b || b.auto) return;
+    this.setPlayer({ ...p, booked: { ...b, auto: true } });
+    this.teeAsk = false; this.youTeeOpen = false; if (!this.speed) this.setSpeed(this.lastSpeed);
+    this.toast(`The game plays your ${clock(b.tee)} round: its score comes when it is done`, 'info'); this.emit();
+  }
+  /** the tee-time card, closed without a choice: the clock goes on, the booking stays (the first-tee card has the same two buttons) */
+  closeTeeAsk() { this.teeAsk = false; if (!this.speed) this.setSpeed(this.lastSpeed); this.emit(); }
+  /** the "play now or let the game play it?" card (null: closed) */
+  teeAskView(): { tee: number } | null { const b = this.golf?.player?.booked; return this.teeAsk && b && !b.auto && !this.yourRound() ? { tee: b.tee } : null; }
+  /** Start round on today's event card: the clock runs to your tee time in it (the next free time on the sheet), then your round in it begins */
+  eventStart(id: EventId) {
+    const why = this.eventPlayWhy(id); if (why) { this.toast(why, 'warn'); return; }
+    this.startRoundAt('event', this.eventTeeTime(), id);
+  }
+  /** Start round for the tournament you joined: the clock runs to just before its tee time, where the watching speed takes over */
+  tournamentStart() {
+    const t = this.tourneyStartTee(); if (t === null) return;
+    this.youTeeOpen = false; this.startRoundAt('tournament', t - OWN_WATCH_LEAD);
   }
   // ---------- T317 (#903): your own round by hand (play/yours.ts) and your golf cart ----------
   /** your golf cart (a mover like you, at the cart's pace: golf/you.ts You with speed CART_TILES); placed by the clubhouse once, then where you leave it */
@@ -8400,11 +8486,11 @@ export class Game {
     if (c.why) { this.toast(c.why, 'warn'); return; }
     if (!v) return;
     const at = this.townNow(), b = p.booked;
-    if (b && b.day === at.day && at.dayMin >= b.tee - BOOK_LEAD && !(b.result && at.dayMin >= b.result.done)) { this.toast('You are out on the course in your booked round', 'warn'); return; }
+    if (b && b.auto && b.day === at.day && at.dayMin >= b.tee - BOOK_LEAD && !(b.result && at.dayMin >= b.result.done)) { this.toast('You are out on the course in your booked round', 'warn'); return; } // (T350: the game's round, not a tee time of yours)
     const holes = pickHoles(v.holes.length, choice, picked);
     if (!holes.length) { this.toast('Pick at least one hole', 'warn'); return; }
     const r = startRound(v, holes, at.day, rules); if (!r) return;
-    if (b && b.day === at.day && !b.result) this.setPlayer({ ...this.playerNow()!, booked: null });
+    if (b && b.day === at.day) this.setPlayer({ ...this.playerNow()!, booked: null }); // (T350: a round by hand ends the booking, whatever it was)
     this.setYourRound(r); this.youTeeOpen = false; this.yrCard = false; this.yrFlight = null;
     this.shutToolsForRound(); // T328: your round clears the tool panels
     const h = holeOf(v, holes[0]!)!, brought = this.youCartBring(h.tee);
@@ -8414,7 +8500,7 @@ export class Game {
   /** each frame (real seconds): your ball's flight (the camera follows it), then the snap: near your ball (SNAP_TILES), on foot or in the cart, you
    *  stand at the address and the shot opens */
   private yourFrame(dt: number) {
-    const r = this.yourRound(), y = this.you; if (!r || !y) { this.yrFlight = null; this.mFlight = null; this.mYou = null; if (this.spinAir?.mine) this.spinAir = null; return; }
+    const r = this.yourRound(), y = this.you; this.watchFor('round', !!r); /* (T350: on the course the clock is at the pace of play) */ if (!r || !y) { this.yrFlight = null; this.mFlight = null; this.mYou = null; if (this.spinAir?.mine) this.spinAir = null; return; }
     if (r.match) this.matchFigure(dt, r); // T244: the opponent's figure (its swing clip)
     let f = this.yrFlight;
     if (!f && this.spinAir?.mine) this.spinAir = null;
@@ -8716,7 +8802,7 @@ export class Game {
     return {
       id, name: def.name, when: eventWhen(id, evSeason), phase, hcp, hcpText: hcpText(hcp), maxHcp: def.maxHcp, why: entryWhy(id, hcp), entered: isEntered(ev, id, evSeason),
       field: today && today.id === id ? today.field.length : null, holes: today && today.id === id ? today.holes : null,
-      playWhy: phase === 'today' ? this.eventPlayWhy(id) : null, playing: eventOfMode(p.round?.mode) === id, result: res, line: res ? resultLine(res) : null, you: p.name,
+      playWhy: phase === 'today' ? this.eventPlayWhy(id) : null, playing: eventOfMode(p.round?.mode) === id, result: res, line: res ? resultLine(res) : null, you: p.name, tee: phase === 'today' ? this.eventTeeTime() : null,
     };
   }
   openEventCard(id: EventId | null) { this.eventCardOpen = id && this.golf ? id : null; this.emit(); }
@@ -10455,7 +10541,7 @@ export class Game {
     this.ground.tilesAhead(bandsAhead(z, tb));
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
-    this.updateDayPins(now); this.updatePlay(now); this.updateEveryday(now); // T269: the day's cups first, so the day's play reads them
+    this.updateDayPins(now); this.updatePlay(now); this.updateEveryday(now); this.stepStartRound(); // T269: the day's cups first, so the day's play reads them
     this.watchFrame(); // T320: the camera on the golfers followed
     if (this.golf) this.monthMoney.note(this.golfMonthAt(now), this.money); // T233: the money chip's change a month
     // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)

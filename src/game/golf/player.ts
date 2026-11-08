@@ -104,7 +104,7 @@ export interface RoundEntry { day: number; kind: RoundKind; strokes: number; par
 /** your everyday round booked on the tee sheet (T208): the town day and the tee time; your game as the round plays it (gameSkills at PRESSURE.everyday:
  *  as you booked, and after each session you practise before you walk to the tee); the result once the day's round is played (the whole day is played
  *  when it is built, so it is known from the start: shown once your round is done, put in your rounds at the day's end at the latest) */
-export interface Booking { day: number; tee: number; skills: GameSkills; result?: { strokes: number; par: number; holes: number; done: number } }
+export interface Booking { day: number; tee: number; skills: GameSkills; /** T350: the game plays this round for you (you said "Let the game play it"); absent: a tee time you play yourself (Start round) */ auto?: true; result?: { strokes: number; par: number; holes: number; done: number } }
 /** the profile (GolfSave.player): the name and sex (defaults until T240), the skills, the practice log and the rounds (the last LOG_MAX and ROUNDS_MAX),
  *  today's sessions by kind (the fatigue), the minute you are busy until (a session under way), and your booked round */
 export interface PlayerProfile {
@@ -162,6 +162,7 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     booked = { day: bk.day, tee: bk.tee, skills: ok ? { driving: q.driving, irons: q.irons, short: q.short, putting: q.putting } : gameSkills(skills, PRESSURE.everyday) };
     const r = bk.result;
     if (r && [r.strokes, r.par, r.holes, r.done].every(v => typeof v === 'number' && Number.isFinite(v))) booked.result = { strokes: r.strokes, par: r.par, holes: r.holes, done: r.done };
+    if (bk.auto === true) booked.auto = true; // T350: the game plays it (you said so)
   }
   return {
     v: 1, name: typeof p.name === 'string' && p.name.trim() ? p.name.trim().slice(0, 40) : s0.name, sex: s0.sex, skills, log, rounds,
@@ -258,7 +259,7 @@ export function bookRound(p: PlayerProfile, day: number, tee: number): PlayerPro
 /** after a session: your round booked today and not begun (before its walk to the tee) plays with your game as it is now */
 export function rebook(p: PlayerProfile, day: number, minute: number): PlayerProfile {
   const b = p.booked; if (!b || b.day !== day || minute >= b.tee - BOOK_LEAD) return p;
-  return { ...p, booked: { day, tee: b.tee, skills: gameSkills(p.skills, PRESSURE.everyday) } };
+  return { ...p, booked: { day, tee: b.tee, skills: gameSkills(p.skills, PRESSURE.everyday), ...(b.auto ? { auto: true as const } : {}) } };
 }
 /** your golfer in the everyday round you booked: as playerGolfer, with the booking's game */
 export function bookedGolfer(p: PlayerProfile, b: Booking): Golfer {
@@ -305,7 +306,7 @@ export function youRangeView(p: PlayerProfile, ctx: Record<PracticeKind, Practic
 
 /** your round today as the profile card shows it: none booked (with the next tee time you can book, or why not), booked (the tee time), out on the
  *  course, or done (the score) */
-export type RoundState = { k: 'none'; next: number | null; why: string | null } | { k: 'booked'; tee: number } | { k: 'out'; tee: number } | { k: 'done'; strokes: number; par: number };
+export type RoundState = { k: 'none'; next: number | null; why: string | null } | { k: 'booked'; tee: number; /** T350: the tee time has passed and you have not started it */ late?: boolean; /** the game plays it (you said so) */ auto?: boolean } | { k: 'out'; tee: number } | { k: 'done'; strokes: number; par: number };
 /** the profile card ("Your golf"): name, handicap, the skills with what each plays, your round today, the practice log and the rounds (newest first) */
 export interface PlayerCardView {
   name: string; sex: Sex; hcp: number; hcpText: string;
