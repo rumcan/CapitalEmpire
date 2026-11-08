@@ -188,7 +188,8 @@ try {
   }
 
   // 6. the new-game card (--card 1): a fresh profile starts a range game; its Who-are-you card offers "Your course"; a real course starts a new game on it, the
-  //    save keeps it (a reload comes back on the same course on the flat plain), and Build your own is the usual start again
+  //    save keeps it (a reload comes back on the same course on the flat plain, with golf.osm whole), the camera starts over the course (the start tutorial's
+  //    Show me must not move it to the clubhouse), and Build your own is the usual start again
   if (card) {
     console.log('\n== the new-game card');
     const cctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 }), cp = await cctx.newPage();
@@ -203,21 +204,52 @@ try {
     console.log('  card:', txt);
     check(txt.includes('Magnolia National (from map data)') && txt.includes('Woodhill Country Club (from map data)') && !txt.toLowerCase().includes('augusta'), 'the famous club is shown under its made-up name, the others under theirs');
     check(txt.includes('scaled to 90%'), 'the card says Woodhill is scaled to 90% to fit the map');
-    await cp.click('[data-testid=who-course-rondebosch]');
-    const started = await cp.waitForFunction(() => window.__game.osmGame()?.id === 'rondebosch' && window.__game.ready, null, { timeout: 120000 }).then(() => true).catch(() => false);
-    check(started, 'a click on Rondebosch starts a new game on it');
-    await settle(cp, 2500);
-    await shot(cp, 'card-2-new-game-on-rondebosch');
-    const g1 = await cp.evaluate(() => { const g = window.__game; return { osm: g.golf.osm?.id, pins: g.golf.pins.length, flat: g.terrain.cls.every((c, i) => i % 997 || c === 0) }; });
-    console.log('  new game', JSON.stringify(g1));
-    await cp.waitForTimeout(5000); // (the autosave)
-    await cp.reload({ waitUntil: 'domcontentloaded' });
-    await cp.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
-    const g2 = await cp.evaluate(() => { const g = window.__game; return { osm: g.golf?.osm?.id ?? null, pins: g.golf?.pins.length ?? 0, grid: !!g.courseGrid, credit: g.golf?.osm?.credit ?? null }; });
-    console.log('  after a reload', JSON.stringify(g2));
-    check(g2.osm === 'rondebosch' && g2.pins === 18 && g2.grid && g2.credit === '© OpenStreetMap contributors', 'the save keeps the real course: a reload comes back on Rondebosch with its 18 pins and its credit');
-    await settle(cp, 2000); await shot(cp, 'card-3-after-reload');
     await cctx.close();
+    /** the game's state a check reads: golf.osm whole, the land, the markers, the tutorial, and where the land's middle shows on the screen (css px off the view's centre) */
+    const stateOf = page => page.evaluate(() => {
+      const g = window.__game, G = g.golf, c = G?.course, s = c ? g.screen(c[0] + c[2] / 2, c[1] + c[3] / 2) : null;
+      return { osm: G?.osm ?? null, course: c ?? null, tees: G?.tees.length ?? 0, pins: G?.pins.length ?? 0, tour: !!G?.progress?.tour, grid: !!g.courseGrid, z: +g.cam.z.toFixed(4), cssW: g.cssW, cssH: g.cssH,
+        off: s ? { dx: Math.round(s.x / g.dpr - g.cssW / 2), dy: Math.round(s.y / g.dpr - g.cssH / 2) } : null };
+    });
+    const camOk = st => !!st.off && Math.abs(st.off.dx) < 150 && Math.abs(st.off.dy) < 150;
+    for (const c of ALL) {
+      console.log(`-- ${c.id}`);
+      // the dev URL: golf.osm whole, and the camera over the course right after the load and still there seconds later (nothing moves it)
+      const dp = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+      dp.on('pageerror', e => { console.log('[pageerror]', e.message); bad++; });
+      await dp.goto(`${base}?osmcourse=${c.id}`, { waitUntil: 'domcontentloaded', timeout: 240000 });
+      await dp.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
+      await dp.waitForTimeout(1500); const d1 = await stateOf(dp);
+      await dp.waitForTimeout(6000); const d2 = await stateOf(dp);
+      console.log('  dev url', JSON.stringify({ osm: d1.osm?.id, scale: d1.osm?.scale, entry: d1.osm?.entry, course: d1.course, tees: d1.tees, tour: d1.tour, z: d1.z, off1: d1.off, off2: d2.off }));
+      check(d1.osm?.id === c.id && d1.osm.credit === '© OpenStreetMap contributors' && !!d1.osm.entry && d1.tees >= c.holes && d1.pins === c.holes, `${c.id}: the dev URL game has golf.osm whole (id, credit, entry) and its markers`);
+      check(camOk(d1) && camOk(d2), `${c.id}: the camera is over the course land at the start and still ${JSON.stringify(d2.off)} off its middle 6 s later`);
+      check(!d1.tour, `${c.id}: no start tutorial (it would move the camera to the clubhouse)`);
+      await shot(dp, `${c.id}-0-first-view`);
+      await dp.close();
+      // the card: a click starts the game, the save keeps it, a reload comes back on it
+      const xctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 }), xp = await xctx.newPage();
+      xp.on('pageerror', e => { console.log('[pageerror]', e.message); bad++; });
+      await xp.goto(base, { waitUntil: 'domcontentloaded', timeout: 240000 });
+      await xp.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
+      await xp.waitForSelector('[data-testid=who-card]', { timeout: 60000 });
+      await xp.click(`[data-testid=who-course-${c.id}]`);
+      const started = await xp.waitForFunction(id => window.__game.osmGame()?.id === id && window.__game.ready, c.id, { timeout: 120000 }).then(() => true).catch(() => false);
+      check(started, `${c.id}: a click on the card starts a new game on it`);
+      await settle(xp, 2500);
+      const s1 = await stateOf(xp);
+      check(camOk(s1), `${c.id}: from the card the camera is over the course too (${JSON.stringify(s1.off)})`);
+      if (c.id === 'rondebosch') await shot(xp, 'card-2-new-game-on-rondebosch');
+      await xp.waitForTimeout(5000); // (the autosave)
+      await xp.reload({ waitUntil: 'domcontentloaded' });
+      await xp.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
+      await xp.waitForTimeout(1500);
+      const s2 = await stateOf(xp);
+      console.log('  after a reload', JSON.stringify({ osm: s2.osm?.id, scale: s2.osm?.scale, entry: s2.osm?.entry, tees: s2.tees, pins: s2.pins, grid: s2.grid, credit: s2.osm?.credit }));
+      check(!!s2.osm && JSON.stringify(s2.osm) === JSON.stringify(s1.osm) && JSON.stringify(s2.course) === JSON.stringify(s1.course) && s2.tees === s1.tees && s2.pins === s1.pins && s2.grid, `${c.id}: the save keeps the real course whole: after a reload golf.osm, the land and the ${s2.tees} tee markers are as they were`);
+      if (c.id === 'rondebosch') { await settle(xp, 2000); await shot(xp, 'card-3-after-reload'); }
+      await xctx.close();
+    }
   }
 
   // 7. the standard range start at the same overview zoom (--standard 1), to see what the plain's ground looks like in an ordinary game

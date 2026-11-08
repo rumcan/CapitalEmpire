@@ -55,12 +55,16 @@ const polys = f => (f.polys ?? []).filter(p => meets(p.outer)).map(p => ({ outer
 const keep = (tags, keys) => { const o = {}; for (const k of keys) if (tags?.[k] !== undefined) o[k] = tags[k]; return o; };
 const rename = v => renames.get(v) ?? v;
 
+// The kinds a fixture keeps. AREAS: polygons, each with the tags worth keeping. LINES: lines (cut to the box, runs of them), each with its tags. A new kind is one entry in a
+// table here and one section in src/game/golf/osm/convert.ts (T354's estate streets: `LINES.street = ['highway', 'name', 'width', 'tunnel']`, once the stage-1 script fetches them).
+const AREAS = { tee: ['tee', 'colour'], green: [], fairway: [], bunker: [], water_hazard: [], lateral_water_hazard: [], water: [], rough: [] };
+const LINES = { waterway: ['waterway', 'width', 'tunnel', 'culvert'] };
 const features = {};
 const area = (kind, keys = []) => {
   const list = (F[kind] ?? []).map(f => ({ tags: keep(f.tags, keys), polys: polys(f) })).filter(f => f.polys.length);
   if (list.length) features[kind] = list.map(f => (Object.keys(f.tags).length ? f : { polys: f.polys }));
 };
-area('tee', ['tee', 'colour']); area('green'); area('fairway'); area('bunker'); area('water_hazard'); area('lateral_water_hazard'); area('water'); area('rough');
+for (const [kind, keys] of Object.entries(AREAS)) area(kind, keys);
 // every hole line near the box (the other courses' too: the converter leaves their features out), the chosen course's under its (renamed) name
 features.hole = holes.filter(h => meets(h.line)).map(h => {
   const t = keep(h.tags, ['handicap']), c = cname(h.tags);
@@ -69,18 +73,20 @@ features.hole = holes.filter(h => meets(h.line)).map(h => {
 });
 features.pin = (F.pin ?? []).filter(f => f.pos && inBox(f.pos)).map(f => ({ pos: pt(f.pos) }));
 // waterways: the runs of each inside the box (with a vertex either side), no names
-features.waterway = [];
-for (const w of F.waterway ?? []) {
-  const L = w.line ?? [];
-  let run = [];
-  const flush = () => { if (run.length >= 2) features.waterway.push({ tags: keep(w.tags, ['waterway', 'width', 'tunnel', 'culvert']), line: dp(run.map(pt), false) }); run = []; };
-  for (let i = 0; i < L.length; i++) {
-    const near = inBox(L[i]) || (i > 0 && inBox(L[i - 1])) || (i + 1 < L.length && inBox(L[i + 1]));
-    if (near) run.push(L[i]); else flush();
+for (const [kind, keys] of Object.entries(LINES)) {
+  features[kind] = [];
+  for (const w of F[kind] ?? []) {
+    const L = w.line ?? [];
+    let run = [];
+    const flush = () => { if (run.length >= 2) features[kind].push({ tags: keep(w.tags, keys), line: dp(run.map(pt), false) }); run = []; };
+    for (let i = 0; i < L.length; i++) {
+      const near = inBox(L[i]) || (i > 0 && inBox(L[i - 1])) || (i + 1 < L.length && inBox(L[i + 1]));
+      if (near) run.push(L[i]); else flush();
+    }
+    flush();
   }
-  flush();
+  if (!features[kind].length) delete features[kind];
 }
-if (!features.waterway.length) delete features.waterway;
 
 const c = j.meta?.course ?? {};
 const fixture = {

@@ -7,6 +7,7 @@ import magnoliaJson from '../src/game/golf/osm/data/magnolia-national.json';
 import woodhillJson from '../src/game/golf/osm/data/woodhill.json';
 import { OSM_COURSES, loadOsmSpec, osmCourseInfo, osmCourseToSpec, osmDisplayName, specOf } from '../src/game/golf/osm';
 import { OSM_CREDIT, type OsmCourseJson, type OsmCourseSpec } from '../src/game/golf/osm/types';
+import { scaleJson } from '../src/game/golf/osm/convert';
 import { paintSpec, specMarkers, surfAtTile } from '../src/game/golf/osm/raster';
 import { SURF, makeGrid } from '../src/game/ext/course-grid';
 import { gridAreas } from '../src/game/ext/course-grid/areas';
@@ -386,6 +387,17 @@ describe('Woodhill (T340): fully mapped, too big for the 2 km map at true size',
     assert.ok(specWh1.fills.some(f => f.code === 'stream-hidden'), 'a tunnelled waterway is not drawn');
     for (const h of specWh1.holes) assert.ok(h.made.length === 0, `hole ${h.n} needed nothing made up`);
     assert.deepEqual(osmCourseToSpec(woodhill, { id: 'woodhill' }), specWh1);
+  });
+});
+
+describe('kinds the converter does not read yet (T340, T354: estate streets)', () => {
+  it("rides along: a `street` kind in the JSON changes nothing in the spec, and a scale moves its coordinates with the rest", () => {
+    const street = { tags: { highway: 'residential' }, line: [[0, 0], [100, 50], [220, 60]] as [number, number][] };
+    const withStreets: OsmCourseJson = { ...ronde, features: { ...ronde.features, street: [street] } };
+    assert.deepEqual(osmCourseToSpec(withStreets, { id: 'rondebosch', name: 'Rondebosch Golf Course' }), specR, 'an unread kind is left alone');
+    const scaled = scaleJson(withStreets, 0.5).features.street![0]!;
+    assert.deepEqual(scaled.line, [[0, 0], [50, 25], [110, 30]]);
+    assert.deepEqual(scaled.tags, street.tags);
   });
 });
 

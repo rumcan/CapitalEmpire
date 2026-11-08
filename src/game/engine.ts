@@ -3013,15 +3013,19 @@ export class Game {
     const [vx, vy, vw, vh] = plan.venue, [px, py, pw, ph] = plan.carpark;
     this.setBizDefs([{ id: 1, type: 'clubhouse', x: vx, y: vy, w: vw, h: vh }]);
     this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
-    this.golf = plan.save; this.golf.progress = { ...emptyProgress(), tour: newTour() }; this.clubLegacy = false;
+    // (no start tutorial: its first step points at the town's houses along a county road and moves the camera to the town, and there is neither: the
+    //  camera stays over the course)
+    this.golf = plan.save; this.golf.progress = { ...emptyProgress() }; this.clubLegacy = false;
     this.courseGrid = plan.grid;
     const mk = specMarkers(spec, plan.at.x, plan.at.y);
     for (const t of mk.tees) this.setGolfMarker(t.hole, t.kind, t.x, t.y);
     for (const p of mk.pins) this.setGolfMarker(p.hole, 'pin', p.x, p.y);
     this.golf.aims = mk.aims;
-    // the camera over the whole land at the start (the player zooms in)
-    const cx = plan.land[0] + plan.land[2] / 2, cy = plan.land[1] + plan.land[3] / 2;
-    this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.cam.z = clampZoom(0.08);
+    // the camera over the whole land at the start, at the closest zoom that holds it (the player zooms in)
+    const [lx, ly, lw, lh] = plan.land, wx = [worldX(lx, ly), worldX(lx + lw, ly), worldX(lx, ly + lh), worldX(lx + lw, ly + lh)], wy = [worldY(lx, ly), worldY(lx + lw, ly), worldY(lx, ly + lh), worldY(lx + lw, ly + lh)];
+    const x0 = Math.min(...wx), x1 = Math.max(...wx), y0 = Math.min(...wy), y1 = Math.max(...wy);
+    this.cam.X = (x0 + x1) / 2; this.cam.Y = (y0 + y1) / 2;
+    this.cam.z = clampZoom(Math.min((this.cssW || 1280) * 0.9 / (x1 - x0), (this.cssH || 800) * 0.8 / (y1 - y0)));
     this.osmSpec = null; this.osmId = null;
     return true;
   }

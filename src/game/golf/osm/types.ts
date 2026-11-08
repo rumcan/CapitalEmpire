@@ -22,7 +22,10 @@ export interface JFeature {
 export interface OsmCourseJson {
   meta?: { attribution?: string; credit?: string; licence?: string; id?: string; place?: string; course?: { osm?: string; name?: string } };
   boundary?: JFeature;
-  features: Partial<Record<'tee' | 'fairway' | 'green' | 'bunker' | 'water_hazard' | 'lateral_water_hazard' | 'rough' | 'hole' | 'pin' | 'water' | 'waterway' | 'cartpath' | 'path', JFeature[]>>;
+  /** the map's features by kind. The converter reads the golf kinds ('tee' 'fairway' 'green' 'bunker' 'water_hazard' 'lateral_water_hazard' 'rough' 'hole' 'pin' 'water'
+   *  'waterway'); 'cartpath', 'path' and any other kind the stage-1 script writes (T354's estate streets: 'street', lines with their `highway` tag) ride along unread until
+   *  its section in convert.ts reads them: a new kind needs no change here or in the trim script's reading */
+  features: { [kind: string]: JFeature[] | undefined };
 }
 
 /** a point in tiles of the land's frame */
