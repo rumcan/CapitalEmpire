@@ -116,20 +116,19 @@ export function boxOnScreen(f: PresetFrame, b: Box): number[] {
 
 // ---------------------------------------------------------------- the trees
 /** the picture margin a tree keeps from a house (screen px at zoom 1: a few tiles' worth of leaves), the room its trunk keeps inside the lot lines, the
- *  least spacing between two trees (tiles) and the sizes a yard tree is drawn at (a share of its owner size) */
-const HOUSE_M = 14, LINE_M = 1.1, SPACING = 3.2, SIZE_LO = 0.78, SIZE_HI = 1;
+ *  least spacing between two trees (tiles), the sizes a yard tree is drawn at (a share of its owner size) and the most spots tried for a lot's trees */
+const HOUSE_M = 14, LINE_M = 1.1, SPACING = 3.2, SIZE_LO = 0.78, SIZE_HI = 1, TRIES = 70;
 /** what the trees keep clear of: the buildings' pictures (screen rectangles) and the drive and the path (lot-frame boxes: no tree's picture covers them) */
 export interface TreeKeep { houses: readonly Rect[]; ground: readonly Box[] }
-/** the spots a lot's trees try, most wanted first: along the back fence, beside the back yard, then the front corners (the order within a group is the lot's
- *  own draw) */
+/** the spots a lot's trees try, most wanted first: the lot's own whole-tile grid, each point nudged a little (the lot's draws), by how close it stands to a line the lot
+ *  fences (a side, the back: a tree on the boundary reads as the yard's own and keeps the middle of the yard open), the front yard (the first tile and a half) last */
 function treeSpots(W: number, D: number, r: () => number): [number, number][] {
-  const shuffle = <T,>(l: T[]): T[] => { for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [l[i], l[j]] = [l[j]!, l[i]!]; } return l; };
-  const back = D - 1.8, j = () => (r() - 0.5) * 0.8;
-  return [
-    ...shuffle<[number, number]>([[2 + j(), back + j() / 2], [W - 2 + j(), back + j() / 2], [W / 2 + (r() - 0.5) * 3, back + j() / 2]]),
-    ...shuffle<[number, number]>([[1.7 + j(), D * 0.62], [W - 1.7 + j(), D * 0.62], [1.7 + j(), D * 0.42], [W - 1.7 + j(), D * 0.42]]),
-    ...shuffle<[number, number]>([[1.7 + j(), 2 + j()], [W - 1.7 + j(), 2 + j()]]),
-  ];
+  const out: { x: number; y: number; k: number }[] = [];
+  for (let x = LINE_M; x <= W - LINE_M + 1e-9; x += 1) for (let y = LINE_M; y <= D - LINE_M + 1e-9; y += 1) {
+    const jx = (r() - 0.5) * 0.6, jy = (r() - 0.5) * 0.6, px = Math.min(W - LINE_M, Math.max(LINE_M, x + jx)), py = Math.min(D - LINE_M, Math.max(LINE_M, y + jy));
+    out.push({ x: px, y: py, k: Math.min(px, W - px, D - py) + (py < 2.4 ? 2.5 : 0) + r() * 1.2 });
+  }
+  return out.sort((a, b) => a.k - b.k).slice(0, TRIES).map(p => [p.x, p.y]);
 }
 /** lays a lot's trees: up to MAX_TREES, each from the owner's real trees (autolot.ts realTrees) at a size of its own, at the first spot where its picture, in
  *  the autumn art and the desert art, covers no building, drive or path, its trunk stands inside the lot, and it keeps SPACING from the trees before it.
@@ -140,10 +139,10 @@ export function cleanTrees(B: Build, f: PresetFrame, keep: TreeKeep, r: () => nu
   const grounds = keep.ground.map(b => boxOnScreen(f, b)), laid: { x: number; y: number }[] = [];
   for (const [sx, sy] of treeSpots(W, D, r)) {
     if (laid.length >= MAX_TREES) break;
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 2; attempt++) {
       const id = pool[Math.floor(r() * pool.length)]!, t = turned(id, f.q), item = LIB_AT.get(t.id);
       if (item === undefined) continue;
-      const s = ownerScaleOf(id) * (SIZE_LO + (SIZE_HI - SIZE_LO) * r()) * (attempt === 2 ? 0.8 : 1), h = footprintOf(t.id, s, t.flip);
+      const s = ownerScaleOf(id) * (SIZE_LO + (SIZE_HI - SIZE_LO) * r()) * (attempt === 1 ? 0.8 : 1), h = footprintOf(t.id, s, t.flip);
       const x = Math.min(Math.max(sx, LINE_M + (h[2] - h[0]) / 2), W - LINE_M - (h[2] - h[0]) / 2), y = Math.min(Math.max(sy, LINE_M + (h[3] - h[1]) / 2), D - LINE_M - (h[3] - h[1]) / 2);
       const c = toWorld(f, x, y), ax = c.x - (h[0] + h[2]) / 2, ay = c.y - (h[1] + h[3]) / 2;
       if (laid.some(p => Math.hypot(p.x - c.x, p.y - c.y) < SPACING)) break;

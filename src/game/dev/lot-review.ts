@@ -72,7 +72,7 @@ export function installLotReview(game: Game): () => void {
   const cur = (): ReviewLot | undefined => lots[idx];
   const recOf = (l: ReviewLot): ReviewRecord | undefined => file.lots[l.id];
   const standing = (l: ReviewLot): Standing => standingOf(recOf(l));
-  const visible = (): number[] => lots.map((l, i) => i).filter(i => { const s = standing(lots[i]!); return filter === 'all' || (filter === 'todo' ? s === 'none' || s === 'touched' : s === 'bad'); });
+  const visible = (): number[] => lots.map((_l, i) => i).filter(i => { const s = standing(lots[i]!); return filter === 'all' || (filter === 'todo' ? s === 'none' || s === 'touched' : s === 'bad'); });
   const remember = () => { try { sessionStorage.setItem(SESSION, JSON.stringify({ kind, seed, idx, filter } satisfies Session)); } catch { /* no storage */ } };
 
   // ---------- the dev server's file
@@ -160,7 +160,7 @@ export function installLotReview(game: Game): () => void {
   function fit() {
     const l = cur(); if (!l) return;
     const h = lotBox(l.g), a = free(), z = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, (a.R - a.L - 2 * FIT) / (h.x1 - h.x0), (a.B - a.T - 2 * FIT) / (h.y1 - h.y0)));
-    game.camEase = null; game.cam.z = z;
+    game.lookAt(l.g.o.x + (l.g.u.x * l.g.w + l.g.n.x * l.g.d) / 2, l.g.o.y + (l.g.u.y * l.g.w + l.g.n.y * l.g.d) / 2, z); // (zoom, and the camera taken back from any ease)
     const c = game.canvas.getBoundingClientRect(), ox = c.left + game.cssW / 2, oy = c.top + game.cssH / 2, wx = (h.x0 + h.x1) / 2, wy = (h.y0 + h.y1) / 2;
     game.cam.X = wx - ((a.L + a.R) / 2 - ox) / z; game.cam.Y = wy - ((a.T + a.B) / 2 - oy) / z; game.emit();
     gridLots.length = 0; gridLots.push({ o: l.g.o, u: l.g.u, n: l.g.n, w: l.g.w, d: l.g.d, cells: false, alpha: 1 });
@@ -299,6 +299,7 @@ ${id}: click, then click on the lot`, armed?.id === id, () => { armed = armed?.i
     else if (k === 'n') { const t = card.querySelector('textarea'); t?.focus(); }
     else if (k === 'p') { fly = fly === 'props' ? null : 'props'; render(); } else if (k === 'd') { fly = fly === 'decals' ? null : 'decals'; render(); }
     else if (k === 'u') void undo(false); else if (k === 'c') void undo(true);
+    else if (k === 'i') { /* the map editor's key: the review never edits a preset */ }
     else used = false;
     if (used) { e.preventDefault(); e.stopImmediatePropagation(); }
   };

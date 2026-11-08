@@ -74,7 +74,7 @@ function unloadLab(){labSeq++;const f=$('#labframe');if(!f)return;f.src='about:b
 // (house, driveway or parking, trees, fence), the bad mark and note, the quick pick decals and props and the machine's reading are in the frame; every action is saved by the
 // game dev server into scripts/assets/lot-review.json, which the lead reads. The frame lives only while this tab is open (its page unloaded, its memory freed, when another tab is chosen)
 let reviewSeq=0;
-async function loadReview(){const n=++reviewSeq;if($('#reviewframe'))return;const c=await fetch('/api/config').then(r=>r.json()),g=new URL(c.game),own=h=>h==='localhost'||h==='127.0.0.1'||h==='[::1]';if(own(g.hostname)&&!own(location.hostname))g.hostname=location.hostname;const u=g.origin+'/?lotreview&dev';$('#reviewopen').href=u;
+async function loadReview(){const n=++reviewSeq;if($('#reviewframe'))return;const c=await fetch('/api/config').then(r=>r.json()),g=new URL(c.game),own=h=>h==='localhost'||h==='127.0.0.1'||h==='[::1]';if(own(g.hostname)&&!own(location.hostname))g.hostname=location.hostname;const u=g.origin+'/?lotreview';$('#reviewopen').href=u;
  if(n!==reviewSeq||$('#reviewframe')||!$('#v-review').classList.contains('on'))return;
  $('#v-review').append(el('iframe',{id:'reviewframe',title:'Lot review: the game itself (the dev server of this checkout) composes and draws every lot exactly as the game does',src:u,style:'display:block;width:100%;flex:1;min-height:0;border:0;background:#1b2816'}));}
 function unloadReview(){reviewSeq++;const f=$('#reviewframe');if(!f)return;f.src='about:blank';f.remove();}

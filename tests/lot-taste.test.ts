@@ -12,6 +12,9 @@ import { presetSamples } from '../src/game/dev/learn-presets';
 import { modelFile } from '../src/game/dev/dev-save';
 import { examLots, examPreset, examRows, EXAM_N, EXAM_ROADS, EXAM_STATES } from '../src/game/lots/lot-exam';
 import { LU, LV } from '../src/game/lots/town';
+import { setCleanYards } from '../src/game/lots/clean-yards';
+// T385 (#1042): this file pins the old yards (the learned generator's house yards, the kit, the starter homes): the clean base is the game's house lot now (tests/clean-lots.test.ts)
+setCleanYards(false);
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 

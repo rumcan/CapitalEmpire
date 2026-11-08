@@ -66,6 +66,6 @@ export function auditLot(g: LotGeom, c: Composition): LotAudit {
     drive: drives.length > 0, driveConnects: drives.some(a => frontOf(g, a.pts) <= 0.4), path: paths.some(a => frontOf(g, a.pts) <= 0.4),
     trees: trees.length, treesClear: treesClear && trees.length <= MAX_TREES,
     fence: fences.length ? 'panels' : hedges.length ? 'hedge' : 'none', fencePieces: pieces.length, fenceAcross: across,
-    clutter: c.props.filter(p => clutterKind(p.id) !== null).map(p => p.id),
+    clutter: c.props.filter(p => p !== house && clutterKind(p.id) !== null).map(p => p.id),
   };
 }

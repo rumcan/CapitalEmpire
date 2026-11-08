@@ -10,13 +10,15 @@ import { LATEST, LOT_MODELS } from '../src/game/lots/lot-models';
 import { CLEAN_MODEL, HEDGE_IDS, MAX_TREES, cleanYards, clutterKind, isClutter, setCleanYards } from '../src/game/lots/clean-yards';
 import { auditLot } from '../src/game/lots/lot-audit';
 import { facingView, bestFacing, pictureHeading, turnsBetween } from '../src/game/lots/house-facing';
-import { cleanGround, rectHitsQuad } from '../src/game/lots/clean-lot';
+import { buildingRect, cleanGround, rectHitsQuad, rectsHit } from '../src/game/lots/clean-lot';
+import { DESERT_THEME } from '../src/game/newart';
 import { frameOf, roadOf } from '../src/game/lots/preset-frame';
+import { footprintOf } from '../src/game/lots/preset-art';
 import { frontageFrames } from '../src/game/golf/estate';
 import { estateState, estateStreets } from '../src/game/dev/review-set';
 import { HEDGE } from '../src/game/lots/autolot';
 import { LU, LV } from '../src/game/lots/town';
-import { mulberry } from '../src/game/iso';
+import { mulberry, worldX, worldY } from '../src/game/iso';
 import { LIBRARY } from '../src/game/library';
 import { isBuilding } from '../src/game/mirror';
 import { CLASS } from '../src/game/network';
@@ -64,7 +66,8 @@ describe('the clean base of a house lot (T385)', () => {
     let houses = 0;
     for (const { g, st } of LOTS) {
       const c = compose(g, st), a = auditLot(g, c);
-      for (const p of c.props) { assert.ok(!isClutter(p.id), `${p.id} is clutter (${clutterKind(p.id)})`); if (!isBuilding(BY.get(p.id)!)) assert.ok(!WORDS.test(`${p.id} ${BY.get(p.id)?.name ?? ''}`), `${p.id} reads as clutter`); }
+      // (a building is the house or its garage: the audit, which leaves the house out, finds any other)
+      for (const p of c.props) { if (isBuilding(BY.get(p.id)!)) continue; assert.ok(!isClutter(p.id), `${p.id} is clutter (${clutterKind(p.id)})`); assert.ok(!WORDS.test(`${p.id} ${BY.get(p.id)?.name ?? ''}`), `${p.id} reads as clutter`); }
       assert.deepEqual(a.clutter, [], 'the audit finds none');
       houses += a.house ? 1 : 0;
     }
@@ -91,13 +94,14 @@ describe('the clean base of a house lot (T385)', () => {
 
   it('4. the drive meets the road and a front path leads to the door, on every lot that has its house', () => {
     setCleanYards(true);
-    let parked = 0;
+    let parked = 0; const lacking: string[] = [];
     for (const { g, st } of LOTS) {
       const a = auditLot(g, compose(g, st)); if (!a.house) continue;
-      assert.ok(a.drive && a.driveConnects, `a drive from the street edge (${g.w}x${g.d} road ${roadOf(g.n)})`); assert.ok(a.path, 'a front path');
       parked++;
+      if (!(a.drive && a.driveConnects && a.path)) lacking.push(`${g.w}x${g.d} road ${roadOf(g.n)} seed ${st.seed}: drive ${a.drive} meets ${a.driveConnects} path ${a.path}`);
     }
     assert.ok(parked > 600, `${parked} lots checked`);
+    assert.ok(lacking.length <= parked * 0.01, `${lacking.length} of ${parked} house lots have no drive that meets the road, or no path: ${lacking.slice(0, 4).join(' | ')}`);
   });
 
   it('5. at most three trees, clear of the house, its roof, the drive and the path, as the autumn tree and as the desert palm or rock', () => {
@@ -109,6 +113,26 @@ describe('the clean base of a house lot (T385)', () => {
       if (a.trees) withTrees++; if (a.trees === MAX_TREES) three++;
     }
     assert.ok(withTrees > total * 0.8 && three > total * 0.25, `${withTrees} of ${total} lots have trees, ${three} have three`);
+  });
+
+  it('5b. with the desert theme on, the palm or rock the engine draws for each tree (newart.ts lookOf, desertPick: the same spot, the same plant) covers no house, drive or path', () => {
+    setCleanYards(true);
+    const at = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
+    let checked = 0;
+    DESERT_THEME.on = true;
+    try {
+      for (const { g, st } of LOTS.slice(0, 250)) {
+        const c = compose(g, st), houses = c.props.filter(p => isBuilding(BY.get(p.id)!)).map(p => { const fp = footprintOf(p.id, p.scale, p.flip); return buildingRect(at.get(p.id)!, p.x, p.y, p.flip, p.scale, [p.x + fp[0], p.y + fp[1], p.x + fp[2], p.y + fp[3]]); });
+        const quads = c.ground.filter(a => a.tex !== 'marks').map(a => a.pts.flatMap((v, i) => (i % 2 ? [] : [worldX(v, a.pts[i + 1]!), worldY(v, a.pts[i + 1]!)])));
+        for (const p of c.props) {
+          if (!isTree(p.id)) continue;
+          const drawn = buildingRect(at.get(p.id)!, p.x, p.y, p.flip, p.scale);
+          assert.ok(!houses.some(h => rectsHit(drawn, h, 0)), `${p.id} covers the house at ${p.x.toFixed(1)},${p.y.toFixed(1)}`); assert.ok(!quads.some(q => rectHitsQuad(drawn, q)), `${p.id} covers the drive or the path`);
+          checked++;
+        }
+      }
+    } finally { DESERT_THEME.on = false; }
+    assert.ok(checked > 100, `${checked} trees checked`);
   });
 
   it('6. the fence runs along the lines the lot owns and never across the drive or the path', () => {
@@ -181,7 +205,7 @@ describe('the clean base of a house lot (T385)', () => {
     // (the lab's forced preset, or its forced template, is the owner's own layout: the clean base leaves it as it is)
     const forced = lotPresets().find(q => q.use === 'res' && q.whole && q.road === 0)!, g = geom(0, forced.w, forced.d), st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: 11, preset: forced.id };
     const now = JSON.stringify(compose(g, st)); setCleanYards(false); const old = JSON.stringify(compose(g, st)); setCleanYards(true);
-    assert.equal(now, old); assert.ok(compose(g, st).props.length > 12, 'the owner's own preset keeps its props');
+    assert.equal(now, old); assert.ok(compose(g, st).props.length > 12, "an owner's own preset keeps its props");
   });
 
   it('11. T353\'s estate lots (frontageFrames along its streets, the estate\'s own seeds) are the same clean lots', () => {

@@ -43,7 +43,7 @@ if (!only || only === 'town') {
   for (const [theme, d] of [['autumn', 'off'], ['desert', 'on']]) {
     const shots = {};
     for (const [look, extra] of [['before', '&oldyards'], ['after', '']]) {
-      const { ctx, page } = await open(`${base}?lotreview&dev&source=town&seed=${seed}&desert=${d}${extra}`);
+      const { ctx, page } = await open(`${base}?lotreview&source=town&seed=${seed}&desert=${d}${extra}`);
       await page.evaluate(() => window.__lotReview.hide(true));
       const lots = await page.evaluate(() => window.__lotReview.lots().map(l => ({ road: l.road, st: l.st, g: l.g, id: l.id })));
       console.log(`${theme} ${look}: ${lots.length} lots`);
@@ -72,7 +72,7 @@ if (!only || only === 'town') {
 
 if (!only || only === 'estate') {
   for (const [look, extra] of [['before', '&oldyards'], ['after', '']]) {
-    const { ctx, page } = await open(`${base}?lotreview&dev&source=estate&seed=${seed}&desert=on${extra}`);
+    const { ctx, page } = await open(`${base}?lotreview&source=estate&seed=${seed}&desert=on${extra}`);
     await page.evaluate(() => window.__lotReview.hide(true));
     await page.evaluate(() => { const g = window.__game; g.camEase = null; g.lookAt(450, 420, 0.12); });
     await settle(page, 2500); await shot(page, `estate-desert-${look}`);
@@ -81,7 +81,7 @@ if (!only || only === 'estate') {
 }
 
 if (!only || only === 'ui') {
-  const { ctx, page } = await open(`${base}?lotreview&dev&source=town&seed=${seed}&desert=off`);
+  const { ctx, page } = await open(`${base}?lotreview&source=town&seed=${seed}&desert=off`);
   const n = await page.evaluate(() => window.__lotReview.lots().length);
   console.log(`the review: ${n} lots`);
   await settle(page, 1500);

@@ -16,7 +16,7 @@ import { LIBRARY } from '../src/game/library';
 import { mergeReview as devMerge, REVIEW_PATH as DEV_PATH } from '../src/game/dev/dev-save';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
-const root = path.resolve(import.meta.dirname ?? '.', '..');
+const root = process.cwd();
 const read = (f: string) => fs.readFileSync(path.join(root, f), 'utf8');
 
 const rec = (over: Partial<ReviewRecord> = {}): ReviewRecord => ({
@@ -41,7 +41,7 @@ describe('the review file (T385)', () => {
     const a = reviewId('town', 7, '1|2'), b = reviewId('estate', 7, '0.l3'), c = reviewId('town', 3, 'blk:a:b:1');
     let text = ''; let m = mergeReview(text, { [b]: rec({ kind: 'estate', key: '0.l3' }), [a]: rec({ key: '1|2', bad: true, note: 'tree through the garage' }) }, undefined);
     assert.ok(m.ok); text = m.text; assert.equal(m.count, 2);
-    const lines = text.trimEnd().split('\n'); assert.equal(lines.length, 4); assert.ok(lines[1]!.includes(`"${a}"`) && lines[2]!.includes(`"${b}"`), 'sorted by id, a lot a line');
+    const lines = text.trimEnd().split('\n'); assert.equal(lines.length, 4); assert.ok(lines[1]!.includes(`"${b}"`) && lines[2]!.includes(`"${a}"`), 'sorted by id (the estate before the town), a lot a line');
     m = mergeReview(text, { [a]: rec({ key: '1|2' }), [c]: rec({ key: 'blk:a:b:1', seed: 3 }) }, [b]); assert.ok(m.ok);
     const f = parseReview(m.text); assert.deepEqual(Object.keys(f.lots).sort(), [a, c].sort()); assert.equal(f.lots[a]!.bad, undefined, 'the upsert replaced the record');
     for (const [up, rm] of [[{ 'nope': rec() }, undefined], [{ [a]: { kind: 'town' } }, undefined], [[], undefined], [{}, 'x'], [{ ['../../etc:1:x']: rec() }, undefined]] as const) assert.equal(mergeReview(text, up, rm).ok, false);
@@ -104,10 +104,10 @@ describe('what the review applies (T385)', () => {
 describe('the Lot review is wired into the studio (T385)', () => {
   it('the dev server\'s route, the light boot, the page, the studio\'s tab and the lead\'s report', () => {
     assert.match(read('vite.config.ts'), /"\/__dev\/lot-review"[\s\S]*mergeReview\(text, upsert, remove\)/);
-    assert.equal(bootFor('?lotreview&dev', true).kind, 'lab'); assert.notEqual(bootFor('?lotreview', false).kind, 'lab'); assert.notEqual(bootFor('?x', true).kind, 'lab');
+    assert.equal(bootFor('?lotreview', true).kind, 'lab'); assert.notEqual(bootFor('?lotreview', false).kind, 'lab'); assert.notEqual(bootFor('?x', true).kind, 'lab');
     assert.match(read('src/App.tsx'), /has\('lotreview'\)[\s\S]*installLotReview/);
     const html = read('scripts/assets/review/studio.html');
-    assert.match(html, /data-v="review"[^>]*>Lot review</); assert.match(html, /id="v-review"/); assert.match(html, /\?lotreview&dev/); assert.match(html, /loadReview\(\)/);
+    assert.match(html, /data-v="review"[^>]*>Lot review</); assert.match(html, /id="v-review"/); assert.match(html, /\?lotreview'/); assert.match(html, /loadReview\(\)/);
     assert.match(read('package.json'), /"lots:review": "node scripts\/lots\/review-report\.mjs"/);
     assert.match(read('src/game/engine.ts'), /stageReview\(o: \{ kind: 'town' \| 'estate'/); assert.match(read('src/game/engine.ts'), /this\.lotOverride\?\.\(key, g\)/);
     // (the palettes: the quick picks exist in the library, the decals are every group)
