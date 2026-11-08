@@ -14,6 +14,7 @@
     "lots:freeze": "node scripts/assets/freeze-lot-presets.mjs",
     "lots:check": "node scripts/assets/freeze-lot-presets.mjs --check",
     "lots:exam": "node scripts/lots/exam.mjs",
+    "lots:review": "node scripts/lots/review-report.mjs",
     "typecheck": "tsc --noEmit -p .",
     "ui:overflow": "node scripts/dev/ui-overflow.mjs",
     "bench": "node scripts/perf/bench.mjs",

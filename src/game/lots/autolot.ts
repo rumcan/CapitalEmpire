@@ -24,6 +24,7 @@ import { mulberry } from '../iso';
 import { PARK_AISLE, STOP, bayDims, bayRow, layCarPark, rowInto, type BayDims, type ParkKit } from './carpark-lot';
 import { centreLot, type CentreKit } from './centre';
 import { centreOf } from './centre-biz';
+import { cleanYards } from './clean-yards';
 import { parsePresets, type Fitted, type LotPreset, type PresetPatch, type PresetProp, type PresetState, type PresetUse, type Road, type View } from './presets';
 import PRESET_JSON from './lot-presets.json';
 
@@ -34,7 +35,8 @@ export const AUTO_TEMPLATES: readonly AutoTemplate[] = ['house', 'corner', 'trai
 /** the template a lot of a use, tier and seed draws: res splits by the seed (a house, a corner house, and on a starter lot a quarter trailer parks);
  *  ind is a junk yard, com a small shop, a park (T296) a car park; a tour venue and a civic lot have none (null) */
 export function templateOf(use: PresetUse, tier: number, seed: number): AutoTemplate | null {
-  if (use === 'res') return tier === 0 && seed % 4 === 0 ? 'trailer' : seed % 3 === 0 ? 'corner' : 'house';
+  // (T385: a clean house lot is a house, never a trailer park: clean-yards.ts; ?oldyards keeps the starter lots' trailer parks)
+  if (use === 'res') return tier === 0 && seed % 4 === 0 && !cleanYards() ? 'trailer' : seed % 3 === 0 ? 'corner' : 'house';
   if (use === 'ind') return 'junk';
   if (use === 'com') return 'shop';
   if (use === 'park') return 'park';
