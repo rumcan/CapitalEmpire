@@ -64,7 +64,7 @@ test('parkValid: a park beside the street is fine; over a road, too small, with 
   assert.match(parkValid({ id: 9, x: 100, y: 100, w: 30, h: 12 }, cls, net, null, []), /no road along/);
   assert.match(parkValid(PARK, cls, net, null, [{ id: 2, x: 410, y: 286, w: 12, h: 10 }]), /another car park/);
   const wet = cls.slice(); wet[290 * MAP + 405] = TC.WATER;
-  assert.match(parkValid(PARK, wet, net, null, []), /buildable/);
+  assert.match(parkValid(PARK, wet, net, null, []), /^on water/); // T387: the class is named, never "not on buildable ground"
 });
 
 test('a park of 20 bays and one entrance, 30 cars sent: 20 parked, 10 turned away, admissions ENTRY_S apart, no car through a shut gate', () => {

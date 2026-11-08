@@ -138,5 +138,5 @@ test('parkValid of the turned park: all ground is fine; over the street it says 
   assert.match(parkValid(D, cls, net, null, [other]), /overlaps another car park/);
   const mid = toWorld(D, { x: D.w / 2, y: D.h / 2 }), wet = cls.slice();
   wet[Math.floor(mid.y) * MAP + Math.floor(mid.x)] = TC.WATER;
-  assert.match(parkValid(D, wet, net, null, []), /buildable/);
+  assert.match(parkValid(D, wet, net, null, []), /^on water/); // T387: the class is named, never "not on buildable ground"
 });

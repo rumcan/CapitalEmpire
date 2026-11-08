@@ -341,18 +341,36 @@ export function quadsOverlap(p: Pt[], q: Pt[]): boolean {
   return true;
 }
 
+/** T387 (#1045, the owner: "can't place the car park near the driving range if you build the driving range to the side"): why terrain class c
+ *  cannot take a car park or a bay row, named ('' when it can): water, a creek or a river bank each by name, and woodland (TC.HILL) unless the
+ *  game lets the player build on it. A golf game does: its owner's woodland is open ground once its trees come off (the range's plot, the
+ *  practice area, the clubhouse and every other placement there refuse only water), so a car park beside a range that stands on the edge of a
+ *  wood was refused with a bare "not buildable" over land the range itself was built on. Never a generic reason: an unknown class
+ *  (none today) is named by its number */
+export function parkClassWhy(c: number | undefined, woodland = false): string {
+  switch (c) {
+    case TC.GROUND: case TC.PATCH: return '';
+    case TC.WATER: return 'on water: a car park needs dry land';
+    case TC.CREEK: return 'on a creek: a car park needs dry land';
+    case TC.BANK: return 'on the river bank: set it back from the water';
+    case TC.HILL: return woodland ? '' : 'on woodland: a car park needs open ground';
+    default: return `on terrain class ${c ?? 'unknown'}, which cannot be built on`;
+  }
+}
+
 /** '' if car park d may be placed on the terrain classes cls (MAP x MAP) beside net, else the reason: a side under MIN_PARK; not EDGE
- *  tiles inside the map (its box); a tile whose centre is in the park not GROUND or PATCH; a road whose verge (centre line closer than its h +
+ *  tiles inside the map (its box); a tile whose centre is in the park not GROUND or PATCH (parkClassWhy names it: water, a creek, the river
+ *  bank, or woodland, which `woodland` lets through: a golf game's); a road whose verge (centre line closer than its h +
  *  walk) reaches the park; the stadium's site (site, grown by 2 tiles, its box); another car park (others, by id: rects, or the corner quads
  *  when either is turned); no frontage (see frontage). Road segs are tested in the park's own frame */
-export function parkValid(d: CarParkDef, cls: Uint8Array, net: RoadNetwork, site: Site | null, others: CarParkDef[]): string {
+export function parkValid(d: CarParkDef, cls: Uint8Array, net: RoadNetwork, site: Site | null, others: CarParkDef[], woodland = false): string {
   if (d.w < MIN_PARK || d.h < MIN_PARK) return `too small: the sides must be at least ${MIN_PARK} tiles`;
   const box = parkBox(d);
   if (box.x < EDGE || box.y < EDGE || box.x + box.w > MAP - EDGE || box.y + box.h > MAP - EDGE) return `too close to the edge of the map (${EDGE} tiles)`;
   for (let y = Math.floor(box.y); y < box.y + box.h; y++) for (let x = Math.floor(box.x); x < box.x + box.w; x++) {
     if (!inPark(d, { x: x + 0.5, y: y + 0.5 })) continue;
-    const c = cls[y * MAP + x];
-    if (c !== TC.GROUND && c !== TC.PATCH) return 'not on buildable ground';
+    const why = parkClassWhy(cls[y * MAP + x], woodland);
+    if (why) return why;
   }
   const r = (d.a ? Math.hypot(d.w, d.h) : Math.max(d.w, d.h)) / 2 + EDGE;
   for (const s of net.segsNear(toWorld(d, { x: d.w / 2, y: d.h / 2 }), r)) {

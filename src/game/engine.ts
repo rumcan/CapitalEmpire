@@ -168,14 +168,14 @@ import { realNet, type AnswerCache } from './golf/osm/polite';
 import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
 import { specMarkers } from './golf/osm/raster';
-import { RANGE_CAM_ZOOM, RANGE_LOT, planRangeStart } from './golf/rangestart';
+import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
 import { CAR_PARK_PLACE_COST, PRACTICE_PLACE_COST, RANGE_PLACE_COST, landWhy, placeVerdict, rangeSpotAt, rectAt, rectPoly as rectPolyOf, rectsMeet, type LandCheck, type Placeable, type RangeSpot } from './golf/placing';
-import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy } from './golf/rangebiz';
+import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy, type RangeBizSave } from './golf/rangebiz';
 import { baysByDoor, servesOf, servingParks, type Serve, type Venue } from './golf/walkserve';
 import { drawServePreview } from './walkserve-overlay';
-import { hiddenBy, rangeKeepOutWhy, snapToRoad, type Building } from './golf/parkplace';
+import { carParkSpotAt, carParkWhy, parkSpotWhy as spotWhyOf, snapToRoad, type Building, type CarParkCtx } from './golf/parkplace';
 import { footStart, parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
 import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
@@ -1695,18 +1695,12 @@ export class Game {
    *  its long side along the road, snapped onto the road beside it (parkplace.ts snapToRoad); its gravel and paving are the range's upgrades */
   private carParkPlaceable(): Placeable<CarParkDef> | null {
     const g = this.golf, b = g?.start === 'range' ? g.range : undefined; if (!g || !b) return null;
-    const [L, D] = RANGE_LOT, w = g.dir === 0 || g.dir === 2 ? L : D, h = g.dir === 0 || g.dir === 2 ? D : L, land = this.landCheck();
+    const land = this.landCheck();
     return {
       id: 'carpark', name: 'Car park', cost: CAR_PARK_PLACE_COST,
-      spot: (x, y) => { const [rx, ry] = rectAt(x, y, w, h), raw: CarParkDef = { id: 0, x: rx, y: ry, w, h }, d = snapToRoad(this.net, raw) ?? raw; return { ...d, cross: true }; },
-      why: d => {
-        if (b.built === false) return 'Place your driving range first';
-        if (b.lot) return 'Your range has its car park: more come from Traffic ▸ Car park';
-        const r: Rect = [d.x, d.y, d.w, d.h], inner: Rect = [d.x + 3, d.y + 3, d.w - 6, d.h - 6]; // (its edge on the road's verge lies past the parcel's)
-        return this.parkSpotWhy(d) || parkValid(d, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(d) ? 'buildings stand there' : '')
-          || landWhy(inner, land) || ((() => { const y = this.homeRect(); return y && rectsMeet(r, y) ? 'Your home is there' : ''; })())
-          || (b.practiceAt && rectsMeet(r, b.practiceAt) ? 'The practice area is there' : '') || (buildPark(this.net, d) ? '' : 'Place it beside a road: its entrance goes on the road');
-      },
+      spot: (x, y) => carParkSpotAt(this.net, g.dir, x, y),
+      // (T387: golf/parkplace.ts carParkWhy: every reason named, woodland is open ground, only water is refused)
+      why: d => carParkWhy(d, this.carParkCtx(b, land)),
       polys: d => [rectPolyOf([d.x, d.y, d.w, d.h])],
       build: d => {
         const pk = buildPark(this.net, d); if (!pk) { this.toast('Car park: no road along its sides', 'warn'); return false; }
@@ -2720,7 +2714,7 @@ export class Game {
   /** the Paint tool's snap distance: 10 css px in tiles */
   private get paintTol() { return 10 / (Math.hypot(HW, HH) * this.cam.z); }
   /** the Car park tool's bay rows, on-street runs and fee (docs/PARKING.md) */
-  parking = new ParkingTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), money: () => this.money, spend: n => this.traffic.spend('construction', n), sendParking: (r, c, f) => { this.traffic.setParking(r, c, f); this.parkingChanged(); }, net: () => this.net, terrain: () => this.terrain.cls, mapSize: MAP, tollKeys: () => new Set(this.tollDefs.map(plazaKey)),
+  parking = new ParkingTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), money: () => this.money, spend: n => this.traffic.spend('construction', n), sendParking: (r, c, f) => { this.traffic.setParking(r, c, f); this.parkingChanged(); }, net: () => this.net, terrain: () => this.terrain.cls, mapSize: MAP, woodland: () => !!this.golf, tollKeys: () => new Set(this.tollDefs.map(plazaKey)),
     occupied: q => { const xs = [q[0]!, q[2]!, q[4]!, q[6]!], ys = [q[1]!, q[3]!, q[5]!, q[7]!], r = { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }, s = this.site;
       return this.lotsUnder(r) ? 'buildings stand there' : s && r.x < s.x + s.w && r.x + r.w > s.x && r.y < s.y + s.h && r.y + r.h > s.y ? 'on the stadium site' : ''; } });
   /** the parks the bay rows' lots and on-street runs make (parking.lots(), then parking.curbParks()), as the City has them; their gates and parked cars follow */
@@ -6531,21 +6525,33 @@ export class Game {
     const def = raw.w > 0 && raw.h > 0 ? snapToRoad(this.net, raw) ?? raw : raw;
     // the preview is laid as syncParks will build it (a golf game's layout), so its bays, serve line and toast count the bays it gets
     if (this.golf) def.cross = true;
-    pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(def) ? 'buildings stand there' : '') || this.parkSpotWhy(def);
+    // T387: a golf game's car park may stand on its owner's woodland (its trees come off when it is built, as for the range's plot): only water is refused
+    pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs, !!this.golf) || (this.lotsUnder(def) ? 'buildings stand there' : '') || this.parkSpotWhy(def);
     pd.park = pd.why ? null : buildPark(this.net, def);
   }
   /** T237: why a car park cannot stand on rect d in golf ('' when it can): over the driving range (its tee box, outfield, shop or yard), or a
    *  spot a club building hides in screen space (golf/parkplace.ts) */
   private parkSpotWhy(d: CarParkDef): string {
-    const g = this.golf; if (!g) return '';
+    if (!this.golf) return '';
+    const { keepOut, buildings } = this.parkSpotFacts(); return spotWhyOf(d, keepOut, buildings);
+  }
+  /** T237: what keeps a car park off the range in golf: the range's keep-out rects (its plot, or its tee box and outfield) and the buildings that
+   *  hide the ground behind them (the clubhouse, the halfway house, the range's pro shop and car park building) */
+  private parkSpotFacts(): { keepOut: Rect[]; buildings: Building[] } {
+    const g = this.golf; if (!g) return { keepOut: [], buildings: [] };
     const rd = g.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined, plot = rd ? plotOfFront([rd.x, rd.y, rd.w, rd.h], g.dir) : null;
-    const keep = plot ? rangeKeepOutWhy(d, rangeKeepOut(plot, g.dir, g.range?.setback ?? 0)) : ''; if (keep) return keep;
     const bs: Building[] = [];
     for (const b of this.bizDefs) if (b.type === 'clubhouse' || b.type === 'halfway') bs.push({ rect: [b.x, b.y, b.w, b.h], name: b.type === 'clubhouse' ? 'the clubhouse' : 'the halfway house' });
     if (plot) bs.push({ rect: rangeLayout(plot, g.dir).hut.rect, name: 'the pro shop' });
     const gb = this.range.scene?.garage?.box; if (gb) bs.push({ rect: [gb[0], gb[1], gb[2] - gb[0], gb[3] - gb[1]], name: 'the car park building' });
-    const hid = hiddenBy(d, bs);
-    return hid ? `Hidden behind ${hid.name}: place it beside or in front of it` : '';
+    return { keepOut: plot ? rangeKeepOut(plot, g.dir, g.range?.setback ?? 0) : [], buildings: bs };
+  }
+  /** T387: the range's first car park's checks as the engine has them now (golf/parkplace.ts carParkWhy runs them, in order, each reason named) */
+  private carParkCtx(b: RangeBizSave, land: LandCheck): CarParkCtx {
+    return {
+      built: b.built !== false, lot: !!b.lot, ...this.parkSpotFacts(), cls: this.terrain.cls, net: this.net, site: this.site, parks: this.parkDefs,
+      lotsUnder: r => this.lotsUnder(r), land, yard: this.homeRect(), practice: b.practiceAt ?? null,
+    };
   }
   /** whether a lot of the town that is not EMPTY overlaps rect r (its box against r) */
   private lotsUnder(r: { x: number; y: number; w: number; h: number }): boolean {
