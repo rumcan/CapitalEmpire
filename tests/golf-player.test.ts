@@ -57,7 +57,7 @@ test('the profile starts a mid-handicap amateur (about 18) under the default nam
 
 test('handicap: the curve at the weighted skills of an everyday round; lower with every better skill, a plus handicap below scratch', () => {
   // the formula by hand: s = weights . gameSkills(everyday), a + b s + c s^2, one decimal
-  const sk: Skills = { driving: 45, irons: 35, short: 30, putting: 40, nerve: 40 }, g = gameSkills(sk, PRESSURE.everyday);
+  const sk: Skills = { driving: 45, irons: 35, short: 30, putting: 40, power: 50, accuracy: 50, touch: 50, nerve: 40 }, g = gameSkills(sk, PRESSURE.everyday);
   const s = HCP_WEIGHTS.driving * g.driving + HCP_WEIGHTS.irons * g.irons + HCP_WEIGHTS.short * g.short + HCP_WEIGHTS.putting * g.putting;
   assert.equal(handicapOf(sk), Math.round((HCP_CURVE.a + HCP_CURVE.b * s + HCP_CURVE.c * s * s) * 10) / 10);
   assert.ok(Math.abs(HCP_WEIGHTS.driving + HCP_WEIGHTS.irons + HCP_WEIGHTS.short + HCP_WEIGHTS.putting - 1) < 1e-9, 'the weights add to 1');
@@ -83,21 +83,21 @@ test('gains shrink as a skill grows, with each session of a kind on the same day
   assert.equal(gainOf(25, 2, 0, 0.5), 2 * 0.75 * 0.75 * 1.5);
   // a better player gains less from the same bucket
   const weak = practicePreview(startProfile(), 'bucket', 3).gains, strong = practicePreview(withSkills(startProfile(), { driving: 70, irons: 70 }), 'bucket', 3).gains;
-  for (let i = 0; i < weak.length; i++) assert.ok(strong[i]!.gain < weak[i]!.gain, `${weak[i]!.id}: ${strong[i]!.gain} < ${weak[i]!.gain}`);
+  for (let i = 0; i < weak.length; i++) { if (weak[i]!.id === 'driving' || weak[i]!.id === 'irons') assert.ok(strong[i]!.gain < weak[i]!.gain, `${weak[i]!.id}: ${strong[i]!.gain} < ${weak[i]!.gain}`); else assert.equal(strong[i]!.gain, weak[i]!.gain, `${weak[i]!.id}: a stat that is the same gains the same`); }
 });
 
 test('practice: each place raises its skills, costs its price and its minutes, and the day\'s second session gains less', () => {
   const p0 = startProfile();
   const a = practise(p0, 'bucket', ctx());
-  assert.deepEqual(Object.keys(a.entry.gains).sort(), ['driving', 'irons']);
+  assert.deepEqual(Object.keys(a.entry.gains).sort(), ['accuracy', 'driving', 'irons', 'power']); // (T334 part 2: the bucket trains power and accuracy too)
   assert.ok(a.profile.skills.driving > p0.skills.driving && a.profile.skills.irons > p0.skills.irons);
   assert.equal(a.profile.skills.putting, p0.skills.putting); assert.equal(a.profile.skills.short, p0.skills.short);
   assert.equal(a.entry.cost, 6); assert.equal(a.entry.min, PRACTICE.bucket.min);
   assert.deepEqual(a.profile.busy, { day: 3, until: 600 + PRACTICE.bucket.min });
   assert.ok(a.entry.hcp[1] <= a.entry.hcp[0], 'the handicap does not rise');
   assert.equal(p0.skills.driving, START_SKILLS.driving, 'the profile passed in is not changed');
-  assert.deepEqual(Object.keys(practise(p0, 'putting', ctx({ price: 2 })).entry.gains), ['putting']);
-  assert.deepEqual(Object.keys(practise(p0, 'chipping', ctx({ price: 2 })).entry.gains), ['short']);
+  assert.deepEqual(Object.keys(practise(p0, 'putting', ctx({ price: 2 })).entry.gains).sort(), ['putting', 'touch']);
+  assert.deepEqual(Object.keys(practise(p0, 'chipping', ctx({ price: 2 })).entry.gains).sort(), ['accuracy', 'short', 'touch']);
   // the second bucket of the day (after the first is over) gains less than the first; the next day's first is fresh
   const b = practise(a.profile, 'bucket', ctx({ minute: 700 }));
   assert.ok(b.entry.gains.driving! < a.entry.gains.driving! * FATIGUE + 1e-6, 'fatigue');
@@ -127,7 +127,7 @@ test('practice: why a session cannot start (hours, busy, money, the green, your 
   // the range card's view: the gain and the cost of each place, and the last session
   const v = youRangeView(busy, { bucket: ctx({ minute: 620 }), putting: ctx({ minute: 620, price: 2 }), chipping: ctx({ minute: 620, price: 2, facility: false }) });
   assert.equal(v.busy, 'Practising until 10:45');
-  assert.deepEqual(v.sessions.map(s => [s.kind, s.cost, s.gains.map(g => g.id).join()]), [['bucket', 6, 'driving,irons'], ['putting', 2, 'putting'], ['chipping', 2, 'short']]);
+  assert.deepEqual(v.sessions.map(s => [s.kind, s.cost, s.gains.map(g => g.id).sort().join()]), [['bucket', 6, 'accuracy,driving,irons,power'], ['putting', 2, 'putting,touch'], ['chipping', 2, 'accuracy,short,touch']]);
   assert.match(v.last!.text, /Hit a bucket at 10:00: driving \+1\.0, irons \+0\.9/);
 });
 
@@ -205,7 +205,7 @@ test('your everyday round: a free tee time on the sheet, you added last, the oth
   assert.deepEqual(rebook(q, 3, t).booked!.skills, p.booked!.skills);
   // the card's view of the round and the log
   const v = playerCardView(q, { k: 'booked', tee: t });
-  assert.equal(v.skills.length, 5); assert.equal(v.log.length, 1); assert.deepEqual(v.round, { k: 'booked', tee: t });
+  assert.equal(v.skills.length, 8); assert.equal(v.log.length, 1); assert.deepEqual(v.round, { k: 'booked', tee: t });
 });
 
 test('the tournament (P4\'s live play): your skills as you joined, the same round on a replay; an old save plays at OWNER_SKILL', () => {

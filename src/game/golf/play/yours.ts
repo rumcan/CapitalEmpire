@@ -13,7 +13,7 @@
 import { TILE_M } from '../types';
 import { holeFrom } from './courseview';
 import { shotOutcome, POWER, type OwnerInput, type OwnerTurn } from './live';
-import { carryM, chooseShot, rng, skillFor, type ShotSkill } from './shot';
+import { carryFor, chooseShot, rng, type ShotSkill } from './shot';
 import type { CourseView, Landing, Lie, PlayHole, Pt, Shot } from './types';
 import type { TeeKind } from '../types';
 import { normalizeMatch, type MatchPlay, type MatchView } from './match';
@@ -129,7 +129,7 @@ export function yourTurn(view: CourseView, r: YourRound, sk: ShotSkill): OwnerTu
   const row = rowOf(r), hole = holeOf(view, row.i); if (!hole) return null;
   const sg = chooseShot(r.lie, r.ball, hole, sk, r.lie === 'tee'), putting = sg.club === 'putter';
   const distM = Math.hypot(hole.pin.x - r.ball.x, hole.pin.y - r.ball.y) * TILE_M, dM = Math.hypot(sg.aim.x - r.ball.x, sg.aim.y - r.ball.y) * TILE_M;
-  const power = putting ? 1 : Math.min(POWER[1]!, Math.max(POWER[0]!, dM / carryM(sg.club, skillFor(sk, sg.club))));
+  const power = putting ? 1 : Math.min(POWER[1]!, Math.max(POWER[0]!, dM / carryFor(sk, sg.club)));
   return { golfer: -1, holeIdx: row.i, hole: hole.n, par: hole.par, stroke: row.strokes + 1, t: 0, lie: r.lie, ball: { x: r.ball.x, y: r.ball.y },
     pin: { x: hole.pin.x, y: hole.pin.y }, distM, suggested: { club: sg.club, aim: { x: sg.aim.x, y: sg.aim.y }, power } };
 }

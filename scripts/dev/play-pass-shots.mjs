@@ -4,7 +4,10 @@
 //   3-wind-bends-a-high-shot.png                        a driver in an 18 mph crosswind against the same drive in a calm: the aim line and the expected-landing ellipse, the flight, the bent tracer
 //   4-panel-slope.png                                   the slope's lines (the ground raised by hand beside the ball: the Ground height tool's own dab)
 //   5-sway.png                                          a tree and the pin flag in the wind against a calm (two frames each, 0.45 s apart); shots.json has the pixel counts that moved
-// Part 2 (--part 2) adds the shaping's strips and the player card. Run:
+//   6-draw-vs-fade-strip.png / 6-panel-shape.png      (part 2) the same 6-iron (the same stream, a calm) as a draw, straight and a fade; the panel with a draw and a high flight picked
+//   7-player-card.png                                  (part 2) the player card's eight skills with power, accuracy and touch raised
+//   8-meter-accuracy.png                               (part 2) the swing meter of a golfer of accuracy 10 and of accuracy 90: the sweet spot's width
+// Run:
 //   node scripts/dev/play-pass-shots.mjs --base http://localhost:5187/ --out E:/ClaudeTemp/T334/shots [--seed 2] [--part 1|2]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; saves are not written. Exit 1 on a page error.
 import { chromium } from 'playwright-core';
@@ -179,6 +182,51 @@ try {
   await sheetRows([rowFlag, rowTree], '5-sway.png', 280, 280);
   await page.screenshot({ path: join(out, '5-sway-scene.png') });
 
+  if (part >= 2) {
+    // ---- 6. the shaping: the same 6-iron (one stream key, a calm) as a draw, straight and a fade; then the panel with a draw and a high flight picked
+    await page.evaluate(() => { const g = window.__game; g.shot = null; g.yrFlight = null; });
+    await setWind(0, 0, 0);
+    const rowsC = [];
+    for (const [shape, name] of [[{ curve: -1, flight: 0 }, 'Draw'], [{ curve: 0, flight: 0 }, 'Straight'], [{ curve: 1, flight: 0 }, 'Fade']]) {
+      await address(s55, 'fairway', 'iron6', 70, 5);
+      await page.evaluate(sh => window.__game.setShotShape(sh.curve, sh.flight), shape);
+      await sleep(300);
+      const res = await swingAndWatch(sw, 100);
+      rep.shots.push({ shape: name, text: res.text }); log(name, res.text);
+      const fr = pick(res.frames, 4);
+      rowsC.push(await Promise.all(fr.map((f, k) => k === 0 ? labelled(f, `${name}: ${res.text}`) : f)));
+    }
+    await sheetRows(rowsC, '6-draw-vs-fade-strip.png');
+    await setWind(12, fromLeft, 0.2);
+    await address(s55, 'fairway', 'iron6', 70, 0, 0.3);
+    await page.evaluate(() => { const g = window.__game; g.setShotShape(-1, 1); });
+    await sleep(500);
+    await page.locator('[data-testid=shot-panel]').screenshot({ path: join(out, '6-panel-shape.png') });
+    rep.shape = await page.evaluate(() => { const c = window.__game.shotConditions(); return { pick: c.shape.pick, lines: c.shape.lines, plays: c.playsLikeM, aimed: c.aimedM, kit: window.__game.shotKit() }; });
+    log('shape', JSON.stringify(rep.shape));
+    // ---- 7. the player card: power, accuracy and touch raised
+    await page.evaluate(() => { const g = window.__game, p = g.playerNow(); g.shot = null; g.setPlayer({ ...p, skills: { ...p.skills, power: 72, accuracy: 64, touch: 41, driving: 38 } }); g.openPlayerCard(true); });
+    await sleep(800);
+    await page.screenshot({ path: join(out, '7-player-card-screen.png') });
+    const card = page.locator('[data-testid=player-skills]'); await card.screenshot({ path: join(out, '7-player-card.png') }).catch(e => log('  card shot:', e.message.slice(0, 80)));
+    rep.card = await page.evaluate(() => window.__game.playerCard()?.skills.map(s => [s.id, s.name, s.value]));
+    log('card', JSON.stringify(rep.card));
+    // ---- 8. the meter's sweet spot at accuracy 10 and at 90 (the same club, a calm)
+    await page.evaluate(() => { const g = window.__game; g.openPlayerCard(false); });
+    const meters = [];
+    for (const acc of [10, 90]) {
+      await page.evaluate(a => { const g = window.__game, p = g.playerNow(); g.shot = null; g.setPlayer({ ...p, skills: { ...p.skills, accuracy: a, touch: 50 } }); }, acc);
+      await address(s55, 'fairway', 'iron6', 70, 0, 0.3);
+      await sleep(400);
+      const kit = await page.evaluate(() => window.__game.shotKit());
+      meters.push({ acc, kit: { sweet: kit.sweet, speed: kit.speed, spread: kit.spread } });
+      const buf = await page.locator('canvas[aria-label="Swing meter"]').screenshot();
+      await sharp(buf).extract({ left: 0, top: 0, width: 300, height: 178 }).png().toFile(join(out, `8-meter-acc${acc}.png`));
+    }
+    rep.meters = meters; log('meters', JSON.stringify(meters));
+    const [a, b] = [join(out, '8-meter-acc10.png'), join(out, '8-meter-acc90.png')];
+    await sharp({ create: { width: 600, height: 178, channels: 4, background: { r: 15, g: 23, b: 42, alpha: 1 } } }).composite([{ input: a, left: 0, top: 0 }, { input: b, left: 300, top: 0 }]).png().toFile(join(out, '8-meter-accuracy.png'));
+  }
   writeFileSync(join(out, 'shots.json'), JSON.stringify(rep, null, 1));
 } finally { await browser.close(); }
 process.exitCode = bad ? 1 : 0;

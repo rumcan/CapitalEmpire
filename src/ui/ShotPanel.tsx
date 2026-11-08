@@ -9,7 +9,7 @@
 // The meter is a plain canvas (no atlas page): a labelled stand-in until meter art exists.
 import { useEffect, useRef, useState } from 'react';
 import type { Game, ShotState } from '../game/engine';
-import { BOOST, CLUB_NAME, METER, SwingMeter, allowedClubs, carryM, compassOf, meterMark, shapeText, sweetSpot, swingEffect, type Lie, type SwingPhase } from '../game/golf/play';
+import { BOOST, CLUB_NAME, METER, SwingMeter, allowedClubs, compassOf, meterMark, pickText, shapeText, sweetSpot, swingEffect, type Lie, type SwingPhase } from '../game/golf/play';
 import { TILE_M } from '../game/golf/types';
 
 /** the lies as the panel names them */
@@ -117,11 +117,11 @@ function ConditionsBox({ game }: { game: Game }) {
 /** the panel for one open turn */
 function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
   const t = s.turn, i = s.input, putting = i.club === 'putter', clubs = allowedClubs(t.lie, t.lie === 'tee'), skill = game.shotSkill();
-  const aimM = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) * TILE_M, fullM = putting ? t.distM : carryM(i.club, skill), cond = game.shotConditions(), playsM = cond?.on && !putting ? cond.playsLikeM : aimM, suggested = cond?.suggest ?? t.suggested.club;
+  const aimM = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) * TILE_M, fullM = putting ? t.distM : game.shotCarry(), kit = game.shotKit(), cond = game.shotConditions(), playsM = cond?.on && !putting ? cond.playsLikeM : aimM, suggested = cond?.suggest ?? t.suggested.club;
   const meter = useRef<SwingMeter | null>(null), canvas = useRef<HTMLCanvasElement | null>(null), fired = useRef(false);
   const [phase, setPhase] = useState<SwingPhase>('ready');
   const [result, setResult] = useState<string | null>(null);
-  const look: MeterLook = { sweet: sweetSpot(skill), aimMark: meterMark(fullM > 0 ? playsM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting };
+  const look: MeterLook = { sweet: sweetSpot(skill, 0, kit?.sweet ?? 1), aimMark: meterMark(fullM > 0 ? playsM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting };
   const swinging = phase === 'up' || phase === 'back', busy = phase !== 'ready';
   const last = game.lastShotReport();
 
@@ -129,13 +129,13 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
   const finish = (m: SwingMeter) => {
     const o = m.outcome(); if (!o || fired.current) return;
     fired.current = true;
-    const e = swingEffect(o, game.shotSkill(), putting);
+    const e = swingEffect(o, game.shotSkill(), putting, game.shotKit()?.sweet ?? 1);
     setPhase('done'); setResult(`${shapeText(e)} · ${Math.round(e.power * 100)}%`);
     window.setTimeout(() => game.ownerSwing(o), HOLD_MS);
   };
   /** the swing button (Enter, a click): starts, sets the power, sets the accuracy */
   const click = () => {
-    if (!meter.current) meter.current = new SwingMeter(game.shotSkill());
+    if (!meter.current) meter.current = new SwingMeter(game.shotSkill(), game.shotKit()?.speed ?? 1);
     const m = meter.current; if (m.phase === 'done') return;
     const ph = m.click(performance.now() / 1000); setPhase(ph);
     if (ph === 'done') finish(m);
@@ -179,7 +179,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
     const frame = () => {
       const c = canvas.current, m = meter.current, now = performance.now() / 1000;
       if (m && (m.phase === 'up' || m.phase === 'back')) { m.tick(now); if ((m.phase as SwingPhase) === 'done') { setPhase('done'); api.current.finish(m); } }
-      if (c) drawMeter(c, m, now, { ...lookRef.current, sweet: sweetSpot(game.shotSkill(), m?.boost() ?? 0) }, resultRef.current);
+      if (c) drawMeter(c, m, now, { ...lookRef.current, sweet: sweetSpot(game.shotSkill(), m?.boost() ?? 0, game.shotKit()?.sweet ?? 1) }, resultRef.current);
       if (m && (m.phase === 'up' || m.phase === 'back')) raf = requestAnimationFrame(frame);
     };
     frame();
@@ -203,6 +203,17 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
                 title={c === suggested ? 'The suggested club' : undefined} onClick={() => game.setShotClub(c)}>{CLUB_NAME[c]}</button>
             ))}
           </div>
+          {!putting && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1" data-testid="shot-shape" title="Shape the shot before the swing: a draw curves left, a fade right; a high flight lands soft and catches more wind, a low one runs on and shrugs it. It is harder to pull off (a bigger miss on a bad accuracy click) the less skilled you are">
+              <span className="flex items-center gap-1"><span className="text-[11px] uppercase text-slate-400">Curve</span>
+                {([['Draw', -1], ['Straight', 0], ['Fade', 1]] as const).map(([n, v]) => <button key={n} disabled={busy} className={`chip ${(s.shape?.curve ?? 0) === v ? 'chip-on' : ''}`} onClick={() => game.setShotShape(v, undefined)}>{n}</button>)}
+              </span>
+              <span className="flex items-center gap-1"><span className="text-[11px] uppercase text-slate-400">Flight</span>
+                {([['Low', -1], ['Normal', 0], ['High', 1]] as const).map(([n, v]) => <button key={n} disabled={busy} className={`chip ${(s.shape?.flight ?? 0) === v ? 'chip-on' : ''}`} onClick={() => game.setShotShape(undefined, v)}>{n}</button>)}
+              </span>
+            </div>
+          )}
+          {!putting && cond && cond.shape.lines.length > 0 && <p className="mt-1 text-[11px] text-amber-200" data-testid="shape-lines">{pickText(cond.shape.pick)}:{cond.shape.lines.join(' · ')}</p>}
           <p className="mt-1 text-xs tabular-nums text-slate-300">
             {CLUB_NAME[i.club]}{i.club === suggested ? ' (suggested)' : ''}: {putting ? `putting scale, 100% is the hole (${t.distM.toFixed(1)} m)` : `full carry ${Math.round(fullM)} m (${Math.round(fullM * YARDS)} yd)`}
             {!putting && Math.abs(playsM - aimM) >= 3 ? <span className="text-cyan-200"> · the aim plays like {Math.round(playsM)} m</span> : null}

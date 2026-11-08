@@ -1,7 +1,7 @@
 // The owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): the golfer he is, the clubs he may take from a lie, the power a club starts at, and
 // his live group started from a fresh plan (a replay of his saved inputs, then the caddie if he handed over); and the day's round as the engine builds it
 // (dayRound: the same after a reload, T209). Pure TS, no DOM.
-import { carryM, skillFor, type ShotSkill } from './shot';
+import { carryFor, type ShotSkill } from './shot';
 import { makeField, teeTimes } from './field';
 import { playRound } from './round';
 import { fieldEntourage } from './entourage';
@@ -43,7 +43,7 @@ export function allowedClubs(lie: Lie, teeShot: boolean): Club[] {
  *  floor (POWER[0]); the putter starts at 1 (the putt's full length to the pin) */
 export function powerFor(club: Club, distM: number, skill: ShotSkill): number {
   if (club === 'putter') return 1;
-  return Math.min(POWER[1]!, Math.max(POWER[0]!, distM / carryM(club, skillFor(skill, club))));
+  return Math.min(POWER[1]!, Math.max(POWER[0]!, distM / carryFor(skill, club)));
 }
 
 /** the owner in the day as the save keeps him (GolfPlaySave without its key): his sex, the inputs he played in order, and how many he had played when he

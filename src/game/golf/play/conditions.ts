@@ -8,6 +8,7 @@ import { CALM_MPH, readWindNow, windEffect, windOnShot, windRelText, windText, t
 import { LIE_FX, LIE_KINDS, flierChance, lieKindFor, slopeAt, slopeEffect, type LieKind, type Slope } from './lies';
 import { TILE_M } from '../types';
 import type { HeightAt } from './roll';
+import type { ShapeFx } from './shape';
 import type { Club, Lie, Pt } from './types';
 
 /** what a shot is struck in: the wind (absent: none), the lie's kind (absent: the coarse lie's own), and the ground under the ball (absent: flat) */
@@ -54,12 +55,12 @@ export function fieldEnv(c: Conditions, kindAt: ((x: number, y: number) => LieKi
  *  after the lie, the slope and the wind; sideM where the landing is off the aim's line (+ right: the wind's drift and the slope's pull); windCarryM and windDriftM
  *  what the wind alone adds (metres); spread the factor on the scatter (the lie's and the slope's) */
 export interface ShotPreview { carryM: number; sideM: number; spread: number; windCarryM: number; windDriftM: number; wind: WindEffect }
-export function previewShot(club: Club, aimedM: number, ux: number, uy: number, env: ShotEnv | null | undefined, flight = 1): ShotPreview {
-  const lx = LIE_FX[env?.lie ?? 'fairway'], sl = slopeEffect(env?.slope), carry0 = aimedM * lx.carry * sl.carry, pull = sl.deg * Math.PI / 180;
+export function previewShot(club: Club, aimedM: number, ux: number, uy: number, env: ShotEnv | null | undefined, shape?: ShapeFx | null): ShotPreview {
+  const lx = LIE_FX[env?.lie ?? 'fairway'], sl = slopeEffect(env?.slope), carry0 = aimedM * lx.carry * sl.carry * (shape ? shape.carry : 1), pull = sl.deg * Math.PI / 180 + (shape ? shape.curve : 0), flight = shape ? shape.wind : 1;
   // the wind meets the shot along the line it flies (the aim turned by the slope's pull)
   const c = Math.cos(pull), s = Math.sin(pull), vx = ux * c - uy * s, vy = ux * s + uy * c;
   const wind = windEffect(env?.wind, club, vx, vy, lx.high * flight), carryM = carry0 * wind.carry, windDriftM = wind.drift * carryM;
-  return { carryM, sideM: windDriftM + carryM * Math.sin(pull), spread: lx.spread * sl.spread, windCarryM: carryM - carry0, windDriftM, wind };
+  return { carryM, sideM: windDriftM + carryM * Math.sin(pull), spread: lx.spread * sl.spread * (shape ? shape.spread : 1), windCarryM: carryM - carry0, windDriftM, wind };
 }
 
 /** the wind for the panel: its speed and bearing now, the day's gust peak (mph), the words for it, its arrow against the shot (degrees clockwise from the shot's
