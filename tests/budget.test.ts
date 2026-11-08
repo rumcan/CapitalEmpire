@@ -176,3 +176,17 @@ test('land sales: saleOf is 2000 x the class value x 0.3 on paved roads and noth
   assert.equal(L.sales, 660); assert.equal(L.net, 660); assert.equal(b.money, 1660);
   assert.equal(b.endDay(2, EMPTY_DAY).sales, undefined, 'a day with no sale has no sales line');
 });
+
+test('T353 house lot sales: lotSale() is income now and in the next ledger (Lot sales, in net), spend(lots) takes a negative n as income, and they are not the money made', () => {
+  const b = new Budget(); b.money = 1000;
+  b.lotSale(14100);
+  assert.equal(b.money, 15100, 'the sale is in the treasury at once');
+  b.spend('lots', -9600);
+  assert.equal(b.money, 24700, 'a negative spend is how the engine books a sale');
+  assert.equal(b.earned, 0, 'the town grows with the earnings of the club and must not feed on the houses it buys');
+  const L = b.endDay(1, EMPTY_DAY);
+  assert.equal(L.lots, 23700); assert.equal(L.net, 23700); assert.equal(b.money, 24700);
+  assert.equal(b.endDay(2, EMPTY_DAY).lots, undefined, 'a day with no lot sale has no Lot sales line');
+  // an older ledger (no lots field) reads as none
+  const old = Budget.from({ ...b.toJSON(), history: [{ ...L, lots: undefined }] }); assert.equal(old.history[0]!.lots ?? 0, 0);
+});

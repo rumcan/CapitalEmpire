@@ -59,7 +59,7 @@ import { welcomeReady } from './golf/firstview';
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, rangeCarLines, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type BrushKind, type PaintTuple, type PaintTex } from './paint';
-import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, grassSlot, landGridBox, lookCellsDiff, looksUsed, makeGrid, paintDisc, paintStroke, setLook, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, grassSlot, landGridBox, lookCellsDiff, looksUsed, makeGrid, paintCells, paintDisc, paintStroke, setLook, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { PLAY_SURF, golfSurfaceOf, grassLooks, normalizeGrasses, type CustomGrass, type GrassPlay } from './golf/grasses';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
@@ -137,10 +137,12 @@ import { LU, LV, lotJobs, type LotTuple } from './lots/town';
 import { rectPlot, surveyBlocks, surveyPatch } from './lots/survey';
 /** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
 const LAND_SURVEY_INSET = 0.6;
-import { acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import { SITE_HEAPS, SITE_LUMBER, acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf, type PresetState } from './lots/presets';
-import { LotMap, ringClear } from './lots/lots';
+import { LotMap, endReach, ringClear } from './lots/lots';
+import * as ES from './golf/estate'; // T353 (#995): house lots
+import { EstateTool } from './golf/estatetool';
 import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
@@ -667,8 +669,8 @@ export class Game {
   /** spends n $ of kind with its float at p: a purchase or upkeep red, a refund green */
   private spendAt(p: Omit<MoneyEvent, 'amount' | 'kind'> | null, kind: 'construction' | 'upkeep', n: number) { const o = this.moneySpot; this.moneySpot = p; try { this.traffic.spend(kind, n); } finally { this.moneySpot = o; } }
   /** every spend (SimClient.onSpend): one placed (a map click, spendAt) floats up there; the business takings book (the range's) float as they are made */
-  private spent(kind: 'construction' | 'compensation' | 'business' | 'upkeep', n: number) {
-    const p = this.moneySpot; if (!p || kind === 'business' || !n) return;
+  private spent(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots', n: number) {
+    const p = this.moneySpot; if (!p || kind === 'business' || kind === 'lots' || !n) return;
     this.floatMoney({ ...p, amount: Math.abs(n), kind: n > 0 ? 'out' : 'in' });
   }
   /** the range's money place (merged over its shop at the mid zoom) */
@@ -1049,7 +1051,7 @@ export class Game {
     // the course's; the brush's footprint and the wizard say which refusal it is
     practiceAt: (x, y) => this.golf?.start === 'range' && !!this.range.scene && inPractice(this.range.scene.practice, x, y), // T206
     mapWaterAt: (x, y) => this.mapWater().at(x, y), // T338
-    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pondMarks: () => this.golf?.ponds ?? [], setPondMarks: m => this.setPondMarks(m), holeBuilt: () => this.guideEvent('hole'), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
+    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y) && !this.onEstate(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.onEstate(x, y) ? 'estate' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pondMarks: () => this.golf?.ponds ?? [], setPondMarks: m => this.setPondMarks(m), holeBuilt: () => this.guideEvent('hole'), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
     // New hole (P23 4.4, T119): the camera framing, the practice area (P24 D24), and what its warnings measure against
     fitView: (pts, zoomIn) => this.fitView(pts, zoomIn), practiceBox: () => (this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null),
     // a range start's ramp (P24 Phase 4a, T132): New hole waits for the range, and the first hole is suggested as a par-3
@@ -1785,7 +1787,7 @@ export class Game {
     const g = this.golf, grid = this.courseGrid; if (!g || !grid) return null;
     return {
       grid, field: this.courseHeight, pins: g.pins, tees: g.tees, aims: g.aims ?? [], boxes: g.teeBoxes ?? {},
-      own: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => LAND_WHY[this.onRangePlot(x, y) ? 'range' : 'off'],
+      own: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y) && !this.onEstate(x, y), landWhy: (x, y) => LAND_WHY[this.onRangePlot(x, y) ? 'range' : this.onEstate(x, y) ? 'estate' : 'off'],
       practice: (x, y) => this.teePractice(x, y), roadsNear: (x, y, r) => this.teeRoads(x, y, r), golf: this.golfMode, unit: unitBuildCost('tee', this.paint.plantKind),
     };
   }
@@ -2704,7 +2706,7 @@ export class Game {
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the hint pill's words for the Course brush (T118: what a click does: the surface, the hole it joins or starts, the price a cell, and the state); '' otherwise */
   courseHint(): string {
-    const m = this.paint.mode; if (!(this.tool === 'course' && this.paintOn && this.brushOpen && (m === 'brush' || m === 'draw') && !this.clubPlacing && !this.halfwayPlacing && !this.proPlacing)) return '';
+    const m = this.paint.mode; if (!(this.tool === 'course' && this.paintOn && this.brushOpen && (m === 'brush' || m === 'draw') && !this.clubPlacing && !this.halfwayPlacing && !this.proPlacing && !this.estatePlacing)) return '';
     // a growing hole's pill says so after the hole's name (P23 4.6, T135): 'Painting Fairway · Hole 1 · growing · ready Mar 1985 · $2 a cell'
     const n = this.paint.brushHole; return hintWithGrow(this.courseCursor.hint, n, this.holeGrowLabel(n));
   }
@@ -3906,6 +3908,7 @@ export class Game {
   }
   /** a lot follows the town: composed from its town state; dropped when EMPTY, gone or holding a starter building (a staged lot is as it was staged) */
   private applyLot(key: string) {
+    if (key.startsWith('estate:')) { this.applyEstateLot(key); return; } // T353: a house lot of the club's estate
     const st = this.staged.get(key);
     const v = st ? undefined : this.traffic.lots.get(key);
     this.townLotChanged(key, st ? lotBoxOf([st.g.o.x, st.g.o.y], [st.g.u.x, st.g.u.y], [st.g.n.x, st.g.n.y], st.g.w, st.g.d) : v ? lotBoxOf(v.o, v.u, v.n, v.w, v.d) : null);
@@ -4009,6 +4012,7 @@ export class Game {
     for (const a of this.paint.areas) { const q = ptsBox(a.pts); if (q[0]! < x1 && q[2]! > x0 && q[1]! < y1 && q[3]! > y0) return true; }
     for (const s of this.golf?.structures ?? []) if (s.x >= x0 && s.x <= x1 && s.y >= y0 && s.y <= y1) return true;
     for (const p of this.propGrid.query([x0, y0, x1, y1])) { const it = LIBRARY[p.item]!; if (!p.auto && it.big && it.kind !== 'car') return true; }
+    for (const l of this.estateRt?.lots ?? []) { const q = ES.boxOf(l); if (q[0] < x1 && q[2] > x0 && q[1] < y1 && q[3] > y0) return true; } // T353: a house lot
     for (const s of this.net.segsNear({ x: (x0 + x1) / 2, y: (y0 + y1) / 2 }, Math.hypot(x1 - x0, y1 - y0) / 2 + 2)) {
       for (let k = 0; k <= 8; k++) { const x = s.a.x + (s.b.x - s.a.x) * k / 8, y = s.a.y + (s.b.y - s.a.y) * k / 8; if (x > x0 && x < x1 && y > y0 && y < y1) return true; }
     }
@@ -4617,7 +4621,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.teePlace = null; /* T268 */ this.placing = null; /* T288 */ this.real.cancel(false); /* T356 */ this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
+  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.teePlace = null; /* T268 */ this.placing = null; /* T288 */ this.real.cancel(false); /* T356 */ this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (t !== 'road') this.estateStreet = null; /* T353: an estate street not drawn is no longer wanted */ if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; this.estateOff(); } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -4641,7 +4645,7 @@ export class Game {
       const onLine = (p: Pt) => Math.abs(plazaLocal(d, p.x, p.y).o) < 0.05;
       tolls.push({ why: 'Roads cannot cross a toll plaza', name: 'a toll plaza', zone: q(-1, PLAZA_LEN + 1, -h - 1, W + 1), outline: q(0, PLAZA_LEN, -h, W), pass: l => onLine(l.a) && onLine(l.b) });
     }
-    return routeObstacles({ course, biz: this.bizDefs, parks: this.parkDefs, structures: this.rangeStructs(), tolls, places: this.placeStructures() });
+    return [...routeObstacles({ course, biz: this.bizDefs, parks: this.parkDefs, structures: this.rangeStructs(), tolls, places: this.placeStructures() }), ...this.estateObstacles()];
   }
   /** the range's buildings and pieces with a footprint (golf/rangebiz.ts rangeStructures), none outside a range start */
   private rangeStructs(): Structure[] {
@@ -4863,7 +4867,7 @@ export class Game {
     this.route = [];
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
     this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} ${paid < 0 ? `(refund $${(-paid).toLocaleString()})` : `for $${paid.toLocaleString()}`}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}${cuts.length ? `, replaced ${cuts.length} road piece${cuts.length > 1 ? 's' : ''} worth $${Math.round(removed).toLocaleString()}` : ''}`, 'good');
-    this.clubDriveBuilt(cls); // T175: the clubhouse stopgap's drive
+    this.clubDriveBuilt(cls); this.estateStreetBuilt(cls); // T175, T353: the clubhouse stopgap's drive
     { const t = this.golf?.progress?.tour; if (t && !isCourseClass(cls.id) && tourRunning(t)) { t.roads++; this.scheduleSave(); } } // T293: the tutorial's road step
     // a one-way road that ends in a dead end traps cars: warned, not refused
     if (cls.oneway && parts.length && [parts[0]!.a, parts[parts.length - 1]!.b].some(p => this.net.nodeAt(p)?.segs.length === 1)) this.toast('A one-way road that ends in a dead end traps cars', 'warn');
@@ -5533,7 +5537,8 @@ export class Game {
       }
       if (p && !p.auto) { const it = LIBRARY[p.item], back = this.sellValue(p); this.removeProp(p); this.traffic.spend('construction', -back); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(back ? `Removed ${it.name} (+$${back.toLocaleString()})` : `Removed ${it.name}`); return; }
   
-      if (this.golf && this.practice.removeAt(t.x, t.y)) return; // T206: a practice facility goes whole, half its price back
+      if (this.golf && this.practice.removeAt(t.x, t.y)) return; // T206
+      if (this.golf && this.estateBulldoze(t.x, t.y)) return; // T353: a lot still for sale comes off the market: a practice facility goes whole, half its price back
       const k = this.parkIndexAt(t);
       if (k >= 0) { const id = this.parkDefs[k]!.id; this.removePark(k); this.scheduleSave(); this.toast(`Removed car park #${id} (no refund)`); this.emit(); return; }
       const g = this.tollIndexAt(t);
@@ -5727,6 +5732,7 @@ export class Game {
         if (this.clubPlacing && this.tool === 'course') { this.clubUpdate(mx, my); this.clubClick(); break; }
         if (this.halfwayPlacing && this.tool === 'course') { this.halfwayUpdate(mx, my); this.halfwayClick(); break; }
         if (this.proPlacing && this.tool === 'course') { this.proUpdate(mx, my); this.proClick(); break; } // T214
+        if (this.estatePlacing && this.tool === 'course') { this.overlay.setPointerCapture(e.pointerId); this.estateTool.down(mx, my); break; } // T353: House lots (a click lays one, a drag a row; on release)
         if (!this.paintOn || !this.brushOpen) break; // Buildings with nothing in hand, or Holes at stage 1 outside New hole: a click lays nothing
         this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); this.courseCursor.press(this.paint, e.altKey); break;
       case 'park': {
@@ -5766,6 +5772,7 @@ export class Game {
     if (this.clubPlacing && this.tool === 'course') this.clubUpdate(mx, my);
     else if (this.halfwayPlacing && this.tool === 'course') this.halfwayUpdate(mx, my);
     else if (this.proPlacing && this.tool === 'course') this.proUpdate(mx, my); // T214
+    else if (this.estatePlacing && this.tool === 'course') this.estateTool.move(mx, my); // T353
     else if (this.paintOn && !this.teePlace) this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift')); // (T268: a tee set in hand is the engine's)
     if (this.tool === 'park') {
       if (this.parking.mode === 'rows') { if (this.hover) { this.parking.snap15 = this.keys.has('Shift'); this.parking.move(this.hover, mx, my); } }
@@ -5773,6 +5780,7 @@ export class Game {
     }
   }
   pointerUp() {
+    if (this.estatePlacing && this.tool === 'course' && this.estateTool.dragging) { const gm = this.ghostMouse; if (gm) this.estateTool.up(gm.mx, gm.my); else this.estateTool.cancel(); } // T353: the row is laid
     const d = this.dragging; this.moneyAt(this.hover); // T147: a spend this release makes floats up here
     if (this.markerDrag) this.holeCardDrop(); // T174
     if (this.teePlace?.drag) this.teeDragDrop(); // T268
@@ -5790,7 +5798,7 @@ export class Game {
     if (this.tool === 'props') this.decor.up();
     this.dragging = null;
   }
-  pointerLeave() { this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.ghostMouse = null; this.busHover = null; this.laneHover = null; this.decor.ghost = null; this.practice.leave(); this.youHover = null; }
+  pointerLeave() { this.estateTool.leave(); this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.ghostMouse = null; this.busHover = null; this.laneHover = null; this.decor.ghost = null; this.practice.leave(); this.youHover = null; }
   /** the name of the road under tile t (the piece under it, then its route), or '' */
   roadNameAt(t: Pt | null): string {
     const piece = t ? this.net.pieceNear(t) : null;
@@ -6000,6 +6008,7 @@ export class Game {
     if (this.clubPlacing && this.tool === 'course') { this.placeClubhouse(false); return true; }
     if (this.halfwayPlacing && this.tool === 'course') { this.placeHalfway(false); return true; }
     if (this.proPlacing && this.tool === 'course') { this.placePro(null); return true; } // T214
+    if (this.estatePlacing && this.tool === 'course') { if (!this.estateTool.cancel()) this.placeEstate(false); return true; } // T353: a drag in hand first, then the tool
     if (this.paintOn && this.paint.key(e)) return true;
     if (this.tool === 'park' && this.parking.key(e)) return true;
     if (this.tool === 'props' && this.decor.esc()) return true;
@@ -6314,7 +6323,7 @@ export class Game {
   placeHalfway(on: boolean) {
     const go = on && !!this.golf;
     if (go && this.uiTool !== 'buildings') this.setTool('buildings');
-    this.halfwayPlacing = go; if (go) { this.clubPlacing = false; this.proPlacing = null; } this.bizHover = null;
+    this.halfwayPlacing = go; if (go) { this.clubPlacing = false; this.proPlacing = null; this.estateOff(); } this.bizHover = null;
     this.emit();
   }
   /** why the halfway house cannot stand on rect r ('' if it can): golf/halfway.ts halfwaySpotWhy */
@@ -6352,7 +6361,7 @@ export class Game {
   placeClubhouse(on: boolean) {
     const go = on && !!this.golf;
     if (go && this.uiTool !== 'buildings') this.setTool('buildings');
-    this.clubPlacing = go; if (go) { this.halfwayPlacing = false; this.proPlacing = null; } this.bizHover = null;
+    this.clubPlacing = go; if (go) { this.halfwayPlacing = false; this.proPlacing = null; this.estateOff(); } this.bizHover = null;
     this.emit();
   }
   /** the gap from rect (x, y, w, h) to the nearest road's verge (any road or drive), tiles: below 0 when a verge reaches into it; Infinity with no
@@ -7513,7 +7522,7 @@ export class Game {
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
       speed: this.net.speedTier,
-      golf: this.golf ? { ...this.golf, bunkers: this.bunkers.serialize(), teeSets: 1 as const, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday } : undefined,
+      golf: this.golf ? { ...this.golf, bunkers: this.bunkers.serialize(), teeSets: 1 as const, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday, estate: ES.encodeEstate(this.estateRt) } : undefined,
     };
     try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
   }
@@ -7537,6 +7546,8 @@ export class Game {
       else this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
+      this.estateRt = ES.normalizeEstate(this.golf?.estate); this.estateDrawn.clear(); this.estateViews.clear(); this.estateRev = -1; this.estateOffer = null; this.estateStreet = null; // T353: the house lots come back as saved
+      if (this.golf) delete this.golf.estate;
       // T288: a range from before T288 was built for the player: its guide's placement steps are done (no reward)
       { const gd = this.golf?.progress?.guide, rb = this.golf?.range; if (gd && rb && rb.built !== false && !rb.home) for (const id of PLACED_STEPS) if (!gd.done.includes(id)) gd.done.push(id); } this.dayBook = null; this.dayPlay = null; this.clubCardOpen = false; // T208: everyday golf comes back from golf.everyday
       this.clubLegacy = !!this.golf && !this.golf.club; // T214: a save from before P26 has no members saved: seeded at the first frame (stepClub)
@@ -7592,7 +7603,7 @@ export class Game {
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
     for (const k of this.stopCuts.keys()) this.setLotGround(k, null); this.stopCuts.clear();
-    this.golf = null; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
+    this.golf = null; this.estateRt = null; this.estateDrawn.clear(); this.estateViews.clear(); this.estateRev = -1; this.estateOffer = null; this.estateStreet = null; this.estatePlacing = false; this.estateTool.on = false; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
     this.landMode = false; this.land.hover = null; this.land.cancel(); this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
     // the last game's season card and calendar year do not carry over (T135: the new game's clock starts again in the city worker)
@@ -9936,6 +9947,232 @@ export class Game {
     const cl = g.club, st = g.crew?.staff;
     return { dues: cl && this.hasClubhouse ? Math.round(cl.members) * cl.price : 0, wages: st ? staffWages(st.staff, st.club) : 0 };
   }
+  // ---------- T353 (#995): house lots on your course (golf/estate.ts is the model, golf/estatetool.ts the tool) ----------
+  /** the estate: the house lots laid on your land (null until the first is wanted; saved in golf.estate, which leaves a lotless estate out) */
+  estateRt: ES.Estate | null = null;
+  /** the House lots tool is in hand (Course › Buildings › House lots; golf games) */
+  estatePlacing = false;
+  /** a lot click found no street within reach: the Buildings card offers to draw an estate street (the spot tried) */
+  estateOffer: Pt | null = null;
+  /** an estate street being drawn (the spot to come back to): when it is built, House lots comes back armed */
+  private estateStreet: Pt | null = null;
+  /** the estate's lots are not drawn (the bench's A/B, setEstateDrawn: their props and ground go, the lots stay in the books) */
+  private estateHide = false;
+  /** the lots as last drawn (key → stage) and the estate's rev then (-1: draw them all); the lots' views by id, read at a course grid revision */
+  private estateDrawn = new Map<string, number>(); private estateRev = -1; private estateViews = new Map<number, { rev: number; v: ES.View }>();
+  readonly estateTool = new EstateTool({
+    tileAt: (mx, my) => this.tileAt(mx, my),
+    streets: (p, r) => this.estateStreets(p, r),
+    env: () => this.estateEnv(),
+    estate: () => this.estateMake(), now: () => this.golfMonthAt(performance.now()), seed: () => this.seed, money: () => this.money,
+    quote: f => this.estateQuote(f),
+    charge: (cost, at) => this.spendAt({ x: at.x, y: at.y }, 'construction', cost),
+    laid: placed => this.estateLaid(placed),
+    noStreet: at => { this.estateOffer = { x: at.x, y: at.y }; },
+    toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
+  });
+  /** the estate, made on first use at the game month now */
+  estateMake(): ES.Estate { return (this.estateRt ??= ES.newEstate(this.golfMonthAt(performance.now()))); }
+  /** whether a tile point is house lot ground: the course's tools treat it as not theirs (the paint brushes, New hole, the tee boxes) */
+  onEstate(x: number, y: number): boolean { const e = this.estateRt; return !!e && e.lots.length > 0 && !!ES.lotAt(e, x, y); }
+  /** the map's water at a tile point (a lake, a creek, a bank) */
+  private estateWet = (x: number, y: number): boolean => { const tx = Math.floor(x), ty = Math.floor(y); if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) return false; const c = this.terrain.cls[ty * MAP + tx]; return c === TC.WATER || c === TC.CREEK || c === TC.BANK; };
+  /** the street pieces lots can front within r tiles of a point: the town's road classes on the ground (not cart paths or course drives, which grow no lots,
+   *  and not bridges or tunnels), each cut back at a junction or a dead end as the town's own lots are (T354: the pieces layEstateLots takes) */
+  estateStreets(near: Pt, r: number): ES.StreetSeg[] {
+    const out: ES.StreetSeg[] = [];
+    for (const s of this.net.segsNear(near, r)) {
+      if (s.kind !== SK.GROUND || s.cls.noLots) continue;
+      out.push({ a: { x: s.a.x, y: s.a.y }, b: { x: s.b.x, y: s.b.y }, base: s.cls.base, h: s.cls.h, walk: s.cls.walk, ra: endReach(s.a, s.cls), rb: endReach(s.b, s.cls) });
+    }
+    return out;
+  }
+  /** the roads near a box for the lot rules (a cart path and a course drive are named in the refusal) */
+  private estateRoads(b: readonly [number, number, number, number]): ES.RoadBit[] {
+    const out: ES.RoadBit[] = [];
+    for (const s of this.net.segsNear({ x: (b[0] + b[2]) / 2, y: (b[1] + b[3]) / 2 }, Math.hypot(b[2] - b[0], b[3] - b[1]) / 2 + 12)) {
+      if (s.kind !== SK.GROUND) continue;
+      out.push({ a: { x: s.a.x, y: s.a.y }, b: { x: s.b.x, y: s.b.y }, hw: s.cls.h + s.cls.walk, kind: s.cls.family === 'cart' ? 'cart' : s.cls.family === 'course' ? 'drive' : 'road' });
+    }
+    return out;
+  }
+  /** why something stands on a box (tiles) that a lot cannot share ('' when it is free): a business, the range's buildings, an iconic place, a car park,
+   *  a town building (roomWhy), a painted area, an event structure, or a prop of the player's (a tree he planted, a decoration) */
+  private estateBlocked(b: readonly [number, number, number, number]): string {
+    const why = this.roomWhy([b[0], b[1], b[2] - b[0], b[3] - b[1]]); if (why) return why;
+    for (const a of this.paint.areas) { const q = ptsBox(a.pts); if (q[0]! < b[2] && q[2]! > b[0] && q[1]! < b[3] && q[3]! > b[1]) return 'Something is painted there'; }
+    for (const s of this.golf?.structures ?? []) if (s.x >= b[0] && s.x <= b[2] && s.y >= b[1] && s.y <= b[3]) return 'An event structure stands there';
+    for (const p of this.propGrid.query([b[0], b[1], b[2], b[3]])) { const it = LIBRARY[p.item]!; if (!p.auto && it.kind !== 'car') return `${it.name} stands there: clear it first`; }
+    return '';
+  }
+  /** what the lot rules read of the game now (golf/estate.ts EstateEnv): the land that is the player's less the driving range's plot and the practice area, the
+   *  course grid, the map's water, each hole's line of play, the roads, and what is built */
+  estateEnv(): ES.EstateEnv {
+    const pb = this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null;
+    return {
+      map: MAP,
+      owned: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y) && !(pb && x >= pb[0] && x <= pb[2] && y >= pb[1] && y <= pb[3]),
+      grid: this.courseGrid, water: this.estateWet,
+      lines: [...this.holeLines()].map(([hole, l]) => { const line: Pt[] = []; for (let k = 0; k + 1 < l.length; k += 2) line.push({ x: l[k]!, y: l[k + 1]! }); return { hole, line }; }),
+      roads: b => this.estateRoads(b), blocked: b => this.estateBlocked(b),
+    };
+  }
+  /** a lot's view, read again when the course changes (the grid's revision) */
+  private estateViewOf(l: ES.EstateLot): ES.View {
+    const rev = this.courseGrid?.rev ?? 0, hit = this.estateViews.get(l.id);
+    if (hit && hit.rev === rev) return hit.v;
+    const v = ES.viewOf(l, this.courseGrid, this.estateWet); this.estateViews.set(l.id, { rev, v }); return v;
+  }
+  /** what a laid lot asks now: its view and the reputation */
+  estateAsk(l: ES.EstateLot): number { return ES.priceOf(l, this.estateViewOf(l), this.golf?.rep ?? 0); }
+  /** what a lot at this frame would ask, with its view in words (the tool's price tag) */
+  private estateQuote(f: ES.Frame): { price: number; view: string } { const v = ES.viewOf(f, this.courseGrid, this.estateWet); return { price: ES.priceOf(f, v, this.golf?.rep ?? 0), view: ES.viewWords(v) }; }
+  /** lots were laid (the tool, the dev fixture): the course's painted ground under them goes (a lot replaces the rough, the long grass and the fescue as a street does, T355: the
+   *  cells are cleared and carved, as a rub out leaves them, and the chunks re-bake), so the lot's own ground shows; the lots are saved and drawn */
+  estateLaid(placed: readonly ES.EstateLot[]) {
+    const g = this.courseGrid, idx: number[] = [];
+    if (g) for (const l of placed) for (const i of ES.cellsUnder(l, g)) idx.push(i);
+    if (g && idx.length) this.courseGridChanged(paintCells(g, idx, idx.length, SURF.none, 0, 0, { carve: true }), true);
+    this.estateOffer = null; this.scheduleSave(); this.emit();
+  }
+  /** T353, for the code that lays streets (T354's imported ones): lays house lots along streets as the tool does (golf/estate.ts placeLots): `along` is the street pieces (estateStreets
+   *  gives the real network's) and a side (+1, -1, or 0 / none: both) or a drag (from, to). The laying cost is paid and the course ground under the lots cleared; with too little
+   *  money none is laid (every lot the rules allow is then refused with that reason). Outside a golf game none is laid. Returns what was laid and what was refused with why */
+  layEstateLots(along: ES.Along): ES.PlaceResult {
+    if (!this.golf) return { placed: [], refused: [], cost: 0 };
+    const e = this.estateMake(), env = this.estateEnv(), plan = ES.planLots(e, along, env), cost = plan.ok.length * ES.LAY_COST;
+    if (cost > this.money) return { placed: [], refused: [...plan.refused, ...plan.ok.map(frame => ({ frame, why: `Not enough money: ${plan.ok.length} lots cost $${cost.toLocaleString()} to lay` }))], cost: 0 };
+    const r = ES.placeLots(e, along, env, this.golfMonthAt(performance.now()), this.seed);
+    if (r.cost) this.traffic.spend('construction', r.cost);
+    this.estateLaid(r.placed);
+    return r;
+  }
+  /** dev, the bench's A/B: the estate's lots drawn (true) or not (false: their props and ground go; the lots stay in the books and come back drawn) */
+  setEstateDrawn(on: boolean) { this.estateHide = !on; this.estateRev = -1; this.estateSync(); }
+  /** the House lots tool goes down (another building tool, another tool, Esc) */
+  private estateOff() { if (!this.estatePlacing && !this.estateTool.on) return; this.estatePlacing = false; this.estateTool.on = false; this.estateTool.leave(); }
+  /** takes the House lots tool in hand (on) or puts it down: the Buildings tool opens, the clubhouse's and the others' ghosts go */
+  placeEstate(on: boolean) {
+    const go = on && !!this.golf;
+    if (go && this.uiTool !== 'buildings') this.setTool('buildings');
+    if (go) { this.clubPlacing = false; this.halfwayPlacing = false; this.proPlacing = null; }
+    this.bizHover = null; this.estatePlacing = go; this.estateOffer = null; this.estateTool.arm(go);
+  }
+  /** Draw an estate street: the road tool with a street in hand (a street may be built over the course land that is not a hole's playing surface, T355); when it is
+   *  built, House lots comes back armed. From the Buildings card, or from the offer a lot click with no street near leaves */
+  drawEstateStreet() {
+    const spot = this.estateOffer, id = (['street', 'lane', 'gravel'] as const).find(c => this.classOpen(c));
+    this.estateOff(); this.estateOffer = null;
+    if (!id) { this.toast('No street is open to build yet', 'warn'); return; }
+    this.setTool('road'); if (this.tool !== 'road') return;
+    this.roadClass = id; this.estateStreet = spot ?? this.hover ?? { x: this.cam.X, y: this.cam.Y };
+    if (spot) this.lookAt(spot.x, spot.y, this.cam.z);
+    this.toast('Draw the estate street from a road to your land (over rough and open ground; not over a fairway, green, tee or hazard), then Enter: House lots comes back to lay the plots along it', 'info'); this.emit();
+  }
+  /** a route was built: a street for the estate brings House lots back armed */
+  private estateStreetBuilt(cls: { family?: string; base: string }) {
+    if (!this.estateStreet || cls.family === 'course' || cls.family === 'cart') return;
+    const at = this.estateStreet; this.estateStreet = null;
+    this.placeEstate(true); if (!this.estatePlacing) return;
+    this.toast('Street built: drag along it to lay house lots (a click lays one)', 'good'); this.lookAt(at.x, at.y, this.cam.z); this.emit();
+  }
+  /** the House lots card's facts (golf games; null outside): the lots by stage, what has been taken, the standard lot's price now (and the dearest it could ask), the
+   *  buyers a month, the levy a month, and whether the tool is in hand and an estate street is wanted */
+  estateCard(): { total: number; sale: number; sold: number; building: number; built: number; takings: number; ask: number; best: number; rep: number; rate: number; levy: number; placing: boolean; offer: boolean } | null {
+    const g = this.golf; if (!g) return null;
+    const c = this.estateRt ? ES.countsOf(this.estateRt) : { total: 0, sale: 0, sold: 0, building: 0, built: 0, takings: 0 }, std = { w: 10, d: 15 };
+    return { ...c, ask: ES.priceOf(std, { fairway: false, green: false, water: false, hole: 0 }, g.rep), best: ES.priceOf(std, { fairway: true, green: true, water: true, hole: 0 }, g.rep), rep: g.rep,
+      rate: ES.sellRate(g.rep, ES.demandOf(this.traffic.pop, this.traffic.room)), levy: c.built * ES.LEVY, placing: this.estatePlacing, offer: !!this.estateOffer };
+  }
+  /** the estate's clock (every two seconds beside the club's month): the buyers come (the lots sold are paid into the books' Lot sales), sold lots start
+   *  their houses and houses finish; each finished house's owner joins the club (with a clubhouse) and the month's levy is booked as the club's business */
+  private estateStep() {
+    const g = this.golf, e = this.estateRt; if (!g || !e || !e.lots.length) return;
+    const out = ES.stepEstate(e, this.golfMonthAt(performance.now()), { rep: g.rep, demand: ES.demandOf(this.traffic.pop, this.traffic.room), ask: l => this.estateAsk(l) });
+    let changed = out.sold.length + out.started.length + out.built.length > 0;
+    if (out.sold.length) {
+      let total = 0;
+      for (const s of out.sold) { total += s.price; this.traffic.spend('lots', -s.price); const c = ES.centreOf(s.lot); this.floatMoney({ x: c.x, y: c.y, amount: s.price, kind: 'in' }); }
+      this.toast(out.sold.length === 1 ? `Lot ${out.sold[0]!.lot.id} sold for $${total.toLocaleString()}: the buyer will build` : `${out.sold.length} lots sold for $${total.toLocaleString()}: the buyers will build`, 'good');
+    }
+    if (out.built.length) this.toast(out.built.length === 1 ? `A new house is finished on lot ${out.built[0]!.id}` : `${out.built.length} new houses are finished on the estate`, 'info');
+    const club = this.hasClubhouse && g.club ? g.club : null;
+    if (club) {
+      const c = g.clubhouse;
+      if (out.levy > 0) { this.traffic.spend('business', -out.levy); this.floatMoney({ x: c.x, y: c.y, amount: Math.round(out.levy), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); changed = true; }
+      let n = 0; for (const l of e.lots) if (l.st === ES.ST.BUILT && !l.member) { l.member = true; n++; }
+      if (n) { g.club = { ...club, members: club.members + n, last: { ...club.last, joined: club.last.joined + n }, season: { ...club.season, joined: club.season.joined + n } }; this.toast(n === 1 ? 'A homeowner on the estate joined the club' : `${n} homeowners on the estate joined the club`, 'good'); changed = true; }
+    }
+    if (changed) { this.scheduleSave(); this.emit(); }
+  }
+  /** the lots that need drawing again are queued for the lot queue (their stage changed, or they are new), the ones that went are dropped */
+  private estateSync() {
+    const e = this.estateRt; this.estateRev = e?.rev ?? -1;
+    const want = new Map<string, number>(); for (const l of this.estateHide ? [] : e?.lots ?? []) want.set(`estate:${l.id}`, l.st);
+    for (const k of [...this.estateDrawn.keys()]) if (!want.has(k)) { this.estateDrawn.delete(k); this.lotQueue.add(k); }
+    for (const [k, st] of want) if (this.estateDrawn.get(k) !== st) { this.estateDrawn.set(k, st); this.lotQueue.add(k); }
+  }
+  /** the compose state of an estate lot being built or built: the town's own RES lot at its stage (lots/compose.ts compose, through placeLot, the saved game's lot model),
+   *  from the lot's own seed. A finished house lot is exactly the town's composition and nothing of the estate's own: T385 (#1042) makes that composition the owner's lot
+   *  (the house facing the road, a drive and a front path, a fence, at most three trees, no clutter) for every lot, estate lots included; an estate-only tightening goes here */
+  private estateLotState(l: ES.EstateLot): ComposeState { return { use: LU.RES, level: l.st === ES.ST.BUILT ? LV.BUILT : LV.BUILDING, decline: 0, seed: l.seed }; }
+  /** a lot of the estate is drawn (the lot queue's key 'estate:<id>'): for sale a pegged plot with the For Sale post; sold the plot with the builder's first
+   *  delivery; being built the town's building site; built the town's house (the saved game's lot model, lots/compose.ts); no lot, nothing */
+  private applyEstateLot(key: string) {
+    const l = this.estateHide ? undefined : this.estateRt?.lots.find(q => `estate:${q.id}` === key);
+    if (!l) { this.townLotChanged(key, null); this.dropLot(key); this.estateDrawn.delete(key); return; }
+    this.townLotChanged(key, lotBoxOf([l.o.x, l.o.y], [l.u.x, l.u.y], [l.n.x, l.n.y], l.w, l.d));
+    if (l.st === ES.ST.BUILDING || l.st === ES.ST.BUILT) this.placeLot(key, { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d }, this.estateLotState(l));
+    else this.placeEstatePlot(key, l);
+  }
+  /** a plot not built on: bare dirt inside the white dashed survey line (as the land the player bought); for sale the For Sale post (a stand-in sign) by its front
+   *  corner, sold a lumber stack and a heap of earth (the builder's first delivery) */
+  private placeEstatePlot(key: string, l: ES.EstateLot) {
+    this.dropLot(key);
+    const e = 0.1, P = (a: number, b: number) => [l.o.x + l.u.x * a + l.n.x * b, l.o.y + l.u.y * a + l.n.y * b];
+    const dirt: LotPatch = { pts: [P(e, e), P(l.w - e, e), P(l.w - e, l.d - e), P(e, l.d - e)].flat(), tex: 'dirt' }, sv = surveyPatch({ o: l.o, u: l.u, n: l.n, w: l.w, d: l.d });
+    this.setLotGround(key, sv ? [dirt, sv] : [dirt]);
+    const ps: Prop[] = [], put = (id: string, a: number, b: number, k = 1) => { const i = LIB_INDEX.get(id); if (i === undefined) return; const q = P(a, b); ps.push(this.addProp(i, q[0]!, q[1]!, false, artScale(i, 1) * k, 'lot:' + key)); };
+    if (l.st === ES.ST.SALE) put(ES.SALE_SIGN, 1.6, 1.4, 1.6);
+    else { put(SITE_LUMBER[0]!, l.w * 0.3, l.d * 0.35); put(SITE_HEAPS[0]!, l.w * 0.7, l.d * 0.6); }
+    this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
+  }
+  /** the bulldozer on a lot: one still for sale comes off the market (half its laying cost back); a sold lot is its buyer's, a house its owner's */
+  private estateBulldoze(x: number, y: number): boolean {
+    const e = this.estateRt, l = e ? ES.lotAt(e, x, y) : null; if (!e || !l) return false;
+    if (l.st !== ES.ST.SALE) { this.toast(l.st === ES.ST.BUILT ? 'That house is private property: it belongs to its owner now' : 'That lot is sold: it belongs to its buyer now', 'warn'); return true; }
+    ES.removeLot(e, l.id); const back = Math.round(ES.LAY_COST / 2);
+    this.traffic.spend('construction', -back); this.scheduleSave(); this.toast(`Took lot ${l.id} off the market (+$${back.toLocaleString()})`); this.emit();
+    return true;
+  }
+  /** the lots as route obstacles: a road may not be built through one (the road tools' list) */
+  private estateObstacles(): Obstacle[] {
+    const e = this.estateRt; if (!e || !e.lots.length) return [];
+    // (made again only when the estate changes: the road tools ask on every move of the pointer)
+    if (this.estateObs && this.estateObs.rev === e.rev && this.estateObs.n === e.lots.length) return this.estateObs.list;
+    const list = e.lots.map((l): Obstacle => { const p = ES.cornersOf(l).flatMap(q => [q.x, q.y]); return { why: 'Roads cannot cross a house lot', name: 'a house lot', zone: p, outline: p }; });
+    this.estateObs = { rev: e.rev, n: e.lots.length, list };
+    return list;
+  }
+  private estateObs: { rev: number; n: number; list: Obstacle[] } | null = null;
+  /** the overlay while House lots is in hand: the lots laid outlined (a tag on each at close zoom), the lots a click or a drag would lay green, or red and hatched with
+   *  the reason, and the words by the cursor (a lot under the pointer says its own state and price) */
+  private drawEstateGhost(ctx: CanvasRenderingContext2D) {
+    const v = this.ghostView(ctx), gh = this.estateTool.ghost, m = this.ghostMouse, flat = (f: Parameters<typeof ES.cornersOf>[0]) => ES.cornersOf(f).flatMap(q => [q.x, q.y]);
+    for (const l of this.estateRt?.lots ?? []) drawGhostPoly(v, flat(l), 'neutral', { dashed: false, lineWidthPx: 1.2, fillColor: 'rgba(0,0,0,0)' });
+    if (this.cam.z >= 0.1) for (const l of this.estateRt?.lots ?? []) {
+      const c = ES.centreOf(l), s = this.screen(c.x, c.y), dpr = this.dpr;
+      const text = l.st === ES.ST.SALE ? `For sale $${this.estateAsk(l).toLocaleString()}` : l.st === ES.ST.SOLD ? `Sold $${l.price.toLocaleString()}` : l.st === ES.ST.BUILDING ? 'Being built' : 'Built';
+      ctx.font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(text, s.x, s.y); ctx.fillStyle = l.st === ES.ST.SALE ? '#fde68a' : '#cbd5e1'; ctx.fillText(text, s.x, s.y); ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
+    }
+    if (gh) for (const q of gh.frames) drawGhostPoly(v, flat(q.f), q.why ? 'invalid' : 'valid', { dashed: true, cross: !!q.why });
+    if (gh && m) {
+      const under = !this.estateTool.dragging && this.hover && this.estateRt ? ES.lotAt(this.estateRt, this.hover.x, this.hover.y) : null;
+      if (under) this.hintAt(ctx, m.mx, m.my, `Lot ${under.id} · ${ES.STAGE_NAME[under.st]!.toLowerCase()}${under.st === ES.ST.SALE ? ` · asks $${this.estateAsk(under).toLocaleString()} (${ES.viewWords(this.estateViewOf(under))})` : ` · $${under.price.toLocaleString()}`}`, false);
+      else this.hintAt(ctx, m.mx, m.my, gh.label, gh.bad);
+    }
+  }
+
   // ---------- T214 (#559, plan P26 phases 3-4): the pro's office, the teaching huts, the club staff and lessons (golf/pros.ts) ----------
   /** the club building being placed with its ghost (Course › Buildings: the pro's office; Facilities › Practice: a teaching hut); null: none */
   proPlacing: 'prooffice' | 'teachhut' | null = null;
@@ -9943,7 +10180,7 @@ export class Game {
   placePro(kind: 'prooffice' | 'teachhut' | null) {
     const go = !!kind && !!this.golf;
     if (go && this.uiTool !== 'buildings') this.setTool('buildings');
-    this.proPlacing = go ? kind : null; if (go) { this.clubPlacing = false; this.halfwayPlacing = false; } this.bizHover = null;
+    this.proPlacing = go ? kind : null; if (go) { this.clubPlacing = false; this.halfwayPlacing = false; this.estateOff(); } this.bizHover = null;
     this.emit();
   }
   /** the room check (one small helper for every placed club building): why something already stands on rect r ('' when the ground is free): the
@@ -10400,7 +10637,7 @@ export class Game {
       g.dayPins = rollDayPins(g.dayPins ?? null, day, g.pins.map(p => ({ hole: p.hole, x: p.x, y: p.y })), (n, prev) => (cut.has(n) ? this.nextPin(day, n, prev) : null));
       this.pinRev++; this.dayCourse = null; this.scheduleSave();
     }
-    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); this.payStaff(); this.stepClub(); } // (T214: the members' month beside the wages)
+    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); this.payStaff(); this.stepClub(); this.estateStep(); } // (T214: the members' month beside the wages)
     if (this.flagRev !== this.pinRev) this.syncFlags();
   }
   /** the day's cups against the course (when the grid or the pins changed): a hole with no cup today is given its placed pin, and a cup no longer on
@@ -10598,7 +10835,9 @@ export class Game {
       return s ?? surfaceAt(d !== c && c ? areasBut(c) : areas, x, y);
     };
     // T269: play reads the day's cups (golf/daypins.ts): the pin and the end of each line; the par and the tees are the placed pin's
-    return withDayPins(makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt), n => this.todayPin(n));
+    // T353: a ball that comes to rest on a house lot is out of bounds (golf/estate.ts lotAt)
+    const lots = this.estateRt;
+    return withDayPins(makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt, lots && lots.lots.length ? (x, y) => !!ES.lotAt(lots, x, y) : undefined), n => this.todayPin(n));
   }
   /** the round of a tournament key from the save: the save's owner play when it is this tournament's (buildPlay replays his inputs). A save the course no
    *  longer fits (its inputs throw) is dropped, and the day is played without him */
@@ -10947,6 +11186,7 @@ export class Game {
     this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
     if (this.grassWait.size) { const tg = performance.now(); this.courseGrass(1); this.cMs += performance.now() - tg; }
     if (++this.surveyTick % 30 === 0) this.syncSurvey(); // T232
+    if (this.estateRt && this.estateRt.rev !== this.estateRev) this.estateSync(); // T353: the house lots changed: drawn again
     this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.watchHoleLines(performance.now()); this.watchMowFlips(performance.now()); this.flushLotGround(); this.flushCasters(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
@@ -12001,6 +12241,8 @@ export class Game {
       const bt = this.bizType; this.bizType = 'clubhouse'; this.drawBizPreview(ctx); this.bizType = bt;
     } else if (this.halfwayPlacing && this.tool === 'course') {
       const bt = this.bizType; this.bizType = 'halfway'; this.drawBizPreview(ctx); this.bizType = bt;
+    } else if (this.estatePlacing && this.tool === 'course') { // T353
+      this.drawEstateGhost(ctx);
     } else if (this.proPlacing && this.tool === 'course') { // T214
       const bt = this.bizType; this.bizType = this.proPlacing; this.drawBizPreview(ctx); this.bizType = bt;
     } else if (this.paintOn && this.brushOpen) {
