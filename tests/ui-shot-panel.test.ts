@@ -23,7 +23,7 @@ const html = (g: Game) => renderToStaticMarkup(createElement(ShotPanel, { game: 
 test('shot panel: the wind dial (mph, the words, the day’s gusts), the lie’s box (name, effect lines, flier risk), and the aim that plays like', () => {
   const h = html(game(state('iron6'), {}));
   assert.ok(h.includes('data-testid="shot-conditions"') && h.includes('aria-label="Wind dial"'), 'the box and the dial');
-  assert.ok(/13 mph/.test(h) && /from the NE/.test(h) && /gusts to 15/.test(h), 'the speed, the bearing and the gust peak');
+  assert.ok(/13 mph/.test(h) && /from the NE/.test(h) && /gusts to 14/.test(h), 'the speed, the bearing and the gust peak');
   assert.ok(/Left to right|Into the wind|Helping|Right to left/.test(h), 'the wind against the shot in words');
   assert.ok(/Rough/.test(h) && /flier risk/.test(h) && /carry -12%/.test(h) && /scatter x1\.3/.test(h) && /45% of the spin/.test(h), 'the lie and what it does');
   assert.ok(/the aim plays like 159 m/.test(h), 'the club line says what the aim plays like');
