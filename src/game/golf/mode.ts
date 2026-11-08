@@ -19,7 +19,7 @@ import { normalizeDayPins, type DayPinsSave } from './daypins';
 import { normalizeCrewSave, type CrewSave } from './crew';
 import { normalizeClubSave, type ClubSave } from './club';
 import { normalizePlayer, type PlayerProfile } from './player';
-import { readMods } from './play/mods';
+import { readGameSkills } from './play/mods';
 import { normalizeEvents, type ClubEventsSave } from './clubevents';
 import type { GameSkills } from './play/types';
 import type { OsmGolfInfo } from './osm/types';
@@ -132,9 +132,8 @@ export function stampWeather(g: { weather?: { from: number } }, runs: number, da
 function normalizePlaySave(p: Partial<GolfPlaySave> | null | undefined): GolfPlaySave | null {
   const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie, tees = p?.tees, sk = p?.skills;
   if (typeof key !== 'number' || !Number.isFinite(key) || (owner !== 'm' && owner !== 'w') || !Array.isArray(inputs)) return null;
-  // (T334 part 2: his power, accuracy and touch when saved as numbers, held to 0..1; a save from before has none: they play as neutral)
-  const stat = (v: unknown): number | null => typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : null;
-  const skills = sk && [sk.driving, sk.irons, sk.short, sk.putting].every(v => typeof v === 'number' && Number.isFinite(v)) ? { driving: sk.driving, irons: sk.irons, short: sk.short, putting: sk.putting, ...(stat(sk.power) !== null ? { power: stat(sk.power)! } : {}), ...(stat(sk.accuracy) !== null ? { accuracy: stat(sk.accuracy)! } : {}), ...(stat(sk.touch) !== null ? { touch: stat(sk.touch)! } : {}), ...(readMods(sk.mods).length ? { mods: readMods(sk.mods) } : {}) } : null;
+  // (T334 part 2: his power, accuracy and touch when saved as numbers, held to 0..1; a save from before has none: they play as neutral. T335: his mods and the clubs in his bag, through the same reader)
+  const skills = readGameSkills(sk);
   return { key, owner, inputs, caddie: typeof caddie === 'number' && Number.isFinite(caddie) ? caddie : null, ...(isTeeKind(tees) ? { tees } : {}), ...(skills ? { skills } : {}) };
 }
 

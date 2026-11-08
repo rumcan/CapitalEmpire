@@ -75,6 +75,7 @@ import { RangeCard } from './ui/golf/RangeCard';
 import { ClubhouseCard } from './ui/golf/ClubhouseCard';
 import { StaffCard } from './ui/golf/StaffCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
+import { BagCard } from './ui/golf/BagCard';
 import { TalkCard, TeeAskCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
 import { MatchResultCard, ReturnChallengeCard } from './ui/golf/MatchCards';
 import { EventCard } from './ui/golf/EventCard';
@@ -93,6 +94,7 @@ import { HoleCard } from './ui/golf/HoleCard';
 import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
 import { StatChips } from './ui/StatChips';
+import { installSettingHold } from './ui/setting-hold';
 import { statChips } from './ui/stat-chips';
 
 /** the top bar on one row (P23 4.11, T135): its golf chips (and the invitation's whole sentence) show their words only from 2200 px; narrower,
@@ -267,13 +269,14 @@ export default function App() {
     canvas.addEventListener('wheel', wheel, { passive: false });
     const kd = (e: KeyboardEvent) => g.keyDown(e), ku = (e: KeyboardEvent) => g.keyUp(e);
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
+    const holdOff = installSettingHold(on => g.paint.holdSetting(on)); // T359: a slider's drag is one undo step, put on the stack on release
     // T330 (#941): a key whose keyup the page never sees (Alt-Tab, a hidden tab, a context menu, a text field) is let go, never left held
     const release = () => g.releaseKeys(), hidden = () => { if (document.hidden) g.releaseKeys(); };
     const menu = (e: MouseEvent) => { if (!e.defaultPrevented) g.releaseKeys(); };
     const focus = (e: FocusEvent) => { const t = e.target as HTMLElement | null; if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) g.releaseKeys(); };
     window.addEventListener('blur', release); document.addEventListener('visibilitychange', hidden); window.addEventListener('contextmenu', menu); window.addEventListener('focusin', focus);
     const iv = window.setInterval(bump, 500);
-    return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', release); document.removeEventListener('visibilitychange', hidden); window.removeEventListener('contextmenu', menu); window.removeEventListener('focusin', focus); clearInterval(iv); };
+    return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); holdOff(); window.removeEventListener('blur', release); document.removeEventListener('visibilitychange', hidden); window.removeEventListener('contextmenu', menu); window.removeEventListener('focusin', focus); clearInterval(iv); };
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < (t.scene ? 9000 : 4000)) : []; // (T242: one with a Set the scene button stays longer)
@@ -346,7 +349,8 @@ export default function App() {
     switch (act?.k) {
       case 'road': game.pickType(act.id as Parameters<Game['pickType']>[0]); break;
       case 'junction': game.brush = act.id as typeof game.brush; break;
-      case 'surface': p.setBrush(act.id as Parameters<typeof p.setBrush>[0], 0); break;
+      // T359: Shape by hand › Fairway (and the rest) opens that surface's panel on the Course default, its look selected, its brush armed
+      case 'surface': p.openSurface(act.id as Parameters<typeof p.openSurface>[0]); break;
       case 'newHole': newHole(game); break;
       case 'club': if (!game.bizDefs.some(d => d.type === 'clubhouse')) game.placeClubhouse(true); break;
       case 'halfway': game.placeHalfway(true); break;
@@ -473,6 +477,8 @@ export default function App() {
                   {game.hasClubhouse && <button className={`chip ${game.clubCardOpen ? 'chip-on' : ''}`} onClick={() => game.openClubCard()} data-tip="The clubhouse: today's members, visitors, green fees and waits" aria-label="Clubhouse" data-testid="club-chip"><Icon name="house" size={16} /><span className={WIDE}>Club</span></button>}
                   {/* T241: your golf (the profile card: your skills, handicap, practice and your tee time) */}
                   {game.golf && <button className={`chip ${game.playerCardOpen ? 'chip-on' : ''}`} onClick={() => game.openPlayerCard()} data-tip="Your golf: your skills, handicap, practice log and your round today" aria-label="You" data-testid="you-chip"><Icon name="people" size={16} /><span className={WIDE}>You</span></button>}
+                  {/* T335: your bag (the 14 clubs, their upgrades, the putter's shaft and head) */}
+                  {game.golf && <button className={`chip ${game.bagCardOpen ? 'chip-on' : ''}`} onClick={() => game.openBagCard()} data-tip="Your bag: the 14 clubs, their upgrades, and the putter's shaft and head" aria-label="Bag" data-testid="bag-chip"><Icon name="briefcase" size={16} /><span className={WIDE}>Bag</span></button>}
                   {/* T240: your character: Me frames you once (T323: the camera no longer follows; Walk and Select are the rail's two cursors) */}
                   {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character (once: it does not follow)" aria-label="Me" data-testid="me-chip"><Icon name="pin" size={16} /><span className={WIDE}>Me</span></button>}
                   {game.you && !game.yourRound() && game.youCartFar() && <button className="chip" onClick={() => game.youCartCall()} data-tip="Your cart: it drives to you (C in the Walk cursor); then E gets in" aria-label="Call your cart" data-testid="cart-chip"><Icon name="compass" size={16} /><span className={WIDE}>Cart</span></button>}
@@ -869,11 +875,11 @@ export default function App() {
           {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
-            const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen ? game.tourView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
+            const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen ? game.tourView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return tv && <RangeGuideCard view={tv} heading="Tutorial · your town" tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
           })()}
           {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
-            const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen ? game.rangeGuideView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
+            const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen ? game.rangeGuideView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return gv && <RangeGuideCard view={gv} right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
           {(() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
@@ -885,7 +891,13 @@ export default function App() {
           {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
             const pv = game.playerCard(); if (!pv) return null;
             const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace || game.holeCardHole !== null;
-            return <PlayerCard view={pv} right={side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} />;
+            return <PlayerCard view={pv} right={side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} onBag={() => game.openBagCard(true)} />;
+          })()}
+          {(() => { // T335: your bag, left of the profile card (and of the card on the right) when they are open; a club's detail opens to its left
+            const bv = game.bagCard(); if (!bv) return null;
+            const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace || game.holeCardHole !== null, me = game.playerCardOpen;
+            return <BagCard view={bv} right={me ? (side ? (game.panel ? 'right-[63rem]' : 'right-[45rem]') : game.panel ? 'right-[41rem]' : 'right-[23rem]') : side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'}
+              onClose={() => game.openBagCard(false)} onUpgrade={(c, v) => game.upgradeBagClub(c, v)} onFit={(k, id) => game.fitBagPart(k, id)} onThird={w => game.setBagThird(w)} />;
           })()}
           {(() => { const pc = game.placeCard(); return pc && <PlaceCard view={pc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closePlaceCard()} onScene={game.placeSceneArt(pc.id) ? () => game.openScene({ kind: 'place', id: pc.id }) : undefined} />; })()}
           {(() => { // T242: the set-the-scene card, centred left of the card on the right (the range's, the club's, a place's) and the side panel

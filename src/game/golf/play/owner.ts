@@ -1,7 +1,7 @@
 // The owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): the golfer he is, the clubs he may take from a lie, the power a club starts at, and
 // his live group started from a fresh plan (a replay of his saved inputs, then the caddie if he handed over); and the day's round as the engine builds it
 // (dayRound: the same after a reload, T209). Pure TS, no DOM.
-import { carryFor, type ShotSkill } from './shot';
+import { CLUB_ORDER, carryFor, type ShotSkill } from './shot';
 import { makeField, teeTimes } from './field';
 import { playRound } from './round';
 import { fieldEntourage } from './entourage';
@@ -30,8 +30,10 @@ export function ownerGolfer(id: number, sex: Sex, tees: TeeKind = 'middle', skil
 /** T241: the average of the four parts of the game (a golfer with skills: his skill, the tee times' order) */
 export const meanSkill = (s: GameSkills): number => (s.driving + s.irons + s.short + s.putting) / 4;
 
-/** the clubs the owner may take from a lie: the driver only from the tee (teeShot), the putter only on the green, the others any time. Longest first */
-export function allowedClubs(lie: Lie, teeShot: boolean): Club[] {
+/** the clubs the owner may take from a lie: the driver only from the tee (teeShot), the putter only on the green, the others any time. Longest first. T335: with `bag` (GameSkills.clubs: the clubs in
+ *  his bag) those that are in it, in bag order; without, the original seven as before */
+export function allowedClubs(lie: Lie, teeShot: boolean, bag?: readonly Club[]): Club[] {
+  if (bag) return CLUB_ORDER.filter(c => bag.includes(c) && (c !== 'driver' || teeShot) && (c !== 'putter' || lie === 'green'));
   const out: Club[] = [];
   if (teeShot) out.push('driver');
   out.push('wood3', 'iron4', 'iron6', 'iron8', 'pw', 'sw');
