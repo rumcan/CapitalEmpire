@@ -39,7 +39,7 @@ const frameOn = (page, pts, maxZ = 0.3) => page.evaluate(([pts, maxZ, W, H]) => 
 
 try {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
-  for (const c of COURSES) {
+  for (const c of skipMain ? [] : COURSES) {
     console.log(`\n== ${c.id}`);
     const page = await ctx.newPage();
     page.on('pageerror', e => { console.log('[pageerror]', e.message); bad++; });
@@ -78,8 +78,13 @@ try {
       console.log('  ' + join(out, `${c.id}-1b-preview-beside-game.png`));
     }
     // 2. the middle zoom over holes 1 to 3
-    const first3 = await page.evaluate(() => { const G = window.__game.golf, pts = []; for (const n of [1, 2, 3]) { for (const t of G.tees.filter(q => q.hole === n)) pts.push({ x: t.x, y: t.y }); for (const a of G.aims.filter(q => q.hole === n)) pts.push({ x: a.x, y: a.y }); const p = G.pins.find(q => q.hole === n); if (p) pts.push({ x: p.x, y: p.y }); } return pts; });
-    if (first3.length) { const z = await frameOn(page, first3, 0.3); console.log('  holes 1-3 zoom', z.toFixed(3)); await settle(page, 1200); await shot(page, `${c.id}-2-holes-1-3`); }
+    const first3 = await page.evaluate(() => { const G = window.__game.golf, pts = []; for (const n of [1, 2]) { for (const t of G.tees.filter(q => q.hole === n)) pts.push({ x: t.x, y: t.y }); for (const a of G.aims.filter(q => q.hole === n)) pts.push({ x: a.x, y: a.y }); const p = G.pins.find(q => q.hole === n); if (p) pts.push({ x: p.x, y: p.y }); } return pts; });
+    if (first3.length) {
+      // the first two holes, at the closest zoom that holds them, but never wider than 7% (a few holes read at that zoom; the whole course is the overview's)
+      const z = await frameOn(page, first3, 0.3), z2 = Math.max(z, 0.07);
+      if (z2 !== z) await page.evaluate(([z2, pts]) => { const g = window.__game, cx = pts.reduce((s, p) => s + p.x, 0) / pts.length, cy = pts.reduce((s, p) => s + p.y, 0) / pts.length; g.camEase = null; g.lookAt(cx, cy, z2); g.emit(); }, [z2, first3]);
+      console.log('  holes 1-2 zoom', z2.toFixed(3)); await settle(page, 1200); await shot(page, `${c.id}-2-holes-1-2`);
+    }
     // 3. the closest zoom on the green with the most bunker round it
     const gb = await page.evaluate(() => {
       const g = window.__game, grid = g.courseGrid; let best = null;
