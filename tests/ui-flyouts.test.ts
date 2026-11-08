@@ -79,7 +79,7 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     assert.deepEqual(find(k, 'Holes', 'Shape by hand', 'Green').leaf?.act, { k: 'surface', id: 'green' });
     assert.deepEqual(find(k, 'Holes', 'Shape by hand', 'Waste area').leaf?.act, { k: 'surface', id: 'waste' }, 'T222: the Waste area brush');
     assert.equal(find(k, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'its pebbles mark');
-    assert.deepEqual(labels(find(k, 'Buildings').children!), ['Clubhouse', 'Halfway house', "Pro's office"]); // (T214: the pro's office)
+    assert.deepEqual(labels(find(k, 'Buildings').children!), ['Clubhouse', 'Halfway house', "Pro's office", 'House lots']); // (T214: the pro's office; T353: House lots)
     if (GREENKEEPING) assert.deepEqual(labels(find(k, 'Greenkeeping').children!), ['Grass care', 'Mow', 'Water']);
     assert.deepEqual(find(k, 'Tournament').leaf?.act, { k: 'event' });
   });
@@ -243,7 +243,7 @@ describe('the tool tiles (T233)', () => {
     assert.deepEqual(tiles(find(courseRows, 'Holes').children!), ['New hole=golf-hole', 'Your holes', 'Shape by hand=fairway']);
     assert.deepEqual(tiles(find(courseRows, 'Holes', 'Shape by hand').children!), ['Fairway=fairway', 'Green=green', 'Tee=tee', 'Rough=rough', 'Bunker=bunker', 'Water=pond', 'Waste area=waste-sand', 'Long grass=long-grass']); // T272: separate painted waste/long-grass art; gameplay brush IDs stay intact
     assert.equal(find(courseRows, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'the gameplay mark stays available with the new tile');
-    assert.deepEqual(tiles(find(courseRows, 'Buildings').children!), ['Clubhouse=clubhouse', 'Halfway house=snack-hut', "Pro's office=clubhouse"]);
+    assert.deepEqual(tiles(find(courseRows, 'Buildings').children!), ['Clubhouse=clubhouse', 'Halfway house=snack-hut', "Pro's office=clubhouse", 'House lots']);
     assert.deepEqual(tiles(find(pathRows, 'Cart paths & drives').children!), ['Walking path', 'Gravel drive'], 'the classes stay a list under their families');
     assert.equal(find(pathRows, 'Cart paths & drives').note, 'Roads and cart paths on your property', 'its tooltip kept');
   });

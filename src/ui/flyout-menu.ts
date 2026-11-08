@@ -16,7 +16,7 @@ export type LeafAct =
   | { k: 'road'; id: string } | { k: 'junction'; id: string } | { k: 'surface'; id: string } | { k: 'newHole' } | { k: 'holes' }
   | { k: 'club' } | { k: 'halfway' } | { k: 'care'; id: string } | { k: 'event' } | { k: 'props'; group: string | null }
   | { k: 'paint'; tex: string } | { k: 'plant'; id: string } | { k: 'paintMode'; id: string } | { k: 'range'; section: string | null } | { k: 'land' }
-  | { k: 'practice'; id: string } | { k: 'build' } | { k: 'place'; id: string } | { k: 'pro'; id: 'prooffice' | 'teachhut' }
+  | { k: 'practice'; id: string } | { k: 'build' } | { k: 'place'; id: string } | { k: 'pro'; id: 'prooffice' | 'teachhut' } | { k: 'estate' }
   /** T356 (#998): Course > Place a real course > (a course): takes that map-data course in hand */
   | { k: 'real'; id: string };
 /** T256 (#743): Build, the holes' painting tools on your property (Range › Build, Facilities › Build on your property): the course tool's
@@ -109,7 +109,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
         tiled(group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => tiled({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }, SURFACE_TILE[s.id]))), ROW_TILE.shape),
       ] : [], h), ROW_TILE.holes));
       const b = byId('buildings');
-      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice)], b), ROW_TILE.buildings));
+      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice), leaf(b, 'House lots', { k: 'estate' }, 'house')], b), ROW_TILE.buildings));
       // T356 (#998, the owner: "add a way for the user to place the golf course he imported into his map"): the real courses, each placed with its outline in hand
       // (the shipped ones first; the player's downloaded courses under a caption of their own, only when there are some: without, the list is the three alone)
       if (c.golf && c.real?.length) {
