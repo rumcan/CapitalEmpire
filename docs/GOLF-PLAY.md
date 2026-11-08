@@ -33,6 +33,16 @@ course. lets say tournaments are 1 day."* Until now the sim had no golf at all (
    first frames until a putt clip exists), the ball in flight and rolling, a live leaderboard (position, name, to par, thru; the owner
    highlighted), and at the end the champion ("Name wins at -4") in the day's result. The tee stand-in golfer goes.
 
+## Starting your own round (T350, #993)
+
+The owner, 2026-11-08: "it tells me what I shot. The game cannot play for me?? ... there should be a start round button and we move the time to the tee time and the round starts and time now slows down to the pace of play." The cause (on the issue): the first-tee card's **Book** made a booked everyday round that the day's playback plays with your skills (`golf/player.ts Booking`, `Game.updateEveryday`), scored at the end (`youRoundDone`), whether or not you were on the course. Now (`golf/startround.ts`, pure; the engine's T350 section):
+- **A booking is a tee time to play yourself.** The model plays it only when `Booking.auto` is set, which only **Let the game play it** does (the first-tee card, or the tee-time card). Playing by hand ends the booking (it used to stay and its simulated score arrived mid-round). A booking whose day is over lapses.
+- **Start round** (first-tee card for a booking; the event card for today's club event, at the next free tee time on the sheet; the first-tee card for the tournament you joined) runs the clock to the tee time (20x far off, slower as it nears and 1x for the last eight minutes, by what the sim has really done: the clock shown runs ahead of the sim between its frames and steps back when the speed drops, so a fast arrival would show a time past the tee time and then an earlier one; `ffSpeed`; touching the speed or the pause cancels it), then begins your round and puts you at the first tee with the first shot open.
+- **On the course the clock runs at the pace of play.** From the moment your own round exists (a booked round, an event, a money match, a practice round) until it ends, the clock is at the watching speed (`WATCH_SPEED`, watch reason `'round'`); the speed bar's faster speeds are off and `setSpeed` holds any faster request to it. A pause and the slower speeds go through. The speed before comes back when the round ends.
+- **If the tee time passes while you are away** (the booking is due, no round under way) the game pauses the clock and asks once a day: **Play now** or **Let the game play it**; closing the card leaves the booking and the clock running.
+- Not changed: the money match's **Skip to result** and the caddie's "finish the hole" are explicit choices already; the tournament's owner round keeps its own watching speed from two minutes before the tee time (`watchFor('own')`).
+- Tests: `tests/golf-start-round.test.ts` (the rules, the profile's `auto`), `tests/ui-start-round.test.ts` (the cards); `scripts/dev/start-round-check.mjs` (the real game: Start round, the clock at the tee time, the first shot open, no score before the last putt).
+
 ## Phases (each its own PR)
 - **P1, the round (pure, tested):** `src/game/golf/play/` (below). No engine change.
 - **P2, the day in the game:** the engine builds the `CourseView` from the course grid and the derived holes, plays the round at the
@@ -41,6 +51,15 @@ course. lets say tournaments are 1 day."* Until now the sim had no golf at all (
   go in the save.
 - **P3, the crowd follows:** the spots' draw from the play (decision 6), the 30-minute moves in the sim (City), the galleries' fans walking.
 - **P4, the owner plays:** decision 7.
+
+## The hole card's Play: a practice round (T349, #992)
+
+The owner, 2026-11-08, on the hole card: "add a play hole button to this menu that asks if you want to play just this hole or all 18/9". **Play** sits next to **Build** in the card's header; it asks **Just hole N**, **All 18** (**All 9** on a 9-hole course: the course's real hole count, `play/practice.ts realHoleCount`) or Cancel, and starts your own round through the play flow that already exists (the walk-up, the shot panel and the meter, the same code the Mayor's Cup and the money matches use): `Game.practiceStart` → `startRound` with `YourRound.practice`.
+- **A practice round is free and changes nothing**: not an event, no mulligan rules beyond your usual first-tee ones, and at its end `yourRoundEnd` records nothing (no handicap, nerve, rounds, reputation or money); the toast says "Practice round: ... not recorded". It does not touch a booked tee time (it refuses, as any round does, while a booked round of yours is out on the course).
+- **Just hole N**: that hole's first turn in the played course, from your tee (the white one, else the first it has: `holeOf`/`holeFrom`). The round ends after the putt: the scorecard shows "Hole 4: Birdie (3, par 4)" with **Back to the course**. **All N** is a normal round on each real hole once, and its scorecard says "Practice round".
+- **Back to the course puts you back**: the camera (eased back), the tool and the side modes that were open (Holes, Grass, ...), and the hole card (`Game.practiceBack`, `practiceReturn`).
+- **Off when the hole cannot be played**: no tee, no pin or no green (the tooltip says which: `play/practice.ts missingParts`), a round under way, a closed course or no clubhouse (`yourChoices().why`).
+- Tests: `tests/golf-practice-hole.test.ts` (the picks, the missing parts, the saved flag), `tests/ui-hole-play.test.ts` (the choice, the scorecard and bar for a practice round); `scripts/dev/practice-hole-shots.mjs` (the real game).
 
 ## P1 contract (`src/game/golf/play/`, pure TS, no DOM; times in game minutes of the day, distances in tiles unless named `M` = metres)
 ```ts
@@ -200,3 +219,74 @@ slider and Hit); `src/game/golf/play/swing.ts`, `tests/golf-play-swing.test.ts`,
 - **The save:** `OwnerInput.swing` keeps the meter's outcome (power, accuracy, boost), never the click times; the replay plays it through the same
   model. An input without it (a save from before T316) plays as before.
 - Left for T317-T319: the spin (a field next to `swing`), the cart and first tee, the break grid, tracers and holing.
+
+**The play pass, part 1 (T334 #960, 2026-11-08; the owner, 2026-11-04: "We want wind and diffrent flights based on fairway and rough"):** the wind, the lie that
+changes the flight, the slope under the ball, and the playtest's fixes. `play/wind.ts`, `play/lies.ts`, `play/conditions.ts`; `tests/golf-play-conditions.test.ts`,
+`tests/golf-play-putting-v2.test.ts`; the playtest's tools `scripts/dev/play-pass-playtest.mjs`, `play-pass-sim.ts`, `play-pass-shots.mjs`, `tests/helpers/swing-bot.ts`.
+- **The shape of it: one optional record per shot.** `ShotEnv { wind?: { mph, from }, lie?: LieKind, slope?: { up, across } }` (conditions.ts) is read when the shot is struck
+  (`Game.shotEnv`: the wind with its gusts at that instant, the lie's kind under the ball from the course, the height field under the stance along the aim) and saved with the
+  owner's input (`OwnerInput.env`; `readEnv` clamps it). `hitShot` takes it as `HitMod.env`. **No `env`: the model is exactly what it was** (the same draws, the same floats:
+  a golden test over `hitShot` x70, `shotOutcome`, a 3810-shot field round and an 18-hole live group, captured from the unchanged code). The wind and the slope take no draws;
+  a flier takes one, only from a lie that can give it. A saved input with `env` replays exactly, whatever the wind and the terrain do afterwards.
+- **The wind** (wind.ts). `dailyWind(seed, day)`: a mean speed (2 to 15 mph, a blustery day to 27, about one day in ten calm), the compass bearing it blows FROM (seven days in ten from the
+  west's quarter; 0 is north, the top of the screen), a gustiness. `windAt(wind, t)`: gusts on a clock in seconds (three slow waves, sharpened; smooth, no snaps), a direction
+  wobble of up to 12 degrees on a gusty day. On a shot (`windEffect`): the wind along the line is a headwind (-0.9% of the carry a mph) or a tailwind (+0.45%), the wind across
+  drifts the ball 0.6% of the carry a mph (a 10 mph crosswind moves a 200 m drive 12 m); times the club's exposure (`WIND_CLUB`: driver and woods 1, 4-iron 0.95, 6-iron 0.85,
+  8-iron 0.75, PW 0.65, SW 0.55, putter 0) and the lie's height (a bunker shot comes out high: x1.3). More on high, long shots, less on low, short ones, none on a putt (a putt
+  does not come through `hitShot`; `shotOutcome` reads no `env` for it). The tournament's wind is `dailyWind(seed, key)` (stable after a reload); your round's, its day's.
+- **The lie** (lies.ts). `LieKind`: tee, fairway, first cut, rough, deep rough, fescue, bunker, green. `makeCourseView` gives the view a `kindAt`: the surface's own kind
+  (long grass is deep rough, fescue is fescue, the waste area is sand) and a rough ball within 1.5 tiles (3 m) of a fairway, fringe, tee or green is first cut; a view
+  without `kindAt` (made by hand) gets the coarse lie's own. `LIE_FX` per kind: carry, spread, the share of the spin that gets on, the run after landing, the chance of a
+  flier, a wild streak, the height. Tee 1.03 carry (the most distance); fairway clean, full spin; first cut 0.98 / 1.1 / 85% of the spin; rough 0.88 / 1.3 / 45%, run x1.25,
+  a flier in 28% (times the club: a driver 10%, a wedge 120%); deep rough 0.74 / 1.55 / 25%, wild 8%; fescue 0.6 / 1.9 / 20%, wild 16%; bunker 0.7 / 1.4, high, no run. A flier
+  jumps off the grass with no spin: +12% carry, run x1.8. T318's spin takes the kind's spin share (`spinEffect(..., kind)`).
+- **The slope** (lies.ts `slopeAt` from the T026 height field, 1.5 tiles either side of the ball): uphill carries 1.1% less per 1% (at most 10%), downhill more, and runs on;
+  the ball above the feet (the ground higher to the right of the target line) pulls left 0.7 degrees per 1% (at most 6), below the feet pushes right; a cross slope adds scatter.
+  The town's course is flat (a height edit raises it: the Ground height tool); the lines on the panel say what the ground does.
+- **The model's golfers** play in the same weather when `playRound(..., { cond })` has the day's `Conditions` (the mean wind, no gusts: a model shot never depends on the
+  minute; the heights; the view's kinds): `dayRound(..., cond)`. The engine passes them for a tournament from `GolfSave.weather.from` on: a save from before the weather has
+  none, and the engine stamps it on load with the next tournament's key, so a day in progress and every day before play exactly as they did. Everyday golf and the money
+  matches' opponent are left as they were (see Left).
+- **The shot panel** (`ui/ShotPanel.tsx`, `Game.shotConditions`): under the meter, the wind dial (the arrow is the way it blows against the shot: up the line a tailwind), its
+  mph, "Into the wind / Helping / Left to right", the gusts' peak and what it adds to this shot ("-9 m, 5 m right"); the lie's name and effect lines ("carry -12% · scatter x1.3
+  · 45% of the spin · a flier in 3 of 10") and the slope's lines. The meter's aim mark is where to stop the power for the distance the aim PLAYS like in the conditions (the club
+  line says so), and the caddie's club (the ring) is the shortest that reaches that. Over the ball (the overlay): the faint ellipse of where the shot is expected to land is
+  shifted by the wind's drift and the slope's pull and as wide as the lie's scatter, and a wind arrow with its mph stands by the ball. The round's bar has a wind chip. The
+  report after the shot ends with what the wind did ("wind -9 m, 5 m right").
+- **The flags and the trees** (`gl.ts` VS_SPRITE / FS_SPRITE, `sprites.ts swayOf`): a uniform (`uWind`: time, the wind's direction on the screen, strength) and a sway code in the
+  sprite's cullable slot (bit 0 stays the cull flag): the top of a tree or a shrub leans downwind and breathes with the gusts (the picture sheared about its foot: four vertices
+  a sprite, no CPU per frame), and the pin's flag cloth ripples in the fragment shader, streams out in a breeze and hangs limp and drawn in toward the pole in a calm. Nothing
+  re-packs on a gust. `?wind=off` (a still day: the shader skips it) or `?wind=14,270,0.6` (mph, bearing, gustiness) force the wind in a dev build, `window.__game.devWind` for the capture
+  scripts; `npm run bench -- --start town --wind off|14,270,0.6` measures it.
+- **The playtest** (the town course, seed 2, and the 18-hole synthetic course; a person's clicks scripted in `tests/helpers/swing-bot.ts`: the timing error in seconds, so a faster
+  meter is harder; `scripts/dev/play-pass-sim.ts`): the findings are on #960. Fixed here: **putting** (the second version, `shot.ts PUTT_V2`, `OwnerInput.v` 2, written on every input
+  the engine plays; a saved input without it is version 1 and plays as before): a 0.5 m putt was missed one time in four and half the holes took three putts or more, because the make
+  chance fell from 0.3 m, the aim's tolerance was a flat 3 degrees (the cup's angle is 8 at half a metre and 1 at ten) and the power's error counted as 25% of the putt whatever its
+  length. Now the chance falls from 0.6 m, the aim's tolerance is the cup's angle at the distance (1.5 to 8 degrees) and the power's window is 0.9 m in metres. The field's days with
+  conditions and the money matches' opponents putt by it too. Measured (30 rounds a golfer, the scripted swinger's clicks): a 0.5 m putt 59-90% before, 92-99% after; 1 m 46-80% before,
+  86-96% after; 3+ putts on 16-55% of the holes before, 7-30% after; putts a round for a club golfer at the starting skills 40.8 before, 36.1 after, and his score +23.4 before, +18.0 after,
+  which is the handicap (18.5) the player card shows.
+- **Filed from the playtest:** T345 #987 (the meter's sweet spot is +-33 ms at the starting skill: make it a window in time), T346 #988 (a ball's roll does not depend on the club),
+  T347 #989 (everyday golfers and the money matches' opponents play without the wind, lie kinds and slope), T348 #990 (other cards stay open over the shot panel).
+- **Left:** the wind has no art but the shader's stand-in (docs/GOLF-SPRITES.md asks for a flag sheet).
+
+**The play pass, part 2 (T334 #960): shot shaping and the player's stats.** `play/shape.ts`, `play/mods.ts`; `tests/golf-play-shaping.test.ts`, `tests/golf-play-stats.test.ts`.
+- **Shot shaping** (`shape.ts`). Before the swing the shot panel picks the **curve** (draw, straight, fade) and the **flight** (low, normal, high); the pick is `ShotShape { curve: -1|0|1, flight: -1|0|1 }`, saved
+  with the input (`OwnerInput.shape`, a full shot only; absent: none, a shot from before plays as before). A draw curves left and a fade right by `SHAPE.curveDeg` (5 degrees over a 200 m carry, more
+  the longer, held between 0.4 and 1.2 of it) and a draw runs on (+15%) while a fade checks; a **high** flight carries 5% less, lands soft (run x0.55) and catches 1.3 times the wind; a **low**
+  flight carries 7% less, runs on (x1.7), catches 0.6 of the wind and is the accurate one (scatter x0.85). T318's spin (the dot on the ball) curves the flight too: the two add.
+  **The skill cost**: a golfer pulls off `SHAPE.work` (half) of a shape at skill 0 and all of it at skill 1 (his accuracy stat lifts it a little); each pick makes the swing's miss bigger (the meter's
+  accuracy click: a curve x1.35, a flight x1.2, both x1.55), widens the scatter by what he does not pull off, and adds a mishit chance that falls to 0 at skill 1. The panel shows it ("Draw: curves left
+  4.0°, runs on · 70% pulled off · miss x1.35"); the expected-landing ellipse, "plays like" and the meter's aim mark follow it.
+- **Stats and modifiers** (`mods.ts`): `Stats` are the four parts of the game (T241: driving, irons, the wedges = `short`, putting) and three new ones: **power** (the carry: woods +-10% over 0..100 against 50, irons
+  +-6%, the wedge +-3%, the putter nothing), **accuracy** (the scatter -+30%, the sweet spot +-40% wide, the marker -+15% in speed: woods and irons) and **touch** (the same for the putter, whose scatter
+  is its leave); the wedge reads the mean of accuracy and touch. 50 changes nothing. They live on the player card (0..100) with the others, nerve takes them off under pressure like the skills (`gameSkills`),
+  practice raises them (the bucket power and accuracy, the putting green touch, the chipping green touch and accuracy) and the handicap follows them (`HCP_STAT_WEIGHTS`; a stat at 50 weighs nothing).
+- **For T335 (the bag) and T336 (the cards): plain data and one function.** A `Mod { id, stats?, carry?, spread?, sweet?, speed?, roll?, mishit?, clubs? }` is a change of stats (added, 0..1 units) and factors
+  on the shot, for every club or the listed ones (a club or a family: wood, iron, wedge, putter). `GameSkills.mods` carries the list (the engine builds it in `Game.yourSkills`: empty today);
+  `applyMods(skills, club)` stacks them in order into the `ClubKit` the club plays at (its skill after the mods, the carry, scatter, sweet spot, marker speed, roll and mishit factors); `skillFor`, `carryFor`
+  (the club's full carry for him), `hitShot`, `shotOutcome`, the meter (`SwingMeter(skill, speed)`, `sweetSpot(skill, boost, sweet)`, `swingEffect(..., sweet)`) and the panel all read it, and nothing else
+  has to change for a card or a club to take effect. A new club (T335) is a `Club` id with its carry in `CLUBS`, its family in `FAMILY` and its part of the game in `PART_OF`; a putter shaft is a `Mod` with
+  `clubs: ['putter']`; a card that unlocks a mechanic is a flag the engine and the panel read (the spin and the shape are the pattern: an optional field of the input).
+- **Back-compat**: a golfer's skills without the new fields (or with them at 0.5) play every shot exactly as a plain skill did (tested over every club and lie); a saved tournament owner keeps his new stats
+  with his skills; a profile from before has them at 50; an input without `shape` is played as before and the golden test of part 1 still passes.

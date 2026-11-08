@@ -75,7 +75,7 @@ import { RangeCard } from './ui/golf/RangeCard';
 import { ClubhouseCard } from './ui/golf/ClubhouseCard';
 import { StaffCard } from './ui/golf/StaffCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
-import { TalkCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
+import { TalkCard, TeeAskCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
 import { MatchResultCard, ReturnChallengeCard } from './ui/golf/MatchCards';
 import { EventCard } from './ui/golf/EventCard';
 import { RoundBar, ScoreCard } from './ui/golf/YourRound';
@@ -491,7 +491,7 @@ export default function App() {
             <div className="pointer-events-auto ml-auto flex items-center gap-2">
               <div className="glass flex items-center gap-1 px-2 py-1.5">
                 <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
-                {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''}`} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
+                {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''} disabled:opacity-40`} disabled={game.paceLock && k > WATCH_SPEED} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
                 {game.golfMode && (game.golfWatch
                   ? <button className="chip chip-on" onClick={() => game.stopWatching()} data-tip="Stop watching: back to the speed before (Esc)" data-testid="watch-stop">Watching {game.golfWatch.label} ✕</button>
                   : <button className="chip" onClick={() => game.watchNearest()} data-tip="Follow the golf group nearest the middle of the screen at the watching speed" data-testid="watch-golf">Watch golf</button>)}
@@ -640,7 +640,7 @@ export default function App() {
                       </div>
                     ))}
                     <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The build that is running: every save records it (P07), so a bug report with a .cesave says which build wrote it">Build {BUILD.app} · {BUILD.sha}</div>
-                    <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The real courses (Rondebosch, Magnolia National) are built from OpenStreetMap data, which is available under the Open Database Licence (ODbL 1.0): openstreetmap.org/copyright" data-testid="osm-credit">Credits: real-course map data © OpenStreetMap contributors</div>
+                    <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The real courses (Rondebosch, Magnolia National, Woodhill and any you download) are built from OpenStreetMap data, which is available under the Open Database Licence (ODbL 1.0): openstreetmap.org/copyright" data-testid="osm-credit">Credits: real-course map data © OpenStreetMap contributors</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
                     <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
@@ -842,12 +842,13 @@ export default function App() {
           {game.shotState() && <ShotPanel game={game} />}
           {game.spinView() && <SpinBall game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
-          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ options: game.osmChoices(), current: game.osmGame()?.id ?? null, onPick: id => { void game.startRealCourse(id); } }} />; })()}
+          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: spec => { void game.startRealCourse(spec); } }} />; })()}
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
           {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} />}
-          {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
-          {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.playEvent(ev.id)} />; })()}
+          {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onStart={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onTourney={() => game.tournamentStart()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
+          {(() => { const ta = game.teeAskView(); return ta && <TeeAskCard tee={ta.tee} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onPlay={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onClose={() => game.closeTeeAsk()} />; })()}
+          {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.eventStart(ev.id)} />; })()}
           {(() => { const rv = game.yourRoundView(); if (!rv) return null;
             // T328 (#936): the bar starts right of the left rail and stops left of a right-hand card (event, tee, talk, challenge: 320 px at most)
             const side = game.panel ? '19.5rem' : '0.75rem', card = !!game.youTalk || !!game.youTeeView() || !!game.eventCard() || !!game.challengeView();

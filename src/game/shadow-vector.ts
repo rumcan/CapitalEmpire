@@ -12,6 +12,8 @@
 // sprite. Sprites with no entry (the walkers' animated frames, new art) keep T141's shadows (shadow-shape.ts and the silhouette cast).
 // Pure: importable from node (tests, the draft) and the game.
 import SHAPES from './shadow-shapes.json';
+// T309: the farm animals' shadows (scripts/assets/prep-animals.mjs drafts them from the standing and grazing frames)
+import ANIMAL_SHAPES from './animal-shadows.json';
 import { CAST, castShear } from './cast-shadow';
 
 /** one picture's shadow (shadow-shapes.json). Rings are flat arrays; a cast ring wound the other way round is a hole (the gap under a bench) */
@@ -33,7 +35,7 @@ export interface VectorShadow {
   /** why it was drawn by hand */
   n?: string;
 }
-export const VECTOR_SHADOWS: Readonly<Record<string, VectorShadow>> = SHAPES as Record<string, VectorShadow>;
+export const VECTOR_SHADOWS: Readonly<Record<string, VectorShadow>> = { ...(SHAPES as Record<string, VectorShadow>), ...(ANIMAL_SHAPES as Record<string, VectorShadow>) };
 
 /** library ids that keep T141's shadows on purpose (vector-shadow test: every other drawn picture has an entry), by prefix or exact id */
 export const VECTOR_FALLBACK: readonly { id: string; why: string }[] = [

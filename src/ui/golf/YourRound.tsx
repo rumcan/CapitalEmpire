@@ -2,7 +2,7 @@
 // distance, the score so far, "Jump to ball", the cart, the scorecard, quit), and the scorecard (strokes, par, to par, putts per hole) that opens between
 // holes and at the end. The engine plays the round (golf/play/yours.ts); these only show it and send the clicks.
 import { useState } from 'react';
-import { DEFAULT_RULES, GIMME_RULES, MULL_RULES, gimmiesOf, mulligansOf, noHandicapWhy, type CardRow, type HoleChoice, type RoundRules, type YourRoundView } from '../../game/golf/play/yours';
+import { DEFAULT_RULES, GIMME_RULES, MULL_RULES, gimmiesOf, mulligansOf, noHandicapWhy, scoreName, type CardRow, type HoleChoice, type RoundRules, type YourRoundView } from '../../game/golf/play/yours';
 import { Icon } from '../Icon';
 import { MatchRows, MatchStrip } from './MatchCards';
 
@@ -62,7 +62,9 @@ export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCar
       <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-slate-950/85 px-3 py-1.5 text-xs text-slate-200 shadow-xl backdrop-blur" data-testid="round-bar">
         {v.match && onSkip && <MatchStrip m={v.match} onSkip={onSkip} />}
         <span className="font-display font-bold text-[var(--gold-hi)]">Hole {v.hole}</span>
+        {r.practice && <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-emerald-100" data-testid="round-practice" data-tip="A practice round: free, not an event, not recorded">Practice</span>}
         <span className="tabular-nums text-slate-300">Par {v.par} · {r.holed ? 'holed' : `stroke ${v.stroke}`}{!r.holed && !r.over ? ` · ${v.distM < 3 ? v.distM.toFixed(1) : Math.round(v.distM)} m to the pin, ${LIE[v.lie] ?? v.lie}` : ''}</span>
+        {v.wind && <span className="rounded bg-cyan-400/15 px-1.5 py-0.5 tabular-nums text-cyan-100" data-testid="round-wind" data-tip="The day's wind. The shot panel shows its gusts and what it does to the shot">Wind: {v.wind}</span>}
         <span className="rounded bg-white/10 px-1.5 py-0.5 font-semibold tabular-nums text-white" data-testid="round-score">{t.thru ? `${toPar(t.toPar)} thru ${t.thru}` : 'E'}</span>
         {v.canJump && <button className="btn-gold px-2 py-0.5 text-xs" onClick={onJump} data-testid="you-jump" data-tip="Skip the trip: you are at your ball, addressing it"><Icon name="forward2" size={14} />Jump to ball</button>}
         {(v.inCart || v.nearCart) && !v.addressing && <button className="chip" onClick={onCart} data-testid="you-cart">{v.inCart ? 'Get out (E)' : 'Get in the cart (E)'}</button>}
@@ -70,7 +72,7 @@ export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCar
         {v.canMull && <button className="chip" onClick={onMull} data-testid="you-mulligan" data-tip="Take your last shot back and hit it again: no stroke counted (M). A round with mulligans does not count toward your handicap">Mulligan (M){v.mullLeft !== Infinity ? ` · ${v.mullLeft} left` : ''}</button>}
         {v.canGimme && <button className="btn-gold px-2 py-0.5 text-xs" onClick={onGimme} data-testid="you-gimme" data-tip="Inside the gimme ring: the putt is conceded, holed for one stroke (G)">Gimme (G)</button>}
         <button className="chip" onClick={onCard} data-testid="round-card-btn">Scorecard</button>
-        <button className="chip" onClick={onQuit} title={v.match ? 'Concede the match: you lose the stake' : 'Stop your round here: the holes done go into your rounds'} data-testid="round-quit">{v.match ? 'Concede' : 'Quit'}</button>
+        <button className="chip" onClick={onQuit} title={v.match ? 'Concede the match: you lose the stake' : r.practice ? 'Stop the practice round: nothing is recorded' : 'Stop your round here: the holes done go into your rounds'} data-testid="round-quit">{v.match ? 'Concede' : 'Quit'}</button>
       </div>
     </div>
   );
@@ -104,8 +106,8 @@ export function ScoreCard({ v, onNext, onDone, onClose }: { v: YourRoundView; on
       <div className="pointer-events-auto max-w-full space-y-3 rounded-2xl border border-white/10 bg-slate-950/92 p-4 text-slate-200 shadow-2xl backdrop-blur" data-testid="scorecard">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{v.match ? `Money match vs ${v.match.name} · ${v.match.score.text}` : 'Your round · scorecard'}</div>
-            <div className="font-display text-xl font-bold text-[var(--gold-hi)]">{r.over ? (v.match ? 'Match over' : 'Round over') : r.holed ? `Hole ${v.hole} done` : `Hole ${v.hole}, stroke ${v.stroke}`}</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{v.match ? `Money match vs ${v.match.name} · ${v.match.score.text}` : r.practice ? 'Practice round · scorecard' : 'Your round · scorecard'}</div>
+            <div className="font-display text-xl font-bold text-[var(--gold-hi)]">{r.over ? (v.match ? 'Match over' : r.practice && r.card.length === 1 ? `Hole ${r.card[0]!.n}: ${scoreName(r.card[0]!.strokes, r.card[0]!.par)} (${r.card[0]!.strokes}, par ${r.card[0]!.par})` : 'Round over') : r.holed ? `Hole ${v.hole} done` : `Hole ${v.hole}, stroke ${v.stroke}`}</div>
           </div>
           {!r.holed && !r.over && <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>}
         </div>
@@ -115,9 +117,10 @@ export function ScoreCard({ v, onNext, onDone, onClose }: { v: YourRoundView; on
           <span className="text-[11px] text-slate-500">◯ birdie or better · ▢ bogey or worse · * picked up{mulls ? ' · m mulligan' : ''}{gims ? ' · g gimme' : ''}</span>
         </div>
         {noHcp && <div className="text-[11px] text-amber-200/80" data-testid="card-no-hcp">Counts in your rounds, not toward your handicap ({noHcp}).</div>}
+        {r.practice && <div className="text-[11px] text-emerald-200/80" data-testid="card-practice">Practice round: free, not an event, and not recorded (no handicap, reputation or money).</div>}
         <div className="flex justify-end gap-2">
           {next && <button className="btn-gold px-3 py-1.5 text-sm" onClick={onNext} data-testid="round-next"><Icon name="play" size={16} />Next hole: {next.n} (par {next.par})</button>}
-          {r.over && <button className="btn-gold px-3 py-1.5 text-sm" onClick={onDone} data-testid="round-done">{v.match ? 'Done: settle the match' : 'Done: into your rounds'}</button>}
+          {r.over && <button className="btn-gold px-3 py-1.5 text-sm" onClick={onDone} data-testid="round-done">{v.match ? 'Done: settle the match' : r.practice ? 'Back to the course' : 'Done: into your rounds'}</button>}
         </div>
       </div>
     </div>

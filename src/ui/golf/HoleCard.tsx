@@ -11,6 +11,7 @@ import { monthIndexLabel } from '../../game/golf/calendar';
 import { SurfaceMark } from '../course/SurfaceMark';
 import { Icon } from '../Icon';
 import { TeeSetRows } from './TeeSets';
+import { allLabel } from '../../game/golf/play/practice';
 
 /** the surfaces' names as the Holes panel says them */
 const NAME: Record<string, string> = { green: 'Green', tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', fescue: 'Fescue', waste: 'Waste area', longGrass: 'Long grass' };
@@ -24,8 +25,9 @@ function useConfirm(): [boolean, () => void, () => void] { const [on, set] = use
 /** the card, beside the map's right edge (left of an open side panel, as the range card); its height in the UI scale's own units (--vh-ui:
  *  78vh ran past the screen's bottom at 125%, T205's overflow check) */
 export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: string }) {
-  const c = useHoleCard(game), [asking, ask, unask] = useConfirm();
+  const c = useHoleCard(game), [asking, ask, unask] = useConfirm(), [pick, setPick] = useState(false);
   if (!c) return null;
+  const playWhy = game.holePlayWhy(c.n); // (T349: why Play is off, or null)
   const bad = c.checks.filter(k => !k.ok), state = bad.length ? { icon: '!', word: 'needs attention', tone: 'text-amber-300' } : c.ready !== null ? { icon: '◔', word: `growing · ready ${monthIndexLabel(c.ready)}`, tone: 'text-sky-300' } : { icon: '✓', word: 'ready', tone: 'text-emerald-300' };
   const length = c.tees[0]?.m ?? 0, del = deleteNote(c);
   const others = game.courseHoleViews().filter(v => v.n !== c.n);
@@ -35,11 +37,11 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
     <section className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--gold-line)] bg-slate-950/90 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur`} data-testid="hole-card" aria-label={`Hole ${c.n}`}>
       <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="wiz-title">Hole {c.n}</span>
             <label className="wiz-num" title="The hole's number: another hole's trades places with it (the routing follows), as dragging its badge in the Holes panel">
               <span className="sr-only">Number</span>
-              <select value={c.n} onChange={e => game.renumberHole(c.n, +e.target.value)} data-testid="hole-number">
+              <select className="w-[5rem]" value={c.n} onChange={e => game.renumberHole(c.n, +e.target.value)} data-testid="hole-number">
                 {Array.from({ length: 18 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n === c.n ? `No. ${n}` : others.some(v => v.n === n && v.started) ? `No. ${n} (swap with hole ${n})` : `No. ${n}`}</option>)}
               </select>
             </label>
@@ -53,9 +55,13 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         <div className="flex shrink-0 items-center gap-1.5">
           {/* Build: straight to painting this hole (the Course tool, this hole in hand, its brushes) */}
           <button className="chip" onClick={() => game.buildHole(c.n)} title={`Build on hole ${c.n}: the Course tool opens with hole ${c.n} in hand, ready to paint its surfaces`} data-testid="hole-build"><Icon name="trophy" size={14} />Build</button>
+          {/* T349 (#992): Play: asks for just this hole or all of the course, then your own practice round (free, not recorded) */}
+          <button className="chip disabled:opacity-40" disabled={!!playWhy} onClick={() => setPick(p => !p)} title={playWhy ?? `Play hole ${c.n} yourself: a practice round on this hole or on the whole course, free and not recorded`} data-testid="hole-play"><Icon name="play" size={14} />Play</button>
           <button className="btn-icon" onClick={() => game.closeHoleCard()} title="Close (Esc)" aria-label="Close the hole card"><Icon name="close" size={18} /></button>
         </div>
       </div>
+
+      {pick && !playWhy && <HolePlayChoice n={c.n} count={game.practiceHoleCount()} onHole={() => { setPick(false); game.practiceStart(c.n, 'hole'); }} onAll={() => { setPick(false); game.practiceStart(c.n, 'all'); }} onCancel={() => setPick(false)} />}
 
       {c.tees.length > 0 && (
         <div className="wiz-stats" data-testid="hole-tees">
@@ -165,5 +171,19 @@ function CheckRow({ game, k }: { game: Game; k: HoleCardCheck }) {
       <span className="min-w-0 flex-1">{k.text}</span>
       {fix && <button className="chip" onClick={() => game.holeCardFix(fix)} title="Arms the tool that fixes it">{label}</button>}
     </li>
+  );
+}
+
+/** T349 (#992): the Play button's question: just this hole, or all of the course's holes (a practice round: free, not an event, not recorded) */
+export function HolePlayChoice({ n, count, onHole, onAll, onCancel }: { n: number; count: number; onHole: () => void; onAll: () => void; onCancel: () => void }) {
+  return (
+    <div className="wiz-stats" data-testid="hole-play-choice">
+      <div className="text-[12px] text-[var(--muted)]">Practice round: free, not an event, not recorded</div>
+      <div className="mt-1.5 flex flex-wrap gap-1.5">
+        <button className="chip chip-on" onClick={onHole} data-testid="hole-play-hole" title={`Play hole ${n} only, from its tee`}>Just hole {n}</button>
+        {count > 0 && <button className="chip chip-on" onClick={onAll} data-testid="hole-play-all" title={`Play all ${count} holes from the first`}>{allLabel(count)}</button>}
+        <button className="chip" onClick={onCancel} data-testid="hole-play-cancel">Cancel</button>
+      </div>
+    </div>
   );
 }

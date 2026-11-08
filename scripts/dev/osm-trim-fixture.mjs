@@ -1,6 +1,6 @@
 // T340 (#967) stage 2: trims a stage-1 course JSON (scripts/dev/osm-course.mjs) to a game fixture: only what the converter (src/game/golf/osm/convert.ts)
 // reads, only near the holes of the course to build, coordinates to 0.1 m, no names but the one the game shows. The fixture keeps the ODbL credit in its
-// header. Players' browsers never call Overpass or Nominatim: the game ships these files.
+// header. A shipped course makes no request: the game ships these files (the search for other courses, T358, calls the servers on the player's own submit).
 //   node scripts/dev/osm-trim-fixture.mjs <stage-1.json> --id rondebosch --name "Rondebosch Golf Course" --place "Cape Town, South Africa" \
 //        [--course "Augusta National" --rename "Augusta National=Magnolia National"] [--reach 120] [--simplify 0.3] [--out src/game/golf/osm/data/<id>.json]
 // Plain Node 22, no installs.

@@ -198,6 +198,8 @@ try {
     await cp.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
     const who = await cp.waitForSelector('[data-testid=who-card]', { timeout: 60000 }).then(() => true).catch(() => false);
     check(who, 'a fresh game shows the Who-are-you card');
+    await cp.click('[data-testid=who-course-open]'); // (T358: the course list is the picker beside the card)
+    await cp.waitForSelector('[data-testid=find-home]', { timeout: 20000 });
     check((await Promise.all(ALL.map(c => cp.$(`[data-testid=who-course-${c.id}]`)))).every(Boolean), `the card lists the ${ALL.length} real courses`);
     await shot(cp, 'card-1-who-are-you-your-course');
     const txt = await cp.$eval('[data-testid=who-course]', e => e.textContent);
@@ -235,6 +237,7 @@ try {
       await xp.goto(base, { waitUntil: 'domcontentloaded', timeout: 240000 });
       await xp.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
       await xp.waitForSelector('[data-testid=who-card]', { timeout: 60000 });
+      await xp.click('[data-testid=who-course-open]');
       await xp.click(`[data-testid=who-course-${c.id}]`);
       const started = await xp.waitForFunction(id => window.__game.osmGame()?.id === id && window.__game.ready, c.id, { timeout: 120000 }).then(() => true).catch(() => false);
       check(started, `${c.id}: a click on the card starts a new game on it`);

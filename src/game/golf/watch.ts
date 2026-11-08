@@ -13,8 +13,8 @@ export const SPEEDS: readonly number[] = [...new Set([WATCH_SPEED, 1 / 16, 1 / 4
 /** a speed's label in the speed bar ("1/16", "1", "20"); the × goes after it */
 export function speedLabel(k: number): string { return k > 0 && k < 1 ? `1/${Math.round(1 / k)}` : String(k); }
 
-/** why the game watches: following golfers, or the owner's own live round */
-export type WatchWhy = 'follow' | 'own';
+/** why the game watches: following golfers, the owner's own live round, or (T350) your own round by hand: the clock stays at the pace of play while you are on the course */
+export type WatchWhy = 'follow' | 'own' | 'round';
 
 /** the watch mode's speed: on while any reason holds, remembering the speed it switched from. set() returns the speed to set now, or null for
  *  no change: entering, WATCH_SPEED; leaving, the speed before, unless the player chose another speed while watching (his choice stands) */
