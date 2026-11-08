@@ -6,6 +6,9 @@
  *  - a course chunk's water reaches into the map's water where it meets it (joinCells: the bare cells of the map's water within JOIN_REACH of
  *    the course's water count as water while the chunk's outlines are made), its edges there are dropped (no wall, bank, feather or shore where
  *    the two meet: joinEdges), and the renderer keeps the course's water off the map's water there (CourseLayer.join), so the two read as one.
+ *  T344 (#982): the same for the rest of the map's ground water. The town's painted water (the classic Paint's water area, the Fountain pond in town)
+ *  is clipped off the map's water by the renderer and its border band runs only where the outline is clear of it (areaJoin); the pond's Stones edge
+ *  (golf/ponds.ts) treats the map's water as wet; and the seam's fade keeps out of water too narrow to take it (fadeBands: a creek's middle).
  *  Pure TypeScript, no DOM. Units: tiles of 2 m; course cells of 1 m (CELL_T). */
 import { CELL_T, SURF, type Grid } from './ext/course-grid';
 
@@ -19,6 +22,13 @@ export const JOIN_EDGE = 1.5;
 export const JOIN_INSET = 0.1;
 /** the seam's fade: the course's water drawn on into the map's water in bands JOIN_FADE_STEP tiles wide, at these alphas (the renderer) */
 export const JOIN_FADE: readonly number[] = [0.6, 0.35, 0.15], JOIN_FADE_STEP = 0.2;
+/** T344: the narrowest water (its full width, tiles) the seam's fade is drawn into: wider than the join spans from its two banks (JOIN_REACH cells
+ *  each: 2 tiles, 4 m). In a creek narrower than that, water laid on both banks joins across it in the outline, and the fade, drawn in from both
+ *  banks, tints the creek's middle with a faint pond (the creek's water shows through whole instead: no fade). The map makes creeks 2.1 to 5.6 m
+ *  wide: the narrower ones take none; the river and the widest creeks do, a middle at least 0.6 tile wide left clear of it */
+export const FADE_MIN_WIDTH = 2 * JOIN_REACH * CELL_T;
+/** T344: how near the map's water a painted water area's outline loses its border band, tiles (JOIN_EDGE cells: the bank stops where the water meets the river) */
+export const JOIN_AREA = JOIN_EDGE * CELL_T;
 /** the bucket side of the segment index, tiles */
 const BUCKET = 16;
 
@@ -98,10 +108,12 @@ export class MapWater {
     return false;
   }
   /** the primitives touching the tile box as shapes for a clip (each convex: a disc or a trapezoid), their edges moved out by grow (negative:
-   *  in): discs as [x, y, r], trapezoids as their four corners [x0, y0, ... x3, y3] */
-  shapes(x0: number, y0: number, x1: number, y1: number, grow = 0): number[][] {
+   *  in): discs as [x, y, r], trapezoids as their four corners [x0, y0, ... x3, y3]. minWidth (T344): only the pieces at least that wide (before
+   *  grow; a trapezoid by its narrower end) */
+  shapes(x0: number, y0: number, x1: number, y1: number, grow = 0, minWidth = 0): number[][] {
     const s = this.prims, out: number[][] = [];
     for (const o of this.prim(x0, y0, x1, y1)) {
+      if (minWidth > 0 && 2 * Math.min(s[o + 3]!, s[o + 6]!) < minWidth) continue;
       const ax = s[o + 1]!, ay = s[o + 2]!, ra = s[o + 3]! + grow, bx = s[o + 4]!, by = s[o + 5]!, rb = s[o + 6]! + grow;
       if (s[o] === 0) { if (ra > 0) out.push([ax, ay, ra]); continue; }
       const l = Math.hypot(bx - ax, by - ay), nx = -(by - ay) / l, ny = (bx - ax) / l;
@@ -172,25 +184,15 @@ export function withJoin<T>(g: Grid, j: Join | null, fn: () => T): T {
   try { return fn(); } finally { for (let k = 0; k < n; k++) { const c = j.ext[k]!; g.surf[c] = s0[k]!; g.hole[c] = h0[k]!; } }
 }
 
-/** the course's water edges (flat x, y polylines, tiles; a closed one repeats its first point) with every point within JOIN_EDGE cells of a bare
- *  cell of the map's water dropped (the seam where the two meet, and the last of a shore running into it): the rest as polylines of two or
- *  more points, a closed one that lost points opened where it did */
-export function joinEdges(g: Grid, edges: readonly (readonly number[])[], j: Join | null): number[][] {
-  if (!j) return edges.map(e => [...e]);
-  const R = JOIN_EDGE, R2 = R * R, r = Math.ceil(R);
-  const near = (x: number, y: number) => {
-    const u = (x - g.x0) / CELL_T, v = (y - g.y0) / CELL_T, ci = Math.floor(u), cj = Math.floor(v);
-    for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) {
-      const i = ci + di, jj = cj + dj; if (i < 0 || jj < 0 || i >= g.w || jj >= g.h || !j.bare.has(jj * g.w + i)) continue;
-      const du = u - (i + 0.5), dv = v - (jj + 0.5); if (du * du + dv * dv <= R2) return true;
-    }
-    return false;
-  };
+/** the polylines (flat x, y, tiles; a closed one repeats its first point) with every point for which near(x, y) holds dropped: the rest as polylines
+ *  of two or more points, a closed one that lost points opened where it did. Each segment is walked in steps of STEP (a long straight run keeps its
+ *  share up to the seam) */
+export function dropNear(edges: readonly (readonly number[])[], near: (x: number, y: number) => boolean): number[][] {
   const out: number[][] = [], STEP = 0.25;
   for (const e of edges) {
     const n = e.length >> 1; if (n < 2) continue;
     const closed = n > 2 && e[0] === e[2 * n - 2] && e[1] === e[2 * n - 1];
-    // each segment walked in steps of STEP (a long straight run keeps its share up to the seam): its points with their drop flags
+    // each segment walked in steps of STEP: its points with their drop flags
     const px: number[] = [], py: number[] = [], dp: boolean[] = [];
     let any = false;
     const put = (x: number, y: number) => { const d = near(x, y); px.push(x); py.push(y); dp.push(d); any ||= d; };
@@ -211,4 +213,63 @@ export function joinEdges(g: Grid, edges: readonly (readonly number[])[], j: Joi
     flush();
   }
   return out;
+}
+
+/** the course's water edges (flat x, y polylines, tiles; a closed one repeats its first point) with every point within JOIN_EDGE cells of a bare
+ *  cell of the map's water dropped (the seam where the two meet, and the last of a shore running into it): the rest as polylines of two or
+ *  more points, a closed one that lost points opened where it did */
+export function joinEdges(g: Grid, edges: readonly (readonly number[])[], j: Join | null): number[][] {
+  if (!j) return edges.map(e => [...e]);
+  const R = JOIN_EDGE, R2 = R * R, r = Math.ceil(R);
+  const near = (x: number, y: number) => {
+    const u = (x - g.x0) / CELL_T, v = (y - g.y0) / CELL_T, ci = Math.floor(u), cj = Math.floor(v);
+    for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) {
+      const i = ci + di, jj = cj + dj; if (i < 0 || jj < 0 || i >= g.w || jj >= g.h || !j.bare.has(jj * g.w + i)) continue;
+      const du = u - (i + 0.5), dv = v - (jj + 0.5); if (du * du + dv * dv <= R2) return true;
+    }
+    return false;
+  };
+  return dropNear(edges, near);
+}
+
+/** T344: one band of the seam's fade (the renderer): the course's or the area's water drawn at alpha into the map's water, within the union of the
+ *  pieces `within` (the map's water pulled in by JOIN_INSET) and outside the pieces `cut` (pulled in further, by this band's depth) */
+export interface FadeBand { alpha: number; within: number[][]; cut: number[][] }
+/** T344: the seam's fade over a tile box: a band for each of JOIN_FADE, each reaching JOIN_FADE_STEP deeper into the map's water than the last. The
+ *  fade is drawn only into water at least FADE_MIN_WIDTH wide (a narrower creek keeps its water whole: no tint of the pond across its middle);
+ *  none when no piece of the map's water in the box is that wide. The pieces are those of MapWater.shapes; keep, when given, leaves out the pieces it
+ *  refuses (the renderer: a river the course covers is hidden, no fade reaches into it) */
+export function fadeBands(water: MapWater, box: readonly number[], keep?: (q: readonly number[]) => boolean): FadeBand[] {
+  const some = (a: number[][]) => (keep ? a.filter(keep) : a);
+  const within = some(water.shapes(box[0]!, box[1]!, box[2]!, box[3]!, -JOIN_INSET, FADE_MIN_WIDTH));
+  if (!within.length) return [];
+  return JOIN_FADE.map((alpha, k) => ({ alpha, within, cut: some(water.shapes(box[0]!, box[1]!, box[2]!, box[3]!, -JOIN_INSET - (k + 1) * JOIN_FADE_STEP)) }));
+}
+
+/** T344: how a painted water area (the town's: the classic Paint's water, the Fountain pond in town) meets the map's water. box: the area's tile box
+ *  grown by JOIN_AREA (the renderer clips the area off the map's water and fades it in over this box); runs: its closed outline as polylines with
+ *  every point within JOIN_AREA of the map's water dropped (the border band is stroked along these only: no bank where the water meets the river's);
+ *  cut: whether any of it was dropped */
+export interface AreaJoin { box: [number, number, number, number]; runs: number[][]; cut: boolean }
+/** whether (x, y) lies inside the ring (flat x, y; even-odd) */
+function inRing(ring: ArrayLike<number>, x: number, y: number): boolean {
+  const n = ring.length >> 1; let c = false;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const yi = ring[2 * i + 1]!, yj = ring[2 * j + 1]!;
+    if ((yi > y) !== (yj > y) && x < ((ring[2 * j]! - ring[2 * i]!) * (y - yi)) / (yj - yi) + ring[2 * i]!) c = !c;
+  }
+  return c;
+}
+/** T344: the join of a painted water area's outline (flat x, y, tiles; as it is drawn) with the map's water, or null when they do not meet: no map
+ *  water within JOIN_AREA of the outline and none inside it */
+export function areaJoin(ring: ArrayLike<number>, water: MapWater | null | undefined): AreaJoin | null {
+  const n = ring.length >> 1; if (!water || water.empty || n < 3) return null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < n; i++) { const x = ring[2 * i]!, y = ring[2 * i + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (!water.near(x0, y0, x1, y1, JOIN_AREA)) return null;
+  const closed = Array.from(ring); closed.push(ring[0]!, ring[1]!);
+  const runs = dropNear([closed], (x, y) => water.at(x, y, JOIN_AREA)), cut = !(runs.length === 1 && runs[0]!.length === closed.length);
+  // (nothing of the outline near: the map's water may lie wholly inside it, a creek in a big pond)
+  if (!cut && !water.shapes(x0, y0, x1, y1).some(q => inRing(ring, q[0]!, q[1]!))) return null;
+  return { box: [x0 - JOIN_AREA, y0 - JOIN_AREA, x1 + JOIN_AREA, y1 + JOIN_AREA], runs, cut };
 }

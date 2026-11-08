@@ -188,8 +188,9 @@ test('T230 the renderer: the river, the course\'s water and painted water draw t
   // (2026-11-01: the creeks' water joins the field for its motion only, SITE.creek, never a look: no waterOver of it)
   assert.ok(!/waterOver\([^)]*creek/i.test(r), 'no look over the creeks: the streams (and the swamp\'s own) keep their look');
   assert.ok(step1.indexOf('this.swampField.alpha(') < riverLook, 'the swamp band is laid before, untouched');
-  assert.match(r, /if \(s === SURF\.water\) this\.waterOver\(ctx, SITE\.course, \(\) => ringsOfCode\(code\), ls\[0\]!\.l\.tex, lite\);/);
-  assert.match(r, /if \(waterTex\(p\.tex\)\) this\.waterOver\(g, SITE\.paint, \(\) => polyPath\(p\.pts\), p\.tex, lite\);/);
+  // (T344: each may carry a last argument, the cut that keeps its gloss off the map's water it joins)
+  assert.match(r, /if \(s === SURF\.water\) this\.waterOver\(ctx, SITE\.course, \(\) => ringsOfCode\(code\), ls\[0\]!\.l\.tex, lite(?:, [^;]*)?\);/);
+  assert.match(r, /if \(waterTex\(p\.tex\)\) this\.waterOver\(g, SITE\.paint, \(\) => polyPath\(p\.pts\), p\.tex, lite(?:, [^;]*)?\); \};/);
   // the glint shares the swamp's gloss mask (the same switch, falloff and knobs on the GPU)
   assert.match(r, /this\.glossMask \?\?= new OffscreenCanvas/);
 });
