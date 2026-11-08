@@ -333,7 +333,8 @@ export default function App() {
     switch (act?.k) {
       case 'road': game.pickType(act.id as Parameters<Game['pickType']>[0]); break;
       case 'junction': game.brush = act.id as typeof game.brush; break;
-      case 'surface': p.setBrush(act.id as Parameters<typeof p.setBrush>[0], 0); break;
+      // T359: Shape by hand › Fairway (and the rest) opens that surface's panel on the Course default, its look selected, its brush armed
+      case 'surface': p.openSurface(act.id as Parameters<typeof p.openSurface>[0]); break;
       case 'newHole': newHole(game); break;
       case 'club': if (!game.bizDefs.some(d => d.type === 'clubhouse')) game.placeClubhouse(true); break;
       case 'halfway': game.placeHalfway(true); break;

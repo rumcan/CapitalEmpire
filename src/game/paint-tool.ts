@@ -780,6 +780,18 @@ export class PaintTool {
   pickLook(kind: BrushKind) { this.brushKind = kind; this.loadLook(); this.host.emit(); }
   /** My looks' "Course default (new holes)" on or off: the card edits the default, or the owner in hand again */
   setLookDefault(on: boolean) { this.lookDefault = on; this.loadLook(); this.host.emit(); }
+  /** T359 (#1006; the owner, 2026-11-08: "going via the menu to shape by hand and clicking fairway should take you to editing the course default
+   *  and the look of fairway already selected. same for the other buttons"): Course › Holes › Shape by hand › <surface> arms that surface's
+   *  brush and opens its panel in focus (BrushControls SurfaceSwatches takes focusWanted once; its ‹ All surfaces back link rules it after) on
+   *  the Course default, its look loaded as the panel's style, so the main and border textures show the course default's */
+  focusWanted = false;
+  /** counts those openings, so a panel already on screen takes the request too */
+  focusRev = 0;
+  openSurface(kind: BrushKind) {
+    this.lookDefault = true; // (setBrush loads the look of whoever owns it now: the course default)
+    this.setBrush(kind, 0);
+    this.focusWanted = true; this.focusRev++; this.host.emit();
+  }
   /** gives owner o its own looks (a copy of the course default) when it has none, inside the open action (undo takes it back); a new hole
    *  starts from the default this way, on its first paint */
   seedLooks(o: string) {
