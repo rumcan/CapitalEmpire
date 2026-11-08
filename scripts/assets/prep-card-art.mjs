@@ -13,6 +13,7 @@ export const PICKS = {
   masher: 'masher',     // Power Mash: a button-masher's controller
   batteries: 'batteries', // Range Rat: a Walkman at the range
   token: 'token',       // the vending machine itself: the arcade cabinet
+  yoyo: 'yoyo',         // Trick Shot: a yo-yo (T337)
 };
 // 16:9, 320 px wide: a tile's picture at 2x and the card's detail at 1x
 const W = 320, H = 180;

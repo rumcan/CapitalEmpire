@@ -101,7 +101,7 @@ test('vending machine: a spin lays the reel (the prize at the stop tile), and th
   assert.ok(/disabled=""[^>]*data-testid="vending-spin"|data-testid="vending-spin"[^>]*disabled=""/.test(sp) && /The machine is choosing/.test(sp), 'Spin is off while it turns');
   // the prize is the player's the moment the pull is spent, but the tally and the odds wait for the reel: while it turns they do not count it
   const turning = machine({ ...addCard(c, flat.id).cards, opened: 1 }, spinning, { initialOdds: true });
-  assert.ok(/0 of \d+ cards · 0 opened/.test(turning), 'turning: the tally does not count the prize yet'); assert.ok(/3 of 3 cards you do not have/.test(turning.replace(/\s+/g, ' ')) || /\d of 3 cards you do not have/.test(turning), 'nor do the odds');
+  assert.ok(/0 of \d+ cards · 0 opened/.test(turning), 'turning: the tally does not count the prize yet'); const epics = CARDS.filter(x => x.rarity === 3).length; assert.ok(new RegExp(`${epics} of ${epics} cards you do not have`).test(turning), 'nor do the odds');
   const landed = machine(addCard(c, flat.id).cards, won(cardPrize(flat))), tiles = landed.split('class="vm-tile');
   assert.ok(landed.includes('data-testid="vending-winner-tile"') && tiles[REEL_STOP + 1]!.includes('vm-winner'), 'the winning tile is the one at the stop');
   assert.ok(/You won: Lie-Angle Balanced Flatstick/.test(landed) && /data-testid="vending-result-name"[^>]*>Lie-Angle Balanced Flatstick/.test(landed) && /New epic card/.test(landed) && /Inspired by:/.test(landed) && /data-testid="vending-equip"/.test(landed), 'the card’s face and Equip');

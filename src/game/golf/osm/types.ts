@@ -1,6 +1,7 @@
 // Types of the map-data course (T340, #967): the stage-1 JSON the converter reads (scripts/dev/osm-course.mjs: metres, x east and y north of the
 // course centre) and the course spec it makes (tiles of 2 m, x east and y SOUTH of the land's north-west corner: the game's frame). Pure types.
 import type { TeeKind } from '../types';
+import type { OsmHeight } from './terrarium';
 
 /** the credit every map-data course carries (the data is OpenStreetMap's, ODbL 1.0) */
 export const OSM_CREDIT = '© OpenStreetMap contributors';
@@ -30,6 +31,9 @@ export interface OsmCourseJson {
    *  'waterway'); 'cartpath', 'path' and any other kind the stage-1 script writes (T354's estate streets: 'street', lines with their `highway` tag) ride along unread until
    *  its section in convert.ts reads them: a new kind needs no change here or in the trim script's reading */
   features: { [kind: string]: JFeature[] | undefined };
+  /** (T357, #999) the real ground height under the course: a smooth grid on a metres lattice in this frame, packed (terrarium.ts HeightPack) with its source and
+   *  credit. A fixture carries it from scripts/dev/osm-trim-fixture.mjs; a download's is fetched by dem.ts and kept beside the answer. Absent: a flat course */
+  height?: OsmHeight;
 }
 
 /** a point in tiles of the land's frame */

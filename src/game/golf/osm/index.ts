@@ -2,6 +2,7 @@
 // scripts/dev/osm-trim-fixture.mjs and checked in under data/ with the ODbL credit in their header. A shipped course makes no request: it is a JSON chunk
 // loaded when it is picked (the search for other courses, T358, is find.ts, and calls the servers only on the player's own submit). Real brand names stay out of the game: a famous club is shown under a made-up name. Pure of DOM.
 import { osmCourseToSpec } from './convert';
+import { landOfHeight, type OsmLand } from './land';
 import { osmFits, osmScaleFor } from './start';
 import { OSM_CREDIT, type OsmCourseJson, type OsmCourseSpec } from './types';
 
@@ -15,6 +16,7 @@ export { osmCourseToSpec } from './convert';
 export interface OsmCourseInfo {
   id: string; name: string; place: string; holes: number; par: number; mappedPar: number;
   /** the course is scaled to fit the 2 km map (below 1; absent: true size) */ scale?: number;
+  /** T357: the source of its real ground height as the card words it ("SRTM, 30 m"; absent: none; checked against the fixture by tests/golf-osm-land.test.ts) */ ground?: string;
   load: () => Promise<OsmCourseJson>;
 }
 
@@ -22,9 +24,9 @@ export interface OsmCourseInfo {
 export const OSM_NOTE = 'from map data';
 
 export const OSM_COURSES: readonly OsmCourseInfo[] = [
-  { id: 'rondebosch', name: 'Rondebosch Golf Course', place: 'Cape Town, South Africa', holes: 18, par: 72, mappedPar: 72, load: async () => (await import('./data/rondebosch.json')).default as unknown as OsmCourseJson },
-  { id: 'magnolia-national', name: 'Magnolia National', place: 'Georgia, United States', holes: 18, par: 75, mappedPar: 72, load: async () => (await import('./data/magnolia-national.json')).default as unknown as OsmCourseJson },
-  { id: 'woodhill', name: 'Woodhill Country Club', place: 'Pretoria, South Africa', holes: 18, par: 72, mappedPar: 73, scale: 0.9, load: async () => (await import('./data/woodhill.json')).default as unknown as OsmCourseJson },
+  { id: 'rondebosch', name: 'Rondebosch Golf Course', place: 'Cape Town, South Africa', holes: 18, par: 72, mappedPar: 72, ground: 'SRTM, 30 m', load: async () => (await import('./data/rondebosch.json')).default as unknown as OsmCourseJson },
+  { id: 'magnolia-national', name: 'Magnolia National', place: 'Georgia, United States', holes: 18, par: 75, mappedPar: 72, ground: 'USGS 3DEP, 10 m', load: async () => (await import('./data/magnolia-national.json')).default as unknown as OsmCourseJson },
+  { id: 'woodhill', name: 'Woodhill Country Club', place: 'Pretoria, South Africa', holes: 18, par: 72, mappedPar: 73, scale: 0.9, ground: 'SRTM, 30 m', load: async () => (await import('./data/woodhill.json')).default as unknown as OsmCourseJson },
 ];
 
 /** the shipped course with this id, or undefined */
@@ -52,6 +54,18 @@ export function loadOsmSpec(id: string): Promise<OsmCourseSpec | null> {
   if (!p) { p = info.load().then(j => specOf(j, { id: info.id, name: info.name, place: info.place })); specs.set(id, p); }
   return p;
 }
+
+const lands = new Map<string, Promise<OsmLand | null>>();
+/** T357 (#999): the real ground height of a shipped course (its fixture's `height`, unpacked once and kept); null for an id the game does not ship, a fixture with
+ *  no height, or a height that does not unpack (the course is then built flat: never a failed start) */
+export function loadOsmLand(id: string): Promise<OsmLand | null> {
+  const info = osmCourseInfo(id);
+  if (!info) return Promise.resolve(null);
+  let p = lands.get(id);
+  if (!p) { p = info.load().then(j => (j.height ? landOfHeight(j.height) : null)).catch(() => null); lands.set(id, p); }
+  return p;
+}
+export type { OsmLand } from './land';
 
 /** the credit line for a course card or the credits: "© OpenStreetMap contributors" */
 export const osmCredit = (): string => OSM_CREDIT;
