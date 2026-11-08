@@ -21,9 +21,9 @@ HEADINGS = ['SE', 'S', 'SW', 'W', 'NW', 'N', 'NE', 'E']
 # what the animal is (image 1): a short look, a pronoun set, its kind
 ANIMALS = {
     'cow-holstein': dict(title='black-and-white cow', kind='cow', pro=('she', 'her', 'She'),
-                         look='a black-and-white Holstein dairy cow: irregular black patches on a white coat, a mostly black head with a pale face, white belly and legs, a pink nose, small pale horns, dark hooves, a thin tail with a pale tuft'),
+                         look='a black-and-white Holstein dairy cow: irregular black patches on a white coat, a mostly black head with a pale face, white belly and legs, a pink nose, small pale horns, a pink udder, dark hooves, a thin tail with a pale tuft'),
     'cow-brown': dict(title='brown cow', kind='cow', pro=('she', 'her', 'She'),
-                      look='a Jersey-type brown dairy cow: a warm golden-brown coat, a little darker on the head, neck and shoulders and paler tan on the belly and legs, a dark nose, small pale curved horns, dark hooves, a thin tail with a dark tuft'),
+                      look='a Jersey-type brown dairy cow: a warm golden-brown coat, a little darker on the head, neck and shoulders and paler tan on the belly and legs, a dark nose, small pale curved horns, a pink udder, dark hooves, a thin tail with a dark tuft'),
     'horse-bay': dict(title='bay horse', kind='horse', pro=('it', 'its', 'It'),
                       look='a bay horse: a rich reddish-brown body with a black mane, a black tail and black lower legs, dark hooves, small ears'),
     'horse-chestnut': dict(title='chestnut horse', kind='horse', pro=('it', 'its', 'It'),

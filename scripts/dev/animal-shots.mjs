@@ -35,7 +35,7 @@ try {
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
   page.on('console', m => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 300)); });
-  await page.goto(`${base}?start=${start}&stamp=0${seed ? '&seed=' + seed : ''}`);
+  await page.goto(`${base}?start=${start}&stamp=0${seed ? '&seed=' + seed : ''}`, { timeout: 240000 }); // (a cold dev server takes a while to compile)
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 180000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
   await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setShowGrid(false); window.__night = 0; g.nightAmount = () => window.__night; });
