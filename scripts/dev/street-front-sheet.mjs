@@ -56,17 +56,17 @@ try {
     let main = null, area = 0; for (const p of props) { const a = (p.x1 - p.x0) * (p.y1 - p.y0); if (a > area) { area = a; main = p; } }
     const id = main ? LIBRARY[main.item].id : null;
     // where the drawn picture lies on the ring [NE, N, SE, E, SW, S, NW, W] (the road's order): an object8 picture by its ring, an old screen-axis picture (N E S W) on the odd places, an old corner on the even ones
-    let ringPos = null, key = null, mode = null;
+    let ringPos = null, key = null, mode = null, subject = id ? sizeKey(id) : null;
     if (id) {
       const e = id.startsWith('object8:') && eight ? eight(id) : null, ax = pa.axisViews(id), fv = pa.fourViews(id);
-      if (e && e.mode === 'eight') { ringPos = e.at; key = e.keys[e.at]; mode = 'eight'; }
+      if (e && e.mode === 'eight') { ringPos = e.at; key = e.keys[e.at]; mode = 'eight'; subject = e.subject ?? subject; } // (an eight-view picture's subject is its set's, not its own id)
       else if (ax) { ringPos = 2 * ax.at + 1; key = 'axis' + 'NESW'[ax.at]; mode = 'axis'; }
       else if (fv) { ringPos = 2 * fv.at; key = ['NE', 'SE', 'SW', 'NW'][fv.at]; mode = 'four'; }
     }
     const diff = ringPos === null ? null : (((ringPos - o.road) % 8) + 8) % 8;
     const c = { x: geom.o.x + geom.u.x * o.w / 2 + geom.n.x * o.d / 2, y: geom.o.y + geom.u.y * o.w / 2 + geom.n.y * o.d / 2 };
     g.camEase = null; g.lookAt(c.x, c.y, o.zoom);
-    return { id, subject: id ? sizeKey(id) : null, mode, key, ringPos, diff, geom, box: main ? [main.x0, main.y0, main.x1, main.y1] : null };
+    return { id, subject, mode, key, ringPos, diff, geom, box: main ? [main.x0, main.y0, main.x1, main.y1] : null };
   }, o);
   /** the screen points of world tile points (the camera as it is now) */
   const project = pts => page.evaluate(async pts => {

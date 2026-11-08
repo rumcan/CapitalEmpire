@@ -9,6 +9,7 @@ import { roadOf } from '../src/game/lots/preset-frame';
 import { CAR_SCALE, carModel, carOwnerScale } from '../src/game/ext/car-art';
 import { LIBRARY } from '../src/game/library';
 import { roleOf } from '../src/game/lots/groups';
+import { SHOP_PALETTE } from '../src/game/lots/variety';
 import { isBuilding } from '../src/game/mirror';
 import type { Road } from '../src/game/lots/presets';
 
@@ -83,4 +84,21 @@ test('a car on a lot is drawn at the road cars\' size (T308)', () => {
   }
   assert.ok(cars > 0, 'the presets have parked cars of a road model');
   console.log(`T308 cars: ${cars}`);
+});
+
+test('the shops of the town face their road on the four map-axis roads, at the lot map sizes (T375): a preset that stood a shop sideways turns it', () => {
+  // (T375, the owner: the Video Vault, the fishing and tackle shop and the pharmacy face the wrong way: 238 of the 560 shop placements stayed at a preset's old view
+  // because the turned footprint passed the lot's edge or the front line; setback.ts turnedSpot slides it inside, over the props it covers)
+  let n = 0, kept = 0; const left: string[] = [];
+  for (const biz of SHOP_PALETTE) for (const road of [0, 2, 4, 6]) for (const [w, d] of [[10, 15], [12.5, 16], [15, 18], [16.5, 19], [20, 20]] as const) for (const seed of [23, 61]) {
+    const lp = lotPreset(lotOn(road, w, d), { use: LU.COM, level: LV.BUILT, decline: 0, seed, biz });
+    if (!lp) continue;
+    for (const q of lp.fit.props) {
+      if (!streetBuilding(q.id) || !faces(q.id, road)) continue;
+      n++; if (q.view !== 0) { kept++; left.push(`${lp.preset.id} ${biz} road ${road} ${w}x${d}`); }
+    }
+  }
+  console.log(`T375 shops: ${n} placements on the four axis roads, ${kept} kept at the preset's view (${(100 * kept / n).toFixed(1)}%)`);
+  assert.ok(n > 300, `${n} placements`);
+  assert.ok(kept <= 0.03 * n, `${kept} of ${n} shops still face the wrong way: ${left.slice(0, 4).join('; ')}`);
 });

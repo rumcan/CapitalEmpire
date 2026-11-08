@@ -23,8 +23,8 @@ import {
 import { WHOLE_FRONT, approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, faces, footprintOf, isVehicle, ownerScaleOf, roadView, turned } from './preset-art';
 import { fixedArt } from './art-fix';
-import { EPS, OVERLAP, REACH, share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear); T308: the facing's tolerance; T376: the setback's reach
-import { basePad } from './base-pad';
+import { share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear)
+import { setBack, turnFirst, turnedSpot } from './setback'; // T375: the turned building's place; T376: the setback behind the pavement
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
@@ -396,55 +396,24 @@ const atRoadSize = (fit: Fitted): Fitted => { const props = fit.props.map(q => i
 /** a building that faces its street when it has the view for it: a house, building or venue, a garage or a shed (its views are checked by faces) */
 const facingBuilding = (id: string): boolean => { const it = BY.get(id); return !!it && isBuilding(it) && (it.kind === 'house' || it.kind === 'building' || it.kind === 'venue' || roleOf(id) === 'garage' || roleOf(id) === 'shed'); };
 /** T308 (#893): a fitted preset's buildings face their street: a building whose picture faces the lot's road (faces, autolot's rule) is drawn in view 0,
- *  the view whose front the street meets (drawnView turns every view by the lot's facing), its centre kept. A building whose turned footprint overlaps
- *  another prop beyond OVERLAP, or leaves the lot, keeps the preset's view and is counted (Fitted.facing: the lot lab's "kept facing"). Farms are untouched */
+ *  the view whose front the street meets (drawnView turns every view by the lot's facing), its centre kept. T375: a turned footprint is deeper or wider than it
+ *  was, so its centre slides inside the lot as little as it takes, over the props it covers, which it is put before so done() keeps it (setback.ts turnedSpot,
+ *  turnFirst). A building that cannot (another building under it; the lot too small) keeps the preset's view and is counted (Fitted.facing: the lot lab's
+ *  "kept facing"). Farms are untouched */
 function faceStreet(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): Fitted {
   // (T298: a shopping centre's wings face across its car park, not the street)
   if (preset.use === 'farm' || !fit.props.length || preset.id === 'auto:centre') return fit;
   const road = roadOf(lot.n), half = frameHalf(f), lo = preset.whole ? -WHOLE_FRONT : 0;
   const props = fit.props.slice(), boxes = fit.props.map(q => boxAt(q, half(q)));
-  let kept = 0;
+  let kept = 0; const first: number[] = [];
   props.forEach((q, k) => {
     if (q.view === 0 || !facingBuilding(q.id) || !faces(q.id, road)) return;
-    const nq: PresetProp = { ...q, view: 0 }, b = boxAt(nq, half(nq));
-    const out = b[0] < -EPS || b[1] < lo - EPS || b[2] > lot.w + EPS || b[3] > lot.d + EPS;
-    if (!out && boxes.every((o, j) => j === k || share(b, o) <= OVERLAP)) { props[k] = nq; boxes[k] = b; }
+    const t = turnedSpot(q, half({ ...q, view: 0 }), lot, lo, props, boxes, k);
+    if (t) { props[k] = t.q; boxes[k] = boxAt(t.q, half(t.q)); if (t.first) first.push(k); }
     else kept++;
   });
-  return props.some((p, k) => p !== fit.props[k]) || kept ? { ...fit, props, facing: kept } : fit;
-}
-// ---------- T376 (#1032): the commercial buildings stand behind the pavement
-/** whether the commercial buildings are set back behind the lot's front line (on; setLotSetback(false) draws the lots as before T376: the lot lab's coverage, and the
- *  tests that show what the setback fixes) */
-let SETBACK = true;
-export function setLotSetback(on: boolean): void { SETBACK = on; }
-export const lotSetback = (): boolean => SETBACK;
-/** T376 (#1032, the owner: "the buildings that are going onto the pavement ... the commercial buildings"): a shop's or venue's buildings stand with their
- *  base behind the lot's front line, the pavement lying beyond it: the footprint (a preset may leave it REACH over the line) and the ground contact of its
- *  picture (base-pad.ts basePad: steps, door mats, planters, kerbs) both at b >= 0. A building too far forward moves straight back by what lacks, as far as
- *  the lot's back (REACH past it, as inside() allows) and the buildings it would newly overlap beyond OVERLAP let it (any other prop it comes to cover is left
- *  out by done(), as an overlap always is: a shopping cart or a crate behind a shop's front is lost, the shop is not). Awnings
- *  and signs above head height cross the line as they do: only ground contact counts. The other uses are left as they are */
-function setBack(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): Fitted {
-  if (!SETBACK || (preset.use !== 'com' && preset.use !== 'tour') || !fit.props.length || preset.id === 'auto:centre') return fit;
-  const road = roadOf(lot.n), half = frameHalf(f), props = fit.props.slice(), boxes = fit.props.map(q => boxAt(q, half(q)));
-  let moved = 0;
-  props.forEach((q, k) => {
-    if (!isBuildingId(q.id)) return;
-    const h = half(q), pad = basePad(drawnView(q.id, f, q.view).id, road, q.scale * ownerScaleOf(q.id));
-    // how far the base reaches in front of the line (tiles), and how far the lot's back lets the building move
-    const need = pad + h.hb - q.y, room = lot.d + REACH - (q.y + h.hb) - 3 * EPS;
-    if (need <= EPS / 4) return;
-    let dy = Math.min(need, room);
-    for (; dy > EPS / 4; dy -= 0.05) {
-      const b = boxAt({ x: q.x, y: q.y + dy }, h);
-      // (another building must stay: two cannot share ground. Any other prop the building comes to overlap beyond OVERLAP is left out by done(), as every overlap is)
-      if (boxes.every((o, j) => j === k || !isBuildingId(props[j]!.id) || share(b, o) <= OVERLAP || share(boxes[k]!, o) > OVERLAP)) break;
-    }
-    if (dy <= EPS / 4) return;
-    props[k] = { ...q, y: q.y + dy }; boxes[k] = boxAt(props[k]!, h); moved++;
-  });
-  return moved ? { ...fit, props } : fit;
+  const turned = props.some((p, k) => p !== fit.props[k]) || kept ? { ...fit, props, facing: kept } : fit;
+  return first.length ? turnFirst(turned, first) : turned;
 }
 /** the frame a preset is drawn in on a lot: frameOf, a lab preset of a diagonal road turned by its quarter (quarterOfRoad) */
 const presetFrame = (lot: LotGeom, preset: LotPreset): PresetFrame => { const f = frameOf(lot); return preset.road !== undefined && preset.road % 2 ? { ...f, q: quarterOfRoad(preset.road) } : f; };
