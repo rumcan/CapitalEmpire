@@ -2,7 +2,7 @@
 // route that would build on top of a road, crowd a junction or make a sharp join. Tiles are 2 m; distances below are in tiles.
 import { MAP, clamp } from './iso';
 import { CLASS, isCourseClass, type Leg, type Node, type PieceSel, type Pt, type RoadClass, type RoadNetwork, type Seg } from './network';
-import { COURSE_LAND_MSG, legsOnLand } from './golf/parcels';
+import { COURSE_LAND_MSG, legsOnLand, streetOnCourseOk } from './golf/parcels';
 import type { Rect } from './golf/mode';
 
 /** where a road point lands: a node (kind 'node', or 'end' for a dead end), a point on a road ('road'), or the tile grid */
@@ -102,12 +102,13 @@ function onRoad(net: RoadNetwork, q: Pt, skip?: Set<Seg>): boolean {
  *  meet at its start, so there only the join's angle counts), and a new junction must be 2 tiles from every other route point.
  *  skip (Replace on): the segs the route bulldozes, which are judged as gone (no rule sees them). land (T124): the player's course land, where
  *  only the course's cart paths and drives are built: a town road's corridor may not reach into it (it may end on the land's edge, where a
- *  course drive or path meets it; the roads already on the land stay, but no town road is built further onto it) */
+ *  course drive or path meets it; the roads already on the land stay, but no town road is built further onto it). T355: but for a street, a
+ *  class streetOnCourseOk (the Small ones): the land takes it, bar a hole's playing surfaces, which the engine judges (golf/parcels.ts legsOnPlay) */
 export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: Snap | null, cls: RoadClass = CLASS.street, skip?: Set<Seg>, land?: readonly Rect[]): string {
   const hw = cls.h + cls.walk;
   // (a leg under 2 tiles, the split rule's least gap for a road with lanes, is refused below with that rule's reason: the jog of a few tenths
   // where a route from a point on a road meets a node, at the land's edge, was said to be on the land)
-  if (land?.length && !isCourseClass(cls.id) && legsOnLand(land, legs.filter(l => dist(l.a, l.b) >= 2), hw)) return COURSE_LAND_MSG;
+  if (land?.length && !isCourseClass(cls.id) && !streetOnCourseOk(cls) && legsOnLand(land, legs.filter(l => dist(l.a, l.b) >= 2), hw)) return COURSE_LAND_MSG;
   /** the node a point sits on: the route's snapped node if it is one of the ends, else the node at that spot */
   const nodeOf = (q: Pt): Node | null => {
     if (from?.node && dist(q, from.p) < EPS) return from.node;
