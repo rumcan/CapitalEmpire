@@ -1,7 +1,8 @@
 // T338 (#965) and T344 (#982): the owner's case, water laid across and beside the map's river or creek: before the fix the painted pond drew its
 // own bank and surface on top of the map's water; after it the two join (one water, one shoreline, no bank where they meet).
 //   node scripts/dev/river-join-shots.mjs --base http://localhost:5186/ --out E:/ClaudeTemp/T344 --tag before [--what course|town|stones|fountain|narrow]
-//     [--kind creek|river] [--seed 7] [--shift -8] [--zooms 0.3,0.12]
+//     [--kind creek|river] [--seed 7] [--shift -8] [--zooms 0.3,0.12] [--wait 6000: ms to let the town's trees be planted again before a shot, so
+//     two runs show the same trees] [--dump 1: stones and fountain, an ASCII map of the pond, the map's water and the pieces]
 // --what course (T338, the default): course water (a strip across the water and a pond beside it, by the Fountain pond's course digs).
 // --what town (T344): the town's painted water: the classic Paint's water area (a strip across and a long pond beside it, with the Water brush's
 //   dirt border) and the Fountain pond in town (one over the water's edge, one a tile from it).
@@ -20,7 +21,7 @@ import { join } from 'node:path';
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const base = opt('base', 'http://localhost:5186/'), out = opt('out', 'E:/ClaudeTemp/T338'), tag = opt('tag', 'before'), seed = opt('seed', '7'), what = opt('what', 'course');
 const kind = opt('kind', what === 'narrow' ? 'creek' : 'any');
-const zooms = opt('zooms', '0.3,0.12').split(',').map(Number), shift = +opt('shift', '0');
+const zooms = opt('zooms', '0.3,0.12').split(',').map(Number), shift = +opt('shift', '0'), wait = +opt('wait', '0');
 const W = 1280, H = 800;
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
@@ -126,12 +127,29 @@ try {
       // on both banks of the creek: discs a tile and a half clear of the water, so that the join reaches across it
       for (let q = b.i - 3; q <= Math.min(P.length - 2, b.i + 3); q++) { const n = norm(q); for (const sg of [1, -1]) dig(n.x + sg * n.mx * (n.hw + 1.4), n.y + sg * n.my * (n.hw + 1.4), 1.5); }
     }
-    return { cells, areas, half, view };
+    return { cells, areas, half, view, marks: (g.golf?.ponds ?? []).slice() };
   }, [b, what]);
   console.log('made', JSON.stringify(made));
+  if (opt('dump', '') && made.marks?.length) {
+    // the pond at each mark as the game lays its edge (golf/ponds.ts), the map's water round it and the pieces: P pond, o the map's water, . land, # a piece
+    await page.waitForTimeout(1500);
+    const dump = await page.evaluate(async () => {
+      const g = window.__game, po = await import('/src/game/golf/ponds.ts'), out = [];
+      for (let k = 0; k + 1 < (g.golf.ponds ?? []).length; k += 2) {
+        const mx = g.golf.ponds[k], my = g.golf.ponds[k + 1], pond = po.pondAt(mx, my, g.pondWet, undefined, g.pondOther);
+        if (!pond) { out.push(`mark ${mx},${my}: no pond`); continue; }
+        const pieces = po.shorePieces(pond), C = po.CELL, rows = [];
+        const x0 = pond.x0 - 6, y0 = pond.y0 - 6, w = pond.w + 12, h = pond.h + 12;
+        for (let j = 0; j < h; j++) { let r = ''; for (let i = 0; i < w; i++) { const cx = x0 + i, cy = y0 + j; const hit = pieces.some(q => Math.floor(q.x / C) === cx && Math.floor(q.y / C) === cy); r += hit ? '#' : po.inPond(pond, cx, cy) ? 'P' : g.pondOther(cx, cy) ? 'o' : g.pondWet(cx, cy) ? 'w' : '.'; } rows.push(r); }
+        out.push(`mark ${mx},${my}: ${pond.cells} cells, ${pieces.length} pieces, ${po.shoreRuns(pond).length} shore runs, box cells ${x0},${y0} ${w}x${h}` + String.fromCharCode(10) + rows.join(String.fromCharCode(10)));
+      }
+      return out;
+    });
+    for (const d of dump) console.log(d);
+  }
   for (const z of zooms) {
     await page.evaluate(([b, z, what, view]) => { const sh = what === 'narrow' ? 0 : -4; window.__game.camEase = null; window.__game.lookAt(view ? view.x : b.x + b.ux * sh, view ? view.y : b.y + b.uy * sh, z); }, [b, z, what, made.view]);
-    await settle(page, 1800);
+    await settle(page, 1800 + wait);
     await shot(page, `map-water-${what}-${b.kind}-${Math.round(z * 100)}pct-painted`);
   }
   await ctx.close();
