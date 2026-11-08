@@ -209,8 +209,94 @@ course after the fitted overview decodes about 90 tile pictures (the near ground
 
 ## Left for later
 Cart paths and `golf=path` lines (the Course's paths are the road tool's), trees from the data (`natural=wood`; today the game's own Frame with trees, `?frame=1` in dev),
-heights from a public DEM (T026), cropping a course to chosen holes instead of scaling it, cutting the housing out of Woodhill's estate boundary, the Old Course's double greens (one green, two
+(heights from a public DEM: done in T357, below) cropping a course to chosen holes instead of scaling it, cutting the housing out of Woodhill's estate boundary, the Old Course's double greens (one green, two
 holes), the Par 3 Course. (The course picker that takes a name, and Wingate Park's holes worked out from its fairways, came back with T358: the next section.)
+
+# Real ground height (T357, #999): the land under a map-data course
+
+The owner, 2026-11-08: "see if theres a way to add the height map to the real world course imports." A real course has 20 to 90 m of relief (Woodhill 91 m, Magnolia National 57 m,
+Rondebosch 27 m); the game's own course height (`ext/course-height`: a 4 m grid held to +-3 m) is the player's shaping layer and cannot hold that. A map-data game now has a second,
+smooth layer under it, the **land height** (`golf/osm/land.ts`), on the same 4 m lattice, and everything that reads the ground reads **land + course height**.
+
+## Where the heights come from at play time (the decision)
+| | where | how big | when it is read |
+| --- | --- | --- | --- |
+| a shipped course (Rondebosch, Magnolia National, Woodhill) | the fixture's `height` (a packed grid on the stage-1 metres frame, with its source and credit) | 19, 52 and 27 kB | when the course is picked: no request |
+| a downloaded course (T358's search) | AWS Terrain Tiles, fetched by the player's browser when Build this course is pressed with **Real ground height** ticked (`dem.ts`) | 4 to 16 tiles of about 90 kB, once | the tiles are kept in the library; nothing is asked twice |
+| a game on either | the save (`golf.land`): the laid land, whole | about 75 kB (2 cm units, deflated) | at load; no fixture, library or network |
+
+**The save keeps the land, it does not refetch it.** A refetch at load would need the library (another browser profile has none), the network, and the same smoothing as the day the
+game was made; the land of a game under way must not change under the player's shaping. The cost is about 75 kB of base64 in the save (the save is already gzip JSON; the land is
+already deflated), written from a copy packed once when the course is laid (`landPack`), never repacked. A save from before T357, and a course with no elevation data, has no `golf.land`:
+flat ground, exactly as before. The library keeps the raw tiles (like the raw Overpass answer: a better smoothing later improves old downloads), not the grid.
+
+## The data
+- **Source:** Tilezen's "terrarium" PNGs on AWS Open Data, `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png`: free, no key, public. Height in metres is R*256 + G + B/256 - 32768.
+  Zoom 15, about 4 m a pixel at golf's latitudes, but the data is as good as the country's source: SRTM (30 m radar, with a faint diagonal striping and the treetops and roofs in it) in South
+  Africa, USGS 3DEP (10 m) in the United States, lidar (2 m) in England.
+- **CORS, checked 2026-11-08** (`curl` with an Origin header on a real tile): a GET and a preflight both answer `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Methods: GET`, and
+  `Access-Control-Expose-Headers: x-amz-meta-x-imagery-sources`, so the browser reads the tile **and what it is made from** (`srtm/S26E028.tif` under Woodhill, `ned13/imgn34w083_13.tif`
+  under Augusta). A plain GET with no custom header sends no preflight (a custom header would not be allowed: `Access-Control-Allow-Headers` is not given). The source decides the smoothing and the credit.
+- **Smoothing:** a Gaussian, **sigma 25 m for SRTM** (about 60 m across at half height), 8 m for 3DEP, 5 m for lidar (`terrarium.ts` SOURCES). Measured on Woodhill: the ripple the radar leaves
+  (wavelength about 60 m) is cut to 3% of its height, an 800 m landform keeps 98% of its own; the root-mean-square slope falls from 10.5% unsmoothed to 8.6% at 15 m and 7.5% at 25 m. At 15 m
+  the previews still showed the diagonal grain; at 25 m it is gone and the landforms (the NE hill, the stream valley through holes 9, 13 and 18) stay. The lead's sketch said "about 30 m".
+- **The fixture lattice:** a smoothed grid has nothing under about 2 sigma, so it is kept at a **16 m lattice for SRTM and 8 m for 3DEP** (`packStepOf`), not 4 m, and read through a
+  Catmull-Rom cubic (continuous slope: no facets in the light; a plane comes back exact). 16-bit units of 1 cm from a base, each sample as its difference from the planar prediction
+  (left + up - up-left), zigzagged into a low-byte plane and a high-byte plane, raw-deflated, base64: Woodhill 27 kB at 16 m (80 kB at 4 m), Magnolia 52 kB at 8 m (120 kB at 4 m).
+- **The window:** the land, a 400 m skirt round it, and the smoothing's reach: the holes' box and 440 m on every side in a fixture; the spec's land and skirt in a download.
+
+## How the land is laid (`layLand`)
+1. The ground is read at the centre of every course-height sample (4 m) through the spec's frame (`originM`, `scale`: a tile of the spec is at `((originM[0] + 2x) / scale, (originM[1] - 2y) / scale)` metres of the stage-1 frame).
+2. **Relative to its own mean:** the samples under the land average 0, so the plain stands at the course's average level and the baseline is the same wherever the course is put.
+   The elevation 0 stands for is kept (`base`; Woodhill 1459 m).
+3. **In true proportion:** a course scaled down to fit the map (Woodhill, 90%) has its heights scaled by the same factor, so a slope in m per m is the real hill's (the slope the ball reads).
+4. **A skirt of SKIRT_T = 200 tiles (400 m)** beyond the land: the real ground goes on and is multiplied by a smoothstep that is 1 at the land's edge with no slope, so the slope is continuous
+   across the edge (tested: within 3% where the hill is 14% steep), there is no cliff and no line in the light where the land ends, and it is exactly 0 at 400 m. Where the land
+   is within 400 m of the map's edge (Woodhill is 24 tiles from it) the skirt is clipped by the map.
+5. **Level features:** a green (a pad of 3 tiles past its edge, then 5 tiles of feather), a tee (2 and 4) and a pond (2 and 4) take the mean of the ground under their pad, so the 30 m data's
+   noise is never on a green and a pond is never tilted; the feather blends the bank into the slope round it. Water first, then tees, then greens (a green beside water stays level).
+6. **The greens' own tilt (`designGreens`):** every green a hole plays to gets the game's own gentle tilt in the **course height** layer (the player's shaping layer, so the Height tool can
+   change it): a plane through its middle, 1 to 2% (seeded by the course and the hole), rising away from the approach (the last aim point, else the tee): front low, back high, as the hole
+   shaping lays a built hole's green (`ext/hole-ground` HOLE_GROUND.green). A green no hole plays to has none; a double green is tilted for its first hole. The break grid (T319) and the putts read it.
+   A course with no elevation data still gets its greens' tilt.
+7. `?land=0` (dev, and the bench's `--land 0`) leaves the land and the tilt out: the flat plain as before T357.
+
+For T356 (placing a course into a running game): `layLand(spec, land, at, { frame })` returns a patch (`LandPatch`) of the lattice, with the skirt fading it into the ground round it,
+that `addLandPatch` adds into the field (a second course's skirt may overlap the first's and the two add). A turned spec passes `frame`: the map from a tile of its (turned) frame to the
+stage-1 metres (the inverse of `rotateSpec`); `landWindow(spec)` is the metres box a download must cover (a turned land needs its bounding box). `designGreens(spec, at, field)` takes the same `at`.
+
+## What reads it, and what does not
+| reads land + course height | reads the course height alone |
+| --- | --- |
+| **the hillshade**: `GroundCache.courseHeight` sends the workers the sum (`groundRect`); their `courseH` is the ground's, so the slope light (T126: the sun at the upper right, shadows at 145 degrees) bakes into every chunk of the land as it does round a mound | the Height tool and its undo, the hole shaping (`ext/hole-ground`), the tee planner, the road flattening (`flattenRoadsIn`) |
+| **the ball**: `ballHeight` (the roll's bend, a putt's break, the lie's slope: `slopeAt`, `crossSlope`, the break grid) | the course quality's slope checks: the steep green and steep fairway penalties, the shaping bonus, the pins' slope (`evaluateCourseHeightQuality`, `courseTerrain(field)`) |
+| **the holes' rise and plays-like length** in the course stats (`coursestats.ts`, `HeightSampler`) | |
+
+The slope checks judge the player's own layer: a real hill is not the player's to smooth (the layer is held to 3 m), so a steep real fairway is not marked down and "Smooth the steep
+fairway" is not said of it; the rise and the plays-like length ("plays 316 m (-22 m)") are the real ground's. **Roads and cart paths follow the land**: the road tool lays flat
+ribbons as ever, nothing flattens the land under them (`flattenRoadsIn` still flattens the player's layer), so a road across a slope is lit as the slope it crosses. Where the player shapes
+the ground on a hillside the shaping sits on the land (a mound is 2 m on the slope).
+
+## Credit
+- **Tilezen's required attribution** (github.com/tilezen/joerd docs/attribution.md, which says to credit each source the data draws on): for SRTM, 3DEP and GMTED2010 "United States 3DEP
+  (formerly NED) and global GMTED2010 and SRTM terrain data courtesy of the U.S. Geological Survey"; England's lidar "United Kingdom terrain data (c) Environment Agency copyright and/or database
+  right 2015. All rights reserved"; the other national sources have their lines in `terrarium.ts` SOURCES. The shipped courses are SRTM (Rondebosch, Woodhill) and 3DEP (Magnolia National).
+  SRTM and 3DEP are in the public domain; USGS asks for the credit.
+- **Where it shows:** the gear menu's credits, a line beside the OSM one ("Credits: real-course ground height ..." with the tiles' credit in its tooltip: "Terrain tiles: Tilezen / Mapzen on AWS
+  Open Data"); the course card (Holes panel) says "Real ground height (SRTM, 30 m): 74 m of rise across the land" with the credit as its tooltip; the picker's Featured list names the source of each shipped
+  course; a downloaded course's preview has the Real ground height box and says where the data is from. The fixtures keep the credit in their `height`.
+
+## Being polite to the elevation server (`dem.ts`)
+One GET a tile, one at a time, 250 ms apart (a `Gate`); a course needs 4 to 16 tiles; every tile is kept for good in the library's `answers` store under `dem:z/x/y` with its imagery source (an
+elevation tile does not change; a second course that shares a tile does not ask for it), a tile in the library is never fetched again; a 429, 403 or 5xx stops the lot (`ServerBusy`: "The map servers are
+busy: try again in a minute"), a 404 or no network is `DemUnavailable` (the card unticks the box and says why: Build then makes the course flat); Cancel stops it; nothing is sent unless the player builds
+with the box ticked. In tests every request is a fake (`tests/golf-osm-land.test.ts`: the request count, the gate's pauses, the cache, the refusals).
+
+## Adding the ground to a course
+`node scripts/dev/osm-course.mjs "<name>" --height` (or `node scripts/dev/osm-height.mjs <slug>` on a stage-1 JSON already made) writes `<slug>.height.json` (the 4 m smoothed grid packed, with the
+source and credit) and `<slug>-height.png` (a hillshade with the hole lines) beside the JSON, and caches the tiles in `E:/ClaudeTemp/T340/dem/raw/<z>-<x>-<y>.png` with a `.meta` (the imagery source).
+`scripts/dev/osm-trim-fixture.mjs` then reads that height file (next to its input; `--height <file>` or `--height none`), crops it to the course's box and 440 m round it, keeps it at the step the
+source needs and writes the fixture's `height`. Rerunning the trim script with `--height none` reproduces the committed fixtures byte for byte.
 
 # Stage 3 (built): Find a real course (T358, #1003)
 

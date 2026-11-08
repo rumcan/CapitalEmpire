@@ -24,6 +24,9 @@ import { CH_SIZE, CH_STEP, courseSlopeAt, createCourseHeightField } from '../src
 import { slopeAt, slopeLines } from '../src/game/golf/play/lies';
 import { normalizeGolfSave } from '../src/game/golf/mode';
 import { holeTerrain } from '../src/game/golf/hole-terrain';
+import { generateOldNine } from '../src/game/golf/coursegen';
+import { buildCourseStatsPanel } from '../src/game/golf/coursestats';
+import type { Need } from '../src/game/golf/tour';
 import { MAP } from '../src/game/iso';
 
 const ronde = rondeboschJson as unknown as OsmCourseJson, magnolia = magnoliaJson as unknown as OsmCourseJson, woodhill = woodhillJson as unknown as OsmCourseJson;
@@ -357,6 +360,18 @@ describe('the land plus the course height (T357)', () => {
     assert.equal(flat.riseM, 0);
     assert.ok(real.riseM < -10, `the rise is ${real.riseM.toFixed(1)} m`);
     assert.ok(real.playsLikeM < hole.lengthM - 10 && real.playsLikeM >= hole.lengthM / 2, `${real.playsLikeM.toFixed(0)} m for a ${hole.lengthM} m hole`);
+  });
+  it('the course stats take the rise and plays-like length from the ground, and judge the slope on the player\'s own layer alone (a real hill is not the player\'s to smooth)', () => {
+    const layout = generateOldNine({ x0: 0, y0: 0, x1: 300, y1: 450 }, 4), have = new Set<Need>(['carpark']), field = createCourseHeightField();
+    const base = buildCourseStatsPanel(layout, 1, have, 7, { field, areas: layout.areas });
+    // a hill that rises 20% along x: far over the 12% a fairway may have
+    const hillside = buildCourseStatsPanel(layout, 1, have, 7, { field, areas: layout.areas, ground: (x: number) => x * 2 * 0.2 });
+    assert.ok(base.rows.every(r => r.riseM === 0 && r.playsLikeM === r.lengthM), 'no ground: no rise');
+    assert.ok(hillside.rows.some(r => Math.abs(r.riseM) > 3 && r.playsLikeM !== r.lengthM), `the ground gives rises: ${hillside.rows.map(r => r.riseM).join(' ')}`);
+    assert.equal(hillside.qualityScore, base.qualityScore, 'the steep fairway penalty and the shaping bonus are the player\'s own layer\'s: the score does not move');
+    assert.ok(!hillside.rows.some(r => r.warnings.some(w => /Fairway slope/.test(w))) && !hillside.qualityHints.some(h => /Smooth the steep fairway/.test(h)), 'no "smooth it" said of a real hill');
+    assert.ok(hillside.qualityHints.some(h => /plays like a par/.test(h)), 'but the plays-like par is said');
+    assert.equal(hillside.heightBonus, base.heightBonus);
   });
   it('a sloping fairway reads as one: the lie\'s slope under the ball, uphill and across (the same reader the ball uses)', async () => {
     const land = (await loadOsmLand('woodhill'))!, spec = specOf(woodhill, { id: 'woodhill', name: 'W', place: '' }), plan = planOsmGame(spec)!, f = fieldOf(layLand(spec, land, plan.at)), c = createCourseHeightField(), A = plan.at;

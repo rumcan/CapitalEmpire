@@ -3072,6 +3072,8 @@ export class Game {
     }
     designGreens(spec, at, this.courseHeight); this.chSave = null; this.breakGrids.clear();
   }
+  /** T357: the ground's height at a tile point, metres relative to the course's own mean: the land plus the player's course height (what the ball reads); for the shots and the console */
+  groundHeightAt(x: number, y: number): number { return groundAt(this.realLand, this.courseHeight, x, y); }
   /** T357: what the game's real ground is, for the new-game card, the course card and the credits (null: none: a hand-made course, or a map-data one built flat) */
   landInfo(): { label: string; credit: string; src: string; fetched: string; reliefM: number } | null { const i = this.realLand.info; return this.realLand.data && i ? { label: i.label, credit: i.credit, src: i.src, fetched: i.fetched, reliefM: i.reliefM } : null; }
   /** T340: a new game on the real course `id` (null: the usual start), from the new-game card: the course loads, then a new game starts as the New game

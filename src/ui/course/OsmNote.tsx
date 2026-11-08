@@ -3,8 +3,9 @@
 import type { Game } from '../../game/engine';
 
 export function OsmNote({ game }: { game: Game }) {
-  const o = game.osmGame(), land = game.landInfo();
+  const o = game.osmGame();
   if (!o) return null;
+  const land = game.landInfo();
   return (
     <div className="mt-1.5 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-snug" data-testid="osm-note">
       <div className="font-semibold text-sky-200">{o.name} <span className="font-normal text-slate-400">(from map data)</span></div>

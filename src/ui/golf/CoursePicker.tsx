@@ -16,6 +16,7 @@ import { refText, type OsmRef } from '../../game/golf/osm/query';
 import { OSM_CREDIT, type OsmCourseSpec } from '../../game/golf/osm/types';
 import { DemUnavailable, fetchLand, tilesKept, tilesOfCourse } from '../../game/golf/osm/dem';
 import type { OsmLand } from '../../game/golf/osm/land';
+import { DEM_CREDIT_DEFAULT } from '../../game/golf/osm/terrarium';
 
 /** a shipped real course, as the card lists it */
 export interface Featured { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number; /** the source of its real ground height ("SRTM, 30 m"), T357 */ ground?: string }
@@ -265,7 +266,7 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
   return (
     <div className="pointer-events-auto max-h-[calc(100vh-2rem)] w-[500px] max-w-full space-y-2 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur" data-testid="find-card">
       {body}
-      <div className="border-t border-white/10 pt-1.5 text-[10px] leading-tight text-slate-500" data-testid="find-footer">Real courses are built from map data {OSM_CREDIT}.</div>
+      <div className="border-t border-white/10 pt-1.5 text-[10px] leading-tight text-slate-500" data-testid="find-footer">Real courses are built from map data {OSM_CREDIT}. Their ground height is public elevation data: {DEM_CREDIT_DEFAULT}, via Tilezen's terrain tiles.</div>
     </div>
   );
 }
