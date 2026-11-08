@@ -427,7 +427,7 @@ describe('the land in a save (T357)', () => {
     let err = 0; for (let k = 0; k < f.data!.length; k++) err = Math.max(err, Math.abs(f.data![k]! - back.data![k]!));
     assert.ok(err <= 0.0101, `max error ${err}`);
     assert.equal(back.info!.label, 'SRTM, 30 m'); assert.equal(back.info!.credit, DEM_CREDIT_DEFAULT); assert.equal(back.base, f.base); assert.ok(back.info!.reliefM > 5);
-    assert.equal(back.info!.reliefM, f.info!.reliefM, 'the card's relief is kept in the save');
+    assert.equal(back.info!.reliefM, f.info!.reliefM, "the card's relief is kept in the save");
     // a load keeps the land the save held, and none where the save had none
     const plan = planOsmGame(specOf(woodhill, { id: 'woodhill', name: 'W', place: '' }))!;
     const n = normalizeGolfSave(JSON.parse(JSON.stringify({ ...plan.save, land: pk })))!;

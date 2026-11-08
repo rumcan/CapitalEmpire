@@ -337,6 +337,21 @@ tile pictures peak at 129 to 186 MB on both sides (the budget is 192), the heap 
 twenty-five canvas operations more (`heightLight`) and a few ms of the light grid's arithmetic; at 15% pan Woodhill's median bake is 60 to 64 ms against 53 to 57 (about 10% more), at 30% the same, Rondebosch's second run is level with
 lead/live's. **Rondebosch's first run with the land is an outlier** (the average bake 68 ms, the median 118, against 32 and 55 in its second run and 30 to 32 in lead/live's two): it is shown as it came (the PC is shared with other agents' browsers, and the same build's second run is level with lead/live's; see the third runs below). The land adds nothing to the main thread, nothing to the memory, and about a tenth to the workers' bake.
 
+## Left out, and for the lead to decide
+- **The light's strength on real ground.** Every 3 to 8% slope gets T263's gentle-ground gain (built for 1 to 3% rolls), so the response is strong everywhere and a course on a slope facing away from the sun is darker as a
+  whole (Woodhill about 10% under its flat look); at the overview the relief is there but subtle at the default Slope light of 1 and clear at 2 (`E:/ClaudeTemp/T357/*-after-light2-*.png`). Left as the light is. A higher default for a
+  game with land, or taking the regional tilt out of the light only (the workers get land + course height, so the plane of the land could be taken off what they get; the ball keeps the true ground), are the two ways if it is wanted.
+- **The skirt** (400 m, fading the real ground to the plain): where the real ground beyond the land falls away below the land's mean there is a shallow trough before the plain (the real valley, attenuated); the plain is
+  at the land's average level, not at the clubhouse's. A longer skirt softens it, the whole map as land (a 2 km window in each fixture) removes it.
+- **A new tee the player places on a slope** is levelled against the course layer, not the land (`teeCourse().field`), so on a 6% hillside it stands on the hillside; the hole shaping's rolls are laid on the course layer too.
+  Both would read the ground if the planners took a sampler as `holeTerrain` now does.
+- **Saves from before T357, and courses built flat** (the box unticked, or no tiles): no land. An "add the ground to this course" could fetch it for an imported course and lay it under what the player has built (the
+  course layer is relative, so it would still fit); not built.
+- **SRTM is a surface model**: treetops and roofs are in it (Rondebosch's surroundings are lumpy; its land is the flat Black River plain). 3DEP (the US) and the lidar (England) are cleaner. A finer source for Cape Town
+  (the city's lidar contours) would not change the game's feel at 30 m smoothing.
+- **The elevation server** (an S3 bucket) publishes no rate limit; the rules above are modest (a few tiles once per course, kept). If the game ships widely a small proxy with its own cache is the safe course, as for Overpass.
+- `?land=0` stays in production code (one `URLSearchParams` read when a map-data game is laid): the A/B of the shots and the bench; it can go when no longer wanted.
+
 ## Adding the ground to a course
 `node scripts/dev/osm-course.mjs "<name>" --height` (or `node scripts/dev/osm-height.mjs <slug>` on a stage-1 JSON already made) writes `<slug>.height.json` (the 4 m smoothed grid packed, with the
 source and credit) and `<slug>-height.png` (a hillshade with the hole lines) beside the JSON, and caches the tiles in `E:/ClaudeTemp/T340/dem/raw/<z>-<x>-<y>.png` with a `.meta` (the imagery source).
