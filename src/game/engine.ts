@@ -852,7 +852,8 @@ export class Game {
       wet: (x, y) => { const c = this.terrain.cls[Math.floor(y) * MAP + Math.floor(x)]; return c === TC.WATER || this.pondWet(Math.floor(x / POND_CELL), Math.floor(y / POND_CELL)); },
     },
     // T231: the ponds (golf/ponds.ts): the still water under a tile, the edge marks (undo carries them) and the Fountain pond's water
-    pondAt: (x, y) => pondAt(x, y, this.pondWet),
+    pondAt: (x, y) => pondAt(x, y, this.pondWet, undefined, this.pondOther), // T344: the map's water is the pond's neighbour, not its shore
+    pondOther: (cx, cy) => this.pondOther(cx, cy),
     pondMarks: () => this.golf?.ponds ?? [], setPondMarks: m => this.setPondMarks(m),
     digPond: (x, y, r, where) => this.digPond(x, y, r, where),
     propsIn: b => this.propGrid.query(b), props: () => this.props, propName: p => (p.decor ? DECOR_BY_KEY.get(p.decor)?.name : p.auto === 'range:shop' ? 'the shop' : undefined) ?? LIBRARY[p.item]!.name,
@@ -3510,7 +3511,8 @@ export class Game {
   private pondKey = ''; private pondTick = 0;
   /** the painted water areas (boxed) and the paint revision they were read at */
   private pondPaint: { rev: number; n: number; areas: { pts: number[]; b: [number, number, number, number] }[] } | null = null;
-  /** still water on the ponds' 1 m lattice: the course's water cells and the painted water areas (the map's lakes and rivers are no pond) */
+  /** still water on the ponds' 1 m lattice: the course's water cells and the painted water areas (the map's lakes and rivers are no pond; T344: nor is
+   *  the map's water under a painted area, which the area is drawn off: it is pondOther's) */
   private pondWet = (cx: number, cy: number): boolean => {
     const x = (cx + 0.5) * POND_CELL, y = (cy + 0.5) * POND_CELL, g = this.courseGrid;
     if (g) { const i = cellAt(g, x, y); if (i >= 0 && g.surf[i] === SURF.water) return true; }
@@ -3519,9 +3521,12 @@ export class Game {
       const areas = this.paint.areas.filter(a => waterTex(a.tex)).map(a => { const b = ptsBox(a.pts); return { pts: a.pts, b: [b[0]!, b[1]!, b[2]!, b[3]!] as [number, number, number, number] }; });
       pp = this.pondPaint = { rev: this.paintRev, n: this.paint.areas.length, areas };
     }
-    for (const a of pp.areas) if (x >= a.b[0] && x <= a.b[2] && y >= a.b[1] && y <= a.b[3] && inPoly(a.pts, x, y)) return true;
+    for (const a of pp.areas) if (x >= a.b[0] && x <= a.b[2] && y >= a.b[1] && y <= a.b[3] && inPoly(a.pts, x, y)) return !this.pondOther(cx, cy);
     return false;
   };
+  /** T344 (#982): the map's own water (the river, the creeks as narrow as they are drawn) on the ponds' lattice: the water a pond joins where they
+   *  meet. No stone is laid along that seam and no planting stands in it (golf/ponds.ts Pond.other) */
+  private pondOther = (cx: number, cy: number): boolean => { const w = this.mapWater(); return !w.empty && w.at((cx + 0.5) * POND_CELL, (cy + 0.5) * POND_CELL); };
   /** sets the ponds' edge marks (the Props tool's Stone pond edge and Fountain pond; undo and redo): the edges are laid again */
   private setPondMarks(m: number[]) {
     if (!this.golf) return;
@@ -3558,7 +3563,7 @@ export class Game {
     const marks = this.golf?.ponds ?? [], want = new Map<string, PondPiece>(), seen = new Set<number>();
     const jets = [...this.fountainProps].map(p => ({ x: p.x, y: p.y }));
     for (let k = 0; k + 1 < marks.length; k += 2) {
-      const pond: Pond | null = pondAt(marks[k]!, marks[k + 1]!, this.pondWet); if (!pond) continue;
+      const pond: Pond | null = pondAt(marks[k]!, marks[k + 1]!, this.pondWet, undefined, this.pondOther); if (!pond) continue;
       const id = pondId(pond); if (seen.has(id)) continue; seen.add(id);
       for (const q of [...shorePieces(pond), ...lilyPads(pond, jets)]) want.set(pieceKey(q), q);
     }

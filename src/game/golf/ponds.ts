@@ -23,14 +23,17 @@ export const POND_MAX_CELLS = 60000;
 export type Wet = (cx: number, cy: number) => boolean;
 
 /** a pond: its cells as a mask over its box (x0, y0 the first cell; w, h cells), how many, and the water sampler it was found in (any water, this pond's
- *  or another body's: the rim's planting keeps off all of it) */
-export interface Pond { x0: number; y0: number; w: number; h: number; mask: Uint8Array; cells: number; wet?: Wet }
+ *  or another body's: the rim's planting keeps off all of it).
+ *  T344 (#982): other, the map's own water (the river, a creek; map-water.ts), which the pond joins where they meet: no stone is laid along that
+ *  seam (the shore runs stop short of it: shoreRuns) and the planting keeps off it. Absent: none (a pond far from the map's water) */
+export interface Pond { x0: number; y0: number; w: number; h: number; mask: Uint8Array; cells: number; wet?: Wet; other?: Wet }
 /** a piece the edge lays: a library id, its footprint's centre (tiles) and its scale */
 export interface PondPiece { id: string; x: number; y: number; s: number }
 
 const cellOf = (v: number) => Math.floor(v / CELL);
-/** the pond at tile (x, y): its connected water cells (4-neighbours), or null when the cell is dry or the water has more than max cells */
-export function pondAt(x: number, y: number, wet: Wet, max = POND_MAX_CELLS): Pond | null {
+/** the pond at tile (x, y): its connected water cells (4-neighbours), or null when the cell is dry or the water has more than max cells. other
+ *  (T344): the map's own water, kept apart from the pond's (it is no part of its cells, and the flood never runs into it) */
+export function pondAt(x: number, y: number, wet: Wet, max = POND_MAX_CELLS, other?: Wet): Pond | null {
   const sx = cellOf(x), sy = cellOf(y);
   if (!wet(sx, sy)) return null;
   const K = 1 << 16, key = (cx: number, cy: number) => (cy + 32768) * K + (cx + 32768);
@@ -47,7 +50,7 @@ export function pondAt(x: number, y: number, wet: Wet, max = POND_MAX_CELLS): Po
   }
   const w = x1 - x0 + 1, h = y1 - y0 + 1, mask = new Uint8Array(w * h);
   for (const k of seen) { const cx = (k % K) - 32768, cy = Math.floor(k / K) - 32768; mask[(cy - y0) * w + (cx - x0)] = 1; }
-  return { x0, y0, w, h, mask, cells: seen.size, wet };
+  return { x0, y0, w, h, mask, cells: seen.size, wet, ...(other ? { other } : {}) };
 }
 /** is cell (cx, cy) (world lattice) part of the pond */
 export function inPond(p: Pond, cx: number, cy: number): boolean {
@@ -103,6 +106,13 @@ export interface ShoreRun { vx: number[]; vy: number[]; closed: boolean }
  *  run depends only on the water in and just round its own block. */
 export function shoreRuns(p: Pond): ShoreRun[] {
   const at = (cx: number, cy: number) => inPond(p, cx, cy);
+  // T344: a side facing the map's water is no shore: the pond joins it there. A cell counts when the map's water lies in it or in a cell next to it
+  // (a one-cell gap of bank between the two is bridged, as the course's water bridges it: map-water.ts JOIN_REACH), so no stone is laid along the seam
+  const other = p.other, seam = (cx: number, cy: number) => {
+    if (!other) return false;
+    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (other(cx + i, cy + j)) return true;
+    return false;
+  };
   // the cell sides, each from a to (a + d), the water on the right
   const ax: number[] = [], ay: number[] = [], dx: number[] = [], dy: number[] = [], bk: number[] = [];
   const startAt = new Map<number, number[]>(), vkey = (x: number, y: number) => (y + 32768) * 65536 + (x + 32768);
@@ -113,10 +123,10 @@ export function shoreRuns(p: Pond): ShoreRun[] {
   for (let j = 0; j < p.h; j++) for (let i = 0; i < p.w; i++) {
     if (!p.mask[j * p.w + i]) continue;
     const cx = p.x0 + i, cy = p.y0 + j;
-    if (!at(cx, cy - 1)) add(cx, cy, 1, 0, cx, cy);
-    if (!at(cx + 1, cy)) add(cx + 1, cy, 0, 1, cx, cy);
-    if (!at(cx, cy + 1)) add(cx + 1, cy + 1, -1, 0, cx, cy);
-    if (!at(cx - 1, cy)) add(cx, cy + 1, 0, -1, cx, cy);
+    if (!at(cx, cy - 1) && !seam(cx, cy - 1)) add(cx, cy, 1, 0, cx, cy);
+    if (!at(cx + 1, cy) && !seam(cx + 1, cy)) add(cx + 1, cy, 0, 1, cx, cy);
+    if (!at(cx, cy + 1) && !seam(cx, cy + 1)) add(cx + 1, cy + 1, -1, 0, cx, cy);
+    if (!at(cx - 1, cy) && !seam(cx - 1, cy)) add(cx, cy + 1, 0, -1, cx, cy);
   }
   // the side that follows e: the sharpest turn to the right from the vertex it ends at, else straight on, else left
   const next = new Int32Array(ax.length).fill(-1);
@@ -131,6 +141,17 @@ export function shoreRuns(p: Pond): ShoreRun[] {
     for (const e of edges) { vx.push(ax[e]! + dx[e]!); vy.push(ay[e]! + dy[e]!); }
     return { vx, vy, closed };
   };
+  // T344: where sides were left out at the map's water the outline is open chains (a side with none before it starts one): each run from its start,
+  // cut where the block changes (not wrapped round), never closed. A pond with no seam has none, and its loops are made as before
+  if (other) {
+    const hasPrev = new Uint8Array(ax.length); for (let e = 0; e < ax.length; e++) if (next[e]! >= 0) hasPrev[next[e]!] = 1;
+    for (let s = 0; s < ax.length; s++) {
+      if (hasPrev[s] || seen[s]) continue;
+      const chain: number[] = []; for (let e = s; e >= 0 && !seen[e]; e = next[e]!) { seen[e] = 1; chain.push(e); }
+      let a = 0;
+      for (let i = 1; i <= chain.length; i++) if (i === chain.length || bk[chain[i]!] !== bk[chain[i - 1]!]) { runs.push(make(chain.slice(a, i), false)); a = i; }
+    }
+  }
   for (let s = 0; s < ax.length; s++) {
     if (seen[s]) continue;
     const loop: number[] = []; for (let e = s; e >= 0 && !seen[e]; e = next[e]!) { seen[e] = 1; loop.push(e); }
@@ -167,7 +188,7 @@ const boulderOf = (big: boolean, r: () => number): { id: string; foot: number; s
 export function shorePieces(p: Pond): PondPiece[] {
   if (p.cells < POND_MIN_CELLS) return [];
   const out: PondPiece[] = [], big = p.cells >= BIG_POND_CELLS, E = KIT_POND_EDGE, LIM = LAND_REACH - REACH_SLACK;
-  const at = (cx: number, cy: number) => inPond(p, cx, cy), dry = (cx: number, cy: number) => !at(cx, cy) && !(p.wet !== undefined && p.wet(cx, cy));
+  const at = (cx: number, cy: number) => inPond(p, cx, cy), dry = (cx: number, cy: number) => !at(cx, cy) && !(p.wet !== undefined && p.wet(cx, cy)) && !(p.other !== undefined && p.other(cx, cy));
   const r3 = (v: number) => Math.round(v * 1000) / 1000;
   /** the distance (tiles) from a point to the pond's nearest water cell: 0 on water, Infinity past a tile */
   const toWater = (x: number, y: number): number => {
