@@ -28,16 +28,18 @@ import type { Rect } from '../src/game/golf/mode';
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
 const MID = Math.round(MAP / 2 / BLOCK) * BLOCK;
-/** a flat terrain of GROUND with these mountain edges and one town site at the map centre (golf-rangestart.test.ts's) */
-function flat(mountainEdges: Edge[]): Terrain {
+/** a flat terrain of GROUND with these mountain edges and one town site, centred on tile j (the range start's junction goes to the town site nearest the map's
+ *  middle that has room for the parcel: golf-rangestart.test.ts's flat map, its town site moved) */
+function flat(mountainEdges: Edge[], j: Pt): Terrain {
   const cls = new Uint8Array(MAP * MAP).fill(TC.GROUND);
-  return { seed: 1, attempt: 0, height: new Float32Array(256 * 256), cls, waters: [], mountainEdges, highway: { x: 0, y: MAP / 2, edge: 'W' }, start: { x: MID - 32, y: MID - 32, size: 64 },
-    towns: [{ x: MID - 32, y: MID - 32, size: 64 }], chokepoints: [] };
+  return { seed: 1, attempt: 0, height: new Float32Array(256 * 256), cls, waters: [], mountainEdges, highway: { x: 0, y: MAP / 2, edge: 'W' }, start: { x: j.x - 32, y: j.y - 32, size: 64 },
+    towns: [{ x: j.x - 32, y: j.y - 32, size: 64 }], chokepoints: [] };
 }
-/** the range start plan of each of the four facings (0 north .. 3 west): a road along x or along y (the mountain edges choose the axis) and each side of it (the seed) */
+/** the range start plan of each of the four facings (0 north .. 3 west): a road along x (the mountain edges N and S) or along y (W and E), and the town site 120 tiles
+ *  off the map's middle toward the side the parcel does not fit on, so the parcel goes on the other (the first site that fits wins: findStart) */
 const starts = new Map<0 | 1 | 2 | 3, RangeStart>();
-for (const [edges, dirs] of [[['N', 'S'], [0, 2]], [['W', 'E'], [1, 3]]] as [Edge[], (0 | 1 | 2 | 3)[]][]) {
-  for (let seed = 1; seed <= 60 && !dirs.every(d => starts.has(d)); seed++) { const p = planRangeStart(flat(edges), seed); if (p && !starts.has(p.site.dir)) starts.set(p.site.dir, p); }
+for (const [edges, j, dir] of [[['N', 'S'], { x: MID, y: MID - 120 }, 2], [['N', 'S'], { x: MID, y: MID + 120 }, 0], [['W', 'E'], { x: MID - 120, y: MID }, 1], [['W', 'E'], { x: MID + 120, y: MID }, 3]] as [Edge[], Pt, 0 | 1 | 2 | 3][]) {
+  const p = planRangeStart(flat(edges, j), 1); if (p && p.site.dir === dir) starts.set(dir, p);
 }
 const FACINGS = [0, 1, 2, 3] as const;
 /** the three layouts: the range on its start spot (straight ahead), slid along the county road to one side and to the other (du tiles) */
