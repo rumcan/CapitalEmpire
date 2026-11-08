@@ -14,7 +14,7 @@
 // Units: tiles (2 m) for places; metres and m/s for the cup.
 import { TILE_M } from '../types';
 import { BallRoll, type HeightAt, type RollPoint } from './roll';
-import type { Pt } from './types';
+import type { Club, Pt } from './types';
 
 // ---- the break grid ----
 
@@ -22,8 +22,9 @@ import type { Pt } from './types';
 export const BREAK_STEP = 0.5;
 /** the heights are read this far either side of a point (tiles) for its slope */
 const SLOPE_D = 1;
-/** under this slope (m per m) a point is flat: no arrow, a still dot */
-export const FLAT_SLOPE = 0.004;
+/** under this slope (m per m) a point is flat: no arrow, a still dot. T333 (#959): 0.2% (was 0.4%), so a gentle slope raised by hand with a wide
+ *  brush (radius 20, level 1: 0.37% at most) shows its arrows */
+export const FLAT_SLOPE = 0.002;
 /** at this slope (m per m) an arrow is at its longest and hottest (T026's steepest green: GREEN_MAX_SLOPE is 6%) */
 export const STEEP_SLOPE = 0.04;
 
@@ -33,6 +34,19 @@ export function breakAt(height: HeightAt, x: number, y: number): { dx: number; d
   const gx = (height(x + SLOPE_D, y) - height(x - SLOPE_D, y)) / (2 * SLOPE_D * TILE_M);
   const gy = (height(x, y + SLOPE_D) - height(x, y - SLOPE_D)) / (2 * SLOPE_D * TILE_M), s = Math.hypot(gx, gy);
   return s < 1e-9 ? { dx: 0, dy: 0, s: 0 } : { dx: -gx / s, dy: -gy / s, s };
+}
+
+/** T333 (#959): a round's state for the break grid (your walk-on round, a match, or your shots in the tournament): the hole's pin, the open shot's club
+ *  (null: no shot open), a putt rolling, another shot in the air, your ball at rest on the green, the hole done */
+export interface BreakTurn { pin: Pt; club: Club | null; putting: boolean; flying: boolean; onGreen: boolean; holed: boolean }
+/** the green whose break shows for a round when you putt (its pin), or null: a putt rolling (it holds while a holed putt drops), your shot open with
+ *  the putter, or your ball at rest on the green with no shot open and nothing in the air */
+export function breakPinOf(t: BreakTurn | null): Pt | null {
+  if (!t) return null;
+  if (t.putting) return t.pin;
+  if (t.holed || t.flying) return null;
+  if (t.club !== null) return t.club === 'putter' ? t.pin : null;
+  return t.onGreen ? t.pin : null;
 }
 
 /** a green's break grid: n points, each [x, y, dx, dy, s] in pts (tiles; downhill unit; m per m), on a BREAK_STEP lattice (i, j: the lattice

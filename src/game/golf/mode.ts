@@ -20,8 +20,10 @@ import { normalizeDayPins, type DayPinsSave } from './daypins';
 import { normalizeCrewSave, type CrewSave } from './crew';
 import { normalizeClubSave, type ClubSave } from './club';
 import { normalizePlayer, type PlayerProfile } from './player';
+import { readGameSkills } from './play/mods';
 import { normalizeEvents, type ClubEventsSave } from './clubevents';
 import type { GameSkills } from './play/types';
+import type { OsmGolfInfo } from './osm/types';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -34,6 +36,8 @@ export interface GolfSave {
  v: 1; tier: number; rep: number; poorYears?: number; town: Pt; course: Rect; parcel: Rect; dir: 0 | 1 | 2 | 3;
  tees: TeeMark[]; pins: Pin[]; aims: AimPoint[]; clubhouse: Pt;
  parcels?: Rect[];
+ /** T356 (#998): the rects of the land a real course was placed on (they are in parcels too; kept apart so Land for sale and the survey lines leave them be) */
+ courseRects?: Rect[];
  /** T232: the town lots the bulldozer cleared on the player's land, pegged out (bare dirt in a survey line) until the player builds there: each
   *  the lot's corner o (x, y), its frame u (x, y) and n (x, y), its width and depth (tiles). Missing: none */
  cleared?: number[][];
@@ -83,6 +87,9 @@ export interface GolfSave {
  founding?: number;
  /** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b; see GolfPlaySave). Missing: he is not in the day */
  play?: GolfPlaySave;
+ /** T334 (#960): the weather: the first tournament (its key: the round's count) played in the day's wind and the lie's kinds. A save from before it has none: the
+  *  engine stamps it on load with the next tournament's key, so a day in progress (and every day before) plays as it did; a new game has none and every day has it */
+ weather?: { from: number };
  /** the range business (range starts, plan P24, T129: golf/rangesave.ts): its upgrades, bucket price and counts; a range start's save without it
   *  loads as the starting range */
  range?: RangeBizSave;
@@ -104,6 +111,10 @@ export interface GolfSave {
  /** T246 (#708): the club's own events (golf/clubevents.ts): the Club Championship and the Mayor's Cup, the seasons held, entered and announced, the
   *  event day and the last result. Missing: an older save (none held yet) */
  clubEvents?: ClubEventsSave;
+ /** T340 (#967): this game's course is a real one built from map data (golf/osm): its shipped id, the name and place the game shows, the credit the
+  *  course card and the credits carry ("© OpenStreetMap contributors"), where it came from, and its holes and par. The game is laid on the flat map
+  *  (boot.ts flatTerrain) whatever its seed. Missing: an ordinary game */
+ osm?: OsmGolfInfo;
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
@@ -114,11 +125,19 @@ export interface GolfPlaySave { key: number; owner: 'm' | 'w'; inputs: OwnerInpu
    *  which plays at OWNER_SKILL as it did */
   skills?: GameSkills }
 
+/** T334: whether the day's weather plays in the tournament of key `key`: from `weather.from` on; a game with no weather yet (a new one, nothing stamped) has it from the first (and is stamped: it keeps it
+ *  through every save) */
+export function weatherOn(g: { weather?: { from: number } }, key: number): boolean { return key >= (g.weather ??= { from: 0 }).from; }
+/** T334: a save from before the weather has none, so its tournament in progress (and every day before) plays as it did: the weather starts with the next tournament (the key after the one
+ *  in progress: `runs` counts the rounds done, and a day under way is not done yet). A save that has it keeps it */
+export function stampWeather(g: { weather?: { from: number } }, runs: number, dayInProgress: boolean): void { if (!g.weather) g.weather = { from: runs + (dayInProgress ? 1 : 0) }; }
+
 /** a saved owner's play, or null when it is not well formed (no key, sex or inputs list); a missing caddie count is null */
 function normalizePlaySave(p: Partial<GolfPlaySave> | null | undefined): GolfPlaySave | null {
   const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie, tees = p?.tees, sk = p?.skills;
   if (typeof key !== 'number' || !Number.isFinite(key) || (owner !== 'm' && owner !== 'w') || !Array.isArray(inputs)) return null;
-  const skills = sk && [sk.driving, sk.irons, sk.short, sk.putting].every(v => typeof v === 'number' && Number.isFinite(v)) ? { driving: sk.driving, irons: sk.irons, short: sk.short, putting: sk.putting } : null;
+  // (T334 part 2: his power, accuracy and touch when saved as numbers, held to 0..1; a save from before has none: they play as neutral. T335: his mods and the clubs in his bag, through the same reader)
+  const skills = readGameSkills(sk);
   return { key, owner, inputs, caddie: typeof caddie === 'number' && Number.isFinite(caddie) ? caddie : null, ...(isTeeKind(tees) ? { tees } : {}), ...(skills ? { skills } : {}) };
 }
 
@@ -134,7 +153,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, weather, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, courseRects, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -159,6 +178,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (invited && Number.isFinite(invited.at)) out.invited = { at: invited.at };
   if (typeof founding === 'number' && Number.isFinite(founding) && founding > 0) out.founding = Math.floor(founding);
   const pl = normalizePlaySave(play); if (pl) out.play = pl;
+  if (weather && typeof weather.from === 'number' && Number.isFinite(weather.from) && weather.from >= 0) out.weather = { from: Math.floor(weather.from) }; // T334
   const ed = normalizeDaySave(everyday); if (ed) out.everyday = ed;
   // T231: the pond marks, finite pairs only (golf/ponds.ts normalizePondMarks: none kept means the field stays out)
   if (Array.isArray(ponds)) { const m: number[] = []; for (let k = 0; k + 1 < ponds.length; k += 2) { const x = ponds[k], y = ponds[k + 1]; if (Number.isFinite(x) && Number.isFinite(y)) m.push(x!, y!); } if (m.length) out.ponds = m; }
@@ -176,5 +196,9 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   // T241: your golf, well formed (none: the engine starts the starting profile when it is first needed)
   const pp = normalizePlayer(player); if (pp) out.player = pp;
   if (clubEvents) out.clubEvents = normalizeEvents(clubEvents); // T246
+  // T340: a map-data course's credit and name, well formed only (the strings kept, the numbers finite)
+  if (osm && typeof osm.id === 'string' && typeof osm.name === 'string') out.osm = { id: osm.id, name: osm.name, place: String(osm.place ?? ''), credit: String(osm.credit ?? ''), licence: String(osm.licence ?? ''), source: String(osm.source ?? ''), holes: Number.isFinite(osm.holes) ? osm.holes : 0, par: Number.isFinite(osm.par) ? osm.par : 0, mappedPar: Number.isFinite(osm.mappedPar) ? osm.mappedPar : Number.isFinite(osm.par) ? osm.par : 0, ...(typeof osm.scale === 'number' && osm.scale > 0 && osm.scale < 1 ? { scale: osm.scale } : {}), ...(osm.entry && Number.isFinite(osm.entry.x) && Number.isFinite(osm.entry.y) && ['N', 'E', 'S', 'W'].includes(osm.entry.edge) ? { entry: { x: osm.entry.x, y: osm.entry.y, edge: osm.entry.edge } } : {}), ...(osm.derived === true ? { derived: true } : {}), ...(typeof osm.turn === 'number' && Number.isFinite(osm.turn) ? { turn: osm.turn } : {}), ...(osm.placed === true ? { placed: true as const } : {}) }; // (T356: placed into a game under way: its own map; turn: how far it was turned)
+  // T356: the rects of the land a real course was placed on, well formed only (finite, positive size)
+  if (Array.isArray(courseRects)) { const cr = courseRects.filter(r => Array.isArray(r) && r.length === 4 && r.every(v => Number.isFinite(v)) && r[2]! > 0 && r[3]! > 0).map(r => [...r] as Rect); if (cr.length) out.courseRects = cr; }
   return out;
 }

@@ -1,0 +1,38 @@
+{
+  "id": "spectator:staff_caddie_w:bag_walk",
+  "name": "staff_caddie_w bag_walk",
+  "clip": "bag_walk",
+  "heightMetres": 1.68,
+  "frameWidth": 160,
+  "frameHeight": 260,
+  "anchor": {
+    "x": 80,
+    "y": 250
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "bag_walk1",
+    "bag_walk2",
+    "bag_walk3",
+    "bag_walk4",
+    "bag_walk5",
+    "bag_walk6",
+    "bag_walk7",
+    "bag_walk8"
+  ],
+  "fps": 7.1,
+  "loop": true,
+  "source": "art/spectators/staff_caddie_w",
+  "clips": {
+    "bag_walk": "retarget_clip 3.97s, stride 1.12s, body turned 15 deg"
+  }
+}

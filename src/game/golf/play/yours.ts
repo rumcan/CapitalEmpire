@@ -13,7 +13,7 @@
 import { TILE_M } from '../types';
 import { holeFrom } from './courseview';
 import { shotOutcome, POWER, type OwnerInput, type OwnerTurn } from './live';
-import { carryM, chooseShot, rng, skillFor, type ShotSkill } from './shot';
+import { carryFor, chooseShot, rng, type ShotSkill } from './shot';
 import type { CourseView, Landing, Lie, PlayHole, Pt, Shot } from './types';
 import type { TeeKind } from '../types';
 import { normalizeMatch, type MatchPlay, type MatchView } from './match';
@@ -99,7 +99,9 @@ export interface YourRound { v: 1; day: number; holes: number[]; at: number; car
    *  Championship, the Mayor's Cup, or a money match. Every mode but casual is a competition: COMPETITION_RULES, the tournament's pressure */
   mode?: RoundMode;
   /** T244: a money match's other side (play/match.ts: the opponent, the stake, their ball, each hole's result); present with mode 'match' */
-  match?: MatchPlay }
+  match?: MatchPlay;
+  /** T349 (#992): a practice round from the hole card's Play: free, not an event, not recorded (no handicap, reputation or money); absent: your round as before */
+  practice?: true }
 /** T246/T244: a round's mode (YourRound.mode) */
 export type RoundMode = 'casual' | 'championship' | 'mayors-cup' | 'match';
 export const ROUND_MODES: readonly RoundMode[] = ['casual', 'championship', 'mayors-cup', 'match'];
@@ -129,7 +131,7 @@ export function yourTurn(view: CourseView, r: YourRound, sk: ShotSkill): OwnerTu
   const row = rowOf(r), hole = holeOf(view, row.i); if (!hole) return null;
   const sg = chooseShot(r.lie, r.ball, hole, sk, r.lie === 'tee'), putting = sg.club === 'putter';
   const distM = Math.hypot(hole.pin.x - r.ball.x, hole.pin.y - r.ball.y) * TILE_M, dM = Math.hypot(sg.aim.x - r.ball.x, sg.aim.y - r.ball.y) * TILE_M;
-  const power = putting ? 1 : Math.min(POWER[1]!, Math.max(POWER[0]!, dM / carryM(sg.club, skillFor(sk, sg.club))));
+  const power = putting ? 1 : Math.min(POWER[1]!, Math.max(POWER[0]!, dM / carryFor(sk, sg.club)));
   return { golfer: -1, holeIdx: row.i, hole: hole.n, par: hole.par, stroke: row.strokes + 1, t: 0, lie: r.lie, ball: { x: r.ball.x, y: r.ball.y },
     pin: { x: hole.pin.x, y: hole.pin.y }, distM, suggested: { club: sg.club, aim: { x: sg.aim.x, y: sg.aim.y }, power } };
 }
@@ -239,6 +241,7 @@ export function normalizeYourRound(x: unknown): YourRound | undefined {
   const ru = o.rules as Partial<RoundRules> | undefined;
   if (ru && typeof ru === 'object' && MULL_RULES.some(m => m.id === ru.mull)) base.rules = { mull: ru.mull!, ...(GIMME_RULES.some(g => g.id === ru.gimme) ? { gimme: ru.gimme! } : {}) };
   if (n(o.mk) && o.mk >= 1) base.mk = Math.round(o.mk);
+  if (o.practice === true && !o.mode) base.practice = true; // T349: a casual round that is practice (a competition or a match never is)
   if (o.mode && ROUND_MODES.includes(o.mode) && o.mode !== 'casual') { base.mode = o.mode; base.rules = { ...COMPETITION_RULES }; } // (T246: a competition keeps its rules)
   if (base.mode === 'match') { const m = normalizeMatch(o.match, holes.length); if (m) base.match = m; else delete base.mode; } // (T244: a match without its other side is a casual round)
   if (o.undo && typeof o.undo === 'object') {
@@ -335,5 +338,7 @@ export interface YourRoundView { round: YourRound; hole: number; par: number; st
   canGimme: boolean;
   /** T244: a money match's bar (play/match.ts matchView); null or absent: not a match */
   match?: MatchView | null;
+  /** T334: the day's wind as the round's bar says it ("8 mph from the W", "Calm"); null: no weather (a day from before it) */
+  wind?: string | null;
   /** T326: your cart is out of reach (the Cart button calls it) */
   cartFar: boolean; card: boolean; flying: boolean; addressing: boolean }

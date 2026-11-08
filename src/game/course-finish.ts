@@ -12,6 +12,7 @@ import { SURF } from './ext/course-grid';
 import { borderBase } from './ext/course-grid/patch';
 import { SUN_TILE_DIR } from './ext/course-height';
 import type { StripeLook } from './course-stripes';
+import { mowCustom, patternOf, type MowKind, type MowOpts, type MowPattern, type MowRec } from './mow-lines';
 
 /** the course finish's knobs */
 export interface CourseFinish {
@@ -78,6 +79,35 @@ export function greenStripeLook(f: CourseFinish, base: StripeLook): StripeLook |
   if (!f.on || !(f.greenStrength > 0)) return null;
   return { w: f.greenWidth, l: GREEN_LIGHT * f.greenStrength, k: GREEN_DARK * f.greenStrength, lc: BAND_TINT, dc: base.dc, t: 0, f: BAND_SOFT, across: false };
 }
+/** T359 (#1006): a look's own mowing lines over the finish. mowSpec is the look a surface lays them with (null: none): the finish's own, then
+ *  the look's settings (a MowRec) over it: on or off (the fairway's and the green's are on by default, the tee's and the rough's off), the band
+ *  width, the light and dark strengths in the finish's terms (a lift of the grass's own colour, a multiply of the dark one: the texture made
+ *  lighter or darker, never a wash) and the pattern with its angle (a checkerboard lays squares as wide as a band; a diamond turns it a
+ *  quarter). A look that sets any of those numbers lays them with the finish on (the Studio's finish off is T218's untextured look, whose
+ *  numbers are not these). textured: laid by mowBands (the grass's detail kept), else by T218's mowStripes */
+export interface MowSpec { look: StripeLook; textured: boolean; pattern: MowPattern; angle: number }
+export function mowSpec(kind: MowKind, rec: MowRec | undefined, f: CourseFinish, base: StripeLook): MowSpec | null {
+  const green = kind === 'green', fin = mowCustom(rec) && !f.on ? { ...DEFAULT_COURSE_FINISH } : f;
+  const def = green ? greenStripeLook(fin, base) : finishStripeLook(fin, base);
+  const on = rec?.on === undefined ? (kind === 'fairway' ? true : green ? !!def : false) : rec.on === 1;
+  if (!on) return null;
+  // the surface's own look, else the finish's tuned one (a green turned on with none, a tee or rough with the finish off: T218's for the tee)
+  const look0 = def ?? (green ? greenStripeLook(DEFAULT_COURSE_FINISH, base)! : base), textured = !!def || green;
+  const L = green ? GREEN_LIGHT : BAND_LIGHT, K = green ? GREEN_DARK : BAND_DARK, pattern = patternOf(rec);
+  const look: StripeLook = { ...look0, ...(rec?.w !== undefined ? { w: rec.w } : {}), ...(rec?.l !== undefined && textured ? { l: L * rec.l } : {}), ...(rec?.k !== undefined && textured ? { k: K * rec.k } : {}),
+    ...(pattern === 'check' || pattern === 'diamond' ? { check: true } : {}) };
+  // (straight: the angle on the ground; a checkerboard follows the hole's line, so its angle is the turn from it, a diamond a quarter more)
+  return { look, textured, pattern, angle: (rec?.a ?? 0) + (pattern === 'diamond' ? 45 : 0) };
+}
+/** what a look's mowing lines read as in the panel, every field with the value it lays (the finish's where the look sets none): the Mowing lines
+ *  section's controls (width in tiles, the strengths 0..1, the angle in degrees) */
+export interface MowShown { on: boolean; pattern: MowPattern; width: number; light: number; dark: number; angle: number }
+export function mowShown(kind: MowKind, o: MowOpts | undefined, f: CourseFinish): MowShown {
+  const fin = f.on ? f : DEFAULT_COURSE_FINISH, green = kind === 'green';
+  const s = green ? fin.greenStrength : fin.bandStrength;
+  return { on: o?.on ?? (kind === 'fairway' ? true : green ? fin.greenStrength > 0 : false), pattern: o?.pattern ?? 'along', width: o?.width ?? (green ? fin.greenWidth : fin.bandWidth), light: o?.light ?? s, dark: o?.dark ?? s, angle: o?.angle ?? 0 };
+}
+
 /** the range outfield's bands with the finish (rangehost outfieldStripes gives its line of play, lx ly): the fairways' width and strength,
  *  along the line of play (a band centred on the line through the mow origin) or across it; null: the finish off, or a stripe set with no
  *  line (it keeps its own look) */

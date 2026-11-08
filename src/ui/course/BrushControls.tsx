@@ -3,7 +3,7 @@
 // size: Square (1 to 4 cells, the pills) or Round (T238: a circle on the map, sized by the slider, which draws as a 2:1 ellipse on screen),
 // the look of the surface in hand (My looks, T252 in Edit hole too) and the ground's height (T252: Ground height in Edit hole too).
 // Self-contained: they read and drive game.paint.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Game } from '../../game/engine';
 import { PAINT_TEXES, SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
 import { MAX_GRASSES } from '../../game/ext/course-grid';
@@ -56,7 +56,10 @@ export function SurfaceSwatches({ game, on, pick, pickGrass }: { game: Game; on:
   const own = game.golfMode && !!game.courseGrid && !!p.grasses, gk = on ? p.grassInHand ?? 0 : 0;
   // the owner, 2026-11-01: a click on a surface shows it alone, in focus (SurfaceFocus: its look large, quick textures, saved grasses, edit,
   // whose look); the keys still switch surfaces, and the focus follows the one in hand
-  const [focus, setFocus] = useState(false);
+  // (T359: Course › Holes › Shape by hand › <surface> asks for the focus too: p.openSurface sets focusWanted, taken here once, on the panel's
+  // first look or, when it is on screen already, at the next opening)
+  const [focus, setFocus] = useState(() => p.focusWanted);
+  useEffect(() => { if (p.focusWanted) { p.focusWanted = false; setFocus(true); } }, [p, p.focusRev]);
   useSwatchPucks();
   if (own && focus && on && !gk) return <SurfaceFocus game={game} kind={on} onBack={() => setFocus(false)} pickGrass={k => { setFocus(false); (pickGrass ?? (q => p.setGrass(q)))(k); }} />;
   return (

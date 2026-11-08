@@ -2,7 +2,9 @@
 // game minute for the playback. Times are game minutes of the day; distances are tiles unless named M. Pure TS, no DOM.
 // The stepping (HoleRun, GroupRun) is shared by playRound and the owner's live group (live.ts), so both keep one time model.
 import { TILE_M } from '../types';
-import { carryM, chooseShot, hitShot, putt, rng, skillFor, type ShotSkill } from './shot';
+import { carryM, chooseShot, hitShot, luckyPutt, putt, rng, skillFor, type ShotSkill } from './shot';
+import { kitOf } from './mods';
+import { fieldEnv, type Conditions } from './conditions';
 import { CART_PACE } from './entourage';
 import type { Club, CourseView, Golfer, Group, GolferState, Landing, Lie, Pace, PlayHole, Pt, RoundPlan, Shot, Standing, Wait } from './types';
 import type { TeeKind } from '../types';
@@ -76,7 +78,9 @@ export interface Player { id: number; pro: boolean; skill: number; /** T241: the
 interface Pending { club: Club; to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean; dur: number; green: boolean; /** T251: a full shot's landing */ landing?: Landing }
 
 /** what a round's play writes to: the course, the seed, the golfers by id, the shots (in the order struck), the done minutes and the pace (T211) */
-export interface PlayCtx { view: CourseView; seed: number; who: Map<number, Golfer>; out: Shot[]; done: number[]; pace: Pace }
+export interface PlayCtx { view: CourseView; seed: number; who: Map<number, Golfer>; out: Shot[]; done: number[]; pace: Pace;
+  /** T334: the day's conditions for the model's golfers (the wind's mean, the heights, the view's finer lie: conditions.ts); absent: none, played as before */
+  cond?: Conditions }
 
 /** one group's play of one hole. A golfer strikes when he is ready (his walk to his ball is done), the group's last strike's routine is over and the
  *  group ahead on the hole lets him (T211, gate), the farthest from the pin first. `first` is the group's first strike on the hole; `now` is when the last
@@ -144,12 +148,15 @@ export class HoleRun {
     if (p.pend) return p.pend;
     const hole = holeFrom(this.c.view.holes[this.h]!, p.set), k = chooseShot(p.lie, p.ball, hole, p.sk, p.lie === 'tee'); // T254: his set's line
     if (k.club === 'putter') {
-      const from = p.ball, dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), o = putt(p.r, skillFor(p.sk, 'putter'), L * TILE_M);
+      const from = p.ball, dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), o0 = putt(p.r, skillFor(p.sk, 'putter'), L * TILE_M, 1, !!this.c.cond); // (T334: a day with conditions putts by the second version, as the owner does)
+      // (T335: a putter with luck, the owner's fitted putter played by the model: a lucky drop or a lip-out; a field golfer's number has none, and takes no draw)
+      const luck = typeof p.sk === 'number' ? 0 : kitOf(p.sk, 'putter').luck, o = luck > 0 ? luckyPutt(p.r, o0, L * TILE_M, luck) : o0;
       // a miss leaves the ball on the putt's line, on the far side of the pin
       const s = L > 0 ? o.leaveM / TILE_M / L : 0, to = o.holed ? { x: hole.pin.x, y: hole.pin.y } : { x: hole.pin.x + dx * s, y: hole.pin.y + dy * s };
       return p.pend = { club: 'putter', to, lie: o.holed ? 'green' : this.c.view.lieAt(to.x, to.y), penalty: 0, holed: o.holed, dur: PUTT_FLIGHT, green: true };
     }
-    const o = hitShot(p.r, p.sk, p.lie, p.ball, k.aim, k.club, this.c.view), atPin = k.aim.x === hole.pin.x && k.aim.y === hole.pin.y;
+    // (T334: with the day's conditions the wind, the lie's kind and the slope play; without them the shot is as before)
+    const cd = this.c.cond, o = hitShot(p.r, p.sk, p.lie, p.ball, k.aim, k.club, this.c.view, cd ? { env: fieldEnv(cd, this.c.view.kindAt, p.ball, p.lie, k.aim) } : undefined), atPin = k.aim.x === hole.pin.x && k.aim.y === hole.pin.y;
     return p.pend = { club: k.club, to: o.to, lie: o.lie, penalty: o.penalty, holed: false, dur: FLIGHT_TIME, green: atPin || o.lie === 'green', landing: o.landing };
   }
   /** the model's stroke for p at its minute (timeOf, which must be known). Recorded, and returned */
@@ -306,13 +313,14 @@ export function liveField(plan: RoundPlan): { field: Field; live: number } | und
  *  to the next tee; the waits and wave-throughs are in plan.pace. Each golfer's random stream is rng(seed, golfer, hole), so one golfer's play never
  *  shifts another's, and the waits only move the minutes. With opts.live (an index into groups), the owner of that group plays by his input: the day is
  *  played up to his first strike, and LiveGroup (live.ts) plays on from there; the golfers not done yet (his group, and the groups behind that wait on
- *  it) have done Infinity */
-export function playRound(view: CourseView, golfers: Golfer[], groups: Group[], seed: number, opts?: { live?: number }): RoundPlan {
+ *  it) have done Infinity. T334: with opts.cond (the day's conditions) the model's shots are struck in the day's mean wind, from the lie's kind and the slope under
+ *  the ball; without it, as before */
+export function playRound(view: CourseView, golfers: Golfer[], groups: Group[], seed: number, opts?: { live?: number; cond?: Conditions }): RoundPlan {
   const N = view.holes.length, size = Math.max(0, ...golfers.map(g => g.id)) + 1;
   const pace: Pace = { arrive: groups.map(() => new Array<number>(N).fill(Infinity)), waits: [], open: [], waves: [] };
   const plan: RoundPlan = { golfers, groups, shots: [], strokes: Array.from({ length: size }, () => new Array<number>(N).fill(0)), done: new Array<number>(size).fill(0), pace };
   for (const gr of groups) for (const id of gr.players) plan.done[id] = N ? Infinity : gr.tee; // with no holes, a golfer is done at his tee time
-  const c: PlayCtx = { view, seed, who: new Map(golfers.map(g => [g.id, g] as const)), out: [], done: plan.done, pace };
+  const c: PlayCtx = { view, seed, who: new Map(golfers.map(g => [g.id, g] as const)), out: [], done: plan.done, pace, ...(opts?.cond ? { cond: opts.cond } : {}) };
   const field = new Field(c, groups), live = opts?.live !== undefined ? groups[opts.live] : undefined;
   if (live) {
     field.ownerId = live.players.find(id => c.who.get(id)?.owner) ?? -1;

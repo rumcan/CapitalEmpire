@@ -1,0 +1,12 @@
+{
+  "generationId": "4e2592dd-09b2-4d65-b367-141a78e8c92b",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "image-to-3d",
+  "quality": "standard",
+  "gameId": "4G0mrT5UcCtD5KY8luXQ",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\art\\spectators\\player_m\\model.glb",
+  "status": "saved",
+  "sha256": "9982610d06fcd0912076f70951b70cefd1ca809750f39e8ff518d813f66ab2a0",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/4G0mrT5UcCtD5KY8luXQ/4e2592dd-09b2-4d65-b367-141a78e8c92b/model.compressed.glb",
+  "seed": 109186693
+}

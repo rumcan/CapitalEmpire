@@ -150,15 +150,33 @@ void main() {
   if (uMode == 1) c *= texture(uMask, vec2(gl_FragCoord.x / uScreen.x, 1.0 - gl_FragCoord.y / uScreen.y)).a;
   o = c * uAlpha;
 }`;
+// T334 (#960): the wind (uWind: x the time in seconds, y and w the wind's direction on the screen, z its strength 0..1; 0: still, the sway is skipped). A sprite's sway
+// code rides in its cullable slot (sprites.ts swayOf: bit 0 is the cull flag, the rest the code: 1 a tree, 2 a shrub, 3 the pin's flag): the top of a tree or a shrub leans
+// downwind and breathes with the gusts (the picture sheared about its foot, two sines on four vertices, nothing per frame on the CPU), and the pin's flag passes its cloth's
+// frame to the fragment shader (vFlag: 1, the picture's left and top and width; vFlagK: its height and the uv's step per world px), which ripples it there
 const VS_SPRITE = `#version 300 es
 layout(location=0) in vec4 aRect; layout(location=1) in vec4 aUV; layout(location=2) in vec4 aMisc; layout(location=3) in vec4 aClip;
-uniform vec4 uCam; uniform vec2 uScreen; uniform float uMinPx;
-out vec3 vUV; out float vAlpha; out vec2 vW; flat out vec4 vClip; flat out float vTint;
+uniform vec4 uCam; uniform vec2 uScreen; uniform float uMinPx; uniform vec4 uWind;
+out vec3 vUV; out float vAlpha; out vec2 vW; flat out vec4 vClip; flat out float vTint; flat out vec4 vFlag; flat out vec3 vFlagK;
 void main() {
   vec2 c = vec2(gl_VertexID & 1, gl_VertexID >> 1);
   vec2 w = mix(aRect.xy, aRect.zw, c);
+  float sw = floor(aMisc.z * 0.5);
+  vFlag = vec4(0.0); vFlagK = vec3(0.0);
+  if (sw > 0.5) {
+    if (sw < 2.5) {
+      if (uWind.z > 0.0 && c.y < 0.5) {
+        float h = aRect.w - aRect.y, ph = aRect.x * 0.0173 + aRect.y * 0.0131, gust = 0.55 + 0.35 * sin(uWind.x * 1.7 + ph) + 0.12 * sin(uWind.x * 4.3 + ph * 2.1);
+        float a = (sw < 1.5 ? 0.05 : 0.03) * h * uWind.z;
+        w += vec2(uWind.y * gust + 0.3 * sin(uWind.x * 2.9 + ph * 1.7), uWind.w * gust) * a;
+      }
+    } else {
+      vFlag = vec4(1.0, aRect.x, aRect.y, aRect.z - aRect.x);
+      vFlagK = vec3(aRect.w - aRect.y, (aUV.z - aUV.x) / max(aRect.z - aRect.x, 1e-3), (aUV.w - aUV.y) / max(aRect.w - aRect.y, 1e-3));
+    }
+  }
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
-  bool cull = aMisc.z > 0.5 && (aRect.w - aRect.y) * uCam.z < uMinPx;
+  bool cull = mod(aMisc.z, 2.0) > 0.5 && (aRect.w - aRect.y) * uCam.z < uMinPx;
   // T176: 2 + alpha marks a tinted sprite (vTint 1); T228: 2 + 2 code + alpha a painted car (vTint code + 1, car-paint.ts)
   float code = aMisc.y > 1.5 ? floor((aMisc.y - 2.0) * 0.5) : -1.0;
   vTint = code + 1.0;
@@ -171,7 +189,7 @@ const FS_SPRITE = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;
 ${atlas}
 ${CAR_PAINT_GLSL}
-in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; flat in float vTint; out vec4 o;
+in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; flat in float vTint; flat in vec4 vFlag; flat in vec3 vFlagK; uniform vec4 uWind; out vec4 o;
 void main() {
   // T192: a lamp's glow (sim/car-lamps.ts, layer GLOW_LAYER: no atlas page): a soft disc of the brake lights' red, added (alpha 0), drawn in
   // the painter's order right after its car, so nearer sprites cover it (the branch is the same for a whole instance)
@@ -181,7 +199,18 @@ void main() {
     float f = (1.0 - d) * (1.0 - d);
     o = vec4(vec3(${BRAKE_LIGHT.colour.map(v => v.toFixed(3)).join(', ')}) * (vAlpha * f), 0.0); return;
   }
-  vec4 c = atlasTex(vUV.xy, vUV.z);
+  // T334: the pin's flag: its cloth (the picture's top third, right of the pole) ripples with the wind, streams out in a breeze, hangs limp and drawn in toward the pole in a
+  // calm; the pole and the base do not move. Stand-in until a flag sheet exists (docs/GOLF-SPRITES.md)
+  vec2 uv = vUV.xy;
+  if (vFlag.x > 0.5) {
+    float hx = (vW.x - vFlag.y) / vFlag.w, hy = (vW.y - vFlag.z) / vFlagK.x;
+    float body = (1.0 - smoothstep(0.38, 0.46, hy)) * smoothstep(0.15, 0.22, hx);
+    float k = uWind.z, ex = clamp((hx - 0.2) / 0.75, 0.0, 1.0);
+    float wave = sin(uWind.x * (2.6 + 5.0 * k) - ex * 6.5 + vFlag.y * 0.07) * (0.006 + 0.02 * k) * ex;
+    float hang = (1.0 - k) * 0.05 * ex * ex, pull = (1.0 - k) * 0.28 * (hx - 0.2);
+    uv += vec2(pull * vFlag.w * vFlagK.y, -(wave + hang) * vFlagK.x * vFlagK.z) * body;
+  }
+  vec4 c = atlasTex(uv, vUV.z);
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
   if (c.a < 0.004) discard;
   // T176: a tinted sprite (a tree a Build would clear): its own light and shade in one warm rust red (its luminance times the tint), so it
@@ -215,7 +244,7 @@ void main() {
   vec2 s = (g - uCam.xy) * uCam.z + uScreen * 0.5;
   vec2 c = vec2((x - aRect.x) / max(aRect.z - aRect.x, 1e-3), (y - aRect.y) / max(aRect.w - aRect.y, 1e-3));
   // T216: the sprite's own cull (VS_SPRITE): a sprite hidden at the district zoom casts no shadow either
-  bool cull = aMisc.z > 0.5 && (aRect.w - aRect.y) * uCam.z < uMinPx;
+  bool cull = mod(aMisc.z, 2.0) > 0.5 && (aRect.w - aRect.y) * uCam.z < uMinPx; // (T334: the sway code rides above bit 0)
   gl_Position = cull || aMisc.w < 0.0 ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
   // (T176: a tint's 2 + alpha; T228: a painted car's 2 + 2 code + alpha)
   vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 - 2.0 * floor((aMisc.y - 2.0) * 0.5) : aMisc.y; vW = vec2(x, y); vClip = aClip;
@@ -463,7 +492,7 @@ export class GLRenderer {
     }
     if (!a) throw err;
     const lib = a.glsl(), samplers = a.samplerNames();
-    this.sprite = this.program(VS_SPRITE, FS_SPRITE(lib), ['uCam', 'uScreen', 'uMinPx', ...samplers]);
+    this.sprite = this.program(VS_SPRITE, FS_SPRITE(lib), ['uCam', 'uScreen', 'uMinPx', 'uWind', ...samplers]);
     this.cast = this.program(VS_CAST, FS_CAST(lib), ['uCam', 'uScreen', 'uCast', 'uMinPx', 'uSunTex', 'uSun', 'uSunOff', ...samplers]);
     this.gl.useProgram(this.cast.p); this.gl.uniform1i(this.cast.u.uSunTex!, SUN_UNIT);
     this.atlas = a; this.atlasReady = true;
@@ -695,10 +724,14 @@ export class GLRenderer {
     const gl = this.gl; if (!r) { gl.disable(gl.SCISSOR_TEST); return; }
     gl.enable(gl.SCISSOR_TEST); gl.scissor(r[0], this.view.ch - r[3], Math.max(0, r[2] - r[0]), Math.max(0, r[3] - r[1]));
   }
+  /** T334: the wind for the sprite pass: the time (s), its direction on the screen (sx along, sy down: the iso projection of the ground vector) and its strength 0..1 (0: still,
+   *  the trees stand and the flags hang as the shader skips them). Set once a frame, before drawSprites */
+  setWind(t: number, sx: number, sy: number, k: number) { const w = this.wind; w[0] = t; w[1] = sx; w[2] = k; w[3] = sy; }
+  private wind = new Float32Array(4);
   /** sprite instances at float offset `firstFloat` of the uploaded stream */
   drawSprites(firstFloat: number, count: number, minPx: number) {
     if (!count || !this.atlas || !this.sprite) return; const gl = this.gl, pr = this.sprite;
-    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uMinPx, minPx);
+    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uMinPx, minPx); gl.uniform4f(pr.u.uWind, this.wind[0]!, this.wind[1]!, this.wind[2]!, this.wind[3]!);
     this.bindAtlas(pr);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
     const B = SPRITE_STRIDE * 4, o = firstFloat * 4;

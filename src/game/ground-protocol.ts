@@ -13,6 +13,7 @@ import type { EdgeProfile } from './paint-edges';
 import type { GrassArt } from './painted-grass-lod';
 import type { ShineWeights } from './grass-shine';
 import type { MotionMaskData } from './water-motion';
+import type { MowRec } from './mow-lines';
 /** T262: a chunk's grass shine weight mask as plain bytes, one channel (renderer.ts takeShineMask) */
 export interface ShineMaskData { w: number; h: number; data: Uint8Array }
 import type { RoughMix } from './rough-yards';
@@ -39,7 +40,9 @@ export interface PatchPaint { s: number; a: number; b: number; bt: string; z: nu
 export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w: number; l: number; k: number; lc: string; dc: string; t: number; f: number;
   /** T227: the line of play's direction (tiles, unit), so the course finish can lay its bands along or across it (course-finish finishMow);
    *  absent: the stripes keep their own look */
-  lx?: number; ly?: number }
+  lx?: number; ly?: number;
+  /** T359: a checkerboard (1): the bands cross a second family along (-uy, ux), light where the two agree and dark where they differ, squares as wide as a band */
+  c?: 1 }
 
 /** a texture as a course layer lays it: the texture (a paint texture or preset), its scale and angle (degrees, tile space about the origin);
  *  and the rest of the course look (the brush's style, course-look.ts): its exposure (x: the texture's RGB times x, 0.5 to 2; absent 1, T261
@@ -61,6 +64,9 @@ export interface CourseTex { tex: string; sc: number; a: number; x?: number; m?:
  *    line (tee, aim points, pin; flat tiles), its share of the chunk when there are two or more (runs: boxes x0 y0 x1 y1, tiles) and a: the
  *    hook for greenkeeping's mow angle (the way the mower drives, degrees in tile space; course-stripes holeStripeLegs), absent until set */
 export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill: Float32Array[]; edges: Float32Array[];
+  /** T338 (#965): the water's join with the map's own water (map-water.ts): the box (x0, y0, x1, y1, tiles) where its fill reaches into the river
+   *  or a creek the course leaves bare; the renderer keeps the course's water off the map's water there, so the two read as one. Absent: none */
+  join?: number[];
   /** its edges sorted by the heights on their sides (ext/course-walls, T099): soft (feathered) and joint (a crisp mowing line against its own
    *  collar) runs; the rest of its edges are walls (CoursePatch.walls) or hidden under a later layer, drawn crisp. Absent: feather all edges */
   soft?: Float32Array[]; joint?: Float32Array[];
@@ -74,7 +80,10 @@ export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill
     /** T269 (#810): the grounds crew's cut (ext/course-grid stripeAreas, the engine's mowFlips): [phase, leg, band]: the hole's bands drawn the
      *  other way (phase 1: light for dark, as the last day's cut ran), and today's fresh stripes behind the mower: along the line, the legs before
      *  `leg` and that leg's bands below `band` flipped again; across it, every leg's bands below `band` (leg -1: no cut today). Absent: as T218 */
-    f?: number[] }[];
+    f?: number[];
+    /** T359 (#1006): this hole's mowing lines (mow-lines.ts MowRec: on or off, the pattern, the band width, the light and dark strengths, the
+     *  angle; every field absent is the course finish's). Absent: the finish's look, as before */
+    m?: MowRec }[];
   /** T256 (#743): the other looks its cells wear in this chunk (each hole, the property and each practice facility owns its looks: golf/looks.ts):
    *  each its fill, its collar band and a bunker's lip grass, drawn over the layer's own look within its share of the chunk (runs: boxes x0 y0
    *  x1 y1, tiles; ext/course-grid cellShares). Absent: the whole layer wears its own look */

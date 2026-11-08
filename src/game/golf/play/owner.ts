@@ -1,12 +1,13 @@
 // The owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): the golfer he is, the clubs he may take from a lie, the power a club starts at, and
 // his live group started from a fresh plan (a replay of his saved inputs, then the caddie if he handed over); and the day's round as the engine builds it
 // (dayRound: the same after a reload, T209). Pure TS, no DOM.
-import { carryM, skillFor, type ShotSkill } from './shot';
+import { CLUB_ORDER, carryFor, type ShotSkill } from './shot';
 import { makeField, teeTimes } from './field';
 import { playRound } from './round';
 import { fieldEntourage } from './entourage';
 import { LiveGroup, POWER } from './live';
 import type { OwnerInput, OwnerTurn } from './live';
+import type { Conditions } from './conditions';
 import type { Club, CourseView, GameSkills, Golfer, Lie, RoundPlan, Sex } from './types';
 import type { TeeKind } from '../types';
 
@@ -29,8 +30,10 @@ export function ownerGolfer(id: number, sex: Sex, tees: TeeKind = 'middle', skil
 /** T241: the average of the four parts of the game (a golfer with skills: his skill, the tee times' order) */
 export const meanSkill = (s: GameSkills): number => (s.driving + s.irons + s.short + s.putting) / 4;
 
-/** the clubs the owner may take from a lie: the driver only from the tee (teeShot), the putter only on the green, the others any time. Longest first */
-export function allowedClubs(lie: Lie, teeShot: boolean): Club[] {
+/** the clubs the owner may take from a lie: the driver only from the tee (teeShot), the putter only on the green, the others any time. Longest first. T335: with `bag` (GameSkills.clubs: the clubs in
+ *  his bag) those that are in it, in bag order; without, the original seven as before */
+export function allowedClubs(lie: Lie, teeShot: boolean, bag?: readonly Club[]): Club[] {
+  if (bag) return CLUB_ORDER.filter(c => bag.includes(c) && (c !== 'driver' || teeShot) && (c !== 'putter' || lie === 'green'));
   const out: Club[] = [];
   if (teeShot) out.push('driver');
   out.push('wood3', 'iron4', 'iron6', 'iron8', 'pw', 'sw');
@@ -42,7 +45,7 @@ export function allowedClubs(lie: Lie, teeShot: boolean): Club[] {
  *  floor (POWER[0]); the putter starts at 1 (the putt's full length to the pin) */
 export function powerFor(club: Club, distM: number, skill: ShotSkill): number {
   if (club === 'putter') return 1;
-  return Math.min(POWER[1]!, Math.max(POWER[0]!, distM / carryM(club, skillFor(skill, club))));
+  return Math.min(POWER[1]!, Math.max(POWER[0]!, distM / carryFor(skill, club)));
 }
 
 /** the owner in the day as the save keeps him (GolfPlaySave without its key): his sex, the inputs he played in order, and how many he had played when he
@@ -55,13 +58,14 @@ export interface DayOwnerPlay { id: number; li: number; tee: number; live: LiveG
 
 /** the tournament day's round as the engine builds it (docs/GOLF-PLAY.md P2 and P4b; T209: the same on a reload): the field of the tier from the seed, the
  *  owner (when he plays) as the next id, the tee times, and the round; his group is played live from his saved inputs (startOwner: replayed, then the
- *  caddie) and his next turn is due. Throws when his inputs no longer fit the course (startOwner) */
-export function dayRound(view: CourseView, tier: number, seed: number, owner: DayOwner | null): { plan: RoundPlan; golfers: Golfer[]; own: DayOwnerPlay | null } {
+ *  caddie) and his next turn is due. Throws when his inputs no longer fit the course (startOwner). T334: with `cond` (the day's wind, heights and the lie's kinds) the
+ *  model's golfers play in the day's weather (play/conditions.ts); without it the day is as it was */
+export function dayRound(view: CourseView, tier: number, seed: number, owner: DayOwner | null, cond?: Conditions): { plan: RoundPlan; golfers: Golfer[]; own: DayOwnerPlay | null } {
   const field = makeField(tier, seed), id = field.length, golfers = owner ? [...field, ownerGolfer(id, owner.owner, owner.tees, owner.skills)] : field;
   const groups = teeTimes(golfers, seed), li = owner ? groups.findIndex(gr => gr.players.includes(id)) : -1;
   // T213: the tour's pros have caddies, the small events' amateurs ride carts (their moves between shots a little quicker)
   fieldEntourage(golfers, groups, tier);
-  const plan = playRound(view, golfers, groups, seed, li >= 0 ? { live: li } : undefined);
+  const plan = playRound(view, golfers, groups, seed, li >= 0 || cond ? { ...(li >= 0 ? { live: li } : {}), ...(cond ? { cond } : {}) } : undefined);
   if (!owner || li < 0) return { plan, golfers, own: null };
   const { live, turn } = startOwner(plan, view, li, seed, owner.inputs, owner.caddie);
   return { plan, golfers, own: { id, li, tee: groups[li]!.tee, live, turn } };

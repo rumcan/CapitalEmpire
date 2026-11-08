@@ -10,6 +10,8 @@ import { MONTH_BASE } from './areas';
 import { growMask } from '../course-fx';
 import { DRAW_ORDER, LayerStack, chunkWalls, coversOf, defaultShadow, layerCode, surfHeights, teeStairs } from '../course-walls';
 import { SPILL_SURFACES, TALL_CODES, lengthOfCode, shadeRuns, spillRuns } from '../course-walls/spill';
+import { joinCells, joinEdges, withJoin, type MapWater } from '../../map-water';
+import { mowAnyOn, mowOfHole, type MowTable } from '../../mow-lines';
 
 /** a course chunk's side, tiles (128 cells) */
 export const COURSE_CHUNK = 64;
@@ -59,7 +61,10 @@ export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar:
    *  the grasses' fills, bands, Borders, Shadows and Round off at their draw ids too) */
   base?: readonly (number | undefined)[];
   /** T271: the custom grasses' draw ids with mowing stripes (a fairway-like grass with stripes on) */
-  stripes?: readonly number[] }
+  stripes?: readonly number[];
+  /** T359 (#1006): each surface's mowing lines by surface id (the fairway's, the green's, the tee's and the rough's; mow-lines.ts MowTable: the
+   *  Course default's and each hole's); absent: the course finish's own lines, as before */
+  mow?: readonly (MowTable | undefined)[] }
 /** T256 (#743): the looks each hole, the property and each practice facility wear (golf/looks.ts): looks[k], owner k's fills, collars, bands
  *  and lip grass (course-look.ts CourseLookSet); hole[h], the owner the cells of hole h wear (-1 or missing: the base looks of CourseLooks);
  *  zones, the facilities' boxes as five numbers each (k, x0, y0, x1, y1, tiles): a cell of no hole inside one wears owner k */
@@ -218,11 +223,38 @@ const f32 = (a: readonly number[][]): Float32Array[] => a.map(q => Float32Array.
  *  the layers come from chunkOutlines in draw order, each in its look (a surface with no look is left out), the fairway carries its mowing
  *  stripes' holes (stripeAreas, T218: the playing lines, lines: per hole, flat tiles, and each hole's share of the chunk), and the growth mask rides along
  *  when something grows (now: the effective game month); the stairs of the tees within reach (T127) face the nearest of `paths` (the cart
- *  paths and drives, flat segments ax, ay, bx, by in tiles) */
-export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>, paths?: ArrayLike<number> | null, flips?: ReadonlyMap<number, readonly number[]>): LotPatch | null {
+ *  paths and drives, flat segments ax, ay, bx, by in tiles).
+ *  T338 (#965): water, the map's own water near the chunk (map-water.ts): where the course's water meets the map's water the course leaves bare,
+ *  the two join (the chunk's water reaches into it, with no edge, so no wall, bank or feather, where they meet; CourseLayer.join tells the
+ *  renderer where to keep the course's water off the map's); absent: as before */
+export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>, paths?: ArrayLike<number> | null, flips?: ReadonlyMap<number, readonly number[]>, water?: MapWater | null): LotPatch | null {
+  // T338: the join's cells (bare map water within reach of the course's water) count as water while the outlines and walls are made, over the
+  // box the chunk's outlines read (its margin, the widest collar and Round off), so neighbouring chunks agree on them
+  const S0 = COURSE_CHUNK, jr = CHUNK_MARGIN + ROUND_REACH_T + 2 * BORDER_MAX_M * CELL_T + 2;
+  const join = joinCells(g, [cx * S0 - jr, cy * S0 - jr, (cx + 1) * S0 + jr, (cy + 1) * S0 + jr], water);
+  const built = withJoin(drawView(g), join, () => courseLayers(g, cx, cy, looks, lines, flips, join));
+  if (!built) return null;
+  const { layers, cw, spill, shade } = built, S = COURSE_CHUNK, heights = courseHeights(looks);
+  const R = COURSE_PATCH_REACH, x0 = cx * S - R, y0 = cy * S - R, x1 = (cx + 1) * S + R, y1 = (cy + 1) * S + R;
+  const grow = courseGrow(g, cx, cy, now);
+  const walls = cw.walls.map(w => ({ p: Float32Array.from(w.p), lo: w.lo, m: w.m, hs: w.hs, ...(w.f ? { f: w.f, r: w.r } : {}) })), rims = cw.rims.map(r => ({ p: Float32Array.from(r.p), hi: r.hi }));
+  // the tees' stairs (T127): every tee within reach of the chunk's walls, its whole box, so each chunk it touches cuts the same steps
+  const stairs = cw.walls.some(w => w.f && w.hs === SURF.tee) ? teeStairs(g, [x0, y0, x1, y1], paths, heights) : [];
+  const st = stairs.length ? { st: stairs.flatMap(q => [q.x, q.y, q.nx, q.ny, q.half]) } : {};
+  // (T271: by draw id: a chunk with a custom grass carries the grasses' Shadows too; any other the nine entries it carried before, or none)
+  const shN = layers.some(l => l.s >= CUSTOM0) ? Math.max(9, looks.shadow?.length ?? 0) : 9, shOn = !!looks.shadow?.some((v, s) => v !== undefined && s < shN);
+  const sh = shOn ? { sh: Array.from({ length: shN }, (_, s) => { const v = looks.shadow![s]; return v !== undefined && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : defaultShadow(s); }) } : {};
+  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, ...(spill.length ? { spill } : {}), ...(shade.length ? { shade } : {}), z: 0 } };
+}
+
+/** the layers of chunk (cx, cy) and its walls (coursePatch; T338: run with the join's cells laid as water, its water's edges cut at the join),
+ *  null when it has none */
+function courseLayers(g: Grid, cx: number, cy: number, looks: CourseLooks, lines: ReadonlyMap<number, readonly number[]> | undefined, flips: ReadonlyMap<number, readonly number[]> | undefined, join: ReturnType<typeof joinCells>) {
   // T271: the course as drawn (d: each custom grass a surface of its own; g itself with none): the outlines, walls, spill, stripes and looks
   // read it; the growth mask and the tees' stairs read the playing grid
   const d = drawView(g), S = COURSE_CHUNK, styles = courseStyles(looks.border, looks.base), heights = courseHeights(looks), outs = chunkOutlines(d, cx, cy, S, styles, true, roundOfLooks(d, looks)).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
+  // T338: the water's edges where it meets the map's water dropped (the seam is no shore: no wall, bank, feather or damp grass there)
+  if (join) for (const o of outs) if (o.surf === SURF.water) { o.edges = joinEdges(d, o.edges, join); if (o.collar) o.collar.edges = joinEdges(d, o.collar.edges, join); }
   // the edges exactly as they will be drawn (capped), for the walls (T099): each layer's edges sorted into soft, joint and wall runs
   const capped = outs.map(o => ({ o, se: capPoints(o.fill, o.edges), ce: o.collar ? capPoints(o.collar.fill, o.collar.edges) : null }));
   const cw = chunkWalls(d, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles, heights);
@@ -257,20 +289,15 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
     // the mowing stripes' holes: the fairway's (T218) and the green's (T227: the course finish's fine stripes, along its hole's line of play)
     // (T271: a custom grass with its stripes on, along the lines of the holes its cells belong to)
     // (T269: the grounds crew's cut on the fairway and the grasses mown as it, not on the green)
-    if ((o.surf === SURF.fairway || o.surf === SURF.green || looks.stripes?.includes(o.surf)) && o.fill.length) { const st = stripeAreas(d, cx, cy, lines, o.surf, o.surf === SURF.green ? undefined : flips); if (st) L.stripes = st; }
+    // (T359: the tee and the rough have lines only where a look turns them on; every hole's own lines ride on its entry)
+    const mow = looks.mow?.[o.surf];
+    if ((o.surf === SURF.fairway || o.surf === SURF.green || looks.stripes?.includes(o.surf) || ((o.surf === SURF.tee || o.surf === SURF.rough) && mowAnyOn(mow))) && o.fill.length) { const st = stripeAreas(d, cx, cy, lines, o.surf, o.surf === SURF.green ? undefined : flips, mow); if (st) L.stripes = st; }
+    // T338: where the renderer keeps the course's water off the map's water it joins (the join's box)
+    if (join && o.surf === SURF.water && L.fill.length) L.join = [...join.box];
     if (L.fill.length || L.collar) layers.push(L);
   }
   if (!layers.length) return null;
-  const R = COURSE_PATCH_REACH, x0 = cx * S - R, y0 = cy * S - R, x1 = (cx + 1) * S + R, y1 = (cy + 1) * S + R;
-  const grow = courseGrow(g, cx, cy, now);
-  const walls = cw.walls.map(w => ({ p: Float32Array.from(w.p), lo: w.lo, m: w.m, hs: w.hs, ...(w.f ? { f: w.f, r: w.r } : {}) })), rims = cw.rims.map(r => ({ p: Float32Array.from(r.p), hi: r.hi }));
-  // the tees' stairs (T127): every tee within reach of the chunk's walls, its whole box, so each chunk it touches cuts the same steps
-  const stairs = cw.walls.some(w => w.f && w.hs === SURF.tee) ? teeStairs(g, [x0, y0, x1, y1], paths, heights) : [];
-  const st = stairs.length ? { st: stairs.flatMap(q => [q.x, q.y, q.nx, q.ny, q.half]) } : {};
-  // (T271: by draw id: a chunk with a custom grass carries the grasses' Shadows too; any other the nine entries it carried before, or none)
-  const shN = layers.some(l => l.s >= CUSTOM0) ? Math.max(9, looks.shadow?.length ?? 0) : 9, shOn = !!looks.shadow?.some((v, s) => v !== undefined && s < shN);
-  const sh = shOn ? { sh: Array.from({ length: shN }, (_, s) => { const v = looks.shadow![s]; return v !== undefined && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : defaultShadow(s); }) } : {};
-  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, ...(spill.length ? { spill } : {}), ...(shade.length ? { shade } : {}), z: 0 } };
+  return { layers, cw, spill, shade };
 }
 
 /** the buffers of a patch's typed arrays (a postMessage transfer list) */
@@ -293,11 +320,11 @@ export type StripeArea = NonNullable<CourseLayer['stripes']>[number];
  *  nearest fairway cell is its (a walk out from the fairway cells in rings, a tie to the lower hole). Every chunk walks the same cells round
  *  its seams the same way, so where an outline can lie (a few cells from its fairway) the shares agree across chunks. null: no fairway cell
  *  within reach. surf: the surface whose cells are walked (T227: the green's, for its fine stripes; the fairway's by default) */
-export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>, surf: number = SURF.fairway, flips?: ReadonlyMap<number, readonly number[]>): StripeArea[] | null {
+export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>, surf: number = SURF.fairway, flips?: ReadonlyMap<number, readonly number[]>, mow?: MowTable): StripeArea[] | null {
   const lineOf = (h: number) => { const l = h > 0 ? lines?.get(h) : undefined; return l && l.length >= 4 ? l : null; };
   const sh = cellShares(g, cx, cy, surf, c => { const h = g.hole[c]!; return lineOf(h) ? h : 0; }); if (!sh) return null;
-  // (T269: a hole's crew cut rides along: flips, [phase, leg, band])
-  const entry = (h: number): StripeArea => { const f = h ? flips?.get(h) : undefined; return { hole: h, line: h ? lineOf(h)!.slice() : [], ...(f ? { f: [...f] } : {}) }; };
+  // (T269: a hole's crew cut rides along: flips, [phase, leg, band]; T359: and the hole's own mowing lines, mow)
+  const entry = (h: number): StripeArea => { const f = h ? flips?.get(h) : undefined, m = mowOfHole(mow, h); return { hole: h, line: h ? lineOf(h)!.slice() : [], ...(f ? { f: [...f] } : {}), ...(m ? { m: { ...m } } : {}) }; };
   return sh.runs ? sh.labels.map((h, k) => ({ ...entry(h), runs: sh.runs![k]! })) : [entry(sh.labels[0]!)];
 }
 /** T256 (generalising T218's walk): the shares of chunk (cx, cy) among the labels of the cells of surface `surf` (label(c), a cell index of g,

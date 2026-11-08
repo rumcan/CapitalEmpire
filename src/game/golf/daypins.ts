@@ -189,7 +189,7 @@ export function withDayPins(view: CourseView, pinOf: (n: number) => Pt | null): 
     if (!m) { m = { line: end(h.line), ...(h.sets ? { sets: h.sets.map(s => ({ ...s, line: end(s.line) })) } : {}) }; made.set(h.line, m); }
     return { ...h, pin: m.line[m.line.length - 1]!, line: m.line, ...(m.sets ? { sets: m.sets } : {}) };
   });
-  return changed ? { holes, lieAt: view.lieAt } : view;
+  return changed ? { holes, lieAt: view.lieAt, ...(view.kindAt ? { kindAt: view.kindAt } : {}) } : view; // (T334: the finer lie goes along)
 }
 
 /** a finite number */

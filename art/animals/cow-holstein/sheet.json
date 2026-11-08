@@ -1,0 +1,88 @@
+{
+ "id": "cow-holstein",
+ "frameWidth": 328,
+ "frameHeight": 328,
+ "anchor": {
+  "x": 164,
+  "y": 250
+ },
+ "directions": [
+  "SE",
+  "S",
+  "SW",
+  "W",
+  "NW",
+  "N",
+  "NE",
+  "E"
+ ],
+ "frames": [
+  "graze1",
+  "graze2",
+  "graze3",
+  "graze4",
+  "lookup1",
+  "lookup2",
+  "lookup3",
+  "walk1",
+  "walk2",
+  "walk3",
+  "walk4",
+  "walk5",
+  "walk6",
+  "walk7",
+  "walk8"
+ ],
+ "clips": {
+  "graze": {
+   "start": 0,
+   "n": 4,
+   "times": [
+    0,
+    0.7,
+    1.4,
+    2.1
+   ],
+   "loop": true
+  },
+  "lookup": {
+   "start": 4,
+   "n": 3,
+   "times": [
+    0,
+    0.22,
+    0.44
+   ],
+   "loop": false
+  },
+  "walk": {
+   "start": 7,
+   "n": 8,
+   "times": [
+    0.0,
+    0.16,
+    0.32,
+    0.48,
+    0.64,
+    0.8,
+    0.96,
+    1.12
+   ],
+   "loop": true
+  }
+ },
+ "lengthMetres": 2.4,
+ "heightMetres": 1.719,
+ "pxPerMetre": 123.255,
+ "repainted": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7
+ ],
+ "v": 2
+}

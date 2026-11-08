@@ -76,6 +76,15 @@ edges); a thin dark rim inside the edge for the paved textures (as lot patches h
 slab sprites (base colour + grime only, as the sidewalks do there). The planner map fills the polygon in the
 texture's flat planner colour.
 
+**Painted water meets the map's water (T344, #982; the course's water does the same since T338).** A water area
+(`waterTex`: the Fountain pond in town, the Paint tool's water) whose outline meets the map's river or a creek
+(`map-water.ts areaJoin`; the water as the ground draws it, a creek 0.35 of its channel) is drawn off that water, a hair
+inside its edge (`JOIN_INSET`), so the river shows through whole. Its border band is stroked only along the outline that is
+clear of the water (`JOIN_AREA`, 0.75 tile): no bank across the river, none along the seam. Its fill is faded on into the water
+in three bands (`fadeBands`), none into water narrower than `FADE_MIN_WIDTH` (2 tiles: a narrow creek's middle stays its own).
+All of it at bake time, only for water areas near map water, in `GroundPainter.drawPaints` / `drawPaint`. The pond's Stones edge
+(T231) treats the map's water as wet (`Pond.other`): no stone along the seam, no planting in the water.
+
 ## Saving
 
 A new optional field in the save, no version bump (like `parks`, `tolls`):

@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/4G0mrT5UcCtD5KY8luXQ/cc2dc0cc-184e-4f7e-bd71-6ba39d9e7b02/model.compressed.glb",
+  "look": "First-tee starter in his 50s, round glasses, a plain burgundy sweater vest over a white shirt, navy slacks, a plain straw boater hat. No logos, no lettering. Full-body figure standing on nothing: no ground, no grass, no base, nothing under the shoes.",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "id": "spectator:staff_pro_m1:tip_cap",
+  "name": "staff_pro_m1 tip_cap",
+  "clip": "tip_cap",
+  "heightMetres": 1.83,
+  "frameWidth": 160,
+  "frameHeight": 279,
+  "anchor": {
+    "x": 80,
+    "y": 269
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "tip_cap1",
+    "tip_cap2",
+    "tip_cap3",
+    "tip_cap4"
+  ],
+  "fps": 1.3,
+  "loop": true,
+  "source": "art/spectators/staff_pro_m1",
+  "clips": {
+    "tip_cap": "retarget_clip 2.97s, stride 1.30s, body turned 29 deg"
+  }
+}

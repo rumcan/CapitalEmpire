@@ -1,7 +1,7 @@
 // Your character's cards (T240, #704; docs/plans/P28.md section 1): the "Who are you?" card at a new game (your name, your look, your starting
 // handicap), the talk card when you walk up to a person (T243 brings the portraits), the first tee's "Start a round" card (T317 builds the round you
 // play yourself on it), and the cursors that say what a click does (walk / talk / look / use), as the point-and-click adventure games do.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LIBRARY } from '../../game/library';
 import type { RoundState } from '../../game/golf/player';
 import type { Verb } from '../../game/golf/you';
@@ -9,9 +9,12 @@ import { Icon } from '../Icon';
 import { Thumb } from '../Thumb';
 import { HoleChoiceBox } from './YourRound';
 import { ChallengeBox, type MatchOffer } from './MatchCards';
+import { CoursePicker, type Featured } from './CoursePicker';
+import type { OsmCourseSpec } from '../../game/golf/osm/types';
 import type { HoleChoice, RoundRules } from '../../game/golf/play/yours';
 import type { PersonIdentity } from '../../game/person-identity';
 import { PersonPortrait } from '../PersonPortrait';
+import { bookingLine } from '../../game/golf/startround';
 
 const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 
@@ -35,11 +38,18 @@ const THEMES: readonly { desert: boolean; name: string; note: string; ids: reado
   { desert: true, name: 'Desert', note: 'Palms, cacti and rocks on desert sand', ids: ['newprop:desert-date-palm-pair', 'newprop:desert-saguaro', 'newprop:desert-agave-clump'] },
 ];
 const BY_ID = new Map(LIBRARY.map(it => [it.id, it] as const));
-export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void;
-  /** T342: the game's look (desert or autumn) and the choice (the world changes behind the card at once) */ desert?: boolean; onTheme?: (desert: boolean) => void }) {
-  const [n, setN] = useState(name), [l, setL] = useState(look);
+export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, course, hidden }: { name: string; look: number; looks: { id: string; sex: 'm' | 'w'; item: number }[]; hcp: string; onDone: (name: string, look: number) => void;
+  /** T356: a real course is in hand over the map (the picker's Place it in my map): the card is out of the way, kept mounted so the picker is as it was when the course is placed or put down */ hidden?: boolean;
+  /** T342: the game's look (desert or autumn) and the choice (the world changes behind the card at once) */ desert?: boolean; onTheme?: (desert: boolean) => void;
+  /** T340 (#967), T358 (#1003): "Your course": build your own, one of the featured real courses, one you downloaded, or one you found (a new game starts on it); current:
+   *  the game's now (its id and the name it shows; null: your own) */
+  course?: { featured: Featured[]; current: string | null; currentName: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec) => void;
+    /** T356: place a found course on this game's map instead of starting a new game on it */ onPlace?: (spec: OsmCourseSpec) => void } }) {
+  const [n, setN] = useState(name), [l, setL] = useState(look), [pick, setPick] = useState(false);
+  // (T356: a course placed on this map is the game's course now: the picker closes and the row names it)
+  useEffect(() => { setPick(false); }, [course?.current]);
   return (
-    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
+    <div className="pointer-events-none absolute inset-0 z-30 flex flex-wrap items-center justify-center gap-3 overflow-y-auto p-4" style={hidden ? { display: 'none' } : undefined} data-hidden={hidden || undefined}>
       <div className="pointer-events-auto w-[460px] max-w-full space-y-3 rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur" data-testid="who-card">
         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">A new game · You</div>
         <div className="font-display text-xl font-bold leading-tight text-[var(--gold-hi)]">Who are you?</div>
@@ -70,6 +80,15 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme }: { n
             </div>
           </div>
         )}
+        {course && (
+          <div>
+            <div className="mb-1 text-xs text-slate-400">Your course <span className="text-slate-500">(build your own, or play a real one)</span></div>
+            <button className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-left text-xs hover:bg-white/10" onClick={() => setPick(o => !o)} aria-expanded={pick} data-testid="who-course-open">
+              <span><span className="font-semibold text-white">{course.currentName ?? 'Build your own'}</span> <span className="text-slate-400">{course.currentName ? '(from map data)' : '· a driving range and an empty plot'}</span></span>
+              <span className="shrink-0 text-amber-300">{pick ? 'Close' : 'Change or find a course ›'}</span>
+            </button>
+          </div>
+        )}
         <div className="flex items-baseline justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5" title="Your skills as a mid-handicap amateur: practise at the range to lower it">
           <span className="text-xs uppercase text-slate-400">Starting handicap</span>
           <span className="text-lg font-bold text-white" data-testid="who-hcp">{hcp}</span>
@@ -77,6 +96,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme }: { n
         <p className="text-xs text-slate-400">You stand beside the shack. With Walk (the walking figure on the left; Alt swaps it with Select) click the ground to walk, a person to talk, a building to look, the range to hit a bucket. WASD walk too; the arrows pan. C calls your golf cart, E gets in.</p>
         <button className="btn-gold w-full py-2 text-sm" onClick={() => onDone(n, l)} data-testid="who-go"><Icon name="people" size={18} />That's me</button>
       </div>
+      {course && pick && <CoursePicker featured={course.featured} current={course.current} onOwn={course.onOwn} onFeatured={course.onFeatured} onBuild={course.onBuild} onPlace={course.onPlace} onClose={() => setPick(false)} />}
     </div>
   );
 }
@@ -115,7 +135,8 @@ export function TalkCard({ talk, right, onClose, offer, onChallenge, lesson, onL
 }
 
 /** the first tee: start a round. Play in today's tournament while you can join it, else your everyday round on the tee sheet */
-export function TeeCard({ view, right, onJoin, onBook, onClose, play, onPlay, event, onEvent }: { view: { join: boolean; round: RoundState; name: string }; right: string; onJoin: () => void; onBook: () => void; onClose: () => void;
+export function TeeCard({ view, right, onJoin, onBook, onStart, onAuto, onTourney, onClose, play, onPlay, event, onEvent }: { view: { join: boolean; round: RoundState; name: string; start?: number | null }; right: string; onJoin: () => void; onBook: () => void;
+  /** T350: Start round (the clock runs to your booked tee time, then you play it), Let the game play it, and Start round for the tournament you joined */ onStart?: () => void; onAuto?: () => void; onTourney?: () => void; onClose: () => void;
   /** T246: today's club event (the Club Championship, the Mayor's Cup) and its card */ event?: { id: 'club' | 'mayor'; name: string; why: string | null } | null; onEvent?: (id: 'club' | 'mayor') => void;
   /** T317: the holes you may play yourself now (play/yours.ts holeOptions) and the start */ play?: Parameters<typeof HoleChoiceBox>[0]['choices']; onPlay?: (c: HoleChoice, picked: number[], rules: RoundRules) => void }) {
   const r = view.round;
@@ -129,16 +150,39 @@ export function TeeCard({ view, right, onJoin, onBook, onClose, play, onPlay, ev
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
       </div>
       {view.join && <button className="chip chip-on w-full justify-center" onClick={onJoin} data-testid="tee-join">Play in today's tournament</button>}
+      {view.start != null && onTourney && <button className="chip chip-on w-full justify-center" onClick={onTourney} data-testid="tee-tourney-start" title="The clock runs to your group's tee time, then you play at the pace of play">Start round: the tournament, tee time {clock(view.start)}</button>}
       {event && onEvent && <button className="chip chip-on w-full justify-center" onClick={() => onEvent(event.id)} title={event.why ?? ''} data-testid="tee-event">Today: the {event.name}{event.why ? ' (see why)' : ''}</button>}
       <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs">
         {r.k === 'none' && <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-300">{r.why ?? (r.next !== null ? `Next free tee time ${clock(r.next)}` : 'No tee times left today')}</span>
           <button className="chip chip-on disabled:opacity-40" disabled={!!r.why || r.next === null} onClick={onBook} data-testid="tee-book">Book {r.next !== null && !r.why ? clock(r.next) : ''}</button></div>}
-        {r.k === 'booked' && <div className="text-slate-300">Your tee time: <span className="font-semibold text-white">{clock(r.tee)}</span></div>}
+        {r.k === 'booked' && <div className="space-y-1.5" data-testid="tee-booked">
+          <div className="text-slate-300" data-testid="tee-booked-line">{bookingLine(r, clock)}</div>
+          {!r.auto && onStart && onAuto && <div className="flex flex-wrap gap-1.5">
+            <button className="chip chip-on" onClick={onStart} data-testid="tee-start" title="The clock runs to your tee time, then you play your round yourself at the pace of play">Start round</button>
+            <button className="chip" onClick={onAuto} data-testid="tee-auto" title="The game plays the round with your skills and tells you the score when it is done">Let the game play it</button></div>}
+        </div>}
         {r.k === 'out' && <div className="text-sky-200">You are out on the course (teed off {clock(r.tee)})</div>}
         {r.k === 'done' && <div className="text-slate-300">You shot <span className="font-semibold text-white">{r.strokes}</span> today</div>}
       </div>
       {play && onPlay && <HoleChoiceBox choices={play} onStart={onPlay} />}
-      <p className="text-[11px] text-slate-500">Booked: the day plays your round for you. Played yourself: you swing every shot.</p>
+      <p className="text-[11px] text-slate-500" data-testid="tee-note">A booking holds a tee time. Start round runs the clock there and you swing every shot; the game plays it for you only if you say so.</p>
+    </div>
+  );
+}
+
+/** T350 (#993): your booked tee time has come and you are not on the course: play now, or let the game play it. Nothing is played for you unless you say so; the clock waits while this is open */
+export function TeeAskCard({ tee, right, onPlay, onAuto, onClose }: { tee: number; right: string; onPlay: () => void; onAuto: () => void; onClose: () => void }) {
+  return (
+    <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-30 w-[300px] space-y-2 rounded-xl border border-amber-300/30 bg-slate-950/92 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="tee-ask">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div className="font-semibold text-amber-200">Your tee time: {clock(tee)}</div>
+        <button className="btn-icon" onClick={onClose} title="Decide later: the clock goes on and your booking stays"><Icon name="close" size={18} /></button>
+      </div>
+      <p className="text-xs text-slate-300">Your tee time has come. Play now, or let the game play it for you?</p>
+      <div className="flex flex-wrap gap-1.5">
+        <button className="chip chip-on" onClick={onPlay} data-testid="tee-ask-play" title="Start your round at the first tee: you swing every shot">Play now</button>
+        <button className="chip" onClick={onAuto} data-testid="tee-ask-auto" title="The game plays the round with your skills and tells you the score when it is done">Let the game play it</button>
+      </div>
     </div>
   );
 }

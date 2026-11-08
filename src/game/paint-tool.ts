@@ -2,6 +2,7 @@
 import type { LotPatch } from './ground-protocol';
 import type { BunkerState } from './ext/bunker-look/controller';
 import { lookChanged, type BrushLooks, type LookStyle } from './course-look';
+import { kindName, settingLabel, styleWords } from './setting-labels';
 import { LOOK_KINDS, copyLook, copySet, defaultSet as defaultSetOf, holeOwner, lookOf as bookLook, ownerHole, seedOwner, type FacilityOwner, type LookBook, type LookSet } from './golf/looks';
 import { placeMyHole, type MyHole, type Placed } from './golf/myholes';
 import { CH_SIZE, CH_STEP, COURSE_CELL_M2 } from './ext/course-height';
@@ -91,6 +92,8 @@ export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your 
 /** why Rub out leaves a cell as it is when the land rules let it (T125): nothing above the base there, or (rubHoleOnly) another hole's cell */
 /** T206: the Green and Bunker brushes in the practice area */
 export const PRACTICE_BRUSH_WHY = 'Practice greens are built with Facilities ▸ Practice';
+/** T338: why the Water brush skips the map's own water (it joins it there) */
+export const MAP_WATER_WHY = 'The river is water already: your water joins it';
 /** whether surface s is one the practice tools lay (the brushes are refused with it in the practice area) */
 const practiceSurf = (s: number) => s === SURF.green || s === SURF.bunker;
 export const RUB_WHY = { nothing: 'Nothing to rub out', hole: 'Another hole' } as const;
@@ -107,6 +110,31 @@ interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: Pr
   looks?: [string, LookSet | null, LookSet | null][];
   /** T254: Edit Hole Layout's step: the pins and tee markers before and after (Engine.markersKey) */
   markers?: { before: string; after: string } }
+/** T359 (#1006; the owner, 2026-11-08: "ctrl/z should always work to reset your prev menu setting change"): the build menus' settings on the undo
+ *  stack, in time order with the ground edits. A setting step keeps just the items its change touched, each as it was before and as it is after:
+ *  the brush presets by surface (each BrushSet as text: the course default's look, the brush's size, Border, Shadow, Length, Height), the looks book
+ *  by owner (each hole's, the property's and the facilities' looks; null: the owner has none), the flags (whose look the panel edits, the brush's
+ *  shape and size, Layer under or Replace, the panel's style) and the course's own grasses (with the new grass being made) */
+interface SettingsFlags { lookDefault: boolean; cells: number; square: number; replace: boolean; style: string }
+interface SettingsSnap { brush: Record<string, string>; book: Record<string, string> | null; flags: SettingsFlags; grasses: string; draft: string | null }
+interface SettingsDelta { brush?: Record<string, string>; book?: Record<string, string | null>; flags?: Partial<SettingsFlags>; grasses?: string; draft?: string | null }
+interface SettingStep { label: string; set: { before: SettingsDelta; after: SettingsDelta } }
+/** an entry of the undo stack: a ground edit (UndoStep) or a setting change (SettingStep) */
+type UndoEntry = UndoStep | SettingStep;
+const isSetting = (u: UndoEntry): u is SettingStep => 'set' in u;
+/** what changed between two snapshots, as the before and after items of a step (null: nothing) */
+function diffSettings(a: SettingsSnap, b: SettingsSnap): SettingStep['set'] | null {
+  const before: SettingsDelta = {}, after: SettingsDelta = {};
+  for (const k of Object.keys(b.brush)) if (a.brush[k] !== b.brush[k]) { (before.brush ??= {})[k] = a.brush[k]!; (after.brush ??= {})[k] = b.brush[k]!; }
+  if (a.book || b.book) for (const o of new Set([...Object.keys(a.book ?? {}), ...Object.keys(b.book ?? {})])) {
+    const x = a.book?.[o] ?? null, y = b.book?.[o] ?? null;
+    if (x !== y) { (before.book ??= {})[o] = x; (after.book ??= {})[o] = y; }
+  }
+  for (const k of Object.keys(b.flags) as (keyof SettingsFlags)[]) if (a.flags[k] !== b.flags[k]) { ((before.flags ??= {}) as Record<string, unknown>)[k] = a.flags[k]; ((after.flags ??= {}) as Record<string, unknown>)[k] = b.flags[k]; }
+  if (a.grasses !== b.grasses) { before.grasses = a.grasses; after.grasses = b.grasses; }
+  if (a.draft !== b.draft) { before.draft = a.draft; after.draft = b.draft; }
+  return before.brush || before.book || before.flags || before.grasses !== undefined || before.draft !== undefined ? { before, after } : null;
+}
 /** the most undo steps kept */
 const UNDO_MAX = 100;
 /** the most course-grid cells the undo steps keep in all (13 bytes a cell: about 26 MB); the oldest steps go first */
@@ -128,6 +156,9 @@ export const BORDER_KINDS: Partial<Record<BrushKind, { s: number; band: string }
 export const GRID_KINDS: readonly BrushKind[] = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste', 'longGrass'];
 /** the least ms between two re-draws of the course while a Border or Shadow slider is dragged (the last value always lands) */
 export const LOOK_MS = 120;
+/** T359: what a grass editor change touched, in words (the first field of the change) */
+const GRASS_WORDS: Readonly<Record<string, string>> = { family: 'texture', scale: 'texture size', angle: 'texture angle', tone: 'exposure', toneAmt: 'exposure', plays: 'plays as', stripes: 'mowing stripes',
+  border: 'border', btex: 'border texture', bscale: 'border texture size', bangle: 'border texture angle', btone: 'border exposure', btoneAmt: 'border exposure', round: 'round off', smooth: 'smoothness', shadow: 'shadow', length: 'grass length' };
 /** the localStorage key of the edited brush presets */
 const BRUSH_KEY = 'capitalempire.brushPresets';
 /** the brush radius range in tiles */
@@ -203,6 +234,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** T206: whether tile (x, y) lies in the driving range's practice area (its greens and bunkers are built with Facilities ▸ Practice, not
    *  the hole brushes: the Green and Bunker brushes are refused there) */
   practiceAt?(x: number, y: number): boolean;
+  /** T338 (#965): whether tile (x, y) lies in the map's own water (the river, a creek; map-water.ts): the Course brush lays no water on a cell
+   *  of it the course leaves bare (it is water already: the course's water meeting it joins it instead) */
+  mapWaterAt?(x: number, y: number): boolean;
   /** the golf game's hole plans (save tuples) and their setter: undo and redo carry them */
   plans?(): unknown[];
   setPlans?(p: unknown[]): void;
@@ -287,6 +321,8 @@ const HIT = 9, ROT_UP = 26, SCALE_OUT = 10;
 const SEND_MS = 120;
 /** style changes to the same areas closer together than this (ms: a slider dragged) join one undo step */
 const RESTYLE_MS = 1500;
+/** T359: a held control joins its changes into one gesture for this long without one (ms); a pointer let go outside the page ends it too */
+const HOLD_MS = 20000;
 
 const TEX_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [string, string]));
 const BTEX_COL = new Map(BORDER_TEXES.map(t => [t.id as string, t.col] as [string, string]));
@@ -361,8 +397,18 @@ export class PaintTool {
   /** hole mode: the preset placed: 0 a generated hole (holeSeed), 1..18 the studio's preset in that slot */
   holeSlot = 0;
   /** undo and redo (Ctrl+Z, Ctrl+Y): the steps, and the action in progress (its depth: nested begins join one step) */
-  private undos: UndoStep[] = [];
-  private redos: UndoStep[] = [];
+  private undos: UndoEntry[] = [];
+  private redos: UndoEntry[] = [];
+  /** T359: the setting change open now (a slider being dragged, a texture being panned): its key (the control), its words, the settings before its
+   *  first change and whether anything changed; it becomes one undo step when the control is let go (holdSetting), another control or an action
+   *  comes, or an undo asks for it. Else a setting is a step of its own at once */
+  private gesture: { key: string; label: string; before: SettingsSnap; dirty: boolean } | null = null;
+  /** T359: a control is held (the pointer is down on a slider, or the Pan texture drag is going on), and since when (ms): its changes join one gesture */
+  private held = 0;
+  /** T359: depth of a setting change being applied (an action begun inside it does not close its gesture) */
+  private applying = 0;
+  /** T359: how many ground steps have been made (a setting change that makes one, a painted area restyled, is that step's, not a setting's) */
+  private commits = 0;
   private tx: { before: AreaSnap; spent: number; depth: number; label: string; gd: GridDiff[]; plans: string; /** only looks changed (no shape: the holes' markers stay) */ looks?: boolean;
     /** T256: the looks owners touched so far, as they were before (lookTouch) */ lk?: Map<string, LookSet | null> } | null = null;
   /** the course height blocks the action in progress touches, for undo (T027) */
@@ -460,7 +506,7 @@ export class PaintTool {
     const out = this.areas.filter(pred); if (!out.length) return out;
     const gone = new Set(out);
     for (const a of out) this.host.setLotGround('paint:' + a.id, null);
-    this.areas = this.areas.filter(a => !gone.has(a)); this.undos = []; this.redos = []; this.selected = 0; this.hover = 0; this.hoverH = null; this.drag = null;
+    this.areas = this.areas.filter(a => !gone.has(a)); this.undos = []; this.redos = []; this.gesture = null; this.selected = 0; this.hover = 0; this.hoverH = null; this.drag = null;
     return out.sort((a, b) => drawZ(a) - drawZ(b));
   }
   /** removes every area from the ground and resets the drawing and selection (the style and mode stay) */
@@ -469,12 +515,14 @@ export class PaintTool {
     this.areas = []; this.pts = []; this.selected = 0; this.hover = 0; this.hoverH = null; this.drag = null; this.nextId = 1; this.lasso = false; this.down = null; this.stroke = null;
     // a new game or a load: the last game's undo steps (they name its cells and areas), its current hole and the New hole wizard's plan and
     // number go too (the owner's test, 2026-10-25); newGame() numbers the wizard from the new game's holes once they are in
-    this.undos = []; this.redos = []; this.tx = null; this.hj = new CourseHeightJournal(); this.pinHint = undefined;
+    this.undos = []; this.redos = []; this.gesture = null; this.held = 0; this.tx = null; this.hj = new CourseHeightJournal(); this.pinHint = undefined;
     this.brushHole = 1; this.pill = null; this.wizard.reset(1);
   }
   /** a new game or a load is in (the engine's afterLoad, after the course grid and the plans): the New hole wizard waits for the tee of the
    *  game's first free hole number (1 in a new game) */
   newGame() { this.wizard.reset(this.nextFreeHole() || 1); this.pill = null; this.host.emit(); }
+  /** T356: a real course was placed over the course: the undo and redo steps name cells that are no longer there, so they go (the owner: "Undo is not needed") */
+  clearHistory() { this.undos = []; this.redos = []; }
 
   /** the areas as save tuples */
   save(): PaintTuple[] { return this.areas.map(a => toTuple(a)); }
@@ -482,8 +530,13 @@ export class PaintTool {
   /** switches between Draw, Pick and Erase, dropping the outline and the selection */
   setMode(m: PaintMode) { this.leaveEditPaint(); this.mode = m; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
 
-  /** changes the panel's style; a selected area takes the change at once (its ground re-bakes), as one undo step (a slider's drag joins one) */
+  /** changes the panel's style; a selected area takes the change at once (its ground re-bakes), as one undo step (a slider's drag joins one).
+   *  T359: on the course the change is a setting step too (a texture pick, its size, angle or pan, the border's, the exposure, the blend, Round
+   *  off, the mowing lines ...): Ctrl+Z puts the look back, a slider's drag one step on release */
   setStyle(p: Partial<Omit<PaintArea, 'id' | 'pts'>>) {
+    this.setting(settingLabel(this.brushKind, styleWords(p), this.lookOwner), `style:${Object.keys(p).sort().join(',')}`, () => this.styleNow(p));
+  }
+  private styleNow(p: Partial<Omit<PaintArea, 'id' | 'pts'>>) {
     this.style = clampStyle({ ...this.style, ...p });
     if (this.selected) {
       const a = this.areas.find(q => q.id === this.selected);
@@ -517,7 +570,8 @@ export class PaintTool {
   brushCells: number = loadCells();
   /** Replace (paint over every surface) or Layer under (slide past the ones drawn above: rough under a fairway), remembered */
   paintReplace: boolean = loadReplace();
-  setPaintReplace(on: boolean) { this.paintReplace = on; try { localStorage.setItem(REPLACE_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ } this.host.emit(); }
+  setPaintReplace(on: boolean) { this.setting(on ? 'brush: replace' : 'brush: layer under', 'replace', () => this.replaceNow(on)); }
+  private replaceNow(on: boolean) { this.paintReplace = on; try { localStorage.setItem(REPLACE_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ } this.host.emit(); }
   /** T238: the square brush's last size (1 to 4 cells; remembered), what Square goes back to */
   squareCells: number = loadSquare(this.brushCells);
   /** T238 (the owner, 2026-10-28: "give me a round isometric brish option so i can draw round bunkers and greens"): the brush's shape, Square
@@ -525,7 +579,8 @@ export class PaintTool {
    *  cell corner so it lines up with the grid). Every surface brush takes it; remembered (brushCells 0 is Round) */
   get brushShape(): 'square' | 'round' { return this.brushCells > 0 ? 'square' : 'round'; }
   setBrushShape(shape: 'square' | 'round') { this.setBrushCells(shape === 'round' ? 0 : this.squareCells); }
-  setBrushCells(n: number) { this.brushCells = n > 0 ? Math.min(SQUARE_SIZES[SQUARE_SIZES.length - 1]!, Math.max(1, Math.round(n))) : 0; if (this.brushCells) { this.squareCells = this.brushCells; try { localStorage.setItem(SQUARE_KEY, String(this.brushCells)); } catch { /* storage may be unavailable */ } } if (!this.brushCells) { this.brushRun = false; this.dropRun(); } try { localStorage.setItem(CELLS_KEY, String(this.brushCells)); } catch { /* storage may be unavailable */ } this.host.emit(); }
+  setBrushCells(n: number) { this.setting((n > 0) !== (this.brushCells > 0) ? 'brush shape' : 'brush size', 'cells', () => this.cellsNow(n)); }
+  private cellsNow(n: number) { this.brushCells = n > 0 ? Math.min(SQUARE_SIZES[SQUARE_SIZES.length - 1]!, Math.max(1, Math.round(n))) : 0; if (this.brushCells) { this.squareCells = this.brushCells; try { localStorage.setItem(SQUARE_KEY, String(this.brushCells)); } catch { /* storage may be unavailable */ } } if (!this.brushCells) { this.brushRun = false; this.dropRun(); } try { localStorage.setItem(CELLS_KEY, String(this.brushCells)); } catch { /* storage may be unavailable */ } this.host.emit(); }
 
   // ---------- Run (T122, plan P23 4.5): a road-like strip of cells ----------
   /** the Course brush's method on the course grid (the panel's Brush | Run): false the brush (click a cell, drag a run of squares), true
@@ -546,7 +601,7 @@ export class PaintTool {
   setBrushRun(on: boolean) {
     if (this.mode !== 'brush') this.setBrush(this.brushKind);
     this.dropRun(); this.brushRun = on;
-    if (on && !this.brushCells) this.setBrushCells(this.squareCells); else this.host.emit();
+    if (on && !this.brushCells) this.cellsNow(this.squareCells); else this.host.emit(); // (T359: Run's own switch to the square brush is no step)
   }
   /** where a click lays the run's next bend with the pointer at tile t: the square brush's middle there, Shift straight from the last bend */
   private runAim(t: { x: number; y: number }): { x: number; y: number } {
@@ -602,7 +657,7 @@ export class PaintTool {
   get strokeSpent(): number { return this.stroke?.grid?.spent ?? 0; }
   /** the cells the stroke in progress has laid or rubbed out so far (0 with none; the cursor's drag total, T118) */
   get strokeCells(): number { return this.stroke?.grid?.cells ?? 0; }
-  setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { ...this.brush[k], r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)) }; this.saveBrush(); this.host.emit(); }
+  setBrushR(r: number) { this.setting(`${kindName(this.brushKind)} brush size`, 'brushR', () => { const k = this.brushKind; this.brush[k] = { ...this.brush[k], r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)) }; this.saveBrush(); this.host.emit(); }); }
 
   // ---------- T253 (#735): Round off and Smoothness ----------
   /** the Round off of a course surface's look, as the owner in hand wears it (lookOwner: the hole open in Edit hole or in hand in Shape by
@@ -618,6 +673,9 @@ export class PaintTool {
    *  owner, or My looks' Course default) is the brush preset, which new holes start from. Saved with the look (the game save's looks book) */
   setRoundOff(c: { round?: boolean; smooth?: number }, kind: BrushKind = this.brushKind) {
     if (!GRID_KINDS.includes(kind)) return;
+    this.setting(settingLabel(kind, 'round off', this.lookOwner), `round:${Object.keys(c).sort().join(',')}`, () => this.roundNow(c, kind));
+  }
+  private roundNow(c: { round?: boolean; smooth?: number }, kind: BrushKind) {
     const owner = this.lookOwner, book = owner !== 'default' && this.host.golfMode?.() ? this.host.lookBook?.() : null;
     if (book) {
       const was = bookLook(book, owner, kind, this.dflt), next = clampStyle({ ...was, ...c }) as LookStyle;
@@ -647,8 +705,7 @@ export class PaintTool {
     if (!BORDER_KINDS[kind] || !Number.isFinite(m)) return;
     const w = clampBorder(m);
     if (w === this.courseBorder(kind)) return;
-    this.brush[kind] = { ...this.brush[kind], bw: w }; this.saveBrush();
-    this.lookSoon(); this.host.emit();
+    this.setting(`${kindName(kind)} border`, `bw:${kind}`, () => { this.brush[kind] = { ...this.brush[kind], bw: w }; this.saveBrush(); this.lookSoon(); this.host.emit(); });
   }
   /** the collar widths set with the Border slider, by surface id (the engine's CourseLooks.border; unset ones are left out) */
   courseBorders(): (number | undefined)[] {
@@ -666,8 +723,7 @@ export class PaintTool {
   setCourseShadow(v: number, kind: BrushKind = this.brushKind) {
     if (!BORDER_KINDS[kind] || !Number.isFinite(v)) return;
     const s = Math.min(1, Math.max(0, v)); if (s === this.courseShadow(kind)) return;
-    this.brush[kind] = { ...this.brush[kind], sh: s }; this.saveBrush();
-    this.lookSoon(); this.host.emit();
+    this.setting(`${kindName(kind)} shadow`, `sh:${kind}`, () => { this.brush[kind] = { ...this.brush[kind], sh: s }; this.saveBrush(); this.lookSoon(); this.host.emit(); });
   }
   /** T285: a grass kind's length (1 the green's cut .. 5 the fescue), or null for a kind that is not grass */
   courseLength(kind: BrushKind = this.brushKind): number | null {
@@ -678,8 +734,7 @@ export class PaintTool {
   setCourseLength(v: number, kind: BrushKind = this.brushKind) {
     if (LENGTH_KINDS[kind] === undefined || !Number.isFinite(v)) return;
     const n = Math.min(5, Math.max(1, Math.round(v))); if (n === this.courseLength(kind)) return;
-    this.brush[kind] = { ...this.brush[kind], len: n }; this.saveBrush();
-    this.lookSoon(); this.host.emit();
+    this.setting(`${kindName(kind)} grass length`, `len:${kind}`, () => { this.brush[kind] = { ...this.brush[kind], len: n }; this.saveBrush(); this.lookSoon(); this.host.emit(); });
   }
   /** the lengths set with the slider, by surface id (the engine's CourseLooks.length; unset ones are left out: their defaults) */
   courseLengths(): (number | undefined)[] {
@@ -704,8 +759,7 @@ export class PaintTool {
   setSurfaceHeight(m: number, kind: BrushKind = this.brushKind) {
     const r = HEIGHT_RANGE[BORDER_KINDS[kind]?.s ?? 0]; if (!r || !Number.isFinite(m)) return;
     const h = Math.min(r[1], Math.max(r[0], m)); if (h === this.surfaceHeight(kind)) return;
-    this.brush[kind] = { ...this.brush[kind], ht: h }; this.saveBrush();
-    this.lookSoon(); this.host.emit();
+    this.setting(`${kindName(kind)} height`, `ht:${kind}`, () => { this.brush[kind] = { ...this.brush[kind], ht: h }; this.saveBrush(); this.lookSoon(); this.host.emit(); });
   }
   /** the heights set with the Height slider, by surface id (the engine's CourseLooks.height; unset ones are left out: SURF_HEIGHT) */
   surfaceHeights(): (number | undefined)[] {
@@ -774,7 +828,23 @@ export class PaintTool {
   /** My looks' surface (Facilities ▸ Practice has no brush: the card picks the surface whose look it edits) */
   pickLook(kind: BrushKind) { this.brushKind = kind; this.loadLook(); this.host.emit(); }
   /** My looks' "Course default (new holes)" on or off: the card edits the default, or the owner in hand again */
-  setLookDefault(on: boolean) { this.lookDefault = on; this.loadLook(); this.host.emit(); }
+  setLookDefault(on: boolean, step = true) {
+    const now = () => { this.lookDefault = on; this.loadLook(); this.host.emit(); };
+    // (T359: the buttons are a setting step; the engine's own switch back to a hole, step false, is not)
+    if (step) this.setting(on ? 'edit the course default' : 'edit this hole', 'lookDefault', now); else now();
+  }
+  /** T359 (#1006; the owner, 2026-11-08: "going via the menu to shape by hand and clicking fairway should take you to editing the course default
+   *  and the look of fairway already selected. same for the other buttons"): Course › Holes › Shape by hand › <surface> arms that surface's
+   *  brush and opens its panel in focus (BrushControls SurfaceSwatches takes focusWanted once; its ‹ All surfaces back link rules it after) on
+   *  the Course default, its look loaded as the panel's style, so the main and border textures show the course default's */
+  focusWanted = false;
+  /** counts those openings, so a panel already on screen takes the request too */
+  focusRev = 0;
+  openSurface(kind: BrushKind) {
+    this.lookDefault = true; // (setBrush loads the look of whoever owns it now: the course default)
+    this.setBrush(kind, 0);
+    this.focusWanted = true; this.focusRev++; this.host.emit();
+  }
   /** gives owner o its own looks (a copy of the course default) when it has none, inside the open action (undo takes it back); a new hole
    *  starts from the default this way, on its first paint */
   seedLooks(o: string) {
@@ -784,6 +854,11 @@ export class PaintTool {
   /** My looks' "Apply to all holes": the look of the kind on the card (whoever it is) goes to every hole that has looks and to the course
    *  default (new holes start from it), the old course-wide change; the property's and the facilities' stay their own. Returns the holes */
   applyLookToAll(kind: BrushKind = this.brushKind): number[] {
+    let out: number[] = [];
+    this.setting(`apply the ${kindName(kind)} look to all holes`, `apply:${kind}`, () => { out = this.applyNow(kind); });
+    return out;
+  }
+  private applyNow(kind: BrushKind): number[] {
     const book = this.host.lookBook?.(), st = { ...this.style } as LookStyle, out: number[] = [];
     this.brush[kind] = { ...this.brush[kind], style: copyLook(st) }; this.saveBrush();
     if (book) for (const o of Object.keys(book)) { const n = ownerHole(o); if (!n) continue; book[o]![kind] = copyLook(st); out.push(n); }
@@ -827,6 +902,13 @@ export class PaintTool {
   closeGrass() { if (!this.grassDraft) return; this.grassDraft = null; this.host.emit(); }
   /** changes the editor's draft; a made grass takes the change at once (saved, its cells drawn again: at most every LOOK_MS) */
   editGrass(p: Partial<Omit<CustomGrass, 'k'>>) {
+    const d = this.grassDraft; if (!d) return;
+    // T359: a setting step like the looks' (the name typed in its box is not: the text field keeps its own undo)
+    const keys = Object.keys(p).sort();
+    if (keys.length === 1 && keys[0] === 'name') { this.grassNow(p); return; }
+    this.setting(`${d.name || 'your grass'}: ${GRASS_WORDS[keys[0] ?? ''] ?? 'settings'}`, `grass:${keys.join(',')}`, () => this.grassNow(p));
+  }
+  private grassNow(p: Partial<Omit<CustomGrass, 'k'>>) {
     const d = this.grassDraft; if (!d) return;
     const next = clampGrass({ ...d, ...p, k: d.k || 1 }); if (!next) return;
     // the name as typed (a cleared box stays clear while the player types; the saved grass takes the clamped one)
@@ -1084,7 +1166,7 @@ export class PaintTool {
     // a set taken off a box another set stands on changes its markers alone: the step is made for them
     if ((!top || top === top0) && moved) { top = { label, before: snap0, after: this.snapshot(), props: null, spent: 0, height: null, grid: null, plans: null }; this.undos.push(top); this.redos = []; this.host.changed?.(); }
     if (top && top !== top0) {
-      if (moved) top.markers = { before: before!, after: after! };
+      if (moved && !isSetting(top)) top.markers = { before: before!, after: after! };
       if (this.planOpen && this.wizard.base) this.editMarks.push(this.wizard.depth);
     }
     this.host.save(); this.host.emit();
@@ -1103,7 +1185,7 @@ export class PaintTool {
     const depth = this.undos.length, top0 = this.undos[depth - 1];
     this.commit();
     const top = this.undos[this.undos.length - 1], after = this.host.markersKey?.() ?? null;
-    if (top && top !== top0 && before !== null && after !== null && before !== after) top.markers = { before, after };
+    if (top && !isSetting(top) && top !== top0 && before !== null && after !== null && before !== after) top.markers = { before, after };
     this.brushHole = hole;
     w.built(typeof performance !== 'undefined' ? performance.now() : 0, this.nextFreeHole());
     w.suggestM = 0; this.pill = null;
@@ -1290,6 +1372,7 @@ export class PaintTool {
   /** Ctrl+Z on the course (P23 4.10): in New hole its own clicks and drags first; while it has something on screen never the course's
    *  steps (Ctrl+Z takes back a drag, not the last hole); else the course's last step */
   undoTop(): void {
+    this.endSetting(); // (T359: a setting change still open is a step, and has its mark, before the marks are read)
     if (this.planOpen && this.course) {
       const w = this.wizard, m = this.editMarks[this.editMarks.length - 1];
       // T238: Edit hole's last stroke, when no plan step came after it, is the course's last undo step
@@ -1301,6 +1384,7 @@ export class PaintTool {
   }
   /** Ctrl+Y on the course: New hole's undone clicks and drags first, else the course's */
   redoTop(): void {
+    this.endSetting();
     if (this.planOpen && this.course) {
       const w = this.wizard, m = this.editRedo[this.editRedo.length - 1];
       // T238: an undone Edit hole stroke comes back when the plan is back where it was laid
@@ -1360,13 +1444,14 @@ export class PaintTool {
     this.begin(areas.length > 1 ? 'restyle areas' : 'restyle area', true); run(); this.commit();
     const top = this.undos[this.undos.length - 1];
     if (!top || top === last) { if (join) r!.at = now; return; } // nothing changed (or a nested step): the drag goes on
-    if (join) { top.before = last!.before; const i = this.undos.lastIndexOf(last!); if (i >= 0) this.undos.splice(i, 1); }
+    if (isSetting(top)) return; // (commit made it, so it is a ground step)
+    if (join && last && !isSetting(last)) { top.before = last.before; const i = this.undos.lastIndexOf(last); if (i >= 0) this.undos.splice(i, 1); }
     this.restyled = { u: top, ids, at: now };
   }
   /** the areas now, for undo */
   private snapshot(): AreaSnap { const ts = this.areas.map(a => toTuple(a)); return { ids: this.areas.map(a => a.id), ts, keys: ts.map(t => JSON.stringify(t)), nextId: this.nextId }; }
   /** starts an undoable action (a nested begin joins the open one) */
-  private begin(label: string, looks = false) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey(), ...(looks ? { looks } : {}) }; this.host.journal?.begin(); this.hj.begin(); }
+  private begin(label: string, looks = false) { if (this.tx) { this.tx.depth++; return; } if (!this.applying) this.endSetting(); this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey(), ...(looks ? { looks } : {}) }; this.host.journal?.begin(); this.hj.begin(); }
   /** the hole plans, the ponds' edge marks (T231) and the custom grasses (T271: a grass made or deleted is an undo step, with its cells) as text
    *  (undo compares and restores them) */
   private plansKey(): string { return JSON.stringify([this.host.plans?.() ?? [], this.host.pondMarks?.() ?? [], this.host.grasses?.() ?? [], this.host.bunkerState?.() ?? null]); }
@@ -1391,12 +1476,14 @@ export class PaintTool {
     if (t.lk) for (const [o, b] of t.lk) { const a = book?.[o] ? copySet(book[o]!) : null; if (JSON.stringify(a) !== JSON.stringify(b)) looks.push([o, b, a]); }
     if (!props && !t.spent && same && !height && !grid && !plans) return; // (a look seeded by a stroke that laid nothing stays: no step for it alone)
     this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans, ...(looks.length ? { looks } : {}) }); if (this.undos.length > UNDO_MAX) this.undos.shift();
+    this.commits++;
     // T238: a stroke laid in Edit hole is ordered against the plan's own steps (undoTop); the course's redo goes, and Edit hole's with it
     if (this.editInHand && (grid || height) && !plans) this.editMarks.push(this.wizard.depth); // T252: a height stroke too
     this.editRedo.length = 0;
     // a few big grid steps (a whole preset hole, a long stroke) can outweigh a hundred small ones: the steps are capped by their cells too
-    let cells = 0; for (const u of this.undos) cells += u.grid?.n ?? 0;
-    while (cells > UNDO_CELLS && this.undos.length > 1) cells -= this.undos.shift()!.grid?.n ?? 0;
+    const cellsOf = (u: UndoEntry) => (isSetting(u) ? 0 : u.grid?.n ?? 0);
+    let cells = 0; for (const u of this.undos) cells += cellsOf(u);
+    while (cells > UNDO_CELLS && this.undos.length > 1) cells -= cellsOf(this.undos.shift()!);
     this.redos = [];
     const hint = this.pinHint; this.pinHint = undefined; if (!t.looks) this.host.changed?.(hint); // a look changed no green or tee: no marker to re-fit
   }
@@ -1462,7 +1549,8 @@ export class PaintTool {
   brushCellCost(): ((x: number, y: number) => number) | null {
     const g = this.courseGrid(), s = g ? this.brushSurf() : 0; if (!g || !s || this.rubOut || !this.host.golfMode?.()) return null;
     const h = this.brushHole, unit = this.priceOf(s);
-    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || (!this.paintReplace && surfAbove(g.surf[i]!, s)) ? 0 : unit; };
+    const wet = s === SURF.water ? this.host.mapWaterAt : undefined; // T338: the map's water is water already
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || (!this.paintReplace && surfAbove(g.surf[i]!, s)) || (wet && g.surf[i] === SURF.none && wet(x, y)) ? 0 : unit; };
   }
   /** the brush rules on grid g: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did; Replace: 'any') and owned
    *  cells only; a rub out (T125) takes every cell rubWhy lets it (it lays the base over them, carved: no 'below', no course-grid rub) */
@@ -1473,7 +1561,9 @@ export class PaintTool {
     const look = this.grass && (this.mode === 'brush' || this.mode === 'draw') && s === PLAY_SURF[this.grass.plays] ? { look: this.grassInHand } : {};
     // T206: a green or bunker never goes into the practice area (Facilities ▸ Practice builds there; painted ones of old saves stay)
     // T256: the property's brush never takes a hole's cell (a hole's brush takes the property's, and another hole's, as before)
-    return { over: this.paintReplace ? 'any' : 'below', allow: i => { if (prop && g.hole[i]! > 0) return false; if (!own && !prac) return true; const c = cellCentre(g, i); return (!own || own(c.x, c.y)) && !prac?.(c.x, c.y); }, ...look };
+    // T338: the water brush never lays water on the map's own water the course leaves bare (a no-op: it joins it)
+    const wet = s === SURF.water ? this.host.mapWaterAt : undefined;
+    return { over: this.paintReplace ? 'any' : 'below', allow: i => { if (prop && g.hole[i]! > 0) return false; if (!own && !prac && !wet) return true; const c = cellCentre(g, i); return (!own || own(c.x, c.y)) && !prac?.(c.x, c.y) && !(wet && g.surf[i] === SURF.none && wet(c.x, c.y)); }, ...look };
   }
   /** T256: the land the brush may paint: your land (Range › Build: the range's plot too), else your land off the range's plot (the holes) */
   private landRule(): ((x: number, y: number) => boolean) | undefined { return this.property ? this.host.landAt ?? this.host.ownedAt : this.host.ownedAt; }
@@ -1515,6 +1605,7 @@ export class PaintTool {
       if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return this.landWhyAt(c.x, c.y); }
       if (this.property && g.hole[i]! > 0) return `Hole ${g.hole[i]}'s: paint it in the Holes panel`; // T256
       if (practiceSurf(s) && this.host.practiceAt) { const c = cellCentre(g, i); if (this.host.practiceAt(c.x, c.y)) return PRACTICE_BRUSH_WHY; }
+      if (s === SURF.water && g.surf[i] === SURF.none && this.host.mapWaterAt) { const c = cellCentre(g, i); if (this.host.mapWaterAt(c.x, c.y)) return MAP_WATER_WHY; } // T338
       const top = g.surf[i]!, nm = SURF_SURFACE[top]; const nn = nm?.replace(/[A-Z]/g, c => ' ' + c.toLowerCase()); return surfAbove(top, s) ? `${nn ? nn[0]!.toUpperCase() + nn.slice(1) : 'A higher surface'} stays on top` : '';
     };
   }
@@ -1548,15 +1639,18 @@ export class PaintTool {
     this.host.save(); this.host.emit();
   }
   /** whether there is a step to undo / redo (the panel's buttons) */
-  get canUndo() { return this.undos.length > 0 && !this.tx; }
+  get canUndo() { return (this.undos.length > 0 || !!this.gesture?.dirty) && !this.tx; }
   get canRedo() { return this.redos.length > 0 && !this.tx; }
-  /** what an undo / redo would take back or do again ('' when there is none), for the Holes panel's tooltips (P23 4.3) */
-  get undoLabel() { return this.canUndo ? this.undos[this.undos.length - 1]!.label : ''; }
+  /** what an undo / redo would take back or do again ('' when there is none), for the Holes panel's tooltips (P23 4.3); T359: a setting change
+   *  still open (a slider being dragged) is the first to go */
+  get undoLabel() { return this.canUndo ? (this.gesture?.dirty ? this.gesture.label : this.undos[this.undos.length - 1]!.label) : ''; }
   get redoLabel() { return this.canRedo ? this.redos[this.redos.length - 1]!.label : ''; }
   /** undoes the last action: its areas go back, its props are taken away or put back, its money is refunded */
   undo() {
     if (this.tx) return;
+    this.endSetting(); // (T359: a setting change still open is the step to take back)
     const u = this.undos.pop(); if (!u) return;
+    if (isSetting(u)) { this.setApply(u.set.before); this.redos.push(u); this.host.toast(`Undone: ${u.label}`); this.host.emit(); return; }
     this.restore(u.before);
     this.gridStep(u, true);
     const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'before'); if (b) this.host.heightChanged?.(b); }
@@ -1570,7 +1664,9 @@ export class PaintTool {
   /** redoes the last undone action */
   redo() {
     if (this.tx) return;
+    this.endSetting();
     const u = this.redos.pop(); if (!u) return;
+    if (isSetting(u)) { this.setApply(u.set.after); this.undos.push(u); this.host.toast(`Redone: ${u.label}`); this.host.emit(); return; }
     this.restore(u.after);
     this.gridStep(u, false);
     const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'after'); if (b) this.host.heightChanged?.(b); }
@@ -1579,6 +1675,85 @@ export class PaintTool {
     this.host.changed?.();
     if (this.planOpen && (u.plans || !this.wizard.base)) this.wizard.plansChanged(this.nextFreeHole(), n => this.usedHoles().has(n));
     this.undos.push(u); this.host.save(); this.host.toast(`Redone: ${u.label}`); this.host.emit();
+  }
+
+  // ---------- T359 (#1006; the owner, 2026-11-08: "ctrl/z should always work to reset your prev menu setting change"): the build menus' settings are
+  // undo steps in time order with the ground edits: a texture pick, its size, angle or pan, the border texture, This hole / Course default and
+  // Apply to all holes, the look editor's values, the mowing lines, the brush's shape and size. A slider's drag is one step, put on the stack
+  // when the pointer lets go (holdSetting); Apply to all holes is one step; a text field keeps its own undo (the engine's keys) ----------
+  /** the settings now, as text per surface brush and per looks owner (two snapshots compare, and a step keeps only what differs) */
+  private settingsSnap(): SettingsSnap {
+    const brush: Record<string, string> = {}; for (const k of Object.keys(this.brush)) brush[k] = JSON.stringify(this.brush[k as BrushKind]);
+    const bk = this.host.lookBook?.(); let book: Record<string, string> | null = null;
+    if (bk) { book = {}; for (const [o, set] of Object.entries(bk)) book[o] = JSON.stringify(set); }
+    const d = this.grassDraft;
+    return { brush, book, flags: { lookDefault: this.lookDefault, cells: this.brushCells, square: this.squareCells, replace: this.paintReplace, style: JSON.stringify(this.style) },
+      grasses: JSON.stringify(this.host.grasses?.() ?? []), draft: d && !d.k ? JSON.stringify(d) : null };
+  }
+  /** runs a setting change `run` as an undo step: a discrete change (a pick, a button) is a step of its own; while a control is held (a slider
+   *  dragged, holdSetting) the changes of that control join one gesture, closed on release. Inside an action, or another setting change, it
+   *  is part of that. Nothing changed (the same pick again): no step. A painted area restyled by it makes its own step (restyle): then it is that */
+  private setting(label: string, key: string, run: () => void): void {
+    if (this.tx || this.applying) { run(); return; }
+    const now = Date.now(), held = this.held > 0 && now - this.held < HOLD_MS;
+    if (this.gesture && !(held && this.gesture.key === key)) this.endSetting();
+    const c0 = this.commits, g = (this.gesture ??= { key, label, before: this.settingsSnap(), dirty: false });
+    this.applying++; try { run(); } finally { this.applying--; }
+    if (this.commits !== c0) { this.gesture = null; return; }
+    g.dirty = true;
+    if (held) this.held = now; else this.endSetting();
+  }
+  /** closes the open setting change: it becomes an undo step when it changed something (the redo steps go, as a new action's do) */
+  endSetting(): void {
+    const g = this.gesture; if (!g) return;
+    this.gesture = null;
+    if (!g.dirty) return;
+    const set = diffSettings(g.before, this.settingsSnap()); if (!set) return;
+    this.undos.push({ label: g.label, set }); if (this.undos.length > UNDO_MAX) this.undos.shift();
+    // (Edit hole orders a step against the plan's own, as a stroke's: undoTop)
+    if (this.editInHand) this.editMarks.push(this.wizard.depth);
+    this.editRedo.length = 0; this.redos = [];
+    this.host.emit();
+  }
+  /** a control is held (true: the pointer went down on a slider, or the Pan texture drag began) or let go (false: the gesture closes) */
+  holdSetting(on: boolean): void {
+    if (on) { this.held = Date.now(); return; }
+    if (!this.held && !this.gesture) return;
+    this.held = 0; this.endSetting();
+  }
+  /** puts a setting step's items back (an undo takes the before ones, a redo the after ones), saves them and draws the course again where they
+   *  changed: the course default's look or a brush's Border, Shadow, Length or Height (every chunk), or just the owners' cells */
+  private setApply(d: SettingsDelta): void {
+    this.applying++;
+    try {
+      let wide = false;
+      const owners: string[] = [], lookPart = (b: BrushSet) => JSON.stringify({ ...b, r: 0 });
+      if (d.brush) {
+        for (const [k, v] of Object.entries(d.brush)) { const next = JSON.parse(v) as BrushSet; if (lookPart(this.brush[k as BrushKind]) !== lookPart(next)) wide = true; this.brush[k as BrushKind] = next; }
+        this.saveBrush();
+      }
+      const book = this.host.lookBook?.();
+      if (d.book && book) for (const [o, v] of Object.entries(d.book)) { if (v === null) delete book[o]; else book[o] = JSON.parse(v) as LookSet; owners.push(o); }
+      const f = d.flags;
+      if (f) {
+        if (f.lookDefault !== undefined) this.lookDefault = f.lookDefault;
+        if (f.square !== undefined) { this.squareCells = f.square; try { localStorage.setItem(SQUARE_KEY, String(f.square)); } catch { /* storage may be unavailable */ } }
+        if (f.cells !== undefined) { this.brushCells = f.cells; if (!f.cells) { this.brushRun = false; this.dropRun(); } try { localStorage.setItem(CELLS_KEY, String(f.cells)); } catch { /* storage may be unavailable */ } }
+        if (f.replace !== undefined) { this.paintReplace = f.replace; try { localStorage.setItem(REPLACE_KEY, f.replace ? '1' : '0'); } catch { /* storage may be unavailable */ } }
+        if (f.style !== undefined) this.style = JSON.parse(f.style) as PaintTool['style'];
+      }
+      // the grasses of your own (an edit of a made one applies as it changes, so its undo puts it back), and the new grass being made
+      if (d.grasses !== undefined) {
+        this.host.setGrasses?.(JSON.parse(d.grasses) as CustomGrass[]);
+        const open = this.grassDraft?.k; if (open) { const g = this.grasses.find(q => q.k === open); this.grassDraft = g ? { ...g } : null; }
+      }
+      if (d.draft && this.grassDraft && !this.grassDraft.k) this.grassDraft = JSON.parse(d.draft) as CustomGrass;
+      // the panel's style is whoever's look is in hand now (the course; a classic game's Paint panel keeps the style it was given)
+      if (this.course) this.loadLook();
+      this.looksRev++; this.host.save();
+      if (wide) this.host.courseLook?.(); else for (const o of owners) this.host.lookChanged?.(o);
+      this.host.emit();
+    } finally { this.applying--; }
   }
 
   /** moves the selected area in the draw order (an undo step): 1 forward past the next area above it that it overlaps, -1 back past the next one
@@ -1789,7 +1964,7 @@ export class PaintTool {
 
   /** a press on tile t (css px mx, my): a handle of the selected area starts a drag; else draw waits for the release (a click or a lasso) and deselects; pick selects the area under it; erase removes it */
   pointerDown(t: { x: number; y: number }, mx: number, my: number, alt = false) {
-    if (this.panTex) { const [kx, ky] = this.panKeys(); this.panning = { x: t.x, y: t.y, ox: this.style[kx] ?? 0, oy: this.style[ky] ?? 0 }; this.host.emit(); return; }
+    if (this.panTex) { const [kx, ky] = this.panKeys(); this.panning = { x: t.x, y: t.y, ox: this.style[kx] ?? 0, oy: this.style[ky] ?? 0 }; this.holdSetting(true); this.host.emit(); return; }
     if (this.mode === 'plan') { this.planDown(t, mx, my); return; }
     if (this.editInHand && this.planPress(mx, my)) { this.planDown(t, mx, my); return; } // T238: Edit hole's handles first (T252: under the height brush too)
     const sel = this.selectedArea();
@@ -1888,7 +2063,7 @@ export class PaintTool {
 
   /** the release: a handle drag ends; in draw, a lasso is simplified and closed, and a press without a drag is a click that adds a corner (tol: the close distance in tiles) */
   pointerUp(tol: number) {
-    if (this.panTex) { this.panning = null; this.host.emit(); return; }
+    if (this.panTex) { this.panning = null; this.holdSetting(false); this.host.emit(); return; }
     if (this.mode === 'plan' || (this.planOpen && this.wizard.drag)) { if (this.wizard.drag) { this.wizard.release(); this.host.emit(); } return; }
     if (this.drag) { this.dragEnd(); return; }
     if (this.mode === 'brush') { if (this.runRight) { this.finishRun(); return; } this.strokeEnd(); return; }
