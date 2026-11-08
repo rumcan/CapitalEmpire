@@ -3,7 +3,8 @@
 // the drive, walking to the ball, the second shot, Jump to ball, a held key walk at a watching speed) and reports every frame where you are
 // missing and every jump (a drawn move faster than a cart runs) that is not Jump to ball. A frame strip of the walk to the ball and the jump.
 //   node scripts/dev/round-trace.mjs --base http://localhost:5187/ --out E:/ClaudeTemp/T333/after --headed
-// Needs a dev server (vite) on --base. One Edge (--headed opens it off-screen), closed when done; saves are not written.
+// --seed N: the town map (default 2, a golf town; a seed with no course beside its town starts a classic game). Needs a dev server (vite) on
+// --base. One Edge (--headed opens it off-screen), closed when done; saves are not written. Exit 1 on a fault.
 import { chromium } from 'playwright-core';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

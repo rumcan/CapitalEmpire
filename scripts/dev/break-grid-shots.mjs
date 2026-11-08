@@ -2,7 +2,7 @@
 // green and Jump to ball (the shot opens with the putter), then a shot of the green and the break grid's arrows counted by colour.
 //   node scripts/dev/break-grid-shots.mjs --base http://localhost:5187/ --out E:/ClaudeTemp/T333 --name after --brush wide|default
 // --flat: the flat line the game draws with (green.ts FLAT_SLOPE: 0.002; 0.004 before T333). --brush wide: one gentle wide dab (radius 20, level 1: under 0.4% on the green); default: the tool's default dab (radius 6, level 2) three times.
-// Needs a dev server (vite) on --base. One Edge off-screen, closed when done; saves are not written. Exit 1 when the green shows no arrows.
+// --seed N: the town map (default 2: a golf town). Needs a dev server (vite) on --base. One Edge off-screen, closed when done; saves are not written. Exit 1 when the green shows no arrows.
 import { chromium } from 'playwright-core';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -40,7 +40,7 @@ try {
     // your ball on the green 3 tiles short of the pin, then Jump to ball: the shot opens with the putter
     g.yrFlight = null; g.shot = null; g.setYourRound({ ...g.yourRound(), ball: { x: pin.x - 3, y: pin.y + 0.5 }, lie: 'green' }); g.yourJump();
     g.lookAt(pin.x - 1, pin.y, 0.32);
-    await new Promise(res => setTimeout(res, 1800));
+    await new Promise(res => setTimeout(res, 1800)); for (let k = 0; k < 40 && !g.firstViewBaked; k++) await new Promise(res => setTimeout(res, 250)); g.lookAt(pin.x - 1, pin.y, 0.32); await new Promise(res => setTimeout(res, 1500)); g.lookAt(pin.x - 1, pin.y, 0.32); await new Promise(res => setTimeout(res, 300));
     const bp = g.breakPins(), bg = bp.length ? g.breakGridOf(bp[0]) : null, b = [0, 0, 0, 0];
     const STEEP = 0.04, bucket = s => { const u = s <= FLAT ? 0 : Math.min(1, (s - FLAT) / (STEEP - FLAT)); return u <= 0 ? 0 : u < 0.3 ? 1 : u < 0.65 ? 2 : 3; };
     if (bg) for (let k = 0; k < bg.n; k++) { if ((bg.ij[2 * k] & 1) || (bg.ij[2 * k + 1] & 1)) continue; b[bucket(bg.pts[5 * k + 4])]++; }
