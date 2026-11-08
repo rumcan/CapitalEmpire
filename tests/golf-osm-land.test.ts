@@ -332,6 +332,15 @@ describe('the greens keep the game\'s own gentle tilt (T357)', () => {
     // the approach comes from the last aim point (30, 55) to the green's middle (46, 36): it climbs toward the north east (x up, y down the screen: y smaller)
     assert.ok(t!.ux > 0 && t!.uy < 0);
   });
+  it('the plane takes the green\'s pad over: laid twice (a course placed over another\'s greens) the tilt does not double, and what was shaped under the pad is replaced', () => {
+    const spec = synth({}, [GREEN]), once = createCourseHeightField(), twice = createCourseHeightField();
+    designGreens(spec, at, once); designGreens(spec, at, twice); designGreens(spec, at, twice);
+    const t = greenTilts(spec)[0]!, cx = at.x + t.cx, cy = at.y + t.cy;
+    for (const [dx, dy] of [[0, 0], [3, 2], [-4, -3], [2, -4]]) assert.ok(Math.abs(groundAt(createLandField(), once, cx + dx, cy + dy) - groundAt(createLandField(), twice, cx + dx, cy + dy)) < 1e-6, `at ${dx}, ${dy}`);
+    const mound = createCourseHeightField(); mound.data[Math.floor(cy / 2) * CH_SIZE + Math.floor(cx / 2)] = 2; mound.rev = 1;
+    designGreens(spec, at, mound);
+    assert.ok(Math.abs(groundAt(createLandField(), mound, cx, cy) - groundAt(createLandField(), once, cx, cy)) < 1e-6, 'a 2 m mound under the green is gone: the pad is the plane');
+  });
   it('a green no hole plays to has none, a double green is tilted for its first hole only, and the tilt stays within the course height\'s 3 m', () => {
     assert.equal(greenTilts(synth({}, [{ ...GREEN, hole: 0 }])).length, 0);
     assert.equal(greenTilts(synth({}, [GREEN, { ...GREEN, rings: [[60, 30, 72, 30, 72, 42, 60, 42]] }])).length, 1);

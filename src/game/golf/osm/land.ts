@@ -188,7 +188,8 @@ export function landAt(f: LandField, x: number, y: number): number { return f.da
 export function groundAt(land: LandField, course: CourseHeightField, x: number, y: number): number {
   return (land.data ? sampleCourseGrid(land.data, x, y) : 0) + (course.rev ? sampleCourseGrid(course.data, x, y) : 0);
 }
-/** the land plus the course height as one field (a fresh array: CourseHeightField's shape, for the readers that take a field: the course stats, the pins) */
+/** the land plus the course height as one field (a fresh array, CourseHeightField's shape; the course itself when there is no land): for a reader that wants the whole ground as a
+ *  field (the console, the tests: the game's own readers sample it with groundAt instead, and the workers get groundRect) */
 export function groundField(land: LandField, course: CourseHeightField): CourseHeightField {
   if (!land.data) return course;
   const d = new Float32Array(CH_SIZE * CH_SIZE), a = land.data, b = course.data;
@@ -245,8 +246,8 @@ export function greenTilts(spec: OsmCourseSpec): GreenTilt[] {
 }
 
 /** lays every green's designed tilt into the course height field (the player's layer): a plane through the green's middle, rising away from the approach,
- *  held over the green's level pad (PAD.green) and eased out over its feather, so the green's edge slope is its tilt and the fringe blends into the ground
- *  round it. Returns the tile box it touched (null: none) and bumps the field's rev */
+ *  held over the green's level pad (PAD.green: it takes the pad over, whatever was shaped there) and eased out over its feather, so the green's edge slope is its tilt and the
+ *  fringe blends into the ground round it. Returns the tile box it touched (null: none) and bumps the field's rev */
 export function designGreens(spec: OsmCourseSpec, at: Pt, field: CourseHeightField): CourseTileBox | null {
   let box: CourseTileBox | null = null;
   const tilts = greenTilts(spec), reach = PAD.green.pad + PAD.green.feather;
@@ -260,7 +261,7 @@ export function designGreens(spec: OsmCourseSpec, at: Pt, field: CourseHeightFie
         if (wt <= 0) continue;
         const plane = t.tilt * ((u - t.cx) * t.ux + (v - t.cy) * t.uy) * 2; // (tiles of 2 m)
         const k = j * CH_SIZE + i;
-        field.data[k] = clampCourseHeightM(field.data[k]! + plane * wt);
+        field.data[k] = clampCourseHeightM(field.data[k]! + (plane - field.data[k]!) * wt); // (the plane takes the pad over, the feather blends: a course placed over another's greens does not double their tilt)
       }
     }
     const bx: CourseTileBox = [Math.max(0, (iA) * CH_STEP), Math.max(0, jA * CH_STEP), (iB + 1) * CH_STEP, (jB + 1) * CH_STEP];

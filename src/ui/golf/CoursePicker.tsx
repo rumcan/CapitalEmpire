@@ -151,7 +151,7 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
         setWithLand(false); setMsg(`The ground height could not be read: ${e.message}. The box is unticked: ${how === 'place' ? 'Place it in my map' : 'Build this course'} makes the course flat, or tick it and try again.`); setView(here);
         return;
       }
-      if (alive.current) go(land);
+      if (alive.current) { setView(here); go(land); } // (the card shows the preview again before the course goes on: Place it keeps this card mounted behind the placing mode, and it must be as it was when the course is put down)
     }, here);
   };
   const working = view.v === 'working';
