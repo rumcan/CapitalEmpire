@@ -57,7 +57,7 @@ export function planOsmGame(spec: OsmCourseSpec, map = MAP): OsmStart | null {
   const road: Leg[] = [{ a: { x: 0, y: ey }, b: { x: ex, y: ey } }], drive: Leg[] = [{ a: { x: ex, y: ey }, b: { x: ex + DRIVE - DOOR, y: ey } }];
   const rs = [land, venue, carpark], x0 = Math.min(...rs.map(r => r[0])), y0 = Math.min(...rs.map(r => r[1])), x1 = Math.max(...rs.map(r => r[0] + r[2])), y1 = Math.max(...rs.map(r => r[1] + r[3]));
   const parcel: Rect = [x0, y0, x1 - x0, y1 - y0], centre: Pt = { x: venue[0] + venue[2] / 2, y: venue[1] + venue[3] / 2 };
-  const info: OsmGolfInfo = { id: spec.id, name: spec.name, place: spec.place, credit: spec.credit, licence: spec.licence, source: spec.source, holes: spec.holes.length, par: spec.gameParTotal, mappedPar: spec.parTotal, ...(spec.scale < 1 ? { scale: spec.scale } : {}), ...(spec.derived ? { derived: true } : {}) };
+  const info: OsmGolfInfo = { id: spec.id, name: spec.name, place: spec.place, credit: spec.credit, licence: spec.licence, source: spec.source, holes: spec.holes.length, par: spec.gameParTotal, mappedPar: spec.parTotal, ...(spec.scale < 1 ? { scale: spec.scale } : {}) };
   const save: GolfSave = { v: 1, tier: 1, rep: GOLF_REP_START, town: centre, course: land, parcel, dir: 1, tees: [], pins: [], aims: [], clubhouse: centre, osm: info };
   const box = landGridBox([land, parcel], GRID_PAD, map)!, grid = makeGrid(box[0], box[1], box[2], box[3]);
   paintSpec(grid, spec, lx, ly);

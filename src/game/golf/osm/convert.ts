@@ -11,7 +11,6 @@ import {
   bandRings, bendDeg, boxOf, boxesMeet, circleRing, distToLine, distToPoly, distToRing, inPoly, interiorPoint, lineLen, polyArea, sampleLine, sliceLine,
   type Box, type P, type Poly,
 } from './geom';
-import { deriveHoleLines } from './derive';
 import {
   OSM_CREDIT, OSM_LICENCE, OSM_MARGIN_M, type JFeature, type OsmCourseJson, type OsmCourseSpec, type SpecArea, type SpecHole, type SpecNote, type SpecSurface, type SpecTee, type TPt,
 } from './types';
@@ -47,7 +46,6 @@ export interface ConvertOptions {
   /** the course to build when the boundary holds several: its golf:course:name / course:name value (default: the one with holes 1..18) */ course?: string;
   /** the land's margin round the holes' features, m (default 40) */ marginM?: number;
   /** a uniform scale for a course too big for the map (the real coordinates times this, 1 by default: true size); the margin and what is made up keep their size */ scale?: number;
-  /** work holes out from the fairways when the map has no hole lines (default: yes; see derive.ts) */ derive?: boolean;
 }
 
 /** a polygon of the JSON as the converter works with it */
@@ -118,15 +116,6 @@ export function osmCourseToSpec(json0: OsmCourseJson, opt: ConvertOptions = {}):
   for (const f of F.hole ?? []) {
     if (!f.line || f.line.length < 2) continue;
     lines.push({ pts: f.line, ref: f.ref ?? num(f.tags?.ref), par: f.par ?? num(f.tags?.par), handicap: num(f.tags?.handicap), course: cname(f.tags), sel: -1 });
-  }
-  // no hole lines at all (Wingate Park): holes worked out from the fairways, the greens near their ends and the tees beyond (derive.ts), marked as a guess
-  let fromFairways = false;
-  if (!lines.length && opt.derive !== false) {
-    const d = deriveHoleLines(fairways, greens, tees);
-    d.holes.forEach((h, i) => lines.push({ pts: h.pts, ref: i + 1, par: null, handicap: null, course: '', sel: -1 }));
-    fromFairways = d.holes.length > 0;
-    if (fromFairways) warn('holes-derived', 0, `No hole lines are mapped: ${d.holes.length} hole${d.holes.length === 1 ? ' was' : 's were'} worked out from the fairways (the green near one end of each, the tee beyond the other), numbered by walking from each green to the nearest tee: a guess, not mapped data`);
-    for (const t of d.skipped) warn('derive-skipped', 0, t);
   }
   const groups = new Map<string, Line[]>();
   for (const l of lines) { const g = groups.get(l.course); if (g) g.push(l); else groups.set(l.course, [l]); }
@@ -421,7 +410,7 @@ export function osmCourseToSpec(json0: OsmCourseJson, opt: ConvertOptions = {}):
 
   const place = opt.place ?? json.meta?.place ?? '';
   return {
-    id: opt.id ?? json.meta?.id ?? 'course', name: opt.name ?? json.meta?.course?.name ?? 'Course', credit: OSM_CREDIT, licence: OSM_LICENCE, scale, derived: fromFairways,
+    id: opt.id ?? json.meta?.id ?? 'course', name: opt.name ?? json.meta?.course?.name ?? 'Course', credit: OSM_CREDIT, licence: OSM_LICENCE, scale,
     source: json.meta?.course?.osm ?? '', place, w: W, h: H, holes, areas, warnings, fills, otherCourses, course: chosen || null,
     parTotal: holes.reduce((s, h) => s + h.par, 0), gameParTotal: holes.reduce((s, h) => s + h.gamePar, 0), lengthM: holes.reduce((s, h) => s + h.lengthM, 0),
     counts,

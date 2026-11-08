@@ -121,7 +121,8 @@ within 60 m of each other), so the validity checks must warn on an imported cour
 # Stage 2 (built): Rondebosch and Magnolia National in the game
 
 **Read this first:** the map is **2 km** (`MAP = 1024` tiles of 2 m in `src/game/iso.ts`), not the 4 km CLAUDE.md and the stage 1 numbers above assume.
-Both courses still fit at 1:1 (no scaling, no crop): Rondebosch's land is 688 x 610 tiles (1376 x 1220 m), Magnolia National's 502 x 658. But **no generated
+Rondebosch (688 x 610 tiles, 1376 x 1220 m) and Magnolia National (502 x 658) fit at 1:1, no scaling or crop; **Woodhill's land is 1079 x 583 tiles, wider than the map,
+so the game scales it to 84%** (see Woodhill below). But **no generated
 valley can host them**: in 12 seeds there is no river-free 500 x 500 window, and every 700-tile window has about 30,000 water tiles (rivers, creeks, banks). So a
 map-data game is laid on the **flat plain** (`boot.ts flatTerrain()`; the save's `golf.osm` makes `load()` use it): the land in the middle of the map, 24+ tiles
 from every edge, the entry road from the west edge (where flatTerrain's highway enters), the clubhouse parcel, car park and drive on the land's west side. The range
@@ -134,11 +135,11 @@ tournament comes with the season, the clubhouse and car park are already placed)
 | the converter `osmCourseToSpec(json, opts)`: stage-1 JSON to a course spec, pure, deterministic | `src/game/golf/osm/convert.ts` (+ `geom.ts`, `types.ts`) |
 | the raster `paintSpec(grid, spec, ox, oy)`: the spec into the course grid's 1 m cells | `src/game/golf/osm/raster.ts` |
 | the plan `planOsmGame(spec)`: land, clubhouse parcel, car park, road, drive, golf state, grid | `src/game/golf/osm/start.ts` |
-| the shipped courses and their loader (a JSON chunk each; no network) | `src/game/golf/osm/index.ts`, `data/*.json` |
+| the shipped courses and their loader (a JSON chunk each; no network); `specOf` scales a course that does not fit the map | `src/game/golf/osm/index.ts`, `data/*.json` |
 | the fixtures' maker (stage-1 JSON to a trimmed fixture) | `scripts/dev/osm-trim-fixture.mjs` |
 | the engine: `?osmcourse=<id>` (a dev start: saving off), `newOsmGame`, `startRealCourse(id)`, `golf.osm` | `src/game/engine.ts`, `golf/mode.ts` |
 | the credit: the Holes panel's course card, the gear menu, the new-game card | `src/ui/course/OsmNote.tsx`, `src/App.tsx`, `src/ui/golf/YouCards.tsx` |
-| the "Your course" row on the Who-are-you card (Build your own / Rondebosch / Magnolia National): a real course starts a new game on it | `src/ui/golf/YouCards.tsx` |
+| the "Your course" row on the Who-are-you card (Build your own / Rondebosch / Magnolia National / Woodhill): a real course starts a new game on it | `src/ui/golf/YouCards.tsx` |
 | the shots script | `scripts/dev/osm-course-shots.mjs` |
 
 ## The converter's rules
@@ -165,22 +166,35 @@ tournament comes with the season, the clubhouse and car park are already placed)
   under water; the planting month stays 0 (established: the course is not growing in). Cart paths and woods are not imported (trees: the game's own Frame with trees).
 
 ## Results
-| | Rondebosch | Magnolia National (the 18 of the Augusta National club boundary) |
-| --- | --- | --- |
-| holes, par as mapped / as the game works it out | 18, 72 / 72 | 18, 72 / 75 (holes 5, 10, 11) |
-| length (tee to pin along the aim points) | 5685 m | 6832 m |
-| land | 688 x 610 tiles | 502 x 658 tiles |
-| fill-ins | none needed | none needed |
-| warnings | 20 close-hole pairs | 15 close-hole pairs; the Par 3 Course (5 holes in the box) named and left out |
-| fixture | 36 kB: 34 tees, 18 greens, 21 fairways, 41 bunkers, 4 water | 97 kB: 36 tees, 34 greens, 23 fairways, 55 bunkers, 6 water, 14 rough, 1 creek |
+| | Rondebosch | Magnolia National (the 18 of the Augusta National club boundary) | Woodhill (scaled to 84%) |
+| --- | --- | --- | --- |
+| holes, par as mapped / as the game works it out | 18, 72 / 72 | 18, 72 / 75 (holes 5, 10, 11) | 18, 73 / 70 (holes 2, 11, 17) |
+| length (tee to pin along the aim points) | 5685 m | 6832 m | 5293 m (6290 m at true size) |
+| land | 688 x 610 tiles | 502 x 658 tiles | 914 x 496 tiles (1079 x 583 at true size) |
+| fill-ins | none needed | none needed | none needed (one tunnelled stream not drawn) |
+| warnings | 20 close-hole pairs | 15 close-hole pairs; the Par 3 Course (5 holes in the box) named and left out | 2 close-hole pairs, the scale, 3 par differences |
+| fixture | 36 kB: 34 tees, 18 greens, 21 fairways, 41 bunkers, 4 water | 97 kB: 36 tees, 34 greens, 23 fairways, 55 bunkers, 6 water, 14 rough, 1 creek | 60 kB: 35 tees, 21 greens, 20 fairways, 43 bunkers, 8 water, 23 rough, 5 waterways |
+
+### Woodhill Country Club, Pretoria (OSM relation/5974410)
+- The club has **no `leisure=golf_course` polygon** in OpenStreetMap: the course area is the "Woodhill Golf Estate" `landuse=residential` multipolygon (2277 x 1535 m, 198.7 ha), found with
+  `--osm relation/5974410`. **That boundary includes the estate's housing. It is kept as course land for now** (the rough is laid over it, houses and all) and is not cut out; a later
+  pass could subtract mapped buildings. Everything else is mapped: 18 hole lines (numbered, par on all, each from a tee to a green), 18 pins, 35 tees, 20 fairways, 21 greens, 43 bunkers, 23 rough,
+  water, 5 waterways, woods, 9 cart paths, a driving range and the clubhouse (woods, cart paths and the range are not imported).
+- **Scaled to 84%.** At true size the holes' land is 1079 tiles (2158 m) wide and the map is 1024 tiles. `specOf` (osm/index.ts) tries true size, then the largest whole percent at which
+  `osmFits` holds (`osmScaleFor`), and `osmCourseToSpec(json, { scale })` multiplies every coordinate (the 40 m margin and what is made up keep their size). The land then sits off centre
+  (the west margin holds the clubhouse parcel, car park and road). The scale is in the spec (`scale`), a warning (`scaled`), the save (`golf.osm.scale`), the Holes panel's course card and the
+  new-game card. Hole lengths shrink with it, so the game's par from length moves: hole 2 is **mapped par 4 at 189 m** (par 3 by the game's rule at true size and scaled), and the two par 5s of
+  486 to 488 m become 408 to 410 m (par 4). The mapped par (73) is kept in the spec; the game shows its own (70).
 
 ## Adding a course
 1. `node scripts/dev/osm-course.mjs "<name>" [--country za]` (stage 1: the JSON in `E:/ClaudeTemp/T340/`; one Overpass query, cached).
 2. `node scripts/dev/osm-trim-fixture.mjs <that json> --id <id> --name "<name the game shows>" --place "<city, country>" [--course "<course name tag>" --rename "<real>=<game name>"]`
    writes `src/game/golf/osm/data/<id>.json` with the credit in its header. Real brand names stay out of the game: rename a famous club.
-3. Add it to `OSM_COURSES` in `src/game/golf/osm/index.ts` (holes and par: the test checks them against the converter) and run `tests/golf-osm-course.test.ts`.
+3. Add it to `OSM_COURSES` in `src/game/golf/osm/index.ts` (holes, par, and `scale` when `specOf` scales it: the test checks them against the loader) and run `tests/golf-osm-course.test.ts`.
 
 ## Left for later
 Cart paths and `golf=path` lines (the Course's paths are the road tool's), trees from the data (`natural=wood`; today the game's own Frame with trees, `?frame=1` in dev),
-heights from a public DEM (T026), a course that does not fit the 2 km map at 1:1 (scale it, or crop to chosen holes), the Old Course's double greens (one green, two holes), the
-Par 3 Course, a course picker that takes a name (the browser must never call Overpass or Nominatim: ship fixtures).
+heights from a public DEM (T026), cropping a course to chosen holes instead of scaling it, cutting the housing out of Woodhill's estate boundary, the Old Course's double greens (one green, two
+holes), the Par 3 Course, a course picker that takes a name (the browser must never call Overpass or Nominatim: ship fixtures). **Parked** (the owner, not important for now): Wingate Park
+Country Club, Pretoria (OSM way/4261725), mapped with tees, fairways, greens and bunkers but no hole lines; holes worked out from the fairways (the green near one end, the tee beyond the
+other, numbered by walking) were built and tested, then taken out of this PR: they are on the branch `arena/T340-wingate-parked`.

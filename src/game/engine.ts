@@ -3026,7 +3026,7 @@ export class Game {
     return true;
   }
   /** T340: the new-game card's real courses (the shipped ones, with the holes and par) and the one this game is laid on (null: an ordinary game) */
-  osmChoices(): { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; derived?: boolean; scale?: number }[] { return OSM_COURSES.map(c => ({ id: c.id, name: osmDisplayName(c.name), place: c.place, holes: c.holes, par: c.par, mappedPar: c.mappedPar, ...(c.derived ? { derived: true } : {}), ...(c.scale ? { scale: c.scale } : {}) })); }
+  osmChoices(): { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number }[] { return OSM_COURSES.map(c => ({ id: c.id, name: osmDisplayName(c.name), place: c.place, holes: c.holes, par: c.par, mappedPar: c.mappedPar, ...(c.scale ? { scale: c.scale } : {}) })); }
   osmGame(): GolfSave['osm'] | null { return this.golf?.osm ?? null; }
   /** T340: a new game on the real course `id` (null: the usual start), from the new-game card: the course loads, then a new game starts as the New game
    *  button's does (the map is replaced; the card comes again for the new game) */

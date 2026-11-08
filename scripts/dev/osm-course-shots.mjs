@@ -13,7 +13,7 @@ const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--
 const base = opt('base', 'http://localhost:5189/'), out = opt('out', 'E:/ClaudeTemp/T340'), which = opt('course', 'all'), frame = opt('frame', '0') === '1', tourney = opt('tourney', '0') === '1', tournament = opt('tournament', '0') === '1', card = opt('card', '0') === '1', standard = opt('standard', '0') === '1', skipMain = opt('main', '1') === '0';
 const ALL = [
   { id: 'rondebosch', preview: 'rondebosch-golf-club.png', holes: 18 }, { id: 'magnolia-national', preview: 'augusta-national-golf-club.png', holes: 18 },
-  { id: 'woodhill', preview: 'woodhill-country-club.png', holes: 18, scaled: true }, { id: 'wingatepark', preview: 'wingatepark-country-club.png', holes: 3, derived: true },
+  { id: 'woodhill', preview: 'woodhill-country-club.png', holes: 18, scaled: true },
 ];
 const COURSES = ALL.filter(c => which === 'all' || which.split(',').includes(c.id));
 const W = 1440, H = 900;
@@ -101,7 +101,6 @@ try {
     console.log('  note:', note);
     check(note.includes('OpenStreetMap contributors'), 'the course card carries "© OpenStreetMap contributors"');
     if (c.scaled) check(await page.$('[data-testid=osm-scaled]') !== null, 'the course card says the course is scaled to fit the map');
-    if (c.derived) check(await page.$('[data-testid=osm-derived]') !== null, 'the course card says the holes were worked out from the fairways');
     await shot(page, `${c.id}-3b-course-card`);
     await page.evaluate(() => { window.__game.setTool?.('select'); window.__game.emit(); });
 
@@ -197,8 +196,8 @@ try {
     await shot(cp, 'card-1-who-are-you-your-course');
     const txt = await cp.$eval('[data-testid=who-course]', e => e.textContent);
     console.log('  card:', txt);
-    check(txt.includes('Magnolia National (from map data)') && txt.includes('Woodhill Country Club (from map data)') && txt.includes('Wingate Park Country Club (from map data)') && !txt.toLowerCase().includes('augusta'), 'the famous club is shown under its made-up name, the others under theirs');
-    check(txt.includes('worked out from the fairways') && txt.includes('scaled to 84%') && txt.includes('3 holes'), 'the card says Wingate Park has 3 holes worked out from its fairways and Woodhill is scaled to 84%');
+    check(txt.includes('Magnolia National (from map data)') && txt.includes('Woodhill Country Club (from map data)') && !txt.toLowerCase().includes('augusta'), 'the famous club is shown under its made-up name, the others under theirs');
+    check(txt.includes('scaled to 84%'), 'the card says Woodhill is scaled to 84% to fit the map');
     await cp.click('[data-testid=who-course-rondebosch]');
     const started = await cp.waitForFunction(() => window.__game.osmGame()?.id === 'rondebosch' && window.__game.ready, null, { timeout: 120000 }).then(() => true).catch(() => false);
     check(started, 'a click on Rondebosch starts a new game on it');

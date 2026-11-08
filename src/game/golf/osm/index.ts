@@ -14,7 +14,6 @@ export { osmCourseToSpec } from './convert';
  *  by tests/golf-osm-course.test.ts) */
 export interface OsmCourseInfo {
   id: string; name: string; place: string; holes: number; par: number; mappedPar: number;
-  /** the holes are worked out from the fairways (the map has no hole lines) */ derived?: boolean;
   /** the course is scaled to fit the 2 km map (below 1; absent: true size) */ scale?: number;
   load: () => Promise<OsmCourseJson>;
 }
@@ -26,7 +25,6 @@ export const OSM_COURSES: readonly OsmCourseInfo[] = [
   { id: 'rondebosch', name: 'Rondebosch Golf Course', place: 'Cape Town, South Africa', holes: 18, par: 72, mappedPar: 72, load: async () => (await import('./data/rondebosch.json')).default as unknown as OsmCourseJson },
   { id: 'magnolia-national', name: 'Magnolia National', place: 'Georgia, United States', holes: 18, par: 75, mappedPar: 72, load: async () => (await import('./data/magnolia-national.json')).default as unknown as OsmCourseJson },
   { id: 'woodhill', name: 'Woodhill Country Club', place: 'Pretoria, South Africa', holes: 18, par: 70, mappedPar: 73, scale: 0.84, load: async () => (await import('./data/woodhill.json')).default as unknown as OsmCourseJson },
-  { id: 'wingatepark', name: 'Wingate Park Country Club', place: 'Pretoria, South Africa', holes: 3, par: 13, mappedPar: 13, derived: true, load: async () => (await import('./data/wingatepark.json')).default as unknown as OsmCourseJson },
 ];
 
 /** the shipped course with this id, or undefined */

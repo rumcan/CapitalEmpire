@@ -178,6 +178,6 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   const pp = normalizePlayer(player); if (pp) out.player = pp;
   if (clubEvents) out.clubEvents = normalizeEvents(clubEvents); // T246
   // T340: a map-data course's credit and name, well formed only (the strings kept, the numbers finite)
-  if (osm && typeof osm.id === 'string' && typeof osm.name === 'string') out.osm = { id: osm.id, name: osm.name, place: String(osm.place ?? ''), credit: String(osm.credit ?? ''), licence: String(osm.licence ?? ''), source: String(osm.source ?? ''), holes: Number.isFinite(osm.holes) ? osm.holes : 0, par: Number.isFinite(osm.par) ? osm.par : 0, mappedPar: Number.isFinite(osm.mappedPar) ? osm.mappedPar : Number.isFinite(osm.par) ? osm.par : 0, ...(typeof osm.scale === 'number' && osm.scale > 0 && osm.scale < 1 ? { scale: osm.scale } : {}), ...(osm.derived === true ? { derived: true } : {}) };
+  if (osm && typeof osm.id === 'string' && typeof osm.name === 'string') out.osm = { id: osm.id, name: osm.name, place: String(osm.place ?? ''), credit: String(osm.credit ?? ''), licence: String(osm.licence ?? ''), source: String(osm.source ?? ''), holes: Number.isFinite(osm.holes) ? osm.holes : 0, par: Number.isFinite(osm.par) ? osm.par : 0, mappedPar: Number.isFinite(osm.mappedPar) ? osm.mappedPar : Number.isFinite(osm.par) ? osm.par : 0, ...(typeof osm.scale === 'number' && osm.scale > 0 && osm.scale < 1 ? { scale: osm.scale } : {}) };
   return out;
 }
