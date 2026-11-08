@@ -205,8 +205,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   roadRev?(): number;
   /** a plant brush dab: props from ids scattered in the circle (spaced, sized size[0]..size[1]); returns how many were placed */
   plant(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number): number;
-  /** removes the plant-brush props in the circle; returns how many */
-  unplant(x: number, y: number, r: number): number;
+  /** removes the plant-brush props in the circle; returns how many. T381: `trees` (the Trees brush): the map's own trees in the circle go too (the
+   *  forest's, the river belts', the town's and the road network's), each counted */
+  unplant(x: number, y: number, r: number, trees?: boolean): number;
   /** the sprites a plant brush can use */
   plantPool(kind: PlantBrushKind, filter?: PlantFilter): { id: string; name: string }[];
   /** the prop journal (undo): begin records every prop added or removed until end, which returns them (null: none); undo and redo
@@ -1626,6 +1627,10 @@ export class PaintTool {
     this.begin(label);
     try { const spent = run(); if (this.tx) this.tx.spent += spent; } finally { this.commit(); }
   }
+  /** T381: an outside stroke as one undo step, opened before its first change and closed when it ends (the bulldozer taking trees: a click or a drag, then
+   *  one Ctrl+Z gives them all back). Props removed or trees taken between the two are in the step; a stroke that changed nothing leaves no step */
+  openStep(label: string) { this.begin(label); }
+  closeStep() { this.commit(); }
   /** an outside edit of the course grid as one undo step (T206: the practice tools build and the bulldozer removes a practice facility): run
    *  lays its cells into the grid (the diffs it returns, made in place) and returns what it spent ($, below 0 for a refund), which is paid
    *  here; undo takes the cells and the money back. Nothing happens without a grid */
@@ -1929,7 +1934,8 @@ export class PaintTool {
   /** one plant dab at t: plant (or rub out) in the circle */
   private plantDab(t: { x: number; y: number }, erase: boolean) {
     const s = this.plant[this.plantBrush];
-    const n = erase ? this.host.unplant(t.x, t.y, s.r) : this.host.plant(this.plantIds(), t.x, t.y, s.r, s.spacing, [s.lo, s.hi], this.plantSeed++);
+    // (T381: the Trees brush's Rub out takes every tree under the brush, the map's own as well as the ones planted)
+    const n = erase ? this.host.unplant(t.x, t.y, s.r, this.plantBrush === 'trees') : this.host.plant(this.plantIds(), t.x, t.y, s.r, s.spacing, [s.lo, s.hi], this.plantSeed++);
     if (this.planting) this.planting.n += n;
   }
   /** drops the outline being drawn (its corners, the lasso and the press) and a stroke in progress (not applied); a handle drag in progress ends (its shape is kept, or reverted when it cannot be placed) */
@@ -2068,7 +2074,13 @@ export class PaintTool {
     if (this.drag) { this.dragEnd(); return; }
     if (this.mode === 'brush') { if (this.runRight) { this.finishRun(); return; } this.strokeEnd(); return; }
     if (this.mode === 'height') { if (this.heighting) { this.heighting = null; this.commit(); this.host.save(); } this.host.emit(); return; }
-    if (this.mode === 'plant') { const pl = this.planting; this.planting = null; if (pl) this.commit(); if (pl && !pl.n && !pl.erase && !this.plantIds().length) this.host.toast('Pick at least one sprite for this brush', 'warn'); this.host.emit(); return; }
+    if (this.mode === 'plant') {
+      const pl = this.planting; this.planting = null; if (pl) this.commit();
+      if (pl && !pl.n && !pl.erase && !this.plantIds().length) this.host.toast('Pick at least one sprite for this brush', 'warn');
+      // T381: Rub out says how many it took (the Trees brush: trees; the others: plants)
+      if (pl?.erase) { const noun = this.plantBrush === 'trees' ? 'tree' : 'plant'; this.host.toast(pl.n ? `Rubbed out ${pl.n} ${noun}${pl.n === 1 ? '' : 's'}` : `No ${noun}s under the brush to rub out`, pl.n ? 'info' : 'warn'); }
+      this.host.emit(); return;
+    }
     if (this.mode !== 'draw') return;
     if (this.lasso) {
       let p = simplify(this.pts); const n = p.length;

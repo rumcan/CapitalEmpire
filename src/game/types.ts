@@ -58,6 +58,9 @@ export interface Prop {
   frame?: number;
   /** drawn this high above its spot (world px; T133: the range's upper deck, an auto prop, never saved): sprites.ts Drawable.lift */
   lift?: number;
+  /** T381: the key (treecut.ts treeKey of its source place) of a forest, river belt or town tree sprite (not a prop: never saved), so Rub out and the bulldozer
+   *  can take it and its cell plants without it from then on */
+  tk?: number;
 }
 
 /** path: the rail's Paths (T084), the road tool on the course's cart paths and drives (setTool turns it into 'road' with roadScope 'course');
