@@ -140,6 +140,10 @@ export function joinCells(g: Grid, box: readonly number[], water: MapWater | nul
   const K = JOIN_REACH, i0 = Math.max(0, Math.floor((box[0]! - g.x0) / CELL_T) - K), j0 = Math.max(0, Math.floor((box[1]! - g.y0) / CELL_T) - K);
   const i1 = Math.min(g.w - 1, Math.ceil((box[2]! - g.x0) / CELL_T) + K), j1 = Math.min(g.h - 1, Math.ceil((box[3]! - g.y0) / CELL_T) + K);
   if (i1 < i0 || j1 < j0) return null;
+  // (no course water in reach: no join, and no cell asked of the map's water; most chunks by the river)
+  let wet = false;
+  for (let j = j0; j <= j1 && !wet; j++) for (let i = i0, o = j * g.w; i <= i1; i++) if (g.surf[o + i] === SURF.water) { wet = true; break; }
+  if (!wet) return null;
   const bare = new Set<number>(), ext: number[] = [], hole: number[] = [];
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
