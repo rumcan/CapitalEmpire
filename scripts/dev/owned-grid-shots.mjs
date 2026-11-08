@@ -1,12 +1,13 @@
 // T339 (#966): no build grid on land you have already bought. In-game check and shots. On a golf game with two blocks bought (one built on:
 // grass, a green and a bunker, as in the owner's picture; one still bare), every tool that turns the faint grid on (the Course paint brush,
-// Paths & drives, the town Paint tool, the Car park tool, the clubhouse ghost) is shot with the grid on, off, and on again in the same state: the
-// pixels that change when the grid goes off (and are steady between the two "on" shots) are the grid's, and each is classed by the tile under it:
-// land the player owns (must be none) or land for sale (must be some). The 2D overlay is read for the gold property outline: the seam between
-// two owned blocks must carry none of it, the outer boundary must. The grid is faint (10% white), so each view is shot twice: as the game draws
-// it, and with the grid's strength raised --boost times (a debug amplification of ext/map-grid's LOOK, so the lines read in a picture).
+// Paths & drives, the town Paint tool, the Car park tool, the clubhouse ghost) is set in hand and the game's own grid call is read (what it passed
+// the layer: the map grid, the half grid, the owned land); the layer's draw is then repeated into an empty off-screen target with those very
+// arguments, so what is read back is the grid alone (no ground, no animation), and each lit pixel is classed by the tile under it: land the player
+// owns (must be none) or land for sale (must be some). The 2D overlay is read for the gold property outline: the seam between two owned blocks
+// must carry none of it, the outer boundary must. The grid is faint (10% white), so each view is also shot with the grid's strength raised
+// --boost times (a debug amplification of ext/map-grid's LOOK, so the lines read in a picture).
 //   node scripts/dev/owned-grid-shots.mjs --base http://localhost:5186/ --out E:/ClaudeTemp/T339 --tag after [--expect clean] [--seed 1] [--seed-town 7] [--boost 5] [--bench]
-// Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile and no saves written. Without --expect it prints the
+// Needs a dev server (vite) on --base. One headless Edge, closed when done; fresh profiles and no saves written. Without --expect it prints the
 // numbers only (the "before" run); with --expect clean a failed check exits 1. --bench times the grid pass with and without the owned land.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -38,6 +39,7 @@ const prep = async page => {
     const p = g.golf.progress; if (p) { for (const k of ['who', 'welcome']) if (!p.seen.includes(k)) p.seen.push(k); if (p.tour) p.tour.off = true; }
     g.setShowGrid(true); g.emit();
   });
+  await spy(page);
 };
 /** the golf land as the engine reads it (course + parcels, less the practice area for sale), and a point-in-it test for node */
 const landOf = page => page.evaluate(() => { const G = window.__game.golf; return { course: G.course, parcel: G.parcel, parcels: G.parcels ?? null, practiceLot: G.practiceLot ?? null }; });
@@ -65,43 +67,50 @@ const buildOn = (page, r) => page.evaluate(async r => {
   g.courseGridChanged(m.paintDisc(grid, x + w * 0.42 + 9.5, y + h * 0.5 - 2, 3.5, S.bunker, 1, 0), true);
   return true;
 }, r);
-/** the camera's frame for classing pixels by tile */
-const camOf = page => page.evaluate(() => { const g = window.__game; return { X: g.cam.X, Y: g.cam.Y, ze: g.cam.z * g.dpr, cw: g.cw, ch: g.ch }; });
-/** counts the pixels that change when the grid goes off (and not between two shots with it on), by whether the tile under them is deep inside
- *  the land the player owns or deep outside it; noisy is how many pixels moved between the two "on" shots (animation, not the grid) */
-async function gridPixels(on1, off, on2, cam, owned) {
-  const a = await sharp(on1).raw().toBuffer({ resolveWithObject: true }), b = await sharp(off).raw().toBuffer(), c = await sharp(on2).raw().toBuffer();
-  const { width: w, height: h, channels: ch } = a.info; let own = 0, sale = 0, noisy = 0;
+/** puts a spy on the layer's draw: the arguments of the game's own last call are kept (window.__gridArgs), the layer's draw itself is window.__gridDraw */
+const spy = page => page.evaluate(() => {
+  const L = window.__game.gridLayer, draw = L.draw; window.__gridDraw = draw;
+  L.draw = function (...a) { window.__gridArgs = a; return draw.apply(this, a); };
+});
+/** the grid alone, as the game's last call drew it: the layer's draw repeated into an empty off-screen target with the same arguments, read back,
+ *  each lit pixel classed by the tile under it (deep inside the land the player owns, or deep outside it); land is the golf land data */
+const coverage = (page, land) => page.evaluate(land => {
+  const g = window.__game, a = window.__gridArgs, L = g.gridLayer; if (!a) return null;
+  const gl = a[0], view = a[1], W = g.cw, H = g.ch;
+  const rs = [land.course, ...(land.parcels ?? [land.parcel])], q = land.practiceLot, inR = (r, x, y) => x >= r[0] && x < r[0] + r[2] && y >= r[1] && y < r[1] + r[3];
+  const owned = (x, y) => !(q && inR(q, x, y)) && rs.some(r => inR(r, x, y));
   const deep = (x, y, v) => [[.75, .75], [-.75, .75], [.75, -.75], [-.75, -.75]].every(([dx, dy]) => owned(x + dx, y + dy) === v);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const i = (y * w + x) * ch; let d = 0, n = 0;
-    for (let k = 0; k < 3; k++) { d = Math.max(d, Math.abs(a.data[i + k] - b[i + k])); n = Math.max(n, Math.abs(a.data[i + k] - c[i + k])); }
-    if (n >= 3) { noisy++; continue; }
-    if (d < 3) continue;
-    const X = (x + 0.5 - cam.cw / 2) / cam.ze + cam.X, Y = (y + 0.5 - cam.ch / 2) / cam.ze + cam.Y, A = X / 64, B = Y / 32, tx = (A + B) / 2, ty = (B - A) / 2;
+  const prevFb = gl.getParameter(gl.FRAMEBUFFER_BINDING), prevVp = gl.getParameter(gl.VIEWPORT), prevTex = gl.getParameter(gl.TEXTURE_BINDING_2D), prevClear = gl.getParameter(gl.COLOR_CLEAR_VALUE);
+  const tex = gl.createTexture(), fb = gl.createFramebuffer();
+  gl.bindTexture(gl.TEXTURE_2D, tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  gl.viewport(0, 0, W, H); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  const drew = window.__gridDraw.apply(L, a), px = new Uint8Array(W * H * 4); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, prevFb); gl.viewport(prevVp[0], prevVp[1], prevVp[2], prevVp[3]); gl.clearColor(prevClear[0], prevClear[1], prevClear[2], prevClear[3]); gl.bindTexture(gl.TEXTURE_2D, prevTex); gl.deleteFramebuffer(fb); gl.deleteTexture(tex);
+  let own = 0, sale = 0, lit = 0;
+  for (let r = 0; r < H; r++) for (let x = 0; x < W; x++) {
+    if (px[(r * W + x) * 4 + 3] < 3) continue; lit++;
+    const sy = H - 1 - r, X = (x + 0.5 - view.cw / 2) / view.ze + view.X, Y = (sy + 0.5 - view.ch / 2) / view.ze + view.Y, A = X / 64, B = Y / 32, tx = (A + B) / 2, ty = (B - A) / 2;
     if (deep(tx, ty, true)) own++; else if (deep(tx, ty, false)) sale++;
   }
-  return { own, sale, noisy };
+  const own8 = a[8]; // (after the fix: the owned land the game passed)
+  return { drew, lit, own, sale, map: a[4], half: a[5], ownedRects: own8 ? own8.rects.length : null };
+}, land);
+/** the tool in hand, a shot as drawn, the grid alone counted, a shot with the grid's strength raised */
+async function gridPair(page, name, land, pointer = [2, 2]) {
+  await page.mouse.move(pointer[0], pointer[1]); await page.waitForTimeout(400); await settle(page, 400);
+  await boost(page, 1); await jpg(await page.screenshot({ type: 'png' }), name);
+  const r = await coverage(page, land);
+  console.log(`  ${name}: map grid ${r?.map}, half grid ${r?.half}, owned rects passed ${r?.ownedRects}; grid pixels on owned land ${r?.own}, on land for sale ${r?.sale} (${r?.lit} lit)`);
+  await boost(page, BOOST); await page.waitForTimeout(300); await jpg(await page.screenshot({ type: 'png' }), `${name}-x${BOOST}`); await boost(page, 1);
+  return r ?? { own: -1, sale: -1, lit: -1, ownedRects: null, half: null };
 }
 /** the grid's strength raised (or put back): the module the engine draws with, its LOOK table */
 const boost = (page, k) => page.evaluate(async k => {
   const m = await import('/src/game/ext/map-grid/index.ts'); window.__look0 ??= { ...m.LOOK };
   for (const key of Object.keys(window.__look0)) m.LOOK[key] = Math.min(0.9, window.__look0[key] * k);
 }, k);
-/** the grid on, off, on again, in the state the page is in; the shots kept: as drawn, and (the grid's strength raised) boosted */
-async function gridPair(page, name, owned, pointer = [2, 2]) {
-  await page.mouse.move(pointer[0], pointer[1]); await page.waitForTimeout(250);
-  await boost(page, 1); await page.evaluate(() => window.__game.setShowGrid(true)); await settle(page, 500);
-  const on1 = await page.screenshot({ type: 'png' }); await jpg(on1, name);
-  await page.evaluate(() => window.__game.setShowGrid(false)); await settle(page, 500);
-  const off = await page.screenshot({ type: 'png' });
-  await page.evaluate(() => window.__game.setShowGrid(true)); await settle(page, 500);
-  const on2 = await page.screenshot({ type: 'png' });
-  const r = await gridPixels(on1, off, on2, await camOf(page), owned);
-  console.log(`  ${name}: grid pixels on owned land ${r.own}, on land for sale ${r.sale} (${r.noisy} moving pixels left out)`);
-  await boost(page, BOOST); await page.waitForTimeout(300); await jpg(await page.screenshot({ type: 'png' }), `${name}-x${BOOST}`); await boost(page, 1);
-  return r;
-}
 /** gold pixels (the property outline) on the 2D overlay within r css px of a tile point */
 const goldAt = (page, x, y, r = 14) => page.evaluate(([x, y, r]) => {
   const g = window.__game, s = g.screen(x, y), d = g.ov.getImageData(Math.max(0, Math.round(s.x - r * g.dpr)), Math.max(0, Math.round(s.y - r * g.dpr)), Math.round(2 * r * g.dpr), Math.round(2 * r * g.dpr)).data;
@@ -114,6 +123,13 @@ const gridTools = [
   ['town-paint', g => { g.setTool('paint'); }],
   ['car-park', g => { g.setTool('park'); }],
 ];
+/** the camera spot for block b: the middle of its centre and its corner farthest from the old land, so land for sale fills the other half of the view */
+const pickView = (b, owned) => {
+  const c = { x: b[0] + b[2] / 2, y: b[1] + b[3] / 2 };
+  const away = [[b[0], b[1]], [b[0] + b[2], b[1]], [b[0], b[1] + b[3]], [b[0] + b[2], b[1] + b[3]]]
+    .map(([x, y]) => ({ x, y, free: [[6, 6], [-6, 6], [6, -6], [-6, -6]].filter(([dx, dy]) => !owned(x + dx, y + dy)).length })).sort((p, q) => q.free - p.free)[0];
+  return { c, view: { x: (c.x + away.x) / 2, y: (c.y + away.y) / 2 } };
+};
 const toScreen = (page, x, y) => page.evaluate(([x, y]) => { const q = window.__game.screen(x, y), g = window.__game; return { x: q.x / g.dpr, y: q.y / g.dpr }; }, [x, y]);
 
 try {
@@ -140,11 +156,7 @@ try {
   check(await buildOn(page, b2), 'the second block is built on: rough, a green and a bunker');
   let L = await landOf(page), owned = ownedFn(L);
   console.log('golf land', JSON.stringify(L), 'bought', JSON.stringify(bought));
-  // aim the camera at the corner of the second block farthest from the old land, so land for sale fills the other half of the view
-  const c2 = { x: b2[0] + b2[2] / 2, y: b2[1] + b2[3] / 2 };
-  const away = [[b2[0], b2[1]], [b2[0] + b2[2], b2[1]], [b2[0], b2[1] + b2[3]], [b2[0] + b2[2], b2[1] + b2[3]]]
-    .map(([x, y]) => ({ x, y, free: [[6, 6], [-6, 6], [6, -6], [-6, -6]].filter(([dx, dy]) => !owned(x + dx, y + dy)).length })).sort((p, q) => q.free - p.free)[0];
-  const view = { x: (c2.x + away.x) / 2, y: (c2.y + away.y) / 2 };
+  const { c: c2, view } = pickView(b2, owned);
   await look(page, view.x, view.y, ZOOM); await settle(page, 3000);
 
   // normal play: Select (no grid in it), the property outline
@@ -173,15 +185,17 @@ try {
   // every tool that turns the grid on
   for (const [name, set] of gridTools) {
     await page.evaluate(`(${set.toString()})(window.__game); window.__game.emit();`); await settle(page, 700);
-    const r = await gridPair(page, `02-${name}`, owned);
+    const r = await gridPair(page, `02-${name}`, L);
     check(r.own === 0, `${name}: no grid on land the player owns (${r.own} px)`);
     check(r.sale > 200, `${name}: land for sale still shows the grid (${r.sale} px)`);
+    check(r.ownedRects > 0, `${name}: the game gives the grid layer the land the player owns (${r.ownedRects} rectangles)`);
+    check(r.half === false, `${name}: a golf game has no 1 m half grid (${r.half})`);
   }
   // a placement in hand in a tool that shows the grid: the clubhouse ghost (Course > Buildings) on the built-on block
   await page.evaluate(() => { const g = window.__game; g.placeClubhouse(true); g.emit(); });
   { const s = await toScreen(page, c2.x, c2.y); await page.mouse.move(s.x, s.y); await page.waitForTimeout(500);
     const armed = await page.evaluate(() => ({ tool: window.__game.tool, clubPlacing: window.__game.clubPlacing })); console.log('clubhouse ghost', JSON.stringify(armed));
-    const r = await gridPair(page, '03-clubhouse-ghost', owned, [s.x, s.y]);
+    const r = await gridPair(page, '03-clubhouse-ghost', L, [s.x, s.y]);
     check(r.own === 0, `the clubhouse ghost in hand: no grid on land the player owns (${r.own} px)`); check(r.sale > 200, `the clubhouse ghost in hand: land for sale still shows the grid (${r.sale} px)`); }
   await page.evaluate(() => { const g = window.__game; g.placeClubhouse(false); g.setTool('select'); g.emit(); });
   // Land for sale open (a side mode in Select): the overlay, the property outlined clearly
@@ -199,7 +213,7 @@ try {
     const cost = await page.evaluate(async () => {
       const g = window.__game, m = await import('/src/game/ext/map-grid/index.ts'), L = g.gridLayer, glc = g.gl.gl, view = g.gl.view, z = g.cam.z, dpr = g.dpr, px = new Uint8Array(4);
       const own = m.propertyOf(g.golf), none = m.NO_LAND, many = m.ownedLand(Array.from({ length: m.MAX_OWNED }, (_, i) => [i * 3, i * 3, 2, 2]));
-      const run = (o, N = 150) => { glc.readPixels(0, 0, 1, 1, glc.RGBA, glc.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < N; i++) L.draw(glc, view, z, dpr, true, false, [], g.net, o); glc.readPixels(0, 0, 1, 1, glc.RGBA, glc.UNSIGNED_BYTE, px); return (performance.now() - t0) / N; };
+      const run = (o, N = 150) => { glc.readPixels(0, 0, 1, 1, glc.RGBA, glc.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < N; i++) window.__gridDraw.call(L, glc, view, z, dpr, true, false, [], g.net, o); glc.readPixels(0, 0, 1, 1, glc.RGBA, glc.UNSIGNED_BYTE, px); return (performance.now() - t0) / N; };
       const res = { none: [], own: [], many: [] }; run(none, 20);
       for (let k = 0; k < 5; k++) { res.none.push(run(none)); res.own.push(run(own)); res.many.push(run(many)); }
       const med = a => a.slice().sort((p, q) => p - q)[a.length >> 1];
@@ -217,23 +231,30 @@ try {
   await p2.waitForFunction(() => window.__game?.ready && window.__game.golf && window.__game.range?.bareGate, null, { timeout: 300000 });
   await prep(p2);
   const got2 = await buyBlocks(p2, 1);
+  check(got2.length === 1, 'a block bought next to the home plot');
+  await buildOn(p2, got2[0]);
   L = await landOf(p2); owned = ownedFn(L);
   console.log('range land', JSON.stringify(L), 'bought', JSON.stringify(got2));
-  const home = L.parcels?.[0] ?? L.parcel, hx = home[0] + home[2] / 2, hy = home[1] + home[3] / 2;
-  // T288: the driving range in hand (Select): its ghost on the plot
+  /** the home plot's point (u along the road, v away from it) in tiles (as scripts/dev/bare-start-shots.mjs) */
+  const homePt = (u, v) => p2.evaluate(([u, v]) => {
+    const g = window.__game, [px, py] = g.golf.range.home, f = g.golf.dir, W = 70, D = 150;
+    return f === 2 ? { x: px + u, y: py + v } : f === 0 ? { x: px + W - u, y: py + D - v } : f === 1 ? { x: px + v, y: py + W - u } : { x: px + D - v, y: py + u };
+  }, [u, v]);
+  // T288: the driving range in hand (Select): its ghost on the plot, the property outlined round it
   await p2.evaluate(() => { const g = window.__game; g.setTool('select'); g.placeRangePart('range'); });
-  await look(p2, hx, hy, 0.15); await settle(p2, 2500);
-  { const s = await toScreen(p2, hx, hy); await p2.mouse.move(s.x, s.y); await p2.waitForTimeout(500); }
+  { const m = await homePt(35, 60), h = await homePt(35, 12); await look(p2, m.x, m.y, 0.12); await settle(p2, 2500);
+    const s = await toScreen(p2, h.x, h.y); await p2.mouse.move(s.x, s.y); await p2.waitForTimeout(500); }
   const ph = await p2.evaluate(() => !!window.__game.placing); check(ph, 'the driving range is in hand (T288)');
   await shot(p2, '06-range-ghost-in-hand');
-  // the clubhouse ghost under the Course tool (Buildings): the grid is on in this tool
+  // the clubhouse ghost under the Course tool (Buildings): the grid is on in this tool; on the bought block's built-on grass
   await p2.evaluate(() => { const g = window.__game; g.cancelPlacing(); g.placeClubhouse(true); g.emit(); });
-  const edge = got2[0] ? { x: got2[0][0] + got2[0][2] / 2, y: got2[0][1] + got2[0][3] / 2 } : { x: hx, y: hy };
-  await look(p2, (edge.x + hx) / 2, (edge.y + hy) / 2, ZOOM); await settle(p2, 2500);
-  const s2 = await toScreen(p2, edge.x, edge.y); await p2.mouse.move(s2.x, s2.y); await p2.waitForTimeout(500);
+  const { c: c3, view: v3 } = pickView(got2[0], owned);
+  await look(p2, v3.x, v3.y, ZOOM); await settle(p2, 3000);
+  const s2 = await toScreen(p2, c3.x, c3.y); await p2.mouse.move(s2.x, s2.y); await p2.waitForTimeout(500);
   console.log('buildings', JSON.stringify(await p2.evaluate(() => ({ tool: window.__game.tool, clubPlacing: window.__game.clubPlacing }))));
-  const r2 = await gridPair(p2, '07-range-clubhouse-ghost', owned, [s2.x, s2.y]);
+  const r2 = await gridPair(p2, '07-range-clubhouse-ghost', L, [s2.x, s2.y]);
   check(r2.own === 0, `the range start, clubhouse ghost in hand: no grid on land the player owns (${r2.own} px)`);
+  check(r2.sale > 200, `the range start, clubhouse ghost in hand: land for sale still shows the grid (${r2.sale} px)`);
   await ctx2.close();
 } finally { await browser.close(); }
 console.log(bad ? `${bad} check(s) failed` : 'done');

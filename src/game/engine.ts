@@ -221,7 +221,7 @@ import { DESERT_THEME, NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale, standInLabel
 import { webpSource } from './atlas-gl';
 import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
-import { HALF_T, courseBuilding, gridShown, loadMapGrid, saveMapGrid } from './ext/map-grid';
+import { HALF_T, PropertyMemo, gridModes, loadMapGrid, saveMapGrid, type GridModes, type LandRect } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
 import { MoneyFloats, addCash, drawMoneyFloats, rangeFloat, type MoneyEvent } from './moneyfloats';
 import { ColumnPlacer, PRI } from './label-place';
@@ -419,6 +419,8 @@ function ptsBox(p: number[]): number[] { let x0 = Infinity, y0 = Infinity, x1 = 
 const PLAYING_SURFACES: ReadonlySet<string> = new Set(['fairway', 'firstCut', 'fringe', 'green', 'tee', 'bunker', 'waste', 'water']);
 /** how far past the golf land the course grid reaches, tiles (plan P21 3.1: the owned box plus a margin) */
 const COURSE_GRID_PAD = 32;
+/** no course land for the grid's half grid to be limited to (T339: it is never drawn in a golf game; elsewhere it covers the whole view) */
+const NO_RECTS: readonly LandRect[] = [];
 /** the least time between two sends of the course chunks during a stroke, ms (paint-tool.ts SEND_MS) */
 const COURSE_SEND_MS = 100;
 /** T218: how often (ms) the holes' playing lines are compared with the last look (engine watchHoleLines), and how far round a line that moved
@@ -630,15 +632,13 @@ export class Game {
   }
   /** the range's money place (merged over its shop at the mid zoom) */
   private rangeSpot(): Omit<MoneyEvent, 'amount' | 'kind'> | null { const c = this.range.scene?.counter; return c ? { x: c.x, y: c.y, group: 'range', gx: c.x, gy: c.y } : null; }
-  /** a course building tool is on (T100): the Course menu's tools, Paths & drives, an event structure being placed; the course half grid shows */
-  get courseBuilding() { return courseBuilding(this.tool, this.roadScope, this.eventTool && !!this.eventStructurePending); }
-  /** the course land the half grid covers (the course and its parcels; none outside a golf game: the whole view), into a reused list */
-  private gridLandBuf: [number, number, number, number][] = [];
-  private gridLand(): readonly [number, number, number, number][] {
-    const g = this.golf, out = this.gridLandBuf; out.length = 0;
-    if (g) { out.push(g.course); if (g.parcels) for (const r of g.parcels) out.push(r); else out.push(g.parcel); }
-    return out;
-  }
+  /** what the grid draws this frame (reused): the 2 m map grid by the tool in hand, and the 1 m course half grid (T100: a course building tool is on:
+   *  the Course menu's tools, Paths & drives, an event structure being placed) outside a golf game only: in one all the land is the player's, and
+   *  land the player owns draws no grid (T339; ext/map-grid gridModes) */
+  private gridMode: GridModes = { map: false, half: false };
+  /** T339: the land the player owns as the grid and the property outline read it (ext/map-grid propertyOf: the course and every parcel, less the
+   *  practice area still for sale), made again only when those change */
+  private property = new PropertyMemo();
   /** the road tool's grid step in tiles (T100): the course half grid (1 m) for Paths & drives, the map's 2 m lattice for town roads */
   roadStep() { return this.roadScope === 'course' ? HALF_T : 1; }
   /** the access overlay (key O): zones with built lots shaded by access; always on at the planner tier (below PLANNER_Z) */
@@ -6418,12 +6418,15 @@ export class Game {
     // the bay rows' lots and on-street runs: their entrances and labels, and a lot with no road in reach
     this.parkView.ctx = ctx; this.parkView.dpr = dpr; this.parkView.labels = this.labels; drawParkingOverlay(this.parkView, this.extraParks, this.traffic.parks, this.parking.rows);
     if (this.golf) {
-    const parcels = this.golf.parcels ?? [this.golf.parcel];
     const rect = (x: number, y: number, w: number, h: number) => { this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0); };
-    for (const r of parcels) {
-    rect(r[0], r[1], r[2], r[3]);
-    // (T200: your land outlined clearly while Land for sale is open)
-    ctx.strokeStyle = this.landMode ? 'rgba(250, 204, 21, 0.95)' : 'rgba(234, 179, 8, 0.7)'; ctx.lineWidth = (this.landMode ? 3 : 1.5) * dpr; ctx.setLineDash([4 * dpr, 4 * dpr]); ctx.stroke(); ctx.setLineDash([]);
+    // T339: the property outlined once, round the outside (ext/map-grid ownedLand: no line between blocks bought one by one); (T200: your land
+    // outlined clearly while Land for sale is open)
+    const line = this.property.of(this.golf).outline;
+    if (line.length) {
+      this.setIso(ctx); ctx.beginPath();
+      for (let k = 0; k + 3 < line.length; k += 4) { ctx.moveTo(line[k]!, line[k + 1]!); ctx.lineTo(line[k + 2]!, line[k + 3]!); }
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.strokeStyle = this.landMode ? 'rgba(250, 204, 21, 0.95)' : 'rgba(234, 179, 8, 0.7)'; ctx.lineWidth = (this.landMode ? 3 : 1.5) * dpr; ctx.setLineDash([4 * dpr, 4 * dpr]); ctx.stroke(); ctx.setLineDash([]);
     }
     // T200: Land for sale: every block for sale tinted by its price band, with its band's $ label and its price (colour never alone, T180);
     // a block you cannot buy hatched with a small ✕ (its reason by the pointer); the block under the pointer and the card's outlined
@@ -10379,7 +10382,9 @@ export class Game {
       if (z !== this.prebakeZ) { this.prebakeZ = z; this.prebakeHold = now + Game.PREBAKE_SETTLE_MS; }
       if (this.ground.idle && now >= this.prebakeHold) this.prebake(z, kind, X0, Y0, X1, Y1, now);
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
-      if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
+      // (T339: never on land the player owns, in any tool: the layer is given it; and a golf game has no half grid)
+      const gm = gridModes(this.gridMode, this.showGrid, this.tool, this.roadScope, this.eventTool && !!this.eventStructurePending, this.golf !== null);
+      if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gm.map, gm.half, NO_RECTS, this.net, this.property.of(this.golf))) gl.stats.draws++;
       // the dev tools' ground lines (the lot lab's Lot grid): the same place, under every shadow and sprite
       if (this.devGround?.(gl.gl, gl.view)) gl.stats.draws++;
       // ---- sprites: every visible tile in one instanced draw (each instance clipped to its tile), vehicles merged in
