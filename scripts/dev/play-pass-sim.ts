@@ -44,11 +44,12 @@ function hand(): CourseView & { heightAt: (x: number, y: number) => number } {
 
 const courseArg = opt('course', 'hand'), view = courseArg === 'hand' ? hand() : fromDump(courseArg), N = +opt('rounds', '30');
 /** --v 1|2: the shot model's version the bot's inputs carry (the putting: shot.ts PUTT_V2; default the current MODEL_V); --env wind=mph,from=deg: the day's steady wind and the lie's kinds and slopes for every full shot */
+const STATS = Object.fromEntries(opt('stat', '').split(',').filter(Boolean).map(kv => kv.split('=')).map(([k, v]) => [k, +v!])) as Record<string, number>, SHAPE_ARG = opt('shape', '').split(',').map(Number);
 const V = +opt('v', String(MODEL_V)), envArg = opt('env', ''), [wmph, wfrom] = envArg.replace(/wind=/, '').split(',').map(Number);
-const modOf = (t: { lie: Lie; ball: Pt; suggested: { aim: Pt; club: string } }): Partial<OwnerInput> => ({ ...(V >= 2 ? { v: V } : {}), ...(envArg && t.suggested.club !== 'putter' ? { env: envOf(wmph! > 0 ? { mph: wmph!, from: wfrom ?? 270 } : null, view.kindAt, view.heightAt, t.ball, t.lie, t.suggested.aim) } : {}) });
+const modOf = (t: { lie: Lie; ball: Pt; suggested: { aim: Pt; club: string } }): Partial<OwnerInput> => ({ ...(V >= 2 ? { v: V } : {}), ...(SHAPE_ARG.length === 2 && t.suggested.club !== 'putter' && (SHAPE_ARG[0] || SHAPE_ARG[1]) ? { shape: { curve: Math.sign(SHAPE_ARG[0]!) as -1 | 0 | 1, flight: Math.sign(SHAPE_ARG[1]!) as -1 | 0 | 1 } } : {}), ...(envArg && t.suggested.club !== 'putter' ? { env: envOf(wmph! > 0 ? { mph: wmph!, from: wfrom ?? 270 } : null, view.kindAt, view.heightAt, t.ball, t.lie, t.suggested.aim) } : {}) });
 /** a profile: the skills (0..100 each) the golfer plays at (your everyday game: nerve in it) */
 const PROFILES: { name: string; sk: ReturnType<typeof gameSkills> }[] = [
-  { name: 'start (hcp 18: 30/24/22/26)', sk: gameSkills(START_SKILLS, PRESSURE.everyday) },
+  { name: 'start (hcp 18: 30/24/22/26)', sk: { ...gameSkills(START_SKILLS, PRESSURE.everyday), ...STATS } },
   { name: 'mid (50 each)', sk: gameSkills({ driving: 50, irons: 50, short: 50, putting: 50, nerve: 50 }, PRESSURE.everyday) },
   { name: 'good (75 each)', sk: gameSkills({ driving: 75, irons: 75, short: 75, putting: 75, nerve: 75 }, PRESSURE.everyday) },
 ];
@@ -67,7 +68,9 @@ function puttsPerHole(rounds: BotRound[]): { p1: number; p2: number; p3: number 
   for (const r of rounds) { const byHole = new Map<number, number>(); for (const s of r.shots) if (s.club === 'putter') byHole.set(s.hole, (byHole.get(s.hole) ?? 0) + 1); for (const k of byHole.values()) { h++; if (k === 1) a++; else if (k === 2) b++; else c++; } }
   return { p1: Math.round(100 * a / h), p2: Math.round(100 * b / h), p3: Math.round(100 * c / h) };
 }
-for (const hname of ['novice', 'club', 'sharp'] as const) for (const p of PROFILES) {
+const ONLY = opt('only', '').split(':');
+for (const hname of ['novice', 'club', 'sharp'] as const) for (const [pi, p] of PROFILES.entries()) {
+  if (ONLY[0] && (ONLY[0] !== hname || (ONLY[1] !== undefined && +ONLY[1] !== pi))) continue;
   const h: Human = HUMANS[hname], rounds: BotRound[] = [];
   for (let k = 0; k < N; k++) rounds.push(botRound(view, p.sk, h, 1000 + k, 1 + (k % 28), t => modOf(t)));
   const tot = rounds.map(r => r.total - r.par), putts = rounds.map(r => r.putts), girs = rounds.map(r => r.gir / r.pars.length * 100), fw = rounds.map(r => r.fairways / Math.max(1, r.fairwayHoles) * 100), pen = rounds.map(r => r.penalties);

@@ -31,6 +31,7 @@ export function PlayerCard({ view, onClose, onBook, onCancel, right = 'right-3' 
             <span className="text-right font-semibold text-white">{s.value.toFixed(1)}</span>
           </div>
         ))}
+        <p className="pt-1 text-[11px] text-slate-400" data-testid="player-skills-note">Power, accuracy and touch shape your swing meter, your carry and your scatter (50 changes nothing); practice raises them.</p>
       </div>
       <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs" data-testid="player-round">
         <div className="mb-1 text-[12px] uppercase text-slate-400">Your round today</div>

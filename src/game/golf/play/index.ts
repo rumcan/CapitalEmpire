@@ -19,3 +19,5 @@ export * from './spin';
 export * from './wind';
 export * from './lies';
 export * from './conditions';
+export * from './mods';
+export * from './shape';

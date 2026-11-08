@@ -7,7 +7,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { ShotPanel } from '../src/ui/ShotPanel';
 import type { Game, ShotConditions, ShotState } from '../src/game/engine';
-import { lieView, previewShot, slopeLines, windView } from '../src/game/golf/play';
+import { carryFor, kitOf, lieView, previewShot, shapeEffect, shapeLines, slopeLines, windView } from '../src/game/golf/play';
 import type { Club, OwnerTurn } from '../src/game/golf/play';
 
 const turn = (lie: OwnerTurn['lie']): OwnerTurn => ({ golfer: -1, holeIdx: 0, hole: 1, par: 4, stroke: 1, t: 0, lie, ball: { x: 10, y: 10 }, pin: { x: 90, y: 10 }, distM: 160, suggested: { club: 'iron6', aim: { x: 80, y: 10 }, power: 1 } });
@@ -15,8 +15,8 @@ const state = (club: Club, lie: OwnerTurn['lie'] = 'rough'): ShotState => ({ tur
 /** the stand-in game: a shot open, its conditions */
 function game(s: ShotState | null, c: Partial<ShotConditions> | null): Game {
   const wind = windView({ mph: 13, from: 46 }, { mph: 11, from: 46, gusty: 0.4, seed: 1 }, 1, 0), lie = lieView('rough', s?.input.club ?? 'iron6');
-  const cond: ShotConditions | null = c === null ? null : { on: true, putting: false, wind, day: null, lie, slope: { up: 0, across: 0 }, slopeLines: [], preview: previewShot('iron6', 140, 1, 0, { lie: 'rough' }), aimedM: 140, playsLikeM: 159, suggest: 'wood3', ...c };
-  return { shotState: () => s, shotSkill: () => 0.3, shotConditions: () => cond, lastShotReport: () => null, setShotClub() { /* none */ }, ownerCaddie() { /* none */ }, ownerSwing() { /* none */ } } as unknown as Game;
+  const cond: ShotConditions | null = c === null ? null : { on: true, putting: false, wind, day: null, lie, slope: { up: 0, across: 0 }, slopeLines: [], preview: previewShot('iron6', 140, 1, 0, { lie: 'rough' }), aimedM: 140, playsLikeM: 159, suggest: 'wood3', shape: { pick: s?.shape ?? { curve: 0, flight: 0 }, fx: shapeEffect(s?.shape ?? null, s?.input.club ?? 'iron6', 140, 0.3), lines: s?.shape ? shapeLines(s.shape, shapeEffect(s.shape, s.input.club, 140, 0.3)) : [] }, ...c };
+  return { shotState: () => s, shotSkill: () => 0.3, shotKit: () => kitOf(0.3, s?.input.club ?? 'iron6'), shotCarry: () => carryFor(0.3, s?.input.club ?? 'iron6'), setShotShape() { /* none */ }, shotConditions: () => cond, lastShotReport: () => null, setShotClub() { /* none */ }, ownerCaddie() { /* none */ }, ownerSwing() { /* none */ } } as unknown as Game;
 }
 const html = (g: Game) => renderToStaticMarkup(createElement(ShotPanel, { game: g }));
 
@@ -49,4 +49,15 @@ test('shot panel: a putt shows the green and no wind; the caddie’s ring follow
   const none = html(game(state('iron6'), null)), off = html(game(state('iron6'), { on: false }));
   assert.ok(!/data-testid="shot-conditions"/.test(none) && !/data-testid="shot-conditions"/.test(off), 'no box without conditions or with the weather off');
   assert.equal(html(game(null, null)), '', 'no shot, no panel');
+});
+
+test('shot panel (part 2): the shaping row (curve and flight, the pick marked) for a full shot, none for a putt, and the pick’s effect and cost in words', () => {
+  const plain = html(game(state('iron6'), {}));
+  assert.ok(plain.includes('data-testid="shot-shape"') && /Draw/.test(plain) && /Straight/.test(plain) && /Fade/.test(plain) && /Low/.test(plain) && /Normal/.test(plain) && /High/.test(plain), 'the six buttons');
+  assert.ok(!plain.includes('data-testid="shape-lines"'), 'straight and normal: no lines');
+  const picked = html(game({ ...state('iron6'), shape: { curve: -1, flight: 1 } }, {}));
+  assert.ok(/data-testid="shape-lines"/.test(picked) && /Draw, high/.test(picked) && /curves left/.test(picked) && /pulled off/.test(picked) && /miss x1.55/.test(picked) && /lands soft/.test(picked), 'a draw and a high flight: curve, flight and the cost');
+  assert.equal((picked.match(/chip chip-on/g) ?? []).length, 3, 'the club and the two picks are marked on');
+  const putt = html(game({ ...state('putter', 'green'), input: { club: 'putter', aim: { x: 90, y: 10 }, power: 1 } }, { putting: true, lie: lieView('green', 'putter') }));
+  assert.ok(!putt.includes('data-testid="shot-shape"'), 'a putt has no shape');
 });

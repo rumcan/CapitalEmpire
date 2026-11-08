@@ -250,3 +250,24 @@ changes the flight, the slope under the ball, and the playtest's fixes. `play/wi
 - **Filed from the playtest:** T345 #987 (the meter's sweet spot is +-33 ms at the starting skill: make it a window in time), T346 #988 (a ball's roll does not depend on the club),
   T347 #989 (everyday golfers and the money matches' opponents play without the wind, lie kinds and slope), T348 #990 (other cards stay open over the shot panel).
 - **Left:** the wind has no art but the shader's stand-in (docs/GOLF-SPRITES.md asks for a flag sheet).
+
+**The play pass, part 2 (T334 #960): shot shaping and the player's stats.** `play/shape.ts`, `play/mods.ts`; `tests/golf-play-shaping.test.ts`, `tests/golf-play-stats.test.ts`.
+- **Shot shaping** (`shape.ts`). Before the swing the shot panel picks the **curve** (draw, straight, fade) and the **flight** (low, normal, high); the pick is `ShotShape { curve: -1|0|1, flight: -1|0|1 }`, saved
+  with the input (`OwnerInput.shape`, a full shot only; absent: none, a shot from before plays as before). A draw curves left and a fade right by `SHAPE.curveDeg` (5 degrees over a 200 m carry, more
+  the longer, held between 0.4 and 1.2 of it) and a draw runs on (+15%) while a fade checks; a **high** flight carries 5% less, lands soft (run x0.55) and catches 1.3 times the wind; a **low**
+  flight carries 7% less, runs on (x1.7), catches 0.6 of the wind and is the accurate one (scatter x0.85). T318's spin (the dot on the ball) curves the flight too: the two add.
+  **The skill cost**: a golfer pulls off `SHAPE.work` (half) of a shape at skill 0 and all of it at skill 1 (his accuracy stat lifts it a little); each pick makes the swing's miss bigger (the meter's
+  accuracy click: a curve x1.35, a flight x1.2, both x1.55), widens the scatter by what he does not pull off, and adds a mishit chance that falls to 0 at skill 1. The panel shows it ("Draw: curves left
+  4.0°, runs on · 70% pulled off · miss x1.35"); the expected-landing ellipse, "plays like" and the meter's aim mark follow it.
+- **Stats and modifiers** (`mods.ts`): `Stats` are the four parts of the game (T241: driving, irons, the wedges = `short`, putting) and three new ones: **power** (the carry: woods +-10% over 0..100 against 50, irons
+  +-6%, the wedge +-3%, the putter nothing), **accuracy** (the scatter -+30%, the sweet spot +-40% wide, the marker -+15% in speed: woods and irons) and **touch** (the same for the putter, whose scatter
+  is its leave); the wedge reads the mean of accuracy and touch. 50 changes nothing. They live on the player card (0..100) with the others, nerve takes them off under pressure like the skills (`gameSkills`),
+  practice raises them (the bucket power and accuracy, the putting green touch, the chipping green touch and accuracy) and the handicap follows them (`HCP_STAT_WEIGHTS`; a stat at 50 weighs nothing).
+- **For T335 (the bag) and T336 (the cards): plain data and one function.** A `Mod { id, stats?, carry?, spread?, sweet?, speed?, roll?, mishit?, clubs? }` is a change of stats (added, 0..1 units) and factors
+  on the shot, for every club or the listed ones (a club or a family: wood, iron, wedge, putter). `GameSkills.mods` carries the list (the engine builds it in `Game.yourSkills`: empty today);
+  `applyMods(skills, club)` stacks them in order into the `ClubKit` the club plays at (its skill after the mods, the carry, scatter, sweet spot, marker speed, roll and mishit factors); `skillFor`, `carryFor`
+  (the club's full carry for him), `hitShot`, `shotOutcome`, the meter (`SwingMeter(skill, speed)`, `sweetSpot(skill, boost, sweet)`, `swingEffect(..., sweet)`) and the panel all read it, and nothing else
+  has to change for a card or a club to take effect. A new club (T335) is a `Club` id with its carry in `CLUBS`, its family in `FAMILY` and its part of the game in `PART_OF`; a putter shaft is a `Mod` with
+  `clubs: ['putter']`; a card that unlocks a mechanic is a flag the engine and the panel read (the spin and the shape are the pattern: an optional field of the input).
+- **Back-compat**: a golfer's skills without the new fields (or with them at 0.5) play every shot exactly as a plain skill did (tested over every club and lie); a saved tournament owner keeps his new stats
+  with his skills; a profile from before has them at 50; an input without `shape` is played as before and the golden test of part 1 still passes.

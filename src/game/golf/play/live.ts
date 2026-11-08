@@ -5,7 +5,9 @@
 import { TILE_M } from '../types';
 import { appendShots, FLIGHT_TIME, liveField, PUTT_FLIGHT } from './round';
 import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
-import { PUTT_V2, carryM, chooseShot, hitShot, putt, rng, skillFor, type ShotSkill } from './shot';
+import { PUTT_V2, carryFor, chooseShot, hitShot, putt, rng, skillFor, type ShotSkill } from './shot';
+import { kitOf } from './mods';
+import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
 import { BOOST, METER, METER_ANG, MIN_SWING_POWER, readSwing, swingEffect, type SwingOutcome } from './swing';
 import { readSpin, spinEffect, type SpinInput } from './spin';
@@ -17,8 +19,9 @@ import type { Club, CourseView, Landing, Lie, PlayHole, Pt, RoundPlan, Shot } fr
  *  play the shot and `power` is only the slider's (absent: a shot from before T316, played exactly as before). T318: spin, the ball's dot and the
  *  clicks added in the air (spin.ts; a full shot only; absent: no spin, a shot from before T318 played exactly as before). T334: env, the conditions the shot was
  *  struck in (conditions.ts: the wind, the lie's kind, the slope; a full shot only; absent: none, a shot from before T334 played exactly as before). T334: v, the version of the
- *  shot model the input was struck under (absent: 1, as before; 2: the putting's second version, shot.ts PUTT_V2); the engine writes MODEL_V on every input it plays */
-export interface OwnerInput { holeIdx: number; stroke: number; club: Club; aim: Pt; power: number; swing?: SwingOutcome; spin?: SpinInput; env?: ShotEnv; v?: number }
+ *  shot model the input was struck under (absent: 1, as before; 2: the putting's second version, shot.ts PUTT_V2); the engine writes MODEL_V on every input it plays. T334 part 2: shape,
+ *  the curve and the flight he picked before the swing (shape.ts; a full shot only; absent: none, a shot from before played exactly as before) */
+export interface OwnerInput { holeIdx: number; stroke: number; club: Club; aim: Pt; power: number; swing?: SwingOutcome; spin?: SpinInput; env?: ShotEnv; v?: number; shape?: ShotShape }
 /** the shot model's current version (OwnerInput.v): 2 since T334 (the putting) */
 export const MODEL_V = 2;
 /** the owner's turn: his golfer, the hole (index, number, par), the stroke he plays, the minute he strikes, his lie, his ball and the pin (tiles), the
@@ -72,10 +75,10 @@ export class LiveGroup {
     if (!turn || !p || !g || !hr || this.field.caddied) throw new Error('LiveGroup.play: no owner turn to play (call advance first)');
     if (input.holeIdx !== turn.holeIdx || input.stroke !== turn.stroke) throw new Error(`LiveGroup.play: the input is for hole ${input.holeIdx} stroke ${input.stroke}, the turn is hole ${turn.holeIdx} stroke ${turn.stroke}`);
     const r = rng(this.ctx.seed, p.id, hr.h * 32 + turn.stroke);
-    const { to, lie, penalty, holed, landing, sw, spin, env } = shotOutcome(this.ctx.view, this.ctx.view.holes[hr.h]!, p.ball, p.lie, p.sk, input, r);
+    const { to, lie, penalty, holed, landing, sw, spin, env, shape } = shotOutcome(this.ctx.view, this.ctx.view.holes[hr.h]!, p.ball, p.lie, p.sk, input, r);
     const putting = input.club === 'putter';
     const s = hr.record(p, input.club, turn.t, putting ? PUTT_FLIGHT : FLIGHT_TIME, to, lie, penalty, holed, landing);
-    this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power, ...(sw ? { swing: sw } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...((input.v ?? 1) >= 2 ? { v: MODEL_V } : {}) });
+    this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power, ...(sw ? { swing: sw } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(shape ? { shape } : {}), ...((input.v ?? 1) >= 2 ? { v: MODEL_V } : {}) });
     this.field.settle(g);
     this.turn = null; this.player = null; this.due = null;
     this.flush();
@@ -96,7 +99,7 @@ export class LiveGroup {
   private turnOf(p: Player, hr: HoleRun, t: number): OwnerTurn {
     const hole = holeFrom(this.ctx.view.holes[hr.h]!, p.set), sg = chooseShot(p.lie, p.ball, hole, p.sk, p.lie === 'tee'), putting = sg.club === 'putter'; // T254: his set's line
     const distM = Math.hypot(hole.pin.x - p.ball.x, hole.pin.y - p.ball.y) * TILE_M, dM = Math.hypot(sg.aim.x - p.ball.x, sg.aim.y - p.ball.y) * TILE_M;
-    const power = putting ? 1 : clamp(dM / carryM(sg.club, skillFor(p.sk, sg.club)), POWER[0]!, POWER[1]!);
+    const power = putting ? 1 : clamp(dM / carryFor(p.sk, sg.club), POWER[0]!, POWER[1]!);
     return { golfer: p.id, holeIdx: hr.h, hole: hole.n, par: hole.par, stroke: p.strokes + 1, t, lie: p.lie, ball: { x: p.ball.x, y: p.ball.y },
       pin: { x: hole.pin.x, y: hole.pin.y }, distM, suggested: { club: sg.club, aim: { x: sg.aim.x, y: sg.aim.y }, power } };
   }
@@ -110,13 +113,15 @@ export class LiveGroup {
  *  and spread; without it the input's power. Returns where the ball came to rest, its lie, the penalty, whether it went in, the full shot's landing, and
  *  the swing read (null: none), the spin read (T318; null: none) and the conditions read (T334; null: none) */
 export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Lie, sk: ShotSkill, input: Omit<OwnerInput, 'holeIdx' | 'stroke'>, r: () => number):
-  { to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean; landing: Landing | undefined; sw: SwingOutcome | null; spin: SpinInput | null; env: ShotEnv | null } {
+  { to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean; landing: Landing | undefined; sw: SwingOutcome | null; spin: SpinInput | null; env: ShotEnv | null; shape: ShotShape | null } {
   const putting = input.club === 'putter';
   let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Landing | undefined;
   // T316: the swing meter's outcome (when he swung it): its power, its miss (radians off the aim, + right as he faces it) and spread
   const spin = !putting && input.spin ? readSpin(input.spin) : null; // (T318: a putt takes no spin)
   const env = !putting && input.env ? readEnv(input.env) : null; // (T334: nor the wind, the lie's kind or the slope: a putt never leaves the ground)
-  const sw = input.swing ? readSwing(input.swing) : null, eff = sw ? swingEffect(sw, skillFor(sk, input.club), putting) : null, miss = eff ? eff.deg * Math.PI / 180 : 0;
+  const shape = !putting && input.shape ? readShape(input.shape) : null; // (T334 part 2: a putt takes no shape)
+  const kit = kitOf(sk, input.club); // (his stats and mods for the club: the sweet spot, the scatter, the carry; neutral for a plain skill)
+  const sw = input.swing ? readSwing(input.swing) : null, eff = sw ? swingEffect(sw, skillFor(sk, input.club), putting, kit.sweet) : null, miss = eff ? eff.deg * Math.PI / 180 : 0;
   if (putting) {
     const pw = eff ? clamp(eff.power, MIN_SWING_POWER, METER.top + BOOST.max) : clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
     const dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0;
@@ -127,6 +132,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     const tol = v2 ? Math.min(PUTT_V2.maxDeg, Math.max(PUTT_V2.minDeg, Math.atan(PUTT_V2.cupM / Math.max(distM, 0.25)) * 180 / Math.PI)) : AIM_DEG;
     const factor = deg <= tol ? (v2 ? Math.max(0, 1 - Math.abs(pw - 1) * distM / PUTT_V2.windowM) : Math.max(0, 1 - 4 * Math.abs(pw - 1))) : 0;
     const k = putt(r, skillFor(sk, 'putter'), distM, factor, v2);
+    k.leaveM *= kit.spread; // (T334 part 2: touch tightens the leave)
     if (k.holed) { to = { x: hole.pin.x, y: hole.pin.y }; lie = 'green'; holed = true; }
     else {
       // a miss: past the cup (short of it under 1) by the model's leave plus the power's error, and off the line by the aim's error
@@ -140,18 +146,20 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     // the intended carry along the aim's direction (the pin's when the aim is on the ball), then the hit model from there: spread, mishits, lies,
     // roll, water and out of bounds all apply
     const pw = eff ? eff.power * eff.carry : clamp(input.power, POWER[0]!, POWER[1]!);
+    // (T334 part 2: the shape's effect at this carry: the curve, the run, the wind's multiplier, the scatter, and the swing's miss made bigger)
+    const fx = shapeEffect(shape, input.club, carryFor(sk, input.club) * pw, kit.skill, kit);
     let ux = input.aim.x - from.x, uy = input.aim.y - from.y, L = Math.hypot(ux, uy);
     if (L === 0) { ux = hole.pin.x - from.x; uy = hole.pin.y - from.y; L = Math.hypot(ux, uy); }
     if (L === 0) { ux = 1; uy = 0; L = 1; }
-    if (miss) { const c = Math.cos(miss), sn = Math.sin(miss), rx = ux * c - uy * sn; uy = ux * sn + uy * c; ux = rx; } // T316: the meter's miss
-    const d = carryM(input.club, skillFor(sk, input.club)) * pw / TILE_M, at = { x: from.x + ux / L * d, y: from.y + uy / L * d };
+    if (miss) { const m2 = miss * fx.miss, c = Math.cos(m2), sn = Math.sin(m2), rx = ux * c - uy * sn; uy = ux * sn + uy * c; ux = rx; } // T316: the meter's miss (T334 part 2: bigger with a shape picked)
+    const d = carryFor(sk, input.club) * pw / TILE_M, at = { x: from.x + ux / L * d, y: from.y + uy / L * d };
     // (T241: his part of the game's skill; T316: a meter shot may carry past the club's full carry, with its spread, and keeps METER_ANG of the
     // model's direction spread, the meter's miss taking over the rest)
     // (T318: the spin, from the lie it is played from: the curve, the check, the release; none without it)
     const sp = spin ? spinEffect(spin, input.club, plie, env?.lie) : null; // (T334: the lie's finer kind scales the spin)
-    const mod = eff || sp || env ? { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(env ? { env } : {}) } : undefined;
+    const mod = eff || sp || env || shape ? { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(env ? { env } : {}), ...(shape ? { shape: fx } : {}) } : undefined;
     const o = hitShot(r, sk, plie, from, at, input.club, view, mod);
     to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
   }
-  return { to, lie, penalty, holed, landing, sw, spin, env };
+  return { to, lie, penalty, holed, landing, sw, spin, env, shape };
 }

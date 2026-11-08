@@ -3,6 +3,7 @@
 import type { Pt } from '../holes';
 import type { TeeKind } from '../types';
 import type { LieKind } from './lies';
+import type { Mod } from './mods';
 export type { Pt };
 
 /** the surface a ball lies on: tee, fairway, rough, fescue (deep grass), bunker, green, water, or out of bounds */
@@ -19,7 +20,11 @@ export type Sex = 'm' | 'w';
 /** T241: a golfer's skill by part of the game (0..1 each), as the shot model reads it (shot.ts skillFor): driving (the driver and the 3-wood), irons
  *  (the irons and the pitching wedge), the short game (the sand wedge: chips, pitches and bunker shots) and putting. Your profile's nerve is already in
  *  them (golf/player.ts gameSkills: what pressure takes off). A field golfer has none: his one skill plays every shot */
-export interface GameSkills { driving: number; irons: number; short: number; putting: number }
+export interface GameSkills { driving: number; irons: number; short: number; putting: number;
+  /** T334 part 2: the stats beyond the four parts of the game (each 0..1, nerve already in them; absent: 0.5, which changes nothing: mods.ts NEUTRAL) */
+  power?: number; accuracy?: number; touch?: number;
+  /** T334 part 2: the modifiers stacked on the stats (cards, clubs and shafts: T335, T336; mods.ts applyMods); absent: none */
+  mods?: readonly Mod[] }
 /** a golfer: a unique id (0..size-1), name, sex, whether a pro, skill (0..1), look (0..4, the art variant), and the owner's golfer. T213 (entourage.ts):
  *  the cart he rides (an index shared by the two golfers of a cart; absent: he walks) and whether a caddie walks with him */
 export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skill: number; look: number; owner?: boolean; cart?: number; caddie?: boolean;
