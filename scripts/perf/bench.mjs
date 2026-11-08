@@ -14,7 +14,8 @@
 // --animals 0 (T309, a dev server): no farm animals for the run (the farms' A/B: the same scene with and without the herds)
 // --sun on|off (T310, a dev server): the sun patches for the run (sun-patches.ts)
 // --estate N (T353, a dev server, with --start town): N built house lots laid along streets on the course land before the tour (dev/estate-fixture.ts), then the lots drawn and
-//   not drawn by turns (Engine.setEstateDrawn) at 30% and 15% over them, three times each: the frames' cpu ms (average, p95), the instances and draws, the lots' own props
+//   not drawn by turns (Engine.setEstateDrawn) at 30% and 15% over them, three times each (estateAb: the frames' cpu ms (average, p95), the instances and draws, the lots' own
+//   props), then the course scene's tour over the estate with the lots drawn (its stages: fps, cpu, instances, draws and the working set in MB, the ground and tile budget's)
 // --osmcourse <id> (T340, with --start town): the game is laid on that real course built from map data (golf/osm; rondebosch, magnolia-national) on the flat map
 // --grassShine on|off (T262, a dev server): the grass shine for the run (grass-shine.ts; on by default, as the player left it otherwise; off: the ground as before)
 // --ground (T166, a dev server): the game's ground-worker levers for the run (boot.ts GROUND_LEVERS, e.g. lazy,w1; old: none)

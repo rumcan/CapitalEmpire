@@ -219,8 +219,8 @@ export function benchGame(g: Game, scene: BenchScene) {
     // T259: ?farms=1 (bench.mjs --farms 1), the farms' before and after on the same page: the farm model 1 (T005's, as main draws it) and 2 by turns
     const farms = new URLSearchParams(location.search).get('farms') === '1' ? farmFollow(g) : null;
     if (farms) { farmStage(g, farms, (r, month) => { const out = { ...info, farms: farms.n, month, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
-    // T353: the lots' A/B over the estate (the lots drawn and not, by turns)
-    if (estateAt) { estateStage(g, estateAt, r => { const out = { ...info, estate: estateN, lots: g.estateRt?.lots.length ?? 0, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
+    // T353: the lots' A/B over the estate (the lots drawn and not, by turns), then the scene's tour over the estate with the lots drawn (its working set, in MB, is the ground and tile budget's)
+    if (estateAt) { const at = estateAt; estateStage(g, at, r => { g.setEstateDrawn(true); g.lookAt(at.x, at.y, 0.3); startTour(g, { ...info, estate: estateN, lots: g.estateRt?.lots.length ?? 0, estateAb: r }, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]); }); return; }
     startTour(g, info, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
   };
 }
