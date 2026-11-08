@@ -6,7 +6,8 @@ import { fileURLToPath, pathToFileURL } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { ALLOC_PATH, checkDevRequest, checkDevSave, devSavePath, LEARN_PATH, mergeAllocations, mergePresets, mergeReview, mergeSamples, MODELS_DIR, REVIEW_PATH, shipPlan } from "./src/game/dev/dev-save";
+import { ALLOC_PATH, checkDevRequest, checkDevSave, devSavePath, LEARN_PATH, mergeAllocations, mergePresets, mergeSamples, MODELS_DIR, shipPlan } from "./src/game/dev/dev-save";
+import { mergeReview, REVIEW_PATH } from "./src/game/dev/dev-save"; // T385 (#1042): the studio's Lot review file
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

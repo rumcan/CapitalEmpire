@@ -24,10 +24,10 @@ import {
   boxOf, names, patchTex, pick, specFit, withVariations,
   type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
-import { WHOLE_FRONT, approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetPatch, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
+import { WHOLE_FRONT, approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, faces, footprintOf, isVehicle, ownerScaleOf, roadView, turned } from './preset-art';
 import { fixedArt } from './art-fix';
-import { EPS, OVERLAP, hit, share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear); T308: the facing's tolerance; T385: the fence off the drive
+import { EPS, OVERLAP, share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear); T308: the facing's tolerance
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
@@ -36,7 +36,7 @@ import { groupsFrom, type GroupData } from './group-data';
 import { FENCE_BAND, ITEM_KINDS, groupOf, modelFrom, type Box, type HouseClass, type ItemKind, type Model, type SectorLot, type UseGroup } from './learn';
 import { pairTable, stateDensity, stateKinds, tasteFrom, type Partner } from './taste';
 import { placesFrom, type PlaceLot, type Places } from './places';
-import { CLASS_NAMES, REAR, areaOf, baseOf, frameHalf, houseFamilies, sizeClassOf } from './house-class';
+import { CLASS_NAMES, REAR, baseOf, frameHalf, houseFamilies, sizeClassOf } from './house-class';
 import { allows, parseAllocations } from './house-alloc';
 import ALLOC_JSON from './house-allocations.json';
 import REMOVED from '../../../scripts/assets/removed.json';
@@ -50,7 +50,12 @@ import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
 import { presetTier, tierOf } from './tiers';
 import { buildGroups, groupOf as cellMembers, roleOf, sizeOf, zoneOf, type Role } from './groups';
-import { autoLot, clearAutoLots, dressStraight, isBigLot, relayParks, texOf, type AutoTemplate } from './autolot';
+import { autoLot, clearAutoLots, dressStraight, isBigLot, relayParks, type AutoTemplate } from './autolot';
+// T385 (#1042): the clean base of a house lot (clean-yards.ts; cleanHouse and cleanLot below): its own imports, on lines of their own
+import { hit } from './compose-core';
+import { areaOf } from './house-class';
+import { texOf } from './autolot';
+import type { PresetPatch } from './presets';
 import { cleanYards } from './clean-yards';
 import { buildingRect, cleanGround, cleanTrees, hedgeRun, type Box as CleanBox } from './clean-lot';
 import { facingView } from './house-facing';
@@ -575,12 +580,13 @@ const boxAt = (q: { x: number; y: number }, h: { ha: number; hb: number }): Box4
 const STARTER_RE = /rundown|derelict|boarded|abandoned|shack|lean-to|mobile-home|camper|pop-?up-caravan|(?<!boat-)trailer/;
 /** the trailers and mobile homes: decor-kind props that stand as a starter home in a house's place for this swap only (the owner, 2026-11-02) */
 const HOME_DECOR = /mobile-home|camper|pop-?up-caravan|(?<!boat-)trailer/;
-let STARTERS: string[] | null = null, STARTER_BUILDINGS: string[] | null = null;
-const startersOf = (decor: boolean): string[] => LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && (isBuilding(it) || (decor && HOME_DECOR.test(it.id))) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:')
-  && !REAR.test(it.id) && !drawnAsStandIn(i) && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort();
+let STARTERS: string[] | null = null;
+const starterPalette = (): readonly string[] => (STARTERS ??= LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && (isBuilding(it) || HOME_DECOR.test(it.id)) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:')
+  && !REAR.test(it.id) && !drawnAsStandIn(i) && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort());
 /** T385 (#1042, #1039): a clean house lot (clean-yards.ts) shows a starter BUILDING, never a trailer or a mobile home: those are decor props, which houseBase left out
  *  of a generated lot, so a tier-0 lot with a mobile home in its house's place drew its yard round no house at all (the owner: "why is there a lot with no house?") */
-const starterPalette = (): readonly string[] => (cleanYards() ? (STARTER_BUILDINGS ??= startersOf(false)) : (STARTERS ??= startersOf(true)));
+let STARTER_BUILDINGS: string[] | null = null;
+const starterBuildings = (): readonly string[] => (STARTER_BUILDINGS ??= starterPalette().filter(id => { const it = BY.get(id); return !!it && isBuilding(it); }));
 /** a fitted preset's main building (the house or the shop): the index of its widest building (its half extents' area), -1 for none */
 function mainIndex(fit: Fitted, f: PresetFrame): number {
   const half = frameHalf(f); let k = -1, a = 0;
@@ -616,7 +622,7 @@ function remixOf(fit: Fitted, preset: LotPreset, lot: LotGeom, st: ComposeState,
   };
   // the starter home: a tier-0 res lot's house spot (a removed house's stand-in keeps its own place: the owner's picture is the one removed)
   if (preset.use === 'res' && cap === 0 && mainK >= 0 && fit.from[mainK] !== undefined && !removedOf(preset.props[fit.from[mainK]!]?.id ?? '') && unitOf(seed, mainK, 0x57) < STARTER_CHANCE) {
-    const list = starterPalette(), n = list.length;
+    const list = cleanYards() ? starterBuildings() : starterPalette(), n = list.length;
     if (n) { const at = mix(seed, mainK, 0x58) % n; for (let t = 0; t < n; t++) { const id = list[(at + t) % n]!; if (allows(ALLOC, id, road, state) && place(mainK, id, STARTER_RULES)) break; } }
   }
   for (let k = 0; k < fit.props.length; k++) {

@@ -137,7 +137,8 @@ import { LU, LV, lotJobs, type LotTuple } from './lots/town';
 import { rectPlot, surveyBlocks, surveyPatch } from './lots/survey';
 /** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
 const LAND_SURVEY_INSET = 0.6;
-import { SITE_HEAPS, SITE_LUMBER, acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type Composition, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import { SITE_HEAPS, SITE_LUMBER, acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import type { Composition } from './lots/compose'; // T385 (#1042): the Lot review's override
 import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf, type PresetState } from './lots/presets';
 import { LotMap, endReach, ringClear } from './lots/lots';
@@ -4070,8 +4071,9 @@ export class Game {
   /** composes a lot and adds its props (auto 'lot:' + key: never saved, and the tools ignore them) and its ground patches */
   private placeLot(key: string, g: LotGeom, st: ComposeState) {
     this.dropLot(key);
+    const c = compose(g, st), ps: Prop[] = [];
     // (T385: the studio's Lot review adds what the owner placed on a lot, its override: lotOverride, set by dev/lot-review.ts in the lab's light boot only)
-    const c0 = compose(g, st), ov = this.lotOverride?.(key, g), c: Composition = ov ? { props: [...c0.props, ...ov.props], ground: [...c0.ground, ...ov.ground] } : c0, ps: Prop[] = [];
+    const ov = this.lotOverride?.(key, g); if (ov) { c.props.push(...ov.props); c.ground.push(...ov.ground); }
     for (const q of c.props) {
       const i = LIB_INDEX.get(q.id); if (i === undefined || (q.street && this.inLayby(i, q))) continue;
       const p = this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key, q.foot ? { foot: q.foot } : undefined); ps.push(p); // q.foot: a parked car of the mix (T236, vehicles.ts parkedAs) on its body footprint
