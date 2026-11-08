@@ -1,0 +1,244 @@
+{
+  "id": "variation~ref-building-farm-shed-0280794d-plain~1",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:32:05.460265+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-b69dc25e-aa60-4b29-b94b-23c20ed03674.png",
+    "sha256": "7870a429f0da849937f17042aca12430b97b3dd40b3d9988c469358e36448ae8",
+    "bytes": 1513707
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-farm-shed-0280794d-plain~1\\corners-v1.png",
+    "sha256": "7870a429f0da849937f17042aca12430b97b3dd40b3d9988c469358e36448ae8",
+    "bytes": 1513707
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-farm-shed-0280794d-plain~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-ref-building-farm-shed-0280794d-plain-1.native.png",
+      "sha256": "aa08794adb08e3d0685401b8d1b302e786efe6bdba8ea683c42a5f94f6d28908",
+      "bytes": 158588
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~ref-building-farm-shed-0280794d-plain~1-corners.png",
+      "sha256": "f3838b258a576beadd0ceea35652828e17ed961b9bf2e9657624b371dae5418e",
+      "bytes": 113160
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-ref-building-farm-shed-0280794d-plain-1.native.png",
+      "sha256": "aa08794adb08e3d0685401b8d1b302e786efe6bdba8ea683c42a5f94f6d28908",
+      "bytes": 158588
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~ref-building-farm-shed-0280794d-plain~1-corners.png",
+      "sha256": "f3838b258a576beadd0ceea35652828e17ed961b9bf2e9657624b371dae5418e",
+      "bytes": 113160
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          56,
+          100,
+          545,
+          521
+        ],
+        "transparent_fraction": 0.5929427745091306,
+        "margins_px": [
+          56,
+          100,
+          82,
+          106
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          79,
+          102,
+          570,
+          531
+        ],
+        "transparent_fraction": 0.6083372124671546,
+        "margins_px": [
+          79,
+          102,
+          57,
+          96
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          66,
+          79,
+          554,
+          534
+        ],
+        "transparent_fraction": 0.5640006206614114,
+        "margins_px": [
+          66,
+          79,
+          73,
+          93
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          66,
+          69,
+          562,
+          534
+        ],
+        "transparent_fraction": 0.5762739457023013,
+        "margins_px": [
+          66,
+          69,
+          65,
+          93
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 33.008056640625
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 28.54833984375
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 32.813557942708336
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 28.353597005208332
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 29.732421875
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 32.969156901041664
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-farm-shed-0280794d-plain~1\\SE.png",
+        "sha256": "201f3d5d73dbcad52469385e784b6c3b014eeb361ae1fca5c3e0b175b3bdacb6",
+        "bytes": 346908
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-farm-shed-0280794d-plain~1\\SE.native.png",
+        "sha256": "201f3d5d73dbcad52469385e784b6c3b014eeb361ae1fca5c3e0b175b3bdacb6",
+        "bytes": 346908
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-farm-shed-0280794d-plain~1\\SW.png",
+        "sha256": "1b065779ad4600346a597f9491096697310c669a4692f0ff882dc515180b8b55",
+        "bytes": 335728
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-farm-shed-0280794d-plain~1\\SW.native.png",
+        "sha256": "1b065779ad4600346a597f9491096697310c669a4692f0ff882dc515180b8b55",
+        "bytes": 335728
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-farm-shed-0280794d-plain~1\\NW.png",
+        "sha256": "71d8cad84c849b7f38603ec057afc65cd3437bba2b2d29579f0fb09ab13e7b3b",
+        "bytes": 352941
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-farm-shed-0280794d-plain~1\\NW.native.png",
+        "sha256": "71d8cad84c849b7f38603ec057afc65cd3437bba2b2d29579f0fb09ab13e7b3b",
+        "bytes": 352941
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-farm-shed-0280794d-plain~1\\NE.png",
+        "sha256": "6545d56a1a3fa712d5724a662f35d94fe385b52f5484265eca14a826652abe8a",
+        "bytes": 388324
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-farm-shed-0280794d-plain~1\\NE.native.png",
+        "sha256": "6545d56a1a3fa712d5724a662f35d94fe385b52f5484265eca14a826652abe8a",
+        "bytes": 388324
+      }
+    }
+  ]
+}

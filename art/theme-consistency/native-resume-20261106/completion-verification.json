@@ -1,0 +1,2037 @@
+{
+  "status": "PASS",
+  "verified_utc": "2026-11-06T19:54:48.050272+00:00",
+  "branch": "lead/art-repaint-20261106",
+  "project_root": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106",
+  "scope": "Original 43 pending CORNER subjects completed; this is not conversion of all older cardinal sheets or the entire catalogue.",
+  "counts": {
+    "resume_corner_subjects": 43,
+    "verified_selected_corner_sets": 43,
+    "verified_current_corner_crops": 172,
+    "pending_original_resume_subjects": 0,
+    "original_preexisting_corner_subjects_with_four_output_files": 87,
+    "combined_original_corner_queue_with_four_output_files": 130,
+    "raw_corner_sheets": 47,
+    "raw_axisturn_sheets": 3,
+    "raw_sheets_total": 50,
+    "provenance_statuses": {
+      "imported-awaiting-visual-review": 47,
+      "held-geometry-requires-regeneration": 2,
+      "rejected-validation": 1
+    },
+    "explicit_eight_view_selections": 2,
+    "selected_eight_view_crop_checks": 16,
+    "future_late_afternoon_corner_subjects": 9
+  },
+  "lighting_scope": "Only from now on: last nine exact prompts use late-afternoon daylight/all-generated-views; preserve earlier historical lighting. Only requested Video Vault and Arcade corrections were retroactive.",
+  "historical_exclusions": [
+    "barber corners-v1 held geometry",
+    "firestation corners-v1 held geometry",
+    "Arcade axisturn-v1 rejected cell-boundary crossing"
+  ],
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "material_failures": [],
+  "selections": [
+    {
+      "id": "world~video_rental",
+      "path": "world~video_rental\\selection.json",
+      "selected": {
+        "corners": "corners-v2.png",
+        "axisturn": "axisturn-v1.png"
+      },
+      "verified_crops": 8,
+      "actual_references_verified": true
+    },
+    {
+      "id": "world~arcade",
+      "path": "world~arcade\\selection.json",
+      "selected": {
+        "corners": "corners-v2.png",
+        "axisturn": "axisturn-v2.png"
+      },
+      "verified_crops": 8,
+      "actual_references_verified": true
+    }
+  ],
+  "verified_corner_sets": [
+    {
+      "queue_index": 0,
+      "id": "world~video_rental",
+      "version": 2,
+      "provenance": "world~video_rental\\corners-v2.provenance.json",
+      "raw_sha256": "fcc308a331f7784095c47fbd0849c9c62a37e4ebd19b2675fd0f28ab1b1bf412",
+      "prompt_sha256": "c03444c448f3d90728239f1537e6aa2f2f74156ce6ff4c72f08b243d5ac0df20",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~video_rental\\NE.native.png",
+          "sha256": "d74785eb60ec8a85e5afe66c3d5d2d0323d8027c55757295011fcd7f46cbd25a",
+          "dimensions": [
+            593,
+            446
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~video_rental\\SE.native.png",
+          "sha256": "12148275bedb8f2b0d56fd0318fa8bdd9c5d74ccd1fbfff150fd63607140076a",
+          "dimensions": [
+            580,
+            457
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~video_rental\\SW.native.png",
+          "sha256": "b147c9e5c68e1cc655b0b3302259d9f7ab02c1453e737646ea7fa3a89b8a85cf",
+          "dimensions": [
+            591,
+            464
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~video_rental\\NW.native.png",
+          "sha256": "1805a24778d7d8046260335eead6601c6a407896c1ba12cd308eca3e5ba685e1",
+          "dimensions": [
+            581,
+            474
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 1,
+      "id": "variation~industrial-freight-depot-a030c919~1",
+      "version": 1,
+      "provenance": "variation~industrial-freight-depot-a030c919~1\\corners-v1.provenance.json",
+      "raw_sha256": "f671c98ab5051e6d8290ac8c4c48c0e5dac472658a2de8e046590429cf686d10",
+      "prompt_sha256": "db2d1b4992ca38b4d1e001d32c46a594a74f1f1feaf3c24739d221e736d03fee",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~industrial-freight-depot-a030c919~1\\NE.native.png",
+          "sha256": "c8c2c175ab9958bf5c1a25cd9e5ffd8f0b0e39f1151604f1d7fb330eac009fac",
+          "dimensions": [
+            539,
+            438
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~industrial-freight-depot-a030c919~1\\SE.native.png",
+          "sha256": "3ce4ceec21242c32ee0b8de6a80728673d764c5cf42464ff62ab3f9594bcb0b9",
+          "dimensions": [
+            580,
+            455
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~industrial-freight-depot-a030c919~1\\SW.native.png",
+          "sha256": "5e57ca60aeec54590eec08281df0d7087617926d482405364747c163d16242d8",
+          "dimensions": [
+            566,
+            484
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~industrial-freight-depot-a030c919~1\\NW.native.png",
+          "sha256": "568e72001de150cfa8623f8b663be0a1deee3b9dda5d7109c8ed7e8f4dd600e5",
+          "dimensions": [
+            578,
+            506
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 2,
+      "id": "variation~industrial-lumber-workshop-8a43a691~1",
+      "version": 1,
+      "provenance": "variation~industrial-lumber-workshop-8a43a691~1\\corners-v1.provenance.json",
+      "raw_sha256": "98f9eb3aecbaa7864f5e52b38e07281b74216dc398e6605abab92fadcb976b8c",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~industrial-lumber-workshop-8a43a691~1\\NE.native.png",
+          "sha256": "3dcff1c660a26732b95a705dbe300dab6fa405a5fe2d57ffc889d7dd1dd7ed23",
+          "dimensions": [
+            546,
+            448
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~industrial-lumber-workshop-8a43a691~1\\SE.native.png",
+          "sha256": "59e5a1bab5bca67e26de7dc04cd2e615304088c78fd4997d2f034a0d8d972635",
+          "dimensions": [
+            570,
+            486
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~industrial-lumber-workshop-8a43a691~1\\SW.native.png",
+          "sha256": "eab235c287dad365cdda8c7de015d6a5874b3d005cca2ed04482bb8b29b94c41",
+          "dimensions": [
+            588,
+            483
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~industrial-lumber-workshop-8a43a691~1\\NW.native.png",
+          "sha256": "8213ab105388b6970207fe637e2a792a925cc66988a67b598c6cf30ae7bebb4a",
+          "dimensions": [
+            562,
+            470
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 3,
+      "id": "variation~industrial-textile-mill-eedf9576~1",
+      "version": 1,
+      "provenance": "variation~industrial-textile-mill-eedf9576~1\\corners-v1.provenance.json",
+      "raw_sha256": "6d4500d37ed9b79bd7c5c099e2b1e95908319c6ae9c4f846cb5114e4df257574",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~industrial-textile-mill-eedf9576~1\\NE.native.png",
+          "sha256": "cb4cd37e0965421103a0ec0354accb047769198b00622b6fa7fddbe208307e7a",
+          "dimensions": [
+            324,
+            466
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~industrial-textile-mill-eedf9576~1\\SE.native.png",
+          "sha256": "c8b8f479f0f87595e4dfea4a87b887334d3838bd65eecf4bcbc841ec6dabab27",
+          "dimensions": [
+            377,
+            534
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~industrial-textile-mill-eedf9576~1\\SW.native.png",
+          "sha256": "555c07f617c7000c37d5f2d2eb8028a1b80eaf2859989e7e70c8f1405536a260",
+          "dimensions": [
+            383,
+            541
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~industrial-textile-mill-eedf9576~1\\NW.native.png",
+          "sha256": "cf86af7e320f1480bc6caa8df112c4fffdb5126815d4730f7421f90677a9675d",
+          "dimensions": [
+            382,
+            578
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 4,
+      "id": "variation~industrial-utility-substation-54820c2b~1",
+      "version": 1,
+      "provenance": "variation~industrial-utility-substation-54820c2b~1\\corners-v1.provenance.json",
+      "raw_sha256": "64d330a60b6be6a25c4748cf8ed8ff0ae3bbddfb52548b13d6db7228cc098abb",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~industrial-utility-substation-54820c2b~1\\NE.native.png",
+          "sha256": "f1295abdb198ae256772bdfec264cb9228b48fc28d4680962de9b2e698b065fe",
+          "dimensions": [
+            229,
+            273
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~industrial-utility-substation-54820c2b~1\\SE.native.png",
+          "sha256": "3e9fa0b6465bdef4517904f06217edced084d53183693055ed5a6448ff997cb0",
+          "dimensions": [
+            363,
+            461
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~industrial-utility-substation-54820c2b~1\\SW.native.png",
+          "sha256": "9ecb03fe04a0d6bf630a6c0f353110766c4f2f9f648bf44e59827fa0f357608f",
+          "dimensions": [
+            391,
+            463
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~industrial-utility-substation-54820c2b~1\\NW.native.png",
+          "sha256": "f83de462eda10cf1f7f9ae7946c9fc4d1cb0a29c8503ac199526ffd68a15e34d",
+          "dimensions": [
+            374,
+            479
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 5,
+      "id": "variation~ref-building-barn-74bee205-plain~1",
+      "version": 1,
+      "provenance": "variation~ref-building-barn-74bee205-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "8746e26ae52ad24b7860338fc7962f1355aaefa60cf1b2abbba5b84c19046e7e",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~ref-building-barn-74bee205-plain~1\\NE.native.png",
+          "sha256": "69c2f653e7b798d8d4182c2cb62e96a1048190c110c5d3b493fe27e97a34e2aa",
+          "dimensions": [
+            559,
+            542
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~ref-building-barn-74bee205-plain~1\\SE.native.png",
+          "sha256": "5c3968b092f72cdfec9e345545f4c189e9ed18fc71c800db55c86eac06521354",
+          "dimensions": [
+            560,
+            540
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~ref-building-barn-74bee205-plain~1\\SW.native.png",
+          "sha256": "4f8c0ac506d415a21a4db952fbc512e6aa27f016a64961734e03b562c5333c14",
+          "dimensions": [
+            559,
+            547
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~ref-building-barn-74bee205-plain~1\\NW.native.png",
+          "sha256": "db6fc66e7bd2885cb9f731e3b58fe3abc314a11adc3510544d40cab314919983",
+          "dimensions": [
+            560,
+            539
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 6,
+      "id": "variation~ref-building-barn-v2-b96e34dc-plain~1",
+      "version": 1,
+      "provenance": "variation~ref-building-barn-v2-b96e34dc-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "3e02e55ffca8689962c36c9d027ad66f5c8ee7acbc8d1da76874a23ca8c4e7ed",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~ref-building-barn-v2-b96e34dc-plain~1\\NE.native.png",
+          "sha256": "2690fa33286692f406ac6e6f1f5c33e3db92b8fa395e99b2f57c8170c2fae190",
+          "dimensions": [
+            597,
+            518
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~ref-building-barn-v2-b96e34dc-plain~1\\SE.native.png",
+          "sha256": "d351fac36fef119c754801fe9b4858d06a3c0691f17b605e4c7731c8b9bbd15f",
+          "dimensions": [
+            592,
+            505
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~ref-building-barn-v2-b96e34dc-plain~1\\SW.native.png",
+          "sha256": "abb65471598e8dc0e4120a36cfa7617232b624639248e7954a7a6ca5e0210b83",
+          "dimensions": [
+            585,
+            507
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~ref-building-barn-v2-b96e34dc-plain~1\\NW.native.png",
+          "sha256": "35a393f5e1815a6266f598a5080152544b3b35b2cee40050d4ce26f351a41696",
+          "dimensions": [
+            589,
+            515
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 7,
+      "id": "variation~ref-building-farm-shed-0280794d-plain~1",
+      "version": 1,
+      "provenance": "variation~ref-building-farm-shed-0280794d-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "7870a429f0da849937f17042aca12430b97b3dd40b3d9988c469358e36448ae8",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~ref-building-farm-shed-0280794d-plain~1\\NE.native.png",
+          "sha256": "6545d56a1a3fa712d5724a662f35d94fe385b52f5484265eca14a826652abe8a",
+          "dimensions": [
+            496,
+            465
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~ref-building-farm-shed-0280794d-plain~1\\SE.native.png",
+          "sha256": "201f3d5d73dbcad52469385e784b6c3b014eeb361ae1fca5c3e0b175b3bdacb6",
+          "dimensions": [
+            489,
+            421
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~ref-building-farm-shed-0280794d-plain~1\\SW.native.png",
+          "sha256": "1b065779ad4600346a597f9491096697310c669a4692f0ff882dc515180b8b55",
+          "dimensions": [
+            491,
+            429
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~ref-building-farm-shed-0280794d-plain~1\\NW.native.png",
+          "sha256": "71d8cad84c849b7f38603ec057afc65cd3437bba2b2d29579f0fb09ab13e7b3b",
+          "dimensions": [
+            488,
+            455
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 8,
+      "id": "variation~ref-building-farmhouse-ef501a21-plain~1",
+      "version": 1,
+      "provenance": "variation~ref-building-farmhouse-ef501a21-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "4f9a9a33e22fef20b09e1ccdf3dbe7312662309cc288747940daab9cade27e2e",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~ref-building-farmhouse-ef501a21-plain~1\\NE.native.png",
+          "sha256": "8ca2eada3cefa16e1ee9a1f32511d4b535dc2716b1d3aded336882882c281a37",
+          "dimensions": [
+            402,
+            411
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~ref-building-farmhouse-ef501a21-plain~1\\SE.native.png",
+          "sha256": "0f5060b81aa7c526e5d32a1fde7448c0b46a91541cf2fda5530969972402fdbb",
+          "dimensions": [
+            582,
+            390
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~ref-building-farmhouse-ef501a21-plain~1\\SW.native.png",
+          "sha256": "ac9210da8c309790cea8f08b2b34354a03c647da33d4a62a0cb1810ebc9b3dd1",
+          "dimensions": [
+            451,
+            514
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~ref-building-farmhouse-ef501a21-plain~1\\NW.native.png",
+          "sha256": "6adc89984a82a66384fbbc550aed95462bebbb817f26040b035d669f9ad1427b",
+          "dimensions": [
+            596,
+            400
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 9,
+      "id": "variation~ref-building-garage-0f7895a1-plain~1",
+      "version": 1,
+      "provenance": "variation~ref-building-garage-0f7895a1-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "683a9b83cb19c633300d7d8ee548befe938028cd64c6b845f9adb4ada0e7af2f",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~ref-building-garage-0f7895a1-plain~1\\NE.native.png",
+          "sha256": "0e2d83486051f575688c306d8c02026f48caaf0f624b031008384e148b9f69c5",
+          "dimensions": [
+            487,
+            446
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~ref-building-garage-0f7895a1-plain~1\\SE.native.png",
+          "sha256": "1c3616ddb52cf750bc8fdd8bc6c628020221c4e82a3289578a5904c343187145",
+          "dimensions": [
+            479,
+            439
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~ref-building-garage-0f7895a1-plain~1\\SW.native.png",
+          "sha256": "ae992f9f9bef8470605a8da7b39c0c2175be7135e27d644444c261f26504a78e",
+          "dimensions": [
+            472,
+            441
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~ref-building-garage-0f7895a1-plain~1\\NW.native.png",
+          "sha256": "311997deabb161ee5f6e975c12882fac49462f30ed8da5a10e6bdbdb5aecfafb",
+          "dimensions": [
+            475,
+            450
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 10,
+      "id": "variation~ref-building-gas-shop-3326e70f-plain~1",
+      "version": 1,
+      "provenance": "variation~ref-building-gas-shop-3326e70f-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "0ce7d775b1c76467c716362fe137538b4b5d06a5ce7e5eaeb8e4ffab16f038fa",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~ref-building-gas-shop-3326e70f-plain~1\\NE.native.png",
+          "sha256": "f26ff36bd52578d5ffc9bea2cd64178d89d7549664f68451455df9f52c8867e9",
+          "dimensions": [
+            492,
+            488
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~ref-building-gas-shop-3326e70f-plain~1\\SE.native.png",
+          "sha256": "3138e9542b346545d839b91978847c302f6b6899558bd7079402557ab074fce0",
+          "dimensions": [
+            578,
+            401
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~ref-building-gas-shop-3326e70f-plain~1\\SW.native.png",
+          "sha256": "4676187117c6d745000ec0b0ecf81f3275eb393bf5844fcc9287bf10985c17bd",
+          "dimensions": [
+            508,
+            486
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~ref-building-gas-shop-3326e70f-plain~1\\NW.native.png",
+          "sha256": "9ede5760d3f313ead207595400f1bd499a6f3be78780698712bc8c627acee511",
+          "dimensions": [
+            573,
+            413
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 11,
+      "id": "variation~ref-building-house-dormer-b4413f08-plain~1",
+      "version": 1,
+      "provenance": "variation~ref-building-house-dormer-b4413f08-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "d9514a8547beb31fc75a79a5c04c91df22a083d32908b16bb214b5077e7ae0fe",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~ref-building-house-dormer-b4413f08-plain~1\\NE.native.png",
+          "sha256": "188395fdbefbb10faf7ae4de5252e2ac9b232fb556d773c902f174a8ff83c5f3",
+          "dimensions": [
+            505,
+            437
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~ref-building-house-dormer-b4413f08-plain~1\\SE.native.png",
+          "sha256": "ed00a7659ba29f8199077d4deb56d73374ebae80ee1fb51c8f8f668167c2192f",
+          "dimensions": [
+            499,
+            467
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~ref-building-house-dormer-b4413f08-plain~1\\SW.native.png",
+          "sha256": "3a0df356cb12a36c5ce84e2566a3f09a348754bee5fde6c688e4742ce4b0355b",
+          "dimensions": [
+            488,
+            440
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~ref-building-house-dormer-b4413f08-plain~1\\NW.native.png",
+          "sha256": "b0408ea5b28a4d48a83272385ca07b81f004f41649979eeb5633e10c6e40ae3d",
+          "dimensions": [
+            502,
+            444
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 12,
+      "id": "variation~ref-building-house-dormer-north-6952cea5-plain~1",
+      "version": 1,
+      "provenance": "variation~ref-building-house-dormer-north-6952cea5-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "e934e92c00af40cb5ab3f623df644131103f0f180b6a86484260c2fd78bb2757",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~ref-building-house-dormer-north-6952cea5-plain~1\\NE.native.png",
+          "sha256": "5f3d276c436585618eac7626eae2bc71ecc7768449e0fb3fa597dff86c23122e",
+          "dimensions": [
+            548,
+            495
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~ref-building-house-dormer-north-6952cea5-plain~1\\SE.native.png",
+          "sha256": "9a9f68abb6d6627c15263a50a4d08344283d3dc8911b435f961c45e2ad6c2a46",
+          "dimensions": [
+            562,
+            499
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~ref-building-house-dormer-north-6952cea5-plain~1\\SW.native.png",
+          "sha256": "971500a8dfa16448991461f09eba31a52adddb895ca3ed7da29cd4bc1ea29ca7",
+          "dimensions": [
+            554,
+            503
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~ref-building-house-dormer-north-6952cea5-plain~1\\NW.native.png",
+          "sha256": "136bfd3c56c5451251c2b28e3818dc0708f68378c106e1df6a661258fa6e85a2",
+          "dimensions": [
+            555,
+            488
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 13,
+      "id": "variation~static-shop_market_rear-f9272004-plain~1",
+      "version": 1,
+      "provenance": "variation~static-shop_market_rear-f9272004-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "f101e4f501b3da225e99e132f9b40ebaf1540afc3caefb619f428a1a71d5ea1b",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~static-shop_market_rear-f9272004-plain~1\\NE.native.png",
+          "sha256": "a3ba1f3016d9e7597f531fb6157284641566da1950580805a564b1371b33fb9f",
+          "dimensions": [
+            525,
+            484
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~static-shop_market_rear-f9272004-plain~1\\SE.native.png",
+          "sha256": "d45d7837bb35192d6c71cdf11519797795d60a70fb49efe44b79b20b07746d02",
+          "dimensions": [
+            513,
+            485
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~static-shop_market_rear-f9272004-plain~1\\SW.native.png",
+          "sha256": "a893fcfbd6309088fea77649a2d1718100ae9311cdafa2d34eefdc2d15db1299",
+          "dimensions": [
+            518,
+            480
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~static-shop_market_rear-f9272004-plain~1\\NW.native.png",
+          "sha256": "e3167cc19e525582b50036e47430eb16207a6f3bceaa5d0493d71f63d7e04582",
+          "dimensions": [
+            511,
+            490
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 14,
+      "id": "variation~town-bakery-af15d7f5-plain~1",
+      "version": 1,
+      "provenance": "variation~town-bakery-af15d7f5-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "567187d1399c4ffd82c04b4309a8c36baf37a1bf630e881324456fcd15ccc28a",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~town-bakery-af15d7f5-plain~1\\NE.native.png",
+          "sha256": "50a0750571d2bfddb3ab5e81970ec3178327377f6060b12be14cc8207b9b6e73",
+          "dimensions": [
+            549,
+            483
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~town-bakery-af15d7f5-plain~1\\SE.native.png",
+          "sha256": "9a0cff76eb68ea2c5b4c65add64657dff61a91f81aca3e3ce62f358148fd7c8b",
+          "dimensions": [
+            542,
+            480
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~town-bakery-af15d7f5-plain~1\\SW.native.png",
+          "sha256": "d7294376a33b246c776a520a9570b2b1a529a31e02c7d4b9b048f3681e562bed",
+          "dimensions": [
+            543,
+            479
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~town-bakery-af15d7f5-plain~1\\NW.native.png",
+          "sha256": "516e195c9fb90be0d523262da57e94049de9532a884d3570af129b1085718d3e",
+          "dimensions": [
+            543,
+            484
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 15,
+      "id": "variation~town-barber-13c5ef06-plain~1",
+      "version": 2,
+      "provenance": "variation~town-barber-13c5ef06-plain~1\\corners-v2.provenance.json",
+      "raw_sha256": "75c27fd780312f476f81b5c74d7a76cac2efbff75996b70d4c3317449b7a5219",
+      "prompt_sha256": "fd55e76eb6368aa3f5205ae381f87b950da0b3c76833b16b62496d643903fedb",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~town-barber-13c5ef06-plain~1\\NE.native.png",
+          "sha256": "85c72dab2f8bc44ad2fbd0911520051aa7c485bb053ea3e11a9349ebce041fa3",
+          "dimensions": [
+            505,
+            544
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~town-barber-13c5ef06-plain~1\\SE.native.png",
+          "sha256": "bab2dc63956bee302592274762a6a33266e1f971fba6a0c9100cd26c67c260ef",
+          "dimensions": [
+            495,
+            543
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~town-barber-13c5ef06-plain~1\\SW.native.png",
+          "sha256": "bddabafabea707a3f275fa268eac677e42a8eb2e2f7aaa809fc81de8e8cf239f",
+          "dimensions": [
+            511,
+            523
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~town-barber-13c5ef06-plain~1\\NW.native.png",
+          "sha256": "0a1678f6819c24eff0dd6bb75bb4bca0b8c52bb8b8ee5a94991269b5a77a212a",
+          "dimensions": [
+            496,
+            539
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 16,
+      "id": "variation~town-firestation-north-0ac85582-plain~1",
+      "version": 2,
+      "provenance": "variation~town-firestation-north-0ac85582-plain~1\\corners-v2.provenance.json",
+      "raw_sha256": "381b26a3246d3da6c10f706b13178529ec2b55f3723af79d0921a75e8b80356c",
+      "prompt_sha256": "651205d77268a201a3f306b63347b358c0a89179b1cca6d09df32760f080683a",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~town-firestation-north-0ac85582-plain~1\\NE.native.png",
+          "sha256": "153441889ba8a91d5412dcacefde53891fb447248681817bcc98f41f81ed9418",
+          "dimensions": [
+            475,
+            467
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~town-firestation-north-0ac85582-plain~1\\SE.native.png",
+          "sha256": "49e8148326b2456eab2ef5d6171e242221f630ffcb7c023647ce8a32267ae826",
+          "dimensions": [
+            472,
+            473
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~town-firestation-north-0ac85582-plain~1\\SW.native.png",
+          "sha256": "78b5fdec3851a91496bdae8d2942b97f7ea5bcc198f6c25167e76a867480bb55",
+          "dimensions": [
+            475,
+            449
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~town-firestation-north-0ac85582-plain~1\\NW.native.png",
+          "sha256": "c69e9bf782d0c7347fff5e9ce6dcc0473a6199c0dff939e6c1029bf5443c640c",
+          "dimensions": [
+            479,
+            456
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 17,
+      "id": "variation~town-fish_tackle-99c1401c-plain~1",
+      "version": 1,
+      "provenance": "variation~town-fish_tackle-99c1401c-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "0e4757fdbdffe11ceb394f497a8a286673915c4a70674240cdf1dd6ca64195af",
+      "prompt_sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~town-fish_tackle-99c1401c-plain~1\\NE.native.png",
+          "sha256": "fa4456ad9aa1677307f6a207f6b7fbab456d72c1f7e3e8105cdd20ff26a156cd",
+          "dimensions": [
+            533,
+            544
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~town-fish_tackle-99c1401c-plain~1\\SE.native.png",
+          "sha256": "4b5abaf35477701989d57d9677ad76d4d02ef23bb13cb7e373c24eda6cf71047",
+          "dimensions": [
+            520,
+            526
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~town-fish_tackle-99c1401c-plain~1\\SW.native.png",
+          "sha256": "4ea3e0108e469a03a894219d5f97ed20cb04f2aee0af9dd424f4a72fe2beaa25",
+          "dimensions": [
+            517,
+            541
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~town-fish_tackle-99c1401c-plain~1\\NW.native.png",
+          "sha256": "dc00f1e1c443731fbaa96a0010a9e9ad091dd9d26384b0f010b123f05c561e28",
+          "dimensions": [
+            526,
+            548
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 18,
+      "id": "variation~town-hardware-bf36737f-plain~1",
+      "version": 1,
+      "provenance": "variation~town-hardware-bf36737f-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "21a391f207929598161eed31da6d08c083d981c3c0d999020db678d85751e70e",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~town-hardware-bf36737f-plain~1\\NE.native.png",
+          "sha256": "f0e8d88b3d2f0cd09b148edaaede34e3b9c7c106db031e3b295c159c44eac7dc",
+          "dimensions": [
+            520,
+            540
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~town-hardware-bf36737f-plain~1\\SE.native.png",
+          "sha256": "290e1e183ce6204e8284598f6caed2d9db595a6097ac1c1ac994c0720714d95e",
+          "dimensions": [
+            516,
+            548
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~town-hardware-bf36737f-plain~1\\SW.native.png",
+          "sha256": "75493c2b61410667a7fe5fffb7d010c7676ee0176966270f30cca6fa46628838",
+          "dimensions": [
+            520,
+            523
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~town-hardware-bf36737f-plain~1\\NW.native.png",
+          "sha256": "11020b60050e6436b5f26caed907d7de913e4f61a2f3835b2db7b7cfffcdb82b",
+          "dimensions": [
+            516,
+            526
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 19,
+      "id": "variation~town-laundromat-43183f9e-plain~1",
+      "version": 1,
+      "provenance": "variation~town-laundromat-43183f9e-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "6cceb964f79c1cb444b941baed88acf51fe43cd73ffeea0435f8c94a8f626b00",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~town-laundromat-43183f9e-plain~1\\NE.native.png",
+          "sha256": "77ab0bdeca788ddffba75398c4a70cbfd16ea59932475c9310f4ae5812466b84",
+          "dimensions": [
+            568,
+            527
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~town-laundromat-43183f9e-plain~1\\SE.native.png",
+          "sha256": "d419982b0704096cb43c4a9a5e0f16384c6cf5a18c09f611e588bbcaec26fe13",
+          "dimensions": [
+            520,
+            528
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~town-laundromat-43183f9e-plain~1\\SW.native.png",
+          "sha256": "ea9937a050da8ce14b9544356fe6de94678322b3f33a8857457ffd97c5d3f26a",
+          "dimensions": [
+            554,
+            498
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~town-laundromat-43183f9e-plain~1\\NW.native.png",
+          "sha256": "6ffbb1471a02b8120403113dc6e1d001ed5ff4c19e9711318e2a9a4fb3aba36a",
+          "dimensions": [
+            511,
+            549
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 20,
+      "id": "variation~town-pharmacy-d87b861c-plain~1",
+      "version": 1,
+      "provenance": "variation~town-pharmacy-d87b861c-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "14882a92e57657282a268cf706f66652d65ccca61689f161e599c72c6a4fda76",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~town-pharmacy-d87b861c-plain~1\\NE.native.png",
+          "sha256": "fd40f3f11776e2f7d4ef8a90557644b04ea6e41510428a483d1741fd4473ee83",
+          "dimensions": [
+            539,
+            578
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~town-pharmacy-d87b861c-plain~1\\SE.native.png",
+          "sha256": "e1affb630a332fbd14d0a552e45e49e19908fe10878263f2586f45991fd9e04f",
+          "dimensions": [
+            556,
+            566
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~town-pharmacy-d87b861c-plain~1\\SW.native.png",
+          "sha256": "55d06e2cb87f9c0af8ebc1d03b310fc8b6a5f0641e91f0edeeff5ef2f293ce66",
+          "dimensions": [
+            570,
+            584
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~town-pharmacy-d87b861c-plain~1\\NW.native.png",
+          "sha256": "61cc42857620116014d2ae7e410e0026800e28953ffc564bb5f66585d07ba99f",
+          "dimensions": [
+            552,
+            595
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 21,
+      "id": "variation~town-postoffice-1c7025b8-plain~1",
+      "version": 1,
+      "provenance": "variation~town-postoffice-1c7025b8-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "8084bb07a349e3a44b971c4298b88754bced50559a4a571c57f2cfa453b9ca23",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~town-postoffice-1c7025b8-plain~1\\NE.native.png",
+          "sha256": "3188f55462d463e1e849c5cea3faa98ae4b1cf6aafc69526030767fe958b939d",
+          "dimensions": [
+            501,
+            474
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~town-postoffice-1c7025b8-plain~1\\SE.native.png",
+          "sha256": "6cf3d02a50a6a62f7d5cba5052f8f8c9a9a7509ba19a1b1b221a5ba79e462d9e",
+          "dimensions": [
+            494,
+            493
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~town-postoffice-1c7025b8-plain~1\\SW.native.png",
+          "sha256": "a0b1e87afc002b1c8ccf99560fc3de9d43a47307f8bc13698e4d30897bda34f5",
+          "dimensions": [
+            494,
+            500
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~town-postoffice-1c7025b8-plain~1\\NW.native.png",
+          "sha256": "522c0983b35c10bdd4f89501e88cebe86afa918e2470b64cb5cb8f036baeb82c",
+          "dimensions": [
+            487,
+            472
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 22,
+      "id": "variation~world-barn-ae80f6c9-plain~1",
+      "version": 1,
+      "provenance": "variation~world-barn-ae80f6c9-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "1e044f9158148e98912439ca0d70dab9f92cb605df9a2179905ac72ed99937ba",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~world-barn-ae80f6c9-plain~1\\NE.native.png",
+          "sha256": "da8af4215057659394922e1d03a5b9e15bf1c091651e23ceacf49d9663f5cc09",
+          "dimensions": [
+            543,
+            442
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~world-barn-ae80f6c9-plain~1\\SE.native.png",
+          "sha256": "c53962de1b7dd2f01e67d601e037330ac9c2a96de03a9aa1844c4dca98db9431",
+          "dimensions": [
+            542,
+            450
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~world-barn-ae80f6c9-plain~1\\SW.native.png",
+          "sha256": "a09f05bae61b79d701f5beefc869d1c2559b03b63baa18ba96094b1934d81759",
+          "dimensions": [
+            516,
+            483
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~world-barn-ae80f6c9-plain~1\\NW.native.png",
+          "sha256": "0598557694037e66eebaee4c8aa9de4b2eb2fc19f88f9512b16a5ad98d9b4d78",
+          "dimensions": [
+            530,
+            470
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 23,
+      "id": "variation~world-church-44e76535-plain~1",
+      "version": 1,
+      "provenance": "variation~world-church-44e76535-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "c43bf05d25a783f5d9902d21adbcd0f416872c054ef0358edd366b042c1082b8",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~world-church-44e76535-plain~1\\NE.native.png",
+          "sha256": "5f5bdea8bddfb19f80bf7ceff27d09437454c99d44ea548b6c4b1193112a4d21",
+          "dimensions": [
+            378,
+            375
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~world-church-44e76535-plain~1\\SE.native.png",
+          "sha256": "551dba46b4c516c22c755f844f9708b3e56d3fd44f861be47160a33ddc4aa461",
+          "dimensions": [
+            464,
+            482
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~world-church-44e76535-plain~1\\SW.native.png",
+          "sha256": "68979e3c031abcdd74e471bf2eb831ff9c17f0503554898f88d2928c3ccae954",
+          "dimensions": [
+            466,
+            562
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~world-church-44e76535-plain~1\\NW.native.png",
+          "sha256": "466881192044ed235f9914aba60aeaba6eec1d3febb014170466713595216d94",
+          "dimensions": [
+            460,
+            553
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 24,
+      "id": "variation~world-house_0-51fa4b80-plain~1",
+      "version": 1,
+      "provenance": "variation~world-house_0-51fa4b80-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "155966caef6733ed963c92551a88e93f3e93d3b37fb16cdd9469e8e5869c4f7a",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~world-house_0-51fa4b80-plain~1\\NE.native.png",
+          "sha256": "801c5a3d8ec1e071bcb7bb6874016faff2823986ab82391dc029a47e465885b4",
+          "dimensions": [
+            532,
+            393
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~world-house_0-51fa4b80-plain~1\\SE.native.png",
+          "sha256": "24542596fde22b625d8a96323e9395b0a601e2b99ba0458e95566d8e3cc6fe5e",
+          "dimensions": [
+            502,
+            409
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~world-house_0-51fa4b80-plain~1\\SW.native.png",
+          "sha256": "15153fdbac043b539ac68aba128bac0bc00266b6d4a1156906f70008d251fa22",
+          "dimensions": [
+            527,
+            388
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~world-house_0-51fa4b80-plain~1\\NW.native.png",
+          "sha256": "78480e0061ad0acbfffe053fbf1d689d8c307908ab9ba541d513282662493f77",
+          "dimensions": [
+            497,
+            407
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 25,
+      "id": "variation~world-house_0-north-1dde6f56-plain~1",
+      "version": 1,
+      "provenance": "variation~world-house_0-north-1dde6f56-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "f3a0684b9d9aa2d09c85872f84ed430e69f975631581f3f3414321e5342de4db",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~world-house_0-north-1dde6f56-plain~1\\NE.native.png",
+          "sha256": "ae20523cc41c78b64a3984a508945cc4d321f6d04365e6bd433c09ef2fe52389",
+          "dimensions": [
+            486,
+            478
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~world-house_0-north-1dde6f56-plain~1\\SE.native.png",
+          "sha256": "8794d4bdacbb94ca5f9851800cbe81527b773b36d27a31107e9440f310f27847",
+          "dimensions": [
+            517,
+            448
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~world-house_0-north-1dde6f56-plain~1\\SW.native.png",
+          "sha256": "a884f3e5d91619b44d2a0550718e02c921536db7610ee072e7d585b0f713099a",
+          "dimensions": [
+            477,
+            449
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~world-house_0-north-1dde6f56-plain~1\\NW.native.png",
+          "sha256": "0f7d9b031d78a240e97e87f36a94dc384a4a8c817aa3dfa35ff4074e681e6090",
+          "dimensions": [
+            510,
+            454
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 26,
+      "id": "variation~world-house_2-north-332663ab-plain~1",
+      "version": 1,
+      "provenance": "variation~world-house_2-north-332663ab-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "a41fc8f9a0e185b52f0fe5c1312d1315bb13700886a907daf2f66488c324834c",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~world-house_2-north-332663ab-plain~1\\NE.native.png",
+          "sha256": "4dbe82df90c63adaf1aaa0e8f636996e5ea7bb7053aa9d0df61c6f5e0dbde2f7",
+          "dimensions": [
+            567,
+            527
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~world-house_2-north-332663ab-plain~1\\SE.native.png",
+          "sha256": "54adf5d118162939faa324f6370047d84e140a32934e8ad21ecaceabed998e53",
+          "dimensions": [
+            564,
+            507
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~world-house_2-north-332663ab-plain~1\\SW.native.png",
+          "sha256": "41555bc01d8713384de82eea245a2d4328e01eadc14154878b7e19f4c7056e62",
+          "dimensions": [
+            569,
+            527
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~world-house_2-north-332663ab-plain~1\\NW.native.png",
+          "sha256": "85b5c2a793f9a9b12fcc8ffb2f1e39c04fdf26c54b3448edf7f7b292a6ead7d0",
+          "dimensions": [
+            576,
+            542
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 27,
+      "id": "variation~world-house_5-d6198cb0-plain~1",
+      "version": 1,
+      "provenance": "variation~world-house_5-d6198cb0-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "98f88d9b00b70bcd6eff814747b7cb57edcd1591291330b16e49815f4c703a7e",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~world-house_5-d6198cb0-plain~1\\NE.native.png",
+          "sha256": "ce04f3dae0491027aaaa606947fd2627a3f103893a6128517dce9a462f4690dd",
+          "dimensions": [
+            550,
+            486
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~world-house_5-d6198cb0-plain~1\\SE.native.png",
+          "sha256": "d6957e36a434e9c3fcbae739d705349447fad50eb5c14ff9b575565f6827af86",
+          "dimensions": [
+            547,
+            516
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~world-house_5-d6198cb0-plain~1\\SW.native.png",
+          "sha256": "7872853da9c91714a1f65cc98ba5d63cd8d4d8d6281fb2cf75bfb4f5f1fc6435",
+          "dimensions": [
+            542,
+            541
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~world-house_5-d6198cb0-plain~1\\NW.native.png",
+          "sha256": "c1f2dd3af1e9a4817c069e4447a23b28a2835e8b8e6d4cf3e06d44b2e64dcb61",
+          "dimensions": [
+            555,
+            466
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 28,
+      "id": "variation~world-house_5-north-bffd2c68-plain~1",
+      "version": 1,
+      "provenance": "variation~world-house_5-north-bffd2c68-plain~1\\corners-v1.provenance.json",
+      "raw_sha256": "35e036017e31ee63af50cde379880759ad13862c40e04b4a14fa050cce64dbc3",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "variation~world-house_5-north-bffd2c68-plain~1\\NE.native.png",
+          "sha256": "76ad257f6238b3449bb948043f51e2951d914b009e33744c8b2bb10b1e525fc3",
+          "dimensions": [
+            513,
+            533
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "variation~world-house_5-north-bffd2c68-plain~1\\SE.native.png",
+          "sha256": "b77e7609cc3f8a2cf025ea2173ee664e0396a52020f7f0974cdbff9374526058",
+          "dimensions": [
+            541,
+            505
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "variation~world-house_5-north-bffd2c68-plain~1\\SW.native.png",
+          "sha256": "cdaff708bb0f5865621117e70692d0ee7b762ea0cf0289ac2e3f200cce4b1f23",
+          "dimensions": [
+            519,
+            520
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "variation~world-house_5-north-bffd2c68-plain~1\\NW.native.png",
+          "sha256": "ff2c47d9a6c4de1dd9f19371924873e95fe24ffbd7cb196edf21520cf7a82025",
+          "dimensions": [
+            541,
+            547
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 29,
+      "id": "world~arcade",
+      "version": 2,
+      "provenance": "world~arcade\\corners-v2.provenance.json",
+      "raw_sha256": "144579a2e4a4b847b0058651c5dec21f839d581378d3695bac074cf7bccc2949",
+      "prompt_sha256": "3c463dd17ace5dcef7db5b02391e2003377fffb14150e261569459fbb287779b",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~arcade\\NE.native.png",
+          "sha256": "2026f277dbfae8e6a81ed519e29951c85914baecb3a11ce41d040568e421929b",
+          "dimensions": [
+            572,
+            451
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~arcade\\SE.native.png",
+          "sha256": "ce927876c23b601c67267ae30e0c177d61656ea32e90440f1721ef7e0ea79ec3",
+          "dimensions": [
+            582,
+            457
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~arcade\\SW.native.png",
+          "sha256": "d4b384393a5185cee193b27396b2913446c9fd388049ed181e4ea74865b156e3",
+          "dimensions": [
+            553,
+            473
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~arcade\\NW.native.png",
+          "sha256": "039c1c7868068e9e78550b05085c8095a828503eae5e317c05c9435d80c7c2e8",
+          "dimensions": [
+            591,
+            447
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 30,
+      "id": "world~barn",
+      "version": 1,
+      "provenance": "world~barn\\corners-v1.provenance.json",
+      "raw_sha256": "93ecedebc9586b67cdff07bb95f0c7e9419bcc8a6207a8991eb59b639ccfd2ee",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~barn\\NE.native.png",
+          "sha256": "d29e62f3b0a200a69ae6f1de3d04598ec971fc0e011051c7055a0ab48504e155",
+          "dimensions": [
+            476,
+            423
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~barn\\SE.native.png",
+          "sha256": "2ffb10d6d2e2eaf6043cec462a9eb45060ed26b39939a42fc4f0252379d6f8c8",
+          "dimensions": [
+            563,
+            431
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~barn\\SW.native.png",
+          "sha256": "9e73392d0db7921cb8a5af9f939676f84dd46364c2d3b78fbc0e61fae17a8e4c",
+          "dimensions": [
+            561,
+            457
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~barn\\NW.native.png",
+          "sha256": "23cdae2cba0aae23cfe871bcd14e7e380b613206b0943195e97879cac9e57c4e",
+          "dimensions": [
+            564,
+            527
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 31,
+      "id": "world~diner",
+      "version": 1,
+      "provenance": "world~diner\\corners-v1.provenance.json",
+      "raw_sha256": "329dcd767d5fa0f961e91404a152a5eca4a8d44739edf0d6cb6f13bff3451a50",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~diner\\NE.native.png",
+          "sha256": "a267a0d47c943e462002133fed690dfce973020325acd305535e62d226bb64a2",
+          "dimensions": [
+            514,
+            376
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~diner\\SE.native.png",
+          "sha256": "01a3394c82c344c4507d6fa076f3a072e8f0694774d0ebe3cefb0c6388f7fb3a",
+          "dimensions": [
+            539,
+            554
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~diner\\SW.native.png",
+          "sha256": "b29ca9feaf33303aef38d4d7b9395cdd763f863284c06c67ccf567e961cb8c20",
+          "dimensions": [
+            584,
+            448
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~diner\\NW.native.png",
+          "sha256": "6de5caae6478fdd3ff2feb54bea4f3886f697aefd40dea2c668e0a6c0964dc44",
+          "dimensions": [
+            543,
+            462
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 32,
+      "id": "world~drivein_marquee",
+      "version": 1,
+      "provenance": "world~drivein_marquee\\corners-v1.provenance.json",
+      "raw_sha256": "22e619f000fca35fbd72faeaaa6f0cc80c739572a7af04c7e58043fac2d8406b",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~drivein_marquee\\NE.native.png",
+          "sha256": "2b941a8d8bea684a5e428d38d11b0c6866d16cb7e6165f24668fecd9ce3a6cfc",
+          "dimensions": [
+            268,
+            569
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~drivein_marquee\\SE.native.png",
+          "sha256": "dcfd85c80a1d566ab46e330fa2cd10283820cd269a1aade2d387499b99821330",
+          "dimensions": [
+            240,
+            543
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~drivein_marquee\\SW.native.png",
+          "sha256": "5e3a46611c8bdfd89ad7e59f323672e52d77ee92c7127c12fcc6dfbca39baf7b",
+          "dimensions": [
+            255,
+            543
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~drivein_marquee\\NW.native.png",
+          "sha256": "056d8e2527e6ce3e8ed04cad8289b4a61310c9eef73b7a4908c563722fbc13a7",
+          "dimensions": [
+            241,
+            570
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 33,
+      "id": "world~house_0",
+      "version": 1,
+      "provenance": "world~house_0\\corners-v1.provenance.json",
+      "raw_sha256": "8f2635a6a543a77b161ce0d176be304a2716d08ca7fe7c0caca44a647f1e7367",
+      "prompt_sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~house_0\\NE.native.png",
+          "sha256": "008b07843fd1f8c088d7e4d8aa7feafea6c3adc455174b452be759a34b4da714",
+          "dimensions": [
+            496,
+            359
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~house_0\\SE.native.png",
+          "sha256": "36ec32208503ac9c3e93d8d39652c970861f940a6f48d642943f2f208c96a8d3",
+          "dimensions": [
+            568,
+            526
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~house_0\\SW.native.png",
+          "sha256": "abc972b645b90ff5a30ef9e42f00ac49df1789d6c365568027384f51a3531ba7",
+          "dimensions": [
+            568,
+            497
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~house_0\\NW.native.png",
+          "sha256": "5dc6a346e10ce600e9ccd810b7b78de2d4b7b36ea3deb298a0900208bbd910d4",
+          "dimensions": [
+            578,
+            457
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 34,
+      "id": "world~house_1",
+      "version": 1,
+      "provenance": "world~house_1\\corners-v1.provenance.json",
+      "raw_sha256": "781ffdcfe773da2ea4b92dc3997721a6cec26f2f75f95083b492fd192d4fefa1",
+      "prompt_sha256": "414159c2362c7e74dedd446fa8103bae23711661a325503bbd2d1818043b0f78",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~house_1\\NE.native.png",
+          "sha256": "0701c86d32ee810094e079cef5dc8cb9b9356bc3ae51031c5818559e84c958a4",
+          "dimensions": [
+            561,
+            491
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~house_1\\SE.native.png",
+          "sha256": "7968ecfc500b6de2e709d28c81648f324c6e4c3d36efb696ce76a35e51504ae4",
+          "dimensions": [
+            562,
+            552
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~house_1\\SW.native.png",
+          "sha256": "d7f1e1f03535494d44fbc707d67002e9520c06f7818ef5ec6cb35a0d8683f5bc",
+          "dimensions": [
+            561,
+            526
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~house_1\\NW.native.png",
+          "sha256": "d00cd24e220b8e3ee8bec295646087fa377d63a8529162464707cce5b72dcc45",
+          "dimensions": [
+            562,
+            489
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 35,
+      "id": "world~house_2",
+      "version": 1,
+      "provenance": "world~house_2\\corners-v1.provenance.json",
+      "raw_sha256": "f46b090c2aa2f108f25b2b04c2759a83bed047fd016bd8b695e901d6e1e3526f",
+      "prompt_sha256": "414159c2362c7e74dedd446fa8103bae23711661a325503bbd2d1818043b0f78",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~house_2\\NE.native.png",
+          "sha256": "d4acd8c087b882174cf06b2d566a9f60c7209f1daa7efde18d3075043c19d70d",
+          "dimensions": [
+            536,
+            536
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~house_2\\SE.native.png",
+          "sha256": "3528122c0887823a33b950fd9bacae239adb01000e844b9554393fc1aaea0fed",
+          "dimensions": [
+            552,
+            581
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~house_2\\SW.native.png",
+          "sha256": "810e7bc145a2686e019c93b14a00a3f2721fbcc26445d225cfa040ad1d2f1ea8",
+          "dimensions": [
+            534,
+            550
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~house_2\\NW.native.png",
+          "sha256": "0d86531e43e2f15c9c192ce50a2f23486410284e84e8f0bbfad734cc78cf02b2",
+          "dimensions": [
+            557,
+            513
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 36,
+      "id": "world~house_3",
+      "version": 1,
+      "provenance": "world~house_3\\corners-v1.provenance.json",
+      "raw_sha256": "c9ebb3bd6114f367c4a052c8bd88f847d147ca2609f3e13429994931a3166634",
+      "prompt_sha256": "414159c2362c7e74dedd446fa8103bae23711661a325503bbd2d1818043b0f78",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~house_3\\NE.native.png",
+          "sha256": "db26a620e39da3a6814e7dccfa21b7ca1d8113958c91990fb2134c161d6850a0",
+          "dimensions": [
+            573,
+            453
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~house_3\\SE.native.png",
+          "sha256": "d9020ee2a9299dcfc7984191170e5aced41f29e753d5a7a23957a8d0d8ea25eb",
+          "dimensions": [
+            561,
+            501
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~house_3\\SW.native.png",
+          "sha256": "2473cf114c528b219acd3450671ef5fe8a329c3edf0faccb981845a5ab461a5f",
+          "dimensions": [
+            556,
+            492
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~house_3\\NW.native.png",
+          "sha256": "ddaa37db042094155d83c88414ed5d499d00ee8510743c903ccc8322120cd93a",
+          "dimensions": [
+            571,
+            454
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 37,
+      "id": "world~house_4",
+      "version": 1,
+      "provenance": "world~house_4\\corners-v1.provenance.json",
+      "raw_sha256": "4d40b7d0c38ae29dcbd283cfd10b76aff48715b4f8211e4dbc1224ba7b2ab238",
+      "prompt_sha256": "414159c2362c7e74dedd446fa8103bae23711661a325503bbd2d1818043b0f78",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~house_4\\NE.native.png",
+          "sha256": "38f8ce1f105afc7bdd9e37421012801f4543f23c88fb410edda3836235893ea0",
+          "dimensions": [
+            584,
+            457
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~house_4\\SE.native.png",
+          "sha256": "a03a76d61f4fafae484035e5fac12855dae3fa81ca7bf749da4dcbef2e14ca02",
+          "dimensions": [
+            565,
+            519
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~house_4\\SW.native.png",
+          "sha256": "b8f3d3b5af5e08440a9352b331c225ab33374d07bc79ff93f8bfaaddb9def477",
+          "dimensions": [
+            577,
+            491
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~house_4\\NW.native.png",
+          "sha256": "4498439131ccb20a9484dd1199b9a564fabc667d04666f89f7cc546e9f42ec77",
+          "dimensions": [
+            571,
+            462
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 38,
+      "id": "world~house_5",
+      "version": 1,
+      "provenance": "world~house_5\\corners-v1.provenance.json",
+      "raw_sha256": "927bc1419cd700e23643a590e9c13631e1bd43743c20b7327b7ca8afd0f1b7c9",
+      "prompt_sha256": "414159c2362c7e74dedd446fa8103bae23711661a325503bbd2d1818043b0f78",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~house_5\\NE.native.png",
+          "sha256": "3243be8be221cd1cda797aa3a5dbd965619aca327e53d06e56e927a3f2296136",
+          "dimensions": [
+            577,
+            523
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~house_5\\SE.native.png",
+          "sha256": "631805513f959e9e31af336ed1bb728c7a1c001475874d3acc12e455edd71e56",
+          "dimensions": [
+            581,
+            560
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~house_5\\SW.native.png",
+          "sha256": "9d49e85cb49b6b1b42969f3b80ffc2e3bb92ddb1f61cce253eb17eafb83c71b7",
+          "dimensions": [
+            573,
+            519
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~house_5\\NW.native.png",
+          "sha256": "874f3cde41c5fc2bbeb65d92057676a05b11fcafe8ef8881cffd6600efe9d25e",
+          "dimensions": [
+            576,
+            515
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 39,
+      "id": "world~primary_school",
+      "version": 1,
+      "provenance": "world~primary_school\\corners-v1.provenance.json",
+      "raw_sha256": "00aa5d8066b37f6c48fca5bab9662cd50341cbfa6b4460be323ad60fe0ede3e3",
+      "prompt_sha256": "414159c2362c7e74dedd446fa8103bae23711661a325503bbd2d1818043b0f78",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~primary_school\\NE.native.png",
+          "sha256": "a13efd41f0d968ea26b89c4088f4ee1c957c349034a9a03cc497ea483c0aa04b",
+          "dimensions": [
+            600,
+            424
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~primary_school\\SE.native.png",
+          "sha256": "08dbd207cca54631b11d30a67b5cfdd5607220f8eeabc099be26af1ed6b3d500",
+          "dimensions": [
+            590,
+            434
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~primary_school\\SW.native.png",
+          "sha256": "7bbe24b4a1742a362bf53d2468d803e63a2a0214bd31b96de824d399e801e127",
+          "dimensions": [
+            595,
+            428
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~primary_school\\NW.native.png",
+          "sha256": "864e1e17d617f5fb74cc5b16330416b41b0bc47747656da103a8fc8bc937cf6a",
+          "dimensions": [
+            592,
+            434
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 40,
+      "id": "world~school",
+      "version": 1,
+      "provenance": "world~school\\corners-v1.provenance.json",
+      "raw_sha256": "275f2ae70bf7e867149c5fad69790ae469e11d1ed43eb074abe41d8b2121e085",
+      "prompt_sha256": "414159c2362c7e74dedd446fa8103bae23711661a325503bbd2d1818043b0f78",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~school\\NE.native.png",
+          "sha256": "f5785e01982a968dc030d763482605dee9039b80a90bb963d4bba4b639bd34bc",
+          "dimensions": [
+            600,
+            471
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~school\\SE.native.png",
+          "sha256": "7a46c66c2de64b5273386218e2ddd24d000bd07143963dce9a1da7dc9c5955c2",
+          "dimensions": [
+            601,
+            468
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~school\\SW.native.png",
+          "sha256": "7427fac86f40fd50cfe54398791bc40d8a15eb6d50f2f2faaaea3bdd7fa2c2ab",
+          "dimensions": [
+            588,
+            463
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~school\\NW.native.png",
+          "sha256": "0dd44d157e359a27b2dda85b9c54c0abe0ebf7dc1da06dde03cf13895dd30e32",
+          "dimensions": [
+            586,
+            460
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 41,
+      "id": "world~snack_bar",
+      "version": 1,
+      "provenance": "world~snack_bar\\corners-v1.provenance.json",
+      "raw_sha256": "9a6fcd11f1195e8d2e032032693dc2f6118a696b65f586928d5f0b5087483b34",
+      "prompt_sha256": "414159c2362c7e74dedd446fa8103bae23711661a325503bbd2d1818043b0f78",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~snack_bar\\NE.native.png",
+          "sha256": "9233b9bde819dc313b5e1340578b293ea401ea19a7161aeedfdbe4c61bfd85e6",
+          "dimensions": [
+            538,
+            460
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~snack_bar\\SE.native.png",
+          "sha256": "46deb625562e290a301a4ed1c645d19098aa713e55b1786c1ea3f32dbbdb87d3",
+          "dimensions": [
+            541,
+            449
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~snack_bar\\SW.native.png",
+          "sha256": "be8a169f09bf5c54bd5279a89d5cfec994f508f9cf09cc8495c9045d759d101e",
+          "dimensions": [
+            537,
+            443
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~snack_bar\\NW.native.png",
+          "sha256": "f9716361c0374c9b0c03cd5b7013941491249e255acc5b2805b6048fb4970e0f",
+          "dimensions": [
+            545,
+            457
+          ]
+        }
+      ]
+    },
+    {
+      "queue_index": 42,
+      "id": "world~video",
+      "version": 1,
+      "provenance": "world~video\\corners-v1.provenance.json",
+      "raw_sha256": "bdd1253197a9f0fb6519119445e8aa3443bfd0398e2e8941f2f4ba3c1fe487e1",
+      "prompt_sha256": "414159c2362c7e74dedd446fa8103bae23711661a325503bbd2d1818043b0f78",
+      "crops": [
+        {
+          "view": "NE",
+          "path": "world~video\\NE.native.png",
+          "sha256": "34cfae54a414fbbc49f4f7554e54acb2632c4aa20d8dd74fea8d5ef219d0b7d9",
+          "dimensions": [
+            557,
+            423
+          ]
+        },
+        {
+          "view": "SE",
+          "path": "world~video\\SE.native.png",
+          "sha256": "0779ff2d484641653304e3fd0517899d9e08028518e7a6af2d940fb0571d1b04",
+          "dimensions": [
+            544,
+            436
+          ]
+        },
+        {
+          "view": "SW",
+          "path": "world~video\\SW.native.png",
+          "sha256": "d60bf5565a386629fd5e53f631cad9bc7eba13f362576a4620f1e43b733f77db",
+          "dimensions": [
+            554,
+            440
+          ]
+        },
+        {
+          "view": "NW",
+          "path": "world~video\\NW.native.png",
+          "sha256": "946fb0368d560135f27252fda38d7093c726df329bf26fa2358cb9f806421a24",
+          "dimensions": [
+            553,
+            435
+          ]
+        }
+      ]
+    }
+  ]
+}

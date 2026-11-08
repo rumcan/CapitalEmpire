@@ -1,0 +1,272 @@
+{
+  "id": "variation~town-fish_tackle-99c1401c-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:52:23.649784+00:00",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-fish_tackle-99c1401c-plain~1\\corners-v1.png",
+    "sha256": "0e4757fdbdffe11ceb394f497a8a286673915c4a70674240cdf1dd6ca64195af",
+    "bytes": 1893304
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-fish_tackle-99c1401c-plain~1\\corners-v1.png",
+    "sha256": "0e4757fdbdffe11ceb394f497a8a286673915c4a70674240cdf1dd6ca64195af",
+    "bytes": 1893304
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-fish_tackle-99c1401c-plain~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-fish_tackle-99c1401c-plain-1.native.png",
+      "sha256": "f5aaf119c1ff396aa8ca00719c783a077d0dc1b979647196df7bbbd0c726a428",
+      "bytes": 183761
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-fish_tackle-99c1401c-plain~1-corners.png",
+      "sha256": "a85f6e626b2d965fdc3d024f05fe91ee44a8274a35910f9bdfb603e08c163cd7",
+      "bytes": 198483
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-fish_tackle-99c1401c-plain-1.native.png",
+      "sha256": "f5aaf119c1ff396aa8ca00719c783a077d0dc1b979647196df7bbbd0c726a428",
+      "bytes": 183761
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-fish_tackle-99c1401c-plain~1-corners.png",
+      "sha256": "a85f6e626b2d965fdc3d024f05fe91ee44a8274a35910f9bdfb603e08c163cd7",
+      "bytes": 198483
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1261,
+      1247
+    ],
+    "split_x": 630,
+    "split_y": 623,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          630,
+          623
+        ],
+        "subject_bbox": [
+          61,
+          37,
+          581,
+          563
+        ],
+        "transparent_fraction": 0.48124028637672295,
+        "margins_px": [
+          61,
+          37,
+          49,
+          60
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          630,
+          0,
+          1261,
+          623
+        ],
+        "subject_bbox": [
+          69,
+          37,
+          586,
+          578
+        ],
+        "transparent_fraction": 0.47238325875766,
+        "margins_px": [
+          69,
+          37,
+          45,
+          45
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          623,
+          630,
+          1247
+        ],
+        "subject_bbox": [
+          51,
+          18,
+          577,
+          566
+        ],
+        "transparent_fraction": 0.4346408221408221,
+        "margins_px": [
+          51,
+          18,
+          53,
+          58
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          630,
+          623,
+          1261,
+          1247
+        ],
+        "subject_bbox": [
+          37,
+          14,
+          570,
+          558
+        ],
+        "transparent_fraction": 0.45143291072371894,
+        "margins_px": [
+          37,
+          14,
+          61,
+          66
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 31.413818359375
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 25.984049479166668
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 35.500325520833336
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 23.918701171875
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 28.554606119791668
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 28.776041666666668
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "first_imported_utc": "2026-11-06T18:50:10.508389+00:00",
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-fish_tackle-99c1401c-plain~1\\SE.png",
+        "sha256": "4b5abaf35477701989d57d9677ad76d4d02ef23bb13cb7e373c24eda6cf71047",
+        "bytes": 470976
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-fish_tackle-99c1401c-plain~1\\SE.native.png",
+        "sha256": "4b5abaf35477701989d57d9677ad76d4d02ef23bb13cb7e373c24eda6cf71047",
+        "bytes": 470976
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-fish_tackle-99c1401c-plain~1\\SW.png",
+        "sha256": "4ea3e0108e469a03a894219d5f97ed20cb04f2aee0af9dd424f4a72fe2beaa25",
+        "bytes": 421676
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-fish_tackle-99c1401c-plain~1\\SW.native.png",
+        "sha256": "4ea3e0108e469a03a894219d5f97ed20cb04f2aee0af9dd424f4a72fe2beaa25",
+        "bytes": 421676
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-fish_tackle-99c1401c-plain~1\\NW.png",
+        "sha256": "dc00f1e1c443731fbaa96a0010a9e9ad091dd9d26384b0f010b123f05c561e28",
+        "bytes": 441810
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-fish_tackle-99c1401c-plain~1\\NW.native.png",
+        "sha256": "dc00f1e1c443731fbaa96a0010a9e9ad091dd9d26384b0f010b123f05c561e28",
+        "bytes": 441810
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-fish_tackle-99c1401c-plain~1\\NE.png",
+        "sha256": "fa4456ad9aa1677307f6a207f6b7fbab456d72c1f7e3e8105cdd20ff26a156cd",
+        "bytes": 496463
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-fish_tackle-99c1401c-plain~1\\NE.native.png",
+        "sha256": "fa4456ad9aa1677307f6a207f6b7fbab456d72c1f7e3e8105cdd20ff26a156cd",
+        "bytes": 496463
+      }
+    }
+  ]
+}

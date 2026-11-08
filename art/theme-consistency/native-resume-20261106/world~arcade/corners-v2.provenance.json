@@ -1,0 +1,271 @@
+{
+  "id": "world~arcade",
+  "kind": "corners",
+  "version": 2,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T19:30:47.391589+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-81d1643c-6678-4eec-9a76-705ce1b2e1e4.png",
+    "sha256": "144579a2e4a4b847b0058651c5dec21f839d581378d3695bac074cf7bccc2949",
+    "bytes": 1928335
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\corners-v2.png",
+    "sha256": "144579a2e4a4b847b0058651c5dec21f839d581378d3695bac074cf7bccc2949",
+    "bytes": 1928335
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\corners-v2.prompt.txt",
+    "sha256": "3c463dd17ace5dcef7db5b02391e2003377fffb14150e261569459fbb287779b",
+    "bytes": 1260
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\corners-v1.png",
+      "sha256": "847cebc802a407233e4520a34900e30a3e17ad10344ff6e75792e290fbc59ef9",
+      "bytes": 1727369
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\world-arcade.native.png",
+      "sha256": "35b2168b719017937f4992ccbefa761237b571d564f9201b0b34e8a9bd0b9dfe",
+      "bytes": 330599
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\world~arcade-corners.png",
+      "sha256": "24d096dc0606c232a00959c097e44d72af49be826b0eeb92195be25c0c0388b4",
+      "bytes": 940495
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "split_x": 627,
+    "split_y": 627,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "subject_bbox": [
+          22,
+          100,
+          604,
+          557
+        ],
+        "transparent_fraction": 0.5203355641532423,
+        "margins_px": [
+          22,
+          100,
+          23,
+          70
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "subject_bbox": [
+          21,
+          94,
+          574,
+          567
+        ],
+        "transparent_fraction": 0.48323578265658346,
+        "margins_px": [
+          21,
+          94,
+          53,
+          60
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "subject_bbox": [
+          17,
+          86,
+          608,
+          533
+        ],
+        "transparent_fraction": 0.47141777889700326,
+        "margins_px": [
+          17,
+          86,
+          19,
+          94
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "subject_bbox": [
+          5,
+          84,
+          577,
+          535
+        ],
+        "transparent_fraction": 0.49705313014303193,
+        "margins_px": [
+          5,
+          84,
+          50,
+          92
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 42.251790364583336
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 30.178792317708332
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 40.902994791666664
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 39.302164713541664
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 30.135091145833332
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 37.577880859375
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": true,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~arcade\\SE.png",
+        "sha256": "ce927876c23b601c67267ae30e0c177d61656ea32e90440f1721ef7e0ea79ec3",
+        "bytes": 437727
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\SE.native.png",
+        "sha256": "ce927876c23b601c67267ae30e0c177d61656ea32e90440f1721ef7e0ea79ec3",
+        "bytes": 437727
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~arcade\\SW.png",
+        "sha256": "d4b384393a5185cee193b27396b2913446c9fd388049ed181e4ea74865b156e3",
+        "bytes": 446638
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\SW.native.png",
+        "sha256": "d4b384393a5185cee193b27396b2913446c9fd388049ed181e4ea74865b156e3",
+        "bytes": 446638
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~arcade\\NW.png",
+        "sha256": "039c1c7868068e9e78550b05085c8095a828503eae5e317c05c9435d80c7c2e8",
+        "bytes": 427840
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\NW.native.png",
+        "sha256": "039c1c7868068e9e78550b05085c8095a828503eae5e317c05c9435d80c7c2e8",
+        "bytes": 427840
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~arcade\\NE.png",
+        "sha256": "2026f277dbfae8e6a81ed519e29951c85914baecb3a11ce41d040568e421929b",
+        "bytes": 452036
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\NE.native.png",
+        "sha256": "2026f277dbfae8e6a81ed519e29951c85914baecb3a11ce41d040568e421929b",
+        "bytes": 452036
+      }
+    }
+  ],
+  "previous_crops_backup": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\backups\\20261106T193047424613Z",
+  "lighting": "late-afternoon daytime",
+  "timeOfDay": "late-afternoon",
+  "sunlight": "upper-right",
+  "shadows": "lower-left"
+}

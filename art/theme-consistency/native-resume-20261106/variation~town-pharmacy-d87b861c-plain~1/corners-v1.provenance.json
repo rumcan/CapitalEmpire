@@ -1,0 +1,271 @@
+{
+  "id": "variation~town-pharmacy-d87b861c-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T19:06:06.910799+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-8ace7146-509e-41cd-8cec-77201b11a774.png",
+    "sha256": "14882a92e57657282a268cf706f66652d65ccca61689f161e599c72c6a4fda76",
+    "bytes": 2426152
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-pharmacy-d87b861c-plain~1\\corners-v1.png",
+    "sha256": "14882a92e57657282a268cf706f66652d65ccca61689f161e599c72c6a4fda76",
+    "bytes": 2426152
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-pharmacy-d87b861c-plain~1\\corners-v1.prompt.txt",
+    "sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+    "bytes": 1818
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-pharmacy-d87b861c-plain-1.native.png",
+      "sha256": "a1e724152af00ef6fc3cf15e58ac408067a355fe31d047808737245ee8b5083c",
+      "bytes": 250717
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-pharmacy-d87b861c-plain~1-corners.png",
+      "sha256": "488340936437e95780a498a85166db4409e820ecb1d7d5c7756051f78b87746d",
+      "bytes": 1270183
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-pharmacy-d87b861c-plain-1.native.png",
+      "sha256": "a1e724152af00ef6fc3cf15e58ac408067a355fe31d047808737245ee8b5083c",
+      "bytes": 250717
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-pharmacy-d87b861c-plain~1-corners.png",
+      "sha256": "488340936437e95780a498a85166db4409e820ecb1d7d5c7756051f78b87746d",
+      "bytes": 1270183
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "split_x": 627,
+    "split_y": 627,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "subject_bbox": [
+          39,
+          44,
+          595,
+          610
+        ],
+        "transparent_fraction": 0.4091990160990413,
+        "margins_px": [
+          39,
+          44,
+          32,
+          17
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "subject_bbox": [
+          31,
+          37,
+          601,
+          621
+        ],
+        "transparent_fraction": 0.3692833650023275,
+        "margins_px": [
+          31,
+          37,
+          26,
+          6
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "subject_bbox": [
+          30,
+          17,
+          582,
+          612
+        ],
+        "transparent_fraction": 0.37156760249180293,
+        "margins_px": [
+          30,
+          17,
+          45,
+          15
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "subject_bbox": [
+          34,
+          26,
+          573,
+          604
+        ],
+        "transparent_fraction": 0.37509316280406685,
+        "margins_px": [
+          34,
+          26,
+          54,
+          23
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 27.282877604166668
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 33.370524088541664
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 30.146484375
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 37.236735026041664
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 33.47119140625
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 33.660725911458336
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-pharmacy-d87b861c-plain~1\\SE.png",
+        "sha256": "e1affb630a332fbd14d0a552e45e49e19908fe10878263f2586f45991fd9e04f",
+        "bytes": 554690
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-pharmacy-d87b861c-plain~1\\SE.native.png",
+        "sha256": "e1affb630a332fbd14d0a552e45e49e19908fe10878263f2586f45991fd9e04f",
+        "bytes": 554690
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-pharmacy-d87b861c-plain~1\\SW.png",
+        "sha256": "55d06e2cb87f9c0af8ebc1d03b310fc8b6a5f0641e91f0edeeff5ef2f293ce66",
+        "bytes": 579297
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-pharmacy-d87b861c-plain~1\\SW.native.png",
+        "sha256": "55d06e2cb87f9c0af8ebc1d03b310fc8b6a5f0641e91f0edeeff5ef2f293ce66",
+        "bytes": 579297
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-pharmacy-d87b861c-plain~1\\NW.png",
+        "sha256": "61cc42857620116014d2ae7e410e0026800e28953ffc564bb5f66585d07ba99f",
+        "bytes": 573008
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-pharmacy-d87b861c-plain~1\\NW.native.png",
+        "sha256": "61cc42857620116014d2ae7e410e0026800e28953ffc564bb5f66585d07ba99f",
+        "bytes": 573008
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-pharmacy-d87b861c-plain~1\\NE.png",
+        "sha256": "fd40f3f11776e2f7d4ef8a90557644b04ea6e41510428a483d1741fd4473ee83",
+        "bytes": 579396
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-pharmacy-d87b861c-plain~1\\NE.native.png",
+        "sha256": "fd40f3f11776e2f7d4ef8a90557644b04ea6e41510428a483d1741fd4473ee83",
+        "bytes": 579396
+      }
+    }
+  ]
+}

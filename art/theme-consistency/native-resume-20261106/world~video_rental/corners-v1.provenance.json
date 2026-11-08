@@ -1,0 +1,233 @@
+{
+  "id": "world~video_rental",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:23:45.165269+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-3c792b93-8e03-43a7-a078-fedeb045e46a.png",
+    "sha256": "ebc0413f131dad5f092caefe546c06a094c0c05fec50ff4bc488da0d06d24d76",
+    "bytes": 1791925
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~video_rental\\corners-v1.png",
+    "sha256": "ebc0413f131dad5f092caefe546c06a094c0c05fec50ff4bc488da0d06d24d76",
+    "bytes": 1791925
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~video_rental\\corners-v1.prompt.txt",
+    "sha256": "40cf9febf1778a579d30de3f9d2e376302dec3dd2446c868c9ece3936c5420e0",
+    "bytes": 1193
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\world-video_rental.native.png",
+      "sha256": "dbea79978a970515a399fd8cb741b280902ea9ed10e6711e5bc8de21b26b0e6d",
+      "bytes": 327211
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\world~video_rental-corners.png",
+      "sha256": "10bd22581eaeee8ee9acc034c08033d9494f3e1e5800e45a3e78dc880d3e5f85",
+      "bytes": 502937
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          40,
+          89,
+          590,
+          542
+        ],
+        "transparent_fraction": 0.5516179167652349,
+        "margins_px": [
+          40,
+          89,
+          37,
+          85
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          32,
+          73,
+          592,
+          533
+        ],
+        "transparent_fraction": 0.527752976758265,
+        "margins_px": [
+          32,
+          73,
+          35,
+          94
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          37,
+          86,
+          591,
+          555
+        ],
+        "transparent_fraction": 0.5109213515156602,
+        "margins_px": [
+          37,
+          86,
+          36,
+          72
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          27,
+          97,
+          595,
+          542
+        ],
+        "transparent_fraction": 0.5445973204724149,
+        "margins_px": [
+          27,
+          97,
+          32,
+          85
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 38.38037109375
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 31.447428385416668
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 41.966471354166664
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 31.524251302083332
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 29.15478515625
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 37.33447265625
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "original export, intentionally retained by sheets.py",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~video_rental\\SE.png",
+        "sha256": "cbda8e0bd559e442ef6d387d25a2fad0bd45eb07595b87b22721144fbb6c4bbc",
+        "bytes": 426648
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~video_rental\\SE.native.png",
+        "sha256": "cbda8e0bd559e442ef6d387d25a2fad0bd45eb07595b87b22721144fbb6c4bbc",
+        "bytes": 426648
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~video_rental\\SW.png",
+        "sha256": "ac5321dade051af780334a359abdd7a27fea208cc64881c2d0f55967a89a5dbe",
+        "bytes": 433162
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~video_rental\\SW.native.png",
+        "sha256": "ac5321dade051af780334a359abdd7a27fea208cc64881c2d0f55967a89a5dbe",
+        "bytes": 433162
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~video_rental\\NW.png",
+        "sha256": "3e65ca3743473eafe73b3e7962eec2c8dbc57b936885e160d615c3582f0b32c6",
+        "bytes": 451779
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~video_rental\\NW.native.png",
+        "sha256": "3e65ca3743473eafe73b3e7962eec2c8dbc57b936885e160d615c3582f0b32c6",
+        "bytes": 451779
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~video_rental\\NE.png",
+        "sha256": "dbea79978a970515a399fd8cb741b280902ea9ed10e6711e5bc8de21b26b0e6d",
+        "bytes": 327211
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~video_rental\\NE.native.png",
+        "sha256": "dbea79978a970515a399fd8cb741b280902ea9ed10e6711e5bc8de21b26b0e6d",
+        "bytes": 327211
+      }
+    }
+  ],
+  "previous_crops_backup": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~video_rental\\backups\\20261106T182345241354Z"
+}
