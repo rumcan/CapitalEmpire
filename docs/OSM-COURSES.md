@@ -54,7 +54,7 @@ the Cape Town clubs complete with fairways, bunkers, ponds and numbered holes; B
 ## What the data showed
 1. **Hole lines (`golf=hole`, a line from tee to green with `ref`, `par`, often `name` and `handicap`) make the order exact** and exist on 5 of 6 courses. Their
    length is the playing length (Augusta's hole 1 comes out at 409 m, 447 yd) and the par totals come out right (72, 72 and 27 for the Par 3 Course). Of the 99 lines,
-   99 start on a mapped tee polygon and 98 end on a mapped green polygon (the one exception is Milnerton's 17th); none is drawn green to tee.
+   all 99 start on a mapped tee polygon and 98 end on a mapped green polygon (the one exception is Milnerton's 17th); none is drawn green to tee.
 2. **Guessing the holes from tee/green pairs does not work.** The next tee stands beside the last green, so the nearest green to a tee is nearly always the
    wrong hole's; a nearest-first pairing recovers 0 to 2 holes of 17 to 27 on every course. If hole lines are missing, `ref=` and `name=` on tees and greens
    are the only cheap link (Augusta: `ref` on 26 of 48 tees, 21 of 43 greens, 42 of 69 bunkers; Old Course: the hole numbers sit in `name` on 16 tees and
@@ -70,7 +70,7 @@ the Cape Town clubs complete with fairways, bunkers, ponds and numbered holes; B
 7. **Coverage depends on the place, not the course's fame.** All three Cape Town clubs tried are complete (Mowbray's tags say `source=coct-2015`, so it looks
    like an import of City of Cape Town open data); Bloemfontein has the boundary and nothing else (confirmed with a count query on its bounding box plus
    1 km: 0 `golf=*` elements). Nominatim found 6 of 10 names tried ("Huddle Park", "Fish Hoek Golf Club", "Zwartkop Country Club" returned nothing: the OSM
-   spelling or `--osm way/ID` is needed). Milnerton shows ordinary slips: hole 17's green missing or misplaced, par total 71, one pin off its green.
+   spelling or `--osm way/ID` is needed). Milnerton shows ordinary slips: hole 17's green missing or misplaced and one pin off its green (its par total, 71, may be right).
 8. **No problems from geometry**: the multipolygon fairways, ponds and course boundaries (Cape Town's are relations, Mowbray's has two parcels) all closed, no
    unclosed area ways, nothing skipped. A hand-made answer exercised the rarer cases: a node-only course, an unclosed way, a multipolygon with an inner ring,
    a sea-sized lake (skipped), a hole drawn green to tee (flagged).
@@ -107,7 +107,7 @@ within 60 m of each other), so the validity checks must warn on an imported cour
    same course twice.
 8. **In the game**: a dev URL first (`?osmcourse=<fixture>`), then a "Real course" card. **Do not call Overpass or Nominatim from players' browsers** (both are for light,
    cached use; Nominatim forbids heavy and search-as-you-type use): ship a few pre-fetched, checked-in courses with the credit shown, and add more with this script.
-9. **Screenshots**: a famous course and a Cape Town club built in the game beside their previews. Elevation is not in this data (later: a public DEM for T026).
+9. **Screenshots**: a famous course and a Cape Town club built in the game beside their previews. No heights came with what was fetched (later: a public DEM for T026).
 
 ## For the owner to decide
 - **Which less famous course to build first**: the Cape Town clubs are all complete; the cleanest is Rondebosch (18 holes, 18 pins, no slips), then Mowbray (3 pins) and
