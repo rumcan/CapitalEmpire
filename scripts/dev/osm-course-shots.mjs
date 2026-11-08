@@ -197,7 +197,7 @@ try {
     const txt = await cp.$eval('[data-testid=who-course]', e => e.textContent);
     console.log('  card:', txt);
     check(txt.includes('Magnolia National (from map data)') && txt.includes('Woodhill Country Club (from map data)') && !txt.toLowerCase().includes('augusta'), 'the famous club is shown under its made-up name, the others under theirs');
-    check(txt.includes('scaled to 84%'), 'the card says Woodhill is scaled to 84% to fit the map');
+    check(txt.includes('scaled to 90%'), 'the card says Woodhill is scaled to 90% to fit the map');
     await cp.click('[data-testid=who-course-rondebosch]');
     const started = await cp.waitForFunction(() => window.__game.osmGame()?.id === 'rondebosch' && window.__game.ready, null, { timeout: 120000 }).then(() => true).catch(() => false);
     check(started, 'a click on Rondebosch starts a new game on it');

@@ -3000,13 +3000,13 @@ export class Game {
     return false;
   }
   /** T340 (#967): a new game on a real course built from map data (golf/osm). The flat map (boot.ts flatTerrain: a generated valley has its river through
-   *  any 700-tile window, and the real courses are 1 to 1.4 km across on the 2 km map), the course's land in the middle, the entry road from the west
-   *  edge, the clubhouse parcel, car park and drive on the land's west side, every surface in the course grid with its hole, the tee sets, pins and aim
+   *  any 700-tile window, and the real courses are 1 to 2 km across on the 2 km map), the course's land in the middle, the clubhouse parcel, car park and
+   *  drive on the side of it nearest the first tee, the entry road from the map's edge there (the terrain's highway), every surface in the course grid with its hole, the tee sets, pins and aim
    *  points (their pictures as any marker's). The old start's rules: the tournament comes with the season. False, and nothing laid, when the land does
    *  not fit the map (the caller then makes the usual start) */
   private newOsmGame(spec: OsmCourseSpec): boolean {
     const plan = planOsmGame(spec); if (!plan) { console.warn(`golf: ${spec.name} does not fit the map; the usual start instead`); return false; }
-    this.useTerrain(flatTerrain(), this.devSeed || newSeed());
+    this.useTerrain({ ...flatTerrain(), highway: plan.entry }, this.devSeed || newSeed()); // (the highway enters where the entry road meets the map's edge)
     this.townPts = [plan.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
     this.edit.addLegs(plan.road, CLASS.road, 0, plan.road.map(() => SK.GROUND), true);
     this.edit.addLegs(plan.drive, classOf('drive-gravel'), 0, undefined, true);
@@ -7301,7 +7301,9 @@ export class Game {
       // T342: the game's own look (a save from before T342 is autumn); ?desert=on|off on the dev server still wins for the session
       this.themeFor(d.theme === 'desert');
       // T340: a map-data game is laid on the flat map whatever its seed (the save's golf state says so)
-      if ((d.golf as { osm?: { id?: unknown } } | undefined)?.osm?.id) this.useTerrain(flatTerrain(), d.seed); else this.genTerrain(d.seed);
+      const osm = (d.golf as { osm?: { id?: unknown; entry?: { x?: unknown; y?: unknown; edge?: unknown } } } | undefined)?.osm, en = osm?.entry;
+      if (osm?.id) this.useTerrain(typeof en?.x === 'number' && typeof en.y === 'number' && (en.edge === 'N' || en.edge === 'E' || en.edge === 'S' || en.edge === 'W') ? { ...flatTerrain(), highway: { x: en.x, y: en.y, edge: en.edge } } : flatTerrain(), d.seed);
+      else this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
       // T288: a range from before T288 was built for the player: its guide's placement steps are done (no reward)

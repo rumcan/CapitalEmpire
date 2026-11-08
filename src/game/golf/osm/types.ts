@@ -69,4 +69,7 @@ export interface OsmCourseSpec {
 
 /** what a map-data game saves of its course: the shipped id (the engine lays the flat map for it), the name the game shows, the place, the credit the
  *  course card and the credits show, the OSM id it came from, its holes, and its par as the game works it out (par) and as the map has it (mappedPar) */
-export interface OsmGolfInfo { id: string; name: string; place: string; credit: string; licence: string; source: string; holes: number; par: number; mappedPar: number; scale?: number }
+export interface OsmGolfInfo { id: string; name: string; place: string; credit: string; licence: string; source: string; holes: number; par: number; mappedPar: number; scale?: number;
+  /** where the entry road meets the map's edge (the flat map's highway enters there: the clubhouse parcel is on that side of the land); absent: the middle of the west edge */ entry?: OsmEntry }
+/** a point on the map's edge: tiles, and the edge it lies on */
+export interface OsmEntry { x: number; y: number; edge: 'N' | 'E' | 'S' | 'W' }
