@@ -1,7 +1,8 @@
 // T340 (#967), stage 1 (a feasibility spike): find a real golf course in OpenStreetMap and write its layout as JSON (metres around the
 // course's centre) and a top-down preview PNG. Plain Node 22 (built-in fetch, fs, zlib, crypto), no installs, no game code.
 //   node scripts/dev/osm-course.mjs "<course name>" [--country za] [--list] [--pick 0] [--osm way/123] [--refresh]
-//        [--out E:/ClaudeTemp/T340] [--overpass https://mirror/api/interpreter,...] [--radius 1200 (only for a node-only course)] [--px 1700]
+//        [--out E:/ClaudeTemp/T340] [--overpass https://mirror/api/interpreter,...] [--timeout 150 (seconds per Overpass attempt)]
+//        [--radius 1200 (only for a node-only course)] [--px 1700]
 // What it does, with one Nominatim request and ONE Overpass query per course (both cached in <out>/raw/, so a rerun makes no request):
 //   1. Nominatim search for the name; takes the first leisure=golf_course hit (--list prints the hits and stops; --pick N takes the Nth
 //      golf-course hit; --osm way/ID or relation/ID skips the search).
@@ -14,8 +15,9 @@
 // Projection: a local equirectangular one, x = (lon - lon0) * cos(lat0) * R, y = (lat - lat0) * R (R = 6371008.8 m, lat0/lon0 = the centre).
 // Over a course (a few km at most) the error is well under 1 m per km, far below the data's own accuracy.
 // Public servers, politely: a descriptive User-Agent (no personal address), Nominatim at most one request a second (here: one request per
-// run), one Overpass query per course, on 429/5xx or a timeout it backs off (Retry-After, else 15 s, 30 s) and falls over to the next public
-// mirror. It never touches commercial course-guide sites or satellite imagery.
+// run), one Overpass query per course; on 429/5xx or a network error it waits (Retry-After, else 15 s) and retries once, on a timeout or a second
+// failure it falls over to the next public mirror (on 2026-11-08 only the main server answered: overpass.kumi.systems hung on every query and
+// overpass.private.coffee did not answer at all). It never touches commercial course-guide sites or satellite imagery.
 // LICENCE: the data is (c) OpenStreetMap contributors under the ODbL 1.0 (https://www.openstreetmap.org/copyright). Anything that uses it,
 // the game included, must credit "© OpenStreetMap contributors" (on the credits screen), and a checked-in fixture of it stays under the
 // ODbL with that credit beside it. Do not commit this script's outputs.
@@ -47,14 +49,18 @@ const OUT = (opts.out || 'E:/ClaudeTemp/T340').replace(/\\/g, '/'), RAW = `${OUT
 const slugify = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'course';
 
 // ---------------------------------------------------------------------------------------------------------------- polite fetching
-/** fetch with a User-Agent, a timeout and a back-off on 429/5xx/timeouts (Retry-After, else 15 s, 30 s, 60 s); other errors throw at once */
+/** fetch with a User-Agent and a timeout; on 429/5xx or a network error it backs off (Retry-After, else 15 s, 30 s, 60 s) and tries again;
+ *  a timeout (a hung server: two public mirrors did on 2026-11-08) and any other error throw at once, so the caller can move to the next server */
 async function politeFetch(url, init, { label, tries, timeoutMs = 60000 }) {
   let last;
   for (let attempt = 1; attempt <= tries; attempt++) {
     let res, retryAfter = 0;
     try {
       res = await fetch(url, { ...init, headers: { 'User-Agent': UA, ...init.headers }, signal: AbortSignal.timeout(timeoutMs) });
-    } catch (e) { last = new Error(`${label}: ${e.name === 'TimeoutError' ? 'timed out' : e.cause?.code || e.message}`); }
+    } catch (e) {
+      last = new Error(`${label}: ${e.name === 'TimeoutError' ? `no answer in ${timeoutMs / 1000} s` : e.cause?.code || e.message}`);
+      if (e.name === 'TimeoutError') throw last;
+    }
     if (res) {
       if (res.ok) return res;
       const body = (await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160);
@@ -119,7 +125,7 @@ async function overpass(src, query) {
     try {
       log(`Overpass: POST ${url} (${query.split('\n').length} lines of query)`);
       const res = await politeFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(query) },
-        { label: 'Overpass', tries: 2, timeoutMs: 180000 });
+        { label: 'Overpass', tries: 2, timeoutMs: +(opts.timeout || 150) * 1000 });
       const text = await res.text();
       let json;
       try { json = JSON.parse(text); } catch { throw new Error(`Overpass: not JSON (${text.replace(/\s+/g, ' ').slice(0, 120)})`); }
@@ -558,7 +564,7 @@ function writeJson(file, out) {
 
 async function main() {
   if (opts.help || (!queryName && !opts.osm)) {
-    log('usage: node scripts/dev/osm-course.mjs "<course name>" [--country za] [--list] [--pick N] [--osm way/ID] [--refresh] [--out DIR] [--overpass URL,URL] [--radius M] [--px N]');
+    log('usage: node scripts/dev/osm-course.mjs "<course name>" [--country za] [--list] [--pick N] [--osm way/ID] [--refresh] [--out DIR] [--overpass URL,URL] [--timeout S] [--radius M] [--px N]');
     process.exitCode = opts.help ? 0 : 2; return;
   }
   mkdirSync(RAW, { recursive: true });
