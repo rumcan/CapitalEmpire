@@ -76,6 +76,8 @@ import { ClubhouseCard } from './ui/golf/ClubhouseCard';
 import { StaffCard } from './ui/golf/StaffCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
 import { BagCard } from './ui/golf/BagCard';
+import { CardsCard } from './ui/golf/CardsCard';
+import { VendingMachine } from './ui/golf/VendingMachine';
 import { TalkCard, TeeAskCard, TeeCard, VERB_CURSOR, WhoCard } from './ui/golf/YouCards';
 import { MatchResultCard, ReturnChallengeCard } from './ui/golf/MatchCards';
 import { EventCard } from './ui/golf/EventCard';
@@ -479,6 +481,8 @@ export default function App() {
                   {game.golf && <button className={`chip ${game.playerCardOpen ? 'chip-on' : ''}`} onClick={() => game.openPlayerCard()} data-tip="Your golf: your skills, handicap, practice log and your round today" aria-label="You" data-testid="you-chip"><Icon name="people" size={16} /><span className={WIDE}>You</span></button>}
                   {/* T335: your bag (the 14 clubs, their upgrades, the putter's shaft and head) */}
                   {game.golf && <button className={`chip ${game.bagCardOpen ? 'chip-on' : ''}`} onClick={() => game.openBagCard()} data-tip="Your bag: the 14 clubs, their upgrades, and the putter's shaft and head" aria-label="Bag" data-testid="bag-chip"><Icon name="briefcase" size={16} /><span className={WIDE}>Bag</span></button>}
+                  {/* T336: your cards (the 8 slots, the collection, the vending machine); the number is the pulls waiting */}
+                  {game.golf && <button className={`chip ${game.cardsCardOpen ? 'chip-on' : ''}`} onClick={() => game.openCardsCard()} data-tip={game.cardsPulls() > 0 ? `Your cards: ${game.cardsPulls()} pull${game.cardsPulls() === 1 ? '' : 's'} waiting at the vending machine` : 'Your cards: 8 slots, earned from wins, opened in the vending machine'} aria-label="Cards" data-testid="cards-chip"><Icon name="layers" size={16} /><span className={WIDE}>Cards</span>{game.cardsPulls() > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-[11px] font-bold leading-4 text-slate-900" data-testid="cards-badge">{game.cardsPulls()}</span>}</button>}
                   {/* T240: your character: Me frames you once (T323: the camera no longer follows; Walk and Select are the rail's two cursors) */}
                   {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character (once: it does not follow)" aria-label="Me" data-testid="me-chip"><Icon name="pin" size={16} /><span className={WIDE}>Me</span></button>}
                   {game.you && !game.yourRound() && game.youCartFar() && <button className="chip" onClick={() => game.youCartCall()} data-tip="Your cart: it drives to you (C in the Walk cursor); then E gets in" aria-label="Call your cart" data-testid="cart-chip"><Icon name="compass" size={16} /><span className={WIDE}>Cart</span></button>}
@@ -861,10 +865,10 @@ export default function App() {
           {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard hidden={game.real.active} name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: spec => { void game.startRealCourse(spec); }, onPlace: spec => { void game.startRealPlaceSpec(spec); } }} />; })()}
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
           {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
-          {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} />}
+          {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} onMachine={() => game.openVending(true)} />}
           {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onStart={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onTourney={() => game.tournamentStart()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
           {(() => { const ta = game.teeAskView(); return ta && <TeeAskCard tee={ta.tee} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onPlay={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onClose={() => game.closeTeeAsk()} />; })()}
-          {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.eventStart(ev.id)} />; })()}
+          {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.eventStart(ev.id)} onMachine={() => game.openVending(true)} />; })()}
           {(() => { const rv = game.yourRoundView(); if (!rv) return null;
             // T328 (#936): the bar starts right of the left rail and stops left of a right-hand card (event, tee, talk, challenge: 320 px at most)
             const side = game.panel ? '19.5rem' : '0.75rem', card = !!game.youTalk || !!game.youTeeView() || !!game.eventCard() || !!game.challengeView();
@@ -875,11 +879,11 @@ export default function App() {
           {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
-            const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen ? game.tourView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
+            const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen ? game.tourView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return tv && <RangeGuideCard view={tv} heading="Tutorial · your town" tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
           })()}
           {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
-            const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen ? game.rangeGuideView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
+            const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen ? game.rangeGuideView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return gv && <RangeGuideCard view={gv} right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
           {(() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
@@ -898,6 +902,16 @@ export default function App() {
             const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace || game.holeCardHole !== null, me = game.playerCardOpen;
             return <BagCard view={bv} right={me ? (side ? (game.panel ? 'right-[63rem]' : 'right-[45rem]') : game.panel ? 'right-[41rem]' : 'right-[23rem]') : side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'}
               onClose={() => game.openBagCard(false)} onUpgrade={(c, v) => game.upgradeBagClub(c, v)} onFit={(k, id) => game.fitBagPart(k, id)} onThird={w => game.setBagThird(w)} />;
+          })()}
+          {(() => { // T336: your cards, where the bag card stands (one of the two is open at a time): left of the profile card and of the card on the right; a card's detail opens to its left
+            const cv = game.vendingOpen ? null : game.cardsCard(); if (!cv) return null; // (not behind the machine: its collection would show the prize before the reel does)
+            const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace || game.holeCardHole !== null, me = game.playerCardOpen;
+            return <CardsCard view={cv} right={me ? (side ? (game.panel ? 'right-[63rem]' : 'right-[45rem]') : game.panel ? 'right-[41rem]' : 'right-[23rem]') : side ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'}
+              onClose={() => game.openCardsCard(false)} onEquip={(id, slot) => game.equipCard(id, slot)} onUnequip={slot => game.unequipCard(slot)} onMachine={() => game.openVending(true)} />;
+          })()}
+          {(() => { // T336: the prize machine in your pro shop: a modal over the game (a reel that spins and slows onto the prize), opened by a pull
+            const vv = game.vendingCard(); if (!vv) return null;
+            return <VendingMachine v={vv} onSpin={g => game.spinVending(g)} onSettle={id => game.settleVending(id)} onEquip={() => game.equipWon()} onClose={() => game.openVending(false)} onBag={() => { game.openVending(false); game.openBagCard(true); }} />;
           })()}
           {(() => { const pc = game.placeCard(); return pc && <PlaceCard view={pc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closePlaceCard()} onScene={game.placeSceneArt(pc.id) ? () => game.openScene({ kind: 'place', id: pc.id }) : undefined} />; })()}
           {(() => { // T242: the set-the-scene card, centred left of the card on the right (the range's, the club's, a place's) and the side panel

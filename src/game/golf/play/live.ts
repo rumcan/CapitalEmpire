@@ -6,7 +6,7 @@ import { TILE_M } from '../types';
 import { appendShots, FLIGHT_TIME, liveField, PUTT_FLIGHT } from './round';
 import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
 import { PUTT_V2, carryFor, chooseShot, hitShot, luckyPutt, putt, rng, skillFor, type ShotSkill } from './shot';
-import { kitOf } from './mods';
+import { hasMech, kitOf } from './mods';
 import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
 import { BOOST, METER, METER_ANG, MIN_SWING_POWER, readSwing, swingEffect, type SwingOutcome } from './swing';
@@ -117,11 +117,15 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
   const putting = input.club === 'putter';
   let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Landing | undefined;
   // T316: the swing meter's outcome (when he swung it): its power, its miss (radians off the aim, + right as he faces it) and spread
-  const spin = !putting && input.spin ? readSpin(input.spin) : null; // (T318: a putt takes no spin)
+  const spin0 = !putting && input.spin ? readSpin(input.spin) : null; // (T318: a putt takes no spin)
+  // T336 (#962): spin added in the air is a card's (Mid-Flight Whisper): without the mechanic the clicks count for none (a golfer whose skills list no mechanics has it, as before the cards)
+  const spin = spin0 && spin0.pump > 0 && !hasMech(sk, 'airspin') ? { ...spin0, pump: 0 } : spin0;
   const env = !putting && input.env ? readEnv(input.env) : null; // (T334: nor the wind, the lie's kind or the slope: a putt never leaves the ground)
   const shape = !putting && input.shape ? readShape(input.shape) : null; // (T334 part 2: a putt takes no shape)
   const kit = kitOf(sk, input.club); // (his stats and mods for the club: the sweet spot, the scatter, the carry; neutral for a plain skill)
-  const sw = input.swing ? readSwing(input.swing) : null, eff = sw ? swingEffect(sw, skillFor(sk, input.club), putting, kit.sweet) : null, miss = eff ? eff.deg * Math.PI / 180 : 0;
+  // (T336: and the Space power-spam is Power Mash's: without the mechanic the boost is none)
+  const sw0 = input.swing ? readSwing(input.swing) : null, sw = sw0 && sw0.boost > 0 && !hasMech(sk, 'boost') ? { ...sw0, boost: 0 } : sw0;
+  const eff = sw ? swingEffect(sw, skillFor(sk, input.club), putting, kit.sweet) : null, miss = eff ? eff.deg * Math.PI / 180 : 0;
   if (putting) {
     const pw = eff ? clamp(eff.power, MIN_SWING_POWER, METER.top + BOOST.max) : clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
     const dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0;

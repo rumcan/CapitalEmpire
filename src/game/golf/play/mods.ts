@@ -78,6 +78,27 @@ export function kitOf(sk: number | GameSkills, club: Club): ClubKit {
   return applyMods(sk, club);
 }
 
+// ---- T336 (#962): the mechanics a card can unlock ----
+/** the mechanics a card unlocks: moves of the swing and the shot that are not a plain number on the kit but a thing the player may do. `boost`: the Space power-spam (swing.ts: taps during the swing add power);
+ *  `airspin`: adding spin with clicks while the ball is in the air (spin.ts `pump`). T337 adds its own (a driver off the deck, the putting reads...). The shot model reads them through `hasMech` and nothing else */
+export const MECH_IDS = ['boost', 'airspin'] as const;
+export type MechId = (typeof MECH_IDS)[number];
+/** a golfer whose skills carry no `mech` list (a field golfer, a save from before the cards, a profile that predates them) has the mechanics the game had before the cards: they stay unlocked. A new game's profile
+ *  lists its own (golf/cards: none until a card gives one), so there they are earned */
+export const LEGACY_MECH: readonly MechId[] = ['boost', 'airspin'];
+/** whether a golfer has a mechanic: the skills' `mech` list, else the legacy set (a plain skill number, a save without the list) */
+export function hasMech(sk: number | GameSkills | null | undefined, id: MechId): boolean {
+  if (sk === null || sk === undefined || typeof sk === 'number') return LEGACY_MECH.includes(id);
+  return (sk.mech ?? LEGACY_MECH).includes(id);
+}
+/** the mechanics a save lists, as the known ids without repeats (an empty list stays empty: nothing unlocked); undefined when it is not a list at all (no list: the legacy set) */
+export function readMech(v: unknown): MechId[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  const out: MechId[] = [];
+  for (const m of v as unknown[]) if (typeof m === 'string' && (MECH_IDS as readonly string[]).includes(m) && !out.includes(m as MechId)) out.push(m as MechId);
+  return out;
+}
+
 /** the most modifiers a save keeps for a golfer (a deck of cards, a bag's upgrades: plenty) */
 export const MAX_MODS = 64;
 /** every club id and family a mod may name (a save's `clubs` are held to these) */
@@ -121,6 +142,6 @@ export function readGameSkills(v: unknown): GameSkills | null {
   const sk = v as Partial<GameSkills> | null | undefined;
   if (!sk || typeof sk !== 'object' || ![sk.driving, sk.irons, sk.short, sk.putting].every(x => typeof x === 'number' && Number.isFinite(x))) return null;
   const stat = (x: unknown): number | null => typeof x === 'number' && Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : null;
-  const mods = readMods(sk.mods), clubs = readClubs(sk.clubs);
-  return { driving: sk.driving!, irons: sk.irons!, short: sk.short!, putting: sk.putting!, ...(stat(sk.power) !== null ? { power: stat(sk.power)! } : {}), ...(stat(sk.accuracy) !== null ? { accuracy: stat(sk.accuracy)! } : {}), ...(stat(sk.touch) !== null ? { touch: stat(sk.touch)! } : {}), ...(mods.length ? { mods } : {}), ...(clubs ? { clubs } : {}) };
+  const mods = readMods(sk.mods), clubs = readClubs(sk.clubs), mech = readMech(sk.mech);
+  return { driving: sk.driving!, irons: sk.irons!, short: sk.short!, putting: sk.putting!, ...(stat(sk.power) !== null ? { power: stat(sk.power)! } : {}), ...(stat(sk.accuracy) !== null ? { accuracy: stat(sk.accuracy)! } : {}), ...(stat(sk.touch) !== null ? { touch: stat(sk.touch)! } : {}), ...(mods.length ? { mods } : {}), ...(clubs ? { clubs } : {}), ...(mech ? { mech } : {}) };
 }

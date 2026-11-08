@@ -209,6 +209,9 @@ import { GOLFER_NAMES } from './golf/play/field';
 import { missingParts, missingWhy, practicePick, realHoleCount, type PracticeScope } from './golf/play/practice';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
 import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, gearOf, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withBag, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
+import { gearFor, withCards } from './golf/player'; // T336 (#962): your cards
+import { hasMech } from './golf/play';
+import { addCard, addPull, bestGrade, cardById, cardsInPlay, cardsView, createSpin, earnFromMatch, earnFromPlace, emptyCards, equipCard as equipInCards, equipWhy, rollPrize, takePull, unequipCard as unequipFromCards, unequipWhy, vendingView, type CardsSave, type CardsView, type Earn, type Grade, type PlayCard, type VendingSpin, type VendingView } from './golf/cards';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -404,7 +407,8 @@ export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string 
  *  today's field and holes, why you cannot play it now, whether you play it, the result and its line, your name */
 export interface EventCardView { id: EventId; name: string; when: string; phase: 'soon' | 'today' | 'result'; hcp: number; hcpText: string; maxHcp: number | null;
   why: string | null; entered: boolean; field: number | null; holes: number | null; playWhy: string | null; playing: boolean; result: EventResult | null; line: string | null; you: string;
-  /** T350: the minute your round in today's event would start (the next free tee time on the sheet): Start round runs the clock there; null: not today */ tee?: number | null }
+  /** T350: the minute your round in today's event would start (the next free tee time on the sheet): Start round runs the clock there; null: not today */ tee?: number | null;
+  /** T336: the card pull this result paid (golf/cards earning.ts), null or absent: none */ pull?: Earn | null }
 /** the leaderboard's rows shown (the top 8, and the owner's row below them) */
 const BOARD_ROWS = 8;
 /** T209: the longest a resumed tournament day waits for its play after the first frame (holdDay), ms */
@@ -8055,7 +8059,7 @@ export class Game {
       this.finishAt = now;
       const pl = this.play, fin = pl.finish.step(pl.plan, pl.view, minute);
       if (fin.last && !fin.over) this.toast(`Last group on the 18th: ${fin.last.golfers.map(id => golferShort(pl.plan.golfers.find(g => g.id === id)?.name ?? '')).join(', ')}`, 'info');
-      if (fin.over) { const line = championLine(pl.plan, pl.view); this.boardCache = null; if (line) this.toast(`${line} — ${this.golf ? tierInfo(this.golf.tier).name : ''}`, 'good'); else this.emit(); }
+      if (fin.over) { const line = championLine(pl.plan, pl.view); this.boardCache = null; if (line) this.toast(`${line} — ${this.golf ? tierInfo(this.golf.tier).name : ''}`, 'good'); else this.emit(); this.tourneyPull(pl, minute); } // (T336: you played it: your place pays a card pull)
     }
   }
   /** the game minute the play is shown at: the town clock's minute of the day, held at the minute the round was over once the clock has run past the day's
@@ -8176,7 +8180,7 @@ export class Game {
   // ---------- T335 (#961): your bag (golf/play/bag.ts): 14 clubs, their upgrades, the putter's shaft and head ----------
   /** your bag card is open */
   bagCardOpen = false;
-  openBagCard(open = !this.bagCardOpen) { this.bagCardOpen = open && !!this.golf; this.emit(); }
+  openBagCard(open = !this.bagCardOpen) { this.bagCardOpen = open && !!this.golf; if (this.bagCardOpen) this.cardsCardOpen = false; /* (T336: the Cards card stands where the bag card does) */ this.emit(); }
   /** the pro shop as the bag buys from it: open with a clubhouse, a pro's office or a range (the shack is a shop too), with your money */
   private bagShop(): ShopCtx {
     const g = this.golf, shop = !!g && (this.hasClubhouse || this.bizCount('prooffice') > 0 || (g.start === 'range' && !!g.range && g.range.built !== false));
@@ -8224,6 +8228,111 @@ export class Game {
     const p = this.playerNow(); if (!p) return;
     const busy = this.bagBusy(); if (busy) { this.toast(busy, 'warn'); return; }
     this.setBag(p, setThird(p.bag, which)); this.toast(`${which === 'hybrid' ? 'Hybrid' : '5-wood'} in the bag`, 'info'); this.emit();
+  }
+
+  // ---------- T336 (#962): your cards: 8 slots on your player, earned from wins, opened in the vending machine (golf/cards) ----------
+  /** your Cards card is open (the 8 slots and the collection) */
+  cardsCardOpen = false;
+  openCardsCard(open = !this.cardsCardOpen) { this.cardsCardOpen = open && !!this.golf; if (this.cardsCardOpen) this.bagCardOpen = false; /* (it stands where the bag card does: one of the two at a time) */ this.emit(); }
+  /** why your cards cannot change now (null: they can): out on the course (your round, the tournament, an open shot) nothing changes in them: cards swap between rounds, never in one */
+  private cardsBusy(): string | null { return this.bagBusy() ? 'You are out on the course: your cards change when the round is over' : null; }
+  /** the Cards card's view (golf/cards view.ts: the 8 slots, the collection, the pulls waiting, why not); null while closed */
+  cardsCard(): CardsView | null {
+    const p = this.cardsCardOpen ? this.playerNow() : null; if (!p) return null;
+    const s = this.bagShop();
+    return cardsView(p.cards, { busy: this.cardsBusy(), shop: s.shop, shopWhy: s.shopWhy ?? null });
+  }
+  /** the pulls waiting at the vending machine, in all (the top bar's Cards chip shows it) */
+  cardsPulls(): number { const c = this.golf?.player?.cards; return c ? c.pulls.bronze + c.pulls.silver + c.pulls.gold : 0; }
+  /** the profile with new cards: a round booked today and not begun plays with them (rebook, as a practice session or the bag does) */
+  private setCards(p: PlayerProfile, cards: CardsSave) { const at = this.townNow(); this.setPlayer(rebook(withCards(p, cards), at.day, at.dayMin)); }
+  /** a card into a slot (the first free one, or the slot picked: the card there goes back to the collection). A toast says why not */
+  equipCard(id: string, slot?: number) {
+    const p = this.playerNow(), c = p?.cards; if (!p || !c) return;
+    const why = equipWhy(c, id, slot, this.cardsBusy()); if (why) { this.toast(why, 'warn'); return; }
+    this.setCards(p, equipInCards(c, id, slot)); this.toast(`${cardById(id)?.name ?? 'The card'} is in play`, 'good'); this.emit();
+  }
+  /** the card in a slot back into the collection. A toast says why not */
+  unequipCard(slot: number) {
+    const p = this.playerNow(), c = p?.cards; if (!p || !c) return;
+    const why = unequipWhy(c, slot, this.cardsBusy()); if (why) { this.toast(why, 'warn'); return; }
+    const name = cardById(c.slots[slot]!)?.name ?? 'The card';
+    this.setCards(p, unequipFromCards(c, slot)); this.toast(`${name} is back in your collection`, 'info'); this.emit();
+  }
+  /** the pulls earned, by where they came from ('event:club', 'event:mayor', 'tourney'): the result cards say it (not saved: a reload shows the toast's words no more) */
+  private pullFor = new Map<string, Earn>();
+  /** the pull an event's result card shows (null: none paid) */
+  eventPull(id: EventId): Earn | null { return this.pullFor.get(`event:${id}`) ?? null; }
+  /** a pull earned (golf/cards earning.ts: a title, a good finish, a money match won): it waits at the vending machine; a toast says why and where it opens. A save from before the cards makes its cards `legacy` (it keeps the
+   *  Space power-spam and the spin in the air it always had) */
+  private grantPull(earn: Earn): Earn {
+    const p = this.playerNow(); if (!p) return earn;
+    this.setPlayer(withCards(p, addPull(p.cards ?? emptyCards(true), earn.grade)));
+    this.toast(`${earn.grade[0]!.toUpperCase()}${earn.grade.slice(1)} card pull: ${earn.why}. Open it at the vending machine (Cards)`, 'good');
+    return earn;
+  }
+  /** the tournament's pull: you played it (the owner in the day) and everyone has finished: your place in the field pays by the table, once a tournament (a reload of its results pays nothing twice) */
+  private tourneyPull(pl: GolfPlay, minute: number) {
+    const own = pl.own, p = this.playerNow(); if (!own || !p) return;
+    const c = p.cards ?? emptyCards(true); if (c.paid?.tourney === pl.key) return;
+    const st = standings(pl.plan, pl.view, minute), me = st.find(s => s.golfer === own.id); if (!me) return;
+    this.setPlayer(withCards(p, { ...c, paid: { ...c.paid, tourney: pl.key } }));
+    const earn = earnFromPlace(me.pos, st.length, 'the tournament'); if (earn) this.pullFor.set('tourney', this.grantPull(earn));
+  }
+  /** the cards in play for the open shot: the ones in your slots, with the lines of what each does and whether it is for this club (a card banned in competition is off in one) */
+  shotCards(): PlayCard[] {
+    const s = this.shot, c = this.golf?.player?.cards; if (!s) return [];
+    return cardsInPlay(c, s.input.club, s.mine ? isCompetition(this.yourRound()) : true);
+  }
+  /** the moves of the swing and the shot the open shot's golfer may make (the Space power-spam: Power Mash; spin added in the air: Mid-Flight Whisper; a save from before the cards has both) */
+  shotCan(): { boost: boolean; airspin: boolean } { const sk = this.shotSk(); return { boost: hasMech(sk, 'boost'), airspin: hasMech(sk, 'airspin') }; }
+
+  // the vending machine (golf/cards vending.ts, copied from TrickOrTreat's): a spinning reel that slows onto the prize, like a case opening
+  /** the machine is open, and the spin on its reel (null: none yet) */
+  vendingOpen = false; vendingSpin: VendingSpin | null = null; private vendingId = 0;
+  /** opens or closes the machine (it stands in your clubhouse or pro shop: the shop the bag buys from) */
+  openVending(open = !this.vendingOpen) {
+    if (open) { const s = this.bagShop(); if (!this.golf || !this.playerNow()) return; if (!s.shop) { this.toast(s.shopWhy ?? 'No pro shop yet', 'warn'); return; } }
+    this.vendingOpen = open && !!this.golf; if (!this.vendingOpen) this.vendingSpin = null;
+    this.emit();
+  }
+  /** the machine's view (null while closed) */
+  vendingCard(): VendingView | null {
+    const p = this.vendingOpen ? this.playerNow() : null; if (!p) return null;
+    return vendingView(p.cards, this.vendingSpin, { busy: this.cardsBusy(), vouchers: p.bag?.vouchers ?? 0 });
+  }
+  /** a spin: one pull of the grade picked (the best you have by default) is spent, the prize is rolled ONCE (the reel's decoys decide nothing) and is yours at once (a card in your collection, a voucher in your bag, junk in the
+   *  drawer), saved; the reel then turns and slows onto it (settleVending when it stops). False with no pull waiting or a reel still turning */
+  spinVending(pick?: Grade): boolean {
+    const p = this.playerNow(), c = p?.cards; if (!p || !c || !this.vendingOpen || this.vendingSpin?.status === 'spinning') return false;
+    const grade = pick && c.pulls[pick] > 0 ? pick : bestGrade(c); if (!grade) return false;
+    const prize = rollPrize(new Set(c.own), grade);
+    let next = { ...takePull(c, grade), opened: c.opened + 1 }, pr = p;
+    if (prize.kind === 'card') next = addCard(next, prize.card.id).cards;
+    else if (prize.kind === 'dud') next = { ...next, junk: next.junk + 1 };
+    else pr = withBag(pr, addVoucher(pr.bag)); // (every card of that rarity is yours: a sponsor's voucher, a club upgraded free)
+    this.setPlayer(withCards(pr, next));
+    this.vendingSpin = createSpin(++this.vendingId, grade, prize); this.emit();
+    return true;
+  }
+  /** the reel has stopped on the prize: the result is shown, and a toast says what it was */
+  settleVending(id: number) {
+    const s = this.vendingSpin; if (!s || s.id !== id || s.status !== 'spinning') return;
+    this.vendingSpin = { ...s, status: 'won' };
+    const w = s.winner;
+    this.toast(w.kind === 'card' ? `${w.card.name}: a new card for your collection` : w.kind === 'voucher' ? 'A sponsor’s voucher: a club upgraded free (your bag)' : `A dud: ${w.dud.name}`, w.kind === 'dud' ? 'info' : 'good');
+    this.emit();
+  }
+  /** the card just won goes into the first free slot (the machine's Equip button); a toast says why not */
+  equipWon() { const w = this.vendingSpin?.status === 'won' ? this.vendingSpin.winner : null; if (w?.kind === 'card') this.equipCard(w.card.id); }
+  /** dev and captures: n pulls of a grade waiting at the machine (a save from before the cards makes its cards legacy) */
+  devPull(grade: Grade = 'gold', n = 1) { const p = this.playerNow(); if (!p) return; this.setPlayer(withCards(p, addPull(p.cards ?? emptyCards(true), grade, n))); this.emit(); }
+  /** dev and captures: cards into the collection (and the first free slots when `equip`) */
+  devCards(ids: string[], equip = false) {
+    const p = this.playerNow(); if (!p) return;
+    let c = p.cards ?? emptyCards(true);
+    for (const id of ids) { c = addCard(c, id).cards; if (equip && equipWhy(c, id) === null) c = equipInCards(c, id); }
+    this.setCards(p, c); this.emit();
   }
 
   // ---------- T240 (#704): your character: point-and-click and the keys (golf/you.ts) ----------
@@ -8737,7 +8846,7 @@ export class Game {
   private yourSkills(): ShotSkill {
     // T246: a competition round (your Club Championship, the Mayor's Cup; T244's money match) plays at its pressure
     const p = this.playerNow(), r = p?.round, pr = r?.mode === 'match' ? PRESSURE.match : isCompetition(r) ? PRESSURE.tournament : PRESSURE.everyday;
-    return p ? gameSkills(p.skills, pr, gearOf(p)) : OWNER_SKILL; // (T335: your bag's clubs, upgrades and putter fitting are in your game)
+    return p ? gameSkills(p.skills, pr, gearFor(p, pr)) : OWNER_SKILL; // (T335: your bag's clubs, upgrades and putter fitting are in your game; T336: and your cards, but a card banned in competition in a competition's)
   }
   /** the course your round is played on: the everyday course (each hole once), null with none */
   private yrView(): CourseView | null { const c = this.dayCourseOf(performance.now()); return c && c.view.holes.length ? c.view : null; }
@@ -8869,7 +8978,7 @@ export class Game {
     const spin = this.shotSpin(), env = this.shotEnv(), input = { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(s.shape && i.club !== 'putter' ? { shape: s.shape } : {}), v: MODEL_V };
     const { round, shot, up } = r.match ? playMatchYours(v, r, sk, input, this.seed) : playYours(v, r, sk, input, this.seed); // (T244: a match's hole is decided as it goes)
     this.yrLastInput = { club: i.club, aim: { x: i.aim.x, y: i.aim.y }, power: i.power }; // (T325: a mulligan opens the shot again on it)
-    this.spinAir = spin ? { mine: true, input: { ...input, spin }, lie: r.lie, prev: r, seen: false, at: performance.now() } : null;
+    this.spinAir = spin && hasMech(sk, 'airspin') ? { mine: true, input: { ...input, spin }, lie: r.lie, prev: r, seen: false, at: performance.now() } : null; // (T336: clicks in the air are Mid-Flight Whisper's: without it the ball flies on its dot's spin alone)
     this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(sk, i.club), i.club === 'putter', kitOf(sk, i.club).sweet) : null, this.shotNote(s.shape, env, i.club, shot));
     this.toast(this.lastShot.text, 'info');
     this.shot = null; this.setYourRound(round);
@@ -9090,6 +9199,8 @@ export class Game {
     const ev = this.clubEv(), d = ev.today; if (!d || d.done) return;
     const res: EventResult = eventResult(d, you);
     d.done = true; ev.last = res;
+    // T336: a title (gold), a podium finish (silver) or the top quarter of the field (bronze) pays a card pull (golf/cards earning.ts)
+    const earn = earnFromPlace(res.pos, res.of, `the ${CLUB_EVENTS[d.id].name}`); if (earn) this.pullFor.set(`event:${d.id}`, this.grantPull(earn)); else this.pullFor.delete(`event:${d.id}`);
     if (res.won) {
       g.rep = Math.min(100, Math.max(0, g.rep + res.rep));
       if (res.money > 0) { this.traffic.spend('business', -res.money); const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: res.money, kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
@@ -9122,6 +9233,7 @@ export class Game {
       id, name: def.name, when: eventWhen(id, evSeason), phase, hcp, hcpText: hcpText(hcp), maxHcp: def.maxHcp, why: entryWhy(id, hcp), entered: isEntered(ev, id, evSeason),
       field: today && today.id === id ? today.field.length : null, holes: today && today.id === id ? today.holes : null,
       playWhy: phase === 'today' ? this.eventPlayWhy(id) : null, playing: eventOfMode(p.round?.mode) === id, result: res, line: res ? resultLine(res) : null, you: p.name, tee: phase === 'today' ? this.eventTeeTime() : null,
+      ...(res ? { pull: this.eventPull(id) } : {}),
     };
   }
   openEventCard(id: EventId | null) { this.eventCardOpen = id && this.golf ? id : null; this.emit(); }
@@ -9198,7 +9310,7 @@ export class Game {
   /** the opponent's ball in the air (as yours: a YourFlight), their figure (a You: its swing clip; it stands at their ball), the pause before their shot */
   private mFlight: YourFlight | null = null; private mYou: YouChar | null = null; private mWait = 0; private mDayCheck = 0;
   /** the last match's result card (null: none) */
-  matchResult: { name: string; text: string; result: 'w' | 'l' | 'h'; stake: number; money: number; rep: number; res: HoleWin[]; card: CardRow[]; ocard: number[]; rival: string } | null = null;
+  matchResult: { name: string; text: string; result: 'w' | 'l' | 'h'; stake: number; money: number; rep: number; res: HoleWin[]; card: CardRow[]; ocard: number[]; rival: string; /** T336: the card pull a win paid */ pull?: Earn | null } | null = null;
   closeMatchResult() { this.matchResult = null; this.emit(); }
   /** the talk card's challenge box (null: they do not golf): their handicap and yours, what they carry, what you have, the most you can stake, the
    *  lengths the course offers, your record against them, why you cannot challenge now (null: you can), and their last answer */
@@ -9295,7 +9407,8 @@ export class Game {
     if (s.money) this.traffic.spend('business', -s.money);
     if (s.rep && this.golf) this.golf.rep = Math.min(100, (this.golf.rep ?? 0) + s.rep);
     const rv = s.profile.rivals?.find(x => x.name === m.name);
-    this.matchResult = { name: m.name, text: s.text, result: s.result, stake: m.stake, money: s.money, rep: s.rep, res: m.res, card: r.card, ocard: m.ocard, rival: rv ? rivalText(rv) : '' };
+    const earn = earnFromMatch(s.result, m.stake), pull = earn ? this.grantPull(earn) : null; // (T336: a money match won pays a card pull)
+    this.matchResult = { name: m.name, text: s.text, result: s.result, stake: m.stake, money: s.money, rep: s.rep, res: m.res, card: r.card, ocard: m.ocard, rival: rv ? rivalText(rv) : '', pull };
     this.yrFlight = null; this.mFlight = null; this.mYou = null; this.yrCard = false;
     this.toast(s.text, s.result === 'w' ? 'good' : s.result === 'l' ? 'warn' : 'info');
     this.scheduleSave(); this.emit();
@@ -10469,7 +10582,7 @@ export class Game {
   joinTournament(sex: Sex, tees: TeeKind = 'middle') {
     const pl = this.play; if (!pl || !this.canJoinTournament()) return;
     // T254: from the tee set he chose; T241: with your skills under the tournament's pressure (golf/player.ts), kept in the save for the replay
-    const me = this.playerNow(), skills = me ? gameSkills(me.skills, PRESSURE.tournament, gearOf(me)) : undefined; // (T335: with your bag, saved with him)
+    const me = this.playerNow(), skills = me ? gameSkills(me.skills, PRESSURE.tournament, gearFor(me, PRESSURE.tournament)) : undefined; // (T335: with your bag, saved with him; T336: and the cards in his slots, the tournament's rules: no card banned in competition)
     const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null, tees, ...(skills ? { skills } : {}) });
     if (!built) return;
     this.play = built; this.saveOwner(); this.emit();
@@ -10576,18 +10689,18 @@ export class Game {
   /** T318: the spin ball's view: before the shot (the open shot's dot, club and lie) or with the ball in the air (the dot, the clicks, whether one still
    *  adds spin); the effect after the caps (cap: the most in the dot's direction, straight down with the dot at the centre). Null with neither (no shot,
    *  a putt, no spin in the air) */
-  spinView(): { air: boolean; x: number; y: number; pump: number; club: Club; lie: Lie; amount: number; cap: number; room: boolean; text: string } | null {
+  spinView(): { air: boolean; x: number; y: number; pump: number; club: Club; lie: Lie; amount: number; cap: number; room: boolean; text: string; /** T336: spin can be added in the air (Mid-Flight Whisper; a save from before the cards has it) */ pumpOk: boolean } | null {
     if (this.spinAir && !this.spinAir.mine && !this.play?.own) this.spinAir = null; // (the day's play is gone)
     const a = this.spinAir;
     if (a) {
       const k = this.spinK(a.mine, a.input.club), e = spinEffect(a.input.spin, a.input.club, a.lie, a.input.env?.lie, k);
-      return { air: true, x: a.input.spin.x, y: a.input.spin.y, pump: a.input.spin.pump, club: a.input.club, lie: a.lie, amount: e.amount, cap: e.cap, room: spinRoom(a.input.spin, a.input.club, a.lie, a.input.env?.lie, k), text: spinText(e) };
+      return { air: true, x: a.input.spin.x, y: a.input.spin.y, pump: a.input.spin.pump, club: a.input.club, lie: a.lie, amount: e.amount, cap: e.cap, room: spinRoom(a.input.spin, a.input.club, a.lie, a.input.env?.lie, k), text: spinText(e), pumpOk: true };
     }
     const s = this.shot; if (!s || s.input.club === 'putter') return null;
     const k = this.spinK(!!s.mine, s.input.club), kind = this.shotEnv()?.lie;
     const d = s.spin ?? { x: 0, y: 0 }, e = spinEffect({ x: d.x, y: d.y, pump: 0 }, s.input.club, s.turn.lie, kind, k), u = Math.hypot(d.x, d.y);
     const cap = u > 1e-3 ? e.cap : spinEffect({ x: 0, y: -1, pump: 0 }, s.input.club, s.turn.lie, kind, k).cap;
-    return { air: false, x: d.x, y: d.y, pump: 0, club: s.input.club, lie: s.turn.lie, amount: e.amount, cap, room: e.amount < cap - 1e-9, text: spinText(e) };
+    return { air: false, x: d.x, y: d.y, pump: 0, club: s.input.club, lie: s.turn.lie, amount: e.amount, cap, room: e.amount < cap - 1e-9, text: spinText(e), pumpOk: this.shotCan().airspin };
   }
   /** T335: the factor your clubs put on the spin of a shot with `club` (play/mods.ts ClubKit.spin: the grooves of a Tour wedge): your round's skills, or the tournament owner's; 1 for a plain skill */
   private spinK(mine: boolean, club: Club): number { const sk = mine ? this.yourSkills() : this.play?.own?.skill; return sk === undefined || typeof sk === 'number' ? 1 : kitOf(sk, club).spin; }
@@ -10673,7 +10786,7 @@ export class Game {
     const i = s.input;
     const spin = this.shotSpin(), env = this.shotEnv();
     const shot = own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(s.shape && i.club !== 'putter' ? { shape: s.shape } : {}), v: MODEL_V });
-    this.spinAir = spin ? { mine: false, input: { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(env ? { env } : {}), ...(s.shape && i.club !== 'putter' ? { shape: s.shape } : {}), v: MODEL_V, spin }, lie: s.turn.lie, prev: null, seen: false, at: performance.now() } : null;
+    this.spinAir = spin && hasMech(own.skill, 'airspin') ? { mine: false, input: { club: i.club, aim: i.aim, power: i.power, ...(swing ? { swing } : {}), ...(env ? { env } : {}), ...(s.shape && i.club !== 'putter' ? { shape: s.shape } : {}), v: MODEL_V, spin }, lie: s.turn.lie, prev: null, seen: false, at: performance.now() } : null;
     // T316: what the shot did (its miss, carry and total), toasted and kept for the panel's "Last shot" line
     this.lastShot = shotReport(shot, swing ? swingEffect(swing, skillFor(own.skill, i.club), i.club === 'putter', kitOf(own.skill, i.club).sweet) : null, this.shotNote(s.shape, env, i.club, shot));
     this.toast(this.lastShot.text, 'info');
