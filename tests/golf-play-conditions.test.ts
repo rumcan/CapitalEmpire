@@ -15,7 +15,7 @@ import {
 } from '../src/game/golf/play';
 import type { Club, CourseView, Lie, OwnerInput, PlayHole, Pt, ShotEnv } from '../src/game/golf/play';
 import type { Hole } from '../src/game/golf/holes';
-import { normalizeGolfSave } from '../src/game/golf/mode';
+import { normalizeGolfSave, stampWeather, weatherOn } from '../src/game/golf/mode';
 import { withDayPins } from '../src/game/golf/daypins';
 import { dayCourse } from '../src/game/golf/everyday';
 import { playYours, startRound } from '../src/game/golf/play/yours';
@@ -454,4 +454,33 @@ test('day: dayRound with the day’s conditions plays the day in them, without t
   const t1 = g.live.advance()!; g.live.play({ holeIdx: t1.holeIdx, stroke: t1.stroke, club: t1.suggested.club, aim: t1.suggested.aim, power: t1.suggested.power, env: { lie: 'fairway', wind: { mph: 11, from: 90 } } });
   const o2 = dayRound(view, 3, seed, { owner: 'm', inputs: JSON.parse(JSON.stringify(g.live.inputs)), caddie: null }, cond);
   assert.deepEqual(o2.own!.turn, g.live.advance(), 'the same next turn'); assert.equal(JSON.stringify(o2.plan.shots), JSON.stringify(o1.plan.shots), 'the same shots');
+});
+
+test('field: a moderate wind and the lie’s kinds cost a tour field a stroke or two a round, not more (it plays on in 8 mph as it did in a calm)', () => {
+  const view = course(), seeds = [11, 12, 13, 14];
+  let calm = 0, windy = 0, n = 0;
+  for (const seed of seeds) {
+    const f = makeField(5, seed), gs = teeTimes(f, seed), a = playRound(view, f, gs, seed), b = playRound(view, f, gs, seed, { cond: { wind: { mph: 8, from: 250, gusty: 0, seed: 2 } } });
+    for (const g of f) { calm += a.strokes[g.id]!.reduce((x, y) => x + y, 0); windy += b.strokes[g.id]!.reduce((x, y) => x + y, 0); n++; }
+  }
+  const d = (windy - calm) / n;
+  assert.ok(d > -1 && d < 4, `a tour golfer in 8 mph and the lie kinds: ${d.toFixed(2)} strokes a round more than in a calm`);
+});
+
+test('weather gate: a new game has the weather from its first tournament; a save from before it gets it from the next tournament (a day in progress and every day before play as they did); a save that has it keeps it', () => {
+  const fresh: { weather?: { from: number } } = {};
+  assert.equal(weatherOn(fresh, 0), true); assert.deepEqual(fresh.weather, { from: 0 }, 'a new game is stamped by its first look: it keeps the weather through every save');
+  // an old save with the tournament day under way (three rounds done): the day in progress is key 3 and plays as it did; the next is key 4
+  const mid: { weather?: { from: number } } = {}; stampWeather(mid, 3, true);
+  assert.deepEqual(mid.weather, { from: 4 }); assert.equal(weatherOn(mid, 3), false, 'the day in progress plays as it did'); assert.equal(weatherOn(mid, 2), false); assert.equal(weatherOn(mid, 4), true);
+  // an old save between tournaments: the next tournament is key 3 and has the weather
+  const idle: { weather?: { from: number } } = {}; stampWeather(idle, 3, false);
+  assert.deepEqual(idle.weather, { from: 3 }); assert.equal(weatherOn(idle, 2), false); assert.equal(weatherOn(idle, 3), true);
+  // a save that has it keeps it, and the gate goes through a save and a load (normalizeGolfSave keeps weather)
+  const kept = { weather: { from: 9 } }; stampWeather(kept, 1, false); assert.deepEqual(kept.weather, { from: 9 });
+  const base = { town: { x: 1, y: 1 }, course: [0, 0, 9, 9], clubhouse: { x: 1, y: 1 }, weather: { from: 5 } } as never;
+  assert.deepEqual(normalizeGolfSave(base)!.weather, { from: 5 });
+  // and a day before the weather is played with no conditions: the same shots as playRound without them (what the engine passes for such a key)
+  const view = course(), f = makeField(3, 9), gs = teeTimes(f, 9);
+  assert.equal(JSON.stringify(playRound(view, f, gs, 9, weatherOn(mid, 3) ? { cond: { wind: null } } : undefined).shots), JSON.stringify(playRound(view, f, gs, 9).shots));
 });

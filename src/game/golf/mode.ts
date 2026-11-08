@@ -113,6 +113,13 @@ export interface GolfPlaySave { key: number; owner: 'm' | 'w'; inputs: OwnerInpu
    *  which plays at OWNER_SKILL as it did */
   skills?: GameSkills }
 
+/** T334: whether the day's weather plays in the tournament of key `key`: from `weather.from` on; a game with no weather yet (a new one, nothing stamped) has it from the first (and is stamped: it keeps it
+ *  through every save) */
+export function weatherOn(g: { weather?: { from: number } }, key: number): boolean { return key >= (g.weather ??= { from: 0 }).from; }
+/** T334: a save from before the weather has none, so its tournament in progress (and every day before) plays as it did: the weather starts with the next tournament (the key after the one
+ *  in progress: `runs` counts the rounds done, and a day under way is not done yet). A save that has it keeps it */
+export function stampWeather(g: { weather?: { from: number } }, runs: number, dayInProgress: boolean): void { if (!g.weather) g.weather = { from: runs + (dayInProgress ? 1 : 0) }; }
+
 /** a saved owner's play, or null when it is not well formed (no key, sex or inputs list); a missing caddie count is null */
 function normalizePlaySave(p: Partial<GolfPlaySave> | null | undefined): GolfPlaySave | null {
   const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie, tees = p?.tees, sk = p?.skills;

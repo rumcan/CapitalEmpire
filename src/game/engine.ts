@@ -147,7 +147,7 @@ import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
-import { normalizeGolfSave, type GolfPlaySave, type GolfSave, type GolfView, type Rect } from './golf/mode';
+import { normalizeGolfSave, stampWeather, weatherOn, type GolfPlaySave, type GolfSave, type GolfView, type Rect } from './golf/mode';
 import { courseSlopeAt, createCourseHeightField, sampleCourseGrid, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
@@ -2881,7 +2881,7 @@ export class Game {
       // the sim waits at that moment until the day's play is built again (holdDay), so the field does not play on while the game boots
       if (loaded.tourney) { this.dayHold = { speed: this.speed || this.lastSpeed, at: 0 }; this.setSpeed(0); this.traffic.resumeDay(loaded.round, loaded.tourney); }
       // T334: a save from before the weather has none: its tournament in progress (and every day before) plays as it did, the wind and the lie's kinds start with the next one
-      if (this.golf && !this.golf.weather) this.golf.weather = { from: (loaded.round?.runs ?? 0) + (loaded.tourney ? 1 : 0) };
+      if (this.golf) stampWeather(this.golf, loaded.round?.runs ?? 0, !!loaded.tourney);
     }
     else this.rangeMorning();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
@@ -10017,7 +10017,7 @@ export class Game {
   }
   // ---------- T334 (#960): the wind, and the lie that changes the flight (golf/play/wind.ts, lies.ts, conditions.ts) ----------
   /** whether the day's weather plays in the tournament of key `key` (GolfSave.weather: a save from before it has its day in progress, and every day before, as it was; a new game has it from the first) */
-  private weatherOn(key: number): boolean { const g = this.golf; if (!g) return false; return key >= (g.weather ??= { from: 0 }).from; } // (a new game is stamped here, from the first tournament; a save from before is stamped on load)
+  private weatherOn(key: number): boolean { const g = this.golf; return !!g && weatherOn(g, key); } // (a new game is stamped here, from the first tournament; a save from before is stamped on load)
   /** a tournament's wind (its key: the same after a reload, whatever town day it is then) */
   private tourneyWind(key: number): Wind { return dailyWind(this.seed + 0x4f55, key); }
   /** the model's golfers' conditions for the tournament of key `key`: its mean wind, the course's heights, and the lie's kinds (the view's); undefined before the weather */

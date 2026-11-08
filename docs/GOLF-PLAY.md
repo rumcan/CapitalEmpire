@@ -209,7 +209,7 @@ changes the flight, the slope under the ball, and the playtest's fixes. `play/wi
   owner's input (`OwnerInput.env`; `readEnv` clamps it). `hitShot` takes it as `HitMod.env`. **No `env`: the model is exactly what it was** (the same draws, the same floats:
   a golden test over `hitShot` x70, `shotOutcome`, a 3810-shot field round and an 18-hole live group, captured from the unchanged code). The wind and the slope take no draws;
   a flier takes one, only from a lie that can give it. A saved input with `env` replays exactly, whatever the wind and the terrain do afterwards.
-- **The wind** (wind.ts). `dailyWind(seed, day)`: a mean speed (2 to 15 mph, a blustery day to 27, about one day in ten calm), the compass bearing it blows FROM (60% from the
+- **The wind** (wind.ts). `dailyWind(seed, day)`: a mean speed (2 to 15 mph, a blustery day to 27, about one day in ten calm), the compass bearing it blows FROM (seven days in ten from the
   west's quarter; 0 is north, the top of the screen), a gustiness. `windAt(wind, t)`: gusts on a clock in seconds (three slow waves, sharpened; smooth, no snaps), a direction
   wobble of up to 12 degrees on a gusty day. On a shot (`windEffect`): the wind along the line is a headwind (-0.9% of the carry a mph) or a tailwind (+0.45%), the wind across
   drifts the ball 0.6% of the carry a mph (a 10 mph crosswind moves a 200 m drive 12 m); times the club's exposure (`WIND_CLUB`: driver and woods 1, 4-iron 0.95, 6-iron 0.85,
