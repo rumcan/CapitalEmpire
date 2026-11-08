@@ -289,19 +289,21 @@ const centreOf = f => f.pos || f.centroid || f.line?.[Math.floor(f.line.length /
 
 function analyse(F) {
   const A = {}, holes = F.hole.filter(h => h.line), tees = F.tee, greens = F.green, pins = F.pin;
-  // numbering and par of the hole lines
-  const refs = holes.map(h => h.ref).filter(r => r != null), count = new Map();
-  for (const r of refs) count.set(r, (count.get(r) || 0) + 1);
-  const maxRef = Math.max(0, ...refs);
-  const firstOf = r => holes.find(h => h.ref === r);
-  A.holeLines = {
-    count: holes.length, numbered: refs.length, distinctNumbers: count.size, highest: maxRef,
-    missingNumbers: Array.from({ length: maxRef }, (_, i) => i + 1).filter(r => !count.has(r)),
-    duplicatedNumbers: [...count].filter(([, c]) => c > 1).map(([r]) => r),
-    withPar: holes.filter(h => h.par != null).length,
-    parTotalOfDistinct: [...count.keys()].every(r => firstOf(r).par != null) && count.size ? [...count.keys()].reduce((s, r) => s + firstOf(r).par, 0) : null,
-    named: holes.filter(h => h.tags.name).length,
-  };
+  // numbering and par of the hole lines, per course (one club boundary can hold several: Augusta National's holds its Par 3 Course too)
+  const courseOf = h => h.tags['golf:course:name'] || h.tags['course:name'] || '', groups = new Map();
+  for (const h of holes) groups.set(courseOf(h), [...(groups.get(courseOf(h)) || []), h]);
+  A.holeLines = { count: holes.length, numbered: holes.filter(h => h.ref != null).length, withPar: holes.filter(h => h.par != null).length, named: holes.filter(h => h.tags.name).length };
+  A.courses = [...groups].map(([name, hs]) => {
+    const refs = hs.map(h => h.ref).filter(r => r != null), count = new Map(), firstOf = r => hs.find(h => h.ref === r);
+    for (const r of refs) count.set(r, (count.get(r) || 0) + 1);
+    const highest = Math.max(0, ...refs);
+    return {
+      name: name || null, holeLines: hs.length, distinctNumbers: count.size, highest,
+      missingNumbers: Array.from({ length: highest }, (_, i) => i + 1).filter(r => !count.has(r)),
+      duplicatedNumbers: [...count].filter(([, c]) => c > 1).map(([r]) => r),
+      parTotal: count.size && [...count.keys()].every(r => firstOf(r).par != null) ? [...count.keys()].reduce((s, r) => s + firstOf(r).par, 0) : null,
+    };
+  });
   // every hole line against the mapped tees, greens, pins and fairways
   const per = holes.map(h => {
     const a = h.line[0], b = h.line[h.line.length - 1];
@@ -311,7 +313,7 @@ function analyse(F) {
       for (let k = 0; k < n; k++) samples.push([p[0] + (q[0] - p[0]) * k / n, p[1] + (q[1] - p[1]) * k / n]);
     }
     const inFairway = samples.filter(s => F.fairway.some(f => distTo(s, f) === 0)).length / (samples.length || 1);
-    return { id: h.id, ref: h.ref ?? null, par: h.par ?? null, length: h.length, teeD: round1(tA.d), tee: tA.f?.id, greenD: round1(gB.d), green: gB.f?.id, fairwayShare: round2(inFairway),
+    return { id: h.id, course: courseOf(h) || null, ref: h.ref ?? null, par: h.par ?? null, length: h.length, teeD: round1(tA.d), tee: tA.f?.id, greenD: round1(gB.d), green: gB.f?.id, fairwayShare: round2(inFairway),
       reversed: gA.d <= NEAR && tB.d <= NEAR && !(tA.d <= NEAR && gB.d <= NEAR) };
   });
   A.perHole = per;
@@ -339,10 +341,17 @@ function analyse(F) {
   for (const c of cand) if (!uT.has(c.t) && !uG.has(c.g)) { uT.add(c.t); uG.add(c.g); pairs.push(c); }
   const judged = per.filter(p => p.teeD <= NEAR && p.greenD <= NEAR);
   const right = judged.filter(p => pairs.some(c => c.t.members.some(m => m.f.id === p.tee) && c.g.f.id === p.green)).length;
-  A.guessFromPairs = { teeClusters: teeCl.length, greens: greens.length, pairsFound: pairs.length, holeLinesJudged: judged.length, pairedCorrectly: right, accuracy: judged.length ? round2(right / judged.length) : null };
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  const ranks = judged.map(p => {                           // how many greens (60 m or more away: the next tee sits by the last green) lie nearer to the hole's tee than its own green
+    const t = centreOf(tees.find(f => f.id === p.tee)), g = greens.find(f => f.id === p.green), dTrue = dist(t, centreOf(g));
+    return 1 + greens.filter(o => { const d = dist(t, centreOf(o)); return o !== g && d >= 60 && d < dTrue; }).length;
+  });
+  A.guessFromPairs = {
+    teeClusters: teeCl.length, greens: greens.length, pairsFound: pairs.length, holeLinesJudged: judged.length, pairedCorrectly: right, accuracy: judged.length ? round2(right / judged.length) : null,
+    nearestGreenIsRight: ranks.filter(r => r === 1).length, rightGreenAmongNearest3: ranks.filter(r => r <= 3).length,
+  };
   return A;
 }
-
 
 // ---------------------------------------------------------------------------------------------------------------- PNG preview
 /** a 3 x 5 pixel font: the character, then its five rows */
@@ -598,11 +607,12 @@ async function main() {
   log('features: ' + KINDS.map(k => `${k} ${counts[k]}`).join(', '));
   log('golf=* values: ' + (Object.entries(golfValues).map(([k, v]) => `${k} ${v}`).join(', ') || 'none'));
   if (model.skipped.length) log(`skipped ${model.skipped.length}: ` + model.skipped.slice(0, 5).map(s => `${s.id} (${s.why})`).join('; '));
-  log(`hole lines: ${H.count} (numbered ${H.numbered}, distinct ${H.distinctNumbers}, highest ${H.highest}, missing [${H.missingNumbers}], duplicated [${H.duplicatedNumbers}], par on ${H.withPar}, par total ${H.parTotalOfDistinct ?? 'n/a'}, named ${H.named})`);
+  log(`hole lines: ${H.count} (numbered ${H.numbered}, par on ${H.withPar}, named ${H.named}), grouped by course name:`);
+  for (const c of A.courses) log(`  "${c.name ?? '(no course name)'}": ${c.holeLines} lines, numbers 1..${c.highest} (distinct ${c.distinctNumbers}, missing [${c.missingNumbers}], duplicated [${c.duplicatedNumbers}]), par total ${c.parTotal ?? 'n/a'}`);
   log(`  start on a tee ${E.startOnTee}, end on a green ${E.endOnGreen}, drawn green-to-tee ${E.drawnGreenToTee}, running along a fairway ${E.onFairway}; greens with a hole line ${M.greensWithAHoleLine} of ${counts.green} (ending 2+ holes: ${M.greensEndingMoreThanOneHole}), tees with one ${M.teesWithAHoleLine} of ${counts.tee}`);
   log(`  pins ${A.pins.count}: on a green ${A.pins.onAGreen}, greens with a pin ${A.pins.greensWithAPin}, with a hole number ${A.pins.withHoleNumber}; ref= on tee/green/fairway/bunker/pin: ${Object.values(A.refsOnFeatures).join('/')}; a hole number in name= on tee/green/fairway/bunker: ${Object.values(A.numbersInNames).join('/')}`);
-  log(`  without hole lines: ${G.teeClusters} tee clusters + ${G.greens} greens -> ${G.pairsFound} nearest pairs; of ${G.holeLinesJudged} judged hole lines ${G.pairedCorrectly} paired correctly (${G.accuracy ?? 'n/a'})`);
-  for (const p of A.perHole.slice().sort((a, b) => (a.ref ?? 999) - (b.ref ?? 999))) log(`   hole ${String(p.ref ?? '?').padStart(2)} par ${p.par ?? '?'} ${String(Math.round(p.length)).padStart(4)} m  tee ${p.teeD} m  green ${p.greenD} m  fairway ${p.fairwayShare}${p.reversed ? '  REVERSED' : ''}`);
+  log(`  the guess without hole lines: ${G.teeClusters} tee clusters + ${G.greens} greens -> ${G.pairsFound} nearest pairs (60-650 m, each used once); of ${G.holeLinesJudged} judged hole lines ${G.pairedCorrectly} paired right (${G.accuracy ?? 'n/a'}); the nearest green 60 m or more away is the right one for ${G.nearestGreenIsRight}, among the nearest 3 for ${G.rightGreenAmongNearest3}`);
+  for (const p of A.perHole.slice().sort((a, b) => String(a.course).localeCompare(String(b.course)) || (a.ref ?? 999) - (b.ref ?? 999))) log(`   ${p.course ? `[${p.course}] ` : ''}hole ${String(p.ref ?? '?').padStart(2)} par ${p.par ?? '?'} ${String(Math.round(p.length)).padStart(4)} m  tee ${p.teeD} m  green ${p.greenD} m  fairway ${p.fairwayShare}${p.reversed ? '  REVERSED' : ''}`);
   log(`wrote ${jsonFile}\nwrote ${pngFile}`);
 }
 main().catch(e => { console.error('FAILED: ' + e.message); process.exitCode = 1; });
