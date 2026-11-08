@@ -1,6 +1,8 @@
-// Course land ownership as a rectangle list, adjacent block pricing by land class and buildings, adjacency checks, and GolfSave.parcel bounds (docs/GOLF-PLAN.md sections 3 and 4.4). Pure TS, no DOM.
+// Course land ownership as a rectangle list, adjacent block pricing by land class and buildings, adjacency checks, and GolfSave.parcel bounds (docs/GOLF-PLAN.md sections 3 and 4.4); the road rules on that land (T124: only the course's paths and drives; T355: streets too, never over a hole's playing surfaces). Pure TS, no DOM.
 import type { Rect } from './mode';
 import { TILE_M } from './types';
+import { CELL_T, SURF, cellAt, type Grid } from '../ext/course-grid';
+import { isCourseClass, type Family, type RoadClass } from '../network';
 
 /** land class of a candidate block beside the course (GOLF-PLAN 4.4) */
 export type ParcelLandClass = 'farm' | 'open' | 'town' | 'commercial' | 'industrial' | 'unbuildable';
@@ -180,6 +182,80 @@ export function legsOnLand(land: readonly Rect[], legs: readonly { a: { x: numbe
 export function pointInLand(land: readonly Rect[], x: number, y: number): boolean {
   const e = 2 * LAND_EPS;
   return inParcels(land, x - e, y - e) && inParcels(land, x + e, y - e) && inParcels(land, x - e, y + e) && inParcels(land, x + e, y + e);
+}
+
+/** T355 (#997; the owner, 2026-11-08: "the cart paths and roads button has streets specifically for your golf course but it wont let me draw them on the
+ *  course"): the town road families that may be built on the course land, which supersedes T124 for them: the Small ones, the streets the Cart paths &
+ *  roads panel lists first (Gravel, Lane, Street, and the street's One-way, Trees and One-way + trees). Every bigger family (Medium, Large, Rural:
+ *  avenues, arterials, boulevards, roads) stays refused on the land with COURSE_LAND_MSG. Change this list and every route check follows */
+export const COURSE_STREET_FAMILIES: readonly Family[] = ['small'];
+/** whether a town road class may be built on the course land (T355: a street); the course's own cart paths and drives are not judged by it (isCourseClass) */
+export function streetOnCourseOk(cls: { family: Family }): boolean { return COURSE_STREET_FAMILIES.includes(cls.family); }
+
+/** the playing surfaces of a hole that a street may not be built over (T355, the owner: "tee, fairway, green, bunker, water hazard"), by course grid surface
+ *  id (SURF), with the word the refusal calls each. The rough, the first cut, the long grass and the fescue are not here: a street replaces that ground */
+export const STREET_REFUSED_SURFACES: Readonly<Record<number, string>> = { [SURF.tee]: 'tee', [SURF.fairway]: 'fairway', [SURF.green]: 'green', [SURF.bunker]: 'bunker', [SURF.water]: 'water hazard' };
+/** STREET_REFUSED_SURFACES as a table by surface id (the scan reads it once a cell) */
+const REFUSED = new Uint8Array(256).map((_, s) => (STREET_REFUSED_SURFACES[s] ? 1 : 0));
+/** the refusal for a street over a hole's playing surface: "Hole 4's fairway is in the way" (hole 0, a surface of no hole such as the practice green or a
+ *  pond of the property: "A water hazard is in the way") */
+export function playWhy(surf: number, hole: number): string {
+  const name = STREET_REFUSED_SURFACES[surf] ?? 'surface';
+  return hole > 0 ? `Hole ${hole}'s ${name} is in the way` : `A ${name} is in the way`;
+}
+/** a hole's playing surface a street runs onto: what it is (surf, a SURF id), its hole (0: none), the refusal (playWhy) and the outline the preview
+ *  draws red (a polygon, x y pairs: the stretch of the route over it, or the cell for a point) */
+export interface PlayHit { surf: number; hole: number; why: string; outline: number[] }
+/** the playing surface under tile point (x, y), or null: where a street's route may not start */
+export function playAt(g: Grid, x: number, y: number): PlayHit | null {
+  const i = cellAt(g, x, y); if (i < 0) return null;
+  const s = g.surf[i]!; if (!REFUSED[s]) return null;
+  const cx = i % g.w, cy = (i - cx) / g.w, x0 = g.x0 + cx * CELL_T, y0 = g.y0 + cy * CELL_T, h = g.hole[i]!;
+  return { surf: s, hole: h, why: playWhy(s, h), outline: [x0, y0, x0 + CELL_T, y0, x0 + CELL_T, y0 + CELL_T, x0, y0 + CELL_T] };
+}
+/** the first playing surface (STREET_REFUSED_SURFACES) the corridors of legs reach onto, or null: the earliest leg that meets one, and in it the
+ *  surface met first along the leg. A corridor is the leg widened by hw tiles either side, square at the ends (as legsOnLand's: a street ending at the
+ *  edge of a fairway stops there), and "reaches onto" a 1 m cell of the course grid when it overlaps it by more than LAND_EPS (the SAT test of legInRect,
+ *  exact, no sampling). The outline is the corridor over that surface's first run along the leg (a gap wider than half a tile ends the run) */
+export function legsOnPlay(g: Grid, legs: readonly { a: { x: number; y: number }; b: { x: number; y: number } }[], hw: number): PlayHit | null {
+  for (const l of legs) {
+    const dx = l.b.x - l.a.x, dy = l.b.y - l.a.y, L = Math.hypot(dx, dy); if (L < 1e-9) continue;
+    const ux = dx / L, uy = dy / L, nx = -uy * hw, ny = ux * hw;
+    // the cells in the corridor's box (clipped to the grid), the playing ones tested exactly
+    const bx0 = Math.min(l.a.x, l.b.x) - Math.abs(nx), bx1 = Math.max(l.a.x, l.b.x) + Math.abs(nx), by0 = Math.min(l.a.y, l.b.y) - Math.abs(ny), by1 = Math.max(l.a.y, l.b.y) + Math.abs(ny);
+    const cx0 = Math.max(0, Math.floor((bx0 - g.x0) / CELL_T)), cx1 = Math.min(g.w - 1, Math.floor((bx1 - g.x0) / CELL_T));
+    const cy0 = Math.max(0, Math.floor((by0 - g.y0) / CELL_T)), cy1 = Math.min(g.h - 1, Math.floor((by1 - g.y0) / CELL_T));
+    const reach = (CELL_T / 2) * (Math.abs(ux) + Math.abs(uy)), hits: { t0: number; t1: number; i: number }[] = [];
+    for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0, i = cy * g.w + cx0; cx <= cx1; cx++, i++) {
+      if (!REFUSED[g.surf[i]!]) continue;
+      const x0 = g.x0 + cx * CELL_T, y0 = g.y0 + cy * CELL_T;
+      if (!legInRect([x0, y0, CELL_T, CELL_T], l.a.x, l.a.y, l.b.x, l.b.y, hw)) continue;
+      const t = (x0 + CELL_T / 2 - l.a.x) * ux + (y0 + CELL_T / 2 - l.a.y) * uy;
+      hits.push({ t0: t - reach, t1: t + reach, i });
+    }
+    if (!hits.length) continue;
+    hits.sort((p, q) => p.t0 - q.t0 || p.i - q.i);
+    const first = hits[0]!, surf = g.surf[first.i]!, hole = g.hole[first.i]!;
+    let s0 = first.t0, s1 = first.t1;
+    for (const h of hits) if (g.surf[h.i] === surf && g.hole[h.i] === hole && h.t0 <= s1 + CELL_T + 1e-9) s1 = Math.max(s1, h.t1);
+    s0 = Math.max(0, s0); s1 = Math.min(L, s1);
+    const ax = l.a.x + ux * s0, ay = l.a.y + uy * s0, bx = l.a.x + ux * s1, by = l.a.y + uy * s1;
+    return { surf, hole, why: playWhy(surf, hole), outline: [ax + nx, ay + ny, bx + nx, by + ny, bx - nx, by - ny, ax - nx, ay - ny] };
+  }
+  return null;
+}
+/** the class gate of legsOnPlay (T355): what a route of class cls runs onto, a hole's playing surface (its corridor is the class's own: h + walk), or null.
+ *  The course's own cart paths and drives cross them freely (isCourseClass: they are laid along the holes); a null grid (a classic game) has none */
+export function playInWay(g: Grid | null | undefined, cls: Pick<RoadClass, 'id' | 'h' | 'walk'>, legs: readonly { a: { x: number; y: number }; b: { x: number; y: number } }[]): PlayHit | null {
+  return g && !isCourseClass(cls.id) ? legsOnPlay(g, legs, cls.h + cls.walk) : null;
+}
+/** why a route of class cls may not start at tile point (x, y), '' when it may (T124, T355): a town road bigger than a street (not streetOnCourseOk)
+ *  may not start inside the course land (COURSE_LAND_MSG; a point on the land's edge is fine, where it may meet a course drive); a street may not start
+ *  on a hole's playing surface ("Hole 4's fairway is in the way"); a course path or drive starts anywhere */
+export function startWhy(land: readonly Rect[], g: Grid | null | undefined, cls: Pick<RoadClass, 'id' | 'family'>, x: number, y: number): string {
+  if (isCourseClass(cls.id)) return '';
+  if (!streetOnCourseOk(cls) && pointInLand(land, x, y)) return COURSE_LAND_MSG;
+  return (g && playAt(g, x, y)?.why) || '';
 }
 
 /** the block for sale under tile point (x, y): a size x size block holding the point that touches the owned land along an edge and overlaps

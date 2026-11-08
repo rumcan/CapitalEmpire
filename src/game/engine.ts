@@ -177,7 +177,7 @@ import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { bizName, inSentence, inTheWay, overlaps, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
-import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
+import { buyAdjacentBlock, blockOnRoad, blockOnWater, playInWay, polyInParcels, startWhy, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
@@ -4384,9 +4384,10 @@ export class Game {
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
   private cursorSnap(): Snap | null { return this.hover ? snapPoint(this.net, this.hover, this.snapRadius(), this.roadStep()) : null; }
-  /** why the preview route cannot be built ('' when it can): see checkLegs; before the first click, a town road's start inside the course land */
+  /** why the preview route cannot be built ('' when it can): see checkLegs; before the first click, a town road's start inside the course land (T124),
+   *  or a street's on a hole's playing surface (T355) */
   routeBlock(legs: Leg[] = this.previewLegs()): string {
-    if (!legs.length) { const cs = this.route.length ? null : this.cursorSnap(); return cs && this.startOnLand(cs.p) ? COURSE_LAND_MSG : ''; }
+    if (!legs.length) { const cs = this.route.length ? null : this.cursorSnap(); return cs ? this.startBlock(cs.p) : ''; }
     // judged exactly as a click at the cursor would be (roadClick refuses such a point), or, with the cursor on the last point, as finishing does
     const c0 = this.cursorSnap(), last = this.route[this.route.length - 1], cs = c0 && last ? this.aim(last, c0) : c0, onLast = !!cs && !!last && cs.p.x === last.x && cs.p.y === last.y;
     return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls, new Set(this.routeCuts(legs).map(c => c.seg)), this.golfLand()) || (this.routeInWay(legs)?.why ?? '');
@@ -4420,12 +4421,14 @@ export class Game {
   routeInWay(legs: Leg[]): { why: string; outline: readonly number[] } | null {
     if (!legs.length) return null;
     const hw = this.cls.h + this.cls.walk, o = inTheWay(legs, hw, this.routeObstacles()); if (o) return o;
+    const play = playInWay(this.courseGrid, this.cls, legs); if (play) return play; // T355: a street never covers a hole's tee, fairway, green, bunker or water hazard
     const p = this.propsNearLegs(legs, hw).find(q => !q.auto && LIBRARY[q.item].big && LIBRARY[q.item].kind !== 'car');
     return p ? { why: `${LIBRARY[p.item].name} is in the way — bulldoze it first`, outline: rectPoly(p.x0, p.y0, p.x1, p.y1) } : null;
   }
-  /** whether a route of the class in hand may not start at p (T124): a town road inside the course land, where only the course's cart paths
-   *  and drives are built (a point on the land's edge is fine: a town road may meet a course drive there) */
-  private startOnLand(p: Pt): boolean { return !isCourseClass(this.cls.id) && pointInLand(this.golfLand(), p.x, p.y); }
+  /** why a route of the class in hand may not start at p, '' when it may (golf/parcels.ts startWhy): T124, a town road bigger than a street inside the
+   *  course land, where only the course's cart paths and drives are built (a point on the land's edge is fine: a town road may meet a course drive
+   *  there); T355, a street on a hole's playing surface */
+  private startBlock(p: Pt): string { return startWhy(this.golfLand(), this.courseGrid, this.cls, p.x, p.y); }
   /** the road pieces the route bulldozes: with Replace on, those it clashes with (see replaceCuts); always, the hidden stubs inside a ring it joins (see ringStubs) */
   private routeCuts(legs: Leg[]): PieceSel[] {
     if (!legs.length) return [];
@@ -4518,7 +4521,7 @@ export class Game {
     if (routeAct('click', this.route.length, second) === 'none') return;
     let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius(), this.roadStep());
     if (this.route.length) s = this.aim(this.route[this.route.length - 1]!, s);
-    if (!this.route.length) { if (this.startOnLand(s.p)) { this.toast(COURSE_LAND_MSG, 'warn'); return; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
+    if (!this.route.length) { const why = this.startBlock(s.p); if (why) { this.toast(why, 'warn'); return; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
     // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
     const legs: Leg[] = []; for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1]!, b: this.route[i]! });
