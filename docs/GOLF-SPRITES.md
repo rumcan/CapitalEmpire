@@ -452,6 +452,17 @@ at 145°, nothing mirrored, each picture in the four views:
 | Pin flag sheet (`golf:pin-flag-wind`, 8 frames x 4 wind directions: S, W, N, E; strengths limp, light, firm) | 0.1 m / 2.2 m | `business:golf-pin-red` with the shader's ripple | a red flagstick cloth in four wind directions, each as limp, a light breeze and a firm wind (8 frames of the ripple loop), the white pole and the black base the same in every frame | P2 |
 | Tree sway sheet (`golf:tree-sway`, 4 frames) for the common trees | as each tree | the shader's shear | the same tree with its crown leaning left, upright and right in a gust (4 frames loop), the trunk fixed | P3 |
 
+## House lots (T353, #995: art requests)
+Course › Buildings › House lots (golf/estate.ts) draws a plot for sale as bare dirt inside the white dashed survey line with a post by its front corner; a sold plot
+with the builder's first delivery; a lot being built as the town's own building site; a finished lot as the town's own house lot (the saved game's lot model), so the
+houses need no art of their own. These are stand-ins, labelled "Stand In" on the card; the sun at the upper right, shadows at 145°, nothing mirrored, no lettering
+(the owner, 2026-10-21: signs are pictograms):
+| Sprite (id to use) | Footprint / height | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| For Sale post (`golf:estate-sale-post`, four views) | 0.3 m / 1.8 m | `newprop:shanty-signpost` | a short timber post with a white board hung from an arm, a red band across the top and a green golf-flag pictogram, no lettering | P2 |
+| Sold post (`golf:estate-sold-post`, four views) | 0.3 m / 1.8 m | the lumber stack and the earth heap | the same post with a diagonal red band across the board (a pictogram for sold), no lettering | P3 |
+| House lots tile (`estate` in `src/assets/ui/tiles/`, the flyout row) | tile | the house icon on the navy square | a little isometric diorama on a dark navy rounded square #1E2A44: three small houses in a row along a new street beside a fairway, a For Sale post at the near end, the light from the upper right, no lettering (the Build-tool tiles' style) | P2 |
+
 ## Your bag's club icons (T335, #961: art requests)
 The bag card (`src/ui/golf/BagCard.tsx`) and the shot panel's club strip draw each club as a small SVG stand-in (`src/ui/golf/ClubIcon.tsx`, labelled "Stand In for club icons" on the card): a shaft
 and a head by the club's family, the head tinted by its upgrade level (Garage-sale slate, Club sky, Tour green, Prototype gold). The real pictures, one square icon each on the owner's gold-on-charcoal UI

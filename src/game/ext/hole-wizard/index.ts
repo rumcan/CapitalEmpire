@@ -57,12 +57,12 @@ const HISTORY_MAX = 60;
 /** Build's block when an edit changes nothing (P23 4.4) */
 export const NO_CHANGES = 'No changes';
 /** the words of a tee or green the land rules refuse, by refusal, and of one on the practice area (P23 4.4; P24 D24) */
-const SPOT_WHY: Readonly<Record<'off' | 'range' | 'practice', string>> = {
-  off: 'off your land', range: 'on the driving range: golfers hit here', practice: 'on the practice area: golfers practise there',
+const SPOT_WHY: Readonly<Record<'off' | 'range' | 'practice' | 'estate', string>> = {
+  off: 'off your land', range: 'on the driving range: golfers hit here', practice: 'on the practice area: golfers practise there', estate: 'on a house lot (T353): the estate is not course land',
 };
 
 /** why the land rules refuse a tile (the host's landWhy): off your land, or the driving range's own plot; '' where the course may go */
-export type LandWhy = 'off' | 'range' | '';
+export type LandWhy = 'off' | 'range' | 'estate' | '';
 /** a public road near the plan (the host's roads): a segment (tiles) and its name ('' unnamed) */
 export interface WizRoad { ax: number; ay: number; bx: number; by: number; name: string }
 /** a row of New hole's check table (P23 4.4): a block (Build waits), a warning (Build goes ahead) or a check passed; its words; the fix the
@@ -673,7 +673,7 @@ export class HoleWizard {
       for (const i of gh.refusedIdx) {
         const cx = i % g.w, cy = (i - cx) / g.w, x = g.x0 + (cx + 0.5) * CELL_T, y = g.y0 + (cy + 0.5) * CELL_T;
         const land = !!this.host.allow && !this.host.allow(i);
-        const what = land ? (this.host.landWhy?.(x, y) === 'range' ? 'the driving range' : 'not your land') : `hole ${g.hole[i]}`;
+        const lw = land ? this.host.landWhy?.(x, y) : '', what = land ? (lw === 'range' ? 'the driving range' : lw === 'estate' ? 'a house lot' : 'not your land') : `hole ${g.hole[i]}`;
         by.set(what, (by.get(what) ?? 0) + 1);
         x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
       }

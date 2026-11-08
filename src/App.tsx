@@ -357,6 +357,7 @@ export default function App() {
       case 'club': if (!game.bizDefs.some(d => d.type === 'clubhouse')) game.placeClubhouse(true); break;
       case 'halfway': game.placeHalfway(true); break;
       case 'pro': game.placePro(act.id); break; // T214: the pro's office, a teaching hut
+      case 'estate': game.placeEstate(true); break; // T353: House lots (Course › Buildings)
       case 'care': game.grassAction = act.id as typeof game.grassAction; break;
       case 'props': if (act.group !== 'buildings') game.decor.focus = act.group as typeof game.decor.focus; break;
       case 'paint': p.setMode('draw'); p.setStyle({ tex: act.tex as Parameters<typeof p.setStyle>[0]['tex'] }); break;
@@ -1035,7 +1036,7 @@ function careerStat(game: Game): { value: string; sub: string; bar?: number } {
 /** the city's books: the last closed day's ledger, the net of the last 14 days as bars, the loans and the debt */
 function BudgetPanel({ game }: { game: Game }) {
   const b = game.traffic.budget, l = game.ledger, H = b.history.slice(-14), mx = Math.max(1, ...H.map(v => Math.abs(v.net)));
-  const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Grants', l.grants ?? 0, true], ['Land sales', l.sales ?? 0, true], ['Connection fees', l.fees ?? 0, true], ['Upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false]] : [];
+  const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Grants', l.grants ?? 0, true], ['Land sales', l.sales ?? 0, true], ['Connection fees', l.fees ?? 0, true], ['Lot sales', l.lots ?? 0, true], ['Upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false]] : [];
   const maxLoans = Budget.from(b).maxLoans(game.traffic.pop);
   return (
     <div className="absolute right-3 top-[var(--hud-top,6rem)] z-20 w-72 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
