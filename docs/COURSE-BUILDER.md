@@ -64,7 +64,7 @@ one and click.
   number, areas tagged by kind (`kindOfTex`); Plants = the plant brushes (they stay in Paint too). **Undo / redo** (Ctrl+Z, Ctrl+Y or
   Ctrl+Shift+Z, and panel buttons) in `PaintTool` for every stroke, shape, preset, erase, handle drag and planting: area snapshots by
   save tuple, the engine's prop journal (only the props the action itself added or removed), and refunds of what a shape cost.
-  Not undoable: style edits. **Open for C2:** the coder's generated course (`golf/paintcourse.ts`) paints surfaces per course, not per
+  Style edits are undo steps too since T359 (see below). **Open for C2:** the coder's generated course (`golf/paintcourse.ts`) paints surfaces per course, not per
   hole, so a new golf game's strip shows 0 holes started and the brush does not join the generated fairways; C2's hole derivation
   should tag them (or the strip should read `holes.ts`).
 - **C2 (DONE 2026-10-22, on main, browser-checked):** auto pin and tee markers; `holes.ts` reads the tagged areas: par, length, checks in the hole strip and the inspector.
@@ -83,3 +83,22 @@ one and click.
 
 Ownership: these are the coder's files (App.tsx, engine.ts, paint-tool.ts); the owner asked the art chat to plan and build the builder
 (2026-10-21 night), so the art chat builds C1 and records each step here and in SECOND-AGENT.md; the coder may take over C2 onward.
+
+## 7. Menu settings are undo steps; the surface panel opens on the Course default; mowing lines (T359, #1006, 2026-11-08)
+- **Ctrl+Z / Ctrl+Y (Ctrl+Shift+Z) also undo and redo the build menus' settings**, on the same stack as the ground edits, in time order
+  (`PaintTool.setting` / `endSetting` / `setApply`, `src/game/paint-tool.ts`): a texture pick, its size, angle or pan, the border texture, the
+  exposure, the blend, Round off, This hole / Course default, Apply to all holes (one step), the Edges sliders, the brush's shape and size,
+  Layer under / Replace, a grass of your own, the mowing lines. A step keeps only the items it changed (the brush presets by surface, the looks
+  book by owner, a few flags). A slider's drag is one step: the page tells the tool when a slider is held (`src/ui/setting-hold.ts`,
+  `PaintTool.holdSetting`; the Pan texture drag holds itself) and the gesture closes on release. A text field keeps its own undo
+  (`src/game/text-entry.ts isTextEntry`; the engine's `keyDown` lets Ctrl+Z through from a slider, tick box or button, which keep the focus after a click).
+- **Course > Holes > Shape by hand > <surface>** calls `PaintTool.openSurface(kind)`: the brush armed, the Course default the owner of the look, the
+  panel in focus (`focusWanted`, taken once by `SurfaceSwatches`); `‹ All surfaces` still goes back.
+- **Mowing lines** (`src/ui/course/MowingLines.tsx`, in the surface panel under This hole / Course default, for the fairway, green, tee, rough):
+  a `mow` field on the look (`src/game/mow-lines.ts`: on / off, pattern along the hole / straight / checkerboard / diamond, band width, light and
+  dark strength, angle; every field absent is the course finish's own, `course-finish.ts mowSpec`). It is saved with the look (the Course
+  default's in the browser, each hole's in the game save), sent to the chunks per hole (`CourseLooks.mow` -> `stripeAreas` -> `CourseLayer.stripes[].m`)
+  and baked by `renderer.ts courseStripes` / `mowBands` (the texture made lighter or darker, never a wash; a checkerboard is two crossed
+  families of bands XORed). The crew's passes follow a hole's own band width. The cause of "I can't edit them any more": the only in-game way
+  to set the mowing direction was Greenkeeping's Grass care (hidden by `GREENKEEPING = false`, 17965bb, 2026-10-27, an hour after T218 made the
+  fairway's stripes automatic with their look in the Studio alone); nothing was removed from the Fairway panel.

@@ -105,7 +105,7 @@ within 60 m of each other), so the validity checks must warn on an imported cour
    else ask the player to number them (the hole strip already reorders); no holes at all: say so, do not invent them.
 7. **Tests**: holes in order with a tee, a pin on a green and a par each; every feature inside the land; the fill-in list matches what was missing; the same fixture gives the
    same course twice.
-8. **In the game**: a dev URL first (`?osmcourse=<fixture>`), then a "Real course" card. **Do not call Overpass or Nominatim from players' browsers** (both are for light,
+8. **In the game**: a dev URL first (`?osmcourse=<fixture>`), then a "Real course" card. **Do not call Overpass or Nominatim from players' browsers** (T358 later did, for the search only, under the rules in its section below; both are for light,
    cached use; Nominatim forbids heavy and search-as-you-type use): ship a few pre-fetched, checked-in courses with the credit shown, and add more with this script.
 9. **Screenshots**: a famous course and a Cape Town club built in the game beside their previews. No heights came with what was fetched (later: a public DEM for T026).
 
@@ -210,6 +210,70 @@ course after the fitted overview decodes about 90 tile pictures (the near ground
 ## Left for later
 Cart paths and `golf=path` lines (the Course's paths are the road tool's), trees from the data (`natural=wood`; today the game's own Frame with trees, `?frame=1` in dev),
 heights from a public DEM (T026), cropping a course to chosen holes instead of scaling it, cutting the housing out of Woodhill's estate boundary, the Old Course's double greens (one green, two
-holes), the Par 3 Course, a course picker that takes a name (the browser must never call Overpass or Nominatim: ship fixtures). **Parked** (the owner, not important for now): Wingate Park
-Country Club, Pretoria (OSM way/4261725), mapped with tees, fairways, greens and bunkers but no hole lines; holes worked out from the fairways (the green near one end, the tee beyond the
-other, numbered by walking) were built and tested, then taken out of this PR: they are on the branch `arena/T340-wingate-parked`.
+holes), the Par 3 Course. (The course picker that takes a name, and Wingate Park's holes worked out from its fairways, came back with T358: the next section.)
+
+# Stage 3 (built): Find a real course (T358, #1003)
+
+The owner, 2026-11-08, on the new-game card's "Your course" list: "this needs to be a search for a golf course. a download/import area." The card's "Your course" row opens a picker
+beside the Who-are-you card (`src/ui/golf/CoursePicker.tsx`): **Build your own** first, the three shipped courses as **Featured**, the courses the player fetched as **Downloaded
+courses** (Refresh, Delete), and **Find a real course**, a search box. From T358 on the player's browser does call the public servers (Nominatim and Overpass) for this one feature,
+on the player's own submit and under the rules below; the shipped courses are still fixtures, with no request.
+
+## The steps (`src/game/golf/osm/find.ts`; every part is pure and takes the network and the clock as arguments, so the tests make no live request)
+1. **What is typed** (`query.ts`): a name; `way/123`, `relation 123`, `node:123`; an openstreetmap.org link (an object, or a map position `#map=z/lat/lon`, `?mlat=&mlon=`); `lat, lon`. Another
+   site's link, or a bare openstreetmap.org link, is said to be unusable.
+2. **A name** goes to Nominatim (`nominatim.ts`): one GET on submit, `limit=20`, filtered to what the map tags `leisure=golf_course` (once each, areas before points, at most 10), each with its
+   name, town and country. The answer is kept for a week (the same question again, in any case or spacing, sends nothing).
+3. **No golf course by that name** (Woodhill: a residential estate with `golf=*` features inside; Wingate: the map's name is the one word "Wingatepark Country Club", and Nominatim's index is
+   word based, so "Wingate Park Country Club" finds nothing and "wingate" finds a suburb and a building): the best place the search did find (an anchor: not a road, a building or a car park;
+   Woodhill's `club=sport` node, the Wingate Park suburb) is looked at with **one small Overpass query** (`nearQuery`): the golf courses within 3 km, the golf features within 3 km, and the landuse
+   and leisure areas that hold the place. `candidatesOf` offers the mapped golf courses first, then the areas that hold at least 6 golf features and are under 6 km across, each by golf features
+   held (Woodhill's estate polygon comes out first). Also kept for a week.
+4. **A pick** fetches the course with **one Overpass query**, the same one `scripts/dev/osm-course.mjs` asks (a test compares them), tried on the main server and then on the two mirrors (a
+   timeout, a busy answer or a runtime-error remark moves on; nothing is retried on the same server). The raw answer goes into the library; `fromosm.ts` (the script's model-building, ported; a
+   test compares it with the script's JSON feature for feature on the 8 answers it cached) makes the course JSON, `specOf` (the converter, scaled to fit the 2 km map when it must be) the spec,
+   `grade.ts` the report.
+5. **The preview** (`preview.ts`, a canvas): the stage-1 PNG preview's look; the counts (holes, greens, bunkers, pins; tees, fairways, water); the grade; the size and the scale needed to fit the
+   map; what the converter made up; **Build this course**, which starts a new game on the spec (`Game.startRealCourse(spec)`), as the featured ones do.
+
+## The grade (what "Build this course" will make)
+| Grade | Means | Example (the answers cached on this PC) |
+| --- | --- | --- |
+| **Full** | 9 or 18 numbered hole lines (one course of the boundary): the holes are the map's own | Rondebosch, Magnolia National, Woodhill, Milnerton, Mowbray, the Old Course: 18 holes |
+| **Partial** | no hole lines but fairways, greens and tees: holes worked out from them (a guess, drawn amber in the preview, `holes-derived`); or only some holes numbered | Wingate Park: 3 holes (`derive.ts`, back from `arena/T340-wingate-parked`) |
+| **Outline only** | nothing to build holes from: the game cannot build it and says so | Bloemfontein: a boundary and two streams |
+
+A graded course is built at true size when its land fits the 2 km map, else scaled by the largest whole percent at which it does (the card says the percent: Woodhill 90%). One that would have to shrink
+below 30% (`MIN_SCALE` in `grade.ts`: its holes would be under a third of their real length) is "too big for the 2 km map" and is not built.
+
+## Being polite to the public servers (`polite.ts`)
+- **Nominatim** (usage policy: at most one request a second, no autocomplete, cache results, identify the app): a search runs only on Search or Enter (never as you type); `Gate` keeps requests at
+  least 1.1 s apart; answers are kept 7 days (IndexedDB); the request carries `X-Requested-With: CapitalEmpire-golf` (Nominatim's CORS answer allows that header; the browser adds the page's origin
+  as the Referer; a browser cannot set User-Agent); a search already made sends nothing.
+- **Overpass**: one query to look near a place and one query per import; a course already kept is never fetched again, Refresh is the only refetch; the main server (130 s) and then the two mirrors
+  (45 s each: a mirror that is down hangs; for the look near a place 70 s and 30 s), a simple POST (no custom header, so no preflight); a server that timed out is left alone for 5 minutes and one that was
+  busy for a minute, so a retry does not wait on it again; the card says which server it is asking and why the last was given up on; the player can Cancel. (Seen on 2026-11-08 in a real run: the main
+  server answered 502 at once, the first mirror held the request until the limit.)
+- **A 429, a refusal (403) or a busy server** (502, 503, 504, 509, an Overpass "timed out" remark on every server): the card says "The map servers are busy: try again in a minute.", and for the
+  minute (or the server's Retry-After) nothing more is sent (`Cooldown`). No network: "Could not reach the map servers: are you online?".
+- **If the game ships widely**, the public servers' policies stop being enough (they are for light, interactive use): a self-hosted Overpass or a small proxy with its own cache would be needed.
+  That is a decision for the owner, not for this ticket.
+
+## The library (`library.ts`)
+IndexedDB `capital-empire-osm`: `courses` (the record: id `way/123`, the name the map gives it, place, credit, licence, fetch date, server, size, grade, holes, par), `raw` (the Overpass answer as
+text), `answers` (the kept Nominatim answers and near looks). Listing reads only the records. Only the raw answer is kept: the course is rebuilt from it with the converter of the day, so an
+improved converter improves old downloads. Where IndexedDB is not available (a private window in some browsers) the library holds for the visit only, and the card says so. The library is per
+browser profile.
+
+## Names and credit
+A shipped course keeps the made-up name when the club is famous (Magnolia National); **a player's own import shows the name the map gives it**, because the player chose it. "© OpenStreetMap
+contributors" is on the picker, the preview, the course card (the Holes panel) and the gear menu's credits, as before; a record keeps its credit and licence with the answer.
+
+## Checks
+`tests/golf-osm-find.test.ts` (parsing, the hit filter on real Nominatim answers, the polite client, Overpass and its mirrors, the near look, the library on a fake store, the grade, the preview, the
+model against the script's) and `node scripts/dev/osm-search-shots.mjs` (a headless run with the servers mocked: Wingate through the near look to a Partial preview and a game on it, Bloemfontein's
+Outline only, a 429, the library across a reload, Delete). The fixtures in `tests/fixtures/osm/` are real answers (ODbL data, credit above).
+
+## Still to do
+Place an imported course into the current map instead of starting a new game (T356, #998); estate streets and house lots on imported courses (T354, T353); choose which of two full courses of one
+boundary to build (the converter builds the fullest; the others are named in the warnings); a Par 3 course of a boundary; cropping a too-big course instead of scaling it.

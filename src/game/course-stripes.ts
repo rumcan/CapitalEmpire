@@ -13,7 +13,9 @@ export const DEFAULT_MOW_DIR: Readonly<{ x: number; y: number }> = { x: Math.SQR
 
 /** a stripe look: MowStripes without its axis and origin (w the band width in tiles, l / k how much lighter / darker, lc / dc the colours,
  *  t the tint, f the soft edge), and across: the bands lie across the line of play (the preset's dir 'x' or 'check'), else along it ('y') */
-export interface StripeLook { w: number; l: number; k: number; lc: string; dc: string; t: number; f: number; across: boolean }
+export interface StripeLook { w: number; l: number; k: number; lc: string; dc: string; t: number; f: number; across: boolean;
+  /** T359: a checkerboard, not bands: squares as wide as a band (the pattern's second family of bands crosses the first) */
+  check?: boolean }
 
 /** the fairways' stripe look: the range outfield preset's Stripes (its numbers whether or not the outfield shows them; a missing preset: the
  *  presets' default Stripes) */
@@ -27,7 +29,7 @@ export function fairwayStripeLook(presets: readonly Pick<PaintPreset, 'id' | 'st
 export interface StripeLeg { m: MowStripes; cut: { x: number; y: number; nx: number; ny: number } | null }
 
 const bands = (look: StripeLook, ux: number, uy: number, ox: number, oy: number): MowStripes =>
-  ({ ux, uy, ox, oy, w: look.w, l: look.l, k: look.k, lc: look.lc, dc: look.dc, t: look.t, f: look.f });
+  ({ ux, uy, ox, oy, w: look.w, l: look.l, k: look.k, lc: look.lc, dc: look.dc, t: look.t, f: look.f, ...(look.check ? { c: 1 as const } : {}) });
 
 /** a hole's stripe legs from its playing line (flat tiles: tee, aim points, pin):
  *  - across (the range's look): each leg's bands alternate along its direction, so each band lies across the line of play; the band count runs
@@ -66,6 +68,14 @@ export function holeStripeLegs(line: ArrayLike<number>, look: StripeLook, angle?
     walked += len; px = dx; py = dy;
   }
   return legs;
+}
+
+/** T359 (#1006): a hole's legs with their bands turned by `deg` about each leg's origin (the checkerboard follows the hole's line of play, its
+ *  squares as wide as a band; a diamond is turned a quarter more): the cuts between the legs stay where the bends put them */
+export function turnStripeLegs(legs: readonly StripeLeg[], deg: number): StripeLeg[] {
+  if (!(Math.abs(deg) > 1e-9) || !Number.isFinite(deg)) return legs.slice();
+  const a = (deg * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a);
+  return legs.map(({ m, cut }) => ({ m: { ...m, ux: m.ux * c - m.uy * s, uy: m.ux * s + m.uy * c }, cut }));
 }
 
 /** the leg a tile point is mown with: the last whose cut it lies past (on a sharp S the later bend wins) */

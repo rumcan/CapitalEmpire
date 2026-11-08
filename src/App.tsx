@@ -91,6 +91,7 @@ import { HoleCard } from './ui/golf/HoleCard';
 import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
 import { StatChips } from './ui/StatChips';
+import { installSettingHold } from './ui/setting-hold';
 import { statChips } from './ui/stat-chips';
 
 /** the top bar on one row (P23 4.11, T135): its golf chips (and the invitation's whole sentence) show their words only from 2200 px; narrower,
@@ -258,13 +259,14 @@ export default function App() {
     canvas.addEventListener('wheel', wheel, { passive: false });
     const kd = (e: KeyboardEvent) => g.keyDown(e), ku = (e: KeyboardEvent) => g.keyUp(e);
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
+    const holdOff = installSettingHold(on => g.paint.holdSetting(on)); // T359: a slider's drag is one undo step, put on the stack on release
     // T330 (#941): a key whose keyup the page never sees (Alt-Tab, a hidden tab, a context menu, a text field) is let go, never left held
     const release = () => g.releaseKeys(), hidden = () => { if (document.hidden) g.releaseKeys(); };
     const menu = (e: MouseEvent) => { if (!e.defaultPrevented) g.releaseKeys(); };
     const focus = (e: FocusEvent) => { const t = e.target as HTMLElement | null; if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) g.releaseKeys(); };
     window.addEventListener('blur', release); document.addEventListener('visibilitychange', hidden); window.addEventListener('contextmenu', menu); window.addEventListener('focusin', focus);
     const iv = window.setInterval(bump, 500);
-    return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', release); document.removeEventListener('visibilitychange', hidden); window.removeEventListener('contextmenu', menu); window.removeEventListener('focusin', focus); clearInterval(iv); };
+    return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); holdOff(); window.removeEventListener('blur', release); document.removeEventListener('visibilitychange', hidden); window.removeEventListener('contextmenu', menu); window.removeEventListener('focusin', focus); clearInterval(iv); };
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < (t.scene ? 9000 : 4000)) : []; // (T242: one with a Set the scene button stays longer)
@@ -334,7 +336,8 @@ export default function App() {
     switch (act?.k) {
       case 'road': game.pickType(act.id as Parameters<Game['pickType']>[0]); break;
       case 'junction': game.brush = act.id as typeof game.brush; break;
-      case 'surface': p.setBrush(act.id as Parameters<typeof p.setBrush>[0], 0); break;
+      // T359: Shape by hand › Fairway (and the rest) opens that surface's panel on the Course default, its look selected, its brush armed
+      case 'surface': p.openSurface(act.id as Parameters<typeof p.openSurface>[0]); break;
       case 'newHole': newHole(game); break;
       case 'club': if (!game.bizDefs.some(d => d.type === 'clubhouse')) game.placeClubhouse(true); break;
       case 'halfway': game.placeHalfway(true); break;
@@ -640,7 +643,7 @@ export default function App() {
                       </div>
                     ))}
                     <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The build that is running: every save records it (P07), so a bug report with a .cesave says which build wrote it">Build {BUILD.app} · {BUILD.sha}</div>
-                    <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The real courses (Rondebosch, Magnolia National) are built from OpenStreetMap data, which is available under the Open Database Licence (ODbL 1.0): openstreetmap.org/copyright" data-testid="osm-credit">Credits: real-course map data © OpenStreetMap contributors</div>
+                    <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The real courses (Rondebosch, Magnolia National, Woodhill and any you download) are built from OpenStreetMap data, which is available under the Open Database Licence (ODbL 1.0): openstreetmap.org/copyright" data-testid="osm-credit">Credits: real-course map data © OpenStreetMap contributors</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
                     <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
@@ -842,7 +845,7 @@ export default function App() {
           {game.shotState() && <ShotPanel game={game} />}
           {game.spinView() && <SpinBall game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
-          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ options: game.osmChoices(), current: game.osmGame()?.id ?? null, onPick: id => { void game.startRealCourse(id); } }} />; })()}
+          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: spec => { void game.startRealCourse(spec); } }} />; })()}
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
           {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} />}
