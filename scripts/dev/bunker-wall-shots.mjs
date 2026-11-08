@@ -35,6 +35,7 @@ try {
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
   await page.evaluate(() => { const g = window.__game; g.setSpeed(0); g.closeWelcome?.(false); g.prebake = () => {}; g.emit(); });
   await page.addStyleTag({ content: 'html.noui * { visibility: hidden !important } html.noui canvas { visibility: visible !important }' });
+  await page.waitForFunction(() => window.__game?.courseGrid, null, { timeout: 120000 });
   await settle(page, 1500);
   report.setting = await page.evaluate(() => window.__game.bunkers.defaults.wallLow);
   console.log('the game holds wallLow', report.setting);
@@ -71,7 +72,7 @@ try {
       const card = page.locator('[data-card="looks"]').first(), box = await card.boundingBox();
       const box2 = await row.boundingBox();
       // the number beside the slider
-      report.shown = await row.evaluate(el => { const wrap = el.closest('div')?.parentElement ?? el.parentElement; return wrap?.querySelector('input[type="number"]')?.value ?? null; });
+      report.shown = await row.evaluate(el => el.closest('div')?.querySelector('input[type="number"]')?.value ?? null);
       console.log('the card shows', report.shown, 'm');
       if (box) {
         const clip = { x: Math.max(0, box.x - 6), y: Math.max(0, box.y - 6), width: Math.min(W - Math.max(0, box.x - 6), box.width + 12), height: Math.min(H - Math.max(0, box.y - 6), box.height + 12) };
@@ -82,7 +83,7 @@ try {
     // the bunker, the UI away
     await page.evaluate(() => { const g = window.__game; g.setTool('select'); g.emit(); });
     await page.evaluate(([x, y]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, 0.3); g.emit(); }, [spot.x, spot.y]);
-    await settle(page, 2500);
+    await settle(page, 6000); // (the bunker picture bakes on its own worker)
     await page.evaluate(() => document.documentElement.classList.add('noui'));
     await settle(page, 800);
     const shot = await page.screenshot({ type: 'png' });
