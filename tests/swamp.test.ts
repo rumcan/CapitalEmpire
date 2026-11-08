@@ -161,7 +161,7 @@ test('T199 the shader runs the same numbers, and off draws and bakes as before',
   assert.match(fs, /\$\{GLOSS_LIGHT_GLSL\}/); assert.match(fs, /if \(uGloss\.z > 0\.0\)/, 'no mask or no gain: the chunk as before'); assert.match(fs, /g\.rgb \/ g\.a/);
   // off: no gain uniform (0) and the empty texture; the engine sets no glint without specCam; the bake makes no mask without it
   assert.match(gl, /const gloss = this\.gloss && this\.gloss\.gain > 0 && this\.glossOf \? this\.glossOf\(tex\) : null, gs = gloss \? this\.gloss : null;/);
-  assert.match(gl, /gl\.uniform4f\(pr\.u\.uGloss, gs \? gs\.inner : 0, gs \? gs\.outer : 1, gs \? gs\.gain : 0, 0\)/);
+  assert.match(gl, /gl\.uniform4f\(pr\.u\.uGloss, gs \? gs\.inner : 0, gs \? gs\.outer : 1, gs \? gs\.gain : 0, gs \? gs\.oval : 1\)/); // (T363: the fourth is the glint's oval, 1 when off)
   assert.match(e, /gl\.gloss = this\.ground\.specCam \? \{/);
   assert.match(r, /const tp = this\.specCam \? this\.tex\.paintedOf\('swamp'\)\?\.tiled : undefined;/);
   assert.match(r, /this\.specMask = null; this\.glossMask = null; this\.swampNow = null;/, 'every bake starts with no gloss mask');

@@ -11492,10 +11492,10 @@ export class Game {
       }
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
       // T215: the camera specular's falloff and gain this frame (the night light's amount takes the pools to their whole strength after dusk)
-      gl.spec = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: specGain(this.spec, this.nightAmount()) } : null;
+      gl.spec = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: specGain(this.spec, this.nightAmount()), oval: this.spec.oval } : null;
       // T199: the swamp's sky glint, on the same switch and knobs (its gain falls after dusk: no sky to reflect); each picture's gloss mask by
       // the picture itself
-      gl.gloss = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: glossGain(this.spec, this.nightAmount()) } : null;
+      gl.gloss = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: glossGain(this.spec, this.nightAmount()), oval: this.spec.oval } : null;
       gl.glossOf ??= tex => this.ground.glossOf(tex);
       // T262: the grass shine's falloff (T215's), gain (by day, by the zoom) and look this frame; each picture's weight mask by the picture
       gl.shine = this.ground.grassShine ? { inner: this.spec.inner, outer: this.spec.outer, gain: shineGain(this.shine, this.nightAmount(), cam.z), exponent: shineExponent(this.shine), bump: this.shine.bump, eye: this.shine.eye } : null;
