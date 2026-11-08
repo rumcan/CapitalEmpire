@@ -78,7 +78,9 @@ try {
     const frontEdge = `<line x1="${(lot[0][0] - left).toFixed(1)}" y1="${(lot[0][1] - top).toFixed(1)}" x2="${(lot[1][0] - left).toFixed(1)}" y2="${(lot[1][1] - top).toFixed(1)}" stroke="#ff3b3b" stroke-width="4"/>`;
     const svg = Buffer.from(`<svg width="${right - left}" height="${bottom - top}" xmlns="http://www.w3.org/2000/svg">${pl(lot, '#ffe600', 1.5)}${frontEdge}${box ? pl(box, '#27e0ff', 1.5) : ''}</svg>`);
     const verdict = r.diff === null ? 'single view' : r.diff === 0 ? 'front' : (r.diff === 1 || r.diff === 7) ? '45 off' : 'WRONG';
-    const buf = await sharp(png).extract({ left, top, width: right - left, height: bottom - top }).composite([{ input: svg }]).resize(CELL_W - 8, CELL_H - 52, { fit: 'inside' }).png().toBuffer();
+    // (sharp runs a composite after the resize whatever the call order: frame the outlines first, then shrink)
+    const framed = await sharp(png).extract({ left, top, width: right - left, height: bottom - top }).composite([{ input: svg }]).png().toBuffer();
+    const buf = await sharp(framed).resize(CELL_W - 8, CELL_H - 52, { fit: 'inside' }).png().toBuffer();
     results.push({ label, road: o.road, id: r.id, subject: r.subject, mode: r.mode, key: r.key, verdict });
     return { buf, verdict, key: r.key, id: r.id };
   };
