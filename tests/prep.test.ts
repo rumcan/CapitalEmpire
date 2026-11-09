@@ -1,9 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { NEED_TYPES, prepDue, prepView, suggestSpot, type PrepFacts } from '../src/game/golf/prep';
+import { NEED_TYPES, completeHoles, prepCourseReady, prepDue, prepView, suggestSpot, type PrepFacts } from '../src/game/golf/prep';
+import { deriveHoles } from '../src/game/golf/holes';
+import { normalizeGolfSave } from '../src/game/golf/mode';
+import type { CourseArea, Pin, TeeMark } from '../src/game/golf/types';
 import { tierInfo, type Need } from '../src/game/golf/tour';
 
-const facts = (o: Partial<PrepFacts> = {}): PrepFacts => ({ tier: 1, have: new Set<Need>(), placed: [], save: { done: [], skipped: [] }, available: () => true, ...o });
+// (T399: the checklist waits for a playable course: the facts here have one by default, 18 complete holes, so the tests below read the checklist itself)
+const facts = (o: Partial<PrepFacts> = {}): PrepFacts => ({ tier: 1, holes: 18, have: new Set<Need>(), placed: [], save: { done: [], skipped: [] }, available: () => true, ...o });
 const ids = (v: ReturnType<typeof prepView>) => v!.lines.map(l => l.step.id);
 
 test('prep: the chapter is this tier while it has a todo step, else the next tier, else none', () => {
@@ -136,4 +140,95 @@ test('prep: due steps are owed whether the chapter shows or not; a done step is 
   assert.equal(prepDue(shared).filter(s => s.id === 'prep-first-stand').length, 1);
   assert.deepEqual(prepDue(shared).map(s => s.id), ['prep-first-stand']);
   assert.deepEqual(prepDue(facts({ tier: 2 })), [], 'nothing built: nothing owed');
+});
+
+// ---------- T399 (#1077): the checklist shows only once there is a course (the owner, 2026-11-09: "tournament prep check list should not show until you have a course")
+/** a square outline x, y, w, h (tiles) as the closed polygon the course areas use */
+const box = (x: number, y: number, w: number, h: number) => [x, y, x + w, y, x + w, y + h, x, y + h];
+/** hole n laid on a row: a tee box at the left, a green at the right, each its own area; `pin` and `tee` choose which markers it gets */
+function lay(n: number, o: { tee?: boolean; pin?: boolean; green?: boolean } = {}): { areas: CourseArea[]; tees: TeeMark[]; pins: Pin[] } {
+  const y = n * 40, areas: CourseArea[] = [{ id: n * 10 + 1, surface: 'tee', pts: box(0, y, 10, 10) }, ...(o.green === false ? [] : [{ id: n * 10 + 2, surface: 'green' as const, pts: box(120, y, 14, 14) }])];
+  return { areas, tees: o.tee === false ? [] : [{ hole: n, kind: 'back', x: 5, y: y + 5 }], pins: o.pin === false ? [] : [{ hole: n, x: 127, y: y + 7 }] };
+}
+/** a course of these holes, derived the way the game derives them */
+function course(holes: { tee?: boolean; pin?: boolean; green?: boolean }[]) {
+  const all = holes.map((o, i) => lay(i + 1, o));
+  return deriveHoles(all.flatMap(l => l.areas), all.flatMap(l => l.tees), all.flatMap(l => l.pins), []);
+}
+const full = (n: number) => Array.from({ length: n }, () => ({}));
+
+test('T399 prep: no course, no checklist (a range start has none)', () => {
+  assert.equal(completeHoles(course([])), 0);
+  assert.equal(prepView(facts({ holes: completeHoles(course([])) })), null, 'nothing on the ground');
+  assert.equal(prepView(facts({ holes: 0, tier: 2 })), null);
+  assert.equal(prepView(facts({ holes: 0, tier: 5, have: new Set<Need>() })), null);
+  assert.equal(prepCourseReady(0, 1), false);
+});
+
+test('T399 prep: a course in progress with no complete hole shows nothing, whatever is on the ground', () => {
+  // a tee painted and marked, no green and no pin yet
+  assert.equal(completeHoles(course([{ pin: false, green: false }])), 0, 'a tee only');
+  // a green painted and pinned, no tee marker
+  assert.equal(completeHoles(course([{ tee: false }])), 0, 'a green and a pin, no tee');
+  // a tee and a green painted, neither marker placed
+  assert.equal(completeHoles(course([{ tee: false, pin: false }])), 0, 'painted, no markers');
+  // a pin and a tee marker but no green under the pin
+  assert.equal(completeHoles(course([{ green: false }])), 0, 'the pin is not on a green');
+  // several half-built holes still make no course
+  const progress = course([{ pin: false }, { tee: false }, { green: false }]);
+  assert.equal(completeHoles(progress), 0);
+  assert.equal(prepView(facts({ holes: completeHoles(progress) })), null);
+  assert.equal(prepView(facts({ holes: completeHoles(progress), have: new Set<Need>(['carpark']), placed: [{ typeId: 'compactBleacher60' }] })), null, 'a built step does not bring it back');
+});
+
+test('T399 prep: a course with the holes its tier asks for shows the checklist (9 for tiers 1 and 2, 18 from tier 3)', () => {
+  assert.equal(tierInfo(1).holes, 9); assert.equal(tierInfo(2).holes, 9); assert.equal(tierInfo(3).holes, 18);
+  const nine = completeHoles(course(full(9))), eighteen = completeHoles(course(full(18)));
+  assert.equal(nine, 9); assert.equal(eighteen, 18);
+  assert.ok(prepView(facts({ tier: 1, holes: nine })), 'nine holes, tier 1');
+  assert.ok(prepView(facts({ tier: 2, holes: nine })), 'nine holes, tier 2');
+  assert.equal(prepView(facts({ tier: 3, holes: nine })), null, 'tier 3 asks for 18');
+  assert.ok(prepView(facts({ tier: 3, holes: eighteen })), 'eighteen holes, tier 3');
+  for (const t of [4, 5]) assert.ok(prepView(facts({ tier: t, holes: eighteen })), `eighteen holes, tier ${t}`);
+  // one short of the tier's holes: nothing
+  assert.equal(prepView(facts({ tier: 1, holes: 8 })), null);
+  assert.equal(prepView(facts({ tier: 4, holes: 17 })), null);
+  // a tier whose number is out of range reads as the nearest (tierInfo clamps it), never as free
+  assert.equal(prepCourseReady(0, 9), false);
+  assert.equal(prepCourseReady(18, 9), true);
+});
+
+test('T399 prep: the rule comes and goes with the course, and leaves the saved progress alone', () => {
+  const save = { done: ['prep-first-stand'], skipped: ['prep-hole-board'], hidden: 1 };
+  const before = JSON.stringify(save);
+  const half = facts({ tier: 1, holes: 4, save }), whole = facts({ tier: 1, holes: 9, save: { done: ['prep-first-stand'], skipped: [] } });
+  assert.equal(prepView(half), null);
+  assert.ok(prepView(whole), 'the ninth hole brings the checklist');
+  assert.equal(JSON.stringify(save), before, 'prepView never writes the save');
+  // what was done stays done when the course dips below its holes and comes back
+  assert.equal(prepView(whole)!.lines.find(l => l.step.id === 'prep-first-stand')?.state, 'done');
+});
+
+test('T399 prep: save and load keep the state: it is the course and the saved progress, nothing else', () => {
+  const save = { done: ['prep-first-stand'], skipped: ['prep-hole-board'] };
+  // the same course and the same saved progress, through JSON and back, show the same (or no) checklist
+  for (const holes of [0, 1, 8, 9]) {
+    const was = facts({ tier: 1, holes, save }), now = facts({ tier: 1, holes, save: JSON.parse(JSON.stringify(save)) });
+    assert.deepEqual(prepView(now), prepView(was), `${holes} holes`);
+    assert.equal(prepView(now) === null, holes < 9, `${holes} holes: shown from nine`);
+  }
+  // a load keeps the progress the game saved (normalizeGolfSave), with a course or without one
+  const base = { v: 1 as const, tier: 1, rep: 0, town: { x: 100, y: 100 }, course: [90, 90, 40, 40] as [number, number, number, number], clubhouse: { x: 95, y: 95 } };
+  const prep = { done: ['prep-gate'], skipped: ['prep-info'], hidden: 2 };
+  assert.deepEqual(normalizeGolfSave(JSON.parse(JSON.stringify({ ...base, prep })))!.prep, prep);
+  assert.equal(normalizeGolfSave({ ...base })!.prep, undefined, 'an old save has none: the engine starts it at its first look');
+});
+
+test('T399 prep: the complete holes count a tee, a pin and a green under the pin, once each', () => {
+  assert.equal(completeHoles(course([{}, {}, { pin: false }, { tee: false }, { green: false }, {}])), 3);
+  assert.equal(completeHoles([]), 0);
+  // the derived holes' own words: a line, and not the pin-off-green warning
+  const d = course([{}, { green: false }]);
+  assert.ok(d[0]!.line.length > 0 && !d[0]!.warnings.includes('The pin is not on a green'));
+  assert.ok(d[1]!.warnings.includes('The pin is not on a green'));
 });

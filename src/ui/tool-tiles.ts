@@ -17,6 +17,9 @@ export const PLANT_TILE: Readonly<Partial<Record<string, ToolTile>>> = { trees: 
 export const PRACTICE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { putting: 'green', chipping: 'chipping-green' };
 /** Actual DECOR_GROUPS ids; Furniture is represented by its table and chairs. */
 export const PROP_GROUP_TILE: Readonly<Partial<Record<string, ToolTile>>> = { stone: 'rocks', water: 'pond', plants: 'flower-bed', furniture: 'patio-table' };
+/** T400 (#1078): the golf props' kinds in Facilities (decor.ts PROP_KINDS): the structures by the scoreboard stand, the furniture by the table and chairs,
+ *  the range's props by its bays, the vehicles by the cart path. */
+export const PROP_KIND_TILE: Readonly<Partial<Record<string, ToolTile>>> = { structures: 'grandstand-scoreboard', coursefurniture: 'patio-table', rangeprops: 'range-bays', vehicles: 'cart-path' };
 /** Existing Course/Facilities rows: menu pictures, not gameplay object replacements. */
 export const ROW_TILE = {
   holes: 'golf-hole', newHole: 'golf-hole', shape: 'fairway', buildings: 'clubhouse', club: 'clubhouse', halfway: 'snack-hut', paths: 'cart-path',
