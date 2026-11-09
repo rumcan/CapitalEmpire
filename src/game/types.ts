@@ -22,6 +22,8 @@ export interface LibItem {
   door: boolean;
   doorAt?: { u: number; v: number };
   cost: number;
+  /** T401 (#1079): a person (a townsperson, a spectator, a golfer, staff, a People prop): the game draws its people itself, a player never places one (person.ts isPerson) */
+  person?: true;
   glows?: Glow[];
   /** a baked lot's night lights (its house's porch, pumpkins, lanterns...): metres from the anchor, unscaled and unmirrored, and the light type (night-light.ts) */
   lights?: { dx: number; dy: number; type: string }[];

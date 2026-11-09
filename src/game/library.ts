@@ -1053,7 +1053,7 @@ const WF = [21,0.474609,0.367188,0.487305,0.391113,16.67,28.33,60,110,21,0.60156
 export const WALKER_BASE = LIBRARY.length;
 for (let i = 0; i < WF.length / 9; i++) {
   const p = WALKER_PEOPLE[Math.floor(i / (WALK_DIRS.length * WALK_FRAMES))], o = i * 9;
-  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * WALK_FRAMES)}`, name: p.id, cat: 'Townspeople', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [WF[o], WF[o + 1], WF[o + 2], WF[o + 3], WF[o + 4]], quad: [WF[o + 5], WF[o + 6], WF[o + 7], WF[o + 8]] });
+  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * WALK_FRAMES)}`, name: p.id, cat: 'Townspeople', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, person: true, tex: [WF[o], WF[o + 1], WF[o + 2], WF[o + 3], WF[o + 4]], quad: [WF[o + 5], WF[o + 6], WF[o + 7], WF[o + 8]] });
 }
 /** a clip: its first frame in the row of its person, its frame count, the seconds of each frame in the source clip, and whether it loops */
 export interface PeopleClip { start: number; n: number; times: number[]; loop: boolean }
@@ -1068,7 +1068,7 @@ const SPECTATOR_WF: number[] = [21,0.642578,0.455078,0.653809,0.478027,21.67,31.
 export const SPECTATOR_BASE = LIBRARY.length;
 for (let i = 0; i < SPECTATOR_WF.length / 9; i++) {
   const p = SPECTATOR_PEOPLE[Math.floor(i / (WALK_DIRS.length * SPECTATOR_FRAMES))], o = i * 9;
-  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * SPECTATOR_FRAMES)}`, name: p.id, cat: 'Spectators', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [SPECTATOR_WF[o], SPECTATOR_WF[o + 1], SPECTATOR_WF[o + 2], SPECTATOR_WF[o + 3], SPECTATOR_WF[o + 4]], quad: [SPECTATOR_WF[o + 5], SPECTATOR_WF[o + 6], SPECTATOR_WF[o + 7], SPECTATOR_WF[o + 8]] });
+  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * SPECTATOR_FRAMES)}`, name: p.id, cat: 'Spectators', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, person: true, tex: [SPECTATOR_WF[o], SPECTATOR_WF[o + 1], SPECTATOR_WF[o + 2], SPECTATOR_WF[o + 3], SPECTATOR_WF[o + 4]], quad: [SPECTATOR_WF[o + 5], SPECTATOR_WF[o + 6], SPECTATOR_WF[o + 7], SPECTATOR_WF[o + 8]] });
 }
 /** the golfers (3D renders): display size, anchor (feet) at the native scale, height in metres */
 export const GOLFER_PEOPLE: { id: string; w: number; h: number; ax: number; ay: number; m: number }[] = [{"id":"golfer:golf_am_m1","w":80,"h":135,"ax":40,"ay":130,"m":1.76},{"id":"golfer:golf_am_m2","w":80,"h":133.5,"ax":40,"ay":128.5,"m":1.74},{"id":"golfer:golf_am_m3","w":80,"h":134,"ax":40,"ay":129,"m":1.75},{"id":"golfer:golf_am_w1","w":80,"h":126.5,"ax":40,"ay":121.5,"m":1.63},{"id":"golfer:golf_pro_m1","w":80,"h":139.5,"ax":40,"ay":134.5,"m":1.83},{"id":"golfer:golf_pro_m2","w":80,"h":137.5,"ax":40,"ay":132.5,"m":1.8},{"id":"golfer:golf_pro_m3","w":80,"h":136,"ax":40,"ay":131,"m":1.78},{"id":"golfer:golf_pro_m4","w":80,"h":141.5,"ax":40,"ay":136.5,"m":1.86},{"id":"golfer:golf_pro_w1","w":80,"h":131,"ax":40,"ay":126,"m":1.7},{"id":"golfer:golf_pro_w2","w":80,"h":128.5,"ax":40,"ay":123.5,"m":1.66}];
@@ -1081,7 +1081,7 @@ const GOLFER_WF: number[] = [20,0.142578,0.283203,0.15625,0.312988,18.33,33.33,6
 export const GOLFER_BASE = LIBRARY.length;
 for (let i = 0; i < GOLFER_WF.length / 9; i++) {
   const p = GOLFER_PEOPLE[Math.floor(i / (WALK_DIRS.length * GOLFER_FRAMES))], o = i * 9;
-  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * GOLFER_FRAMES)}`, name: p.id, cat: 'Golfers', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [GOLFER_WF[o], GOLFER_WF[o + 1], GOLFER_WF[o + 2], GOLFER_WF[o + 3], GOLFER_WF[o + 4]], quad: [GOLFER_WF[o + 5], GOLFER_WF[o + 6], GOLFER_WF[o + 7], GOLFER_WF[o + 8]] });
+  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * GOLFER_FRAMES)}`, name: p.id, cat: 'Golfers', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, person: true, tex: [GOLFER_WF[o], GOLFER_WF[o + 1], GOLFER_WF[o + 2], GOLFER_WF[o + 3], GOLFER_WF[o + 4]], quad: [GOLFER_WF[o + 5], GOLFER_WF[o + 6], GOLFER_WF[o + 7], GOLFER_WF[o + 8]] });
 }
 appendCars(LIBRARY, ATLAS_PAGES);
 appendEast(LIBRARY, ATLAS_PAGES);

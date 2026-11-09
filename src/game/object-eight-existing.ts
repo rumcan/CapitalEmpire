@@ -9,6 +9,6 @@ export function appendExistingObjectEight(library: LibItem[]): void {
   const by = new Map(library.map(i => [i.id, i]));
   for (const s of REGISTERED_ROWS) for (const key of OBJECT_FACING_KEYS) {
     const source = by.get(s.sourceIds[key]); if (!source) continue;
-    library.push({ ...source, id: s.views[key].id, name: `${s.name} (${key})`, cat: 'New: Eight-view objects', boxes: s.views[key].boxes });
+    library.push({ ...source, id: s.views[key].id, name: `${s.name} (${key})`, cat: 'New: Eight-view objects', boxes: s.views[key].boxes, ...(s.person ? { person: true as const } : {}) });
   }
 }

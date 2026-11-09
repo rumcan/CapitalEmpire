@@ -20,13 +20,15 @@ export type LeafAtlas = { cv: Cnv; rects: Float32Array };
 /** a leaf sprite's rect in the sheet for a leaf of sizeM metres (textures.ts pickLeaf and leafRect) */
 export type LeafPick = (r: () => number, sizeM: number) => [number, number, number, number];
 
+/** the tints and how they are laid (T384: the desert's litter takes its own: desert-litter.ts DESERT_TINTS, DESERT_TINT_LOOK; the leaves' by default) */
+export interface LeafLook { tints: readonly string[]; look: readonly { a: number; mul?: string }[]; /** the sprites' drawn size over the leaves' (the same counts and places) */ scale?: number; /** the shadow's darkness (the leaves': 0.26) */ shadow?: number }
 /** the atlas at level L from the leaf sprite sheet */
-export function leafAtlasAt(L: number, sheet: Cnv, pick: LeafPick): LeafAtlas {
-  const pics = leafPictures(), ppm = PX_PER_M * L, pad = 2, off = Math.max(SHADOW_MIN, SHADOW_OFF * L), shX = SHADOW_DX * off, shY = SHADOW_DY * off;
+export function leafAtlasAt(L: number, sheet: Cnv, pick: LeafPick, desert?: LeafLook): LeafAtlas {
+  const pics = leafPictures(), ppm = PX_PER_M * L * (desert?.scale ?? 1), pad = 2, off = Math.max(SHADOW_MIN, SHADOW_OFF * L), shX = SHADOW_DX * off, shY = SHADOW_DY * off;
   // the sheet in each colour
   // (each lifted by a warm screen: at a few pixels a sprite's dark outline and veins would dull it to a brown speck on the grass)
-  const sheets = LEAF_TINTS.map((t, i) => {
-    const c = canvas(sheet.width, sheet.height), g = ctx2d(c), look = TINT_LOOK[i]!;
+  const sheets = (desert?.tints ?? LEAF_TINTS).map((t, i) => {
+    const c = canvas(sheet.width, sheet.height), g = ctx2d(c), look = (desert?.look ?? TINT_LOOK)[i]!;
     g.drawImage(sheet, 0, 0);
     if (t) { g.globalCompositeOperation = 'color'; g.globalAlpha = look.a; g.fillStyle = t; g.fillRect(0, 0, c.width, c.height); }
     if (look.mul) { g.globalCompositeOperation = 'multiply'; g.globalAlpha = 1; g.fillStyle = look.mul; g.fillRect(0, 0, c.width, c.height); }
@@ -61,7 +63,7 @@ export function leafAtlasAt(L: number, sheet: Cnv, pick: LeafPick): LeafAtlas {
   // silhouette, so overlapping leaves cast no darker shadow; the pad keeps it in the picture's rect)
   const sh = canvas(cv.width, cv.height), sg = ctx2d(sh);
   sg.drawImage(cv, 0, 0); sg.globalCompositeOperation = 'source-in'; sg.fillStyle = SHADOW_RGB; sg.fillRect(0, 0, sh.width, sh.height);
-  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-over'; g.globalAlpha = SHADOW_A; g.drawImage(sh, shX, shY);
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-over'; g.globalAlpha = desert?.shadow ?? SHADOW_A; g.drawImage(sh, shX, shY);
   g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; sh.width = sh.height = 1;
   return { cv, rects };
 }

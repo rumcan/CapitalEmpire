@@ -18,6 +18,7 @@ import { CAMERA_FALLOFF_GLSL, SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflec
 import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
 import { CAR_PAINT_GLSL } from './car-paint';
+import { ROOF_DUST_CODE, ROOF_DUST_GLSL } from './roof-dust';
 import { GRASS_SHINE_GLSL, LUM_HP_STD, MASK_SCALE, SHINE_SHADE } from './grass-shine';
 import { TRACKS_GLSL, type TyreTracks } from './tyre-tracks';
 import { WATER_MOTION_GLSL, type MotionFrame } from './water-motion';
@@ -189,6 +190,7 @@ const FS_SPRITE = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;
 ${atlas}
 ${CAR_PAINT_GLSL}
+${ROOF_DUST_GLSL}
 in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; flat in float vTint; flat in vec4 vFlag; flat in vec3 vFlagK; uniform vec4 uWind; out vec4 o;
 void main() {
   // T192: a lamp's glow (sim/car-lamps.ts, layer GLOW_LAYER: no atlas page): a soft disc of the brake lights' red, added (alpha 0), drawn in
@@ -216,6 +218,8 @@ void main() {
   // T176: a tinted sprite (a tree a Build would clear): its own light and shade in one warm rust red (its luminance times the tint), so it
   // reads as marked even among autumn reds, and the art's own darks stay dark (the owner's light rule)
   if (vTint > 0.5 && vTint < 1.5) { float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = min(vec3(l) * vec3(1.8, 0.66, 0.44), vec3(c.a)); }
+  // T384: a world building in the desert theme (roof-dust.ts): the leaves painted in its roof take the colour of the roof round them, and a soft warm film of dust settles in the roof's creases
+  else if (vTint > ${ROOF_DUST_CODE}.5) c.rgb = roofDust(c.rgb / c.a, uv, vUV.z) * c.a;
   // T228: a painted car (car-paint.ts): its body's pixels take its paint at their own light and shade (premultiplied: by its coverage)
   else if (vTint > 1.5) c.rgb = carPaint(c.rgb / c.a, vTint - 1.0) * c.a;
   o = c * vAlpha;

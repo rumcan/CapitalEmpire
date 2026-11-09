@@ -42,7 +42,7 @@ import { KeysSheet } from './ui/KeysSheet';
 import { keySheet, numberedGroups, type LabKeys } from './ui/keymap';
 import { indicesOf, leavesOf, menuOf, type MenuCtx, type MenuRow } from './ui/flyout-menu';
 import { GRASS_COST } from './game/ext/grass-management/management';
-import { DECOR_GROUPS } from './game/golf/decor';
+import { propMenuLists } from './game/golf/decor';
 import { PLANT_KINDS } from './game/plant';
 import { newHole } from './ui/course/HoleStrip';
 import { SurfaceMark } from './ui/course/SurfaceMark';
@@ -131,7 +131,8 @@ function menuCtx(game: Game): MenuCtx {
     junctions: JUNCTION_KINDS.map(t => { const lk = game.junctionOpen(t) ? null : unlockOf('junction', t); return { id: t, name: SEG_NAME[t], why: game.junctionOpen(t) ? null : game.eventMode ? `${SEG_NAME[t]} needs the Roundabout card` : lk ? `Unlocks at ${lk.pop.toLocaleString()} residents` : 'Not open yet' }; }),
     surfaces: SURFACE_BRUSHES.filter(b => !ui || (ui.visibleCourseBrushes as string[]).includes(b.kind)).map(b => ({ id: b.kind, name: b.name })), // T252: no cart path brush
     cares: (Object.keys(GRASS_COST) as string[]).map(k => ({ id: k, name: k[0]!.toUpperCase() + k.slice(1) })),
-    propGroups: DECOR_GROUPS.filter(g => g.id !== 'buildings').map(g => ({ id: g.id, name: g.name })),
+    // T400 (#1078): Facilities lists the everyday groups and, by kind, the golf props; Town decoration lists the town's groups alone (no golf group)
+    ...propMenuLists(),
     materials: MENU_TEXES.map(t => ({ id: t.id, name: t.name, col: t.col })),
     plants: PLANT_KINDS.map(k => ({ id: k.kind, name: k.name, col: k.col })),
     // T206: Facilities ▸ Practice: the range's practice area's facilities (no range: locked with why)
@@ -651,8 +652,8 @@ export default function App() {
                         <span className="w-10 text-right tabular-nums">{Math.round(game.sunLook.strength * 100)}%</span>
                       </label>
                     )}
-                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before">
-                      <span className="w-16 shrink-0">Fallen leaves</span>
+                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip={game.desertTheme ? 'Desert litter baked into the ground: drifts of sand, pebbles and dry brush under the palms, along the fences, walls and houses, kerbs and gutters, and a scatter over the yards, sidewalks and roads (T384). 100% = the default, 0 = only what there was before' : 'Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before'}>
+                      <span className="w-16 shrink-0">{game.desertTheme ? 'Desert litter' : 'Fallen leaves'}</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.leafDensity} onChange={e => { game.setLeafDensity(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.leafDensity * 100)}%</span>
                     </label>

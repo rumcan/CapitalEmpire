@@ -28,7 +28,7 @@ import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_S
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
-import { onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
+import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
 import { MOW_KINDS, mowOfHole, mowRecOf, type MowKind, type MowRec, type MowTable } from './mow-lines';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
@@ -55,6 +55,7 @@ import { BALL_DRAW_MAX, BALL_POINT_FLOATS, RangeHost, type RangeCardView } from 
 import { PropsTool } from './golf/propstool';
 import { PracticeTool } from './golf/practicetool';
 import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
+import { dropPeople } from './person';
 import { CELL as POND_CELL, discOutline, lilyPads, normalizePondMarks, pieceKey, pondAt, pondId, shorePieces, type Pond, type PondPiece } from './golf/ponds';
 import { fountainAt, fountainFrame } from './kit';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
@@ -248,7 +249,7 @@ import { nextStructureFacing, structurePicture, structureArtReadiness, structure
 import { objectFacings } from './object-eight';
 import { objectAnchor, objectFacingLabel, type ObjectFacingKey } from './object-eight-types';
 import { STRUCTURE } from './golf/tents';
-import { prepDue, prepView, suggestSpot, type PrepFacts, type PrepTarget, type PrepView } from './golf/prep';
+import { completeHoles, prepCourseReady, prepDue, prepView, suggestSpot, type PrepFacts, type PrepTarget, type PrepView } from './golf/prep';
 import { gallerySpots } from './golf/galleries';
 import { buildWalkField, type Way } from './golf/walkground';
 import { CART, RouteCache, SPECTATOR_GROW, SPECTATOR_WATER_GROW, dilate, passable, type WalkField } from './golf/walkfield';
@@ -3868,7 +3869,7 @@ export class Game {
   setLeafDensity(v: number) {
     this.leafDensity = clampLeafDensity(v);
     try { localStorage.setItem('capitalempire.leafDensity', String(this.leafDensity)); } catch { /* storage may be unavailable */ }
-    this.ground.setLeafDensity(this.desertTheme ? 0 : this.leafDensity); this.emit();
+    this.ground.setLeafDensity(this.desertTheme && desertLeavesDev() ? 0 : this.leafDensity); this.emit(); // (T384: the desert's litter has the player's density too)
   }
   /** T341 (#968): the desert theme, the gear menu's Desert theme (kept across reloads; ?desert=on|off on the dev server for the session): the
    *  world's trees drawn as palms and rocks, its bushes as desert plants and rocks, its open ground desert sand, dirt and pale sand and the lot
@@ -3895,9 +3896,11 @@ export class Game {
   private applyDesert() {
     const t0 = performance.now();
     DESERT_THEME.on = this.desertTheme; DESERT_THEME.gen++; DESERT_THEME.keep = d => this.courseOwns(d);
+    DESERT_THEME.dust = this.desertTheme && !desertLeavesDev(); // T384: the leaves painted in the world buildings' roofs are dust in the desert (roof-dust.ts)
     this.paint.plantFilter = this.desertTheme ? 'desert' : 'all'; // T342: the plant brushes start on the game's plants (the player may pick All or Autumn)
     setDesertSurfaces(this.desertTheme);
-    this.ground.setLeafDensity(this.desertTheme ? 0 : this.leafDensity); // no fallen leaves under the palms
+    // T384: the fallen leaves' density stays as the player set it in the desert too: what lies there is the desert's litter (sand drifts, pebbles, dry brush: desert-litter.ts), the same stamps and cost; it was 0 (no litter at all)
+    this.ground.setLeafDensity(this.desertTheme && desertLeavesDev() ? 0 : this.leafDensity); // (dev server, ?litter=leaves: the desert as it was, with no litter at all)
     this.sprites.relist();
     this.desertMs = performance.now() - t0;
   }
@@ -5874,11 +5877,12 @@ export class Game {
   }
   // ---------- the tournament prep quests (golf/prep.ts; the RangeGuideCard's look): this tier's chapter (or the next) as a checklist, the first
   // structure of a step suggested as a spot to click (the game never places a structure itself), each step paid once when it is built
-  /** the prep quests' facts (null outside golf): the tier, the needs the course has, its placed structures, its saved progress, and whether a
-   *  type's art is ready and its tier allowed */
+  /** the prep quests' facts (null outside golf): the tier, the complete holes the course has (T399), the needs the course has, its placed structures,
+   *  its saved progress, and whether a type's art is ready and its tier allowed */
   private prepFacts(): PrepFacts | null {
     const g = this.golf; if (!g) return null;
-    return { tier: g.tier, have: this.golfFacts(g).facts.have, placed: g.structures ?? [], save: g.prep ?? { done: [], skipped: [] }, available: id => this.eventArtStatus(id).ready && (STRUCTURE[id]?.tier ?? 9) <= g.tier + 1 };
+    const gf = this.golfFacts(g);
+    return { tier: g.tier, holes: completeHoles(gf.holes), have: gf.facts.have, placed: g.structures ?? [], save: g.prep ?? { done: [], skipped: [] }, available: id => this.eventArtStatus(id).ready && (STRUCTURE[id]?.tier ?? 9) <= g.tier + 1 };
   }
   /** the chapter the checklist shows, the player's hiding ignored (null: no chapter has a todo step) */
   private prepChapter(f: PrepFacts): number | null { return prepView({ ...f, save: { done: f.save.done, skipped: f.save.skipped } })?.chapter ?? null; }
@@ -5891,6 +5895,8 @@ export class Game {
     if (!force && ++this.prepTick % 6) return; // about once a second
     const g = this.golf, f = this.prepFacts(); if (!g || !f) { this.prepCached = null; return; }
     if (!g.prep) { g.prep = { done: prepDue(f).map(s => s.id), skipped: [] }; this.scheduleSave(); return; }
+    // T399 (#1077): before the course is playable there is no checklist, and no reward or toast either (a step built early pays once the course is there)
+    if (!prepCourseReady(f.holes, f.tier)) { if (this.prepCached) { this.prepCached = null; this.emit(); } return; }
     const p = g.prep, due = prepDue(f);
     for (const s of due) { p.done.push(s.id); this.traffic.spend('construction', -s.reward); this.toast(`Tournament prep: ${s.title} ✓ (+$${s.reward.toLocaleString()})`, 'good'); }
     const unhide = p.hidden !== undefined && p.hidden !== this.prepChapter(f);
@@ -8240,7 +8246,8 @@ export class Game {
       for (const entry of d.nodes) applyNodeEntry(this.edit, entry);
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
       // (T257: a Props tool prop keeps its saved flip, a tree's too: as the player turned it)
-      for (const t of d.props) { const [id, x, y, flip, scale] = t, i = index.get(id), m = tupleMarks(t); if (i !== undefined) Object.assign(this.addProp(i, x, y, !!flip, scale, undefined, m.decor ? { own: true } : undefined), m); }
+      // (T401, #1079: a person placed from the Props tool by an old save is dropped, nothing refunded or charged: person.ts dropPeople)
+      for (const t of dropPeople(d.props, id => LIBRARY[index.get(id) ?? -1])) { const [id, x, y, flip, scale] = t, i = index.get(id), m = tupleMarks(t); if (i !== undefined) Object.assign(this.addProp(i, x, y, !!flip, scale, undefined, m.decor ? { own: true } : undefined), m); }
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
       this.places = placesFromTuples(d.places);
       if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));
@@ -8279,7 +8286,7 @@ export class Game {
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
     for (const k of this.stopCuts.keys()) this.setLotGround(k, null); this.stopCuts.clear();
-    this.golf = null; this.estateRt = null; this.estateDrawn.clear(); this.estateViews.clear(); this.estateRev = -1; this.estateOffer = null; this.estateStreet = null; this.estatePlacing = false; this.estateTool.on = false; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
+    this.golf = null; this.prepCached = null; this.prepFolded = null; this.estateRt = null; this.estateDrawn.clear(); this.estateViews.clear(); this.estateRev = -1; this.estateOffer = null; this.estateStreet = null; this.estatePlacing = false; this.estateTool.on = false; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
     this.landMode = false; this.land.hover = null; this.land.cancel(); this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
     // the last game's season card and calendar year do not carry over (T135: the new game's clock starts again in the city worker)
