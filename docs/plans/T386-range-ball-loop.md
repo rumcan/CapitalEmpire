@@ -78,9 +78,36 @@ Pure model `golf/rangeauto.ts` (balls a second at the reference 600-second day; 
 Scripted-player timeline (`tests/golf-range-pacing.test.ts`, `PACING=1`, the 10-minute day, speed 1): tube **2.3 min**, basket **10.2**, push picker **14.4**, **first hire 21**, cart
 **33.2**, **washer (the first machine) 41.7**, night picking **50.6**, robots **54.6**.
 
+## The rest of the tree (PR 3, built)
+The tree is **33 nodes in five branches** (Picking 7, Staff 5, Machines 10, Supply 5, Your game 6), all bought with the range's till; `tests/golf-range-tree.test.ts` checks the whole of it (25 to 40
+nodes, every prerequisite listed before its node, every node buyable in order). Each staff and machine node's card says its **balls an hour** (`nodeRates`, from the host's view).
+
+| Branch | Node | Price | Upkeep | Needs | Effect (constant) |
+| --- | --- | --- | --- | --- | --- |
+| Picking | Bigger hopper | $5,500 | $40 | pull-behind picker | the cart's and gang picker's hopper +60% (`HOPPER_BIG` 1.6: 720 and 1,440) |
+| Staff | Pro shop training | $2,200 | $30 | attendant | attendants pick at `ATTENDANT_TRAINED` 1.0, not 0.8 (a quarter faster) |
+| Staff | Night attendant | $3,000 | $90 | second attendant | a third shift: somebody picks round the clock |
+| Staff | Staff golf cart | $12,000 | $60 | attendant, pull-behind picker | attendants tow the picker (`ATTENDANT_CART` 2 tiles/s) |
+| Machines | Ball polisher | $4,500 | $40 | washer | a clean ball earns `POLISH_VALUE` 1.08 of its price |
+| Machines | Fast chargers | $4,000 | $30 | robot pickers | a charge takes `ROBOT_CHARGE_FAST` 0.5 hour |
+| Supply | Standing order | $3,000 | $20 | supplier | with the ball room under `STANDING_LOW` 2 buckets the supplier brings a case (till and the day's cases permitting) |
+| Supply | Trade price | $6,000 | $20 | supplier | a ball costs `BULK_PRICE` 0.85 of $8.50 ($867 a case) |
+| Supply | Pallet deliveries | $9,000 | $40 | trade price | `CASES_PALLET` 6 cases a day, not 3 |
+| Supply | Stamped range balls | $1,500 | $10 | none | the overnight loss is `STAMP_KEEP` 0.5 |
+| Your game | Swing video room | $6,000 | $40 | push picker | your buckets teach `VIDEO_GAIN` 1.15 |
+| Your game | Fans and lemonade | $4,500 | $30 | video room | later buckets of the day teach `FANS_FATIGUE` 0.8 of the one before (not 0.7) |
+| Your game | Weighted training clubs | $6,500 | $30 | video room | a bucket's power gain x `WEIGHTED_POWER` 1.5 |
+| Your game | Launch monitor | $14,000 | $60 | video room | a bucket's driving and irons gains x `LMON_SWING` 1.25 |
+| Your game | Doppler ball tracker | $20,000 | $60 | launch monitor | a bucket's accuracy gain x `RADAR_ACCURACY` 1.6 |
+| Your game | Putting stroke trainer | $7,500 | $40 | video room | putting and chipping sessions x `PUTTLAB_GAIN` 1.25 |
+
+The whole tree costs $212,800 (the first 17 nodes $103,600), the upkeep of all of it $1,665 a month. **The golf side** is `golf/rangegear.ts` (pure): `practiceGear(owned)` gives each
+session kind a `PracticeGear` (a factor on all its gains, factors on single skills, the fatigue) which `player.ts practicePreview` and `practise` apply and the engine passes from `practiceCtx`; the
+skills it raises are the T334 stats (power, accuracy, driving, irons; `golf/play/mods.ts` reads them), so a better-practised golfer plays better, and nothing changes without the nodes.
+
 ## Resuming
-- Branches `arena/T386-range-ball-loop` (PR 1), `arena/T386-ball-loop-2` (PR 2) (worktree `F:\Repos\ce-wt\t357`); progress comments on #1043 end with a "To resume:" line.
+- Branches `arena/T386-range-ball-loop` (PR 1, #1085), `arena/T386-ball-loop-2` (PR 2, #1087), `arena/T386-ball-loop-3` (PR 3) (worktree `F:\Repos\ce-wt\t357`); progress comments on #1043 end with a "To resume:" line.
 - Tests: `tests/golf-range-balls.test.ts` (the economy, the sim, the host), `tests/golf-range-pacing.test.ts` (the first hour; `PACING=1` prints the timeline), and the range
   tests that changed with the picker (`golf-range-extras`, `-parking`, `-ramp`, `golf-rangebiz`).
 - In-game: `E:/ClaudeTemp/T386/` (shots and the scripts that took them).
-- Next (PR 3): the rest of the nodes to 25 to 40 and the golf-side ones (range practice raises skills faster: `golf/play/mods.ts`).
+- Next: art (docs/GOLF-SPRITES.md, "The range ball loop"), and balancing the tree's prices against play data.

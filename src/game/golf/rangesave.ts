@@ -20,7 +20,10 @@ export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covere
    *  the gang picker behind your cart, night picking and the supplier's account ('picker' is the pull-behind picker now: the T133 cart you drive yourself) */
   | 'tube' | 'basket' | 'pushpick' | 'gang' | 'nightpick' | 'supplier'
   /** T386 part 2: the staff (a range attendant on a shift you set) and the machines (a ball washer, robot pickers and their upgrades, target nets, a bucket counter) */
-  | 'attendant' | 'attendant2' | 'washer' | 'robot' | 'robot2' | 'robot3' | 'robotbat' | 'robotspd' | 'nets' | 'counter';
+  | 'attendant' | 'attendant2' | 'washer' | 'robot' | 'robot2' | 'robot3' | 'robotbat' | 'robotspd' | 'nets' | 'counter'
+  /** T386 part 3: the rest of the tree: a bigger hopper; training, a night attendant and a staff cart; a polisher and fast chargers; a standing order, the trade price, pallets and stamped balls; and the
+   *  golf side (a video room, fans and lemonade, weighted clubs, a launch monitor, a radar, a putting trainer: golf/rangegear.ts) */
+  | 'hopper2' | 'training' | 'attendant3' | 'staffcart' | 'polisher' | 'chargers' | 'autoorder' | 'bulk' | 'pallet' | 'stamp' | 'swingcam' | 'fans' | 'weighted' | 'lmon' | 'radar' | 'puttlab';
 /** a span's counts: the golfers who bought a bucket, the buckets (the customers they stand for), the lost (turned away or left the queue), the takings ($)
  *  and the upgrades' upkeep paid ($, T132) */
 export interface RangeCounts { golfers: number; buckets: number; lost: number; takings: number; upkeep: number }
@@ -98,8 +101,8 @@ export interface RangeUpgrade { id: RangeUpgradeId; name: string; cost: number; 
    *  `branch`: the ball room's upgrade tree shows it (a flyout beside the Range card) in this branch, not the Upgrades list */
   till?: true; branch?: TreeBranch }
 /** the ball room's upgrade tree's branches (T386; the flyout's first column): the picking tools and the supply (PR 2 and 3 add staff, machines, nets and the golf side) */
-export type TreeBranch = 'picking' | 'supply' | 'staff' | 'machines';
-export const BRANCH_NAME: Readonly<Record<TreeBranch, string>> = { picking: 'Picking', supply: 'Supply', staff: 'Staff', machines: 'Machines' };
+export type TreeBranch = 'picking' | 'supply' | 'staff' | 'machines' | 'golf';
+export const BRANCH_NAME: Readonly<Record<TreeBranch, string>> = { picking: 'Picking', supply: 'Supply', staff: 'Staff', machines: 'Machines', golf: 'Your game' };
 export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   // T223: the desert start's ground: the dirt tee box turfed, then the desert outfield grassed
   { id: 'teeturf', name: 'Turf the tee box', cost: 4000, upkeep: 30, effect: 'Grass turf under the mats instead of dust: +5% visitors, golfers pay $1 more' },
@@ -124,20 +127,37 @@ export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   { id: 'basket', name: 'Wire basket', cost: 500, upkeep: 5, till: true, branch: 'picking', effect: 'A bigger basket: 48 balls a trip instead of 24' },
   { id: 'pushpick', name: 'Push picker', cost: 2400, upkeep: 20, needs: 'tube', till: true, branch: 'picking', effect: 'A rolling wire cage you push: hold F and walk over the balls, a 4.8 m swath, a basket of 96' },
   { id: 'picker', name: 'Pull-behind picker', cost: 8000, upkeep: 60, needs: 'pushpick', till: true, branch: 'picking', effect: 'The ball picker cart, yours to drive: it tows a picker behind your golf cart (E): drive over the balls, a 10 m swath, 450 balls a load, emptied at the ball room' },
+  { id: 'hopper2', name: 'Bigger hopper', cost: 5500, upkeep: 40, needs: 'picker', till: true, branch: 'picking', effect: 'A bigger hopper on the picker: 60% more balls a load (720 on the cart, 1,440 on the gang picker): fewer trips to the ball room' },
   { id: 'gang', name: 'Gang picker', cost: 20000, upkeep: 80, needs: 'picker', till: true, branch: 'picking', effect: 'Three reels abreast behind the cart: an 18 m swath and 900 balls a load' },
   { id: 'nightpick', name: 'Night picking', cost: 8000, upkeep: 60, needs: 'picker', till: true, branch: 'picking', effect: 'The cart drives the outfield in lanes by itself after closing and picks what is left: a clean range every morning, +5% visitors' },
   // T386 part 2: the staff and the machines, bought with the till (a staff member's upkeep is his wage a game month)
   { id: 'attendant', name: 'Range attendant', cost: 1800, upkeep: 90, needs: 'pushpick', till: true, branch: 'staff', effect: 'A teenager from the town works a shift (you set when it starts): he picks balls up with your tools, but not the cart, and tends the shop counter unless a ball dispenser stands' },
+  { id: 'training', name: 'Pro shop training', cost: 2200, upkeep: 30, needs: 'attendant', till: true, branch: 'staff', effect: 'A week with the club pro: the attendants pick at your own pace, a quarter faster' },
   { id: 'attendant2', name: 'Second attendant', cost: 2400, upkeep: 90, needs: 'attendant', till: true, branch: 'staff', effect: 'A second shift right after the first: the range is picked sixteen hours a day' },
+  { id: 'attendant3', name: 'Night attendant', cost: 3000, upkeep: 90, needs: 'attendant2', till: true, branch: 'staff', effect: 'A third shift: with the two before it somebody is out picking the range round the clock' },
+  { id: 'staffcart', name: 'Staff golf cart', cost: 12000, upkeep: 60, needs: ['attendant', 'picker'], till: true, branch: 'staff', effect: 'A second cart for the lads: the attendants tow the pull-behind picker too, at two tiles a second' },
   { id: 'washer', name: 'Ball washer', cost: 6000, upkeep: 90, needs: 'pushpick', till: true, branch: 'machines', effect: 'A tumbling ball washer: 14 balls a second beside the tap\'s 2.5. The balls you pick up are dirty, and a bucket of dirty balls earns only 75% of a clean one' },
+  { id: 'polisher', name: 'Ball polisher', cost: 4500, upkeep: 40, needs: 'washer', till: true, branch: 'machines', effect: 'A wax tumbler after the washer: washed balls shine, and a bucket of clean balls earns 8% more' },
   { id: 'robot', name: 'Robot pickers', cost: 9000, upkeep: 120, needs: 'washer', till: true, branch: 'machines', effect: 'Two 1985 inventor\'s robots trundle the outfield by themselves, a battery for three town hours and an hour\'s charge: 1.2 balls a second each while they run' },
   { id: 'robot2', name: 'Two more robots', cost: 9000, upkeep: 120, needs: 'robot', till: true, branch: 'machines', effect: 'Another pair of robots on the outfield' },
   { id: 'robot3', name: 'A third pair of robots', cost: 11000, upkeep: 120, needs: 'robot2', till: true, branch: 'machines', effect: 'And another pair: six robots in all' },
   { id: 'robotbat', name: 'Bigger robot batteries', cost: 5000, upkeep: 30, needs: 'robot', till: true, branch: 'machines', effect: 'Six town hours of running to an hour\'s charge, not three' },
   { id: 'robotspd', name: 'Faster drive motors', cost: 6000, upkeep: 30, needs: 'robot', till: true, branch: 'machines', effect: 'The robots drive 60% faster and pick that much more' },
+  { id: 'chargers', name: 'Fast chargers', cost: 4000, upkeep: 30, needs: 'robot', till: true, branch: 'machines', effect: 'A robot charges in half an hour, not an hour' },
   { id: 'nets', name: 'Target nets', cost: 7000, upkeep: 50, needs: 'greens', till: true, branch: 'machines', effect: 'A funnel net behind each target green: 30% of the balls that land by one roll down its chute into the ball room without anyone picking them' },
   { id: 'counter', name: 'Bucket counter', cost: 3500, upkeep: 30, needs: 'washer', till: true, branch: 'machines', effect: 'Counts each bucket out exactly: 10% fewer balls a bucket, the extra scoops stop' },
   { id: 'supplier', name: "Supplier's account", cost: 2500, upkeep: 20, till: true, branch: 'supply', effect: `Order cases of balls from the Range card (a case is ${CASE_BALLS}: $${BALL_COST.toFixed(2)} a ball, ${CASES_A_DAY} cases a day): the books' Range balls line` },
+  { id: 'autoorder', name: 'Standing order', cost: 3000, upkeep: 20, needs: 'supplier', till: true, branch: 'supply', effect: "When the ball room is down to two buckets the supplier brings a case on his own, as long as the till can pay and the day's cases last" },
+  { id: 'bulk', name: 'Trade price', cost: 6000, upkeep: 20, needs: 'supplier', till: true, branch: 'supply', effect: "The supplier's trade price: balls cost 15% less ($7.23 a ball, $867 a case)" },
+  { id: 'pallet', name: 'Pallet deliveries', cost: 9000, upkeep: 40, needs: 'bulk', till: true, branch: 'supply', effect: "The supplier's lorry brings six cases a day, not three" },
+  { id: 'stamp', name: 'Stamped range balls', cost: 1500, upkeep: 10, till: true, branch: 'supply', effect: "Every ball stamped with the range's name in red ink: half as many walk off overnight" },
+  // T386 part 3: the golf side: what the range's gear does to your own practice (golf/rangegear.ts)
+  { id: 'swingcam', name: 'Swing video room', cost: 6000, upkeep: 40, needs: 'pushpick', till: true, branch: 'golf', effect: 'A video camera on a tripod and a VCR on a trolley: a bucket of your own at the range teaches 15% more' },
+  { id: 'fans', name: 'Fans and lemonade', cost: 4500, upkeep: 30, needs: 'swingcam', till: true, branch: 'golf', effect: 'Practising tires you less: each later bucket of the day teaches 80% of the one before, not 70%' },
+  { id: 'weighted', name: 'Weighted training clubs', cost: 6500, upkeep: 30, needs: 'swingcam', till: true, branch: 'golf', effect: 'Heavy warm-up clubs by the mats: a bucket raises your power half as much again' },
+  { id: 'lmon', name: 'Launch monitor', cost: 14000, upkeep: 60, needs: 'swingcam', till: true, branch: 'golf', effect: 'A box of lights and numbers behind the mats: a bucket raises your driving and your irons a quarter more' },
+  { id: 'radar', name: 'Doppler ball tracker', cost: 20000, upkeep: 60, needs: 'lmon', till: true, branch: 'golf', effect: 'A radar dish on a pole reads back every ball you hit: a bucket raises your accuracy 60% more' },
+  { id: 'puttlab', name: 'Putting stroke trainer', cost: 7500, upkeep: 40, needs: 'swingcam', till: true, branch: 'golf', effect: 'A mirror and a chalk line on the putting green: putting and chipping practice teaches a quarter more' },
   { id: 'tier2', name: 'Second tier of bays', cost: 60000, upkeep: 450, needs: ['bays12', 'covered'], effect: 'A double-deck stand over the mats: 12 more bays upstairs, the World of Golf look, +10% visitors' },
   { id: 'academy', name: 'Golf academy', cost: 30000, upkeep: 350, needs: 'proshop', effect: 'A pro teaches on two bays: 15% of golfers take a $15 lesson, +5% visitors' },
   // T146 (P24 D49): the busy range's car park building, offered once the second tier makes parking the limit
