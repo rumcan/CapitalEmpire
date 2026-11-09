@@ -130,7 +130,7 @@ describe('Woodhill’s estate (T354)', () => {
     assert.equal(framesOf({ segs: [seg], only: f => keep.has(`${f.seg}:${f.k}:${f.side}`) }).length, got.length);
   });
 
-  it('lays the lots on streets at any heading: T353 axis rule is the model default (a lot square to a street at 30 degrees is refused), the engine turns it off (the composer draws a house on every heading)', () => {
+  it('lays the lots on streets at any heading: T353 axis rule is the model default (a lot square to a street at 30 degrees is refused), the imported estate lots turn it off (anyHeading: they stand on the map streets)', () => {
     const a = (30 * Math.PI) / 180, u = { x: Math.cos(a), y: Math.sin(a) }, n = { x: -u.y, y: u.x };
     const env: EstateEnv = { map: 1024, owned: () => true, grid: null, lines: [], roads: () => [] };
     const f = { o: { x: 120, y: 90 }, u, n, w: 10, d: 15 };

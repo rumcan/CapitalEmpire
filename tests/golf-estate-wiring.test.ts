@@ -82,9 +82,11 @@ test('the menu and the card: Course > Buildings > House lots, the App picks it u
 test('the entry point for streets laid by code (T354): layEstateLots lays lots along street pieces through placeLots, pays for them and clears the ground; its inputs are public', () => {
   assert.match(eng, /\n {2}estateStreets\(near: Pt, r: number\): ES\.StreetSeg\[\] \{/);
   assert.match(eng, /\n {2}estateEnv\(\): ES\.EstateEnv \{/);
-  assert.match(method('estateEnv(): ES.EstateEnv {'), /anyHeading: true,/); // (T354: the composer draws a house on every road heading, so the lot rules do not refuse a street for its angle)
+  assert.doesNotMatch(method('estateEnv(): ES.EstateEnv {'), /anyHeading/); // (T354: the House lots tool keeps T353's axis rule: only an imported estate's lots skip it)
   assert.match(eng, /\n {2}estateMake\(\): ES\.Estate \{/);
-  const lay = method('layEstateLots(along: ES.Along, free = false): ES.PlaceResult {'); // (T354: free, an imported estate's lots come with the course)
+  const lay = method('layEstateLots(along: ES.Along, free = false, anyHeading = false): ES.PlaceResult {'); // (T354: free, an imported estate's lots come with the course; anyHeading, they stand on the map's streets at any heading)
+  assert.match(lay, /env = anyHeading \? \{ \.\.\.this\.estateEnv\(\), anyHeading: true \} : this\.estateEnv\(\)/);
+  assert.match(method('layOsmEstate(houses: readonly Pt[]) {'), /this\.layEstateLots\(\{ segs, only: f => keep\.has\(key\(f\)\) \}, true, true\)/);
   assert.match(lay, /if \(!this\.golf\) return \{ placed: \[\], refused: \[\], cost: 0 \};/);
   assert.match(lay, /ES\.planLots\(e, along, env\)/);
   assert.match(lay, /if \(cost > this\.money && !free\) return \{ placed: \[\]/);

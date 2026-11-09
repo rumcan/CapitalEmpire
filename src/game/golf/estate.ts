@@ -45,7 +45,7 @@ export const BUILD_MONTHS: readonly [number, number] = [2, 3.5];
 /** what a finished house pays the club each month ($: the estate levy for the grounds the estate looks onto); its owner joins the club besides */
 export const LEVY = 20;
 /** a lot whose street runs more than this many degrees off both map axes cannot take a house (lots/compose.ts isAngled: it draws a green): the model's rule, which a game that sets
- *  EstateEnv.anyHeading (the engine does, T354: the composer draws a house on every heading) does not apply */
+ *  EstateEnv.anyHeading (the engine sets it for an imported estate's lots, T354: they stand on the map's own streets, at any heading) does not apply */
 export const OFF_AXIS_DEG = 20;
 /** the time step stepEstate works in (months): a long skip sells and builds as a run of short months would */
 const STEP = 0.25;
@@ -198,9 +198,10 @@ export interface EstateEnv {
   /** T355's way with a street: the rough, the long grass and the fescue are ground a lot may cover (the lot replaces it, as a street does); only the playing surfaces and the
    *  hazards refuse one. false: every painted surface refuses a lot ({the rough} is in the way: rub it out first). Missing: true */ coverRough?: boolean;
   /** why something stands on a box ('' when the ground is free): a building, a prop of the player's, a car park ... */ blocked?(box: readonly [number, number, number, number]): string;
-  /** T354: a lot may front a street at any heading. The town's composer draws a house on every heading (the lot lab's diagonal-road presets, and the generated lots of T305 turned to
-   *  the road: lots/compose.ts planOf), so a street off the map's axes is no reason to refuse a lot, where T353 refused one more than OFF_AXIS_DEG off both axes (it believed such a
-   *  lot drew a green). The engine says true; missing: false, the model's own rule (offAxis) */ anyHeading?: boolean;
+  /** T354: a lot may front a street at any heading: an imported estate's lots stand on the map's own streets, which run at whatever heading the real ones do (Woodhill's houses stand on streets 21 to 43 degrees
+   *  off the nearest axis, so the axis rule alone would refuse every one). The composer does draw a building on every heading, but on a diagonal road (25 to 65 degrees) from art that is not all houses yet
+   *  (about a third of the lots a Snack Bar, a Diner or a Corner Store, one in eight a run-down house; the town's own house lots on such a road draw the same), which is why the House lots tool keeps the
+   *  axis rule and only the imported estate (Engine.layEstateLots(..., anyHeading)) skips it. Missing: false, the model's own rule (offAxis) */ anyHeading?: boolean;
 }
 /** the surfaces of the course grid by id, as a refusal calls them */
 const SURF_WORD: Readonly<Record<number, string>> = { [SURF.rough]: 'rough', [SURF.fescue]: 'fescue', [SURF.water]: 'water hazard', [SURF.fairway]: 'fairway', [SURF.tee]: 'tee', [SURF.bunker]: 'bunker', [SURF.waste]: 'waste area', [SURF.green]: 'green', [SURF.longGrass]: 'long grass' };

@@ -3410,7 +3410,7 @@ export class Game {
     const g = this.golf; if (!g) return;
     const c = g.course, segs = this.estateStreets({ x: c[0] + c[2] / 2, y: c[1] + c[3] / 2 }, Math.hypot(c[2], c[3]) / 2 + 8);
     const key = (f: ES.Frame): string => `${f.seg}:${f.k}:${f.side}`, keep = new Set(framesAtBuildings(ES.framesOf({ segs }), houses).map(key));
-    const r = this.layEstateLots({ segs, only: f => keep.has(key(f)) }, true);
+    const r = this.layEstateLots({ segs, only: f => keep.has(key(f)) }, true, true);
     const why = new Map<string, number>(); for (const q of r.refused) { const w = q.why.replace(/[0-9]+([.][0-9]+)?/g, '#'); why.set(w, (why.get(w) ?? 0) + 1); }
     console.log(`golf: the estate: ${r.placed.length} lots laid at the map's ${houses.length} houses, ${r.refused.length} refused${r.refused.length ? ` (${[...why].sort((a, b) => b[1] - a[1]).map(([w, n]) => `${n} x ${w}`).join('; ')})` : ''}`);
   }
@@ -10878,7 +10878,6 @@ export class Game {
       grid: this.courseGrid, water: this.estateWet,
       lines: [...this.holeLines()].map(([hole, l]) => { const line: Pt[] = []; for (let k = 0; k + 1 < l.length; k += 2) line.push({ x: l[k]!, y: l[k + 1]! }); return { hole, line }; }),
       roads: b => this.estateRoads(b), blocked: b => this.estateBlocked(b),
-      anyHeading: true, // (T354: the composer draws a house on every road heading, so a street off the map's axes takes lots: Woodhill's houses stand on streets 20 to 60 degrees off them)
     };
   }
   /** a lot's view, read again when the course changes (the grid's revision) */
@@ -10901,10 +10900,12 @@ export class Game {
   }
   /** T353, for the code that lays streets (T354's imported ones): lays house lots along streets as the tool does (golf/estate.ts placeLots): `along` is the street pieces (estateStreets
    *  gives the real network's) and a side (+1, -1, or 0 / none: both) or a drag (from, to). The laying cost is paid and the course ground under the lots cleared; with too little
-   *  money none is laid (every lot the rules allow is then refused with that reason). Outside a golf game none is laid. Returns what was laid and what was refused with why */
-  layEstateLots(along: ES.Along, free = false): ES.PlaceResult {
+   *  money none is laid (every lot the rules allow is then refused with that reason). Outside a golf game none is laid. free: no charge (an imported estate's lots come with the course);
+   *  anyHeading: the lots may front a street at any heading (the imported estate's). Returns what was laid and what was refused with why */
+  layEstateLots(along: ES.Along, free = false, anyHeading = false): ES.PlaceResult {
     if (!this.golf) return { placed: [], refused: [], cost: 0 };
-    const e = this.estateMake(), env = this.estateEnv(), plan = ES.planLots(e, along, env), cost = plan.ok.length * ES.LAY_COST;
+    // (T354: an imported estate's streets are the map's, at whatever heading they run, so its lots skip T353's axis rule: anyHeading; the House lots tool keeps it)
+    const e = this.estateMake(), env = anyHeading ? { ...this.estateEnv(), anyHeading: true } : this.estateEnv(), plan = ES.planLots(e, along, env), cost = plan.ok.length * ES.LAY_COST;
     if (cost > this.money && !free) return { placed: [], refused: [...plan.refused, ...plan.ok.map(frame => ({ frame, why: `Not enough money: ${plan.ok.length} lots cost $${cost.toLocaleString()} to lay` }))], cost: 0 };
     const r = ES.placeLots(e, along, env, this.golfMonthAt(performance.now()), this.seed);
     if (free) r.cost = 0; else if (r.cost) this.traffic.spend('construction', r.cost); // (T354: an imported estate's lots come with the course, free)
