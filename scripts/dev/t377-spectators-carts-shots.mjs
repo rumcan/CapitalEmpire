@@ -195,11 +195,12 @@ try {
       const ux = (best.p.x - best.t.x) / best.d, uy = (best.p.y - best.t.y) / best.d, nx = -uy, ny = ux, off = 14;
       const a = { x: best.t.x - ux * 6 + nx * off, y: best.t.y - uy * 6 + ny * off }, b = { x: best.p.x + ux * 6 + nx * off, y: best.p.y + uy * 6 + ny * off };
       g.edit.addLegs([{ a, b }], N.CLASSES.find(c => c.id === 'cart-dirt'), 0); g.commitNetwork();
+      window.__oldPlay = g.play; g.playTried = -1; // (the day's play was built when the town loaded: built again, with the path, at the next frame)
       return { hole: best.t.hole, a, b, d: Math.round(best.d) };
     });
     log('a cart path laid along the longest hole:', JSON.stringify(lay)); metrics.pathLaid = lay;
     await jump(7 * 60); await page.evaluate(() => window.__game.setSpeed(1));
-    await page.waitForFunction(() => window.__game.play?.pv, null, { timeout: 120000 });
+    await page.waitForFunction(() => { const g = window.__game; return g.play && g.play !== window.__oldPlay && g.play.pv; }, null, { timeout: 120000 });
     const r = await page.evaluate(() => {
       const { M, g, groundOf, BLOCKED } = window.__t377, pl = g.play, cp = pl.pv.cartPlay;
       if (!cp) return { error: 'no carts in the tournament day' };
@@ -229,7 +230,7 @@ try {
           for (let i = 0; i <= k; i++) { const gr = groundOf(A.x + (B.x - A.x) * i / k, A.y + (B.y - A.y) * i / k); if (gr === 'water') water++; else if (BLOCKED.has(gr)) other++; }
           const score = water ? -1 : other, cand = { c, h, d, score, t0: vs[v].dep, t1: vs[v + 1].arr, ax: A.x, ay: A.y, bx: B.x, by: B.y };
           if (!pick || cand.score > pick.score || (cand.score === pick.score && cand.d > pick.d)) pick = cand;
-          if (toPath(A.x, A.y) <= 3 && toPath(B.x, B.y) <= 3 && d > 25 && (!onPathPick || d > onPathPick.d)) onPathPick = cand;
+          if (toPath(A.x, A.y) <= 3 && toPath(B.x, B.y) <= 3 && d > 10 && (!onPathPick || d > onPathPick.d)) onPathPick = cand;
         }
       }
       pick = onPathPick ?? pick;
