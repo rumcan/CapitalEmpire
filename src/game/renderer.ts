@@ -52,7 +52,7 @@ import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type 
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
 import { DESERT_FALL_SCALE, DESERT_LITTER_SCALE, DESERT_SHADOW_A, DESERT_TINTS, DESERT_TINT_LOOK, DESERT_TUFT } from './desert-litter';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
-import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
+import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropArtTurn, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
 import { DAMP_TINT, DESERT_BLOT_M, LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 import { courseBlendG, courseTexG, paintedLay, type Aff } from './painted-turn';
 /** a DOMMatrix as painted-turn's plain affine */
@@ -807,6 +807,14 @@ export class GroundPainter {
   private cropArt(p: LotPatch): string | null {
     const c = p.crop!, t = cropSurface(c.st, c.d[0], c.d[1]);
     return this.tex.paintedOf(t) ? t : null;
+  }
+  /** T402 (#1080): the fill of a crop field's art, its furrows laid along the field: the picture of the nearest axis turned by the angle between that axis and the
+   *  field's rows (cropArtTurn, through the painted look's own turn, as the Paint tool's areas are laid), over the part of the chunk the field covers. null: the field
+   *  lies on the axes (no turn: the chunk's own composition, as before) or the look is not ready (the caller's unturned fill) */
+  private cropFill(g: C2D, p: LotPatch, art: string, box: BBox): CanvasPattern | null {
+    const c = p.crop!, turn = cropArtTurn(c.d[0], c.d[1]); if (!turn) return null;
+    const pb = quadBox(p.pts), need: BBox = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
+    return need[2] <= need[0] || need[3] <= need[1] ? null : this.paintedFill(g, art, need, 1, new DOMMatrix().rotateSelf(0, 0, turn));
   }
   /** T259: the crop fields' stand-in rows (ext/farms/crops.ts ROW_LOOK, the stand-ins for 185 and 186) over their soil, a state at a time:
    *  - the rows along each field's direction, `pitch` apart (thinned out, wider, where they would fall under ROW_MIN_PX apart: no moire),
@@ -1800,13 +1808,14 @@ export class GroundPainter {
         // T259: a crop field wears its state's art once it lands (cropArt), else its soil (tex 'field') under the stand-in rows (drawCrops)
         const art = p.crop ? this.cropArt(p) : p.hard && p.tex === 'dirt' && this.tex.paintedOf(LANE_SURFACE) ? LANE_SURFACE : null;
         // T247: a lot's dirt (a dirt car park, a vegetable bed, a building site, a field) with its soft band where it meets grass (T259: not a farm lane)
+        const turned = art && p.crop ? this.cropFill(ctx, p, art, box) : null;
         if (sc && !p.hard && this.softTex(p.tex)) {
-          const fill = pat((art ?? p.tex) as TexName);
+          const fill = turned ?? pat((art ?? p.tex) as TexName);
           this.softArea(ctx, softBand(p, p.pts, 0), M, () => { ctx.fillStyle = fill; ctx.fill(path); }, (g, r) => { g.fillStyle = fill; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); }, path);
           continue;
         }
         if (p.tex === 'slabs') { ctx.save(); ctx.clip(path); ctx.fillStyle = tex.curb.top; ctx.fill(path); if (!lite) this.slabGrid(ctx, new DOMMatrix(), quadBox(p.pts), M); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = pat('grime'); ctx.fill(path); ctx.restore(); ctx.setTransform(M); }
-        else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : p.tex === 'concrete' ? lotConc! : pat((art ?? p.tex) as TexName); ctx.fill(path); }
+        else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : p.tex === 'concrete' ? lotConc! : turned ?? pat((art ?? p.tex) as TexName); ctx.fill(path); }
         if (p.tex === 'asphalt' || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'concrete' || p.tex === 'slabs') {
           ctx.save(); ctx.clip(path); ctx.strokeStyle = p.tex === 'asphalt' ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = p.tex === 'asphalt' ? 0.3 : 0.16; ctx.stroke(path); ctx.restore();
         }

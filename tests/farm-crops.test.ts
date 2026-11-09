@@ -114,9 +114,12 @@ test('model 1 (T005\'s farm, the saves made with it) composes exactly as before 
   // the digest pinned from main before T259 (7ed8b99, composeFarm/farmTrack/farmsteadOf as they were): the first 100 fixture farms' compositions,
   // tracks and farmsteads. T329: re-pinned on lead/live (was d5ebd258): two deliberate changes since moved it, the owner's T291 (2026-11-01: no
   // town wood fences on farms, model 1 too) and the 2 km map (T280: the fixture roads moved onto it, so the farms are other parcels). It now
-  // guards model 1 against any change from here
+  // guards model 1 against any change from here. T402 (#1080) re-pinned it (was f26e468d): deliberate changes to model 1 as to model 2, from the owner's 2026-11-09
+  // report of a farm paddock ("fences not correct, a house garage as a barn??"): the house kit's garage is gone from the farm's buildings (its random draws stay,
+  // so every other prop stands where it stood), the paddock fence stands on the map's axes in four runs end to end with a gate (paddock.ts), and a sheep farm has the
+  // farm kit's shed and a horse farm a stable beside its barn
   const out = FARMS.slice(0, 100).map(({ p, seed }) => JSON.stringify(composeFarm(p, seed, { model: 1 })) + JSON.stringify(farmTrack(p, seed, 1)) + JSON.stringify(farmsteadOf(p, seed, 1)));
-  assert.equal(fnv(out.join('|')), 'f26e468d');
+  assert.equal(fnv(out.join('|')), 'b5425d7d');
   assert.equal(farmSeason(FARMS[0].p, FARMS[0].seed, 1, 3), farmSeason(FARMS[0].p, FARMS[0].seed, 1, 9));
 });
 
