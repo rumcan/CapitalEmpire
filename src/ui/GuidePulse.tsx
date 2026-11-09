@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 export const ANCHOR_FALLBACK: Readonly<Record<string, readonly string[]>> = {
   'new-hole': ['rail-course'], 'clubhouse-card': ['rail-course'], 'tool-park': ['rail-traffic'], 'fix-holes': ['season-chip'], 'fix-carpark': ['season-chip'],
   'fix-clubhouse': ['season-chip'], 'invite-pill': ['season-chip'], 'results': ['season-chip'],
+  // T366: the Skip to tournament button is a row of the Season card: while the card is shut the guide points at the chip that opens it
+  'chip-skip': ['season-chip'],
 };
 /** the element an anchor id points at now: the first visible one of the id, then of its fallbacks */
 export function anchorElement(id: string, doc: Pick<Document, 'querySelectorAll'> = document): HTMLElement | null {

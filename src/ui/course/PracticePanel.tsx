@@ -6,6 +6,7 @@ import { PRACTICE_SIZE, PUTT_SHAPES, TURNS } from '../../game/golf/practicebuild
 import { FACILITY_NAME } from '../../game/golf/practicetool';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, type PracticeId } from '../../game/golf/rangesave';
 import { ToolHead } from '../ToolHead';
+import { SideMenuRow } from '../SideMenuRow';
 
 const BLURB: Readonly<Record<PracticeId, string>> = {
   putting: 'An organic putting green with its fringe and practice flags.',
@@ -53,9 +54,8 @@ export function PracticePanel({ game, looks = false, onLooks }: { game: Game; lo
           )}
           {/* T256 (#743): the facility owns its looks (its green, its bunker, its mat): My looks edits this facility's alone */}
           {game.golfMode && onLooks && (
-            <div className="flex items-center justify-between gap-2" data-testid="practice-looks">
-              <span>My looks</span>
-              <button className={`chip ${looks ? 'chip-on' : ''}`} aria-pressed={looks} title={`The looks of the ${FACILITY_NAME[k].toLowerCase()}: its own, apart from the holes' and your property's`} onClick={() => { if (!looks) game.paint.pickLook(['green', 'bunker', 'tee'].includes(game.paint.brushKind) ? game.paint.brushKind : 'green'); onLooks(!looks); }}>{`${FACILITY_NAME[k]}'s looks`} <span aria-hidden>▸</span></button>
+            <div data-testid="practice-looks">
+              <SideMenuRow label="My looks" value={`${FACILITY_NAME[k]}'s looks`} open={looks} aria-pressed={looks} title={`The looks of the ${FACILITY_NAME[k].toLowerCase()}: its own, apart from the holes' and your property's`} onClick={() => { if (!looks) game.paint.pickLook(['green', 'bunker', 'tee'].includes(game.paint.brushKind) ? game.paint.brushKind : 'green'); onLooks(!looks); }} />
             </div>
           )}
           <p className={`leading-snug ${pt.ghost?.why ? 'text-rose-300' : ''}`} data-testid="practice-status">{pt.status}</p>

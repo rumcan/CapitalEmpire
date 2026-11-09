@@ -15,6 +15,7 @@ import { lookWhat } from '../../game/golf/looks';
 import { SurfaceMark } from './SurfaceMark';
 import { grassPuckImage, swatchPuckOf, useSwatchPucks } from './swatch-puck';
 import { SurfaceFocus } from './SurfaceFocus';
+import { SideMenuRow } from '../SideMenuRow';
 
 /** a k x k grid of dots, the size pills' glyph */
 export function SizeGlyph({ k }: { k: number }) {
@@ -103,9 +104,9 @@ export function GrassEdgesEntry({ game }: { game: Game }) {
   const p = game.paint, g = p.grass; if (!g) return null;
   const parts = [g.border > 0 ? `Border ${g.border < 1 ? `${Math.round(g.border * 100)} cm` : `${g.border.toFixed(1)} m`}` : 'Border none', g.round ? `Round off ${Math.round(g.smooth * 100)}%` : 'not rounded', `Shadow ${Math.round(g.shadow * 100)}%`];
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-1.5" data-edges="grass">
-      <span className="sub-line">{parts.join(' · ')}</span>
-      <button className="chip" onClick={() => p.openGrass(g.k)}>{`Edit in ${g.name}`} <span aria-hidden>▸</span></button>
+    <div className="mt-1 space-y-1.5" data-edges="grass">
+      <span className="sub-line block">{parts.join(' · ')}</span>
+      <SideMenuRow label={`Edit in ${g.name}`} sub="Its texture, scale, stripes and edges" onClick={() => p.openGrass(g.k)} />
     </div>
   );
 }
@@ -125,14 +126,14 @@ function GrassInHand({ game }: { game: Game }) {
   if (!g || (p.mode !== 'brush' && p.mode !== 'draw')) return null;
   const play = GRASS_PLAYS.find(q => q.play === g.plays)?.name ?? '';
   return (
-    <div className="mt-1.5 flex flex-wrap items-center gap-1.5" data-testid="grass-in-hand">
-      <span className="sub-line">{`${g.name} plays as ${play.toLowerCase()}`}</span>
-      {ask === g.k ? (<>
+    <div className="mt-1.5 space-y-1.5" data-testid="grass-in-hand">
+      <span className="sub-line block">{`${g.name} plays as ${play.toLowerCase()}`}</span>
+      {ask === g.k ? (<div className="flex flex-wrap items-center gap-1.5">
         <span className="text-rose-300">{`Delete ${g.name}? Its cells become plain ${g.plays === 'firstCut' ? 'rough' : play.toLowerCase()}.`}</span>
         <button className="chip" data-testid="grass-delete-yes" onClick={() => { p.deleteGrass(g.k); setAsk(0); }}>Delete</button>
         <button className="chip" onClick={() => setAsk(0)}>Keep</button>
-      </>) : (<>
-        <button className={`chip ${p.grassDraft?.k === g.k ? 'chip-on' : ''}`} data-testid="grass-edit" onClick={() => p.openGrass(g.k)}>Edit <span aria-hidden>▸</span></button>
+      </div>) : (<>
+        <SideMenuRow label="Edit" sub={`${g.name}: its texture, scale, stripes and edges`} open={p.grassDraft?.k === g.k} data-testid="grass-edit" onClick={() => p.openGrass(g.k)} />
         <button className="chip" data-testid="grass-delete" title={`Delete ${g.name}: its cells keep how they play and take that surface's own look (Undo brings it back)`} onClick={() => setAsk(g.k)}>Delete</button>
       </>)}
     </div>
@@ -189,15 +190,13 @@ export function LooksEntry({ game, looks, onLooks, arm }: { game: Game; looks: b
   // T271: a custom grass in hand is edited in its own editor (its look is the course's, not a hole's)
   const g = p.grass;
   if (g) return (
-    <div className="flex items-center justify-between gap-2" data-testid="looks-entry">
-      <span>Your grass</span>
-      <button className={`chip ${p.grassDraft?.k === g.k ? 'chip-on' : ''}`} data-looks aria-pressed={p.grassDraft?.k === g.k} title={`${g.name}: its texture, scale, exposure, stripes and edges (every cell of it on the course)`} onClick={() => { onLooks?.(false); p.openGrass(g.k); }}>{`${g.name}: ${familyName(g.family)}`} <span aria-hidden>▸</span></button>
+    <div data-testid="looks-entry">
+      <SideMenuRow label="Your grass" value={`${g.name}: ${familyName(g.family)}`} open={p.grassDraft?.k === g.k} data-looks aria-pressed={p.grassDraft?.k === g.k} title={`${g.name}: its texture, scale, exposure, stripes and edges (every cell of it on the course)`} onClick={() => { onLooks?.(false); p.openGrass(g.k); }} />
     </div>
   );
   return (
-    <div className="flex items-center justify-between gap-2" data-testid="looks-entry">
-      <span>My looks</span>
-      <button className={`chip ${looks ? 'chip-on' : ''}`} data-looks aria-pressed={looks} title={`${what}: only they wear this look (the others keep their own); the puck at the pointer shows it`} onClick={() => { arm(); p.closeGrass?.(); onLooks?.(!looks); }}>{`${name}: ${lookName(tex)}`} <span aria-hidden>▸</span></button>
+    <div data-testid="looks-entry">
+      <SideMenuRow label="My looks" value={`${name}: ${lookName(tex)}`} open={looks} data-looks aria-pressed={looks} title={`${what}: only they wear this look (the others keep their own); the puck at the pointer shows it`} onClick={() => { arm(); p.closeGrass?.(); onLooks?.(!looks); }} />
     </div>
   );
 }

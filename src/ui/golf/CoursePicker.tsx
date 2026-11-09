@@ -159,7 +159,7 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
   const row = 'rounded-lg border px-2 py-1 text-left text-xs';
   const pickRow = (on: boolean) => `${row} ${on ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`;
   const hdr = (title: string, onBack?: () => void) => (
-    <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2">
+    <div className="win-head win-head-slate win-head-pad5 flex items-center justify-between gap-2">
       <div className="flex items-center gap-2">
         {onBack && <button className="btn-icon" onClick={onBack} title="Back" aria-label="Back" data-testid="find-back">‹</button>}
         <div className="font-display text-lg font-bold leading-tight text-[var(--gold-hi)]">{title}</div>

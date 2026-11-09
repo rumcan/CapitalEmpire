@@ -16,6 +16,7 @@ import { lookName } from './CoursePanel';
 import { SurfaceMark } from './SurfaceMark';
 import { grassPuckImage } from './swatch-puck';
 import { MowingLines, hasMowing } from './MowingLines';
+import { SideMenuRow } from '../SideMenuRow';
 
 export function SurfaceFocus({ game, kind, onBack, pickGrass }: { game: Game; kind: BrushKind; onBack: () => void; pickGrass: (k: number) => void }) {
   const p = game.paint, s = p.style, b = SURFACE_BRUSHES.find(x => x.kind === kind), name = b?.name ?? kind, owner = p.lookOwner;
@@ -59,7 +60,7 @@ export function SurfaceFocus({ game, kind, onBack, pickGrass }: { game: Game; ki
           </div>
         </div>
       )}
-      <button className={`chip mt-2 ${edit ? 'chip-on' : ''}`} aria-expanded={edit} onClick={() => setEdit(!edit)} data-focus-edit>{edit ? 'Close the editor' : `Edit the ${name.toLowerCase()} look`} <span aria-hidden>{edit ? '▾' : '▸'}</span></button>
+      <SideMenuRow className="mt-2" label={edit ? 'Close the editor' : `Edit the ${name.toLowerCase()} look`} open={edit} side="down" aria-expanded={edit} onClick={() => setEdit(!edit)} data-focus-edit />
       {edit && <div className="mt-1.5" data-focus-editor><StyleEditor game={game} gridOnly /></div>}
     </div>
   );

@@ -21,7 +21,7 @@ export function ClubhouseCard({ view, onClose, onStaff, onPrice, right = 'right-
   const t = view.today, s = view.season, pace = s.paceRep > 0 ? `+${s.paceRep}` : `${s.paceRep}`;
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="club-card">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+      <div className="win-head win-head-slate flex items-center justify-between">
         <div>
           <div className="font-semibold text-amber-200">Clubhouse</div>
           <div className="text-[12px] text-slate-400">{view.open ? `Open · ${clock(view.minute)} · green fee ${money(view.fee)}` : 'Closed today: the course is the tournament\'s'} · {view.clubMembers} members</div>
