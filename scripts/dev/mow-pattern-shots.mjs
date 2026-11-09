@@ -1,8 +1,8 @@
 // T365 (#1020): each mowing pattern on a fairway, beside the owner's reference picture (E:/ClaudeTemp/tickets/mowing-reference.png: left, a real course's bold
 // wide stripes with a crossed cut at the bottom; right, a broad two-tone split along the fairway's line), in the old nine (?start=town):
-//   node scripts/dev/mow-pattern-shots.mjs --base http://localhost:5195/ --out E:/ClaudeTemp/T365 [--seed 7] [--zoom 20] [--only wide,halves] [--mow along]
-// The Course default's fairway look is set to each pattern in turn through the Paint tool (the same calls the panel's chips make), and the camera sits on
-// the old nine's longest fairway. Writes <out>/<pattern>.png (the picture, 1366 x 768 without the UI), <out>/<pattern>-ref.png (the reference | the shot, captioned),
+//   node scripts/dev/mow-pattern-shots.mjs --base http://localhost:5195/ --out E:/ClaudeTemp/T365 [--seed 7] [--zoom 14] [--only wide,halves] [--mow along]
+// The longest fairway's own look (the panel's This hole: the old nine's holes have looks of their own, which the Course default does not reach) is given each
+// pattern in turn through the Paint tool (the same calls the panel's chips make), and the camera sits on that fairway. Writes <out>/<pattern>.png (the picture, 1366 x 768 without the UI), <out>/<pattern>-ref.png (the reference | the shot, captioned),
 // and <out>/all.png (every pattern in one sheet). --mow along: the fairway default as it was before T365 (the dev server's ?mow=along).
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, no saves written.
 import { chromium } from 'playwright-core';
@@ -11,7 +11,7 @@ import { mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
-const base = opt('base', 'http://localhost:5195/'), out = opt('out', 'E:/ClaudeTemp/T365'), seed = opt('seed', '7'), zoom = +opt('zoom', '20') / 100, mowFlag = opt('mow', ''), only = opt('only', '');
+const base = opt('base', 'http://localhost:5195/'), out = opt('out', 'E:/ClaudeTemp/T365'), seed = opt('seed', '7'), zoom = +opt('zoom', '14') / 100, mowFlag = opt('mow', ''), only = opt('only', '');
 const REF = opt('ref', 'E:/ClaudeTemp/tickets/mowing-reference.png');
 const W = 1366, H = 768;
 /** the patterns shown: the id of the sheet, its caption and the look the Course default's fairway is given (undefined: none, the finish's own and its default pattern) */
@@ -65,10 +65,10 @@ try {
   });
   console.log('  fairway', JSON.stringify(spot));
   const look = (x, y, z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); g.emit(); }, [x, y, z]);
-  await page.evaluate(() => { const g = window.__game; g.setTool('select'); const p = g.paint; p.openSurface('fairway'); p.setLookDefault(true, false); g.emit(); });
+  await page.evaluate(h => { const g = window.__game; g.setTool('select'); const p = g.paint; p.openSurface('fairway'); p.setLookDefault(false, false); p.setHole(h); g.emit(); }, spot.h);
   await look(spot.x, spot.y, zoom);
   for (const [id, label, mow] of SHOTS) {
-    await page.evaluate(m => { const g = window.__game, p = g.paint; p.setLookDefault(true, false); p.setStyle({ mow: m }); g.emit(); }, mow);
+    await page.evaluate(([h, m]) => { const g = window.__game, p = g.paint; p.setLookDefault(false, false); p.setHole(h); p.setStyle({ mow: m }); g.emit(); }, [spot.h, mow]);
     await look(spot.x, spot.y, zoom); await settle(page, 2500);
     await page.mouse.move(4, 4); await page.evaluate(() => document.documentElement.classList.add('noui')); await sleep(300);
     const png = await page.screenshot({ type: 'png' }); shots.set(id, png);

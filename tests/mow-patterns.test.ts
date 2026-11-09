@@ -15,7 +15,6 @@ import { COURSE_PATCH_REACH } from '../src/game/ext/course-grid/patch';
 const FIN = DEFAULT_COURSE_FINISH, BASE = fairwayStripeLook(), F = clampSurfaces(file);
 const ALONG = { ...FIN, pattern: 'along' as const };
 const P = (id: string) => MOW_PATTERNS.findIndex(q => q.id === id);
-const deg = (x: number, y: number) => (Math.atan2(y, x) * 180) / Math.PI;
 /** the angle between two undirected lines, degrees 0..90 */
 const between = (a: { x: number; y: number }, b: { x: number; y: number }) => (Math.acos(Math.min(1, Math.abs(a.x * b.x + a.y * b.y))) * 180) / Math.PI;
 

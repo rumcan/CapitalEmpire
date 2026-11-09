@@ -214,5 +214,12 @@ test('the Mowing lines section is in the panel of the fairway, the green, the te
   assert.doesNotMatch(panel(), /aria-label="Light bands"/, 'and no sliders while it is off');
   p.openSurface('fairway'); p.setStyle({ mow: { pattern: 'check', width: 2 } });
   const html = panel(); assert.match(html, /data-mow-pattern="check"/); assert.match(html, /data-testid="mow-width"[^>]*>4 m</, 'the band width in metres (2 tiles of 2 m)'); assert.match(html, /data-mow="reset"/);
+  // T365: the new patterns' panels: a crosscut's Angle is its crossing (15 to 90, 90 by default), two-tone halves have no band width, wide stripes follow the hole
+  p.openSurface('fairway'); p.setStyle({ mow: { pattern: 'crosscut' } });
+  let h2 = panel(); assert.match(h2, /data-mow-pattern="crosscut"/); assert.match(h2, />Crossing</); assert.match(h2, /data-testid="mow-angle"[^>]*>90°</);
+  assert.match(h2, /aria-label="Mowing angle"[^>]*min="15"[^>]*max="90"/); assert.doesNotMatch(h2, /aria-label="Mowing angle" disabled/);
+  p.setStyle({ mow: { pattern: 'halves' } }); h2 = panel(); assert.doesNotMatch(h2, /aria-label="Mowing band width"/, 'two-tone halves: no band width'); assert.match(h2, /aria-label="Light bands"/);
+  p.setStyle({ mow: { pattern: 'wide' } }); h2 = panel(); assert.match(h2, /data-testid="mow-width"[^>]*>10 m</); assert.match(h2, /data-testid="mow-angle"[^>]*>follows</);
+  p.setStyle({ mow: undefined });
   for (const kind of ['bunker', 'water', 'waste', 'longGrass'] as const) { p.openSurface(kind); assert.doesNotMatch(panel(), /data-mowing=/, `${kind}: no Mowing lines`); }
 });
