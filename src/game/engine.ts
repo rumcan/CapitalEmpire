@@ -248,7 +248,7 @@ import { nextStructureFacing, structurePicture, structureArtReadiness, structure
 import { objectFacings } from './object-eight';
 import { objectAnchor, objectFacingLabel, type ObjectFacingKey } from './object-eight-types';
 import { STRUCTURE } from './golf/tents';
-import { prepDue, prepView, suggestSpot, type PrepFacts, type PrepTarget, type PrepView } from './golf/prep';
+import { completeHoles, prepCourseReady, prepDue, prepView, suggestSpot, type PrepFacts, type PrepTarget, type PrepView } from './golf/prep';
 import { gallerySpots } from './golf/galleries';
 import { buildWalkField, type Way } from './golf/walkground';
 import { CART, RouteCache, SPECTATOR_GROW, SPECTATOR_WATER_GROW, dilate, passable, type WalkField } from './golf/walkfield';
@@ -5876,11 +5876,12 @@ export class Game {
   }
   // ---------- the tournament prep quests (golf/prep.ts; the RangeGuideCard's look): this tier's chapter (or the next) as a checklist, the first
   // structure of a step suggested as a spot to click (the game never places a structure itself), each step paid once when it is built
-  /** the prep quests' facts (null outside golf): the tier, the needs the course has, its placed structures, its saved progress, and whether a
-   *  type's art is ready and its tier allowed */
+  /** the prep quests' facts (null outside golf): the tier, the complete holes the course has (T399), the needs the course has, its placed structures,
+   *  its saved progress, and whether a type's art is ready and its tier allowed */
   private prepFacts(): PrepFacts | null {
     const g = this.golf; if (!g) return null;
-    return { tier: g.tier, have: this.golfFacts(g).facts.have, placed: g.structures ?? [], save: g.prep ?? { done: [], skipped: [] }, available: id => this.eventArtStatus(id).ready && (STRUCTURE[id]?.tier ?? 9) <= g.tier + 1 };
+    const gf = this.golfFacts(g);
+    return { tier: g.tier, holes: completeHoles(gf.holes), have: gf.facts.have, placed: g.structures ?? [], save: g.prep ?? { done: [], skipped: [] }, available: id => this.eventArtStatus(id).ready && (STRUCTURE[id]?.tier ?? 9) <= g.tier + 1 };
   }
   /** the chapter the checklist shows, the player's hiding ignored (null: no chapter has a todo step) */
   private prepChapter(f: PrepFacts): number | null { return prepView({ ...f, save: { done: f.save.done, skipped: f.save.skipped } })?.chapter ?? null; }
@@ -5893,6 +5894,8 @@ export class Game {
     if (!force && ++this.prepTick % 6) return; // about once a second
     const g = this.golf, f = this.prepFacts(); if (!g || !f) { this.prepCached = null; return; }
     if (!g.prep) { g.prep = { done: prepDue(f).map(s => s.id), skipped: [] }; this.scheduleSave(); return; }
+    // T399 (#1077): before the course is playable there is no checklist, and no reward or toast either (a step built early pays once the course is there)
+    if (!prepCourseReady(f.holes, f.tier)) { if (this.prepCached) { this.prepCached = null; this.emit(); } return; }
     const p = g.prep, due = prepDue(f);
     for (const s of due) { p.done.push(s.id); this.traffic.spend('construction', -s.reward); this.toast(`Tournament prep: ${s.title} ✓ (+$${s.reward.toLocaleString()})`, 'good'); }
     const unhide = p.hidden !== undefined && p.hidden !== this.prepChapter(f);
@@ -8281,7 +8284,7 @@ export class Game {
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
     for (const k of this.stopCuts.keys()) this.setLotGround(k, null); this.stopCuts.clear();
-    this.golf = null; this.estateRt = null; this.estateDrawn.clear(); this.estateViews.clear(); this.estateRev = -1; this.estateOffer = null; this.estateStreet = null; this.estatePlacing = false; this.estateTool.on = false; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
+    this.golf = null; this.prepCached = null; this.prepFolded = null; this.estateRt = null; this.estateDrawn.clear(); this.estateViews.clear(); this.estateRev = -1; this.estateOffer = null; this.estateStreet = null; this.estatePlacing = false; this.estateTool.on = false; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
     this.landMode = false; this.land.hover = null; this.land.cancel(); this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
     // the last game's season card and calendar year do not carry over (T135: the new game's clock starts again in the city worker)

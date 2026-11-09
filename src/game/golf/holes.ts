@@ -13,6 +13,9 @@ export interface Hole { n: number; par: 3 | 4 | 5; lengthM: number; memberLength
 /** the course totals over its playable holes (those with a pin and a tee) */
 export interface CourseStats { holes: number; par: number; lengthM: number; memberLengthM: number; mix: { 3: number; 4: number; 5: number } }
 
+/** the warning a hole gets when its pin is not on a green (T399: the prep checklist counts a hole complete only without it) */
+export const PIN_OFF_GREEN = 'The pin is not on a green';
+
 /** the surfaces a ball can be played from (the off-course test) */
 const PLAYABLE = new Set<GolfSurface>(['green', 'fringe', 'tee', 'fairway', 'firstCut', 'rough', 'longGrass', 'fescue', 'bunker']);
 /** the spacing (tiles) at which the line is sampled for the off-course test */
@@ -138,7 +141,7 @@ export function deriveHoles(areas: CourseArea[], tees: TeeMark[], pins: Pin[], a
     const warnings: string[] = [];
     if (!pin) warnings.push('No pin');
     if (!start) warnings.push('No tee markers');
-    if (pin && surfaceAt(areas, pin.x, pin.y) !== 'green') warnings.push('The pin is not on a green');
+    if (pin && surfaceAt(areas, pin.x, pin.y) !== 'green') warnings.push(PIN_OFF_GREEN);
     if (back && surfaceAt(areas, back.x, back.y) !== 'tee') warnings.push('The back tee is not on a tee');
     const line = pin && start ? holeLine(start, holeAims, pin) : [];
     const lengthM = line.length ? Math.round(lineLength(line) * TILE_M) : 0;
