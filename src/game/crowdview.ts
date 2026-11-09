@@ -78,17 +78,20 @@ function seatFrame(spot: number, s: number, lt: number): number {
 /** Gallery buffer x/y/fans/kind/focus/aim at float offset o. Standing fans retain their seeded informal rows (up to 60); stands draw up to 90
  *  samples of occupied authored seats, preserving exact positions, aisle gaps, bank facings and bench heights. Larger stands sample across
  *  their occupied rows rather than changing gameplay capacity. Without supplied geometry the legacy stand view is only an estimate.
+ *  T377: a standing gallery with `places` (a tee's arc and a green's ring: golf/galleries.ts galleryPlaces, x y x y ... best first) puts its first n fans on the first
+ *  n places, each a little off its place (a 0.28 tile jitter), facing the focus; the fans past the places are not drawn.
  *  Reuses out objects; cheer >= 0 is seconds since a nearby birdie and keeps the existing clap/cheer animation clips. */
-export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1, seating?: PlacedSeating): number {
-  const x = G[o]!, y = G[o + 1]!, stand = G[o + 3] === 2, fx = G[o + 4]!, fy = G[o + 5]!;
+export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1, seating?: PlacedSeating, places?: ArrayLike<number>): number {
+  const x = G[o]!, y = G[o + 1]!, stand = G[o + 3] === 2, fx = G[o + 4]!, fy = G[o + 5]!, spread = !stand && !!places && places.length >= 2;
   const occupied = Math.max(0, Math.min(Math.round(G[o + 2]!), stand && seating ? seating.count : Infinity));
-  const n = Math.min(occupied, stand ? 90 : 60);
+  const n = Math.min(occupied, stand ? 90 : spread ? Math.min(60, places!.length >> 1) : 60);
   if (people <= 0 || n <= 0) return 0;
   unit(fx - x, fy - y);
   const ux = U[0], uy = U[1], vx = -uy, vy = ux, perRow = stand ? Math.max(1, Math.ceil(Math.sqrt(n * 2))) : 10, seatRow = rowToward(ux, uy);
   for (let s = 0; s < n; s++) {
     const r = Math.floor(s / perRow), along = (s % perRow - (perRow - 1) / 2) * 0.55, back = r * 0.6;
     let px = x + vx * along - ux * back + (hash(spot, s * 3) - 0.5) * 0.24, py = y + vy * along - uy * back + (hash(spot, s * 3 + 1) - 0.5) * 0.24;
+    if (spread) { px = places![2 * s]! + (hash(spot, s * 3) - 0.5) * 0.28; py = places![2 * s + 1]! + (hash(spot, s * 3 + 1) - 0.5) * 0.28; }
     const lt = ((now + hash(spot * 7 + 1, s) * 20) % 20 + 20) % 20, p = slot(out, s);
     p.x = px; p.y = py; p.group = 0; p.person = Math.floor(hash(spot, s * 3 + 2) * people);
     p.row = stand ? seatRow : rowToward(fx - px, fy - py);

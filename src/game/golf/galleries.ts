@@ -14,7 +14,10 @@ export type GalleryKind = 'green' | 'tee' | 'stand' | 'tent';
 /** a spot: its point (tiles), kind, pull, room (fans) and hole (0 for a structure); fx, fy: what its fans face (the pin of a green, the tee, a
  *  grandstand's authored front, a tent's centre); ax, ay: where play aims (the pin for a green or a tee, else fx, fy) */
 export interface GallerySpot { x: number; y: number; kind: GalleryKind; weight: number; cap: number; hole: number; fx: number; fy: number; ax: number; ay: number;
-  /** Structure identity for the renderer's authored seat layout; entry is the real approach/exit point in tiles. */ structureId?: number; entry?: SeatPoint }
+  /** Structure identity for the renderer's authored seat layout; entry is the real approach/exit point in tiles. */ structureId?: number; entry?: SeatPoint;
+  /** T377: where a tee's or a green's fans stand, best first (x, y, x, y ... in tiles): an arc round the back and sides of the tee box, a ring round the green's
+   *  open sides (galleryPlaces); absent with no field: the fans stand in a block at x, y as before */
+  places?: number[] }
 
 /** the pulls and rooms: a green's gallery (the last hole's pulls most), a tee's, a grandstand's (by its seats), a tent's (by its rate) */
 export const GALLERY = { green: { weight: 3, cap: 400, off: 7 }, lastGreen: { weight: 5, cap: 800 }, tee: { weight: 1.5, cap: 150, back: 3, off: 4 }, standPerWeight: 80, tentWeight: 1, tentFront: 3 };
@@ -53,6 +56,52 @@ export function standingSpot(f: WalkField | null | undefined, x: number, y: numb
   return { x, y };
 }
 
+/** T377 (#1033, the owner: "they need to be around it not on it"; the lead's review: a gallery is an arc round a tee, a ring round a green, not one clump): the places a tee's
+ *  or a green's fans stand at, best first. They are the points of a 1 m lattice on open ground that the walk field (the spectators', grown clear of the tee box,
+ *  the green, the bunkers and the water) lets people stand on, in the first ROWS rows from the box or the green (a row a lattice step further out, which a chamfer
+ *  distance to the box or the green measures), so a gallery is a few deep along its outline. A tee's are behind it and to its sides, never ahead of the tee (dot with
+ *  the line of play at most half a tile) and so outside the line of play and its forward cone; a green's are all round it but the cone of 35 degrees on each side of its
+ *  approach. They are ordered from straight behind (the tee's back, the green's back) outward round both sides, a bin of 0.06 rad at a time, a bin's rows together:
+ *  the first n places are the n fans of a crowd of n, so it grows outward along the arc and the ring and is a few rows deep all the way. [] where there are fewer than
+ *  a handful. c: the tee marker or the pin; u: the unit line of play, tee to pin */
+export function galleryPlaces(f: WalkField, kind: 'tee' | 'green', c: { x: number; y: number }, u: { x: number; y: number }): number[] {
+  const LAT = kind === 'tee' ? PLACE_LAT : PLACE_LAT_GREEN, R = kind === 'tee' ? 18 : 22, n = Math.floor(2 * R / LAT) + 1, src = kind === 'tee' ? GROUND.tee : GROUND.green, X = (i: number) => c.x - R + i * LAT, Y = (j: number) => c.y - R + j * LAT;
+  const d = new Float32Array(n * n), ok = new Uint8Array(n * n);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const g = groundAt(f, X(i), Y(j)); d[j * n + i] = g === src ? 0 : 1e9; ok[j * n + i] = standable(g) ? 1 : 0; }
+  // the distance to the box or the green: a chamfer over the lattice (the first pass down and right, the second up and left)
+  const D1 = LAT, D2 = LAT * Math.SQRT2;
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const k = j * n + i; let v = d[k]!;
+    if (i > 0) v = Math.min(v, d[k - 1]! + D1);
+    if (j > 0) { v = Math.min(v, d[k - n]! + D1); if (i > 0) v = Math.min(v, d[k - n - 1]! + D2); if (i < n - 1) v = Math.min(v, d[k - n + 1]! + D2); }
+    d[k] = v;
+  }
+  for (let j = n - 1; j >= 0; j--) for (let i = n - 1; i >= 0; i--) {
+    const k = j * n + i; let v = d[k]!;
+    if (i < n - 1) v = Math.min(v, d[k + 1]! + D1);
+    if (j < n - 1) { v = Math.min(v, d[k + n]! + D1); if (i < n - 1) v = Math.min(v, d[k + n + 1]! + D2); if (i > 0) v = Math.min(v, d[k + n - 1]! + D2); }
+    d[k] = v;
+  }
+  // the back of a tee is away from the line of play; the back of a green is away from its approach (the way the line of play comes)
+  const bx = kind === 'tee' ? -u.x : u.x, by = kind === 'tee' ? -u.y : u.y;
+  const cand: { x: number; y: number; dist: number; bin: number; band: number }[] = []; let dmin = Infinity;
+  for (let j = 1; j < n - 1; j++) for (let i = 1; i < n - 1; i++) {
+    const k = j * n + i; if (!ok[k] || !ok[k - 1] || !ok[k + 1] || !ok[k - n] || !ok[k + n] || d[k]! > PLACE_REACH) continue;
+    const dx = X(i) - c.x, dy = Y(j) - c.y, r = Math.hypot(dx, dy) || 1e-9;
+    if (kind === 'tee' ? dx * u.x + dy * u.y > 0.5 : (-dx * u.x - dy * u.y) / r > APPROACH_COS) continue;
+    dmin = Math.min(dmin, d[k]!);
+    cand.push({ x: X(i), y: Y(j), dist: d[k]!, bin: Math.floor(Math.abs(Math.atan2(bx * dy - by * dx, bx * dx + by * dy)) / PLACE_BIN), band: 0 });
+  }
+  const rows = cand.filter(q => { q.band = Math.floor((q.dist - dmin + 0.01) / LAT); return q.band < PLACE_ROWS; });
+  if (rows.length < 12) return [];
+  rows.sort((p, q) => p.bin - q.bin || p.band - q.band || p.x - q.x || p.y - q.y);
+  const out: number[] = []; for (const q of rows.slice(0, PLACES_MAX)) out.push(q.x, q.y);
+  return out;
+}
+/** the lattice of the places (tiles: a tee's 1 m, a green's 1.2 m), the rows a gallery is deep (2: a lattice step apart), the angle a bin is, how far from the box or green a
+ *  place may be (tiles), the most places a spot has, and the cone round a green's approach that no one stands in */
+const PLACE_LAT = 0.5, PLACE_LAT_GREEN = 0.6, PLACE_ROWS = 2, PLACE_BIN = 0.06, PLACE_REACH = 9, PLACES_MAX = 90, APPROACH_COS = Math.cos(35 * Math.PI / 180);
+
 /** the spots of a course (tees and pins by hole; a hole with no pin has no green spot) and its placed structures. T377: with the course's walk field (`ground`) a
  *  green's and a tee's gallery stands on open ground round it (standingSpot), never on the tee box or the putting surface */
 export function gallerySpots(tees: readonly { hole: number; x: number; y: number }[], pins: readonly { hole: number; x: number; y: number }[], structures: readonly PlacedEventStructure[] = [], sets: readonly ObjectEightSet[] = OBJECT_EIGHT_SETS, ground: WalkField | null = null): GallerySpot[] {
@@ -63,11 +112,13 @@ export function gallerySpots(tees: readonly { hole: number; x: number; y: number
     let ux = 0.7071, uy = 0.7071;
     if (t) { const dx = p.x - t.x, dy = p.y - t.y, L = Math.hypot(dx, dy); if (L > 1e-6) { ux = dx / L; uy = dy / L; } }
     const nx = -uy, ny = ux, G = p.hole === last ? { ...GALLERY.green, ...GALLERY.lastGreen } : GALLERY.green;
-    const g = standingSpot(ground, p.x + nx * GALLERY.green.off, p.y + ny * GALLERY.green.off, { x: p.x, y: p.y });
-    out.push({ x: g.x, y: g.y, kind: 'green', weight: G.weight, cap: G.cap, hole: p.hole, fx: p.x, fy: p.y, ax: p.x, ay: p.y });
+    // (T377: a green's gallery is a ring round its open sides, its point the best place, the ring's back; with too little open ground round it, or no field, the block)
+    const gp = ground ? galleryPlaces(ground, 'green', p, { x: ux, y: uy }) : [], g = gp.length ? { x: gp[0]!, y: gp[1]! } : standingSpot(ground, p.x + nx * GALLERY.green.off, p.y + ny * GALLERY.green.off, { x: p.x, y: p.y });
+    out.push({ x: g.x, y: g.y, kind: 'green', weight: G.weight, cap: G.cap, hole: p.hole, fx: p.x, fy: p.y, ax: p.x, ay: p.y, ...(gp.length ? { places: gp } : {}) });
     if (t) {
-      const s = standingSpot(ground, t.x - ux * GALLERY.tee.back + nx * GALLERY.tee.off, t.y - uy * GALLERY.tee.back + ny * GALLERY.tee.off, { x: t.x, y: t.y }, { tx: t.x, ty: t.y, ux, uy });
-      out.push({ x: s.x, y: s.y, kind: 'tee', weight: GALLERY.tee.weight, cap: GALLERY.tee.cap, hole: p.hole, fx: t.x, fy: t.y, ax: p.x, ay: p.y });
+      // (and a tee's an arc behind and to the sides of the tee box)
+      const tp = ground ? galleryPlaces(ground, 'tee', t, { x: ux, y: uy }) : [], s = tp.length ? { x: tp[0]!, y: tp[1]! } : standingSpot(ground, t.x - ux * GALLERY.tee.back + nx * GALLERY.tee.off, t.y - uy * GALLERY.tee.back + ny * GALLERY.tee.off, { x: t.x, y: t.y }, { tx: t.x, ty: t.y, ux, uy });
+      out.push({ x: s.x, y: s.y, kind: 'tee', weight: GALLERY.tee.weight, cap: GALLERY.tee.cap, hole: p.hole, fx: t.x, fy: t.y, ax: p.x, ay: p.y, ...(tp.length ? { places: tp } : {}) });
     }
   }
   for (const s of structures) {

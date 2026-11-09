@@ -4670,6 +4670,8 @@ export class Game {
     golfStructureProps = new Map<number, Prop>();
     /** Prepared row/entry anchors by worker gallery slot; rebuilt only when structures or holes change. */
     private gallerySeating = new Map<number, PlacedSeating>();
+    /** T377: per tee or green spot (the spot's index), where its fans stand: an arc round the tee box, a ring round the green (galleries.ts galleryPlaces) */
+    private galleryPlaces = new Map<number, readonly number[]>();
     eventTool = false;
     /** Condition for newly placed seating, independent of tournament tier, size and facing. */
     eventCondition: FacilityCondition = 'budget';
@@ -4835,8 +4837,9 @@ export class Game {
     if (sf !== this.walkFieldSent) { this.walkFieldSent = sf; this.traffic.setWalkField(sf); }
     // the galleries (LEAD.md M2.2): the greens and tees of the course and the placed grandstands and tents (T377: a green's and a tee's gallery on open ground round it)
     const spots = this.golf ? gallerySpots(this.golf.tees ?? [], this.golf.pins ?? [], this.golf.structures ?? [], undefined, sf) : [];
-    this.gallerySeating.clear();
+    this.gallerySeating.clear(); this.galleryPlaces.clear();
     spots.forEach((spot, i) => {
+      if (spot.places) this.galleryPlaces.set(i, spot.places); // (T377: a tee's arc and a green's ring: where its fans stand)
       if (spot.kind !== 'stand' || spot.structureId === undefined) return;
       const s = this.golf?.structures?.find(q => q.id === spot.structureId), def = s && STRUCTURE[s.typeId]; if (!s || !def) return;
       const authored = structureSeating(s), good = authored.layout && !seatingProblems(authored.layout, def.capacity, authored.footprint).length;
@@ -8103,7 +8106,7 @@ export class Game {
     } catch (e) { console.error('load failed', e); return false; }
   }
   private reset() {
-    this.eventCondition = 'budget'; this.gallerySeating.clear();
+    this.eventCondition = 'budget'; this.gallerySeating.clear(); this.galleryPlaces.clear();
     this.peds.restoreIdentities(); this.pedNet = -1; this.pedLots = -1; this.pedTick = 0; this.spectatorSeenN = 0;
     this.courseHeight = createCourseHeightField(); this.chSave = null; this.breakGrids.clear();
     this.realLand = createLandField(); this.landPack = Promise.resolve(null); this.landIn = null; // T357
@@ -8525,12 +8528,12 @@ export class Game {
     const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length, ch = this.play?.pv.cheers.length ? this.play.pv.cheers : null;
     let m = 0;
     for (let i = 0; i + 7 < G.length; i += 8) {
-      const x = G[i]!, y = G[i + 1]!;
-      if (x < X0 || x > X1 || y < Y0 || y > Y1) continue;
+      const x = G[i]!, y = G[i + 1]!, pad = this.galleryPlaces.has(i / 8) ? 14 : 0; // (T377: an arc or a ring of fans reaches this far from its point)
+      if (x < X0 - pad || x > X1 + pad || y < Y0 - pad || y > Y1 + pad) continue;
       // (T213: the fans cheer a birdie or better holed near them, the playback's celebrations)
       let cheer = -1;
       if (ch) for (const c of ch) if ((c.x - x) ** 2 + (c.y - y) ** 2 < CHEER_TILES * CHEER_TILES) cheer = Math.max(cheer, c.t);
-      const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P, cheer, this.gallerySeating.get(spot));
+      const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P, cheer, this.gallerySeating.get(spot), this.galleryPlaces.get(spot));
       this.rememberSpectators(P, k, 0, spot);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }

@@ -11,14 +11,16 @@ import assert from 'node:assert/strict';
 import { Crowd, WALK_STRIDE } from '../src/game/event/crowd';
 import { galleryPeople, walkerPeople, type CrowdPerson } from '../src/game/crowdview';
 import { SPECTATOR_PEOPLE } from '../src/game/library';
-import { gallerySpots } from '../src/game/golf/galleries';
-import { G, RouteCache, SPECTATOR, SPECTATOR_GROW, SPECTATOR_WATER_GROW, dilate, groundAt, type WalkField } from '../src/game/golf/walkfield';
+import { galleryPlaces, gallerySpots } from '../src/game/golf/galleries';
+import { G, RouteCache, SPECTATOR, SPECTATOR_GROW, SPECTATOR_WATER_GROW, dilate, groundAt, passable, type WalkField } from '../src/game/golf/walkfield';
 import { buildWalkField, type Way } from '../src/game/golf/walkground';
 import { CartPlay, cartPaths, fieldEntourage, makeField, playRound, teeTimes } from '../src/game/golf/play';
 import type { CourseView, Lie, PlayCart, PlayHole } from '../src/game/golf/play';
 import { TILE_M } from '../src/game/golf/types';
 
 const NP = SPECTATOR_PEOPLE.length;
+/** whether a spectator may stand at a point of a field */
+const passableAt = (f: WalkField, x: number, y: number): boolean => passable(f, SPECTATOR, x, y);
 /** the grounds nobody walks or drives on */
 const blocked = (f: WalkField, x: number, y: number): boolean => { const g = groundAt(f, x, y); return g === G.tee || g === G.green || g === G.bunker || g === G.water; };
 
@@ -44,8 +46,8 @@ const GATE = { x: 20, y: 10 };
 describe('T377: the galleries stand round a tee and a green, not on them', () => {
   const f0 = fieldA(), sf = dilate(f0, SPECTATOR_GROW, SPECTATOR_WATER_GROW);
   /** the people of a spot as the engine draws them (60 fans), by galleryPeople */
-  const fans = (s: { x: number; y: number; kind: string; fx: number; fy: number; ax: number; ay: number }, i: number): CrowdPerson[] => {
-    const out: CrowdPerson[] = [], buf = Float32Array.of(s.x, s.y, 60, s.kind === 'stand' ? 2 : 0, s.fx, s.fy, s.ax, s.ay), n = galleryPeople(buf, 0, i, 100, NP, out);
+  const fans = (s: { x: number; y: number; kind: string; fx: number; fy: number; ax: number; ay: number; places?: number[] }, i: number): CrowdPerson[] => {
+    const out: CrowdPerson[] = [], buf = Float32Array.of(s.x, s.y, 60, s.kind === 'stand' ? 2 : 0, s.fx, s.fy, s.ax, s.ay), n = galleryPeople(buf, 0, i, 100, NP, out, -1, undefined, s.places);
     return out.slice(0, n).map(p => ({ ...p }));
   };
   it('on the old code (no ground) the gallery of a big tee box and of a green stands on it', () => {
@@ -65,6 +67,74 @@ describe('T377: the galleries stand round a tee and a green, not on them', () =>
       // round it: the gallery is near the tee or green it watches (within 16 tiles), not far off
       assert.ok(Math.hypot(s.x - s.fx, s.y - s.fy) <= 22, `${s.kind} spot ${i} stays round its tee or green (${Math.hypot(s.x - s.fx, s.y - s.fy).toFixed(1)} tiles)`);
     });
+  });
+});
+
+/** a tee box of 4 x 8 tiles (x 40 to 44, y 56 to 64) with its marker at (42, 60), the line of play east to a green of radius 6 at (100, 60) with a bunker beside it at (96, 70) and a
+ *  pond to the north of the tee (x 20 to 40, y 30 to 45): the ground of a small course, for the galleries' arc and ring */
+function smallCourse(): { f0: WalkField; sf: WalkField; tee: { x: number; y: number }; pin: { x: number; y: number } } {
+  const tee = { x: 42, y: 60 }, pin = { x: 100, y: 60 };
+  const surf = (x: number, y: number): number => Math.hypot(x - pin.x, y - pin.y) <= 6 ? 8 : Math.hypot(x - 96, y - 70) <= 3 ? 6 : x >= 40 && x < 44 && y >= 56 && y < 64 ? 5 : x > 44 && x < 100 && Math.abs(y - 60) <= 6 ? 4 : 1;
+  const f0 = buildWalkField(0, 0, 140, 120, { surf, wet: (x, y) => x >= 20 && x < 40 && y >= 30 && y < 45, ways: [], teeBoxes: [{ x: tee.x, y: tee.y, r: 1.5 }], holes: [{ tee, aim: pin }] });
+  return { f0, sf: dilate(f0, SPECTATOR_GROW, SPECTATOR_WATER_GROW), tee, pin };
+}
+describe('T377: a gallery is an arc round the back and sides of a tee box and a ring round a green, a few rows deep, not one clump', () => {
+  const { f0, sf, tee, pin } = smallCourse(), u = { x: 1, y: 0 };
+  const fans = (s: { x: number; y: number; kind: string; fx: number; fy: number; ax: number; ay: number; places?: number[] }, i: number): CrowdPerson[] => {
+    const out: CrowdPerson[] = [], buf = Float32Array.of(s.x, s.y, 60, 0, s.fx, s.fy, s.ax, s.ay), n = galleryPeople(buf, 0, i, 100, NP, out, -1, undefined, s.places);
+    return out.slice(0, n).map(p => ({ ...p }));
+  };
+  const near = (ps: number[]): { min: number; mean: number } => {
+    let min = Infinity, sum = 0; const n = ps.length >> 1;
+    for (let i = 0; i < n; i++) { let best = Infinity; for (let j = 0; j < n; j++) if (j !== i) best = Math.min(best, Math.hypot(ps[2 * i]! - ps[2 * j]!, ps[2 * i + 1]! - ps[2 * j + 1]!)); min = Math.min(min, best); sum += best; }
+    return { min, mean: sum / n };
+  };
+  const distTo = (ground: number, x: number, y: number): number => { let d = Infinity; for (let j = 0; j < sf.h; j++) for (let i = 0; i < sf.w; i++) if (sf.g[j * sf.w + i] === ground) d = Math.min(d, Math.hypot(sf.x0 + i + 0.5 - x, sf.y0 + j + 0.5 - y)); return d; };
+  it('a tee: places behind it and to its sides on open ground, never ahead of it, 2 rows deep about a metre apart, both sides of the line of play', () => {
+    const ps = galleryPlaces(sf, 'tee', tee, u); assert.ok(ps.length >= 120, `${ps.length / 2} places`); assert.ok(ps.length <= 180);
+    for (let i = 0; i < ps.length; i += 2) {
+      const x = ps[i]!, y = ps[i + 1]!, g = groundAt(f0, x, y);
+      assert.ok(g === G.open || g === G.path || g === G.walk, `a place at ${x}, ${y} on ground ${g}`);
+      assert.ok(passableAt(sf, x, y), 'and clear of the grown tee box, green, bunker and water'); assert.ok((x - tee.x) * u.x + (y - tee.y) * u.y <= 0.5 + 1e-9, `a place ahead of the tee: ${x}, ${y}`);
+    }
+    const first = ps.slice(0, 120); let north = 0, south = 0, minY = Infinity, maxY = -Infinity;
+    for (let i = 1; i < first.length; i += 2) { const y = first[i]!; if (y < tee.y - 3) north++; if (y > tee.y + 3) south++; minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+    assert.ok(north >= 8 && south >= 8, `the first 60 fans are on both sides of the line of play: ${north} to its north, ${south} to its south`);
+    assert.ok(maxY - minY >= 13, `an arc of ${(maxY - minY).toFixed(1)} tiles across the line of play, not a clump of 5`);
+    const rows = new Set<number>(); for (let i = 0; i < 120; i += 2) rows.add(Math.round(distTo(G.tee, ps[i]!, ps[i + 1]!) / 0.5));
+    assert.ok(rows.size >= 2 && rows.size <= 4, `${rows.size} rows deep (distances to the box ${[...rows].join(', ')} half tiles)`);
+    const nn = near(first); assert.ok(nn.min >= 0.45 && nn.mean <= 0.8, `about a metre apart: the nearest neighbour ${nn.min.toFixed(2)} at least, ${nn.mean.toFixed(2)} on average (tiles of 2 m)`);
+  });
+  it('a tee: filled from the best place outward: the back of the box first, the crowd growing sideways along the arc', () => {
+    const ps = galleryPlaces(sf, 'tee', tee, u), lateral = (k: number) => { let m = 0; for (let i = 0; i < 2 * Math.min(k, ps.length >> 1); i += 2) m = Math.max(m, Math.abs(ps[i + 1]! - tee.y)); return m; };
+    assert.ok(Math.abs(ps[1]! - tee.y) <= 1.5 && ps[0]! < tee.x - 3, `the first place is straight behind the box: ${ps[0]}, ${ps[1]}`);
+    assert.ok(lateral(8) <= lateral(30) && lateral(30) <= lateral(60) && lateral(60) <= lateral(90), 'each crowd is wider than the one before');
+    assert.ok(lateral(10) < 3 && lateral(60) > 6, `10 fans stand together behind the box (${lateral(10).toFixed(1)} wide), 60 reach round it (${lateral(60).toFixed(1)})`);
+  });
+  it('a green: a ring round its open sides, on open ground clear of the grown green, the bunker and the water, never in the cone of its approach', () => {
+    const ps = galleryPlaces(sf, 'green', pin, u); assert.ok(ps.length >= 120, `${ps.length / 2} places`);
+    let behind = 0, north = 0, south = 0;
+    for (let i = 0; i < ps.length; i += 2) {
+      const x = ps[i]!, y = ps[i + 1]!, g = groundAt(f0, x, y), dx = x - pin.x, dy = y - pin.y, r = Math.hypot(dx, dy);
+      assert.ok(g === G.open || g === G.path || g === G.walk, `a place at ${x}, ${y} on ground ${g}`); assert.ok(passableAt(sf, x, y));
+      assert.ok(r >= 8, `a place ${r.toFixed(1)} tiles from the pin: on the green or its collar`); assert.ok(Math.hypot(x - 96, y - 70) >= 5, 'or in the margin of the bunker');
+      assert.ok(-dx / r <= Math.cos(35 * Math.PI / 180) + 1e-9, `a place in the cone of the approach: ${x}, ${y}`);
+      if (dx > 4) behind++; if (dy < -4) north++; if (dy > 4) south++;
+    }
+    assert.ok(behind > 10 && north > 10 && south > 10, `behind ${behind}, to the north ${north}, to the south ${south}`);
+    const first = ps.slice(0, 120), nn = near(first); assert.ok(nn.min >= 0.45 && nn.mean <= 0.8, `about a metre apart (${nn.min.toFixed(2)}, ${nn.mean.toFixed(2)})`);
+    let a0 = Infinity, a1 = -Infinity; for (let i = 0; i < 120; i += 2) { const a = Math.atan2(first[i + 1]! - pin.y, first[i]! - pin.x); a0 = Math.min(a0, a); a1 = Math.max(a1, a); }
+    assert.ok((a1 - a0) * 180 / Math.PI >= 100, `60 fans reach ${((a1 - a0) * 180 / Math.PI).toFixed(0)} degrees round the green`);
+  });
+  it('the spots carry the places (their point is the best place), the fans are drawn on them, none on a tee, a green, a bunker, water or a fairway; with no room round a tee the spot is the block as before', () => {
+    const tees = [{ hole: 1, ...tee }], pins = [{ hole: 1, ...pin }], spots = gallerySpots(tees, pins, [], undefined, sf);
+    for (const s of spots) { assert.ok(s.places && s.places.length >= 120, `${s.kind} places`); assert.deepEqual([s.x, s.y], [s.places![0], s.places![1]], 'the spot is at the best place'); }
+    spots.forEach((s, i) => { const ps = fans(s, i); assert.equal(ps.length, 60); for (const p of ps) { const g = groundAt(f0, p.x, p.y); assert.ok(g === G.open || g === G.path || g === G.walk, `a fan on ground ${g}`); } });
+    // a tee box in the middle of a lake: no place, so the old block (standingSpot) and no places
+    const lake = buildWalkField(0, 0, 80, 80, { surf: (x, y) => x >= 38 && x < 42 && y >= 38 && y < 42 ? 5 : 3, wet: () => false, ways: [], teeBoxes: [{ x: 40, y: 40, r: 1.5 }], holes: [] });
+    const cut = gallerySpots([{ hole: 1, x: 40, y: 40 }], [{ hole: 1, x: 200, y: 40 }], [], undefined, dilate(lake, 2, 1)).find(s => s.kind === 'tee')!;
+    assert.equal(cut.places, undefined, 'no places on a tee box with no ground to stand on round it');
+    assert.equal(gallerySpots(tees, pins, [])[0]!.places, undefined, 'and none with no field');
   });
 });
 

@@ -58,6 +58,22 @@ test('galleryPeople: the counts cap (60 a spot, 90 a grandstand), none with no f
   assert.deepEqual(a.slice(0, na), b.slice(0, nb));
 });
 
+test('galleryPeople (T377): with places the first n fans stand on the first n places (a little off each), facing the focus, and the fans past the places are not drawn; a stand ignores them; without places the block as before', () => {
+  const places = [10, 10, 12, 10, 14, 10, 16, 10], out: CrowdPerson[] = [];
+  const n = galleryPeople(spotBuf(0, 3, 30, 30, 20, 10), 0, 5, 100, PEOPLE, out, -1, undefined, places), first = out.slice(0, 3).map(p => [p.x, p.y, p.person]);
+  assert.equal(n, 3, 'a crowd of 3 on the first 3 places');
+  for (let j = 0; j < n; j++) {
+    const p = out[j]!; assert.ok(Math.abs(p.x - places[2 * j]!) <= 0.14 + 1e-9 && Math.abs(p.y - places[2 * j + 1]!) <= 0.14 + 1e-9, `fan ${j} at ${p.x.toFixed(2)}, ${p.y.toFixed(2)} off place ${j}`);
+    assert.equal(p.row, rowToward(20 - p.x, 10 - p.y), 'facing the focus');
+  }
+  assert.equal(galleryPeople(spotBuf(0, 500, 30, 30, 20, 10), 0, 5, 100, PEOPLE, out, -1, undefined, places), 4, 'no more fans than places');
+  assert.equal(galleryPeople(spotBuf(0, 500, 30, 30, 20, 10), 0, 5, 100, PEOPLE, out), 60, 'with none, the block of 60 as before');
+  assert.equal(galleryPeople(spotBuf(2, 50, 30, 30, 20, 10), 0, 5, 100, PEOPLE, out, -1, undefined, places), 50, 'a stand has its own seats');
+  // the same fans on the same places every time (seeded), and another spot's fans are other people
+  const again: CrowdPerson[] = []; galleryPeople(spotBuf(0, 3, 30, 30, 20, 10), 0, 5, 100, PEOPLE, again, -1, undefined, places);
+  assert.deepEqual(again.slice(0, 3).map(p => [p.x, p.y, p.person]), first);
+});
+
 test('galleryPeople: a green\'s fans face the focus (their row is toward it), and the rows step back from the focus', () => {
   const out: CrowdPerson[] = [], focus = { x: 20, y: 10 };
   const n = galleryPeople(spotBuf(0, 30, 20, 20, focus.x, focus.y), 0, 7, 12.5, PEOPLE, out);

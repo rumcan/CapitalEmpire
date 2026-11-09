@@ -82,19 +82,27 @@ try {
     const r = await page.evaluate(() => {
       const { M, g, groundOf, surfOf, BLOCKED, NP, field, tees, pins } = window.__t377;
       const unit = (dx, dy) => { const L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
-      const fansOf = (s, i) => { const o = [], buf = Float32Array.of(s.x, s.y, 60, s.kind === 'stand' ? 2 : 0, s.fx, s.fy, s.ax, s.ay), n = M.view.galleryPeople(buf, 0, i, 100, NP, o); return o.slice(0, n).map(p => ({ x: p.x, y: p.y })); };
+      // (the fans as the engine draws them: on the spot's places when it has them (the new code's arc and ring), else the block)
+      const fansOf = (s, i) => { const o = [], buf = Float32Array.of(s.x, s.y, 60, s.kind === 'stand' ? 2 : 0, s.fx, s.fy, s.ax, s.ay), n = M.view.galleryPeople(buf, 0, i, 100, NP, o, -1, undefined, s.places); return o.slice(0, n).map(p => ({ x: p.x, y: p.y })); };
       const spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], undefined, field());
       const tally = (kind) => {
-        const t = { spots: 0, fans: 0, onTee: 0, onGreen: 0, onFairway: 0, onWater: 0, onBunker: 0, ahead: 0 };
+        const t = { spots: 0, fans: 0, onTee: 0, onGreen: 0, onFairway: 0, onWater: 0, onBunker: 0, ahead: 0, spread: 0, spreadMax: 0, withPlaces: 0 }; // (spread: the mean over the spots of the width of the 60 fans across the line of play for a tee, the angle they cover round the pin for a green, in degrees)
         spots.forEach((s, i) => {
           if (s.kind !== kind) return; t.spots++;
           const tee = tees.find(q => q.hole === s.hole), pin = pins.find(q => q.hole === s.hole), [ux, uy] = tee && pin ? unit(pin.x - tee.x, pin.y - tee.y) : [0, 0];
-          for (const p of fansOf(s, i)) {
+          const ps = fansOf(s, i); if (s.places) t.withPlaces++;
+          if (ps.length && tee && pin) {
+            let lo = Infinity, hi = -Infinity;
+            for (const p of ps) { const w = kind === 'tee' ? (p.x - tee.x) * -uy + (p.y - tee.y) * ux : Math.atan2(ux * (p.y - pin.y) - uy * (p.x - pin.x), ux * (p.x - pin.x) + uy * (p.y - pin.y)) * 180 / Math.PI; lo = Math.min(lo, w); hi = Math.max(hi, w); }
+            t.spread += (hi - lo) / 1; t.spreadMax = Math.max(t.spreadMax, hi - lo);
+          }
+          for (const p of ps) {
             t.fans++; const gr = groundOf(p.x, p.y);
             if (gr === 'tee') t.onTee++; if (gr === 'green') t.onGreen++; if (gr === 'fairway') t.onFairway++; if (gr === 'water') t.onWater++; if (gr === 'bunker') t.onBunker++;
             if (kind === 'tee' && tee && ((p.x - tee.x) * ux + (p.y - tee.y) * uy) > 1.2) t.ahead++;
           }
         });
+        if (t.spots) t.spread = +(t.spread / t.spots).toFixed(1); t.spreadMax = +t.spreadMax.toFixed(1);
         return t;
       };
       // the holes to shoot: the tee whose gallery stood most on the painted tee box, in water, on a green, a bunker or a fairway with the old rule (a place behind and beside
@@ -118,9 +126,10 @@ try {
       const at = which === 'tee' ? pos.tees.find(t => t.hole === hole) : pos.pins.find(p => p.hole === hole);
       await page.evaluate(([hole]) => {
         const { M, g, field, tees, pins } = window.__t377, spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], undefined, field());
-        const buf = new Float32Array(8 * 2); let n = 0;
-        for (const s of spots) if (s.hole === hole && (s.kind === 'tee' || s.kind === 'green')) { buf.set([s.x, s.y, 60, 0, s.fx, s.fy, s.ax, s.ay], 8 * n); n++; }
-        window.__galBuf = buf.slice(0, 8 * n); Object.defineProperty(g.traffic, 'gallery', { configurable: true, get: () => window.__galBuf, set: () => {} });
+        // every spot, in the engine's order (the engine's places are by the spot's index): 60 fans at that hole's tee and green, none elsewhere
+        const buf = new Float32Array(8 * spots.length);
+        spots.forEach((s, i) => buf.set([s.x, s.y, s.hole === hole && (s.kind === 'tee' || s.kind === 'green') ? 60 : 0, 0, s.fx, s.fy, s.ax, s.ay], 8 * i));
+        window.__galBuf = buf; Object.defineProperty(g.traffic, 'gallery', { configurable: true, get: () => window.__galBuf, set: () => {} });
       }, [hole]);
       await look(page, at.x, at.y, zoom); await settle(page, warm ? 3500 : 1800);
       if (!warm) await shot(page, `gallery-${kind}-hole${hole}`);
