@@ -43,11 +43,10 @@ import ALLOC_JSON from './house-allocations.json';
 import REMOVED from '../../../scripts/assets/removed.json';
 import { OWNER_SCALE } from './scales';
 import { LIBRARY } from '../library';
-import { drawnAsStandIn, standInFamily } from '../newart';
+import { drawnAsStandIn, lotDrawLimit, standInFamily } from '../newart';
 import { GAS_SHOP, GAS_SHOP_FALLBACK, WHEEL_STOP, gasPlan, isCanopy, isOpenStructure, matchBays } from './gas-station';
 import { LATEST, LOT_MODELS } from './lot-models';
 import { lotPickup, parkedAs } from '../vehicles';
-import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
 import { presetTier, tierOf } from './tiers';
 import { buildGroups, groupOf as cellMembers, roleOf, sizeOf, zoneOf, type Role } from './groups';
@@ -496,7 +495,7 @@ export function swapScale(q: PresetProp, id: string, f: PresetFrame, R: SwapRule
   if (SWAP_K.size > 1 << 16) SWAP_K.clear();
   // (T331: the limit of the view it is drawn in and of view 0: faceStreet turns a swapped shop to face its street after the swap, and the turned view's
   // picture can hold fewer pixels: a laundromat swapped at its view's limit was drawn 0.04% past the east view's)
-  const limOf = (v: number) => PIXEL_LIMIT[LIB_AT.get(drawnView(id, f, v).id) ?? -1] ?? 0;
+  const limOf = (v: number) => lotDrawLimit(LIB_AT.get(drawnView(id, f, v).id) ?? -1);
   const half = frameHalf(f), h0 = half(q), h1 = half({ ...q, id, scale: 1 }), lim = Math.min(limOf(q.view), limOf(0));
   k = Math.min(q.scale, lim / ownerScaleOf(id), (h0.ha + R.side) / h1.ha, (2 * h0.hb + R.back) / (2 * h1.hb));
   k = k >= R.least && h1.ha * h1.hb * k * k >= R.area * h0.ha * h0.hb ? k : 0;
