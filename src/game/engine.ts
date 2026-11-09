@@ -4036,7 +4036,8 @@ export class Game {
   /** a lot's ground patches (driveways, walks, car parks, yards); null drops them. Batched: the ground hears of them once per frame */
   setLotGround(key: string, patches: LotPatch[] | null) {
     const keep: string[] = [];
-    for (let i = 0; i < (patches?.length ?? 0); i++) { const p = patches![i], surface = (p.paint || p.lawn) && grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)); if (!surface) continue; const id = `${key}/${i}`; keep.push(id); this.grass.register(id, p.pts, surface, /worn|dry/i.test(p.tex) ? 'stressed' : 'maintained'); }
+    // (T402: a farm's fields of grass are painted areas for their look alone: they are no managed turf, so no grass care, condition or health colour reaches them)
+    for (let i = 0; i < (patches?.length ?? 0); i++) { const p = patches![i], surface = !key.startsWith('farm:') && (p.paint || p.lawn) && grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)); if (!surface) continue; const id = `${key}/${i}`; keep.push(id); this.grass.register(id, p.pts, surface, /worn|dry/i.test(p.tex) ? 'stressed' : 'maintained'); }
     // a course chunk's turf (each grass surface's outer fill rings, at most 1,000 corners each) waits for courseGrass, a millisecond a frame
     if (key.startsWith('cg:')) this.grassWait.set(key, patches);
     else {

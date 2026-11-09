@@ -9,7 +9,7 @@
 import { MAP, clamp, mulberry } from '../../iso';
 import { LIBRARY } from '../../library';
 import type { LibItem } from '../../types';
-import type { LotPatch } from '../../ground-protocol';
+import type { LotPatch, PatchPaint } from '../../ground-protocol';
 import type { Pt } from '../../network';
 import type { Composition, Placed } from '../../lots/compose';
 import { OWNER_SCALE } from '../../lots/scales';
@@ -165,7 +165,7 @@ const CHAIN_GATE: Pair = { x: 'expansion:gate-chainlink-x', y: 'expansion:gate-c
 interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; fence: boolean; veh: boolean; street: boolean; plant: boolean }
 interface Spec { id: string; s: number; flip: boolean; h: Box4 }
 interface Opt { flip?: boolean; mul?: number; fixed?: boolean; street?: boolean; plant?: boolean; veh?: boolean }
-interface Patch { block: boolean; tex: LotPatch['tex']; quad: number[]; lines?: number[]; crop?: LotPatch['crop']; hard?: true }
+interface Patch { block: boolean; tex: LotPatch['tex']; quad: number[]; lines?: number[]; crop?: LotPatch['crop']; hard?: true; paint?: PatchPaint }
 
 /** does an axis-aligned footprint overlap a convex quad (8 numbers, corners in order); touching is not overlap */
 function hit(fp: Box4, q: number[]): boolean {
@@ -275,6 +275,17 @@ class FB {
     if (A1 - A0 < 0.05 || B1 - B0 < 0.05) return;
     this.patches.push(crop ? { block, tex, quad: this.quad(A0, B0, A1, B1), crop } : hard ? { block, tex, quad: this.quad(A0, B0, A1, B1), lines, hard: true } : { block, tex, quad: this.quad(A0, B0, A1, B1), lines });
   }
+  /** T402 (#1080, T361 #1016): the parcel frame's turn from the map's axes in degrees, folded to -45..45 (a parcel on the axes: 0; on a road at 45 degrees to the grid: 45; a
+   *  field's grain follows its own sides, and a quarter turn of it is the same grain), the angle a grass patch's texture is laid at */
+  get turn(): number { const a = Math.atan2(this.u.y, this.u.x) * 180 / Math.PI, t = Math.round((((a % 90) + 135) % 90 - 45) * 1e4) / 1e4; return t === 0 ? 0 : t; }
+  /** T402 (#1080, T361 #1016): a field of grass over a parcel-frame rectangle, laid as a painted area (the way the course lays its long grass): through the iso ground path,
+   *  its texture at the course's own scale and turned with the field (FieldGrass.a), its edge feathered into the ground round it (the flat profile: the feather the course's
+   *  rough and fescue have) in place of the hard cut edge of a lot patch, under every area the player paints (z). `i` keeps the fields' order */
+  grass(a0: number, b0: number, a1: number, b1: number, tex: LotPatch['tex'], i = 0) {
+    const A0 = clamp(a0, 0, this.W), A1 = clamp(a1, 0, this.W), B0 = clamp(b0, 0, this.D), B1 = clamp(b1, 0, this.D);
+    if (A1 - A0 < 0.05 || B1 - B0 < 0.05) return;
+    this.patches.push({ block: false, tex, quad: this.quad(A0, B0, A1, B1), paint: { s: FIELD_GRASS.s, a: this.turn, b: 0, bt: tex as string, z: FIELD_GRASS.z + i, e: FIELD_GRASS.e } });
+  }
   /** crop or furrow rows for a field rectangle: lines every ROW tiles running along u or along n, in world tiles.
    *  NOTE for the lead: the renderer paints every lot patch's lines in worn off-white today (parking bays); rows want a
    *  dark furrow colour when this is wired in — the geometry here is the rows whatever they are painted in. */
@@ -332,7 +343,7 @@ class FB {
       }
       acc.push(it); props.push({ id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s });
     }
-    return { props, ground: this.patches.map(q => (q.crop ? { pts: q.quad, tex: q.tex, crop: q.crop } : q.hard ? { pts: q.quad, tex: q.tex, ...(q.lines?.length ? { lines: q.lines } : {}), hard: true as const } : q.lines?.length ? { pts: q.quad, tex: q.tex, lines: q.lines } : { pts: q.quad, tex: q.tex })) };
+    return { props, ground: this.patches.map(q => (q.paint ? { pts: q.quad, tex: q.tex, paint: q.paint } : q.crop ? { pts: q.quad, tex: q.tex, crop: q.crop } : q.hard ? { pts: q.quad, tex: q.tex, ...(q.lines?.length ? { lines: q.lines } : {}), hard: true as const } : q.lines?.length ? { pts: q.quad, tex: q.tex, lines: q.lines } : { pts: q.quad, tex: q.tex })) };
   }
 }
 
@@ -533,6 +544,10 @@ export const LANE_HALF = 1.2;
 export const ORCHARD_PITCH = 3, ORCHARD_MAX = 8, ORCHARD_MUL = 0.62;
 /** the fallow field's grass (the course's long grass: an unkept field, never the map's own grass, so it reads against it) */
 const FALLOW_TEX: LotPatch['tex'] = 'golfLongGrass';
+/** T402 (#1080, T361 #1016; the owner, 2026-11-08: "fix scaling on farms with the green long grass texture. it has a hard edge that doesn't look right"): how a field of grass is
+ *  laid. A painted area's look, the way the course's long grass is: scale s (1: the course's own, the same display scale as the map's other tile-set grasses), its edge e feathered
+ *  (the flat profile, 0.5 tiles: no cut line against the ground round it), drawn under every area the player paints (z, the range ground's own order) */
+export const FIELD_GRASS: { s: number; e: NonNullable<PatchPaint['e']>; z: number } = { s: 1, e: 'flat', z: -2e6 };
 /** the windbreak's trees: the gold birch (Stand In for the poplars: their shape and autumn gold) on most farms, else a row of spruces; one tree a row */
 const WIND_POPLAR = names(['ref:tree-birch-gold']), WIND_SPRUCE = names(['ref:tree-spruce-blue', 'capital:tree-spruce-open']);
 /** T276 (#855; the owner, 2026-10-29: "Farm roads' tree lines become a single row on one side of the road only ... vary each tree's size and
@@ -706,7 +721,7 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   for (const q of L.plots) {
     const st = plotState(q, month);
     if (st) { const d = q.alongU ? p.u : p.n; B.pave(false, q.a0, q.b0, q.a1, q.b1, 'field', undefined, { st, d: [Math.round(d.x * 1e4) / 1e4, Math.round(d.y * 1e4) / 1e4], ph: q.ph }); }
-    else if (q.kind === 'fallow') B.pave(false, q.a0, q.b0, q.a1, q.b1, FALLOW_TEX);
+    else if (q.kind === 'fallow') B.grass(q.a0, q.b0, q.a1, q.b1, FALLOW_TEX, B.patches.length);
   }
   // (the yard: packed earth, its edge soft into the grass)
   B.pave(false, L.yA0, L.yardB0, L.yA1, L.yardB1, 'dirt');
