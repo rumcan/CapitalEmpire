@@ -16,18 +16,18 @@ import { canvas, ctx2d, type C2D, type Cnv } from './canvas2d';
 
 /** the litter's colours: sand (pale to deep), stone (grey and brown), dry brush (browns), a little grey-green sage, and the dust of a dry road */
 export const SAND = ['#d6b97f', '#c9a668', '#e2c993', '#bf9a60'] as const;
-export const STONE = ['#9a9184', '#7d766b', '#b0a798', '#6a645b', '#a18a6c', '#8c6f52'] as const;
+export const STONE = ['#a18a6c', '#8c6f52', '#b3a186', '#9a9184', '#7d766b', '#6a645b'] as const;
 export const BRUSH = ['#6e4f32', '#8a6a42', '#5a4128', '#9a7b50'] as const;
 export const SAGE = ['#8c9468', '#7f8860', '#a3a67b'] as const;
 export const DUST = '#caa878';
 /** the tints the fallen leaves' atlas lays over the desert sprites in place of the leaves' (leaf-atlas.ts: as drawn, sand, stone, dry brown, sage), and how (alpha, the multiply) */
-export const DESERT_TINTS = ['', '#d6b878', '#8a6a42', '#cdb27a', '#8c8472'] as const; // (in the leaves' order of moods: as drawn, sand where the maple's red was, dry brown for the oak's brown, straw for the gold, stone for the green: warm ones lead, so a pile under a palm is sand and dry brush, not grey)
+export const DESERT_TINTS = ['', '#d6b878', '#8a6a42', '#cdb27a', '#b09a74'] as const; // (in the leaves' order of moods: as drawn, sand where the maple's red was, dry brown for the oak's brown, straw for the gold, stone for the green: warm ones lead, so a pile under a palm is sand and dry brush, not grey)
 /** the strokes of the grass tufts at the kerb's edge in the desert: dry straw and brown (the autumn grass is green) */
 export const DESERT_TUFT = ['#a08a5a', '#b9a574', '#7d6a45', '#c9b88a'] as const;
 export const DESERT_TINT_LOOK: readonly { a: number; mul?: string }[] = [{ a: 0 }, { a: 0.55 }, { a: 0.5 }, { a: 0.55 }, { a: 0.45 }];
 /** the desert litter's sprites are drawn this much bigger than the leaves they stand for (the same counts and places: a pebble or a clump of sand a hand's breadth across reads on a road at the closest zoom, a leaf's 0.1 to 0.6 m does not) and
  *  cast a lighter shadow (leaf-atlas.ts) */
-export const DESERT_LITTER_SCALE = 1.5, DESERT_SHADOW_A = 0.16;
+export const DESERT_LITTER_SCALE = 1.7, DESERT_SHADOW_A = 0.05; // (a soft clump of sand has a soft silhouette: its shadow is a faint one, or it is a grey haze)
 
 const pick = <T>(a: readonly T[], r: () => number): T => a[Math.floor(r() * a.length) % a.length]!;
 const hex = (h: string): [number, number, number] => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
@@ -36,7 +36,7 @@ const TAU = Math.PI * 2;
 
 /* ---- the pieces (pixels; (x, y) a centre) ---- */
 /** a pebble: a rounded irregular stone, lit toward the upper right (the sun) and shaded toward the lower left, with a contact shadow beside it and a thin dark rim */
-export function pebble(g: C2D, x: number, y: number, rad: number, r: () => number, tone: string = pick(STONE, r)): void {
+export function pebble(g: C2D, x: number, y: number, rad: number, r: () => number, tone: string = r() < 0.65 ? pick(STONE.slice(0, 3), r) : pick(STONE.slice(3), r)): void {
   g.save(); g.translate(x, y);
   g.fillStyle = 'rgba(40,28,18,0.30)'; g.beginPath(); g.ellipse(-rad * 0.28, rad * 0.34, rad * 1.02, rad * 0.62, 0, 0, TAU); g.fill();
   g.rotate(r() * TAU); g.scale(1, 0.74 + r() * 0.22);

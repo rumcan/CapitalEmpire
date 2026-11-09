@@ -1,7 +1,7 @@
 // T384 (#1040): the same desert town before (?litter=leaves on the dev server: the autumn leaves in the desert, as it was) and after (the desert's litter: sand drifts, pebbles, dry brush, tumbleweed tufts) at the zooms the owner looks at, 30% and
 // 15%: a street (the road's gutters and kerbs, the sidewalks, the yards, the roofs), a house's roof close, the open desert, a road. The town is the grown fixture (?fixture=range20) in the desert theme (&desert=on); each view is taken in
 // both looks from the same camera, and laid side by side as <view>-before-vs-after.png. Also checks the game's state (the theme is on, the leaf density is the player's, not 0 in the desert) and exits 1 on a failed check.
-//   node scripts/dev/desert-litter-shots.mjs --base http://localhost:5187/ --out E:/ClaudeTemp/T384 [--fixture range20] [--autumn 1]
+//   node scripts/dev/desert-litter-shots.mjs --base http://localhost:5187/ --out E:/ClaudeTemp/T384 [--fixture range20] [--autumn 1] [--views street30,roof30,road30,...]
 // --autumn 1 also takes the street in the autumn theme (&desert=off), to show its leaves are as they were. Needs a dev server (vite) on --base. One headless Edge, closed when done; saving is off.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -49,7 +49,7 @@ const points = page => page.evaluate(() => {
   for (let y = 64; y < MAP - 64; y += 32) for (let x = 64; x < MAP - 64; x += 32) { let d = 1e9; for (const q of lots) d = Math.min(d, Math.hypot(q.x - x, q.y - y)); for (const s of g.net.segs) d = Math.min(d, Math.hypot((s.a.x + s.b.x) / 2 - x, (s.a.y + s.b.y) / 2 - y)); if (d > open.d && g.terrain[y * MAP + x] <= 1) open = { x, y, d }; }
   return { street: best, roof: second, road: { x: segs.x, y: segs.y }, open: { x: open.x, y: open.y }, lots: lots.length };
 });
-const VIEWS = [['street30', 'street', 0.3], ['street15', 'street', 0.15], ['roof30', 'roof', 0.3], ['road30', 'road', 0.3], ['open30', 'open', 0.3], ['open15', 'open', 0.15]];
+const ALL = [['street30', 'street', 0.3], ['street15', 'street', 0.15], ['roof30', 'roof', 0.3], ['road30', 'road', 0.3], ['open30', 'open', 0.3], ['open15', 'open', 0.15]], want = opt('views', ''), VIEWS = want ? ALL.filter(v => want.split(',').includes(v[0])) : ALL;
 try {
   const files = { before: {}, after: {} };
   let pts = null;
