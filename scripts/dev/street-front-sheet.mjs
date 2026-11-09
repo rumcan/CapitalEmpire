@@ -57,12 +57,17 @@ try {
     const pa = await import('/src/game/lots/preset-art.ts'), { isBuilding } = await import('/src/game/mirror.ts'), { sizeKey } = pa;
     // (lead/live has no object-eight.ts: the before run reads the old art's views alone)
     let eight = null; try { eight = (await import('/src/game/object-eight.ts')).objectFacings; } catch { /* the old game */ }
-    const st = { use: LU[o.use], level: 2, decline: 0, seed: o.seed, ...(o.biz ? { biz: o.biz } : {}) };
+    // (T398 forced: the building alone on the lot: the lot composes nothing (a shopping centre's part, biz '^force') and the building is put there in the picture the game draws for that road, at its owner size)
+    const st = o.force ? { use: LU.NONE, level: 0, decline: 0, seed: o.seed, biz: '^force' } : { use: LU[o.use], level: 2, decline: 0, seed: o.seed, ...(o.biz ? { biz: o.biz } : {}) };
     // (stageLab resets the whole map: once for a lot's kind and road, then the lot moves along its street a lattice cell at a time)
-    const lk = [o.use, o.road, o.w, o.d, o.seed, o.biz ?? ''].join('|');
+    const lk = [o.use, o.road, o.w, o.d, o.seed, o.biz ?? '', o.force ? 'forced' : ''].join('|');
     if (window.__labKey !== lk) { window.__labGeom = g.stageLab({ road: o.road, w: o.w, d: o.d, st }).g; window.__labKey = lk; }
     let geom = window.__labGeom;
     if (o.shift) geom = { ...geom, o: { x: geom.o.x + geom.u.x * 7 * o.shift, y: geom.o.y + geom.u.y * 7 * o.shift } };
+    if (o.force) {
+      const { frameOf } = await import('/src/game/lots/preset-frame.ts'), dv = pa.drawnView(o.force, frameOf(geom), 0), q = { x: geom.o.x + geom.u.x * o.w / 2 + geom.n.x * o.d / 2, y: geom.o.y + geom.u.y * o.w / 2 + geom.n.y * o.d / 2 };
+      g.lotOverride = key => key === 'lab' ? { props: [{ id: dv.id, x: q.x, y: q.y, flip: dv.flip, scale: pa.ownerScaleOf(o.force) }], ground: [] } : undefined;
+    } else g.lotOverride = null;
     g.placeLot('lab', geom, st);
     const props = [...g.propsOfLot('lab')].filter(p => isBuilding(LIBRARY[p.item]));
     let main = null, area = 0; for (const p of props) { const a = (p.x1 - p.x0) * (p.y1 - p.y0); if (a > area) { area = a; main = p; } }
@@ -159,6 +164,17 @@ try {
       rows.push({ label: want, cells });
     }
     await sheets('houses', rows);
+  }
+  if (only.has('forced')) {
+    // T398: each building of --wanted (a library id) alone on a lot of each road asked for, in the picture the game draws for it on that road (corner views on the roads along an axis, the eight-view set's
+    // straight-on views on the screen-straight ones): no town lot has to show it. Before the import: the nearest corner, 45 off; after: the straight-on view, front
+    const rows = [];
+    for (const want of opt('wanted', '').split(',').filter(Boolean)) {
+      const cells = [];
+      for (const road of roads) { const o = { use: 'RES', road, w: 20, d: 18, seed: 5, force: want }; cells.push(await cell(o, want, await stage({ ...o, zoom: ZOOM }))); }
+      rows.push({ label: want, cells });
+    }
+    await sheets('forced', rows);
   }
   if (only.has('wanted')) {
     // T398: the buildings of the straight-views batch (or any): each on the first lot of a town use kind that shows it, on every road asked for

@@ -219,6 +219,13 @@ export function lookOf<T extends Drawn>(d: T): Look {
  *  at its limit past it), so a swapped item has none */
 export function maxDrawScale(item: number): number { return SWAP[item] ? Infinity : limitOf(item) * PIXEL_SLACK; }
 
+/** T398: the pictures of the object-eight sets that reuse a building's corner pictures (the straight-on views a corners-only building gained: art/object-eight-20261109): packed at the density of every object-eight cell, so their
+ *  pixels hold a scale of about 1 while the building is drawn at its own size (baseline 0.7 to 2.1) */
+const REUSE_VIEWS: ReadonlySet<string> = new Set(OBJECT_EIGHT_SETS.filter(s => s.runtimeReuse).flatMap(s => Object.values(s.views).map(v => v.id)));
+/** the largest scale a lot may draw an item at (a swap, a generated lot's fit): its pixel limit (sizes.ts), but for a picture of a reuse set what the draw allows (maxDrawScale): measured against its pixels alone a house of owner
+ *  size 2.1 whose straight-on views hold a limit of 1 could never be placed. Every other picture is measured as before */
+export const lotDrawLimit = (item: number): number => (REUSE_VIEWS.has(LIBRARY[item]?.id ?? '') ? maxDrawScale(item) : PIXEL_LIMIT[item] ?? 0);
+
 /** the item a library item is thumbnailed as (its stand-in at its owner scale, or itself when it is drawn as itself) */
 export function thumbItem(it: LibItem): LibItem {
   const replacement = drawnAs(it, false)[0], replacementIndex = replacement === it.id ? undefined : INDEX.get(replacement);
