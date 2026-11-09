@@ -485,7 +485,7 @@ maps from the dev server. not sure if bug." (It was not a bug: that evening the 
   it opens** (`src/game/golf/osm/catalogue.ts`: the index first, then the chunks, the player's own country's first, three at a time; the list narrows over what has arrived and the line under the filter says how
   far the loading is). The game's start-up bundle gets nothing from it; `tests/golf-osm-catalogue.test.ts` checks that no module of `src` imports the catalogue statically or a catalogue file at all.
 - **The format.** `index.json`: the countries (code, name, number of courses) and the chunks (file name with a content hash, courses per country, bytes, gzipped bytes, date of the map data). A chunk: a
-  country with 150 courses or more is a chunk of its own, the smaller ones are packed together (700 courses to a pack, each entry carrying its country code); an entry is a tuple
+  country with 150 courses or more is a chunk of its own, the smaller ones are packed together (700 courses to a pack, each entry carrying its country code); the US, with thousands of courses, is cut into chunks of about 4 500, whole states to a chunk; an entry is a tuple
   `[ref, name, place, lat, lon, w, h, holes, alt, cc]` ("w4261725": a way, "r" a relation, "n" a node; the centre to 4 decimals; the size in 10 m; `holes` the hole lines numbered 1..18 the map has inside it:
   9 or 18 is **Full**, the grade the preview will give; `alt` other names for the filter). One entry a line, so a rebuild's diff reads.
 - **How the entries are made** (`scripts/dev/osm-catalogue-lib.mjs`, pure, tested): every `leisure=golf_course` with a name (`nwr`, tags and bounding box, no geometry); the **place** is the course's own `addr:*`, else the
@@ -503,7 +503,7 @@ maps from the dev server. not sure if bug." (It was not a bug: that evening the 
 - **At least 10 s between two requests**, one at a time, User-Agent `CapitalEmpire-catalogue/1.0 (dev script)` (no address of the owner's), every answer **cached gzipped** under `E:/ClaudeTemp/T378/cache` with
   its server and time (a rerun asks nothing twice; a stopped run carries on), 429 and 5xx: back-off (Retry-After, else 30 s doubling) and the next server, a hung server left alone 10 minutes, the server that
   answered last asked first; an answer with an Overpass remark (runtime error, timed out) is a failure; **an answer older than 3 days is refused** (on 2026-11-09 overpass.kumi.systems answered Texas from a July
-  snapshot: 139 courses of some 900). The script asks the main server and maps.mail.ru (kumi and private.coffee hung or were stale that day).
+  snapshot: 139 courses of some 900). The script asks the main server and maps.mail.ru (kumi and private.coffee hung or were stale that day); a request that the main server turns away at once (502 in under 5 s: one of its two backends was down that day) is asked again, up to four times, before the mirror.
 - The countries are asked in the owner's order (South Africa, the US, the UK and Ireland, Australia, Canada, New Zealand, then by number of courses); the script prints what is not asked yet and finishes it on its next run.
 
 <<SIZES>>

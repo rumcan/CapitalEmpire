@@ -1,31 +1,38 @@
 // T378 (#1034): builds the golf course names catalogue the new-game card's course search filters (src/game/golf/osm/catalogue.ts): every leisure=golf_course with a name,
-// country by country, from the public Overpass servers, as compact JSON chunks under public/catalogue/ (an index and a chunk per big country, the small countries packed
+// country by country, from the public Overpass servers, as compact JSON chunks under public/catalogue/ (an index; a chunk per big country, the US in several; the small countries packed
 // together). Run by the lead, once in a while; never by a player. Plain Node 22 (built-in fetch, zlib), no installs.
-//   node scripts/dev/osm-course-catalogue.mjs [--countries ZA,US,GB] [--max-minutes 170] [--cache E:/ClaudeTemp/T378/cache] [--out public/catalogue]
+//   node scripts/dev/osm-course-catalogue.mjs [--countries ZA,US,GB] [--max-minutes 150] [--cache E:/ClaudeTemp/T378/cache] [--out public/catalogue]
 //        [--gap 10 (seconds between two requests, at least)] [--overpass https://a/api/interpreter,https://b/...] [--build-only] [--no-build] [--list]
 // What it asks, and how politely:
-//   - ONE Overpass query per country (the US: one per state, a few hundred courses each, not sixteen thousand): `area["ISO3166-1"="XX"]`, the named golf courses as
-//     `out tags bb` (tags and bounding boxes, no geometry) and, in the same answer, the golf=hole ways with a ref as `out tags center`, so a course can be marked Full
-//     (its holes numbered 1..18 inside it) with no query of its own. A country whose courses mostly have no address asks ONE more, the named places (city, town,
-//     village, suburb, hamlet) as tab-separated text, where a course with no addr:city takes its town from (the nearest, in the build).
-//   - at least --gap seconds (10) between any two requests; one request at a time; the User-Agent "CapitalEmpire-catalogue/1.0 (dev script)", no personal address.
-//   - every answer is kept on disk under the cache (gzipped, with the server and the time), so a rerun asks nothing twice; a run that stops (a server down, the time
-//     up, Ctrl-C) carries on where it was; a region that failed is tried again at the end of the run, after a pause.
-//   - 429 and 5xx: it backs off (Retry-After, else 30 s doubling to 5 min) and falls over to the next server; a server that hung or was busy is left alone for a while
-//     (10 minutes for a hang, 3 for busy) and the server that answered last is asked first (the health ordering the game's own course import uses, overpass.ts).
+//   - REGIONS IN BATCHES: a region is a country (`area["ISO3166-1"="XX"]`; the US: a state, `ISO3166-2`). For each, the named golf courses as `out tags bb` (tags and bounding boxes,
+//     no geometry) and, in the same answer, the golf=hole ways with a ref as `out tags center`, so a course can be marked Full (its holes numbered 1..18 inside it) with no query of
+//     its own. On 2026-11-09 every query took 50 to 95 s whatever its size (Luxembourg, six courses: 79 s; Florida, 10 000 hole lines: 76 s), so five US states or up to twelve small
+//     countries go in ONE request, an `out count` after each set saying where one region's courses and hole lines end (osm-catalogue-lib.mjs batchQuery / splitBatch: a count
+//     that disagrees with what came refuses the answer). A batch that fails is asked again in two halves, down to one region. Each region's part is kept on its own.
+//   - the places (city, town, village, suburb nodes, as tab-separated text) where a course with no address takes its town from: once for the US, five countries to a request
+//     for the rest, for the countries in which at least 20 courses have no address.
+//   - at least --gap seconds (10, never less) between any two requests; one request at a time; the User-Agent "CapitalEmpire-catalogue/1.0 (dev script)", no personal address.
+//   - every answer is kept on disk under the cache (gzipped, with the server and the time), so a rerun asks nothing twice; a run that stops (a server down, the time up, Ctrl-C)
+//     carries on where it was; what failed is asked again after a pause (twice).
+//   - the servers: overpass-api.de and maps.mail.ru (kumi and private.coffee hung, or answered from a July snapshot, on 2026-11-09; --overpass takes another list). A request the main
+//     server turns away at once (a 502 in under 5 s: one of its two backends was down that day) is asked again up to four times; 429 and other 5xx: back-off (Retry-After, else 30 s
+//     doubling to 5 min) and the next server; a server that hung is left alone 10 minutes, one that was busy a minute, and the one that answered last is asked first (the health
+//     ordering the game's own course import uses, overpass.ts). An answer older than --max-age-days (3) is refused (a mirror's old snapshot would be a quietly incomplete catalogue).
 //   - an answer with an Overpass "remark" (runtime error, timed out, out of memory) is a failure, never kept (Overpass answers those with HTTP 200 and half a result).
 // The build (always at the end, or alone with --build-only) turns the cache into the chunks: nothing is asked. The countries not asked yet (the time ran out, a server
 // was down) are listed and the script finishes them on its next run.
 // LICENCE: Data (c) OpenStreetMap contributors, ODbL 1.0: the chunks carry the credit, and the game shows it beside the list.
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { gunzipSync, gzipSync } from 'node:zlib';
+import https from 'node:https';
+import net from 'node:net';
+import { createGunzip, gunzipSync, gzipSync } from 'node:zlib';
 import { join } from 'node:path';
 import * as L from './osm-catalogue-lib.mjs';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; }, flag = k => args.includes(`--${k}`);
 const CACHE = opt('cache', 'E:/ClaudeTemp/T378/cache').replace(/\\/g, '/'), OUT = opt('out', 'public/catalogue').replace(/\\/g, '/');
-const GAP_MS = Math.max(10, Number(opt('gap', 10))) * 1000, MAX_MS = Number(opt('max-minutes', 170)) * 60_000;
+const GAP_MS = Math.max(10, Number(opt('gap', 10))) * 1000, MAX_MS = Number(opt('max-minutes', 150)) * 60_000;
 /** an answer whose map data is older than this is not used (--max-age-days): on 2026-11-09 overpass.kumi.systems answered Texas from a July snapshot, with 139 courses of some 900 */
 const MAX_AGE_MS = Number(opt('max-age-days', 3)) * 86_400_000;
 // (the game's own course import asks four servers; this script asks the main one and maps.mail.ru: on 2026-11-09 kumi answered from a July snapshot or hung and private.coffee hung, 215 s a try)
@@ -36,6 +43,8 @@ const stamp = () => new Date().toISOString().slice(11, 19);
 const log = (...a) => console.log(`[${stamp()}]`, ...a);
 const left = () => MAX_MS - (Date.now() - T0);
 mkdirSync(CACHE, { recursive: true });
+// (node:https tries the IPv6 and IPv4 addresses of a host in turn, 250 ms each by default: from this PC the TLS handshake with overpass-api.de takes about as long, and the connect failed with ETIMEDOUT)
+net.setDefaultAutoSelectFamilyAttemptTimeout?.(3000);
 
 // ---------------------------------------------------------------------------------------------------------------- the cache
 const fileOf = (name, ext) => `${CACHE}/${name}.${ext}`;
@@ -66,6 +75,24 @@ function ordered() {
 /** how long a request is waited for: the main server the query's own time and a little more, a mirror (they hang when they are down) at most 200 s and a little more */
 const clientTimeoutMs = (url, timeoutS) => (url === SERVERS[0] ? timeoutS + 45 : Math.min(timeoutS, 200) + 15) * 1000;
 async function gap() { const w = lastEnd + GAP_MS - Date.now(); if (w > 0) await sleep(w); }
+/** a POST of a form, with node:https (not fetch: undici gives up on a server that sends no headers for 300 s, and the biggest places query takes longer than that); the answer
+ *  is read whole, gunzipped when the server gzipped it. Rejects with a TimeoutError after `timeoutMs`. Resolves { status, ok, headers, text } */
+function post(url, body, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    let timer = null;
+    const req = https.request({ method: 'POST', hostname: u.hostname, port: u.port || 443, path: u.pathname + u.search, headers: { 'User-Agent': L.UA, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body), 'Accept-Encoding': 'gzip' } }, res => {
+      const chunks = [], stream = res.headers['content-encoding'] === 'gzip' ? res.pipe(createGunzip()) : res;
+      stream.on('data', c => chunks.push(c));
+      stream.on('end', () => { clearTimeout(timer); resolve({ status: res.statusCode ?? 0, ok: (res.statusCode ?? 0) >= 200 && (res.statusCode ?? 0) < 300, headers: res.headers, text: Buffer.concat(chunks).toString('utf8') }); });
+      stream.on('error', e => { clearTimeout(timer); reject(e); });
+      res.on('error', e => { clearTimeout(timer); reject(e); });
+    });
+    timer = setTimeout(() => { const e = new Error(`no answer in ${timeoutMs / 1000} s`); e.name = 'TimeoutError'; req.destroy(); reject(e); }, timeoutMs);
+    req.on('error', e => { clearTimeout(timer); reject(e); });
+    req.end(body);
+  });
+}
 class Failed extends Error {}
 class TimeUp extends Error {}
 
@@ -85,10 +112,10 @@ async function ask(query, kind, label, timeoutS) {
       const t0 = Date.now(), tag = `${label} on ${host(url)}`;
       let res = null, text = '', why = '', hung = false, retryAfter = 0;
       try {
-        res = await fetch(url, { method: 'POST', headers: { 'User-Agent': L.UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(query), signal: AbortSignal.timeout(clientTimeoutMs(url, timeoutS)) });
-        retryAfter = parseInt(res.headers.get('retry-after') ?? '', 10) || 0;
-        text = await res.text();
-      } catch (e) { hung = e.name === 'TimeoutError' || e.name === 'AbortError'; why = hung ? `no answer in ${clientTimeoutMs(url, timeoutS) / 1000} s` : (e.cause?.code || e.message); }
+        res = await post(url, 'data=' + encodeURIComponent(query), clientTimeoutMs(url, timeoutS));
+        retryAfter = parseInt(res.headers['retry-after'] ?? '', 10) || 0;
+        text = res.text;
+      } catch (e) { hung = e.name === 'TimeoutError' || e.name === 'AbortError'; why = hung ? `no answer in ${clientTimeoutMs(url, timeoutS) / 1000} s` : (e.code || e.cause?.code || e.errors?.[0]?.code || e.message || e.name || 'the request failed'); }
       lastEnd = Date.now();
       const s = ((lastEnd - t0) / 1000).toFixed(1);
       let base = '';
@@ -152,7 +179,19 @@ const regionOfCc = cc => (cc === 'US' ? L.usPlaces : { id: cc.toLowerCase(), cc,
 const placeFiles = () => readdirSync(CACHE).filter(f => /^places-.*\.csv\.gz$/.test(f)).map(f => f.replace(/\.csv\.gz$/, ''));
 /** the countries a kept places file covers (its meta says; the first two files of this script's run, places-za and places-us, are named after theirs) */
 const placesCovers = name => { try { return JSON.parse(readFileSync(fileOf(name, 'meta.json'), 'utf8')).ccs ?? [name.slice(7).toUpperCase()]; } catch { return []; } };
-const placesCovered = cc => placeFiles().some(n => placesCovers(n).includes(cc));
+// (the US: one request for the whole country answered 504 and a headers timeout after 300 s on 2026-11-09, so its places come eight states to a request)
+const US_GROUPS = Array.from({ length: Math.ceil(L.US_STATES.length / 8) }, (_, i) => L.US_STATES.slice(i * 8, i * 8 + 8));
+const usGroupName = i => `places-us-${i + 1}`;
+const usGroupKept = i => existsSync(fileOf(usGroupName(i), 'csv.gz')) && existsSync(fileOf(usGroupName(i), 'meta.json'));
+const placesCovered = cc => (cc === 'US' ? US_GROUPS.every((_, i) => usGroupKept(i)) : placeFiles().some(n => placesCovers(n).includes(cc)));
+async function usPlaces() {
+  for (const [i, states] of US_GROUPS.entries()) {
+    if (usGroupKept(i)) continue;
+    const rs = states.map(([code]) => ({ id: `us-${code.toLowerCase()}`, cc: 'US', area: ['ISO3166-2', `US-${code}`] }));
+    const a = await ask(L.placesBatchQuery(rs, ['city', 'town', 'village', 'suburb'], 300), 'csv', usGroupName(i), 300);
+    keep(usGroupName(i), 'csv', a.text, { server: a.server, fetchedAt: new Date().toISOString(), bytes: a.text.length, ccs: ['US'] });
+  }
+}
 /** whether a country is worth a places query: at least 20 of its named courses give no town of their own (the US always is) */
 function needsPlaces(cc, mine) {
   if (cc === 'US') return true;
@@ -166,6 +205,7 @@ function needsPlaces(cc, mine) {
 }
 /** asks for the places of several countries in ONE request (the areas united); the biggest places only (a hamlet is not a town), the US alone */
 async function placesStep(ccs) {
+  if (ccs.length === 1 && ccs[0] === 'US') return usPlaces();
   const name = `places-${ccs.map(c => c.toLowerCase()).join('-')}`, rs = ccs.map(regionOfCc);
   const a = await ask(L.placesBatchQuery(rs, ['city', 'town', 'village', 'suburb'], 300), 'csv', name, 300);
   keep(name, 'csv', a.text, { server: a.server, fetchedAt: new Date().toISOString(), bytes: a.text.length, ccs });
@@ -199,6 +239,8 @@ async function fetchAll() {
       if (pass) { if (!bad.length) break; log(`${bad.length} failed, asking them again after a pause: ${label(bad)}`); await sleep(Math.min(120_000, left())); }
       const todo = pass ? bad : regions.filter(r => !have(r));
       bad = [];
+      for (const cc of ccs) if (wantPlaces(cc)) pending.push(cc); // (countries kept by an earlier run: the US, whose places come before the rest of the world)
+      await flush(false);
       for (const b of L.batchPlan(todo, r => !have(r))) {
         bad.push(...await coursesTask(b));
         for (const cc of new Set(b.map(r => r.cc))) if (wantPlaces(cc)) pending.push(cc);
@@ -207,7 +249,7 @@ async function fetchAll() {
       for (const cc of ccs) if (wantPlaces(cc)) pending.push(cc); // (countries that were kept by an earlier run and have no places yet)
       await flush(true);
     }
-  } catch (e) { if (!(e instanceof TimeUp)) throw e; log(`the ${opt('max-minutes', 170)} minutes are up: what is kept is built, the rest is for the next run`); }
+  } catch (e) { if (!(e instanceof TimeUp)) throw e; log(`the ${opt('max-minutes', 150)} minutes are up: what is kept is built, the rest is for the next run`); }
   return [...regions.filter(r => !have(r)).map(r => r.id), ...ccs.filter(cc => complete(cc) && !placesCovered(cc) && needsPlaces(cc, regions.filter(r => r.cc === cc))).map(cc => `places-${cc.toLowerCase()}`)];
 }
 
