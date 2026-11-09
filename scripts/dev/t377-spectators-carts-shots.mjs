@@ -136,7 +136,9 @@ try {
       const start = g.golf.clubhouse, line = (a, b) => { let water = 0, other = 0, n = 0, mid = null; const L = Math.hypot(b.x - a.x, b.y - a.y), k = Math.max(2, Math.ceil(L / 0.5)); for (let i = 0; i <= k; i++) { const x = a.x + (b.x - a.x) * i / k, y = a.y + (b.y - a.y) * i / k, gr = groundOf(x, y); n++; if (gr === 'water') water++; else if (BLOCKED.has(gr)) { other++; mid = { x, y }; } } return { water, other, n, mid }; };
       // the walk to shoot: the one whose straight line crosses the most tee boxes, greens and bunkers and no water (a river is crossed by a bridge or not at all: a way round
       // the rest is always there), the same for both runs
-      let best = null, any = null; spots.forEach((s, i) => { const l = line(start, s); if (!any || l.water + l.other > any.water + any.other) any = { i, hole: s.hole, ...l }; if (!l.water && (!best || l.other > best.other)) best = { i, hole: s.hole, ...l }; });
+      // (to the place the old rule gave the gallery, a place beside the pin: the same whatever the code puts the gallery)
+      const oldPlace = s => { const t = tees.find(q => q.hole === s.hole), p = pins.find(q => q.hole === s.hole), L = Math.hypot(p.x - t.x, p.y - t.y) || 1; return { x: p.x + (-(p.y - t.y) / L) * 7, y: p.y + ((p.x - t.x) / L) * 7 }; };
+      let best = null, any = null; spots.forEach((s, i) => { const l = line(start, oldPlace(s)); if (!any || l.water + l.other > any.water + any.other) any = { i, hole: s.hole, ...l }; if (!l.water && (!best || l.other > best.other)) best = { i, hole: s.hole, ...l }; });
       best = best && best.other > 0 ? best : any;
       return { start, spots: spots.length, best, holes: spots.map(s => s.hole) };
     });
