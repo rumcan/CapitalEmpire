@@ -3057,6 +3057,10 @@ export class Game {
     this.ground.living = { on: this.groundVariety, debug: false };
     try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
     this.ground.slopeLight = this.slopeLight;
+    // T388: the real ground's light as the player left it (the gear menu's Real ground light; on by default: the hills read), and ?landlight=classic|hills (the dev server: the A/B of the shots)
+    try { this.landClassic = localStorage.getItem('capitalempire.landLight') === 'classic'; } catch { /* the default, the hills' light */ }
+    { const q = new URLSearchParams(location.search).get('landlight'); if (import.meta.env.DEV && (q === 'classic' || q === 'hills')) this.landClassic = q === 'classic'; }
+    this.ground.landClassic = this.landClassic;
     try { this.tyreTracks = localStorage.getItem(TRACKS_KEY) !== '0'; } catch { /* the default, on */ }
     // T310: the sun through the clouds as the player left it (the gear menu's Sun and clouds; on by default), and ?sun=on|off (the dev server)
     try { const s = localStorage.getItem(SUN_KEY); if (s) this.sunLook = clampSun(JSON.parse(s)); } catch { /* the default */ }
@@ -3837,6 +3841,14 @@ export class Game {
     this.slopeLight = clampHeightLight(v);
     try { localStorage.setItem('capitalempire.slopeLight', String(this.slopeLight)); } catch { /* storage may be unavailable */ }
     this.ground.setSlopeLight(this.slopeLight); this.emit();
+  }
+  /** T388 (#1048): the real ground's light, the gear menu's Real ground light (kept across reloads): the land is lit by its own response, proportional to the slope, so a hill reads and gentle ground stays calm (ext/course-height/light.ts landExag).
+   *  Off (`landClassic`): the land and the course height are lit as one field with the gentle-ground gain, the look before T388 */
+  landClassic = false;
+  setLandClassic(v: boolean) {
+    this.landClassic = v;
+    try { localStorage.setItem('capitalempire.landLight', v ? 'classic' : 'hills'); } catch { /* storage may be unavailable */ }
+    this.ground.setLandClassic(v); this.emit();
   }
   /** T220: the fallen leaves' density, the gear menu's Fallen leaves: 0 (none: the ground as before T220) to 2, 1 the default (kept across reloads) */
   leafDensity = LEAF_DENSITY_DEFAULT;
@@ -4663,14 +4675,14 @@ export class Game {
     return out;
   }
   /** the course height changed in box: save, and the workers take the new heights and re-bake the ground there */
-  private courseHeightChanged(box: CourseTileBox) { this.scheduleSave(); this.ground.courseHeight(this.courseHeight.data, box, this.realLand.data); }
+  private courseHeightChanged(box: CourseTileBox) { this.scheduleSave(); this.ground.courseHeight(this.courseHeight.data, box, this.realLand); }
   private afterLoad() {
     const ops = this.edit.commit(true); this.lanes.update(this.net);
     // the city worker gets the whole network (the bench commits its own edits before this, so `ops` can be empty)
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false); this.syncBlockLawns();
-    this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP], this.realLand.data); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs); this.syncStopCuts();
+    this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP], this.realLand); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs); this.syncStopCuts();
     this.farmMonthNow = -1; this.farmsUpdate(true, true);
     this.syncPlaces();
     // the worker's golf state (a new game or a load of one; a classic game turns it off)

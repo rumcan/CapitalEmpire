@@ -624,6 +624,12 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.slopeLight} onChange={e => { game.setSlopeLight(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.slopeLight * 100)}%</span>
                     </label>
+                    {game.landInfo() && (
+                      <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="The real ground of a map-data course lit by its own response: gentle ground stays calm and a hill's flanks catch the sun in proportion to their steepness, so the hills read (T388). Off: the old light, where every 3 to 15% slope lit the same" data-testid="land-light">
+                        <input type="checkbox" checked={!game.landClassic} onChange={e => { game.setLandClassic(!e.target.checked); bump(); }} />
+                        Real ground hill light
+                      </label>
+                    )}
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Tyre tracks where golf carts, the grounds crew's mowers and cars off the road cross the grass: paired light and dark streaks, lighter one way of travel and darker the other, building with traffic and fading slowly without (T322)">
                       <input type="checkbox" checked={game.tyreTracks} onChange={e => { game.setTyreTracks(e.target.checked); bump(); }} />
                       Tyre tracks

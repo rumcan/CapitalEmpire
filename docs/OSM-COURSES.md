@@ -272,7 +272,7 @@ save keeps the sum (`golf.land`).
 ## What reads it, and what does not
 | reads land + course height | reads the course height alone |
 | --- | --- |
-| **the hillshade**: `GroundCache.courseHeight` sends the workers the sum (`groundRect`); their `courseH` is the ground's, so the slope light (T126: the sun at the upper right, shadows at 145 degrees) bakes into every chunk of the land as it does round a mound | the Height tool and its undo, the hole shaping (`ext/hole-ground`), the tee planner, the road flattening (`flattenRoadsIn`) |
+| **the hillshade**: the workers get the land as its own layer (`landLightRect`, T388) beside the course height and light each by its own response (`heightLightGrid`'s `land`), so the slope light (T126: the sun at the upper right, shadows at 145 degrees) bakes into every chunk of the land as it does round a mound | the Height tool and its undo, the hole shaping (`ext/hole-ground`), the tee planner, the road flattening (`flattenRoadsIn`) |
 | **the ball**: `ballHeight` (the roll's bend, a putt's break, the lie's slope: `slopeAt`, `crossSlope`, the break grid) | the course quality's slope checks: the steep green and steep fairway penalties, the shaping bonus, the pins' slope (`evaluateCourseHeightQuality`, `courseTerrain(field)`) |
 | **the holes' rise and plays-like length** in the course stats (`coursestats.ts`, `HeightSampler`) | |
 
@@ -280,6 +280,40 @@ The slope checks judge the player's own layer: a real hill is not the player's t
 fairway" is not said of it; the rise and the plays-like length ("plays 316 m (-22 m)") are the real ground's. **Roads and cart paths follow the land**: the road tool lays flat
 ribbons as ever, nothing flattens the land under them (`flattenRoadsIn` still flattens the player's layer), so a road across a slope is lit as the slope it crosses; house lots (T353) stand on the land as it is too (the estate levels nothing). Where the player shapes
 the ground on a hillside the shaping sits on the land (a mound is 2 m on the slope).
+
+## The real ground's light (T388, #1048): the hills read, gentle ground stays calm
+The owner: "make the hills read" (Woodhill's 67 m hill showed as a subtle shading at the default Slope light of 1). **The cause was the response, not the strength.** The slope light's
+gentle-ground gain (T263, `lightExag`: built for a fairway's 1 to 3% rolls) tilts the light's normal 0.38 at a 3% slope, 0.43 at 5% and 0.45 at 10%: flat from 4 to 10%. Under real ground
+(median slope 6%, 90th percentile 13% on Woodhill) every slope from 3 to 15% therefore lit the same, by its direction alone: blotches of "facing the sun" and "facing away" with hard
+edges, a gentle regional slope as strong as a hill's flank (the whole of Magnolia National 10% darker for it), and nothing to tell a hill from the plain. Doubling the strength (T357's idea)
+doubled the blotches.
+- **The land is lit by its own response** (`ext/course-height/light.ts` `landExag`, `LAND_EXAG` 6, `LAND_FLOOR` 0.3, `LAND_KNEE` 0.1): the tilt per slope grows with the slope, faint on gentle ground
+  (0.05 at 2%, 0.27 at 6%) and 0.6 at 10%, 0.9 at 15%, 1.2 at 20%, so the light follows the steepness: a flank is lit and shaded in proportion, its crest rounds off, gentle ground stays near flat.
+  `LAND_GAIN` 1.35 makes a land-dominated point's shade and lift 35% deeper than the same tilt on the player's ground (a steep flank has room to show). The shade's gentle-ground boost
+  (`gentleDark`) is for the player's rolls and is left off the land (a 3% slope facing away darkened a whole course by 6%).
+- **Two layers, two responses, one surface.** `heightLightGrid(h, box, res, land)` takes the land as `LightLand` (the samples of its box, `landLightRect`): the surface for the cast shadows and the
+  occlusion is the sum; the tilt is the course height's own (its gain, the player's rolls and a green's 1 to 2% tilt as ever) plus the land's (its response), the two added; a point's land share
+  of the tilt sets how much of the amplitude boost it takes. No land (or a chunk out of its reach) lights every number as before (a test holds it). **The ball keeps the true ground**: only the
+  light is split.
+- **The workers get the layers apart**: `GroundCache.courseHeight(field, box, land)` sends the course height alone in the box of an edit, as ever, and the land layer (`{ t: 'land', rect }`: the box of
+  everything that is not 0, about 1 MB, copied per worker) only when the land changed (a new game, a placed course, a load: the field and its rev), before the course message. The painter
+  (`landL`) lights both in the chunk bake and the planner map.
+- **The old light is an option** (the owner's rule: the old look stays): the gear menu's **Real ground hill light** (only in a game with land, on by default, kept across reloads) and `?landlight=classic|hills`
+  (dev server; the bench's `--landlight`) light the land and the course height as one summed field with the gentle-ground gain, as before T388 (`classic`).
+- **Measured** (the CPU reference `applyHeightLight` on a textured grass, the mean deviation of a pixel's luminance from the flat ground's, by the land's own slope; the old light against the new): Woodhill
+  gentle ground (under 4%) 9.0% before, 2.9% now; middle slopes 11.8% before, 12.0% now; steep (over 10%) 11.9% before, 22.4% now (hills read twice as strongly, gentle ground a third as much).
+  Magnolia National 7.7 / 11.2 / 11.9% before, 2.0 / 10.9 / 21.5% now; Rondebosch (a plain with lumps) 9.0 / 10.8 / 10.4% before, 2.5 / 9.0 / 15.1% now. The luminance spread of the whole land (5th to 95th
+  percentile) is 0.36 before and 0.56 now on Woodhill; the best 120-tile windows 0.33 before and 0.60 to 0.62 now. The in-game shots, before and after, are in `E:/ClaudeTemp/T388/`
+  (`scripts/dev/land-light-shots.mjs`: each course in both lights at 30% and 15%).
+- **The skirt is longer** (`SKIRT_T` 200 to 320 tiles, 640 m): where the real ground beyond the land falls below the land's mean (Woodhill's valley through holes 9, 13 and 18 leaves the NW edge 35 m under its
+  mean) the skirt has to climb back to the plain, and over 400 m that climb was a 13% flank all round, a rim the light drew as a band of shade. Over 640 m the steepest climb is 8% and the share of the skirt steeper
+  than 8% falls from 24% to 15% on Woodhill (24% to 17% on Magnolia National). The **data window stays 400 m** (`WINDOW_T`: the shipped grids hold about 215 to 260 tiles beyond the land, a download is at most 16 tiles):
+  past it the real ground is held at its edge value and faded out with the rest, so nothing more is fetched and the climb is smooth. The map's 1024 tiles bound it where the land is wide (Woodhill is 24 tiles from
+  its west and east edges, and the skirt is clipped there as before).
+- **Not done**: the optional "Add the real ground to this course" action for a course built flat or before T357 (it would fetch the tiles for an imported course); taking the regional plane out of the
+  light as well (the land's response makes it small: Woodhill's 2.9% regional slope tilts 0.08, a 4% shift of tone, Magnolia's 3.6% a 3%).
+- Tests: `tests/ext-course-height-land-light.test.ts` (12: the response, gentle ground and a hill, no land as before, the player's layer on the land, the old light, the seam, the land's cubic, the land layer
+  as given, the skirt, the plumbing and the way back).
 
 ## Credit
 - **Tilezen's required attribution** (github.com/tilezen/joerd docs/attribution.md, which says to credit each source the data draws on): for SRTM, 3DEP and GMTED2010 "United States 3DEP
@@ -342,11 +376,9 @@ lead/live's. **Rondebosch's first run with the land is an outlier** (the average
 the PC's load and not the land's (two of the land's three Rondebosch runs are level with lead/live's three; the raw outputs are in `E:/ClaudeTemp/T357/bench-*.out`).
 
 ## Left out, and for the lead to decide
-- **The light's strength on real ground.** Every 3 to 8% slope gets T263's gentle-ground gain (built for 1 to 3% rolls), so the response is strong everywhere and a course on a slope facing away from the sun is darker as a
-  whole (Woodhill about 10% under its flat look); at the overview the relief is there but subtle at the default Slope light of 1 and clear at 2 (`E:/ClaudeTemp/T357/*-after-light2-*.png`). Left as the light is. A higher default for a
-  game with land, or taking the regional tilt out of the light only (the workers get land + course height, so the plane of the land could be taken off what they get; the ball keeps the true ground), are the two ways if it is wanted.
-- **The skirt** (400 m, fading the real ground to the plain): where the real ground beyond the land falls away below the land's mean there is a shallow trough before the plain (the real valley, attenuated); the plain is
-  at the land's average level, not at the clubhouse's. A longer skirt softens it, the whole map as land (a 2 km window in each fixture) removes it.
+- **The light's strength on real ground** (done in T388, see "The real ground's light" above): the land has its own response and a modest boost, so the hills read at the default Slope light of 1 and gentle ground does not darken.
+- **The skirt** (done in T388: 640 m, over 400 m of data): where the real ground beyond the land falls away below the land's mean the skirt climbs back to the plain more gently; the plain is at the land's average
+  level, not at the clubhouse's. The whole map as land (a 2 km window in each fixture) would remove the trough.
 - **A new tee the player places on a slope** is levelled against the course layer, not the land (`teeCourse().field`), so on a 6% hillside it stands on the hillside; the hole shaping's rolls are laid on the course layer too.
   Both would read the ground if the planners took a sampler as `holeTerrain` now does.
 - **Saves from before T357, and courses built flat** (the box unticked, or no tiles): no land. An "add the ground to this course" could fetch it for an imported course and lay it under what the player has built (the

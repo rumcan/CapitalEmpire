@@ -15,13 +15,18 @@
 //    front low and back high as the hole shaping lays it (ext/hole-ground), laid in the course layer, where the player's shaping is.
 // Pure TypeScript, no DOM, deterministic; metres for heights, tiles (2 m) for places.
 import { CH_SIZE, CH_STEP, clampCourseHeightM, sampleCourseGrid, type CourseHeightField, type CourseTileBox } from '../../ext/course-height';
+import type { LightLand } from '../../ext/course-height/light';
 import type { Pt } from '../../network';
 import { heightAtM, packGrid, unpackGrid, type HeightGrid, type HeightPack, type OsmHeight } from './terrarium';
 import { cosSin } from './rotate';
 import type { OsmCourseSpec, SpecArea } from './types';
 
-/** the skirt: how far (tiles) beyond the land the heights fade to the plain (400 m) */
-export const SKIRT_T = 200;
+/** the skirt: how far (tiles) beyond the land the heights fade to the plain (640 m). T388 (#1048): it was 400 m (200 tiles). Where the real ground beyond the land falls below the land's mean (Woodhill's valley through holes 9, 13 and 18 leaves the
+ *  land's north-west edge 35 m under its mean) the skirt has to climb back to the plain, and over 400 m that climb was a 13% flank all round the land, a rim the slope light drew as a band of shade. Over 640 m it is 8%, softer than the hills inside */
+export const SKIRT_T = 320;
+/** how far (tiles) beyond the land the data goes: the window a download fetches (landWindow) and a shipped course's grid holds (the land, 400 m, and the smoothing's reach). The skirt is longer than that (SKIRT_T): beyond the window the
+ *  real ground is held at its edge value and faded out with the rest, so the climb is gentle and no more tiles are fetched (a download is at most 16 of them) */
+export const WINDOW_T = 200;
 /** the level pad under a green, a tee and a pond: its reach beyond the polygon (a sample is 2 tiles, so a pad of 2 keeps the polygon's edge itself level when it is
  *  read between samples), and the feather beyond that, tiles */
 export const PAD = { green: { pad: 3, feather: 5 }, tee: { pad: 2, feather: 4 }, water: { pad: 2, feather: 4 } } as const;
@@ -44,9 +49,9 @@ export async function landOfHeight(h: OsmHeight): Promise<OsmLand> {
 export function specToMetres(spec: Pick<OsmCourseSpec, 'originM' | 'scale'>, u: number, v: number): [number, number] {
   return [(spec.originM[0] + 2 * u) / spec.scale, (spec.originM[1] - 2 * v) / spec.scale];
 }
-/** the metres box (the stage-1 frame) the land and its skirt cover: the grid a download needs to hold it. anyTurn (a course to be placed, T356: the player turns it
+/** the metres box (the stage-1 frame) the land and its data window cover (WINDOW_T: the skirt is longer, T388): the grid a download needs to hold it. anyTurn (a course to be placed, T356: the player turns it
  *  before it is laid): the square about the land's middle that holds it however it is turned, and its skirt */
-export function landWindow(spec: Pick<OsmCourseSpec, 'originM' | 'scale' | 'w' | 'h'>, skirtT = SKIRT_T, anyTurn = false): [number, number, number, number] {
+export function landWindow(spec: Pick<OsmCourseSpec, 'originM' | 'scale' | 'w' | 'h'>, skirtT = WINDOW_T, anyTurn = false): [number, number, number, number] {
   if (anyTurn) {
     const [cx, cy] = specToMetres(spec, spec.w / 2, spec.h / 2), half = Math.hypot(spec.w, spec.h) / spec.scale + (2 * skirtT) / spec.scale; // (the land is 2w x 2h m at the map's scale: half its diagonal is hypot(w, h) m, and a tile of the skirt is 2 m, both at 1 / scale in true metres)
     return [cx - half, cy - half, cx + half, cy + half];
@@ -206,6 +211,24 @@ export function groundRect(course: Float32Array, land: Float32Array | null, b: r
   for (let j = 0; j < h; j++) data.set(course.subarray((j0 + j) * CH_SIZE + i0, (j0 + j) * CH_SIZE + i1 + 1), j * w);
   if (land) for (let j = 0; j < h; j++) { const row = (j0 + j) * CH_SIZE + i0, o = j * w; for (let i = 0; i < w; i++) data[o + i] = data[o + i]! + land[row + i]!; }
   return { i0, j0, w, h, data };
+}
+/** T388 (#1048): the land as the light is given it (ext/course-height/light.ts LightLand): the samples of the box that holds everything that is not 0, a sample to spare, copied (the workers keep it; the ground workers light the land by its own
+ *  response, beside the course height, not as one sum with it: heightLightGrid). Null with no land. Kept for the field's rev: asked again it is the same object until the land changes */
+const lightMemo = new WeakMap<LandField, { rev: number; rect: LightLand | null }>();
+export function landLightRect(f: LandField): LightLand | null {
+  const m = lightMemo.get(f); if (m && m.rev === f.rev) return m.rect;
+  let rect: LightLand | null = null;
+  if (f.data) {
+    let i0 = CH_SIZE, i1 = -1, j0 = CH_SIZE, j1 = -1;
+    for (let j = 0; j < CH_SIZE; j++) { const row = j * CH_SIZE; for (let i = 0; i < CH_SIZE; i++) if (f.data[row + i] !== 0) { if (i < i0) i0 = i; if (i > i1) i1 = i; if (j < j0) j0 = j; j1 = j; } }
+    if (i1 >= 0) {
+      i0 = Math.max(0, i0 - 1); j0 = Math.max(0, j0 - 1); i1 = Math.min(CH_SIZE - 1, i1 + 1); j1 = Math.min(CH_SIZE - 1, j1 + 1);
+      const w = i1 - i0 + 1, h = j1 - j0 + 1, data = new Float32Array(w * h);
+      for (let j = 0; j < h; j++) data.set(f.data.subarray((j0 + j) * CH_SIZE + i0, (j0 + j) * CH_SIZE + i1 + 1), j * w);
+      rect = { i0, j0, w, h, data };
+    }
+  }
+  lightMemo.set(f, { rev: f.rev, rect }); return rect;
 }
 /** the relief of the land: the lowest to the highest sample inside its box, metres */
 export function landRelief(f: LandField): number {
