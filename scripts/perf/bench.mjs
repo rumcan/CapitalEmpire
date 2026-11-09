@@ -27,7 +27,7 @@
 //   and 8%: the bakes over the middle farm and the frames panning along the farms; --farmMonth N: the calendar month shown (default 7, August)
 // --ballRoll ab (T251, a dev server): the balls' bounce and roll on and off by turns at 30% and 15% over the action (bench.ts rollStage);
 //   --rangeBalls N: the busy range, N balls kept in the air (with --start range); --tourney 1: the day plays the tournament's round (with --start town)
-// --fieldBalls N (T386, with --start range): a full outfield: N balls lie on the range from the start; --fieldAb 1: the lying balls drawn and not drawn by turns at 30% and 17% over the
+// --fieldBalls N (T386, with --fixture range20, a built range: a new range start is bare): a full outfield: N balls lie on the range from the start; --fieldAb 1: the lying balls drawn and not drawn by turns at 30% and 17% over the
 //   outfield (bench.ts fieldStage: the frames' cpu ms average and p95, the points drawn)
 // --serve starts `vite preview` on dist/ itself (run `npm run build` first); otherwise it needs a running dev or
 // preview server at the url. Screenshots (--shots stalls frames, so only for looking) and JSON go to output/bench/.

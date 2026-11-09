@@ -9522,7 +9522,7 @@ export class Game {
     const picking = !this.youInCart && ((this.keys.has('f') && this.youKeysOn()) || r.order?.phase === 'pick');
     if (!(bk.basket > 0 || (this.youInCart && (bk.hopper > 0 || r.kit().cart > 0)) || picking || r.order)) return;
     const dpr = this.dpr, ze = this.cam.z * dpr, kit = r.kit(), n = this.youInCart ? bk.hopper : bk.basket, cap = this.youInCart ? kit.hopper : kit.basket;
-    const sx = (worldX(y.x, y.y) - this.cam.X) * ze + this.cw / 2, sy = (worldY(y.x, y.y) - this.cam.Y) * ze + this.ch / 2 - Math.max(34 * dpr, 4.2 * HH * ze);
+    const sx = (worldX(y.x, y.y) - this.cam.X) * ze + this.cw / 2, sy = (worldY(y.x, y.y) - this.cam.Y) * ze + this.ch / 2 - Math.max(50 * dpr, 6.4 * HH * ze);
     if (sx < -60 * dpr || sy < -30 * dpr || sx > this.cw + 60 * dpr || sy > this.ch + 30 * dpr) return;
     const text = `${this.youInCart ? 'Hopper' : 'Basket'} ${n}/${cap}${picking && n >= cap ? ' · full: to the ball room' : ''}`, fp = Math.round(12 * dpr);
     ctx.font = `700 ${fp}px ui-sans-serif, system-ui, sans-serif`; const w = ctx.measureText(text).width + 14 * dpr, h = fp * 1.7;
