@@ -77,7 +77,7 @@ function onBlocked(day: CrewDay, f: WalkField): { drives: number; samples: numbe
 
 test('T377: the crew\'s drives, laid with the course\'s cart routes, never cross a tee, a green, a bunker or the pond; drawn straight they do', () => {
   const c = course(), f = fieldOf(c), rc = new RouteCache(f, CART, { pad: 12 });
-  const route: CrewInputs['route'] = (ax, ay, bx, by) => rc.route({ x: ax, y: ay }, { x: bx, y: by });
+  const route: CrewInputs['route'] = (ax, ay, bx, by) => rc.route({ x: ax, y: ay }, { x: bx, y: by }) ?? null;
   const straight = crewDay(inputs(c)), routed = crewDay(inputs(c, route));
   const a = onBlocked(straight, f), b = onBlocked(routed, f);
   console.log(`# crew drives straight: ${a.drives} legs, ${a.blocked} of ${a.samples} samples on a tee, green, bunker or water; routed: ${b.drives} legs, ${b.blocked} of ${b.samples} (${b.tiles.toFixed(0)} tiles driven, straight ${a.tiles.toFixed(0)}); ${rc.size} routes worked out`);
@@ -89,10 +89,10 @@ test('T377: the crew\'s drives, laid with the course\'s cart routes, never cross
 
 test('T377: the routes change the crew\'s drives and nothing else: the same cups, the same cut, the same jobs, legs end to end in time and in place', () => {
   const c = course(), f = fieldOf(c), rc = new RouteCache(f, CART, { pad: 12 });
-  const route: CrewInputs['route'] = (ax, ay, bx, by) => rc.route({ x: ax, y: ay }, { x: bx, y: by });
+  const route: CrewInputs['route'] = (ax, ay, bx, by) => rc.route({ x: ax, y: ay }, { x: bx, y: by }) ?? null;
   const straight = crewDay(inputs(c)), routed = crewDay(inputs(c, route));
   // (the minutes of a drive are shared among its legs by their lengths: the sums agree to the last digits of a float)
-  const near = <T extends { t: number }>(a: T[], b: T[], what: string) => { assert.equal(a.length, b.length, what); a.forEach((x, i) => assert.deepEqual({ ...x, t: 0 }, { ...b[i]!, t: 0 }, `${what} ${i}`) && assert.ok(Math.abs(x.t - b[i]!.t) < 1e-6, `${what} ${i} at ${x.t} and ${b[i]!.t}`)); };
+  const near = <T extends { t: number }>(a: T[], b: T[], what: string) => { assert.equal(a.length, b.length, what); a.forEach((x, i) => { assert.deepEqual({ ...x, t: 0 }, { ...b[i]!, t: 0 }, `${what} ${i}`); assert.ok(Math.abs(x.t - b[i]!.t) < 1e-6, `${what} ${i} at ${x.t} and ${b[i]!.t}`); }); };
   near(routed.cups, straight.cups, 'every cup at the same minute');
   near(routed.mown, straight.mown, 'the same bands cut at the same minutes');
   assert.equal(routed.workers.length, straight.workers.length);

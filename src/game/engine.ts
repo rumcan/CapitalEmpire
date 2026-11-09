@@ -4695,7 +4695,7 @@ export class Game {
     private walkFieldMemo: { key: string; v: WalkField | null } | null = null;
     private walkFieldSent: WalkField | null | undefined = undefined;
     private walkFieldNow(): WalkField | null {
-      const g = this.golf, grid = this.courseGrid; if (!g || !grid) return null;
+      const g = this.golf, grid = this.courseGrid; if (!g || !grid || !this.terrain) return null;
       const key = `${grid.rev}|${this.net.version}|${g.tees.length}|${g.pins.length}|${this.paintRev}`;
       if (this.walkFieldMemo?.key === key) return this.walkFieldMemo.v;
       const pad = 24, x0 = Math.max(0, Math.floor(grid.x0 - pad)), y0 = Math.max(0, Math.floor(grid.y0 - pad)), x1 = Math.min(MAP, Math.ceil(grid.x0 + grid.w * CELL_T + pad)), y1 = Math.min(MAP, Math.ceil(grid.y0 + grid.h * CELL_T + pad));
@@ -4703,7 +4703,7 @@ export class Game {
       for (const s of this.net.segs) {
         if (s.kind !== SK.GROUND && s.kind !== SK.BRIDGE) continue;
         const a = s.a, b = s.b; if (Math.max(a.x, b.x) < x0 || Math.min(a.x, b.x) > x1 || Math.max(a.y, b.y) < y0 || Math.min(a.y, b.y) > y1) continue;
-        ways.push({ ax: a.x, ay: a.y, bx: b.x, by: b.y, hw: s.cls.h + s.cls.walk, cart: s.cls.family === 'cart' || s.cls.family === 'course', bridge: s.kind === SK.BRIDGE });
+        ways.push({ ax: a.x, ay: a.y, bx: b.x, by: b.y, hw: s.cls.h + s.cls.walk, cart: (s.cls.family === 'cart' && s.cls.base !== 'cart-walk') || s.cls.family === 'course', bridge: s.kind === SK.BRIDGE });
       }
       const holes = (g.pins ?? []).flatMap(p => { const t = (g.tees ?? []).find(q => q.hole === p.hole); return t ? [{ tee: { x: t.x, y: t.y }, aim: { x: p.x, y: p.y } }] : []; });
       const v = buildWalkField(x0, y0, x1, y1, {
@@ -10772,7 +10772,7 @@ export class Game {
     const pace = capped(this.golfPace);
     // T377: the crew's drives go round the tees, greens, bunkers and water (the cart profile of the course's walk field), each way worked out once
     const wf = this.walkFieldNow(), rc = wf ? new RouteCache(wf, CART, { pad: 12 }) : null;
-    const cd = crewDay({ holes: crew, yard: { x: yard.x, y: yard.y }, gk: size.gk, mo: size.mo, ...jobs, windows, firstOn, pace: pace ? { walk: WALK_CAP * spm, cart: CART_CAP * spm } : null, ...(rc ? { route: (ax: number, ay: number, bx: number, by: number) => rc.route({ x: ax, y: ay }, { x: bx, y: by }) } : {}) });
+    const cd = crewDay({ holes: crew, yard: { x: yard.x, y: yard.y }, gk: size.gk, mo: size.mo, ...jobs, windows, firstOn, pace: pace ? { walk: WALK_CAP * spm, cart: CART_CAP * spm } : null, ...(rc ? { route: (ax: number, ay: number, bx: number, by: number) => rc.route({ x: ax, y: ay }, { x: bx, y: by }) ?? null } : {}) });
     this.crew = { day: cd, view: new CrewView(cd, pace ? { walk: WALK_CAP, cart: CART_CAP } : null), town: day, nextCup: -Infinity };
   }
   /** T269: the grounds crew's cut of each hole now (golf/crew.ts crewFlips: the saved phases and today's fresh stripes behind the mowers), as the

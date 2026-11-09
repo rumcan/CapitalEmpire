@@ -17,7 +17,7 @@ const TENT_KINDS = new Set(['food', 'drink', 'snack', 'merch', 'hospitality']);
 
 /** T377 (#1033, the owner: "fix people standing watching next to a tee box. they need to be around it not on it."): the ground the fans of a gallery may stand on: open
  *  ground and paths, never a fairway, the ground in front of a tee in the line of play, a tee box, a green, a bunker or water (golf/walkfield.ts) */
-const standable = (g: number): boolean => g === GROUND.open || g === GROUND.path;
+const standable = (g: number): boolean => g === GROUND.open || g === GROUND.path || g === GROUND.walk;
 /** the block of fans a spot draws (crowdview.ts galleryPeople: rows of up to 10, 0.55 apart across the line to the focus, 0.6 apart going back from it, up to 6
  *  rows, jitter 0.12) as sample points: tiles across the line, and tiles back from the spot along it (a little in front too), with a margin */
 const BLOCK_ACROSS = [-3.2, -1.6, 0, 1.6, 3.2], BLOCK_BACK = [-0.8, 0, 1.2, 2.4, 3.6, 4.4];

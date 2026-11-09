@@ -35,7 +35,7 @@ function surfA(x: number, y: number): number {
   for (const h of HOLES_A) if (x > h.tee.x && x < h.pin.x && Math.abs(y - h.tee.y) <= 9) return 4;
   return 1;
 }
-const wetA = (x: number, y: number): boolean => x >= 120 && x < 130;
+const wetA = (x: number, _y: number): boolean => x >= 120 && x < 130;
 const WAYS_A: Way[] = [{ ax: 100, ay: 143, bx: 150, by: 143, hw: 2, cart: false, bridge: true }, { ax: 60, ay: 0, bx: 60, by: 300, hw: 1, cart: true }];
 const fieldA = (): WalkField => buildWalkField(0, 0, 420, 300, { surf: surfA, wet: wetA, ways: WAYS_A, teeBoxes: HOLES_A.map(h => ({ x: h.tee.x, y: h.tee.y, r: 1.5 })), holes: HOLES_A.map(h => ({ tee: h.tee, aim: h.pin })) });
 const TEES = HOLES_A.map((h, i) => ({ hole: i + 1, ...h.tee })), PINS = HOLES_A.map((h, i) => ({ hole: i + 1, ...h.pin }));
@@ -59,7 +59,7 @@ describe('T377: the galleries stand round a tee and a green, not on them', () =>
       const ps = fans(s, i); assert.equal(ps.length, 60, `spot ${i}`);
       for (const p of ps) {
         const g = groundAt(f0, p.x, p.y);
-        assert.ok(g === G.open || g === G.path, `${s.kind} gallery of hole ${s.hole}: a fan at ${p.x.toFixed(1)}, ${p.y.toFixed(1)} on ground ${g}`);
+        assert.ok(g === G.open || g === G.path || g === G.walk, `${s.kind} gallery of hole ${s.hole}: a fan at ${p.x.toFixed(1)}, ${p.y.toFixed(1)} on ground ${g}`);
         if (s.kind === 'tee') { const t = HOLES_A[s.hole - 1]!.tee, pin = HOLES_A[s.hole - 1]!.pin, L = Math.hypot(pin.x - t.x, pin.y - t.y); assert.ok(((p.x - t.x) * (pin.x - t.x) + (p.y - t.y) * (pin.y - t.y)) / L <= 1.2, `a fan of hole ${s.hole}'s tee gallery stands in front of the tee`); }
       }
       // round it: the gallery is near the tee or green it watches (within 16 tiles), not far off
@@ -130,10 +130,11 @@ describe('T377: the spectators walk the day without crossing a tee, a green, a b
     const C = new Crowd(1, 0); C.setSpots(1); let asked = 0, ready = false;
     C.router = () => { asked++; return ready ? [{ x: 20, y: 10 }, { x: 20, y: 30 }] : undefined; };
     C.add({ x: 10, y: 10, tx: 20, ty: 30, n: 3, town: 0, stage: 3, route: 0 });
-    C.step(1); C.step(1); const w = C.walkers[0]!;
-    assert.equal(asked, 2, 'asked each step'); assert.deepEqual([w.x, w.y], [10, 10], 'it has not moved'); assert.equal(w.via, undefined, 'and has no way yet');
+    const first = () => C.walkers[0]!;
+    C.step(1); C.step(1);
+    assert.equal(asked, 2, 'asked each step'); assert.deepEqual([first().x, first().y], [10, 10], 'it has not moved'); assert.ok(first().via === undefined, 'and has no way yet');
     ready = true; C.step(1);
-    assert.equal(asked, 3); assert.ok(w.via && w.via.length === 2, 'it has its way'); assert.ok(w.x > 10.5 && Math.abs(w.y - 10) < 0.01 || w.x > 10, 'and walks it (first to the corner at x 20)');
+    assert.equal(asked, 3); assert.equal(first().via?.length, 2, 'it has its way'); assert.ok(first().x > 10.5 && Math.abs(first().y - 10) < 0.01, 'and walks it: first along y = 10 to the corner at x = 20');
   });
   it('two parties side by side are not in step with each other either', () => {
     const buf = Float32Array.of(50, 50, 3, 3, 60, 50, 1, 50, 52, 3, 3, 60, 52, 2), a: CrowdPerson[] = [], b: CrowdPerson[] = []; let same = 0, n = 0;

@@ -76,6 +76,9 @@ describe('T377: a route over the walk field', () => {
     const s = findRoute(f, SPECTATOR, a, b)!; assert.ok(shareOn(f, a, s, G.path) >= 0.5, 'a walker uses it too');
     // no path: across the open ground
     const g = field(100, 40, []); assert.ok(shareOn(g, a, findRoute(g, CART, a, b)!, G.path) === 0);
+    // a way for people only (a walking path, a street) is open ground to a cart (it does not go out of its way to take it) and a way to a spectator
+    const w = field(100, 40, [[8, 28, 92, 30, G.walk]]);
+    assert.ok(shareOn(w, a, findRoute(w, CART, a, b)!, G.walk) < 0.05, 'a cart keeps off a footpath'); assert.ok(shareOn(w, a, findRoute(w, SPECTATOR, a, b)!, G.walk) >= 0.5, 'a spectator takes it');
   });
   it('a cart never enters a tee, a green, a bunker or water, whatever the ground in its way; a spectator never a tee, green, bunker or water either', () => {
     // a ring of every blocked ground, with a path and a fairway through it
@@ -104,7 +107,7 @@ describe('T377: a route over the walk field', () => {
     const f = field(80, 80, [[30, 30, 50, 50, G.green]]), c = new RouteCache(f, SPECTATOR), a = { x: 5.5, y: 40.5 }, b = { x: 75.5, y: 40.5 };
     const r1 = c.route(a, b), r2 = c.route({ x: 5.7, y: 40.2 }, { x: 75.2, y: 40.9 });
     assert.ok(r1 && r1 === r2, 'one route for the same two cells'); assert.equal(c.size, 1); assert.equal(c.stats.miss, 1); assert.equal(c.stats.hits, 1);
-    assert.notEqual(c.route(a, { x: 75.5, y: 10.5 }), r1); assert.equal(c.route({ x: -3, y: 4 }, b), null);
+    assert.notEqual(c.route(a, { x: 75.5, y: 10.5 }), r1); assert.equal(c.route({ x: -3, y: 4 }, { x: -9, y: 9 }), null, 'both ends off the field: none'); assert.ok(Array.isArray(c.route({ x: -3, y: 4 }, b)), 'one end off it: the way from its rim');
   });
 });
 
@@ -123,6 +126,14 @@ describe('T377: the ground of a course (golf/walkground.ts)', () => {
     assert.equal(groundAt(f, 85.5, 16.5), G.green, 'a way never lays over a green');
     assert.equal(groundAt(f, 35.5, 12.5), G.front, 'in front of the tee in the line of play');
     assert.equal(groundAt(f, 5.5, 12.5), G.open, 'behind the tee is not in front of it');
+  });
+  it('a way for carts is path, a way for people only (a walking path, a street) is walk, and a path stays a path where a walk crosses it, laid first or last', () => {
+    for (const order of [0, 1]) {
+      const ways = [{ ax: 10, ay: 30, bx: 90, by: 30, hw: 1, cart: false }, { ax: 50, ay: 10, bx: 50, by: 50, hw: 1, cart: true }];
+      const f = buildWalkField(0, 0, 100, 60, { surf: () => 1, wet: () => false, ways: order ? ways.slice().reverse() : ways, teeBoxes: [], holes: [] });
+      assert.equal(groundAt(f, 20.5, 30.5), G.walk, 'a walking path'); assert.equal(groundAt(f, 50.5, 20.5), G.path, 'a cart path'); assert.equal(groundAt(f, 50.5, 30.5), G.path, 'the crossing is path');
+      assert.equal(groundAt(f, 20.5, 40.5), G.open);
+    }
   });
 });
 
@@ -178,10 +189,18 @@ describe('T377: the finer points of the walk field', () => {
     assert.equal(groundAt(f, 8.5, 10.5), G.open, 'the original is as it was'); assert.equal(groundAt(f, 29.5, 30.5), G.open);
     assert.equal(dilate(f, 0).g.join(), f.g.join(), 'a margin of none changes nothing');
   });
-  it('NO_WAY: a cache answers the empty route for ends with no way between them (a river across the field) and null for an end off the field', () => {
+  it('NO_WAY: a cache answers the empty route for ends with no way between them (a river across the field) and null when both ends are off the field', () => {
     const f = field(40, 40, [[0, 20, 40, 22, G.water]]), rc = new RouteCache(f, SPECTATOR);
     assert.equal(rc.route({ x: 5.5, y: 5.5 }, { x: 5.5, y: 35.5 }), NO_WAY); assert.equal(NO_WAY.length, 0);
-    assert.equal(rc.route({ x: 5.5, y: 5.5 }, { x: 100, y: 5 }), null);
+    assert.equal(rc.route({ x: -5, y: 5 }, { x: 100, y: 5 }), null);
     assert.ok(rc.route({ x: 5.5, y: 5.5 }, { x: 30.5, y: 8.5 })!.length >= 1, 'a way on the same side');
+  });
+  it('an end outside the field is brought to its rim: straight outside, routed inside (the lots and the gates are not always inside the box of the course)', () => {
+    const f = field(100, 60, [[48, 0, 52, 40, G.water]]), rc = new RouteCache(f, SPECTATOR), a = { x: -30, y: 10 }, b = { x: 90.5, y: 10.5 }, r = rc.route(a, b)!;
+    assert.ok(r.length >= 3, `a way round the wall (${r.length} points)`); assert.deepEqual(r[0], { x: 0.5, y: 10 }, 'first to the rim'); assert.deepEqual(r[r.length - 1], b);
+    assert.ok(routeClear(f, SPECTATOR, r), 'inside the field it never enters the water');
+    const out = { x: 150, y: 59 }, r2 = rc.route(b, out)!;
+    assert.deepEqual(r2[r2.length - 1], out, 'to an end outside: the way to its rim, then straight out'); assert.deepEqual(r2[r2.length - 2], { x: 99.5, y: 59 }); assert.ok(routeClear(f, SPECTATOR, [b, ...r2.slice(0, -1)]));
+    assert.equal(rc.route({ x: -5, y: 5 }, { x: 150, y: 5 }), null, 'both outside: a straight line');
   });
 });

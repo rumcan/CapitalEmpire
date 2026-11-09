@@ -6,7 +6,8 @@ import { G, makeField, type Ground, type WalkField } from './walkfield';
 
 /** the course grid's surface ids (ext/course-grid SURF), as the ground reads them */
 const S = { none: 0, rough: 1, fescue: 2, water: 3, fairway: 4, tee: 5, bunker: 6, waste: 7, green: 8, longGrass: 9 } as const;
-/** a way (a cart path, a drive, a street): its centre line (tiles), its half width and whether it is a cart's way (a cart path or a course drive) */
+/** a way (a cart path, a drive, a walking path, a street): its centre line (tiles), its half width and whether it is a cart's way (a cart path or a course drive: laid
+ *  as path, for carts and people) or for people only (a walking path, a street: laid as walk, which a cart takes for open ground) */
 export interface Way { ax: number; ay: number; bx: number; by: number; hw: number; cart: boolean; /** a bridge: laid over water too */ bridge?: boolean }
 /** a hole's tee and where it aims (tiles) */
 export interface HoleLine { tee: Pt; aim: Pt }
@@ -39,11 +40,11 @@ function surfGround(src: GroundSources, x: number, y: number): Ground {
 
 /** the field of the tile box x0 y0 x1 y1: the surfaces and the water first, the tee markers' boxes over them, the ground in front of each tee in the
  *  line of play (a fairway or open ground there becomes `front`: dear to cross), then the ways laid over open ground and fairway (a way across a fairway
- *  is where it is crossed; never over a tee, a green, a bunker or water) */
+ *  is where it is crossed; never over a tee, a green, a bunker or water; a bridge over water too): a cart's way as path, a way for people only as walk, a
+ *  path over a walk where they cross */
 export function buildWalkField(x0: number, y0: number, x1: number, y1: number, src: GroundSources, cell = 1): WalkField {
   const f = makeField(x0, y0, x1, y1, cell), { w, h, g } = f;
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) g[j * w + i] = surfGround(src, x0 + (i + 0.5) * cell, y0 + (j + 0.5) * cell);
-  const at = (x: number, y: number): number => { const i = Math.floor((x - x0) / cell), j = Math.floor((y - y0) / cell); return i < 0 || j < 0 || i >= w || j >= h ? -1 : j * w + i; };
   // the tee markers' boxes
   for (const t of src.teeBoxes) {
     const i0 = Math.floor((t.x - t.r - x0) / cell), i1 = Math.floor((t.x + t.r - x0) / cell), j0 = Math.floor((t.y - t.r - y0) / cell), j1 = Math.floor((t.y + t.r - y0) / cell);
@@ -65,11 +66,11 @@ export function buildWalkField(x0: number, y0: number, x1: number, y1: number, s
     const dx = wy.bx - wy.ax, dy = wy.by - wy.ay, L2 = dx * dx + dy * dy, R = wy.hw + cell;
     const i0 = Math.floor((Math.min(wy.ax, wy.bx) - R - x0) / cell), i1 = Math.floor((Math.max(wy.ax, wy.bx) + R - x0) / cell), j0 = Math.floor((Math.min(wy.ay, wy.by) - R - y0) / cell), j1 = Math.floor((Math.max(wy.ay, wy.by) + R - y0) / cell);
     for (let j = Math.max(0, j0); j <= Math.min(h - 1, j1); j++) for (let i = Math.max(0, i0); i <= Math.min(w - 1, i1); i++) {
-      const c = j * w + i, v = g[c]!; if (v !== G.open && v !== G.fairway && v !== G.front && !(wy.bridge && v === G.water)) continue;
+      const c = j * w + i, v = g[c]!, to = wy.cart ? G.path : G.walk;
+      if (v !== G.open && v !== G.fairway && v !== G.front && !(wy.bridge && v === G.water) && !(to === G.path && v === G.walk)) continue;
       const px = x0 + (i + 0.5) * cell, py = y0 + (j + 0.5) * cell, t = L2 > 0 ? Math.max(0, Math.min(1, ((px - wy.ax) * dx + (py - wy.ay) * dy) / L2)) : 0;
-      if (Math.hypot(px - wy.ax - dx * t, py - wy.ay - dy * t) <= Math.max(wy.hw, cell * 0.5)) g[c] = G.path;
+      if (Math.hypot(px - wy.ax - dx * t, py - wy.ay - dy * t) <= Math.max(wy.hw, cell * 0.5)) g[c] = to;
     }
   }
-  void at;
   return f;
 }

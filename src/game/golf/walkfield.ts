@@ -9,14 +9,15 @@
 // the ground from the course grid and the roads and hands the field to the City (the spectators' routes) and the cart playback.
 import type { Pt } from '../network';
 
-/** what a cell of the field is: open ground (the rough, the fescue, the land off the course), a cart path or a drive or a street, a fairway (its first cut
- *  and fringe too), the ground in front of a tee in the line of play (a fairway too, dearer to cross), a tee box, a green, a bunker, water */
-export const G = { open: 0, path: 1, fairway: 2, front: 3, tee: 4, green: 5, bunker: 6, water: 7 } as const;
+/** what a cell of the field is: open ground (the rough, the fescue, the land off the course), a cart path or a course drive (a way for carts and people), a
+ *  fairway (its first cut and fringe too), the ground in front of a tee in the line of play (a fairway too, dearer to cross), a tee box, a green, a bunker,
+ *  water, and a way for people only (a walking path, a street: a cart takes it for open ground) */
+export const G = { open: 0, path: 1, fairway: 2, front: 3, tee: 4, green: 5, bunker: 6, water: 7, walk: 8 } as const;
 export type Ground = (typeof G)[keyof typeof G];
 /** what a ground costs to cross a tile of, per profile (0: never). A cart path is the cheapest way, so the routes follow the paths while they lead there */
-export interface Profile { readonly name: 'spectator' | 'cart'; readonly cost: readonly [number, number, number, number, number, number, number, number] }
-export const SPECTATOR: Profile = { name: 'spectator', cost: [2, 1, 12, 36, 0, 0, 0, 0] };
-export const CART: Profile = { name: 'cart', cost: [3, 1, 7, 7, 0, 0, 0, 0] };
+export interface Profile { readonly name: 'spectator' | 'cart'; readonly cost: readonly [number, number, number, number, number, number, number, number, number] }
+export const SPECTATOR: Profile = { name: 'spectator', cost: [2, 1, 12, 36, 0, 0, 0, 0, 1] };
+export const CART: Profile = { name: 'cart', cost: [3, 1, 7, 7, 0, 0, 0, 0, 3] };
 /** the spectators' field keeps this many cells (tiles) off every tee, green and bunker, and the second off water (dilate): the people of a party walk a little either side of its line */
 export const SPECTATOR_GROW = 2, SPECTATOR_WATER_GROW = 1;
 
@@ -195,6 +196,8 @@ function astar(f: WalkField, p: Profile, s: number, t: number, pad: number): num
       }
     }
   }
+  // (a search over the whole field leaves a heap of millions of entries: it is not kept)
+  if (HF.length > (1 << 17)) { HF = new Float64Array(1 << 14); HI = new Int32Array(1 << 14); }
   if (!closed[lt]) return null;
   const out: number[] = [];
   for (let v = lt; v >= 0; v = from[v]!) out.push((Math.floor(v / bw) + j0) * W + (v % bw + i0));
@@ -221,6 +224,11 @@ function pull(f: WalkField, p: Profile, pts: Pt[]): Pt[] {
 
 /** the route of a pair of ends with no way between them */
 export const NO_WAY: Pt[] = [];
+/** the point of the field's rim nearest to a point outside it (the middle of the rim cell) */
+function rimOf(f: WalkField, p: Pt): Pt {
+  const h = f.cell / 2;
+  return { x: Math.min(f.x0 + f.w * f.cell - h, Math.max(f.x0 + h, p.x)), y: Math.min(f.y0 + f.h * f.cell - h, Math.max(f.y0 + h, p.y)) };
+}
 /** a cache of routes by the cells of their ends: the route (or null for none) the first time, the same one after (the City keeps one per day). `budget` is how
  *  many routes it may still work out (a miss costs a search; a hit costs a look): the City gives it a few each step so a crowd arriving at once does not stall a
  *  step; over it a miss is not worked out and the answer is undefined (ask again next step) */
@@ -228,10 +236,20 @@ export class RouteCache {
   private m = new Map<number, Pt[]>(); private hits = 0; private miss = 0;
   budget = Infinity;
   constructor(readonly f: WalkField, readonly p: Profile, private o: RouteOpts = {}) {}
-  /** the route a to b (see findRoute), by the cells the two points are in; null for an end outside the field (off the course: a straight line will do), NO_WAY
-   *  (an empty route) when both ends are on it and there is no way between them, and undefined when the route is not known and the budget is spent */
+  /** the route a to b (see findRoute), by the cells the two points are in: null when both ends are outside the field (off the course: a straight line will do),
+   *  NO_WAY (an empty route) when there is no way between them, undefined when the route is not known and the budget is spent. An end outside the field is brought
+   *  to its rim: the way outside is the straight line to the rim's point (the first waypoint of a route from outside, the one before the end of a route to it),
+   *  the way inside is worked out from the rim (and kept) */
   route(a: Pt, b: Pt): Pt[] | null | undefined {
-    const ca = cellOf(this.f, a.x, a.y), cb = cellOf(this.f, b.x, b.y); if (ca < 0 || cb < 0) return null;
+    const f = this.f, ca = cellOf(f, a.x, a.y), cb = cellOf(f, b.x, b.y);
+    if (ca < 0 && cb < 0) return null;
+    const a2 = ca < 0 ? rimOf(f, a) : a, b2 = cb < 0 ? rimOf(f, b) : b, r = this.inside(a2, b2);
+    if (!r || !r.length || (ca >= 0 && cb >= 0)) return r;
+    return [...(ca < 0 ? [a2] : []), ...r, ...(cb < 0 ? [b] : [])];
+  }
+  /** the route between two points inside the field, from the cache or worked out (within the budget) */
+  private inside(a: Pt, b: Pt): Pt[] | null | undefined {
+    const ca = cellOf(this.f, a.x, a.y), cb = cellOf(this.f, b.x, b.y);
     const key = ca * (this.f.w * this.f.h) + cb, got = this.m.get(key);
     if (got !== undefined) { this.hits++; return got; }
     if (this.budget <= 0) return undefined;
