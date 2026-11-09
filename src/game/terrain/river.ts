@@ -19,7 +19,9 @@ import { TC, type WaterPoint } from './types';
 
 export type P = { x: number; y: number };
 
-/** the natural river's numbers (tiles unless said):
+/** the natural river's numbers (tiles unless said). They are terrain model 2's contract: a save stamped model 2 rebuilds its valley from them, so
+ *  changing one (or anything else this file and generate.ts's nat branches compute) puts every such town beside another river: a change is a new
+ *  model (TERRAIN_MODEL 3, the old numbers kept for model 2), never an edit.
  *  - wander: the heading's wander in radians, three parts. med, the meanders: a sine of the arc (the classic sine-generated curve: a bend, its
  *    mirror, the next) whose wavelength is med[0] tiles on average, its angle med[1], the wavelength swinging by med[2] (a share) over about
  *    450 tiles and the angle by med[3] over 260, so the bends are never alike (a heading swing of 1 radian over 340 tiles is a bend of about 55

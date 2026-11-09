@@ -114,6 +114,24 @@ test('model 1 (a save from before) is the old valley bit for bit: the same class
   }
 });
 
+/** the natural river's hash: every waterway rounded to a thousandth of a tile (kind, count, then x, y, w and bar of each point), so the last bit of a float is no part of it */
+function hashWatersNat(ws: readonly Waterway[]): number {
+  const f: number[] = [];
+  for (const w of ws) { f.push(w.kind === 'river' ? 1 : 2, w.pts.length); for (const p of w.pts) f.push(Math.round(p.x * 1000), Math.round(p.y * 1000), Math.round(p.w * 1000), Math.round((p.bar ?? 0) * 1000)); }
+  return fnv(Float64Array.from(f));
+}
+/** model 2's maps as T360 made them: a save stamped 2 builds its valley again from these numbers, a seed each */
+const NAT_PINNED: readonly [number, number, number][] = [
+  [1, 2219442668, 403532857], [2, 459471939, 2387361220], [3, 1602431070, 530944695], [7, 4237105600, 1961143410], [13, 4003714651, 2200979767], [42, 3588255045, 3660263270], [100, 636312604, 776269099],
+];
+test('model 2 is a contract too: a save stamped 2 gets the same classes and the same river (a change to the natural river is a model 3, not an edit of model 2)', () => {
+  for (const [seed, cls, waters] of NAT_PINNED) {
+    const t = gen(seed, 2);
+    assert.equal(fnv(t.cls), cls, `seed ${seed}: the classes of model 2 changed (make it a new terrain model, TERRAIN_MODEL + 1)`);
+    assert.equal(hashWatersNat(t.waters), waters, `seed ${seed}: the waterways of model 2 changed (make it a new terrain model, TERRAIN_MODEL + 1)`);
+  }
+});
+
 test('the same seed gives the same natural river, and different seeds different ones', () => {
   const a = generateTerrain(7, TERRAIN_MODEL), b = generateTerrain(7, TERRAIN_MODEL);
   assert.equal(fnv(a.cls), fnv(b.cls));
