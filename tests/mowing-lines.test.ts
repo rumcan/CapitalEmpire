@@ -21,6 +21,9 @@ import type { Game } from '../src/game/engine';
 import { SurfaceSwatches } from '../src/ui/course/BrushControls';
 
 const FIN = DEFAULT_COURSE_FINISH, BASE = fairwayStripeLook();
+// (T365: the fairway's pattern with no look naming one is the finish's: wide stripes. The finish's own bands along the hole, T359's default, are the pattern 'along')
+const ALONG = { ...FIN, pattern: 'along' as const };
+const P = (id: string) => MOW_PATTERNS.findIndex(q => q.id === id);
 const fw = (book: LookBook, o: string) => book[o]?.fairway; // (read through a function: assert.equal narrows an indexed read to its asserted type)
 const box = (g: Grid, x0: number, y0: number, x1: number, y1: number, s: number, h: number) => fillPolygon(g, [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }], s, h, 0);
 
@@ -31,16 +34,16 @@ test('mowing lines are held to their ranges; a bad or empty setting is left out 
   assert.deepEqual(clampMow({ on: true, pattern: 'check', width: 99, light: 2, dark: -1, angle: 200, extra: 5 }), { on: true, pattern: 'check', width: 16, light: 1, dark: 0, angle: 90 });
   assert.deepEqual(clampMow({ width: 0.1, angle: -200 }), { width: 0.5, angle: -90 });
   assert.deepEqual(clampMow({ width: 3.1, light: 0.123, angle: 12.4 }), { width: 3, light: 0.12, angle: 12 }, 'rounded to a quarter tile, a percent, a degree');
-  assert.deepEqual(MOW_PATTERNS.map(p => p.id), ['along', 'straight', 'check', 'diamond']);
+  assert.deepEqual(MOW_PATTERNS.map(p => p.id), ['along', 'wide', 'crosscut', 'halves', 'collar', 'straight', 'check', 'diamond']);
   assert.deepEqual([...MOW_KINDS], ['fairway', 'green', 'tee', 'rough']);
 });
 
 test('the worker\'s form: every field that is set, none that is not; a pattern by index', () => {
   assert.equal(mowRecOf(undefined), undefined);
   assert.deepEqual(mowRecOf({ on: false }), { on: 0 });
-  assert.deepEqual(mowRecOf({ on: true, pattern: 'diamond', width: 2, light: 0.4, dark: 0.9, angle: -30 }), { on: 1, p: 3, w: 2, l: 0.4, k: 0.9, a: -30 });
-  assert.deepEqual(mowRecOf({ pattern: 'along' }), undefined, 'along the hole is the default: nothing to carry');
-  assert.equal(patternOf({ p: 2 }), 'check'); assert.equal(patternOf(undefined), 'along'); assert.equal(patternOf({ p: 9 }), 'along');
+  assert.deepEqual(mowRecOf({ on: true, pattern: 'diamond', width: 2, light: 0.4, dark: 0.9, angle: -30 }), { on: 1, p: P('diamond'), w: 2, l: 0.4, k: 0.9, a: -30 });
+  assert.deepEqual(mowRecOf({ pattern: 'along' }), { p: 0 }, 'every pattern a look names is carried, the bands along the hole too: the fairway\'s default is no longer that one');
+  assert.equal(patternOf({ p: P('check') }), 'check'); assert.equal(patternOf(undefined), undefined, 'none named: the kind\'s own default'); assert.equal(patternOf({ p: 99 }), undefined);
   const t: MowTable = { base: { w: 2 }, hole: [undefined, { on: 0 }, {}] };
   assert.deepEqual(mowOfHole(t, 1), { on: 0 }); assert.deepEqual(mowOfHole(t, 2), {}); assert.deepEqual(mowOfHole(t, 5), { w: 2 }, 'a hole with no entry wears the base'); assert.equal(mowOfHole(undefined, 1), undefined);
   assert.equal(mowAnyOn(t), false); assert.equal(mowAnyOn({ hole: [undefined, { on: 1 }] }), true); assert.equal(mowAnyOn({ base: { on: 1 } }), true);
@@ -48,7 +51,7 @@ test('the worker\'s form: every field that is set, none that is not; a pattern b
 
 test('the course finish\'s own lines: a look with none changes nothing; the fairway\'s bands and the green\'s stripes are on, the tee\'s and the rough\'s off', () => {
   const fl = finishStripeLook(FIN, BASE)!, gl = greenStripeLook(FIN, BASE)!;
-  const fair = mowSpec('fairway', undefined, FIN, BASE)!;
+  const fair = mowSpec('fairway', undefined, ALONG, BASE)!;
   assert.deepEqual(fair.look, fl); assert.equal(fair.textured, true); assert.equal(fair.pattern, 'along'); assert.equal(fair.angle, 0);
   const green = mowSpec('green', undefined, FIN, BASE)!;
   assert.deepEqual(green.look, gl); assert.equal(green.textured, true);
@@ -59,7 +62,7 @@ test('the course finish\'s own lines: a look with none changes nothing; the fair
   const t218 = mowSpec('fairway', undefined, off, BASE)!; assert.deepEqual(t218.look, BASE); assert.equal(t218.textured, false);
   assert.equal(mowSpec('green', undefined, off, BASE), null);
   // only on / off set: the look stays the finish's
-  assert.equal(mowSpec('fairway', { on: 0 }, FIN, BASE), null); assert.deepEqual(mowSpec('fairway', { on: 1 }, FIN, BASE)!.look, fl);
+  assert.equal(mowSpec('fairway', { on: 0 }, FIN, BASE), null); assert.deepEqual(mowSpec('fairway', { on: 1 }, ALONG, BASE)!.look, fl);
   assert.equal(mowSpec('green', { on: 0 }, FIN, BASE), null);
   assert.deepEqual(mowSpec('tee', { on: 1 }, FIN, BASE)!.look, fl, 'a tee turned on lays the fairway\'s bands');
   assert.deepEqual(mowSpec('rough', { on: 1 }, FIN, BASE)!.look, fl);
@@ -79,14 +82,14 @@ test('the numbers: the band width, and the light and dark strengths in the finis
 });
 
 test('the patterns: along the hole follows its line; straight is one direction at the angle; a checkerboard crosses a second family; a diamond is turned a quarter', () => {
-  assert.equal(mowSpec('fairway', { p: 1, a: 30 }, FIN, BASE)!.angle, 30);
-  const c = mowSpec('fairway', { p: 2, a: 10 }, FIN, BASE)!; assert.equal(c.look.check, true); assert.equal(c.angle, 10);
-  const d = mowSpec('fairway', { p: 3, a: 10 }, FIN, BASE)!; assert.equal(d.look.check, true); assert.equal(d.angle, 55, 'a quarter turn on the angle');
-  assert.equal(mowSpec('fairway', { p: 1 }, FIN, BASE)!.look.check, undefined);
+  assert.equal(mowSpec('fairway', { p: P('straight'), a: 30 }, FIN, BASE)!.angle, 30);
+  const c = mowSpec('fairway', { p: P('check'), a: 10 }, FIN, BASE)!; assert.equal(c.look.check, true); assert.equal(c.angle, 10);
+  const d = mowSpec('fairway', { p: P('diamond'), a: 10 }, FIN, BASE)!; assert.equal(d.look.check, true); assert.equal(d.angle, 55, 'a quarter turn on the angle');
+  assert.equal(mowSpec('fairway', { p: P('straight') }, FIN, BASE)!.look.check, undefined);
   // the legs: along follows a dogleg (two legs); the others are one direction over the whole hole, from the tee
   const line = [0, 0, 100, 0, 100, 80];
   assert.equal(holeStripeLegs(line, mowSpec('fairway', undefined, FIN, BASE)!.look).length, 2);
-  const straight = mowSpec('fairway', { p: 1, a: 20 }, FIN, BASE)!, legs = holeStripeLegs(line, straight.look, straight.angle);
+  const straight = mowSpec('fairway', { p: P('straight'), a: 20 }, FIN, BASE)!, legs = holeStripeLegs(line, straight.look, straight.angle);
   assert.equal(legs.length, 1); assert.ok(Math.abs(legs[0]!.m.ux + Math.sin(20 * Math.PI / 180)) < 1e-9);
   assert.equal(holeStripeLegs(line, straight.look, straight.angle)[0]!.m.c, undefined, 'plain bands carry no second family');
   // a checkerboard follows the hole's line (its squares across it, a leg of its own each side of a bend), turned by the angle; a diamond a quarter more
@@ -101,7 +104,7 @@ test('the patterns: along the hole follows its line; straight is one direction a
 });
 
 test('what the panel reads: every field with the value it lays, the finish\'s where the look sets none', () => {
-  const v = mowShown('fairway', undefined, FIN);
+  const v = mowShown('fairway', undefined, ALONG);
   assert.deepEqual(v, { on: true, pattern: 'along', width: FIN.bandWidth, light: FIN.bandStrength, dark: FIN.bandStrength, angle: 0 });
   const g = mowShown('green', undefined, FIN); assert.deepEqual([g.on, g.width, g.light], [true, FIN.greenWidth, FIN.greenStrength]);
   assert.equal(mowShown('tee', undefined, FIN).on, false); assert.equal(mowShown('rough', undefined, FIN).on, false);
@@ -202,11 +205,11 @@ test('the Mowing lines section is in the panel of the fairway, the green, the te
     if (kind === 'tee' || kind === 'rough') p.setStyle({ mow: { on: true } });
     const html = panel();
     assert.match(html, new RegExp(`data-mowing="${kind}"`), `${kind}: Mowing lines`);
-    for (const w of ['Mowing lines', 'Along the hole', 'Straight', 'Checkerboard', 'Diamond', 'Band width', 'Contrast', 'Light', 'Dark', 'Angle']) assert.ok(html.includes(w), `${kind}: ${w}`);
+    for (const w of ['Mowing lines', 'Along the hole', 'Wide stripes', 'Crosscut', 'Two-tone halves', 'Collar ring', 'Straight', 'Checkerboard', 'Diamond', 'Band width', 'Contrast', 'Light', 'Dark', 'Angle']) assert.ok(html.includes(w), `${kind}: ${w}`);
     if (kind === 'tee' || kind === 'rough') p.undoTop(); // (and off again)
   }
   p.openSurface('fairway');
-  assert.match(panel(), /data-mow-on="on"[^>]*data-mow-pattern="along"/, 'the fairway: on, along the hole');
+  assert.match(panel(), /data-mow-on="on"[^>]*data-mow-pattern="wide"/, 'the fairway: on, wide stripes (T365: the strongest look is the default)');
   p.openSurface('tee'); assert.match(panel(), /data-mow-on="off"/, 'the tee: off, mown plain');
   assert.doesNotMatch(panel(), /aria-label="Light bands"/, 'and no sliders while it is off');
   p.openSurface('fairway'); p.setStyle({ mow: { pattern: 'check', width: 2 } });

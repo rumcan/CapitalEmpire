@@ -11,8 +11,8 @@ import type { MowStripes } from './ground-protocol';
 import { SURF } from './ext/course-grid';
 import { borderBase } from './ext/course-grid/patch';
 import { SUN_TILE_DIR } from './ext/course-height';
-import type { StripeLook } from './course-stripes';
-import { mowCustom, patternOf, type MowKind, type MowOpts, type MowPattern, type MowRec } from './mow-lines';
+import { HALF_SOFT, HALF_WIDTH, type StripeLook } from './course-stripes';
+import { BAND_PATTERNS, CROSS_DEFAULT, DEFAULT_FAIRWAY_PATTERN, MOW_PATTERNS, PATTERN_LOOKS, mowCustom, patternOf, type MowKind, type MowOpts, type MowPattern, type MowRec } from './mow-lines';
 
 /** T364 (#1019; the owner, 2026-11-08: "use the same texture the bunker uses for its walls for the elevated tee walls"): how a raised tee's cut sides
  *  are painted: 'bunker', the bunker's wall (the Bunker look's Cut wall picture, its light and shade: tee-wall.ts); 'sand', the same light on the native
@@ -44,9 +44,14 @@ export interface CourseFinish {
   /** T364 (#1019): a raised tee's cut sides (TeeWall): the bunker's wall by default, 'sand' its native painting, 'rock' the stones of before.
    *  Independent of `on` (the tees' walls are T127's, not T227's); the tee's grass is its own look in the file's surfaces (the Tee surface wears the green's) */
   teeWall: TeeWall;
+  /** T365 (#1020; the owner, 2026-11-08: "make the strongest look the default for new fairways"): the pattern a fairway's mowing lines lay when its look
+   *  sets none (mow-lines.ts MOW_PATTERNS): wide stripes, the bold bands of the owner's reference. 'along' is the bands along the hole at the finish's
+   *  own width and strength, as before T365 (the dev server's ?mow=along). A look's own pattern, and the green's, the tee's and the rough's, are not
+   *  this; with the finish off the fairway keeps T218's bands */
+  pattern: MowPattern;
 }
 /** the tuned look (against the concept, at 30% and 15%) */
-export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3, bandStrength: 0.8, greenWidth: 0.75, greenStrength: 0.3, collarWidth: 4, collarTone: 0.45, lip: 1, bowl: 1, roll: 1, teeWall: 'bunker' };
+export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3, bandStrength: 0.8, greenWidth: 0.75, greenStrength: 0.3, collarWidth: 4, collarTone: 0.45, lip: 1, bowl: 1, roll: 1, teeWall: 'bunker', pattern: DEFAULT_FAIRWAY_PATTERN };
 /** the finish off: the course exactly as before T227 */
 export const FINISH_OFF: Readonly<CourseFinish> = { ...DEFAULT_COURSE_FINISH, on: false };
 /** the knobs' ranges (collarWidth: the Border slider's, ext/course-grid/patch BORDER_MIN_M .. BORDER_MAX_M) */
@@ -58,7 +63,8 @@ export function clampCourseFinish(f: unknown): CourseFinish {
   const o = (f && typeof f === 'object' ? f : {}) as Partial<Record<keyof CourseFinish, unknown>>, D = DEFAULT_COURSE_FINISH;
   const num = (k: Ranged) => { const v = o[k], [lo, hi] = FINISH_RANGES[k]; return Math.round(Math.min(hi, Math.max(lo, typeof v === 'number' && Number.isFinite(v) ? v : D[k])) * 1000) / 1000; };
   return { on: typeof o.on === 'boolean' ? o.on : D.on, along: typeof o.along === 'boolean' ? o.along : D.along, bandWidth: num('bandWidth'), bandStrength: num('bandStrength'), greenWidth: num('greenWidth'), greenStrength: num('greenStrength'), collarWidth: num('collarWidth'), collarTone: num('collarTone'), lip: num('lip'), bowl: num('bowl'), roll: num('roll'),
-    teeWall: TEE_WALLS.includes(o.teeWall as TeeWall) ? (o.teeWall as TeeWall) : D.teeWall };
+    teeWall: TEE_WALLS.includes(o.teeWall as TeeWall) ? (o.teeWall as TeeWall) : D.teeWall,
+    pattern: MOW_PATTERNS.some(q => q.id === o.pattern) ? (o.pattern as MowPattern) : D.pattern };
 }
 /** the finish a surfaces file carries (painted-surfaces.ts SurfacesFile.course), clamped and kept per file (the file is never changed) */
 const memo = new WeakMap<object, CourseFinish>();
@@ -95,28 +101,44 @@ export function greenStripeLook(f: CourseFinish, base: StripeLook): StripeLook |
  *  width, the light and dark strengths in the finish's terms (a lift of the grass's own colour, a multiply of the dark one: the texture made
  *  lighter or darker, never a wash) and the pattern with its angle (a checkerboard lays squares as wide as a band; a diamond turns it a
  *  quarter). A look that sets any of those numbers lays them with the finish on (the Studio's finish off is T218's untextured look, whose
- *  numbers are not these). textured: laid by mowBands (the grass's detail kept), else by T218's mowStripes */
+ *  numbers are not these). textured: laid by mowBands (the grass's detail kept), else by T218's mowStripes.
+ *  T365 (#1020): the pattern is the look's own, else the kind's default (a fairway's: the finish's `pattern`, wide stripes; with the finish off, T218's
+ *  bands along the hole; every other kind's: along the hole), and a fairway, tee or rough lays the pattern's own tuned numbers (mow-lines.ts
+ *  PATTERN_LOOKS: wide 10 m bands at the full strength ...) between the finish's and the look's own; a green keeps its fine stripes. Two-tone halves
+ *  are one band as wide as the fairway's reach with a crisp edge on the line of play (course-stripes HALF_WIDTH); a crosscut's angle is how its two
+ *  sets cross (90 by default). A pattern a look names is laid by the finish too, with the finish off */
 export interface MowSpec { look: StripeLook; textured: boolean; pattern: MowPattern; angle: number }
 export function mowSpec(kind: MowKind, rec: MowRec | undefined, f: CourseFinish, base: StripeLook): MowSpec | null {
-  const green = kind === 'green', fin = mowCustom(rec) && !f.on ? { ...DEFAULT_COURSE_FINISH } : f;
+  const green = kind === 'green', named = patternOf(rec), fin = mowCustom(rec) && !f.on ? { ...DEFAULT_COURSE_FINISH } : f;
   const def = green ? greenStripeLook(fin, base) : finishStripeLook(fin, base);
   const on = rec?.on === undefined ? (kind === 'fairway' ? true : green ? !!def : false) : rec.on === 1;
   if (!on) return null;
   // the surface's own look, else the finish's tuned one (a green turned on with none, a tee or rough with the finish off: T218's for the tee)
   const look0 = def ?? (green ? greenStripeLook(DEFAULT_COURSE_FINISH, base)! : base), textured = !!def || green;
-  const L = green ? GREEN_LIGHT : BAND_LIGHT, K = green ? GREEN_DARK : BAND_DARK, pattern = patternOf(rec);
-  const look: StripeLook = { ...look0, ...(rec?.w !== undefined ? { w: rec.w } : {}), ...(rec?.l !== undefined && textured ? { l: L * rec.l } : {}), ...(rec?.k !== undefined && textured ? { k: K * rec.k } : {}),
-    ...(pattern === 'check' || pattern === 'diamond' ? { check: true } : {}) };
-  // (straight: the angle on the ground; a checkerboard follows the hole's line, so its angle is the turn from it, a diamond a quarter more)
-  return { look, textured, pattern, angle: (rec?.a ?? 0) + (pattern === 'diamond' ? 45 : 0) };
+  const L = green ? GREEN_LIGHT : BAND_LIGHT, K = green ? GREEN_DARK : BAND_DARK;
+  const pattern = named ?? (kind === 'fairway' && f.on ? f.pattern : 'along'), pl = textured && !green ? PATTERN_LOOKS[pattern] : undefined;
+  const look: StripeLook = { ...look0,
+    ...(pl?.w !== undefined ? { w: pl.w } : {}), ...(pl?.f !== undefined ? { f: pl.f } : {}), ...(pl?.l !== undefined ? { l: L * pl.l } : {}), ...(pl?.k !== undefined ? { k: K * pl.k } : {}),
+    ...(rec?.w !== undefined ? { w: rec.w } : {}), ...(rec?.l !== undefined && textured ? { l: L * rec.l } : {}), ...(rec?.k !== undefined && textured ? { k: K * rec.k } : {}),
+    ...(pattern === 'check' || pattern === 'diamond' ? { check: true } : {}),
+    ...(pattern === 'halves' ? { half: true, w: HALF_WIDTH, f: Math.min(0.49, 2 * HALF_SOFT / HALF_WIDTH), across: false } : {}) };
+  // (straight: the angle on the ground; a checkerboard follows the hole's line, so its angle is the turn from it, a diamond a quarter more; a
+  // crosscut's is the angle its two sets cross at)
+  return { look, textured, pattern, angle: (rec?.a ?? (pattern === 'crosscut' ? CROSS_DEFAULT : 0)) + (pattern === 'diamond' ? 45 : 0) };
 }
+/** the bands the grounds crew mows a fairway in (engine crewGroundsNow; golf/crewground.ts: one band a pass): the look its mowSpec lays when that is bands along
+ *  the hole (the default wide stripes, a hole's own width), else the finish's own (null: the finish off or the lines off). T365: the default pattern is
+ *  wide stripes now, so a hole with no mowing look of its own is mown in them too: the passes are the bands the ground draws */
+export const crewBandLook = (spec: MowSpec | null, finishLook: StripeLook): StripeLook => (spec && BAND_PATTERNS.includes(spec.pattern) ? spec.look : finishLook);
 /** what a look's mowing lines read as in the panel, every field with the value it lays (the finish's where the look sets none): the Mowing lines
  *  section's controls (width in tiles, the strengths 0..1, the angle in degrees) */
 export interface MowShown { on: boolean; pattern: MowPattern; width: number; light: number; dark: number; angle: number }
 export function mowShown(kind: MowKind, o: MowOpts | undefined, f: CourseFinish): MowShown {
   const fin = f.on ? f : DEFAULT_COURSE_FINISH, green = kind === 'green';
   const s = green ? fin.greenStrength : fin.bandStrength;
-  return { on: o?.on ?? (kind === 'fairway' ? true : green ? fin.greenStrength > 0 : false), pattern: o?.pattern ?? 'along', width: o?.width ?? (green ? fin.greenWidth : fin.bandWidth), light: o?.light ?? s, dark: o?.dark ?? s, angle: o?.angle ?? 0 };
+  // T365: the pattern the look names, else the kind's default; a fairway, tee or rough shows the pattern's own tuned numbers where the look sets none
+  const pattern = o?.pattern ?? (kind === 'fairway' && f.on ? f.pattern : 'along'), pl = green ? undefined : PATTERN_LOOKS[pattern];
+  return { on: o?.on ?? (kind === 'fairway' ? true : green ? fin.greenStrength > 0 : false), pattern, width: o?.width ?? pl?.w ?? (green ? fin.greenWidth : fin.bandWidth), light: o?.light ?? pl?.l ?? s, dark: o?.dark ?? pl?.k ?? s, angle: o?.angle ?? (pattern === 'crosscut' ? pl?.angle ?? CROSS_DEFAULT : 0) };
 }
 
 /** the range outfield's bands with the finish (rangehost outfieldStripes gives its line of play, lx ly): the fairways' width and strength,
