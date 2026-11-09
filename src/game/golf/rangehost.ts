@@ -346,7 +346,8 @@ export class RangeHost {
       if (bk) {
         const q = screen(sc.ballRoom.x, sc.ballRoom.y);
         if (on(q, 100)) {
-          const out = bk.clean < visitBalls(this.ctx.dayLen()), px = Math.round(dpr * 11), font = `700 ${px}px system-ui, sans-serif`, t = out ? 'Ball room · OUT OF BALLS' : `Ball room · ${Math.floor(bk.clean).toLocaleString()} balls`;
+          const out = bk.clean + bk.dirty < bucketBalls(visitBalls(this.ctx.dayLen()), autoKit(this.ctx.biz()?.owned ?? [])), px = Math.round(dpr * 11), font = `700 ${px}px system-ui, sans-serif`;
+          const t = out ? 'Ball room · OUT OF BALLS' : `Ball room · ${Math.floor(bk.clean + bk.dirty).toLocaleString()} balls${bk.dirty >= 1 ? ` (${Math.floor(bk.dirty).toLocaleString()} dirty)` : ''}`; // (the dirty ones sell too)
           labels.pill(sc.ballRoom, PRI.count, t, q.x, q.y - 2.1 * 32 * ze, font, labels.width(font, t) + 10 * dpr, px * 1.6, out ? 'rgba(127,29,29,0.92)' : 'rgba(16,24,16,0.8)', 4 * dpr, '#f8fafc', 0.5 * dpr);
         }
       }
@@ -590,7 +591,7 @@ export class RangeHost {
     return {
       flow, dirty: b.dirty, staff: { attendants: a.attendants, shift: b.shift, starts: SHIFT_STARTS, hours: SHIFT_HOURS, onNow },
       clean: b.clean, buckets: bucketsLeft(b, vb), vb, field: fieldCount(b), inPlay: b.inPlay, basket: b.basket, hopper: b.hopper, kit, till: Math.floor(b.till),
-      out: b.clean < vb, noBalls: this.sim.today.noBalls, supplier: biz.owned.includes('supplier'), caseBalls: CASE_BALLS, caseCost: Math.round(CASE_BALLS * BALL_COST), casesLeft: Math.max(0, CASES_A_DAY - cases),
+      out: b.clean + b.dirty < vb, noBalls: this.sim.today.noBalls, supplier: biz.owned.includes('supplier'), caseBalls: CASE_BALLS, caseCost: Math.round(CASE_BALLS * BALL_COST), casesLeft: Math.max(0, CASES_A_DAY - cases),
       day: b.day, total: b.total, handHour: Math.round(perHour(kit.rate, dayLen)),
     };
   }
