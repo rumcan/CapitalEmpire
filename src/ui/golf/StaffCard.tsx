@@ -27,7 +27,7 @@ export function StaffCard({ view, right, onClose, onHire, onLetGo }: { view: Sta
   const [ask, setAsk] = useState<number | null>(null);
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="staff-card">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+      <div className="win-head win-head-slate flex items-center justify-between">
         <div>
           <div className="font-semibold text-amber-200">Staff · <span data-testid="staff-wages">{money(view.wages)}</span> a month</div>
           <div className="text-[12px] text-slate-400">Paid as each month begins, with the grounds crew</div>

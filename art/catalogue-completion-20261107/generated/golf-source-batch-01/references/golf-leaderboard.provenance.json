@@ -1,0 +1,54 @@
+{
+  "id": "golf:leaderboard",
+  "name": "leaderboard",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.source.png",
+  "originalSource": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\leaderboard.png",
+  "sourceSHA256": "b93efb59577a2b0180c789d5230fef8acef5a7b08371b5e80510342f5f3fc85f",
+  "referenceSHA256": "b93efb59577a2b0180c789d5230fef8acef5a7b08371b5e80510342f5f3fc85f",
+  "referenceSize": [
+    1024,
+    1024
+  ],
+  "operation": "byte-for-byte copy of retained native PNG master",
+  "visualInspection": "inspected native source PNG",
+  "existingNormalCornerReferences": {
+    "NE": {
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-NE.png",
+      "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\NE.png",
+      "sha256": "7637d784f6a8a9215a3d9f875a64407f3b090fbd7db539e723015ec7b832d914",
+      "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+      "approvalClaimed": false,
+      "usableForIdentityReference": true,
+      "usableAsFinishedDaytimeView": false
+    },
+    "SE": {
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-SE.png",
+      "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\SE.png",
+      "sha256": "f293c7bb71886a259047b2d972bedb470ba98547ad406921f6b962cc84205668",
+      "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+      "approvalClaimed": false,
+      "usableForIdentityReference": true,
+      "usableAsFinishedDaytimeView": false
+    },
+    "SW": {
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-SW.png",
+      "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\SW.png",
+      "sha256": "20e9872b07ddfd305a0b8ef49a6cf61dbe6e16afb1bd9c60133c15a00df3df12",
+      "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+      "approvalClaimed": false,
+      "usableForIdentityReference": true,
+      "usableAsFinishedDaytimeView": false
+    },
+    "NW": {
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-NW.png",
+      "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\NW.png",
+      "sha256": "a71489c64a04849166b8b528e06dcb6a0a854e6f13a61c85686be9bc0db7a9a0",
+      "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+      "approvalClaimed": false,
+      "usableForIdentityReference": true,
+      "usableAsFinishedDaytimeView": false
+    }
+  },
+  "visualNotes": "Large blank green scoring grid on braced timber supports, rear/service walkway, right-side staircase, three-part pitched shingle rain cap and two green flags; lamps currently glow. Good exact subject reference; future sheets are late-afternoon with lamps off.",
+  "sourceOnlyNotReleaseProof": true
+}

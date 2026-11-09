@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-course-map-board",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../../batch02/course-map-board/yaw8-E.png",
+    "sha256": "08992e73a61f89b56c9d7405d3eb06f1797d4bd8d085c0e4130e9c36f894f92c",
+    "width": 627,
+    "height": 626
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 626
+  },
+  "crop": {
+    "left": 225,
+    "top": 15,
+    "width": 214,
+    "height": 584
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "4d05bb0daddd60101d564bef8c0ae9c200d594e8c202c6fad809d38d18c3871f",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

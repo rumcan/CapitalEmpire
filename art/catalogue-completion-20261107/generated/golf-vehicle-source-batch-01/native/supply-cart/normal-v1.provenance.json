@@ -1,0 +1,22 @@
+{
+  "key": "newprop:supply-cart",
+  "slug": "supply-cart",
+  "family": "normal",
+  "condition": "ordinary-budget-redesign",
+  "version": 1,
+  "target": "generated/golf-vehicle-source-batch-01/native/supply-cart/normal-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\normal-world-v1.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\supply-cart.source.png"
+  ],
+  "prompt": "Create a native2x2 sheet of FOUR actual corner views of ONE specialist golf vehicle or mobile vending prop. REFERENCE1 is fixed-world assembly/camera/occlusion authority. REFERENCE2 is subject identity and detailed painterly miniature MATERIALS/BODY DETAIL only; never repeat its one camera. Preserve recognizable vehicle shape, wheels, restrained cream-green finishes and fine metal/glass/canvas texture, not flatlowpolyguide surfaces. Function: Four-wheel supply/refreshment golf utility with front cream bench/windshield/canopy and rear cargo bed carrying two orange water coolers, two white-lid coolboxes and bottled water crate. Preserve load distribution and rear-bed sideboards as fixed geometry; no people.. Fixedphysicalrules: FRONTbench/canopy/controls, REARloadedbed. EXACT load:2orange round jugs,2rectangular white-lid coolboxes,1bottle crate. Fixed cargo positions across8views; no passengers or loose cargo movement. Older plain bolted-board/metal utility, intact canopy; no rope/tarp shack.. Ordinary older-utility redesign: replace rope-lashed raw timber and patched blue tarp with simple bolted metal/painted-board cargo sides and intact practical canopy. This source shares beverage load with drinks-cart-green but remains a separate exact catalogue ID; never claim one file completes both.. REDESIGN cheap construction as ordinary sound old steel/timberbody with bolted hardware/intactplaincanopy; no ropebindings, scrapwoodshack, blueplasticpatchtarp, corrugatedhood, logposts or fantasyvillage ornaments. Worn, faded and lightlyrusted workingequipment is fine. Fourdistinct45degreecorner poses in exact SE SW / NW NE cellsasguide, orthographic30degreesDOWN; equalphysicalscale. Rearmustshowtrueback, no inventedfrontheadlights/steering onrear. Allroofequipment/seatrows/ramps/cargo/stretcher stayonfixedworldside; nooperatingstatechanges. Satellitebowlbackconvexwhenviewedfromrear, neverrepanaimingtofaceviewer. Late-afternoon DAYTIME sunlightfixedSCREENUPPERRIGHT/shadowsLOWERLEFT, allheadlamps/beaconsOFF. CompleteisolatedopaqueobjectswithgenerousZEROALPHAtransparentmargins/gutters, smallcontactshadowonly; no broadgreyhalo/scenery/groundtile/road/people/plants/labels/UI/grid. Intrinsicmedicalcross/accesssymbolallowed, no extrabrands/text.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-7b77b875-b9e6-405b-9ea4-92364140cb19.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\normal-world-v1.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\supply-cart.source.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "0f5a192799dfb43f71bc1c0b9069400d00143ab35ea6195994128d02b627014b",
+  "native_bytes_preserved": true
+}

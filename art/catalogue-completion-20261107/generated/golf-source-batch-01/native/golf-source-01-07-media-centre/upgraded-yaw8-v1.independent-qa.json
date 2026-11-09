@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:44:57.947405+00:00",
+  "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/upgraded-yaw8-v1.png",
+    "sha256": "80a25a18be0f284a672f7e9a2c57cc9f9fa3108b1fc3dc1e492d1b7baa2c959b",
+    "bytes": 1312960
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/upgraded-yaw8-v1.provenance.json",
+    "sha256": "8d400d5ecad3fdfaf5108090103c23fee7b5014aa91f068c020af88199279e8e",
+    "bytes": 3167
+  },
+  "exact_prompt_utf8_sha256": "1c70070583b5234deb67b659796eba322789283236bc98d66330385725f30099",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-yaw8-v1.png",
+      "sha256": "5f5832f76e24c381c1e25b22d43a70f8fc17485e4897e0f47f28078d9f715b97",
+      "bytes": 1396013
+    },
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/upgraded-normal-v1.png",
+      "sha256": "82adee171a484e448fd1bf160824324992e584b1bd09f7d0c625f4e80907cc81",
+      "bytes": 1705911
+    }
+  ],
+  "four_actual_main_faces_visually_verified": true,
+  "zero_alpha_fraction": 0.5888506062895386,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    636,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 2,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_visible_main_face": "double front door and six windows",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        636,
+        627
+      ],
+      "minimum_core_margin_px": 5,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 3,
+      "native_rgba_rectangle_sha256": "f8d84e03d5b1523e7b5c6ed0d70bdddaefbd53238a6f46515f9861f98bb38c61"
+    },
+    {
+      "cell": "TR",
+      "actual_visible_main_face": "two-window end A; front sliver right",
+      "reference_rect_ltrb": [
+        636,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 77,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "4a6c31cd312679cd8cc523b5cb8ca0ac52d7e46686f2be01afe443beccf45aad"
+    },
+    {
+      "cell": "BL",
+      "actual_visible_main_face": "rear single door and two vents",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 13,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "4a4976b299d4b2aad577a58e5c2f67d2ff89f28828433451fa64e8484d031202"
+    },
+    {
+      "cell": "BR",
+      "actual_visible_main_face": "two-window end B; front sliver left",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 86,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "cae7d4dbcfde3262236cfe57197f7176c25e4408ee19284d8e734a59a1c4f2b7"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Four distinct main elevations; front windows, rear vents/door, two-window ends and two roof antennas retained. Exact antenna small-part orientation and numerical camera calibration not certified."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "native_image_bytes_changed": false,
+  "source_crops_saved": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "limits": "Limited source visual face/state/alpha review; labels are main faces, not measured native camera angles. No release or exact 8 degree certification."
+}

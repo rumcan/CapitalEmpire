@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:fishing-dock-rope",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/fishing-dock-rope.png",
+  "sourceSha256": "512ac06cd5ced4e98e15a6e8fc84914f74e3855ec54c34891630a328dc467164",
+  "output": "identity-references/business-fishing-dock-rope-285fa0a6/source.png",
+  "outputSha256": "512ac06cd5ced4e98e15a6e8fc84914f74e3855ec54c34891630a328dc467164",
+  "width": 542,
+  "height": 442,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      542,
+      442
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "fishing-dock-rope",
+    "sourceSheet": "sliced/builtin/fishing-props.png",
+    "sourceCrop": [
+      48,
+      113,
+      534,
+      434
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

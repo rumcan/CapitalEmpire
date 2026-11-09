@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-bag-trolley",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/golf-bag-trolley.png",
+  "sourceSha256": "d17bc67df69a229083723c2741facc4f1b16613f4bcf251b99259d97b7d9ab4a",
+  "output": "identity-references/business-golf-bag-trolley-cb1dc71c/source.png",
+  "outputSha256": "d17bc67df69a229083723c2741facc4f1b16613f4bcf251b99259d97b7d9ab4a",
+  "width": 362,
+  "height": 480,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      362,
+      480
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "golf-bag-trolley",
+    "sourceSheet": "sliced/builtin/golf-equipment.png",
+    "sourceCrop": [
+      772,
+      691,
+      354,
+      472
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { CLUB_SHORT, LEVEL_NAME, type BagView, type Club, type ClubRow, type PartKind } from '../../game/golf/play';
 import { Icon } from '../Icon';
 import { ClubIcon, LEVEL_COLOR } from './ClubIcon';
+import { SideMenuRow } from '../SideMenuRow';
 
 const usd = (n: number): string => `$${n.toLocaleString('en-US')}`;
 const YARDS = 1.09361;
@@ -35,7 +36,7 @@ function ClubDetail({ row, view, part, onUpgrade, onPart, onThird, onClose }: { 
   const n = row.next, third = row.club === 'wood5' || row.club === 'hybrid';
   return (
     <div className="pointer-events-auto max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[300px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" data-testid="bag-detail">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+      <div className="win-head win-head-slate flex items-center justify-between">
         <div className="flex items-center gap-2"><ClubIcon club={row.club} level={row.level} size={34} />
           <div><div className="font-semibold text-sky-200" data-testid="bag-detail-name">{row.name}</div>
             <div className="text-[12px]" style={{ color: LEVEL_COLOR[row.level] }} data-testid="bag-detail-level">{row.levelName}{row.level === 0 ? ' · the club you started with' : ''}</div></div></div>
@@ -85,11 +86,8 @@ function PutterFitting({ view, part, onPart }: { view: BagView & { busy?: string
       {(['shaft', 'head'] as const).map(k => {
         const cur = (k === 'shaft' ? p.shafts : p.heads).find(r => r.fitted);
         return (
-          <button key={k} className={`flex w-full items-center justify-between gap-2 rounded-lg border px-2 py-1.5 text-left text-xs hover:border-amber-300/60 ${part === k ? 'border-amber-300/70 bg-amber-300/10' : 'border-white/10 bg-white/5'}`}
-            onClick={() => onPart(part === k ? null : k)} title={`Change the putter’s ${k}: it opens to the left`} data-testid={`bag-slot-${k}`}>
-            <span><span className="block text-[11px] uppercase text-slate-400">{k === 'shaft' ? 'Shaft' : 'Head'}</span><span className="font-semibold text-slate-100">{cur?.name ?? ''}</span></span>
-            <Icon name="left" size={14} />
-          </button>
+          <SideMenuRow key={k} side="left" label={k === 'shaft' ? 'Shaft' : 'Head'} value={cur?.name ?? ''} open={part === k}
+            onClick={() => onPart(part === k ? null : k)} title={`Change the putter’s ${k}: it opens to the left`} data-testid={`bag-slot-${k}`} />
         );
       })}
     </div>
@@ -100,7 +98,7 @@ function PartsFlyout({ kind, view, onFit, onClose }: { kind: PartKind; view: Bag
   const parts = kind === 'shaft' ? view.putter.shafts : view.putter.heads;
   return (
     <div className="pointer-events-auto max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[300px] space-y-1.5 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" data-testid={`bag-${kind}s`}>
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+      <div className="win-head win-head-slate flex items-center justify-between">
         <div><div className="font-semibold text-sky-200">Putter {kind}s</div><div className="text-[12px] text-slate-400">Feel, line and luck: what each trades</div></div>
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={16} /></button>
       </div>
@@ -131,7 +129,7 @@ export function BagCard({ view, onClose, onUpgrade, onFit, onThird, right = 'rig
       {row?.club === 'putter' && part && <PartsFlyout kind={part} view={view} onFit={onFit} onClose={() => setPart(null)} />}
       {row && <ClubDetail row={row} view={view} part={part} onUpgrade={onUpgrade} onPart={setPart} onThird={onThird} onClose={() => { setSel(null); setPart(null); }} />}
       <div className="pointer-events-auto max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[304px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" data-testid="bag-card">
-        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div className="win-head win-head-slate flex items-center justify-between">
           <div><div className="font-semibold text-sky-200">Your bag</div><div className="text-[12px] text-slate-400">{view.rows.length} clubs · {view.points} of {view.max} upgrades</div></div>
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>

@@ -12,7 +12,7 @@ export function PlayerCard({ view, onClose, onBook, onCancel, onBag, right = 'ri
   const r = view.round;
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[320px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="player-card">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+      <div className="win-head win-head-slate flex items-center justify-between">
         <div>
           <div className="font-semibold text-sky-200">Your golf</div>
           <div className="text-[12px] text-slate-400">{view.name} · an amateur golfer</div>

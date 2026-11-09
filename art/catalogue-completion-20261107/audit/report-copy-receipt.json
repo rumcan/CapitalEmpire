@@ -1,0 +1,75 @@
+{
+  "files": [
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\aliases.json",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\aliases.json",
+      "sha256": "39e8670a6794b66ea4435d0221d1674ff3f0a064a1289b671f25443742698d55"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\audit-summary.json",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\audit-summary.json",
+      "sha256": "2d7035b1ba288a553a66c6171a21a8a0f6bd581bbf6425e9836e075a609f2a6d"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\audit_catalogue.py",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\audit_catalogue.py",
+      "sha256": "73301740839ef92a986bd239812bc2e5705e8e001ecb8d123107009094f17007"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\catalogue-audit.csv",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\catalogue-audit.csv",
+      "sha256": "21b9e4288b255ddb303e7b53b2c89bee11a2eb91b4e8d2176a51ba2b1dc184ab"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\catalogue-audit.json",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\catalogue-audit.json",
+      "sha256": "2a18fac131d2c9b8692b3fd56123ff9052523acd3d45090a55b607403b90b42f"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\exclusions.json",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\exclusions.json",
+      "sha256": "98ee64ccfc639cc7b92d7230796f9be5077cc50726bf8eed06149cb43e973b3d"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\missing-golf-views.csv",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\missing-golf-views.csv",
+      "sha256": "d32963ceee7ad0a8830e2d02d289f1926e04182f5cd8e25e2c8b2eb04b1fad8c"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\missing-golf-views.json",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\missing-golf-views.json",
+      "sha256": "9cbbdfa652b56f7ac59dc83bfce70eb6371d549eef4da3872fd290f278e12c0a"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\runtime-findings.md",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\runtime-findings.md",
+      "sha256": "5f6d06cefb61fbbd9084ef0dfc97c52a3bee262133044da2176b8f4b7a840753"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\runtime-registry.json",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\runtime-registry.json",
+      "sha256": "dfadf5c21a36ded9ac3bb4aabef015adf8fc73f9ac35d2742ece49d6a112f780"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\audit\\supplemental-source-only.json",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\supplemental-source-only.json",
+      "sha256": "d3ffa28d5d5daebacdf27fa18fb09414f343e6e5a3d564a6c933c1061db013c4"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\plan\\budget-replacement-inventory.json",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\budget-replacement-inventory.json",
+      "sha256": "f9a7e21c143ecb1744d6e87fc9ac0570f3c8916edd83700c2b7ed8f6395b6829"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\plan\\facility-expansion-matrix.json",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\facility-expansion-matrix.json",
+      "sha256": "5fa54d4a0bbc9c18911fda5f210ef2a13eaaecf61c7cb812e8bdbaba0ecb4638"
+    },
+    {
+      "source": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\catalogue-completion-20261107\\plan\\GOLF-FACILITIES.md",
+      "destination": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\GOLF-FACILITIES.md",
+      "sha256": "623f678b46787dcb7db8952b0b4d442a2f386c2ccfede4efa89af6d4fcf876f7"
+    }
+  ],
+  "originals_preserved": true
+}

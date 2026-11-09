@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-hole-12-sign",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch02/hole-12-sign/normal-NE.png",
+    "sha256": "0f647dd396b8c455d505c7bd86eb03c45aa3feeed1c00f9613b2032cae647fc2",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 189,
+    "top": 59,
+    "width": 266,
+    "height": 494
+  },
+  "output": "normalNE.native.png",
+  "sha256": "1885703f7dda491d26ced1e581469006952d031e73bc574eb3dbcfa4241f8113",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

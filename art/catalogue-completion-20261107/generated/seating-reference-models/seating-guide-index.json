@@ -1,0 +1,219 @@
+{
+  "design_specification": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\seating-world-designs-20261107.json",
+    "sha256": "fe1eabdbfa065dee6724302a36aaadcfe6546b6cc95dc45a9ed14334718d746f"
+  },
+  "exact_chair_prototype": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seating-reference-models\\molded-chair-1985-cream-green-v1.json",
+    "sha256": "d34eac4a9f3de8ab75042a66f94e58c5fdf09620adead91b247ab4ba860c122b"
+  },
+  "chair_prototype_closeup_guides": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\molded-chair-1985-cream-green\\guides\\normal-world-v1.png",
+      "sha256": "806595f7b256f50b260814a04e67e42bcfa1a65c30bc54bc9c21e06b09d5892d"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\molded-chair-1985-cream-green\\guides\\yaw8-world-v1.png",
+      "sha256": "3a064a23ee4d185634e371e3dc32c4a785d97d03968ef925dfb8c8af884459d7"
+    }
+  ],
+  "variants": [
+    {
+      "design_key": "seated-pavilion-24-budget",
+      "capacity_target": 24,
+      "proposed_place_count": 24,
+      "individual_molded_chairs": 0,
+      "normal_and_yaw8_guides": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v2.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v2.png"
+      ],
+      "top_plan": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\seating-top-plan-v2.png",
+      "world_mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\seated-pavilion-24-budget-world-model-v2.json",
+      "release_anchors_authored": false,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "projection_status": "runtime projection verified for technical proxy",
+      "native_art_correspondence_verified": false,
+      "heading_filename_labels_provisional": false
+    },
+    {
+      "design_key": "seated-pavilion-24-upgraded",
+      "capacity_target": 24,
+      "proposed_place_count": 24,
+      "individual_molded_chairs": 24,
+      "normal_and_yaw8_guides": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-upgraded\\guides\\normal-world-v1.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-upgraded\\guides\\yaw8-world-v1.png"
+      ],
+      "top_plan": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-upgraded\\guides\\seating-top-plan-v1.png",
+      "world_mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-upgraded\\guides\\seated-pavilion-24-upgraded-world-model-v1.json",
+      "release_anchors_authored": false,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "projection_status": "runtime projection verified for technical proxy",
+      "native_art_correspondence_verified": false,
+      "heading_filename_labels_provisional": false
+    },
+    {
+      "design_key": "seated-pavilion-60-budget",
+      "capacity_target": 60,
+      "proposed_place_count": 60,
+      "individual_molded_chairs": 0,
+      "normal_and_yaw8_guides": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-budget\\guides\\normal-world-v1.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-budget\\guides\\yaw8-world-v1.png"
+      ],
+      "top_plan": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-budget\\guides\\seating-top-plan-v1.png",
+      "world_mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-budget\\guides\\seated-pavilion-60-budget-world-model-v1.json",
+      "release_anchors_authored": false,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "projection_status": "runtime projection verified for technical proxy",
+      "native_art_correspondence_verified": false,
+      "heading_filename_labels_provisional": false
+    },
+    {
+      "design_key": "seated-pavilion-60-upgraded",
+      "capacity_target": 60,
+      "proposed_place_count": 60,
+      "individual_molded_chairs": 60,
+      "normal_and_yaw8_guides": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-upgraded\\guides\\normal-world-v1.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-upgraded\\guides\\yaw8-world-v1.png"
+      ],
+      "top_plan": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-upgraded\\guides\\seating-top-plan-v1.png",
+      "world_mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-upgraded\\guides\\seated-pavilion-60-upgraded-world-model-v1.json",
+      "release_anchors_authored": false,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "projection_status": "runtime projection verified for technical proxy",
+      "native_art_correspondence_verified": false,
+      "heading_filename_labels_provisional": false
+    },
+    {
+      "design_key": "seated-pavilion-120-budget",
+      "capacity_target": 120,
+      "proposed_place_count": 120,
+      "individual_molded_chairs": 0,
+      "normal_and_yaw8_guides": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-budget\\guides\\normal-world-v1.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-budget\\guides\\yaw8-world-v1.png"
+      ],
+      "top_plan": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-budget\\guides\\seating-top-plan-v1.png",
+      "world_mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-budget\\guides\\seated-pavilion-120-budget-world-model-v1.json",
+      "release_anchors_authored": false,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "projection_status": "runtime projection verified for technical proxy",
+      "native_art_correspondence_verified": false,
+      "heading_filename_labels_provisional": false
+    },
+    {
+      "design_key": "seated-pavilion-120-upgraded",
+      "capacity_target": 120,
+      "proposed_place_count": 120,
+      "individual_molded_chairs": 120,
+      "normal_and_yaw8_guides": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-upgraded\\guides\\normal-world-v1.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-upgraded\\guides\\yaw8-world-v1.png"
+      ],
+      "top_plan": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-upgraded\\guides\\seating-top-plan-v1.png",
+      "world_mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-upgraded\\guides\\seated-pavilion-120-upgraded-world-model-v1.json",
+      "release_anchors_authored": false,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "projection_status": "runtime projection verified for technical proxy",
+      "native_art_correspondence_verified": false,
+      "heading_filename_labels_provisional": false
+    },
+    {
+      "design_key": "compact-bleacher-60-budget",
+      "capacity_target": 60,
+      "proposed_place_count": 60,
+      "individual_molded_chairs": 0,
+      "normal_and_yaw8_guides": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-budget\\guides\\normal-world-v1.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-budget\\guides\\yaw8-world-v1.png"
+      ],
+      "top_plan": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-budget\\guides\\seating-top-plan-v1.png",
+      "world_mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-budget\\guides\\compact-bleacher-60-budget-world-model-v1.json",
+      "release_anchors_authored": false,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "projection_status": "runtime projection verified for technical proxy",
+      "native_art_correspondence_verified": false,
+      "heading_filename_labels_provisional": false
+    },
+    {
+      "design_key": "compact-bleacher-60-upgraded",
+      "capacity_target": 60,
+      "proposed_place_count": 60,
+      "individual_molded_chairs": 60,
+      "normal_and_yaw8_guides": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-upgraded\\guides\\normal-world-v1.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-upgraded\\guides\\yaw8-world-v1.png"
+      ],
+      "top_plan": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-upgraded\\guides\\seating-top-plan-v1.png",
+      "world_mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-upgraded\\guides\\compact-bleacher-60-upgraded-world-model-v1.json",
+      "release_anchors_authored": false,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "projection_status": "runtime projection verified for technical proxy",
+      "native_art_correspondence_verified": false,
+      "heading_filename_labels_provisional": false
+    }
+  ],
+  "variant_count": 8,
+  "proposed_places_total": 528,
+  "individual_molded_chair_meshes_total": 264,
+  "prior_24_budget_v1_files_preserved": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.calibration.json",
+      "sha256": "2dad57d8d1f955c9ed2e98ba0c962416293ba62022f605b1dda8b1eabd31acfa"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.png",
+      "sha256": "114ddf3bd68ae5b61ac222ba9837ea177490288cdbc538afb26bfb24b9287ecc"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.svg",
+      "sha256": "286b25c4419548a525f9cf6ecf12ba5d8b1b8d7122a9d3912f34a3d9348425af"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\seated-pavilion-24-budget-world-model-v1.json",
+      "sha256": "cab587ff0fa79610a1d9b9978c0d713019bcf20e6acd0ae0323a4b5fac70c017"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.calibration.json",
+      "sha256": "139a89cfc97e2910d0e0f9f42d4001ccb474579d733a892c14a9126f8f66c1be"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.png",
+      "sha256": "d21c4533b420b870067b65efe4dcf676b003e36b01733c4bb5da848a440efedd"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.svg",
+      "sha256": "c7eeb5ae7bfce9cea091ccd8c5d46113562203e71278bfc80de774f9a5f9d2ad"
+    }
+  ],
+  "status": "technical proposed references; final native sheets must match; no release anchors/approval",
+  "runtime_edited": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "code": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_seating_geometry_guides.py",
+    "sha256": "9c322f51fabff9fc3a1a83988cadadda4096e461c007730dcb9766ada58ddd07"
+  },
+  "handedness_proof": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\pavilion-guide-handedness-proof.json",
+    "sha256": "c07f415b3c6be0f9ecec4b9ec95185f8ce8fbb0f4dba07633a4283f649368ba0"
+  },
+  "new_guides_measured_projection_proof": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\seating-guides-projection-verification.json",
+    "sha256": "5f25330e386eb9ee88582515a637f29a6f1c2d0843f4c5aa5664ded589cc5a49"
+  },
+  "runtime_projection_status": "runtime projection verified for technical guides",
+  "heading_filename_labels_provisional": false,
+  "native_art_correspondence_verified": false,
+  "verticalPixelsPerMetreAfterCameraScaling": 39.191835884530846
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "key": "newprop:ice-cream-cart",
+    "family": "normal-SE",
+    "condition": "base",
+    "version": 2,
+    "target": "generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-SE-v2.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalSE.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\original-ice-cream-identity.png"
+    ],
+    "prompt": "Generate ONE SINGLE SE corner view of the same manual ice-cream pushcart. Reference1 is exact 3D camera/assembly authority; reference2 is the ORIGINAL one-view identity/material reference only, never a camera to repeat. Model REAR+Y contains the push handle, cone rack, cup stack and ONE small caster, all on the SAME physical end in every view. In THIS SE guide view that complete rear/handle end projects FAR UPPER LEFT; caster can be occluded behind chest. TWO large spoked wheels share one transverse axle at the chest; never move the small caster to the opposite end. One fixed striped green/cream umbrella and four freezer tubs under glass lids, same compartment layout and fixed pole. Preserve old enamel chest, restrained worn metalwork and detailed painted-miniature texture from reference2, but repair unnecessary holes into intact worn umbrella and avoid ornamental fantasy additions. Reconstruct this guide corner independently; do not mirror pixels or place the handle toward viewer by habit. Give generous margins around umbrella and every wheel. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT and shadows LOWER LEFT, all lamps off. One complete opaque object on true zero-alpha background, transparent spoke gaps, no people, motor, extra cab, ground plate, scenery, text, UI or grid. Source candidate only; no runtime or numerical camera release is implied.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b569c01a-0a09-49f4-850c-249cea09d472.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalSE.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\original-ice-cream-identity.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "f33d7f9e4e47f58a62a3295a88526aedb5950a0f15a1d37ed992f3aae9fef33d",
+    "native_bytes_preserved": true
+  }
+]

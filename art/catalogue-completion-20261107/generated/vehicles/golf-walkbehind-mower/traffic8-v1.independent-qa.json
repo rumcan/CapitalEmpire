@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:24.445140+00:00",
+  "review_result": "HOLD-camera-consistency;invented-mower-rear-lamps",
+  "identity_direction_alpha_result": "HOLD",
+  "source": {
+    "path": "generated/vehicles/golf-walkbehind-mower/traffic8-v1.png",
+    "sha256": "6f45c883fedb27b8bc25890e88b837355f3311b52baa9192a805f9a9d99eaa31",
+    "bytes": 1329605
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.6955116431887886,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "actual_screen_nose": "lower-left",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "native_core_margin_pixels": 15,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "848277a1ea6af0d8d024accc1e3330a8a9a6836f81b709c260195e6dcbeae1e6"
+    },
+    {
+      "cell": 1,
+      "actual_screen_nose": "down",
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "native_core_margin_pixels": 18,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "26b6561b08020e9d293ff5505f36d675c11963aa9d95866e549e9d34b7bfaa52"
+    },
+    {
+      "cell": 2,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "native_core_margin_pixels": 15,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "2ef2cb7b50bf422492b1513c9d3fa72daf008fd57784edb63cf57e005c35279b"
+    },
+    {
+      "cell": 3,
+      "actual_screen_nose": "left",
+      "reference_rect_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "native_core_margin_pixels": 18,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "ea42562a320c9f960a576d59289b2941a1e03de1171b85b72b39f5cd3c5d7595"
+    },
+    {
+      "cell": 4,
+      "actual_screen_nose": "upper-right",
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "native_core_margin_pixels": 19,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "d2f912fa8d2d87eecbe1459c1f69e309a1b3ab598d7121744437e060f76430ca"
+    },
+    {
+      "cell": 5,
+      "actual_screen_nose": "up",
+      "reference_rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "native_core_margin_pixels": 54,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "93a4a01d11d180d0b49c62ec5e4ba306b5f2e93b18591fc6704efadcea7ddca8"
+    },
+    {
+      "cell": 6,
+      "actual_screen_nose": "upper-left",
+      "reference_rect_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "native_core_margin_pixels": 25,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "c989a1b1548bb999e3809e55a73adbc07750ec109dacf094f0825dd282c86ff2"
+    },
+    {
+      "cell": 7,
+      "actual_screen_nose": "right",
+      "reference_rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "native_core_margin_pixels": 18,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "9892a6696d022e5e817ca2ebcf03e73941ede70d973d8a37ca5f179b23a58649"
+    }
+  ],
+  "all_eight_distinct_nose_directions_present": true,
+  "side_cell_order_is_remappable": true,
+  "native_core_clipped_at_canvas_border": false,
+  "actual_clear_gutter_crops_reference_only": [
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ],
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ]
+  ],
+  "source_crops_performed": false,
+  "notes": [
+    "Both side directions exist but col4 is reversed versus prompt. Actual top col4 LEFT; bottom col4 RIGHT. Map source cells; not a missing direction by itself.",
+    "HOLD invented car-like red rear lamp blocks/bumper panel on walkbehind mower. Native correction required; not part of referenced mower identity.",
+    "HOLD visually inconsistent elevation: col4 side profiles show nearly level body/roof and near-circular side wheels; diagonal/front/rear cells show substantially more top planes. Need shared fixed30degree camera proof or native correction, not relabelling."
+  ],
+  "camera_measurement_scope": "Visual inconsistency established; exact percell camera degrees not numerically certified. Do not present approximate appearance as an8degree/30degree measured proof.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_only": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/golf-walkbehind-mower/traffic8-v1.prompt.txt",
+    "sha256": "439f090a1a9512e5d273ee9504aa6b61e867bbe0b08004fa98e7badc02c3bd16",
+    "bytes": 1921
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-walkbehind-mower/traffic8-v1.provenance.json",
+    "sha256": "ae35f8ab786a7f509c4344884a64d12992425c567c8d2cd2e308794dae53346b",
+    "bytes": 2771
+  }
+}

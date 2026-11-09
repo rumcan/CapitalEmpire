@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "expansion:rundown-house",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/expansion-rundown-house/NE.png",
+  "sourceSha256": "05ad9ccfcd179ce5ac7df14adc93ce90894299e6cb250b553be59b7ba81a9b85",
+  "output": "identity-references/expansion-rundown-house-a7c17683/source.png",
+  "outputSha256": "05ad9ccfcd179ce5ac7df14adc93ce90894299e6cb250b553be59b7ba81a9b85",
+  "width": 585,
+  "height": 473,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      585,
+      473
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\expansion-rundown-house\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "expansion:rundown-house",
+    "version": "expansion-rundown-house-4views-v1",
+    "files": {
+      "NE": "05ad9ccfcd179ce5ac7df14adc93ce90894299e6cb250b553be59b7ba81a9b85",
+      "SE": "67efaac04e1c7f639c6823cfd41c205587e1dfd93dbc97579f12c611aed8f550",
+      "SW": "ec32071337ceb17da2831cbee2ac9ce0e62154bfe7fbe985fa6ec6532bae030e",
+      "NW": "2822a9a3cc80a47929d79a6971ffb1afa818df41cdf399d635f5768b0cf90911"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.546875,
+      0.757813,
+      0.757813,
+      0.917969
+    ],
+    "crop": {
+      "left": 1120,
+      "top": 1552,
+      "width": 432,
+      "height": 328
+    },
+    "native": "art/theme-consistency/exports/buildings/expansion-rundown-house.native.png",
+    "nativeSha256": "51a0c574e90b9677b48a3bc77c29978a10136f57bb051b2a74fd4e496b756d48"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,338 @@
+{
+  "schema": 1,
+  "technicalOnly": true,
+  "nativeGenerated": false,
+  "runtimeIntegrated": false,
+  "ownerApproved": false,
+  "purpose": "Correct duplicate/opposite-edge and inconsistent-camera small props with one fixed world model.",
+  "geometryDimensionsAreProposals": true,
+  "worldBasis": "physicalRIGHT+X,LEFT-X,FRONT-Y,REAR+Y,UP+Z",
+  "normalCells": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "yaw8Cells": [
+    [
+      "N",
+      "E"
+    ],
+    [
+      "S",
+      "W"
+    ]
+  ],
+  "finalStyle": "Detailed painterly game style; late-afternoon upper-right sunlight/lower-left shadows. Geometry/camera from guide, material identity from exact source reference. Genuine zero-alpha background, no haze/grid/captions, no people, no floor except functional ramp.",
+  "models": [
+    {
+      "eventTypeId": "holeBoard",
+      "newArtSubjectProposal": "golf:event-hole-scoreboard",
+      "ppm": 245,
+      "dimensions": [
+        1.65,
+        1.1,
+        1.94
+      ],
+      "fixed": "Exactly2uprights,7blank cream name rows+2small score cells per row on FRONT-Ygreen face. REAR+Yhas plain backing slats/centralspine and2diagonal braces reaching rear feet. No clock, map, hole12, roof, copied front edge or floor plate.",
+      "nativeIdentity": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-08-hole-scoreboard\\budget-normal-v1.png",
+      "key": "hole-scoreboard",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-scoreboard\\guides\\hole-scoreboard-world-model-v1.json",
+      "meshSHA256": "c3ab271340a1f7f00e9abc8809ee0396daacad29df9ae1f831e60dd5ea07a8cf",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-scoreboard\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-scoreboard\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-scoreboard\\guides\\normal-world-v1.calibration.json",
+          "sha256": "c2f0305cacbf56be986491be87f239f5eb06d67abde8a41d23f02327d7401dcb",
+          "objectBoundsPerCell": [
+            [
+              178,
+              118,
+              622,
+              682
+            ],
+            [
+              178,
+              84,
+              622,
+              716
+            ],
+            [
+              178,
+              84,
+              622,
+              716
+            ],
+            [
+              178,
+              118,
+              622,
+              682
+            ]
+          ],
+          "geometryClipped": false,
+          "cellRGBAHashes": [
+            "336f0e30def4e6f8c186192c7d6b4ad76dd1d7d67b41d8a0f00a19922143ecb5",
+            "63e9d040c449787f210c229b4a7ef6542f6943a48b3101ad8973d2e2580ee955",
+            "97da0a8ded0b80e2032a8898e5895435cd33daae20e1c8af4c9695dbf8f09df7",
+            "9a2c9b142db6074684fe09fc5383733b47d84445aca7b98344ba3bb1582479a3"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-scoreboard\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-scoreboard\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-scoreboard\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "14909bec6c3930d1bf8a13999bf7362acf6cc42eebcd9889e35122d4a8d44083",
+          "objectBoundsPerCell": [
+            [
+              190,
+              171,
+              610,
+              629
+            ],
+            [
+              256,
+              96,
+              544,
+              704
+            ],
+            [
+              190,
+              123,
+              610,
+              677
+            ],
+            [
+              256,
+              90,
+              544,
+              710
+            ]
+          ],
+          "geometryClipped": false,
+          "cellRGBAHashes": [
+            "341b10361e2196b2f948f17b919671a42083837987b7ce2c6794a5a05e25ab16",
+            "e996d29ccf03d6d6454c2f29019b3d2ce3366613ae81e94307ae056cc2534fff",
+            "cea250bc29a4bec32c54bfdba935343d067c1d008ffcdbac09c8a41deef65bf1",
+            "116c4f3e107ada2d0987463a48863ac546599d4cebf2c8563f1c554643364423"
+          ]
+        }
+      },
+      "nativeArtApproval": false,
+      "uniqueTechnicalViewCount": 8
+    },
+    {
+      "runtimeSubjectId": "newprop:hole-12-sign",
+      "ppm": 270,
+      "dimensions": [
+        1.16,
+        0.25,
+        1.87
+      ],
+      "fixed": "Exactly2green uprights, arched board, intrinsic12on FRONT-Yabove ONEhole map and5coloured dots in fixed left column (black,blue,white,yellow,red). REAR+Yplain planks/braces, no copied12/map. No soil/grass apron.",
+      "nativeIdentity": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\hole-12-sign.source.png",
+      "key": "hole-12-sign",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-12-sign\\guides\\hole-12-sign-world-model-v1.json",
+      "meshSHA256": "42280bdeab23d1242e807b901921fd7eb33636ff87444cd8d4e8845e3ccd20ce",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-12-sign\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-12-sign\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-12-sign\\guides\\normal-world-v1.calibration.json",
+          "sha256": "a9b25d93fe76add94936dfd79ac2b20087371b62b9fe4f770821fc7a22491db8",
+          "objectBoundsPerCell": [
+            [
+              266,
+              125,
+              534,
+              674
+            ],
+            [
+              266,
+              125,
+              534,
+              674
+            ],
+            [
+              266,
+              125,
+              534,
+              674
+            ],
+            [
+              266,
+              125,
+              534,
+              674
+            ]
+          ],
+          "geometryClipped": false,
+          "cellRGBAHashes": [
+            "b4843bc62162ae21e52b3e9c0008e80ab643d9cbacf5e94f45fd4463bf10ac5a",
+            "6d7ab5349af5b2e287c3695dd380c82d8c7e1b200fecaa0b5c3eec14249c9c4b",
+            "c40d57acb89c63fa0a556dedb67008146108d4150c923f3c9ba445f921eff274",
+            "2b9f3f697fce53965a9f663a4ca73fc6a7038d07cc8d1f0b06d004b6491cdd07"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-12-sign\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-12-sign\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-12-sign\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "c09cc1a4dd7f6c9023b4d25bd66361f52e2273595805a5e3989a47a1f7923a7f",
+          "objectBoundsPerCell": [
+            [
+              240,
+              163,
+              560,
+              637
+            ],
+            [
+              346,
+              110,
+              454,
+              690
+            ],
+            [
+              240,
+              163,
+              560,
+              637
+            ],
+            [
+              346,
+              110,
+              454,
+              690
+            ]
+          ],
+          "geometryClipped": false,
+          "cellRGBAHashes": [
+            "7186b4db2c30d3af7b1c952fa2c5c3223111fdd893e9618e0eee559e147d74d3",
+            "9408f9c7a30599ec96806d45eb11d7368c1148f9fd48ed33a9923524e4d8b60c",
+            "9a85e6ecc888cc8611fb1a156986a6c9619eb0d1edfde61eb30c698d72363ad4",
+            "917a41434eba2b85dd93743ad52acdbd0f18bda2710a306590dc822ed2755e36"
+          ]
+        }
+      },
+      "nativeArtApproval": false,
+      "uniqueTechnicalViewCount": 8
+    },
+    {
+      "runtimeSubjectId": "newprop:rope-walkway",
+      "ppm": 260,
+      "dimensions": [
+        1.9,
+        1.65,
+        1.03
+      ],
+      "fixed": "Exactly4green posts,2gate leaves fixed90degreesOPEN, rear+Yhinges and leaves extendingtowardFRONT-Y; ONEperforated metal ramp/threshold with yellow long-side edges. Two leaves never change angle, swap hinge ends or become closed. No generic ground plate outside functional ramp.",
+      "nativeIdentity": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-walkway.source.png",
+      "key": "rope-walkway",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\rope-walkway\\guides\\rope-walkway-world-model-v1.json",
+      "meshSHA256": "266358074e904146fe6fce8eaf837e8961319391b8da7d3f343af67c90eeefdb",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\rope-walkway\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\rope-walkway\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\rope-walkway\\guides\\normal-world-v1.calibration.json",
+          "sha256": "701f4167e399c04eb97b20830ac56c020e9ed5c176f7e7c098e50ac6fb369c91",
+          "objectBoundsPerCell": [
+            [
+              101,
+              145,
+              698,
+              654
+            ],
+            [
+              101,
+              160,
+              698,
+              640
+            ],
+            [
+              102,
+              160,
+              699,
+              640
+            ],
+            [
+              102,
+              145,
+              699,
+              654
+            ]
+          ],
+          "geometryClipped": false,
+          "cellRGBAHashes": [
+            "31300c6d85b2399b2dffbf3897ddc830e42831099d3563fd66514f552ee697ee",
+            "9985d5399bfede485d8ae8b40a3b235e522e2954ca76a03547e0c6747e0f5b60",
+            "fb4785da318e407eccca830a38bd5008751b9b068ba139303581c2e7751309c4",
+            "f1ce6c24f1af0a7956c12a97bb871ef583c499cb65bf48b5ec48ac87837c9c33"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\rope-walkway\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\rope-walkway\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\rope-walkway\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "1fbfe268de8466a74b297ac8024feaa24d22f58994a3467ef0226a7c1b278f4b",
+          "objectBoundsPerCell": [
+            [
+              142,
+              175,
+              658,
+              625
+            ],
+            [
+              161,
+              164,
+              639,
+              636
+            ],
+            [
+              142,
+              203,
+              658,
+              597
+            ],
+            [
+              161,
+              164,
+              639,
+              636
+            ]
+          ],
+          "geometryClipped": false,
+          "cellRGBAHashes": [
+            "01762515084d293ce748bd1ed96e69df7e1ba7162dc611f6a1c03de98998c541",
+            "16bf722e71a32125142439066d0e6d652a491d79dcf24cf84e16c52240aa7ede",
+            "c3d7d93d5af617227ee38b3311b88e65131ef17fae2178de8d6600fd12da068f",
+            "7680e67a77075883d29d6c5751246d03d2891faa3201c57c69088d3c43d75960"
+          ]
+        }
+      },
+      "nativeArtApproval": false,
+      "uniqueTechnicalViewCount": 8
+    }
+  ],
+  "generatorProvenance": {
+    "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\build_small_prop_correction_guides.py",
+    "sha256": "a4a57196f342940c74fba06f4f13b3db1a63993fa1d64d5d403d22332e0706eb"
+  },
+  "technicalVisualInspection": {
+    "allSixSheetsViewed": true,
+    "technicalViews": 24,
+    "notes": [
+      "Small scoreboard yawEshows front scoring sliver, yawWshows rear backing/braces: opposite sides are distinct, not duplicated edge views.",
+      "Hole12normal front corners genuinely oppose each other;12/map/five dots only belong to the physical front. Rear is bare board and two braces.",
+      "Walkway uses one physical4post/2openleaf arrangement and one functional perforated ramp; all eight source-camera frames derive from fixed coordinates, not a posed repeated corner."
+    ],
+    "nativeArtApproval": false,
+    "nativeCameraCertified": false
+  },
+  "waterStationEditBrief": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\water-station-targeted-edit.json"
+}

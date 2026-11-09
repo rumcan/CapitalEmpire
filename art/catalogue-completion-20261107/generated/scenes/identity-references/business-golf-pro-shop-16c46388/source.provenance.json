@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-pro-shop",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-golf-pro-shop/NE.png",
+  "sourceSha256": "aa38b47e5916b68862216e3d6f6d6c7ce81f6fb801bed21d972fde009bfd46ca",
+  "output": "identity-references/business-golf-pro-shop-16c46388/source.png",
+  "outputSha256": "aa38b47e5916b68862216e3d6f6d6c7ce81f6fb801bed21d972fde009bfd46ca",
+  "width": 608,
+  "height": 533,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      608,
+      533
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-golf-pro-shop\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "business:golf-pro-shop",
+    "version": "business-golf-pro-shop-4views-v1",
+    "files": {
+      "NE": "aa38b47e5916b68862216e3d6f6d6c7ce81f6fb801bed21d972fde009bfd46ca",
+      "SE": "7a0b3030f872ba2f1789a3304fa2ff507b627a0f39437e37eb5cabb589f55ac2",
+      "SW": "302c9fb3e643c967b292bed5167a2762e3c6d96187904d5f92e6506d2917e53b",
+      "NW": "2b3dec10b1981fae63d022f9ede7ed0f587028f0f0fa257a80e02026d02173cf"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-0-0.webp",
+    "atlasSha256": "7345eb8787ac146688e3a811ad9005a42c01ce29f619897f360dc82938fbf093",
+    "runtimePage": 18,
+    "localPage": 0,
+    "uv": [
+      0.712890625,
+      0.0078125,
+      0.93115234375,
+      0.19970703125
+    ],
+    "crop": {
+      "left": 1460,
+      "top": 16,
+      "width": 447,
+      "height": 393
+    },
+    "native": "art/theme-consistency/exports/buildings/business-golf-pro-shop.native.png",
+    "nativeSha256": "d8a275278508c89d162e083077644dd44ebcfd24c9aea171fb4e04b643ad70a5"
+  },
+  "originalBusinessSourceCell": {
+    "id": "golf-pro-shop",
+    "sourceSheet": "sliced/builtin/golf-buildings.png",
+    "sourceCrop": [
+      802,
+      232,
+      439,
+      385
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

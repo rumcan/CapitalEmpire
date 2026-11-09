@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-splitlevel-north-63bc759e-plain-1/NE.png",
+  "sourceSha256": "0069bb8658c8d91647c4e77d7092363e831f11c4dbdd39e3c1f411bc8ccb4b74",
+  "output": "identity-references/variation-gen-house-splitlevel-north-63bc759e-plain-1-72fb5b81/source.png",
+  "outputSha256": "0069bb8658c8d91647c4e77d7092363e831f11c4dbdd39e3c1f411bc8ccb4b74",
+  "width": 634,
+  "height": 454,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      634,
+      454
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-house-splitlevel-north-63bc759e-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Deck/sliding door front and smaller awning back stay distinct; chimney switches side under rigid rotation. Needs repack. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review."
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+    "version": "variation-gen-house-splitlevel-north-63bc759e-plain-1-4views-v2",
+    "files": {
+      "NE": "0069bb8658c8d91647c4e77d7092363e831f11c4dbdd39e3c1f411bc8ccb4b74",
+      "SE": "9e74a81221a04bc0be095082ea30f523eedbcfc5265f3adda636c4a0ce8c5f30",
+      "SW": "0c121a407e241da955b06b0a59c9ac991f60c299d7c799bb0ae50854c28df415",
+      "NW": "7920b3b36cba560ef0dad2d2ba643040b6212ad17ba4da633ae9ce67ebf79c84"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-10-0.webp",
+    "atlasSha256": "6ca370227e33f5f4eab6c0abe7cfcf952ed2ff26a21472925e105f582f2922ac",
+    "runtimePage": 10,
+    "localPage": 10,
+    "uv": [
+      0.570313,
+      0.367188,
+      0.720215,
+      0.52002
+    ],
+    "crop": {
+      "left": 1168,
+      "top": 752,
+      "width": 307,
+      "height": 313
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-house-splitlevel-north-63bc759e-plain-1.native.png",
+    "nativeSha256": "3541f0785c512d3df9d799fde7882e4c81bd6b13ec4de7d77ff5c00f2ce79994"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

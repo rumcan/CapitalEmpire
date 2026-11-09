@@ -1,0 +1,33 @@
+{
+  "key": "golf-source-01-08-hole-scoreboard",
+  "condition": "budget",
+  "runtimeTarget": {
+    "eventTypeId": "holeBoard",
+    "eventName": "Hole scoreboard",
+    "currentSpriteSubjectId": "poi:fishing-board",
+    "newArtSubjectProposal": "golf:event-hole-scoreboard",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 1,
+      "depth": 1
+    },
+    "footprintMetres": {
+      "width": 2,
+      "depth": 2
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-8a58371a-31c3-4f84-9c98-1893ab88108c.png",
+  "target": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.png",
+  "prompt": "Generate a high-detail2x2 sheet of ONE SAME golf-event item in FOUR genuinely different orthographic45degree CORNER views, camera30degrees down. Reference1 is painted miniature materials/brushwork ONLY, do not copy its building. Reference2 is functional equipment reference ONLY; obey the design brief and reject all ornamental/goblin/modern details described below. Functional identity: A compact2x2m footprint hole scoreboard on two plain uprights with rear diagonal supports; one blank green/cream face subdivided into score/name slat rows, about2m high as a proposed art size. A scoreboard, not a course map or baked hole12yardage marker. Rear view has slat backs/braces and no duplicated scoring face. Condition: Old1950spainted timber uprights and worn chalk/slat board; keep supports simple and practical. It is1985; budget means ordinary old1950smanufactured equipment stillusednow, no fantasyarchitecture/rope-lashedlogs/patchworkblueplastic/ornatebrassfinials. Four camera cells: TOP LEFT FRONT+LEFT sides, TOP RIGHT REAR+LEFT sides, BOTTOM LEFT REAR+RIGHT sides, BOTTOM RIGHT FRONT+RIGHT sides, corresponding SE SW / NW NE. Reconstruct real REAR faces, don't pastefront servicehatches/screens/lenses onto theback. Keep ALL doors/windows/vents/equipment/ladder/stair/camera/servingcounter positions fixed in localphysicalspace across the four turns. Structuralbodies andfunctionalattachments are same in every view. Finely hand-painted miniature game style consistent with source authority, realistic materials and readable silhouettes. LATE-AFTERNOON DAYTIME sunfixedSCREEN UPPER RIGHT, shadowsLOWER LEFT; all electriclamps/screensoff. Nopeople, plants, groundplate/roads/terrain, UI/captions/grid/text orhaze. Equipment's owndeck/mat is allowed onlyifpartofbrief. Fullyopaqueobjects on genuinelyzeroalpha transparentbackground includingallgutters; netting/railopeningsremaintransparent. Four complete separate sprites, equal physicalscale, centredwithgenerouscellmargins.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.source.png"
+  ],
+  "status": "native normal4 candidate; yaw4 and independent identity/alpha/geometry review pending",
+  "runtime_imported": false,
+  "sha256": "cc834765e5f2fb9cecbd6953e0306d4640f7723251e636edecb28af3f2b66bb2",
+  "native_bytes_preserved": true
+}

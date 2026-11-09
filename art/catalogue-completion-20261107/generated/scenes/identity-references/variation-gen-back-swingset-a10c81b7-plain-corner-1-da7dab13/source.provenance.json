@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-back-swingset-a10c81b7-plain-corner-1/NE.png",
+  "sourceSha256": "09e9c92d5935cbdf4cff49ea6ba30b3688853b2b189bbe11cf9504136c44c0f9",
+  "output": "identity-references/variation-gen-back-swingset-a10c81b7-plain-corner-1-da7dab13/source.png",
+  "outputSha256": "09e9c92d5935cbdf4cff49ea6ba30b3688853b2b189bbe11cf9504136c44c0f9",
+  "width": 555,
+  "height": 496,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      555,
+      496
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-back-swingset-a10c81b7-plain-corner-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+    "version": "variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v2",
+    "files": {
+      "NE": "09e9c92d5935cbdf4cff49ea6ba30b3688853b2b189bbe11cf9504136c44c0f9",
+      "SE": "c11a84291c6dfb1d2504b65f9aae8690d0a849113b7f43b3ffaaef94896e26fc",
+      "SW": "50f08615e2d695b816e06540369a9a4203dbd24134a9c489761385266d90bb25",
+      "NW": "1c98513ca5433aaed2eef722385f0e3e5a7e6b69bcd4025583341b4e15a4a9ce"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-3-0.webp",
+    "atlasSha256": "2fc83a268c62030dfbfbd7b95621bbee98621258acf3580154f943542c867e7d",
+    "runtimePage": 3,
+    "localPage": 3,
+    "uv": [
+      0.007813,
+      0.007813,
+      0.278809,
+      0.250488
+    ],
+    "crop": {
+      "left": 16,
+      "top": 16,
+      "width": 555,
+      "height": 497
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1.native.png",
+    "nativeSha256": "ed99744ed8ad29367f0168ed9fc60c596ab197c7ce3a83ddf0273cc93dd75e42"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

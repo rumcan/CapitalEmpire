@@ -1,0 +1,21 @@
+[
+  {
+    "key": "newprop:water-tank-stall",
+    "family": "normal",
+    "condition": "base",
+    "version": 2,
+    "target": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\water-tank-stall\\normal-v1.png"
+    ],
+    "prompt": "Edit ONLY the four water-station sprites in reference1. Remove the invented beige golfer/arrow/12direction plaque from the tank FRONT in top-left and bottom-right cells; restore continuous plain galvanized tank metal at those exact locations. Also remove the entire added green-framed hole-map board from its physical side, including any frame/back edge visible in all four cells. Remove those two signage assemblies, not merely their printed content. Preserve the SAME tank shape, top fill cap, two front taps, trough, bucket, towel/hook, hanging basket, wooden foot grate, four legs and rear cross-braces in their existing positions. Keep all four exact camera views, scale, source cell layout, full silhouettes except removed map attachment, painterly materials and late-afternoon upper-right sunlight/lower-left shadows. No new signs, numbers, maps, people, plants, floor plate or extra equipment. Return the same2x2 sheet on genuine transparent zero-alpha background. Do not redesign or change any other component.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-598add07-ea94-4f07-81a5-1eb88d36b279.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\water-tank-stall\\normal-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b",
+    "native_bytes_preserved": true
+  }
+]

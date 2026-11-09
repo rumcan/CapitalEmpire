@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "sourceFile": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-e7bd701a-b52e-498b-ba9f-d09effd62f36.png",
+  "sourceSha256": "1ef6ef59725085f1c3c792bc77f18f28a32f792547bcb0629efc6150f0ddd61e",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "approvalClaimed": false,
+  "disposition": "held-candidate",
+  "camera": "V-shaped45degree corners now substantially match guide: measured rear-view ground edges near+-0.5, conditional pitch about31degrees versus30target. CorrectSW/NW cell arrangement.",
+  "identity": "Cream weathered clapboard, greentrim,12x8gablebody, frontwindow/door/servicehatch and bench/crate coherent.",
+  "blocker": "Chimney stays screen-left of body centre in every quarter. Under180degree rotation the horizontal displacement of any fixedroofpoint relativefootprintcentre must reverse sign (height cannot change screenX). OppositepairsSE/NWandSW/NE violate this. PreserveNE/SEdesignposition and repairSW/NWphysicalchimneyend.",
+  "chimneyCapXCandidatesCellPixels": {
+    "normalSE": 214,
+    "normalSW": 173,
+    "normalNW": 168,
+    "normalNE": 173
+  },
+  "measurements": [
+    {
+      "cell": 1,
+      "intendedView": "normalSW",
+      "fitRangesXCell": [
+        [
+          85,
+          335
+        ],
+        [
+          390,
+          535
+        ]
+      ],
+      "foundationSlopes": [
+        0.4917154240182129,
+        -0.5398879816451853
+      ],
+      "foundationIntercepts": [
+        331.4568924302789,
+        704.0475065793913
+      ],
+      "conditionalOrthographicPitchDegrees": 31.013432758649298,
+      "nearCornerLineIntersectionPixels": [
+        361.1762156887305,
+        509.05280847295654
+      ],
+      "observedOuterFoundationCornersCellPixels": [
+        [
+          64,
+          363
+        ],
+        [
+          560,
+          399
+        ]
+      ],
+      "diagnosticFloorCentrePixels": [
+        312.0,
+        381.0
+      ],
+      "trueCameraPixelsPerMetreFromTotalBodyWidth": 35.07249634685276,
+      "measurementLimits": "Outer foundation endpoints are observed pixel estimates, not calibrated release anchors. Assumes12x8m body and orthogonal walls. Props/eaves excluded."
+    },
+    {
+      "cell": 2,
+      "intendedView": "normalNW",
+      "fitRangesXCell": [
+        [
+          80,
+          240
+        ],
+        [
+          285,
+          545
+        ]
+      ],
+      "foundationSlopes": [
+        0.5253565677478721,
+        -0.5046793690647337
+      ],
+      "foundationIntercepts": [
+        370.47089947089944,
+        637.077953487535
+      ],
+      "conditionalOrthographicPitchDegrees": 30.99171937490629,
+      "nearCornerLineIntersectionPixels": [
+        258.83276931253255,
+        506.45039477760827
+      ],
+      "observedOuterFoundationCornersCellPixels": [
+        [
+          60,
+          401
+        ],
+        [
+          570,
+          349
+        ]
+      ],
+      "diagnosticFloorCentrePixels": [
+        315.0,
+        375.0
+      ],
+      "trueCameraPixelsPerMetreFromTotalBodyWidth": 36.062445840513924,
+      "measurementLimits": "Outer foundation endpoints are observed pixel estimates, not calibrated release anchors. Assumes12x8m body and orthogonal walls. Props/eaves excluded."
+    }
+  ],
+  "releaseAnchor": null,
+  "releasePixelsPerMetre": null,
+  "calibrationConclusion": "Rear views suggest truecamera native scale around35\u201336px/m for12x8body, with several-percent painting variation. Do not copy44px/m technicalguide scale; do not approve/fabricate a sharedscale or front anchors while physical chimneyidentity remainsheld.",
+  "engineMathCorrection": "Importer now converts truecamera nativeppm using sqrt(2)*HW/TILE_M/nativeppm. ActualHW64/HH32/TILE_M2 yields45.2548339959/nativeppm;44px/m guide produces640x320logicalgroundfootprint for12x8m normal view."
+}

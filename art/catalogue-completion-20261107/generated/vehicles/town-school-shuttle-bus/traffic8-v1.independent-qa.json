@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:25.127183+00:00",
+  "review_result": "HOLD-camera-consistency;missing-nose-and-bus-side-identity",
+  "identity_direction_alpha_result": "HOLD",
+  "source": {
+    "path": "generated/vehicles/town-school-shuttle-bus/traffic8-v1.png",
+    "sha256": "4827ab92de2dff23cc409d8204241fe8cf28d72280d5ebaca65b08c3091886cb",
+    "bytes": 1674175
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.34951555030765064,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    2.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    2.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "native_core_margin_pixels": 14,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "e3bfbe154e0d0cae5a27d6b938b37785e90a22c37889f4a2793ed33d0cae7f23"
+    },
+    {
+      "cell": 1,
+      "actual_screen_nose": "down",
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "native_core_margin_pixels": 38,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "2d1b723387ddbb315bf37ac353a9b02d4386a4935e2672dab30aa056b25f21a9"
+    },
+    {
+      "cell": 2,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1327,
+        443
+      ],
+      "native_core_margin_pixels": 21,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 6,
+      "rgba_rectangle_sha256": "6b67d8661be79c3e49d13dafc7dd4ea20af10873826324a229c7fd1a29d6439e"
+    },
+    {
+      "cell": 3,
+      "actual_screen_nose": "right",
+      "reference_rect_ltrb": [
+        1327,
+        0,
+        1774,
+        443
+      ],
+      "native_core_margin_pixels": 9,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 7,
+      "rgba_rectangle_sha256": "e5fb3b751956c3a3bb3b5b4ab4e9adaf5ac1832c45f9e20c174b35d90dd0ffb7"
+    },
+    {
+      "cell": 4,
+      "actual_screen_nose": "upper-right",
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "native_core_margin_pixels": 15,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 2,
+      "rgba_rectangle_sha256": "1d63853c51b987b9d233a081a10a21f450f65adc7a7f8212f4995cccaafe445c"
+    },
+    {
+      "cell": 5,
+      "actual_screen_nose": "up",
+      "reference_rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "native_core_margin_pixels": 45,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "fb1134d4be76680aac3e12ee5b6eaa54cad3301db7bdf5946587e5c45251a967"
+    },
+    {
+      "cell": 6,
+      "actual_screen_nose": "upper-left",
+      "reference_rect_ltrb": [
+        887,
+        443,
+        1327,
+        887
+      ],
+      "native_core_margin_pixels": 20,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 5,
+      "rgba_rectangle_sha256": "6db099d6a6cb97ad60fbaadf9a7d8eebd27282971ee4b6c096bf2b3607c525ff"
+    },
+    {
+      "cell": 7,
+      "actual_screen_nose": "left",
+      "reference_rect_ltrb": [
+        1327,
+        443,
+        1774,
+        887
+      ],
+      "native_core_margin_pixels": 6,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "2fb58a1f5bd5806a7aca60ebf1f350d6f91a492a2202f9f76de393a958fa364b"
+    }
+  ],
+  "all_eight_distinct_nose_directions_present": false,
+  "side_cell_order_is_remappable": false,
+  "native_core_clipped_at_canvas_border": false,
+  "actual_clear_gutter_crops_reference_only": [
+    [
+      0,
+      443,
+      887,
+      1327,
+      1774
+    ],
+    [
+      0,
+      443,
+      887,
+      1327,
+      1774
+    ]
+  ],
+  "source_crops_performed": false,
+  "notes": [
+    "HOLD missing lower-left front view: top-left repeats lower-right thirdcell orientation; only7distinct nose directions.",
+    "HOLD physical side identity: stop-arm and entry door coexist on same side; correct one consistent bus sides, do not mirror features.",
+    "HOLD visually inconsistent elevation: col4 side profiles show nearly level body/roof and near-circular side wheels; diagonal/front/rear cells show substantially more top planes. Need shared fixed30degree camera proof or native correction, not relabelling."
+  ],
+  "camera_measurement_scope": "Visual inconsistency established; exact percell camera degrees not numerically certified. Do not present approximate appearance as an8degree/30degree measured proof.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_only": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/town-school-shuttle-bus/traffic8-v1.prompt.txt",
+    "sha256": "5b36688896406c4c85b7160ddecee4054441c79e77ff897fc7f8806bb48d9877",
+    "bytes": 2125
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-school-shuttle-bus/traffic8-v1.provenance.json",
+    "sha256": "bba98d1898b7fee3446973b4e4b647d865ad4ba623020c87cf7fdf0f253997f2",
+    "bytes": 2843
+  }
+}

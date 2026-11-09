@@ -1,0 +1,21 @@
+{
+  "key": "newprop:park-bench",
+  "family": "normal-SW",
+  "condition": "base",
+  "version": 1,
+  "target": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v1.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SW-world-guide-single-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png"
+  ],
+  "prompt": "ONE isolated sprite only: render exact singleview geometry/camera in REFERENCE1 as finely detailed painterly gameart matching materialidentity ofREFERENCE2. Reference1 isfixedworld/camera authority; Reference2 is DIFFERENTcamera for materialidentityONLY; nevercopyitscamera. Target SW: Bare map backing/rear slats, opposite rear projection; guide SW long edge falls screen-right.. Three-place slatted bench, BACK on+Y, sitting FRONT on-Y. Tall attached course-map panel ALWAYS at physicalRIGHT+X. Panel FRONT has map, BACK bare wood; do not duplicate a front corner. Keepallcomponentsmountedonfixedphysicalside withproperfront/backocclusion. Correctoppositeside ratherthanmirrored2Dcopy. Orthographic30degreesDOWN,45degreecornerexactlyasguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT. Samepaintedwood/castmetal/brass/materials/colours asnativeidentityref. Onecompleteobjectcentredwithverywidezeroalphatransparentmargins; nomissingfeet/supports, no greyhaze, floorplate, people, plants, UI or technicaltext.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-9f2e815a-73c7-4cd6-9b90-e5359e809146.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SW-world-guide-single-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "229bfb8923d9a643de943c464ac8995cce56cddf708fcde4f5688bd970904785",
+  "native_bytes_preserved": true
+}

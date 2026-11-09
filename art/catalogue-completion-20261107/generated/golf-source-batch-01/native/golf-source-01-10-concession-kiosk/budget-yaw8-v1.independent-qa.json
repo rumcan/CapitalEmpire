@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:26:24.560621+00:00",
+  "review_result": "PASS-distinct-main-face-source-candidate;exact8-unverified",
+  "four_distinct_main_faces_present": true,
+  "actual_main_face_by_cell": [
+    "servingface/fridge",
+    "blankend",
+    "rearstaffdoor",
+    "glazedfridgeend"
+  ],
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-yaw8-v1.png",
+    "sha256": "2264bf6e6b3cb31cfeac7d30cd3848747036fc8b227eb133731c073d04957607",
+    "bytes": 1700926
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-yaw8-v1.provenance.json",
+    "sha256": "f8beb72974efcdc9b0330ceead7e718d6517f1949c53fd337c3e961e31b1b260",
+    "bytes": 3157
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "54966aa461d4b0eeadb974831cda593d149c0f780cbb9029a347a37a47b26370",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.5603084483719084,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    630,
+    627
+  ],
+  "true_clear_gutters_found": true,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        630,
+        627
+      ],
+      "minimum_core_margin_px": 1,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 108,
+      "native_rgba_rectangle_sha256": "15a89855103fa54fc8f3af9d8fee6da01952931e39181eae172ca232760001e2"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        630,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 59,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 3,
+      "native_rgba_rectangle_sha256": "1bdb80ec787b09c18e2ff207743ea244ed1252df40b1c05f2b3a6d598168a9bf"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 20,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "627cb80d56f3670a1a1f4a749248ae54eb017a3eb87c4c19c9861dfa36abac2b"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 19,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "3e266ef9e7d43c79f89c437f878531b76600347dc7cc488a7691ab1e8d51f07a"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Four distinct functional main-face classes present. Exact8/pitch/physicalscale unverified; no native source pixels edited."
+  ],
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

@@ -1,0 +1,33 @@
+{
+  "key": "golf-source-01-05-info-will-call-booth",
+  "condition": "budget",
+  "runtimeTarget": {
+    "eventTypeId": "info",
+    "eventName": "Info and will-call booth",
+    "currentSpriteSubjectId": "ce:parking-kiosk",
+    "newArtSubjectProposal": "golf:event-info-will-call-booth",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 2,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 4,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-464d7799-5dab-4597-871c-a22c583e732d.png",
+  "target": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.png",
+  "prompt": "Generate a high-detail2x2 sheet of ONE SAME golf-event item in FOUR genuinely different orthographic45degree CORNER views, camera30degrees down. Reference1 is painted miniature materials/brushwork ONLY, do not copy its building. Reference2 is functional equipment reference ONLY; obey the design brief and reject all ornamental/goblin/modern details described below. Functional identity: A4x4m information and will-call booth with two front counter windows, shallow practical roof, one paper-ticket pickup shelf, folded-map rack on the left counter and a blank information panel on the right side; one rear staff door. It serves spectators on foot, not parking-car drivers. No plants/queues/people baked in. Condition: Weathered but ordinary1950spainted-board booth, modest corrugated roof, paper lists and simple shuttered windows. No cupola/gold finials or fantasy construction. It is1985; budget means ordinary old1950smanufactured equipment stillusednow, no fantasyarchitecture/rope-lashedlogs/patchworkblueplastic/ornatebrassfinials. Four camera cells: TOP LEFT FRONT+LEFT sides, TOP RIGHT REAR+LEFT sides, BOTTOM LEFT REAR+RIGHT sides, BOTTOM RIGHT FRONT+RIGHT sides, corresponding SE SW / NW NE. Reconstruct real REAR faces, don't pastefront servicehatches/screens/lenses onto theback. Keep ALL doors/windows/vents/equipment/ladder/stair/camera/servingcounter positions fixed in localphysicalspace across the four turns. Structuralbodies andfunctionalattachments are same in every view. Finely hand-painted miniature game style consistent with source authority, realistic materials and readable silhouettes. LATE-AFTERNOON DAYTIME sunfixedSCREEN UPPER RIGHT, shadowsLOWER LEFT; all electriclamps/screensoff. Nopeople, plants, groundplate/roads/terrain, UI/captions/grid/text orhaze. Equipment's owndeck/mat is allowed onlyifpartofbrief. Fullyopaqueobjects on genuinelyzeroalpha transparentbackground includingallgutters; netting/railopeningsremaintransparent. Four complete separate sprites, equal physicalscale, centredwithgenerouscellmargins.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\ticket-booth.source.png"
+  ],
+  "status": "native normal4 candidate; yaw4 and independent identity/alpha/geometry review pending",
+  "runtime_imported": false,
+  "sha256": "640400b359ad0cec56f81c74fd4eda63973391970f6c4362cc4f4913d0a76b46",
+  "native_bytes_preserved": true
+}

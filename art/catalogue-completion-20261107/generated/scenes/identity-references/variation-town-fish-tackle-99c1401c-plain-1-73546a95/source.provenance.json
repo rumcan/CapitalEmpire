@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:town-fish_tackle-99c1401c-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-fish_tackle-99c1401c-plain-1/NE.png",
+  "sourceSha256": "5c35de50f82c3e8a4fc7af68f3e4c7f333f5bb70de83b44e0348486c12c04fa9",
+  "output": "identity-references/variation-town-fish-tackle-99c1401c-plain-1-73546a95/source.png",
+  "outputSha256": "5c35de50f82c3e8a4fc7af68f3e4c7f333f5bb70de83b44e0348486c12c04fa9",
+  "width": 728,
+  "height": 596,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      728,
+      596
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-town-fish_tackle-99c1401c-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Parent explicitly approved proven physical-identity reuse from clean selected existing base; no generation/pixel changes."
+  },
+  "sourceRegistration": {
+    "id": "variation:town-fish_tackle-99c1401c-plain:1",
+    "version": "variation-town-fish_tackle-99c1401c-plain-1-4views-v1",
+    "files": {
+      "NE": "5c35de50f82c3e8a4fc7af68f3e4c7f333f5bb70de83b44e0348486c12c04fa9",
+      "SE": "55a4335b5b0837b857d731368d5376174bf3214ba10a2098c7b0c044195392d6",
+      "SW": "6aed218973586d8e47661004b2ee644effc156bf11d5eb007e3078f21391d008",
+      "NW": "0b23ad70d40b753466d7592fe10d558579efab8c7a8d083a1c214db5935f312e"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.789063,
+      0.484375,
+      0.924316,
+      0.61377
+    ],
+    "crop": {
+      "left": 1616,
+      "top": 992,
+      "width": 277,
+      "height": 265
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-town-fish_tackle-99c1401c-plain-1.native.png",
+    "nativeSha256": "f5aaf119c1ff396aa8ca00719c783a077d0dc1b979647196df7bbbd0c726a428"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

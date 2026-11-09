@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-four-lane-entrance",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch01/four-lane-entrance/budget/normal-NE.png",
+    "sha256": "0b0a1dee74e41554aea1aac9a6db3080c382774d7f7f2f3556827ae9b80be1ad",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 43,
+    "top": 106,
+    "width": 536,
+    "height": 423
+  },
+  "output": "normalNE.native.png",
+  "sha256": "b4c6940ea944c140208f0a26ae519b7075bb9e07fe5fd6c5606e1c43b523cc35",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

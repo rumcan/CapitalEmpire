@@ -1,0 +1,14 @@
+{
+  "key": "1990s-redbrick-family-single-garage",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-8dc37111-a421-483b-a915-6c0af595bc5e.png",
+  "target": "generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+  "prompt": "Paint the FOUR exact technical models in reference1 in the exact same finished material/style identity as reference2. Matching2x2 near-cardinal views of this 1990s house: Ordinary modest redbrick family house, cream frames, charcoal pitched tile roof, one lower attached single garage on model right. Main front door at x=-1.8,y=-4. One brick chimney on rear-left main roof. No luxury entrance, no extra wings. Exact footprint/roof volumes/garage/chimney/doors/windows fixed across all views. Preserve every opening visible on either main wall or narrow secondary side from guide1. Camera orthographic30degreesdown,8degrees yaw away from each cardinal,4cells N E / S W; subtly slanting bases0.07027slope and a narrow receding side, never zero-yaw elevation or45degree broadcorner. Finely hand-painted miniature game materials matching reference2, no redesigns. Late-afternoon DAYTIME sunlight SCREEN UPPER RIGHT, shadows LOWER LEFT, no lamps/windows glowing. Complete opaque buildings on genuinely zero-alpha transparent background, same scale/amplemargins, no groundplate, garden, driveway, cars, people, plants, haze, grid, captions or labels.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png"
+  ],
+  "status": "native house candidate; identity/alpha/angle QA pending",
+  "runtime_imported": false,
+  "sha256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,511 @@
+{
+  "technical_only": true,
+  "final_sprite_art": false,
+  "runtime_integrated": false,
+  "owner_approved": false,
+  "renewal_sequence": [
+    "1980s existing town",
+    "1990s",
+    "2000s",
+    "2010s",
+    "2020s"
+  ],
+  "camera": "orthographic30degrees down; normal camera beta=-45degrees; cardinal camera beta=+8degrees; one fixed world model rotated0/90/180/270degrees",
+  "lighting": "technical diffuse proxy only; final painted art late afternoon daylight, sun upper-right, shadows lower-left",
+  "style_for_final": "Use the established CapitalEmpire painterly town/building style; modest ordinary houses, no modern mansions or futuristic forms. Technical colors are geometry proxies, not final materials.",
+  "renderer_source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_world_geometry_guides.py",
+  "renderer_sha256": "2231e62f5ae7fcd5d7fa8102a6aec4e477aa754875912c21fefa714ee762379e",
+  "houses": [
+    {
+      "era": "1990s",
+      "name": "Redbrick single-storey family home with one attached garage",
+      "physical_dimensions_metres": [
+        14,
+        8
+      ],
+      "storeys": 1,
+      "brief": "Ordinary modest redbrick family house, cream frames, charcoal pitched tile roof, one lower attached single garage on model right. Main front door at x=-1.8,y=-4. One brick chimney on rear-left main roof. No luxury entrance, no extra wings.",
+      "key": "1990s-redbrick-family-single-garage",
+      "technical_only": true,
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\1990s-redbrick-family-single-garage-world-model-v1.json",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\normal-world-v1.calibration.json",
+          "object_bounds_per_cell": [
+            [
+              92,
+              218,
+              708,
+              583
+            ],
+            [
+              112,
+              207,
+              688,
+              593
+            ],
+            [
+              92,
+              211,
+              708,
+              589
+            ],
+            [
+              112,
+              194,
+              688,
+              606
+            ]
+          ],
+          "core_geometry_clipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\yaw8-world-v1.calibration.json",
+          "object_bounds_per_cell": [
+            [
+              110,
+              248,
+              690,
+              552
+            ],
+            [
+              202,
+              205,
+              598,
+              595
+            ],
+            [
+              110,
+              261,
+              690,
+              539
+            ],
+            [
+              202,
+              191,
+              598,
+              610
+            ]
+          ],
+          "core_geometry_clipped": false
+        }
+      },
+      "front_door_anchors": {
+        "front-main-door/threshold": [
+          -1.8,
+          -4.025,
+          0.05
+        ]
+      },
+      "all_feature_anchors": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\1990s-redbrick-family-single-garage-world-model-v1.json",
+      "face_count": 130,
+      "feature_anchor_count": 64,
+      "normal_cells": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "yaw8_cells": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "final_art_requirements": [
+        "Native painted material treatment consistent with existing1980s town style.",
+        "Keep architecture, doors, windows, chimneys, garage positions and solar-panel count fixed across both sheets.",
+        "Late-afternoon daylight; one sun upper-right; cast shadows lower-left.",
+        "Transparent background, no ground plate, no labels/text, no people or cars baked into final sprite.",
+        "Orthographic30degrees down, four true45degreecorner views plus four true8degreeturnedcardinal views."
+      ],
+      "mesh_sha256": "f77e89e3457aae77e800fc9d51bfef8c3e8d55ed07de314ca2b888920dcc197e"
+    },
+    {
+      "era": "2000s",
+      "name": "Cream stucco two-storey family home with one attached garage",
+      "physical_dimensions_metres": [
+        11.5,
+        8
+      ],
+      "storeys": 2,
+      "brief": "Ordinary compact two-storey cream stucco family house with modest brown tile hip roof, one single garage attached at right and a small door canopy. Three upper front windows, one broad ground living window. No mansion columns or double-height glazing.",
+      "key": "2000s-cream-stucco-two-storey-garage",
+      "technical_only": true,
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\2000s-cream-stucco-two-storey-garage-world-model-v1.json",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\normal-world-v1.calibration.json",
+          "object_bounds_per_cell": [
+            [
+              125,
+              196,
+              675,
+              604
+            ],
+            [
+              152,
+              196,
+              648,
+              604
+            ],
+            [
+              125,
+              186,
+              675,
+              614
+            ],
+            [
+              152,
+              165,
+              648,
+              635
+            ]
+          ],
+          "core_geometry_clipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\yaw8-world-v1.calibration.json",
+          "object_bounds_per_cell": [
+            [
+              158,
+              201,
+              642,
+              599
+            ],
+            [
+              208,
+              218,
+              592,
+              582
+            ],
+            [
+              158,
+              218,
+              642,
+              582
+            ],
+            [
+              208,
+              183,
+              591,
+              617
+            ]
+          ],
+          "core_geometry_clipped": false
+        }
+      },
+      "front_door_anchors": {
+        "front-main-door/threshold": [
+          -0.6,
+          -4.025,
+          0.05
+        ]
+      },
+      "all_feature_anchors": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\2000s-cream-stucco-two-storey-garage-world-model-v1.json",
+      "face_count": 133,
+      "feature_anchor_count": 84,
+      "normal_cells": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "yaw8_cells": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "final_art_requirements": [
+        "Native painted material treatment consistent with existing1980s town style.",
+        "Keep architecture, doors, windows, chimneys, garage positions and solar-panel count fixed across both sheets.",
+        "Late-afternoon daylight; one sun upper-right; cast shadows lower-left.",
+        "Transparent background, no ground plate, no labels/text, no people or cars baked into final sprite.",
+        "Orthographic30degrees down, four true45degreecorner views plus four true8degreeturnedcardinal views."
+      ],
+      "mesh_sha256": "143d885eeacdc74cc1e7469b6fe020744d590467c78db0a6744aa29049c7baa3"
+    },
+    {
+      "era": "2010s",
+      "name": "Two attached brick and white-clad townhouses",
+      "physical_dimensions_metres": [
+        12,
+        7
+      ],
+      "storeys": 2,
+      "dwelling_units_proposed": 2,
+      "brief": "A modest attached pair, two equal 6m-wide units and exactly two distinct front doors near the central party wall. Brick ground floor, white upper cladding, simple charcoal pitched roof; four upper front windows and separate rear patio doors. No detached gap, no garage doors mistaken for front doors.",
+      "key": "2010s-brick-white-clad-townhouse-pair",
+      "technical_only": true,
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\2010s-brick-white-clad-townhouse-pair-world-model-v1.json",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\normal-world-v1.calibration.json",
+          "object_bounds_per_cell": [
+            [
+              132,
+              177,
+              668,
+              623
+            ],
+            [
+              132,
+              177,
+              668,
+              623
+            ],
+            [
+              132,
+              177,
+              668,
+              623
+            ],
+            [
+              132,
+              177,
+              668,
+              623
+            ]
+          ],
+          "core_geometry_clipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\yaw8-world-v1.calibration.json",
+          "object_bounds_per_cell": [
+            [
+              146,
+              223,
+              654,
+              577
+            ],
+            [
+              226,
+              166,
+              574,
+              634
+            ],
+            [
+              146,
+              223,
+              654,
+              577
+            ],
+            [
+              226,
+              166,
+              574,
+              634
+            ]
+          ],
+          "core_geometry_clipped": false
+        }
+      },
+      "front_door_anchors": {
+        "left-front-door/threshold": [
+          -1.25,
+          -3.55,
+          0.05
+        ],
+        "right-front-door/threshold": [
+          1.25,
+          -3.55,
+          0.05
+        ]
+      },
+      "all_feature_anchors": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\2010s-brick-white-clad-townhouse-pair-world-model-v1.json",
+      "face_count": 132,
+      "feature_anchor_count": 86,
+      "normal_cells": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "yaw8_cells": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "final_art_requirements": [
+        "Native painted material treatment consistent with existing1980s town style.",
+        "Keep architecture, doors, windows, chimneys, garage positions and solar-panel count fixed across both sheets.",
+        "Late-afternoon daylight; one sun upper-right; cast shadows lower-left.",
+        "Transparent background, no ground plate, no labels/text, no people or cars baked into final sprite.",
+        "Orthographic30degrees down, four true45degreecorner views plus four true8degreeturnedcardinal views."
+      ],
+      "mesh_sha256": "ace3412999c48bb391f90afac21849fcc70149656ed63652c2238aa793984cce"
+    },
+    {
+      "era": "2020s",
+      "name": "Compact white and charcoal contemporary solar home",
+      "physical_dimensions_metres": [
+        9,
+        7
+      ],
+      "storeys": 1,
+      "solar_panels": 6,
+      "brief": "An ordinary compact single-storey home, higher white left volume and lower charcoal right entry volume. Asymmetrical stepped flat parapet roofs, timber front door and six rectangular solar modules in two rows of three on the higher roof. No science-fiction canopy, no huge glazing walls, no mansion scale.",
+      "key": "2020s-white-charcoal-asymmetric-solar-home",
+      "technical_only": true,
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\2020s-white-charcoal-asymmetric-solar-home-world-model-v1.json",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\normal-world-v1.calibration.json",
+          "object_bounds_per_cell": [
+            [
+              182,
+              236,
+              618,
+              564
+            ],
+            [
+              182,
+              236,
+              618,
+              564
+            ],
+            [
+              182,
+              230,
+              618,
+              570
+            ],
+            [
+              182,
+              230,
+              618,
+              570
+            ]
+          ],
+          "core_geometry_clipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\yaw8-world-v1.calibration.json",
+          "object_bounds_per_cell": [
+            [
+              210,
+              255,
+              590,
+              545
+            ],
+            [
+              231,
+              250,
+              569,
+              550
+            ],
+            [
+              210,
+              265,
+              590,
+              535
+            ],
+            [
+              231,
+              243,
+              569,
+              557
+            ]
+          ],
+          "core_geometry_clipped": false
+        }
+      },
+      "front_door_anchors": {
+        "front-timber-door/threshold": [
+          2.3,
+          -3.525,
+          0.05
+        ]
+      },
+      "all_feature_anchors": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\2020s-white-charcoal-asymmetric-solar-home-world-model-v1.json",
+      "face_count": 143,
+      "feature_anchor_count": 55,
+      "normal_cells": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "yaw8_cells": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "final_art_requirements": [
+        "Native painted material treatment consistent with existing1980s town style.",
+        "Keep architecture, doors, windows, chimneys, garage positions and solar-panel count fixed across both sheets.",
+        "Late-afternoon daylight; one sun upper-right; cast shadows lower-left.",
+        "Transparent background, no ground plate, no labels/text, no people or cars baked into final sprite.",
+        "Orthographic30degrees down, four true45degreecorner views plus four true8degreeturnedcardinal views."
+      ],
+      "mesh_sha256": "62a9491e421b99a92a22e18507ad544766db25c337ae7778a8e7f606a3f0e816"
+    }
+  ],
+  "generator_source": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\build_era_house_guides.py",
+    "sha256": "7811312d8894cbe9a0f5f081a4ba072119a0d4528d16f9d2795649b370f205cc"
+  },
+  "technical_visual_review": {
+    "allEightSheetsViewed": true,
+    "views": 32,
+    "notes": [
+      "Front and rear door/window arrangements remain fixed in world space.",
+      "Single garages remain on the same physical side, partly or fully occluded as dictated by the camera.",
+      "Townhouse pair retains exactly two front doors, two separate rear patio doors and one shared physical building.",
+      "2020s home retains exactly six solar panels on the higher white roof; lower charcoal roof stays panel-free.",
+      "Guides are flat technical geometry proxies, never final painterly art."
+    ],
+    "final_art_approval": false
+  }
+}

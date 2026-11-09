@@ -1,0 +1,68 @@
+[
+  {
+    "key": "era-1990s-teal-sedan",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0d0cdbf0-6f5f-4ab5-858f-c4f8c7581a70.png",
+    "target": "generated/vehicles/era-1990s-teal-sedan/traffic8-v2.png",
+    "prompt": "Precise background-extraction edit of this eight-direction vehicle atlas. Preserve the exact same eight vehicle designs, viewing directions, positions, proportions, body/glass/wheels and material details. Remove ALL pale-grey/white cloudy background wash and ALL external ground shadows/haze around and between the eight vehicles. Background truly alpha0, fully transparent in outerborder and gutters. Keep vehicle opaque, only actual edge antialiasing. Do not paint a checkerboard, white backdrop, grey matte or vignette. No labels/words/UI. Same4x2 layout and native resolution. The task is ONLY clean transparent isolation of all eight existing complete vehicle sprites.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/era-1990s-teal-sedan/traffic8-v1.png"
+    ],
+    "status": "native correction candidate; alpha/direction/identity QA pending",
+    "runtime_imported": false,
+    "sha256": "efa3c3bd1b0a643c0d11f45b23675066800aefd90bb1cd8dd255c72f4179d0a0",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "golf-range-ball-picker",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-4e705033-c19e-452c-b096-4687be06dab4.png",
+    "target": "generated/vehicles/golf-range-ball-picker/traffic8-v2.png",
+    "prompt": "Precise background-extraction edit of this eight-direction vehicle atlas. Preserve the exact same eight vehicle designs, viewing directions, positions, proportions, body/glass/wheels and material details. Remove ALL pale-grey/white cloudy background wash and ALL external ground shadows/haze around and between the eight vehicles. Background truly alpha0, fully transparent in outerborder and gutters. Keep vehicle opaque, only actual edge antialiasing. Do not paint a checkerboard, white backdrop, grey matte or vignette. No labels/words/UI. Same4x2 layout and native resolution. The task is ONLY clean transparent isolation of all eight existing complete vehicle sprites.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-range-ball-picker/traffic8-v1.png"
+    ],
+    "status": "native correction candidate; alpha/direction/identity QA pending",
+    "runtime_imported": false,
+    "sha256": "7ef327fb145a22175569bd19109241213eba4db83a2908af2528352be9f8f11d",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "golf-player-cart",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-92843f62-a90b-4590-8e04-72129fc87d9f.png",
+    "target": "generated/vehicles/golf-player-cart/yaw8-v2.png",
+    "prompt": "Correct ONLY TOP-RIGHT CELL of reference1 golf-cart near-cardinal sheet. It currently repeats a nose-LEFT view. It must instead be a genuine near-RIGHT view: front bonnet/bumper/windshield at SCREEN RIGHT, rear mounted golfbags at SCREEN LEFT, with a small8degree yaw from the true rightward view of reference2topright. Use exactly the same darkgreen2seatcart, creamcanopy/tanbench/tworeargolfbags/fourwheels. Preserve other3cells and their proper orientations: topleftnearfrontnoseDOWN, bottomleftnearrearnoseUP, bottomrightnearLEFT. Same orthographic30degree-down camera/scale, upper-right daylight, transparentbackground. Never mirror shadows/light; redraw correct physical side. Four different near-cardinal directions, no duplicated noseleft. Complete separate vehicles with generous margins, no text or haze. Also fix rear bag colour handedness in BOTTOM-LEFT rear cell: as viewed from directly behind, BLUE bag must appear SCREEN RIGHT and BROWN bag SCREEN LEFT, reversing the front-facing visible order. Both bags remain fixed side-by-side on the same rear rack when the cart rotates; do not swap their physical mounting sides.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-player-cart/yaw8-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-player-cart/cardinal-v1.png"
+    ],
+    "status": "native correction candidate; alpha/direction/identity QA pending",
+    "runtime_imported": false,
+    "sha256": "d5e8de91baefde8ffdb9abaa1026c542c5c42b9b2398199ef57edc5635e4078b",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "golf-walkbehind-mower",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-97db8e8b-3e45-4812-8de8-6b7db7f52362.png",
+    "target": "generated/vehicles/golf-walkbehind-mower/traffic8-v2.png",
+    "prompt": "Correct the eight-direction red walk-behind lawnmower atlas. Remove the invented red CAR TAILLAMPS from the rear deck in bottomrowfirst/second/third cells: this is a simple petrol push mower, it has NO lighting system, NO taillamps, NO reflectors, NO car bumper or registration panel. Rear deck should be plain curved red pressed metal with appropriate dark grass-discharge flap/handle brackets, consistent with the same actual small four-wheeled mower. Keep black petrolengine, black tall pushhandle atREAR, four blacksmallwheelscreamrims, all eight different nose headings and same4x2 arrangement. Keep samepaintedstyle/upperrightdaylight/scale. Truly transparentzeroalphabackground, noaddedgroundshadowwash, captionsorgrid.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-walkbehind-mower/traffic8-v1.png"
+    ],
+    "status": "native correction candidate; alpha/direction/identity QA pending",
+    "runtime_imported": false,
+    "sha256": "59db959882a394f33ab7db6aefebc52494f36d0daf9630e6e63a0e3c4f4f122b",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-school-shuttle-bus",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-5e9d20db-e754-4724-ac15-63d9121e71ac.png",
+    "target": "generated/vehicles/town-school-shuttle-bus/traffic8-v2.png",
+    "prompt": "Repair this eight-direction schoolbus sheet. Top-left cell currently duplicates top-third's noseLOWERRIGHT. TOP-LEFT MUST show the same bus with nose SCREEN LOWER LEFT, the opposite front corner. KeeptopthirdnoseLOWERRIGHT. Bothtruefrontcornerandbothtruerearcornerheadings needed. Physical sideidentity: exactlyONE folding passenger entrance at frontRIGHT side of bus; STOPpaddle belongs LEFTside only, never on same side as passengerdoor. Correct this on all visible sides: noseRIGHT sidecelltopfour shows driverLEFTside/STOPpaddle and NO passengerdoor; noseLEFT sidecellbottomfour shows passengerRIGHTside/frontdoor and NO STOPpaddle. Same yellowbody, bonnet, wheelbase/windowcount/roofhatches. BottomrowfirstnoseUPPERRIGHT, bottomsecondnoseUPflatREAR, bottomthirdnoseUPPERLEFT, bottomfourLEFT; topsecondDOWNflatFRONT. Camera30degreesdownfromabove consistently, includingbothhorizontalnoseviews: showroofaswideplane, never level-eye sideelevation. Nopeople, nolightsonglow, nogroundplateorhaze. Detailedpaintedminiature daylightfromUPPERRIGHT/shadowsLOWERLEFT. Genuinealphatransparentbackground, generouscellmargins.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/traffic8-v1.png"
+    ],
+    "status": "native correction candidate; alpha/direction/identity QA pending",
+    "runtime_imported": false,
+    "sha256": "bbb25651d1225cd3aa89ac829febc75a550120c679ddb4943be5bea9c6fdf032",
+    "native_bytes_preserved": true
+  }
+]

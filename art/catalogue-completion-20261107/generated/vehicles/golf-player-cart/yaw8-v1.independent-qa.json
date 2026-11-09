@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:41:06.367832+00:00",
+  "review_result": "HOLD-missing-near-right-and-fixed-bag-identity",
+  "source": {
+    "path": "generated/vehicles/golf-player-cart/yaw8-v1.png",
+    "sha256": "d4e90610b9dbd0462847b5273411057540e840c2db8d600050b79e2539aba475",
+    "bytes": 1586848
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1261,
+    1247
+  ],
+  "zero_alpha_fraction": 0.5518195294400455,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        630,
+        623
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 17,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "16e76bc5cf5e0f55cf738cf7075722e07739aff5b00b0b9c33796d9d7abd4ac0",
+      "actual_screen_nose": "almost down, angled lower-left"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        630,
+        0,
+        1261,
+        623
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 7,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "41b6c51efa26e949a1c30d49cfa9855bcbccd961a2016c2db13d78cd75e07638",
+      "actual_screen_nose": "almost left"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        623,
+        612,
+        1247
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 16,
+      "boundary_alpha_max": 7,
+      "rgba_rectangle_sha256": "26e5e2a5bc8d0f4bda31eb17549159fe63b4916f930691e314ac3b1c2de8802c",
+      "actual_screen_nose": "almost up"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        612,
+        623,
+        1261,
+        1247
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 1,
+      "boundary_alpha_max": 6,
+      "rgba_rectangle_sha256": "b23b34710a68c95e203f125f97bd27b3f33b5abd0a69b775df70e917620e1cfe",
+      "actual_screen_nose": "almost left"
+    }
+  ],
+  "all_cells_clear_core_boundaries": true,
+  "all_pixels_partitioned": true,
+  "native_source_crops_performed": false,
+  "notes": [
+    "TR and BR both show front bonnet/windshield onLEFT, bags atRIGHT: true nearRIGHT direction is absent, not merely an E/W layout swap.",
+    "Rear BL blue-left/brown-right bag ordering resembles frontview rather than reversing fixed bag positions as cardinal rear does; correct fixed physical bag identity.",
+    "Exact8 projection independently unverified."
+  ],
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "pixels_modified": false,
+  "exact_prompt": {
+    "path": "generated/vehicles/golf-player-cart/yaw8-v1.prompt.txt",
+    "sha256": "a3ca16521b57855d455ad80951e9fc45156dc1df6063b1d3b9ea81eb8fed22aa",
+    "bytes": 1026
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-player-cart/yaw8-v1.provenance.json",
+    "sha256": "426a89e3a1da9ff762d492aefc85402ad383710b81a9588010d217aad9062eeb",
+    "bytes": 1655
+  }
+}

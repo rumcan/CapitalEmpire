@@ -24,18 +24,26 @@ test('the manifest: every picture once, its file there at its size, 1024 px wide
     const f = `${DIR}/${p.file}`;
     assert.ok(existsSync(f), f);
     assert.equal(statSync(f).size, p.bytes, `${p.file} bytes`);
+    // (T375, the other lead's T243: a property's "outside" scene is the owner's native PNG, 836 px wide: its own contract until it is converted to WebP)
+    if (p.view === 'outside') {
+      assert.equal(p.w, 836, `${p.file} width`); assert.ok(p.h > 400 && p.h < 520, `${p.file} height ${p.h}`);
+      assert.ok(p.bytes > 100 * 1024 && p.bytes < 1024 * 1024, `${p.file} is ${Math.round(p.bytes / 1024)} KB`);
+      assert.ok(p.file.endsWith('.png') && readFileSync(f).subarray(1, 4).toString('latin1') === 'PNG', `${p.file} is a PNG`);
+      continue;
+    }
     assert.equal(p.w, 1024, `${p.file} width`); assert.ok(p.h > 500 && p.h < 620, `${p.file} height ${p.h}`);
     assert.ok(p.bytes >= 60 * 1024 && p.bytes <= 260 * 1024, `${p.file} is ${Math.round(p.bytes / 1024)} KB`);
     assert.equal(p.file, `${p.slug}-${p.state}.webp`);
     assert.match(p.state, /^(rundown|upgraded|one|tier[1-5]|[a-z0-9-]+)$/);
     const head = readFileSync(f).subarray(0, 12).toString('latin1'); assert.ok(head.startsWith('RIFF') && head.endsWith('WEBP'), `${p.file} is a WebP`);
   }
-  const files = readdirSync(DIR).filter(f => f.endsWith('.webp'));
-  assert.deepEqual(files.sort(), m.pictures.map(p => p.file).sort(), 'every WebP in the folder is listed');
+  const files = readdirSync(DIR).filter(f => f.endsWith('.webp') || f.endsWith('.png'));
+  assert.deepEqual(files.sort(), m.pictures.map(p => p.file).sort(), 'every picture in the folder is listed');
   for (const s of BATCH1) assert.ok(m.pictures.some(p => p.slug === s && p.state === 'rundown'), `${s} run-down`);
   for (const s of BATCH1.filter(s => s !== 'home-cottage')) assert.ok(m.pictures.some(p => p.slug === s && p.state === 'upgraded'), `${s} upgraded`);
   const total = m.pictures.reduce((a, p) => a + p.bytes, 0);
-  assert.ok(total < 4.5 * 1024 * 1024, `the scenes add ${(total / 1048576).toFixed(2)} MB`);
+  // (4.5 MB before T243's four native PNGs, about 0.8 MB each; converted to WebP they come back under it)
+  assert.ok(total < 6 * 1024 * 1024, `the scenes add ${(total / 1048576).toFixed(2)} MB`);
 });
 
 test('pickPicture: the first wanted state the art has; hard times never borrow the good-times picture', () => {

@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:world-house_0-51fa4b80-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-world-house_0-51fa4b80-plain-1/NE.png",
+  "sourceSha256": "8124205951228354a9e8e5697bd5b55dba4ec113df58b1ecc5394632e71a9ef8",
+  "output": "identity-references/variation-world-house-0-51fa4b80-plain-1-06798888/source.png",
+  "outputSha256": "8124205951228354a9e8e5697bd5b55dba4ec113df58b1ecc5394632e71a9ef8",
+  "width": 579,
+  "height": 463,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      579,
+      463
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-world-house_0-51fa4b80-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "blocked",
+    "integrationReason": "Rear/sides change window identities: NE rightB has paired sash while SE leftB has single; NW leftD single while SW rightD paired; rearC has one small sash SE but two SW."
+  },
+  "sourceRegistration": {
+    "id": "variation:world-house_0-51fa4b80-plain:1",
+    "version": "variation-world-house_0-51fa4b80-plain-1-4views-v1",
+    "files": {
+      "NE": "8124205951228354a9e8e5697bd5b55dba4ec113df58b1ecc5394632e71a9ef8",
+      "SE": "bf6ec1c41c9de1d709857ac25771de737a8e1a14c017a7aa678fe86ef5eb698a",
+      "SW": "78ac41b20ba752709199b394245f052150cf25b93ff8c157335b08b5c652ac63",
+      "NW": "cf13e1477bdf75f59f71d1e860ed116278821d5b1df05ef2eb2d4585657d5018"
+    },
+    "cropsBy": "prep-views (four-view-cells.mjs)"
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-10-0.webp",
+    "atlasSha256": "6ca370227e33f5f4eab6c0abe7cfcf952ed2ff26a21472925e105f582f2922ac",
+    "runtimePage": 10,
+    "localPage": 10,
+    "uv": [
+      0.398438,
+      0.367188,
+      0.550293,
+      0.52002
+    ],
+    "crop": {
+      "left": 816,
+      "top": 752,
+      "width": 311,
+      "height": 313
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-world-house_0-51fa4b80-plain-1.native.png",
+    "nativeSha256": "c4dc7805e0be2975760557b5645945ea9beb10634059b5251ee8f491a8b8171a"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

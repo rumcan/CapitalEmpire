@@ -1,0 +1,33 @@
+{
+  "look_id": "spectator:spec_m_plaid",
+  "actual_runtime_look": {
+    "id": "spectator:spec_m_plaid",
+    "w": 80,
+    "h": 133.5,
+    "ax": 40,
+    "ay": 128.5,
+    "m": 1.74,
+    "seat": 0.64
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_m_plaid.png",
+    "sha256": "ebc1ece9031c65cdb64329b851ba91f61256861e7b2f1da583551beaf726cc7d",
+    "bytes": 1066028
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_plaid\\identity-source.png",
+    "sha256": "ebc1ece9031c65cdb64329b851ba91f61256861e7b2f1da583551beaf726cc7d",
+    "bytes": 1066028
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

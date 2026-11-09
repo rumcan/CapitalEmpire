@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:57:01.992280+00:00",
+  "subject": "newprop:park-bench",
+  "cell_layout": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "candidates": [
+    {
+      "guide_corner": "SE",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.png",
+        "sha256": "e6cd6180b231e981d90188e5ffa7d2eaf3c11997cc673bfa189ad76fec103b94",
+        "bytes": 646558
+      },
+      "cell": "single",
+      "rectangle_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "native_rgba_rectangle_sha256": "a2cfed67b15a91456a5e03f871c2b28a07a736d67c5376a2fcee0531acf62a71",
+      "status": "pose-candidate-held-map-arch-drift"
+    },
+    {
+      "guide_corner": "SW",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v1.png",
+        "sha256": "229bfb8923d9a643de943c464ac8995cce56cddf708fcde4f5688bd970904785",
+        "bytes": 676401
+      },
+      "cell": "single",
+      "rectangle_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "native_rgba_rectangle_sha256": "d92aca2bc0c24d9a252186507a565b43fe7217f3f7018f287449dac67b6bb5cd",
+      "status": "pose-candidate-held-finials-and-arch-drift"
+    },
+    {
+      "guide_corner": "NW",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+        "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+        "bytes": 1603986
+      },
+      "cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "ba44b1c73d5e169e816cb373e431661fbf0274f041015239ef47097fbc2ecefd",
+      "status": "limited-source-identity-pose-pass"
+    },
+    {
+      "guide_corner": "NE",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+        "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+        "bytes": 1603986
+      },
+      "cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "ececb0e9488c2ea9bdd09538db7ced78ac30953f1539f49720cbb83bda5c9197",
+      "status": "limited-source-identity-pose-pass"
+    }
+  ],
+  "all_four_matching_assembly_pass": false,
+  "composed_sheet_created": false,
+  "composition_hold": "New native singles are 1254x1254 while original cells are627x627; unchanged-pixel composition would suggest inconsistent physical scale. Further identity holds also remain. Do not resize native finals to conceal this.",
+  "future_yaw_references": "Use fixed-world yaw guide first, unchanged normal-v2 native sheet for material style only; do not copy repeated cameras. Correct held components before claiming complete matching four-view reference.",
+  "owner_approved": false,
+  "runtime_ready": false
+}

@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:57:01.992280+00:00",
+  "review_result": "HOLD-front-apparatus-invented-on-rear",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.png",
+    "sha256": "3bf081c4a8a3ce1c0cd439169e403ed76efca35c9f6712f8ec908de1a9ac6c1d",
+    "bytes": 830541
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.provenance.json",
+    "sha256": "1176d3ac04bb591135e2c8931fa83a1fd48f8d249ad9f57178bb2085c397bdd2",
+    "bytes": 2502
+  },
+  "exact_prompt_utf8_sha256": "2bee2048732904e8d8125a786601cd1af6d5b70b05035030b007a67b126f375c",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-world-guide-single-v1.png",
+      "sha256": "1489790a6c39135ae68bc9c0374ef093b04f11f2bdd725f3d7d21d55650e57d0",
+      "bytes": 12769
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png",
+      "sha256": "f0fe7d4003cf361348c4391d1057fe7dfccd31dac9cfd15d521f71238bd8503f",
+      "bytes": 283002
+    }
+  ],
+  "zero_alpha_fraction": 0.7940116348577694,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": null,
+  "clear_vertical_cut_by_row": null,
+  "cells": [
+    {
+      "cell": "single",
+      "rect_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 245,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "f198e6e0adc722f6c250b140c9458428a046f8e7c143c6c1d11e61c198894814"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "limited_source_identity_and_pose_pass": false,
+  "visual_observations": [
+    "Rear/left-plane projection acquired but rear service panel incorrectly has NEW round ball display, coin controls and chute. Correct rear must remain plain latched service door.",
+    "Basket still visible behind right edge: front apparatus on visible rear is a functional side duplication, not acceptable SW repair."
+  ],
+  "source_crops_saved": false,
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

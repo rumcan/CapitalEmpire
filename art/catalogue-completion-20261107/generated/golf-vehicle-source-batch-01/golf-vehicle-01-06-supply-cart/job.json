@@ -1,0 +1,67 @@
+{
+  "priority": 6,
+  "jobId": "golf-vehicle-01-06-supply-cart",
+  "runtimeSubjectId": "newprop:supply-cart",
+  "runtimeName": "Supply cart",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\supply-cart.source.png",
+  "sourceProvenance": {
+    "runtimeSubjectId": "newprop:supply-cart",
+    "runtimeName": "Supply cart",
+    "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\supply-cart.source.png",
+    "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+    "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+    "sourceSheetSHA256": "eae0daeb83966cdc4004902ed719d9997dce86f2b2fdfaa1ffea68788e308b8c",
+    "cropRectXYWH": [
+      22,
+      715,
+      632,
+      488
+    ],
+    "sourceCell": "bottom left",
+    "pngSHA256": "703b02a80bf03c0dc399cc3d95ac055f50da12e3c4227ccd6702a30d249107c3",
+    "rgbaSHA256": "6752066fdd1540970b99d4a4537ef979fe8b0f3cd845031dfe84db9f32c9857f",
+    "cropPixels": [
+      632,
+      488
+    ],
+    "sourceMetadataCutOff": false,
+    "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+    "visualInspection": "inspected native crop",
+    "actualIdentityNotes": "Confirmed another loaded utility; source cargo matches drinks-cart-green, but wood/tarp/rope construction is distinct and requires ordinary-budget redesign.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 1.3,
+      "hy": 1.3,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "sourceDisplayPixels": [
+    166.4,
+    128.49
+  ],
+  "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+  "functionalBrief": "Four-wheel supply/refreshment golf utility with front cream bench/windshield/canopy and rear cargo bed carrying two orange water coolers, two white-lid coolboxes and bottled water crate. Preserve load distribution and rear-bed sideboards as fixed geometry; no people.",
+  "conditionAndEraBrief": "Ordinary older-utility redesign: replace rope-lashed raw timber and patched blue tarp with simple bolted metal/painted-board cargo sides and intact practical canopy. This source shares beverage load with drinks-cart-green but remains a separate exact catalogue ID; never claim one file completes both.",
+  "ordinaryBudgetRedesignRequired": true,
+  "originalAuditCounts": {
+    "normal": 0,
+    "yaw8": 0
+  },
+  "nativeGeneratedByThisBrief": false,
+  "exactEightImagesAlreadyProvenForThisStableID": false,
+  "existingNormal4UsableRefs": 0,
+  "generatedCoreReuseClaimed": false,
+  "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+  "sourcePlan": {
+    "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+    "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+    "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+    "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+  },
+  "ownerApproved": false,
+  "runtimeIntegrated": false
+}

@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "status": "practical-main-face-four-source-candidate",
+  "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-yaw8-v2.png",
+  "sourceSHA256": "715255c17ecb60ba9a81cfb53221c93dabba13c8916b8966989bd8dc7ca6478c",
+  "sourceProvenanceHashMatches": true,
+  "referenceBudgetFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-yaw8-v1.png",
+  "referenceBudgetSHA256": "6ccf159eb2ca3eb25d46d9da525815b3f789267b62271d6deaab2f863ae36ca7",
+  "finding": "Material upgrade retains all4 budget near-main-face projections, fixed lens/ladder/case and natural occlusion; replaces broader-camera upgraded yaw-v1. Clean bright galvanized metal, sound timber and tidy green canvas.",
+  "rows": [
+    {
+      "view": "yaw8N",
+      "observation": "Front camera lens and front/right ladder. Case at rear/right behind rail; dominant front face with narrow right sliver.",
+      "alphaGT128BBox": [
+        199,
+        57,
+        428,
+        562
+      ],
+      "coreMinMargin": 57,
+      "opaqueBoundaryPixels": 0,
+      "budgetOpaqueSilhouetteIoU": 0.933891,
+      "budgetSourceCoreBBox": [
+        201,
+        61,
+        423,
+        562
+      ]
+    },
+    {
+      "view": "yaw8E",
+      "observation": "Camera side with lens toward screen right; no front iris pasted on side. Case near left/foreground, ladder naturally far/occluded. Dominant side with narrow adjacent sliver.",
+      "alphaGT128BBox": [
+        200,
+        60,
+        427,
+        560
+      ],
+      "coreMinMargin": 60,
+      "opaqueBoundaryPixels": 0,
+      "budgetOpaqueSilhouetteIoU": 0.92343,
+      "budgetSourceCoreBBox": [
+        202,
+        65,
+        419,
+        558
+      ]
+    },
+    {
+      "view": "yaw8S",
+      "observation": "Plain rear camera end with no iris. Case at near-left, ladder far-left/occluded; dominant rear face with narrow side sliver.",
+      "alphaGT128BBox": [
+        198,
+        44,
+        428,
+        560
+      ],
+      "coreMinMargin": 44,
+      "opaqueBoundaryPixels": 0,
+      "budgetOpaqueSilhouetteIoU": 0.947504,
+      "budgetSourceCoreBBox": [
+        199,
+        46,
+        423,
+        560
+      ]
+    },
+    {
+      "view": "yaw8W",
+      "observation": "Camera side with lens toward screen left; ladder at left edge of dominant side/front sliver, case near-right. Narrow side-slice family matches budget source.",
+      "alphaGT128BBox": [
+        201,
+        54,
+        428,
+        561
+      ],
+      "coreMinMargin": 54,
+      "opaqueBoundaryPixels": 0,
+      "budgetOpaqueSilhouetteIoU": 0.940044,
+      "budgetSourceCoreBBox": [
+        203,
+        56,
+        424,
+        558
+      ]
+    }
+  ],
+  "selectionFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-yaw8-source-selection-v2.json",
+  "rawCropCaveat": "1254x1254 sheet, four exact627x627 half-cell candidates; no full1254 single override in this yaw family. Preserve native alpha/RGBA, no resize/trim/key/flip.",
+  "nativeCameraCertified": false,
+  "runtimeReady": false,
+  "supersedesFunctionalCameraHoldFor": "upgraded-yaw8-v1.png",
+  "separateHolds": [
+    "Exact numerical native8-degree yaw not certified",
+    "Native pixels-per-metre and floor anchors unmeasured",
+    "No runtime release approval"
+  ]
+}

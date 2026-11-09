@@ -1,0 +1,21 @@
+{
+  "key": "2020s-compact-gabled-solar-family-home",
+  "family": "normal",
+  "condition": "modern-era",
+  "version": 2,
+  "target": "generated/era-houses/expansion-02/2020s-compact-gabled-solar-family-home/normal-v2.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/2020s-compact-gabled-solar-family-home/normal-v1.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\normal-world-v1.png"
+  ],
+  "prompt": "PRECISE architectural opening correction to REFERENCE1 four-view finished house sheet. ONLY BOTTOM-RIGHT NE view: restore the missing small UPPER-STOREY WINDOW on the physical RIGHT GABLE-END wall. It is shown in the same wall in reference2 and in the rear view bottom-left; upper-floor window near the front half of the plain white gable wall, directly above its existing lower window. Do not add a window elsewhere, move solar panels or alter other openings. Keep exact four cameras, building silhouettes, fine painted materials, window frames, wall textures, lightsOFF, scale, colors and all alreadycorrect cells unchanged. Reference2 is technical position guide only; do not make the finished picture lowpoly. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT. Genuinezeroalphatransparentbackground/gutters, complete sprites and broad margins. No additional scenery, groundplate, labels or UI.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-cd8c74a8-5274-4825-acd8-854348820b96.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/2020s-compact-gabled-solar-family-home/normal-v1.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\normal-world-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+  "native_bytes_preserved": true
+}

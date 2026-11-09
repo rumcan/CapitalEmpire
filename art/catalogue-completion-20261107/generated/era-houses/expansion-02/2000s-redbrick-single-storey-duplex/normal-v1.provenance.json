@@ -1,0 +1,21 @@
+{
+  "key": "2000s-redbrick-single-storey-duplex",
+  "family": "normal",
+  "condition": "modern-era",
+  "version": 1,
+  "target": "generated/era-houses/expansion-02/2000s-redbrick-single-storey-duplex/normal-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png"
+  ],
+  "prompt": "Redraw the FOUR exact technical house views in REFERENCE1 as finished native painterly miniature game sprites. REFERENCE1 controls building geometry, camera, fixeddoors/windows/balconies/chimneys/solar positions and which face is seen in each cell; REFERENCE2 is detailed hand-painted game-material STYLE ONLY, never geometry. Subject: Two compact side-by-side one-storey redbrick homes under one shared charcoal pitched roof. Exactly two front doors near the middle, two broad outer front living windows, separate rear GLASS patio sliders, two roof vents. No upstairs floor or garage. An ordinary affordable duplex, distinct from the two-storey2010stownhouse pair.. Ordinary affordable residential town architecture appropriate to the stated decade. Preserve every guide opening, all floor counts, roof shape and physical side of features. Glazed patio sliders at rear must remain GLASS with narrow frames, never become garage shutters. Painted brick, render, tile, timber and glass with fine believable material detail in the established style. No lowpoly flat unfinished technical colors. Four different45-degreecorners in same SE SW / NW NE cells asguide, cameraorthographic30degreesDOWN. One fixed building quarterturned, no mirroring, noinventedreardoor onfront. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadowsLOWERLEFT, windowslampsOFF. Four equallyscaled complete sprites with generous genuinely zero-alpha transparent margins/gutters. Buildingonly, no people, plants, fencing, pavementslab, scenery, labels, technicaltext, UI or grid. No lawn/groundplate. Retain small intrinsic doorsteps.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b7917682-c857-4623-aa54-10e2dabc6041.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "e065a5bc87e24022ee182a07179570b428ea060a4eaa30259b1d914f5e4cdef3",
+  "native_bytes_preserved": true
+}

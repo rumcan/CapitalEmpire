@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "review_result": "PASS-elevated-single-source-candidate-direction-visual-camera-alpha;release-pending",
+  "source": {
+    "path": "generated/vehicles/town-mustard-taxi/right-elevated-v1.png",
+    "sha256": "56c602a4f5f3508a01fa07211e6c00f3ec46247b03e0dc62b2b4f10916965ed3",
+    "bytes": 1096801
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-mustard-taxi/right-elevated-v1.provenance.json",
+    "sha256": "593a127f7cdc3bab2214228df7f460c2fbe1719afa974fafb2052011b2e8df72",
+    "bytes": 2250
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "mode": "RGBA",
+  "dimensions": [
+    1774,
+    887
+  ],
+  "actual_screen_nose": "right",
+  "subject_model": "town-mustard-taxi",
+  "is_single_sprite_not_sheet": true,
+  "core_bbox_ltrb": [
+    260,
+    165,
+    1516,
+    720
+  ],
+  "minimum_canvas_core_margin_px": 165,
+  "zero_alpha_fraction": 0.6728881031153998,
+  "outer_border_alpha_max": 0,
+  "outside_core_bbox10_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "mid_alpha_fraction9to127": 0.0019554659626904464,
+  "identity_references": [
+    {
+      "path": "generated/vehicles/town-mustard-taxi/camera-calibration-refs/right-camera-only.png",
+      "sha256": "4af8ad88b99ce701b8df92c020e4a109e45193eaca1b6cfe47f1356de7f56a64",
+      "bytes": 5607
+    },
+    {
+      "path": "generated/vehicles/town-mustard-taxi/camera-calibration-refs/corner-identity-only.png",
+      "sha256": "5800ddc72db9f3d12fb2a3c780030852d09088495bbc6122e620151df444afb3",
+      "bytes": 205351
+    }
+  ],
+  "exact_prompt": {
+    "path": "generated/vehicles/town-mustard-taxi/right-elevated-v1.prompt.txt",
+    "sha256": "d1c374123ec6e18bb83a5e6b123675267ac92e9ade129d2c1cb49cf028d4a1dd",
+    "bytes": 1368
+  },
+  "notes": [
+    "Actual screen nose RIGHT; longitudinal body/wheelbase is horizontal, no broad front/rear grille plane is exposed.",
+    "Broad roof/hood/boot or open bed top surfaces are materially closer to isolated elevatedcamera reference than old traffic8 col4 profiles.",
+    "This is qualitative reference matching, not a numerical30degree certificate. Cross-view physical scale, anchors and full eight-heading release review remain pending.",
+    "Apparent raw-view RGB glow is not actual haze: native background alpha measured separately. No coded cleanup or source pixels changed."
+  ],
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact30degree_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false
+}

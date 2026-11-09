@@ -1,0 +1,323 @@
+{
+  "schema": 1,
+  "created_utc": "2026-11-07T10:28:50.691667+00:00",
+  "owner_direction": "Add modern cars and houses as thetown develops; sourceproductiononly. Keep existing1980s starters/style.",
+  "initial_scope": {
+    "eras": 4,
+    "subjects": 8,
+    "independent_native_views": 64,
+    "sheet_tasks": 12
+  },
+  "root_owned_other_work": {
+    "new1980s_town_car_models": 6,
+    "required_traffic_headings_each": 8,
+    "currently_generating": true
+  },
+  "queue": [
+    {
+      "source_design_id": "source-design:town-car-1990s",
+      "era": "1990s",
+      "kind": "car",
+      "minimum_initial_subjects": 1,
+      "runtime_id": null,
+      "status": "native-source-candidate-generated; camera-consistency-held; alpha-cleanup-required",
+      "brief": "Ordinary teal compact sedan, squared but softly rounded body, narrow grille, modest dark bumpers and fabric seats; plausible period-inspired original with no badge.",
+      "style": "same painterly miniature game art as1980s starters; orthographic30degreesdown; late-afternoon daylight; sunupperright, shadowslowerleft; nativeRGBA transparency",
+      "required_views": [
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW",
+        "N",
+        "NE",
+        "E"
+      ],
+      "moving_traffic_cardinals_are_exact_not_yaw8": true,
+      "source_sheet_deliverables": [
+        "eight-moving-headings"
+      ],
+      "original1980s_sources_preserved": true,
+      "no_runtime_time_progression_implementation": true,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "remarks": "Creative period-inspired design, not a claim specific technology was invented in thisdecade; no logos/text/frames. Do not claim same-silhouette recolours are distinctmodels.",
+      "actual_source": {
+        "path": "generated/vehicles/era-1990s-teal-sedan/traffic8-v1.png",
+        "sha256": "76fcc53fe4d9b48c9336f2463e4c7bef3f1a22c797f809a3652dde032eb450bf"
+      }
+    },
+    {
+      "source_design_id": "source-design:town-house-1990s",
+      "era": "1990s",
+      "kind": "house",
+      "minimum_initial_subjects": 1,
+      "runtime_id": null,
+      "status": "normal4+yaw4native candidates; exact8review pending",
+      "brief": "Modest cream-brick suburban house, simple brown tiled pitched roof, timber front door, ordinary rectangular windows and attached compact garage; clear entrance and rear service door.",
+      "style": "same painterly miniature game art as1980s starters; orthographic30degreesdown; late-afternoon daylight; sunupperright, shadowslowerleft; nativeRGBA transparency",
+      "required_views": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-yaw8",
+        "E-yaw8",
+        "S-yaw8",
+        "W-yaw8"
+      ],
+      "moving_traffic_cardinals_are_exact_not_yaw8": false,
+      "source_sheet_deliverables": [
+        "normal-four-corners",
+        "yaw8-four-cardinals"
+      ],
+      "original1980s_sources_preserved": true,
+      "no_runtime_time_progression_implementation": true,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "remarks": "Creative period-inspired design, not a claim specific technology was invented in thisdecade; no logos/text/frames. Do not claim same-silhouette recolours are distinctmodels.",
+      "actual_design_key": "1990s-redbrick-family-single-garage",
+      "actual_source": {
+        "path": "generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+        "sha256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f"
+      },
+      "proposal_brief_scope": "Initial proposal; actual archived prompt and exact technical worldmodel are authoritative for generated identity.",
+      "actual_latest_source_evidence": {
+        "path": "generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+        "sha256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf"
+      }
+    },
+    {
+      "source_design_id": "source-design:town-car-2000s",
+      "era": "2000s",
+      "kind": "car",
+      "minimum_initial_subjects": 1,
+      "runtime_id": null,
+      "status": "native-source-candidate-generated; camera-consistency-held",
+      "brief": "Silver family estate/hatchback, softly rounded body, larger clear headlamp shapes, restrained dark trim, ordinary tyres and unbranded alloy-style wheels.",
+      "style": "same painterly miniature game art as1980s starters; orthographic30degreesdown; late-afternoon daylight; sunupperright, shadowslowerleft; nativeRGBA transparency",
+      "required_views": [
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW",
+        "N",
+        "NE",
+        "E"
+      ],
+      "moving_traffic_cardinals_are_exact_not_yaw8": true,
+      "source_sheet_deliverables": [
+        "eight-moving-headings"
+      ],
+      "original1980s_sources_preserved": true,
+      "no_runtime_time_progression_implementation": true,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "remarks": "Creative period-inspired design, not a claim specific technology was invented in thisdecade; no logos/text/frames. Do not claim same-silhouette recolours are distinctmodels.",
+      "actual_source": {
+        "path": "generated/vehicles/era-2000s-silver-mpv/traffic8-v1.png",
+        "sha256": "db5c0b607e2b0661b089d767d16de9c67a16a4215be08870bce6e0fc2ae7ae60"
+      }
+    },
+    {
+      "source_design_id": "source-design:town-house-2000s",
+      "era": "2000s",
+      "kind": "house",
+      "minimum_initial_subjects": 1,
+      "runtime_id": null,
+      "status": "normal4+yaw4native candidates; exact8review pending",
+      "brief": "Ordinary pale rendered family house with brick accents, broad pitched tiled roof, sheltered entrance and modest larger rear living windows; avoid luxury-mansion scale.",
+      "style": "same painterly miniature game art as1980s starters; orthographic30degreesdown; late-afternoon daylight; sunupperright, shadowslowerleft; nativeRGBA transparency",
+      "required_views": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-yaw8",
+        "E-yaw8",
+        "S-yaw8",
+        "W-yaw8"
+      ],
+      "moving_traffic_cardinals_are_exact_not_yaw8": false,
+      "source_sheet_deliverables": [
+        "normal-four-corners",
+        "yaw8-four-cardinals"
+      ],
+      "original1980s_sources_preserved": true,
+      "no_runtime_time_progression_implementation": true,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "remarks": "Creative period-inspired design, not a claim specific technology was invented in thisdecade; no logos/text/frames. Do not claim same-silhouette recolours are distinctmodels.",
+      "actual_design_key": "2000s-cream-stucco-two-storey-garage",
+      "actual_source": {
+        "path": "generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+        "sha256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079"
+      },
+      "proposal_brief_scope": "Initial proposal; actual archived prompt and exact technical worldmodel are authoritative for generated identity.",
+      "actual_latest_source_evidence": {
+        "path": "generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.png",
+        "sha256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3"
+      }
+    },
+    {
+      "source_design_id": "source-design:town-car-2010s",
+      "era": "2010s",
+      "kind": "car",
+      "minimum_initial_subjects": 1,
+      "runtime_id": null,
+      "status": "native-source-candidate-generated; camera-consistency-held",
+      "brief": "Dark blue compact hatchback with swept headlamp shapes, clean curved body surfaces, small roof aerial and unbranded wheels; visibly a different silhouette from the earlier sedan/estate.",
+      "style": "same painterly miniature game art as1980s starters; orthographic30degreesdown; late-afternoon daylight; sunupperright, shadowslowerleft; nativeRGBA transparency",
+      "required_views": [
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW",
+        "N",
+        "NE",
+        "E"
+      ],
+      "moving_traffic_cardinals_are_exact_not_yaw8": true,
+      "source_sheet_deliverables": [
+        "eight-moving-headings"
+      ],
+      "original1980s_sources_preserved": true,
+      "no_runtime_time_progression_implementation": true,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "remarks": "Creative period-inspired design, not a claim specific technology was invented in thisdecade; no logos/text/frames. Do not claim same-silhouette recolours are distinctmodels.",
+      "actual_source": {
+        "path": "generated/vehicles/era-2010s-blue-crossover/traffic8-v1.png",
+        "sha256": "1bb715a34b7c6c243c9f8101a8e701bc47eb1cd866413150097d1d02e7a25c81"
+      }
+    },
+    {
+      "source_design_id": "source-design:town-house-2010s",
+      "era": "2010s",
+      "kind": "house",
+      "minimum_initial_subjects": 1,
+      "runtime_id": null,
+      "status": "normal4+yaw4native candidates; exact8review pending; BRsliverhold",
+      "brief": "Compact contemporary townhouse, light render with warm timber accents, simple pitched roof and deeper rectangular window reveals; clear front entrance and rear garden access.",
+      "style": "same painterly miniature game art as1980s starters; orthographic30degreesdown; late-afternoon daylight; sunupperright, shadowslowerleft; nativeRGBA transparency",
+      "required_views": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-yaw8",
+        "E-yaw8",
+        "S-yaw8",
+        "W-yaw8"
+      ],
+      "moving_traffic_cardinals_are_exact_not_yaw8": false,
+      "source_sheet_deliverables": [
+        "normal-four-corners",
+        "yaw8-four-cardinals"
+      ],
+      "original1980s_sources_preserved": true,
+      "no_runtime_time_progression_implementation": true,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "remarks": "Creative period-inspired design, not a claim specific technology was invented in thisdecade; no logos/text/frames. Do not claim same-silhouette recolours are distinctmodels.",
+      "actual_design_key": "2010s-brick-white-clad-townhouse-pair",
+      "actual_source": {
+        "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+        "sha256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190"
+      },
+      "proposal_brief_scope": "Initial proposal; actual archived prompt and exact technical worldmodel are authoritative for generated identity.",
+      "actual_latest_source_evidence": {
+        "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.png",
+        "sha256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca"
+      }
+    },
+    {
+      "source_design_id": "source-design:town-car-2020s",
+      "era": "2020s",
+      "kind": "car",
+      "minimum_initial_subjects": 1,
+      "runtime_id": null,
+      "status": "native-source-candidate-generated; camera-consistency-held",
+      "brief": "Off-white compact crossover, restrained smooth front, clean light clusters, dark lower sill and plain wheels; contemporary electric-inspired visual design without brands or technical claims.",
+      "style": "same painterly miniature game art as1980s starters; orthographic30degreesdown; late-afternoon daylight; sunupperright, shadowslowerleft; nativeRGBA transparency",
+      "required_views": [
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW",
+        "N",
+        "NE",
+        "E"
+      ],
+      "moving_traffic_cardinals_are_exact_not_yaw8": true,
+      "source_sheet_deliverables": [
+        "eight-moving-headings"
+      ],
+      "original1980s_sources_preserved": true,
+      "no_runtime_time_progression_implementation": true,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "remarks": "Creative period-inspired design, not a claim specific technology was invented in thisdecade; no logos/text/frames. Do not claim same-silhouette recolours are distinctmodels.",
+      "actual_source": {
+        "path": "generated/vehicles/era-2020s-white-electric-hatch/traffic8-v1.png",
+        "sha256": "664d479618cc67c1b2e5983c7ebea0ba2adc7d7642fc9cf5c02e46048892c58c"
+      }
+    },
+    {
+      "source_design_id": "source-design:town-house-2020s",
+      "era": "2020s",
+      "kind": "house",
+      "minimum_initial_subjects": 1,
+      "runtime_id": null,
+      "status": "normalv2+yaw8v1native sourcecandidates; patioidentitycorrected; exact8pending",
+      "brief": "Modest contemporary family house with light masonry, simple roof planes, shaded larger glazing and integrated porch; maintain readable buildable footprint and ordinary town character.",
+      "style": "same painterly miniature game art as1980s starters; orthographic30degreesdown; late-afternoon daylight; sunupperright, shadowslowerleft; nativeRGBA transparency",
+      "required_views": [
+        "NE",
+        "SE",
+        "SW",
+        "NW",
+        "N-yaw8",
+        "E-yaw8",
+        "S-yaw8",
+        "W-yaw8"
+      ],
+      "moving_traffic_cardinals_are_exact_not_yaw8": false,
+      "source_sheet_deliverables": [
+        "normal-four-corners",
+        "yaw8-four-cardinals"
+      ],
+      "original1980s_sources_preserved": true,
+      "no_runtime_time_progression_implementation": true,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "remarks": "Creative period-inspired design, not a claim specific technology was invented in thisdecade; no logos/text/frames. Do not claim same-silhouette recolours are distinctmodels.",
+      "actual_design_key": "2020s-white-charcoal-asymmetric-solar-home",
+      "actual_source": {
+        "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.png",
+        "sha256": "9f6851c3debf5e05c2c5612b95db259ec328f4308f235741ca5523881c80fc30"
+      },
+      "proposal_brief_scope": "Initial proposal; actual archived prompt and exact technical worldmodel are authoritative for generated identity.",
+      "actual_latest_source_evidence": {
+        "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+        "sha256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0"
+      }
+    }
+  ],
+  "not_a_scheduled_automation": true,
+  "whole_catalogue_complete": false,
+  "source_generation_checkpoint": {
+    "era_car_subjects_generated": 4,
+    "era_car_raw_views": 32,
+    "era_house_subjects_generated": 4,
+    "not_equivalent_to_validated_camera_or_runtime_completion": true,
+    "era_house_normal_raw_views": 16,
+    "era_house_yaw_raw_views": 16,
+    "era_house_yaw_subjects_generated": 4,
+    "era_house_normal_repair_versions": 1,
+    "later_era_car_elevated_single_profiles": 8
+  }
+}

@@ -1,0 +1,4 @@
+Long cream/green four-wheel open-sided passenger shuttle cart with three transverse two-place bench rows, full-length cream canopy, front steering wheel/windshield and fixed rear rail. Preserve exactly three bench rows and long wheelbase; no front row copied to rear, no people or side doors added.
+Identity-preserving six-place-looking passenger body, different from generated two-place player cart and schoolbus. Seating shown is source geometry, not an accepted runtime capacity. Source rounded nose is later-era styling; timeline binding remains separate.
+All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.
+Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos.

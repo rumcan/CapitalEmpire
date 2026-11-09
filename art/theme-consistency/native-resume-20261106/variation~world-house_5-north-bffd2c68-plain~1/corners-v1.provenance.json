@@ -1,0 +1,271 @@
+{
+  "id": "variation~world-house_5-north-bffd2c68-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T19:14:43.950954+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-702aaa02-091b-4c3a-b266-5ded1a56ff92.png",
+    "sha256": "35e036017e31ee63af50cde379880759ad13862c40e04b4a14fa050cce64dbc3",
+    "bytes": 2014336
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-house_5-north-bffd2c68-plain~1\\corners-v1.png",
+    "sha256": "35e036017e31ee63af50cde379880759ad13862c40e04b4a14fa050cce64dbc3",
+    "bytes": 2014336
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-house_5-north-bffd2c68-plain~1\\corners-v1.prompt.txt",
+    "sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+    "bytes": 1818
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-world-house_5-north-bffd2c68-plain-1.native.png",
+      "sha256": "7cbd7963f775e00bf833ce641300b85f0d52807e00f5acbd13609da1df66aa3b",
+      "bytes": 258734
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~world-house_5-north-bffd2c68-plain~1-corners.png",
+      "sha256": "aaead395115f296a2a87a05881b69039d22929492d2c4684e2677357519d8913",
+      "bytes": 388941
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-world-house_5-north-bffd2c68-plain-1.native.png",
+      "sha256": "7cbd7963f775e00bf833ce641300b85f0d52807e00f5acbd13609da1df66aa3b",
+      "bytes": 258734
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~world-house_5-north-bffd2c68-plain~1-corners.png",
+      "sha256": "aaead395115f296a2a87a05881b69039d22929492d2c4684e2677357519d8913",
+      "bytes": 388941
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "split_x": 627,
+    "split_y": 627,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "subject_bbox": [
+          45,
+          62,
+          586,
+          567
+        ],
+        "transparent_fraction": 0.4963917696226938,
+        "margins_px": [
+          45,
+          62,
+          41,
+          60
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "subject_bbox": [
+          53,
+          51,
+          572,
+          571
+        ],
+        "transparent_fraction": 0.49493677647795,
+        "margins_px": [
+          53,
+          51,
+          55,
+          56
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "subject_bbox": [
+          40,
+          41,
+          581,
+          588
+        ],
+        "transparent_fraction": 0.4788122982532451,
+        "margins_px": [
+          40,
+          41,
+          46,
+          39
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "subject_bbox": [
+          59,
+          49,
+          572,
+          582
+        ],
+        "transparent_fraction": 0.4732339766336241,
+        "margins_px": [
+          59,
+          49,
+          55,
+          45
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 31.872802734375
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 25.769449869791668
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 31.800130208333332
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 33.077473958333336
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 22.477132161458332
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 33.610595703125
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~world-house_5-north-bffd2c68-plain~1\\SE.png",
+        "sha256": "b77e7609cc3f8a2cf025ea2173ee664e0396a52020f7f0974cdbff9374526058",
+        "bytes": 465251
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-house_5-north-bffd2c68-plain~1\\SE.native.png",
+        "sha256": "b77e7609cc3f8a2cf025ea2173ee664e0396a52020f7f0974cdbff9374526058",
+        "bytes": 465251
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~world-house_5-north-bffd2c68-plain~1\\SW.png",
+        "sha256": "cdaff708bb0f5865621117e70692d0ee7b762ea0cf0289ac2e3f200cce4b1f23",
+        "bytes": 457719
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-house_5-north-bffd2c68-plain~1\\SW.native.png",
+        "sha256": "cdaff708bb0f5865621117e70692d0ee7b762ea0cf0289ac2e3f200cce4b1f23",
+        "bytes": 457719
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~world-house_5-north-bffd2c68-plain~1\\NW.png",
+        "sha256": "ff2c47d9a6c4de1dd9f19371924873e95fe24ffbd7cb196edf21520cf7a82025",
+        "bytes": 471312
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-house_5-north-bffd2c68-plain~1\\NW.native.png",
+        "sha256": "ff2c47d9a6c4de1dd9f19371924873e95fe24ffbd7cb196edf21520cf7a82025",
+        "bytes": 471312
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~world-house_5-north-bffd2c68-plain~1\\NE.png",
+        "sha256": "76ad257f6238b3449bb948043f51e2951d914b009e33744c8b2bb10b1e525fc3",
+        "bytes": 472003
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-house_5-north-bffd2c68-plain~1\\NE.native.png",
+        "sha256": "76ad257f6238b3449bb948043f51e2951d914b009e33744c8b2bb10b1e525fc3",
+        "bytes": 472003
+      }
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "jobId": "golf-source-01-02-tv-camera-tower",
+  "priority": 2,
+  "status": "brief-ready-for-root-native-generation",
+  "sourceOnly": true,
+  "nativeGeneratedByThisJob": false,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "action": "New actual camera-tower design replacing a water-tower stand-in.",
+  "requiresOrdinary1950sBudgetRedesign": true,
+  "functionalIdentity": "Compact2x2m four-leg braced TV scaffold tower, proposed platform about4m high and one period broadcast camera on a tripod; platform has simple guard rails, internal/face ladder and fixed equipment case. Camera points toward model front. No water tank, gazebo, operator or camera lens changing sides. Height is an art proposal, not accepted runtime measurement.",
+  "referenceImages": [
+    {
+      "runtimeSubjectId": "newprop:camera-tower",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\camera-tower.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Four-corner scaffold tower, green fabric cladding, ladder on one face, roofless guarded camera platform with broadcast camera and equipment case. Correct role but ornate brass fittings/torn cloth need ordinary practical steel/timber treatment.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\camera-tower.provenance.json"
+    },
+    {
+      "runtimeSubjectId": "newprop:tv-camera",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\tv-camera.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Large black camera on three-legged tripod with rain cover and cabled pedestal head. Functional camera reference, not complete TV tower. Use period1985broadcast hardware and no visible operator.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\tv-camera.provenance.json"
+    }
+  ],
+  "conditions": {
+    "budget": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Worn painted steel scaffold and plain timber platform, grey fittings, weathered small canvas windscreen. Real1950sbudget construction; no ornate brass balls, ropes or patchwork fortress."
+    },
+    "upgraded": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Clean galvanized modular scaffold, green guardrail skirt and neat equipment case, same functional camera platform and ladder."
+    }
+  },
+  "sourceSheetsPerCondition": [
+    {
+      "kind": "normal",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+    },
+    {
+      "kind": "yaw8",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+    }
+  ],
+  "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+  "generationConstraints": [
+    "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+    "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+    "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+    "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+    "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+    "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+  ],
+  "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+  "runtimeTarget": {
+    "eventTypeId": "tvTower",
+    "eventName": "TV camera tower",
+    "currentSpriteSubjectId": "ref:landmark-water-tower",
+    "newArtSubjectProposal": "golf:event-tv-camera-tower",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 1.0,
+      "depth": 1.0
+    },
+    "footprintMetres": {
+      "width": 2.0,
+      "depth": 2.0
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "existingFourCorners": {
+    "usableCorrectTargetCornersFound": false,
+    "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+  },
+  "promptCore": "Compact2x2m four-leg braced TV scaffold tower, proposed platform about4m high and one period broadcast camera on a tripod; platform has simple guard rails, internal/face ladder and fixed equipment case. Camera points toward model front. No water tank, gazebo, operator or camera lens changing sides. Height is an art proposal, not accepted runtime measurement. For budget: Worn painted steel scaffold and plain timber platform, grey fittings, weathered small canvas windscreen. Real1950sbudget construction; no ornate brass balls, ropes or patchwork fortress. For upgraded: Clean galvanized modular scaffold, green guardrail skirt and neat equipment case, same functional camera platform and ladder. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+}

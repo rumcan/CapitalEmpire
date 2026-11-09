@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "version": 2,
+  "as_of_utc": "2026-11-07T14:10:53.936532+00:00",
+  "subject": "newprop:park-bench",
+  "intended_cell_layout": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "selected_source_cells": [
+    {
+      "guide_corner": "SE",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.png",
+        "sha256": "aea9a17d72edc74499a3a62f841d5852e086b8bda6ad53fd30e8ebf245142aae",
+        "bytes": 597597
+      },
+      "cell": "single",
+      "rectangle_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "native_rgba_rectangle_sha256": "994f5a16285727d5c7c8a18eaea637285e683a711147d251aa7d4502da0f863c",
+      "status": "limited-source-main-component-identity-and-pose-pass"
+    },
+    {
+      "guide_corner": "SW",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.png",
+        "sha256": "65a43e7d32a3ccacc6360cf1ef3503191a7ca82bd7bf8b57b6983ea7c492e033",
+        "bytes": 652310
+      },
+      "cell": "single",
+      "rectangle_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "native_rgba_rectangle_sha256": "c3abf7b9ecb32b6d4c56ade4501ecc34620687641c8ee2685cb57a81d4b38b4a",
+      "status": "limited-source-main-component-identity-and-pose-pass"
+    },
+    {
+      "guide_corner": "NW",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+        "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+        "bytes": 1603986
+      },
+      "cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "ba44b1c73d5e169e816cb373e431661fbf0274f041015239ef47097fbc2ecefd",
+      "status": "limited-source-main-component-identity-and-pose-pass"
+    },
+    {
+      "guide_corner": "NE",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+        "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+        "bytes": 1603986
+      },
+      "cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "native_rgba_rectangle_sha256": "ececb0e9488c2ea9bdd09538db7ced78ac30953f1539f49720cbb83bda5c9197",
+      "status": "limited-source-main-component-identity-and-pose-pass"
+    }
+  ],
+  "four_distinct_main_component_identity_and_pose_source_candidates": true,
+  "composition_created": false,
+  "mixed_resolution_and_scale_hold": "Native corrected single images1254x1254 and original quarters627x627 retained untouched. A pasted atlas would suggest inconsistent physical scale. No resized/painted composition created. Runtime anchors/scale pending.",
+  "historical_holds_retained": "normal-cell-candidates-v1.json and earlier native versions/reviews remain unchanged; these selections supersede their held pose candidates only.",
+  "future_yaw_reference_policy": "Use updated fixed-world yaw guide first as camera/occlusion authority and original normal-v2 material identity plus these corrected native singles as needed. Avoid teaching repeated source cameras or a mixed-scale composed atlas.",
+  "fine_detail_review_pending": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

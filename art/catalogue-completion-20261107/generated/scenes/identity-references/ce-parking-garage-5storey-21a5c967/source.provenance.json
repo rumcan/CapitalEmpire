@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "ce:parking-garage-5storey",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/parking-garage-5storey/NE.png",
+  "sourceSha256": "2098bc8dcce49ae69afb436640fe07f76d49c138f60b2a70a2e4869a43478c77",
+  "output": "identity-references/ce-parking-garage-5storey-21a5c967/source.png",
+  "outputSha256": "2098bc8dcce49ae69afb436640fe07f76d49c138f60b2a70a2e4869a43478c77",
+  "width": 1254,
+  "height": 1254,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      1254,
+      1254
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\parking-garage-5storey\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "geometryReview": {
+      "status": "accepted-for-art-appearance",
+      "reviewDate": "2026-10-27",
+      "reviewer": "Primary art agent",
+      "scope": "Primary inspected the full native sheet and road-overlay proofs: distinct physical quarter-turns, correct storeys, clear alpha. Art review only; not owner approval or live integration.",
+      "targetSlopes": [
+        0.5,
+        -0.5
+      ],
+      "measuredTolerance": "Painterly lower-footing fits vary by approximately 0.3â€“3.0 degrees from the 26.565 degree road directions. No mathematical-exactness claim.",
+      "evidence": [
+        {
+          "file": "art/theme-consistency/generated/buildings/parking-garage-5storey-4views-v2/review/NE.road-proof.png",
+          "sha256": "c502d2c650d693f98723d05a51c28b441bd6dc255da28437d59f2435c1c02d6d"
+        },
+        {
+          "file": "art/theme-consistency/generated/buildings/parking-garage-5storey-4views-v2/review/SE.road-proof.png",
+          "sha256": "c14ae7f2cc7276853a844d4ac6b3b5210d15d9b14a93b3468aa0e48e26bdd333"
+        },
+        {
+          "file": "art/theme-consistency/generated/buildings/parking-garage-5storey-4views-v2/review/SW.road-proof.png",
+          "sha256": "6f86f9e8bb72bd400a522bc0690ff63e3329ce7788a70843f797ba7130a05ae9"
+        },
+        {
+          "file": "art/theme-consistency/generated/buildings/parking-garage-5storey-4views-v2/review/NW.road-proof.png",
+          "sha256": "43df2f32ca5c5a97df85049c2bc34087e2bf9ce4b379a6a7db22694b106c2e06"
+        }
+      ]
+    }
+  },
+  "sourceRegistration": {
+    "id": "ce:parking-garage-5storey",
+    "version": "parking-garage-5storey-4views-v2",
+    "files": {
+      "NE": "2098bc8dcce49ae69afb436640fe07f76d49c138f60b2a70a2e4869a43478c77",
+      "SE": "92a1047abbb65358a6deeceb21a231c80a57b32a6a4261af6c58dbf899fcd626",
+      "SW": "8cc0ad3aa79605ffdc73e2689dee373647e1ebe2364a678590c8a0a7fe39dd8f",
+      "NW": "4c4eb6861ceba6fdb20f1e9243677ff9d7ab234a78263a5c9b0ccfa6a515cc26"
+    }
+  },
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

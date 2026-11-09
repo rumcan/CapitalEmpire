@@ -1,0 +1,255 @@
+{
+  "key": "2020s-white-charcoal-asymmetric-solar-home",
+  "name": "2020s white charcoal asymmetric solar home",
+  "sourceViews": [
+    {
+      "sourceCameraKey": "normalSE",
+      "nominalCameraFamily": "normal",
+      "file": "2020s-white-charcoal-asymmetric-solar-home/normalSE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.png",
+      "sourceFileSHA256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "a779c0b7bb19e0b8037115e3b85d1b4dc8d496056de0ee99d53eba7a771a3f3a",
+      "rgbaSHA256": "0ec8173ab621d0ed525e6e8e0ee6d72f0a83e130dd1c1859a76ff4cb5ee209fc",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "timber front door, broad front window, left side2windows,6solar panels",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/normalSE.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\normalSE.png"
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "nominalCameraFamily": "normal",
+      "file": "2020s-white-charcoal-asymmetric-solar-home/normalSW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.png",
+      "sourceFileSHA256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "ea335a8ec208234178c1128ae198cfa1a9bc27b9c7468cc83543e2f7219dcf4f",
+      "rgbaSHA256": "60a54c7cfb28b70b761d25a795f48ac376e98976254e205bb45e177b37ab171a",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear GLASS sliding patio door, rear utility window, left side2windows,6panels",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/normalSW.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\normalSW.png"
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "nominalCameraFamily": "normal",
+      "file": "2020s-white-charcoal-asymmetric-solar-home/normalNW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.png",
+      "sourceFileSHA256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "25841b43f424020f113976bd57a56535e900972246877aa527ce5cb7b7a94083",
+      "rgbaSHA256": "1820ec6c5b0cb1678aa7493ef3223297d367c377dfd6ecb5ff4b7e51441225b1",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear GLASS patio door and right charcoal side window,6panels",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/normalNW.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\normalNW.png"
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "nominalCameraFamily": "normal",
+      "file": "2020s-white-charcoal-asymmetric-solar-home/normalNE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.png",
+      "sourceFileSHA256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "993384b124c59e93767bfc2489eafb5582658ea3464a41e0583c560844e51873",
+      "rgbaSHA256": "24d864ecce81bdfb2845ab779e12500d1aef4363cd8c280139dd9fbe61b4c2fa",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "front timber entrance/broad window, right side window,6panels",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/normalNE.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\normalNE.png"
+    },
+    {
+      "sourceCameraKey": "yaw8N",
+      "nominalCameraFamily": "yaw8",
+      "file": "2020s-white-charcoal-asymmetric-solar-home/yaw8N.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.png",
+      "sourceFileSHA256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "a7dcf27fc30d50e099f8f65963d63dc5760cdf6c86ccb8009b6de532aa3e6332",
+      "rgbaSHA256": "bebacdb0d641b8af612363b865e42ef4d7e64d8a2c8d8b177b9b3724f41d3f05",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "front timber door/broad window/narrow side-light,6solar panels",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/yaw8N.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\yaw8N.png"
+    },
+    {
+      "sourceCameraKey": "yaw8E",
+      "nominalCameraFamily": "yaw8",
+      "file": "2020s-white-charcoal-asymmetric-solar-home/yaw8E.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.png",
+      "sourceFileSHA256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "331849aa9f8ed39eea2aa3269cf7c5960c196544b2d316afa0c9ace23a660324",
+      "rgbaSHA256": "37f9255ee72d4c954259c0516256c5a88cb26d1b96ea8627d097b41785c1dc91",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "left white side2windows, thin front entrance sliver,6panels",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/yaw8E.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\yaw8E.png"
+    },
+    {
+      "sourceCameraKey": "yaw8S",
+      "nominalCameraFamily": "yaw8",
+      "file": "2020s-white-charcoal-asymmetric-solar-home/yaw8S.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.png",
+      "sourceFileSHA256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "eab553702aab5e3ef6ee6e5e38d5b64082c0f51442a7eb294d1aeb0754a151e3",
+      "rgbaSHA256": "b87f1764cd3a28988dc6f1721ac9712e0fe858195a74efdf18979d34b36be909",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear glass patio and utility window,6panels",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/yaw8S.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\yaw8S.png"
+    },
+    {
+      "sourceCameraKey": "yaw8W",
+      "nominalCameraFamily": "yaw8",
+      "file": "2020s-white-charcoal-asymmetric-solar-home/yaw8W.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.png",
+      "sourceFileSHA256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "10fa45b00c4a38bbc88de5e839ada8ea74e6e0f6659d5ac4c3e008ba6c0a995d",
+      "rgbaSHA256": "aede9a76355488bbfe2d10d6cc0e2bbb93b90a1970812afff20a15dfa3a9428b",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "right charcoal side window, tiny rear/front edge projections,6panels",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/yaw8W.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\yaw8W.png"
+    }
+  ],
+  "inheritedFromV1": true
+}

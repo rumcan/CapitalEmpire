@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-freight-depot-a030c919:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-freight-depot-a030c919-1/NE.png",
+  "sourceSha256": "f02d9c6e5ff8448e2a48ffb0b6829e5314100400f906f062c664f3c4a09d9aeb",
+  "output": "identity-references/variation-industrial-freight-depot-a030c919-1-9563274f/source.png",
+  "outputSha256": "f02d9c6e5ff8448e2a48ffb0b6829e5314100400f906f062c664f3c4a09d9aeb",
+  "width": 962,
+  "height": 510,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      962,
+      510
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-freight-depot-a030c919-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Full4-viewpostassemblyinspectionovermagenta atvisible-boundzoom confirms true distinctquarterturns, sharedfixed2:1camera/upper-rightdusk/mastermaterials/no surroundingfloor. AlphaPASS0warnings; unchanged3PNGbytesverified ateachreplacementstep. Physicalbuildingheightretained, doormeasurementnotcertified."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-freight-depot-a030c919:1",
+    "version": "variation-industrial-freight-depot-a030c919-1-4views-v5",
+    "files": {
+      "NE": "f02d9c6e5ff8448e2a48ffb0b6829e5314100400f906f062c664f3c4a09d9aeb",
+      "SE": "a4d7215738c953193c7922f28c6599a088683cdc4bda82f3e2ff17b63b7fead8",
+      "SW": "b3e5066747a59e7e29f0873d569194f0fb96a6a3785492bcc86aea1d08902c3f",
+      "NW": "f88a0982911f7821730d0cad90ac3982c09cbcc61eed6748d49f63f614564993"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.5625,
+      0.25,
+      0.825684,
+      0.463867
+    ],
+    "crop": {
+      "left": 1152,
+      "top": 512,
+      "width": 539,
+      "height": 438
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-freight-depot-a030c919-1.native.png",
+    "nativeSha256": "c8c2c175ab9958bf5c1a25cd9e5ffd8f0b0e39f1151604f1d7fb330eac009fac"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

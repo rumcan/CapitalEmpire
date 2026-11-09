@@ -1,0 +1,101 @@
+{
+  "jobId": "golf-source-01-12-bag-trolley",
+  "priority": 12,
+  "status": "brief-ready-for-root-native-generation",
+  "sourceOnly": true,
+  "nativeGeneratedByThisJob": false,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "action": "Maintain exact existing brown-bag manual trolley subject; generate missing independent views.",
+  "requiresOrdinary1950sBudgetRedesign": false,
+  "functionalIdentity": "One brown leather golf bag strapped to a black two-wheel manual pull trolley, curved upper handle, lower metal foot and the same protruding club/headcover grouping. Proposed real object about0.65m wide x1.1m long x1.3m high including clubs; existing4x4m dummy library box is not a physical trolley measurement. No electric cart, canopy or person.",
+  "referenceImages": [
+    {
+      "runtimeSubjectId": "business:golf-bag-trolley",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-bag-trolley.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Brown leather golf bag carrying clubs, strapped onto a black manual two-wheel pull trolley with curved handle and metal lower foot. Preserve bag/club/handle/wheel assembly, no motor or seat.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-bag-trolley.provenance.json"
+    }
+  ],
+  "conditions": {
+    "budget": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Optional later variant: worn brown leather, scuffed metal and intact straps/wheels, ordinary working equipment."
+    },
+    "upgraded": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Initial identity-preserving set: cared-for brown leather and black trolley with matching clubs. Do not replace with a different bag color or three-wheel motorized design."
+    }
+  },
+  "sourceSheetsPerCondition": [
+    {
+      "kind": "normal",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+    },
+    {
+      "kind": "yaw8",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+    }
+  ],
+  "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+  "generationConstraints": [
+    "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+    "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+    "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+    "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+    "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+    "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+  ],
+  "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+  "runtimeTarget": {
+    "runtimeSubjectId": "business:golf-bag-trolley",
+    "name": "golf bag trolley",
+    "librarySource": "src/game/business-library.ts",
+    "baseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "baseBoxMetres": {
+      "width": 4,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Generic base collision box only, not authored physical object measurement; placement/studio scale can change it. Proposed real object dimensions are explicit in functionalIdentity.",
+    "sourceDisplayPixels": {
+      "width": 362,
+      "height": 480
+    }
+  },
+  "initialGenerationCondition": "upgraded identity-preserving set; budget optional later",
+  "existingFourCorners": {
+    "usableCorrectTargetCornersFound": false,
+    "reason": "Catalogue audit has no independent normal corner candidates for this exact subject."
+  },
+  "promptCore": "One brown leather golf bag strapped to a black two-wheel manual pull trolley, curved upper handle, lower metal foot and the same protruding club/headcover grouping. Proposed real object about0.65m wide x1.1m long x1.3m high including clubs; existing4x4m dummy library box is not a physical trolley measurement. No electric cart, canopy or person. For budget: Optional later variant: worn brown leather, scuffed metal and intact straps/wheels, ordinary working equipment. For upgraded: Initial identity-preserving set: cared-for brown leather and black trolley with matching clubs. Do not replace with a different bag color or three-wheel motorized design. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+}

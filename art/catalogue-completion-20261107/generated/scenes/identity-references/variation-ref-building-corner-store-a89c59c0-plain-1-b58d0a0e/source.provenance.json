@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-corner-store-a89c59c0-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-corner-store-a89c59c0-plain-1/NE.png",
+  "sourceSha256": "6169939df039dea5b37ebf6333c846296fb68091ce475f5b3026795f44dc4086",
+  "output": "identity-references/variation-ref-building-corner-store-a89c59c0-plain-1-b58d0a0e/source.png",
+  "outputSha256": "6169939df039dea5b37ebf6333c846296fb68091ce475f5b3026795f44dc4086",
+  "width": 382,
+  "height": 373,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      382,
+      373
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-corner-store-a89c59c0-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-corner-store-a89c59c0-plain:1",
+    "version": "variation-ref-building-corner-store-a89c59c0-plain-1-4views-v5",
+    "files": {
+      "NE": "6169939df039dea5b37ebf6333c846296fb68091ce475f5b3026795f44dc4086",
+      "SE": "bc0f73faf143b1b3fa1ca3646e5466c96ac248437cff1a20480f183968953a9a",
+      "SW": "31c74f673e59822b4b560d90fdf948a6b77b2ef64a9e128c8039996eb8c00c2f",
+      "NW": "04391a3ecaf5187d986c342dadc753cd0bb7c0989ba6f4bd319c49c6583ca336"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.78125,
+      0.007813,
+      0.968262,
+      0.190918
+    ],
+    "crop": {
+      "left": 1600,
+      "top": 16,
+      "width": 383,
+      "height": 375
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-corner-store-a89c59c0-plain-1.native.png",
+    "nativeSha256": "f0172b6c6ece172d2666b31491be75af1a491d6f438e18bcf5312287671dcb71"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

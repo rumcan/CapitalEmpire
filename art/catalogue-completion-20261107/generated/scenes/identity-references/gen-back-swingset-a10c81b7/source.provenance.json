@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "gen:back-swingset",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/gen-back-swingset/NE.png",
+  "sourceSha256": "51f7b0a4bc1ff0fc51a6645fec4bb334a06be3a20da2f0928ea7817ee817f8f6",
+  "output": "identity-references/gen-back-swingset-a10c81b7/source.png",
+  "outputSha256": "51f7b0a4bc1ff0fc51a6645fec4bb334a06be3a20da2f0928ea7817ee817f8f6",
+  "width": 611,
+  "height": 476,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      611,
+      476
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\gen-back-swingset\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review",
+    "integrationStatus": "ready",
+    "integrationReason": "Exact pixel-conserving layout correction of finished master-theme building, original four facades retained; post-repack actual alpha over magenta and geometry reviewed. No new image generation."
+  },
+  "sourceRegistration": {
+    "id": "gen:back-swingset",
+    "version": "gen-back-swingset-4views-v2",
+    "files": {
+      "NE": "51f7b0a4bc1ff0fc51a6645fec4bb334a06be3a20da2f0928ea7817ee817f8f6",
+      "SE": "7f8d2ed6cbb6e8fd7fc5a225bc50be47bd9e384015c336642886abe2f969a237",
+      "SW": "7239a4414f1eefa088e0bdf34f7a67761afb56294231a1d281682558e2521a1a",
+      "NW": "8686c5035ef34f20b4f537d967fbf027044d11f6dfb0ebaa89625999a75bfd87"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-4-0.webp",
+    "atlasSha256": "7cb439e61cdd5f48e2c1327386b33c854fa4e1e3e6a58e39ba137e00c48ee2cd",
+    "runtimePage": 4,
+    "localPage": 4,
+    "uv": [
+      0.359375,
+      0.75,
+      0.61084,
+      0.972168
+    ],
+    "crop": {
+      "left": 736,
+      "top": 1536,
+      "width": 515,
+      "height": 455
+    },
+    "native": "art/theme-consistency/exports/buildings/gen-back-swingset.native.png",
+    "nativeSha256": "fe0025dc504f80b2ab60e80322ef57564111b6799c667577ca7725f58805ef92"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

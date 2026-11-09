@@ -1,0 +1,38 @@
+{
+  "jobId": "golf-source-01-06-four-lane-entrance",
+  "functionalIdentity": "A12x6m nominal event entrance arrangement with exactly four pedestrian admission lanes across the width: three simple manual turnstiles and one visibly wider accessible swing gate, supported by low dividers and a restrained blank overhead sign frame. Keep queues/ground surface outside the artwork. Front and back must remain genuinely different.",
+  "exact_placement_plot_metres": {
+    "width": 12.0,
+    "depth": 6.0
+  },
+  "model_bounds_metres": {
+    "min": [
+      -5.71,
+      -1.9600000000000002,
+      0.0
+    ],
+    "max": [
+      5.71,
+      1.9600000000000002,
+      3.715
+    ]
+  },
+  "fixedIdentity": "Exactly4lanes acrossX:3manual turnstiles then1wider swing gate at+X. No ground slab. Sign frame only, no added roof required by brief.",
+  "geometry_is_proposed_not_measured_native": true,
+  "ground_plate": false,
+  "world_convention": "x right, y rear, z up; model front-Y. Rotate entire mesh, never relocate features for visibility.",
+  "source_art_modified": false,
+  "runtime_modified": false,
+  "outputs": {
+    "normal": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\normal-world-v1.png",
+      "sha256": "9c4d637fa55943dde74087bb95de355952e1507528fd76f79c83e309b6677263",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\normal-world-v1.calibration.json"
+    },
+    "yaw8": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\yaw8-world-v1.png",
+      "sha256": "b813825722697a26bc267e372e5ba8ec1da0c0aac134a6886644bd6ea8a9fac6",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\yaw8-world-v1.calibration.json"
+    }
+  }
+}

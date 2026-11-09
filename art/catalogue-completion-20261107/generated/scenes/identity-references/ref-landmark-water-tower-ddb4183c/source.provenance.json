@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "ref:landmark-water-tower",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/ref-landmark-water-tower/NE.png",
+  "sourceSha256": "7081bcf84a15c947845e8b3c7d492d1d7828bd8512157f8a67e460df9d58ca10",
+  "output": "identity-references/ref-landmark-water-tower-ddb4183c/source.png",
+  "outputSha256": "7081bcf84a15c947845e8b3c7d492d1d7828bd8512157f8a67e460df9d58ca10",
+  "width": 399,
+  "height": 493,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      399,
+      493
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\ref-landmark-water-tower\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Weathered steel, warm right highlights/cool left shading and detailed brackets fit master; landscaped tile/captions removed.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "ref:landmark-water-tower",
+    "version": "ref-landmark-water-tower-4views-v3",
+    "files": {
+      "NE": "7081bcf84a15c947845e8b3c7d492d1d7828bd8512157f8a67e460df9d58ca10",
+      "SE": "a5232e154d39dd82264b2201850e619a6a4e4841fb97b6c6fb71f44d3ba90f87",
+      "SW": "a6d6d7441a697cd8419da1200ad31bc4a67b74547f90457690f57edf2eb7736e",
+      "NW": "9e009e3573277117dffbe18fd795bee8da7735a1b647f7c0b9efd23be04ab0f5"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.820313,
+      0.195313,
+      0.911621,
+      0.361328
+    ],
+    "crop": {
+      "left": 1680,
+      "top": 400,
+      "width": 187,
+      "height": 340
+    },
+    "native": "art/theme-consistency/exports/buildings/ref-landmark-water-tower.native.png",
+    "nativeSha256": "ecfd0d692ad092e8a9383d15a0c02db643d043238491e796476f89a3081cff6f"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

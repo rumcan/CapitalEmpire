@@ -1,0 +1,23 @@
+[
+  {
+    "key": "golf-source-01-03-broadcast-compound",
+    "family": "yaw8-N",
+    "condition": "upgraded",
+    "version": 2,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-N-v2.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-N-camera-guide.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-N-identity-from-normal-NE.png"
+    ],
+    "prompt": "Render ONE SINGLE N nearcardinal view of this upgraded broadcastcompound. REFERENCE1fixes exact camera, componentpositions, projectedbodyaxes andocclusion. REFERENCE2isacceptedfinishedidentity/materialONLY, its DIFFERENTcornercamera MUSTNOTbecopied. BothvehicleNOSESpoint SCREEN DOWN, slightly screen-left. Front cab/grille/windshield is the dominant main face; only a narrow physical +X right-side sliver. Thisis NOTa45degreecornerview. Followguide'smainfacebroad/secondaryfacenarrow, cameraorthographic30degreesDOWN,nominal8offcardinal. EXACTLY2maintained1980scream/forestgreensquarecabvehicles fixedsameworldlayout: truckleft-X, uplinkvanrear-right+X/+Y,bothfront-Y; generatorfront-right, cablebench/reel fixed, servicegapfrontopen. Only the small far screen-RIGHT +X stair sliver if exposed; absolutely NO near screen-LEFT stair. SINGLEfixedRIGHT+Xtruckservicestaironly, no duplicates. Dish Broad concave front and front feed. Dishaxisfixedtovan; neverturnbowltofaceviewer. Matchallvehiclewindows/doors/wheels/2truckroofHVAC/vanHVAC/antennas, finepaintedminiaturewood/metals/glass/rubberbodydetail; cleanprofessionalequipment, norust/rope/tarp/repairpatches. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT,lamps/screensOFF. OnecompleteassemblycentredwithgenerousZEROALPHAtransparentmargins, noscenery/people/plants/groundplate/road/textUI/grid/haze. OneviewONLY, noquad/sheet/labels, noindependentswivellingequipment.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-61854ef0-506f-4a86-949d-917334bee55d.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-N-camera-guide.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-N-identity-from-normal-NE.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "e837c5ff7e7404a4ee621eeb18b6ed0b90a6482781e0186e058be0936427f6f0",
+    "native_bytes_preserved": true
+  }
+]

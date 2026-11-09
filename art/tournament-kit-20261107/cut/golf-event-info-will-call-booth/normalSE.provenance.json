@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-info-will-call-booth",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../../batch01/info-will-call-booth/budget/normal-SE.png",
+    "sha256": "3fd22ba56c95d0f8fbb3648c4c75b961a71ffa9f369edeb6d0b439757df699a9",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 43,
+    "top": 61,
+    "width": 560,
+    "height": 525
+  },
+  "output": "normalSE.native.png",
+  "sha256": "c03e2ac1b41af108a0fd9ffee50de2cdcd3709f807f1a43abcbefbdf09b1282c",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

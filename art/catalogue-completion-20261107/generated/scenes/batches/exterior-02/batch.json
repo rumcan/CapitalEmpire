@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "batchId": "exterior-02",
+  "status": "prepared-not-generated",
+  "view": "outside",
+  "condition": "rundown",
+  "sourcePrompt": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/batches/exterior-02/prompt.txt",
+  "referenceImages": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/style-authority.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-clubhouse-343e3275/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-pro-shop-16c46388/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-garage-1a3cdb4c/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-halfway-pavilion-d89d56ad/source.png"
+  ],
+  "referenceRoles": [
+    "style-only",
+    "exact-building-identity",
+    "exact-building-identity",
+    "exact-building-identity",
+    "exact-building-identity"
+  ],
+  "cells": [
+    {
+      "cell": "top-left",
+      "cellIndex": 0,
+      "identityReferenceNumber": 2,
+      "runtimeId": "business:golf-clubhouse",
+      "condition": "rundown",
+      "view": "outside",
+      "description": "Large red-brick golf clubhouse with pale stone base and trim, complex dark blue slate pitched roofs, a square glazed cupola with a pyramidal roof and finial, tall brick chimneys, an arched central front gable, and a deep timber veranda wrapping the right side. Keep the entrance, dormers, veranda posts and cart bays in their actual positions.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-clubhouse-343e3275/source.png",
+      "referenceSha256": "80145907925e5693b77ffb2250948d30a48dc050fd973c5d6de52b50041e9fb3",
+      "manifestEntryAfterReview": {
+        "slug": "property-business-golf-clubhouse-outside",
+        "subject": "business:golf-clubhouse",
+        "state": "rundown",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "top-right",
+      "cellIndex": 1,
+      "identityReferenceNumber": 3,
+      "runtimeId": "business:golf-pro-shop",
+      "condition": "rundown",
+      "view": "outside",
+      "description": "Compact red-brick and timber golf shop with a pale masonry base, dark blue slate hip/gable roofs, a square brick chimney, an exposed timber-braced entrance porch, large display windows, double entrance doors and golf-bag displays by the threshold.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-pro-shop-16c46388/source.png",
+      "referenceSha256": "aa38b47e5916b68862216e3d6f6d6c7ce81f6fb801bed21d972fde009bfd46ca",
+      "manifestEntryAfterReview": {
+        "slug": "property-business-golf-pro-shop-outside",
+        "subject": "business:golf-pro-shop",
+        "state": "rundown",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "bottom-left",
+      "cellIndex": 2,
+      "identityReferenceNumber": 4,
+      "runtimeId": "business:golf-cart-garage",
+      "condition": "rundown",
+      "view": "outside",
+      "description": "Long single-storey red-brick cart garage with pale stone piers, a dark slate pitched roof with three small front dormer vents, four open arched service/cart bays on the long face, yellow protective bollards and a separate timber side door. Keep all four bay openings and the roof rhythm.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-garage-1a3cdb4c/source.png",
+      "referenceSha256": "24a447b9e44c0dac40426aa87b668108c65dbfe33bab3f9b4ac6b5ec20c5acdb",
+      "manifestEntryAfterReview": {
+        "slug": "property-business-golf-cart-garage-outside",
+        "subject": "business:golf-cart-garage",
+        "state": "rundown",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "bottom-right",
+      "cellIndex": 3,
+      "identityReferenceNumber": 5,
+      "runtimeId": "business:golf-halfway-pavilion",
+      "condition": "rundown",
+      "view": "outside",
+      "description": "Open-sided timber halfway refreshment pavilion on pale masonry piers, with a broad dark slate roof, square glazed roof cupola and finial, integrated food counter, round tables and stools, short railings and hanging baskets. Preserve its open layout; do not enclose it as a different clubhouse.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-halfway-pavilion-d89d56ad/source.png",
+      "referenceSha256": "0783e2307c1fcc4df9d131edec709e4800efe8e2dd86abfd929bb7fafd60f15b",
+      "manifestEntryAfterReview": {
+        "slug": "property-business-golf-halfway-pavilion-outside",
+        "subject": "business:golf-halfway-pavilion",
+        "state": "rundown",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    }
+  ],
+  "pairedBatch": "exterior-01",
+  "appendAcceptedPairOutputAsCompositionReference": true,
+  "outputPolicy": "four independent opaque cinematic property cells; native crop only after review, never count as rotations",
+  "sameCameraRequiredForFutureConditionPair": true,
+  "registrationAutomatic": false
+}

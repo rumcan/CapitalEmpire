@@ -1,0 +1,245 @@
+{
+  "id": "variation~town-bakery-af15d7f5-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:46:59.761311+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-3621bd2b-a438-44e5-8d43-643a0c17d38a.png",
+    "sha256": "567187d1399c4ffd82c04b4309a8c36baf37a1bf630e881324456fcd15ccc28a",
+    "bytes": 1877827
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-bakery-af15d7f5-plain~1\\corners-v1.png",
+    "sha256": "567187d1399c4ffd82c04b4309a8c36baf37a1bf630e881324456fcd15ccc28a",
+    "bytes": 1877827
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-bakery-af15d7f5-plain~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-bakery-af15d7f5-plain-1.native.png",
+      "sha256": "8f895a44506fdaae13f62b1f261bb7eb4c86b3f7f7296f5cf309fe0fb2821c5d",
+      "bytes": 143456
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-bakery-af15d7f5-plain~1-corners.png",
+      "sha256": "bced894fb9420ea168eac67efe116dbc1b892475449b0a5c76d482f691f2cf55",
+      "bytes": 368428
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-bakery-af15d7f5-plain-1.native.png",
+      "sha256": "8f895a44506fdaae13f62b1f261bb7eb4c86b3f7f7296f5cf309fe0fb2821c5d",
+      "bytes": 143456
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-bakery-af15d7f5-plain~1-corners.png",
+      "sha256": "bced894fb9420ea168eac67efe116dbc1b892475449b0a5c76d482f691f2cf55",
+      "bytes": 368428
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          40,
+          70,
+          582,
+          550
+        ],
+        "transparent_fraction": 0.5305128850835222,
+        "margins_px": [
+          40,
+          70,
+          45,
+          77
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          44,
+          74,
+          587,
+          553
+        ],
+        "transparent_fraction": 0.5278191128102989,
+        "margins_px": [
+          44,
+          74,
+          40,
+          74
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          39,
+          72,
+          582,
+          556
+        ],
+        "transparent_fraction": 0.5228767147679261,
+        "margins_px": [
+          39,
+          72,
+          45,
+          71
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          40,
+          74,
+          589,
+          557
+        ],
+        "transparent_fraction": 0.5207171182995912,
+        "margins_px": [
+          40,
+          74,
+          38,
+          70
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 34.560872395833336
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 32.115071614583336
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 32.107584635416664
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 37.710286458333336
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 31.869791666666668
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 34.52685546875
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-bakery-af15d7f5-plain~1\\SE.png",
+        "sha256": "9a0cff76eb68ea2c5b4c65add64657dff61a91f81aca3e3ce62f358148fd7c8b",
+        "bytes": 446921
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-bakery-af15d7f5-plain~1\\SE.native.png",
+        "sha256": "9a0cff76eb68ea2c5b4c65add64657dff61a91f81aca3e3ce62f358148fd7c8b",
+        "bytes": 446921
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-bakery-af15d7f5-plain~1\\SW.png",
+        "sha256": "d7294376a33b246c776a520a9570b2b1a529a31e02c7d4b9b048f3681e562bed",
+        "bytes": 431145
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-bakery-af15d7f5-plain~1\\SW.native.png",
+        "sha256": "d7294376a33b246c776a520a9570b2b1a529a31e02c7d4b9b048f3681e562bed",
+        "bytes": 431145
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-bakery-af15d7f5-plain~1\\NW.png",
+        "sha256": "516e195c9fb90be0d523262da57e94049de9532a884d3570af129b1085718d3e",
+        "bytes": 438743
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-bakery-af15d7f5-plain~1\\NW.native.png",
+        "sha256": "516e195c9fb90be0d523262da57e94049de9532a884d3570af129b1085718d3e",
+        "bytes": 438743
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-bakery-af15d7f5-plain~1\\NE.png",
+        "sha256": "50a0750571d2bfddb3ab5e81970ec3178327377f6060b12be14cc8207b9b6e73",
+        "bytes": 453849
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-bakery-af15d7f5-plain~1\\NE.native.png",
+        "sha256": "50a0750571d2bfddb3ab5e81970ec3178327377f6060b12be14cc8207b9b6e73",
+        "bytes": 453849
+      }
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:24:11.365118+00:00",
+  "review_result": "HOLD-lid-state-changes",
+  "recommended_yaw_source_continuation": false,
+  "four_actual_corners_visually_verified": false,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-washer/normal-v1.png",
+    "sha256": "bf6e8489caa34c7090034ad957fb8a88de49e1e3fd80337d6d51d04961ae2172",
+    "bytes": 1262352
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-washer/normal-v1.provenance.json",
+    "sha256": "6c0fd0d581dbf24a2c60b9cbd17ab83052bf7068ca3cbd8a16882bccd8b83753",
+    "bytes": 2503
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "81984b6bbc4c2c8fce0fa3f53498d628d7e3c551dd2074568b9310608ebc8ae0",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/references/ball-washer.source.png",
+      "sha256": "3733415ef6c52354fae9c19f30b386d51a9ec30caba2b982138b0658a0700941",
+      "bytes": 324074
+    },
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.6772306291319135,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "true_clear_gutters_found": true,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 19,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "f13a1ce29d91c7b674c3170b862099d24d4edd1f7c3c359ebcbdb9150a2b5e8e"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 19,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "5fbeafbf29409d0066fdb7248c56c02a2d17da9c9a6048d9f2bde67105a58100"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 16,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "ba66d067bb2ce9e791a981f0e7dde982660c23c9eb63875d2e240195d43ce044"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 16,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "b90e3e0b7cb7e200b01ae182cddab5e858c951cc1c65600f3c8883ff2e34d211"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "FrontTL/BR show hingedlidOPEN and ball/brush cup visible; rearTR/BL lidCLOSED. State changes under rotation.",
+    "Crank/towel counts preserved, but fix one permanently open lid pose across all cameras."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

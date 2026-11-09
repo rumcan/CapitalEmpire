@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "asOfUTC": "2026-11-07T14:25:38.126935+00:00",
+  "subject": "golf:event-broadcast-compound",
+  "condition": "budget",
+  "kind": "lossless selected-cell source-reference atlas",
+  "sourceOnly": true,
+  "nativeGeneratedHere": false,
+  "countsAsNativeGeneration": false,
+  "finalApproval": false,
+  "nativeCameraCertified": false,
+  "nativeScaleAndAnchorsApproved": false,
+  "runtimeReady": false,
+  "runtimeIntegrated": false,
+  "selection": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/source-candidate-selection-v1.json",
+  "selectionSHA256": "2a3cc588322a6fa0c31ad20d74e173ac6e75bd44671335508a8697548672c571",
+  "selectionRule": "Normal v4 SE/SW/NW plus normal v3 NE, exactly as explicit selection.",
+  "output": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-selected-reference-v1.png",
+  "outputSize": [
+    1254,
+    1254
+  ],
+  "outputMode": "RGBA",
+  "outputSHA256": "04fdc518fd7c0cae9c36f05b8bda315e8b25438b56daa1d971be55b2efbbcf02",
+  "outputRGBA_SHA256": "929a956079034957addf8edfe2640a8f8b33bf3906e611ad87d8b73f4462d71d",
+  "cellOrder": [
+    [
+      "normalSE",
+      "normalSW"
+    ],
+    [
+      "normalNW",
+      "normalNE"
+    ]
+  ],
+  "cells": [
+    {
+      "sourceCameraKey": "normalSE",
+      "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v4.png",
+      "sourceFileSHA256": "91a98125388138b7445c4a66a49d1f5653b47f3dcc07036ef35ed4ec61b0ffbf",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "sourceMode": "RGBA",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "outputFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "tileSize": [
+        627,
+        627
+      ],
+      "tileRGBA_SHA256": "acd4812ba09be1b4250f1d6ef573556789714c41cc01a9bfe0f446d1cb554a91",
+      "selectionPixelHashMatches": true,
+      "sourceBoundsVerified": true,
+      "nativeHeadingDegrees": null,
+      "operation": "Literal native RGBA crop and unmasked paste; no resize, transform, recolour, paint, key, alpha cleanup or compositing blend.",
+      "decodedOutputTileRGBA_SHA256": "acd4812ba09be1b4250f1d6ef573556789714c41cc01a9bfe0f446d1cb554a91",
+      "decodedOutputPixelsExactlyEqualSourceCrop": true
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v4.png",
+      "sourceFileSHA256": "91a98125388138b7445c4a66a49d1f5653b47f3dcc07036ef35ed4ec61b0ffbf",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "sourceMode": "RGBA",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "outputFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "tileSize": [
+        627,
+        627
+      ],
+      "tileRGBA_SHA256": "c07294467f1c3d0dd9fd709587126eba218b6df0b881fb360eda8d8584ad5fed",
+      "selectionPixelHashMatches": true,
+      "sourceBoundsVerified": true,
+      "nativeHeadingDegrees": null,
+      "operation": "Literal native RGBA crop and unmasked paste; no resize, transform, recolour, paint, key, alpha cleanup or compositing blend.",
+      "decodedOutputTileRGBA_SHA256": "c07294467f1c3d0dd9fd709587126eba218b6df0b881fb360eda8d8584ad5fed",
+      "decodedOutputPixelsExactlyEqualSourceCrop": true
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v4.png",
+      "sourceFileSHA256": "91a98125388138b7445c4a66a49d1f5653b47f3dcc07036ef35ed4ec61b0ffbf",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "sourceMode": "RGBA",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "outputFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "tileSize": [
+        627,
+        627
+      ],
+      "tileRGBA_SHA256": "9d00ec2c5746e75806f1bef44cbc19ceaff496f68d39e5e93582c3f01c41e5e3",
+      "selectionPixelHashMatches": true,
+      "sourceBoundsVerified": true,
+      "nativeHeadingDegrees": null,
+      "operation": "Literal native RGBA crop and unmasked paste; no resize, transform, recolour, paint, key, alpha cleanup or compositing blend.",
+      "decodedOutputTileRGBA_SHA256": "9d00ec2c5746e75806f1bef44cbc19ceaff496f68d39e5e93582c3f01c41e5e3",
+      "decodedOutputPixelsExactlyEqualSourceCrop": true
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v3.png",
+      "sourceFileSHA256": "c3ba33c5a46a6f26661c20484a812b919549fa9bf4a1a18d1dcf1e7a377f9316",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "sourceMode": "RGBA",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "outputFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "tileSize": [
+        627,
+        627
+      ],
+      "tileRGBA_SHA256": "76f8707bed3892a63cff1acaef269977a8be9b41141f67b1fa0898af7d8b72c4",
+      "selectionPixelHashMatches": true,
+      "sourceBoundsVerified": true,
+      "nativeHeadingDegrees": null,
+      "operation": "Literal native RGBA crop and unmasked paste; no resize, transform, recolour, paint, key, alpha cleanup or compositing blend.",
+      "decodedOutputTileRGBA_SHA256": "76f8707bed3892a63cff1acaef269977a8be9b41141f67b1fa0898af7d8b72c4",
+      "decodedOutputPixelsExactlyEqualSourceCrop": true
+    }
+  ],
+  "visuallyInspected": true,
+  "intendedUse": "Combined budget identity/material reference for separate upgraded normal/yaw native generation. Technical guides govern requested cameras. This atlas is not a new native generation or final camera approval.",
+  "visualInspectionNote": "Inspected completed 2x2 atlas: selected v4 SE/SW/NW and v3 NE are in the prescribed cells, with no cell truncation or atlas overlap. Identity reference only; native camera/scale/alpha release approval not asserted."
+}

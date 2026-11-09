@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-direction-signpost",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../../batch02/direction-signpost/yaw8-W.png",
+    "sha256": "bb7d8bc55c643fd46047af8306ea52ab68911a3494447c35b3ca53bf8bd169dd",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 241,
+    "top": 12,
+    "width": 169,
+    "height": 575
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "2a7f2bf69b07ceeaee9cd4d9412f87ccf69bb987fa0a8b3be8fd672797e87dd9",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -1,0 +1,111 @@
+{
+  "jobId": "golf-source-01-01-food-truck",
+  "priority": 1,
+  "status": "brief-ready-for-root-native-generation",
+  "sourceOnly": true,
+  "nativeGeneratedByThisJob": false,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "action": "New role-specific vehicle design replacing a wrong food-tent stand-in.",
+  "requiresOrdinary1950sBudgetRedesign": true,
+  "functionalIdentity": "A self-propelled catering step van, proposed body5.4m long along localX and2.2m wide along localY, with cab at negativeX, four road wheels, one raised serving hatch/counter on negativeY, a small roof cooking-extraction vent toward the rear positiveX, rear service door at positiveX and plain equipment side at positiveY. Vehicle plus opened0.8m serving hatch fits the exact6x4m event plot. These physical body dimensions are design proposals. Do not draw a tent or ordinary delivery box.",
+  "referenceImages": [
+    {
+      "runtimeSubjectId": "newprop:delivery-truck",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\delivery-truck.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Cream/green modern cab-over refrigerated box truck with roof refrigeration unit, one side cargo door and visible modern rounded cab. Functional vehicle proportions only; change to period1950s/1980s food-truck body, add serving hatch and cooking extractor. Not a food truck as drawn.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\delivery-truck.provenance.json"
+    },
+    {
+      "runtimeSubjectId": "newprop:green-food-kiosk",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Small green plank counter kiosk with sagging green canvas roof, brass corner balls, display shelves and upright glass drinks fridge. Useful service-counter identity. Remove ornamental gold finials and integrated flower planters; do not reproduce large ripped holes in upgraded tier.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.provenance.json"
+    }
+  ],
+  "conditions": {
+    "budget": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Worn ordinary1950s/1960scream-and-green step van, faded paint and light rust; sound chassis, functional serving hatch. No rope/log/tarp shack attached."
+    },
+    "upgraded": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Well-maintained period1980swhite/green catering step van, clean counter, restrained awning and stainless roof extraction. Same identifiable side/door/wheel layout across its eight views."
+    }
+  },
+  "sourceSheetsPerCondition": [
+    {
+      "kind": "normal",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+    },
+    {
+      "kind": "yaw8",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+    }
+  ],
+  "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+  "generationConstraints": [
+    "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+    "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+    "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+    "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+    "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+    "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+  ],
+  "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+  "runtimeTarget": {
+    "eventTypeId": "foodTruck",
+    "eventName": "Food truck",
+    "currentSpriteSubjectId": "golf:food-tent",
+    "newArtSubjectProposal": "golf:event-food-truck",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 3.0,
+      "depth": 2.0
+    },
+    "footprintMetres": {
+      "width": 6.0,
+      "depth": 4.0
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 4,
+        "hy": 4,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "existingFourCorners": {
+    "usableCorrectTargetCornersFound": false,
+    "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+  },
+  "promptCore": "A self-propelled catering step van, proposed body5.4m long along localX and2.2m wide along localY, with cab at negativeX, four road wheels, one raised serving hatch/counter on negativeY, a small roof cooking-extraction vent toward the rear positiveX, rear service door at positiveX and plain equipment side at positiveY. Vehicle plus opened0.8m serving hatch fits the exact6x4m event plot. These physical body dimensions are design proposals. Do not draw a tent or ordinary delivery box. For budget: Worn ordinary1950s/1960scream-and-green step van, faded paint and light rust; sound chassis, functional serving hatch. No rope/log/tarp shack attached. For upgraded: Well-maintained period1980swhite/green catering step van, clean counter, restrained awning and stainless roof extraction. Same identifiable side/door/wheel layout across its eight views. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+}

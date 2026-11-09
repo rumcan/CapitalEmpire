@@ -1,0 +1,16 @@
+[
+  {
+    "key": "era-1990s-teal-sedan",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-97aa6cfe-890f-47b0-883b-ea1ccccb1c9b.png",
+    "target": "generated/vehicles/era-1990s-teal-sedan/left-elevated-v1.png",
+    "prompt": "Paint the exact projected vehicle of REFERENCE1 as the precise vehicle from REFERENCE2. Produce ONE SINGLE vehicle sprite, NOT a sheet. Orientation/camera/plane visibility comes EXCLUSIVELY from reference1: nose points exactly SCREEN LEFT, longitudinal axis precisely horizontal, orthographic camera looks DOWN30degrees from ABOVE the side. The roof/bonnet/boot or pickup bed show their full upper surfaces as broad planes at this projection; wheels are vertical ellipses0.866height/width, not perfectcircles. No broad front/rear grille plane visible, only thinendrim. Do NOT turn diagonally. Reference2 provides only exactidentity/materials/body/trim/wheels: A1995-style teal rounded FOUR-DOOR compact sedan with separate rear boot, smooth body-coloured bumpers, silver five-spoke wheels, softly oval headlamps and conventional rear tail lenses. Plain unbranded family car, noticeably more rounded than the1980s fleet. Preserve this SAME model/paint/doorcount/roofline/wheelbase; don'tcopytechnicalproxyboxshape oritscolour. Don't copy reference2's diagonal orientation. Draw the actual leftward-facing physical side, never mirror lighting. Detailed paintedminiature style, natural late-afternoon DAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, lampsoff. One completeopaquevehicle centredwithamplemargins on TRUEzeroalpha transparentbackground, no groundplate/road/haze/text/logos/UI.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/era-1990s-teal-sedan/camera-calibration-refs/left-camera-only.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/era-1990s-teal-sedan/camera-calibration-refs/corner-identity-only.png"
+    ],
+    "status": "single-side30degree camera candidate; independent alpha/identity/projection QA pending",
+    "runtime_imported": false,
+    "sha256": "3806ed8e35e1a64305e16828f8ab5a01c051f7bd755fa2934d361dc83f2a28e4",
+    "native_bytes_preserved": true
+  }
+]

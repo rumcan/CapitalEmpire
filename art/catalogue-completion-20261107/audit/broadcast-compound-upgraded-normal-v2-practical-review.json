@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "asOfUTC": "2026-11-07T14:52:15.705266+00:00",
+  "subject": "golf:event-broadcast-compound",
+  "condition": "upgraded",
+  "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v2.png",
+  "sourceSHA256": "b46027013a800ed1d896bce7156bed5fa79ea3cbef4e4e0d3dc28ac4c49722f1",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "sourceMode": "RGBA",
+  "review": "PASS-practical-four-corner-source-candidate",
+  "sourceOnly": true,
+  "nativeCameraCertified": false,
+  "nativeScaleAndAnchorsApproved": false,
+  "runtimeReady": false,
+  "runtimeIntegrated": false,
+  "allFourSelectedTogether": true,
+  "priorV1SEStairHoldResolved": true,
+  "observations": [
+    "SE extra opposite-side service stair is removed. The fixed +X stair is retained in NW/NE and naturally absent in SE/SW.",
+    "Four actual corners show the same two tidy cream/green period square-cab vehicles; large truck has two HVAC units and small uplink van has one fixed dish and roof HVAC.",
+    "Dish shows broad concave front/feed in SE/NE, convex ribbed back in SW, thin oblique bowl in NW; no substituted lattice aerial.",
+    "Generator, work table, red/grey equipment boxes and reel remain the same compound arrangement; no new practical regression identified against v1.",
+    "All four v2 cells may be selected together. No mixed v1 retention is necessary."
+  ],
+  "cells": [
+    {
+      "sourceCameraKey": "normalSE",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "RGBA_SHA256": "fe02017d37a2ae3595e7350521e205a3946b939623762f6b78fc137e2b7a6d5a",
+      "coreBBoxAlphaGT128": [
+        25,
+        109,
+        589,
+        544
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "visuallyInspected": true
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "RGBA_SHA256": "ea17d7e823e0567b879368badb97cab3d500a8f01b1e745d0b9913a6989a1760",
+      "coreBBoxAlphaGT128": [
+        34,
+        148,
+        593,
+        533
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "visuallyInspected": true
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "RGBA_SHA256": "2a5aad09ad5ed625718cb8399865e8cfb9c0dfe8c895060d4cdb373e49f3ada8",
+      "coreBBoxAlphaGT128": [
+        25,
+        100,
+        591,
+        521
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "visuallyInspected": true
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "RGBA_SHA256": "bec4d1281581c28ae3a20aa458a1bf8a7d5c0e19df728cd3bbc6a634d051b2f7",
+      "coreBBoxAlphaGT128": [
+        27,
+        82,
+        583,
+        531
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "visuallyInspected": true
+    }
+  ],
+  "nativeSourcePixelsChanged": false,
+  "nativeGenerationPerformed": false,
+  "runtimeModified": false,
+  "numericalAngleMetrologyPerformed": false
+}

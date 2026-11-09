@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "town:barber",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/town-barber/NE.png",
+  "sourceSha256": "f9e48dd649b9a359a6405d8e890da0aaca6567bd245cff490db5b3d5fd6943e7",
+  "output": "identity-references/town-barber-13c5ef06/source.png",
+  "outputSha256": "f9e48dd649b9a359a6405d8e890da0aaca6567bd245cff490db5b3d5fd6943e7",
+  "width": 537,
+  "height": 483,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      537,
+      483
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\town-barber\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "town:barber",
+    "version": "town-barber-4views-v1",
+    "files": {
+      "NE": "f9e48dd649b9a359a6405d8e890da0aaca6567bd245cff490db5b3d5fd6943e7",
+      "SE": "ddfdb5318b21e7e719788dd080c92de8ff135809b7c43f95854fcff2944e447a",
+      "SW": "7388ed9c3b5ac5561116b004a916cc144ea9caa897cf845cb34f2b7aa30b2e89",
+      "NW": "21e3275ab735a1dfe25c8658cca6ce0fd25c3292b8884925d102afb52700d3a9"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-10-0.webp",
+    "atlasSha256": "6ca370227e33f5f4eab6c0abe7cfcf952ed2ff26a21472925e105f582f2922ac",
+    "runtimePage": 10,
+    "localPage": 10,
+    "uv": [
+      0.164063,
+      0.710938,
+      0.333008,
+      0.858887
+    ],
+    "crop": {
+      "left": 336,
+      "top": 1456,
+      "width": 346,
+      "height": 303
+    },
+    "native": "art/theme-consistency/exports/buildings/town-barber.native.png",
+    "nativeSha256": "6b8c4d118680b8ae3d7fce29e0d8d196f52005d6c7d65ce628abeb03d4888077"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

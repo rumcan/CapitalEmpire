@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:arcade",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../src/yaw8E.png",
+    "sha256": "f2cc9790b66d46efe0b2cd8cf3d878e5be3e023ee4118a5dc692e3622230987c",
+    "width": 341,
+    "height": 428
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 341,
+    "height": 428
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 333,
+    "height": 420
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "5bda39139903966c18d1c4676301043b1b421042bdc63fe63cb24908676d3b0c",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "newprop:green-food-kiosk",
+  "name": "Green food kiosk",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+  "sourceSheetSHA256": "d471a7b9201c45fdc5e7f72a57d2eee3ea749bbe21950133443deb5f0df94617",
+  "referenceSHA256": "c441fad79cf91121e2db9e58d8d0838081ea97702caded23b8e8e7f0638882e6",
+  "sourcePixelRectXYWH": [
+    13,
+    9,
+    633,
+    599
+  ],
+  "originalCellLabel": "top left",
+  "referenceSize": [
+    633,
+    599
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Small green plank counter kiosk with sagging green canvas roof, brass corner balls, display shelves and upright glass drinks fridge. Useful service-counter identity. Remove ornamental gold finials and integrated flower planters; do not reproduce large ripped holes in upgraded tier.",
+  "sourceOnlyNotReleaseProof": true
+}

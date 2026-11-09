@@ -1,0 +1,107 @@
+{
+ "schema": 1,
+ "projection": "normal+yaw8",
+ "version": 1,
+ "review": "candidate",
+ "footprintMetres": {
+  "width": 14,
+  "depth": 7
+ },
+ "pixelsPerMetre": 37.67,
+ "pixelCalibrationSpace": "orthographic-camera",
+ "baselineScale": 1,
+ "views": {
+  "normalNE": {
+   "anchor": {
+    "x": 309,
+    "y": 382.2
+   },
+   "headingDegrees": 0,
+   "pixelsPerMetre": 37.67,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 14 x 7 m, height 4.5 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSE": {
+   "anchor": {
+    "x": 315,
+    "y": 389.2
+   },
+   "headingDegrees": 270,
+   "pixelsPerMetre": 37.67,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 14 x 7 m, height 4.5 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSW": {
+   "anchor": {
+    "x": 312,
+    "y": 387.2
+   },
+   "headingDegrees": 180,
+   "pixelsPerMetre": 37.67,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 14 x 7 m, height 4.5 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalNW": {
+   "anchor": {
+    "x": 315,
+    "y": 376.2
+   },
+   "headingDegrees": 90,
+   "pixelsPerMetre": 37.67,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 14 x 7 m, height 4.5 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8N": {
+   "anchor": {
+    "x": 339,
+    "y": 438.7
+   },
+   "headingDegrees": 323,
+   "pixelsPerMetre": 46.06,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 14 x 7 m, height 4.5 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8E": {
+   "anchor": {
+    "x": 328.5,
+    "y": 404.1
+   },
+   "headingDegrees": 233,
+   "pixelsPerMetre": 38.79,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 14 x 7 m, height 4.5 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8S": {
+   "anchor": {
+    "x": 331.5,
+    "y": 419.1
+   },
+   "headingDegrees": 143,
+   "pixelsPerMetre": 43.19,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 14 x 7 m, height 4.5 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8W": {
+   "anchor": {
+    "x": 347,
+    "y": 362.8
+   },
+   "headingDegrees": 53,
+   "pixelsPerMetre": 43.19,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 14 x 7 m, height 4.5 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  }
+ },
+ "source": {
+  "views": {
+   "normalNE": "../batch01/media-centre/budget/normal-NE.png",
+   "normalSE": "../batch01/media-centre/budget/normal-SE.png",
+   "normalSW": "../batch01/media-centre/budget/normal-SW.png",
+   "normalNW": "../batch01/media-centre/budget/normal-NW.png",
+   "yaw8N": "../batch01/media-centre/budget/yaw8-N.png",
+   "yaw8E": "../batch01/media-centre/budget/yaw8-E.png",
+   "yaw8S": "../batch01/media-centre/budget/yaw8-S.png",
+   "yaw8W": "../batch01/media-centre/budget/yaw8-W.png"
+  }
+ },
+ "subject": "golf:event-media-centre",
+ "name": "Media centre (budget)",
+ "kind": "building",
+ "category": "Golf tournament",
+ "visualTier": "budget",
+ "eventTypes": [
+  "media"
+ ]
+}

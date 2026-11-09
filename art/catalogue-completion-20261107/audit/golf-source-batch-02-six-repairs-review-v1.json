@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:57:01.992280+00:00",
+  "sources_reviewed": 6,
+  "limited_source_passes": 3,
+  "held": 3,
+  "scope": "Six latest batch02 normal repairs only. No exact-angle or release certification. No composition due remaining identity holds and unequal native image scales.",
+  "records": [
+    {
+      "key": "park-bench",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.png",
+      "review_result": "HOLD-map-panel-arch-straightened;PASS-missing-SE-pose",
+      "limited_source_identity_and_pose_pass": false,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.8431449982066955,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.independent-qa.json"
+    },
+    {
+      "key": "park-bench",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v1.png",
+      "review_result": "HOLD-both-finials-and-arch-lost;PASS-missing-SW-pose",
+      "limited_source_identity_and_pose_pass": false,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.8178028077297783,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v1.independent-qa.json"
+    },
+    {
+      "key": "ball-dispenser",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.png",
+      "review_result": "HOLD-front-apparatus-invented-on-rear",
+      "limited_source_identity_and_pose_pass": false,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.7940116348577694,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.independent-qa.json"
+    },
+    {
+      "key": "hole-12-sign",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+      "review_result": "PASS-source-candidate-opposite-front-rear-corners",
+      "limited_source_identity_and_pose_pass": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.7716366637922921,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.independent-qa.json"
+    },
+    {
+      "key": "rope-walkway",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+      "review_result": "PASS-source-candidate-four-fixed-gate-projections",
+      "limited_source_identity_and_pose_pass": true,
+      "outer_border_alpha_max": 2,
+      "zero_alpha_fraction": 0.6824496539303893,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.independent-qa.json"
+    },
+    {
+      "key": "water-tank-stall",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+      "review_result": "PASS-source-candidate-sign-removal-main-faces",
+      "limited_source_identity_and_pose_pass": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.5504516329245617,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.independent-qa.json"
+    }
+  ]
+}

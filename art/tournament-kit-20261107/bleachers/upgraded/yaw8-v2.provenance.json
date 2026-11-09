@@ -1,0 +1,15 @@
+{
+  "key": "compact-bleacher-60-upgraded",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-ce2c18cb-75e4-4ef4-9e94-f93171f86093.png",
+  "target": "generated/compact-bleacher-60-upgraded/yaw8-v2.png",
+  "prompt": "Correct the third reference's4-view bleacher sheet to the exact first reference's technical model. Reference1 defines camera/geometry and EXACT SIX ROWS OF TEN CHAIRS=60SEATS. Reference2 defines the correct same-model normal45degree painted appearance. Reference3 is an erroneous edit target with only FIVE rows in its front view: that must be replaced by SIX clearly separate unobscured rows of TEN cream molded chairs each. There are SIX real seating terraces, not five, not seven. Side/back views must correspond to this same six-terrace object with wide side stair, twelve half-riser treads, six landings, darkgreen steel frame/guardrails. No roof/no people. Preserve the guide1 near-cardinal8degree yaw cameras/30degree down and2x2 order N E / S W. Finely hand-painted illustrated miniature materials matching reference2, daylight sun SCREEN UPPER RIGHT/shadows LOWER LEFT. Four complete separate sprites centred in their own quarters, same physical scale, generous margins. Fully opaque objects on genuinely zero-alpha transparent background. No groundplate, haze, outside shadow puddle, labels, text or technical lines. Count the six ten-chair rows in the front view before finishing.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/compact-bleacher-60-upgraded/guides/yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/compact-bleacher-60-upgraded/normal-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/compact-bleacher-60-upgraded/yaw8-v1.png"
+  ],
+  "status": "native correction candidate; independent QA pending",
+  "runtime_imported": false,
+  "sha256": "adad4d41642586f1cf610342b4fd6c69649dbfdf2245b8bc7e68de711cf72b36",
+  "native_bytes_preserved": true
+}

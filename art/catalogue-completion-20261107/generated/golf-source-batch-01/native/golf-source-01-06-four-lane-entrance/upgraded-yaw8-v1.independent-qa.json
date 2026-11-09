@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:44:57.816537+00:00",
+  "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-yaw8-v1.png",
+    "sha256": "579be9182541f2ed151921cb10ea1e32b869489e2b1c812e3c5614312761c179",
+    "bytes": 802370
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-yaw8-v1.provenance.json",
+    "sha256": "342167902681afa774b89dafcc4df3937914ee090d2c36063ae3651a89289127",
+    "bytes": 2948
+  },
+  "exact_prompt_utf8_sha256": "eeec481e67bea617adefeeb1e94286bee286f629b71269a61174e75f426acf91",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/guides/yaw8-world-v2.png",
+      "sha256": "29479b56926760ac6db7aaedef66edbcddfe6d16cd76f2bd5a007fb4b9e37a22",
+      "bytes": 37381
+    },
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-normal-v1.png",
+      "sha256": "d953c11148397b0914ae521069ff4ac1ce6eb6b863e1e1f4fdfb8a9a320a1a03",
+      "bytes": 1075365
+    }
+  ],
+  "four_actual_main_faces_visually_verified": true,
+  "zero_alpha_fraction": 0.7873554227747126,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 0,
+    "vertical_bottom": 0
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_visible_main_face": "front cream sign face; wide gate right",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 30,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "863b1733cf7ba8f0378ef01cc5f5bca176543abba7df3f49209a5f63cf736ebd"
+    },
+    {
+      "cell": "TR",
+      "actual_visible_main_face": "end view; wide gate far",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 95,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "native_rgba_rectangle_sha256": "3685cdf7fb7afc96c4168f907d9ed8fb8d11519f900bb952c83824b0c0430a43"
+    },
+    {
+      "cell": "BL",
+      "actual_visible_main_face": "back sign frame; wide gate left",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 31,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "37e27741d4937b6af903346c121dc316fc6b215ab001b60d16c75668d7d5bc77"
+    },
+    {
+      "cell": "BR",
+      "actual_visible_main_face": "opposite end; wide gate near",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 99,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "native_rgba_rectangle_sha256": "b6efb20417c3686c5f34d44da1fba2203251339d39dcf2b0f0f9fad4175df9d8"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Three turnstile pedestals and one wider swing gate retained in front/rear; side poses show wide lane at far versus near end, matching fixed-world guide. No concrete slab. Occlusion means side views do not independently prove every turnstile arm."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "native_image_bytes_changed": false,
+  "source_crops_saved": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "limits": "Limited source visual face/state/alpha review; labels are main faces, not measured native camera angles. No release or exact 8 degree certification."
+}

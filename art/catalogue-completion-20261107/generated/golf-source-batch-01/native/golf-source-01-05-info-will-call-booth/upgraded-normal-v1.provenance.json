@@ -1,0 +1,37 @@
+{
+  "key": "golf-source-01-05-info-will-call-booth",
+  "family": "normal",
+  "condition": "upgraded",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/upgraded-normal-v1.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.png"
+  ],
+  "runtimeTarget": {
+    "eventTypeId": "info",
+    "eventName": "Info and will-call booth",
+    "currentSpriteSubjectId": "ce:parking-kiosk",
+    "newArtSubjectProposal": "golf:event-info-will-call-booth",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 2,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 4,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "prompt": "Create the UPGRADED condition of this exact golf event facility in reference1. This is a restrained practical renovation of the same physical assembly; preserve the four exact cameras and all doors, roof shapes, post/stair/vent positions, and functional layout. Upgrade condition: Fresh green/cream spectator service booth with durable counters and neat map/ticket storage. Preserve clear paper service function rather than modern touchscreen kiosks.. Functional identity to retain: A4x4m information and will-call booth with two front counter windows, shallow practical roof, one paper-ticket pickup shelf, folded-map rack on the left counter and a blank information panel on the right side; one rear staff door. It serves spectators on foot, not parking-car drivers. No plants/queues/people baked in.. Match the reference's detailed painterly miniature materials and proportions; fresh clean finishes, professionally maintained structure, sound canvas, no rust or ragged holes. Four actual corners in the same cells, same physical size and even scale, orthographic 30 degrees down. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT and shadows LOWER LEFT, windows and lamps OFF. Complete separate sprites with wide zero-alpha transparent margins and gutters. No scene, groundplate, plants, people, UI, captions or decorative extra objects. ",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-c2a392b4-0b5c-46a7-96f0-b281226bd61f.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "f12eef44409e5c21e335120ee95e70e8e7d3a577f681bdb419e681f0b4a703d9",
+  "native_bytes_preserved": true
+}

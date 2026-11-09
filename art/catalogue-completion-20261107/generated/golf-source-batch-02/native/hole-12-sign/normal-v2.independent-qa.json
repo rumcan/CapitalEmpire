@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:57:01.992280+00:00",
+  "review_result": "PASS-source-candidate-opposite-front-rear-corners",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+    "sha256": "bbd5e42167f4b04f05a43679eb609df5a0e84e878bb18f3b84eaf61f74d97271",
+    "bytes": 941680
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.provenance.json",
+    "sha256": "dd77876b1982b66134e56a2d494e10dfc7aadc81c84ea23688f1744a61e6b24a",
+    "bytes": 2302
+  },
+  "exact_prompt_utf8_sha256": "0f7b8c6a87e2a77840ff2fac90d0a733293e422d084394d0b730be4a3195143b",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-small-prop-correction-guides-v1/hole-12-sign/guides/normal-world-v1.png",
+      "sha256": "a9b25d93fe76add94936dfd79ac2b20087371b62b9fe4f770821fc7a22491db8",
+      "bytes": 33486
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v1.png",
+      "sha256": "aba12d8a15079281ea1631f86165a38348f51322e3c8698ccc8f56b3d5e820a9",
+      "bytes": 1432517
+    }
+  ],
+  "zero_alpha_fraction": 0.7716366637922921,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cells": [
+    {
+      "cell": "TL",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 65,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "649d4e7ea514dc47cc9358a05610896bed8b0fef03d8a678d89183feba321c72"
+    },
+    {
+      "cell": "TR",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 78,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "8aa2505cb2091602ffca7c778be290f52eb29529f735a27a530e2e05b4691c1f"
+    },
+    {
+      "cell": "BL",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 64,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "ee50e04fbda172cff79b139fec240d4614fad7731d77824dd591e2e0d3489dcb"
+    },
+    {
+      "cell": "BR",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 64,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "147169c31e5d4fd082de932c6eb7712638b99814ee33a354441ca4ca30907108"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "limited_source_identity_and_pose_pass": true,
+  "visual_observations": [
+    "Two front corners now have opposite board-edge slopes; both rear corners distinct. Intrinsic12/map/five coloured dots remain front-only; rear plank braces correct.",
+    "Two uprights, gold finials and arched top retained. No exact numerical camera certification."
+  ],
+  "source_crops_saved": false,
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

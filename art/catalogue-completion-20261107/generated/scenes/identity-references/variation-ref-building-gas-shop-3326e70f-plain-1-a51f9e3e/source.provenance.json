@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-gas-shop-3326e70f-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-gas-shop-3326e70f-plain-1/NE.png",
+  "sourceSha256": "02d640471b664bc17abe758dca9674c9aa11e92cd0113cc281bc4384ed3fc515",
+  "output": "identity-references/variation-ref-building-gas-shop-3326e70f-plain-1-a51f9e3e/source.png",
+  "outputSha256": "02d640471b664bc17abe758dca9674c9aa11e92cd0113cc281bc4384ed3fc515",
+  "width": 639,
+  "height": 486,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      639,
+      486
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-gas-shop-3326e70f-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Gas shop front sign and right-corner pump canopy stay on fixed walls; rear service door and ladder/utility faces turn consistently. Genuine cutout on magenta. Verify native alpha and repack cell split before ready. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-gas-shop-3326e70f-plain:1",
+    "version": "variation-ref-building-gas-shop-3326e70f-plain-1-4views-v2",
+    "files": {
+      "NE": "02d640471b664bc17abe758dca9674c9aa11e92cd0113cc281bc4384ed3fc515",
+      "SE": "153e95d0bfedf935242118f5962f65d924e3b0660ef490e82af49b13d481b770",
+      "SW": "4c0b74ebecf6f9ac7d7146851e858c62d39bc905c1d3a00fa3a090c0a923de7f",
+      "NW": "fb51a66fcb13ef84e4b5209d8d4c6e95f65a485a0f7c61b015772b128665924d"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.007813,
+      0.382813,
+      0.186523,
+      0.548828
+    ],
+    "crop": {
+      "left": 16,
+      "top": 784,
+      "width": 366,
+      "height": 340
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-gas-shop-3326e70f-plain-1.native.png",
+    "nativeSha256": "de702a01b7d6c0bc88fb70f5464abff4d0b84da18d062bfb5532b91f896894c8"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

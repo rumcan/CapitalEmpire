@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:24:11.365118+00:00",
+  "review_result": "HOLD-repeated-front-and-rear-corner-pairs",
+  "recommended_yaw_source_continuation": false,
+  "four_actual_corners_visually_verified": false,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-v1.png",
+    "sha256": "4f8388cedc98adb3acf945279eb454591bf6c4eed5f479e493167cea3c5bd569",
+    "bytes": 1499707
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-v1.provenance.json",
+    "sha256": "f52ddc5e4bfd682a2fee28c9c01b6690ab17f5bbb756bff4b38a388e5aa28864",
+    "bytes": 2528
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "da6f06937cb77a8f617d5e24c05cb57ace87567aa6de7868a073d5cfb9bdefaa",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/references/park-bench.source.png",
+      "sha256": "7f47f7f13847a5858b4feb068973c5ca3523bd2a5043de1a867bf1bcc82dba29",
+      "bytes": 361656
+    },
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.622239137789377,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "true_clear_gutters_found": true,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 26,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "1d02b3e84efe2e338aa7c918bb743b34abf0ed8c2e2af79da70642e3870f6b30"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 29,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "94b7f3f113f3f77ac88a2a18169030486177e1dd020d058e4ad06869db4389f5"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 12,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "646fb7b48db917548977a24c6fdd584090e61cc45fb95b09a21aab299c000a75"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 32,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "33e209f3883fd23c62fa51dcf28318df6f4ad8c5b622b0b14f419c479b36d164"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "TL/BR same actual front bench/map corner;TR/BL same back corner. Long seat/back edges retain same slope within eachpair rather than opposite front corners.",
+    "Attached map remains on same end; need true four rigid rotations, not texturevariants of two poses."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:fishing-rental-kiosk",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-fishing-rental-kiosk/NE.png",
+  "sourceSha256": "75073ac5c2756739448094ebf81a2368afb4d06055f9ab32746e53c45a8dfc35",
+  "output": "identity-references/business-fishing-rental-kiosk-06b71234/source.png",
+  "outputSha256": "75073ac5c2756739448094ebf81a2368afb4d06055f9ab32746e53c45a8dfc35",
+  "width": 558,
+  "height": 560,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      558,
+      560
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-fishing-rental-kiosk\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "business:fishing-rental-kiosk",
+    "version": "business-fishing-rental-kiosk-4views-v1",
+    "files": {
+      "NE": "75073ac5c2756739448094ebf81a2368afb4d06055f9ab32746e53c45a8dfc35",
+      "SE": "6d6be29dd98f79ec61e232666e342c1eb5addf345753b028dec0715bbf1d169e",
+      "SW": "8f81853a2701991e4dc088ca9f926f4687ed18e9ca765257a79291988f41c24d",
+      "NW": "450cde44e2295c24dc97d05665d2b2273bf61987e20b0245295ef43d40bf1e34"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-1-0.webp",
+    "atlasSha256": "aa782da3ea205d00d59b9d94528cd5fc11a02dbc97cd18a4e6336792ea6899ff",
+    "runtimePage": 19,
+    "localPage": 1,
+    "uv": [
+      0.203125,
+      0.7099609375,
+      0.453125,
+      0.958984375
+    ],
+    "crop": {
+      "left": 416,
+      "top": 1454,
+      "width": 512,
+      "height": 510
+    },
+    "native": "art/theme-consistency/exports/buildings/business-fishing-rental-kiosk.native.png",
+    "nativeSha256": "c3706425a97f2348e22b974b7bf501cbed54c0167682fad052d34efaa3bb6968"
+  },
+  "originalBusinessSourceCell": {
+    "id": "fishing-rental-kiosk",
+    "sourceSheet": "sliced/builtin/fishing-props.png",
+    "sourceCrop": [
+      676,
+      661,
+      542,
+      539
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

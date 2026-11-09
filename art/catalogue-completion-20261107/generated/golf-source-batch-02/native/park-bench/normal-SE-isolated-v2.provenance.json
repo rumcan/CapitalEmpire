@@ -1,0 +1,21 @@
+{
+  "key": "newprop:park-bench",
+  "family": "normal-SE",
+  "condition": "base",
+  "version": 2,
+  "target": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-identity-from-v2-BR-NE.png"
+  ],
+  "prompt": "Edit only the TOP ARCHITECTURE of the tall map panel in REFERENCE1 singlebenchsprite, keeping its exact camera/projection and allbench/slat/leg/arm/map-bodygeometry unchanged. Restore the mapboard's ARCHED curved timber top cap from reference2, spanning between the same two tall uprights. Keep/restore exactly TWO small GOLD BALL FINIALS, one atop each upright, with square darkmetal collar underneath as reference2. The mapboardtopmustnotbeastraighthorizontalbar. Keep the existing front map illustration unchanged below the restored arch. Reference2 is cap/finial materialidentity ONLY; nevercopyitsdifferentcamera. Preserveexistingfinepaintedwood/castmetaldetail, allfeetandsameview, scale, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT. Onecompleteisolatedobjectontruezeroalpha transparentbackground, wideclear margins, noaddedobjects/ground/UI/text/haze.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-1c23a74b-7a1c-45c0-ac6d-889c315a6ef1.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-identity-from-v2-BR-NE.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "aea9a17d72edc74499a3a62f841d5852e086b8bda6ad53fd30e8ebf245142aae",
+  "native_bytes_preserved": true
+}

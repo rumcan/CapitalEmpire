@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:24:11.365118+00:00",
+  "review_result": "PASS-source-candidate-main-faces-and-alpha",
+  "recommended_yaw_source_continuation": true,
+  "four_actual_corners_visually_verified": true,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+    "sha256": "9cad2e7a817441125f1c332d1f285164faf9de2ae655b8c17dc101266ea7e33e",
+    "bytes": 1745797
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.provenance.json",
+    "sha256": "88c0f25949122fbef919ce74f9beec08e89e9d98c16a8ae938101c3541388c54",
+    "bytes": 2591
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "9da2ba769a73a90316fea083cadb73325366e19997a4de316b6503be5ca29a9e",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/references/course-map-board.source.png",
+      "sha256": "68399b1762dc542bae34d9b6d217a8e42759cc6011cd16f6f0c958c76c03ebd1",
+      "bytes": 557401
+    },
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.5461864934919581,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "true_clear_gutters_found": true,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 13,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9d0256f8a8171247aa45c7aa4f6ee02d2dc10f6fae765950ea711de80d390a91"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 21,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "ceb60a1d5460275d73f1a245bd8c2b0096fed0ea4de76f5bfe556c03bb497c51"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 21,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "fe8a5369a2e605866d03fea4037bbae9896952a6c72c02bcf78ea2983f564dce"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 21,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "17eb7ae10d9ae81e7b0a930e3d5f3933288dd3563eb269f0664f754798d00a9d"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Two opposite front slopes and two opposite rear slopes present, map front versus structural back distinct.",
+    "Two lanterns, shallowroof, infoicon and structuralposts retained; flowerplanters/paving removed. No clear lightpools established from warmglass alone."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

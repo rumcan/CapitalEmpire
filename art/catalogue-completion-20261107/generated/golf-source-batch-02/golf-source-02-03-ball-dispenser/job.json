@@ -1,0 +1,93 @@
+{
+  "jobId": "golf-source-02-03-ball-dispenser",
+  "runtimeSubjectId": "newprop:ball-dispenser",
+  "runtimeName": "Ball dispenser",
+  "displayName": "Ball dispenser",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-dispenser.source.png",
+  "sourceProvenance": {
+    "id": "newprop:ball-dispenser",
+    "name": "Ball dispenser",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-dispenser.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+    "originalSheetSHA256": "603c5d0bf8d3206c56aa22b814d0012d3332ce9de5f7a5e9ac3a977058266ea0",
+    "referenceSHA256": "4659dc05fee23fc96f5f492595714837a6166f3a0410021538211897c242717d",
+    "sourceRectXYWH": [
+      781,
+      655,
+      376,
+      559
+    ],
+    "sourceCell": "bottom right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      376,
+      559
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 2.5,
+        "hy": 2.5,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      320,
+      475.74
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      2.5,
+      2.5
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed coin machine with lower front basket and upper ball window; no electronic touchscreen.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "sourceDimensions": {
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 2.5,
+        "hy": 2.5,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      2.5,
+      2.5
+    ],
+    "sourceCropPixels": [
+      376,
+      559
+    ],
+    "newPhysicalDimensionsProposal": "Proposed machine0.65m wide x0.6m deep x1.5m high plus basket; source-design proposal.",
+    "notRuntimeBalanceOrGeometryChange": true
+  },
+  "functionalBrief": "One green upright coin-operated golf-ball dispenser: sloping top hood, upper front window showing golf balls, coin slot/button panel below, lower ball chute and one green wire basket on front. Back is plain service panel; basket never moves to rear in turned views.",
+  "ordinary1950sRedesignRequired": false,
+  "conditionBrief": "Identity-preserving period range machine, worn1950s/1960sgreen enamel or attractive maintained1980scondition. No touchscreen.",
+  "visualNotes": "Confirmed coin machine with lower front basket and upper ball window; no electronic touchscreen.",
+  "existingNormalFourReferences": {
+    "candidateCount": 0,
+    "usableCount": 0,
+    "paths": [],
+    "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+  },
+  "existingYaw8Candidates": 0,
+  "historicallyApprovedEightSet": false,
+  "generationPlan": {
+    "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+    "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+    "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+  },
+  "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+  "approvalClaimed": false,
+  "runtimeIntegrated": false,
+  "nativeGeneratedHere": false,
+  "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+}

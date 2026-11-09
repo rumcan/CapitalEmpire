@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:expansion-derelict-two-storey-012bed48:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-expansion-derelict-two-storey-012bed48-1/NE.png",
+  "sourceSha256": "0a2debd1269fe1db675d0594c39033f838b990072b5e3d47109c88f83956359d",
+  "output": "identity-references/variation-expansion-derelict-two-storey-012bed48-1-e38813e3/source.png",
+  "outputSha256": "0a2debd1269fe1db675d0594c39033f838b990072b5e3d47109c88f83956359d",
+  "width": 344,
+  "height": 337,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      344,
+      337
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-expansion-derelict-two-storey-012bed48-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:expansion-derelict-two-storey-012bed48:1",
+    "version": "variation-expansion-derelict-two-storey-012bed48-1-4views-v4",
+    "files": {
+      "NE": "0a2debd1269fe1db675d0594c39033f838b990072b5e3d47109c88f83956359d",
+      "SE": "5468cb1ad73d5ac5b8747fcba5f815e53798ba84b911dd1f2080dcae57e9ac77",
+      "SW": "dbcf41f7dca1aca2b6886f9eaa375f993c67cf8c71200eea65709f6c9c09164f",
+      "NW": "4b7da1e95213bfd4f2e766ac81afadf1e09ab9ef817c240ee5c82c45d53f1cea"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.5625,
+      0.382813,
+      0.730957,
+      0.547852
+    ],
+    "crop": {
+      "left": 1152,
+      "top": 784,
+      "width": 345,
+      "height": 338
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-expansion-derelict-two-storey-012bed48-1.native.png",
+    "nativeSha256": "763bc643d350c509f028511bd936e8089e2db4f84041357eea679c08f5b2ac21"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,92 @@
+{
+  "look_id": "spectator:spec_m_polo_visor",
+  "actual_runtime_look": {
+    "id": "spectator:spec_m_polo_visor",
+    "w": 80,
+    "h": 137.5,
+    "ax": 40,
+    "ay": 132.5,
+    "m": 1.8,
+    "seat": 0.66
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "spectator:spec_m_polo_visor",
+  "runtime_namespace_differs_from_source_grid": false,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_polo_visor\\preview.png",
+    "sha256": "d2397321ed183ec729745fd3dff36b76244002308fdbf195f2a9567cf0d13033",
+    "bytes": 1898293
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_polo_visor\\sheet.json",
+    "sha256": "c5ce723ed239e126f2f50abefef3cb2c5b7fe7088263ec570d3f97c73c64523d",
+    "bytes": 675
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 275
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_polo_visor\\identity-idle-pair.native.png",
+    "sha256": "22339cc2bb3b585ac034ad3f0a97adb5c13e60b3b1f1d4c0971fa4affb4a16ab",
+    "bytes": 46787
+  },
+  "dimensions": [
+    320,
+    275
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        275
+      ],
+      "dimensions": [
+        160,
+        275
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_polo_visor\\idle-S.native.png",
+        "sha256": "8b718e024032ff45a2d91883a3766c55c7c7dd1e439a3156f67876b06f195add",
+        "bytes": 24867
+      },
+      "pixel_sha256": "8b56801571bc205c83beaa359fa25db2effe9ea319ed541fb1f1092ee0bcbad9"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        275,
+        160,
+        550
+      ],
+      "dimensions": [
+        160,
+        275
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_polo_visor\\idle-SW.native.png",
+        "sha256": "84fc1c4a550f611fbaa41c829462e321f59cf7d33f9a1f7ddb9ba480153d3f79",
+        "bytes": 23050
+      },
+      "pixel_sha256": "ef358a065a0b67f4de4f3ce105942536f4ad9ccf8cb8431c7fa07c5fd86d0515"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

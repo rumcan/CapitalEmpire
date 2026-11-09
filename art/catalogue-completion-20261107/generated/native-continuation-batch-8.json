@@ -1,0 +1,92 @@
+[
+  {
+    "key": "1990s-redbrick-family-single-garage",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-8dc37111-a421-483b-a915-6c0af595bc5e.png",
+    "target": "generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+    "prompt": "Paint the FOUR exact technical models in reference1 in the exact same finished material/style identity as reference2. Matching2x2 near-cardinal views of this 1990s house: Ordinary modest redbrick family house, cream frames, charcoal pitched tile roof, one lower attached single garage on model right. Main front door at x=-1.8,y=-4. One brick chimney on rear-left main roof. No luxury entrance, no extra wings. Exact footprint/roof volumes/garage/chimney/doors/windows fixed across all views. Preserve every opening visible on either main wall or narrow secondary side from guide1. Camera orthographic30degreesdown,8degrees yaw away from each cardinal,4cells N E / S W; subtly slanting bases0.07027slope and a narrow receding side, never zero-yaw elevation or45degree broadcorner. Finely hand-painted miniature game materials matching reference2, no redesigns. Late-afternoon DAYTIME sunlight SCREEN UPPER RIGHT, shadows LOWER LEFT, no lamps/windows glowing. Complete opaque buildings on genuinely zero-alpha transparent background, same scale/amplemargins, no groundplate, garden, driveway, cars, people, plants, haze, grid, captions or labels.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png"
+    ],
+    "status": "native house candidate; identity/alpha/angle QA pending",
+    "runtime_imported": false,
+    "sha256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "2000s-cream-stucco-two-storey-garage",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-3eb052f7-65e7-488f-ae84-9f0e5d1c981f.png",
+    "target": "generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.png",
+    "prompt": "Paint the FOUR exact technical models in reference1 in the exact same finished material/style identity as reference2. Matching2x2 near-cardinal views of this 2000s house: Ordinary compact two-storey cream stucco family house with modest brown tile hip roof, one single garage attached at right and a small door canopy. Three upper front windows, one broad ground living window. No mansion columns or double-height glazing. Exact footprint/roof volumes/garage/chimney/doors/windows fixed across all views. Preserve every opening visible on either main wall or narrow secondary side from guide1. Camera orthographic30degreesdown,8degrees yaw away from each cardinal,4cells N E / S W; subtly slanting bases0.07027slope and a narrow receding side, never zero-yaw elevation or45degree broadcorner. Finely hand-painted miniature game materials matching reference2, no redesigns. Late-afternoon DAYTIME sunlight SCREEN UPPER RIGHT, shadows LOWER LEFT, no lamps/windows glowing. Complete opaque buildings on genuinely zero-alpha transparent background, same scale/amplemargins, no groundplate, garden, driveway, cars, people, plants, haze, grid, captions or labels.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png"
+    ],
+    "status": "native house candidate; identity/alpha/angle QA pending",
+    "runtime_imported": false,
+    "sha256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "2010s-brick-white-clad-townhouse-pair",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0b8d2cbc-80d6-4f8e-b5d3-bbd21e260cf8.png",
+    "target": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.png",
+    "prompt": "Paint the FOUR exact technical models in reference1 in the exact same finished material/style identity as reference2. Matching2x2 near-cardinal views of this 2010s house: A modest attached pair, two equal 6m-wide units and exactly two distinct front doors near the central party wall. Brick ground floor, white upper cladding, simple charcoal pitched roof; four upper front windows and separate rear patio doors. No detached gap, no garage doors mistaken for front doors. Exact footprint/roof volumes/garage/chimney/doors/windows fixed across all views. Preserve every opening visible on either main wall or narrow secondary side from guide1. Camera orthographic30degreesdown,8degrees yaw away from each cardinal,4cells N E / S W; subtly slanting bases0.07027slope and a narrow receding side, never zero-yaw elevation or45degree broadcorner. Finely hand-painted miniature game materials matching reference2, no redesigns. Late-afternoon DAYTIME sunlight SCREEN UPPER RIGHT, shadows LOWER LEFT, no lamps/windows glowing. Complete opaque buildings on genuinely zero-alpha transparent background, same scale/amplemargins, no groundplate, garden, driveway, cars, people, plants, haze, grid, captions or labels.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png"
+    ],
+    "status": "native house candidate; identity/alpha/angle QA pending",
+    "runtime_imported": false,
+    "sha256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "2020s-white-charcoal-asymmetric-solar-home",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-013e98da-44a5-4072-b9a4-0102f146ea9a.png",
+    "target": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png",
+    "prompt": "Make a precise correction to the first reference's four-view modern2020s solar house sheet. In TOP-RIGHT and BOTTOM-LEFT cells the large rear opening was wrongly painted like a grey shutter/garage door. Replace this exact opening with a two-panel aluminium-framed SLIDING GLASS PATIO DOOR: dark blue-grey reflective glazing with a central vertical frame, fullheight, no horizontal shutter slats. This small home has NO GARAGE. Keep identical opening position/size, housefootprint, steppedwhite/charcoalflatroofs, exactSIXsolarpanels, vent, otherdoors/windows,30degreeisometriccameras, fourcellplacement, style/scale andsunupperrightdaylight. No other redesign or scenery. Reference2technicalmodelconfirmsrearopening. Return same2x2opaquehouse sprites on genuinezeroalpha transparentbackground, no outsidegroundwash.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\normal-world-v1.png"
+    ],
+    "status": "native house candidate; identity/alpha/angle QA pending",
+    "runtime_imported": false,
+    "sha256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "era-home-exteriors-01",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b8027895-b516-449f-b974-e0a18d861fc4.png",
+    "target": "generated/scenes/batches/era-home-exteriors-01/source-v1.png",
+    "prompt": "Create one wide16:9 high-resolution2x2 sheet of FOUR distinct large hand-painted cinematic property-detail pictures. Each of the four cells itself16:9, opaque, full scene, clean simplecellseparationwithoutframes/captions/grid/UI. The same detailed illustrated warm miniature realism as reference1(characterportrait STYLEONLY, doNOTcopytheperson). References2\u20135 give exacthouseidentity for cells1\u20134. Fourdifferenthouses, NOTfourrotations. Late-afternoon DAYTIME, sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT. Keep eachhouse's exactarchitecture/roofmasses/storeys/garageplacement/doors/windows/chimney/solarpanels from its reference. No brandsorlogos. Eachcellshowsits properera, from1990s to2020s as townrenewal. No fantasy/Halloween props or nightglow. No characters copied fromreference1. Eye-level or slightlyraisedfront3quarter exterior view, wholemainfacade/entrancevisible anddominant, modesttidysuburbangarden/approach andnaturalsurroundings, no cars obstructingthehouse. PreserveONEsinglegarageonlywhere thebuildingactuallyhasone;2020househasNOgarage, rearopeningisglasspatiodoor. Warmbrightmaintainedlater-era homes, plausiblematerials, samepaintedstyleacrossallfour.\nCELL 1 top-left: 1990s Ordinary modest redbrick family house, cream frames, charcoal pitched tile roof, one lower attached single garage on model right. Main front door at x=-1.8,y=-4. One brick chimney on rear-left main roof. No luxury entrance, no extra wings.\nCELL 2 top-right: 2000s Ordinary compact two-storey cream stucco family house with modest brown tile hip roof, one single garage attached at right and a small door canopy. Three upper front windows, one broad ground living window. No mansion columns or double-height glazing.\nCELL 3 bottom-left: 2010s A modest attached pair, two equal 6m-wide units and exactly two distinct front doors near the central party wall. Brick ground floor, white upper cladding, simple charcoal pitched roof; four upper front windows and separate rear patio doors. No detached gap, no garage doors mistaken for front doors.\nCELL 4 bottom-right: 2020s An ordinary compact single-storey home, higher white left volume and lower charcoal right entry volume. Asymmetrical stepped flat parapet roofs, timber front door and six rectangular solar modules in two rows of three on the higher roof. No science-fiction canopy, no huge glazing walls, no mansion scale.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/portraits/golf-pro-m1/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.png"
+    ],
+    "status": "native scene candidate; authored inferred interiors; no measured floorplan claim",
+    "runtime_imported": false,
+    "sha256": "aa389be44b02746ab801d55145299f3681db049a11beea6ae0c2ef4611738ced",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "era-home-interiors-01",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-dd958a84-7117-40d2-a39c-48dfb82e508f.png",
+    "target": "generated/scenes/batches/era-home-interiors-01/source-v1.png",
+    "prompt": "Create one wide16:9 high-resolution2x2 sheet of FOUR distinct large hand-painted cinematic property-detail pictures. Each of the four cells itself16:9, opaque, full scene, clean simplecellseparationwithoutframes/captions/grid/UI. The same detailed illustrated warm miniature realism as reference1(characterportrait STYLEONLY, doNOTcopytheperson). References2\u20135 give exacthouseidentity for cells1\u20134. Fourdifferenthouses, NOTfourrotations. Late-afternoon DAYTIME, sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT. Keep eachhouse's exactarchitecture/roofmasses/storeys/garageplacement/doors/windows/chimney/solarpanels from its reference. No brandsorlogos. Eachcellshowsits properera, from1990s to2020s as townrenewal. No fantasy/Halloween props or nightglow. No characters copied fromreference1. Eachcellis a spacious eye-level plausible LIVINGROOM interior of thecorrespondinghouse, onecompletecoherentroompercell; architecturalinteriorsareauthoredillustrations, notmeasuredfloorplans. Camera showscomfortablefurnishings, somewindowlightfromupperright, cleanroomcirculation, nopeople. Match era:1990s redbrickhome withtimberfurniture,floralfabricsofa, modestboxCRTtelevision/bookcase;2000screamstuccohomewithwarmbeigefurnishings/woodlaminate/compactearlyflatscreen;2010stownhousewithwhitewalls/lightoak/scandisofaandsmallmodernTV;2020ssolarhomewithwarmminimalisttimber/neutralfabricsofa/houseplantinpot/largeclearglazing anddiscreetmodernfurnishings. A lived-inordinaryhome, notluxuryshowroom. No UI/text, noproductbranding. Allfourremainthesamehandpaintedgameillustrationstyle.\nCELL 1 top-left: 1990s Ordinary modest redbrick family house, cream frames, charcoal pitched tile roof, one lower attached single garage on model right. Main front door at x=-1.8,y=-4. One brick chimney on rear-left main roof. No luxury entrance, no extra wings.\nCELL 2 top-right: 2000s Ordinary compact two-storey cream stucco family house with modest brown tile hip roof, one single garage attached at right and a small door canopy. Three upper front windows, one broad ground living window. No mansion columns or double-height glazing.\nCELL 3 bottom-left: 2010s A modest attached pair, two equal 6m-wide units and exactly two distinct front doors near the central party wall. Brick ground floor, white upper cladding, simple charcoal pitched roof; four upper front windows and separate rear patio doors. No detached gap, no garage doors mistaken for front doors.\nCELL 4 bottom-right: 2020s An ordinary compact single-storey home, higher white left volume and lower charcoal right entry volume. Asymmetrical stepped flat parapet roofs, timber front door and six rectangular solar modules in two rows of three on the higher roof. No science-fiction canopy, no huge glazing walls, no mansion scale.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/portraits/golf-pro-m1/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.png"
+    ],
+    "status": "native scene candidate; authored inferred interiors; no measured floorplan claim",
+    "runtime_imported": false,
+    "sha256": "7636918e44e0627ec3d9bb8bda7306b821b592616422787d79efee4153bcf214",
+    "native_bytes_preserved": true
+  }
+]

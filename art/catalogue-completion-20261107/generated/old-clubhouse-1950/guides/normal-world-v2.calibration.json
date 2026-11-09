@@ -1,0 +1,4890 @@
+{
+  "purpose": "technical single-world geometry only, never final sprites",
+  "model": "old-clubhouse-1950",
+  "settings": {
+    "body_dimensions_metres": [
+      12,
+      8,
+      3
+    ],
+    "ridge_height_metres": 4.2,
+    "chimney_world_location": [
+      -4,
+      0,
+      4.2
+    ],
+    "brick_chimney_count": 1,
+    "gable_end_windows": "two fixed windows on each x=-6 and x=+6 gable end",
+    "rear_vents": "exactly two high vents on y=+4",
+    "front": "y=-4; door/window/hatch/awning/bench/steps/crate",
+    "guide_version": 2,
+    "scale_px_per_metre": 44,
+    "identity_policy": "Explicit parent single-world-coordinate brief; do not move chimney or substitute front details onto rear slivers."
+  },
+  "kind": "normal",
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "camera_down_degrees": 30,
+  "camera_horizontal_offset_degrees": -45,
+  "runtime_cardinal_yaw_metadata": null,
+  "basis": {
+    "screen_right": [
+      0.7071067811865476,
+      -0.7071067811865476,
+      0.0
+    ],
+    "screen_down": [
+      -0.35355339059327373,
+      -0.35355339059327373,
+      -0.8660254037844387
+    ],
+    "toward_camera": [
+      -0.6123724356957946,
+      -0.6123724356957946,
+      0.49999999999999994
+    ]
+  },
+  "coordinate_system": "metres; front y=-depth/2; right x=+width/2; z up; ONE model rotated0/90/180/270 about z",
+  "depth_handling": "orthographic triangle rasterization, barycentric per-pixel depth, keep nearest; no average-depth painter guess",
+  "svg_form": "self-contained exact technical z-buffer raster; editable full world mesh is stored separately",
+  "views": [
+    {
+      "view": "SE",
+      "object_rotation_degrees_about_Z": 0,
+      "cell_box": [
+        0,
+        0,
+        800,
+        800
+      ],
+      "scale_px_per_metre": 44,
+      "local_offset_px": [
+        400.0,
+        460.57634313820813
+      ],
+      "object_bbox_local_px": [
+        72,
+        184,
+        728,
+        616
+      ],
+      "projected_anchors": {
+        "enclosed-body": {
+          "world_metres": [
+            0,
+            0,
+            1.5
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            1.5
+          ],
+          "screen_projection_metres": [
+            0.0,
+            -1.299038105676658
+          ],
+          "pixel": [
+            400.0,
+            403.4186664884352
+          ],
+          "depth_toward_camera": 0.7499999999999999,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/frame": {
+          "world_metres": [
+            -6.015,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.015,
+            -1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.909744404582643,
+            1.4127344404906597
+          ],
+          "pixel": [
+            271.9712461983637,
+            522.7366585197972
+          ],
+          "depth_toward_camera": 5.646927828532214,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/glass": {
+          "world_metres": [
+            -6.023,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.023,
+            -1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.9154012588321354,
+            1.4155628676154055
+          ],
+          "pixel": [
+            271.722344611386,
+            522.861109313286
+          ],
+          "depth_toward_camera": 5.65182680801778,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/mullion": {
+          "world_metres": [
+            -6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.9182296859568817,
+            1.4169770811777787
+          ],
+          "pixel": [
+            271.5978938178972,
+            522.9233347100304
+          ],
+          "depth_toward_camera": 5.654276297760563,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/frame": {
+          "world_metres": [
+            -6.015,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.015,
+            1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.5967501730915235,
+            0.06923155623621935
+          ],
+          "pixel": [
+            153.74299238397296,
+            463.6225316126018
+          ],
+          "depth_toward_camera": 3.3199125728881946,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/glass": {
+          "world_metres": [
+            -6.023,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.023,
+            1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.602407027341016,
+            0.0720599833609652
+          ],
+          "pixel": [
+            153.4940907969953,
+            463.7469824060906
+          ],
+          "depth_toward_camera": 3.324811552373761,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/mullion": {
+          "world_metres": [
+            -6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.605235454465762,
+            0.07347419692333834
+          ],
+          "pixel": [
+            153.36964000350645,
+            463.80920780283503
+          ],
+          "depth_toward_camera": 3.3272610421165436,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/frame": {
+          "world_metres": [
+            6.015,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.015,
+            -1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.5967501730915235,
+            -2.8405128483464237
+          ],
+          "pixel": [
+            646.2570076160271,
+            335.5937778109655
+          ],
+          "depth_toward_camera": -1.719912572888195,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/glass": {
+          "world_metres": [
+            6.023,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.023,
+            -1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.602407027341016,
+            -2.843341275471169
+          ],
+          "pixel": [
+            646.5059092030046,
+            335.4693270174767
+          ],
+          "depth_toward_camera": -1.7248115523737613,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/mullion": {
+          "world_metres": [
+            6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.605235454465762,
+            -2.8447554890335427
+          ],
+          "pixel": [
+            646.6303599964936,
+            335.40710162073225
+          ],
+          "depth_toward_camera": -1.727261042116544,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/frame": {
+          "world_metres": [
+            6.015,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.015,
+            1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.909744404582643,
+            -4.184015732600864
+          ],
+          "pixel": [
+            528.0287538016363,
+            276.4796509037701
+          ],
+          "depth_toward_camera": -4.0469278285322146,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/glass": {
+          "world_metres": [
+            6.023,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.023,
+            1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.9154012588321354,
+            -4.186844159725609
+          ],
+          "pixel": [
+            528.277655388614,
+            276.3552001102813
+          ],
+          "depth_toward_camera": -4.05182680801778,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/mullion": {
+          "world_metres": [
+            6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.9182296859568817,
+            -4.188258373287983
+          ],
+          "pixel": [
+            528.4021061821028,
+            276.29297471353686
+          ],
+          "depth_toward_camera": -4.0542762977605635,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/frame": {
+          "world_metres": [
+            -3.1,
+            -4.015,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -3.1,
+            -4.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            0.6470027047856908,
+            1.1298917280160403
+          ],
+          "pixel": [
+            428.4681190105704,
+            510.2915791709139
+          ],
+          "depth_toward_camera": 5.157029879975578,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/glass": {
+          "world_metres": [
+            -3.1,
+            -4.023,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -3.1,
+            -4.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            0.6526595590351834,
+            1.1327201551407866
+          ],
+          "pixel": [
+            428.71702059754807,
+            510.41602996440275
+          ],
+          "depth_toward_camera": 5.1619288594611445,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/mullion": {
+          "world_metres": [
+            -3.1,
+            -4.026999999999999,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -3.1,
+            -4.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            0.6554879861599292,
+            1.1341343687031593
+          ],
+          "pixel": [
+            428.84147139103686,
+            510.47825536114715
+          ],
+          "depth_toward_camera": 5.164378349203927,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door": {
+          "world_metres": [
+            0.1,
+            -4.018,
+            1.2
+          ],
+          "rotated_world_metres": [
+            0.1,
+            -4.018,
+            1.2
+          ],
+          "screen_projection_metres": [
+            2.9118657249262028,
+            0.34599169980312006
+          ],
+          "pixel": [
+            528.1220918967529,
+            475.79997792954543
+          ],
+          "depth_toward_camera": 2.999275203056123,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/frame": {
+          "world_metres": [
+            0.10000000000000002,
+            -4.03,
+            1.65
+          ],
+          "rotated_world_metres": [
+            0.10000000000000002,
+            -4.03,
+            1.65
+          ],
+          "screen_projection_metres": [
+            2.9203510063004416,
+            -0.039477091212757776
+          ],
+          "pixel": [
+            528.4954442772195,
+            458.8393511248468
+          ],
+          "depth_toward_camera": 3.2316236722844724,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/glass": {
+          "world_metres": [
+            0.10000000000000003,
+            -4.038,
+            1.65
+          ],
+          "rotated_world_metres": [
+            0.10000000000000003,
+            -4.038,
+            1.65
+          ],
+          "screen_projection_metres": [
+            2.926007860549934,
+            -0.036648664088011706
+          ],
+          "pixel": [
+            528.7443458641972,
+            458.9638019183356
+          ],
+          "depth_toward_camera": 3.236522651770039,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/mullion": {
+          "world_metres": [
+            0.1,
+            -4.042,
+            1.65
+          ],
+          "rotated_world_metres": [
+            0.1,
+            -4.042,
+            1.65
+          ],
+          "screen_projection_metres": [
+            2.9288362876746796,
+            -0.03523445052563878
+          ],
+          "pixel": [
+            528.8687966576858,
+            459.02602731508
+          ],
+          "depth_toward_camera": 3.238972141512822,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-serving-hatch": {
+          "world_metres": [
+            3.325,
+            -4.02,
+            1.525
+          ],
+          "rotated_world_metres": [
+            3.325,
+            -4.02,
+            1.525
+          ],
+          "screen_projection_metres": [
+            5.193699307815192,
+            -1.0749691343089438
+          ],
+          "pixel": [
+            628.5227695438684,
+            413.2777012286146
+          ],
+          "depth_toward_camera": 1.1880988428085768,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "hatch-sill": {
+          "world_metres": [
+            3.325,
+            -4.25,
+            1.0
+          ],
+          "rotated_world_metres": [
+            3.325,
+            -4.25,
+            1.0
+          ],
+          "screen_projection_metres": [
+            5.3563338674880985,
+            -0.5389885174856605
+          ],
+          "pixel": [
+            635.6786901694763,
+            436.8608483688391
+          ],
+          "depth_toward_camera": 1.06644450301861,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "rear-high-vent--3.4": {
+          "world_metres": [
+            -3.4,
+            4.02,
+            2.425
+          ],
+          "rotated_world_metres": [
+            -3.4,
+            4.02,
+            2.425
+          ],
+          "screen_projection_metres": [
+            -5.246732316404183,
+            -2.3193147063450934
+          ],
+          "pixel": [
+            169.14377807821597,
+            358.526496059024
+          ],
+          "depth_toward_camera": 0.8328290898686073,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.31": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.3225
+          ],
+          "rotated_world_metres": [
+            -3.4,
+            4.03,
+            2.3225
+          ],
+          "screen_projection_metres": [
+            -5.253803384216049,
+            -2.234082636363121
+          ],
+          "pixel": [
+            168.83265109449385,
+            362.2767071382308
+          ],
+          "depth_toward_camera": 0.7754553655116492,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.4": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "rotated_world_metres": [
+            -3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "screen_projection_metres": [
+            -5.253803384216049,
+            -2.3120249227037206
+          ],
+          "pixel": [
+            168.83265109449385,
+            358.84724653924445
+          ],
+          "depth_toward_camera": 0.8204553655116491,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.49": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "rotated_world_metres": [
+            -3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "screen_projection_metres": [
+            -5.253803384216049,
+            -2.389967209044321
+          ],
+          "pixel": [
+            168.83265109449385,
+            355.417785940258
+          ],
+          "depth_toward_camera": 0.8654553655116495,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "rear-high-vent-3.4": {
+          "world_metres": [
+            3.4,
+            4.02,
+            2.425
+          ],
+          "rotated_world_metres": [
+            3.4,
+            4.02,
+            2.425
+          ],
+          "screen_projection_metres": [
+            -0.43840620433565913,
+            -4.723477762379355
+          ],
+          "pixel": [
+            380.710127009231,
+            252.7433215935165
+          ],
+          "depth_toward_camera": -3.331303472862796,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.31": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.3225
+          ],
+          "rotated_world_metres": [
+            3.4,
+            4.03,
+            2.3225
+          ],
+          "screen_projection_metres": [
+            -0.4454772721475253,
+            -4.6382456923973825
+          ],
+          "pixel": [
+            380.3990000255089,
+            256.4935326727233
+          ],
+          "depth_toward_camera": -3.388677197219754,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.4": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "rotated_world_metres": [
+            3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "screen_projection_metres": [
+            -0.4454772721475253,
+            -4.716187978737982
+          ],
+          "pixel": [
+            380.3990000255089,
+            253.06407207373692
+          ],
+          "depth_toward_camera": -3.343677197219754,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.49": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "rotated_world_metres": [
+            3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "screen_projection_metres": [
+            -0.4454772721475253,
+            -4.794130265078582
+          ],
+          "pixel": [
+            380.3990000255089,
+            249.6346114747505
+          ],
+          "depth_toward_camera": -3.298677197219754,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-bench-seat": {
+          "world_metres": [
+            -3.0,
+            -4.72,
+            0.5
+          ],
+          "rotated_world_metres": [
+            -3.0,
+            -4.72,
+            0.5
+          ],
+          "screen_projection_metres": [
+            1.2162236636408617,
+            2.296419473487854
+          ],
+          "pixel": [
+            453.51384120019793,
+            561.6187999716738
+          ],
+          "depth_toward_camera": 4.977515203571533,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-bench-back": {
+          "world_metres": [
+            -3.0,
+            -4.42,
+            0.86
+          ],
+          "rotated_world_metres": [
+            -3.0,
+            -4.42,
+            0.86
+          ],
+          "screen_projection_metres": [
+            1.0040916292848974,
+            1.878584310947474
+          ],
+          "pixel": [
+            444.1800316885355,
+            543.234052819897
+          ],
+          "depth_toward_camera": 4.973803472862795,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "bench-leg--4.4": {
+          "world_metres": [
+            -4.4,
+            -4.72,
+            0.23
+          ],
+          "rotated_world_metres": [
+            -4.4,
+            -4.72,
+            0.23
+          ],
+          "screen_projection_metres": [
+            0.22627416997969485,
+            3.0252210793402354
+          ],
+          "pixel": [
+            409.95606347910655,
+            593.6860706291785
+          ],
+          "depth_toward_camera": 5.699836613545647,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "bench-leg--1.6": {
+          "world_metres": [
+            -1.6,
+            -4.72,
+            0.23
+          ],
+          "rotated_world_metres": [
+            -1.6,
+            -4.72,
+            0.23
+          ],
+          "screen_projection_metres": [
+            2.206173157302028,
+            2.035271585679069
+          ],
+          "pixel": [
+            497.0716189212892,
+            550.1282929080871
+          ],
+          "depth_toward_camera": 3.9851937935974213,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-step-lower": {
+          "world_metres": [
+            0.1,
+            -5.05,
+            0.075
+          ],
+          "rotated_world_metres": [
+            0.1,
+            -5.05,
+            0.075
+          ],
+          "screen_projection_metres": [
+            3.6415999231107197,
+            1.685137378152872
+          ],
+          "pixel": [
+            560.2303966168716,
+            534.7223877769345
+          ],
+          "depth_toward_camera": 3.068743556694183,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-step-upper": {
+          "world_metres": [
+            0.1,
+            -4.6,
+            0.175
+          ],
+          "rotated_world_metres": [
+            0.1,
+            -4.6,
+            0.175
+          ],
+          "screen_projection_metres": [
+            3.323401871576773,
+            1.4394358120074549
+          ],
+          "pixel": [
+            546.229682349378,
+            523.9115188665362
+          ],
+          "depth_toward_camera": 2.8431759606310756,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ball-crate": {
+          "world_metres": [
+            1.55,
+            -4.76,
+            0.28
+          ],
+          "rotated_world_metres": [
+            1.55,
+            -4.76,
+            0.28
+          ],
+          "screen_projection_metres": [
+            4.461843789287116,
+            0.8924192707447658
+          ],
+          "pixel": [
+            596.3211267286331,
+            499.84279105097784
+          ],
+          "depth_toward_camera": 2.1057155185835006,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "crate-open-top": {
+          "world_metres": [
+            1.55,
+            -4.76,
+            0.565
+          ],
+          "rotated_world_metres": [
+            1.55,
+            -4.76,
+            0.565
+          ],
+          "screen_projection_metres": [
+            4.461843789287116,
+            0.6456020306662009
+          ],
+          "pixel": [
+            596.3211267286331,
+            488.98283248752097
+          ],
+          "depth_toward_camera": 2.2482155185835,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-0-0": {
+          "world_metres": [
+            1.39,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            1.39,
+            -4.87,
+            0.62
+          ],
+          "screen_projection_metres": [
+            4.426488450227788,
+            0.6934300489182407
+          ],
+          "pixel": [
+            594.7654918100227,
+            491.08726529061073
+          ],
+          "depth_toward_camera": 2.4410560762213653,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-0-1": {
+          "world_metres": [
+            1.39,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            1.39,
+            -4.68,
+            0.62
+          ],
+          "screen_projection_metres": [
+            4.2921381618023435,
+            0.6262549047055187
+          ],
+          "pixel": [
+            588.8540791193032,
+            488.13155894525096
+          ],
+          "depth_toward_camera": 2.3247053134391638,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-1-0": {
+          "world_metres": [
+            1.5499999999999998,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            1.5499999999999998,
+            -4.87,
+            0.62
+          ],
+          "screen_projection_metres": [
+            4.539625535217636,
+            0.6368615064233171
+          ],
+          "pixel": [
+            599.7435235495759,
+            488.59824942083407
+          ],
+          "depth_toward_camera": 2.3430764865100384,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-1-1": {
+          "world_metres": [
+            1.5499999999999998,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            1.5499999999999998,
+            -4.68,
+            0.62
+          ],
+          "screen_projection_metres": [
+            4.405275246792192,
+            0.5696863622105947
+          ],
+          "pixel": [
+            593.8321108588564,
+            485.6425430754743
+          ],
+          "depth_toward_camera": 2.226725723727837,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-2-0": {
+          "world_metres": [
+            1.71,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            1.71,
+            -4.87,
+            0.62
+          ],
+          "screen_projection_metres": [
+            4.652762620207483,
+            0.580292963928393
+          ],
+          "pixel": [
+            604.7215552891292,
+            486.1092335510574
+          ],
+          "depth_toward_camera": 2.245096896798711,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-2-1": {
+          "world_metres": [
+            1.71,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            1.71,
+            -4.68,
+            0.62
+          ],
+          "screen_projection_metres": [
+            4.518412331782039,
+            0.513117819715671
+          ],
+          "pixel": [
+            598.8101425984097,
+            483.1535272056976
+          ],
+          "depth_toward_camera": 2.1287461340165095,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "eave-fascia--1": {
+          "world_metres": [
+            0,
+            -4.25,
+            2.895
+          ],
+          "rotated_world_metres": [
+            0.0,
+            -4.25,
+            2.895
+          ],
+          "screen_projection_metres": [
+            3.0052038200428273,
+            -1.0045416339345368
+          ],
+          "pixel": [
+            532.2289680818844,
+            416.3765112450885
+          ],
+          "depth_toward_camera": 4.050082851707127,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "eave-fascia-1": {
+          "world_metres": [
+            0,
+            4.25,
+            2.895
+          ],
+          "rotated_world_metres": [
+            0.0,
+            4.25,
+            2.895
+          ],
+          "screen_projection_metres": [
+            -3.0052038200428273,
+            -4.009745453977364
+          ],
+          "pixel": [
+            267.77103191811557,
+            284.1475431632041
+          ],
+          "depth_toward_camera": -1.1550828517071272,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ridge-center": {
+          "world_metres": [
+            0,
+            0,
+            4.2
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            4.2
+          ],
+          "screen_projection_metres": [
+            0.0,
+            -3.6373066958946425
+          ],
+          "pixel": [
+            400.0,
+            300.5348485188439
+          ],
+          "depth_toward_camera": 2.0999999999999996,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ONE-brick-chimney": {
+          "world_metres": [
+            -4,
+            0,
+            4.58
+          ],
+          "rotated_world_metres": [
+            -4.0,
+            0.0,
+            4.58
+          ],
+          "screen_projection_metres": [
+            -2.8284271247461903,
+            -2.5521827869596345
+          ],
+          "pixel": [
+            275.54920651116765,
+            348.2803005119842
+          ],
+          "depth_toward_camera": 4.739489742783178,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-cap": {
+          "world_metres": [
+            -4,
+            0,
+            5.12
+          ],
+          "rotated_world_metres": [
+            -4.0,
+            0.0,
+            5.12
+          ],
+          "screen_projection_metres": [
+            -2.8284271247461903,
+            -3.019836505003231
+          ],
+          "pixel": [
+            275.54920651116765,
+            327.703536918066
+          ],
+          "depth_toward_camera": 5.0094897427831775,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-opening": {
+          "world_metres": [
+            -4,
+            0,
+            5.193
+          ],
+          "rotated_world_metres": [
+            -4.0,
+            0.0,
+            5.193
+          ],
+          "screen_projection_metres": [
+            -2.8284271247461903,
+            -3.083056359479495
+          ],
+          "pixel": [
+            275.54920651116765,
+            324.9218633211103
+          ],
+          "depth_toward_camera": 5.045989742783178,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-ridge-location": {
+          "world_metres": [
+            -4,
+            0,
+            4.2
+          ],
+          "rotated_world_metres": [
+            -4.0,
+            0.0,
+            4.2
+          ],
+          "screen_projection_metres": [
+            -2.8284271247461903,
+            -2.2230931335215476
+          ],
+          "pixel": [
+            275.54920651116765,
+            362.76024526326
+          ],
+          "depth_toward_camera": 4.549489742783178,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-entry": {
+          "world_metres": [
+            0.1,
+            -4.1,
+            0.35
+          ],
+          "rotated_world_metres": [
+            0.1,
+            -4.1,
+            0.35
+          ],
+          "screen_projection_metres": [
+            2.9698484809834995,
+            1.1111046710485413
+          ],
+          "pixel": [
+            530.673333163274,
+            509.464948664344
+          ],
+          "depth_toward_camera": 2.624489742783178,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-focus": {
+          "world_metres": [
+            0,
+            -7.5,
+            0
+          ],
+          "rotated_world_metres": [
+            0.0,
+            -7.5,
+            0.0
+          ],
+          "screen_projection_metres": [
+            5.303300858899107,
+            2.651650429449553
+          ],
+          "pixel": [
+            633.3452377915607,
+            577.2489620339885
+          ],
+          "depth_toward_camera": 4.592793267718459,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        }
+      },
+      "main_wall_bottom_slope": -0.4999999999999999,
+      "main_wall_bottom_angle_screen_degrees": -26.565051177077986,
+      "visible_body_walls": [
+        "front",
+        "left-gable-end"
+      ],
+      "dominant_wall": "front",
+      "secondary_wall": "left-gable-end",
+      "front_details_belong_on_visible_secondary_wall": false,
+      "rear_vents_belong_on_visible_secondary_wall": false,
+      "projected_front_focus_direction": [
+        0.7071067811865476,
+        0.35355339059327373
+      ]
+    },
+    {
+      "view": "SW",
+      "object_rotation_degrees_about_Z": 90,
+      "cell_box": [
+        800,
+        0,
+        1600,
+        800
+      ],
+      "scale_px_per_metre": 44,
+      "local_offset_px": [
+        400.0,
+        460.57634313820813
+      ],
+      "object_bbox_local_px": [
+        72,
+        184,
+        728,
+        616
+      ],
+      "projected_anchors": {
+        "enclosed-body": {
+          "world_metres": [
+            0,
+            0,
+            1.5
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            1.5
+          ],
+          "screen_projection_metres": [
+            0.0,
+            -1.299038105676658
+          ],
+          "pixel": [
+            1200.0,
+            403.4186664884352
+          ],
+          "depth_toward_camera": 0.7499999999999999,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/frame": {
+          "world_metres": [
+            -6.015,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.8999999999999995,
+            -6.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.5967501730915235,
+            0.06923155623621957
+          ],
+          "pixel": [
+            1446.257007616027,
+            463.6225316126018
+          ],
+          "depth_toward_camera": 3.319912572888195,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/glass": {
+          "world_metres": [
+            -6.023,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.8999999999999995,
+            -6.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.602407027341016,
+            0.07205998336096542
+          ],
+          "pixel": [
+            1446.5059092030046,
+            463.74698240609064
+          ],
+          "depth_toward_camera": 3.3248115523737614,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/mullion": {
+          "world_metres": [
+            -6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.8999999999999995,
+            -6.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.605235454465762,
+            0.07347419692333856
+          ],
+          "pixel": [
+            1446.6303599964936,
+            463.80920780283503
+          ],
+          "depth_toward_camera": 3.327261042116544,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/frame": {
+          "world_metres": [
+            -6.015,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.9000000000000004,
+            -6.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.909744404582643,
+            1.4127344404906597
+          ],
+          "pixel": [
+            1328.0287538016364,
+            522.7366585197972
+          ],
+          "depth_toward_camera": 5.646927828532214,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/glass": {
+          "world_metres": [
+            -6.023,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.9000000000000004,
+            -6.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.9154012588321354,
+            1.4155628676154055
+          ],
+          "pixel": [
+            1328.277655388614,
+            522.861109313286
+          ],
+          "depth_toward_camera": 5.6518268080177805,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/mullion": {
+          "world_metres": [
+            -6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.9000000000000004,
+            -6.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.9182296859568817,
+            1.4169770811777787
+          ],
+          "pixel": [
+            1328.4021061821027,
+            522.9233347100304
+          ],
+          "depth_toward_camera": 5.654276297760563,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/frame": {
+          "world_metres": [
+            6.015,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.9000000000000004,
+            6.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.909744404582643,
+            -4.184015732600864
+          ],
+          "pixel": [
+            1071.9712461983636,
+            276.4796509037701
+          ],
+          "depth_toward_camera": -4.0469278285322146,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/glass": {
+          "world_metres": [
+            6.023,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.9000000000000004,
+            6.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.9154012588321354,
+            -4.186844159725609
+          ],
+          "pixel": [
+            1071.722344611386,
+            276.3552001102813
+          ],
+          "depth_toward_camera": -4.051826808017781,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/mullion": {
+          "world_metres": [
+            6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.9000000000000004,
+            6.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.9182296859568817,
+            -4.188258373287983
+          ],
+          "pixel": [
+            1071.5978938178973,
+            276.29297471353686
+          ],
+          "depth_toward_camera": -4.0542762977605635,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/frame": {
+          "world_metres": [
+            6.015,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.8999999999999995,
+            6.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.5967501730915235,
+            -2.8405128483464237
+          ],
+          "pixel": [
+            953.7429923839729,
+            335.5937778109655
+          ],
+          "depth_toward_camera": -1.7199125728881954,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/glass": {
+          "world_metres": [
+            6.023,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.8999999999999995,
+            6.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.602407027341016,
+            -2.8433412754711695
+          ],
+          "pixel": [
+            953.4940907969954,
+            335.46932701747664
+          ],
+          "depth_toward_camera": -1.7248115523737617,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/mullion": {
+          "world_metres": [
+            6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.8999999999999995,
+            6.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.605235454465762,
+            -2.8447554890335427
+          ],
+          "pixel": [
+            953.3696400035064,
+            335.40710162073225
+          ],
+          "depth_toward_camera": -1.7272610421165444,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/frame": {
+          "world_metres": [
+            -3.1,
+            -4.015,
+            1.6
+          ],
+          "rotated_world_metres": [
+            4.015,
+            -3.1000000000000005,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.0310647481422865,
+            -1.7091419984479472
+          ],
+          "pixel": [
+            1421.3668489182605,
+            385.37409520649845
+          ],
+          "depth_toward_camera": 0.2396792213383484,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/glass": {
+          "world_metres": [
+            -3.1,
+            -4.023,
+            1.6
+          ],
+          "rotated_world_metres": [
+            4.023,
+            -3.1000000000000005,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.036721602391779,
+            -1.7119704255726935
+          ],
+          "pixel": [
+            1421.6157505052383,
+            385.2496444130096
+          ],
+          "depth_toward_camera": 0.23478024185278212,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/mullion": {
+          "world_metres": [
+            -3.1,
+            -4.026999999999999,
+            1.6
+          ],
+          "rotated_world_metres": [
+            4.026999999999999,
+            -3.1000000000000005,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.0395500295165245,
+            -1.7133846391350664
+          ],
+          "pixel": [
+            1421.740201298727,
+            385.1874190162652
+          ],
+          "depth_toward_camera": 0.23233075210999898,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door": {
+          "world_metres": [
+            0.1,
+            -4.018,
+            1.2
+          ],
+          "rotated_world_metres": [
+            4.018,
+            0.09999999999999976,
+            1.2
+          ],
+          "screen_projection_metres": [
+            2.7704443686888935,
+            -2.4951633470044277
+          ],
+          "pixel": [
+            1321.8995522223113,
+            350.7891558700133
+          ],
+          "depth_toward_camera": -1.9217496901952822,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/frame": {
+          "world_metres": [
+            0.10000000000000002,
+            -4.03,
+            1.65
+          ],
+          "rotated_world_metres": [
+            4.03,
+            0.09999999999999977,
+            1.65
+          ],
+          "screen_projection_metres": [
+            2.7789296500631324,
+            -2.8891174193945446
+          ],
+          "pixel": [
+            1322.2729046027778,
+            333.4551766848482
+          ],
+          "depth_toward_camera": -1.7040981594236317,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/glass": {
+          "world_metres": [
+            0.10000000000000003,
+            -4.038,
+            1.65
+          ],
+          "rotated_world_metres": [
+            4.038,
+            0.09999999999999978,
+            1.65
+          ],
+          "screen_projection_metres": [
+            2.7845865043126246,
+            -2.8919458465192904
+          ],
+          "pixel": [
+            1322.5218061897554,
+            333.33072589135935
+          ],
+          "depth_toward_camera": -1.7089971389091985,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/mullion": {
+          "world_metres": [
+            0.1,
+            -4.042,
+            1.65
+          ],
+          "rotated_world_metres": [
+            4.042,
+            0.09999999999999976,
+            1.65
+          ],
+          "screen_projection_metres": [
+            2.7874149314373704,
+            -2.8933600600816636
+          ],
+          "pixel": [
+            1322.6462569832443,
+            333.26850049461495
+          ],
+          "depth_toward_camera": -1.7114466286519812,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-serving-hatch": {
+          "world_metres": [
+            3.325,
+            -4.02,
+            1.525
+          ],
+          "rotated_world_metres": [
+            4.02,
+            3.3249999999999997,
+            1.525
+          ],
+          "screen_projection_metres": [
+            0.49143921292465054,
+            -3.917538394678864
+          ],
+          "pixel": [
+            1221.6233253686846,
+            288.20465377233813
+          ],
+          "depth_toward_camera": -3.735375540185611,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "hatch-sill": {
+          "world_metres": [
+            3.325,
+            -4.25,
+            1.0
+          ],
+          "rotated_world_metres": [
+            4.25,
+            3.3249999999999997,
+            1.0
+          ],
+          "screen_projection_metres": [
+            0.654073772597557,
+            -3.544192337528487
+          ],
+          "pixel": [
+            1228.7792459942925,
+            304.6318802869547
+          ],
+          "depth_toward_camera": -4.1387212003956435,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "rear-high-vent--3.4": {
+          "world_metres": [
+            -3.4,
+            4.02,
+            2.425
+          ],
+          "rotated_world_metres": [
+            -4.02,
+            -3.3999999999999995,
+            2.425
+          ],
+          "screen_projection_metres": [
+            -0.4384062043356596,
+            0.5232545540248266
+          ],
+          "pixel": [
+            1180.710127009231,
+            483.5995435153005
+          ],
+          "depth_toward_camera": 5.756303472862794,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.31": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.3225
+          ],
+          "rotated_world_metres": [
+            -4.03,
+            -3.3999999999999995,
+            2.3225
+          ],
+          "screen_projection_metres": [
+            -0.44547727214752575,
+            0.6155576918186649
+          ],
+          "pixel": [
+            1180.399000025509,
+            487.6608815782294
+          ],
+          "depth_toward_camera": 5.711177197219754,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.4": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "rotated_world_metres": [
+            -4.03,
+            -3.3999999999999995,
+            2.4124999999999996
+          ],
+          "screen_projection_metres": [
+            -0.44547727214752575,
+            0.5376154054780655
+          ],
+          "pixel": [
+            1180.399000025509,
+            484.231420979243
+          ],
+          "depth_toward_camera": 5.7561771972197535,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.49": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "rotated_world_metres": [
+            -4.03,
+            -3.3999999999999995,
+            2.5025000000000004
+          ],
+          "screen_projection_metres": [
+            -0.44547727214752575,
+            0.4596731191374652
+          ],
+          "pixel": [
+            1180.399000025509,
+            480.8019603802566
+          ],
+          "depth_toward_camera": 5.8011771972197534,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "rear-high-vent-3.4": {
+          "world_metres": [
+            3.4,
+            4.02,
+            2.425
+          ],
+          "rotated_world_metres": [
+            -4.02,
+            3.4000000000000004,
+            2.425
+          ],
+          "screen_projection_metres": [
+            -5.246732316404183,
+            -1.8809085020094345
+          ],
+          "pixel": [
+            969.143778078216,
+            377.816369049793
+          ],
+          "depth_toward_camera": 1.5921709101313921,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.31": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.3225
+          ],
+          "rotated_world_metres": [
+            -4.03,
+            3.4000000000000004,
+            2.3225
+          ],
+          "screen_projection_metres": [
+            -5.253803384216049,
+            -1.7886053642155961
+          ],
+          "pixel": [
+            968.8326510944938,
+            381.8777071127219
+          ],
+          "depth_toward_camera": 1.5470446344883502,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.4": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "rotated_world_metres": [
+            -4.03,
+            3.4000000000000004,
+            2.4124999999999996
+          ],
+          "screen_projection_metres": [
+            -5.253803384216049,
+            -1.8665476505561955
+          ],
+          "pixel": [
+            968.8326510944938,
+            378.4482465137355
+          ],
+          "depth_toward_camera": 1.59204463448835,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.49": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "rotated_world_metres": [
+            -4.03,
+            3.4000000000000004,
+            2.5025000000000004
+          ],
+          "screen_projection_metres": [
+            -5.253803384216049,
+            -1.9444899368967958
+          ],
+          "pixel": [
+            968.8326510944938,
+            375.0187859147491
+          ],
+          "depth_toward_camera": 1.6370446344883505,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-bench-seat": {
+          "world_metres": [
+            -3.0,
+            -4.72,
+            0.5
+          ],
+          "rotated_world_metres": [
+            4.72,
+            -3.0000000000000004,
+            0.5
+          ],
+          "screen_projection_metres": [
+            5.458864350760147,
+            -1.04112453371265
+          ],
+          "pixel": [
+            1440.1900314334466,
+            414.76686365485153
+          ],
+          "depth_toward_camera": -0.803280589396766,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-bench-back": {
+          "world_metres": [
+            -3.0,
+            -4.42,
+            0.86
+          ],
+          "rotated_world_metres": [
+            4.42,
+            -3.0000000000000004,
+            0.86
+          ],
+          "screen_projection_metres": [
+            5.246732316404183,
+            -1.2468276618970657
+          ],
+          "pixel": [
+            1430.856221921784,
+            405.71592601473725
+          ],
+          "depth_toward_camera": -0.439568858688028,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "bench-leg--4.4": {
+          "world_metres": [
+            -4.4,
+            -4.72,
+            0.23
+          ],
+          "rotated_world_metres": [
+            4.72,
+            -4.4,
+            0.23
+          ],
+          "screen_projection_metres": [
+            6.448813844421315,
+            -0.31232292786026833
+          ],
+          "pixel": [
+            1483.747809154538,
+            446.8341343123563
+          ],
+          "depth_toward_camera": -0.08095917942265385,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "bench-leg--1.6": {
+          "world_metres": [
+            -1.6,
+            -4.72,
+            0.23
+          ],
+          "rotated_world_metres": [
+            4.72,
+            -1.6000000000000003,
+            0.23
+          ],
+          "screen_projection_metres": [
+            4.468914857098981,
+            -1.302272421521435
+          ],
+          "pixel": [
+            1396.6322537123551,
+            403.27635659126497
+          ],
+          "depth_toward_camera": -1.7956019993708787,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-step-lower": {
+          "world_metres": [
+            0.1,
+            -5.05,
+            0.075
+          ],
+          "rotated_world_metres": [
+            5.05,
+            0.0999999999999997,
+            0.075
+          ],
+          "screen_projection_metres": [
+            3.5001785668734104,
+            -1.8857518668391926
+          ],
+          "pixel": [
+            1354.00785694243,
+            377.60326099728366
+          ],
+          "depth_toward_camera": -3.1162180438333418,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-step-upper": {
+          "world_metres": [
+            0.1,
+            -4.6,
+            0.175
+          ],
+          "rotated_world_metres": [
+            4.6,
+            0.09999999999999973,
+            0.175
+          ],
+          "screen_projection_metres": [
+            3.181980515339464,
+            -1.8132553814506631
+          ],
+          "pixel": [
+            1340.0071426749364,
+            380.79310635437895
+          ],
+          "depth_toward_camera": -2.7906504477702345,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ball-crate": {
+          "world_metres": [
+            1.55,
+            -4.76,
+            0.28
+          ],
+          "rotated_world_metres": [
+            4.76,
+            1.5499999999999998,
+            0.28
+          ],
+          "screen_projection_metres": [
+            2.269812767608818,
+            -2.4734090077031996
+          ],
+          "pixel": [
+            1299.871761774788,
+            351.74634679926737
+          ],
+          "depth_toward_camera": -3.7240700692404634,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "crate-open-top": {
+          "world_metres": [
+            1.55,
+            -4.76,
+            0.565
+          ],
+          "rotated_world_metres": [
+            4.76,
+            1.5499999999999998,
+            0.565
+          ],
+          "screen_projection_metres": [
+            2.269812767608818,
+            -2.7202262477817647
+          ],
+          "pixel": [
+            1299.871761774788,
+            340.8863882358105
+          ],
+          "depth_toward_camera": -3.5815700692404637,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-0-0": {
+          "world_metres": [
+            1.39,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            4.87,
+            1.3899999999999997,
+            0.62
+          ],
+          "screen_projection_metres": [
+            2.460731598529186,
+            -2.7501799754602456
+          ],
+          "pixel": [
+            1308.2721903352842,
+            339.56842421795733
+          ],
+          "depth_toward_camera": -3.523451447455674,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-0-1": {
+          "world_metres": [
+            1.39,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            4.68,
+            1.3899999999999997,
+            0.62
+          ],
+          "screen_projection_metres": [
+            2.3263813101037414,
+            -2.683004831247523
+          ],
+          "pixel": [
+            1302.3607776445647,
+            342.5241305633171
+          ],
+          "depth_toward_camera": -3.4071006846734724,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-1-0": {
+          "world_metres": [
+            1.5499999999999998,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            4.87,
+            1.5499999999999996,
+            0.62
+          ],
+          "screen_projection_metres": [
+            2.347594513539338,
+            -2.806748517955169
+          ],
+          "pixel": [
+            1303.294158595731,
+            337.07940834818066
+          ],
+          "depth_toward_camera": -3.6214310371670013,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-1-1": {
+          "world_metres": [
+            1.5499999999999998,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            4.68,
+            1.5499999999999996,
+            0.62
+          ],
+          "screen_projection_metres": [
+            2.213244225113894,
+            -2.739573373742447
+          ],
+          "pixel": [
+            1297.3827459050112,
+            340.03511469354044
+          ],
+          "depth_toward_camera": -3.5050802743847997,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-2-0": {
+          "world_metres": [
+            1.71,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            4.87,
+            1.7099999999999997,
+            0.62
+          ],
+          "screen_projection_metres": [
+            2.234457428549491,
+            -2.8633170604500933
+          ],
+          "pixel": [
+            1298.3161268561776,
+            334.59039247840406
+          ],
+          "depth_toward_camera": -3.7194106268783282,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-2-1": {
+          "world_metres": [
+            1.71,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            4.68,
+            1.7099999999999997,
+            0.62
+          ],
+          "screen_projection_metres": [
+            2.100107140124046,
+            -2.796141916237371
+          ],
+          "pixel": [
+            1292.404714165458,
+            337.5460988237638
+          ],
+          "depth_toward_camera": -3.6030598640961267,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "eave-fascia--1": {
+          "world_metres": [
+            0,
+            -4.25,
+            2.895
+          ],
+          "rotated_world_metres": [
+            4.25,
+            -2.6023744481881253e-16,
+            2.895
+          ],
+          "screen_projection_metres": [
+            3.0052038200428273,
+            -4.009745453977364
+          ],
+          "pixel": [
+            1332.2289680818844,
+            284.1475431632041
+          ],
+          "depth_toward_camera": -1.1550828517071272,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "eave-fascia-1": {
+          "world_metres": [
+            0,
+            4.25,
+            2.895
+          ],
+          "rotated_world_metres": [
+            -4.25,
+            2.6023744481881253e-16,
+            2.895
+          ],
+          "screen_projection_metres": [
+            -3.0052038200428273,
+            -1.0045416339345368
+          ],
+          "pixel": [
+            1067.7710319181156,
+            416.3765112450885
+          ],
+          "depth_toward_camera": 4.050082851707127,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ridge-center": {
+          "world_metres": [
+            0,
+            0,
+            4.2
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            4.2
+          ],
+          "screen_projection_metres": [
+            0.0,
+            -3.6373066958946425
+          ],
+          "pixel": [
+            1200.0,
+            300.5348485188439
+          ],
+          "depth_toward_camera": 2.0999999999999996,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ONE-brick-chimney": {
+          "world_metres": [
+            -4,
+            0,
+            4.58
+          ],
+          "rotated_world_metres": [
+            -2.4492935982947064e-16,
+            -4.0,
+            4.58
+          ],
+          "screen_projection_metres": [
+            2.8284271247461903,
+            -2.5521827869596345
+          ],
+          "pixel": [
+            1324.4507934888325,
+            348.2803005119842
+          ],
+          "depth_toward_camera": 4.739489742783178,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-cap": {
+          "world_metres": [
+            -4,
+            0,
+            5.12
+          ],
+          "rotated_world_metres": [
+            -2.4492935982947064e-16,
+            -4.0,
+            5.12
+          ],
+          "screen_projection_metres": [
+            2.8284271247461903,
+            -3.019836505003231
+          ],
+          "pixel": [
+            1324.4507934888325,
+            327.703536918066
+          ],
+          "depth_toward_camera": 5.0094897427831775,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-opening": {
+          "world_metres": [
+            -4,
+            0,
+            5.193
+          ],
+          "rotated_world_metres": [
+            -2.4492935982947064e-16,
+            -4.0,
+            5.193
+          ],
+          "screen_projection_metres": [
+            2.8284271247461903,
+            -3.083056359479495
+          ],
+          "pixel": [
+            1324.4507934888325,
+            324.9218633211103
+          ],
+          "depth_toward_camera": 5.045989742783178,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-ridge-location": {
+          "world_metres": [
+            -4,
+            0,
+            4.2
+          ],
+          "rotated_world_metres": [
+            -2.4492935982947064e-16,
+            -4.0,
+            4.2
+          ],
+          "screen_projection_metres": [
+            2.8284271247461903,
+            -2.2230931335215476
+          ],
+          "pixel": [
+            1324.4507934888325,
+            362.76024526326
+          ],
+          "depth_toward_camera": 4.549489742783178,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-entry": {
+          "world_metres": [
+            0.1,
+            -4.1,
+            0.35
+          ],
+          "rotated_world_metres": [
+            4.1,
+            0.09999999999999976,
+            0.35
+          ],
+          "screen_projection_metres": [
+            2.8284271247461903,
+            -1.7880331318163032
+          ],
+          "pixel": [
+            1324.4507934888325,
+            381.9028853382908
+          ],
+          "depth_toward_camera": -2.3969642299223373,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-focus": {
+          "world_metres": [
+            0,
+            -7.5,
+            0
+          ],
+          "rotated_world_metres": [
+            7.5,
+            -4.592425496802575e-16,
+            0.0
+          ],
+          "screen_projection_metres": [
+            5.303300858899107,
+            -2.651650429449553
+          ],
+          "pixel": [
+            1433.3452377915607,
+            343.9037242424278
+          ],
+          "depth_toward_camera": -4.592793267718459,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        }
+      },
+      "main_wall_bottom_slope": -0.4999999999999999,
+      "main_wall_bottom_angle_screen_degrees": -26.565051177077986,
+      "visible_body_walls": [
+        "back",
+        "left-gable-end"
+      ],
+      "dominant_wall": "back",
+      "secondary_wall": "left-gable-end",
+      "front_details_belong_on_visible_secondary_wall": false,
+      "rear_vents_belong_on_visible_secondary_wall": false,
+      "projected_front_focus_direction": [
+        0.7071067811865476,
+        -0.35355339059327373
+      ]
+    },
+    {
+      "view": "NW",
+      "object_rotation_degrees_about_Z": 180,
+      "cell_box": [
+        0,
+        800,
+        800,
+        1600
+      ],
+      "scale_px_per_metre": 44,
+      "local_offset_px": [
+        400.0,
+        460.57634313820813
+      ],
+      "object_bbox_local_px": [
+        72,
+        184,
+        728,
+        616
+      ],
+      "projected_anchors": {
+        "enclosed-body": {
+          "world_metres": [
+            0,
+            0,
+            1.5
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            1.5
+          ],
+          "screen_projection_metres": [
+            0.0,
+            -1.299038105676658
+          ],
+          "pixel": [
+            400.0,
+            1203.418666488435
+          ],
+          "depth_toward_camera": 0.7499999999999999,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/frame": {
+          "world_metres": [
+            -6.015,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.015,
+            1.8999999999999992,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.9097444045826433,
+            -4.184015732600863
+          ],
+          "pixel": [
+            528.0287538016363,
+            1076.47965090377
+          ],
+          "depth_toward_camera": -4.046927828532214,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/glass": {
+          "world_metres": [
+            -6.023,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.023,
+            1.8999999999999992,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.915401258832136,
+            -4.186844159725609
+          ],
+          "pixel": [
+            528.277655388614,
+            1076.3552001102812
+          ],
+          "depth_toward_camera": -4.05182680801778,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/mullion": {
+          "world_metres": [
+            -6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.026999999999999,
+            1.8999999999999992,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.918229685956882,
+            -4.188258373287982
+          ],
+          "pixel": [
+            528.4021061821028,
+            1076.292974713537
+          ],
+          "depth_toward_camera": -4.054276297760563,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/frame": {
+          "world_metres": [
+            -6.015,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.015,
+            -1.9000000000000006,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.5967501730915235,
+            -2.8405128483464237
+          ],
+          "pixel": [
+            646.2570076160271,
+            1135.5937778109655
+          ],
+          "depth_toward_camera": -1.7199125728881945,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/glass": {
+          "world_metres": [
+            -6.023,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.023,
+            -1.9000000000000006,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.602407027341016,
+            -2.843341275471169
+          ],
+          "pixel": [
+            646.5059092030046,
+            1135.4693270174766
+          ],
+          "depth_toward_camera": -1.7248115523737608,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/mullion": {
+          "world_metres": [
+            -6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            6.026999999999999,
+            -1.9000000000000006,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.605235454465763,
+            -2.8447554890335427
+          ],
+          "pixel": [
+            646.6303599964936,
+            1135.4071016207322
+          ],
+          "depth_toward_camera": -1.7272610421165435,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/frame": {
+          "world_metres": [
+            6.015,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.015,
+            1.9000000000000006,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.5967501730915235,
+            0.06923155623621935
+          ],
+          "pixel": [
+            153.74299238397296,
+            1263.6225316126017
+          ],
+          "depth_toward_camera": 3.319912572888194,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/glass": {
+          "world_metres": [
+            6.023,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.023,
+            1.9000000000000006,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.602407027341016,
+            0.0720599833609652
+          ],
+          "pixel": [
+            153.4940907969953,
+            1263.7469824060906
+          ],
+          "depth_toward_camera": 3.3248115523737605,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/mullion": {
+          "world_metres": [
+            6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.026999999999999,
+            1.9000000000000006,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.605235454465763,
+            0.07347419692333834
+          ],
+          "pixel": [
+            153.36964000350642,
+            1263.809207802835
+          ],
+          "depth_toward_camera": 3.327261042116543,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/frame": {
+          "world_metres": [
+            6.015,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.015,
+            -1.8999999999999992,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.9097444045826433,
+            1.4127344404906592
+          ],
+          "pixel": [
+            271.9712461983637,
+            1322.7366585197972
+          ],
+          "depth_toward_camera": 5.646927828532213,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/glass": {
+          "world_metres": [
+            6.023,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.023,
+            -1.8999999999999992,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.915401258832136,
+            1.415562867615405
+          ],
+          "pixel": [
+            271.722344611386,
+            1322.8611093132859
+          ],
+          "depth_toward_camera": 5.65182680801778,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/mullion": {
+          "world_metres": [
+            6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -6.026999999999999,
+            -1.8999999999999992,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.918229685956882,
+            1.4169770811777782
+          ],
+          "pixel": [
+            271.5978938178972,
+            1322.9233347100303
+          ],
+          "depth_toward_camera": 5.654276297760562,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/frame": {
+          "world_metres": [
+            -3.1,
+            -4.015,
+            1.6
+          ],
+          "rotated_world_metres": [
+            3.1000000000000005,
+            4.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -0.6470027047856903,
+            -3.9011730201262447
+          ],
+          "pixel": [
+            371.5318809894296,
+            1088.9247302526533
+          ],
+          "depth_toward_camera": -3.5570298799755786,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/glass": {
+          "world_metres": [
+            -3.1,
+            -4.023,
+            1.6
+          ],
+          "rotated_world_metres": [
+            3.1000000000000005,
+            4.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -0.6526595590351829,
+            -3.904001447250991
+          ],
+          "pixel": [
+            371.28297940245193,
+            1088.8002794591646
+          ],
+          "depth_toward_camera": -3.561928859461145,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/mullion": {
+          "world_metres": [
+            -3.1,
+            -4.026999999999999,
+            1.6
+          ],
+          "rotated_world_metres": [
+            3.1000000000000005,
+            4.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -0.6554879861599288,
+            -3.9054156608133637
+          ],
+          "pixel": [
+            371.15852860896314,
+            1088.7380540624201
+          ],
+          "depth_toward_camera": -3.5643783492039285,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door": {
+          "world_metres": [
+            0.1,
+            -4.018,
+            1.2
+          ],
+          "rotated_world_metres": [
+            -0.09999999999999952,
+            4.018,
+            1.2
+          ],
+          "screen_projection_metres": [
+            -2.9118657249262028,
+            -2.424452668885773
+          ],
+          "pixel": [
+            271.8779081032471,
+            1153.9004257072343
+          ],
+          "depth_toward_camera": -1.7992752030561234,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/frame": {
+          "world_metres": [
+            0.10000000000000002,
+            -4.03,
+            1.65
+          ],
+          "rotated_world_metres": [
+            -0.09999999999999952,
+            4.03,
+            1.65
+          ],
+          "screen_projection_metres": [
+            -2.9203510063004416,
+            -2.81840674127589
+          ],
+          "pixel": [
+            271.50455572278054,
+            1136.5664465220689
+          ],
+          "depth_toward_camera": -1.581623672284473,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/glass": {
+          "world_metres": [
+            0.10000000000000003,
+            -4.038,
+            1.65
+          ],
+          "rotated_world_metres": [
+            -0.09999999999999953,
+            4.038,
+            1.65
+          ],
+          "screen_projection_metres": [
+            -2.926007860549934,
+            -2.821235168400636
+          ],
+          "pixel": [
+            271.2556541358029,
+            1136.4419957285802
+          ],
+          "depth_toward_camera": -1.5865226517700397,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/mullion": {
+          "world_metres": [
+            0.1,
+            -4.042,
+            1.65
+          ],
+          "rotated_world_metres": [
+            -0.0999999999999995,
+            4.042,
+            1.65
+          ],
+          "screen_projection_metres": [
+            -2.9288362876746796,
+            -2.822649381963009
+          ],
+          "pixel": [
+            271.1312033423141,
+            1136.3797703318357
+          ],
+          "depth_toward_camera": -1.5889721415128224,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-serving-hatch": {
+          "world_metres": [
+            3.325,
+            -4.02,
+            1.525
+          ],
+          "rotated_world_metres": [
+            -3.3249999999999997,
+            4.02,
+            1.525
+          ],
+          "screen_projection_metres": [
+            -5.193699307815191,
+            -1.566408347233594
+          ],
+          "pixel": [
+            171.47723045613162,
+            1191.65437585993
+          ],
+          "depth_toward_camera": 0.3369011571914228,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "hatch-sill": {
+          "world_metres": [
+            3.325,
+            -4.25,
+            1.0
+          ],
+          "rotated_world_metres": [
+            -3.3249999999999997,
+            4.25,
+            1.0
+          ],
+          "screen_projection_metres": [
+            -5.356333867488098,
+            -1.1930622900832168
+          ],
+          "pixel": [
+            164.32130983052372,
+            1208.0816023745465
+          ],
+          "depth_toward_camera": -0.0664445030186101,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "rear-high-vent--3.4": {
+          "world_metres": [
+            -3.4,
+            4.02,
+            2.425
+          ],
+          "rotated_world_metres": [
+            3.3999999999999995,
+            -4.02,
+            2.425
+          ],
+          "screen_projection_metres": [
+            5.246732316404183,
+            -1.880908502009434
+          ],
+          "pixel": [
+            630.856221921784,
+            1177.8163690497931
+          ],
+          "depth_toward_camera": 1.5921709101313926,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.31": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.3225
+          ],
+          "rotated_world_metres": [
+            3.3999999999999995,
+            -4.03,
+            2.3225
+          ],
+          "screen_projection_metres": [
+            5.253803384216049,
+            -1.7886053642155957
+          ],
+          "pixel": [
+            631.1673489055062,
+            1181.877707112722
+          ],
+          "depth_toward_camera": 1.5470446344883506,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.4": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "rotated_world_metres": [
+            3.3999999999999995,
+            -4.03,
+            2.4124999999999996
+          ],
+          "screen_projection_metres": [
+            5.253803384216049,
+            -1.866547650556195
+          ],
+          "pixel": [
+            631.1673489055062,
+            1178.4482465137355
+          ],
+          "depth_toward_camera": 1.5920446344883505,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.49": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "rotated_world_metres": [
+            3.3999999999999995,
+            -4.03,
+            2.5025000000000004
+          ],
+          "screen_projection_metres": [
+            5.253803384216049,
+            -1.9444899368967954
+          ],
+          "pixel": [
+            631.1673489055062,
+            1175.018785914749
+          ],
+          "depth_toward_camera": 1.637044634488351,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "rear-high-vent-3.4": {
+          "world_metres": [
+            3.4,
+            4.02,
+            2.425
+          ],
+          "rotated_world_metres": [
+            -3.4000000000000004,
+            -4.02,
+            2.425
+          ],
+          "screen_projection_metres": [
+            0.4384062043356587,
+            0.5232545540248275
+          ],
+          "pixel": [
+            419.28987299076897,
+            1283.5995435153004
+          ],
+          "depth_toward_camera": 5.756303472862795,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.31": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.3225
+          ],
+          "rotated_world_metres": [
+            -3.4000000000000004,
+            -4.03,
+            2.3225
+          ],
+          "screen_projection_metres": [
+            0.44547727214752486,
+            0.6155576918186658
+          ],
+          "pixel": [
+            419.6009999744911,
+            1287.6608815782295
+          ],
+          "depth_toward_camera": 5.711177197219754,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.4": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "rotated_world_metres": [
+            -3.4000000000000004,
+            -4.03,
+            2.4124999999999996
+          ],
+          "screen_projection_metres": [
+            0.44547727214752486,
+            0.5376154054780664
+          ],
+          "pixel": [
+            419.6009999744911,
+            1284.231420979243
+          ],
+          "depth_toward_camera": 5.7561771972197535,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.49": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "rotated_world_metres": [
+            -3.4000000000000004,
+            -4.03,
+            2.5025000000000004
+          ],
+          "screen_projection_metres": [
+            0.44547727214752486,
+            0.4596731191374661
+          ],
+          "pixel": [
+            419.6009999744911,
+            1280.8019603802566
+          ],
+          "depth_toward_camera": 5.8011771972197534,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-bench-seat": {
+          "world_metres": [
+            -3.0,
+            -4.72,
+            0.5
+          ],
+          "rotated_world_metres": [
+            3.0000000000000004,
+            4.72,
+            0.5
+          ],
+          "screen_projection_metres": [
+            -1.2162236636408617,
+            -3.1624448772722924
+          ],
+          "pixel": [
+            346.48615879980207,
+            1121.4287685382274
+          ],
+          "depth_toward_camera": -4.477515203571534,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-bench-back": {
+          "world_metres": [
+            -3.0,
+            -4.42,
+            0.86
+          ],
+          "rotated_world_metres": [
+            3.0000000000000004,
+            4.42,
+            0.86
+          ],
+          "screen_projection_metres": [
+            -1.0040916292848974,
+            -3.3681480054567086
+          ],
+          "pixel": [
+            355.8199683114645,
+            1112.377830898113
+          ],
+          "depth_toward_camera": -4.113803472862797,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "bench-leg--4.4": {
+          "world_metres": [
+            -4.4,
+            -4.72,
+            0.23
+          ],
+          "rotated_world_metres": [
+            4.400000000000001,
+            4.719999999999999,
+            0.23
+          ],
+          "screen_projection_metres": [
+            -0.22627416997969352,
+            -3.4235927650810773
+          ],
+          "pixel": [
+            390.0439365208935,
+            1109.9382614746407
+          ],
+          "depth_toward_camera": -5.469836613545646,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "bench-leg--1.6": {
+          "world_metres": [
+            -1.6,
+            -4.72,
+            0.23
+          ],
+          "rotated_world_metres": [
+            1.6000000000000008,
+            4.72,
+            0.23
+          ],
+          "screen_projection_metres": [
+            -2.206173157302028,
+            -2.433643271419911
+          ],
+          "pixel": [
+            302.9283810787108,
+            1153.496039195732
+          ],
+          "depth_toward_camera": -3.755193793597422,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-step-lower": {
+          "world_metres": [
+            0.1,
+            -5.05,
+            0.075
+          ],
+          "rotated_world_metres": [
+            -0.09999999999999938,
+            5.05,
+            0.075
+          ],
+          "screen_projection_metres": [
+            -3.6415999231107192,
+            -1.8150411887205382
+          ],
+          "pixel": [
+            239.76960338312836,
+            1180.7145308345043
+          ],
+          "depth_toward_camera": -2.9937435566941835,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-step-upper": {
+          "world_metres": [
+            0.1,
+            -4.6,
+            0.175
+          ],
+          "rotated_world_metres": [
+            -0.09999999999999944,
+            4.6,
+            0.175
+          ],
+          "screen_projection_metres": [
+            -3.3234018715767726,
+            -1.7425447033320087
+          ],
+          "pixel": [
+            253.77031765062202,
+            1183.9043761915998
+          ],
+          "depth_toward_camera": -2.668175960631076,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ball-crate": {
+          "world_metres": [
+            1.55,
+            -4.76,
+            0.28
+          ],
+          "rotated_world_metres": [
+            -1.5499999999999994,
+            4.76,
+            0.28
+          ],
+          "screen_projection_metres": [
+            -4.461843789287115,
+            -1.3773934968640515
+          ],
+          "pixel": [
+            203.67887327136694,
+            1199.97102927619
+          ],
+          "depth_toward_camera": -1.825715518583501,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "crate-open-top": {
+          "world_metres": [
+            1.55,
+            -4.76,
+            0.565
+          ],
+          "rotated_world_metres": [
+            -1.5499999999999994,
+            4.76,
+            0.565
+          ],
+          "screen_projection_metres": [
+            -4.461843789287115,
+            -1.6242107369426164
+          ],
+          "pixel": [
+            203.67887327136694,
+            1189.111070712733
+          ],
+          "depth_toward_camera": -1.683215518583501,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-0-0": {
+          "world_metres": [
+            1.39,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -1.3899999999999992,
+            4.87,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -4.4264884502277875,
+            -1.767301549610945
+          ],
+          "pixel": [
+            205.23450818997736,
+            1182.8150749553265
+          ],
+          "depth_toward_camera": -1.8210560762213657,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-0-1": {
+          "world_metres": [
+            1.39,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -1.3899999999999992,
+            4.68,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -4.2921381618023435,
+            -1.7001264053982226
+          ],
+          "pixel": [
+            211.14592088069688,
+            1185.7707813006864
+          ],
+          "depth_toward_camera": -1.704705313439164,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-1-0": {
+          "world_metres": [
+            1.5499999999999998,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -1.5499999999999992,
+            4.87,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -4.539625535217635,
+            -1.710733007116021
+          ],
+          "pixel": [
+            200.2564764504241,
+            1185.3040908251032
+          ],
+          "depth_toward_camera": -1.7230764865100388,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-1-1": {
+          "world_metres": [
+            1.5499999999999998,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -1.5499999999999992,
+            4.68,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -4.405275246792191,
+            -1.643557862903299
+          ],
+          "pixel": [
+            206.1678891411436,
+            1188.2597971704631
+          ],
+          "depth_toward_camera": -1.6067257237278372,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-2-0": {
+          "world_metres": [
+            1.71,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -1.7099999999999993,
+            4.87,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -4.652762620207483,
+            -1.6541644646210973
+          ],
+          "pixel": [
+            195.27844471087076,
+            1187.79310669488
+          ],
+          "depth_toward_camera": -1.6250968967987118,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-2-1": {
+          "world_metres": [
+            1.71,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -1.7099999999999993,
+            4.68,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -4.518412331782038,
+            -1.586989320408375
+          ],
+          "pixel": [
+            201.18985740159033,
+            1190.7488130402396
+          ],
+          "depth_toward_camera": -1.5087461340165103,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "eave-fascia--1": {
+          "world_metres": [
+            0,
+            -4.25,
+            2.895
+          ],
+          "rotated_world_metres": [
+            5.204748896376251e-16,
+            4.25,
+            2.895
+          ],
+          "screen_projection_metres": [
+            -3.005203820042827,
+            -4.009745453977364
+          ],
+          "pixel": [
+            267.7710319181156,
+            1084.147543163204
+          ],
+          "depth_toward_camera": -1.1550828517071277,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "eave-fascia-1": {
+          "world_metres": [
+            0,
+            4.25,
+            2.895
+          ],
+          "rotated_world_metres": [
+            -5.204748896376251e-16,
+            -4.25,
+            2.895
+          ],
+          "screen_projection_metres": [
+            3.005203820042827,
+            -1.0045416339345365
+          ],
+          "pixel": [
+            532.2289680818844,
+            1216.3765112450885
+          ],
+          "depth_toward_camera": 4.050082851707128,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ridge-center": {
+          "world_metres": [
+            0,
+            0,
+            4.2
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            4.2
+          ],
+          "screen_projection_metres": [
+            0.0,
+            -3.6373066958946425
+          ],
+          "pixel": [
+            400.0,
+            1100.5348485188438
+          ],
+          "depth_toward_camera": 2.0999999999999996,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ONE-brick-chimney": {
+          "world_metres": [
+            -4,
+            0,
+            4.58
+          ],
+          "rotated_world_metres": [
+            4.0,
+            -4.898587196589413e-16,
+            4.58
+          ],
+          "screen_projection_metres": [
+            2.8284271247461907,
+            -5.380609911705824
+          ],
+          "pixel": [
+            524.4507934888323,
+            1023.8295070231518
+          ],
+          "depth_toward_camera": -0.1594897427831783,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-cap": {
+          "world_metres": [
+            -4,
+            0,
+            5.12
+          ],
+          "rotated_world_metres": [
+            4.0,
+            -4.898587196589413e-16,
+            5.12
+          ],
+          "screen_projection_metres": [
+            2.8284271247461907,
+            -5.848263629749421
+          ],
+          "pixel": [
+            524.4507934888323,
+            1003.2527434292335
+          ],
+          "depth_toward_camera": 0.11051025721682173,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-opening": {
+          "world_metres": [
+            -4,
+            0,
+            5.193
+          ],
+          "rotated_world_metres": [
+            4.0,
+            -4.898587196589413e-16,
+            5.193
+          ],
+          "screen_projection_metres": [
+            2.8284271247461907,
+            -5.911483484225685
+          ],
+          "pixel": [
+            524.4507934888323,
+            1000.471069832278
+          ],
+          "depth_toward_camera": 0.14701025721682148,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-ridge-location": {
+          "world_metres": [
+            -4,
+            0,
+            4.2
+          ],
+          "rotated_world_metres": [
+            4.0,
+            -4.898587196589413e-16,
+            4.2
+          ],
+          "screen_projection_metres": [
+            2.8284271247461907,
+            -5.051520258267737
+          ],
+          "pixel": [
+            524.4507934888323,
+            1038.3094517744278
+          ],
+          "depth_toward_camera": -0.34948974278317824,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-entry": {
+          "world_metres": [
+            0.1,
+            -4.1,
+            0.35
+          ],
+          "rotated_world_metres": [
+            -0.0999999999999995,
+            4.1,
+            0.35
+          ],
+          "screen_projection_metres": [
+            -2.9698484809834995,
+            -1.7173224536976486
+          ],
+          "pixel": [
+            269.326666836726,
+            1185.0141551755116
+          ],
+          "depth_toward_camera": -2.274489742783179,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-focus": {
+          "world_metres": [
+            0,
+            -7.5,
+            0
+          ],
+          "rotated_world_metres": [
+            9.18485099360515e-16,
+            7.5,
+            0.0
+          ],
+          "screen_projection_metres": [
+            -5.303300858899106,
+            -2.6516504294495533
+          ],
+          "pixel": [
+            166.65476220843934,
+            1143.9037242424279
+          ],
+          "depth_toward_camera": -4.59279326771846,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        }
+      },
+      "main_wall_bottom_slope": -0.4999999999999999,
+      "main_wall_bottom_angle_screen_degrees": -26.565051177077986,
+      "visible_body_walls": [
+        "back",
+        "right-gable-end"
+      ],
+      "dominant_wall": "back",
+      "secondary_wall": "right-gable-end",
+      "front_details_belong_on_visible_secondary_wall": false,
+      "rear_vents_belong_on_visible_secondary_wall": false,
+      "projected_front_focus_direction": [
+        -0.7071067811865475,
+        -0.3535533905932738
+      ]
+    },
+    {
+      "view": "NE",
+      "object_rotation_degrees_about_Z": 270,
+      "cell_box": [
+        800,
+        800,
+        1600,
+        1600
+      ],
+      "scale_px_per_metre": 44,
+      "local_offset_px": [
+        400.0,
+        460.57634313820813
+      ],
+      "object_bbox_local_px": [
+        72,
+        184,
+        728,
+        616
+      ],
+      "projected_anchors": {
+        "enclosed-body": {
+          "world_metres": [
+            0,
+            0,
+            1.5
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            1.5
+          ],
+          "screen_projection_metres": [
+            0.0,
+            -1.299038105676658
+          ],
+          "pixel": [
+            1200.0,
+            1203.418666488435
+          ],
+          "depth_toward_camera": 0.7499999999999999,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/frame": {
+          "world_metres": [
+            -6.015,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.8999999999999988,
+            6.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.596750173091523,
+            -2.8405128483464237
+          ],
+          "pixel": [
+            953.742992383973,
+            1135.5937778109655
+          ],
+          "depth_toward_camera": -1.7199125728881954,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/glass": {
+          "world_metres": [
+            -6.023,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.8999999999999988,
+            6.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.602407027341015,
+            -2.84334127547117
+          ],
+          "pixel": [
+            953.4940907969954,
+            1135.4693270174766
+          ],
+          "depth_toward_camera": -1.7248115523737617,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y-1.9/mullion": {
+          "world_metres": [
+            -6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.8999999999999988,
+            6.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.605235454465761,
+            -2.8447554890335427
+          ],
+          "pixel": [
+            953.3696400035064,
+            1135.4071016207322
+          ],
+          "depth_toward_camera": -1.7272610421165444,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/frame": {
+          "world_metres": [
+            -6.015,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.900000000000001,
+            6.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.909744404582642,
+            -4.184015732600864
+          ],
+          "pixel": [
+            1071.9712461983638,
+            1076.47965090377
+          ],
+          "depth_toward_camera": -4.0469278285322146,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/glass": {
+          "world_metres": [
+            -6.023,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.900000000000001,
+            6.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.9154012588321345,
+            -4.18684415972561
+          ],
+          "pixel": [
+            1071.7223446113862,
+            1076.3552001102812
+          ],
+          "depth_toward_camera": -4.051826808017781,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x-6-y1.9/mullion": {
+          "world_metres": [
+            -6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.900000000000001,
+            6.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -2.918229685956881,
+            -4.188258373287983
+          ],
+          "pixel": [
+            1071.5978938178973,
+            1076.2929747135368
+          ],
+          "depth_toward_camera": -4.0542762977605635,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/frame": {
+          "world_metres": [
+            6.015,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.900000000000001,
+            -6.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.909744404582642,
+            1.41273444049066
+          ],
+          "pixel": [
+            1328.0287538016362,
+            1322.7366585197972
+          ],
+          "depth_toward_camera": 5.646927828532214,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/glass": {
+          "world_metres": [
+            6.023,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.900000000000001,
+            -6.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.9154012588321345,
+            1.415562867615406
+          ],
+          "pixel": [
+            1328.2776553886138,
+            1322.8611093132859
+          ],
+          "depth_toward_camera": 5.6518268080177805,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y-1.9/mullion": {
+          "world_metres": [
+            6.026999999999999,
+            -1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -1.900000000000001,
+            -6.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            2.918229685956881,
+            1.416977081177779
+          ],
+          "pixel": [
+            1328.4021061821027,
+            1322.9233347100303
+          ],
+          "depth_toward_camera": 5.654276297760563,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/frame": {
+          "world_metres": [
+            6.015,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.8999999999999988,
+            -6.015,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.596750173091523,
+            0.0692315562362198
+          ],
+          "pixel": [
+            1446.2570076160268,
+            1263.6225316126017
+          ],
+          "depth_toward_camera": 3.319912572888195,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/glass": {
+          "world_metres": [
+            6.023,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.8999999999999988,
+            -6.023,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.602407027341015,
+            0.07205998336096564
+          ],
+          "pixel": [
+            1446.5059092030046,
+            1263.7469824060906
+          ],
+          "depth_toward_camera": 3.3248115523737614,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "gable-window-x6-y1.9/mullion": {
+          "world_metres": [
+            6.026999999999999,
+            1.9,
+            1.6
+          ],
+          "rotated_world_metres": [
+            1.8999999999999988,
+            -6.026999999999999,
+            1.6
+          ],
+          "screen_projection_metres": [
+            5.605235454465761,
+            0.07347419692333879
+          ],
+          "pixel": [
+            1446.6303599964936,
+            1263.809207802835
+          ],
+          "depth_toward_camera": 3.327261042116544,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/frame": {
+          "world_metres": [
+            -3.1,
+            -4.015,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -4.014999999999999,
+            3.100000000000001,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.0310647481422865,
+            -1.0621392936622573
+          ],
+          "pixel": [
+            978.6331510817394,
+            1213.8422142170689
+          ],
+          "depth_toward_camera": 1.3603207786616505,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/glass": {
+          "world_metres": [
+            -3.1,
+            -4.023,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -4.022999999999999,
+            3.100000000000001,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.036721602391778,
+            -1.0593108665375113
+          ],
+          "pixel": [
+            978.3842494947618,
+            1213.9666650105576
+          ],
+          "depth_toward_camera": 1.3652197581472167,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-main-window/mullion": {
+          "world_metres": [
+            -3.1,
+            -4.026999999999999,
+            1.6
+          ],
+          "rotated_world_metres": [
+            -4.026999999999998,
+            3.100000000000001,
+            1.6
+          ],
+          "screen_projection_metres": [
+            -5.0395500295165245,
+            -1.0578966529751384
+          ],
+          "pixel": [
+            978.259798701273,
+            1214.028890407302
+          ],
+          "depth_toward_camera": 1.3676692478899999,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door": {
+          "world_metres": [
+            0.1,
+            -4.018,
+            1.2
+          ],
+          "rotated_world_metres": [
+            -4.018,
+            -0.09999999999999927,
+            1.2
+          ],
+          "screen_projection_metres": [
+            -2.770444368688894,
+            0.41670237792177445
+          ],
+          "pixel": [
+            1078.1004477776887,
+            1278.9112477667663
+          ],
+          "depth_toward_camera": 3.1217496901952817,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/frame": {
+          "world_metres": [
+            0.10000000000000002,
+            -4.03,
+            1.65
+          ],
+          "rotated_world_metres": [
+            -4.03,
+            -0.09999999999999928,
+            1.65
+          ],
+          "screen_projection_metres": [
+            -2.778929650063133,
+            0.031233586905896615
+          ],
+          "pixel": [
+            1077.7270953972222,
+            1261.9506209620677
+          ],
+          "depth_toward_camera": 3.3540981594236308,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/glass": {
+          "world_metres": [
+            0.10000000000000003,
+            -4.038,
+            1.65
+          ],
+          "rotated_world_metres": [
+            -4.038,
+            -0.0999999999999993,
+            1.65
+          ],
+          "screen_projection_metres": [
+            -2.784586504312625,
+            0.034062014030642684
+          ],
+          "pixel": [
+            1077.4781938102446,
+            1262.0750717555563
+          ],
+          "depth_toward_camera": 3.3589971389091975,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-glass/mullion": {
+          "world_metres": [
+            0.1,
+            -4.042,
+            1.65
+          ],
+          "rotated_world_metres": [
+            -4.042,
+            -0.09999999999999926,
+            1.65
+          ],
+          "screen_projection_metres": [
+            -2.787414931437371,
+            0.03547622759301561
+          ],
+          "pixel": [
+            1077.3537430167557,
+            1262.1372971523008
+          ],
+          "depth_toward_camera": 3.36144662865198,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-serving-hatch": {
+          "world_metres": [
+            3.325,
+            -4.02,
+            1.525
+          ],
+          "rotated_world_metres": [
+            -4.0200000000000005,
+            -3.3249999999999993,
+            1.525
+          ],
+          "screen_projection_metres": [
+            -0.4914392129246514,
+            1.2761609131363265
+          ],
+          "pixel": [
+            1178.3766746313154,
+            1316.7274233162066
+          ],
+          "depth_toward_camera": 5.260375540185611,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "hatch-sill": {
+          "world_metres": [
+            3.325,
+            -4.25,
+            1.0
+          ],
+          "rotated_world_metres": [
+            -4.250000000000001,
+            -3.3249999999999993,
+            1.0
+          ],
+          "screen_projection_metres": [
+            -0.6540737725975574,
+            1.8121415299596095
+          ],
+          "pixel": [
+            1171.2207540057075,
+            1340.310570456431
+          ],
+          "depth_toward_camera": 5.1387212003956435,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "rear-high-vent--3.4": {
+          "world_metres": [
+            -3.4,
+            4.02,
+            2.425
+          ],
+          "rotated_world_metres": [
+            4.0200000000000005,
+            3.399999999999999,
+            2.425
+          ],
+          "screen_projection_metres": [
+            0.4384062043356609,
+            -4.723477762379355
+          ],
+          "pixel": [
+            1219.289872990769,
+            1052.7433215935166
+          ],
+          "depth_toward_camera": -3.331303472862796,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.31": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.3225
+          ],
+          "rotated_world_metres": [
+            4.030000000000001,
+            3.399999999999999,
+            2.3225
+          ],
+          "screen_projection_metres": [
+            0.44547727214752664,
+            -4.6382456923973825
+          ],
+          "pixel": [
+            1219.600999974491,
+            1056.4935326727232
+          ],
+          "depth_toward_camera": -3.388677197219754,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.4": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "rotated_world_metres": [
+            4.030000000000001,
+            3.399999999999999,
+            2.4124999999999996
+          ],
+          "screen_projection_metres": [
+            0.44547727214752664,
+            -4.716187978737982
+          ],
+          "pixel": [
+            1219.600999974491,
+            1053.064072073737
+          ],
+          "depth_toward_camera": -3.343677197219754,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille--3.4-2.49": {
+          "world_metres": [
+            -3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "rotated_world_metres": [
+            4.030000000000001,
+            3.399999999999999,
+            2.5025000000000004
+          ],
+          "screen_projection_metres": [
+            0.44547727214752664,
+            -4.794130265078582
+          ],
+          "pixel": [
+            1219.600999974491,
+            1049.6346114747505
+          ],
+          "depth_toward_camera": -3.298677197219754,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "rear-high-vent-3.4": {
+          "world_metres": [
+            3.4,
+            4.02,
+            2.425
+          ],
+          "rotated_world_metres": [
+            4.019999999999999,
+            -3.400000000000001,
+            2.425
+          ],
+          "screen_projection_metres": [
+            5.246732316404183,
+            -2.319314706345093
+          ],
+          "pixel": [
+            1430.856221921784,
+            1158.526496059024
+          ],
+          "depth_toward_camera": 0.8328290898686082,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.31": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.3225
+          ],
+          "rotated_world_metres": [
+            4.029999999999999,
+            -3.400000000000001,
+            2.3225
+          ],
+          "screen_projection_metres": [
+            5.253803384216049,
+            -2.2340826363631203
+          ],
+          "pixel": [
+            1431.167348905506,
+            1162.276707138231
+          ],
+          "depth_toward_camera": 0.7754553655116501,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.4": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.4124999999999996
+          ],
+          "rotated_world_metres": [
+            4.029999999999999,
+            -3.400000000000001,
+            2.4124999999999996
+          ],
+          "screen_projection_metres": [
+            5.253803384216049,
+            -2.3120249227037197
+          ],
+          "pixel": [
+            1431.167348905506,
+            1158.8472465392445
+          ],
+          "depth_toward_camera": 0.82045536551165,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "vent-grille-3.4-2.49": {
+          "world_metres": [
+            3.4,
+            4.03,
+            2.5025000000000004
+          ],
+          "rotated_world_metres": [
+            4.029999999999999,
+            -3.400000000000001,
+            2.5025000000000004
+          ],
+          "screen_projection_metres": [
+            5.253803384216049,
+            -2.38996720904432
+          ],
+          "pixel": [
+            1431.167348905506,
+            1155.417785940258
+          ],
+          "depth_toward_camera": 0.8654553655116504,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-bench-seat": {
+          "world_metres": [
+            -3.0,
+            -4.72,
+            0.5
+          ],
+          "rotated_world_metres": [
+            -4.719999999999999,
+            3.000000000000001,
+            0.5
+          ],
+          "screen_projection_metres": [
+            -5.458864350760146,
+            0.1750991299282108
+          ],
+          "pixel": [
+            959.8099685665536,
+            1268.2807048550494
+          ],
+          "depth_toward_camera": 1.3032805893967654,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-bench-back": {
+          "world_metres": [
+            -3.0,
+            -4.42,
+            0.86
+          ],
+          "rotated_world_metres": [
+            -4.419999999999999,
+            3.000000000000001,
+            0.86
+          ],
+          "screen_projection_metres": [
+            -5.246732316404183,
+            -0.24273603261216903
+          ],
+          "pixel": [
+            969.143778078216,
+            1249.8959577032726
+          ],
+          "depth_toward_camera": 1.2995688586880272,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "bench-leg--4.4": {
+          "world_metres": [
+            -4.4,
+            -4.72,
+            0.23
+          ],
+          "rotated_world_metres": [
+            -4.719999999999999,
+            4.400000000000001,
+            0.23
+          ],
+          "screen_projection_metres": [
+            -6.448813844421314,
+            -0.08604875788057414
+          ],
+          "pixel": [
+            916.2521908454622,
+            1256.7901977914628
+          ],
+          "depth_toward_camera": 0.31095917942265294,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "bench-leg--1.6": {
+          "world_metres": [
+            -1.6,
+            -4.72,
+            0.23
+          ],
+          "rotated_world_metres": [
+            -4.72,
+            1.600000000000001,
+            0.23
+          ],
+          "screen_projection_metres": [
+            -4.468914857098982,
+            0.9039007357805926
+          ],
+          "pixel": [
+            1003.3677462876448,
+            1300.3479755125543
+          ],
+          "depth_toward_camera": 2.0256019993708785,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-step-lower": {
+          "world_metres": [
+            0.1,
+            -5.05,
+            0.075
+          ],
+          "rotated_world_metres": [
+            -5.05,
+            -0.09999999999999908,
+            0.075
+          ],
+          "screen_projection_metres": [
+            -3.500178566873411,
+            1.7558480562715264
+          ],
+          "pixel": [
+            1045.99214305757,
+            1337.8336576141553
+          ],
+          "depth_toward_camera": 3.1912180438333415,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-step-upper": {
+          "world_metres": [
+            0.1,
+            -4.6,
+            0.175
+          ],
+          "rotated_world_metres": [
+            -4.6,
+            -0.09999999999999916,
+            0.175
+          ],
+          "screen_projection_metres": [
+            -3.1819805153394642,
+            1.5101464901261092
+          ],
+          "pixel": [
+            1059.9928573250636,
+            1327.022788703757
+          ],
+          "depth_toward_camera": 2.965650447770234,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ball-crate": {
+          "world_metres": [
+            1.55,
+            -4.76,
+            0.28
+          ],
+          "rotated_world_metres": [
+            -4.76,
+            -1.5499999999999992,
+            0.28
+          ],
+          "screen_projection_metres": [
+            -2.2698127676088182,
+            1.988434781583914
+          ],
+          "pixel": [
+            1100.128238225212,
+            1348.0674735279003
+          ],
+          "depth_toward_camera": 4.004070069240463,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "crate-open-top": {
+          "world_metres": [
+            1.55,
+            -4.76,
+            0.565
+          ],
+          "rotated_world_metres": [
+            -4.76,
+            -1.5499999999999992,
+            0.565
+          ],
+          "screen_projection_metres": [
+            -2.2698127676088182,
+            1.7416175415053492
+          ],
+          "pixel": [
+            1100.128238225212,
+            1337.2075149644434
+          ],
+          "depth_toward_camera": 4.146570069240463,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-0-0": {
+          "world_metres": [
+            1.39,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -4.87,
+            -1.389999999999999,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -2.460731598529186,
+            1.6763084747675414
+          ],
+          "pixel": [
+            1091.7278096647158,
+            1334.33391602798
+          ],
+          "depth_toward_camera": 4.143451447455673,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-0-1": {
+          "world_metres": [
+            1.39,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -4.68,
+            -1.389999999999999,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -2.3263813101037423,
+            1.6091333305548194
+          ],
+          "pixel": [
+            1097.6392223554353,
+            1331.3782096826203
+          ],
+          "depth_toward_camera": 4.027100684673472,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-1-0": {
+          "world_metres": [
+            1.5499999999999998,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -4.87,
+            -1.549999999999999,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -2.347594513539339,
+            1.7328770172624655
+          ],
+          "pixel": [
+            1096.705841404269,
+            1336.8229318977565
+          ],
+          "depth_toward_camera": 4.2414310371670005,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-1-1": {
+          "world_metres": [
+            1.5499999999999998,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -4.68,
+            -1.549999999999999,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -2.213244225113894,
+            1.665701873049743
+          ],
+          "pixel": [
+            1102.6172540949888,
+            1333.8672255523968
+          ],
+          "depth_toward_camera": 4.125080274384799,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-2-0": {
+          "world_metres": [
+            1.71,
+            -4.87,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -4.87,
+            -1.709999999999999,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -2.234457428549491,
+            1.789445559757389
+          ],
+          "pixel": [
+            1101.6838731438224,
+            1339.3119477675332
+          ],
+          "depth_toward_camera": 4.339410626878328,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "range-ball-2-1": {
+          "world_metres": [
+            1.71,
+            -4.68,
+            0.62
+          ],
+          "rotated_world_metres": [
+            -4.68,
+            -1.709999999999999,
+            0.62
+          ],
+          "screen_projection_metres": [
+            -2.100107140124047,
+            1.722270415544667
+          ],
+          "pixel": [
+            1107.595285834542,
+            1336.3562414221735
+          ],
+          "depth_toward_camera": 4.223059864096126,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "eave-fascia--1": {
+          "world_metres": [
+            0,
+            -4.25,
+            2.895
+          ],
+          "rotated_world_metres": [
+            -4.25,
+            7.807123344564377e-16,
+            2.895
+          ],
+          "screen_projection_metres": [
+            -3.0052038200428277,
+            -1.004541633934537
+          ],
+          "pixel": [
+            1067.7710319181156,
+            1216.3765112450885
+          ],
+          "depth_toward_camera": 4.050082851707126,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "eave-fascia-1": {
+          "world_metres": [
+            0,
+            4.25,
+            2.895
+          ],
+          "rotated_world_metres": [
+            4.25,
+            -7.807123344564377e-16,
+            2.895
+          ],
+          "screen_projection_metres": [
+            3.0052038200428277,
+            -4.009745453977363
+          ],
+          "pixel": [
+            1332.2289680818844,
+            1084.147543163204
+          ],
+          "depth_toward_camera": -1.1550828517071268,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ridge-center": {
+          "world_metres": [
+            0,
+            0,
+            4.2
+          ],
+          "rotated_world_metres": [
+            0.0,
+            0.0,
+            4.2
+          ],
+          "screen_projection_metres": [
+            0.0,
+            -3.6373066958946425
+          ],
+          "pixel": [
+            1200.0,
+            1100.5348485188438
+          ],
+          "depth_toward_camera": 2.0999999999999996,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "ONE-brick-chimney": {
+          "world_metres": [
+            -4,
+            0,
+            4.58
+          ],
+          "rotated_world_metres": [
+            7.347880794884119e-16,
+            4.0,
+            4.58
+          ],
+          "screen_projection_metres": [
+            -2.82842712474619,
+            -5.380609911705824
+          ],
+          "pixel": [
+            1075.5492065111675,
+            1023.8295070231518
+          ],
+          "depth_toward_camera": -0.15948974278317918,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-cap": {
+          "world_metres": [
+            -4,
+            0,
+            5.12
+          ],
+          "rotated_world_metres": [
+            7.347880794884119e-16,
+            4.0,
+            5.12
+          ],
+          "screen_projection_metres": [
+            -2.82842712474619,
+            -5.848263629749421
+          ],
+          "pixel": [
+            1075.5492065111675,
+            1003.2527434292335
+          ],
+          "depth_toward_camera": 0.11051025721682084,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-opening": {
+          "world_metres": [
+            -4,
+            0,
+            5.193
+          ],
+          "rotated_world_metres": [
+            7.347880794884119e-16,
+            4.0,
+            5.193
+          ],
+          "screen_projection_metres": [
+            -2.82842712474619,
+            -5.911483484225685
+          ],
+          "pixel": [
+            1075.5492065111675,
+            1000.471069832278
+          ],
+          "depth_toward_camera": 0.1470102572168206,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "chimney-ridge-location": {
+          "world_metres": [
+            -4,
+            0,
+            4.2
+          ],
+          "rotated_world_metres": [
+            7.347880794884119e-16,
+            4.0,
+            4.2
+          ],
+          "screen_projection_metres": [
+            -2.82842712474619,
+            -5.051520258267738
+          ],
+          "pixel": [
+            1075.5492065111675,
+            1038.3094517744275
+          ],
+          "depth_toward_camera": -0.3494897427831791,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-door-entry": {
+          "world_metres": [
+            0.1,
+            -4.1,
+            0.35
+          ],
+          "rotated_world_metres": [
+            -4.1,
+            -0.09999999999999926,
+            0.35
+          ],
+          "screen_projection_metres": [
+            -2.8284271247461907,
+            1.1818153491671959
+          ],
+          "pixel": [
+            1075.5492065111675,
+            1312.5762185015647
+          ],
+          "depth_toward_camera": 2.7469642299223365,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        },
+        "front-focus": {
+          "world_metres": [
+            0,
+            -7.5,
+            0
+          ],
+          "rotated_world_metres": [
+            -7.5,
+            1.3777276490407722e-15,
+            0.0
+          ],
+          "screen_projection_metres": [
+            -5.3033008588991075,
+            2.6516504294495524
+          ],
+          "pixel": [
+            966.6547622084393,
+            1377.2489620339884
+          ],
+          "depth_toward_camera": 4.592793267718458,
+          "visible_in_final_image": "not asserted; complete coordinates include anchors occluded by roof/walls"
+        }
+      },
+      "main_wall_bottom_slope": -0.4999999999999999,
+      "main_wall_bottom_angle_screen_degrees": -26.565051177077986,
+      "visible_body_walls": [
+        "right-gable-end",
+        "front"
+      ],
+      "dominant_wall": "right-gable-end",
+      "secondary_wall": "front",
+      "front_details_belong_on_visible_secondary_wall": false,
+      "rear_vents_belong_on_visible_secondary_wall": false,
+      "projected_front_focus_direction": [
+        -0.7071067811865477,
+        0.3535533905932737
+      ]
+    }
+  ],
+  "mesh_file": "old-clubhouse-1950-world-model-v2.json",
+  "guide_code": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_world_geometry_guides.py",
+    "sha256": "2231e62f5ae7fcd5d7fa8102a6aec4e477aa754875912c21fefa714ee762379e"
+  },
+  "outputs": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\guides\\normal-world-v2.png",
+      "sha256": "92fdfb5aa3b051625a0eba021fff6fea59eb5c836c5bf134ef705ec43acc0ae7"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\guides\\normal-world-v2.svg",
+      "sha256": "23cdc80d9e7759d9ba88184ecfb5ea97e72887fa8c9978f77fd2b4ddf59559a7"
+    }
+  ],
+  "capacity_validated": null,
+  "owner_approved": false,
+  "runtime_integrated": false
+}

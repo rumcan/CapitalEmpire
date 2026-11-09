@@ -1,0 +1,26 @@
+{
+  "runtimeSubjectId": "newprop:shuttle-cart",
+  "runtimeName": "Shuttle cart",
+  "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shuttle-cart.source.png",
+  "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+  "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+  "sourceSheetSHA256": "7cc4f106aa4a8a0aeec4a14bbcc3ff9a0b79c92c8a1053fddcdb5f319bfeb765",
+  "cropRectXYWH": [
+    647,
+    66,
+    597,
+    545
+  ],
+  "sourceCell": "top right",
+  "pngSHA256": "372e0bb76bdee79e4ad0870c76d089ed58f55282a4ace113c1bbf502c7b1711e",
+  "rgbaSHA256": "1221054db0e233e9795eeed925e6f4da889f4febdef7ebb32706b81e55968b56",
+  "cropPixels": [
+    597,
+    545
+  ],
+  "sourceMetadataCutOff": false,
+  "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+  "visualInspection": "inspected native crop",
+  "actualIdentityNotes": "Confirmed three passenger bench rows under long canopy, open sides and four wheels; not a bus.",
+  "sourceOnlyNotReleaseProof": true
+}

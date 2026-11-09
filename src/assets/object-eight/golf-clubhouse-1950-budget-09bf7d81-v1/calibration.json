@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "space": "orthographic-camera",
+  "engineProjection": {
+    "HW": 64,
+    "HH": 32,
+    "tileMetres": 2
+  },
+  "targetCameraPixelsPerMetre": 45.254833995939045,
+  "sourcePixelsPerMetre": 35,
+  "views": {
+    "normalNE": {
+      "sourcePixelsPerMetre": 34.6568,
+      "displayScale": 1.305799554371409,
+      "anchorSourcePixels": {
+        "x": 264.663,
+        "y": 245.15699999999998
+      },
+      "measurement": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6, isotropic camera fit RMS 2.538px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 0 degrees proved by pavilion-guide-handedness-proof.json."
+    },
+    "yaw8N": {
+      "sourcePixelsPerMetre": 35.3027,
+      "displayScale": 1.2819085791154512,
+      "anchorSourcePixels": {
+        "x": 248.29899999999998,
+        "y": 194.781
+      },
+      "measurement": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862, isotropic camera fit RMS 3.225px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 323 degrees proved by pavilion-guide-handedness-proof.json."
+    },
+    "normalSE": {
+      "sourcePixelsPerMetre": 34.3075,
+      "displayScale": 1.3190944835951046,
+      "anchorSourcePixels": {
+        "x": 259.506,
+        "y": 242.235
+      },
+      "measurement": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6, isotropic camera fit RMS 4.564px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 270 degrees proved by pavilion-guide-handedness-proof.json."
+    },
+    "yaw8E": {
+      "sourcePixelsPerMetre": 35.338,
+      "displayScale": 1.2806280490106696,
+      "anchorSourcePixels": {
+        "x": 190.50900000000001,
+        "y": 249.51799999999997
+      },
+      "measurement": "independent-review-normal-v5-yaw8-v4.json: 2 observed 12x8m foundation corners, source SHA256 091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862, isotropic camera fit RMS 0.337px; E uses two visible gable-floor corners; front furniture hides far floor, so full-depth validation is less constrained. Runtime local F(x,y)=(x,-y), heading 233 degrees proved by pavilion-guide-handedness-proof.json."
+    },
+    "normalSW": {
+      "sourcePixelsPerMetre": 34.448,
+      "displayScale": 1.3137144100075198,
+      "anchorSourcePixels": {
+        "x": 261.428,
+        "y": 241.06900000000002
+      },
+      "measurement": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6, isotropic camera fit RMS 3.104px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 180 degrees proved by pavilion-guide-handedness-proof.json."
+    },
+    "yaw8S": {
+      "sourcePixelsPerMetre": 35.1693,
+      "displayScale": 1.2867709620589276,
+      "anchorSourcePixels": {
+        "x": 248.539,
+        "y": 191.887
+      },
+      "measurement": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862, isotropic camera fit RMS 2.376px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 143 degrees proved by pavilion-guide-handedness-proof.json."
+    },
+    "normalNW": {
+      "sourcePixelsPerMetre": 34.8612,
+      "displayScale": 1.298143322545955,
+      "anchorSourcePixels": {
+        "x": 264.767,
+        "y": 241.24900000000002
+      },
+      "measurement": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6, isotropic camera fit RMS 2.133px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 90 degrees proved by pavilion-guide-handedness-proof.json."
+    },
+    "yaw8W": {
+      "sourcePixelsPerMetre": 35.0057,
+      "displayScale": 1.2927847178013594,
+      "anchorSourcePixels": {
+        "x": 210.524,
+        "y": 248.42000000000002
+      },
+      "measurement": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862, isotropic camera fit RMS 1.789px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 53 degrees proved by pavilion-guide-handedness-proof.json."
+    }
+  }
+}

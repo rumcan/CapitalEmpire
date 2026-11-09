@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-garage-north-a7184edf-plain-1/NE.png",
+  "sourceSha256": "91fa2c3eb80eb297e47ade2d80d35def3e1a9ab9ae7797ee66667f5b0c6f0779",
+  "output": "identity-references/variation-ref-building-house-garage-north-a7184edf-plain-1-7edd16da/source.png",
+  "outputSha256": "91fa2c3eb80eb297e47ade2d80d35def3e1a9ab9ae7797ee66667f5b0c6f0779",
+  "width": 315,
+  "height": 312,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      315,
+      312
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-house-garage-north-a7184edf-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+    "version": "variation-ref-building-house-garage-north-a7184edf-plain-1-4views-v2",
+    "files": {
+      "NE": "91fa2c3eb80eb297e47ade2d80d35def3e1a9ab9ae7797ee66667f5b0c6f0779",
+      "SE": "ffd7578c46889fe52a6eb1a3076557b29f723db86c15e3a7df6a9fee6aeba9ce",
+      "SW": "8163b5b52d1df12d73b6f2b35896814a1818d8b2266a88bdb0124ee7682a679f",
+      "NW": "27f2342818a1e0d198ee24e7fd8130625a0cf9c9df37837678653f77f1c8b03e"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-10-0.webp",
+    "atlasSha256": "6ca370227e33f5f4eab6c0abe7cfcf952ed2ff26a21472925e105f582f2922ac",
+    "runtimePage": 10,
+    "localPage": 10,
+    "uv": [
+      0.007813,
+      0.710938,
+      0.14502,
+      0.858887
+    ],
+    "crop": {
+      "left": 16,
+      "top": 1456,
+      "width": 281,
+      "height": 303
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-house-garage-north-a7184edf-plain-1.native.png",
+    "nativeSha256": "376e7490e4d28548bdfa115e6580c8c9c150321079029c56b713835bbcb5445c"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

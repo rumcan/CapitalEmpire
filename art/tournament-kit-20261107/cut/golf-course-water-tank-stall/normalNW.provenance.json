@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-water-tank-stall",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../batch02/water-tank-stall/normal-NW.png",
+    "sha256": "4fdce187bffdb8cef69ae007a9bef6900c730c9600b212489a5d4a173c01f63d",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 126,
+    "top": 63,
+    "width": 449,
+    "height": 503
+  },
+  "output": "normalNW.native.png",
+  "sha256": "909367422f58d1da266908646e1d19ab910eac17eda03fba342bc1a4a10e8dad",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

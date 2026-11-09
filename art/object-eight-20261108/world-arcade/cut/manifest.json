@@ -1,0 +1,298 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:arcade",
+  "name": "Arcade",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "file": "../src/normalNE.png",
+        "sha256": "a4554fce5e52ecdefa54f36dc543ce15f64e6a42ec4b67aa45cf5311d40c9c27",
+        "width": 588,
+        "height": 467
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "ad8514c1209309e4b90d4ff27076bce4e0154f8cbbd6cd7f4f51a797efa8d345",
+        "width": 468,
+        "height": 288
+      },
+      "normalSE": {
+        "file": "../src/normalSE.png",
+        "sha256": "48935f810fcb79ccb5c565ef3ffdabcd5d7a3d8c2c9a1502d2c2d7a3acfc27a0",
+        "width": 598,
+        "height": 473
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "f2cc9790b66d46efe0b2cd8cf3d878e5be3e023ee4118a5dc692e3622230987c",
+        "width": 341,
+        "height": 428
+      },
+      "normalSW": {
+        "file": "../src/normalSW.png",
+        "sha256": "035988b1417de83981fddf03363309818f244a839822e8948cd16e6c0eab7343",
+        "width": 569,
+        "height": 489
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "2c0696690bd05e553b562b295b04a87b04848ecb29afb20b5368f733c7176f82",
+        "width": 489,
+        "height": 299
+      },
+      "normalNW": {
+        "file": "../src/normalNW.png",
+        "sha256": "b4f2993da3c606e9141bd9ce285737eb5656dd7b7569dc6d1bdec95c599182a7",
+        "width": 607,
+        "height": 463
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "28b2bb881ff600fd18bbac6c0315895fe24cbe59fc637d387d08bcd293f01b6a",
+        "width": 328,
+        "height": 342
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8.16,
+    "depth": 5.42
+  },
+  "pixelsPerMetre": 48,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.696,
+  "kind": "building",
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "file": "normalNE.native.png",
+      "sha256": "92a6598293ebe82112ec55c76e465962521fe3e93e0dc9a4fc84b1a2adb2fc50",
+      "width": 580,
+      "height": 459,
+      "anchor": {
+        "x": 299,
+        "y": 333.12
+      },
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "a4554fce5e52ecdefa54f36dc543ce15f64e6a42ec4b67aa45cf5311d40c9c27",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 588,
+        "height": 467
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 580,
+        "height": 459
+      }
+    },
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "89d0d105f3882e0bd34eb03036999f50dfa4db4d06d69a3a83dfe252272e0b3e",
+      "width": 460,
+      "height": 280,
+      "anchor": {
+        "x": 263.75,
+        "y": 226.64
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "ad8514c1209309e4b90d4ff27076bce4e0154f8cbbd6cd7f4f51a797efa8d345",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 468,
+        "height": 288
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 460,
+        "height": 280
+      }
+    },
+    "normalSE": {
+      "file": "normalSE.native.png",
+      "sha256": "b912f0579c05305ac1454cd1bf7520f56fe304b1386ea4c019b9249d9d06ea6b",
+      "width": 590,
+      "height": 465,
+      "anchor": {
+        "x": 319,
+        "y": 350.34
+      },
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "48935f810fcb79ccb5c565ef3ffdabcd5d7a3d8c2c9a1502d2c2d7a3acfc27a0",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 598,
+        "height": 473
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 590,
+        "height": 465
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "5bda39139903966c18d1c4676301043b1b421042bdc63fe63cb24908676d3b0c",
+      "width": 333,
+      "height": 420,
+      "anchor": {
+        "x": 166.5,
+        "y": 307.44
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f2cc9790b66d46efe0b2cd8cf3d878e5be3e023ee4118a5dc692e3622230987c",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 341,
+        "height": 428
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 333,
+        "height": 420
+      }
+    },
+    "normalSW": {
+      "file": "normalSW.native.png",
+      "sha256": "6e08eae8d757fcee6bea835b2ee42c1b8248468b89336504c50c957b7b09e8c7",
+      "width": 561,
+      "height": 481,
+      "anchor": {
+        "x": 295.5,
+        "y": 336.26
+      },
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "035988b1417de83981fddf03363309818f244a839822e8948cd16e6c0eab7343",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 569,
+        "height": 489
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 561,
+        "height": 481
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "c53ac472479a2e7f613c9998580238ef91e437a9b8d8855c212fbd7ab3bef050",
+      "width": 481,
+      "height": 291,
+      "anchor": {
+        "x": 193.25,
+        "y": 235.71
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "2c0696690bd05e553b562b295b04a87b04848ecb29afb20b5368f733c7176f82",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 489,
+        "height": 299
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 481,
+        "height": 291
+      }
+    },
+    "normalNW": {
+      "file": "normalNW.native.png",
+      "sha256": "fae30cfbf0300bfdef132d7dcbb75251ede8db1e348223ea0f610b15f4f354b4",
+      "width": 599,
+      "height": 455,
+      "anchor": {
+        "x": 277,
+        "y": 329.14
+      },
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "b4f2993da3c606e9141bd9ce285737eb5656dd7b7569dc6d1bdec95c599182a7",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 607,
+        "height": 463
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 599,
+        "height": 455
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "ca8b22af8da2366bd709b6efceeab576e5ad845908037162576de7cd77c60fab",
+      "width": 320,
+      "height": 334,
+      "anchor": {
+        "x": 140.5,
+        "y": 216.62
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "28b2bb881ff600fd18bbac6c0315895fe24cbe59fc637d387d08bcd293f01b6a",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 328,
+        "height": 342
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 320,
+        "height": 334
+      }
+    }
+  },
+  "calibrationNotes": "Scale: 48.0000 px/m (the median of a free fit of the four corner views, the game native scale being 45.2548); the same on every view of the subject, as one sheet's cells are. Anchors: the 8.16 x 5.42 m footprint's centre fitted to each silhouette (scripts/assets/fit-box-silhouette.mjs, wall 4.49 m, eave 0.56 m, IoU 0.9623 0.8545 0.8834 0.8219 0.9061 0.8807 0.9199 0.9233), not owner-measured. Art: world~arcade selection.json (corners-v2.png, axisturn-v2.png), owner_approved false.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ],
+  "reviewNote": "T375 2026-11-08: the eight crops viewed together (one building, daylight, sun upper right, no mirrored view); anchors and scale fitted (calibrationNotes), not owner-measured. The art itself stays owner_approved=false in native-resume-20261106/<id>/selection.json: the owner reviews it on the check sheet."
+}

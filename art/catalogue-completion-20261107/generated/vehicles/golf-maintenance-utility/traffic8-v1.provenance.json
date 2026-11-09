@@ -1,0 +1,15 @@
+{
+  "key": "golf-maintenance-utility",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-db87879d-5e00-4d76-83e3-21ac59ff944c.png",
+  "target": "generated/vehicles/golf-maintenance-utility/traffic8-v1.png",
+  "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical emptygolf maintenance vehicle. Reference1 defines the subject/model; any tiny reference is just structural identity, reconstruct clean higher detail. Preserve the same mechanical layout in all views. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.1985 golf-course setting, period-appropriate machinery. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity: Create a distinct sensible1980s manufactured golf-course maintenance utility cart. Reference is PAINTED MATERIAL STYLE ONLY, not its passenger/golfbag layout. Dark-green steel body, cream small rigid canopy, ONE tan two-seat front bench with steering wheel/windshield, a plain open rectangular rear green CARGO BED holding a closed metal toolbox and a single coiled hose. Four chunky tyres with simple cream steel rims. No golf bags, no rear passenger bench, no roller collector, no rags/ropes/patchwork roof.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/src/assets/businesses/capital-v1/png/golf-cart-sw.png"
+  ],
+  "replacement_target": "crew-utility-cart",
+  "era": "1980s",
+  "status": "native source candidate; alpha/actual directions/camera/identity QA pending",
+  "runtime_imported": false,
+  "sha256": "4a9145c65c79e7a70cef2290a2142e8b702160e660f08e5a64e90b2e6f9fb80d",
+  "native_bytes_preserved": true
+}

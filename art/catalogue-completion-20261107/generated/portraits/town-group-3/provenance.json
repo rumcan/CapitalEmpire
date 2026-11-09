@@ -1,0 +1,285 @@
+{
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-07T06:43:15.343357+00:00",
+  "full_original_source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-34c9020b-955c-485e-ab73-ab5ea98d96ed.png",
+    "sha256": "afa11b38476cd5fe3f7432b9b771cb513a6662424082db3394ebd4f4d2953b61",
+    "bytes": 3338327
+  },
+  "archived_full_sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-3\\source.png",
+    "sha256": "afa11b38476cd5fe3f7432b9b771cb513a6662424082db3394ebd4f4d2953b61",
+    "bytes": 3338327
+  },
+  "exact_prompt": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-3\\prompt.txt",
+    "sha256": "c417c2b05bc566cba5257d92f2e055ea5f493780d2fbfdbd4b21bb61fbecb097",
+    "bytes": 1860
+  },
+  "actual_reference_files": [],
+  "actual_references_complete": false,
+  "references_note": "Omitted reference paths are unknown, never inferred from expected identity files.",
+  "dimensions": [
+    1263,
+    1246
+  ],
+  "mode": "RGB",
+  "split_x": 631,
+  "split_y": 623,
+  "split_rule": "explicit reviewed coordinate if provided, otherwise floor half; right/bottom preserve remainder",
+  "central_RGB_transition_measurements": {
+    "x": [
+      {
+        "split_before_coordinate": 627,
+        "mean_absolute_RGB_difference": 11.683788121990368
+      },
+      {
+        "split_before_coordinate": 628,
+        "mean_absolute_RGB_difference": 13.322899946495452
+      },
+      {
+        "split_before_coordinate": 629,
+        "mean_absolute_RGB_difference": 13.73060460139112
+      },
+      {
+        "split_before_coordinate": 630,
+        "mean_absolute_RGB_difference": 16.502407704654896
+      },
+      {
+        "split_before_coordinate": 631,
+        "mean_absolute_RGB_difference": 31.318619582664528
+      },
+      {
+        "split_before_coordinate": 632,
+        "mean_absolute_RGB_difference": 40.23274478330658
+      },
+      {
+        "split_before_coordinate": 633,
+        "mean_absolute_RGB_difference": 11.329320492241841
+      },
+      {
+        "split_before_coordinate": 634,
+        "mean_absolute_RGB_difference": 12.209470304975923
+      },
+      {
+        "split_before_coordinate": 635,
+        "mean_absolute_RGB_difference": 11.764044943820224
+      }
+    ],
+    "y": [
+      {
+        "split_before_coordinate": 619,
+        "mean_absolute_RGB_difference": 7.198205331221959
+      },
+      {
+        "split_before_coordinate": 620,
+        "mean_absolute_RGB_difference": 6.752705199261019
+      },
+      {
+        "split_before_coordinate": 621,
+        "mean_absolute_RGB_difference": 9.504882554763789
+      },
+      {
+        "split_before_coordinate": 622,
+        "mean_absolute_RGB_difference": 44.77988915281077
+      },
+      {
+        "split_before_coordinate": 623,
+        "mean_absolute_RGB_difference": 58.465030351016104
+      },
+      {
+        "split_before_coordinate": 624,
+        "mean_absolute_RGB_difference": 14.275270519926103
+      },
+      {
+        "split_before_coordinate": 625,
+        "mean_absolute_RGB_difference": 10.85484296648192
+      },
+      {
+        "split_before_coordinate": 626,
+        "mean_absolute_RGB_difference": 10.793349168646081
+      },
+      {
+        "split_before_coordinate": 627,
+        "mean_absolute_RGB_difference": 11.282924254420692
+      }
+    ]
+  },
+  "cell_order": [
+    [
+      "person:3d:town_m_mechanic",
+      "person:3d:town_m_postman"
+    ],
+    [
+      "person:3d:town_w_elder",
+      "person:3d:town_w_nurse"
+    ]
+  ],
+  "exact_reconstruction_verified": true,
+  "records": [
+    {
+      "look_id": "person:3d:town_m_mechanic",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        631,
+        623
+      ],
+      "dimensions": [
+        631,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-3\\person-3d-town-m-mechanic.native.png",
+        "sha256": "53b425f7d25fb979c1ce61b66646347461bd9e35435f822f268b7cc18d8a0c93",
+        "bytes": 758724
+      },
+      "pixel_sha256": "81211258e3077d978e415fee091f624bf5bf12955edad975c690277b18b11356",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_m_mechanic",
+        "file": "town-m-mechanic.png",
+        "w": 631,
+        "h": 623,
+        "bytes": 758724,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-m-mechanic.png",
+        "sha256": "53b425f7d25fb979c1ce61b66646347461bd9e35435f822f268b7cc18d8a0c93",
+        "bytes": 758724
+      }
+    },
+    {
+      "look_id": "person:3d:town_m_postman",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        631,
+        0,
+        1263,
+        623
+      ],
+      "dimensions": [
+        632,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-3\\person-3d-town-m-postman.native.png",
+        "sha256": "d2c871dcab682d0a8273e49d2137527d07c8e724c074eeded15f88b8c4bb2c78",
+        "bytes": 763196
+      },
+      "pixel_sha256": "48688ef6951b9dc5d9522146ec191cd700aa4471cbe870ad86bb348e114e93f3",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_m_postman",
+        "file": "town-m-postman.png",
+        "w": 632,
+        "h": 623,
+        "bytes": 763196,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-m-postman.png",
+        "sha256": "d2c871dcab682d0a8273e49d2137527d07c8e724c074eeded15f88b8c4bb2c78",
+        "bytes": 763196
+      }
+    },
+    {
+      "look_id": "person:3d:town_w_elder",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        623,
+        631,
+        1246
+      ],
+      "dimensions": [
+        631,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-3\\person-3d-town-w-elder.native.png",
+        "sha256": "e359222c00af6b9722d95ba2596af5a5216312d2e4f661baf1140b542525c564",
+        "bytes": 802883
+      },
+      "pixel_sha256": "0f32965b46586ae9ab402227b3777914bafbd47b433a4dc166532366f31b8fcf",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_w_elder",
+        "file": "town-w-elder.png",
+        "w": 631,
+        "h": 623,
+        "bytes": 802883,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-w-elder.png",
+        "sha256": "e359222c00af6b9722d95ba2596af5a5216312d2e4f661baf1140b542525c564",
+        "bytes": 802883
+      }
+    },
+    {
+      "look_id": "person:3d:town_w_nurse",
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        631,
+        623,
+        1263,
+        1246
+      ],
+      "dimensions": [
+        632,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-3\\person-3d-town-w-nurse.native.png",
+        "sha256": "0494400062ecf53bb674d1847d5d261f869dbb9d3b4cec3d0fbcafd6fe21478c",
+        "bytes": 763803
+      },
+      "pixel_sha256": "bbcd4a52a627e7cf4ceb574897511aa73b6e52d3367b8b3d5d299ca1eab56563",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_w_nurse",
+        "file": "town-w-nurse.png",
+        "w": 632,
+        "h": 623,
+        "bytes": 763803,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-w-nurse.png",
+        "sha256": "0494400062ecf53bb674d1847d5d261f869dbb9d3b4cec3d0fbcafd6fe21478c",
+        "bytes": 763803
+      }
+    }
+  ],
+  "parent_reviewed": true,
+  "owner_approved": false,
+  "runtime_integrated": true,
+  "status": "imported-parent-reviewed-native-candidates"
+}

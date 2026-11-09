@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-media-centre-upgraded",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch01/media-centre/upgraded/normal-NE.png",
+    "sha256": "cfbbd3c38ed691e989945b74ff2deec2a9ba97ec41d8f0026643c035da4faff6",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 3,
+    "top": 92,
+    "width": 598,
+    "height": 436
+  },
+  "output": "normalNE.native.png",
+  "sha256": "8e24095738e4d66d92679fb1c75c57194ee96a7dd2b7e32f6b71203b010803de",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

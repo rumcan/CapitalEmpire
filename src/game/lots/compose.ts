@@ -27,7 +27,8 @@ import {
 import { WHOLE_FRONT, approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, faces, footprintOf, isVehicle, ownerScaleOf, roadView, turned } from './preset-art';
 import { fixedArt } from './art-fix';
-import { EPS, OVERLAP, share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear); T308: the facing's tolerance
+import { EPS, OVERLAP, share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear); T308: the facing's tolerance (T385's clean lot uses it: faceStreet no longer does)
+import { setBack, turnFirst, turnedSpot } from './setback'; // T375: the turned building's place; T376: the setback behind the pavement
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
@@ -407,22 +408,24 @@ const atRoadSize = (fit: Fitted): Fitted => { const props = fit.props.map(q => i
 /** a building that faces its street when it has the view for it: a house, building or venue, a garage or a shed (its views are checked by faces) */
 const facingBuilding = (id: string): boolean => { const it = BY.get(id); return !!it && isBuilding(it) && (it.kind === 'house' || it.kind === 'building' || it.kind === 'venue' || roleOf(id) === 'garage' || roleOf(id) === 'shed'); };
 /** T308 (#893): a fitted preset's buildings face their street: a building whose picture faces the lot's road (faces, autolot's rule) is drawn in view 0,
- *  the view whose front the street meets (drawnView turns every view by the lot's facing), its centre kept. A building whose turned footprint overlaps
- *  another prop beyond OVERLAP, or leaves the lot, keeps the preset's view and is counted (Fitted.facing: the lot lab's "kept facing"). Farms are untouched */
+ *  the view whose front the street meets (drawnView turns every view by the lot's facing), its centre kept. T375: a turned footprint is deeper or wider than it
+ *  was, so its centre slides inside the lot as little as it takes, over the props it covers, which it is put before so done() keeps it (setback.ts turnedSpot,
+ *  turnFirst). A building that cannot (another building under it; the lot too small) keeps the preset's view and is counted (Fitted.facing: the lot lab's
+ *  "kept facing"). Farms are untouched */
 function faceStreet(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): Fitted {
   // (T298: a shopping centre's wings face across its car park, not the street)
   if (preset.use === 'farm' || !fit.props.length || preset.id === 'auto:centre') return fit;
   const road = roadOf(lot.n), half = frameHalf(f), lo = preset.whole ? -WHOLE_FRONT : 0;
   const props = fit.props.slice(), boxes = fit.props.map(q => boxAt(q, half(q)));
-  let kept = 0;
+  let kept = 0; const first: number[] = [];
   props.forEach((q, k) => {
     if (q.view === 0 || !facingBuilding(q.id) || !faces(q.id, road)) return;
-    const nq: PresetProp = { ...q, view: 0 }, b = boxAt(nq, half(nq));
-    const out = b[0] < -EPS || b[1] < lo - EPS || b[2] > lot.w + EPS || b[3] > lot.d + EPS;
-    if (!out && boxes.every((o, j) => j === k || share(b, o) <= OVERLAP)) { props[k] = nq; boxes[k] = b; }
+    const t = turnedSpot(q, half({ ...q, view: 0 }), lot, lo, props, boxes, k);
+    if (t) { props[k] = t.q; boxes[k] = boxAt(t.q, half(t.q)); if (t.first) first.push(k); }
     else kept++;
   });
-  return props.some((p, k) => p !== fit.props[k]) || kept ? { ...fit, props, facing: kept } : fit;
+  const turned = props.some((p, k) => p !== fit.props[k]) || kept ? { ...fit, props, facing: kept } : fit;
+  return first.length ? turnFirst(turned, first) : turned;
 }
 /** the frame a preset is drawn in on a lot: frameOf, a lab preset of a diagonal road turned by its quarter (quarterOfRoad) */
 const presetFrame = (lot: LotGeom, preset: LotPreset): PresetFrame => { const f = frameOf(lot); return preset.road !== undefined && preset.road % 2 ? { ...f, q: quarterOfRoad(preset.road) } : f; };
@@ -434,7 +437,7 @@ export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; 
   const { preset } = plan, frame = presetFrame(lot, preset);
   // T167: a picture the owner removed is never drawn: a stand-in takes its place (or it is left out), before the house finds its yards
   // T297 (#882): the remix comes last, on the props as drawn (the stand-ins and the shop in place); its main building is the shop's spot
-  const fit0 = faceStreet(swapShop(standIns(atRoadSize(fitPreset(preset, lot.w, lot.d)), preset, lot, frame), plan, lot, frame), preset, lot, frame);
+  const fit0 = setBack(faceStreet(swapShop(standIns(atRoadSize(fitPreset(preset, lot.w, lot.d)), preset, lot, frame), plan, lot, frame), preset, lot, frame), preset, lot, frame);
   const sw = plan.swap ? fit0.from.indexOf(plan.swap.spot) : -1;
   const fit1 = remixOf(fit0, preset, lot, st, frame, sw >= 0 ? sw : mainIndex(fit0, frame));
   // T314 (#899): an approved house preset on a screen-straight road gets the generated lots' yard trees, owned hedge and soft ground (autolot.ts
@@ -701,12 +704,12 @@ function standInHouse(q: PresetProp, r: RemovedPic, fit: Fitted, lot: LotGeom, f
   return ok.reduce((a, b) => (Math.abs(fam.area.get(a)! - area) <= Math.abs(fam.area.get(b)! - area) ? a : b));
 }
 /** a stand-in building of another use (a fire station): one of the library's buildings of the removed one's kind (not removed, drawn as itself, a
- *  front view) within 40% of its footprint area, one of the three nearest picked by the seed; null when there is none. On a road at 45 degrees
+ *  front view, not a tournament structure: those are the Event tool's) within 40% of its footprint area, one of the three nearest picked by the seed; null when there is none. On a road at 45 degrees
  *  (T154 Phase 2) those with a screen-axis set come first */
 function standInBuilding(q: PresetProp, r: RemovedPic, seed: number, road: Road): string | null {
   const hr = removedHalf(q.id, r, q.scale), area = 4 * hr * hr;
   let pool = KIND_POOL.get(r.kind);
-  if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
+  if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && it.cat !== 'Golf tournament' && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
     .map(it => { const fp = footprintOf(it.id, OWNER_SCALE[it.id] ?? 1, false); return { id: it.id, a: (fp[2] - fp[0]) * (fp[3] - fp[1]) }; }));
   const all = pool.filter(c => c.a >= area * 0.6 && c.a <= area * 1.4).sort((a, b) => Math.abs(a.a - area) - Math.abs(b.a - area) || (a.id < b.id ? -1 : 1));
   const faced = all.filter(c => roadView(c.id, road, 0)), near = (faced.length ? faced : all).slice(0, 3);

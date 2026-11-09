@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:video_rental",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-video_rental/NE.png",
+  "sourceSha256": "4e909c83906d4a80792b33e196532c6c210ecfaac009b79415297839b70b60c3",
+  "output": "identity-references/world-video-rental-cc8c504f/source.png",
+  "outputSha256": "4e909c83906d4a80792b33e196532c6c210ecfaac009b79415297839b70b60c3",
+  "width": 613,
+  "height": 519,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      613,
+      519
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-video_rental\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Blue storefront identity is kept within master muted siding/brick palette; warm windows, detailed slate parapet roof and right-side sun remain coherent.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-1.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "world:video_rental",
+    "version": "world-video_rental-4views-v2",
+    "files": {
+      "NE": "4e909c83906d4a80792b33e196532c6c210ecfaac009b79415297839b70b60c3",
+      "SE": "b464b1af1d63d986136ed88b39c578e53671176798acc5671c092bc9185e5704",
+      "SW": "7ef9bbecdd27795285738cfefe9a938b6f96b3ed0e10d39cc284be00368c89ef",
+      "NW": "da61e8f8f30ba5d2dbd44004284b08de73f6d3cb3fe8b499ffb5a24792925a01"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.195313,
+      0.195313,
+      0.418945,
+      0.363281
+    ],
+    "crop": {
+      "left": 400,
+      "top": 400,
+      "width": 458,
+      "height": 344
+    },
+    "native": "art/theme-consistency/exports/buildings/world-video_rental.native.png",
+    "nativeSha256": "dbea79978a970515a399fd8cb741b280902ea9ed10e6711e5bc8de21b26b0e6d"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

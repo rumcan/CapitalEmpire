@@ -1,0 +1,34 @@
+{
+  "look_id": "person:3d:town_w_waitress",
+  "actual_runtime_look": {
+    "id": "person:3d:town_w_waitress",
+    "size": "adult",
+    "w": 80,
+    "h": 128.5,
+    "ax": 40,
+    "ay": 123.5,
+    "m": 1.66,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_w_waitress.png",
+    "sha256": "0ff0f27a08d7374aab3af760c3c003b95df772118a1781369d4592d4b52c601a",
+    "bytes": 987341
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_waitress\\identity-source.png",
+    "sha256": "0ff0f27a08d7374aab3af760c3c003b95df772118a1781369d4592d4b52c601a",
+    "bytes": 987341
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

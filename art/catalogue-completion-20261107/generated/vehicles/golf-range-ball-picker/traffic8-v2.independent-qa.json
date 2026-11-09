@@ -1,0 +1,171 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "PASS-native-alpha-cleanup-and-identity;HOLD-uniform30degree-camera",
+  "source": {
+    "path": "generated/vehicles/golf-range-ball-picker/traffic8-v2.png",
+    "sha256": "7ef327fb145a22175569bd19109241213eba4db83a2908af2528352be9f8f11d",
+    "bytes": 1708404
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "is_opaque_scene": false,
+  "zero_alpha_fraction": 0.5451244266106061,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "rgba_rectangle_sha256": "b440b7d82bdd7fe71c6630a7166323080b928b901abf53b921cf9b6055bc3f4e",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 17,
+      "actual_screen_nose": "lower-left"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "rgba_rectangle_sha256": "be2ebac9088d98138b7272893cf98165ec57c371326b2ff67f2d608ebccea9d0",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 16,
+      "actual_screen_nose": "down"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1329,
+        443
+      ],
+      "rgba_rectangle_sha256": "2d7d331e346a174674a4b182ea050b9f4d3194ab45fd1f0ff221107ab684af35",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 8,
+      "actual_screen_nose": "lower-right"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        1329,
+        0,
+        1774,
+        443
+      ],
+      "rgba_rectangle_sha256": "ae468600a410c6578b3d597455207734a61e0f0ae2660b77c86edd21353cc127",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 2,
+      "actual_screen_nose": "right"
+    },
+    {
+      "cell": 4,
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "rgba_rectangle_sha256": "b22faa8b068924c1b614473fdeca4e859e580d319853e3b521151f8101e251fb",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 27,
+      "actual_screen_nose": "upper-right"
+    },
+    {
+      "cell": 5,
+      "reference_rect_ltrb": [
+        443,
+        443,
+        880,
+        887
+      ],
+      "rgba_rectangle_sha256": "db00041a989c039514ff2aa07ce696af30b08b2d7bb337195316be5f17848917",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 28,
+      "actual_screen_nose": "up"
+    },
+    {
+      "cell": 6,
+      "reference_rect_ltrb": [
+        880,
+        443,
+        1328,
+        887
+      ],
+      "rgba_rectangle_sha256": "e314d50a88cbf689e9c45fd98ace65ba92544d449f7519dadddefad08aa3236b",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 2,
+      "actual_screen_nose": "upper-left"
+    },
+    {
+      "cell": 7,
+      "reference_rect_ltrb": [
+        1328,
+        443,
+        1774,
+        887
+      ],
+      "rgba_rectangle_sha256": "f4e7212772618b9038e9685683efdb503a1e7b5f6ad39a408b7883ad514801b2",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 4,
+      "actual_screen_nose": "left"
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      443,
+      887,
+      1329,
+      1774
+    ],
+    [
+      0,
+      443,
+      880,
+      1328,
+      1774
+    ]
+  ],
+  "notes": [
+    "Native background haze corrected; known empty central gutter and border alpha≤1, real zero-alpha areas preserved.",
+    "All eight nose directions remain distinct; original body/cage/cargo identity preserved. Side-profile camera consistency hold remains until native guided correction."
+  ],
+  "source_crops_performed": false,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/vehicles/golf-range-ball-picker/traffic8-v2.prompt.txt",
+    "sha256": "81e81749ca730f697e7bfbbf897d47ef0865fbd48bf95a0f9c500eb7358ce3b8",
+    "bytes": 675
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-range-ball-picker/traffic8-v2.provenance.json",
+    "sha256": "ad92c2f856872a3e221d5f08cb2539ad244033f7c2e46dc80dfd61143d6b5bf6",
+    "bytes": 1341
+  }
+}

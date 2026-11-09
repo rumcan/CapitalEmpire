@@ -1,0 +1,563 @@
+{
+  "newprop:delivery-truck": {
+    "id": "newprop:delivery-truck",
+    "name": "Delivery truck",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\delivery-truck.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
+    "sourceSheetSHA256": "244d4c32605d22f33a9ff2c4c1cef289fe29bcf7fcdee485e2410ad5b9f8518e",
+    "referenceSHA256": "649271639453451cc83d34ca2bb09c7a300b2df2afacd267379db9c05b6c3578",
+    "sourcePixelRectXYWH": [
+      17,
+      46,
+      604,
+      567
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      604,
+      567
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Cream/green modern cab-over refrigerated box truck with roof refrigeration unit, one side cargo door and visible modern rounded cab. Functional vehicle proportions only; change to period1950s/1980s food-truck body, add serving hatch and cooking extractor. Not a food truck as drawn.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:green-food-kiosk": {
+    "id": "newprop:green-food-kiosk",
+    "name": "Green food kiosk",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+    "sourceSheetSHA256": "d471a7b9201c45fdc5e7f72a57d2eee3ea749bbe21950133443deb5f0df94617",
+    "referenceSHA256": "c441fad79cf91121e2db9e58d8d0838081ea97702caded23b8e8e7f0638882e6",
+    "sourcePixelRectXYWH": [
+      13,
+      9,
+      633,
+      599
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      633,
+      599
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Small green plank counter kiosk with sagging green canvas roof, brass corner balls, display shelves and upright glass drinks fridge. Useful service-counter identity. Remove ornamental gold finials and integrated flower planters; do not reproduce large ripped holes in upgraded tier.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:camera-tower": {
+    "id": "newprop:camera-tower",
+    "name": "Camera tower",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\camera-tower.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "sourceSheetSHA256": "0841140a75a9e5e3b1b7a66bfed4c684cb97cb67614672042402223bf4882f80",
+    "referenceSHA256": "03a446484ba17fd8433df4fcec2f00f7a621ec5cd9e860d6d7691600769d6f39",
+    "sourcePixelRectXYWH": [
+      81,
+      14,
+      456,
+      604
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      456,
+      604
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Four-corner scaffold tower, green fabric cladding, ladder on one face, roofless guarded camera platform with broadcast camera and equipment case. Correct role but ornate brass fittings/torn cloth need ordinary practical steel/timber treatment.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:tv-camera": {
+    "id": "newprop:tv-camera",
+    "name": "TV camera",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\tv-camera.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "sourceSheetSHA256": "0841140a75a9e5e3b1b7a66bfed4c684cb97cb67614672042402223bf4882f80",
+    "referenceSHA256": "a0e1c9668580326ca51a4a65dea13d56cb104e81eeef5eb5da95a1fb49c8d68b",
+    "sourcePixelRectXYWH": [
+      756,
+      626,
+      432,
+      571
+    ],
+    "originalCellLabel": "bottom right",
+    "referenceSize": [
+      432,
+      571
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Large black camera on three-legged tripod with rain cover and cabled pedestal head. Functional camera reference, not complete TV tower. Use period1985broadcast hardware and no visible operator.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:broadcast-truck": {
+    "id": "newprop:broadcast-truck",
+    "name": "Broadcast truck",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\broadcast-truck.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "sourceSheetSHA256": "0841140a75a9e5e3b1b7a66bfed4c684cb97cb67614672042402223bf4882f80",
+    "referenceSHA256": "5d49a158680b38f65ffaca8352605a0c7441254fadcf63f65e2aa28772a8b12d",
+    "sourcePixelRectXYWH": [
+      573,
+      55,
+      655,
+      565
+    ],
+    "originalCellLabel": "top right",
+    "referenceSize": [
+      655,
+      565
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Long cream/green three-axle broadcast truck, roof HVAC/vents, cable reels over cab and equipment doors. Cab styling is later than1985; keep functional equipment layout but use period body in event compound.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:satellite-van": {
+    "id": "newprop:satellite-van",
+    "name": "Satellite van",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\satellite-van.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+    "sourceSheetSHA256": "0841140a75a9e5e3b1b7a66bfed4c684cb97cb67614672042402223bf4882f80",
+    "referenceSHA256": "a54c9edffaa4b6981591114eada2d9942b5b1ecaaf953e6ee1527b096a158f16",
+    "sourcePixelRectXYWH": [
+      44,
+      598,
+      566,
+      629
+    ],
+    "originalCellLabel": "bottom left",
+    "referenceSize": [
+      566,
+      629
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Cream/green modern panel van with large roof satellite dish, HVAC and antennas. Later-era cab unsuitable for base1985set. Native crop contains a small neighbouring gold foot at its upper edge: ignore fragment; reference is van only.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:medical-tent": {
+    "id": "newprop:medical-tent",
+    "name": "Medical tent",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\medical-tent.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+    "sourceSheetSHA256": "a99d9e88357e720c6a7bf66e7139bb5a84e1818632b82f62d8d7ac8f1cfcde5c",
+    "referenceSHA256": "114afbfdb978cf93a6465575099463ee1198633fc3a0d254bcc2baa39322058e",
+    "sourcePixelRectXYWH": [
+      17,
+      41,
+      642,
+      591
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      642,
+      591
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Cream/green pointed marquee, front open flaps, visible cot and medicine cabinet, arched side windows. Gold finials and ornate garden planters are not required; use ordinary rectangular first-aid shelter. Maintains medical function.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:shanty-medical-tent": {
+    "id": "newprop:shanty-medical-tent",
+    "name": "Shanty medical tent",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-medical-tent.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-afa3d18f-f6d3-407b-b4fb-ac7fce3dab73.png",
+    "sourceSheetSHA256": "2ae188510ab3dc9ac7e769c01de83b3fdfdac8d9a58bce0168b413cbd062fbf6",
+    "referenceSHA256": "23ed4651ee755b012b2dcbe04d85604bc898835cb5ac6106b6bbcc051e5d2470",
+    "sourcePixelRectXYWH": [
+      27,
+      28,
+      652,
+      609
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      652,
+      609
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Blue tarp/log-and-rope fantasy shack containing medical cot, bottles and first-aid box. Reject architectural treatment; retain only practical medical equipment/function in a worn1950sreal-world shelter.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:ticket-booth": {
+    "id": "newprop:ticket-booth",
+    "name": "Ticket booth",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\ticket-booth.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+    "sourceSheetSHA256": "1a726bd22fc3d14f4a1a9cbccb248011e743fbe1ec00d61c0487953ca5be24fc",
+    "referenceSHA256": "7603bd35ab39928c2f7e0738e8de9ba7557be90f7657d531588a757f9445776b",
+    "sourcePixelRectXYWH": [
+      36,
+      45,
+      563,
+      605
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      563,
+      605
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Green clapboard ticket office with two front service windows, hipped roof/cupola and queue posts. Correct service-counter function; info/will-call redesign uses paper lists/maps, plain practical roof and rear staff door. Do not duplicate already-generated budget ticket cabin.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:course-map-stand": {
+    "id": "newprop:course-map-stand",
+    "name": "Course map stand",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-stand.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+    "sourceSheetSHA256": "cb1440cc480d50703ec0decdc2a284a059f2a5a20828240edc8c001c759c0c6f",
+    "referenceSHA256": "85f92995cd1e8863970f42028f5854caa6d4d6a0c4cc688c4fc46a7db221eebf",
+    "sourcePixelRectXYWH": [
+      60,
+      637,
+      507,
+      536
+    ],
+    "originalCellLabel": "bottom left",
+    "referenceSize": [
+      507,
+      536
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "MISLABELLED: actual image is an ornate round patio table with four chairs and striped umbrella. Excluded from all job generation references; does not depict a map stand.",
+    "sourceOnlyNotReleaseProof": true,
+    "excludedFromJobReferenceSets": true
+  },
+  "newprop:gate-arch": {
+    "id": "newprop:gate-arch",
+    "name": "Gate arch",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\gate-arch.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-5df0cf3b-18f0-416d-b18b-e1ea0e8eabc6.png",
+    "sourceSheetSHA256": "2d7f99feed2b2b468b46a9c6712e127aaad27425e37c8a73f84e5c9d126779c0",
+    "referenceSHA256": "5ecacae9412c4cfbac98ef29a056b607b4e399e071bcbc315991adaab9087ed9",
+    "sourcePixelRectXYWH": [
+      888,
+      35,
+      608,
+      504
+    ],
+    "originalCellLabel": "top right",
+    "referenceSize": [
+      608,
+      504
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Rope-lashed log arch with crossed-club board, scrap-corrugated side fences, baked brown background and grass base. Reject as architecture/style; only conceptual pedestrian entrance reference for ordinary1950sreplacement.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:shanty-turnstiles": {
+    "id": "newprop:shanty-turnstiles",
+    "name": "Shanty turnstiles",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-turnstiles.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-ec2f9b16-5471-4288-a7ed-912831f8bc87.png",
+    "sourceSheetSHA256": "55e349d7c48c5558d128dd79e889687014df8a87f51b6d541580dbddca24c8cb",
+    "referenceSHA256": "a12f90b950a19079aa4da8ac04ab57227caee8baf0d61488e4bec8312b94971d",
+    "sourcePixelRectXYWH": [
+      33,
+      712,
+      642,
+      477
+    ],
+    "originalCellLabel": "bottom left",
+    "referenceSize": [
+      642,
+      477
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Four primitive timber admission lanes with tarps, ropes and arrow boards. Preserve four-lane function, replace fantasy build with practical manual turnstiles plus one wide accessible gate. Arrows/text are not identity-critical.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:white-tent-booth": {
+    "id": "newprop:white-tent-booth",
+    "name": "White tent booth",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\white-tent-booth.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+    "sourceSheetSHA256": "1a726bd22fc3d14f4a1a9cbccb248011e743fbe1ec00d61c0487953ca5be24fc",
+    "referenceSHA256": "dc089ef7286bd65b246f7817618630c7b229be2673075728bc427a2e53436105",
+    "sourcePixelRectXYWH": [
+      681,
+      56,
+      534,
+      588
+    ],
+    "originalCellLabel": "top right",
+    "referenceSize": [
+      534,
+      588
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "MISLABELLED FOR MEDIA USE: canopy shelter contains security scanner arch, inspection table and baggage trays. Security function only; excluded as media-centre architectural identity.",
+    "sourceOnlyNotReleaseProof": true,
+    "excludedFromJobReferenceSets": true
+  },
+  "newprop:scaffold-booth": {
+    "id": "newprop:scaffold-booth",
+    "name": "Scaffold booth",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\scaffold-booth.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+    "sourceSheetSHA256": "5d36b7204d7b36458aa1e6b025aede7a3cc64c0ce1b23c25c648d54a5d540f0b",
+    "referenceSHA256": "48498a86a4e976275cdf64f615656fff86d3895bbe7e916c1457754bd96f4b9e",
+    "sourcePixelRectXYWH": [
+      669,
+      140,
+      554,
+      507
+    ],
+    "originalCellLabel": "top right",
+    "referenceSize": [
+      554,
+      507
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Primitive timber/tarp/corrugated booth with microphone board and modern laptop on desk. Media-work function only. Reject shack construction and laptop for1985; use modular press building with paper/CRT-era equipment if visible.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:hole-12-sign": {
+    "id": "newprop:hole-12-sign",
+    "name": "Hole 12 sign",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\hole-12-sign.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "sourceSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+    "referenceSHA256": "1b694824de74d4a7ce7c55266cd5dc579934a337c8bfbeecd89f467ce2bd1de7",
+    "sourcePixelRectXYWH": [
+      749,
+      20,
+      476,
+      627
+    ],
+    "originalCellLabel": "top right",
+    "referenceSize": [
+      476,
+      627
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Hole12course-map marker with yardage dots and ornate green frame. Not a hole SCOREBOARD. Use as scale/context only; do not copy static hole number/map into the new score display. Native crop has small detached neighbouring gold fragment at bottom.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "business:golf-practice-net": {
+    "id": "business:golf-practice-net",
+    "name": "golf practice net",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-practice-net.source.png",
+    "originalSource": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\src\\assets\\businesses\\capital-v1\\png\\golf-practice-net.png",
+    "sourceSHA256": "ac1c8162bf7b832ff78f5992d68b0d6a07753ab5ad03841f900280d8c7fdf42a",
+    "referenceSHA256": "ac1c8162bf7b832ff78f5992d68b0d6a07753ab5ad03841f900280d8c7fdf42a",
+    "referenceSize": [
+      508,
+      462
+    ],
+    "operation": "byte-for-byte copy of retained native PNG master",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Standalone square green tubular hitting cage, rear/side/roof netting, open front, internal green hitting mat and tee. Preserve open side and real net transparency across all views; mat is equipment, not a generic terrain plate.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "business:golf-bag-trolley": {
+    "id": "business:golf-bag-trolley",
+    "name": "golf bag trolley",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-bag-trolley.source.png",
+    "originalSource": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\src\\assets\\businesses\\capital-v1\\png\\golf-bag-trolley.png",
+    "sourceSHA256": "d17bc67df69a229083723c2741facc4f1b16613f4bcf251b99259d97b7d9ab4a",
+    "referenceSHA256": "d17bc67df69a229083723c2741facc4f1b16613f4bcf251b99259d97b7d9ab4a",
+    "referenceSize": [
+      362,
+      480
+    ],
+    "operation": "byte-for-byte copy of retained native PNG master",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Brown leather golf bag carrying clubs, strapped onto a black manual two-wheel pull trolley with curved handle and metal lower foot. Preserve bag/club/handle/wheel assembly, no motor or seat.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "golf:leaderboard": {
+    "id": "golf:leaderboard",
+    "name": "leaderboard",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.source.png",
+    "originalSource": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\leaderboard.png",
+    "sourceSHA256": "b93efb59577a2b0180c789d5230fef8acef5a7b08371b5e80510342f5f3fc85f",
+    "referenceSHA256": "b93efb59577a2b0180c789d5230fef8acef5a7b08371b5e80510342f5f3fc85f",
+    "referenceSize": [
+      1024,
+      1024
+    ],
+    "operation": "byte-for-byte copy of retained native PNG master",
+    "visualInspection": "inspected native source PNG",
+    "existingNormalCornerReferences": {
+      "NE": {
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-NE.png",
+        "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\NE.png",
+        "sha256": "7637d784f6a8a9215a3d9f875a64407f3b090fbd7db539e723015ec7b832d914",
+        "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+        "approvalClaimed": false,
+        "usableForIdentityReference": true,
+        "usableAsFinishedDaytimeView": false
+      },
+      "SE": {
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-SE.png",
+        "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\SE.png",
+        "sha256": "f293c7bb71886a259047b2d972bedb470ba98547ad406921f6b962cc84205668",
+        "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+        "approvalClaimed": false,
+        "usableForIdentityReference": true,
+        "usableAsFinishedDaytimeView": false
+      },
+      "SW": {
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-SW.png",
+        "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\SW.png",
+        "sha256": "20e9872b07ddfd305a0b8ef49a6cf61dbe6e16afb1bd9c60133c15a00df3df12",
+        "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+        "approvalClaimed": false,
+        "usableForIdentityReference": true,
+        "usableAsFinishedDaytimeView": false
+      },
+      "NW": {
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-NW.png",
+        "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\NW.png",
+        "sha256": "a71489c64a04849166b8b528e06dcb6a0a854e6f13a61c85686be9bc0db7a9a0",
+        "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+        "approvalClaimed": false,
+        "usableForIdentityReference": true,
+        "usableAsFinishedDaytimeView": false
+      }
+    },
+    "visualNotes": "Large blank green scoring grid on braced timber supports, rear/service walkway, right-side staircase, three-part pitched shingle rain cap and two green flags; lamps currently glow. Good exact subject reference; future sheets are late-afternoon with lamps off.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "golf:food-tent": {
+    "id": "golf:food-tent",
+    "name": "food-tent",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-food-tent.source.png",
+    "originalSource": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\food-tent.png",
+    "sourceSHA256": "b720170e46f767719ec3cc5e4427649659b78b9590eb65bb9c77c9e39af290fb",
+    "referenceSHA256": "b720170e46f767719ec3cc5e4427649659b78b9590eb65bb9c77c9e39af290fb",
+    "referenceSize": [
+      1024,
+      1024
+    ],
+    "operation": "byte-for-byte copy of retained native PNG master",
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Food-service marquee with white peaked roof, counters, grill and fridge. CURRENT WRONG foodTruck stand-in only: never use it as the vehicle silhouette or claim new foodTruck art completes this tent.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:course-map-board": {
+    "id": "newprop:course-map-board",
+    "name": "Course map board",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-board.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+    "sourceSheetSHA256": "8d3a7260b7ec4b810ea709271c0f84e3103ac1bb25d769e9ad9361c46b02c2bb",
+    "referenceSHA256": "68399b1762dc542bae34d9b6d217a8e42759cc6011cd16f6f0c958c76c03ebd1",
+    "sourcePixelRectXYWH": [
+      49,
+      18,
+      520,
+      629
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      520,
+      629
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Actual roofed green information/map board with course plan, information symbol, lanterns and flower planters. Map/data display reference only; omit planters, ground plinth and night lamp glow from info booth scene.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "newprop:leaderboard": {
+    "id": "newprop:leaderboard",
+    "name": "Leaderboard",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\leaderboard.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "sourceSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+    "referenceSHA256": "740f406bfa9da078fb51a32f188f79943ae2089011a9df4114d6935c39474b6a",
+    "sourcePixelRectXYWH": [
+      47,
+      6,
+      656,
+      642
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      656,
+      642
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "visualInspection": "inspected native source PNG",
+    "visualNotes": "Green/cream multi-hole scoreboard with clock, score rows and support legs. Correct scoreboard function but many baked numbers and ornate scrollwork. Secondary small-board reference; new faces blank for game data. Native crop contains detached neighbour gold fragment below.",
+    "sourceOnlyNotReleaseProof": true
+  }
+}

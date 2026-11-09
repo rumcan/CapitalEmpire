@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-house-l-shape-e0e3b328-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-shape-e0e3b328-plain-1/NE.png",
+  "sourceSha256": "0580a83a8244a81fb210ec7f9ca723d869aa3a8d9cb7b8521616fd95c6d33a2c",
+  "output": "identity-references/variation-gen-house-l-shape-e0e3b328-plain-1-824a0db4/source.png",
+  "outputSha256": "0580a83a8244a81fb210ec7f9ca723d869aa3a8d9cb7b8521616fd95c6d33a2c",
+  "width": 574,
+  "height": 590,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      574,
+      590
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-house-l-shape-e0e3b328-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation."
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-house-l-shape-e0e3b328-plain:1",
+    "version": "variation-gen-house-l-shape-e0e3b328-plain-1-4views-v1",
+    "files": {
+      "NE": "0580a83a8244a81fb210ec7f9ca723d869aa3a8d9cb7b8521616fd95c6d33a2c",
+      "SE": "49ffd3c88ca6f5524498a440db92a26eb0211e1b700f8d9cd463c75b95dc6685",
+      "SW": "f0dd7f6f30d9962c0d636c694d0e7618b50024e807c0f011a5f9e683126420e8",
+      "NW": "3901c70a56c27926b1f3c947bd7f192dce3cdd24ca4b443ef6b5dcd6851be418"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-2-0.webp",
+    "atlasSha256": "7765354742f849f1de2a5a1f34c606a80c1a2b229251a5f6c00725fc7d0c8a52",
+    "runtimePage": 2,
+    "localPage": 2,
+    "uv": [
+      0.273438,
+      0.546875,
+      0.517578,
+      0.791016
+    ],
+    "crop": {
+      "left": 560,
+      "top": 1120,
+      "width": 500,
+      "height": 500
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-house-l-shape-e0e3b328-plain-1.native.png",
+    "nativeSha256": "d53ea8398fb74a81e62dc4f49f6c8a8bbddd7f980bd464b53200b3b1c042a822"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

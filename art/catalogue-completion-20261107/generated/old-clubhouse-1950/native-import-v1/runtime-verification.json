@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "subject": "golf:clubhouse-1950-budget",
+  "before": {
+    "rows": 9118,
+    "pages": 88
+  },
+  "after": {
+    "rows": 9126,
+    "pages": 89,
+    "activeEightFacingSubjects": 25
+  },
+  "oldRowsAndAtlasReferencesUnchanged": true,
+  "nativeCropsPixelExact": true,
+  "originalSourcesUnchanged": true,
+  "cycle16TransitionsVerified": true,
+  "noFlip": true,
+  "noLegacyAlias": true,
+  "noEventBindingOrCapacity": true,
+  "footprintBoxesPerView": 4,
+  "atlasPixelChecks": [
+    {
+      "key": "normalNE",
+      "libraryIndex": 9118,
+      "rowId": "object8:golf-clubhouse-1950-budget-09bf7d81-v1:normalNE",
+      "atlasFile": "src/assets/object-eight/golf-clubhouse-1950-budget-09bf7d81-v1/page-0-0.webp",
+      "atlasRectangle": {
+        "left": 8,
+        "top": 8,
+        "width": 531,
+        "height": 373
+      },
+      "alphaExact": true,
+      "visibleRgbChannelsChanged": 647,
+      "maximumVisibleRgbDelta": 1
+    },
+    {
+      "key": "yaw8N",
+      "libraryIndex": 9119,
+      "rowId": "object8:golf-clubhouse-1950-budget-09bf7d81-v1:yaw8N",
+      "atlasFile": "src/assets/object-eight/golf-clubhouse-1950-budget-09bf7d81-v1/page-0-0.webp",
+      "atlasRectangle": {
+        "left": 547,
+        "top": 8,
+        "width": 495,
+        "height": 300
+      },
+      "alphaExact": true,
+      "visibleRgbChannelsChanged": 1053,
+      "maximumVisibleRgbDelta": 1
+    },
+    {
+      "key": "normalSE",
+      "libraryIndex": 9120,
+      "rowId": "object8:golf-clubhouse-1950-budget-09bf7d81-v1:normalSE",
+      "atlasFile": "src/assets/object-eight/golf-clubhouse-1950-budget-09bf7d81-v1/page-0-0.webp",
+      "atlasRectangle": {
+        "left": 1050,
+        "top": 8,
+        "width": 522,
+        "height": 367
+      },
+      "alphaExact": true,
+      "visibleRgbChannelsChanged": 640,
+      "maximumVisibleRgbDelta": 1
+    },
+    {
+      "key": "yaw8E",
+      "libraryIndex": 9121,
+      "rowId": "object8:golf-clubhouse-1950-budget-09bf7d81-v1:yaw8E",
+      "atlasFile": "src/assets/object-eight/golf-clubhouse-1950-budget-09bf7d81-v1/page-0-0.webp",
+      "atlasRectangle": {
+        "left": 1580,
+        "top": 8,
+        "width": 399,
+        "height": 371
+      },
+      "alphaExact": true,
+      "visibleRgbChannelsChanged": 962,
+      "maximumVisibleRgbDelta": 1
+    },
+    {
+      "key": "normalSW",
+      "libraryIndex": 9122,
+      "rowId": "object8:golf-clubhouse-1950-budget-09bf7d81-v1:normalSW",
+      "atlasFile": "src/assets/object-eight/golf-clubhouse-1950-budget-09bf7d81-v1/page-0-0.webp",
+      "atlasRectangle": {
+        "left": 8,
+        "top": 389,
+        "width": 523,
+        "height": 368
+      },
+      "alphaExact": true,
+      "visibleRgbChannelsChanged": 668,
+      "maximumVisibleRgbDelta": 1
+    },
+    {
+      "key": "yaw8S",
+      "libraryIndex": 9123,
+      "rowId": "object8:golf-clubhouse-1950-budget-09bf7d81-v1:yaw8S",
+      "atlasFile": "src/assets/object-eight/golf-clubhouse-1950-budget-09bf7d81-v1/page-0-0.webp",
+      "atlasRectangle": {
+        "left": 539,
+        "top": 389,
+        "width": 495,
+        "height": 281
+      },
+      "alphaExact": true,
+      "visibleRgbChannelsChanged": 1021,
+      "maximumVisibleRgbDelta": 1
+    },
+    {
+      "key": "normalNW",
+      "libraryIndex": 9124,
+      "rowId": "object8:golf-clubhouse-1950-budget-09bf7d81-v1:normalNW",
+      "atlasFile": "src/assets/object-eight/golf-clubhouse-1950-budget-09bf7d81-v1/page-0-0.webp",
+      "atlasRectangle": {
+        "left": 1042,
+        "top": 389,
+        "width": 532,
+        "height": 371
+      },
+      "alphaExact": true,
+      "visibleRgbChannelsChanged": 537,
+      "maximumVisibleRgbDelta": 1
+    },
+    {
+      "key": "yaw8W",
+      "libraryIndex": 9125,
+      "rowId": "object8:golf-clubhouse-1950-budget-09bf7d81-v1:yaw8W",
+      "atlasFile": "src/assets/object-eight/golf-clubhouse-1950-budget-09bf7d81-v1/page-0-0.webp",
+      "atlasRectangle": {
+        "left": 1582,
+        "top": 389,
+        "width": 396,
+        "height": 368
+      },
+      "alphaExact": true,
+      "visibleRgbChannelsChanged": 824,
+      "maximumVisibleRgbDelta": 1
+    }
+  ],
+  "limitations": [
+    "In-game standalone placement/alignment review pending; old clubhouse remains unbound.",
+    "Lossless WebP packing follows existing sharp compositing behavior; visible pixel deltas, if any, explicitly reported below. Native PNG masters/crops retain exact RGBA."
+  ]
+}

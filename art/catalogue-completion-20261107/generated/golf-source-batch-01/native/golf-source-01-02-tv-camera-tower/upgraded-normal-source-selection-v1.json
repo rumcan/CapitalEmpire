@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "subject": "golf:event-tv-camera-tower",
+  "condition": "upgraded",
+  "review": "practical-normal-four-source-candidate",
+  "sourceOnly": true,
+  "views": {
+    "normalSE": {
+      "nominalCameraKey": "normalSE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-v2.png",
+      "sourceFileSHA256": "f9eeb1a8be99b8c1a7bbe0825810b32dc6b2a6555dc337eb0e29aa24872a77ac",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "de663cee3f73112cd5006ea17d1a2c36567b5abaedf42f3ab4aa35ed7dd3d6b0",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Existing native source selection only; no crop file, resize, flip or painting written"
+    },
+    "normalSW": {
+      "nominalCameraKey": "normalSW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-SW-v2.png",
+      "sourceFileSHA256": "f2fcc31ac8e67544bc9c12246a01bec99945c1969f92ba02f9b20d7a9cfcfc89",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "59e33ba0f1fe1c434b9f7fa27ca12621b02d0999f5b5fc5fdc2300631583a358",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Existing native source selection only; no crop file, resize, flip or painting written"
+    },
+    "normalNW": {
+      "nominalCameraKey": "normalNW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-v2.png",
+      "sourceFileSHA256": "f9eeb1a8be99b8c1a7bbe0825810b32dc6b2a6555dc337eb0e29aa24872a77ac",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "e835ec79c3fea6c85da174f701d0850864afbcacbf1102be3ad3cf799d2bb046",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Existing native source selection only; no crop file, resize, flip or painting written"
+    },
+    "normalNE": {
+      "nominalCameraKey": "normalNE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-v2.png",
+      "sourceFileSHA256": "f9eeb1a8be99b8c1a7bbe0825810b32dc6b2a6555dc337eb0e29aa24872a77ac",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "3253ba32a0e50d8b2044998c2c2032648a3cf5fbd59ad26031bbf3027ec11fcc",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Existing native source selection only; no crop file, resize, flip or painting written"
+    }
+  },
+  "nativeCameraCertified": false,
+  "nativeScaleAndAnchorsApproved": false,
+  "scaleHold": "1254px isolated SW is preserved against627px sheet cells; no rescaling/calibration here.",
+  "runtimeIntegrated": false
+}

@@ -1,0 +1,245 @@
+{
+  "id": "variation~ref-building-house-dormer-north-6952cea5-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:44:50.119867+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-c82875d7-7bd6-488d-a6ef-e506881613fb.png",
+    "sha256": "e934e92c00af40cb5ab3f623df644131103f0f180b6a86484260c2fd78bb2757",
+    "bytes": 2242719
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\corners-v1.png",
+    "sha256": "e934e92c00af40cb5ab3f623df644131103f0f180b6a86484260c2fd78bb2757",
+    "bytes": 2242719
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-ref-building-house-dormer-north-6952cea5-plain-1.native.png",
+      "sha256": "a73a1643e4c0486bf3af57c61d8c160dc8ee104a4bb82756d4b99375fec3e6c8",
+      "bytes": 267371
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~ref-building-house-dormer-north-6952cea5-plain~1-corners.png",
+      "sha256": "1b4facaaa49ac3462632189177976fc9d0a13e2802320a8137eccc799eaf96ca",
+      "bytes": 491911
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-ref-building-house-dormer-north-6952cea5-plain-1.native.png",
+      "sha256": "a73a1643e4c0486bf3af57c61d8c160dc8ee104a4bb82756d4b99375fec3e6c8",
+      "bytes": 267371
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~ref-building-house-dormer-north-6952cea5-plain~1-corners.png",
+      "sha256": "1b4facaaa49ac3462632189177976fc9d0a13e2802320a8137eccc799eaf96ca",
+      "bytes": 491911
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          39,
+          73,
+          601,
+          572
+        ],
+        "transparent_fraction": 0.49851321067639376,
+        "margins_px": [
+          39,
+          73,
+          26,
+          55
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          33,
+          69,
+          587,
+          572
+        ],
+        "transparent_fraction": 0.5076450732456776,
+        "margins_px": [
+          33,
+          69,
+          40,
+          55
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          37,
+          69,
+          592,
+          557
+        ],
+        "transparent_fraction": 0.5144087564132893,
+        "margins_px": [
+          37,
+          69,
+          35,
+          70
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          42,
+          65,
+          590,
+          560
+        ],
+        "transparent_fraction": 0.48705641150869056,
+        "margins_px": [
+          42,
+          65,
+          37,
+          67
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 34.980794270833336
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 26.340983072916668
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 35.981282552083336
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 35.671061197916664
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 26.271809895833332
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 34.7216796875
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\SE.png",
+        "sha256": "9a9f68abb6d6627c15263a50a4d08344283d3dc8911b435f961c45e2ad6c2a46",
+        "bytes": 523330
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\SE.native.png",
+        "sha256": "9a9f68abb6d6627c15263a50a4d08344283d3dc8911b435f961c45e2ad6c2a46",
+        "bytes": 523330
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\SW.png",
+        "sha256": "971500a8dfa16448991461f09eba31a52adddb895ca3ed7da29cd4bc1ea29ca7",
+        "bytes": 501931
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\SW.native.png",
+        "sha256": "971500a8dfa16448991461f09eba31a52adddb895ca3ed7da29cd4bc1ea29ca7",
+        "bytes": 501931
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\NW.png",
+        "sha256": "136bfd3c56c5451251c2b28e3818dc0708f68378c106e1df6a661258fa6e85a2",
+        "bytes": 490192
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\NW.native.png",
+        "sha256": "136bfd3c56c5451251c2b28e3818dc0708f68378c106e1df6a661258fa6e85a2",
+        "bytes": 490192
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\NE.png",
+        "sha256": "5f3d276c436585618eac7626eae2bc71ecc7768449e0fb3fa597dff86c23122e",
+        "bytes": 533565
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-house-dormer-north-6952cea5-plain~1\\NE.native.png",
+        "sha256": "5f3d276c436585618eac7626eae2bc71ecc7768449e0fb3fa597dff86c23122e",
+        "bytes": 533565
+      }
+    }
+  ]
+}

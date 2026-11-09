@@ -1,0 +1,24 @@
+[
+  {
+    "key": "newprop:drinks-cart-green",
+    "slug": "drinks-cart-green",
+    "family": "normal",
+    "condition": "base",
+    "version": 1,
+    "target": "generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\normal-world-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\drinks-cart-green.source.png"
+    ],
+    "prompt": "Create a native2x2 sheet of FOUR actual corner views of ONE specialist golf vehicle or mobile vending prop. REFERENCE1 is fixed-world assembly/camera/occlusion authority. REFERENCE2 is subject identity and detailed painterly miniature MATERIALS/BODY DETAIL only; never repeat its one camera. Preserve recognizable vehicle shape, wheels, restrained cream-green finishes and fine metal/glass/canvas texture, not flatlowpolyguide surfaces. Function: Green four-wheel motorized beverage utility cart with cream two-place front bench/short canopy and open rear cargo tray. Fixed load: two orange cylindrical drink coolers, two rectangular green/white coolboxes and one crate of bottled water. Keep driver/canopy at front and all refreshment cargo at rear; no people.. Fixedphysicalrules: FRONTbench/canopy/controls, REARloadedbed. EXACT load:2orange round jugs,2rectangular white-lid coolboxes,1bottle crate. Fixed cargo positions across8views; no passengers or loose cargo movement. Green painted utility bed; source later-era nose is identity-only, geometry proxy does not bind an era.. Identity-preserving loaded beverage-service vehicle. Distinct actual load from generic maintenance utility core. Match its source later-style nose if producing a later-era model; no invented runtime upgrade or capacity.. Keep authentic wear modest and plausible; no gratuitous holes or fantasy filigree. Fourdistinct45degreecorner poses in exact SE SW / NW NE cellsasguide, orthographic30degreesDOWN; equalphysicalscale. Rearmustshowtrueback, no inventedfrontheadlights/steering onrear. Allroofequipment/seatrows/ramps/cargo/stretcher stayonfixedworldside; nooperatingstatechanges. Satellitebowlbackconvexwhenviewedfromrear, neverrepanaimingtofaceviewer. Late-afternoon DAYTIME sunlightfixedSCREENUPPERRIGHT/shadowsLOWERLEFT, allheadlamps/beaconsOFF. CompleteisolatedopaqueobjectswithgenerousZEROALPHAtransparentmargins/gutters, smallcontactshadowonly; no broadgreyhalo/scenery/groundtile/road/people/plants/labels/UI/grid. Intrinsicmedicalcross/accesssymbolallowed, no extrabrands/text.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-56910a47-56dd-484a-b6f5-1cb92d9a0643.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\normal-world-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\drinks-cart-green.source.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "f0df89d1e3e1c24035c9494a2f0937966907eddab9ed95b88528482c420737eb",
+    "native_bytes_preserved": true
+  }
+]

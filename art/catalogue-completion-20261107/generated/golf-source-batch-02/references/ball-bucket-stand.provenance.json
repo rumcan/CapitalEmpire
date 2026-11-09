@@ -1,0 +1,44 @@
+{
+  "id": "newprop:ball-bucket-stand",
+  "name": "Ball bucket stand",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-bucket-stand.source.png",
+  "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+  "originalSheetSHA256": "923ff2d5fce8d9553d97045286bba84a25f9f7ecbd58e2aa96fc850966e7a684",
+  "referenceSHA256": "8cc5a4030df385a964f07ab0e48bae4a7913a7215f749ff112e327ac4f8a7371",
+  "sourceRectXYWH": [
+    768,
+    626,
+    408,
+    579
+  ],
+  "sourceCell": "bottom right",
+  "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+  "sourceCropSize": [
+    408,
+    579
+  ],
+  "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+  "sourceMetadataCutOff": false,
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 2.5,
+      "hy": 2.5,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "runtimeDisplayPixels": [
+    320,
+    454.12
+  ],
+  "manifestHalfExtentsMetresFirstGuess": [
+    2.5,
+    2.5
+  ],
+  "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+  "visualInspection": "inspected",
+  "visualNotes": "Confirmed manual ball hopper and front bucket, not simple bucket shelf. Bolted timber framing is ordinary rather than fantasy logs.",
+  "sourceOnlyNotReleaseProof": true
+}

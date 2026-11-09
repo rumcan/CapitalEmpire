@@ -1,0 +1,21 @@
+{
+  "key": "newprop:shuttle-cart",
+  "family": "yaw8-W",
+  "condition": "base",
+  "version": 2,
+  "target": "generated/golf-vehicle-source-batch-01/native/shuttle-cart/yaw8-W-v2.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shuttle-cart/yaw8W-guide.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/references/shuttle-cart.source.png"
+  ],
+  "prompt": "Render ONE SINGLE missing nearcardinal sprite, exactcamera/occlusioninREFERENCE1. Reference2isfinishednativeidentityandpaintedmaterialsonly, notcamera. Longcream/greenpassengershuttle withEXACTLY3fixedtwo-placebenchrows/fullcanopy/fourwheels. Missing nearRIGHTbroadside, noseSCREENLEFT, longsideDOMINATES, rearendonlythinsliver. NEVERa45degreecornerpose. Preservevehiclebodyproportions fromreference2butcameraONLYfromsingleviewguide. Rearseatsstayforwardfacing, steeringfrontonly. Followguideprojectedbase/roofedges, cameraorthographic30degreesDOWNandnominal8degreesoffcardinal\u2014broadmainface+narrowsecondaryface. Believabledetailedhandpaintedminiaturegameart, samefinecream/forestgreenpaint/metal/glass/rubberasreference2, noflatlowpoly. ONEcompletevehiclecentredwithbroadZEROALPHAtransparentmargins, nogreyhalo/groundplate/road/scene/people/plants/labelsUI/grid. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lightsOFF. No2Dmirroring, noindependentswivellingequipment, nootherperspectivesintheimage.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-daf1f578-38dc-4df3-bdbc-fb7cb2963da4.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shuttle-cart/yaw8W-guide.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/references/shuttle-cart.source.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "065027d4e1f189bb7dba9472c859d788851dbd331490c2d0cfe324b36d7837f3",
+  "native_bytes_preserved": true
+}

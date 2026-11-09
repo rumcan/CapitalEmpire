@@ -1,0 +1,44 @@
+{
+  "id": "newprop:direction-signpost",
+  "name": "Direction signpost",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\direction-signpost.source.png",
+  "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+  "originalSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+  "referenceSHA256": "9f794b546fb239c7faf22edf24017fc93e51470e7d618d4232f963f49daae1b0",
+  "sourceRectXYWH": [
+    733,
+    623,
+    448,
+    619
+  ],
+  "sourceCell": "bottom right",
+  "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+  "sourceCropSize": [
+    448,
+    619
+  ],
+  "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+  "sourceMetadataCutOff": false,
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 0.6,
+      "hy": 0.6,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "runtimeDisplayPixels": [
+    76.8,
+    106.11
+  ],
+  "manifestHalfExtentsMetresFirstGuess": [
+    0.6,
+    0.6
+  ],
+  "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+  "visualInspection": "inspected",
+  "visualNotes": "Confirmed four arrow boards with golf/food/toilet/exit pictograms. Source crop has a detached fragment from neighbouring prop above; ignore it.",
+  "sourceOnlyNotReleaseProof": true
+}

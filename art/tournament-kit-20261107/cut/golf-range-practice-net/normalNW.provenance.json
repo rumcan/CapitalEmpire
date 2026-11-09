@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:range-practice-net",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../batch01/practice-net/upgraded/normal-NW.png",
+    "sha256": "4ed059a81192ce54507427591542054432aef5db798c022be62b4ccabdeca714",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 47,
+    "top": 43,
+    "width": 509,
+    "height": 520
+  },
+  "output": "normalNW.native.png",
+  "sha256": "7ab791d71154a32285e331cc8c20904712655eea443b34ccb55f38fbb0838e28",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

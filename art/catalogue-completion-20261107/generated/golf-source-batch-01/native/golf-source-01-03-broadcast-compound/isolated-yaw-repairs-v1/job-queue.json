@@ -1,0 +1,348 @@
+{
+  "schema": 1,
+  "asOfUTC": "2026-11-07T15:05:02.779411+00:00",
+  "purpose": "Four isolated native yaw repairs: camera/main-face identity and fixed-side stair together, not stair-only edits to the rejected corner-family yaw sheet.",
+  "sourceOnly": true,
+  "nativeGenerationPerformedHere": false,
+  "nativeGenerationCountOfCrops": 0,
+  "runtimeModified": false,
+  "existingYawSheet": "upgraded-yaw8-v1.png remains held for repeated corner-family cameras plus N/E/S stair-side regression.",
+  "allFourYawSlotsRemainHeldUntilNewActualMainFacesPass": true,
+  "noZIPOrPNGExportClaim": true,
+  "jobs": [
+    {
+      "jobId": "upgraded-broadcast-yaw-N-isolated-v1",
+      "subject": "golf:event-broadcast-compound",
+      "condition": "upgraded",
+      "nominalCameraKey": "yaw8N",
+      "referenceOrder": [
+        "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-N-camera-guide.png",
+        "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-N-identity-from-normal-NE.png"
+      ],
+      "guideReference": {
+        "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-N-camera-guide.png",
+        "purpose": "CAMERA AND FIXED WORLD GEOMETRY AUTHORITY. This controls the new pose, not the identity reference.",
+        "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/guides/yaw8-world-v2.png",
+        "sourceSHA256": "7786f774f671d6ecf6f199d24f9abfaa1bea40e93eed6d05f7d537fece52999a",
+        "sourceSize": [
+          1600,
+          1600
+        ],
+        "sourceFrameRectLTRB": [
+          0,
+          0,
+          800,
+          800
+        ],
+        "cropSize": [
+          800,
+          800
+        ],
+        "PNG_SHA256": "41fa3d6f4b8313bf87cca1f71a451c653a899d0f6b064adef151187284690f8f",
+        "RGBA_SHA256": "a82c5c30a442d9c1b1b433c11e18b6fe4e364f62aef2a41edd52f3dd006bc62a",
+        "decodedOutputPixelEqualityWithNativeSourceCrop": true,
+        "operation": "Literal native RGBA crop only, no resize, trim, flip, key, recolour, painting or alpha cleanup.",
+        "countsAsNativeGeneration": false,
+        "visuallyInspected": true
+      },
+      "identityReference": {
+        "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-N-identity-from-normal-NE.png",
+        "purpose": "Accepted upgraded material/body identity ONLY; its corner camera is NOT the requested yaw camera.",
+        "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v2.png",
+        "sourceSHA256": "b46027013a800ed1d896bce7156bed5fa79ea3cbef4e4e0d3dc28ac4c49722f1",
+        "sourceSize": [
+          1254,
+          1254
+        ],
+        "sourceFrameRectLTRB": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "cropSize": [
+          627,
+          627
+        ],
+        "PNG_SHA256": "7bcc15082da0c9c907db313958bc01f9a8c9928265ce5017abeea1fb3faecff1",
+        "RGBA_SHA256": "bec4d1281581c28ae3a20aa458a1bf8a7d5c0e19df728cd3bbc6a634d051b2f7",
+        "decodedOutputPixelEqualityWithNativeSourceCrop": true,
+        "operation": "Literal native RGBA crop only, no resize, trim, flip, key, recolour, painting or alpha cleanup.",
+        "countsAsNativeGeneration": false,
+        "visuallyInspected": true
+      },
+      "expectedMainNoseScreenDirection": "DOWN, slightly screen-left",
+      "technicalProjectedNoseUnitBasis": [
+        -0.13917310096006544,
+        0.4951340343707851
+      ],
+      "expectedMainFaces": "Front cab/grille/windshield is the dominant main face; only a narrow physical +X right-side sliver.",
+      "stairVisibility": "Only the small far screen-RIGHT +X stair sliver if exposed; absolutely NO near screen-LEFT stair.",
+      "dishExposure": "Broad concave front and front feed.",
+      "physicalLayoutAuthority": {
+        "normalPhysicalSides": "FRONT -Y, REAR +Y, RIGHT +X, LEFT -X",
+        "truck": "Fixed original world left-X; nose -Y; one stair only on +X.",
+        "van": "Fixed original world rear/right +X/+Y; nose -Y; dish axis fixed.",
+        "originalModelRotationAboutZDegrees": 0,
+        "technicalGameHeadingFromProvenBasis": 323,
+        "technicalHeadingDoesNotCertifyFutureNativeCamera": true
+      },
+      "prompt": "Generate ONE finished transparent painterly game sprite of this complete upgraded golf-event broadcast compound. Reference 1 is the ONLY camera and fixed-world-layout authority: paint its exact isolated pose, orthographic 30 degrees down with its nominal 8-degree off-cardinal turn. Reference 2 supplies the tidy cream/green 1980s square-cab vehicle bodies, proportions, materials and small equipment identity ONLY; DO NOT copy its corner view. Requested source camera N: both vehicle noses point DOWN, slightly screen-left. Front cab/grille/windshield is the dominant main face; only a narrow physical +X right-side sliver. Only the small far screen-RIGHT +X stair sliver if exposed; absolutely NO near screen-LEFT stair. Same fixed assembly: exactly TWO parallel period vehicles, one large broadcast truck with two roof HVAC units and one smaller uplink panel van with one fixed curved satellite dish and roof HVAC; one green generator, work table with red/grey cases, and one cable reel. Keep the physical relative positions, service gap and fixed dish axis from reference 1. Do not rearrange the compound to make a prettier corner pose. The satellite dish must remain a true curved bowl with a front feed tripod and convex ribbed back; its front/back exposure follows this exact guide camera, never turns to face the viewer. Keep the existing painterly game style, late-afternoon DAYLIGHT, sun screen UPPER RIGHT and shadows LOWER LEFT; lights off. Show the whole complete compound with broad transparent margins. No people, labels, captions, grid, invented buildings, ground slab, pavement, plants or fog. Output one large native image, not a 2x2 sheet.",
+      "sourceOnly": true,
+      "nativeGenerationPerformedHere": false,
+      "runtimeReady": false,
+      "nativeCameraCertified": false
+    },
+    {
+      "jobId": "upgraded-broadcast-yaw-E-isolated-v1",
+      "subject": "golf:event-broadcast-compound",
+      "condition": "upgraded",
+      "nominalCameraKey": "yaw8E",
+      "referenceOrder": [
+        "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-E-camera-guide.png",
+        "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-E-identity-from-normal-SE.png"
+      ],
+      "guideReference": {
+        "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-E-camera-guide.png",
+        "purpose": "CAMERA AND FIXED WORLD GEOMETRY AUTHORITY. This controls the new pose, not the identity reference.",
+        "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/guides/yaw8-world-v2.png",
+        "sourceSHA256": "7786f774f671d6ecf6f199d24f9abfaa1bea40e93eed6d05f7d537fece52999a",
+        "sourceSize": [
+          1600,
+          1600
+        ],
+        "sourceFrameRectLTRB": [
+          800,
+          0,
+          1600,
+          800
+        ],
+        "cropSize": [
+          800,
+          800
+        ],
+        "PNG_SHA256": "083eaf29c39b446bbf6147f3d1e1d01b3b9c9e110183b4fd5de827f149cda17e",
+        "RGBA_SHA256": "f930e03a3022260884eeaa2359b22c9c30b33fe37dbbe1105bb5d87fc9ca77b5",
+        "decodedOutputPixelEqualityWithNativeSourceCrop": true,
+        "operation": "Literal native RGBA crop only, no resize, trim, flip, key, recolour, painting or alpha cleanup.",
+        "countsAsNativeGeneration": false,
+        "visuallyInspected": true
+      },
+      "identityReference": {
+        "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-E-identity-from-normal-SE.png",
+        "purpose": "Accepted upgraded material/body identity ONLY; its corner camera is NOT the requested yaw camera.",
+        "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v2.png",
+        "sourceSHA256": "b46027013a800ed1d896bce7156bed5fa79ea3cbef4e4e0d3dc28ac4c49722f1",
+        "sourceSize": [
+          1254,
+          1254
+        ],
+        "sourceFrameRectLTRB": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "cropSize": [
+          627,
+          627
+        ],
+        "PNG_SHA256": "89c3ce1670bb51ba049ded6b6645961bc0e2af3696d2a157ca023f39c97ed6e2",
+        "RGBA_SHA256": "fe02017d37a2ae3595e7350521e205a3946b939623762f6b78fc137e2b7a6d5a",
+        "decodedOutputPixelEqualityWithNativeSourceCrop": true,
+        "operation": "Literal native RGBA crop only, no resize, trim, flip, key, recolour, painting or alpha cleanup.",
+        "countsAsNativeGeneration": false,
+        "visuallyInspected": true
+      },
+      "expectedMainNoseScreenDirection": "RIGHT, slightly screen-down",
+      "technicalProjectedNoseUnitBasis": [
+        0.9902680687415704,
+        0.06958655048003273
+      ],
+      "expectedMainFaces": "Long physical LEFT (-X) body wall is the dominant face; only a narrow FRONT (-Y) cab/grille sliver on screen-right.",
+      "stairVisibility": "NO visible fold-out stair. The sole physical +X stair is on the hidden opposite side.",
+      "dishExposure": "Thin oblique concave front/feed; never a convex back copied from S.",
+      "physicalLayoutAuthority": {
+        "normalPhysicalSides": "FRONT -Y, REAR +Y, RIGHT +X, LEFT -X",
+        "truck": "Fixed original world left-X; nose -Y; one stair only on +X.",
+        "van": "Fixed original world rear/right +X/+Y; nose -Y; dish axis fixed.",
+        "originalModelRotationAboutZDegrees": 90,
+        "technicalGameHeadingFromProvenBasis": 233,
+        "technicalHeadingDoesNotCertifyFutureNativeCamera": true
+      },
+      "prompt": "Generate ONE finished transparent painterly game sprite of this complete upgraded golf-event broadcast compound. Reference 1 is the ONLY camera and fixed-world-layout authority: paint its exact isolated pose, orthographic 30 degrees down with its nominal 8-degree off-cardinal turn. Reference 2 supplies the tidy cream/green 1980s square-cab vehicle bodies, proportions, materials and small equipment identity ONLY; DO NOT copy its corner view. Requested source camera E: both vehicle noses point RIGHT, slightly screen-down. Long physical LEFT (-X) body wall is the dominant face; only a narrow FRONT (-Y) cab/grille sliver on screen-right. NO visible fold-out stair. The sole physical +X stair is on the hidden opposite side. Same fixed assembly: exactly TWO parallel period vehicles, one large broadcast truck with two roof HVAC units and one smaller uplink panel van with one fixed curved satellite dish and roof HVAC; one green generator, work table with red/grey cases, and one cable reel. Keep the physical relative positions, service gap and fixed dish axis from reference 1. Do not rearrange the compound to make a prettier corner pose. The satellite dish must remain a true curved bowl with a front feed tripod and convex ribbed back; its front/back exposure follows this exact guide camera, never turns to face the viewer. Keep the existing painterly game style, late-afternoon DAYLIGHT, sun screen UPPER RIGHT and shadows LOWER LEFT; lights off. Show the whole complete compound with broad transparent margins. No people, labels, captions, grid, invented buildings, ground slab, pavement, plants or fog. Output one large native image, not a 2x2 sheet.",
+      "sourceOnly": true,
+      "nativeGenerationPerformedHere": false,
+      "runtimeReady": false,
+      "nativeCameraCertified": false
+    },
+    {
+      "jobId": "upgraded-broadcast-yaw-S-isolated-v1",
+      "subject": "golf:event-broadcast-compound",
+      "condition": "upgraded",
+      "nominalCameraKey": "yaw8S",
+      "referenceOrder": [
+        "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-S-camera-guide.png",
+        "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-S-identity-from-normal-SW.png"
+      ],
+      "guideReference": {
+        "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-S-camera-guide.png",
+        "purpose": "CAMERA AND FIXED WORLD GEOMETRY AUTHORITY. This controls the new pose, not the identity reference.",
+        "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/guides/yaw8-world-v2.png",
+        "sourceSHA256": "7786f774f671d6ecf6f199d24f9abfaa1bea40e93eed6d05f7d537fece52999a",
+        "sourceSize": [
+          1600,
+          1600
+        ],
+        "sourceFrameRectLTRB": [
+          0,
+          800,
+          800,
+          1600
+        ],
+        "cropSize": [
+          800,
+          800
+        ],
+        "PNG_SHA256": "fe25dcabab1bc696c3960cd8a6843e8f8f885ebfcd0451eaf9729819af0d8314",
+        "RGBA_SHA256": "db0ac835533b3a15997120f94f99f7d463b759a9e9b5a2ce3e5b6b6a363109fc",
+        "decodedOutputPixelEqualityWithNativeSourceCrop": true,
+        "operation": "Literal native RGBA crop only, no resize, trim, flip, key, recolour, painting or alpha cleanup.",
+        "countsAsNativeGeneration": false,
+        "visuallyInspected": true
+      },
+      "identityReference": {
+        "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-S-identity-from-normal-SW.png",
+        "purpose": "Accepted upgraded material/body identity ONLY; its corner camera is NOT the requested yaw camera.",
+        "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v2.png",
+        "sourceSHA256": "b46027013a800ed1d896bce7156bed5fa79ea3cbef4e4e0d3dc28ac4c49722f1",
+        "sourceSize": [
+          1254,
+          1254
+        ],
+        "sourceFrameRectLTRB": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "cropSize": [
+          627,
+          627
+        ],
+        "PNG_SHA256": "180a6e97f6f81daa91df411191a6b598191108b8be9ee192ddc74da4f1fbd0a2",
+        "RGBA_SHA256": "ea17d7e823e0567b879368badb97cab3d500a8f01b1e745d0b9913a6989a1760",
+        "decodedOutputPixelEqualityWithNativeSourceCrop": true,
+        "operation": "Literal native RGBA crop only, no resize, trim, flip, key, recolour, painting or alpha cleanup.",
+        "countsAsNativeGeneration": false,
+        "visuallyInspected": true
+      },
+      "expectedMainNoseScreenDirection": "UP, slightly screen-right",
+      "technicalProjectedNoseUnitBasis": [
+        0.13917310096006555,
+        -0.4951340343707851
+      ],
+      "expectedMainFaces": "Rear doors/tail lights are the dominant main faces; only a narrow physical LEFT (-X) body-side sliver.",
+      "stairVisibility": "NO visible fold-out stair. The sole physical +X stair is hidden on the far side.",
+      "dishExposure": "Convex ribbed back with rear pivot; no broad front face.",
+      "physicalLayoutAuthority": {
+        "normalPhysicalSides": "FRONT -Y, REAR +Y, RIGHT +X, LEFT -X",
+        "truck": "Fixed original world left-X; nose -Y; one stair only on +X.",
+        "van": "Fixed original world rear/right +X/+Y; nose -Y; dish axis fixed.",
+        "originalModelRotationAboutZDegrees": 180,
+        "technicalGameHeadingFromProvenBasis": 143,
+        "technicalHeadingDoesNotCertifyFutureNativeCamera": true
+      },
+      "prompt": "Generate ONE finished transparent painterly game sprite of this complete upgraded golf-event broadcast compound. Reference 1 is the ONLY camera and fixed-world-layout authority: paint its exact isolated pose, orthographic 30 degrees down with its nominal 8-degree off-cardinal turn. Reference 2 supplies the tidy cream/green 1980s square-cab vehicle bodies, proportions, materials and small equipment identity ONLY; DO NOT copy its corner view. Requested source camera S: both vehicle noses point UP, slightly screen-right. Rear doors/tail lights are the dominant main faces; only a narrow physical LEFT (-X) body-side sliver. NO visible fold-out stair. The sole physical +X stair is hidden on the far side. Same fixed assembly: exactly TWO parallel period vehicles, one large broadcast truck with two roof HVAC units and one smaller uplink panel van with one fixed curved satellite dish and roof HVAC; one green generator, work table with red/grey cases, and one cable reel. Keep the physical relative positions, service gap and fixed dish axis from reference 1. Do not rearrange the compound to make a prettier corner pose. The satellite dish must remain a true curved bowl with a front feed tripod and convex ribbed back; its front/back exposure follows this exact guide camera, never turns to face the viewer. Keep the existing painterly game style, late-afternoon DAYLIGHT, sun screen UPPER RIGHT and shadows LOWER LEFT; lights off. Show the whole complete compound with broad transparent margins. No people, labels, captions, grid, invented buildings, ground slab, pavement, plants or fog. Output one large native image, not a 2x2 sheet.",
+      "sourceOnly": true,
+      "nativeGenerationPerformedHere": false,
+      "runtimeReady": false,
+      "nativeCameraCertified": false
+    },
+    {
+      "jobId": "upgraded-broadcast-yaw-W-isolated-v1",
+      "subject": "golf:event-broadcast-compound",
+      "condition": "upgraded",
+      "nominalCameraKey": "yaw8W",
+      "referenceOrder": [
+        "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-W-camera-guide.png",
+        "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-W-identity-from-normal-NW.png"
+      ],
+      "guideReference": {
+        "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-W-camera-guide.png",
+        "purpose": "CAMERA AND FIXED WORLD GEOMETRY AUTHORITY. This controls the new pose, not the identity reference.",
+        "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/guides/yaw8-world-v2.png",
+        "sourceSHA256": "7786f774f671d6ecf6f199d24f9abfaa1bea40e93eed6d05f7d537fece52999a",
+        "sourceSize": [
+          1600,
+          1600
+        ],
+        "sourceFrameRectLTRB": [
+          800,
+          800,
+          1600,
+          1600
+        ],
+        "cropSize": [
+          800,
+          800
+        ],
+        "PNG_SHA256": "812cfd2b9f6db59b7702836e7c69d79ac6a98f4a44135fcb890374fff696bed4",
+        "RGBA_SHA256": "5ff7ce8fea30485fad437ab2c1f66ac3671c60170cf21aacc72549c47f0a9846",
+        "decodedOutputPixelEqualityWithNativeSourceCrop": true,
+        "operation": "Literal native RGBA crop only, no resize, trim, flip, key, recolour, painting or alpha cleanup.",
+        "countsAsNativeGeneration": false,
+        "visuallyInspected": true
+      },
+      "identityReference": {
+        "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/isolated-yaw-repairs-v1/references/yaw-W-identity-from-normal-NW.png",
+        "purpose": "Accepted upgraded material/body identity ONLY; its corner camera is NOT the requested yaw camera.",
+        "source": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v2.png",
+        "sourceSHA256": "b46027013a800ed1d896bce7156bed5fa79ea3cbef4e4e0d3dc28ac4c49722f1",
+        "sourceSize": [
+          1254,
+          1254
+        ],
+        "sourceFrameRectLTRB": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "cropSize": [
+          627,
+          627
+        ],
+        "PNG_SHA256": "1c04c148d6791eb9f92873f7a6a8fce46230c056ab32d777770e10da15fc6428",
+        "RGBA_SHA256": "2a5aad09ad5ed625718cb8399865e8cfb9c0dfe8c895060d4cdb373e49f3ada8",
+        "decodedOutputPixelEqualityWithNativeSourceCrop": true,
+        "operation": "Literal native RGBA crop only, no resize, trim, flip, key, recolour, painting or alpha cleanup.",
+        "countsAsNativeGeneration": false,
+        "visuallyInspected": true
+      },
+      "expectedMainNoseScreenDirection": "LEFT, slightly screen-up",
+      "technicalProjectedNoseUnitBasis": [
+        -0.9902680687415704,
+        -0.0695865504800328
+      ],
+      "expectedMainFaces": "Long physical RIGHT (+X) body wall is dominant; only a narrow REAR (+Y) door/tail-light sliver on screen-right.",
+      "stairVisibility": "The ONE physical RIGHT (+X) truck stair is visible in its fixed position; no extra stair on the opposite side.",
+      "dishExposure": "Concave front/feed from the opposite physical side, fixed axis.",
+      "physicalLayoutAuthority": {
+        "normalPhysicalSides": "FRONT -Y, REAR +Y, RIGHT +X, LEFT -X",
+        "truck": "Fixed original world left-X; nose -Y; one stair only on +X.",
+        "van": "Fixed original world rear/right +X/+Y; nose -Y; dish axis fixed.",
+        "originalModelRotationAboutZDegrees": 270,
+        "technicalGameHeadingFromProvenBasis": 53,
+        "technicalHeadingDoesNotCertifyFutureNativeCamera": true
+      },
+      "prompt": "Generate ONE finished transparent painterly game sprite of this complete upgraded golf-event broadcast compound. Reference 1 is the ONLY camera and fixed-world-layout authority: paint its exact isolated pose, orthographic 30 degrees down with its nominal 8-degree off-cardinal turn. Reference 2 supplies the tidy cream/green 1980s square-cab vehicle bodies, proportions, materials and small equipment identity ONLY; DO NOT copy its corner view. Requested source camera W: both vehicle noses point LEFT, slightly screen-up. Long physical RIGHT (+X) body wall is dominant; only a narrow REAR (+Y) door/tail-light sliver on screen-right. The ONE physical RIGHT (+X) truck stair is visible in its fixed position; no extra stair on the opposite side. Same fixed assembly: exactly TWO parallel period vehicles, one large broadcast truck with two roof HVAC units and one smaller uplink panel van with one fixed curved satellite dish and roof HVAC; one green generator, work table with red/grey cases, and one cable reel. Keep the physical relative positions, service gap and fixed dish axis from reference 1. Do not rearrange the compound to make a prettier corner pose. The satellite dish must remain a true curved bowl with a front feed tripod and convex ribbed back; its front/back exposure follows this exact guide camera, never turns to face the viewer. Keep the existing painterly game style, late-afternoon DAYLIGHT, sun screen UPPER RIGHT and shadows LOWER LEFT; lights off. Show the whole complete compound with broad transparent margins. No people, labels, captions, grid, invented buildings, ground slab, pavement, plants or fog. Output one large native image, not a 2x2 sheet.",
+      "sourceOnly": true,
+      "nativeGenerationPerformedHere": false,
+      "runtimeReady": false,
+      "nativeCameraCertified": false
+    }
+  ],
+  "visuallyInspectedCrops": 8,
+  "allGuideAndIdentityCropPixelsVerified": true
+}

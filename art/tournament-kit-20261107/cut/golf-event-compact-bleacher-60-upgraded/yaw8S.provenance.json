@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-compact-bleacher-60-upgraded",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../../bleachers/upgraded/yaw8-v2.png",
+    "sha256": "adad4d41642586f1cf610342b4fd6c69649dbfdf2245b8bc7e68de711cf72b36",
+    "width": 1254,
+    "height": 1254
+  },
+  "cell": 2,
+  "cellRect": {
+    "left": 0,
+    "top": 627,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 70,
+    "top": 190,
+    "width": 511,
+    "height": 231
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "890b330f96fabcbce07221c5d56cf02f55d4a03608993d120a2177a328e4672b",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

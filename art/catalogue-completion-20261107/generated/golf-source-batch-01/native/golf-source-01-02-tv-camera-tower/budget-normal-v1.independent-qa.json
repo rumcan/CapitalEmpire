@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "HOLD-shared-world-camera-ladder-case-review",
+  "recommended_continue_yaw_source_generation": false,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v1.png",
+    "sha256": "43bd17288a10ca6fe77c1fa3af4d644d84ee1a7084021b2c4a7560846b3825ca",
+    "bytes": 1715828
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "tvTower",
+    "eventName": "TV camera tower",
+    "currentSpriteSubjectId": "ref:landmark-water-tower",
+    "newArtSubjectProposal": "golf:event-tv-camera-tower",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 1,
+      "depth": 1
+    },
+    "footprintMetres": {
+      "width": 2,
+      "depth": 2
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v1.provenance.json",
+    "sha256": "75c1f814936b4bc9503096bc5f1cf7299f8044ee4ea85ff98c938dec77a37d39",
+    "bytes": 3705
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v1.archive.json",
+    "sha256": "e44090e7a22543a23488ff55cd9cd62a1340d45675c29e8d1f9cf29dd7491bd1",
+    "bytes": 3777
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "34e9048ab7a333b79814411f6850a957f6796b56f80af47371f9295cb9f74256",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    },
+    {
+      "path": "generated/golf-source-batch-01/references/camera-tower.source.png",
+      "sha256": "03a446484ba17fd8433df4fcec2f00f7a621ec5cd9e860d6d7691600769d6f39",
+      "bytes": 517001
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.5777276669998906,
+  "outer_border_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "center_gutter_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        144,
+        26,
+        536,
+        580
+      ],
+      "minimum_core_margin_px": 26,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "f4e2bf42dbb99320e2d20e8325d557d254199689e82b06d42b11c00557048e4e",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "02dc4af859ec284bb0c9091e9e5d102ee3ecd5794db464043fb67bb2ab4474a5"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        97,
+        30,
+        483,
+        577
+      ],
+      "minimum_core_margin_px": 30,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "6c5dd37f0812537da62f6b2330a2e59b0222bef6c5a448d0c8f0150651ac8fd1",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "72df72496fd735d7b33cc3e3d28ee091ebaa63a23bee4e5a3d1931c3f5f13843"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        143,
+        24,
+        525,
+        580
+      ],
+      "minimum_core_margin_px": 24,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "25e9375ae393ae7dcfeb79219317cd00b267e9001bf858d6ed2c09deb8356a23",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "06ab62fbf1eb9fd93c95b1ef2a40bb13e177dbd2daa2ef43a41bbac669510585"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        99,
+        24,
+        486,
+        575
+      ],
+      "minimum_core_margin_px": 24,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "53d3edcc146b5fdc9598730796b4adc8c3a40d48a25e0cba8ebcd26128f73311",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "3d9f26d1e83f461891834923b0ac7f98484ce70129f70cb6c0356b779b0154ef"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "Four braced platform corners, one tripodcamera, one equipment case, guardrails and ladder are depicted; rear camera housing differs from lens face.",
+    "Lens inTL/BR reads screenleft while ladder-bearing face changes corner. Fixed camera aim relative to ladder/case cannot be reliably accepted from these pictures alone; root shared-world guide is required.",
+    "Do not infer fixed component coordinates or numerical camera angle from source labels."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v1.prompt.txt",
+    "sha256": "20aa14c272ee3582c8fd9e3a98f9fdaba4d017926da9a849bc0270c65b875cc1",
+    "bytes": 2119
+  }
+}

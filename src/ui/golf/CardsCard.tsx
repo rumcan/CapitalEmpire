@@ -51,7 +51,7 @@ function Detail({ t, view, picking, onEquip, onUnequip, onClose }: { t: CardTile
   const full = view.slots.every(s => s), inSlot = t.slot >= 0;
   return (
     <div className="pointer-events-auto max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[300px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" style={{ borderColor: `${t.color}99` }} data-testid="cards-detail">
-      <div className="flex items-start justify-between gap-2">
+      <div className="win-head win-head-slate flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: t.color }} data-testid="cards-detail-rarity">{t.rarityName} card{t.banned && t.owned ? ' · banned in competition' : ''}</div>
           <div className="font-display text-base font-bold leading-tight text-white" data-testid="cards-detail-name">{t.owned ? t.name : 'Not won yet'}</div>
@@ -94,7 +94,7 @@ export function CardsCard({ view, onClose, onEquip, onUnequip, onMachine, right 
     <div className={`pointer-events-none absolute ${right} top-[var(--hud-top,6rem)] z-20 flex items-start gap-1.5`} data-testid="cards-root">
       {t && <Detail t={t} view={view} picking={picking} onEquip={id => onEquip(id)} onUnequip={onUnequip} onClose={() => setSel(null)} />}
       <div className="pointer-events-auto max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[336px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" data-testid="cards-card">
-        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div className="win-head win-head-slate flex items-center justify-between">
           <div><div className="font-semibold text-sky-200">Your cards</div><div className="text-[12px] text-slate-400" data-testid="cards-count">{view.owned} of {view.total} collected · {SLOTS} slots</div></div>
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>

@@ -1,0 +1,194 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "sourceOnly": true,
+  "scope": "Only isolated upgraded towerSW and2holeboard yaw sources from next9repairs; other6reviewed elsewhere.",
+  "rows": [
+    {
+      "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-SW-v1.png",
+      "sha256": "1a694bb99ead8260b78989da08a844a54275ee3eaeb7bcdce505fab491474daf",
+      "hashMatchesProvenance": true,
+      "review": "HOLD-SW-case-position-only",
+      "notes": [
+        "Plain camera rear housing/control buttons are corrected; front green iris is no longer visible on near end.",
+        "Equipment case has moved to foreground RIGHT of camera. Fixed SW guide and other source views require case foreground LEFT (one fixed world rear-right case). Move case only, preserve corrected camera housing and tower."
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "nativeRGBA": true,
+      "trueZeroAlphaFraction": 0.7439536386275243,
+      "faintAlpha1to8Fraction": 0.017905064240999774,
+      "outerBorderAlphaMax": 1,
+      "cells": [
+        {
+          "view": "SW",
+          "coreBBoxExclusive": [
+            365,
+            118,
+            888,
+            1114
+          ],
+          "minimumCoreMargin": 118,
+          "coreBoundaryPixels": 0
+        }
+      ],
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-yaw8-v2.png",
+      "sha256": "22e46186b368808d5b64c811cc516025263e57f853d8817927abe86372aa2446",
+      "hashMatchesProvenance": true,
+      "review": "PASS-practical-yaw-source-candidate",
+      "notes": [
+        "N front has7blank cream score rows with2small score cells per row; S is genuine rear slat backing/spine and braces.",
+        "E/W are opposite physical edges with correct front-score versus rear-back slivers; no repeated side image. Two uprights and rear feet remain fixed."
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "nativeRGBA": true,
+      "trueZeroAlphaFraction": 0.7020488185811782,
+      "faintAlpha1to8Fraction": 0.055720895685640086,
+      "outerBorderAlphaMax": 1,
+      "cells": [
+        {
+          "view": "N",
+          "coreBBoxExclusive": [
+            125,
+            97,
+            514,
+            538
+          ],
+          "minimumCoreMargin": 89,
+          "coreBoundaryPixels": 0
+        },
+        {
+          "view": "E",
+          "coreBBoxExclusive": [
+            199,
+            62,
+            463,
+            595
+          ],
+          "minimumCoreMargin": 32,
+          "coreBoundaryPixels": 0
+        },
+        {
+          "view": "S",
+          "coreBBoxExclusive": [
+            109,
+            51,
+            495,
+            568
+          ],
+          "minimumCoreMargin": 51,
+          "coreBoundaryPixels": 0
+        },
+        {
+          "view": "W",
+          "coreBBoxExclusive": [
+            178,
+            28,
+            431,
+            570
+          ],
+          "minimumCoreMargin": 28,
+          "coreBoundaryPixels": 0
+        }
+      ],
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/upgraded-yaw8-v1.png",
+      "sha256": "bbc905098314065e1aa844e5e3b2e1e725ddad5372fb37490089770117e56d18",
+      "hashMatchesProvenance": true,
+      "review": "PASS-practical-yaw-source-candidate",
+      "notes": [
+        "Same7front rows/score cells, genuine rear backing/centralspine and2rear braces in fresh condition.",
+        "Opposite E/W edge views and brace sides are preserved. No groundslab, baked scores, map or hole12text."
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "nativeRGBA": true,
+      "trueZeroAlphaFraction": 0.7229389080937809,
+      "faintAlpha1to8Fraction": 0.04018973415850777,
+      "outerBorderAlphaMax": 1,
+      "cells": [
+        {
+          "view": "N",
+          "coreBBoxExclusive": [
+            122,
+            115,
+            514,
+            543
+          ],
+          "minimumCoreMargin": 84,
+          "coreBoundaryPixels": 0
+        },
+        {
+          "view": "E",
+          "coreBBoxExclusive": [
+            162,
+            66,
+            452,
+            593
+          ],
+          "minimumCoreMargin": 34,
+          "coreBoundaryPixels": 0
+        },
+        {
+          "view": "S",
+          "coreBBoxExclusive": [
+            120,
+            56,
+            496,
+            541
+          ],
+          "minimumCoreMargin": 56,
+          "coreBoundaryPixels": 0
+        },
+        {
+          "view": "W",
+          "coreBBoxExclusive": [
+            157,
+            27,
+            429,
+            572
+          ],
+          "minimumCoreMargin": 27,
+          "coreBoundaryPixels": 0
+        }
+      ],
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    }
+  ],
+  "sourceCandidateSheets": 2,
+  "heldSingleViews": 1,
+  "remainingTowerRepair": "Move equipment case to SW guide foreground LEFT; retain plain camera rear and every other component.",
+  "mobileReferencePreparation": {
+    "iceCreamQueue": "generated/golf-vehicle-source-batch-01/ice-cream-isolated-repairs-v1/repair-queue.json",
+    "iceCreamJobs": 4,
+    "iceCreamReferences": "4lossless guide cells +1byte-identical original single native identity reused for all4.",
+    "mobileQueue": "generated/golf-vehicle-source-batch-01/isolated-repairs-v1/repair-queue.json",
+    "mobileJobs": 3,
+    "newJob": "Broadcast SE only: remove extra LEFT vented hatch; keep RIGHT equipment panel on hidden opposite side.",
+    "existingAmbulanceAndSatelliteJobsUnchanged": true
+  },
+  "alphaConclusion": "All recorded strong opaque cores clear their image/cell boundaries. Real zero-alpha exists; low-alpha exterior residue remains source-level and does not imply final mask approval.",
+  "nativeSourcePixelsChanged": false,
+  "nativeGenerationPerformed": false,
+  "runtimeModified": false,
+  "importsRun": false,
+  "testsRun": false,
+  "buildRun": false,
+  "serverStarted": false,
+  "commitCreated": false
+}

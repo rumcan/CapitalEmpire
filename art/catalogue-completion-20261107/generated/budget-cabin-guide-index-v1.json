@@ -1,0 +1,42 @@
+[
+  {
+    "key": "budget-1950-shanty-hut",
+    "replacement_target": "newprop:shanty-hut",
+    "brief": "Small ordinary1950s cream-painted clapboard caretaker cabin. One green front door at left and one small front window at right; one right-side window and one high rear vent. Straight manufactured lumber, grey corrugated gable roof, modest peeling paint and age.",
+    "guides": {
+      "normal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-hut\\guides\\normal-world-v1.png",
+      "yaw8": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-hut\\guides\\yaw8-world-v1.png"
+    },
+    "runtime_integrated": false
+  },
+  {
+    "key": "budget-1950-shanty-shed",
+    "replacement_target": "newprop:shanty-shed",
+    "brief": "Cheap old1950s garden maintenance shed, faded brown horizontal timber siding, paired green front tool doors, one small right-side window and one high rear vent, grey corrugated gable roof, restrained rust and weathering.",
+    "guides": {
+      "normal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-shed\\guides\\normal-world-v1.png",
+      "yaw8": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-shed\\guides\\yaw8-world-v1.png"
+    },
+    "runtime_integrated": false
+  },
+  {
+    "key": "budget-1950-shanty-ticket-hut",
+    "replacement_target": "newprop:shanty-ticket-hut",
+    "brief": "Ordinary1950s ticket office cabin, faded cream clapboard and blue-green trim, a wide front ticket hatch with small projecting sill, one service door on the right wall, a high rear vent and grey corrugated gable roof. Cheap and old but structurally sound.",
+    "guides": {
+      "normal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-ticket-hut\\guides\\normal-world-v1.png",
+      "yaw8": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-ticket-hut\\guides\\yaw8-world-v1.png"
+    },
+    "runtime_integrated": false
+  },
+  {
+    "key": "budget-1950-shanty-toilet",
+    "replacement_target": "newprop:shanty-toilet",
+    "brief": "Plain1950s budget golf-course toilet block, faded pale-grey painted timber, exactly two separate front cubicle doors in muted green, two high rear ventilation grilles, plain grey corrugated gable roof. Ordinary municipal construction with scuffed paint; no fantasy outhouse.",
+    "guides": {
+      "normal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-toilet\\guides\\normal-world-v1.png",
+      "yaw8": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-toilet\\guides\\yaw8-world-v1.png"
+    },
+    "runtime_integrated": false
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "id": "newprop:rope-barrier",
+  "name": "Rope barrier",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier.source.png",
+  "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+  "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+  "referenceSHA256": "081eca194b4fd550a33a12920b5b7eab03c05ed5ed83a5c2159aef57b7af25d0",
+  "sourceRectXYWH": [
+    40,
+    219,
+    552,
+    219
+  ],
+  "sourceCell": "top left",
+  "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+  "sourceCropSize": [
+    552,
+    219
+  ],
+  "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+  "sourceMetadataCutOff": false,
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 0.8,
+      "hy": 0.8,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "runtimeDisplayPixels": [
+    102.4,
+    40.63
+  ],
+  "manifestHalfExtentsMetresFirstGuess": [
+    0.8,
+    0.8
+  ],
+  "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+  "visualInspection": "inspected",
+  "visualNotes": "Confirmed three stanchions, two rope spans; preserves straight modular geometry.",
+  "sourceOnlyNotReleaseProof": true
+}

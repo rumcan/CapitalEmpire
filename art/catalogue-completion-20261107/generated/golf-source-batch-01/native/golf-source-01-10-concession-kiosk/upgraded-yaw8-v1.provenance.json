@@ -1,0 +1,47 @@
+{
+  "key": "golf-source-01-10-concession-kiosk",
+  "family": "yaw8",
+  "condition": "upgraded",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-yaw8-v1.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-yaw8-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-normal-v1.png"
+  ],
+  "runtimeTarget": {
+    "eventTypeId": "kiosk",
+    "eventName": "Concession kiosk",
+    "currentSpriteSubjectId": "business:fishing-rental-kiosk",
+    "newArtSubjectProposal": "golf:event-concession-kiosk",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 2,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 4,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "prompt": "Create UPGRADEDcondition matchingReference2, retaining FOUR exact nearcardinal cameras/mainfaces and fixed physical layout of Reference1. Reference1 is N E / S W camera and assemblyauthority, Reference2 finer materials/conditionupgrade only. Sameoneobject, neverredesignorrepancameras. Clean green/cream kiosk with neat canopy, full snack shelves and the same fridge/service-door arrangement. Period1985stock, no touchscreen vending wall.. Preserveallwindows/vents/doors/rearhatches/awning/frame/attachments onphysicalfixedsides; nevercopyfrontfeaturesontoback. The ONEcornerfridge physicalRIGHT hasTWOadjacentglazedfaces, staysfixed; nottwofridges. Fresh cleancream/greenpaint, soundcanvas, professionalequipment; no rust/tornholes/flakingwood. Detailedpainterlyminiaturestylematchesbothrefs. Orthographic30degreesDOWN, nominal8degreeoffcardinal likeReference1, same4cells. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lamps/screensOFF. Completeisolated equallyscaledobjects with generousgenuinelyzeroalpha transparentmargins/gutters; nogroundplate/scenery/people/plants/UI/captions/haze.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-5df43dd6-029e-405e-9aaf-dd7526fbcfd9.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-yaw8-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "91d53b31bc6b7c46d549fb091636d775ad34dd618e990a2ae02d7ff1b96fd962",
+  "native_bytes_preserved": true
+}

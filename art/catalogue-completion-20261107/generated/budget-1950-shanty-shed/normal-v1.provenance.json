@@ -1,0 +1,14 @@
+{
+  "key": "budget-1950-shanty-shed",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-441fbd9c-bc40-4f37-b043-4fbd78a267cd.png",
+  "target": "generated/budget-1950-shanty-shed/normal-v1.png",
+  "prompt": "Create a finished2x2 sprite sheet of exactly this same1950s ordinary manufactured building seen from four corners, using image1 as the exact geometry/camera guide and image2 ONLY for painted miniature material style. Cheap old1950s garden maintenance shed, faded brown horizontal timber siding, paired green front tool doors, one small right-side window and one high rear vent, grey corrugated gable roof, restrained rust and weathering. The corner views and placements are SE SW / NW NE exactly as guide1;30degree-down orthographic camera with both building walls visible equally and the base forming a V. Preserve each guide's roof shape, visible sides, doors, windows and rear vents in their exact world positions. Same building identity in all four cells, no invented chimney, second door or extra windows. Old worn functional real-world golf-event equipment still in use in1985. No goblin-village construction, jagged logs, ropes, patchwork tarps, fantasy props or Halloween decoration. Fine hand-painted materials and tasteful wear. LATE-AFTERNOON DAYTIME sunlight SCREEN UPPER RIGHT, shadows toward LOWER LEFT; no glowing windows/lamps. Fully opaque buildings on genuinely transparent zero-alpha background, no grass, terrain plate, ground slab, extra scenery, haze, grid, labels or text. Four complete separate native painted sprites centred within their own cells, all at same scale, generous transparent margins.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-shed\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png"
+  ],
+  "replacement_target": "newprop:shanty-shed",
+  "status": "source candidate; geometry and alpha QA pending",
+  "sha256": "44a22033fd772071e4a4325c93633638b9d29f47f651d3676b9ce46bacebe382",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:07.560228+00:00",
+  "review_result": "HOLD-exact-yaw8-geometry;main-face-identity-and-alpha-pass",
+  "source": {
+    "path": "generated/budget-1950-shanty-ticket-hut/yaw8-v1.png",
+    "sha256": "091203a9c0e2da09af1c3994fc17e96ef20bfe3f435af0a974f659922c5f199b",
+    "bytes": 1148273
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "references": [
+    {
+      "path": "generated/budget-1950-shanty-ticket-hut/guides/yaw8-world-v1.png",
+      "sha256": "e51b240eb9be80e05bcb05e321c82c6dff36d2a644eb47472cd0a28cf8022020",
+      "bytes": 24425
+    },
+    {
+      "path": "generated/budget-1950-shanty-ticket-hut/normal-v1.png",
+      "sha256": "6e4493fb8fd753a6b570be1b68913e221d7a1279bd93c91045df8ef71b1313dd",
+      "bytes": 1652210
+    }
+  ],
+  "source_core_clipping": false,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.7173027174286303,
+  "cells": [
+    {
+      "guide_cell_label_only": "N",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "native_core_margin_pixels": 106,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "da9ac5ad8789b138fb7c2fcbaf16b0d2ddbc28dc53f4942bb49fe9ecc188c319"
+    },
+    {
+      "guide_cell_label_only": "E",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "native_core_margin_pixels": 95,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 0,
+      "rgba_rectangle_sha256": "301be6a42a92f9d1dc39029f3e50869f06282db20e49aef95f538fba34591930"
+    },
+    {
+      "guide_cell_label_only": "S",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "native_core_margin_pixels": 117,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "3d4a5bcc746042e54a4e15913193fd7766341f55127ebb92238dbf1803ddeecf"
+    },
+    {
+      "guide_cell_label_only": "W",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "native_core_margin_pixels": 104,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "3ee32fc77ed0c4ec2be2f9eeb2a878f76035c2937efdb50236dacbbd1314149a"
+    }
+  ],
+  "notes": [
+    "All four principal wall identities present and consistent with normal source. Ordinary1950s cladding/corrugatedroof/paint remains coherent.",
+    "Direct native foundation-edge slopes recorded in audit/cabin-native-yaw-baseline-measurements-v1.json; not an8degree proof inferred from technical guide.",
+    "Ticket hatch/sill atfront, rearvent, blankend and service-doorend remain distinct; front/rear native yaw is shallower than target under30degree-pitch assumption."
+  ],
+  "exact8_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact_prompt": {
+    "path": "generated/budget-1950-shanty-ticket-hut/yaw8-v1.prompt.txt",
+    "sha256": "27481673d94e65d8f5d5127222b9c720bf46a538d595b64a1f4919b9b3c9916f",
+    "bytes": 1432
+  },
+  "parent_provenance": {
+    "path": "generated/budget-1950-shanty-ticket-hut/yaw8-v1.provenance.json",
+    "sha256": "67ecb6837b22d79e667681af5bcca6d11e9438d80d8cee24575887c5496ffdca",
+    "bytes": 2268
+  }
+}

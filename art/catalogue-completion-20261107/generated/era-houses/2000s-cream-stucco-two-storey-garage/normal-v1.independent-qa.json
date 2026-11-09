@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:07.073882+00:00",
+  "review_result": "PASS-source-candidate-openings-and-alpha;exact-camera-unverified",
+  "source": {
+    "path": "generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+    "sha256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+    "bytes": 1221711
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "references": [
+    {
+      "path": "generated/era-houses/2000s-cream-stucco-two-storey-garage/guides/normal-world-v1.png",
+      "sha256": "0bd0ce1036a50dc61733ccddae1026a9ecdffed64e90c48c0cf0e56465831cf6",
+      "bytes": 41055
+    },
+    {
+      "path": "generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png",
+      "sha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a",
+      "bytes": 618401
+    }
+  ],
+  "source_core_clipping": false,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.6816636523889105,
+  "cells": [
+    {
+      "guide_cell_label_only": "SE",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "native_core_margin_pixels": 89,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "6869da0d5f446e42bc148d46d1f905a23e3c98e70129f2cf4d4bb1f7c181bfd5"
+    },
+    {
+      "guide_cell_label_only": "SW",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "native_core_margin_pixels": 111,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "81bdd3f2e782536d1e651ad033b4d9a7ffcb1b7450972629cb2c5f49ce1c361a"
+    },
+    {
+      "guide_cell_label_only": "NW",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "native_core_margin_pixels": 90,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "5c1034765e5cc26b99bcae943be0fc120ea71bec39b6fedb7f32e8c7b054c144"
+    },
+    {
+      "guide_cell_label_only": "NE",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "native_core_margin_pixels": 111,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "3f7517f85dd87c16de53f1a7945e92b4453b025225e7a451f243f355b0e8d2b9"
+    }
+  ],
+  "notes": [
+    "Two-storey main block with garage extension and front awning: front upper3windows/lowerbroadwindow+door, rear door/window arrangement and side windows visually agree with guide."
+  ],
+  "exact8_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact_prompt": {
+    "path": "generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.prompt.txt",
+    "sha256": "5db88f52ff6f59f3be6f383281d488d2869df058a87672f4bcf2899bd95012dd",
+    "bytes": 1445
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.provenance.json",
+    "sha256": "d9692d382d38707496270f4d9396e0d864da8fd4459a357f2d3cf9d05374a6e9",
+    "bytes": 2357
+  }
+}

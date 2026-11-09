@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "gen:back-bbq-deck",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/gen-back-bbq-deck/NE.png",
+  "sourceSha256": "2ed7fed86664754c5b879e9b79e20b35eca48cc2a0e860159253f314aac8d5ab",
+  "output": "identity-references/gen-back-bbq-deck-b546df1a/source.png",
+  "outputSha256": "2ed7fed86664754c5b879e9b79e20b35eca48cc2a0e860159253f314aac8d5ab",
+  "width": 417,
+  "height": 433,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      417,
+      433
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\gen-back-bbq-deck\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "gen:back-bbq-deck",
+    "version": "gen-back-bbq-deck-4views-v2",
+    "files": {
+      "NE": "2ed7fed86664754c5b879e9b79e20b35eca48cc2a0e860159253f314aac8d5ab",
+      "SE": "3c8858455952108663d4a4a44e8dc2ea9fe8a8bfeccd8f609fe25a8148a28800",
+      "SW": "6d3539df94aaa5b0b4c02bceee60741321a257a10ffd90b7c58231c231c4d1dd",
+      "NW": "d7a63ec13f8ac23c1789d970963db454d0c39ac44ff87bfaf860ff1802b8a0cc"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.007813,
+      0.484375,
+      0.211426,
+      0.695801
+    ],
+    "crop": {
+      "left": 16,
+      "top": 992,
+      "width": 417,
+      "height": 433
+    },
+    "native": "art/theme-consistency/exports/buildings/gen-back-bbq-deck.native.png",
+    "nativeSha256": "d776efb194fb80e8c43cede2c25b57ddf6bb30b82f254af60e46e57fac9b9b8f"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,107 @@
+{
+ "schema": 1,
+ "projection": "normal+yaw8",
+ "version": 1,
+ "review": "candidate",
+ "footprintMetres": {
+  "width": 1.2,
+  "depth": 1.6
+ },
+ "pixelsPerMetre": 171.97,
+ "pixelCalibrationSpace": "orthographic-camera",
+ "baselineScale": 1,
+ "views": {
+  "normalNE": {
+   "anchor": {
+    "x": 308,
+    "y": 444.9
+   },
+   "headingDegrees": 0,
+   "pixelsPerMetre": 171.97,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1.2 x 1.6 m, height 2.1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSE": {
+   "anchor": {
+    "x": 334,
+    "y": 453.9
+   },
+   "headingDegrees": 270,
+   "pixelsPerMetre": 171.97,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1.2 x 1.6 m, height 2.1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSW": {
+   "anchor": {
+    "x": 617.5,
+    "y": 878.3
+   },
+   "headingDegrees": 180,
+   "pixelsPerMetre": 262.06,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1.2 x 1.6 m, height 2.1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalNW": {
+   "anchor": {
+    "x": 301.5,
+    "y": 433.9
+   },
+   "headingDegrees": 90,
+   "pixelsPerMetre": 171.97,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1.2 x 1.6 m, height 2.1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8N": {
+   "anchor": {
+    "x": 316.5,
+    "y": 475.6
+   },
+   "headingDegrees": 323,
+   "pixelsPerMetre": 176.88,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1.2 x 1.6 m, height 2.1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8E": {
+   "anchor": {
+    "x": 301,
+    "y": 474.6
+   },
+   "headingDegrees": 233,
+   "pixelsPerMetre": 176.88,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1.2 x 1.6 m, height 2.1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8S": {
+   "anchor": {
+    "x": 317.5,
+    "y": 441.6
+   },
+   "headingDegrees": 143,
+   "pixelsPerMetre": 176.88,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1.2 x 1.6 m, height 2.1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8W": {
+   "anchor": {
+    "x": 299.5,
+    "y": 470.6
+   },
+   "headingDegrees": 53,
+   "pixelsPerMetre": 176.88,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 1.2 x 1.6 m, height 2.1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  }
+ },
+ "source": {
+  "views": {
+   "normalNE": "../batch02/ball-dispenser/normal-NE.png",
+   "normalSE": "../batch02/ball-dispenser/normal-SE.png",
+   "normalSW": "../batch02/ball-dispenser/normal-SW.png",
+   "normalNW": "../batch02/ball-dispenser/normal-NW.png",
+   "yaw8N": "../batch02/ball-dispenser/yaw8-N.png",
+   "yaw8E": "../batch02/ball-dispenser/yaw8-E.png",
+   "yaw8S": "../batch02/ball-dispenser/yaw8-S.png",
+   "yaw8W": "../batch02/ball-dispenser/yaw8-W.png"
+  }
+ },
+ "subject": "golf:course-ball-dispenser",
+ "name": "Ball dispenser",
+ "kind": "decor",
+ "category": "Eight-view props",
+ "aliases": [
+  "newprop:ball-dispenser"
+ ],
+ "solid": 1
+}

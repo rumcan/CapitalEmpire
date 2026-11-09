@@ -1,0 +1,99 @@
+{
+  "purpose": "Compact TECHNICAL ONLY camera reference, not final sprite art.",
+  "model": "technical-vehicle-pickup",
+  "camera_down_degrees": 30,
+  "cell_pixels": [
+    400,
+    400
+  ],
+  "layout": [
+    4,
+    2
+  ],
+  "camera_pixels_per_metre": 52.5,
+  "cardinal_horizontal_offset_degrees": 0,
+  "corner_horizontal_offset_degrees": -45,
+  "cell_order": [
+    [
+      "LOWER LEFT",
+      "DOWN",
+      "LOWER RIGHT",
+      "RIGHT"
+    ],
+    [
+      "UPPER RIGHT",
+      "UP",
+      "UPPER LEFT",
+      "LEFT"
+    ]
+  ],
+  "source_cells": [
+    {
+      "cell": 0,
+      "source_family": "normal",
+      "source_cell": 3,
+      "actual_nose_screen": "LOWER LEFT"
+    },
+    {
+      "cell": 1,
+      "source_family": "cardinal",
+      "source_cell": 0,
+      "actual_nose_screen": "DOWN"
+    },
+    {
+      "cell": 2,
+      "source_family": "normal",
+      "source_cell": 0,
+      "actual_nose_screen": "LOWER RIGHT"
+    },
+    {
+      "cell": 3,
+      "source_family": "cardinal",
+      "source_cell": 1,
+      "actual_nose_screen": "RIGHT"
+    },
+    {
+      "cell": 4,
+      "source_family": "normal",
+      "source_cell": 1,
+      "actual_nose_screen": "UPPER RIGHT"
+    },
+    {
+      "cell": 5,
+      "source_family": "cardinal",
+      "source_cell": 2,
+      "actual_nose_screen": "UP"
+    },
+    {
+      "cell": 6,
+      "source_family": "normal",
+      "source_cell": 2,
+      "actual_nose_screen": "UPPER LEFT"
+    },
+    {
+      "cell": 7,
+      "source_family": "cardinal",
+      "source_cell": 3,
+      "actual_nose_screen": "LEFT"
+    }
+  ],
+  "sources": {
+    "normal": {
+      "png": "normal-world-v1.png",
+      "sha256": "43a7a033e5838b7e26338a7c283f23f597290b88ecddcc21a56d7aebc50d24c0"
+    },
+    "cardinal": {
+      "png": "cardinal-world-v1.png",
+      "sha256": "19ed1039544e3f3e8085cc935ad3ab758e6758516b06e86aa051695bc8e6c303"
+    }
+  },
+  "output": {
+    "png": "traffic8-camera-world-v1.png",
+    "sha256": "c6cfa5cc9b633337d91c2f131519794a3ab46879c22a83c8014507034cb040d8"
+  },
+  "mesh_file": "technical-vehicle-pickup-world-model-v1.json",
+  "mesh_sha256": "7951cf20f553c2bd9189f890ad5a520ebd41eff81cc44ff6250f7d6ce206a8b8",
+  "technical_only": true,
+  "final_native_art_approved": false,
+  "runtime_integrated": false
+}

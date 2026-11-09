@@ -1,0 +1,3888 @@
+{
+  "schema": 1,
+  "created_utc": "2026-11-07T14:42:37.359837+00:00",
+  "title": "Golf course props batch02:96 native source-view candidates",
+  "subject_count": 12,
+  "native_png_count": 96,
+  "view_layouts": {
+    "normal": [
+      "SE",
+      "SW",
+      "NW",
+      "NE"
+    ],
+    "yaw8": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ]
+  },
+  "status": "source-candidates-only",
+  "functional_source_holds_selected": 0,
+  "remaining_review_holds": [
+    "Exact native yaw8 and30degree elevation not numerically certified.",
+    "Physical scale, release anchors/footprints and game handedness/integration remain unapproved.",
+    "Mixed native resolutions retained: new single views and different canvases do not imply equal physical scale.",
+    "Fine ornament/stroke identity and owner art approval remain pending.",
+    "Straight rope and paired gold markers have intrinsic180degree symmetry; similar silhouettes are not duplicated runtime aliases."
+  ],
+  "restrictions": {
+    "resized": false,
+    "repainted": false,
+    "alpha_keyed_or_reconstructed": false,
+    "runtime_integrated": false,
+    "owner_approved": false
+  },
+  "selection_notes": [
+    "Bench and signpost yaw N/E/S remain v1; W uses v2. Bench v2 E was rejected because native edit also erased front map.",
+    "Washer yaw labels remapped by actual fixed attachments: N=TL,E=BR,S=BL,W=TR.",
+    "Bench and dispenser normals use explicit selected original quarters plus native corrected singles; native dimensions retained, no scaling."
+  ],
+  "sources": {
+    "generated/golf-source-batch-02/native/ball-washer/normal-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+        "sha256": "cd8d39dbb650303dd4e705561625566c2ff55fb415ecbb95f90fb86f025ed9aa",
+        "bytes": 1126333
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.provenance.json",
+        "sha256": "2fa90931eb156278354309a4c7500ad4d964e2c4cfafe032db2ed31ede031f12",
+        "bytes": 2715
+      },
+      "exact_actual_generation_prompt": "Paint FOUR real corner views of the one fixed physical golf prop in REFERENCE1 as finished game art, matching material identity and detailed painterly miniature style of REFERENCE2. Reference1 is the projected geometry/side/occlusion/camera authority. Reference2 supplies material texture/color only; its earlier duplicate cameras and state mistakes must NOT be copied. Fixed object: Lid OPEN70degrees in every view; one ball in opening; crank on physical+XRIGHT; towel on physical-XLEFT. No state changes or mirroring.. Preserve exactly the guide's four quarterturns SE SW / NW NE, orthographic30degreesDOWN,45degreecorners, equal physical scale. Source assembly identity: One dark-green pedestal ball washer with round base, cylindrical brush cup, hinged lid, ball opening, wooden-grip hand crank on model right and white towel hanging model left. Keep lid/crank/towel on those same physical sides across8views; no person. . Ordinary practical golf equipment, no inventedornament. Keep ALL apparatus on fixed physical sides while the whole object rotates; true rear and opposite corner views, never repeat a front corner. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadowsLOWERLEFT,lampsOFF. Four complete separatedsprites with broad zeroalpha transparent margins/gutters, no haze/white/grey background, no groundtile, plants, people, UI/captions/grid. Retain functional mesh/holes/ball/brass/castmetal textures.",
+      "prompt_utf8_sha256": "873460e0993034cbe8654bb1bafb16779748b9558f6643e9d427c43de6c736e6",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-washer/guides/normal-world-v1.png",
+          "sha256": "708837111f417beef86df77de7f417880f9eb760b603e2d3581ee8bc9b60534b",
+          "bytes": 36706
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/ball-washer/normal-v1.png",
+          "sha256": "bf6e8489caa34c7090034ad957fb8a88de49e1e3fd80337d6d51d04961ae2172",
+          "bytes": 1262352
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-d3e1faca-d419-43b7-834e-cd816c291fe8.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.independent-qa.json",
+        "sha256": "582ac3343a6fb84fadd2d8fe56c8f1de5e76c72b4afc962fe106fc67dca7156b",
+        "bytes": 3328
+      }
+    },
+    "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+        "sha256": "1306b1294963719eb0a0e9f35e154403fa83bdede82a40a7839a4fb78c187aa5",
+        "bytes": 1012719
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.provenance.json",
+        "sha256": "bd945768ded94cf5d0339de847b840525b261bfc9a9621342565b40600d9bacb",
+        "bytes": 2654
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Lid OPEN70degrees in every view; one ball in opening; crank on physical+XRIGHT; towel on physical-XLEFT. No state changes or mirroring.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "a3f0a59072f849a26739e5f85a2758427d00cb44110f6588930eb2ab50ae34a5",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-washer/guides/yaw8-world-v1.png",
+          "sha256": "b40b2392053e9436916f0b9d901bd75f91a1607988ce3223175efc3bad13f698",
+          "bytes": 34042
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+          "sha256": "cd8d39dbb650303dd4e705561625566c2ff55fb415ecbb95f90fb86f025ed9aa",
+          "bytes": 1126333
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f5427f6b-466e-4a2a-aabb-91503e6375aa.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.independent-qa.json",
+        "sha256": "8b31899f9fd8b1ae3efb8cb2f1bdbabba81a55b0c9dea94a91c9ed519423dd0b",
+        "bytes": 4014
+      }
+    },
+    "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+        "sha256": "8c11d7d6ac9da5b2efad2d46aa926df1fbcc545ba1ebe402fd88b849e1376ab0",
+        "bytes": 1810123
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.provenance.json",
+        "sha256": "d8a0a2e5544616f18964f53adf6438b4d43a0dc17304b3bf7246364efe7f96d8",
+        "bytes": 2901
+      },
+      "exact_actual_generation_prompt": "Paint FOUR real corner views of the one fixed physical golf prop in REFERENCE1 as finished game art, matching material identity and detailed painterly miniature style of REFERENCE2. Reference1 is the projected geometry/side/occlusion/camera authority. Reference2 supplies material texture/color only; its earlier duplicate cameras and state mistakes must NOT be copied. Fixed object: Manual ball hopper with sloping rain cap, four sawn-timber legs, front-Yball window/outlet/chute/manual crank and exactly one front-Ymetal bucket. Rear+Yplain riveted metal and rear diagonal timber brace. No duplicated front corners.. Preserve exactly the guide's four quarterturns SE SW / NW NE, orthographic30degreesDOWN,45degreecorners, equal physical scale. Source assembly identity: Actual source is a manual bulk golf-ball hopper: rusty sheet-metal box under sloping rain cap on bolted sawn-timber legs, front ball outlet/chute with manual crank and one metal bucket beneath/in front. Preserve hopper, front outlet and bucket position; do not replace it with a bare bucket rack. . Ordinary practical golf equipment, no inventedornament. Keep ALL apparatus on fixed physical sides while the whole object rotates; true rear and opposite corner views, never repeat a front corner. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadowsLOWERLEFT,lampsOFF. Four complete separatedsprites with broad zeroalpha transparent margins/gutters, no haze/white/grey background, no groundtile, plants, people, UI/captions/grid. Retain functional mesh/holes/ball/brass/castmetal textures.",
+      "prompt_utf8_sha256": "f62fdb0eabaf5c1ce0b00c4eee32d253e99c6d44042d7d2c74084e85b99af83d",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-bucket-stand/guides/normal-world-v1.png",
+          "sha256": "59ee1e90af660e61126b6a79caed51d6a833797d94d2f237ded292953ee654e6",
+          "bytes": 68342
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v1.png",
+          "sha256": "72a69fad909156b40b5e375b8dfe5629862f9d3a9ccd64ca73abcd3f4fdbb843",
+          "bytes": 1893589
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-a34e5620-c40e-46ec-82b9-2e4d099b8636.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.independent-qa.json",
+        "sha256": "f1d0154f483f66f395b7e824505b438c21e4e5f0c35ca9bffbdb7ace4e3c34c3",
+        "bytes": 3399
+      }
+    },
+    "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+        "sha256": "3c24a75e447a47ce15c6bc902a0b8e2c3e158ee49c6335f3c9dbccaef4957e91",
+        "bytes": 1518753
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.provenance.json",
+        "sha256": "4bb2449795ba7912ca9ac79818cae14a0bc51115086592497629ae8a9dd7121e",
+        "bytes": 2794
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Manual ball hopper with sloping rain cap, four sawn-timber legs, front-Yball window/outlet/chute/manual crank and exactly one front-Ymetal bucket. Rear+Yplain riveted metal and rear diagonal timber brace. No duplicated front corners.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "5353ece151bd590e5be39d533a15f047a0634c0c5c3cd85a8879688c51debb7e",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-bucket-stand/guides/yaw8-world-v1.png",
+          "sha256": "a3a62bffccbf90fedbe1f9ea9c2cae1a5a8b99a480e04c75ea74a26cdb6c1de0",
+          "bytes": 56682
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+          "sha256": "8c11d7d6ac9da5b2efad2d46aa926df1fbcc545ba1ebe402fd88b849e1376ab0",
+          "bytes": 1810123
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-4528d4e2-b637-4053-8880-8faa40ef80dc.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.independent-qa.json",
+        "sha256": "86811bf2d2e6c163e56ceaa62389436c5a3d68e8f3d2ea296062cfe2ce32517c",
+        "bytes": 3910
+      }
+    },
+    "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+        "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+        "bytes": 1167889
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.provenance.json",
+        "sha256": "bfd3f0076d3b9f1eebaf72b527a41bd5ac63c3ff3767247b2507a90d2142ab9c",
+        "bytes": 2837
+      },
+      "exact_actual_generation_prompt": "Paint FOUR real corner views of the one fixed physical golf prop in REFERENCE1 as finished game art, matching material identity and detailed painterly miniature style of REFERENCE2. Reference1 is the projected geometry/side/occlusion/camera authority. Reference2 supplies material texture/color only; its earlier duplicate cameras and state mistakes must NOT be copied. Fixed object: Only physicalFRONT-Yhas ball window/coin controls/chute and the single wire basket. PhysicalREAR+Yis plain latched service panel. Sloping hood is lower at front, higher at rear. Fronts must not be repeated for rear views.. Preserve exactly the guide's four quarterturns SE SW / NW NE, orthographic30degreesDOWN,45degreecorners, equal physical scale. Source assembly identity: One green upright coin-operated golf-ball dispenser: sloping top hood, upper front window showing golf balls, coin slot/button panel below, lower ball chute and one green wire basket on front. Back is plain service panel; basket never moves to rear in turned views. . Ordinary practical golf equipment, no inventedornament. Keep ALL apparatus on fixed physical sides while the whole object rotates; true rear and opposite corner views, never repeat a front corner. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadowsLOWERLEFT,lampsOFF. Four complete separatedsprites with broad zeroalpha transparent margins/gutters, no haze/white/grey background, no groundtile, plants, people, UI/captions/grid. Retain functional mesh/holes/ball/brass/castmetal textures.",
+      "prompt_utf8_sha256": "93d373d30b1f309274110ec19a71caa4480ed20c57ed4c9240af48aa179b9fc3",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-dispenser/guides/normal-world-v1.png",
+          "sha256": "47cec4bf76113066ab2461546ef48ab7d0505d31ab9bf3845009ac293d60456a",
+          "bytes": 62523
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v1.png",
+          "sha256": "65e05e02f407f2055d4899bbd5ba9c16f8137ec83f0485baea05b2903663fc93",
+          "bytes": 1492371
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-72d4e614-6fa3-4c16-bcbd-f594c5c7a89a.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.independent-qa.json",
+        "sha256": "a2d32d66db1bd9af9999dc928aa2a5fe9adc4730db2f936aa5b17d727c243d2d",
+        "bytes": 3641
+      }
+    },
+    "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.png",
+        "sha256": "c8b2025139ed0235a0a50530453dc40818783cb2b440df742846dc2a2022c7c6",
+        "bytes": 729955
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.provenance.json",
+        "sha256": "a3fea441a14dccb47c2e1f71cb431e7a314d69fd3a00ed3bdcf959cdc8872486",
+        "bytes": 2378
+      },
+      "exact_actual_generation_prompt": "Correct ONLY the broad visible REAR PANEL in reference1 single golf-ball dispenser sprite. It incorrectly has an oval glass ball window, coin-slot/button controls and a protruding ball chute. REMOVE ALL of these rear-front fixtures and restore a PLAIN GREEN RECTANGULAR LATCHED SERVICE DOOR, like reference2: solid worn painted metal, thin rectangular door seam, small plain latch/handle, subtle hinges/bolts. NO oval/round hole/window, no balls visible through rear, no coin panel, no projecting chute on this broad rear plane. Keep the actual single front basket glimpsed BEHIND the far RIGHT edge unchanged; its location is correct. Keep exact body projection/camera, upper sloping hood, blank narrow side, base, texture, scale, light and entire silhouette except removing the erroneous rear chute. Reference2 door detail/material only, do NOT copy its othercamera/basketside. Oneisolatedfinesprite, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, truezeroalpha transparentbackground/clearmargins, noextraobjects/textUI/haze.",
+      "prompt_utf8_sha256": "d0b50f5ab7581067f14403f1bfe625a7b57730062c88ad69bd411a6e95590f25",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.png",
+          "sha256": "3bf081c4a8a3ce1c0cd439169e403ed76efca35c9f6712f8ec908de1a9ac6c1d",
+          "bytes": 830541
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png",
+          "sha256": "f0fe7d4003cf361348c4391d1057fe7dfccd31dac9cfd15d521f71238bd8503f",
+          "bytes": 283002
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-7a71a9d4-9820-4096-8f1b-6d56b09f7946.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.independent-qa.json",
+        "sha256": "ed1b631c95ace8691fc8ee535c701e9a9f88204c5f6c35719b77514e22409491",
+        "bytes": 2179
+      }
+    },
+    "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+        "sha256": "4ba069e17fc6d053a846dc5066ee28254415fd57f6a349234b6692d47df92307",
+        "bytes": 1016128
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.provenance.json",
+        "sha256": "9720c6e998ce065fc96eb1fa7ce6e35eb3643667ec626423d7c4e8b7bccb1ee9",
+        "bytes": 2761
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Only physicalFRONT-Yhas ball window/coin controls/chute and the single wire basket. PhysicalREAR+Yis plain latched service panel. Sloping hood is lower at front, higher at rear. Fronts must not be repeated for rear views.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "96bff97e316677f8b82a29bec08966a44a4b98e4e468155ceb367d999b55d6d2",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-dispenser/guides/yaw8-world-v1.png",
+          "sha256": "3926563ed158e41211f0b241c6d90306687092af363d029be7acb051b240ce8b",
+          "bytes": 56269
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+          "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+          "bytes": 1167889
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-c470b1d9-8cd7-4b90-a037-3ec33b172e0a.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.independent-qa.json",
+        "sha256": "e830baa4b38f6dd368ba8068c9aa062b984940fb58f295c3bd88af2658d37582",
+        "bytes": 3912
+      }
+    },
+    "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.png",
+        "sha256": "aea9a17d72edc74499a3a62f841d5852e086b8bda6ad53fd30e8ebf245142aae",
+        "bytes": 597597
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.provenance.json",
+        "sha256": "4b5497aebdcd1eea73f4bef4f9c7fa7f2098b23e3d20de2a2f18aa3bbe270a42",
+        "bytes": 2187
+      },
+      "exact_actual_generation_prompt": "Edit only the TOP ARCHITECTURE of the tall map panel in REFERENCE1 singlebenchsprite, keeping its exact camera/projection and allbench/slat/leg/arm/map-bodygeometry unchanged. Restore the mapboard's ARCHED curved timber top cap from reference2, spanning between the same two tall uprights. Keep/restore exactly TWO small GOLD BALL FINIALS, one atop each upright, with square darkmetal collar underneath as reference2. The mapboardtopmustnotbeastraighthorizontalbar. Keep the existing front map illustration unchanged below the restored arch. Reference2 is cap/finial materialidentity ONLY; nevercopyitsdifferentcamera. Preserveexistingfinepaintedwood/castmetaldetail, allfeetandsameview, scale, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT. Onecompleteisolatedobjectontruezeroalpha transparentbackground, wideclear margins, noaddedobjects/ground/UI/text/haze.",
+      "prompt_utf8_sha256": "0626ed5e71797806407bb662dc6842b8b2ec767298361280633b1d5401e12d39",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.png",
+          "sha256": "e6cd6180b231e981d90188e5ffa7d2eaf3c11997cc673bfa189ad76fec103b94",
+          "bytes": 646558
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-identity-from-v2-BR-NE.png",
+          "sha256": "39f79f0f4c8cfa82647d5f833bbffbe0b68b975b33878ec43c06203c25b7ebc1",
+          "bytes": 422376
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-1c23a74b-7a1c-45c0-ac6d-889c315a6ef1.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.independent-qa.json",
+        "sha256": "31bacc480ff8ce87d4348d3dc548ace312b5771ecf6b98db3fc1520bff0ffc9d",
+        "bytes": 2225
+      }
+    },
+    "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.png",
+        "sha256": "65a43e7d32a3ccacc6360cf1ef3503191a7ca82bd7bf8b57b6983ea7c492e033",
+        "bytes": 652310
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.provenance.json",
+        "sha256": "1a7c2744270481bc4435c028c121368dc10d1e9ed254e423b1aaf7693bbac34d",
+        "bytes": 2201
+      },
+      "exact_actual_generation_prompt": "Edit only the TOP ARCHITECTURE of the tall map panel in REFERENCE1 singlebenchsprite, keeping its exact camera/projection and allbench/slat/leg/arm/map-bodygeometry unchanged. Restore the mapboard's ARCHED curved timber top cap from reference2, spanning between the same two tall uprights. Keep/restore exactly TWO small GOLD BALL FINIALS, one atop each upright, with square darkmetal collar underneath as reference2. The mapboardtopmustnotbeastraighthorizontalbar. Show rear of this arched panel, plain wooden backing; do NOT add printed map to the back. Reference2 is cap/finial materialidentity ONLY; nevercopyitsdifferentcamera. Preserveexistingfinepaintedwood/castmetaldetail, allfeetandsameview, scale, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT. Onecompleteisolatedobjectontruezeroalpha transparentbackground, wideclear margins, noaddedobjects/ground/UI/text/haze.",
+      "prompt_utf8_sha256": "e43a55cd72c9fe3c87b1b2d87b90839e8ab946f1392326c1898ea9c674014e39",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v1.png",
+          "sha256": "229bfb8923d9a643de943c464ac8995cce56cddf708fcde4f5688bd970904785",
+          "bytes": 676401
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png",
+          "sha256": "383efc946948c8c6beeca241b710c8450afaa7db6c15aaaffa32b75ed3aac5cb",
+          "bytes": 357702
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b38c2704-d74b-4c50-bc8c-5b2143cdf3a4.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.independent-qa.json",
+        "sha256": "2d9459069454814235b4f3d291e25db9e4a0223fd47aa52e6de0b9458db4f958",
+        "bytes": 2147
+      }
+    },
+    "generated/golf-source-batch-02/native/park-bench/normal-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+        "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+        "bytes": 1603986
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.provenance.json",
+        "sha256": "8f203b8d2d02d63a5e893823aa5fd71371d63e844b7601dfdcf0fb765ca6bfbd",
+        "bytes": 2786
+      },
+      "exact_actual_generation_prompt": "Paint FOUR real corner views of the one fixed physical golf prop in REFERENCE1 as finished game art, matching material identity and detailed painterly miniature style of REFERENCE2. Reference1 is the projected geometry/side/occlusion/camera authority. Reference2 supplies material texture/color only; its earlier duplicate cameras and state mistakes must NOT be copied. Fixed object: Three-place slatted bench, BACK on+Y, sitting FRONT on-Y. Tall attached course-map panel ALWAYS at physicalRIGHT+X. Panel FRONT has map, BACK bare wood; do not duplicate a front corner.. Preserve exactly the guide's four quarterturns SE SW / NW NE, orthographic30degreesDOWN,45degreecorners, equal physical scale. Source assembly identity: Actual source is a three-seat timber-slat bench with black cast-metal arms/legs PLUS one tall attached hole-map panel at its model right end. Preserve the bench/map combined assembly and map side. Back has slat backs and panel backing, not another front seating face. No people. . Ordinary practical golf equipment, no inventedornament. Keep ALL apparatus on fixed physical sides while the whole object rotates; true rear and opposite corner views, never repeat a front corner. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadowsLOWERLEFT,lampsOFF. Four complete separatedsprites with broad zeroalpha transparent margins/gutters, no haze/white/grey background, no groundtile, plants, people, UI/captions/grid. Retain functional mesh/holes/ball/brass/castmetal textures.",
+      "prompt_utf8_sha256": "875329a2ce430ebe89f884c92230e8c2446bbd3056647efffbd91cd3e303ee8d",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/park-bench/guides/normal-world-v1.png",
+          "sha256": "24a6d201dd35f002348d0f0a6ff153e5c74cdf7e3d3949f1abd1401057945d37",
+          "bytes": 40858
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/park-bench/normal-v1.png",
+          "sha256": "4f8388cedc98adb3acf945279eb454591bf6c4eed5f479e493167cea3c5bd569",
+          "bytes": 1499707
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-2e9ebfb3-85aa-4969-b337-11d8fc40c77c.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.independent-qa.json",
+        "sha256": "1df34c8961c932e686acaa58d73d181ca2c7a477ddf455e2a057e947c342fe49",
+        "bytes": 3590
+      }
+    },
+    "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+        "sha256": "0dcecf6800741f11709b5031baa787a4c8fac20c168ff2a4474e861fcbe8f55a",
+        "bytes": 1822653
+      },
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.provenance.json",
+        "sha256": "7f9b688e074ddd5a814b192b17e8283e4d349bf69cfba4c868503ec7664182c0",
+        "bytes": 2766
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Three-place slatted bench, BACK on+Y, sitting FRONT on-Y. Tall attached course-map panel ALWAYS at physicalRIGHT+X. Panel FRONT has map, BACK bare wood; do not duplicate a front corner. Preserve the ARCHED cap and exactlyTWOgoldballfinials onmapuprights.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "55c15271fb2d9544563695e68aacf8323d511e193afd17849618fdaf63f32a19",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/park-bench/guides/yaw8-world-v2.png",
+          "sha256": "0448bd833c2b26d460e752a996785c92e757e3266ceeb5cf0c93eaf52bbc2373",
+          "bytes": 40669
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+          "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+          "bytes": 1603986
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-670e1dff-e238-48d7-8e2f-fefc482c06d1.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.independent-qa.json",
+        "sha256": "16c6b08d2d315ec7210aed8efa552f5d853c6bd77bc80ffbe93cf61106ac9c8e",
+        "bytes": 4803
+      }
+    },
+    "generated/golf-source-batch-02/native/park-bench/yaw8-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v2.png",
+        "sha256": "b8022ef2aa96119ff82eb02e6559e0cbcd340a5a1a8abde1f9d0b387f0462005",
+        "bytes": 1746264
+      },
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v2.provenance.json",
+        "sha256": "419989b3752996f2102f207d1ae2d04ea9113989b6bf0f6f4ef96330558d4153",
+        "bytes": 1672
+      },
+      "exact_actual_generation_prompt": "TARGETED correction to ONLY BOTTOM-RIGHT W cell of reference1 four-view bench/mapsheet. The thinvisibleface of the tall attached mapboard wrongly shows a colored printed map. Replace that visible panel interior ONLY with plain vertical wooden BACKING planks, matching the panel back in bottom-left S view. No green map graphic/blue pond/red flag on Wback. Keep archedcap, bothgoldfinials, postcollars, rails, benchseat/backslats/feet/arms and exact camera unchanged. Keep ALLotherthreecells pixelappearance/cameras/materials/geometry unchanged. Samefourviews, detailedpaintedminiaturestyle, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT. Genuinezeroalpha transparentbackground/gutters, broadmargins; removeanysurroundingbrownhaze, noaddedobjects/textUI/scenery.",
+      "prompt_utf8_sha256": "6fb72ccf29847a77d4c66db11b73534ff3068a8fe9568fd3b5c2dc56d9803c04",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+          "sha256": "0dcecf6800741f11709b5031baa787a4c8fac20c168ff2a4474e861fcbe8f55a",
+          "bytes": 1822653
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-3dabd7e3-af6e-4d88-b1bf-97db2850120f.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v2.independent-qa.json",
+        "sha256": "92d2ae9a98b815bbeb693f49cdd9c3a4ea6cb07468b27d48ef326218a04a7ff0",
+        "bytes": 3802
+      }
+    },
+    "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+        "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b",
+        "bytes": 1648387
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.provenance.json",
+        "sha256": "cd44b9c764fdc1e4fa926e04b5da854535431e0fd808c3a83f6eb39fd28373dd",
+        "bytes": 1950
+      },
+      "exact_actual_generation_prompt": "Edit ONLY the four water-station sprites in reference1. Remove the invented beige golfer/arrow/12direction plaque from the tank FRONT in top-left and bottom-right cells; restore continuous plain galvanized tank metal at those exact locations. Also remove the entire added green-framed hole-map board from its physical side, including any frame/back edge visible in all four cells. Remove those two signage assemblies, not merely their printed content. Preserve the SAME tank shape, top fill cap, two front taps, trough, bucket, towel/hook, hanging basket, wooden foot grate, four legs and rear cross-braces in their existing positions. Keep all four exact camera views, scale, source cell layout, full silhouettes except removed map attachment, painterly materials and late-afternoon upper-right sunlight/lower-left shadows. No new signs, numbers, maps, people, plants, floor plate or extra equipment. Return the same2x2 sheet on genuine transparent zero-alpha background. Do not redesign or change any other component.",
+      "prompt_utf8_sha256": "9eb4af3059f154be1fe391fed94bd298d205551ddd02778e0af8ddf73dd7a3f0",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v1.png",
+          "sha256": "3fea9724ef5aab171a1846157ba58674b0a5fa154cc32ba4b505db0df19e3ac9",
+          "bytes": 1733101
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-598add07-ea94-4f07-81a5-1eb88d36b279.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.independent-qa.json",
+        "sha256": "5c28eef27afc1f69322e31314cee216aa1666d21fd5602493ad94ffae7e420db",
+        "bytes": 3411
+      }
+    },
+    "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+        "sha256": "856b1736cdccfa93df744f4e2b244385b4cdb6f29884b32ddda8b95c4d4cd124",
+        "bytes": 1571292
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.provenance.json",
+        "sha256": "842ca83adacf96e457f3ca16d3b982e20da58f3b78114ef1aa24642d1248a116",
+        "bytes": 2812
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Closed galvanized cistern; exactly two FRONT (-Y) taps above an open trough. Fill cap stays REAR-LEFT (-X,+Y); towel and basket stay physical RIGHT (+X); bucket stays FRONT-RIGHT. Four legs, rear V braces. No sign, 12 plaque, map, tarp, plants or floor slab.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "910609b5537f651d9b8f03ada3518d9aa3a754bccf58761e86a37fe0cac74bb1",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v2/water-tank-stall/guides/yaw8-world-v1.png",
+          "sha256": "0ab98b8202ebe9d1aedd265b98d847399f46edac6f64d922c635e9fe3b0fcb55",
+          "bytes": 56923
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+          "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b",
+          "bytes": 1648387
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-61cb1732-9af6-4896-8a6c-a144b787e120.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.independent-qa.json",
+        "sha256": "66b428c138cb44884191ce667d4f0fc283233e92105f5da403d0bd9443c82b56",
+        "bytes": 3893
+      }
+    },
+    "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+        "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6",
+        "bytes": 901071
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.provenance.json",
+        "sha256": "e6934b4dda9365da3612ebf09218ddda56fdb65caba580e02a44056e2d0b387f",
+        "bytes": 2468
+      },
+      "exact_actual_generation_prompt": "Create a native 2x2 sprite sheet of this ONE SAME golf-course prop in four real orthographic 45-degree corner views, camera 30 degrees down. Reference1 is exact subject identity and assembly; reference2 is hand-painted miniature material style only. Preserve reference1's actual object, colour, attachment counts and functional geometry. Subject: Exactly three green round-foot stanchions in one straight line connected by two sagging cream rope spans. Maintain post order, spacing and rope attachment height; back views show actual hardware. No ground strip. Four different views: top-left FRONT+LEFT, top-right REAR+LEFT, bottom-left REAR+RIGHT, bottom-right FRONT+RIGHT. The entire single physical assembly rotates rigidly; keep every handle, crank, towel, map panel, arrow, ramp, rope, tap, basket and support on its same physical side. Reconstruct true rear backing and brackets; do not paste front labels/pockets/coin slots onto back views. Fixed late-afternoon DAYTIME sunlight SCREEN UPPER RIGHT, shadows LOWER LEFT. Detailed hand-painted miniature materials matching the existing golf-town art; no new brands, no people. Four complete separate sprites centred in their own quarters, same physical scale, generous transparent margins. Objects opaque on a genuinely zero-alpha transparent background, including gutters. No baked grass/soil/groundplate or external scenery, no plants, haze, captions/grid/UI or invented text. Intrinsic tiny pictograms and existing hole number12 are allowed only where the identity brief requires them. Actual equipment ramp/mat is retained when explicitly part of the subject.",
+      "prompt_utf8_sha256": "b0e3a5042809b72ee84653948a025b51212ffff53ee158cb793d708b8fe26cfc",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/references/rope-barrier.source.png",
+          "sha256": "081eca194b4fd550a33a12920b5b7eab03c05ed5ed83a5c2159aef57b7af25d0",
+          "bytes": 134813
+        },
+        {
+          "path": "generated/old-clubhouse-1950/normal-v5.png",
+          "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+          "bytes": 1473832
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-a546d579-8a2c-48fb-b0db-86a1b8b49e9c.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.independent-qa.json",
+        "sha256": "a4307295fe996e8e2a6a4192bd7463960e15408ae5f225b5b3427953fa54c6be",
+        "bytes": 3656
+      }
+    },
+    "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+        "sha256": "cbfde471bf05680abedc150ef53ffcda10430424c3dcc27e3c9f7b0068e5c6f8",
+        "bytes": 758292
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.provenance.json",
+        "sha256": "8d2a043c0e46e0b2ffa18f1aa9ca84eee438e3e8538a4a5c710ae3428f917149",
+        "bytes": 2778
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Exactly three stanchions in one straight X line at (-1.5,0), (0,0), (1.5,0); exactly two cream rope spans with fixed 0.20 m sag. Brass attachment plates stay FRONT (-Y). No L shape, fourth post or third span. Individual round feet only; no floor strip.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "08d821e126c4ab02c4cbb1e17ae9a4064a4257206fb6fe3cc16136c0f012dfd3",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v2/rope-barrier/guides/yaw8-world-v1.png",
+          "sha256": "1277cf9dad25379d01e3f909c9fa031fe218fb5d7d57906e8685d873e56d35db",
+          "bytes": 34986
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+          "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6",
+          "bytes": 901071
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-a60ebc64-3176-4579-9461-0f3a91db18f9.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.independent-qa.json",
+        "sha256": "76c6c3d46f2e25c7ed51cad2de289142635a636cc181a49f970dddc35e393624",
+        "bytes": 3920
+      }
+    },
+    "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+        "sha256": "5b2bc88fb3c87a6e1304d33460d54b615ac0228ae6b8c2afddbfc2716e67d98d",
+        "bytes": 935658
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.provenance.json",
+        "sha256": "1a34f60682adcb750c7731ef85d0b2f216b637cd4e3c2251f327558c6824cc7c",
+        "bytes": 2886
+      },
+      "exact_actual_generation_prompt": "Paint FOUR real corner views of the one fixed physical golf prop in REFERENCE1 as finished game art, matching material identity and detailed painterly miniature style of REFERENCE2. Reference1 is the projected geometry/side/occlusion/camera authority. Reference2 supplies material texture/color only; its earlier duplicate cameras and state mistakes must NOT be copied. Fixed object: EXACTLY5posts and4rope spans, rigid90degreeL in ground plane. Corner shared post0=(-1.5,-1.5); armXposts1/2=(0,-1.5)/(1.5,-1.5); armYposts3/4=(-1.5,0)/(-1.5,1.5). Do not flatten, mirror or duplicate corners.. Preserve exactly the guide's four quarterturns SE SW / NW NE, orthographic30degreesDOWN,45degreecorners, equal physical scale. Source assembly identity: Exactly five green round-foot stanchions and four cream rope spans making one90degreecorner: centre corner post shared by two arms, with one intermediate and one end post on each arm. Preserve L-shaped ground layout and five-post count in every view; do not flatten it into a straight barrier. . Ordinary practical golf equipment, no inventedornament. Keep ALL apparatus on fixed physical sides while the whole object rotates; true rear and opposite corner views, never repeat a front corner. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadowsLOWERLEFT,lampsOFF. Four complete separatedsprites with broad zeroalpha transparent margins/gutters, no haze/white/grey background, no groundtile, plants, people, UI/captions/grid. Retain functional mesh/holes/ball/brass/castmetal textures.",
+      "prompt_utf8_sha256": "8753356cdc201d78484e7e8cd9c2c06870e7ba6f79a1eb11f9b2540bafde4c92",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/rope-barrier-corner/guides/normal-world-v1.png",
+          "sha256": "018f6355dc932fc7e90b34b9c573cb8c5b471ec488ff481f7723880d21e0ef19",
+          "bytes": 44525
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v1.png",
+          "sha256": "a3a04f91908736370714392788f13950b3ad36f58efc228dd525d22ce2c0476b",
+          "bytes": 2631029
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-fec4426c-6931-47bc-8143-fbf9996e4945.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.independent-qa.json",
+        "sha256": "68a8d4703d571621d9c9b7c991b8f9e153ce16106f772e9673ef45f506415518",
+        "bytes": 3424
+      }
+    },
+    "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+        "sha256": "071878c1d0f2214d891b51ba03fda869ad12acbca11b5a310624ec7eb5351d28",
+        "bytes": 732435
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.provenance.json",
+        "sha256": "c5a7687dca6f431d8b81ae675390b316defc9c2bfa35e0c32593a84ae3d7a404",
+        "bytes": 2782
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: EXACTLY5posts and4rope spans, rigid90degreeL in ground plane. Corner shared post0=(-1.5,-1.5); armXposts1/2=(0,-1.5)/(1.5,-1.5); armYposts3/4=(-1.5,0)/(-1.5,1.5). Do not flatten, mirror or duplicate corners.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "f1ebd89154f72e6c27e90c4644f9569a131df03817db611ce4647fb614c05592",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v1/rope-barrier-corner/guides/yaw8-world-v1.png",
+          "sha256": "a8df18627c574404cdcf45b22f7246146f727c7a28dd4e0216e6924816edbf4d",
+          "bytes": 42630
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+          "sha256": "5b2bc88fb3c87a6e1304d33460d54b615ac0228ae6b8c2afddbfc2716e67d98d",
+          "bytes": 935658
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f85eb1f8-adb7-4e80-8b1a-99a446921b8d.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.independent-qa.json",
+        "sha256": "c7f0d237c2b3c35d7124046f049f9663e24bcf99f6478608eedd95ce09516268",
+        "bytes": 3872
+      }
+    },
+    "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+        "sha256": "4667e69c8dbb673bd7b8cff7ae2a0a3717bd463511da9af1123e1ec8297b49a2",
+        "bytes": 1298781
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.provenance.json",
+        "sha256": "a199ad27a529cc3a455b2233b3178559511ac0d1864e9518ab36528ec78ccfe1",
+        "bytes": 2369
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact fixed-world 45degreecorner views inREFERENCE1 as finished detailedpainterlygameartmatchingidentity/materials inREFERENCE2. Reference1controls ALLcameras/sidegeometry/attachments/occlusion; reference2styleONLY, donotcopyduplicateposes. Exactly4green posts,2gate leaves fixed90degreesOPEN, rear+Yhinges and leaves extendingtowardFRONT-Y; ONEperforated metal ramp/threshold with yellow long-side edges. Two leaves never change angle, swap hinge ends or become closed. No generic ground plate outside functional ramp.. Retainbelievableordinarywear/materials matchingnativeidentity, nofantasychanges. Onefixedassemblyrotatedfourquarterturns; Preserveexactguide front/rear/mainfaceincells, neverrepeatfrontcornerTLforBR. Orthographic30degreesDOWN, same4cellsasguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lampsOFF. Completeequallyscaledobjects,broadgenuinelyzeroalpha transparentgutters/margins; nopavement/groundplate/plants/people/haze/UI/captions/grid. Functionalrampretainedwhenpresentinguide. Keep7blankscorerows orintrinsichole12/map/dots ONLYasfixedidentityrequires.",
+      "prompt_utf8_sha256": "c4b0888b98554aa92fd09a7f97445386bd9f5e2bb0f1bef082b3a8a4d7d0f03d",
+      "actual_references": [
+        {
+          "path": "generated/golf-small-prop-correction-guides-v1/rope-walkway/guides/normal-world-v1.png",
+          "sha256": "701f4167e399c04eb97b20830ac56c020e9ed5c176f7e7c098e50ac6fb369c91",
+          "bytes": 72994
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v1.png",
+          "sha256": "484d8689a00469e4508fd84e005743160f3106bc841caa6ddbd07b0589b89c89",
+          "bytes": 1915634
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f413035b-a292-4992-b80a-1aecee680f85.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.independent-qa.json",
+        "sha256": "3af744e9c650c9d2eee54e6a52fde602bb86ace5ae2ae54ca1c02b69b4e92cd4",
+        "bytes": 3575
+      }
+    },
+    "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+        "sha256": "4fd4a314d7442c5ad546ffb49b7876b97f1dc7bab4bd9c95fd536f0399de8778",
+        "bytes": 1378381
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.provenance.json",
+        "sha256": "d35416856c8a9e1d9fafe8d4b186e11b3ad5615c4830bb074c2796ccd7e3132c",
+        "bytes": 2790
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Exactly4green posts,2gate leaves fixed90degreesOPEN, rear+Yhinges and leaves extendingtowardFRONT-Y; ONEperforated metal ramp/threshold with yellow long-side edges. Two leaves never change angle, swap hinge ends or become closed. No generic ground plate outside functional ramp.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "73144cd4a07a0e1667d2dee1eb4c12a52f18614cfa9699c8c7abdb9a913f6046",
+      "actual_references": [
+        {
+          "path": "generated/golf-small-prop-correction-guides-v1/rope-walkway/guides/yaw8-world-v1.png",
+          "sha256": "1fbfe268de8466a74b297ac8024feaa24d22f58994a3467ef0226a7c1b278f4b",
+          "bytes": 56765
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+          "sha256": "4667e69c8dbb673bd7b8cff7ae2a0a3717bd463511da9af1123e1ec8297b49a2",
+          "bytes": 1298781
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-33445955-c517-489a-ad6f-3d4df5d9adac.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.independent-qa.json",
+        "sha256": "1a350a80f4f3c38a44e59fb1869c7efd7cdf8639442a47d5d8b7603b36e1d685",
+        "bytes": 3862
+      }
+    },
+    "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+        "sha256": "317b54ad6750cd145f7a7772b7fcc7a1e5cf6b5773aca951fea839e0d1c1ee00",
+        "bytes": 1147434
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.provenance.json",
+        "sha256": "4265e079f4dbbc6132f6cc23de67d84afaec73a558e3a873b8f24a9f4884ddf0",
+        "bytes": 2624
+      },
+      "exact_actual_generation_prompt": "Create a native 2x2 sprite sheet of this ONE SAME golf-course prop in four real orthographic 45-degree corner views, camera 30 degrees down. Reference1 is exact subject identity and assembly; reference2 is hand-painted miniature material style only. Preserve reference1's actual object, colour, attachment counts and functional geometry. Subject: One green pedestal fingerpost with exactly four arrow boards: upper-left golf icon, upper-right food icon, lower-left toilets icon, lower-right exit icon. Keep arrows physically attached to fixed sides; backs may be plain. No captions or invented destination text; small intrinsic pictograms allowed. Ignore detached neighbour fragment at source top. Four different views: top-left FRONT+LEFT, top-right REAR+LEFT, bottom-left REAR+RIGHT, bottom-right FRONT+RIGHT. The entire single physical assembly rotates rigidly; keep every handle, crank, towel, map panel, arrow, ramp, rope, tap, basket and support on its same physical side. Reconstruct true rear backing and brackets; do not paste front labels/pockets/coin slots onto back views. Fixed late-afternoon DAYTIME sunlight SCREEN UPPER RIGHT, shadows LOWER LEFT. Detailed hand-painted miniature materials matching the existing golf-town art; no new brands, no people. Four complete separate sprites centred in their own quarters, same physical scale, generous transparent margins. Objects opaque on a genuinely zero-alpha transparent background, including gutters. No baked grass/soil/groundplate or external scenery, no plants, haze, captions/grid/UI or invented text. Intrinsic tiny pictograms and existing hole number12 are allowed only where the identity brief requires them. Actual equipment ramp/mat is retained when explicitly part of the subject.",
+      "prompt_utf8_sha256": "825df9f18a089baf8915be1aed97b3818b9f10ee9f5343aa7c9d946191c7a7d7",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/references/direction-signpost.source.png",
+          "sha256": "9f794b546fb239c7faf22edf24017fc93e51470e7d618d4232f963f49daae1b0",
+          "bytes": 320515
+        },
+        {
+          "path": "generated/old-clubhouse-1950/normal-v5.png",
+          "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+          "bytes": 1473832
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0d25d104-59a2-4052-9ce4-b22c8150a8c6.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.independent-qa.json",
+        "sha256": "ed5ca9b9f64539cb4e39e3a3b32aa97347c1b31c90a762c42a243a1b12ca20d1",
+        "bytes": 3628
+      }
+    },
+    "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+        "sha256": "55a005747397a2283c22b449a5042bfa596d4bad251ebdcd35862af96c5ae08e",
+        "bytes": 831140
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.provenance.json",
+        "sha256": "29255fd5c940711008b71627cfd417c6b629f155090391cb05359e80b6632597",
+        "bytes": 2823
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Exactly four arrow boards: two point physical LEFT (-X), two RIGHT (+X), all in one fixed XZ plane. FRONT (-Y) icons: upper-left golf, upper-right food, lower-left toilets, lower-right exit. REAR (+Y) has four plain backs. Never radial or re-aimed arrows.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "1ffc61f83da6bda0378c720824e0b3b42b69d86a0389e1cbf6cdd4131f5e72a5",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v2/direction-signpost/guides/yaw8-world-v1.png",
+          "sha256": "bd7bda4ceddb309a7377caeb658bc477ff5f8579206730e1312d387a42d31fb8",
+          "bytes": 30828
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+          "sha256": "317b54ad6750cd145f7a7772b7fcc7a1e5cf6b5773aca951fea839e0d1c1ee00",
+          "bytes": 1147434
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-3cb05d7f-68e5-4a74-b8f9-e1759e569376.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.independent-qa.json",
+        "sha256": "7d1f5928f2dee52faca46a4feea614b0cde4bc2ef9714b48fb8cff04faa2eb13",
+        "bytes": 3899
+      }
+    },
+    "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.png",
+        "sha256": "d0f9d58c7a62a0409232d5ce6f4e25174129eb8ad8e5b0949466d56185eba5c6",
+        "bytes": 822577
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.provenance.json",
+        "sha256": "3a5db24ee42086d6fbc2d53213baf5e1d620ff15225a2a27ed9efc6c3ba6741c",
+        "bytes": 1697
+      },
+      "exact_actual_generation_prompt": "TARGETED correction to ONLY BOTTOM-RIGHT W cell of reference1 four-view direction signpostsheet. The visible arrow-board faces wronglyrepeat the white golfer/toilet/food/exit pictograms and direction arrows from the front. RemoveALLwhiteicons/printedarrows from the visible faces in Wcell, leaving4PLAINwornGREENboardbacks withbrassborders, same4arrow-shapedboardsandfixedmounts. Keeptop-leftN/top-rightEfronticons and bottom-leftSblankbacksunchanged. Keep ALLotherthreecells pixelappearance/cameras/materials/geometry unchanged. Samefourviews, detailedpaintedminiaturestyle, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT. Genuinezeroalpha transparentbackground/gutters, broadmargins; removeanysurroundingbrownhaze, noaddedobjects/textUI/scenery.",
+      "prompt_utf8_sha256": "b16f7761cbce701d7ecad84f21cb3c3706ad4170ef6f2a275027384db2ab4719",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+          "sha256": "55a005747397a2283c22b449a5042bfa596d4bad251ebdcd35862af96c5ae08e",
+          "bytes": 831140
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-47f8131e-fd9f-4040-bdc0-e10eb1c5455c.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.independent-qa.json",
+        "sha256": "1ae2144040c22d417b791c452520c7f30228e5cc30416e369a2fb638547a11aa",
+        "bytes": 3807
+      }
+    },
+    "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+        "sha256": "f1dd757238cb786feeff82a858c46dc9a9aaa22dcbf5a68d4f12c6b3873d874d",
+        "bytes": 1290365
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.provenance.json",
+        "sha256": "dc7098063740e8c2fb7f9fe4304e8cabb74d9aa4a59525a58d6836bf5a335c65",
+        "bytes": 2556
+      },
+      "exact_actual_generation_prompt": "Create a native 2x2 sprite sheet of this ONE SAME golf-course prop in four real orthographic 45-degree corner views, camera 30 degrees down. Reference1 is exact subject identity and assembly; reference2 is hand-painted miniature material style only. Preserve reference1's actual object, colour, attachment counts and functional geometry. Subject: Exactly two gold dimpled golf-ball tee markers on small round individual mounting feet, separated by a fixed gap and aligned as one paired object. Preserve two markers and their physical relative positions across8views. Remove the baked grass/soil rectangle; no new plants or ground tile. Four different views: top-left FRONT+LEFT, top-right REAR+LEFT, bottom-left REAR+RIGHT, bottom-right FRONT+RIGHT. The entire single physical assembly rotates rigidly; keep every handle, crank, towel, map panel, arrow, ramp, rope, tap, basket and support on its same physical side. Reconstruct true rear backing and brackets; do not paste front labels/pockets/coin slots onto back views. Fixed late-afternoon DAYTIME sunlight SCREEN UPPER RIGHT, shadows LOWER LEFT. Detailed hand-painted miniature materials matching the existing golf-town art; no new brands, no people. Four complete separate sprites centred in their own quarters, same physical scale, generous transparent margins. Objects opaque on a genuinely zero-alpha transparent background, including gutters. No baked grass/soil/groundplate or external scenery, no plants, haze, captions/grid/UI or invented text. Intrinsic tiny pictograms and existing hole number12 are allowed only where the identity brief requires them. Actual equipment ramp/mat is retained when explicitly part of the subject.",
+      "prompt_utf8_sha256": "bf6314cd69f44695005346fb296caa8e7a22136d9331135e97a12fc07bc884d7",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/references/gold-tee-markers.source.png",
+          "sha256": "67bf38a38112160400120a8e35fe73985096b9650a54a14e2505c5422edfb26c",
+          "bytes": 329351
+        },
+        {
+          "path": "generated/old-clubhouse-1950/normal-v5.png",
+          "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+          "bytes": 1473832
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-9e77ac73-9b7b-4d37-9645-908ed3b86bc0.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.independent-qa.json",
+        "sha256": "fccb51319aac6cc5f1d32788db2be2666c9b0537d11f1852e71f6c8aab840101",
+        "bytes": 3643
+      }
+    },
+    "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+        "sha256": "bc06623d914c7cb0ba987029b799204cc9a4de7c2d64903a959b314a0f9be531",
+        "bytes": 1846153
+      },
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.provenance.json",
+        "sha256": "49cd7587ead0895d5106629091ab9d6feeb82dc78c5f7687e1a290b911384324",
+        "bytes": 2851
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Exactly two gold golf-ball markers at (-0.23,0,0.202) and (+0.23,0,0.202): fixed 0.46 m centre gap on one world X line. Each has a short individual round foot. No third ball, changing gap, grass bed, slab or connecting rail. Final painted balls keep golf dimples; guide faceting is technical only.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "0b10c5b8ab967b95ce55295f7e70d41abc7bfddd0d6dd026f14e2f29d0f2e1db",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v2/gold-tee-markers/guides/yaw8-world-v1.png",
+          "sha256": "d6f37fa0dceafc7f2246d493706d8e32c73dcdbd6a039d4b12561ea9b65ccb84",
+          "bytes": 50955
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+          "sha256": "f1dd757238cb786feeff82a858c46dc9a9aaa22dcbf5a68d4f12c6b3873d874d",
+          "bytes": 1290365
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-d1674c71-938f-44a9-999f-55889ed38e7b.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.independent-qa.json",
+        "sha256": "e0e8c5c77c561ddce87e8653ba4535e6f1b33ecd51dc017722920350acb33305",
+        "bytes": 4244
+      }
+    },
+    "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+        "sha256": "bbd5e42167f4b04f05a43679eb609df5a0e84e878bb18f3b84eaf61f74d97271",
+        "bytes": 941680
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.provenance.json",
+        "sha256": "dd77876b1982b66134e56a2d494e10dfc7aadc81c84ea23688f1744a61e6b24a",
+        "bytes": 2302
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact fixed-world 45degreecorner views inREFERENCE1 as finished detailedpainterlygameartmatchingidentity/materials inREFERENCE2. Reference1controls ALLcameras/sidegeometry/attachments/occlusion; reference2styleONLY, donotcopyduplicateposes. Exactly2green uprights, arched board, intrinsic12on FRONT-Yabove ONEhole map and5coloured dots in fixed left column (black,blue,white,yellow,red). REAR+Yplain planks/braces, no copied12/map. No soil/grass apron.. Retainbelievableordinarywear/materials matchingnativeidentity, nofantasychanges. Onefixedassemblyrotatedfourquarterturns; Preserveexactguide front/rear/mainfaceincells, neverrepeatfrontcornerTLforBR. Orthographic30degreesDOWN, same4cellsasguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lampsOFF. Completeequallyscaledobjects,broadgenuinelyzeroalpha transparentgutters/margins; nopavement/groundplate/plants/people/haze/UI/captions/grid. Functionalrampretainedwhenpresentinguide. Keep7blankscorerows orintrinsichole12/map/dots ONLYasfixedidentityrequires.",
+      "prompt_utf8_sha256": "0f7b8c6a87e2a77840ff2fac90d0a733293e422d084394d0b730be4a3195143b",
+      "actual_references": [
+        {
+          "path": "generated/golf-small-prop-correction-guides-v1/hole-12-sign/guides/normal-world-v1.png",
+          "sha256": "a9b25d93fe76add94936dfd79ac2b20087371b62b9fe4f770821fc7a22491db8",
+          "bytes": 33486
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v1.png",
+          "sha256": "aba12d8a15079281ea1631f86165a38348f51322e3c8698ccc8f56b3d5e820a9",
+          "bytes": 1432517
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-1bcefb7e-6c98-45ac-8ca9-939731a4d5ff.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.independent-qa.json",
+        "sha256": "8a2ffc1ecd269c5bd9073f83d546e8cbe0477a70758b8b260bf11f94c61fd4a6",
+        "bytes": 3564
+      }
+    },
+    "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+        "sha256": "fcc401adb26dffa0ac6fb5ff2718eb426781199fff35c2f2ef2ec1a1130e2042",
+        "bytes": 790192
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.provenance.json",
+        "sha256": "ea90ad0188bf8a9f616d5f528e6df68fac8b4d2449e4ae0e6ec35d6c07be3afb",
+        "bytes": 2723
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Exactly2green uprights, arched board, intrinsic12on FRONT-Yabove ONEhole map and5coloured dots in fixed left column (black,blue,white,yellow,red). REAR+Yplain planks/braces, no copied12/map. No soil/grass apron.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "14acedfb2d015625074a13858e793e5c15f9814791326fcab2f05287d93034f8",
+      "actual_references": [
+        {
+          "path": "generated/golf-small-prop-correction-guides-v1/hole-12-sign/guides/yaw8-world-v1.png",
+          "sha256": "c09cc1a4dd7f6c9023b4d25bd66361f52e2273595805a5e3989a47a1f7923a7f",
+          "bytes": 28805
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+          "sha256": "bbd5e42167f4b04f05a43679eb609df5a0e84e878bb18f3b84eaf61f74d97271",
+          "bytes": 941680
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-86921e44-8eeb-4c0e-95b8-71c3e9b618b8.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.independent-qa.json",
+        "sha256": "83b327882063be487d6d1fcf3eafeade24563a24cd7074ebf33aa28d27f3db00",
+        "bytes": 3823
+      }
+    },
+    "generated/golf-source-batch-02/native/course-map-board/normal-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+        "sha256": "9cad2e7a817441125f1c332d1f285164faf9de2ae655b8c17dc101266ea7e33e",
+        "bytes": 1745797
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.provenance.json",
+        "sha256": "88c0f25949122fbef919ce74f9beec08e89e9d98c16a8ae938101c3541388c54",
+        "bytes": 2591
+      },
+      "exact_actual_generation_prompt": "Create a native 2x2 sprite sheet of this ONE SAME golf-course prop in four real orthographic 45-degree corner views, camera 30 degrees down. Reference1 is exact subject identity and assembly; reference2 is hand-painted miniature material style only. Preserve reference1's actual object, colour, attachment counts and functional geometry. Subject: One freestanding roofed course information/map board with green timber surround, broad cream map panel, shallow pitched roof and information symbol above. Preserve the actual board and back structure; switch lanterns off for daylight. Omit the integrated flower planters and paving slab, retaining only structural supports. Four different views: top-left FRONT+LEFT, top-right REAR+LEFT, bottom-left REAR+RIGHT, bottom-right FRONT+RIGHT. The entire single physical assembly rotates rigidly; keep every handle, crank, towel, map panel, arrow, ramp, rope, tap, basket and support on its same physical side. Reconstruct true rear backing and brackets; do not paste front labels/pockets/coin slots onto back views. Fixed late-afternoon DAYTIME sunlight SCREEN UPPER RIGHT, shadows LOWER LEFT. Detailed hand-painted miniature materials matching the existing golf-town art; no new brands, no people. Four complete separate sprites centred in their own quarters, same physical scale, generous transparent margins. Objects opaque on a genuinely zero-alpha transparent background, including gutters. No baked grass/soil/groundplate or external scenery, no plants, haze, captions/grid/UI or invented text. Intrinsic tiny pictograms and existing hole number12 are allowed only where the identity brief requires them. Actual equipment ramp/mat is retained when explicitly part of the subject.",
+      "prompt_utf8_sha256": "9da2ba769a73a90316fea083cadb73325366e19997a4de316b6503be5ca29a9e",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/references/course-map-board.source.png",
+          "sha256": "68399b1762dc542bae34d9b6d217a8e42759cc6011cd16f6f0c958c76c03ebd1",
+          "bytes": 557401
+        },
+        {
+          "path": "generated/old-clubhouse-1950/normal-v5.png",
+          "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+          "bytes": 1473832
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-116f04ae-0d8b-419a-b31d-b6c1f8d3f49d.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.independent-qa.json",
+        "sha256": "ce49ebf7e0c036aa36aeb664636f4c32a099d740fe86737c88fa2d28595a17a8",
+        "bytes": 3613
+      }
+    },
+    "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png": {
+      "source": {
+        "path": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+        "sha256": "e826361f9ae7cecc9d78ec292ced240e85e8e97a564ecbbb95863344c7e79c62",
+        "bytes": 1283894
+      },
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "provenance": {
+        "path": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.provenance.json",
+        "sha256": "26d6ea8e812f705d9c0eec38b2d78701130acda4c6d8ee8d3a9074291299769c",
+        "bytes": 2819
+      },
+      "exact_actual_generation_prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Broad cream map only on FRONT (-Y); plain green planked REAR (+Y) with two horizontal battens. Green gable roof ridge runs along Y. Exactly two unlit lanterns attach to FRONT left/right; two structural posts with individual feet. No planters, plants or paving slab.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+      "prompt_utf8_sha256": "6adaf568029e0715eddcacecbcfd1da64e3cd4d1361a2cd0a6da99ebe80e1262",
+      "actual_references": [
+        {
+          "path": "generated/golf-source-batch-02/fixed-world-guides-v2/course-map-board/guides/yaw8-world-v1.png",
+          "sha256": "e0a3d54c40a7b06e9106b9a16b21c8f425442f88f1c4491b63ccb8c0dc95fe7f",
+          "bytes": 34788
+        },
+        {
+          "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+          "sha256": "9cad2e7a817441125f1c332d1f285164faf9de2ae655b8c17dc101266ea7e33e",
+          "bytes": 1745797
+        }
+      ],
+      "source_original": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-406c6f73-3344-4737-8540-ceb7c2f23278.png",
+      "source_qa": {
+        "path": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.independent-qa.json",
+        "sha256": "2936257ac729782588ba5f5bede2b63bec0355020deea36423cbd96cbf285251",
+        "bytes": 4389
+      }
+    }
+  },
+  "views": [
+    {
+      "subject": "newprop:ball-washer",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "ball-washer/normal-SE.png",
+      "sha256": "20195ddd8beb7725b0b3d6ba6c74dd93366a8242876c2bbffb5f191e8b309328",
+      "bytes": 281783,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "4bfabba5dae0694e4daef6455d41733387852c4d674cea0a2414309d923ca1e9",
+      "source": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7197077803977829,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-washer",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "ball-washer/normal-SW.png",
+      "sha256": "79f6b5fe8b35e96c72100464cbc5a0f7ba0b6387836f5c161e87f25457712ca4",
+      "bytes": 262577,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "891d4efa9739697c6f07db59dd3f29656a17fa837a6e93925e5048edbd46f7d5",
+      "source": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7377400293542323,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-washer",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "ball-washer/normal-NW.png",
+      "sha256": "0f95574686d79d5ff80d5499938f6121b82f01a077796f5da171b9781055c007",
+      "bytes": 275063,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "1986efde32d05902ff844b061c952f838c1595a2d682267dcc482ee93ddb4795",
+      "source": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7269547654841032,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-washer",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "ball-washer/normal-NE.png",
+      "sha256": "71d67af2ecf3d223a5a7a42aa285e6ab108bd625b2406916ed51f20db59a8411",
+      "bytes": 286983,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "e7ae530654bb49adae99a1064b3bdf47709723da708ac0168f6e8c774a38b111",
+      "source": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.722111571519781,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-washer",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "ball-washer/yaw8-N.png",
+      "sha256": "0597ff8ed12d68aad3f71054c834c687c9ed231dc624c0a4dfb74a3cbcbc94be",
+      "bytes": 283428,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "cda02e86ac43fb0ea5bab3190df7da39bfee3064f1eacceeb16c922f28cd8cc6",
+      "source": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7117867163195796,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-washer",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "ball-washer/yaw8-W.png",
+      "sha256": "9bf7321126d6e1e09d64f35648a12f22a396b422f9c073e29bb579648fa33a03",
+      "bytes": 218952,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "9591416a509568d7acd1a24c5f62d7c9c2645548cd9580a3538fefff85034971",
+      "source": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7799678985778206,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-washer",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "ball-washer/yaw8-S.png",
+      "sha256": "9184d3c2e0715fd9e01507da71bd09fec1db1e37cdeaf1eed8b8affb731bcb6e",
+      "bytes": 278035,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "85692dd13c204227cf48251253769a73c2b58f5fb59a97d24f557f22960d89d8",
+      "source": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7041632644755283,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-washer",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "ball-washer/yaw8-E.png",
+      "sha256": "5f0a95fef13f9a36763f99039fe826bba24344be50074f95f32e3ad891e75e15",
+      "bytes": 215919,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "4a2270a7935b62b09d300df44bea2d6539780ff932d0243fa291f55d173df22c",
+      "source": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7882781478852997,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-bucket-stand",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "ball-bucket-stand/normal-SE.png",
+      "sha256": "68db08f0baa7958bed985761e5ff63b0d4ccb77695aa513ad595f9096d7c1fbf",
+      "bytes": 444314,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "626dc1f16064d065c881cde942284b33f3a725e1465483ea5ba8d8301e755b53",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5555987983588084,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-bucket-stand",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "ball-bucket-stand/normal-SW.png",
+      "sha256": "9f6240aa449166d9f05b00a3f3eb6669ee6a7e871e839a65c848b75db3201067",
+      "bytes": 411775,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "bf264f0c4b59a3e999bfec97fb90c0a54397285b0b060e4a21cf420c340545ce",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5631764637052977,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-bucket-stand",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "ball-bucket-stand/normal-NW.png",
+      "sha256": "0edbd9b4bac63cec5c59318b54e4ac5fa0ef279e08a84fa9ab491bd5bfb22483",
+      "bytes": 417850,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "f0b6c5eba0a0705929d18b819e7b776ed25cf3b252af548c6c2d989a60fa6c26",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.555779400654747,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-bucket-stand",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "ball-bucket-stand/normal-NE.png",
+      "sha256": "f9f55099e82470eb0b3f154b9b96a37701157b1aa0959ae6bcd20fa891b04f7a",
+      "bytes": 466730,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "fe36d6a90e06e7ba43cd20a87e38b0ee8105cd2005d6ee78cd6ce823a61d428d",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5304365742542524,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-bucket-stand",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "ball-bucket-stand/yaw8-N.png",
+      "sha256": "a5c81ff10717f2ab7b262b9f39d9da6719ee070763cb6f6061b076237a7eedea",
+      "bytes": 388065,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "cdd2864c83eaad2de54175945f15eafe8a3b7ff80296d4c91fd938c8a4da6ccf",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.617621696694978,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-bucket-stand",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "ball-bucket-stand/yaw8-E.png",
+      "sha256": "ffaf11afd8b6878f418e409ab0dfc02c17c2652000bfc86aec60662b3cb00b0f",
+      "bytes": 371130,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "9f75258c187f4e6c92517ba47552534a2b2a06f3f2685f32c995e6932ab78202",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6303859547375035,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-bucket-stand",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "ball-bucket-stand/yaw8-S.png",
+      "sha256": "a6946b1c99dddb793d81256c372d5f9ae9b41b61f15aae4418465a1a4badd5c8",
+      "bytes": 346079,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "7cb6c4b5d0e087c1ec518d80b91688d82841e58f8acea5a470862ec3e87fc524",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6466808604809109,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-bucket-stand",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "ball-bucket-stand/yaw8-W.png",
+      "sha256": "bbfec62f2daa1efbcd3175b84ed1be3c0fd894e29ce08bd1e14165141c23bd4e",
+      "bytes": 394648,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "5f0252fe6d8ab638f36151d88c441a6e2e5904bc7e2af1e3cdbda2680011f18d",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5954584881807244,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-dispenser",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "ball-dispenser/normal-SE.png",
+      "sha256": "ed9dfd7cc83ff3158a3b633c1aed8a7331eefd619d27772d395bae85462dd486",
+      "bytes": 290578,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "16d068d494ee559bc4a8964067380a74a77b09f07d06471e75d63444bc834355",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7131297869147277,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-dispenser",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "ball-dispenser/normal-SW.png",
+      "sha256": "c8b2025139ed0235a0a50530453dc40818783cb2b440df742846dc2a2022c7c6",
+      "bytes": 729955,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "1b2b252b8226396e55e3515cc6a2f013608e3227b9a5e8c40d973b5d0f05a892",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.png",
+      "source_cell": "single",
+      "rectangle_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "operation": "byte-identical-native-single-copy",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.80494443299782,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-dispenser",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "ball-dispenser/normal-NW.png",
+      "sha256": "f0fe7d4003cf361348c4391d1057fe7dfccd31dac9cfd15d521f71238bd8503f",
+      "bytes": 283002,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "9fde9692b75cb9d989325e505f9d94e8f04879683c8b2faa0aac8b0be3fa0252",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.709515197301649,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-dispenser",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "ball-dispenser/normal-NE.png",
+      "sha256": "0eaa6874119f3609c2db7c46d4051775f10acd7dfe15d9565d4dfda01086e66d",
+      "bytes": 302222,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "44f578b772259cc060d12fa8a65163d790d5400486c6983a4e6e349b9c2b91c9",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7069715029926563,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-dispenser",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "ball-dispenser/yaw8-N.png",
+      "sha256": "59fdf3c0c86d4c443a4f3973b571167075731903106620c502084a1998bff640",
+      "bytes": 244111,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "dc4741d22560dde41105994c0f462daaeb44cbf6254877819d2fb0537c24ce0a",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7497284606325151,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-dispenser",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "ball-dispenser/yaw8-E.png",
+      "sha256": "c8800e17b43ae9cde700dfdc106c31fbd7916d1ecc8d0858548c2394e8510675",
+      "bytes": 263875,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "e659f100e1df85ea135ae3ce0120207764ff1b03f92ed283cd1e14a46da23fed",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7411892788372264,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-dispenser",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "ball-dispenser/yaw8-S.png",
+      "sha256": "b84192aeae0ae4ec9e35c894a9788db95a10a98dfe70063940fec92b1c630b94",
+      "bytes": 221228,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "48d9eef3d300d79bc798637e81e866736715da00c41cc12971609190f00ebc52",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7629505836506592,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:ball-dispenser",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "ball-dispenser/yaw8-W.png",
+      "sha256": "d2cda03f5f0f08bf409235728c1775c658809fe0f2df30119a29c4210ddd89d3",
+      "bytes": 277850,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "c79d4a3f5d424ad8b2772ece03f7e3853af4b92eaf2c9db784aea4315a23eecd",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7230527384141083,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:park-bench",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "park-bench/normal-SE.png",
+      "sha256": "aea9a17d72edc74499a3a62f841d5852e086b8bda6ad53fd30e8ebf245142aae",
+      "bytes": 597597,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "994f5a16285727d5c7c8a18eaea637285e683a711147d251aa7d4502da0f863c",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.png",
+      "source_cell": "single",
+      "rectangle_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "operation": "byte-identical-native-single-copy",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8445446660002187,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:park-bench",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "park-bench/normal-SW.png",
+      "sha256": "65a43e7d32a3ccacc6360cf1ef3503191a7ca82bd7bf8b57b6983ea7c492e033",
+      "bytes": 652310,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "c3abf7b9ecb32b6d4c56ade4501ecc34620687641c8ee2685cb57a81d4b38b4a",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.png",
+      "source_cell": "single",
+      "rectangle_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "operation": "byte-identical-native-single-copy",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8356531825431347,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:park-bench",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "park-bench/normal-NW.png",
+      "sha256": "383efc946948c8c6beeca241b710c8450afaa7db6c15aaaffa32b75ed3aac5cb",
+      "bytes": 357702,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "ba44b1c73d5e169e816cb373e431661fbf0274f041015239ef47097fbc2ecefd",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5907958965123408,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:park-bench",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "park-bench/normal-NE.png",
+      "sha256": "39f79f0f4c8cfa82647d5f833bbffbe0b68b975b33878ec43c06203c25b7ebc1",
+      "bytes": 422376,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "ececb0e9488c2ea9bdd09538db7ced78ac30953f1539f49720cbb83bda5c9197",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.555741245240112,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:park-bench",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "park-bench/yaw8-N.png",
+      "sha256": "6f69f727f1e7f6da691435364db730756a56b2c966038c8197c0777ec53014a0",
+      "bytes": 526797,
+      "dimensions": [
+        768,
+        512
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "fd97e687edac943fea65fe507136a9882a634b88e522ae32eb5cb6d13ae96926",
+      "source": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        768,
+        512
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5373687744140625,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:park-bench",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "park-bench/yaw8-E.png",
+      "sha256": "f20a3f9a9b7077ed67f84b960f01192387d5bfe62d1436757a8c58a3daaae17b",
+      "bytes": 382243,
+      "dimensions": [
+        768,
+        512
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "a1da18aeb3f4d2a34882050ca7b7af27b0370d0cfbe0005a2095e44d22c84deb",
+      "source": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        768,
+        0,
+        1536,
+        512
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7923126220703125,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:park-bench",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "park-bench/yaw8-S.png",
+      "sha256": "8fc5b2b6262d5b449efd91fc605024d02a9122f6bbef4dee615c42d8801ccd38",
+      "bytes": 503979,
+      "dimensions": [
+        776,
+        512
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "3cbc03febefe005e97cbb080dc528aa845c4cf9c24db125cb66d77af9f4e27ad",
+      "source": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        512,
+        776,
+        1024
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.31615959246134023,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 3,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:park-bench",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "park-bench/yaw8-W.png",
+      "sha256": "6108d1df5d012891184a75ab06926929239f2a3ab7d9e85c693dd4656b1597cd",
+      "bytes": 391387,
+      "dimensions": [
+        768,
+        512
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "1549fcfeac8f49ccbfca49c2416f37424dc1db76b4dc14fe04430cdffd17ce56",
+      "source": "generated/golf-source-batch-02/native/park-bench/yaw8-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        768,
+        512,
+        1536,
+        1024
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8361155192057291,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:water-tank-stall",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "water-tank-stall/normal-SE.png",
+      "sha256": "14e25bb4f8ef03981d2a0e251f74149fb5ca605b183282398f21bc94b2b1d924",
+      "bytes": 413141,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "63db29ba54a45772105ae8317da1776697faeda61ee863ed43ba099cbba7b07c",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5348091847714109,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:water-tank-stall",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "water-tank-stall/normal-SW.png",
+      "sha256": "d18bf86fc8b1b8614443bc3f63af15ecf1e99d49544710877f23b8e53d270c40",
+      "bytes": 363493,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "c0dab2b252346209ad7a94cdea7db8c1808e4ef65ca39c85465ba5579c7fc8cf",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5881479107366793,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:water-tank-stall",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "water-tank-stall/normal-NW.png",
+      "sha256": "4fdce187bffdb8cef69ae007a9bef6900c730c9600b212489a5d4a173c01f63d",
+      "bytes": 377552,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "27848cf8af12bcfae961a95d7f8c6420a50ddd23a8cdbdac93a3df2e0eb5e1c7",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5584095805702454,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:water-tank-stall",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "water-tank-stall/normal-NE.png",
+      "sha256": "fda90ae9f4c16d864cd2cf52c2303e7f04cd0a6f198df50b9a2780ab240e927f",
+      "bytes": 421314,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "9b965ac9cacb5493aeb959784dc2a64c27b6b4ff5cfdc99a66338fcb29e7dbbd",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.520439855619911,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:water-tank-stall",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "water-tank-stall/yaw8-N.png",
+      "sha256": "52b29b88d638b84bdff17cb27f9d94d4816977782441d0590500d2a8a59f74c9",
+      "bytes": 413296,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "39fff4dff37b1d99f4557c3f5d8a937a5e100bd0259d962bc93c1321aaf1b2ea",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.48306535513788096,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:water-tank-stall",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "water-tank-stall/yaw8-E.png",
+      "sha256": "6984c1a54c62df74b55290dc9031494e1415e0e987ff5502ef26a6fcfc5d0f24",
+      "bytes": 357162,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "98a71e3bfa8d35721e012e328caf4f1de8dff32e1f89436f41413bdfe67f9eb9",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5537419015132438,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:water-tank-stall",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "water-tank-stall/yaw8-S.png",
+      "sha256": "e810555c54268020cd13e70e7f4eefac97eca336d73d619e86460947de30a852",
+      "bytes": 367187,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "7a055f416ff34a2737046a50008a62c6d0cedd4821cf659c5a3f36701cbf69e3",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5464389551521256,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:water-tank-stall",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "water-tank-stall/yaw8-W.png",
+      "sha256": "ab879dd48a648425868d1aab411d3500078ef507e3bd73beea315ed335764ae7",
+      "bytes": 345570,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "96b7ee52a2ab456166d50fc883df78f08479d3ef7a00f4796587ccb92101a274",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.560991430293873,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "rope-barrier/normal-SE.png",
+      "sha256": "37735bb0a044fe3076757f5618fe69520e1d18a3001e5044e8d6e7971e722ae6",
+      "bytes": 207221,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "1a4091980b48da25a6752ee21b37e8863d1a3812316a0e11aac89ae31814660a",
+      "source": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7949019278659167,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "rope-barrier/normal-SW.png",
+      "sha256": "949d19845ed987f00a5e6df5dba676055573bc3c964d52a581885f2342eda148",
+      "bytes": 208757,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "75fffdc3d85a3b1d9612c0b1820830cf68da24a58ff983cd0ce259a23cd84adf",
+      "source": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7903919578560726,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "rope-barrier/normal-NW.png",
+      "sha256": "59ef0826a9272929df4e5fccc8c6d1594ac78912dd95791344baf103d466ccc6",
+      "bytes": 222560,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "5a7fbc83bdd2bdb70f69b27a60ad8416be02bdb1ee7e4b281c0005bb0db3a3a2",
+      "source": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7737333038264793,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "rope-barrier/normal-NE.png",
+      "sha256": "3b2441345ec6a6995655cca223a7639659b0df2272dcec70ecc3c41ea26c1cc9",
+      "bytes": 224166,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "8edb8e62a2e2c849b2f0ccd9965d8e109e5f377b5df164dd1cb7c5fe60a6fa81",
+      "source": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7631871472213955,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "rope-barrier/yaw8-N.png",
+      "sha256": "0993836283110c369c1cda29494ac8ad907fab7123e246cd7be98337d0dc0c8e",
+      "bytes": 208260,
+      "dimensions": [
+        695,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "c73e76e50eed52539b06cfb18b7e311de3acc17556a3e6070d4b67b95d45ddf6",
+      "source": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        695,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7721042304912051,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 3,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "rope-barrier/yaw8-E.png",
+      "sha256": "8ae93f3c66e2ac8b28480cc9a406128159f3c48452a3725d1e3d36f9d8b518eb",
+      "bytes": 135361,
+      "dimensions": [
+        559,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "787c655830ae805e7e3aab3da8eccb28d9f63d5631ada4626577ea1a3c4fadfb",
+      "source": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        695,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8260421748793841,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "rope-barrier/yaw8-S.png",
+      "sha256": "dd22e2749087db7cf9f1c229f8af3e6cf1460573a4e8137b0271dbda5b66a9df",
+      "bytes": 210240,
+      "dimensions": [
+        701,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "35ef30c40001bc579989e158cea14b8bc9fc8fed4f4b26f8195b351cec1ccf05",
+      "source": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        701,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7682827221080843,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 4,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "rope-barrier/yaw8-W.png",
+      "sha256": "0e33c506a93fdd71e2a3ef1cbfc4796cb0008219e9de9daf6d608bd461941858",
+      "bytes": 138776,
+      "dimensions": [
+        553,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "34acaaa57ac630f9e43abc1bc76c565538e0f31d543130c0ce1a3b2328acdc23",
+      "source": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        701,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8236990635391701,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier-corner",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "rope-barrier-corner/normal-SE.png",
+      "sha256": "1bb7423bc4d1d7e26058e814ed01f10880c61276fc0d733a74c7e95c166c3904",
+      "bytes": 210833,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "97411f274d36814323cfa0335af0e8e7d9d5163abc117be09985773c06984b4b",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6695791966504633,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier-corner",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "rope-barrier-corner/normal-SW.png",
+      "sha256": "a7aac083ca5f258906d158301795c6893d9a2f52d93376661c991f6c0c9f9288",
+      "bytes": 189639,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "7064add1740f0f8ab516bd0b63cd793e0922c91c2f6ac66e06c3d44656d94462",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7243169544856777,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier-corner",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "rope-barrier-corner/normal-NW.png",
+      "sha256": "30825dcb1b97cffbef199cdad3d088ab0cfe587d2491b276dd983d0c22d1cf87",
+      "bytes": 224842,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "b3295928b533cf69ce191aed99d181ed897cf6e15351015978ddaabcc6d99312",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6057807996866169,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 3,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier-corner",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "rope-barrier-corner/normal-NE.png",
+      "sha256": "c15d0b864ddc39d6f294e3f59103b45c505bb45400c5ac23f226f1161f3550a6",
+      "bytes": 192661,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "ec51f9d89f0e4d08e9237347a5c290a13b6f81f779e108dd07ab7472762476a8",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7276644561963121,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier-corner",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "rope-barrier-corner/yaw8-N.png",
+      "sha256": "089e24bcba49600a411f0138efcc99da3aa5bb79a6c7726b58ef62c868d30df3",
+      "bytes": 172828,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "1b2ef7f6ccb086d34f9c21933876651fd4ffa92fad840294281ce87794484769",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8092305579084728,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier-corner",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "rope-barrier-corner/yaw8-E.png",
+      "sha256": "cf6f63633d020ef0904f8379d3ddf2ef39887b2f62c67d2379a78a5f14664abb",
+      "bytes": 170958,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "8c52606c0af0a34af145eaa806689b24ab4415f1eb34e7bacb74be464ace4ad1",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8177061473460365,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier-corner",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "rope-barrier-corner/yaw8-S.png",
+      "sha256": "64fe6419f6aed48cefc71937396605c212c472eff8909de7dbf9a88754505fcd",
+      "bytes": 170968,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "7ef1c93779e3376d3b67acf9687ba72d0c197bb023b7cf08776935d041f76262",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8222415542989706,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-barrier-corner",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "rope-barrier-corner/yaw8-W.png",
+      "sha256": "fc6ca1447f2a2dd3759ffdcbfe4aa9ff5f1a7a2be8d6653996af44ce0748570e",
+      "bytes": 170010,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "2345749539a4c64274a82391433911b09ac15b22cff1bebe63f62f1e88513071",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8261283192031115,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-walkway",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "rope-walkway/normal-SE.png",
+      "sha256": "a04149f1acd4570ab035803592b2f2016678045556778b3661c386a7d81d4af0",
+      "bytes": 314441,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "bc57e94c65e96d431a166be94b37ad2f04bd842d4658236e944c428e850abb45",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6810487142897115,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-walkway",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "rope-walkway/normal-SW.png",
+      "sha256": "526949eee2c478f6da70f77d986ccb52479e2527aaf2244c45e41df6633722c2",
+      "bytes": 283790,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "b82ec54856c5232f3d4ab6689250ece9773c21471a3b8fbee63d67f5e2bad496",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7093015269796937,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-walkway",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "rope-walkway/normal-NW.png",
+      "sha256": "dbd705692a68dbcd308df0ae6da6e1534087166eb2594f78d4d306d5d29641c1",
+      "bytes": 301266,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "cf26b17de648c7809d5a46580ce081ce48fba3aba1869699a08426239c5c4e29",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6700039936000651,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-walkway",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "rope-walkway/normal-NE.png",
+      "sha256": "cac8e1d939a4091255ff865777531d8c0493c69a1aa3cad16ba68c12ad788e91",
+      "bytes": 316936,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "e9552a793d09102adb8a326d978ab9f094195813d307e9d82f72887633b7d4b5",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6694443808520867,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-walkway",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "rope-walkway/yaw8-N.png",
+      "sha256": "39613968667692afa691fd6a2a1a198bc0b6308354ad9e1b411bed6d4514db4e",
+      "bytes": 319206,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "62bfb1328583d823497a718aefbd0b86168bc7846e38319a72827105a98036cc",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5108272348262275,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-walkway",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "rope-walkway/yaw8-E.png",
+      "sha256": "d95bda71a1b2566b0537a87328bbf356344d092c6ed9c8d92f005342200c0c3a",
+      "bytes": 337296,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "09b8e710f01476e268744e40edea7c8a857865d472abb8caf97f1ed057d0d982",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5367220428917734,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-walkway",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "rope-walkway/yaw8-S.png",
+      "sha256": "d0a3730531909046204b56d72f189880a8cb4038091e8d8288388e883362072e",
+      "bytes": 295364,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "27d8c5f4c2d341c14d3e89c7790237d8c2dbe9012c98f92c87840774c5425c9d",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5163521388653597,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:rope-walkway",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "rope-walkway/yaw8-W.png",
+      "sha256": "4d7b5dbc5f15c42946a0a8a113817604540ba56d03aa7336ca5b01b4e283e98d",
+      "bytes": 341862,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "6a6b60f0d150c5e5459da9ec2d4fd42ee848c0f317ea9a3d7a59b4de8a0eb258",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5149327574409418,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:direction-signpost",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "direction-signpost/normal-SE.png",
+      "sha256": "c878481474bdb848066a3cd170d55b0efec542b9108ef7ce1b09def34fe9507c",
+      "bytes": 286384,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "b0c26445056f51710dac07d9f90edf6dda50275a19648e6855ddccafc08fcd6e",
+      "source": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7351174805216608,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:direction-signpost",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "direction-signpost/normal-SW.png",
+      "sha256": "889b405f83e5315cf4654a9284940449c365280b96fd3cd68f5b5eedee6007c3",
+      "bytes": 283370,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "12ee84235b23e2e69d2ad774a7cc3a4432f4c14e39c2e649f55e9a99ba36332a",
+      "source": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7428096121120549,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:direction-signpost",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "direction-signpost/normal-NW.png",
+      "sha256": "bbef66ab53d51fe63501482b612c77183d2d96c956a1bd0f23603b36336029ba",
+      "bytes": 257867,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "a8ed2c8ddba9a9875bfadf2efd4dea4450c5476e6d54abe99b6b5c4565a14443",
+      "source": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7551134614846526,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:direction-signpost",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "direction-signpost/normal-NE.png",
+      "sha256": "82c96c9a172ff5934a22fd54496ed8f5afed66f89f623d63dfe5fcd263710af1",
+      "bytes": 284735,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "09b189a6f97b527378334ef8f5be12d9fb3add0356212ce8bfd1116d6cedcc00",
+      "source": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7414792599884517,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:direction-signpost",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "direction-signpost/yaw8-N.png",
+      "sha256": "9a909015b2714ecae7d22d65d14d2f2ac60e96bdc16af95f000ebcf4c90f05f7",
+      "bytes": 271336,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "fab64af31060d15c670945280c7a4d5030076c498bb5dee6effe6ca54cd48a21",
+      "source": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7147908192985,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:direction-signpost",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "direction-signpost/yaw8-E.png",
+      "sha256": "856ac815ff03ba85c4327f2da5279e484bdd00b968c837c10cf4605e38bc2cd5",
+      "bytes": 140578,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "7640b1f5b7a9977417c6a0e9f1e89399b1f2740f46baa6c619573b010f4f7323",
+      "source": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8694194526478586,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:direction-signpost",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "direction-signpost/yaw8-S.png",
+      "sha256": "ce88a698692356db6613d6a8c73c559dce770186bcf6b8949b87cc64babc7d41",
+      "bytes": 266879,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "d97d6e0e331886762c191f77a87dfa3bc388a2bfbdbbfd26923e856d16dc938a",
+      "source": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7153911311554223,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:direction-signpost",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "direction-signpost/yaw8-W.png",
+      "sha256": "bb7d8bc55c643fd46047af8306ea52ab68911a3494447c35b3ca53bf8bd169dd",
+      "bytes": 150694,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "58fb65ccbd4c991dc39fa3312667859c101e38284fbce71b83b8815c8a08e89d",
+      "source": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8478743618506902,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:gold-tee-markers",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "gold-tee-markers/normal-SE.png",
+      "sha256": "e3abf75fd717dc8b187a505019f09d7d1af0fbd7ee9337d0b858a8c409a527a5",
+      "bytes": 307160,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "1bd4632006591315c9995f72a572e3347359d55756cf16538992d5d46de2d7af",
+      "source": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6346695359538472,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:gold-tee-markers",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "gold-tee-markers/normal-SW.png",
+      "sha256": "14229f29792b13189930afa25ea5bdaea3b355ff290c8a9331b061c0fff545cf",
+      "bytes": 300692,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "ed35035b3249dc7e9d8e5ad4c23f2bd2e256aaaefffd6572874799009adf9e5b",
+      "source": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6424659590109099,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:gold-tee-markers",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "gold-tee-markers/normal-NW.png",
+      "sha256": "8d13eec4a414f45e28e903f4ab7f47fc5353cf2000260d46183ff3e02e85c65e",
+      "bytes": 302793,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "bb5d6e38ce4bcd5638705ebb6195d4354ec9444a6a8cfdb147bafdcd00cf61b8",
+      "source": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6052186432443295,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:gold-tee-markers",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "gold-tee-markers/normal-NE.png",
+      "sha256": "b27b9b47886080ae695290a0b07748d1bed939eda14127bb1a2a6ae24ea9b048",
+      "bytes": 315193,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "a2bbeb410fa4a0e83bc19686698253d8205982e7ce2acfa660417ffb042a5c52",
+      "source": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.6322682885261581,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:gold-tee-markers",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "gold-tee-markers/yaw8-N.png",
+      "sha256": "d97a18548f5b4e8983eeb5e75b98f0d1a07a05b003157f172d642c3fc48ebfce",
+      "bytes": 483093,
+      "dimensions": [
+        768,
+        512
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "d6c5b2627264e70915bac13c9c3647aacb2441c109d5afa9c6f8f6332fa5ba23",
+      "source": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        768,
+        512
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7219721476236979,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:gold-tee-markers",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "gold-tee-markers/yaw8-E.png",
+      "sha256": "bf603af5b48b6c47bde1c0c1aa029f169ff697c217ecbff5d576e29d277429e3",
+      "bytes": 433380,
+      "dimensions": [
+        768,
+        512
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "98933b8ac9754a411a3a77524ab406ce9234329a794f1f312ba059323c939c0a",
+      "source": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        768,
+        0,
+        1536,
+        512
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7921371459960938,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:gold-tee-markers",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "gold-tee-markers/yaw8-S.png",
+      "sha256": "e47c89659ea70c0413f4eb6844c83fa2bd4d1cf1005ed1beceae66da57ecc9e1",
+      "bytes": 483308,
+      "dimensions": [
+        768,
+        512
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "ff9130950173179ad27ccf8db804941f730db3c87f9323518cf7e0521c6599f7",
+      "source": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        512,
+        768,
+        1024
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7135162353515625,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:gold-tee-markers",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "gold-tee-markers/yaw8-W.png",
+      "sha256": "6ecdd6cd622a957d99ba818ecaa52178df5da334ccf6169ff792c7fe4d36551f",
+      "bytes": 430499,
+      "dimensions": [
+        768,
+        512
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "adbfbf0084f2e6d42eebcef69e445a8057f639d7f25a51f015a8e80ce13cf30e",
+      "source": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        768,
+        512,
+        1536,
+        1024
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.79461669921875,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:hole-12-sign",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "hole-12-sign/normal-SE.png",
+      "sha256": "0f03f004bd0ba5bc662d90ac092f2dd805b4d87eed858cafcee9985eabdf3a99",
+      "bytes": 236633,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "649d4e7ea514dc47cc9358a05610896bed8b0fef03d8a678d89183feba321c72",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7719018439240046,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:hole-12-sign",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "hole-12-sign/normal-SW.png",
+      "sha256": "149897627097c723cffa612c6c5a3ef3c9eb1f8820b79d533e536fd15812b966",
+      "bytes": 216033,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "8aa2505cb2091602ffca7c778be290f52eb29529f735a27a530e2e05b4691c1f",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7819977666363968,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:hole-12-sign",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "hole-12-sign/normal-NW.png",
+      "sha256": "e1a0ff778899a64b74c7d375f93d33b02246312b99a9f4a2ae630293c0260096",
+      "bytes": 227663,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "ee50e04fbda172cff79b139fec240d4614fad7731d77824dd591e2e0d3489dcb",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7690808869353316,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:hole-12-sign",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "hole-12-sign/normal-NE.png",
+      "sha256": "0f647dd396b8c455d505c7bd86eb03c45aa3feeed1c00f9613b2032cae647fc2",
+      "bytes": 245957,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "147169c31e5d4fd082de932c6eb7712638b99814ee33a354441ca4ca30907108",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7635661576734354,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:hole-12-sign",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "hole-12-sign/yaw8-N.png",
+      "sha256": "746ce07279129b21de77564fffe545380bcc8dd687bd485b30a203d8ca90b240",
+      "bytes": 288714,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "f04296aa6c16603b517dd167859113a7939b1a6cc0addf1e2684903c1b0c21a1",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7110566760528987,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:hole-12-sign",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "hole-12-sign/yaw8-E.png",
+      "sha256": "075b1c8605e6eafb2c043d2a82a33e50a2ba7dbf62bf4630eda6d004ca52783a",
+      "bytes": 112833,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "9eaab75e9fb54d718a9d64a07100ddec0afd6738b707da1bdc994ad570035f5d",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8936481409410143,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:hole-12-sign",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "hole-12-sign/yaw8-S.png",
+      "sha256": "e38d684fe9e65c85dec0ffb1b07aa3d0e8bee9344efd2bc66a2814059c7c10f4",
+      "bytes": 260641,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "4af21b9d0b0d5bce53d0f64dc12b5345c52cf6c9c3539575e875850135fb14d0",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7219386003067695,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:hole-12-sign",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "hole-12-sign/yaw8-W.png",
+      "sha256": "d8f47544dffb03baef67e2983cf7c595eb33e6158d6ca6933479d954bacfa6e2",
+      "bytes": 116609,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "70de36e0e98c017e3ba54aa11701f7ae1d405e2b602a2551085449cbaf3d304d",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.8879171976628537,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:course-map-board",
+      "family": "normal",
+      "guide_direction": "SE",
+      "file": "course-map-board/normal-SE.png",
+      "sha256": "524499f343c042f6f8011735a929794542a877f089116fd838aeeb2cc7a50c9d",
+      "bytes": 470657,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "9d0256f8a8171247aa45c7aa4f6ee02d2dc10f6fae765950ea711de80d390a91",
+      "source": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5310979347745906,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:course-map-board",
+      "family": "normal",
+      "guide_direction": "SW",
+      "file": "course-map-board/normal-SW.png",
+      "sha256": "30b268abf131a2c449ec77825a1fdcf01eb1e530907d7d1add566b6b0dff778f",
+      "bytes": 370961,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "ceb60a1d5460275d73f1a245bd8c2b0096fed0ea4de76f5bfe556c03bb497c51",
+      "source": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.607825929911047,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:course-map-board",
+      "family": "normal",
+      "guide_direction": "NW",
+      "file": "course-map-board/normal-NW.png",
+      "sha256": "ec3ef3b4469bb7f882e875b0894de282c05eb6335508f2f338067a893d501584",
+      "bytes": 390180,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "fe8a5369a2e605866d03fea4037bbae9896952a6c72c02bcf78ea2983f564dce",
+      "source": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5556420411620613,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:course-map-board",
+      "family": "normal",
+      "guide_direction": "NE",
+      "file": "course-map-board/normal-NE.png",
+      "sha256": "cabbb8a0af23476d1dd9e135edab5670279631caa92fa4114d5103f3efa0efca",
+      "bytes": 490261,
+      "dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "17eb7ae10d9ae81e7b0a930e3d5f3933288dd3563eb269f0664f754798d00a9d",
+      "source": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.4901800681201336,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:course-map-board",
+      "family": "yaw8",
+      "guide_direction": "N",
+      "file": "course-map-board/yaw8-N.png",
+      "sha256": "69c350198d78c06573dab25e2caf0f6f9ad069c6ea9447480f882b055f82eba2",
+      "bytes": 456285,
+      "dimensions": [
+        627,
+        626
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "6d6db95ed2a9ade090182de9be169fbece8276cbe918789df459da77c61f66c2",
+      "source": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+      "source_cell": "TL",
+      "rectangle_ltrb": [
+        0,
+        0,
+        627,
+        626
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5447131479584817,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:course-map-board",
+      "family": "yaw8",
+      "guide_direction": "E",
+      "file": "course-map-board/yaw8-E.png",
+      "sha256": "08992e73a61f89b56c9d7405d3eb06f1797d4bd8d085c0e4130e9c36f894f92c",
+      "bytes": 197848,
+      "dimensions": [
+        627,
+        626
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "c16b441c0f74cdf015e801be96e210c0cd9e9cee00a044caa05290b2f4784895",
+      "source": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+      "source_cell": "TR",
+      "rectangle_ltrb": [
+        627,
+        0,
+        1254,
+        626
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7997793641815838,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:course-map-board",
+      "family": "yaw8",
+      "guide_direction": "S",
+      "file": "course-map-board/yaw8-S.png",
+      "sha256": "17f2a618b33569f8e80821266838aef3ea4a432b76873a9a2f92685b4568b083",
+      "bytes": 408152,
+      "dimensions": [
+        627,
+        628
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "05aee4e6921fa23b3213a32d2b6ccf59fb96917f37b028e63484999149b6a426",
+      "source": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+      "source_cell": "BL",
+      "rectangle_ltrb": [
+        0,
+        626,
+        627,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.5571064313940614,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    },
+    {
+      "subject": "newprop:course-map-board",
+      "family": "yaw8",
+      "guide_direction": "W",
+      "file": "course-map-board/yaw8-W.png",
+      "sha256": "ae0d3f8fcbd45e583d2e4c8454a785f30bfa7901b135d81a722fbc81a7bfe77e",
+      "bytes": 199486,
+      "dimensions": [
+        627,
+        628
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "74431e11663026bb4d33082db31efc785de0260ab22a13a6b28679c67fb305d8",
+      "source": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+      "source_cell": "BR",
+      "rectangle_ltrb": [
+        627,
+        626,
+        1254,
+        1254
+      ],
+      "operation": "lossless-native-rectangle-crop",
+      "native_pixels_verified": true,
+      "zero_alpha_fraction": 0.7949389977549548,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "runtime_imported": false,
+      "owner_approved": false
+    }
+  ]
+}

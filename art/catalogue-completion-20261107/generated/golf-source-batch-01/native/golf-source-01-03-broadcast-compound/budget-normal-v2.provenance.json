@@ -1,0 +1,41 @@
+{
+  "key": "golf-source-01-03-broadcast-compound",
+  "condition": "budget",
+  "runtimeTarget": {
+    "eventTypeId": "broadcast",
+    "eventName": "Broadcast compound",
+    "currentSpriteSubjectId": "business:golf-cart-garage",
+    "newArtSubjectProposal": "golf:event-broadcast-compound",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 15,
+      "depth": 10
+    },
+    "footprintMetres": {
+      "width": 30,
+      "depth": 20
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-aa20f29a-280c-439f-a27a-d5f1c77267fe.png",
+  "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v2.png",
+  "prompt": "Paint the FOUR exact technical world-model views in REFERENCE1 as finished hand-painted miniature game art, with material/style/condition ofREFERENCE2 ONLY. Reference1controlsALLgeometry/cameras/featurepositions; reference2's earlier spatialerrorsmustnotbe copied. Followtheguide's exact fixed arrangement andvehiclebearings: broadcasttruckleft-X, uplinkvanrear-right+X/+Y, BOTHvehiclefronts-Y, generatorfront-right, benchandcablereelfixed. Camera-dependentocclusionisintentional; don'trearrangethings tomakeallvisible. Preserveopenfrontservicegap andtransparentemptyspaces. Useold1950s/1960struckbodieswithworking1985broadcastgear; no moderncabs. Tired1950s/1960struck bodies with repainted cream/green panels, repair patches and older cable equipment. Use ordinary working equipment, not fantasy shanties. Keep exactprojectedfootprint/silhouette/componentlayout ineachquarter. Four genuine45degreecorners, orthographic30degreesDOWN, same SE SW / NW NE cellsasguide. Late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, lamps/screensoff. Complete separatedopaqueobjects on genuinelyzeroalpha transparentbackground, generouscellmargins/equalphysicalscale. No people, plants, groundplate, road, scenery, UI/text/labels/grid/haze. Raiseddeck onlywhereexplicitlyshowninguide. Preserveoriginalnativequality/detail.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v1.png"
+  ],
+  "status": "native guided correction candidate; independent physical feature/alpha review pending",
+  "runtime_imported": false,
+  "sha256": "b50b463badd03c675ba5411ee62cf28d15bc6e34d2698c9406bd7d4d8f09001d",
+  "native_bytes_preserved": true
+}

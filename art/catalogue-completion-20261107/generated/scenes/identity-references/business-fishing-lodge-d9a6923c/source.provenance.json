@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:fishing-lodge",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-fishing-lodge/NE.png",
+  "sourceSha256": "e4cabb6c54a9984e96eb005297a00c7ef47e1a509869da4e152cd047a8f3efc5",
+  "output": "identity-references/business-fishing-lodge-d9a6923c/source.png",
+  "outputSha256": "e4cabb6c54a9984e96eb005297a00c7ef47e1a509869da4e152cd047a8f3efc5",
+  "width": 653,
+  "height": 595,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      653,
+      595
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-fishing-lodge\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review",
+    "integrationStatus": "ready",
+    "integrationReason": "2026-10-25 source review: all4physicalcorners inspected atvisible-boundzoom overmagenta, correctclockwisefacadecycle/fixed2:1camera, coherent MapleBeanmattepalette/detail/upper-rightdusk, no surroundingfloor/haze. Singleassembly preservesunchanged3nativePNGhashes, canonicalreassignments preserveall4nativebytes. Runtime scale stillrequires placementcheck."
+  },
+  "sourceRegistration": {
+    "id": "business:fishing-lodge",
+    "version": "business-fishing-lodge-4views-v5",
+    "files": {
+      "NE": "e4cabb6c54a9984e96eb005297a00c7ef47e1a509869da4e152cd047a8f3efc5",
+      "SE": "c8a7687ae08602b2fe9199d40cb3fc4d72f99af981761d9905658867ab7e0d65",
+      "SW": "8414fdc56c1f44d2a7b052340c412456f9b1d7d04f29c5f600bc65b6a8601b61",
+      "NW": "4fb384baa5d84aa2452e769682c6496c19405a432deee25f8088466008750793"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-1-0.webp",
+    "atlasSha256": "aa782da3ea205d00d59b9d94528cd5fc11a02dbc97cd18a4e6336792ea6899ff",
+    "runtimePage": 19,
+    "localPage": 1,
+    "uv": [
+      0.265625,
+      0.265625,
+      0.515625,
+      0.46826171875
+    ],
+    "crop": {
+      "left": 544,
+      "top": 544,
+      "width": 512,
+      "height": 415
+    },
+    "native": "art/theme-consistency/exports/buildings/business-fishing-lodge.native.png",
+    "nativeSha256": "6b65789b23281c0f1acaedfe34117fa8cd28a102ed5ce58953287f4369c9245d"
+  },
+  "originalBusinessSourceCell": {
+    "id": "fishing-lodge",
+    "sourceSheet": "sliced/builtin/fishing-buildings.png",
+    "sourceCrop": [
+      17,
+      112,
+      670,
+      541
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

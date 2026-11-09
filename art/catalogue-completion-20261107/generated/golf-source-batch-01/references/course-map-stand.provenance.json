@@ -1,0 +1,28 @@
+{
+  "id": "newprop:course-map-stand",
+  "name": "Course map stand",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-stand.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+  "sourceSheetSHA256": "cb1440cc480d50703ec0decdc2a284a059f2a5a20828240edc8c001c759c0c6f",
+  "referenceSHA256": "85f92995cd1e8863970f42028f5854caa6d4d6a0c4cc688c4fc46a7db221eebf",
+  "sourcePixelRectXYWH": [
+    60,
+    637,
+    507,
+    536
+  ],
+  "originalCellLabel": "bottom left",
+  "referenceSize": [
+    507,
+    536
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "MISLABELLED: actual image is an ornate round patio table with four chairs and striped umbrella. Excluded from all job generation references; does not depict a map stand.",
+  "sourceOnlyNotReleaseProof": true,
+  "excludedFromJobReferenceSets": true
+}

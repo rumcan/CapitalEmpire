@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-ball-bucket-stand",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch02/ball-bucket-stand/normal-NE.png",
+    "sha256": "f9f55099e82470eb0b3f154b9b96a37701157b1aa0959ae6bcd20fa891b04f7a",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 95,
+    "top": 1,
+    "width": 416,
+    "height": 591
+  },
+  "output": "normalNE.native.png",
+  "sha256": "f516e6703dac6c5841389592025ad6aab83d782b2740aa21945456fcc835913a",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

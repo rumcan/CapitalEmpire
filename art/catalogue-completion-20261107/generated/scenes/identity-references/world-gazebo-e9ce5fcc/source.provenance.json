@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:gazebo",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-gazebo/NE.png",
+  "sourceSha256": "ab45762590d894cdf5fea80a2a2e8e2abe1425756ee7c02affa9be7799b70aa4",
+  "output": "identity-references/world-gazebo-e9ce5fcc/source.png",
+  "outputSha256": "ab45762590d894cdf5fea80a2a2e8e2abe1425756ee7c02affa9be7799b70aa4",
+  "width": 195,
+  "height": 215,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      195,
+      215
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-gazebo\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "world:gazebo",
+    "version": "world-gazebo-4views-v2",
+    "files": {
+      "NE": "ab45762590d894cdf5fea80a2a2e8e2abe1425756ee7c02affa9be7799b70aa4",
+      "SE": "cc58f500269aec32b690fb4eb2384dafb8b6385511e00a9ea3fc1383f6cb40e9",
+      "SW": "1cbc5f8780847c91b01e5775fb261d8ebb2d83253ecce75ff52dca6d26227844",
+      "NW": "22a3dea553f351936be4b3ca7989eab483ee89167d31b47f273f5c78272139b9"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-12-0.webp",
+    "atlasSha256": "31dde0992d4d538ce56a04bf6d0c60db791aca99c04fad6259f266ba9c973a58",
+    "runtimePage": 12,
+    "localPage": 12,
+    "uv": [
+      0.296875,
+      0.28125,
+      0.39209,
+      0.38623
+    ],
+    "crop": {
+      "left": 608,
+      "top": 576,
+      "width": 195,
+      "height": 215
+    },
+    "native": "art/theme-consistency/exports/buildings/world-gazebo.native.png",
+    "nativeSha256": "918435653859060b750ad512a8879946262eb004df9d14f129ff29ebe8cfdd69"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

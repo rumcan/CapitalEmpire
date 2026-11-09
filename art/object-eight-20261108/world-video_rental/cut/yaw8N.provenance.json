@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:video_rental",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../src/yaw8N.png",
+    "sha256": "33c0484db9303e05754775659417ed15f13a7baab5337274417e0fdec5225db7",
+    "width": 590,
+    "height": 399
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 590,
+    "height": 399
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 582,
+    "height": 391
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "00fed7aaa439eec68cb570d1372f92b8c28aedba2e3f0a0b75cfdf69a522b0c0",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

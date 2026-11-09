@@ -1,0 +1,23 @@
+[
+  {
+    "key": "golf-source-01-03-broadcast-compound",
+    "family": "normal",
+    "condition": "budget",
+    "version": 3,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v3.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v2.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v1.png"
+    ],
+    "prompt": "TARGETED satellite dish correction to REFERENCE1 only. It is one physical broadcast compound in four views. In the two rear views TOP-RIGHT and BOTTOM-LEFT the small uplink van's roof dish was wrongly replaced by a rectangular slatted Yagi aerial. Replace that wrong roof object with the SAME SINGLE solid smooth circular PARABOLIC SATELLITE DISH from the other two views, mounted at exactly the same fixed roof position and pointing in the same fixed world direction. Use REFERENCE2 only for the dish's world position, inclination and occlusion. Its back is a smooth convex curved bowl with a central mount, not flat bars, rungs, antenna rods, ladder, grating, solar panel or rectangular plate. Keep all vehicles, their headings, shapes, doors, wheels, roof vents, material wear, workbench, generator, cable reel and exact four cameras/layout unchanged. Retain the two alreadycorrect dish views. Maintain equal scale and generous gutters; late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT. Preserve highquality painterly miniature detail. Genuinezeroalpha transparent background. No new objects, ground or scenery.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-ca7bfe6f-31d9-40b3-8065-c250c2728446.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v2.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "c3ba33c5a46a6f26661c20484a812b919549fa9bf4a1a18d1dcf1e7a377f9316",
+    "native_bytes_preserved": true
+  }
+]

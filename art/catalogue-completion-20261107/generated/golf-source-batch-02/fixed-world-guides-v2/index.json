@@ -1,0 +1,190 @@
+{
+  "schema": 1,
+  "technicalOnly": true,
+  "sourceOnly": true,
+  "nativeGeneratedHere": false,
+  "runtimeIntegrated": false,
+  "ownerApproved": false,
+  "purpose": "Five remaining batch02 props: fixed front/back and component counts for normal/yaw native source generation.",
+  "sourceCoordinates": "Metres: physical RIGHT +X, LEFT -X, FRONT -Y, REAR +Y, height +Z. The whole model rotates; features never reattach.",
+  "camera": "Orthographic 30 degrees down; normal 2x2 SE/SW/NW/NE at beta -45; yaw 2x2 N/E/S/W at beta +8. Both rotate the physical model by 0/90/180/270 degrees. Native camera approval is not inferred.",
+  "finalStyle": "Existing painterly game style; late-afternoon daylight, upper-right sun and lower-left shadows, transparent background. Guides only.",
+  "models": [
+    {
+      "ppm": 255,
+      "runtimeSubjectId": "newprop:water-tank-stall",
+      "proposedOverallMetres": [
+        1.77,
+        1.37,
+        1.87
+      ],
+      "fixedIdentity": "Closed galvanized cistern; exactly two FRONT (-Y) taps above an open trough. Fill cap stays REAR-LEFT (-X,+Y); towel and basket stay physical RIGHT (+X); bucket stays FRONT-RIGHT. Four legs, rear V braces. No sign, 12 plaque, map, tarp, plants or floor slab.",
+      "nativeSourceVersion": "normal-v2.png",
+      "symmetryNote": "Front taps/trough and rear braces distinguish front and rear views.",
+      "key": "water-tank-stall",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\water-tank-stall\\guides\\water-tank-stall-world-model-v1.json",
+      "meshSHA256": "e23231f5893bc3f6a38f15b8cab43989abcd779555ca1f1ace50b218569ef7de",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\water-tank-stall\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\water-tank-stall\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\water-tank-stall\\guides\\normal-world-v1.calibration.json",
+          "sha256": "af93768dc925f387526ed61ec391f93066e7e62c7c44e6d1d18edd2a9f5a0bdc"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\water-tank-stall\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\water-tank-stall\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\water-tank-stall\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "0ab98b8202ebe9d1aedd265b98d847399f46edac6f64d922c635e9fe3b0fcb55"
+        }
+      },
+      "nativeIdentityReference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\water-tank-stall\\normal-v2.png",
+        "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b"
+      },
+      "nativeArtApproval": false,
+      "dimensionsAreDesignProposalsOnly": true
+    },
+    {
+      "ppm": 230,
+      "runtimeSubjectId": "newprop:direction-signpost",
+      "proposedOverallMetres": [
+        1.62,
+        0.4,
+        2.22
+      ],
+      "fixedIdentity": "Exactly four arrow boards: two point physical LEFT (-X), two RIGHT (+X), all in one fixed XZ plane. FRONT (-Y) icons: upper-left golf, upper-right food, lower-left toilets, lower-right exit. REAR (+Y) has four plain backs. Never radial or re-aimed arrows.",
+      "nativeSourceVersion": "normal-v1.png",
+      "symmetryNote": "Board silhouettes are bilaterally symmetric; front-only pictograms and plain backs distinguish front and rear.",
+      "key": "direction-signpost",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\direction-signpost\\guides\\direction-signpost-world-model-v1.json",
+      "meshSHA256": "34656e4532b17939fce461008a9b0390eb25783319950725d86fa1036720ade1",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\direction-signpost\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\direction-signpost\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\direction-signpost\\guides\\normal-world-v1.calibration.json",
+          "sha256": "e933de05e8d7fa4baeab9e509efeb21365c6ec4ed12c2e80699a2ebceb128851"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\direction-signpost\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\direction-signpost\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\direction-signpost\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "bd7bda4ceddb309a7377caeb658bc477ff5f8579206730e1312d387a42d31fb8"
+        }
+      },
+      "nativeIdentityReference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\direction-signpost\\normal-v1.png",
+        "sha256": "317b54ad6750cd145f7a7772b7fcc7a1e5cf6b5773aca951fea839e0d1c1ee00"
+      },
+      "nativeArtApproval": false,
+      "dimensionsAreDesignProposalsOnly": true
+    },
+    {
+      "ppm": 195,
+      "runtimeSubjectId": "newprop:course-map-board",
+      "proposedOverallMetres": [
+        2.28,
+        0.79,
+        2.45
+      ],
+      "fixedIdentity": "Broad cream map only on FRONT (-Y); plain green planked REAR (+Y) with two horizontal battens. Green gable roof ridge runs along Y. Exactly two unlit lanterns attach to FRONT left/right; two structural posts with individual feet. No planters, plants or paving slab.",
+      "nativeSourceVersion": "normal-v1.png",
+      "symmetryNote": "Map/front lanterns and plain rear braces distinguish opposite cameras; do not move lamps onto rear.",
+      "key": "course-map-board",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\course-map-board\\guides\\course-map-board-world-model-v1.json",
+      "meshSHA256": "d160f1ca1ced929ab6ce0cd2b82621eda6b08d3c63551fb5b4b9cb6adb35111d",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\course-map-board\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\course-map-board\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\course-map-board\\guides\\normal-world-v1.calibration.json",
+          "sha256": "68facf8d13f4417d12007c5e4381d905e9122d197c112fe156aa723dc6b2ce87"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\course-map-board\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\course-map-board\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\course-map-board\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "e0a3d54c40a7b06e9106b9a16b21c8f425442f88f1c4491b63ccb8c0dc95fe7f"
+        }
+      },
+      "nativeIdentityReference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\course-map-board\\normal-v1.png",
+        "sha256": "9cad2e7a817441125f1c332d1f285164faf9de2ae655b8c17dc101266ea7e33e"
+      },
+      "nativeArtApproval": false,
+      "dimensionsAreDesignProposalsOnly": true
+    },
+    {
+      "ppm": 195,
+      "runtimeSubjectId": "newprop:rope-barrier",
+      "proposedOverallMetres": [
+        3.28,
+        0.28,
+        0.98
+      ],
+      "fixedIdentity": "Exactly three stanchions in one straight X line at (-1.5,0), (0,0), (1.5,0); exactly two cream rope spans with fixed 0.20 m sag. Brass attachment plates stay FRONT (-Y). No L shape, fourth post or third span. Individual round feet only; no floor strip.",
+      "nativeSourceVersion": "normal-v1.png",
+      "symmetryNote": "Simple barrier is largely symmetric. Opposite views can naturally have similar silhouettes; fixed front brass plates are visible only from appropriate sides. Do not invent new parts merely to force uniqueness.",
+      "key": "rope-barrier",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\rope-barrier\\guides\\rope-barrier-world-model-v1.json",
+      "meshSHA256": "9ff695328c6a35f471c21d4a5869c7616858cc8271575d297c589beaa8ef9729",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\rope-barrier\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\rope-barrier\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\rope-barrier\\guides\\normal-world-v1.calibration.json",
+          "sha256": "1b0e543c83926f6a22d170bd3575148412c94ffa251e4154d3eed2ba09a24449"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\rope-barrier\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\rope-barrier\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\rope-barrier\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "1277cf9dad25379d01e3f909c9fa031fe218fb5d7d57906e8685d873e56d35db"
+        }
+      },
+      "nativeIdentityReference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\rope-barrier\\normal-v1.png",
+        "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6"
+      },
+      "nativeArtApproval": false,
+      "dimensionsAreDesignProposalsOnly": true
+    },
+    {
+      "ppm": 700,
+      "runtimeSubjectId": "newprop:gold-tee-markers",
+      "proposedOverallMetres": [
+        0.676,
+        0.216,
+        0.31
+      ],
+      "fixedIdentity": "Exactly two gold golf-ball markers at (-0.23,0,0.202) and (+0.23,0,0.202): fixed 0.46 m centre gap on one world X line. Each has a short individual round foot. No third ball, changing gap, grass bed, slab or connecting rail. Final painted balls keep golf dimples; guide faceting is technical only.",
+      "nativeSourceVersion": "normal-v1.png",
+      "symmetryNote": "Two matching spherical markers are genuinely symmetric; some opposite-camera silhouettes naturally repeat. Do not add asymmetry to make fake unique faces. Fixed bolts, world spacing and lighting remain consistent.",
+      "dimensionNote": "Compact 0.46 m centre spacing is a source-geometry proposal matching current painted proportions, superseding the earlier unmeasured 1 m proposal. Runtime tee width is unchanged.",
+      "key": "gold-tee-markers",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\gold-tee-markers\\guides\\gold-tee-markers-world-model-v1.json",
+      "meshSHA256": "0a05a89dd17be6558adf9a0118efd7e5849cc55c440f8449ac9a21ed7f2425be",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\gold-tee-markers\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\gold-tee-markers\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\gold-tee-markers\\guides\\normal-world-v1.calibration.json",
+          "sha256": "1d4eae137dec1a564db3930bdd652dc1f6529e9deafa972c66ba65ea4684cdc3"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\gold-tee-markers\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\gold-tee-markers\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\gold-tee-markers\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "d6f37fa0dceafc7f2246d493706d8e32c73dcdbd6a039d4b12561ea9b65ccb84"
+        }
+      },
+      "nativeIdentityReference": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\gold-tee-markers\\normal-v1.png",
+        "sha256": "f1dd757238cb786feeff82a858c46dc9a9aaa22dcbf5a68d4f12c6b3873d874d"
+      },
+      "nativeArtApproval": false,
+      "dimensionsAreDesignProposalsOnly": true
+    }
+  ]
+}

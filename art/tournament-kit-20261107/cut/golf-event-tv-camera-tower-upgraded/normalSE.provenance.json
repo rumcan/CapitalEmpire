@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-tv-camera-tower-upgraded",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../../batch01/tv-camera-tower/upgraded/normal-SE.png",
+    "sha256": "01c58f3ee4ef9af99f500f4f408d6b621287a08d6a98770aaac4bc042c70254d",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 179,
+    "top": 64,
+    "width": 269,
+    "height": 500
+  },
+  "output": "normalSE.native.png",
+  "sha256": "e63704679e4d1669647694f9879746d0089fc39b979de1e00dd97113c60bcf81",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

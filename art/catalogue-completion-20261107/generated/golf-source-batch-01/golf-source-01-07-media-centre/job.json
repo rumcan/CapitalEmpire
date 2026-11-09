@@ -1,0 +1,104 @@
+{
+  "jobId": "golf-source-01-07-media-centre",
+  "priority": 7,
+  "status": "brief-ready-for-root-native-generation",
+  "sourceOnly": true,
+  "nativeGeneratedByThisJob": false,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "action": "New purpose-built media centre replacing the clubhouse stand-in.",
+  "requiresOrdinary1950sBudgetRedesign": true,
+  "functionalIdentity": "A24x16m low single-storey modular press centre: plain joined prefab units under one shallow gabled/corrugated roof, double central front entrance, three window groups on each side of the entrance, rear service door, two rear vents and two small roof antenna masts. Practical press-work building, not grand clubhouse or tiny microphone shack. No media staff/vehicles baked in.",
+  "referenceImages": [
+    {
+      "runtimeSubjectId": "newprop:scaffold-booth",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\scaffold-booth.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Primitive timber/tarp/corrugated booth with microphone board and modern laptop on desk. Media-work function only. Reject shack construction and laptop for1985; use modular press building with paper/CRT-era equipment if visible.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\scaffold-booth.provenance.json"
+    }
+  ],
+  "conditions": {
+    "budget": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Older1950scommunity-event prefab: faded cream boards, patched corrugated roof and basic windows; structurally ordinary and believable. Source shack is function-only reference; reject its laptop/log/tarp architecture."
+    },
+    "upgraded": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Clean maintained1980sprefab press centre with green trim, neat windows, proper entrance canopy and antennas. No futuristic glazed office or luxury mansion."
+    }
+  },
+  "sourceSheetsPerCondition": [
+    {
+      "kind": "normal",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+    },
+    {
+      "kind": "yaw8",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+    }
+  ],
+  "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+  "generationConstraints": [
+    "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+    "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+    "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+    "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+    "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+    "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+  ],
+  "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+  "runtimeTarget": {
+    "eventTypeId": "media",
+    "eventName": "Media centre",
+    "currentSpriteSubjectId": "business:golf-clubhouse",
+    "newArtSubjectProposal": "golf:event-media-centre",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 12.0,
+      "depth": 8.0
+    },
+    "footprintMetres": {
+      "width": 24.0,
+      "depth": 16.0
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "existingFourCorners": {
+    "usableCorrectTargetCornersFound": false,
+    "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+  },
+  "promptCore": "A24x16m low single-storey modular press centre: plain joined prefab units under one shallow gabled/corrugated roof, double central front entrance, three window groups on each side of the entrance, rear service door, two rear vents and two small roof antenna masts. Practical press-work building, not grand clubhouse or tiny microphone shack. No media staff/vehicles baked in. For budget: Older1950scommunity-event prefab: faded cream boards, patched corrugated roof and basic windows; structurally ordinary and believable. Source shack is function-only reference; reject its laptop/log/tarp architecture. For upgraded: Clean maintained1980sprefab press centre with green trim, neat windows, proper entrance canopy and antennas. No futuristic glazed office or luxury mansion. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+}

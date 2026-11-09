@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:video_rental",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../src/normalNE.png",
+    "sha256": "44734473681765f9d5b73feff78ee776c0caedf74d226f22d6d998aea055b2d8",
+    "width": 609,
+    "height": 462
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 609,
+    "height": 462
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 601,
+    "height": 454
+  },
+  "output": "normalNE.native.png",
+  "sha256": "e90b678e9474f357c0fd3c23cd31f38b451c1b4134cb996b693a12ae03c61607",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

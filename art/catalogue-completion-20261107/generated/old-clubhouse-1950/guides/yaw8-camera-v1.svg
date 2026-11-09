@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1600" viewBox="0 0 1600 1600">
+<title>Technical orthographic yaw8 camera proxy; not final artwork</title>
+<polygon data-face="N-back-roof" points="127.676281,279.656902 672.323719,317.929505 698.349089,273.923465 153.701651,235.650863" fill="#c2c9cf" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="N-right-gable" points="636.936304,564.349137 685.925236,390.061957 685.925236,275.746604 661.430770,317.164053 636.936304,450.033784" fill="#d4c1a6" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="N-front-roof" points="101.650911,420.830992 646.298349,459.103594 672.323719,317.929505 127.676281,279.656902" fill="#a8b3be" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="N-front" points="114.074764,527.607439 636.936304,564.349137 636.936304,450.033784 114.074764,413.292085" fill="#b4d7ca" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="183.777389,498.255298 288.349697,505.603637 288.349697,459.877496 183.777389,452.529156" fill="#4a6f61" stroke="#263d35" stroke-width="1"/>
+<polygon points="351.528800,544.337865 399.457774,547.705854 399.457774,463.874595 351.528800,460.506606" fill="#4a6f61" stroke="#263d35" stroke-width="1"/>
+<polygon points="462.636877,517.850870 567.209185,525.199210 567.209185,483.283580 462.636877,475.935241" fill="#4a6f61" stroke="#263d35" stroke-width="1"/>
+<text x="40" y="42" fill="#263d35" font-family="Arial" font-size="22">N: 8° offset, 30° down — TECHNICAL GUIDE</text>
+<polygon data-face="E-front" points="1337.545481,619.582986 1411.028879,358.152216 1411.028879,243.836863 1337.545481,505.267633" fill="#b4d7ca" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="1347.430411,550.437068 1362.127091,498.150914 1362.127091,452.424772 1347.430411,504.710926" fill="#4a6f61" stroke="#263d35" stroke-width="1"/>
+<polygon points="1371.006335,500.855968 1377.742313,476.891481 1377.742313,393.060222 1371.006335,417.024709" fill="#4a6f61" stroke="#263d35" stroke-width="1"/>
+<polygon points="1386.621557,411.007324 1401.318236,358.721170 1401.318236,316.805540 1386.621557,369.091694" fill="#4a6f61" stroke="#263d35" stroke-width="1"/>
+<polygon data-face="E-back-roof" points="1161.727397,452.740733 1238.272603,180.417014 1053.092474,215.988354 976.547268,488.312073" fill="#c2c9cf" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="E-front-roof" points="1346.907526,514.337443 1423.452732,242.013724 1238.272603,180.417014 1161.727397,452.740733" fill="#a8b3be" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="E-left-gable" points="988.971121,595.088520 1337.545481,619.582986 1337.545481,505.267633 1163.258301,447.294259 988.971121,480.773167" fill="#afc5df" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<text x="840" y="42" fill="#263d35" font-family="Arial" font-size="22">E: 8° offset, 30° down — TECHNICAL GUIDE</text>
+<polygon data-face="S-front-roof" points="698.349089,1073.923465 153.701651,1035.650863 127.676281,1079.656902 672.323719,1117.929505" fill="#a8b3be" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="S-left-gable" points="636.936304,1364.349137 685.925236,1190.061957 685.925236,1075.746604 661.430770,1117.164053 636.936304,1250.033784" fill="#afc5df" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="S-back-roof" points="672.323719,1117.929505 127.676281,1079.656902 101.650911,1220.830992 646.298349,1259.103594" fill="#c2c9cf" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="S-back" points="114.074764,1327.607439 636.936304,1364.349137 636.936304,1250.033784 114.074764,1213.292085" fill="#d9b8a8" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<text x="40" y="842" fill="#263d35" font-family="Arial" font-size="22">S: 8° offset, 30° down — TECHNICAL GUIDE</text>
+<polygon data-face="W-back" points="1337.545481,1419.582986 1411.028879,1158.152216 1411.028879,1043.836863 1337.545481,1305.267633" fill="#d9b8a8" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="W-front-roof" points="1053.092474,1015.988354 976.547268,1288.312073 1161.727397,1252.740733 1238.272603,980.417014" fill="#a8b3be" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="W-back-roof" points="1238.272603,980.417014 1161.727397,1252.740733 1346.907526,1314.337443 1423.452732,1042.013724" fill="#c2c9cf" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<polygon data-face="W-right-gable" points="988.971121,1395.088520 1337.545481,1419.582986 1337.545481,1305.267633 1163.258301,1247.294259 988.971121,1280.773167" fill="#d4c1a6" stroke="#304252" stroke-width="2" stroke-linejoin="round"/>
+<text x="840" y="842" fill="#263d35" font-family="Arial" font-size="22">W: 8° offset, 30° down — TECHNICAL GUIDE</text>
+</svg>

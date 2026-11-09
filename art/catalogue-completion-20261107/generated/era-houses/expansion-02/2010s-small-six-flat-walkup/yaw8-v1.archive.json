@@ -1,0 +1,23 @@
+[
+  {
+    "key": "2010s-small-six-flat-walkup",
+    "family": "yaw8",
+    "condition": "modern-era",
+    "version": 1,
+    "target": "generated/era-houses/expansion-02/2010s-small-six-flat-walkup/yaw8-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/2010s-small-six-flat-walkup/normal-v1.png"
+    ],
+    "prompt": "Render FOUR missing near-cardinal directions of ONE exact fixed house. REFERENCE1 is camera/geometry/door-window-occlusion authority; REFERENCE2 is its finished identity, matching detailed painterly miniature materials ONLY. Do NOT copy reference2's corner cameras. Subject: A modest rectangular three-storey six-flat walk-up: brick lower storey, cream upper render, shallow flat parapet roof, ONE shared central front entrance, two small balconies per floor (six total) with plain metal rails, fixed rear/end window grids, one rear service door. No tower, lifts in glass shafts, luxury roof terraces or giant glazing. Dwelling count is an art/design proposal, never game population balance.. Preserve every door/window/balcony/roof feature's actual world position as it rotates90degrees each time. Follow guide N E / S W cells, sameorthographic30degreesDOWN and nominal8degrees off cardinal; mainface broad, thin secondary side. Smooth consistent architectural lines and true rear surfaces, glazed patio sliders remain glass, not garage shutters. Solar panels ONLYwhere shown in guide, no migrating to opposite roof slope. Equal physical size across4cells. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT, shadowsLOWERLEFT; lamps/windowsOFF. Nativefinelypainted believable brick,render,timber,roofmaterials match reference2 exactly. Fourcomplete isolatedsprites, broadZEROALPHAtransparentmargins/gutters. No technicaltext, labels, groundplate, landscape, vegetation, people, scene, UI or haze.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b43def4e-5d1f-4650-9185-f13ff8da8b51.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/2010s-small-six-flat-walkup/normal-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+    "native_bytes_preserved": true
+  }
+]

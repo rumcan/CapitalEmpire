@@ -1,0 +1,1181 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T15:38:41.687218+00:00",
+  "overall_request_complete": false,
+  "workspace": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107",
+  "baseline_audit_counts": {
+    "eligible_runtime_subjects": 1208,
+    "eligible_buildings": 203,
+    "eligible_props": 1005,
+    "golf_priority_subjects": 206,
+    "candidate_four_corners": 185,
+    "candidate_four_yawed8_cardinals": 160,
+    "candidate_full_eight": 160,
+    "runtime_eight_player_selectable": 0,
+    "golf_missing_any_eight_views": 199,
+    "explicit_alias_records": 810,
+    "excluded_runtime_subjects": 506,
+    "supplemental_source_or_design_records": 137,
+    "excluded_source_only_records": 2,
+    "runtime_registered_corners_and_yawed8_cardinals": 32
+  },
+  "current_progress": {
+    "baseline_subjects": 1208,
+    "additional_design_subjects": 1,
+    "current_normal_four_candidate_sets": 185,
+    "current_yaw8_four_candidate_sets": 160,
+    "current_eight_source_candidate_sets": 160,
+    "active_historical_eight_view_subjects": 24,
+    "disabled_historical_eight_view_sets": 2,
+    "runtime_source_id_failures": 0,
+    "exact_subject_scene_files": 4,
+    "subjects_with_exact_scene_coverage": 4,
+    "legacy_unscoped_scene_files": 17,
+    "actual_cast_looks": 40,
+    "actual_portrait_looks_imported": 40,
+    "portrait_looks_remaining": 0,
+    "additional_clubhouse_normal_candidates": 4,
+    "additional_clubhouse_yaw8_candidates": 4,
+    "legacy_shanty_replacement_verified": false,
+    "archived_native_source_file_versions": 273,
+    "unique_native_generation_hashes": 273,
+    "native_source_category_counts": {
+      "map_objects": {
+        "archivedNativeFileVersions": 167,
+        "uniqueNativeSHA256": 167,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 617,
+        "families": 45
+      },
+      "vehicles": {
+        "archivedNativeFileVersions": 84,
+        "uniqueNativeSHA256": 84,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 306,
+        "families": 25
+      },
+      "portraits": {
+        "archivedNativeFileVersions": 11,
+        "uniqueNativeSHA256": 11,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 41,
+        "families": 11
+      },
+      "scenes": {
+        "archivedNativeFileVersions": 5,
+        "uniqueNativeSHA256": 5,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 20,
+        "families": 5
+      },
+      "ui_gear": {
+        "archivedNativeFileVersions": 6,
+        "uniqueNativeSHA256": 6,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 48,
+        "families": 5
+      }
+    },
+    "native_source_checkpoint": "audit/source-generation-progress.json",
+    "baseline_catalogue_candidate_set_counts_not_reaudited": true,
+    "source_files_are_not_accepted8view_completion": true
+  },
+  "source_evidence_policy": "Only hash-identical candidates retain the earlier decoded alpha/independence proof. File candidates and existing reuse whitelist are not new-art approvals. Additional clubhouse quarters checked separately.",
+  "scene_classification": {
+    "library_classified_buildings": 203,
+    "all203_are_physical_buildings": false,
+    "nonbuilding_interior_exception_subjects": 21,
+    "nonbuilding_interior_exception_slots": 42,
+    "supplemental_physical_building_props": 8,
+    "generic_unscoped_scenes_do_not_satisfy_exact_subject_slots": true
+  },
+  "inputs": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\catalogue-audit.json",
+      "sha256": "2a18fac131d2c9b8692b3fd56123ff9052523acd3d45090a55b607403b90b42f"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\game\\object-eight-existing.json",
+      "sha256": "ed815b1c2e9ca0fe4466cffac2edfab186935e74c9aa887dc439b3a915092b10"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\manifest.json",
+      "sha256": "9e9ee3ad4ec6f00552ab530dd94fb072c65753776e78be335fddb207f4d9e90f"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\scenes\\manifest.json",
+      "sha256": "afff4c42385c642af47a5a73341f8d402f914b1691376a0ba8a0e06e837ed3d6"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\reference-index.json",
+      "sha256": "67bc439485f1aabfb1a4514215a47149e5c114a08ae1110a9b66c915ecb859e0"
+    }
+  ],
+  "source_candidate_failures": [],
+  "active_runtime_source_id_failures": [],
+  "portrait_coverage": {
+    "imported_records": [
+      {
+        "look_id": "golfer:golf_pro_m1",
+        "file": "golf-pro-m1.png",
+        "valid_actual_import": true,
+        "sha256": "1e4b798feb936b78de7fb9f38e24bcf723181366741b29c6660cfc5065b68832"
+      },
+      {
+        "look_id": "golfer:golf_pro_m2",
+        "file": "golf-pro-m2.png",
+        "valid_actual_import": true,
+        "sha256": "4dc27b1d625492cb2781bb50549187b81abb8005983bc534b32541e2bb776b11"
+      },
+      {
+        "look_id": "golfer:golf_pro_w1",
+        "file": "golf-pro-w1.png",
+        "valid_actual_import": true,
+        "sha256": "6df81479b25faa950ba693d68cd8ff36258e7561a9561ccdfa24d043c86710a6"
+      },
+      {
+        "look_id": "golfer:golf_pro_m3",
+        "file": "golf-pro-m3.png",
+        "valid_actual_import": true,
+        "sha256": "ae6a82c8e6647a151b97728e161b4413f7592b60a073f08963effed40f72f64e"
+      },
+      {
+        "look_id": "golfer:golf_pro_m4",
+        "file": "golf-pro-m4.png",
+        "valid_actual_import": true,
+        "sha256": "eb5af400448f8c792b969af74a1b247b15a43b374a2ea4ff4fbad882831c1e8c"
+      },
+      {
+        "look_id": "golfer:golf_pro_w2",
+        "file": "golf-pro-w2.png",
+        "valid_actual_import": true,
+        "sha256": "5fac9366100b038d43372e1dfe6b7429b0b6c0d1bc3d3704666fe13377edd439"
+      },
+      {
+        "look_id": "golfer:golf_am_m1",
+        "file": "golf-am-m1.png",
+        "valid_actual_import": true,
+        "sha256": "f7995c87ae726e20cfae12d89e8d1d1e500117f61dad986ca8b9fdb192d1e325"
+      },
+      {
+        "look_id": "golfer:golf_am_w1",
+        "file": "golf-am-w1.png",
+        "valid_actual_import": true,
+        "sha256": "8d527fef91bf6e831998aca90ce323f5e0a2007872b38eff26c091c142829fc5"
+      },
+      {
+        "look_id": "golfer:golf_am_m2",
+        "file": "golf-am-m2.png",
+        "valid_actual_import": true,
+        "sha256": "a18d72dab70310361357e2e5fe3571590b9386cd6e23aa04ceda284d1335e139"
+      },
+      {
+        "look_id": "person:3d:base_kid",
+        "file": "base-kid.png",
+        "valid_actual_import": true,
+        "sha256": "bc387ed462eef8cae52385380b4624944d480d06766145fdfac337dc4bf29de0"
+      },
+      {
+        "look_id": "person:3d:base_man",
+        "file": "base-man.png",
+        "valid_actual_import": true,
+        "sha256": "77ee7b8bfa3ed53b95c8e665fc85a76a32aa7d07e90cd1c0b8a758824591208f"
+      },
+      {
+        "look_id": "person:3d:base_woman",
+        "file": "base-woman.png",
+        "valid_actual_import": true,
+        "sha256": "a41fe844723171b8d281a676f370f9d189bbac9868b9ea1f29ae244e9a8adfac"
+      },
+      {
+        "look_id": "person:3d:town_k_boy",
+        "file": "town-k-boy.png",
+        "valid_actual_import": true,
+        "sha256": "b917581170f682a6851073d0fb81941c1fd27518296ad39d054904f72d7b5b8b"
+      },
+      {
+        "look_id": "person:3d:town_k_girl",
+        "file": "town-k-girl.png",
+        "valid_actual_import": true,
+        "sha256": "66115ff9d29f10be9a833017a3a87d8bc062204fc3319c11bbeb686444e722ab"
+      },
+      {
+        "look_id": "person:3d:town_m_business",
+        "file": "town-m-business.png",
+        "valid_actual_import": true,
+        "sha256": "677195dca24325dc4e1ddb7cd59957baea4b590fdc8769c17fc715249a97463c"
+      },
+      {
+        "look_id": "person:3d:town_m_elder",
+        "file": "town-m-elder.png",
+        "valid_actual_import": true,
+        "sha256": "89788ec1b9148c2a52e46bf5c573ae19a6c196e13f2fa83ff2487eea315fbdbd"
+      },
+      {
+        "look_id": "person:3d:town_m_jogger",
+        "file": "town-m-jogger.png",
+        "valid_actual_import": true,
+        "sha256": "aef69c7f4514f07427829309dc6b7f0d1e7246acb4effe2f3173eb145f6b3a42"
+      },
+      {
+        "look_id": "person:3d:town_m_mechanic",
+        "file": "town-m-mechanic.png",
+        "valid_actual_import": true,
+        "sha256": "53b425f7d25fb979c1ce61b66646347461bd9e35435f822f268b7cc18d8a0c93"
+      },
+      {
+        "look_id": "person:3d:town_m_postman",
+        "file": "town-m-postman.png",
+        "valid_actual_import": true,
+        "sha256": "d2c871dcab682d0a8273e49d2137527d07c8e724c074eeded15f88b8c4bb2c78"
+      },
+      {
+        "look_id": "person:3d:town_w_elder",
+        "file": "town-w-elder.png",
+        "valid_actual_import": true,
+        "sha256": "e359222c00af6b9722d95ba2596af5a5216312d2e4f661baf1140b542525c564"
+      },
+      {
+        "look_id": "person:3d:town_w_nurse",
+        "file": "town-w-nurse.png",
+        "valid_actual_import": true,
+        "sha256": "0494400062ecf53bb674d1847d5d261f869dbb9d3b4cec3d0fbcafd6fe21478c"
+      },
+      {
+        "look_id": "person:3d:town_w_shopper",
+        "file": "town-w-shopper.png",
+        "valid_actual_import": true,
+        "sha256": "d47501666dee8b59b5fd89a0e240562790b30f919006609347efc46daca54dfd"
+      },
+      {
+        "look_id": "person:3d:town_w_student",
+        "file": "town-w-student.png",
+        "valid_actual_import": true,
+        "sha256": "f174f692744e702915b582eba3c244fdc65af492e15be8f7a2d47d6cc2c0ebaa"
+      },
+      {
+        "look_id": "person:3d:town_w_waitress",
+        "file": "town-w-waitress.png",
+        "valid_actual_import": true,
+        "sha256": "137cf185c006c660e59050e966d34a8de06eec5ba25152e8775d3e74e09d6779"
+      },
+      {
+        "look_id": "spectator:spec_k_boy_cap",
+        "file": "spec-k-boy-cap.png",
+        "valid_actual_import": true,
+        "sha256": "ea847a5651c199b1b0bf22648bbbc1826abdbfaffc35b27f71ebdef07595dde2"
+      },
+      {
+        "look_id": "spectator:spec_k_girl_pigtails",
+        "file": "spec-k-girl-pigtails.png",
+        "valid_actual_import": true,
+        "sha256": "a994e3329e531c39d0841cbc731895e6d8bd33a847e631fea6e1547fa6aef988"
+      },
+      {
+        "look_id": "spectator:spec_m_bucket_hat",
+        "file": "spec-m-bucket-hat.png",
+        "valid_actual_import": true,
+        "sha256": "ee49ce79b7b7e5564a7654d3f6c5cd3be1e464ea51dbe94d83613dedb4fd7554"
+      },
+      {
+        "look_id": "spectator:spec_m_dad",
+        "file": "spec-m-dad.png",
+        "valid_actual_import": true,
+        "sha256": "25bb6b9b862004601b2c8163154802cde00c77511b9a79a90347e6fd9f9a05a6"
+      },
+      {
+        "look_id": "spectator:spec_m_plaid",
+        "file": "spec-m-plaid.png",
+        "valid_actual_import": true,
+        "sha256": "bb311e2569394277a846211bbfff798abfd3c7bb58fc9e3593af60f008e12492"
+      }
+    ],
+    "remaining_actual_look_ids": [
+      "golfer:golf_am_m3",
+      "spectator:spec_m_polo_visor",
+      "spectator:spec_m_sun_hat",
+      "spectator:spec_m_young_cap",
+      "spectator:spec_teen_boy",
+      "spectator:spec_teen_girl",
+      "spectator:spec_w_older_cardigan",
+      "spectator:spec_w_sunhat_dress",
+      "spectator:spec_w_visor_pastel",
+      "spectator:spec_w_windbreaker",
+      "spectator:spec_w_young_shorts"
+    ]
+  },
+  "nonbuilding_interior_exceptions": [
+    {
+      "id": "business:golf-bag-trolley",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-bag-trolley",
+          "manifestSlug": "property-business-golf-bag-trolley-inside",
+          "plannedFile": "business-golf-bag-trolley-cb1dc71c-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-bag-trolley",
+          "manifestSlug": "property-business-golf-bag-trolley-inside",
+          "plannedFile": "business-golf-bag-trolley-cb1dc71c-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:golf-bench-course-map",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-bench-course-map",
+          "manifestSlug": "property-business-golf-bench-course-map-inside",
+          "plannedFile": "business-golf-bench-course-map-adcedc6b-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-bench-course-map",
+          "manifestSlug": "property-business-golf-bench-course-map-inside",
+          "plannedFile": "business-golf-bench-course-map-adcedc6b-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:golf-cart-se",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-cart-se",
+          "manifestSlug": "property-business-golf-cart-se-inside",
+          "plannedFile": "business-golf-cart-se-fe59e78e-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-cart-se",
+          "manifestSlug": "property-business-golf-cart-se-inside",
+          "plannedFile": "business-golf-cart-se-fe59e78e-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:golf-cart-sw",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-cart-sw",
+          "manifestSlug": "property-business-golf-cart-sw-inside",
+          "plannedFile": "business-golf-cart-sw-325df122-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-cart-sw",
+          "manifestSlug": "property-business-golf-cart-sw-inside",
+          "plannedFile": "business-golf-cart-sw-325df122-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:golf-footbridge",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-footbridge",
+          "manifestSlug": "property-business-golf-footbridge-inside",
+          "plannedFile": "business-golf-footbridge-6d0e23d0-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-footbridge",
+          "manifestSlug": "property-business-golf-footbridge-inside",
+          "plannedFile": "business-golf-footbridge-6d0e23d0-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:golf-mower",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-mower",
+          "manifestSlug": "property-business-golf-mower-inside",
+          "plannedFile": "business-golf-mower-dc916060-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-mower",
+          "manifestSlug": "property-business-golf-mower-inside",
+          "plannedFile": "business-golf-mower-dc916060-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:golf-patio-table",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-patio-table",
+          "manifestSlug": "property-business-golf-patio-table-inside",
+          "plannedFile": "business-golf-patio-table-c0963669-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-patio-table",
+          "manifestSlug": "property-business-golf-patio-table-inside",
+          "plannedFile": "business-golf-patio-table-c0963669-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:golf-pin-red",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-pin-red",
+          "manifestSlug": "property-business-golf-pin-red-inside",
+          "plannedFile": "business-golf-pin-red-45060d49-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-pin-red",
+          "manifestSlug": "property-business-golf-pin-red-inside",
+          "plannedFile": "business-golf-pin-red-45060d49-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:golf-pin-red-equipment",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-pin-red-equipment",
+          "manifestSlug": "property-business-golf-pin-red-equipment-inside",
+          "plannedFile": "business-golf-pin-red-equipment-176c1d7f-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-pin-red-equipment",
+          "manifestSlug": "property-business-golf-pin-red-equipment-inside",
+          "plannedFile": "business-golf-pin-red-equipment-176c1d7f-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:golf-pin-yellow",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:golf-pin-yellow",
+          "manifestSlug": "property-business-golf-pin-yellow-inside",
+          "plannedFile": "business-golf-pin-yellow-c698fac9-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:golf-pin-yellow",
+          "manifestSlug": "property-business-golf-pin-yellow-inside",
+          "plannedFile": "business-golf-pin-yellow-c698fac9-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "golf:leaderboard",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "golf:leaderboard",
+          "manifestSlug": "property-golf-leaderboard-inside",
+          "plannedFile": "golf-leaderboard-de548983-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "golf:leaderboard",
+          "manifestSlug": "property-golf-leaderboard-inside",
+          "plannedFile": "golf-leaderboard-de548983-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:bus-se",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:bus-se",
+          "manifestSlug": "property-business-bus-se-inside",
+          "plannedFile": "business-bus-se-b69abf6d-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:bus-se",
+          "manifestSlug": "property-business-bus-se-inside",
+          "plannedFile": "business-bus-se-b69abf6d-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:bus-sw",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:bus-sw",
+          "manifestSlug": "property-business-bus-sw-inside",
+          "plannedFile": "business-bus-sw-520586c5-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:bus-sw",
+          "manifestSlug": "property-business-bus-sw-inside",
+          "plannedFile": "business-bus-sw-520586c5-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:fishing-bass-boat",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:fishing-bass-boat",
+          "manifestSlug": "property-business-fishing-bass-boat-inside",
+          "plannedFile": "business-fishing-bass-boat-a215d701-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:fishing-bass-boat",
+          "manifestSlug": "property-business-fishing-bass-boat-inside",
+          "plannedFile": "business-fishing-bass-boat-a215d701-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:fishing-dock-lifebuoy",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:fishing-dock-lifebuoy",
+          "manifestSlug": "property-business-fishing-dock-lifebuoy-inside",
+          "plannedFile": "business-fishing-dock-lifebuoy-07db82db-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:fishing-dock-lifebuoy",
+          "manifestSlug": "property-business-fishing-dock-lifebuoy-inside",
+          "plannedFile": "business-fishing-dock-lifebuoy-07db82db-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:fishing-dock-rope",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:fishing-dock-rope",
+          "manifestSlug": "property-business-fishing-dock-rope-inside",
+          "plannedFile": "business-fishing-dock-rope-285fa0a6-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:fishing-dock-rope",
+          "manifestSlug": "property-business-fishing-dock-rope-inside",
+          "plannedFile": "business-fishing-dock-rope-285fa0a6-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:taxi-se",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:taxi-se",
+          "manifestSlug": "property-business-taxi-se-inside",
+          "plannedFile": "business-taxi-se-db101f94-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:taxi-se",
+          "manifestSlug": "property-business-taxi-se-inside",
+          "plannedFile": "business-taxi-se-db101f94-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "business:taxi-sw",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "business:taxi-sw",
+          "manifestSlug": "property-business-taxi-sw-inside",
+          "plannedFile": "business-taxi-sw-c89edfba-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "business:taxi-sw",
+          "manifestSlug": "property-business-taxi-sw-inside",
+          "plannedFile": "business-taxi-sw-c89edfba-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "ref:landmark-fountain-v2",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "ref:landmark-fountain-v2",
+          "manifestSlug": "property-ref-landmark-fountain-v2-inside",
+          "plannedFile": "ref-landmark-fountain-v2-23e8e991-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "ref:landmark-fountain-v2",
+          "manifestSlug": "property-ref-landmark-fountain-v2-inside",
+          "plannedFile": "ref-landmark-fountain-v2-23e8e991-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+          "manifestSlug": "property-variation-ref-building-drive-in-screen-b0bccc2a-plain-1-inside",
+          "plannedFile": "variation-ref-building-drive-in-screen-b0bccc2a-plain-1-6d8b9c44-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+          "manifestSlug": "property-variation-ref-building-drive-in-screen-b0bccc2a-plain-1-inside",
+          "plannedFile": "variation-ref-building-drive-in-screen-b0bccc2a-plain-1-6d8b9c44-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    },
+    {
+      "id": "world:drivein_marquee",
+      "slots": [
+        {
+          "view": "inside",
+          "state": "rundown",
+          "exactSubject": "world:drivein_marquee",
+          "manifestSlug": "property-world-drivein-marquee-inside",
+          "plannedFile": "world-drivein-marquee-2c35be93-inside-rundown.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        },
+        {
+          "view": "inside",
+          "state": "upgraded",
+          "exactSubject": "world:drivein_marquee",
+          "manifestSlug": "property-world-drivein-marquee-inside",
+          "plannedFile": "world-drivein-marquee-2c35be93-inside-upgraded.png",
+          "status": "not-applicable-nonbuilding-interior",
+          "generationRequired": false,
+          "alreadyCoveredByExistingExactScene": false,
+          "brief": "No building interior is evidenced or applicable for this outdoor prop/vehicle. Do not invent a house or shop room; keep this cohort record and plan a functional-detail picture separately if requested."
+        }
+      ]
+    }
+  ],
+  "supplemental_physical_building_props": [
+    {
+      "runtimeId": "newprop:neon-storefront-row",
+      "name": "Neon storefront row",
+      "category": "New: Buildings",
+      "auditClassification": "prop; outside the requested exact 203-ID cohort",
+      "auditedActiveRuntimeId": true,
+      "runtimeImage": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/neon-storefront-row.webp",
+      "nativeSourcePNG": "E:/Repos/CapitalEmpire/All Generated Images/exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
+      "sourceCell": "top left",
+      "cropXYWH": [
+        16,
+        84,
+        663,
+        589
+      ],
+      "status": "supplemental physical-building candidate; retained, not silently discarded or merged into the 203 cohort",
+      "exactSceneCoverageProven": false
+    },
+    {
+      "runtimeId": "newprop:neon-diner-front",
+      "name": "Neon diner front",
+      "category": "New: Buildings",
+      "auditClassification": "prop; outside the requested exact 203-ID cohort",
+      "auditedActiveRuntimeId": true,
+      "runtimeImage": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/neon-diner-front.webp",
+      "nativeSourcePNG": "E:/Repos/CapitalEmpire/All Generated Images/exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
+      "sourceCell": "top right",
+      "cropXYWH": [
+        648,
+        168,
+        602,
+        472
+      ],
+      "status": "supplemental physical-building candidate; retained, not silently discarded or merged into the 203 cohort",
+      "exactSceneCoverageProven": false
+    },
+    {
+      "runtimeId": "newprop:brick-storefront",
+      "name": "Brick storefront",
+      "category": "New: Buildings",
+      "auditClassification": "prop; outside the requested exact 203-ID cohort",
+      "auditedActiveRuntimeId": true,
+      "runtimeImage": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/brick-storefront.webp",
+      "nativeSourcePNG": "E:/Repos/CapitalEmpire/All Generated Images/exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
+      "sourceCell": "bottom left",
+      "cropXYWH": [
+        4,
+        705,
+        701,
+        481
+      ],
+      "status": "supplemental physical-building candidate; retained, not silently discarded or merged into the 203 cohort",
+      "exactSceneCoverageProven": false
+    },
+    {
+      "runtimeId": "newprop:lit-shop-corner",
+      "name": "Lit shop corner",
+      "category": "New: Buildings",
+      "auditClassification": "prop; outside the requested exact 203-ID cohort",
+      "auditedActiveRuntimeId": true,
+      "runtimeImage": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/lit-shop-corner.webp",
+      "nativeSourcePNG": "E:/Repos/CapitalEmpire/All Generated Images/exec-1391454a-3c47-4993-90fb-3b7c2f8517f7.png",
+      "sourceCell": "bottom right",
+      "cropXYWH": [
+        706,
+        765,
+        543,
+        426
+      ],
+      "status": "supplemental physical-building candidate; retained, not silently discarded or merged into the 203 cohort",
+      "exactSceneCoverageProven": false
+    },
+    {
+      "runtimeId": "newprop:clubhouse-manor",
+      "name": "Clubhouse manor",
+      "category": "New: Buildings",
+      "auditClassification": "prop; outside the requested exact 203-ID cohort",
+      "auditedActiveRuntimeId": true,
+      "runtimeImage": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/clubhouse-manor.webp",
+      "nativeSourcePNG": "E:/Repos/CapitalEmpire/All Generated Images/exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
+      "sourceCell": "top left",
+      "cropXYWH": [
+        12,
+        0,
+        877,
+        582
+      ],
+      "status": "supplemental physical-building candidate; retained, not silently discarded or merged into the 203 cohort",
+      "exactSceneCoverageProven": false
+    },
+    {
+      "runtimeId": "newprop:gate-pillars",
+      "name": "Gate pillars",
+      "category": "New: Buildings",
+      "auditClassification": "prop; outside the requested exact 203-ID cohort",
+      "auditedActiveRuntimeId": true,
+      "runtimeImage": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/gate-pillars.webp",
+      "nativeSourcePNG": "E:/Repos/CapitalEmpire/All Generated Images/exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
+      "sourceCell": "top right",
+      "cropXYWH": [
+        886,
+        86,
+        639,
+        469
+      ],
+      "status": "supplemental physical-building candidate; retained, not silently discarded or merged into the 203 cohort",
+      "exactSceneCoverageProven": false
+    },
+    {
+      "runtimeId": "newprop:pavilion",
+      "name": "Pavilion",
+      "category": "New: Buildings",
+      "auditClassification": "prop; outside the requested exact 203-ID cohort",
+      "auditedActiveRuntimeId": true,
+      "runtimeImage": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/pavilion.webp",
+      "nativeSourcePNG": "E:/Repos/CapitalEmpire/All Generated Images/exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
+      "sourceCell": "bottom left",
+      "cropXYWH": [
+        29,
+        536,
+        814,
+        480
+      ],
+      "status": "supplemental physical-building candidate; retained, not silently discarded or merged into the 203 cohort",
+      "exactSceneCoverageProven": false
+    },
+    {
+      "runtimeId": "newprop:gazebo",
+      "name": "Gazebo",
+      "category": "New: Buildings",
+      "auditClassification": "prop; outside the requested exact 203-ID cohort",
+      "auditedActiveRuntimeId": true,
+      "runtimeImage": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/gazebo.webp",
+      "nativeSourcePNG": "E:/Repos/CapitalEmpire/All Generated Images/exec-6ca801a6-f368-4b2e-823e-a22fac64724c.png",
+      "sourceCell": "bottom right",
+      "cropXYWH": [
+        858,
+        475,
+        633,
+        538
+      ],
+      "status": "supplemental physical-building candidate; retained, not silently discarded or merged into the 203 cohort",
+      "exactSceneCoverageProven": false
+    }
+  ],
+  "additional_subjects": [
+    {
+      "cohort": "additional-new-design",
+      "id": "clubhouse-1950-budget",
+      "name": "1950s budget clubhouse redesign",
+      "golf_priority": true,
+      "library_classification": "additional design; not silently substituted into1208",
+      "physical_role": "new physical clubhouse design",
+      "baseline_normal_candidates": 0,
+      "baseline_yaw8_candidates": 0,
+      "active_eight_view_runtime": false,
+      "runtime_status": "not-yet-in-active-parent-registry",
+      "known_holds": [
+        {
+          "kind": "pending-parent-release-and-legacy-alias-proof"
+        }
+      ],
+      "budget_redesign_required": true,
+      "legacy_identity_replaced": false,
+      "legacy_subject_pending_replacement": "golf:clubhouse-shanty",
+      "scene_interior_applicable": true,
+      "supplemental_physical_building_prop": false,
+      "exact_subject_scene_count": 0,
+      "exact_instance_scene_count": 0,
+      "requested_scene_generations": 4,
+      "missing_exact_scene_slots": [
+        {
+          "view": "outside",
+          "state": "rundown"
+        },
+        {
+          "view": "outside",
+          "state": "upgraded"
+        },
+        {
+          "view": "inside",
+          "state": "rundown"
+        },
+        {
+          "view": "inside",
+          "state": "upgraded"
+        }
+      ],
+      "nonbuilding_interior_exception_slots": [],
+      "owner_approval_inferred": false,
+      "native_release_verified": false,
+      "independent_review": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\independent-review-normal-v5-yaw8-v4.json",
+        "sha256": "77c115ceb0ef789ac54ddf56e9e78b671ce420b4684d3f39ed416743f9ecb125",
+        "disposition": "candidate-ready-for-parent-review"
+      },
+      "current_normal_candidates": 4,
+      "normal_source": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v5.png",
+        "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+        "cells": [
+          {
+            "source_box": [
+              0,
+              0,
+              627,
+              627
+            ],
+            "native_alpha_nonblank": true,
+            "pixel_sha256": "453e672da1bacff71023527ea2368a0b33fc0dfceb29889c11c1417ced5a55d7"
+          },
+          {
+            "source_box": [
+              627,
+              0,
+              1254,
+              627
+            ],
+            "native_alpha_nonblank": true,
+            "pixel_sha256": "505be8a2c389682ae3bafee87543ad814634fcbf0a5fb385e86fbf4681380011"
+          },
+          {
+            "source_box": [
+              0,
+              627,
+              627,
+              1254
+            ],
+            "native_alpha_nonblank": true,
+            "pixel_sha256": "2af97dffdae2f74f3baab0907d2e88d7e1d8f8863ba1a6fdae40b91a89934eec"
+          },
+          {
+            "source_box": [
+              627,
+              627,
+              1254,
+              1254
+            ],
+            "native_alpha_nonblank": true,
+            "pixel_sha256": "1c2e6e6f735de2d2342d408ac1f9ed2f6425fa423182798eaa307e5543d14a64"
+          }
+        ]
+      },
+      "current_yaw8_candidates": 4,
+      "yaw8_source": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\yaw8-v4.png",
+        "sha256": "091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862",
+        "cells": [
+          {
+            "source_box": [
+              0,
+              0,
+              627,
+              627
+            ],
+            "native_alpha_nonblank": true,
+            "pixel_sha256": "1f1647182632d42b36af111ef10c1d253b9752ef8d62e84a89d1fc94efecd5ec"
+          },
+          {
+            "source_box": [
+              627,
+              0,
+              1254,
+              627
+            ],
+            "native_alpha_nonblank": true,
+            "pixel_sha256": "a5dcebce8472976d1d7433992925987ec22b79a9ac524d21f292225a319ddac5"
+          },
+          {
+            "source_box": [
+              0,
+              627,
+              627,
+              1254
+            ],
+            "native_alpha_nonblank": true,
+            "pixel_sha256": "ea5200cf09536f768c9ec344aa8cec00d6f3936487e501c3aaf2d0f9190af430"
+          },
+          {
+            "source_box": [
+              627,
+              627,
+              1254,
+              1254
+            ],
+            "native_alpha_nonblank": true,
+            "pixel_sha256": "6f53464e56776b19f6dfcf727751ddbada7815e2408fb23c4f3b5ea9b58dcbe4"
+          }
+        ]
+      }
+    }
+  ],
+  "owner_approval_inferred": false,
+  "remaining_work": "Catalogue sprite/redesign work and exact scene coverage remain broad; portraits are in progress; new-clubhouse alias replacement and seating/native release remain unverified.",
+  "sourceInventoryCheckpoint": {
+    "file": "audit/current-native-source-inventory.json",
+    "asOf": "2026-11-07T15:38:41.687218+00:00",
+    "guidesCropsExportsExcluded": true,
+    "geometryOrOwnerApprovalInferred": false
+  },
+  "source_bundle_checkpoint": {
+    "file": "audit/source-bundle-handoff.json",
+    "asOfUTC": "2026-11-07T15:40:31.721909+00:00",
+    "currentSourcePackages": 6,
+    "currentExportedPNGCount": 520,
+    "newGolfEventPracticePNGs": 176,
+    "newGolfArchiveSHA256": "31c95365543b60a7b2b01be9966a283831a1846442d33911a63bd0e0f950a1a5",
+    "sourceOnlyNotRuntimeOrWholeCatalogueCompletion": true
+  }
+}

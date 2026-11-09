@@ -1,0 +1,302 @@
+[
+  {
+    "file": "generated/vehicles/era-1990s-teal-sedan/left-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.6998413765666924,
+    "mid_alpha_fraction9to127": 0.0016516919197375596,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      315,
+      183,
+      1457,
+      711
+    ]
+  },
+  {
+    "file": "generated/vehicles/era-1990s-teal-sedan/right-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.7170319369471853,
+    "mid_alpha_fraction9to127": 0.0016891870421940874,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      344,
+      208,
+      1463,
+      714
+    ]
+  },
+  {
+    "file": "generated/vehicles/era-2000s-silver-mpv/right-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.5809920065483007,
+    "mid_alpha_fraction9to127": 0.0020603252034587026,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      286,
+      130,
+      1489,
+      789
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-blue-sedan/left-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.6896388901952162,
+    "mid_alpha_fraction9to127": 0.0019020830764811527,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      310,
+      182,
+      1468,
+      704
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-blue-sedan/right-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.6483357885224252,
+    "mid_alpha_fraction9to127": 0.001839167532020199,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      2.0
+    ],
+    "bbox": [
+      279,
+      179,
+      1496,
+      750
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-cream-coupe/left-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.703153022043319,
+    "mid_alpha_fraction9to127": 0.0020107553805500727,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      289,
+      226,
+      1493,
+      719
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-cream-coupe/right-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.6674297030004995,
+    "mid_alpha_fraction9to127": 0.0022293710097881334,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      226,
+      194,
+      1549,
+      695
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-ivory-panel-van/left-elevated-v1.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "zero": 0.5828698476155599,
+    "mid_alpha_fraction9to127": 0.0019283294677734375,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      206,
+      186,
+      1323,
+      866
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-ivory-panel-van/right-elevated-v1.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "zero": 0.5903542836507162,
+    "mid_alpha_fraction9to127": 0.0018183390299479167,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      190,
+      225,
+      1358,
+      878
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-mustard-taxi/left-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.6119146788955844,
+    "mid_alpha_fraction9to127": 0.0021118015580176646,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      224,
+      191,
+      1551,
+      778
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-mustard-taxi/right-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.6728881031153998,
+    "mid_alpha_fraction9to127": 0.0019554659626904464,
+    "border_max": 0,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      260,
+      165,
+      1516,
+      720
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-red-hatchback/left-elevated-v1.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "zero": 0.7019583384195963,
+    "mid_alpha_fraction9to127": 0.0016543070475260417,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      259,
+      233,
+      1273,
+      806
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-red-hatchback/right-elevated-v1.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "zero": 0.8236068822193224,
+    "mid_alpha_fraction9to127": 0.0012197014211620103,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      230,
+      410,
+      1035,
+      840
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-tan-pickup/left-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.610028483582856,
+    "mid_alpha_fraction9to127": 0.002349482503759045,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      0.0,
+      1.0
+    ],
+    "bbox": [
+      242,
+      141,
+      1546,
+      779
+    ]
+  },
+  {
+    "file": "generated/vehicles/town-tan-pickup/right-elevated-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero": 0.6032139039540195,
+    "mid_alpha_fraction9to127": 0.0020196525282516215,
+    "border_max": 1,
+    "outside_core_bbox10_alpha_p95max": [
+      1.0,
+      2.0
+    ],
+    "bbox": [
+      292,
+      174,
+      1480,
+      740
+    ]
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-gold-tee-markers",
+  "version": 1,
+  "key": "normalSW",
+  "source": {
+    "file": "../../batch02/gold-tee-markers/normal-SW.png",
+    "sha256": "14229f29792b13189930afa25ea5bdaea3b355ff290c8a9331b061c0fff545cf",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 103,
+    "top": 62,
+    "width": 403,
+    "height": 456
+  },
+  "output": "normalSW.native.png",
+  "sha256": "213383523830f7cb26a05f8f6b5dc221457b42e07d1cafc68a0b445e0f4a5b74",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

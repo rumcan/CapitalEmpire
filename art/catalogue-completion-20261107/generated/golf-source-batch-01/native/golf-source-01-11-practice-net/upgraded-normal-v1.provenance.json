@@ -1,0 +1,37 @@
+{
+  "key": "golf-source-01-11-practice-net",
+  "condition": "upgraded",
+  "runtimeTarget": {
+    "runtimeSubjectId": "business:golf-practice-net",
+    "name": "golf practice net",
+    "librarySource": "src/game/business-library.ts",
+    "baseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "baseBoxMetres": {
+      "width": 4,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Generic base collision box only, not authored physical object measurement; placement/studio scale can change it. Proposed real object dimensions are explicit in functionalIdentity.",
+    "sourceDisplayPixels": {
+      "width": 508,
+      "height": 462
+    }
+  },
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-838bf011-6f45-4dd8-9ad1-26252ae6d89d.png",
+  "target": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-normal-v1.png",
+  "prompt": "Generate a high-detail2x2 sheet of ONE SAME golf-event item in FOUR genuinely different orthographic45degree CORNER views, camera30degrees down. Reference1 is exact subject identity; reference2 is painted miniature materials only. Functional identity: Green tubular golf hitting cage with open front, netted left/right/back/top, diagonally braced posts and an internal rectangular hitting mat with a tee. Proposed physical net3m wide x3.5m deep x3m high, fitting a4x4m nominal base collision box before contextual scaling. The opening and tee face the same model front in every camera. Transparent mesh remains mesh, never an opaque shed wall. Condition: Initial identity-preserving set: clean green frame, real mesh, deep-green mat and small tee. No golfer, bag or ball-picker vehicle. It is1985; budget means ordinary old1950smanufactured equipment stillusednow, no fantasyarchitecture/rope-lashedlogs/patchworkblueplastic/ornatebrassfinials. Four camera cells: TOP LEFT FRONT+LEFT sides, TOP RIGHT REAR+LEFT sides, BOTTOM LEFT REAR+RIGHT sides, BOTTOM RIGHT FRONT+RIGHT sides, corresponding SE SW / NW NE. Reconstruct real REAR faces, don't pastefront servicehatches/screens/lenses onto theback. Keep ALL doors/windows/vents/equipment/ladder/stair/camera/servingcounter positions fixed in localphysicalspace across the four turns. Structuralbodies andfunctionalattachments are same in every view. Finely hand-painted miniature game style consistent with source authority, realistic materials and readable silhouettes. LATE-AFTERNOON DAYTIME sunfixedSCREEN UPPER RIGHT, shadowsLOWER LEFT; all electriclamps/screensoff. Nopeople, plants, groundplate/roads/terrain, UI/captions/grid/text orhaze. Equipment's owndeck/mat is allowed onlyifpartofbrief. Fullyopaqueobjects on genuinelyzeroalpha transparentbackground includingallgutters; netting/railopeningsremaintransparent. Four complete separate sprites, equal physicalscale, centredwithgenerouscellmargins.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-practice-net.source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png"
+  ],
+  "status": "native normal4 candidate; yaw4 and independent identity/alpha/geometry review pending",
+  "runtime_imported": false,
+  "sha256": "f11e2a553c43ea3202b5fec844fd6a745c273c8bc37505c73940cb18887be228",
+  "native_bytes_preserved": true
+}

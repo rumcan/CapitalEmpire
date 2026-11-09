@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:26:24.560621+00:00",
+  "sources_reviewed": 8,
+  "records": [
+    {
+      "key": "golf-source-01-01-food-truck",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-yaw8-v1.png",
+      "review_result": "PASS-distinct-main-face-source-candidate;exact8-unverified",
+      "four_distinct_main_faces_present": true,
+      "outer_alpha_max": 1.0,
+      "core_boundaries_clear": true,
+      "safe_vertical_cuts": [
+        654,
+        657
+      ],
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-04-first-aid-tent",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-yaw8-v1.png",
+      "review_result": "PASS-distinct-main-face-source-candidate;exact8-unverified",
+      "four_distinct_main_faces_present": true,
+      "outer_alpha_max": 1.0,
+      "core_boundaries_clear": true,
+      "safe_vertical_cuts": [
+        627,
+        627
+      ],
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-05-info-will-call-booth",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-yaw8-v1.png",
+      "review_result": "PASS-distinct-main-face-source-candidate;exact8-unverified",
+      "four_distinct_main_faces_present": true,
+      "outer_alpha_max": 0.0,
+      "core_boundaries_clear": true,
+      "safe_vertical_cuts": [
+        627,
+        627
+      ],
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-07-media-centre",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-yaw8-v1.png",
+      "review_result": "PASS-distinct-main-face-source-candidate;exact8-unverified",
+      "four_distinct_main_faces_present": true,
+      "outer_alpha_max": 1.0,
+      "core_boundaries_clear": true,
+      "safe_vertical_cuts": [
+        628,
+        627
+      ],
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-08-hole-scoreboard",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-yaw8-v1.png",
+      "review_result": "HOLD-duplicate-E-W-edgeprofile-missing-opposite-side",
+      "four_distinct_main_faces_present": false,
+      "outer_alpha_max": 1.0,
+      "core_boundaries_clear": true,
+      "safe_vertical_cuts": [
+        627,
+        627
+      ],
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-10-concession-kiosk",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-yaw8-v1.png",
+      "review_result": "PASS-distinct-main-face-source-candidate;exact8-unverified",
+      "four_distinct_main_faces_present": true,
+      "outer_alpha_max": 1.0,
+      "core_boundaries_clear": true,
+      "safe_vertical_cuts": [
+        630,
+        627
+      ],
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-11-practice-net",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-yaw8-v1.png",
+      "review_result": "PASS-distinct-main-face-source-candidate;exact8-unverified",
+      "four_distinct_main_faces_present": true,
+      "outer_alpha_max": 1.0,
+      "core_boundaries_clear": true,
+      "safe_vertical_cuts": [
+        627,
+        627
+      ],
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-12-bag-trolley",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-12-bag-trolley/upgraded-yaw8-v1.png",
+      "review_result": "PASS-distinct-main-face-source-candidate;exact8-unverified",
+      "four_distinct_main_faces_present": true,
+      "outer_alpha_max": 1.0,
+      "core_boundaries_clear": true,
+      "safe_vertical_cuts": [
+        627,
+        627
+      ],
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-12-bag-trolley/upgraded-yaw8-v1.independent-qa.json"
+    }
+  ],
+  "native_originals_preserved": true,
+  "no_exact8_certification": true,
+  "no_runtime_tests_build_server_commit": true,
+  "whole_catalogue_complete": false
+}

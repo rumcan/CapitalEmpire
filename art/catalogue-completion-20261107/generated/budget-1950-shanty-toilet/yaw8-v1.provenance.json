@@ -1,0 +1,15 @@
+{
+  "key": "budget-1950-shanty-toilet",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-135206b7-328b-4764-ac65-6583177a0404.png",
+  "target": "generated/budget-1950-shanty-toilet/yaw8-v1.png",
+  "prompt": "Create the matching near-cardinal2x2 sprite sheet for this exact ordinary1950s budget building. Reference1 is exact single-world geometry and8degree-yaw/30degree-down camera. Reference2 is this building's selected painted identity, materials and condition. Plain1950s budget golf-course toilet block, faded pale-grey painted timber, exactly two separate front cubicle doors in muted green, two high rear ventilation grilles, plain grey corrugated gable roof. Ordinary municipal construction with scuffed paint; no fantasy outhouse. Keep the exact same footprint, height, roof, worn paint, door/window/vent count and physical locations across all cells. Match reference1 cells N E / S W. Main bases slant subtly by0.07027rise/run; narrow secondary side only, never square-on or45degree corners. Carefully retain any door/window sliver visible on a narrow side. No invented additional windows/doors or chimney. Cheap old manufactured real-world building used in1985, straight timber/steel construction, no goblin village, crooked logs, ropes or patchwork tarps. Detailed hand-painted miniature game materials matching reference2. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT, lamps/windows not glowing. Four complete separate opaque sprites on exactly zero-alpha transparent background, same scale, generous cell margins. No text, technical lines, grid, plants, people, cars, ground plates, outside shadow puddles, scenery or haze.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-toilet\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/budget-1950-shanty-toilet/normal-v1.png"
+  ],
+  "era": "1950s",
+  "status": "native source candidate; alpha/geometry/camera QA pending",
+  "runtime_imported": false,
+  "sha256": "18b9b38ea8de06b0fc1cb0966942e206ef9971642c5fb1b45c6f88d3bed33ca8",
+  "native_bytes_preserved": true
+}

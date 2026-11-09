@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:40:14.741147+00:00",
+  "review_result": "HOLD-missing-SW-guide-corner-and-TR-basket-drift",
+  "four_actual_corners_visually_verified": false,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+    "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+    "bytes": 1167889
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.provenance.json",
+    "sha256": "bfd3f0076d3b9f1eebaf72b527a41bd5ac63c3ff3767247b2507a90d2142ab9c",
+    "bytes": 2837
+  },
+  "exact_prompt_utf8_sha256": "93d373d30b1f309274110ec19a71caa4480ed20c57ed4c9240af48aa179b9fc3",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-dispenser/guides/normal-world-v1.png",
+      "sha256": "47cec4bf76113066ab2461546ef48ab7d0505d31ab9bf3845009ac293d60456a",
+      "bytes": 62523
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v1.png",
+      "sha256": "65e05e02f407f2055d4899bbd5ba9c16f8137ec83f0485baea05b2903663fc93",
+      "bytes": 1492371
+    }
+  ],
+  "zero_alpha_fraction": 0.7089943758918829,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "nominal_10px_center_gap_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": "TL",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 56,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "16d068d494ee559bc4a8964067380a74a77b09f07d06471e75d63444bc834355"
+    },
+    {
+      "cell": "TR",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 93,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "12f0dadb61c207dc184b61b48120786cfa61d408e4805104490dcf70a47c3fde"
+    },
+    {
+      "cell": "BL",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 77,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9fde9692b75cb9d989325e505f9d94e8f04879683c8b2faa0aac8b0be3fa0252"
+    },
+    {
+      "cell": "BR",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 43,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "44f578b772259cc060d12fa8a65163d790d5400486c6983a4e6e349b9c2b91c9"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Against labelled technical guide, native TL=SE, BL=NW, BR=NE. TR has NW body/rear-door-on-right plane again but basket protrudes RIGHT (SW attachment silhouette) instead of LEFT as correct NW. TR is a hybrid and cannot count as independent SW; missing SW needs rear door on LEFT plane and blank side on RIGHT."
+  ],
+  "alpha_policy": "Actual alpha measured. Hidden RGB at zero/very low alpha is not visible haze. No alpha reconstruction, keying or pixel edits.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "actual_body_guide_cell_map": {
+    "TL": "SE",
+    "TR": "NW-body-with-wrong-side-basket",
+    "BL": "NW",
+    "BR": "NE"
+  },
+  "missing_guide_corners": [
+    "SW"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-auto-body-shop-63875699:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-auto-body-shop-63875699-1/NE.png",
+  "sourceSha256": "cb32fcbb51240ef99f0fe5258fe7ce12a076e3ba5bea5148db5de275bf213444",
+  "output": "identity-references/variation-industrial-auto-body-shop-63875699-1-ad774170/source.png",
+  "outputSha256": "cb32fcbb51240ef99f0fe5258fe7ce12a076e3ba5bea5148db5de275bf213444",
+  "width": 603,
+  "height": 456,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      603,
+      456
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-auto-body-shop-63875699-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-auto-body-shop-63875699:1",
+    "version": "variation-industrial-auto-body-shop-63875699-1-4views-v2",
+    "files": {
+      "NE": "cb32fcbb51240ef99f0fe5258fe7ce12a076e3ba5bea5148db5de275bf213444",
+      "SE": "64862f618085d530777fbd30235857663d9c96647d1ad443daea25204526308f",
+      "SW": "87b07d0769b8735c47bc8e9f9ce4c15bfadf70d06f3145756faf71853c0a1d42",
+      "NW": "f21660ac9725c49f7b51c714e840acc0631c4fa8831db3ee7f59ce06623467ad"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-10-0.webp",
+    "atlasSha256": "6ca370227e33f5f4eab6c0abe7cfcf952ed2ff26a21472925e105f582f2922ac",
+    "runtimePage": 10,
+    "localPage": 10,
+    "uv": [
+      0.6875,
+      0.710938,
+      0.867188,
+      0.856445
+    ],
+    "crop": {
+      "left": 1408,
+      "top": 1456,
+      "width": 368,
+      "height": 298
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-auto-body-shop-63875699-1.native.png",
+    "nativeSha256": "825250a950012014f048548255d891fb6b86452677f01e90f0360d47c7211eb8"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

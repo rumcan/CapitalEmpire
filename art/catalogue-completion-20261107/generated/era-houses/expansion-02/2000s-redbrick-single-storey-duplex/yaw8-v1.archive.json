@@ -1,0 +1,23 @@
+[
+  {
+    "key": "2000s-redbrick-single-storey-duplex",
+    "family": "yaw8",
+    "condition": "modern-era",
+    "version": 1,
+    "target": "generated/era-houses/expansion-02/2000s-redbrick-single-storey-duplex/yaw8-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/2000s-redbrick-single-storey-duplex/normal-v1.png"
+    ],
+    "prompt": "Render FOUR missing near-cardinal directions of ONE exact fixed house. REFERENCE1 is camera/geometry/door-window-occlusion authority; REFERENCE2 is its finished identity, matching detailed painterly miniature materials ONLY. Do NOT copy reference2's corner cameras. Subject: Two compact side-by-side one-storey redbrick homes under one shared charcoal pitched roof. Exactly two front doors near the middle, two broad outer front living windows, separate rear GLASS patio sliders, two roof vents. No upstairs floor or garage. An ordinary affordable duplex, distinct from the two-storey2010stownhouse pair.. Preserve every door/window/balcony/roof feature's actual world position as it rotates90degrees each time. Follow guide N E / S W cells, sameorthographic30degreesDOWN and nominal8degrees off cardinal; mainface broad, thin secondary side. Smooth consistent architectural lines and true rear surfaces, glazed patio sliders remain glass, not garage shutters. Solar panels ONLYwhere shown in guide, no migrating to opposite roof slope. Equal physical size across4cells. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT, shadowsLOWERLEFT; lamps/windowsOFF. Nativefinelypainted believable brick,render,timber,roofmaterials match reference2 exactly. Fourcomplete isolatedsprites, broadZEROALPHAtransparentmargins/gutters. No technicaltext, labels, groundplate, landscape, vegetation, people, scene, UI or haze.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b6afc9fd-e4b1-4e00-a5ad-10678b491890.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/2000s-redbrick-single-storey-duplex/normal-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+    "native_bytes_preserved": true
+  }
+]

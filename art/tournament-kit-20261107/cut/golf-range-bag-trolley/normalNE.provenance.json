@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:range-bag-trolley",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch01/bag-trolley/upgraded/normal-NE.png",
+    "sha256": "0acb5979c1784e3bd1a7eadfcca5b18743364ea541a598bbe3198b3b1f485437",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 76,
+    "top": 7,
+    "width": 431,
+    "height": 573
+  },
+  "output": "normalNE.native.png",
+  "sha256": "073205d112f486ab3cc90bc1b67f67576965da6c1064e3e887ca4a4f08e26610",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

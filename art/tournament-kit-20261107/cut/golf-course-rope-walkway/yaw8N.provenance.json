@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-rope-walkway",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch02/rope-walkway/yaw8-N.png",
+    "sha256": "39613968667692afa691fd6a2a1a198bc0b6308354ad9e1b411bed6d4514db4e",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 54,
+    "top": 79,
+    "width": 511,
+    "height": 433
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "33013f97a8a8d00bce1eab4b208c9b12bf9eac391d93259eec2c18824bc8ce28",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

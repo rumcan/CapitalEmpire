@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "review_result": "PASS-BR-rear-sliver-repair-and-alpha;HOLD-existing-under-yaw",
+  "source": {
+    "path": "generated/budget-1950-shanty-shed/yaw8-v2.png",
+    "sha256": "5fd10aa2beae60c9959b3d06572b8859df457c2aafeb1e1ea5013eecec388f8e",
+    "bytes": 1337384
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "exact_prompt": {
+    "path": "generated/budget-1950-shanty-shed/yaw8-v2.prompt.txt",
+    "sha256": "447fa2d4dc5ffa879538ce9d5e8b24997d1a25de2e7d692cbcc3c3cf8f4f44a5",
+    "bytes": 1082
+  },
+  "parent_provenance": {
+    "path": "generated/budget-1950-shanty-shed/yaw8-v2.provenance.json",
+    "sha256": "6c495ef9be64e1b5a7701b0b7cbdf41449db008701c9302e79cb04faddcf654a",
+    "bytes": 1871
+  },
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.641743549827156,
+  "outer_border_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "center_gap_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "nominal_cells": [
+    {
+      "cell": 0,
+      "nominal_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 79,
+      "rgba_rectangle_sha256": "38563f45b34a9ce3ef6ae4d7181755f6d60d594adcc9e2e30de0812e79dc2cca"
+    },
+    {
+      "cell": 1,
+      "nominal_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 99,
+      "rgba_rectangle_sha256": "d5cadee58ca2372986b91ba79356262e8ac7d73207a3da18beed7263d0053b52"
+    },
+    {
+      "cell": 2,
+      "nominal_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 80,
+      "rgba_rectangle_sha256": "47804f74d8b44933bce527a801d69c7633b0f39fa78fe9543dba6d0ba580a58c"
+    },
+    {
+      "cell": 3,
+      "nominal_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 80,
+      "rgba_rectangle_sha256": "d84bef7cb92462de1ce3fc21e5ecea9d7ed6b44176919839f5def77867019bfc"
+    }
+  ],
+  "native_baseline_measurements": [
+    {
+      "view": "N",
+      "source_local_x_range": [
+        135,
+        450
+      ],
+      "alpha_threshold": 128,
+      "slope": 0.05758092320214409,
+      "rms_px": 0.29386182871277483,
+      "conditional_yaw_if_pitch30": 6.569348312020159,
+      "target_slope_at8yaw30pitch": 0.07027041735119573,
+      "not_independent_camera_certificate": true
+    },
+    {
+      "view": "S",
+      "source_local_x_range": [
+        133,
+        450
+      ],
+      "alpha_threshold": 128,
+      "slope": 0.057623529039485546,
+      "rms_px": 0.3073492869345349,
+      "conditional_yaw_if_pitch30": 6.574166632278377,
+      "target_slope_at8yaw30pitch": 0.07027041735119573,
+      "not_independent_camera_certificate": true
+    }
+  ],
+  "notes": [
+    "BR windowed gable now shows rear-vent sliver instead of front green door/tool doors; limited identity/sliver repair passes.",
+    "N/Sfoundation transverse slopes remain shallow; direct native regression attached. Exact8 geometry remains held."
+  ],
+  "source_only": true,
+  "no_native_pixel_changes_or_source_crops": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false
+}

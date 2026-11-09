@@ -1,0 +1,47 @@
+{
+  "key": "golf-source-01-01-food-truck",
+  "family": "yaw8",
+  "condition": "upgraded",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-yaw8-v1.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-yaw8-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-normal-v1.png"
+  ],
+  "runtimeTarget": {
+    "eventTypeId": "foodTruck",
+    "eventName": "Food truck",
+    "currentSpriteSubjectId": "golf:food-tent",
+    "newArtSubjectProposal": "golf:event-food-truck",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 3,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 6,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 4,
+        "hy": 4,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "prompt": "Create UPGRADEDcondition matchingReference2, retaining FOUR exact nearcardinal cameras/mainfaces and fixed physical layout of Reference1. Reference1 is N E / S W camera and assemblyauthority, Reference2 finer materials/conditionupgrade only. Sameoneobject, neverredesignorrepancameras. Well-maintained period1980swhite/green catering step van, clean counter, restrained awning and stainless roof extraction. Same identifiable side/door/wheel layout across its eight views.. Preserveallwindows/vents/doors/rearhatches/awning/frame/attachments onphysicalfixedsides; nevercopyfrontfeaturesontoback.  Fresh cleancream/greenpaint, soundcanvas, professionalequipment; no rust/tornholes/flakingwood. Detailedpainterlyminiaturestylematchesbothrefs. Orthographic30degreesDOWN, nominal8degreeoffcardinal likeReference1, same4cells. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lamps/screensOFF. Completeisolated equallyscaledobjects with generousgenuinelyzeroalpha transparentmargins/gutters; nogroundplate/scenery/people/plants/UI/captions/haze.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-08145da0-7a8e-456b-8136-e5ad6c1a417c.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-yaw8-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "49ee11decee85f6f1f6b7b692af819da65fa5cdb4456ca000705d93fc8204d71",
+  "native_bytes_preserved": true
+}

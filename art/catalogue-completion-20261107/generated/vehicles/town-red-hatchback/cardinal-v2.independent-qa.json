@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "source": {
+    "path": "generated/vehicles/town-red-hatchback/cardinal-v2.png",
+    "sha256": "a8ef62a7bb2cb8c1ed599b78740932982b8feb554e93389e503ccd0d4569ccf1",
+    "bytes": 848085
+  },
+  "review_result": "HOLD-parent-declared-failed-sheet-camera-calibration",
+  "hold_evidence": "Parent task: generic4view sheets failed, redcardinalv1/v2 held; abortedbatch56 produced no other worker results.",
+  "independently_visually_reviewed_this_turn": false,
+  "usable_source_view_count": 0,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_preserved": true
+}

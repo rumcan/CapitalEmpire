@@ -1,0 +1,1230 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "scope": "Independent visual QA of ALL26currently-whitelisted historical subjects, eight source images each208views. Diagnostic resizing/compositing only; original art and runtime not modified.",
+  "approvalClaimed": false,
+  "method": "Viewed seven1840pxcontact sheets at original resolution and enlarged dedicated8-view diagnostics for gazebo and timber garage. Did not equate PNG/alpha/hash validity with visual correctness.",
+  "blockingFindings": [
+    {
+      "subject": "world:gazebo",
+      "reason": "Repeated normal-camera/front entrance inNE/SE/SW. Exclude from true8reuse until genuine corner redraw.",
+      "detail": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\detail-22.png"
+    },
+    {
+      "subject": "golf:clubhouse-shanty",
+      "reason": "Owner explicitly rejected this blue-tarp/goblin-shack style; replacement1950sbudget clubhouse is already in progress. Do not call this historical artwork a completed replacement."
+    }
+  ],
+  "counts": {
+    "subjectsVisuallyInspected": 26,
+    "viewsVisuallyInspected": 208,
+    "definiteRotationBlockers": 1,
+    "explicitOwnerStyleReplacement": 1,
+    "remainingProvisionalDistinctAngleSubjects": 24,
+    "finalArtApprovals": 0
+  },
+  "importantLimits": [
+    "Contact-scale review is sufficient to catch repeated camera/facade errors but does not certify exact8degree yaw, all fine roof/window positions, anchors or physical pixels/metre.",
+    "Most historical art has window/neon/lamp glow. These cannot be represented as newly generated late-afternoon daylight art. The earlier only-from-now-on instruction is not retroactive approval to regenerate all historic art.",
+    "Several haunted/rundown and workshop-subject identity/style questions are recorded individually; no unrelated candidate has been silently approved.",
+    "No image generation, runtime edits, full tests, build or server were started."
+  ],
+  "items": [
+    {
+      "number": 1,
+      "subject": "golf:clubhouse-shanty",
+      "reviewDisposition": "owner-style-replacement-required",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Historical timber/blue-tarp hut is precisely the shack style the owner rejected. Eight exposures are distinct, but it is unsuitable as the new1950sbudget clubhouse.",
+      "lighting": "Warm porch lamp; historical dusk.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-01-04.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/golf-clubhouse-shanty/NE.png",
+          "sha256": "fbd77aaed5ea2a0c50c05f21161c17bf2e3e2c63b545e4f3e2f963c3497abfcc"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/golf-clubhouse-shanty/turned/N.png",
+          "sha256": "37fd845e9077f984044373e498d5a7f0a4be24c3b4d38457d30e5de275802b92"
+        },
+        "normalSE": {
+          "file": "art/building-views/golf-clubhouse-shanty/SE.png",
+          "sha256": "ada37ea1a6baf3c88e052da94160e8b7b48af5af3d77d7a093c9ec4f952e43f0"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/golf-clubhouse-shanty/turned/E.png",
+          "sha256": "81618684c0ebf14f94759cc0396bed68ca1ac88230616212f9ec4a02e3c92db0"
+        },
+        "normalSW": {
+          "file": "art/building-views/golf-clubhouse-shanty/SW.png",
+          "sha256": "bf15a229ecd2426db8d895a911881ce9d36899861ead7c7938651c18b4c1c8fc"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/golf-clubhouse-shanty/turned/S.png",
+          "sha256": "abdb54faf37dee5a1d62caa9e9d53db24fe61c5280b91da4d9608958abab1fd0"
+        },
+        "normalNW": {
+          "file": "art/building-views/golf-clubhouse-shanty/NW.png",
+          "sha256": "4ce772b865eefb814feb4e7723ecc2d659ce91ceee75eabce2a67354ee2cfb6a"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/golf-clubhouse-shanty/turned/W.png",
+          "sha256": "e626fd0e93d65092c043a5de7bbedc28a9c647c19de9d1f229e5abaee9af58e6"
+        }
+      }
+    },
+    {
+      "number": 2,
+      "subject": "gen:back-bbq-deck",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Deck/front door and grill/umbrella rotate to side exposures; opposite rear stays blank.",
+      "lighting": "Dusk windows and doors glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-01-04.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/gen-back-bbq-deck/NE.png",
+          "sha256": "2ed7fed86664754c5b879e9b79e20b35eca48cc2a0e860159253f314aac8d5ab"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/gen-back-bbq-deck/turned/N.png",
+          "sha256": "5aab6ac163af97ef91fe6ce8479de5660b392e099c24c666bb062201c6622f37"
+        },
+        "normalSE": {
+          "file": "art/building-views/gen-back-bbq-deck/SE.png",
+          "sha256": "3c8858455952108663d4a4a44e8dc2ea9fe8a8bfeccd8f609fe25a8148a28800"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/gen-back-bbq-deck/turned/E.png",
+          "sha256": "ce649225f3d375b4bd6e985ef83138cac94be299f5e9b25cbb5f70e08fb9e7b1"
+        },
+        "normalSW": {
+          "file": "art/building-views/gen-back-bbq-deck/SW.png",
+          "sha256": "6d3539df94aaa5b0b4c02bceee60741321a257a10ffd90b7c58231c231c4d1dd"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/gen-back-bbq-deck/turned/S.png",
+          "sha256": "3100724465fd0467c967f616a1b2f8f95994b52c8d6edae61446b4b76f598de6"
+        },
+        "normalNW": {
+          "file": "art/building-views/gen-back-bbq-deck/NW.png",
+          "sha256": "d7a63ec13f8ac23c1789d970963db454d0c39ac44ff87bfaf860ff1802b8a0cc"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/gen-back-bbq-deck/turned/W.png",
+          "sha256": "79031c33512bdd51b0ac1c05e8d613b4a1b171113655812eb28c874a82442a2e"
+        }
+      }
+    },
+    {
+      "number": 3,
+      "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+      "reviewDisposition": "provisional-needs-lighting-consistency",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Distinct front/deck and rear brace facades; normalNE and yaw8N glazing look unlit while normalSE glows.",
+      "lighting": "Mixed illumination between views.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-01-04.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-gen-back-bbq-deck-b546df1a-plain-1/NE.png",
+          "sha256": "458c207a5a3723ce59dd89a18d0d457eb8ef4f9859fb44778fd169ebd13c6342"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-gen-back-bbq-deck-b546df1a-plain-1/turned/N.png",
+          "sha256": "36ddd9b9dc049d3307f6ecb25c309d0fbf4d645e98c1e1c751eeab3a07d184e7"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-gen-back-bbq-deck-b546df1a-plain-1/SE.png",
+          "sha256": "7c7a45105d923e45c95ded39c4333f73930dc888adf654f2edc6abeb1ff0b7fd"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-gen-back-bbq-deck-b546df1a-plain-1/turned/E.png",
+          "sha256": "a9bbfb9b8a66e4780233f7b89c1581fb6a5832ca24ff72444e309a7e6790bf86"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-gen-back-bbq-deck-b546df1a-plain-1/SW.png",
+          "sha256": "15499160d240e76cc2b1b3bebb86fda7cef6bc374645761b94fcd3c43d48f198"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-gen-back-bbq-deck-b546df1a-plain-1/turned/S.png",
+          "sha256": "b92e0cbd5515721d39e8138066144de8c88592781ea082111574804f27ea142f"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-gen-back-bbq-deck-b546df1a-plain-1/NW.png",
+          "sha256": "b25593a35ebc5329bab682ca0602c0c18b3d72a25c57f8763963039709d1595c"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-gen-back-bbq-deck-b546df1a-plain-1/turned/W.png",
+          "sha256": "bac331558ac6be95bee8b9a0002dbc8a587bfbf6518ccec6d99f02c7db1b317d"
+        }
+      }
+    },
+    {
+      "number": 4,
+      "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Pool, extended wing and main roof alternate sides consistently; no repeated front substituted for rear.",
+      "lighting": "Dusk/window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-01-04.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-gen-back-patio-pool-3b943d52-plain-corner-1/NE.png",
+          "sha256": "ad7dbaa147de13c26d99f1df8043b8b063032bf1705341054e2f507498c522d9"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-gen-back-patio-pool-3b943d52-plain-corner-1/turned/N.png",
+          "sha256": "ff67d5811e02ed869aeb4e1c3053d0cb317e13e504aa4657d8f7e40a4f4c8a02"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-gen-back-patio-pool-3b943d52-plain-corner-1/SE.png",
+          "sha256": "0304622192f3795b5f5ef279c4e8e87baf3cc3f8c758d4ac264c7beadaa37cfe"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-gen-back-patio-pool-3b943d52-plain-corner-1/turned/E.png",
+          "sha256": "e321d53e2351a307dd8f2fc9e014a0e60e54f469510cd7dd294be2276df6f136"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-gen-back-patio-pool-3b943d52-plain-corner-1/SW.png",
+          "sha256": "e18989bc28233c10398891574ac420e432a946ec6937eb668ec39fc7bad5ce3c"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-gen-back-patio-pool-3b943d52-plain-corner-1/turned/S.png",
+          "sha256": "41aad1636eae49639ac09aa48392a5c4b6f62c9d72531c2c23378bcffb6211ad"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-gen-back-patio-pool-3b943d52-plain-corner-1/NW.png",
+          "sha256": "e059abc0b64793db6033d78ce35b22f3bc13859592fe097b8e2923840d8392f8"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-gen-back-patio-pool-3b943d52-plain-corner-1/turned/W.png",
+          "sha256": "83a03cbd2a26d7b4fca09ec14f0bdbc25de0bb575fa4ae32f1abe6d5bbd65031"
+        }
+      }
+    },
+    {
+      "number": 5,
+      "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
+      "reviewDisposition": "provisional-needs-small-artifact-review",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Screened porch, opposite blank rear and balcony side remain identifiable. Possible detached vertical stroke left of yaw8N; check native crop before visual acceptance.",
+      "lighting": "Dusk/window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-05-08.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-gen-back-screened-porch-8c31c391-plain-1/NE.png",
+          "sha256": "17c8623e9645c5ca318aba4704f4965140b42bc957bbbce9d5e33fab31be1915"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-gen-back-screened-porch-8c31c391-plain-1/turned/N.png",
+          "sha256": "458af2df4ce97e5ba5aa107dffa08125596de5dbc7219dd76c38a3bdc675d145"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-gen-back-screened-porch-8c31c391-plain-1/SE.png",
+          "sha256": "b551d024b750384eaed32e8508bf07068d533f6cb818e499a05777d0a521d81b"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-gen-back-screened-porch-8c31c391-plain-1/turned/E.png",
+          "sha256": "8cfac381421a679273ec80ea8305138ac7521dc72056ae50eb32e54f8fb3e53c"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-gen-back-screened-porch-8c31c391-plain-1/SW.png",
+          "sha256": "397aaca3750c5810937beb1cd09ec565d2ba87f00d7a086e3ef48e5a7e7ad566"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-gen-back-screened-porch-8c31c391-plain-1/turned/S.png",
+          "sha256": "eace393fd38cf3feb05b74ccd6c09a5d4fabfc92b36bae72865f68cbd79daa0f"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-gen-back-screened-porch-8c31c391-plain-1/NW.png",
+          "sha256": "331d5deb8fd0d6cc720833e120da2130573dd9774183a5138822ec755eb3b653"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-gen-back-screened-porch-8c31c391-plain-1/turned/W.png",
+          "sha256": "273ebdd7cc74d3e115c00cdeaf16f2a9dc5abd26b11f05de50c1ce468ce85877"
+        }
+      }
+    },
+    {
+      "number": 6,
+      "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Single main chimney, side garage, swing and sandbox have distinct front/rear/side exposures.",
+      "lighting": "Dusk/window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-05-08.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-gen-back-swingset-a10c81b7-plain-corner-1/NE.png",
+          "sha256": "09e9c92d5935cbdf4cff49ea6ba30b3688853b2b189bbe11cf9504136c44c0f9"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-gen-back-swingset-a10c81b7-plain-corner-1/turned/N.png",
+          "sha256": "99a0e7823f87f6842d10a44b4be9bffb554805d883450807bbd7868df563d133"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-gen-back-swingset-a10c81b7-plain-corner-1/SE.png",
+          "sha256": "c11a84291c6dfb1d2504b65f9aae8690d0a849113b7f43b3ffaaef94896e26fc"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-gen-back-swingset-a10c81b7-plain-corner-1/turned/E.png",
+          "sha256": "e77d177714cdb396673c5342191872df60759d0b45abb5ddf86c5acb0b0ea107"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-gen-back-swingset-a10c81b7-plain-corner-1/SW.png",
+          "sha256": "50f08615e2d695b816e06540369a9a4203dbd24134a9c489761385266d90bb25"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-gen-back-swingset-a10c81b7-plain-corner-1/turned/S.png",
+          "sha256": "99a1e46ffc4e857522c7e1ded467859d142fc0ffff1f8bf0e27a05a0a420a411"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-gen-back-swingset-a10c81b7-plain-corner-1/NW.png",
+          "sha256": "1c98513ca5433aaed2eef722385f0e3e5a7e6b69bcd4025583341b4e15a4a9ce"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-gen-back-swingset-a10c81b7-plain-corner-1/turned/W.png",
+          "sha256": "6a4a4a6477a7b397cf50c020a982a5c3de31c251a570af14b060308802ca3d87"
+        }
+      }
+    },
+    {
+      "number": 7,
+      "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Red gabled house, deck, swing and sandbox rotate coherently; rear view has different window/yard exposure.",
+      "lighting": "Dusk/window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-05-08.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-gen-back-swingset-a10c81b7-plain-1/NE.png",
+          "sha256": "5488d6395bd5ec90b13443622a3abb7ed25d61725ca35264daee1fae169492d4"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-gen-back-swingset-a10c81b7-plain-1/turned/N.png",
+          "sha256": "35a636c5a7e2c2aef8781732d3f2eef7e71c0357b61293f4fd6fb96292bd4a1f"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-gen-back-swingset-a10c81b7-plain-1/SE.png",
+          "sha256": "f381f452fd06d8bed26cf6e6539784ba7a0800f4e328b9c9b95d0993b735667d"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-gen-back-swingset-a10c81b7-plain-1/turned/E.png",
+          "sha256": "e64139a4002dd8f29e0920ae4b78f1fd693ac3a97d018c6c79ba130b555ede55"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-gen-back-swingset-a10c81b7-plain-1/SW.png",
+          "sha256": "a6871d8df86c2e4752e7ac49e9641c1bf3d789d1d8023a972df0e10be9fe5f1e"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-gen-back-swingset-a10c81b7-plain-1/turned/S.png",
+          "sha256": "74c20d776a3ef166418fec123607204a17c3338f346a477d39feee8562b5f760"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-gen-back-swingset-a10c81b7-plain-1/NW.png",
+          "sha256": "259248ce5fd40c030e2fec84235adb1f9adbde61d3b549ef4d0ca6caf4425953"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-gen-back-swingset-a10c81b7-plain-1/turned/W.png",
+          "sha256": "10ea51ac14960b45f8ea47c057d5dc0af93e4112d75fcad6e330a20fa84ab37e"
+        }
+      }
+    },
+    {
+      "number": 8,
+      "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "White cross-gable cottage and chimney preserve front deck/grill and blank rear distinction.",
+      "lighting": "Some window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-05-08.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-ref-building-house-cottage-north-304e5431-plain-1/NE.png",
+          "sha256": "ceba58144cdf1058ce2c2f1ea1886e74685ecb7bfaa4c75979980ad6e77cec07"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-ref-building-house-cottage-north-304e5431-plain-1/turned/N.png",
+          "sha256": "c704813de3bf6e29525bf55104cff4ede07c1f959c5dfa4dddc5f4279a50471e"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-ref-building-house-cottage-north-304e5431-plain-1/SE.png",
+          "sha256": "539d072941d4dc5664af9c133cea1acfac2b5e80802e90c41d1c11d12e588e9a"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-ref-building-house-cottage-north-304e5431-plain-1/turned/E.png",
+          "sha256": "fe9258f5ab89da193cd03b341a52d8491b448179d07a5b235d61f087fc7de123"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-ref-building-house-cottage-north-304e5431-plain-1/SW.png",
+          "sha256": "343739e2f38569536516ce061d07576f8301b499177848682a7f4978eab00fdc"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-ref-building-house-cottage-north-304e5431-plain-1/turned/S.png",
+          "sha256": "95470f7e0c048ba51644e8675d0919af474a10f3a9096f59e391e7024f355e8c"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-ref-building-house-cottage-north-304e5431-plain-1/NW.png",
+          "sha256": "8c15346149acbf9460f99ae4d8c0124e826740020945c200ee788cfb5b5e15b8"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-ref-building-house-cottage-north-304e5431-plain-1/turned/W.png",
+          "sha256": "10f78b71df0ac716fc189aea9f6a181c7f990def087c28a86f7923b8730d6251"
+        }
+      }
+    },
+    {
+      "number": 9,
+      "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Porch entry and hose remain on entry sides; blank rear and side step are distinct.",
+      "lighting": "Largely unlit/daylight.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-09-12.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-ref-building-house-garage-north-a7184edf-plain-1/NE.png",
+          "sha256": "91fa2c3eb80eb297e47ade2d80d35def3e1a9ab9ae7797ee66667f5b0c6f0779"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-ref-building-house-garage-north-a7184edf-plain-1/turned/N.png",
+          "sha256": "9ca2c91b909e26e16cee7dc4d00b58874b9b2d8d27a4f45809f1c72f3aa48566"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-ref-building-house-garage-north-a7184edf-plain-1/SE.png",
+          "sha256": "ffd7578c46889fe52a6eb1a3076557b29f723db86c15e3a7df6a9fee6aeba9ce"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-ref-building-house-garage-north-a7184edf-plain-1/turned/E.png",
+          "sha256": "c6767c9fd8ce8e6b19caf23eab0cc617fc521c92575a95baf105c8557c0b2363"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-ref-building-house-garage-north-a7184edf-plain-1/SW.png",
+          "sha256": "8163b5b52d1df12d73b6f2b35896814a1818d8b2266a88bdb0124ee7682a679f"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-ref-building-house-garage-north-a7184edf-plain-1/turned/S.png",
+          "sha256": "6bff0393b265c2787c6aa79ac4e4d2e44cc6f7d27db4324e4ea41234b1591a29"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-ref-building-house-garage-north-a7184edf-plain-1/NW.png",
+          "sha256": "27f2342818a1e0d198ee24e7fd8130625a0cf9c9df37837678653f77f1c8b03e"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-ref-building-house-garage-north-a7184edf-plain-1/turned/W.png",
+          "sha256": "bfbb8020a9efb01606a3bb30a33f689f3990ba72cc686c56348294153a061ad2"
+        }
+      }
+    },
+    {
+      "number": 10,
+      "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Large multi-gable house retains chimneys, upper porches and stairs; all eight are distinct exposures. Fine roof intersections need larger review before asserting exact geometry.",
+      "lighting": "Strong historical dusk/window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-09-12.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-ref-building-house-large-north-24d21776-plain-1/NE.png",
+          "sha256": "c696bd415f27dfb2182734ecb22f50adf708e87989ecf1a631b2766e00898213"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-ref-building-house-large-north-24d21776-plain-1/turned/N.png",
+          "sha256": "c6417026a3aaa10cfc754cdf5471061c6fabb953ce7d4169ba2969c3662ce12c"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-ref-building-house-large-north-24d21776-plain-1/SE.png",
+          "sha256": "47bc2304cf33839cfac0a868448278e6d80c57a9700c488c2a9daf9750b7a126"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-ref-building-house-large-north-24d21776-plain-1/turned/E.png",
+          "sha256": "f76088679c0be8c2c9cbbad45aecda29ad16d7297d369d2e4a1ca62ca1c55130"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-ref-building-house-large-north-24d21776-plain-1/SW.png",
+          "sha256": "6dddaa7788b90fc9e9f7a1c5897b18dc0ccc2dc56313cd3ee9884e29d667d55d"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-ref-building-house-large-north-24d21776-plain-1/turned/S.png",
+          "sha256": "83bebea7e7edf57c9e86185478fcd6ce56084d1e332393b677475020b1c40db0"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-ref-building-house-large-north-24d21776-plain-1/NW.png",
+          "sha256": "2f7228a88d3f7124d4ff7665cc160f7e92b0b620c966b35a77763929575a7e3f"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-ref-building-house-large-north-24d21776-plain-1/turned/W.png",
+          "sha256": "3736dfea82aac4792c8282c0bc15904d0ed6d83b08b290e43fbffc7e442adab0"
+        }
+      }
+    },
+    {
+      "number": 11,
+      "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Full-size diagnostic confirms garage front door+window, opposite circular vent and distinct blank sides.",
+      "lighting": "Warm exterior lamp on.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-09-12.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-static-garage_timber-v2-22fab891-plain-1/NE.png",
+          "sha256": "b5bf84d14c15cbdd15126c0331083d2243862cb74e8debf852546674b8b462b8"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-static-garage_timber-v2-22fab891-plain-1/turned/N.png",
+          "sha256": "c39faa40b946f3dd79355ba41270f6c834978f3b0befd6af73dc24d23d2116ee"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-static-garage_timber-v2-22fab891-plain-1/SE.png",
+          "sha256": "7a001f03b75e16b4e81678dfc6c16a99339a203d2957588053a224769a320e26"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-static-garage_timber-v2-22fab891-plain-1/turned/E.png",
+          "sha256": "bb9a5b60c45cc54b000208d6c594401380d3926c2986e6a533026d43aaf0e8ce"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-static-garage_timber-v2-22fab891-plain-1/SW.png",
+          "sha256": "b14a12dda2dc93d8e9ce0a844446b3d4653bb3a6a74968b774e493bfde57c194"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-static-garage_timber-v2-22fab891-plain-1/turned/S.png",
+          "sha256": "2b956ef94a941d9b72002dbd7b5c4de917fd92552db3f8c831c5b025df616909"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-static-garage_timber-v2-22fab891-plain-1/NW.png",
+          "sha256": "b1e2257111b7410630e9d7f235dc184f490fc98ea083abee8108971e3496cabd"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-static-garage_timber-v2-22fab891-plain-1/turned/W.png",
+          "sha256": "25ebc0e0d0812ae64e47d82737aead9e6068111efae6228ce374b7f410c95cf6"
+        }
+      }
+    },
+    {
+      "number": 12,
+      "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Green house front porch/entry, external chimney, blank rear and gable windows remain distinct.",
+      "lighting": "Window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-09-12.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-world-house_1-ba13ed2e-plain-corner-1/NE.png",
+          "sha256": "cc1d09488968388c1e2f3c0bd86a0d9f170581e76958e7d2c5501f3f011f6e02"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-world-house_1-ba13ed2e-plain-corner-1/turned/N.png",
+          "sha256": "441514a69bf1a3bb5409e3fa91762a77107e0b08ff31813273e0cca354f58ad3"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-world-house_1-ba13ed2e-plain-corner-1/SE.png",
+          "sha256": "56cff622e33f8476cc4ec99836876f3e60330e2d652e7f5753429380eb37fb37"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-world-house_1-ba13ed2e-plain-corner-1/turned/E.png",
+          "sha256": "d97d28f4f08b8fee0916c12b5855f3970ddc5efda33b43dd971b2f1d4ff90857"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-world-house_1-ba13ed2e-plain-corner-1/SW.png",
+          "sha256": "40a9d856c91068cfea5dfab0aff8dc3b79cef26f3b0cf047beb49f16e0aa30c1"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-world-house_1-ba13ed2e-plain-corner-1/turned/S.png",
+          "sha256": "ebacb63e75127e59689a32f89f40491afcd1b51554ef28c1d2f641832e65a17a"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-world-house_1-ba13ed2e-plain-corner-1/NW.png",
+          "sha256": "7c82e7cf96f2bd530dac91110a17ad5e346afc8526ad9fb6c6c3618126680993"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-world-house_1-ba13ed2e-plain-corner-1/turned/W.png",
+          "sha256": "316a01a48b92bf7c3e2ce0a1547a8554d2fa0122a0cca853b46f13e441398cf8"
+        }
+      }
+    },
+    {
+      "number": 13,
+      "subject": "variation:world-house_1-north-2521eca8-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Green house with three small attic-gable windows, front entry/porch and different rear/side openings; eight exposures visible.",
+      "lighting": "Largely unlit/daylight.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-13-16.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-world-house_1-north-2521eca8-plain-1/NE.png",
+          "sha256": "d67e0284d26d492322178b3f85a4a0b4020d26b9948efbc7bb41bd4b6660d0d7"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-world-house_1-north-2521eca8-plain-1/turned/N.png",
+          "sha256": "3ed33d4f55e80746cbae266c139fd444584b1d1ba3e99ddec7806f4b16fa206e"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-world-house_1-north-2521eca8-plain-1/SE.png",
+          "sha256": "9a00c669f65568a5c25b897021e1ac442e656410b8cc3e8f6c40fbf7cc64e531"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-world-house_1-north-2521eca8-plain-1/turned/E.png",
+          "sha256": "6b3d3e252bbc1b8f92376d6f98878987eb32b1103bc025dedf7078429c6205d6"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-world-house_1-north-2521eca8-plain-1/SW.png",
+          "sha256": "9855c926215d7f788ec955d5aaadb021ad48ff4552510fba63b4c52c4c52dcb6"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-world-house_1-north-2521eca8-plain-1/turned/S.png",
+          "sha256": "fb38e2726698c312b4d0473f455012ff49b430594b0df3a38fd1813c6383724c"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-world-house_1-north-2521eca8-plain-1/NW.png",
+          "sha256": "c603beb341677ec6fffccccace1491f7fde5c92da17bb45d5d2a0a5e02ecb2aa"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-world-house_1-north-2521eca8-plain-1/turned/W.png",
+          "sha256": "e7908fda21272f9e17c792bd987ac8f60a1cb4d9cd8605171737a10fabb800e4"
+        }
+      }
+    },
+    {
+      "number": 14,
+      "subject": "variation:world-house_3-north-2638a034-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Front door between windows/steps, side chimney and blank rear correspond across corner and cardinal images.",
+      "lighting": "Largely unlit/daylight.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-13-16.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-world-house_3-north-2638a034-plain-1/NE.png",
+          "sha256": "8a8a21d837cfcd834e3ae46132c502d988b0739ff011ff129e9b0c08f8cc22e8"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-world-house_3-north-2638a034-plain-1/turned/N.png",
+          "sha256": "bfb72148e4752bf7ecbb09a9c370ea1fcbba02f71eaefd563ed9caac7aa4f8d7"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-world-house_3-north-2638a034-plain-1/SE.png",
+          "sha256": "50f4f4cce93d30b6da00d500577e8d3cd568f19d9251d50f9b195c8d76f62591"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-world-house_3-north-2638a034-plain-1/turned/E.png",
+          "sha256": "a26729178b4c882aebbc543ea28bf25894e0d65a3a011daf332248ef4359af0f"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-world-house_3-north-2638a034-plain-1/SW.png",
+          "sha256": "108f93ee84288db19ff72145fc7fe170ebbaa62fe203070b092d0a26ad60042c"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-world-house_3-north-2638a034-plain-1/turned/S.png",
+          "sha256": "888377e97cadd893b59133406c8cdd8068c07cd35e9e061b2dcccc95d9782285"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-world-house_3-north-2638a034-plain-1/NW.png",
+          "sha256": "4feea52a9237e2c688724ccf740e6fec0d76a57987390a74ecf1935c7af12077"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-world-house_3-north-2638a034-plain-1/turned/W.png",
+          "sha256": "99a944dceb20fbff85044c355c5bd26c72460caab792853e42d80cc2d7f0dcf5"
+        }
+      }
+    },
+    {
+      "number": 15,
+      "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Brick store retains external stairs, boarded openings, pipes, roof AC and garage. Eight distinct facade exposures.",
+      "lighting": "Warm garage/exterior lamp.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-13-16.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-expansion-boarded-store-rear-d09a309a-1/NE.png",
+          "sha256": "d817eab530332ec00c2d546240fd8d7f511d13634c6569f53ccea51d1a5193a9"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-expansion-boarded-store-rear-d09a309a-1/turned/N.png",
+          "sha256": "398e31f78e63161427231280d55bb39e3de4f2d730c91f37fc0cd61e2a4a88a5"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-expansion-boarded-store-rear-d09a309a-1/SE.png",
+          "sha256": "54646258a123c8b856b39e9e9ee810f4e4dc9ab610ec3c04323c434e6bd9a8f1"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-expansion-boarded-store-rear-d09a309a-1/turned/E.png",
+          "sha256": "ff99029b2c79cd3e69b1e7c52846cce9d0d754d2edf5d1a5f6795fa6da2c30cd"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-expansion-boarded-store-rear-d09a309a-1/SW.png",
+          "sha256": "7713fcc1e43e1750dfa2915604890fa1ec2371f12994db1e9b4caed8bc27fe7d"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-expansion-boarded-store-rear-d09a309a-1/turned/S.png",
+          "sha256": "db0076762f2e63433fe1858246e25b12e600545ebf92ce8964e1f7b5921e0869"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-expansion-boarded-store-rear-d09a309a-1/NW.png",
+          "sha256": "a89f4b3890584ab267992b5fbca3c34509bdf20d84348daca481a4ad9888ea85"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-expansion-boarded-store-rear-d09a309a-1/turned/W.png",
+          "sha256": "a3cecf04484e161f4ec98abf6b44c96bf35e8b4cffb6dff35c277d4e8fe168b7"
+        }
+      }
+    },
+    {
+      "number": 16,
+      "subject": "variation:expansion-derelict-two-storey-012bed48:1",
+      "reviewDisposition": "provisional-needs-style-review",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Distinct sides of ruined multi-storey Victorian house, broken roof and multiple chimneys; haunted/Halloween appearance is conspicuous and needs theme review.",
+      "lighting": "Strong glow/jack-o-lanterns.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-13-16.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-expansion-derelict-two-storey-012bed48-1/NE.png",
+          "sha256": "0a2debd1269fe1db675d0594c39033f838b990072b5e3d47109c88f83956359d"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-expansion-derelict-two-storey-012bed48-1/turned/N.png",
+          "sha256": "b2bbfab6467f74cc556bf01cd5add623963539ce004e9c11233298d938e9c29b"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-expansion-derelict-two-storey-012bed48-1/SE.png",
+          "sha256": "5468cb1ad73d5ac5b8747fcba5f815e53798ba84b911dd1f2080dcae57e9ac77"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-expansion-derelict-two-storey-012bed48-1/turned/E.png",
+          "sha256": "2d9415ecdb2957ba0a14dc020aa2fba4d81097802a1989b1cf336a4d9b9b79a6"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-expansion-derelict-two-storey-012bed48-1/SW.png",
+          "sha256": "dbcf41f7dca1aca2b6886f9eaa375f993c67cf8c71200eea65709f6c9c09164f"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-expansion-derelict-two-storey-012bed48-1/turned/S.png",
+          "sha256": "34d74c87062dd391ff8f176dfe7320cfd676312262d76d9bc55ce6bef9d31935"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-expansion-derelict-two-storey-012bed48-1/NW.png",
+          "sha256": "4b7da1e95213bfd4f2e766ac81afadf1e09ab9ef817c240ee5c82c45d53f1cea"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-expansion-derelict-two-storey-012bed48-1/turned/W.png",
+          "sha256": "d3d30b7b0e806875adac636a9de9c419a1ea4f35a488c1a9fff8d900a45a3359"
+        }
+      }
+    },
+    {
+      "number": 17,
+      "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Boarded timber house shows distinct front, rear and side openings and porch; detailed roof-hole positions not physically certified.",
+      "lighting": "Unlit/weathered.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-17-20.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-expansion-rundown-house-a7c17683-plain-corner-1/NE.png",
+          "sha256": "964e200a51a2f2d990136aad445cc2ca75b40a561f7da71453d8e963ebd729b9"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-expansion-rundown-house-a7c17683-plain-corner-1/turned/N.png",
+          "sha256": "26276d2fe866f0a1455b29f1fd38e473ab702ab309abebb32e01e39e8a316fef"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-expansion-rundown-house-a7c17683-plain-corner-1/SE.png",
+          "sha256": "317b1d90fb615778a062dbb1d984692227e7c2c5f18d2434e5fb7716d85d5f69"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-expansion-rundown-house-a7c17683-plain-corner-1/turned/E.png",
+          "sha256": "a1b51faf10087b980373b802e826efa72a8b8ff6fb44fab168442adb4ddbbea4"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-expansion-rundown-house-a7c17683-plain-corner-1/SW.png",
+          "sha256": "524d032e5d76453177a34b431e7fd6476233f9624aea9718494e6fbdcfaf9a09"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-expansion-rundown-house-a7c17683-plain-corner-1/turned/S.png",
+          "sha256": "ec61b77a06a93bf8188661b316fa39104db77de79869d7fa8905de25b5ba8246"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-expansion-rundown-house-a7c17683-plain-corner-1/NW.png",
+          "sha256": "5e424160a2d5de3e79abf3684895f501552f8685903adc4312f6939219dc7e2d"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-expansion-rundown-house-a7c17683-plain-corner-1/turned/W.png",
+          "sha256": "1b39cb8a02d88450fdded6227a074ff023d9fc62f14abfb39187888116ea896f"
+        }
+      }
+    },
+    {
+      "number": 18,
+      "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Ivy-covered entry, steps, blank rear and exposed side chimney provide distinct exposures.",
+      "lighting": "Unlit/weathered.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-17-20.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-expansion-rundown-house-north-24ae3116-plain-1/NE.png",
+          "sha256": "58b1bf7481cc1810db9d963ba66f984de93172c88fa2c4147b54f7599a1208aa"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-expansion-rundown-house-north-24ae3116-plain-1/turned/N.png",
+          "sha256": "0da352c7b5a560417fd1823059f992a10ca73667df75b49d85ccab828b3f2bcc"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-expansion-rundown-house-north-24ae3116-plain-1/SE.png",
+          "sha256": "899f7d4d088f3a45bd0c25c93164dd1d0be4e56dac7266752a9ebd4726e7f449"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-expansion-rundown-house-north-24ae3116-plain-1/turned/E.png",
+          "sha256": "2c0fe669446422e523e6a99631363c3ef8bd9d8924f596b94ad6f83a1f1a15f6"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-expansion-rundown-house-north-24ae3116-plain-1/SW.png",
+          "sha256": "1efd7d8b1a437e2b874b8fa5e65282fede87488513071e52cefca4a980f32d61"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-expansion-rundown-house-north-24ae3116-plain-1/turned/S.png",
+          "sha256": "00e880238748bb953384e7d3f6bc6ef1314aa876636edef2f6ea53ae55e82e4d"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-expansion-rundown-house-north-24ae3116-plain-1/NW.png",
+          "sha256": "ec031e36fffa71712918d53f37937e75d67bbfe01feb6ce0032452210b1bffb2"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-expansion-rundown-house-north-24ae3116-plain-1/turned/W.png",
+          "sha256": "ef90871b659865b7096a0fe3466ea067945f9abe669ed43c948329a6f2e613e3"
+        }
+      }
+    },
+    {
+      "number": 19,
+      "subject": "variation:world-arcade-f5b7f5eb-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Arcade lettered front, blue-window side, rear vents/blank facade and side door correspond across eight exposures.",
+      "lighting": "Neon/window glow; historical nighttime.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-17-20.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-world-arcade-f5b7f5eb-plain-1/NE.png",
+          "sha256": "2f47485c5f554bf39c8f30904cd777a91ebfb50a4bf77693effbe009e2b0d54c"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-world-arcade-f5b7f5eb-plain-1/turned/N.png",
+          "sha256": "23ac298339af9bdc7bd80176edfd006d4bb4d3e2a760295aadf9878dc1343ea6"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-world-arcade-f5b7f5eb-plain-1/SE.png",
+          "sha256": "c3e80abb0d442f65ebd34d8f452cc5bab17341571a824ee2a1af12709ae7dbce"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-world-arcade-f5b7f5eb-plain-1/turned/E.png",
+          "sha256": "62072a4c15fd7c4eef6e7611cbe79a39fc3d2d81690ca799f0094e0ea27ee7f9"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-world-arcade-f5b7f5eb-plain-1/SW.png",
+          "sha256": "5cc1fb20c66853e9537e81e8909bbc3fe0d1bfeda9756e9875ab416ebd77caf6"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-world-arcade-f5b7f5eb-plain-1/turned/S.png",
+          "sha256": "d5233ebd912ca3902e08fc1bc7ee9eab8b16f212876d8f55dd30d4156461f86e"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-world-arcade-f5b7f5eb-plain-1/NW.png",
+          "sha256": "70e3a1b6fbd0ca1333bcd100b55df973a9cdaee7953ddd8716db95b99524338b"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-world-arcade-f5b7f5eb-plain-1/turned/W.png",
+          "sha256": "70a8ba720d07ab9b7965976c4a4258c48984f97ce5d0e33d3dda98abea852351"
+        }
+      }
+    },
+    {
+      "number": 20,
+      "subject": "variation:world-diner-c9878d46-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Diner neon front, rounded chrome, different rear/side blank windows and rooftop equipment rotate visibly.",
+      "lighting": "Strong neon/window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-17-20.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-world-diner-c9878d46-plain-1/NE.png",
+          "sha256": "b5f2061c26edc73e191315744cda5acd2b0ef1d904f6c1eb69f23502f2a30bb8"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-world-diner-c9878d46-plain-1/turned/N.png",
+          "sha256": "ed7d25eebc090c3c93c2c0ceb60640670e9e31969e2fe662737582e2e1c5bb4f"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-world-diner-c9878d46-plain-1/SE.png",
+          "sha256": "e300e9f44eb3d03e26fbff54a69d6c1abb88cc600ef9601d1222eb01c9c3f7bb"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-world-diner-c9878d46-plain-1/turned/E.png",
+          "sha256": "6188be5ab077947146f728f72e2b89e3e0d6e62f22dae62386f1a75c2724139b"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-world-diner-c9878d46-plain-1/SW.png",
+          "sha256": "770283cdd2e1a6a64f9ba67218e30a3b4d56eaa30d19d3850521338ed9dc3512"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-world-diner-c9878d46-plain-1/turned/S.png",
+          "sha256": "b31ca4ad46783bd1d85d67680251af2dc4bd1488a6c260ce70972183c6cce372"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-world-diner-c9878d46-plain-1/NW.png",
+          "sha256": "8468cd746ada861764d7564037f2cf4b33be05d794a80298c0288d629e5b7f95"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-world-diner-c9878d46-plain-1/turned/W.png",
+          "sha256": "4a58ed8361e867277b9b70a8bc9731b3d3750bf872423d886cdc2aee577fa56e"
+        }
+      }
+    },
+    {
+      "number": 21,
+      "subject": "variation:world-video-bf85dfb9-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "VIDEO gable front and opposite blank gable/brick sides are distinct; roof dish and equipment remain visible by side.",
+      "lighting": "Window/interior glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-21-24.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-world-video-bf85dfb9-plain-1/NE.png",
+          "sha256": "71abae55f1333a57b50403d6e00f44ee33f53dc3d78f57f9aaffa85d1dee3571"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-world-video-bf85dfb9-plain-1/turned/N.png",
+          "sha256": "9955d6cb59149a16a42f267929dbb5c8ddf250a75e38c529c766407c258e8dff"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-world-video-bf85dfb9-plain-1/SE.png",
+          "sha256": "16f8d78c2a27170b8f8162c983b75bdca212e4b96f066ce13da035b80e4f4db7"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-world-video-bf85dfb9-plain-1/turned/E.png",
+          "sha256": "03fda764224d281f7035e87a0b4a1338eaa8fd801920b837594845588edf97ea"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-world-video-bf85dfb9-plain-1/SW.png",
+          "sha256": "ee1348fc3ce4796e36eb500b0e8833364a83b5445cd1b681280ee93226ccc1eb"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-world-video-bf85dfb9-plain-1/turned/S.png",
+          "sha256": "be9f75cc28acac6526189de1c1afe1e6431081befeab467e58a9e04a9c5acefb"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-world-video-bf85dfb9-plain-1/NW.png",
+          "sha256": "2cf593469c125edb4abcca8dfa618be4175def216d72916cf38d2859545022cd"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-world-video-bf85dfb9-plain-1/turned/W.png",
+          "sha256": "eeef6cec1f76907f06545454e790cff2e170a4f0bfe80b040b2c4c018ddf368f"
+        }
+      }
+    },
+    {
+      "number": 22,
+      "subject": "world:gazebo",
+      "reviewDisposition": "held-repeated-normal-camera",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "held: first three repeat front-corner exposure",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "normalNE, normalSE and normalSW repeat the same front-corner camera: same opening/steps at lower-left and pumpkin on right-front opening. normalSW should show rear/side closed rails seen in yaw8S/E, not repeat front entrance. Exact pixel hashes differ, so distinct-file checks did not catch it. All four near-cardinal exposures are distinct, but they cannot rescue missing correct corner exposures.",
+      "lighting": "Internal warm glow and jack-o-lantern.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-21-24.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/world-gazebo/NE.png",
+          "sha256": "ab45762590d894cdf5fea80a2a2e8e2abe1425756ee7c02affa9be7799b70aa4"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/world-gazebo/turned/N.png",
+          "sha256": "f28fefbc18e565ed24e522e6e3925cc876e200ad311a82ec8ae121f9dd0d7af4"
+        },
+        "normalSE": {
+          "file": "art/building-views/world-gazebo/SE.png",
+          "sha256": "cc58f500269aec32b690fb4eb2384dafb8b6385511e00a9ea3fc1383f6cb40e9"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/world-gazebo/turned/E.png",
+          "sha256": "f07f59a5828f04e6b8080b93f5de002e1c7edf3df368949dc5e1dc597abc6871"
+        },
+        "normalSW": {
+          "file": "art/building-views/world-gazebo/SW.png",
+          "sha256": "1cbc5f8780847c91b01e5775fb261d8ebb2d83253ecce75ff52dca6d26227844"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/world-gazebo/turned/S.png",
+          "sha256": "c43500abdac2f4129f594c6dceb77057770b9c02147b4eb6b1eab60136db3403"
+        },
+        "normalNW": {
+          "file": "art/building-views/world-gazebo/NW.png",
+          "sha256": "22a3dea553f351936be4b3ca7989eab483ee89167d31b47f273f5c78272139b9"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/world-gazebo/turned/W.png",
+          "sha256": "1de2a8c46aaa9878c833a91c030b9a10d5558559a6c45834c3f8cf7c60bca9ca"
+        }
+      }
+    },
+    {
+      "number": 23,
+      "subject": "expansion:dormer-rear",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Dormer house front porch, large side window, plain opposite gable and rear door distinguish the orientations.",
+      "lighting": "Dusk/window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-21-24.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/expansion-dormer-rear/NE.png",
+          "sha256": "ab3fc209bd8fd7db2153c71169135dab15030fe7013ddc5e3d75dada965d9eaf"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/expansion-dormer-rear/turned/N.png",
+          "sha256": "48b61076ddc985eae7dea4120a68918d65891f8af745307151d2e6cd413eae72"
+        },
+        "normalSE": {
+          "file": "art/building-views/expansion-dormer-rear/SE.png",
+          "sha256": "c4216f689799e8b116d90872ebeb2591b4973eeac20d669ad5e03fae2828c341"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/expansion-dormer-rear/turned/E.png",
+          "sha256": "5e25d146f9ab86b2e38c5b559baca910644d2079f22719df79f36e6a7d819776"
+        },
+        "normalSW": {
+          "file": "art/building-views/expansion-dormer-rear/SW.png",
+          "sha256": "640b0dd327ed566344711f8c399eb3e745721a94ab8cb30e0c2dbc79457f80f6"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/expansion-dormer-rear/turned/S.png",
+          "sha256": "0796206bd76f1e314eb8df091990dfe2fb6fa4f70eb18e0423a82f1ca0cddfb7"
+        },
+        "normalNW": {
+          "file": "art/building-views/expansion-dormer-rear/NW.png",
+          "sha256": "7c84fcf159c141133b6d45df05e15f14eb9d6417c3b8eb487f5e9befd63fec44"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/expansion-dormer-rear/turned/W.png",
+          "sha256": "a86b88392a61d1c3d2a8e6b87bffbc414c7f85d98c0053037fd2a7a96116aaaa"
+        }
+      }
+    },
+    {
+      "number": 24,
+      "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Cream cottage side chimney, stepped roof, front porch and different rear gable/window pattern rotate coherently.",
+      "lighting": "Dusk/window glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-21-24.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-expansion-cottage-rear-e52a10bb-plain-1/NE.png",
+          "sha256": "7bc699ec4e10d2046be7399de76c2e3834d904984acbefa444d160e2a2b8947c"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-expansion-cottage-rear-e52a10bb-plain-1/turned/N.png",
+          "sha256": "79853896b202f6b54a79575b36063375522200661606d787e99cb808fe3a9c27"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-expansion-cottage-rear-e52a10bb-plain-1/SE.png",
+          "sha256": "bfe3b81f823e875aa745a5d60a25a933695c8bb0f2de1f0e169df199cd968a82"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-expansion-cottage-rear-e52a10bb-plain-1/turned/E.png",
+          "sha256": "c8aacadb2ff053e403e2621ac5108b81d70d207495999fd6e4e0ad3465984024"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-expansion-cottage-rear-e52a10bb-plain-1/SW.png",
+          "sha256": "ad8b1624dbae49391266094cd91c0411ee64ca45f60aa933e2324e4a1e37d331"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-expansion-cottage-rear-e52a10bb-plain-1/turned/S.png",
+          "sha256": "aee529db8835de94a157ea2f1e1e31670f8874ad3fa7eeff658c7fe2da5151e1"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-expansion-cottage-rear-e52a10bb-plain-1/NW.png",
+          "sha256": "e621ba44aa335be64c51581c5264cf5a55133ebf6d2fc28482307d8c4d002cea"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-expansion-cottage-rear-e52a10bb-plain-1/turned/W.png",
+          "sha256": "1f17651bc37166d88d32630b4c92aeacffc7281a6a655fbb7bda060b34e31eae"
+        }
+      }
+    },
+    {
+      "number": 25,
+      "subject": "variation:expansion-garage-rear-91bcbe45:1",
+      "reviewDisposition": "provisional-needs-catalogue-identity-review",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Artwork says MAPLE FALLS TIRE&LUBE and shows workshop windows/logs; orientations are distinct, but it is not a plain domestic timber garage despite the subject label. Confirm intended business/house use.",
+      "lighting": "Window glow/Halloween props.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-25-26.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/variation-expansion-garage-rear-91bcbe45-1/NE.png",
+          "sha256": "240fb25d80bee213874271ef7ae9986d212f728692ec53fa87d6aac377b6158a"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/variation-expansion-garage-rear-91bcbe45-1/turned/N.png",
+          "sha256": "06e95edf00c4c31fde14c9f0c6ef8ff692010cb5001e0bc011af62a938a676e6"
+        },
+        "normalSE": {
+          "file": "art/building-views/variation-expansion-garage-rear-91bcbe45-1/SE.png",
+          "sha256": "a3218f08b342fdc68f26ed963fc8128d8a6713baadbadc47b61abba4df16c4d0"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/variation-expansion-garage-rear-91bcbe45-1/turned/E.png",
+          "sha256": "39d49915225b3f66ccaafd6d395c5c6913c2a90c998246e703d0cae2b48cd0f8"
+        },
+        "normalSW": {
+          "file": "art/building-views/variation-expansion-garage-rear-91bcbe45-1/SW.png",
+          "sha256": "937590979e80c4766391bbe4e274e070d62a176703a63f02865d0a8a12a7bf3b"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/variation-expansion-garage-rear-91bcbe45-1/turned/S.png",
+          "sha256": "827b6674e6e059c9dbe57ab76b0dc48a699c83ed8070657b5ee18a7912f43e23"
+        },
+        "normalNW": {
+          "file": "art/building-views/variation-expansion-garage-rear-91bcbe45-1/NW.png",
+          "sha256": "0c1b644e773b08bfe9dee275221e1854548ef8eb25af2df8953f415837950bcb"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/variation-expansion-garage-rear-91bcbe45-1/turned/W.png",
+          "sha256": "f57278aeca3111b9aac51547f72b5523dc43ce48138d60b7b916c5be07c970f0"
+        }
+      }
+    },
+    {
+      "number": 26,
+      "subject": "town:firestation",
+      "reviewDisposition": "provisional-no-obvious-angle-blocker",
+      "allEightViewsVisuallyInspected": true,
+      "normalCamera": "four corner-like exposures seen; exact45degree/30degree camera not numerically certified",
+      "yaw8Camera": "four near-axis exposures seen; -8 metadata exists, but each physical camera was not independently angle-fitted",
+      "identityAndGeometry": "Firestation front has two engine bays and bell; covered side entrance, rear window wall and other-side vents distinguish all eight views.",
+      "lighting": "Strong historical window/bay glow.",
+      "clipping": "No obvious hard clipping at diagnostic scale; not an original-canvas border certificate.",
+      "contact": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\output\\historical26-review-20261107\\contact-25-26.png",
+      "sourceViews": {
+        "normalNE": {
+          "file": "art/building-views/town-firestation/NE.png",
+          "sha256": "a6c559cbbe8785fad0237a1d3e34a7d6cb4e7087c79c6c7883d746e8108ad77f"
+        },
+        "yaw8N": {
+          "file": "art/axis-views/town-firestation/turned/N.png",
+          "sha256": "dde510788cd787c02bf6791cdd138a9731e784315df6d5dfcc8d22d763120814"
+        },
+        "normalSE": {
+          "file": "art/building-views/town-firestation/SE.png",
+          "sha256": "07924f6bd486f6ee9f39561cec35483d2f7d4f80624199b536535eaa16e8909a"
+        },
+        "yaw8E": {
+          "file": "art/axis-views/town-firestation/turned/E.png",
+          "sha256": "abaa8ba81c5d3ebef163832613ddb314b598e8bd3201ff21252b46e38731f84c"
+        },
+        "normalSW": {
+          "file": "art/building-views/town-firestation/SW.png",
+          "sha256": "726c843eac9ba714d85c57c65244df171fe48063d8e5da5984ae5df20d85c24a"
+        },
+        "yaw8S": {
+          "file": "art/axis-views/town-firestation/turned/S.png",
+          "sha256": "b4cb128775d3c111a5c8113590ddcd21a2ef31a5b1166b74aca2455a6376b460"
+        },
+        "normalNW": {
+          "file": "art/building-views/town-firestation/NW.png",
+          "sha256": "274c602a7251eb3f98c288b595d601bedd61f8043e9af20e890e9bdcbf259ee0"
+        },
+        "yaw8W": {
+          "file": "art/axis-views/town-firestation/turned/W.png",
+          "sha256": "2326b17690be88d7de9f489452b5e12af8d57a2fccc773fa3d80ccbdc5770e3e"
+        }
+      }
+    }
+  ]
+}

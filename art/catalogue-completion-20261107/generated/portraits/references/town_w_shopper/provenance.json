@@ -1,0 +1,93 @@
+{
+  "look_id": "person:3d:town_w_shopper",
+  "actual_runtime_look": {
+    "id": "person:3d:town_w_shopper",
+    "size": "adult",
+    "w": 80,
+    "h": 126.5,
+    "ax": 40,
+    "ay": 121.5,
+    "m": 1.63,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "person:3d:town_w_shopper",
+  "runtime_namespace_differs_from_source_grid": false,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_w_shopper\\preview.png",
+    "sha256": "a3bd44bc0be67bf6a4c80486cdc5a2cbe332fc4e4a3931b037f45fd10d3aaecb",
+    "bytes": 1683137
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_w_shopper\\sheet.json",
+    "sha256": "e5e4f88ad724f9d40b551e23a5db600e3588b5e94ef807a99acd499a3d715c65",
+    "bytes": 668
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 253
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_shopper\\identity-idle-pair.native.png",
+    "sha256": "770d91f774a216a62b0176b51dc140e2b7aedd087d7e0748f0acd45781ccf5fd",
+    "bytes": 41386
+  },
+  "dimensions": [
+    320,
+    253
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        253
+      ],
+      "dimensions": [
+        160,
+        253
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_shopper\\idle-S.native.png",
+        "sha256": "a10c4ee24ce490275a97c683da4c129d1073b4454d130988060f5efd0b51b38f",
+        "bytes": 21626
+      },
+      "pixel_sha256": "e2de5ade3fd37f9ab182b7b10c122f25c15deac3ad59d5f33ede46dae3d2d2c0"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        253,
+        160,
+        506
+      ],
+      "dimensions": [
+        160,
+        253
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_shopper\\idle-SW.native.png",
+        "sha256": "04f3aefe1da016af10a5874e26064d345acc4aa7a163bfa51133e82a4ff1abc8",
+        "bytes": 20826
+      },
+      "pixel_sha256": "1516a5b4e01fac6c53537b83ceccbd0e652b21cf4ebaa6c7b528ed76c825fcfa"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

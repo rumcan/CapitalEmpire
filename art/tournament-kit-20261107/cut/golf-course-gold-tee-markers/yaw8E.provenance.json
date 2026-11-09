@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-gold-tee-markers",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../../batch02/gold-tee-markers/yaw8-E.png",
+    "sha256": "bf603af5b48b6c47bde1c0c1aa029f169ff697c217ecbff5d576e29d277429e3",
+    "width": 768,
+    "height": 512
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 768,
+    "height": 512
+  },
+  "crop": {
+    "left": 241,
+    "top": 52,
+    "width": 279,
+    "height": 422
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "7319692c12f5d452eccbd24964bf80f9c2fa7ad7154827e993165cc8eb72b47d",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

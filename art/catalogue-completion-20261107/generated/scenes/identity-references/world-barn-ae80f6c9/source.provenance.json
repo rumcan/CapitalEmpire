@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:barn",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-barn/NE.png",
+  "sourceSha256": "1db49273f997731d9f91f710f9286d4ff0f34c4e57cb84d01dcd090da9217124",
+  "output": "identity-references/world-barn-ae80f6c9/source.png",
+  "outputSha256": "1db49273f997731d9f91f710f9286d4ff0f34c4e57cb84d01dcd090da9217124",
+  "width": 627,
+  "height": 608,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      627,
+      608
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-barn\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Fivepure-reassignmentaudit: fourdistinctphysicalcornersalreadyexisted; canonicalclockwiseorderingcorrectedwithoutgeneration/resizing/mirroring. Actualmagentaalphaandpost-permutationgeometryreviewPASS; all4sourcePNGbytehashesconserved. RuntimecalibrationrequiresmatchingmeasurednativeSHA.",
+    "review": "Four distinct front/rear facade views inspected; original identity retained and Halloween decoration omitted. Alpha/crop boundaries checked by preparation; game scale retains original width until door gauge is measured."
+  },
+  "sourceRegistration": {
+    "id": "world:barn",
+    "version": "world-barn-4views-v2",
+    "files": {
+      "NE": "1db49273f997731d9f91f710f9286d4ff0f34c4e57cb84d01dcd090da9217124",
+      "SE": "cfce52bc5762b8c8e75ec047fd064349737b135fc3a5e866330cb4ab71703545",
+      "SW": "8079c00b3441a332e44c524f34e693e906a41401843d203eb88085626a1e184b",
+      "NW": "d408a40ffbeb1b4bca74f5f907f0b5fa846daa6ae4bcf4805e0ab65dda7a2af6"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-6-0.webp",
+    "atlasSha256": "5bf555ea578c014fa9e9f4e6119ae5f09128a07573eed569e85b1c5554f2ac51",
+    "runtimePage": 6,
+    "localPage": 6,
+    "uv": [
+      0.421875,
+      0.007813,
+      0.654297,
+      0.214355
+    ],
+    "crop": {
+      "left": 864,
+      "top": 16,
+      "width": 476,
+      "height": 423
+    },
+    "native": "art/theme-consistency/exports/buildings/world-barn.native.png",
+    "nativeSha256": "d29e62f3b0a200a69ae6f1de3d04598ec971fc0e011051c7055a0ab48504e155"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

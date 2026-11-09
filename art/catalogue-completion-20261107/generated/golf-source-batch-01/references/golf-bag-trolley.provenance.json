@@ -1,0 +1,16 @@
+{
+  "id": "business:golf-bag-trolley",
+  "name": "golf bag trolley",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-bag-trolley.source.png",
+  "originalSource": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\src\\assets\\businesses\\capital-v1\\png\\golf-bag-trolley.png",
+  "sourceSHA256": "d17bc67df69a229083723c2741facc4f1b16613f4bcf251b99259d97b7d9ab4a",
+  "referenceSHA256": "d17bc67df69a229083723c2741facc4f1b16613f4bcf251b99259d97b7d9ab4a",
+  "referenceSize": [
+    362,
+    480
+  ],
+  "operation": "byte-for-byte copy of retained native PNG master",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Brown leather golf bag carrying clubs, strapped onto a black manual two-wheel pull trolley with curved handle and metal lower foot. Preserve bag/club/handle/wheel assembly, no motor or seat.",
+  "sourceOnlyNotReleaseProof": true
+}

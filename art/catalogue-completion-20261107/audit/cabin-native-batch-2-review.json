@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "sheets_reviewed": 4,
+  "source_candidate_cells": 16,
+  "records": [
+    {
+      "family": "budget-1950-shanty-hut",
+      "review_result": "PASS-native-source-candidate-identity-and-alpha; exact-camera-calibration-pending",
+      "qa": "generated/budget-1950-shanty-hut/normal-v1.independent-qa.json"
+    },
+    {
+      "family": "budget-1950-shanty-shed",
+      "review_result": "PASS-native-source-candidate-identity-and-alpha; exact-camera-calibration-pending",
+      "qa": "generated/budget-1950-shanty-shed/normal-v1.independent-qa.json"
+    },
+    {
+      "family": "budget-1950-shanty-ticket-hut",
+      "review_result": "PASS-native-source-candidate-identity-and-alpha; exact-camera-calibration-pending",
+      "qa": "generated/budget-1950-shanty-ticket-hut/normal-v1.independent-qa.json"
+    },
+    {
+      "family": "budget-1950-shanty-toilet",
+      "review_result": "PASS-native-source-candidate-identity-and-alpha; exact-camera-calibration-pending",
+      "qa": "generated/budget-1950-shanty-toilet/normal-v1.independent-qa.json"
+    }
+  ],
+  "full_eight_view_request_complete": false
+}

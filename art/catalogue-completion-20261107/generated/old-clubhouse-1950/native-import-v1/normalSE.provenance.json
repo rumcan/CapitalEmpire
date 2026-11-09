@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:clubhouse-1950-budget",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../normal-v5.png",
+    "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+    "width": 1254,
+    "height": 1254
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 51,
+    "top": 138,
+    "width": 522,
+    "height": 367
+  },
+  "output": "normalSE.native.png",
+  "sha256": "d9434150dd450deef88d9f4245842f062b5799b3a0f16ac1a7773a2b8fdab2ce",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

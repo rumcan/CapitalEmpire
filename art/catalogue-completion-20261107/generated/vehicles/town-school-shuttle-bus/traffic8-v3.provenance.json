@@ -1,0 +1,14 @@
+{
+  "key": "town-school-shuttle-bus",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-addd47aa-16e2-4d3c-ad4d-c6ec78dff24c.png",
+  "target": "generated/vehicles/town-school-shuttle-bus/traffic8-v3.png",
+  "prompt": "Paint EIGHT vehicle views matching the EXACT CAMERA and noseheadings in reference1, using reference2aspaintedBUSidentityonly. Keep reference2yellow conventional bonnet-frontschoolbus, exactaxle/wheelbase/windowcount/bonnet/frontRIGHTpassengerentrydoor andLEFTonlySTOPpaddle; realflatREARemergencydoor/redlenses. Do not copy boxshapeoffirsttechnicalproxy, itprovides30degree-downorthographiccamera andheadingsonly. ToprowNOSElowerleft,DOWN,lowerright,RIGHT; bottomrowupperright,UP,upperleft,LEFT. SideheadingsmustkeeplengthhorizontalbutshowroofwideplanefromABOVE, nevereyelevelor45degreecorner. LIGHTSOFF/lateafternoondaylightsunUPPERRIGHT, shadowsLOWERLEFT. CRITICAL: reference2hasUNWANTEDOPAQUEWHITEBACKGROUND; removeit entirely. TRUEzeroalphatransparentbackgroundinallgutters/outerborderandaroundcars, no white/greybackdropwash, haze, groundshadowpuddleorparkingplate. Busopaquebody/glass, antialiasonlyattrueedges. Samepaintedminiaturematerialstyle, nopeople, gridorUI.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-bus/guides/traffic8-camera-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/traffic8-v2.png"
+  ],
+  "status": "native correction candidate; independent review pending",
+  "runtime_imported": false,
+  "sha256": "2346f2399e0dc571be66b5861f69b5d2e6995717e509e0b55f37e9b5bad1dceb",
+  "native_bytes_preserved": true
+}

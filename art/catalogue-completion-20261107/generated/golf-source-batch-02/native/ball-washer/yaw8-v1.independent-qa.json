@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+    "sha256": "1306b1294963719eb0a0e9f35e154403fa83bdede82a40a7839a4fb78c187aa5",
+    "bytes": 1012719
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.provenance.json",
+    "sha256": "bd945768ded94cf5d0339de847b840525b261bfc9a9621342565b40600d9bacb",
+    "bytes": 2654
+  },
+  "exact_prompt_utf8_sha256": "a3f0a59072f849a26739e5f85a2758427d00cb44110f6588930eb2ab50ae34a5",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-washer/guides/yaw8-world-v1.png",
+      "sha256": "b40b2392053e9436916f0b9d901bd75f91a1607988ce3223175efc3bad13f698",
+      "bytes": 34042
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+      "sha256": "cd8d39dbb650303dd4e705561625566c2ff55fb415ecbb95f90fb86f025ed9aa",
+      "bytes": 1126333
+    }
+  ],
+  "zero_alpha_fraction": 0.7460490068145571,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 0,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N front/open lid-inner; towel left/crank right",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 23,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "cda02e86ac43fb0ea5bab3190df7da39bfee3064f1eacceeb16c922f28cd8cc6",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "W side; crank toward viewer",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 23,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9591416a509568d7acd1a24c5f62d7c9c2645548cd9580a3538fefff85034971",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S rear/lid exterior; crank left/towel right",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 25,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "85692dd13c204227cf48251253769a73c2b58f5fb59a97d24f557f22960d89d8",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "E side; towel toward viewer",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 22,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "4a2270a7935b62b09d300df44bea2d6539780ff932d0243fa291f55d173df22c",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Open lid, one ball, crank and towel remain attached; four actual main orientations present. Native TR is W/crank-facing, BR is E/towel-facing against guide labels. Select these by actual roles; do not count an ordering difference as absent geometry."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false
+}

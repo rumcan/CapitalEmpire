@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-cart-garage",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-golf-cart-garage/NE.png",
+  "sourceSha256": "24a447b9e44c0dac40426aa87b668108c65dbfe33bab3f9b4ac6b5ec20c5acdb",
+  "output": "identity-references/business-golf-cart-garage-1a3cdb4c/source.png",
+  "outputSha256": "24a447b9e44c0dac40426aa87b668108c65dbfe33bab3f9b4ac6b5ec20c5acdb",
+  "width": 617,
+  "height": 465,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      617,
+      465
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-golf-cart-garage\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "business:golf-cart-garage",
+    "version": "business-golf-cart-garage-4views-v2",
+    "files": {
+      "NE": "24a447b9e44c0dac40426aa87b668108c65dbfe33bab3f9b4ac6b5ec20c5acdb",
+      "SE": "00437129b6210695ce133c3211867e10c3e4539469aff94bb4998a85458dfa60",
+      "SW": "956ee4019621afcee70c5018ae1f2f2402a6c49cbe748b22fb882044780350ed",
+      "NW": "c9dfc586e3329ec4bd0e002f299f7c9af33a2089ebd32c105cf5d06ef4cda55b"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-0-0.webp",
+    "atlasSha256": "7345eb8787ac146688e3a811ad9005a42c01ce29f619897f360dc82938fbf093",
+    "runtimePage": 18,
+    "localPage": 0,
+    "uv": [
+      0.0078125,
+      0.30810546875,
+      0.2578125,
+      0.4736328125
+    ],
+    "crop": {
+      "left": 16,
+      "top": 631,
+      "width": 512,
+      "height": 339
+    },
+    "native": "art/theme-consistency/exports/buildings/business-golf-cart-garage.native.png",
+    "nativeSha256": "6a8f41532aa9e462ad71af74a5b65d52616d5247258c4a6f5e4c7a24b45c06a4"
+  },
+  "originalBusinessSourceCell": {
+    "id": "golf-cart-garage",
+    "sourceSheet": "sliced/builtin/golf-buildings.png",
+    "sourceCrop": [
+      23,
+      768,
+      662,
+      435
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

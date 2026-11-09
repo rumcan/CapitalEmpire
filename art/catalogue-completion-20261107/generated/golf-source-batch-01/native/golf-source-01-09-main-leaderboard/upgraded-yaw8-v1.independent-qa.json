@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:44:58.106535+00:00",
+  "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-yaw8-v1.png",
+    "sha256": "448627a87594716d0a9e40c770c086b89b53c05a61ba540c72b1ab5009fbbd0b",
+    "bytes": 970122
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-yaw8-v1.provenance.json",
+    "sha256": "2af97cc7ef2c1f0ff82cb735b4271f3d6d540d30b65fffe3e49bf165238587fb",
+    "bytes": 3060
+  },
+  "exact_prompt_utf8_sha256": "b93f8fe858137d6931a617d54eca8365da6b1dc1003ce28c3bb4d0f1d0272125",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/guides/yaw8-world-v1.png",
+      "sha256": "48682ccd0b1ad6af0535f7f46b1a9866e0259f717a2d69c0d9d7a134abe1f0df",
+      "bytes": 41264
+    },
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-normal-v1.png",
+      "sha256": "59fc3d8903f17ca51f8e2dc89333bfcac2d3a958d8dc3bb297e4b0fb13573b75",
+      "bytes": 1611034
+    }
+  ],
+  "four_actual_main_faces_visually_verified": true,
+  "zero_alpha_fraction": 0.7071648237601398,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 1,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_visible_main_face": "front score grid; stairs right",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 88,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "d0e2292b7218740e54c83f5ebc813531d2783ab06b2b4da68a0df1288108385f"
+    },
+    {
+      "cell": "TR",
+      "actual_visible_main_face": "grid sliver/deck side; stair farther end",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 77,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "29d45acc8c780334a61a15cd8319fc67790bb31d84945588f5cf25eaa54e33d8"
+    },
+    {
+      "cell": "BL",
+      "actual_visible_main_face": "rear slats/braces",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 74,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "ab2c2a23bdde180cd2b4781b97c0d917c1f796cda62d5ce1186e15106c66f16f"
+    },
+    {
+      "cell": "BR",
+      "actual_visible_main_face": "brace side; stairs near lower-left",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 62,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "c85f553607e3ff136b2befd97f7071f7ab0c197b52906b0008a69dc10f35b67c"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Grid front versus structural rear distinguished; side deck/brace occlusion and staircase near/far silhouettes follow fixed-world guide. Three roof caps/two flags retained. Hidden stair treads cannot be fully verified in rear elevation."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "native_image_bytes_changed": false,
+  "source_crops_saved": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "limits": "Limited source visual face/state/alpha review; labels are main faces, not measured native camera angles. No release or exact 8 degree certification."
+}

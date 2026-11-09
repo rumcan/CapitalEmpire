@@ -15,6 +15,7 @@ import SHAPES from './shadow-shapes.json';
 // T309: the farm animals' shadows (scripts/assets/prep-animals.mjs drafts them from the standing and grazing frames)
 import ANIMAL_SHAPES from './animal-shadows.json';
 import { CAST, castShear } from './cast-shadow';
+import { releaseBuffer } from './release-buffer';
 
 /** one picture's shadow (shadow-shapes.json). Rings are flat arrays; a cast ring wound the other way round is a hole (the gap under a bench) */
 export interface VectorShadow {
@@ -37,12 +38,15 @@ export interface VectorShadow {
 }
 export const VECTOR_SHADOWS: Readonly<Record<string, VectorShadow>> = { ...(SHAPES as Record<string, VectorShadow>), ...(ANIMAL_SHAPES as Record<string, VectorShadow>) };
 
-/** library ids that keep T141's shadows on purpose (vector-shadow test: every other drawn picture has an entry), by prefix or exact id */
+/** library ids that keep T141's shadows, on purpose or until a shape is drafted (the reason says which; vector-shadow test: every other drawn picture has an entry), by prefix or exact id */
 export const VECTOR_FALLBACK: readonly { id: string; why: string }[] = [
   { id: 'walker', why: 'the walkers, the crowd and the golfers: thousands of animated frames; their silhouette cast moves with their legs' },
   // T257: T232's open stud frames: the silhouette cast draws their studs and the gaps between them; a drafted shape fills the gaps solid
   { id: 'construction:timber-frame-1', why: 'an open stud frame: its silhouette cast shows the studs and the gaps between them' },
   { id: 'construction:timber-frame-2', why: 'an open stud frame: its silhouette cast shows the studs and the gaps between them' },
+  // T375: PR #976's eight-view object art (object-eight-library.ts, 520 pictures when this was written: building views, props, the clubhouses): no shape is drafted for them yet (not on purpose:
+  // scripts/dev/draft-shadows.mjs over them, corrected by eye on the audit sheets, is owed), so T141's silhouette cast draws them, as it draws any picture with no entry
+  { id: 'object8', why: 'the eight-view object art: no vector shadow drafted for it yet, T141 silhouette shadows until then' },
 ];
 
 /** a built mesh: vertices (VERTEX_FLOATS each) and triangle indices, and each picture's range in the indices */
@@ -126,9 +130,25 @@ export const DRAFT_SHEAR = castShear(CAST);
 /** the extra soft rim every contact (blob) shadow gets, display px (the owner, 2026-10-26: "make the blob shadows more blurry across the
  *  board. like 2px"; 3 px since the contact shadows became ambient occlusion, CONTACT_AO) */
 export const BLOB_BLUR = 3;
+/** T375: the mesh as it is built: vertices and indices in growing typed arrays. They were two number[] arrays (420 000 vertices, 1.6 million indices), and every growth of
+ *  an array left its old backing store behind in the old generation: about 100 MB of dead arrays a build, a dev page builds the mesh twice (React's double mount: the second
+ *  engine builds what the first let go), so the used JS heap sat at 250 to 285 MB for as long as no full collection ran (the bench read 471 MB against live's 199 MB), where
+ *  the page keeps 83 MB. The vertices are doubles so each rim is computed from the very numbers that were pushed: the mesh is bit for bit the one the arrays made; the final
+ *  copies are exact-size Float32Array / Uint32Array. The builder's own arrays (44 MB a build) are given back when they are outgrown and when the build is done
+ *  (release-buffer.ts), not left for a collection. */
+class MeshBuf<A extends Float64Array | Uint32Array> {
+  a: A; n = 0;
+  constructor(private make: (length: number) => A, length: number) { this.a = make(length); }
+  /** room for k more (reads of `a` after a push must go through `a` again: the array is replaced when it grows) */
+  room(k: number) { if (this.n + k > this.a.length) { const b = this.make(Math.max(this.a.length * 2, this.n + k)); b.set(this.a.subarray(0, this.n)); releaseBuffer(this.a); this.a = b; } }
+  /** the build is done: the array's bytes go back */
+  free() { releaseBuffer(this.a); }
+  push1(x: number) { this.room(1); this.a[this.n++] = x; }
+  push6(x0: number, x1: number, x2: number, x3: number, x4: number, x5: number) { this.room(6); const a = this.a, o = this.n; a[o] = x0; a[o + 1] = x1; a[o + 2] = x2; a[o + 3] = x3; a[o + 4] = x4; a[o + 5] = x5; this.n = o + 6; }
+}
 /** add one entry's triangles to the growing mesh: its contact rings, then its cast rings (outer rings and holes by winding), each filled and
  *  rimmed outward with its feather; far: the far copy (each ring cut to FAR_POINTS, no holes, no rim) */
-function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean, far = false) {
+function addEntry(e: VectorShadow, V: MeshBuf<Float64Array>, I: MeshBuf<Uint32Array>, mirror: boolean, far = false) {
   const sx = DRAFT_SHEAR.sx, sy = DRAFT_SHEAR.sy;
   // mirrored: every x negated and every ring reversed (so outer rings and holes keep their winding)
   const mir = (rings: number[][], stride: number) => !mirror ? rings : rings.map(r => { const o: number[] = []; for (let i = r.length - stride; i >= 0; i -= stride) { o.push(-r[i]!); for (let k = 1; k < stride; k++) o.push(r[i + k]!); } return o; });
@@ -145,8 +165,9 @@ function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean, fa
     // contact: its rim from its size (a post's spot stays tight, a building's base soft)
     let size = 0; if (!kind) { const xs = R.flatMap(r => r.map(v => v.p[0])), ys = R.flatMap(r => r.map(v => v.p[1])); size = Math.min(Math.max(...xs) - Math.min(...xs), 2 * (Math.max(...ys) - Math.min(...ys))); }
     const fc = (e.fc ?? Math.max(1.5, Math.min(8, size * 0.12))) + BLOB_BLUR;
-    const pts: P[] = [], base = V.length / VERTEX_FLOATS, ringIdx: number[][] = [];
-    const vertex = (x: number, y: number, h: number, core: number, edge: number) => { V.push(x, y, h, kind, core, edge, 0, 0); };
+    const pts: P[] = [], base = V.n / VERTEX_FLOATS, ringIdx: number[][] = [];
+    // (the two spare floats stay 0: a typed array starts zeroed and a grown one copies only what was written)
+    const vertex = (x: number, y: number, h: number, core: number, edge: number) => { V.room(VERTEX_FLOATS); const a = V.a, o = V.n; a[o] = x; a[o + 1] = y; a[o + 2] = h; a[o + 3] = kind; a[o + 4] = core; a[o + 5] = edge; V.n = o + VERTEX_FLOATS; };
     for (const r of R) {
       const idx: number[] = [];
       for (const v of r) { idx.push(pts.length); pts.push(v.p); const core = kind ? (e.ks ?? D.ks) * (1 - (e.fade ?? D.fade) * Math.min(1, v.h / hMax)) : (e.kc ?? D.kc) * CONTACT_AO; vertex(v.x, v.y, v.h, core, 1); }
@@ -156,22 +177,22 @@ function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean, fa
     const outers = ringIdx.filter(r => area(r.map(i => pts[i]!)) > 0), holes = ringIdx.filter(r => area(r.map(i => pts[i]!)) < 0);
     for (const o of outers) {
       const op = o.map(i => pts[i]!), mine = holes.filter(h => inside(pts[h[0]!]!, op));
-      for (const t of triangulate(pts, o, mine)) I.push(base + t);
+      for (const t of triangulate(pts, o, mine)) I.push1(base + t);
     }
     // the rim: each ring's vertices pushed outward (away from the filled side) along the mitred normal by the feather, edge 0 (none far off:
     // a few px of shadow need no soft edge)
     if (!far) for (const ring of ringIdx) {
-      const n = ring.length, rimAt = V.length / VERTEX_FLOATS;
+      const n = ring.length, rimAt = V.n / VERTEX_FLOATS;
       for (let i = 0; i < n; i++) {
         const a = pts[ring[(i + n - 1) % n]!]!, b = pts[ring[i]!]!, c = pts[ring[(i + 1) % n]!]!;
         const n1 = norm(b[1] - a[1], -(b[0] - a[0])), n2 = norm(c[1] - b[1], -(c[0] - b[0]));
         const m = norm(n1[0] + n2[0], n1[1] + n2[1]), cosA = Math.max(0.4, m[0] * n2[0] + m[1] * n2[1]);
-        const o = (base + ring[i]!) * VERTEX_FLOATS, h = V[o + 2]!, w = kind ? (e.f ?? D.f) + (e.p ?? D.p) * h : fc, L = w / cosA;
-        vertex(V[o]! + m[0] * L, V[o + 1]! + m[1] * L, h, V[o + 4]!, 0);
+        const o = (base + ring[i]!) * VERTEX_FLOATS, h = V.a[o + 2]!, w = kind ? (e.f ?? D.f) + (e.p ?? D.p) * h : fc, L = w / cosA;
+        vertex(V.a[o]! + m[0] * L, V.a[o + 1]! + m[1] * L, h, V.a[o + 4]!, 0);
       }
       for (let i = 0; i < n; i++) {
         const j = (i + 1) % n, a = base + ring[i]!, b = base + ring[j]!, oa = rimAt + i, ob = rimAt + j;
-        I.push(a, b, ob, a, ob, oa);
+        I.push6(a, b, ob, a, ob, oa);
       }
     }
   }
@@ -203,23 +224,33 @@ function segDist(p: P, a: P, b: P) {
 
 /** build the mesh of every entry (each `same` entry shares its source's range) */
 export function buildVectorMesh(shapes: Readonly<Record<string, VectorShadow>> = VECTOR_SHADOWS): VectorMesh {
-  const V: number[] = [], I: number[] = [], at = new Map<string, VectorRange>();
+  // (room for what the game's 3 335 pictures need, about 1 000 floats and 490 indices each, so the buffers are made once; a bigger set grows them)
+  const count = Object.keys(shapes).length;
+  const V = new MeshBuf<Float64Array>(n => new Float64Array(n), Math.max(4096, count * 1300)), I = new MeshBuf<Uint32Array>(n => new Uint32Array(n), Math.max(4096, count * 650)), at = new Map<string, VectorRange>();
   for (const [id, e] of Object.entries(shapes)) {
     if (e.same) continue;
     // (an entry with no shapes draws none: a flat picture)
-    const first = I.length; addEntry(e, V, I, false); const mfirst = I.length; addEntry(e, V, I, true);
-    const ffirst = I.length; addEntry(e, V, I, false, true); const fmfirst = I.length; addEntry(e, V, I, true, true);
-    at.set(id, { first, count: mfirst - first, mfirst, mcount: ffirst - mfirst, ffirst, fcount: fmfirst - ffirst, fmfirst, fmcount: I.length - fmfirst });
+    const first = I.n; addEntry(e, V, I, false); const mfirst = I.n; addEntry(e, V, I, true);
+    const ffirst = I.n; addEntry(e, V, I, false, true); const fmfirst = I.n; addEntry(e, V, I, true, true);
+    at.set(id, { first, count: mfirst - first, mfirst, mcount: ffirst - mfirst, ffirst, fcount: fmfirst - ffirst, fmfirst, fmcount: I.n - fmfirst });
   }
   for (const [id, e] of Object.entries(shapes)) if (e.same) { const r = at.get(e.same); if (r) at.set(id, r); }
-  return { verts: Float32Array.from(V), idx: Uint32Array.from(I), nVerts: V.length / VERTEX_FLOATS, nIdx: I.length, at };
+  // (the doubles rounded to floats exactly as Float32Array.from did; exact-size copies, so the growth room is not kept)
+  const verts = new Float32Array(V.n); verts.set(V.a.subarray(0, V.n));
+  const idx = I.a.slice(0, I.n), nVerts = V.n / VERTEX_FLOATS, nIdx = I.n;
+  V.free(); I.free();
+  return { verts, idx, nVerts, nIdx, at };
 }
 let MESH: VectorMesh | null = null;
 /** the game's mesh, built on first use */
 export function vectorMesh(): VectorMesh { return MESH ??= buildVectorMesh(); }
 /** T172: the mesh's vertices and indices let go once they are on the GPU (gl.ts initVector; about 11 MB): the ranges (`at`) and the counts
  *  stay for the sprites */
-export function releaseVectorMeshData() { if (MESH) MESH = { ...MESH, verts: new Float32Array(0), idx: new Uint32Array(0) }; }
+export function releaseVectorMeshData(uploaded?: VectorMesh) {
+  if (MESH) MESH = { ...MESH, verts: new Float32Array(0), idx: new Uint32Array(0) };
+  // T375: the arrays of the mesh that was uploaded (the game's, or the one a second engine built again: 20 MB each) go back at once, not at a full collection
+  if (uploaded) { releaseBuffer(uploaded.verts); releaseBuffer(uploaded.idx); }
+}
 /** the mesh with its vertices and indices, for an upload: the game's, or the same mesh built again once they were let go (a second engine on
  *  the page: React's dev double mount, a hot reload) */
 export function vectorMeshData(): VectorMesh { const m = vectorMesh(); return m.verts.length >= m.nVerts * VERTEX_FLOATS ? m : buildVectorMesh(); }

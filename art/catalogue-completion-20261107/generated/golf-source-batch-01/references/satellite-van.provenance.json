@@ -1,0 +1,27 @@
+{
+  "id": "newprop:satellite-van",
+  "name": "Satellite van",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\satellite-van.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-856f5483-2e96-4fc4-9378-10795ee99b40.png",
+  "sourceSheetSHA256": "0841140a75a9e5e3b1b7a66bfed4c684cb97cb67614672042402223bf4882f80",
+  "referenceSHA256": "a54c9edffaa4b6981591114eada2d9942b5b1ecaaf953e6ee1527b096a158f16",
+  "sourcePixelRectXYWH": [
+    44,
+    598,
+    566,
+    629
+  ],
+  "originalCellLabel": "bottom left",
+  "referenceSize": [
+    566,
+    629
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Cream/green modern panel van with large roof satellite dish, HVAC and antennas. Later-era cab unsuitable for base1985set. Native crop contains a small neighbouring gold foot at its upper edge: ignore fragment; reference is van only.",
+  "sourceOnlyNotReleaseProof": true
+}

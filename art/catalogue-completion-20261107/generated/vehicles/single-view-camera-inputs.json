@@ -1,0 +1,62 @@
+[
+  {
+    "key": "town-red-hatchback",
+    "detail": "A small1983-style red THREE-DOOR hatchback (two side doors plus steep rear hatch), black rubber bumpers/side trim, simple silver steel wheels, compact short wheelbase, small round front headlamps and a rear wiper. Different short body from any station wagon.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-red-hatchback/traffic8-v1.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-hatch/guides/cardinal-world-v1.png"
+  },
+  {
+    "key": "town-blue-sedan",
+    "detail": "A boxy1980-style pale powder-blue FOUR-DOOR midsize sedan with a separate rectangular boot/trunk, thin chrome bumpers, rectangular headlamps, plain small wheel hubcaps and blue-grey glazing. No roof rack, no estate rear.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-blue-sedan/traffic8-v2.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-sedan/guides/cardinal-world-v1.png"
+  },
+  {
+    "key": "town-cream-coupe",
+    "detail": "A long low1978-style cream TWO-DOOR coupe with brown vinyl roof, broad separate rear boot, thin chrome bumpers and plain period steel hubcaps. One long door per side, small rear quarter window. No station wagon or hatchback body.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-cream-coupe/traffic8-v1.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-sedan/guides/cardinal-world-v1.png"
+  },
+  {
+    "key": "town-tan-pickup",
+    "detail": "A1982-style two-tone tan and dark-brown standard-cab PICKUP with one door per side, OPEN empty rectangular cargo bed, simple metal tailgate, steel wheels and rugged black tyres. No crew cab, no canopy and no modern SUV body.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-tan-pickup/traffic8-v1.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-pickup/guides/cardinal-world-v1.png"
+  },
+  {
+    "key": "town-ivory-panel-van",
+    "detail": "An1981-style short-wheelbase ivory commercial PANEL VAN, single front cab doors and rectangular side sliding cargo door, solid cargo side panels without rear passenger windows, split twin rear cargo doors, plain black bumpers and simple steel wheels. No lettering or roof attachments.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-ivory-panel-van/traffic8-v1.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-van/guides/cardinal-world-v1.png"
+  },
+  {
+    "key": "town-mustard-taxi",
+    "detail": "A1984-style large mustard-yellow FOUR-DOOR taxi sedan, squared separate trunk, black-and-yellow checker stripe along both body sides, small plain cream roof taxi box without any text, dark bumpers and simple chrome hubcaps. No station wagon body.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-mustard-taxi/traffic8-v1.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-sedan/guides/cardinal-world-v1.png"
+  },
+  {
+    "key": "era-1990s-teal-sedan",
+    "detail": "A1995-style teal rounded FOUR-DOOR compact sedan with separate rear boot, smooth body-coloured bumpers, silver five-spoke wheels, softly oval headlamps and conventional rear tail lenses. Plain unbranded family car, noticeably more rounded than the1980s fleet.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/era-1990s-teal-sedan/traffic8-v2.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-sedan/guides/cardinal-world-v1.png"
+  },
+  {
+    "key": "era-2000s-silver-mpv",
+    "detail": "A2005-style silver compact family MPV/minivan with tall cabin, short bonnet, five passenger doors including a rear liftgate, broad rear windows, roof rails, restrained silver alloy wheels and conventional headlamps. Plain unbranded family vehicle.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/era-2000s-silver-mpv/traffic8-v1.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-van/guides/cardinal-world-v1.png"
+  },
+  {
+    "key": "era-2010s-blue-crossover",
+    "detail": "A2015-style dark-blue compact crossover, five doors, raised but modest ride height, grey lower bumper cladding, silver alloy wheels, narrow angular headlamps, hatchback rear with red corner tail lamps. Contemporary unbranded body, no giant offroad tyres.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/era-2010s-blue-crossover/traffic8-v1.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-hatch/guides/cardinal-world-v1.png"
+  },
+  {
+    "key": "era-2020s-white-electric-hatch",
+    "detail": "A2024-style pearl-white compact ELECTRIC hatchback with five doors, short smooth enclosed nose with no grille, slim front LED lenses, charcoal panoramic roof, dark lower sill and aerodynamic five-spoke wheel covers, clean red rear light bar. Unbranded, ordinary affordable town car, no science-fiction shapes.",
+    "identity": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/era-2020s-white-electric-hatch/traffic8-v1.png",
+    "guide": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-hatch/guides/cardinal-world-v1.png"
+  }
+]

@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "golf:toilet-block",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/golf-toilet-block/NE.png",
+  "sourceSha256": "807a8ce07db9052f58d27f0fa46fa382979d2a88e2f796a9e1e267289eedd1d2",
+  "output": "identity-references/golf-toilet-block-8f941e26/source.png",
+  "outputSha256": "807a8ce07db9052f58d27f0fa46fa382979d2a88e2f796a9e1e267289eedd1d2",
+  "width": 663,
+  "height": 482,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      663,
+      482
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-toilet-block\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Muted green cubicles, cream roofs and warm timber platform fit master exposure/material detail; parent approved corrected v3.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "golf:toilet-block",
+    "version": "golf-toilet-block-4views-v3",
+    "files": {
+      "NE": "807a8ce07db9052f58d27f0fa46fa382979d2a88e2f796a9e1e267289eedd1d2",
+      "SE": "81356327ee9534ad4598fde5bd4485604789322e8a14c03e05d11cb398ce96a0",
+      "SW": "4d525f8fe0b9111b7437906a1f369962615ae29e38a44fd339b57448930343a1",
+      "NW": "9d30e2da0a13e3eeca82142608e8005dd756b4d8be9133344004b8e4b4564c74"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/golf-library.ts",
+    "librarySha256": "f5d0a29bfdd14b84e8f49462ca5b93bd2a8cf914202ae9f1cc857fe6237eca45",
+    "atlas": "src/assets/golf/golf-0.webp",
+    "atlasSha256": "d648cfc5275d577289b8714b2ff18fcd2d2532ee26a204d08d90659123e821d0",
+    "runtimePage": 22,
+    "localPage": 0,
+    "uv": [
+      0.54443359375,
+      0.0078125,
+      0.68115234375,
+      0.10986328125
+    ],
+    "crop": {
+      "left": 1115,
+      "top": 16,
+      "width": 280,
+      "height": 209
+    },
+    "native": "art/theme-consistency/exports/buildings/golf-toilet-block.native.png",
+    "nativeSha256": "60e8e8d9bf33c877d6af08346c97b91390debddf203df0ba0ea3a052d6b0017e"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

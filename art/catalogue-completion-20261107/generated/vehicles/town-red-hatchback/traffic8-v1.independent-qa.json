@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:35:57.992890+00:00",
+  "review_result": "PASS-source-candidate-identity-direction-alpha",
+  "source": {
+    "path": "generated/vehicles/town-red-hatchback/traffic8-v1.png",
+    "sha256": "09e772f7de60d9352c404ce3c12d500a054a896a53aa1694a116a29aba11ac4f",
+    "bytes": 1350018
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "prompt": {
+    "path": "generated/vehicles/town-red-hatchback/traffic8-v1.prompt.txt",
+    "sha256": "96b478897ca4963dd60887033ae542b6a94d199fe8bc48ebc8e56315fe125d58",
+    "bytes": 1710
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-red-hatchback/traffic8-v1.provenance.json",
+    "sha256": "f6bc0325b21cc5192e030ca0f4750fa51419f63cc21705de65aaa837b95a12f5",
+    "bytes": 2325
+  },
+  "identity_observation": "Short three-door red hatchback remains distinct from wagons; two side doors/steep hatch, front round lights and rear hatch/wiper coherent.",
+  "actual_cell_mapping": [
+    {
+      "cell": 0,
+      "rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "core_margin": 11,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "lower-left",
+      "rgba_crop_sha256": "ae303e2267cb1107b69b60be1f8876cb060d81713dd3d6d46adc76f093ecabc4",
+      "core_trim_dimensions": [
+        390,
+        305
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "f6a7b74eca3f53d0dd89c62e7508dd81d1b9b88eebe5240d7cf59e57b3315ed4"
+    },
+    {
+      "cell": 1,
+      "rect_ltrb": [
+        443,
+        0,
+        883,
+        443
+      ],
+      "core_margin": 57,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 2,
+      "actual_screen_nose": "down",
+      "rgba_crop_sha256": "720b886e33b969360ed2b43eeecfe27623eb0aa42939c21d43019901706cc6c8",
+      "core_trim_dimensions": [
+        239,
+        307
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "d173a1ee6c2f5198069cca853727904c41005fbbe87f1ee05a808e42803676b8"
+    },
+    {
+      "cell": 2,
+      "rect_ltrb": [
+        883,
+        0,
+        1316,
+        443
+      ],
+      "core_margin": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 4,
+      "actual_screen_nose": "lower-right",
+      "rgba_crop_sha256": "e9b20df975b9dd35123577c84393c4a36741d770f428eb25df651cbbb4e1f11c",
+      "core_trim_dimensions": [
+        392,
+        305
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "13e233c88ee68a3279fdc3f4455aa223ea60e7a68b8c347558f66cd68b406987"
+    },
+    {
+      "cell": 3,
+      "rect_ltrb": [
+        1316,
+        0,
+        1774,
+        443
+      ],
+      "core_margin": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 7,
+      "actual_screen_nose": "right",
+      "rgba_crop_sha256": "0e02d60f415afc10e9c5f4749ea0e20f3ff6177e8c0119e3b6a8c8edb7db68a8",
+      "core_trim_dimensions": [
+        432,
+        199
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "c9fb417e0f707008e4cb1bb37f954ec1ab5dd44659d5a6c2d62e7bca9311c40f"
+    },
+    {
+      "cell": 4,
+      "rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "core_margin": 14,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "upper-right",
+      "rgba_crop_sha256": "0941e0164d88b1c5eb71f81b8b1a49697979c499c29e91dbdf9dd02842dbd9c7",
+      "core_trim_dimensions": [
+        388,
+        276
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "2f246846bf9fa9bbc5edc0864c9e2f2877acb899e9a7eea5c2ef715274e83274"
+    },
+    {
+      "cell": 5,
+      "rect_ltrb": [
+        443,
+        443,
+        875,
+        887
+      ],
+      "core_margin": 70,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 4,
+      "actual_screen_nose": "up",
+      "rgba_crop_sha256": "9ec4c924e8d82b85d1fc30ba3d94039a7dad0817ca2e5b2d6815ad673d86c2dc",
+      "core_trim_dimensions": [
+        228,
+        297
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "fec5d2ba7ad0a634f0f779ef1208cad63a283c84d81bf582555d63cac589ec45"
+    },
+    {
+      "cell": 6,
+      "rect_ltrb": [
+        875,
+        443,
+        1315,
+        887
+      ],
+      "core_margin": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 7,
+      "actual_screen_nose": "upper-left",
+      "rgba_crop_sha256": "67bd5c9f18d5e2cb289a9fbcfd9cbd17f489fa83efad298931902bb4cff5a4fc",
+      "core_trim_dimensions": [
+        389,
+        277
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "b2a963cc310d6784eda210507b33c87e92f0f0982eac48479340345115526619"
+    },
+    {
+      "cell": 7,
+      "rect_ltrb": [
+        1315,
+        443,
+        1774,
+        887
+      ],
+      "core_margin": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 5,
+      "actual_screen_nose": "left",
+      "rgba_crop_sha256": "c8a47df2d885ea6bdf307b7460b1723d95450e884d5ce68fd409538c84ff8c08",
+      "core_trim_dimensions": [
+        426,
+        202
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "451e44d8d810a264c77da405895fcd815b22c8a05dabb4abb4588e895e4d13ba"
+    }
+  ],
+  "background": {
+    "zero_alpha_fraction": 0.6335341122997983,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "canvas_dimensions": [
+    1774,
+    887
+  ],
+  "actual_clear_gutter_crops_needed": true,
+  "crop_operation_performed": false,
+  "all_cells_core_clear_of_accepted_cut_boundaries": true,
+  "partition_covers_all_pixels": true,
+  "no_duplicate_core_cell_hashes": true,
+  "exact_duplicate_core_pairs": [],
+  "exact_mirrored_core_pairs": [],
+  "mirror_limit": "Only exact pixel duplicate/mirror detection; conceptual/model mirroring needs visual judgment. All cells visually inspected.",
+  "notes": [
+    "Use recorded actual clear-gutter rectangles; equal-width column cuts would truncate some native body/bumper pixels. Artwork itself is complete and separated; no regeneration required for nominal-grid placement alone."
+  ],
+  "source_only": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "vehicle_physical_scale_calibration_pending": true,
+  "camera_followup_hold": "Sideprofiles nearly level vs30degree corners/front/rear; source identity/alpha result is not camera approval.",
+  "uniform30degree_camera_certified": false
+}

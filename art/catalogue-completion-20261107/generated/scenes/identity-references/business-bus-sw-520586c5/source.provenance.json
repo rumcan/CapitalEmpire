@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:bus-sw",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/bus-sw.png",
+  "sourceSha256": "4772ec344b99f2e3fb7ad0dfacc08e89bafcfc3d73ce44b8a73a8ccce1cfa71e",
+  "output": "identity-references/business-bus-sw-520586c5/source.png",
+  "outputSha256": "4772ec344b99f2e3fb7ad0dfacc08e89bafcfc3d73ce44b8a73a8ccce1cfa71e",
+  "width": 603,
+  "height": 474,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      603,
+      474
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "bus-sw",
+    "sourceSheet": "sliced/builtin/transport-vehicles.png",
+    "sourceCrop": [
+      24,
+      137,
+      595,
+      466
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

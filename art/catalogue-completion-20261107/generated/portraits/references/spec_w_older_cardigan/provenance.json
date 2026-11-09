@@ -1,0 +1,92 @@
+{
+  "look_id": "spectator:spec_w_older_cardigan",
+  "actual_runtime_look": {
+    "id": "spectator:spec_w_older_cardigan",
+    "w": 80,
+    "h": 123.5,
+    "ax": 40,
+    "ay": 118.5,
+    "m": 1.58,
+    "seat": 0.67
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "person:3d:spec_w_older_cardigan",
+  "runtime_namespace_differs_from_source_grid": true,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_older_cardigan\\preview.png",
+    "sha256": "17804bef302a824a783a10346efe33521171fbc543efac0bfdd19d0f9547edf9",
+    "bytes": 1647450
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_older_cardigan\\sheet.json",
+    "sha256": "87fc915cefbd004c8c4bb1067c19b33cccf72708ab2e04082ada6b847bbc34c3",
+    "bytes": 689
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 247
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_older_cardigan\\identity-idle-pair.native.png",
+    "sha256": "3f481b9e498824f4d98783acf8cf5273d55043c7311693e55255912bcbbe9a36",
+    "bytes": 41718
+  },
+  "dimensions": [
+    320,
+    247
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        247
+      ],
+      "dimensions": [
+        160,
+        247
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_older_cardigan\\idle-S.native.png",
+        "sha256": "6d938fba55bac6af77ba210fdad27467c88580705266eef51d8655ab26a72e39",
+        "bytes": 21896
+      },
+      "pixel_sha256": "97c0034621a12233a7ab3c64c9e00db62fd7b340fde7c57c50ea67179dc0660f"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        247,
+        160,
+        494
+      ],
+      "dimensions": [
+        160,
+        247
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_older_cardigan\\idle-SW.native.png",
+        "sha256": "3d24b1c306092ea9d58fef9592c2a12150a1febefd2e6585c0b2a64fe9f85270",
+        "bytes": 21041
+      },
+      "pixel_sha256": "d2cdc656caedcc622afa4c5a9fd9b71cb379e32a7330531381f8101027268634"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

@@ -1,0 +1,21 @@
+{
+  "key": "newprop:hole-12-sign",
+  "family": "normal",
+  "condition": "base",
+  "version": 2,
+  "target": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-12-sign\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/hole-12-sign/normal-v1.png"
+  ],
+  "prompt": "Paint FOUR exact fixed-world 45degreecorner views inREFERENCE1 as finished detailedpainterlygameartmatchingidentity/materials inREFERENCE2. Reference1controls ALLcameras/sidegeometry/attachments/occlusion; reference2styleONLY, donotcopyduplicateposes. Exactly2green uprights, arched board, intrinsic12on FRONT-Yabove ONEhole map and5coloured dots in fixed left column (black,blue,white,yellow,red). REAR+Yplain planks/braces, no copied12/map. No soil/grass apron.. Retainbelievableordinarywear/materials matchingnativeidentity, nofantasychanges. Onefixedassemblyrotatedfourquarterturns; Preserveexactguide front/rear/mainfaceincells, neverrepeatfrontcornerTLforBR. Orthographic30degreesDOWN, same4cellsasguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lampsOFF. Completeequallyscaledobjects,broadgenuinelyzeroalpha transparentgutters/margins; nopavement/groundplate/plants/people/haze/UI/captions/grid. Functionalrampretainedwhenpresentinguide. Keep7blankscorerows orintrinsichole12/map/dots ONLYasfixedidentityrequires.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-1bcefb7e-6c98-45ac-8ca9-939731a4d5ff.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\hole-12-sign\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/hole-12-sign/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "bbd5e42167f4b04f05a43679eb609df5a0e84e878bb18f3b84eaf61f74d97271",
+  "native_bytes_preserved": true
+}

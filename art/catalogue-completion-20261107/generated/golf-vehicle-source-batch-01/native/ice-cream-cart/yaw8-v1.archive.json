@@ -1,0 +1,24 @@
+[
+  {
+    "key": "newprop:ice-cream-cart",
+    "slug": "ice-cream-cart",
+    "family": "yaw8",
+    "condition": "base",
+    "version": 1,
+    "target": "generated/golf-vehicle-source-batch-01/native/ice-cream-cart/yaw8-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-SE-v2.png"
+    ],
+    "prompt": "Paint FOUR missing nearcardinal views of ONE exact specialist golf mobileprop from REFERENCE1 fixedworldguide. Guide controls allcameras/physicalattachments/occlusion. REFERENCE2 supplies finishedsubjectidentity/finepaintedmaterialsONLY; nevercopyitscornercamera. Functionalidentity: One manually pushed green/cream ice-cream chest cart: two large spoked axle wheels, small caster at handle end, transparent top freezer lids with tubs below, cone/cup rack at handle end and one fixed striped umbrella above. Handle, caster and cone rack remain on same end; no engine, cab or extra wheels.. Fixedstate: Manual chest pushcart, TWO large axle wheels+ONE small rear caster; handle/cone rack/cups all atREAR+Y, ONE fixed striped umbrella,4top freezer tubs. No engine or driver..   FourgenuineMAINfacesN E / S W asguide, eachnominal8degreesoffcardinal, orthographic30degreesDOWN. Fixedroofequipment/cargo, wheellayout, seatrowcount, canopy/bench positions neverchange. ExactlyTWOlargeaxlewheels+ONEsmallcaster atSAMErearhandle/conerackend; farcastermayhide. Exactly4fixedfreezertubs underglass andonestripedumbrella; donotmovehandle/racktowardviewerbyhabit. Finepainterlyminiaturegameartmatchreference2wood/enamel/metals/glass, notlowpolyguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lights/beaconsOFF. CompleteisolatedequallyscaledopaqueobjectswithwideZEROALPHAtransparentgutters/margins, smallcontactshadowonly. Nopeopledrivers/patients, road/groundplate, scenery, plants, captions/UI/grid/halo. Intrinsiccross/accesssymbolsretained wherephysicalbodyhas them.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f12e6e4c-8fcd-4dc1-b6a8-c617b98e09f4.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-SE-v2.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "9d47ed8c3bc77801ae9e6fd77c6f90946daf15ff6e418a987d7a7d03b56bdca7",
+    "native_bytes_preserved": true
+  }
+]

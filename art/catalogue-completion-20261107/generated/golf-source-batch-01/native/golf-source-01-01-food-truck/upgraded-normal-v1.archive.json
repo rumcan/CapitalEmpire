@@ -1,0 +1,47 @@
+[
+  {
+    "key": "golf-source-01-01-food-truck",
+    "family": "normal",
+    "condition": "upgraded",
+    "version": 1,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-normal-v1.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v2.png"
+    ],
+    "runtimeTarget": {
+      "eventTypeId": "foodTruck",
+      "eventName": "Food truck",
+      "currentSpriteSubjectId": "golf:food-tent",
+      "newArtSubjectProposal": "golf:event-food-truck",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 3,
+        "depth": 2
+      },
+      "footprintMetres": {
+        "width": 6,
+        "depth": 4
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+      "currentSpriteBaseBoxesInTiles": [
+        {
+          "hx": 4,
+          "hy": 4,
+          "dx": 0,
+          "dy": 0
+        }
+      ]
+    },
+    "prompt": "Create the UPGRADED condition of this exact golf event facility in reference1. This is a restrained practical renovation of the same physical assembly; preserve the four exact cameras and all doors, roof shapes, post/stair/vent positions, and functional layout. Upgrade condition: Well-maintained period1980swhite/green catering step van, clean counter, restrained awning and stainless roof extraction. Same identifiable side/door/wheel layout across its eight views.. Functional identity to retain: A self-propelled catering step van, proposed body5.4m long along localX and2.2m wide along localY, with cab at negativeX, four road wheels, one raised serving hatch/counter on negativeY, a small roof cooking-extraction vent toward the rear positiveX, rear service door at positiveX and plain equipment side at positiveY. Vehicle plus opened0.8m serving hatch fits the exact6x4m event plot. These physical body dimensions are design proposals. Do not draw a tent or ordinary delivery box.. Match the reference's detailed painterly miniature materials and proportions; fresh clean finishes, professionally maintained structure, sound canvas, no rust or ragged holes. Four actual corners in the same cells, same physical size and even scale, orthographic 30 degrees down. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT and shadows LOWER LEFT, windows and lamps OFF. Complete separate sprites with wide zero-alpha transparent margins and gutters. No scene, groundplate, plants, people, UI, captions or decorative extra objects. ",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-124d651d-0e49-4703-a90b-653ae2bb8017.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v2.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "d2788a4b9b94ca357b3bc5d01fd1c32b54cf78faef9383521a3b2b276b0430e3",
+    "native_bytes_preserved": true
+  }
+]

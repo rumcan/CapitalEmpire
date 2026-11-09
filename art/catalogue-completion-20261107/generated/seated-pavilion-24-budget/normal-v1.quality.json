@@ -1,0 +1,142 @@
+{
+  "proposal_id": "seated-pavilion-24-budget",
+  "runtime_id": null,
+  "kind": "normal-corners",
+  "version": 1,
+  "source": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-b0e5afc0-4125-48eb-9c4f-0044af3f98b6.png",
+  "raw": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\normal-v1.png",
+  "sha256": "cb6513a9c99083f0b491d71c734e01330cea6e6b60ef372b250b3f115e1043a4",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_mode": "RGBA",
+  "alpha_extrema": [
+    0,
+    255
+  ],
+  "zero_alpha_fraction": 0.5976079098718232,
+  "alpha_le24_fraction": 0.6572104830729862,
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "cells": [
+    {
+      "view": "SE",
+      "cell_box": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "subject_bbox_alpha_gt24": [
+        42,
+        142,
+        598,
+        523
+      ],
+      "margins_px": [
+        42,
+        142,
+        29,
+        104
+      ],
+      "zero_alpha_fraction": 0.5917675877383759
+    },
+    {
+      "view": "SW",
+      "cell_box": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "subject_bbox_alpha_gt24": [
+        27,
+        142,
+        585,
+        520
+      ],
+      "margins_px": [
+        27,
+        142,
+        42,
+        107
+      ],
+      "zero_alpha_fraction": 0.6158411106786831
+    },
+    {
+      "view": "NW",
+      "cell_box": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "subject_bbox_alpha_gt24": [
+        41,
+        119,
+        597,
+        503
+      ],
+      "margins_px": [
+        41,
+        119,
+        30,
+        124
+      ],
+      "zero_alpha_fraction": 0.5963462374945628
+    },
+    {
+      "view": "NE",
+      "cell_box": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "subject_bbox_alpha_gt24": [
+        28,
+        119,
+        585,
+        504
+      ],
+      "margins_px": [
+        28,
+        119,
+        42,
+        123
+      ],
+      "zero_alpha_fraction": 0.586476703575671
+    }
+  ],
+  "low_alpha_saturated_red_or_yellow_pixels": 15221,
+  "max_alpha_of_these_fringe_pixels": 7,
+  "status": "candidate-needs-seating-geometry-and-alpha-review",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_integrated": false,
+  "native_pixels_unchanged": true,
+  "alpha_reconstruction_performed": false,
+  "geometry_review": "Parent/owner review required: enclosed roof/post supports and actual three-row bench arrangement/24 capacity must match in all four views. Do not infer capacity from the filename.",
+  "alpha_interpretation": "PNG is straight/unassociated RGBA; saturated RGB at alpha<=7 is not opaque colour. Correct white/grey alpha compositing limits its contribution to at most7/255. Diagnostic composites are not final art and must never enter runtime manifests.",
+  "diagnostics": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\diagnostics\\normal-v1-on-white.diagnostic.png",
+      "sha256": "28996f07d5db4f062b95013f597b253fdbda4fe474311ab6133bd73fd3b84212",
+      "purpose": "alpha-composite diagnostic only; never final art"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\diagnostics\\normal-v1-on-grey.diagnostic.png",
+      "sha256": "c06ce2f9c960c14c5080c5d41cd4a28dde749d6aa7b2419e254849035a05066c",
+      "purpose": "alpha-composite diagnostic only; never final art"
+    }
+  ]
+}

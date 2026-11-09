@@ -1,0 +1,68 @@
+{
+  "reference_crops": [
+    {
+      "id": "gen:lawnmower",
+      "source_atlas": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/src/assets/atlas/sprites-15-0.webp",
+        "sha256": "683636fa25e0cb119b5148e4ca4f7a347956de27156d37d435b624a1c2c11a9b",
+        "bytes": 889440
+      },
+      "runtime_tex": [
+        15,
+        0.476563,
+        0.757813,
+        0.504395,
+        0.789063
+      ],
+      "rect_ltrb": [
+        976,
+        1552,
+        1033,
+        1616
+      ],
+      "crop": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/audit/vehicle-references/gen-lawnmower.runtime-atlas-reference.png",
+        "sha256": "b72fc8bd1eccb8687d10a6715bef014614bab97aea0d5e1901e3fcb158bae4dd",
+        "bytes": 7231
+      },
+      "decoded_rgba_sha256": "fcf4a80076bcd45ddb468489bb2aad215a878a57ce9e70246ad30ff72f3b7c7a",
+      "operation": "lossless native rectangle crop of decoded current runtime atlas; no resize/repaint/keying; retained original source PNG unavailable in searched live art/assets",
+      "display_size_not_source_pixels": [
+        64,
+        72
+      ]
+    },
+    {
+      "id": "expansion:rideon-mower",
+      "source_atlas": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/src/assets/atlas/sprites-15-0.webp",
+        "sha256": "683636fa25e0cb119b5148e4ca4f7a347956de27156d37d435b624a1c2c11a9b",
+        "bytes": 889440
+      },
+      "runtime_tex": [
+        15,
+        0.195313,
+        0.703125,
+        0.239258,
+        0.736816
+      ],
+      "rect_ltrb": [
+        400,
+        1440,
+        490,
+        1509
+      ],
+      "crop": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/audit/vehicle-references/expansion-rideon-mower.runtime-atlas-reference.png",
+        "sha256": "d2c9344aed0db7efe0fe7138dee926d63d69b57013c8bac9677b349e6288f34f",
+        "bytes": 14508
+      },
+      "decoded_rgba_sha256": "3d7bf12ea6ef64709c85389c98f470079fd6eb52fb7a85930ac461cf7371af27",
+      "operation": "lossless native rectangle crop of decoded current runtime atlas; no resize/repaint/keying; retained original source PNG unavailable in searched live art/assets",
+      "display_size_not_source_pixels": [
+        89.6,
+        68.85128205128204
+      ]
+    }
+  ]
+}

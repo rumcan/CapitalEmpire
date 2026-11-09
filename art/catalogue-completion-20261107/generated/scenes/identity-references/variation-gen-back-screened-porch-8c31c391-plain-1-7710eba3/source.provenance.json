@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-back-screened-porch-8c31c391-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-back-screened-porch-8c31c391-plain-1/NE.png",
+  "sourceSha256": "17c8623e9645c5ca318aba4704f4965140b42bc957bbbce9d5e33fab31be1915",
+  "output": "identity-references/variation-gen-back-screened-porch-8c31c391-plain-1-7710eba3/source.png",
+  "outputSha256": "17c8623e9645c5ca318aba4704f4965140b42bc957bbbce9d5e33fab31be1915",
+  "width": 362,
+  "height": 367,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      362,
+      367
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-back-screened-porch-8c31c391-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-back-screened-porch-8c31c391-plain:1",
+    "version": "variation-gen-back-screened-porch-8c31c391-plain-1-4views-v4",
+    "files": {
+      "NE": "17c8623e9645c5ca318aba4704f4965140b42bc957bbbce9d5e33fab31be1915",
+      "SE": "b551d024b750384eaed32e8508bf07068d533f6cb818e499a05777d0a521d81b",
+      "SW": "397aaca3750c5810937beb1cd09ec565d2ba87f00d7a086e3ef48e5a7e7ad566",
+      "NW": "331d5deb8fd0d6cc720833e120da2130573dd9774183a5138822ec755eb3b653"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.226563,
+      0.414063,
+      0.403809,
+      0.59375
+    ],
+    "crop": {
+      "left": 464,
+      "top": 848,
+      "width": 363,
+      "height": 368
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-back-screened-porch-8c31c391-plain-1.native.png",
+    "nativeSha256": "117ed7b6fcb89cd9d0a04b51bf3832870bc62ab3c0e72716ffc1fc909518e122"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

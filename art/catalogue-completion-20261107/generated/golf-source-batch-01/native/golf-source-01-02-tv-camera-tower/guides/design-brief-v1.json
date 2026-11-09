@@ -1,0 +1,38 @@
+{
+  "jobId": "golf-source-01-02-tv-camera-tower",
+  "functionalIdentity": "Compact2x2m four-leg braced TV scaffold tower, proposed platform about4m high and one period broadcast camera on a tripod; platform has simple guard rails, internal/face ladder and fixed equipment case. Camera points toward model front. No water tank, gazebo, operator or camera lens changing sides. Height is an art proposal, not accepted runtime measurement.",
+  "exact_placement_plot_metres": {
+    "width": 2.0,
+    "depth": 2.0
+  },
+  "model_bounds_metres": {
+    "min": [
+      -0.95,
+      -0.9874999999999999,
+      0.0
+    ],
+    "max": [
+      0.95,
+      0.95,
+      5.395
+    ]
+  },
+  "fixedIdentity": "One2x2m tower, platform z4m; front/right ladder, rear/right case, lens points front-Y.",
+  "geometry_is_proposed_not_measured_native": true,
+  "ground_plate": false,
+  "world_convention": "x right, y rear, z up; model front-Y. Rotate entire mesh, never relocate features for visibility.",
+  "source_art_modified": false,
+  "runtime_modified": false,
+  "outputs": {
+    "normal": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\normal-world-v1.png",
+      "sha256": "43e9a9613d8770d661f5632fb9de6241ab58503281bbb56d785d413fba388548",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\normal-world-v1.calibration.json"
+    },
+    "yaw8": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\yaw8-world-v1.png",
+      "sha256": "3a5320d5fef40fe67a11772650021215286cfff7465cfd913c85703d803b0cec",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\yaw8-world-v1.calibration.json"
+    }
+  }
+}

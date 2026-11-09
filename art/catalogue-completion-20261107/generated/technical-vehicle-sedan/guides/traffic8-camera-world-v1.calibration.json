@@ -1,0 +1,99 @@
+{
+  "purpose": "Compact TECHNICAL ONLY camera reference, not final sprite art.",
+  "model": "technical-vehicle-sedan",
+  "camera_down_degrees": 30,
+  "cell_pixels": [
+    400,
+    400
+  ],
+  "layout": [
+    4,
+    2
+  ],
+  "camera_pixels_per_metre": 55.0,
+  "cardinal_horizontal_offset_degrees": 0,
+  "corner_horizontal_offset_degrees": -45,
+  "cell_order": [
+    [
+      "LOWER LEFT",
+      "DOWN",
+      "LOWER RIGHT",
+      "RIGHT"
+    ],
+    [
+      "UPPER RIGHT",
+      "UP",
+      "UPPER LEFT",
+      "LEFT"
+    ]
+  ],
+  "source_cells": [
+    {
+      "cell": 0,
+      "source_family": "normal",
+      "source_cell": 3,
+      "actual_nose_screen": "LOWER LEFT"
+    },
+    {
+      "cell": 1,
+      "source_family": "cardinal",
+      "source_cell": 0,
+      "actual_nose_screen": "DOWN"
+    },
+    {
+      "cell": 2,
+      "source_family": "normal",
+      "source_cell": 0,
+      "actual_nose_screen": "LOWER RIGHT"
+    },
+    {
+      "cell": 3,
+      "source_family": "cardinal",
+      "source_cell": 1,
+      "actual_nose_screen": "RIGHT"
+    },
+    {
+      "cell": 4,
+      "source_family": "normal",
+      "source_cell": 1,
+      "actual_nose_screen": "UPPER RIGHT"
+    },
+    {
+      "cell": 5,
+      "source_family": "cardinal",
+      "source_cell": 2,
+      "actual_nose_screen": "UP"
+    },
+    {
+      "cell": 6,
+      "source_family": "normal",
+      "source_cell": 2,
+      "actual_nose_screen": "UPPER LEFT"
+    },
+    {
+      "cell": 7,
+      "source_family": "cardinal",
+      "source_cell": 3,
+      "actual_nose_screen": "LEFT"
+    }
+  ],
+  "sources": {
+    "normal": {
+      "png": "normal-world-v1.png",
+      "sha256": "c3ef97250bccc7ac900ec726514693eca1b5424c2bf97b9674c2b208e5eb80af"
+    },
+    "cardinal": {
+      "png": "cardinal-world-v1.png",
+      "sha256": "8d766a682debdacf458e399d6d1d64690c81a4341fab3900343220c33b68d625"
+    }
+  },
+  "output": {
+    "png": "traffic8-camera-world-v1.png",
+    "sha256": "3b65ede9bd57d65d8ecae33d2a874203c4e1672c0d46b57a7851bf7481ed2ee8"
+  },
+  "mesh_file": "technical-vehicle-sedan-world-model-v1.json",
+  "mesh_sha256": "298f8363df9ce5c8cda5a849d64921e4a78de45df70435a3d6563ec26afa444b",
+  "technical_only": true,
+  "final_native_art_approved": false,
+  "runtime_integrated": false
+}

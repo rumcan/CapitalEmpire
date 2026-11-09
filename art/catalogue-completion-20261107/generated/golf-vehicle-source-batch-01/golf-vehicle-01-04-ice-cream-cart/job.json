@@ -1,0 +1,67 @@
+{
+  "priority": 4,
+  "jobId": "golf-vehicle-01-04-ice-cream-cart",
+  "runtimeSubjectId": "newprop:ice-cream-cart",
+  "runtimeName": "Ice cream cart",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\ice-cream-cart.source.png",
+  "sourceProvenance": {
+    "runtimeSubjectId": "newprop:ice-cream-cart",
+    "runtimeName": "Ice cream cart",
+    "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\ice-cream-cart.source.png",
+    "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+    "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+    "sourceSheetSHA256": "d471a7b9201c45fdc5e7f72a57d2eee3ea749bbe21950133443deb5f0df94617",
+    "cropRectXYWH": [
+      763,
+      652,
+      444,
+      570
+    ],
+    "sourceCell": "bottom right",
+    "pngSHA256": "42278282306fd77bf5902dfa93468be869f0f97659dc2c7a955147cdc7da1bf6",
+    "rgbaSHA256": "e509b22b72f84e1d060a94ecadc60c7592f4dcfafd5d777f5e43bfc785e163f8",
+    "cropPixels": [
+      444,
+      570
+    ],
+    "sourceMetadataCutOff": false,
+    "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+    "visualInspection": "inspected native crop",
+    "actualIdentityNotes": "Confirmed manual vending chest with large spoked wheels, caster/handles and fixed umbrella/cone rack.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 2,
+      "hy": 2,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "sourceDisplayPixels": [
+    256,
+    328.65
+  ],
+  "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+  "functionalBrief": "One manually pushed green/cream ice-cream chest cart: two large spoked axle wheels, small caster at handle end, transparent top freezer lids with tubs below, cone/cup rack at handle end and one fixed striped umbrella above. Handle, caster and cone rack remain on same end; no engine, cab or extra wheels.",
+  "conditionAndEraBrief": "Identity-preserving mobile vending pushcart. Repair gratuitous tarp holes into ordinary worn intact umbrella; keep old enamel/timber chest and restrained metalwork, with no gold fantasy filigree.",
+  "ordinaryBudgetRedesignRequired": false,
+  "originalAuditCounts": {
+    "normal": 0,
+    "yaw8": 0
+  },
+  "nativeGeneratedByThisBrief": false,
+  "exactEightImagesAlreadyProvenForThisStableID": false,
+  "existingNormal4UsableRefs": 0,
+  "generatedCoreReuseClaimed": false,
+  "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+  "sourcePlan": {
+    "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+    "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+    "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+    "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+  },
+  "ownerApproved": false,
+  "runtimeIntegrated": false
+}

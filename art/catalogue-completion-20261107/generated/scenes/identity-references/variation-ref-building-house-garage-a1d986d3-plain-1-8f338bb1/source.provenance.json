@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-house-garage-a1d986d3-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-garage-a1d986d3-plain-1/NE.png",
+  "sourceSha256": "756031ccacf00b3f246770a69f6a50121036f0571c52fbe0b92d598496978d7d",
+  "output": "identity-references/variation-ref-building-house-garage-a1d986d3-plain-1-8f338bb1/source.png",
+  "outputSha256": "756031ccacf00b3f246770a69f6a50121036f0571c52fbe0b92d598496978d7d",
+  "width": 580,
+  "height": 496,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      580,
+      496
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-house-garage-a1d986d3-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Garage doors, front workbench and smaller service door distinguish front; air conditioner and blank rear lower wall follow correct turns. Pixel-preserving v2 layout inspected on magenta; alpha audit passes with zero crop/split warnings."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-house-garage-a1d986d3-plain:1",
+    "version": "variation-ref-building-house-garage-a1d986d3-plain-1-4views-v2",
+    "files": {
+      "NE": "756031ccacf00b3f246770a69f6a50121036f0571c52fbe0b92d598496978d7d",
+      "SE": "5efecb4b640a253e1e83393f48cbdc3f04e1c5a66b74682cd5efb2d25109b3c4",
+      "SW": "9392bd9ebac85b313ae18357cfd329ad623270e32b146cff5ebeba5d37213443",
+      "NW": "11a2dcbfe83085c7491f789622806f69085b5e3ff4d0bd7659aaea0510afc8a7"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.367188,
+      0.007813,
+      0.5625,
+      0.177246
+    ],
+    "crop": {
+      "left": 752,
+      "top": 16,
+      "width": 400,
+      "height": 347
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-house-garage-a1d986d3-plain-1.native.png",
+    "nativeSha256": "f58ee57af08d9c08b69db2aebd540e2a181488909c98df067c1fd7d07c60f92f"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

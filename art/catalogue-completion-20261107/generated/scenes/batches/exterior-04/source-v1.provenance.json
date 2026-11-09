@@ -1,0 +1,89 @@
+{
+  "key": "exterior-04",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-12bc2676-ebf7-4207-a6ad-5f4c393d60a7.png",
+  "target": "generated/scenes/batches/exterior-04/source-v1.png",
+  "prompt": "Create one high-resolution wide 16:9 painted property-scene sheet for Capital Empire, with exactly FOUR independent wide 16:9 property-detail pictures in a strict 2x2 layout. These four cells are FOUR DIFFERENT PROPERTIES, not four rotations or a contact sheet of isometric sprites. Each cell is a full opaque cinematic eye-level or slightly raised front exterior scene, with its own small natural surroundings and a clearly readable principal facade/entrance. Keep a clean simple separation for native cropping, no captions, labels, UI, frames or composite panorama between cells. Use the largest native image resolution available; do not simulate resolution by upscaling. Reference 1 gives the detailed hand-painted illustrated miniature materials, proportions and brushwork only. References 2, 3, 4, 5 identify the four EXACT buildings, in row-major order; keep their individual architecture and readable signs. It is 1985. LATE-AFTERNOON DAYTIME in all four cells: warm sun fixed at screen UPPER RIGHT, soft shadows toward LOWER LEFT, readable daytime facades and roofs. Relight the identity references for this daylight; their dusk lamps are not a time-of-day instruction. Same coherent style across houses, shops and golf buildings, realistic period details, no modern technology or Halloween dressing. Good times: maintained surfaces, repaired paint, tidy approaches and a few appropriate period visitors; the same actual building, not a redesigned modern replacement.\n\nCELL 1 (top-left), exact subject world:video_rental, condition upgraded: Distinct larger blue VIDEO VAULT rental shop with a flat parapet roof, a large central box-and-curved-duct roof unit, smaller roof vents, a yellow VIDEO VAULT fascia with BE KIND - REWIND below, glazed front display bays and glass entrance doors. Keep this base shop distinct from world:video and from every variation ID.\nCELL 2 (top-right), exact subject world:arcade, condition upgraded: Single-storey brown masonry arcade with a flat parapet roof, two box air-conditioning units with connecting pipework and a roof flue, a cyan-and-pink ARCADE marquee with star motifs and a line of bulbs, glazed front arcade-cabinet windows and central double doors. This is the base world:arcade identity, not its variation.\nCELL 3 (bottom-left), exact subject town:grocery, condition upgraded: Two-storey red-brick grocery with pale stone lintels and corner trim, a flat parapet roof with its chimney/vents/air unit, a dark green MAPLE FALLS GROCERY fascia, a green-and-cream striped awning, produce displays and glazed shop entrance beneath upper sash windows.\nCELL 4 (bottom-right), exact subject town:bakery, condition upgraded: Pale cream clapboard ROSE'S BAKERY with a flat parapet roof, roof chimney and air unit, red-and-cream striped front awning, curved red-and-gold bakery sign, glazed front display windows full of bread, a red shop door and flower boxes on the right-side windows.\n\nEvery final crop needs visual review against its own identity PNG and its condition. No reference to a base building substitutes for a different variation ID. Keep the native generated sheet unchanged.\n",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/portraits/golf-pro-m1/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-video-rental-cc8c504f/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-arcade-f5b7f5eb/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-grocery-46d5dc39/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-bakery-af15d7f5/source.png"
+  ],
+  "cells": [
+    {
+      "cell": "top-left",
+      "cellIndex": 0,
+      "identityReferenceNumber": 2,
+      "runtimeId": "world:video_rental",
+      "condition": "upgraded",
+      "view": "outside",
+      "description": "Distinct larger blue VIDEO VAULT rental shop with a flat parapet roof, a large central box-and-curved-duct roof unit, smaller roof vents, a yellow VIDEO VAULT fascia with BE KIND - REWIND below, glazed front display bays and glass entrance doors. Keep this base shop distinct from world:video and from every variation ID.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-video-rental-cc8c504f/source.png",
+      "referenceSha256": "4e909c83906d4a80792b33e196532c6c210ecfaac009b79415297839b70b60c3",
+      "manifestEntryAfterReview": {
+        "slug": "video-store-outside",
+        "subject": "world:video_rental",
+        "state": "upgraded",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "top-right",
+      "cellIndex": 1,
+      "identityReferenceNumber": 3,
+      "runtimeId": "world:arcade",
+      "condition": "upgraded",
+      "view": "outside",
+      "description": "Single-storey brown masonry arcade with a flat parapet roof, two box air-conditioning units with connecting pipework and a roof flue, a cyan-and-pink ARCADE marquee with star motifs and a line of bulbs, glazed front arcade-cabinet windows and central double doors. This is the base world:arcade identity, not its variation.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-arcade-f5b7f5eb/source.png",
+      "referenceSha256": "ac48c283b864bcf2ca334aea0b33c08f582369ea12734e1926e41f9e29c26e2a",
+      "manifestEntryAfterReview": {
+        "slug": "arcade-outside",
+        "subject": "world:arcade",
+        "state": "upgraded",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "bottom-left",
+      "cellIndex": 2,
+      "identityReferenceNumber": 4,
+      "runtimeId": "town:grocery",
+      "condition": "upgraded",
+      "view": "outside",
+      "description": "Two-storey red-brick grocery with pale stone lintels and corner trim, a flat parapet roof with its chimney/vents/air unit, a dark green MAPLE FALLS GROCERY fascia, a green-and-cream striped awning, produce displays and glazed shop entrance beneath upper sash windows.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-grocery-46d5dc39/source.png",
+      "referenceSha256": "f660671f8b3ed4c82715e532db57646940120c311d2a9b262ef862c1ac8775f9",
+      "manifestEntryAfterReview": {
+        "slug": "grocery-store-outside",
+        "subject": "town:grocery",
+        "state": "upgraded",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "bottom-right",
+      "cellIndex": 3,
+      "identityReferenceNumber": 5,
+      "runtimeId": "town:bakery",
+      "condition": "upgraded",
+      "view": "outside",
+      "description": "Pale cream clapboard ROSE'S BAKERY with a flat parapet roof, roof chimney and air unit, red-and-cream striped front awning, curved red-and-gold bakery sign, glazed front display windows full of bread, a red shop door and flower boxes on the right-side windows.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-bakery-af15d7f5/source.png",
+      "referenceSha256": "29b411b0e050769e6ece08db9d7cf8e015e966076ae66430e632bf42b135ff48",
+      "manifestEntryAfterReview": {
+        "slug": "bakery-outside",
+        "subject": "town:bakery",
+        "state": "upgraded",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    }
+  ],
+  "status": "native scene candidate; exact identity review pending",
+  "sha256": "ab92a671005b4271cd0ad1c4f1692daf72bc85f24bb2c0b697fb944031238a12"
+}

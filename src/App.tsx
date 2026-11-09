@@ -47,7 +47,13 @@ import { PLANT_KINDS } from './game/plant';
 import { newHole } from './ui/course/HoleStrip';
 import { SurfaceMark } from './ui/course/SurfaceMark';
 import { MENU_TEXES, SURFACE_BRUSHES } from './game/paint';
-import { STRUCTURES } from './game/golf/tents';
+import { STRUCTURE, type StructureType } from './game/golf/tents';
+import { STRUCTURE_GROUPS } from './game/golf/structure-groups';
+import { NEED_TYPES } from './game/golf/prep';
+import { hasUpgradedArt, improvementCost } from './game/golf/facility-models';
+import { structurePicture } from './game/golf/structure-facing';
+import { structuresNeeds } from './game/golf/eventtool';
+import { tierInfo } from './game/golf/tour';
 import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
 import { computeTournamentCloseBook } from './game/golf/yearend';
@@ -514,7 +520,6 @@ export default function App() {
                   {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { if (game.landMode) game.closeLandSale(); else game.openLandSale(); bump(); }} data-tip="Land for sale: the blocks next to your land, priced; click one to see it, Buy on its card (also Course › Land for sale)" aria-label="Land for sale"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
  {chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
- {chip('skipTournament') && <button data-guide="chip-skip" className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} data-tip={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -837,7 +842,7 @@ export default function App() {
           </div>
 
           {(game.traffic.car || game.traffic.watch?.node) && (
-          <div className="absolute left-[444px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
+          <div className="absolute left-[450px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
           {game.traffic.car && <CarPanel game={game} />}
           {game.traffic.watch?.node && <RoutesPanel game={game} />}
           </div>
@@ -851,33 +856,65 @@ export default function App() {
           )}
           {game.eventTool && gv && (
           <div className={`pointer-events-auto absolute ${game?.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 max-h-[75vh] w-80 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`}>
-          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+          <div className="win-head win-head-slate flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold text-amber-200"><Icon name="buildings" size={18} />Event Structures</div>
-          <button className="btn-icon" onClick={() => game.toggleEventTool()}>✕</button>
+          <button className="btn-icon" onClick={() => game.toggleEventTool()} aria-label="Close Event Structures" data-tip="Close">✕</button>
           </div>
-          <div className="space-y-1.5 text-xs">
-          {STRUCTURES.filter(s => s.tier <= gv.tier + 1).map(s => (
-          <div key={s.id} className="space-y-1 rounded-lg border border-white/5 bg-white/5 p-2">
+          {game.eventFacingInfo() && <div className="space-y-1 rounded-lg bg-white/5 p-2 text-xs" data-testid="event-facing-controls">
+            <div>{game.eventFacingLabel()} · {game.eventFacingInfo()!.info.ids.length} of 8 angles ready</div>
+            <div className="flex gap-1.5">
+              <button className="chip" disabled={game.eventFacingInfo()!.info.ids.length < 2} onClick={() => game.turnEventStructure()}>Turn (R)</button>
+              {!game.eventStructurePending && game.selectedEventStructure() && <button className="chip" onClick={() => game.moveSelectedEventStructure()}>Move</button>}
+              {game.eventStructurePending && <button className="chip" onClick={() => game.cancelEventStructure()}>Cancel placement</button>}
+              {game.eventUpgradeInfo() && <button className="chip" disabled={!game.eventUpgradeInfo()!.available} title={game.eventUpgradeInfo()!.reason}
+                onClick={() => game.upgradeSelectedFacility()} data-testid="event-upgrade">Improve · ${game.eventUpgradeInfo()!.cost.toLocaleString()}</button>}
+            </div>
+            {game.selectedEventStructure() && (STRUCTURE[game.selectedEventStructure()!.typeId]?.requiresEightArt || hasUpgradedArt(game.selectedEventStructure()!.typeId)) && <div>{game.selectedEventStructure()!.visualTier === 'upgraded' ? 'Upgraded' : 'Budget / worn'}</div>}
+          </div>}
+          <div className="space-y-1 rounded-lg bg-white/5 p-2 text-xs" data-testid="event-condition-controls">
+            <div className="text-slate-400">Condition for new structures</div>
+            <div className="flex gap-1.5">
+              <button className={`chip ${game.eventCondition === 'budget' ? 'chip-on' : ''}`} onClick={() => game.setEventCondition('budget')}>Budget / worn</button>
+              <button className={`chip ${game.eventCondition === 'upgraded' ? 'chip-on' : ''}`} onClick={() => game.setEventCondition('upgraded')}>Upgraded</button>
+            </div>
+            <div className="text-[12px] text-slate-400">Upgraded costs a one-time fee shown on each card</div>
+          </div>
+          <div className="space-y-3 text-xs">
+          {eventSections(game, gv.tier).map(sec => (
+          <div key={sec.id} className="space-y-1.5">
+          <div className="text-[12px] font-semibold uppercase tracking-[0.2em] text-amber-300/80">{sec.name}</div>
+          {sec.items.map(({ s, locked, needed, it }) => (
+          <div key={s.id} className={`space-y-1 rounded-lg border border-white/5 bg-white/5 p-2 ${locked ? 'opacity-50' : ''}`}>
+          <div className="flex items-start gap-2">
+          {it && <Thumb it={it} size={40} />}
+          <div className="min-w-0 flex-1 space-y-1">
           <div className="flex justify-between font-medium text-white">
           <span>{s.name}</span>
           <span className="text-[12px] text-slate-400">{s.footprint.w}×{s.footprint.h}{s.unit ? ` · ${s.capacity} ${s.unit}` : ''}</span>
           </div>
           <p className="text-[12px] text-slate-400">{s.blurb}</p>
-          <div className="flex gap-1.5 pt-1">
+          {needed && <div className="text-[12px] text-amber-200" data-testid={`facility-needed-${s.id}`}>Needed for {needed}</div>}
+          {s.requiresEightArt && !game.eventArtStatus(s.id).ready && <p className="text-[12px] text-amber-200/80" data-testid={`facility-pending-${s.id}`}>Pictures and seating are being prepared.</p>}
+          {game.eventCondition === 'upgraded' && (s.requiresEightArt || hasUpgradedArt(s.id)) && <p className="text-[12px] text-slate-400">Upgraded +${improvementCost(s).toLocaleString()}</p>}
+          {locked ? <p className="pt-1 text-[12px] text-slate-400">Unlocks with {tierInfo(s.tier - 1).name}</p> : <div className="flex gap-1.5 pt-1">
           {s.rent > 0 && (
-          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'rent' ? 'chip-on' : ''}`} onClick={() => { if (game) { game.setPendingStructure(s.id, 'rent'); bump(); } }}>Rent ${s.rent.toLocaleString()}</button>
+          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'rent' ? 'chip-on' : ''}`} disabled={!game.eventArtStatus(s.id).ready} title={game.eventArtStatus(s.id).reason} onClick={() => { if (game) { game.setPendingStructure(s.id, 'rent'); bump(); } }}>Rent ${s.rent.toLocaleString()}</button>
           )}
           {s.buy > 0 && (
-          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'buy' ? 'chip-on' : ''}`} onClick={() => { if (game) { game.setPendingStructure(s.id, 'buy'); bump(); } }}>Buy ${s.buy.toLocaleString()}</button>
+          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'buy' ? 'chip-on' : ''}`} disabled={!game.eventArtStatus(s.id).ready} title={game.eventArtStatus(s.id).reason} onClick={() => { if (game) { game.setPendingStructure(s.id, 'buy'); bump(); } }}>Buy ${s.buy.toLocaleString()}</button>
           )}
+          </div>}
           </div>
+          </div>
+          </div>
+          ))}
           </div>
           ))}
           </div>
           </div>
           )}
           {game.site && game.traffic.round.stage !== 'eval' && !(game.golfMode && game.traffic.round.stage === 'free') && <RoundPanel game={game} />}
-          {seasonOpen && game.golfMode && game.traffic.round.stage !== 'eval' && <SeasonCard game={game} onClose={() => setSeasonOpen(false)} onSelectHole={h => { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.lookAt(pin.x, pin.y); }} />}
+          {seasonOpen && game.golfMode && game.traffic.round.stage !== 'eval' && <SeasonCard game={game} canSkip={chip('skipTournament')} onClose={() => setSeasonOpen(false)} onSelectHole={h => { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.lookAt(pin.x, pin.y); }} />}
           {game.site && game.resultsOpen() && <EvalScreen game={game} />}
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
@@ -906,6 +943,10 @@ export default function App() {
           {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
             const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen ? game.rangeGuideView() : null;
             return gv && <RangeGuideCard view={gv} right={stack!.guide()} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
+          })()}
+          {(() => { // the tournament prep checklist (golf/prep.ts), bottom right like the guide: on a free day only (the round is not running), after the tutorial and the guide
+            const pv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && game.traffic.round.stage === 'free' ? game.prepCardView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
+            return pv && <RangeGuideCard view={pv} heading={pv.heading} tid="prep" foot="Each step pays once when it is done" offLabel="Hide this checklist" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.eventTool ? (game.panel ? 'right-[40.25rem]' : 'right-[21.5rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.prepShowMe(id); bump(); }} onSkip={id => { game.prepSkip(id); bump(); }} onFold={f => { game.prepFolded = f; bump(); }} />;
           })()}
           {(() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
           {(() => { // T214: the Staff card, beside the Clubhouse card (to its left) when that is open
@@ -1110,6 +1151,22 @@ function liveRows(v: SurgeView): TownRow[] {
 
 /** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock).
  *  Docked top right (left of a right-hand panel when one is open); the eval stage has its own screen (EvalScreen) */
+/** the Event Structures panel's library pictures by id (the thumbnails) */
+const EVENT_LIB = new Map(LIBRARY.map(it => [it.id, it]));
+/** the panel's sections in STRUCTURE_GROUPS order: each type with its picture, whether it is locked above this tier (shown last), and the
+ *  tier's name when the course still lacks a need this type meets (this tier or the next) */
+function eventSections(game: Game, tier: number) {
+  const have = new Set(structuresNeeds(game.golf?.structures ?? [], []));
+  const neededFor = (id: string) => { const t = [tier, tier + 1].find(t => t <= 5 && tierInfo(t).needs.some(n => !have.has(n) && NEED_TYPES[n]?.includes(id))); return t === undefined ? null : tierInfo(t).name; };
+  return STRUCTURE_GROUPS.map(g => {
+    const defs = g.ids.map(id => STRUCTURE[id]).filter((s): s is StructureType => !!s);
+    const items = [...defs.filter(s => s.tier <= tier + 1), ...defs.filter(s => s.tier > tier + 1)].map(s => ({
+      s, locked: s.tier > tier + 1, needed: neededFor(s.id), it: EVENT_LIB.get(structurePicture({ typeId: s.id, visualTier: game.eventCondition }).id),
+    }));
+    return { id: g.id, name: g.name, items };
+  }).filter(sec => sec.items.length > 0);
+}
+
 function RoundPanel({ game }: { game: Game }) {
   const r = game.traffic.round, last = r.last, golf = game.golfMode, gv = golf ? game.golfView() : null;
   const crowd = r.crowd.map((c, i) => `Town ${String.fromCharCode(65 + i)} ${c}`).join(' · ') + (r.crowd.length ? ' cars' : '');

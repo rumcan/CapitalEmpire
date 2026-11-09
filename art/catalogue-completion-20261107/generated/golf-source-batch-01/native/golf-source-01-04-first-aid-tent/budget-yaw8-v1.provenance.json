@@ -1,0 +1,32 @@
+{
+  "key": "golf-source-01-04-first-aid-tent",
+  "condition": "budget",
+  "runtimeTarget": {
+    "eventTypeId": "firstAid",
+    "eventName": "First aid tent",
+    "currentSpriteSubjectId": "expansion:backyard-tent",
+    "newArtSubjectProposal": "golf:event-first-aid-tent",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 3,
+      "depth": 3
+    },
+    "footprintMetres": {
+      "width": 6,
+      "depth": 6
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-96d55b2a-ccf4-4df3-bebb-4b802c33a3cf.png",
+  "target": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-yaw8-v1.png",
+  "prompt": "Create the missing FOUR near-cardinal views of the EXACT SAME budget golf item in reference1, not a redesign. Reference1 supplies its fixed physical identity, materials and normal corners. Functional design: A6x6m rectangular first-aid tent, low ridge roof, plain metal or sawn-timber uprights, one broad front opening with tied-back flaps, two simple side ventilation/window panels and closed rear wall with a small service flap. A visible cot, medical cabinet and plain first-aid box establish function where camera permits. Ground-level accessible entrance; no stamped staff, no garden planters. Four distinct2x2 main faces in order N E / S W: N OPEN front with tied-back flaps/cot/cabinet; E netted/vented LEFT wall; S CLOSED rear and small service flap, no open front; W vented RIGHT wall. Same single object rotated by quarter turns, each viewed8degrees off its cardinal, orthographic30degreesDOWN. Near-cardinal means subtlysloping main bases and a NARROWsecondaryside, not broad45degreecorners and not square-on elevation. Keep all attachments/roof/doors/windows/reels/pockets/handle locations fixed; reconstruct actual rear faces without pasting frontfeatures onto the back. Match reference1's detailed hand-painted miniature material style and budget condition exactly. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadows LOWER LEFT in all cells, lamps/screens OFF. Four complete separate equallyscaled opaque sprites, truly zero-alpha transparentbackground/gutters, generousmargins. Meshopenings stay transparent where applicable. No people/plants/groundplate/road/terrain, scenehaze, labels/text/grid/UI.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-normal-v1.png"
+  ],
+  "status": "native yaw4 candidate; source identity/alpha/actual main faces/camera review pending",
+  "runtime_imported": false,
+  "sha256": "2521ec8adb9ac12ccb3651694a463d7775d12160325e15cc81766ebae8122844",
+  "native_bytes_preserved": true
+}

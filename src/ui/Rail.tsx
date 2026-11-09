@@ -5,7 +5,7 @@
 // the town footer along the bottom (a slim row: each group's icon beside its name; compact, its icons alone, the names in the tooltip and the
 // buttons' labels). The buttons, their states and their anchors (data-rail, data-guide: the guide's Show me) are the same in both.
 import { Icon } from './Icon';
-import { railTip, type Drawer, type RailEntry, type RailItem } from './rail-items';
+import { railLabel, railTip, type Drawer, type RailEntry, type RailItem } from './rail-items';
 import { tipAttrs } from './tip';
 
 
@@ -82,7 +82,7 @@ export function Rail({ walk, entries, onPick, onLocked, onHover, open = null, na
             {locked && <span className="rail-lock"><LockMark /></span>}
             {isNew && <NewBadge className="rail-new" />}
             <Icon name={r.icon} size={foot ? 24 : 28} />
-            {!(foot && compact) && <span>{r.label}</span>}
+            {!(foot && compact) && <span>{railLabel(r)}</span>}
           </button>}
         </div>
       ); })}

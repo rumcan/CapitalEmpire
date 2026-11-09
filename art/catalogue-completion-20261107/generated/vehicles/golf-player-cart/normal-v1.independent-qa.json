@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:35:57.877160+00:00",
+  "review_result": "PASS-source-candidate-identity-direction-alpha",
+  "source": {
+    "path": "generated/vehicles/golf-player-cart/normal-v1.png",
+    "sha256": "2d5501d434040ee9130db24ba4f2bfaec43af8a01f380a9b519420c1316c8254",
+    "bytes": 2006869
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "prompt": {
+    "path": "generated/vehicles/golf-player-cart/normal-v1.prompt.txt",
+    "sha256": "6f50a5eaca1afdabdbced861f77f2bbc7807b3d599289ae0b5f33a2f4d5461a1",
+    "bytes": 1341
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-player-cart/normal-v1.provenance.json",
+    "sha256": "ed012486d795e7350a6a69c658d4cb7b500d6c70ed851dbd162592fdfcef9985",
+    "bytes": 2060
+  },
+  "identity_observation": "Single cream passenger bench, canopy and two rear golf bags preserved; rear cells show rear bags/tail mechanism, no second passenger bench.",
+  "actual_cell_mapping": [
+    {
+      "cell": 0,
+      "rect_ltrb": [
+        0,
+        0,
+        630,
+        623
+      ],
+      "core_margin": 27,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 2,
+      "actual_screen_nose": "lower-left",
+      "rgba_crop_sha256": "91788d7701a45022a115781fdf196c41ff25c457bf8f6783a01014cbf1dd4009",
+      "core_trim_dimensions": [
+        539,
+        553
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "d569b395154e84a22c4aae7fa021424bf1d99b50325863f33646d63904d63d6d"
+    },
+    {
+      "cell": 1,
+      "rect_ltrb": [
+        630,
+        0,
+        1261,
+        623
+      ],
+      "core_margin": 27,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 3,
+      "actual_screen_nose": "lower-right",
+      "rgba_crop_sha256": "c4c2cf9cbd555c752849f01fa0575e1f6c2d43ce7f6156c981ad6187c95d315e",
+      "core_trim_dimensions": [
+        545,
+        554
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "abab4f613e5c96826c76b2939a147c54bc117cce53ddbd69495782ab1b3ec6e5"
+    },
+    {
+      "cell": 2,
+      "rect_ltrb": [
+        0,
+        623,
+        630,
+        1247
+      ],
+      "core_margin": 3,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 4,
+      "actual_screen_nose": "upper-right",
+      "rgba_crop_sha256": "680a4d12e31d2705f9259dbcb145ddd1bad2b12405bb7958b3bb457db973e1de",
+      "core_trim_dimensions": [
+        519,
+        574
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "8bc00fbcb5770fd20d84b06c083ddcc67c4016fa798c473782dbcb8283a0f078"
+    },
+    {
+      "cell": 3,
+      "rect_ltrb": [
+        630,
+        623,
+        1261,
+        1247
+      ],
+      "core_margin": 3,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 5,
+      "actual_screen_nose": "upper-left",
+      "rgba_crop_sha256": "b3fb195f60e4a3022d30dd810e14b1a6c9986387ece46aa984c91b4966d91517",
+      "core_trim_dimensions": [
+        531,
+        577
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "d845d65e89e64a90a61f48c694f796742b68344aaf7df8fba5aaec4e7916217b"
+    }
+  ],
+  "background": {
+    "zero_alpha_fraction": 0.47365381912625193,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      1.0,
+      170.0
+    ]
+  },
+  "canvas_dimensions": [
+    1261,
+    1247
+  ],
+  "actual_clear_gutter_crops_needed": false,
+  "crop_operation_performed": false,
+  "all_cells_core_clear_of_accepted_cut_boundaries": true,
+  "partition_covers_all_pixels": true,
+  "no_duplicate_core_cell_hashes": true,
+  "exact_duplicate_core_pairs": [],
+  "exact_mirrored_core_pairs": [],
+  "mirror_limit": "Only exact pixel duplicate/mirror detection; conceptual/model mirroring needs visual judgment. All cells visually inspected.",
+  "notes": [],
+  "source_only": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "vehicle_physical_scale_calibration_pending": true
+}

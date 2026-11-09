@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "gen:house-ranch-long",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/gen-house-ranch-long/NE.png",
+  "sourceSha256": "012d2b2c9c2a3529c0f87887fc297a9a81eb006d157af321cda6e8a72dc94112",
+  "output": "identity-references/gen-house-ranch-long-a4ddd58c/source.png",
+  "outputSha256": "012d2b2c9c2a3529c0f87887fc297a9a81eb006d157af321cda6e8a72dc94112",
+  "width": 610,
+  "height": 429,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      610,
+      429
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\gen-house-ranch-long\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "gen:house-ranch-long",
+    "version": "gen-house-ranch-long-4views-v1",
+    "files": {
+      "NE": "012d2b2c9c2a3529c0f87887fc297a9a81eb006d157af321cda6e8a72dc94112",
+      "SE": "f46a6e7caf6b70041a5efc831823eb0fb47529fad2385c316d33fb25b0375cfe",
+      "SW": "d1c1f4fc11254e5f9cbb276e29bd49e6247737518a95dd20b215f9c2118b93a9",
+      "NW": "58c40f880b4c2de7c3b617780cadc1895c4c35e65a29d037cd0ca81f109af389"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.664063,
+      0.484375,
+      0.976074,
+      0.694824
+    ],
+    "crop": {
+      "left": 1360,
+      "top": 992,
+      "width": 639,
+      "height": 431
+    },
+    "native": "art/theme-consistency/exports/buildings/gen-house-ranch-long.native.png",
+    "nativeSha256": "dde35ac5feb3cbb26efa2160c339d9a0598bcd8a5234786f7789436513c39b83"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

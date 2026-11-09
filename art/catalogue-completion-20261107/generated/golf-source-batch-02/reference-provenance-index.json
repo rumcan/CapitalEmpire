@@ -1,0 +1,557 @@
+[
+  {
+    "id": "newprop:ball-washer",
+    "name": "Ball washer",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-washer.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+    "originalSheetSHA256": "252ee9747b1f9513b0fda88f9781d4e5edf7fdcdf52fe7211f8c9d84841484b8",
+    "referenceSHA256": "3733415ef6c52354fae9c19f30b386d51a9ec30caba2b982138b0658a0700941",
+    "sourceRectXYWH": [
+      95,
+      5,
+      449,
+      600
+    ],
+    "sourceCell": "top left",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      449,
+      600
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.4,
+        "hy": 0.4,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      51.2,
+      68.42
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.4,
+      0.4
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed pedestal washer with hand crank and towel; two features on opposite sides make reliable turning identity cues.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:bag-stand-stall",
+    "name": "Bag stand stall",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\bag-stand-stall.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-6b8f2006-8090-4a33-8ae9-128c0c466afd.png",
+    "originalSheetSHA256": "567699b9ed1ee6ee33e8227ab75a05dfff316df85908f69295aabccc7801d2ec",
+    "referenceSHA256": "ae835d26483688f9cade3f33fc1c594847fa354d356896c14f593f5c8b1a58ce",
+    "sourceRectXYWH": [
+      662,
+      668,
+      575,
+      569
+    ],
+    "sourceCell": "bottom right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      575,
+      569
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 2,
+        "hy": 2,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      256,
+      253.33
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      2,
+      2
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected and excluded from golf bag-stand job",
+    "actualImage": "Three material bins containing sand/gravel/soil, stacked sacks and a shovel. No golf bag rack. This ID remains a deferred maintenance-material rack rather than inventing a bag stand replacement."
+  },
+  {
+    "id": "newprop:ball-bucket-stand",
+    "name": "Ball bucket stand",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-bucket-stand.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+    "originalSheetSHA256": "923ff2d5fce8d9553d97045286bba84a25f9f7ecbd58e2aa96fc850966e7a684",
+    "referenceSHA256": "8cc5a4030df385a964f07ab0e48bae4a7913a7215f749ff112e327ac4f8a7371",
+    "sourceRectXYWH": [
+      768,
+      626,
+      408,
+      579
+    ],
+    "sourceCell": "bottom right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      408,
+      579
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 2.5,
+        "hy": 2.5,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      320,
+      454.12
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      2.5,
+      2.5
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed manual ball hopper and front bucket, not simple bucket shelf. Bolted timber framing is ordinary rather than fantasy logs.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:ball-dispenser",
+    "name": "Ball dispenser",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-dispenser.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+    "originalSheetSHA256": "603c5d0bf8d3206c56aa22b814d0012d3332ce9de5f7a5e9ac3a977058266ea0",
+    "referenceSHA256": "4659dc05fee23fc96f5f492595714837a6166f3a0410021538211897c242717d",
+    "sourceRectXYWH": [
+      781,
+      655,
+      376,
+      559
+    ],
+    "sourceCell": "bottom right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      376,
+      559
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 2.5,
+        "hy": 2.5,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      320,
+      475.74
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      2.5,
+      2.5
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed coin machine with lower front basket and upper ball window; no electronic touchscreen.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:park-bench",
+    "name": "Park bench",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\park-bench.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+    "originalSheetSHA256": "cb1440cc480d50703ec0decdc2a284a059f2a5a20828240edc8c001c759c0c6f",
+    "referenceSHA256": "7f47f7f13847a5858b4feb068973c5ca3523bd2a5043de1a867bf1bcc82dba29",
+    "sourceRectXYWH": [
+      665,
+      96,
+      562,
+      494
+    ],
+    "sourceCell": "top right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      562,
+      494
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      128,
+      112.51
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      1,
+      1
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed bench with attached tall hole-map panel. Name alone understates combined object.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:water-tank-stall",
+    "name": "Water tank stall",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\water-tank-stall.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+    "originalSheetSHA256": "cd5cc17e639f6a0dc65e703f567c681d5b05b3910841090744961f0738251b4d",
+    "referenceSHA256": "6a61327dfe20364214768682655d10804bf937fae1d1e4d5dceaabaa15fb7c49",
+    "sourceRectXYWH": [
+      710,
+      683,
+      507,
+      516
+    ],
+    "sourceCell": "bottom right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      507,
+      516
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 2,
+        "hy": 2,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      256,
+      260.54
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      2,
+      2
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed modern white IBC tank/cage on wood/rope stand under blue tarp, two taps/trough. Requires ordinary1950sredesign.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:gold-tee-markers",
+    "name": "Gold tee markers",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\gold-tee-markers.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+    "originalSheetSHA256": "252ee9747b1f9513b0fda88f9781d4e5edf7fdcdf52fe7211f8c9d84841484b8",
+    "referenceSHA256": "67bf38a38112160400120a8e35fe73985096b9650a54a14e2505c5422edfb26c",
+    "sourceRectXYWH": [
+      709,
+      198,
+      514,
+      396
+    ],
+    "sourceCell": "top right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      514,
+      396
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.4,
+        "hy": 0.4,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      51.2,
+      39.45
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.4,
+      0.4
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed pair of gold ball markers. Source includes an integrated grass/soil plate, which should not be baked into new physical prop.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:rope-barrier",
+    "name": "Rope barrier",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+    "referenceSHA256": "081eca194b4fd550a33a12920b5b7eab03c05ed5ed83a5c2159aef57b7af25d0",
+    "sourceRectXYWH": [
+      40,
+      219,
+      552,
+      219
+    ],
+    "sourceCell": "top left",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      552,
+      219
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.8,
+        "hy": 0.8,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      102.4,
+      40.63
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.8,
+      0.8
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed three stanchions, two rope spans; preserves straight modular geometry.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:rope-barrier-corner",
+    "name": "Rope barrier corner",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier-corner.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+    "referenceSHA256": "c289149eb4e23dd5eaaf8b54cece8dd8ce9aedfe81ec1226d515014a5ff73d07",
+    "sourceRectXYWH": [
+      674,
+      157,
+      538,
+      352
+    ],
+    "sourceCell": "top right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      538,
+      352
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.8,
+        "hy": 0.8,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      102.4,
+      67
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.8,
+      0.8
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed five stanchions, four spans in a two-arm corner, not only three posts.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:rope-walkway",
+    "name": "Rope walkway",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-walkway.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+    "referenceSHA256": "7ffe2072f61cff60abb48631948f9df608d4c66256b6282a144506847c4acca6",
+    "sourceRectXYWH": [
+      24,
+      752,
+      662,
+      385
+    ],
+    "sourceCell": "bottom left",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      662,
+      385
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.8,
+        "hy": 0.8,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      102.4,
+      59.55
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.8,
+      0.8
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed two open swing gates, four posts and perforated ramp; not a generic rope walkway.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:direction-signpost",
+    "name": "Direction signpost",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\direction-signpost.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "originalSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+    "referenceSHA256": "9f794b546fb239c7faf22edf24017fc93e51470e7d618d4232f963f49daae1b0",
+    "sourceRectXYWH": [
+      733,
+      623,
+      448,
+      619
+    ],
+    "sourceCell": "bottom right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      448,
+      619
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.6,
+        "hy": 0.6,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      76.8,
+      106.11
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.6,
+      0.6
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed four arrow boards with golf/food/toilet/exit pictograms. Source crop has a detached fragment from neighbouring prop above; ignore it.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:hole-12-sign",
+    "name": "Hole 12 sign",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\hole-12-sign.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "originalSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+    "referenceSHA256": "1b694824de74d4a7ce7c55266cd5dc579934a337c8bfbeecd89f467ce2bd1de7",
+    "sourceRectXYWH": [
+      749,
+      20,
+      476,
+      627
+    ],
+    "sourceCell": "top right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      476,
+      627
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.6,
+        "hy": 0.6,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      76.8,
+      101.16
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.6,
+      0.6
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed tee hole-map sign with12and five dots; unrelated detached neighbouring gold finial below crop must be ignored.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  {
+    "id": "newprop:course-map-board",
+    "name": "Course map board",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\course-map-board.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+    "sourceSheetSHA256": "8d3a7260b7ec4b810ea709271c0f84e3103ac1bb25d769e9ad9361c46b02c2bb",
+    "referenceSHA256": "68399b1762dc542bae34d9b6d217a8e42759cc6011cd16f6f0c958c76c03ebd1",
+    "sourcePixelRectXYWH": [
+      49,
+      18,
+      520,
+      629
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      520,
+      629
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed roofed course-map information board, lanterns and planter/paving extras. The board itself is the desired physical prop.",
+    "sourceOnlyNotReleaseProof": true,
+    "sourceCopyOperation": "byte-for-byte copy of prior native-RGBA crop; original source/provenance retained",
+    "sourcePriorProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-board.provenance.json"
+  }
+]

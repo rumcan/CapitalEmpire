@@ -1,0 +1,180 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:23.654228+00:00",
+  "review_result": "HOLD-camera-consistency;background-alpha",
+  "identity_direction_alpha_result": "HOLD",
+  "source": {
+    "path": "generated/vehicles/era-1990s-teal-sedan/traffic8-v1.png",
+    "sha256": "76fcc53fe4d9b48c9336f2463e4c7bef3f1a22c797f809a3652dde032eb450bf",
+    "bytes": 2754299
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.0,
+  "outer_border_alpha_p50p95max": [
+    74.0,
+    86.0,
+    97.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    68.0,
+    80.0,
+    86.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "actual_screen_nose": "lower-left",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "native_core_margin_pixels": 9,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 97,
+      "rgba_rectangle_sha256": "d076f8b6358579bf672ddf82bc4e8b438dd2db3b1abff16050f55b41da277900"
+    },
+    {
+      "cell": 1,
+      "actual_screen_nose": "down",
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "native_core_margin_pixels": 55,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 82,
+      "rgba_rectangle_sha256": "fc47c984b1b256b027036b9815c9995d3b1f30b90044f54da93e9ca259f36faf"
+    },
+    {
+      "cell": 2,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "native_core_margin_pixels": 0,
+      "boundary_core_pixels": 103,
+      "boundary_alpha_max": 253,
+      "rgba_rectangle_sha256": "24c6c054cc0724b558e95603235fdd3c23634c4149f6c5d9ed4bd616b9e79ae6"
+    },
+    {
+      "cell": 3,
+      "actual_screen_nose": "right",
+      "reference_rect_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "native_core_margin_pixels": 0,
+      "boundary_core_pixels": 106,
+      "boundary_alpha_max": 253,
+      "rgba_rectangle_sha256": "ca6e66be4239b3614cbfc140e717588dc2880ae31e7b347ed9036fab63144fa0"
+    },
+    {
+      "cell": 4,
+      "actual_screen_nose": "upper-right",
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "native_core_margin_pixels": 15,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 92,
+      "rgba_rectangle_sha256": "98c5053829e4bcce631dcfbf0dbd37ffdbc16f6fabd7ae4f23a696cff3c3ea12"
+    },
+    {
+      "cell": 5,
+      "actual_screen_nose": "up",
+      "reference_rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "native_core_margin_pixels": 66,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 88,
+      "rgba_rectangle_sha256": "d5c352d20e3623b3336f88cb8fd65038509232b87bff13771f14ca22880e175e"
+    },
+    {
+      "cell": 6,
+      "actual_screen_nose": "upper-left",
+      "reference_rect_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "native_core_margin_pixels": 0,
+      "boundary_core_pixels": 87,
+      "boundary_alpha_max": 252,
+      "rgba_rectangle_sha256": "e47d6ace24292c764dbcba293143db64ee0921aca68ff870205509a7eb67baa4"
+    },
+    {
+      "cell": 7,
+      "actual_screen_nose": "left",
+      "reference_rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "native_core_margin_pixels": 0,
+      "boundary_core_pixels": 89,
+      "boundary_alpha_max": 252,
+      "rgba_rectangle_sha256": "35639c5fff4751f45db8a6becbb1048fe0534a51718ae5fc19b0c64d00133a3f"
+    }
+  ],
+  "all_eight_distinct_nose_directions_present": true,
+  "side_cell_order_is_remappable": false,
+  "native_core_clipped_at_canvas_border": false,
+  "actual_clear_gutter_crops_reference_only": [
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ],
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ]
+  ],
+  "source_crops_performed": false,
+  "notes": [
+    "HOLD actual alpha haze/background wash; native cleanup required. No coded alpha reconstruction permitted.",
+    "HOLD visually inconsistent elevation: col4 side profiles show nearly level body/roof and near-circular side wheels; diagonal/front/rear cells show substantially more top planes. Need shared fixed30degree camera proof or native correction, not relabelling."
+  ],
+  "camera_measurement_scope": "Visual inconsistency established; exact percell camera degrees not numerically certified. Do not present approximate appearance as an8degree/30degree measured proof.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_only": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/era-1990s-teal-sedan/traffic8-v1.prompt.txt",
+    "sha256": "884da412a5419e57b713a49e40c779dfd7b983982edc8e08134132449e7610bf",
+    "bytes": 1779
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/era-1990s-teal-sedan/traffic8-v1.provenance.json",
+    "sha256": "9e97bd6ced7b55105dbf06197ff3d344fd3ccc2a95b03cbe6cfd6e3bad120c9d",
+    "bytes": 2463
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:07.170412+00:00",
+  "review_result": "PASS-source-candidate-openings-and-alpha;exact-camera-unverified",
+  "source": {
+    "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+    "sha256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+    "bytes": 1529702
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "references": [
+    {
+      "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/guides/normal-world-v1.png",
+      "sha256": "ca23503caab2a1f8344117bf6ce1753f0ed895564cbeea7bd17cdde9d686543e",
+      "bytes": 41372
+    },
+    {
+      "path": "generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png",
+      "sha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a",
+      "bytes": 618401
+    }
+  ],
+  "source_core_clipping": false,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.6085591497956142,
+  "cells": [
+    {
+      "guide_cell_label_only": "SE",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "native_core_margin_pixels": 98,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "79ffd42dadc541aadceed4fef7186d1b16dc92129b21745688cffdfc50fd937b"
+    },
+    {
+      "guide_cell_label_only": "SW",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "native_core_margin_pixels": 95,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "66368bde5bf1538be6977c87c8dd13055420f9e2514366779d08f7a5da849caf"
+    },
+    {
+      "guide_cell_label_only": "NW",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "native_core_margin_pixels": 97,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "2750f281c7c8eb0eb4af0721737459ff5335184d51c214381af1d6b258ac81a7"
+    },
+    {
+      "guide_cell_label_only": "NE",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "native_core_margin_pixels": 96,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "ec215453676de918db285937d62151d9ac06a5e86957ed1ed8f91e44c39c56d9"
+    }
+  ],
+  "notes": [
+    "Two front entrances/awnings,4front upperwindows,2rear patio doors and2small/2large upperrear windows preserved;2roof vents and sidewall windows coherent."
+  ],
+  "exact8_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact_prompt": {
+    "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.prompt.txt",
+    "sha256": "42e608e29d1064556a36ff2b09ae73916762176a99cc8f32a9f98a72132eefca",
+    "bytes": 1494
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.provenance.json",
+    "sha256": "6c8e58f47c1910c4f8ba67702f4c89b8fcb66cfbc6c223bcf05ea9c5460aa6f9",
+    "bytes": 2409
+  }
+}

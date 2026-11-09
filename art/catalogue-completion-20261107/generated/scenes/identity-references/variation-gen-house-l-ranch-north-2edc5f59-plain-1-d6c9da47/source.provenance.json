@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-ranch-north-2edc5f59-plain-1/NE.png",
+  "sourceSha256": "30d5363f96e08f768a2ddfd285abba073e956e57ce41c61a8be95cffb08b5e97",
+  "output": "identity-references/variation-gen-house-l-ranch-north-2edc5f59-plain-1-d6c9da47/source.png",
+  "outputSha256": "30d5363f96e08f768a2ddfd285abba073e956e57ce41c61a8be95cffb08b5e97",
+  "width": 441,
+  "height": 393,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      441,
+      393
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-house-l-ranch-north-2edc5f59-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+    "version": "variation-gen-house-l-ranch-north-2edc5f59-plain-1-4views-v5",
+    "files": {
+      "NE": "30d5363f96e08f768a2ddfd285abba073e956e57ce41c61a8be95cffb08b5e97",
+      "SE": "65381395d33210c1ec1c399fa59dc7441a118b4b4a0a5eb1aa5e9afe5c7ce813",
+      "SW": "24aa55a656c9d75e12fe79481bb8fc4d9d90ade0d38b67066ebeb409b5a57773",
+      "NW": "73fab5fdb0bff334380c1bd5aa65a67acffa2d8d8853f7e13583735cb15206b1"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.007813,
+      0.429688,
+      0.200684,
+      0.618164
+    ],
+    "crop": {
+      "left": 16,
+      "top": 880,
+      "width": 395,
+      "height": 386
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-house-l-ranch-north-2edc5f59-plain-1.native.png",
+    "nativeSha256": "dc11e3708ef2e7ab2c17b3be1e6040fb84cac12d85626431a3bf63739df69d30"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}
