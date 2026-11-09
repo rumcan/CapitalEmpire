@@ -132,7 +132,7 @@ describe('the catalogue script: places and entries (T378)', () => {
 });
 
 describe('the catalogue script: a course on a border (T378)', () => {
-  it('is listed once, in the country asked first: the second answer's copy is dropped, what the first did not have stays', () => {
+  it('is listed once, in the country asked first: the copy in the second answer is dropped, what the first did not have stays', () => {
     const e = (ref: string, name: string): L.Entry => [ref, name, '', 1, 2, 10, 10, 0, '', ''];
     const seen = new Set<string>();
     const first = L.firstSeen([e('w1', 'Border GC'), e('w2', 'Home GC')], seen), second = L.firstSeen([e('w1', 'Border GC'), e('w3', 'Away GC')], seen);
