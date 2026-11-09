@@ -200,7 +200,7 @@ import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { bizName, inSentence, inTheWay, overlaps, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
-import { buyAdjacentBlock, blockOnRoad, blockOnWater, mergeParcelBounds, playInWay, polyInParcels, startWhy, type LandRoad, type ParcelLandClass } from './golf/parcels';
+import { buyAdjacentBlock, blockOnRoad, blockOnWater, clampBlock, mergeParcelBounds, playInWay, polyInParcels, startWhy, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
@@ -7697,13 +7697,17 @@ export class Game {
     }
     return blockOnRoad(r, roads);
   }
-  /** buys block r (T200: at price when given: refused if the price has moved since); true when bought */
-  buyLandBlock(r: [number, number, number, number], price?: number): boolean {
+  /** buys block r (T200: at price when given: refused if the price has moved since); true when bought. T395 (#1062): the block is cut at the map's edge, or refused when none of
+   *  it is on the map or it is no block (past a few LAND_BLOCKs a side), before anything walks its tiles or asks the network about it: what is on the map is bought and charged */
+  buyLandBlock(asked: [number, number, number, number], price?: number): boolean {
   if (!this.golf) return false;
+  const cut = clampBlock(asked, MAP);
+  if ('why' in cut) { this.toast(cut.why, 'warn'); return false; }
+  const r = cut.rect, trimmed = r.some((v, i) => v !== asked[i]);
   if (this.blockOnPublicRoad(r)) { this.toast('A public road runs here: it stays public', 'warn'); return false; }
   const parcels = this.golf.parcels ?? [this.golf.parcel];
   const info = this.blockLandClass(r);
-  const res = buyAdjacentBlock(parcels, { rect: r, ...info, townPop: this.traffic.pop }, this.money);
+  const res = buyAdjacentBlock(parcels, { rect: r, ...info, townPop: this.traffic.pop, map: MAP }, this.money);
   if (!res.ok) {
   this.toast(res.reason ?? 'Cannot buy this block', 'warn');
   return false;
@@ -7715,7 +7719,7 @@ export class Game {
   this.sendGolf(); // the town keeps off the new land too
   this.traffic.spend('construction', res.price);
   this.scheduleSave();
-  this.toast(`Bought ${info.landClass} land: $${res.price.toLocaleString()}`);
+  this.toast(`Bought ${info.landClass} land: $${res.price.toLocaleString()}${trimmed ? ' (the part of the block that is on the map)' : ''}`);
   this.land.hover = null;
   this.emit();
   return true;
