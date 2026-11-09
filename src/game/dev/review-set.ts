@@ -11,10 +11,7 @@ import { frameOf, roadOf, type Pt } from '../lots/preset-frame';
 import { ownerScaleOf, turned } from '../lots/preset-art';
 import type { LotAudit } from '../lots/lot-audit';
 import { reviewId, type Check, type ReviewKind, type ReviewOverride, type ReviewRecord } from '../lots/review-file';
-import { housePalette, lotPresets } from '../lots/compose';
-import { baseOf, areaOf } from '../lots/house-class';
-import { roleOf } from '../lots/groups';
-import { isBuilding } from '../mirror';
+import { housePalette } from '../lots/compose';
 export type { ReviewKind } from '../lots/review-file';
 /** a lot of a review set, as the page stages and lists it: its id, its key in the engine (staged under it), its frame, its compose state and its road (0..7) */
 export interface ReviewLot { id: string; kind: ReviewKind; seed: number; key: string; g: LotGeom; st: ComposeState; road: number }
@@ -101,35 +98,13 @@ export function sampleStreets(c: Pt): { a: Pt; b: Pt; base: 'road' }[] {
     { a: { x: c.x - 70, y: c.y + 300 }, b: { x: c.x - 70 + h, y: c.y + 300 - h }, base: 'road' },
   ];
 }
-/** the main house of a preset: its widest building that is a house (the clean base keeps the same one) */
-function houseOfPreset(props: readonly { id: string; scale: number }[]): string | null {
-  let best: string | null = null, area = 0;
-  for (const q of props) { const it = LIBRARY[LIB_AT.get(q.id) ?? -1]; if (!it || !isBuilding(it) || roleOf(q.id) !== 'house') continue; const a = areaOf(q.id) * q.scale * q.scale; if (a > area) { area = a; best = baseOf(q.id); } }
-  return best;
-}
-let PRESETS_OF: Map<string, string[]> | null = null, TYPE_OF: Map<string, string> | null = null;
-/** the frozen built house presets by the house type they hold (a house palette entry's base id), in file order: what a sample lot forces to show that type */
-function presetsByType(): { by: Map<string, string[]>; of: Map<string, string> } {
-  if (!PRESETS_OF || !TYPE_OF) {
-    PRESETS_OF = new Map(); TYPE_OF = new Map(); const pal = new Set(housePalette());
-    for (const p of lotPresets()) {
-      if (p.use !== 'res' || p.state !== 'built' || p.road !== undefined) continue;
-      const t = houseOfPreset(p.props); if (!t || !pal.has(t)) continue;
-      let a = PRESETS_OF.get(t); if (!a) PRESETS_OF.set(t, a = []); a.push(p.id); TYPE_OF.set(p.id, t);
-    }
-  }
-  return { by: PRESETS_OF, of: TYPE_OF };
-}
-/** the house type (a house palette entry) the sample lot with this forced preset was laid to show, or null */
-export const wantedOfPreset = (preset: string | undefined): string | null => (preset ? presetsByType().of.get(preset) ?? null : null);
-/** the house type a sample lot was laid to show: the type forced on it (a type no frozen preset holds), or the one its frozen preset holds; null for any other lot */
-export const wantedOf = (st: Pick<ComposeState, 'preset' | 'house'>): string | null => st.house ?? wantedOfPreset(st.preset);
-/** the state of a sample lot: the lots of a road take the house types in the palette's order (the k-th lot of the road the k-th type, round again past the last), each as a frozen built preset that holds that type,
- *  or, for a type no frozen preset holds, the lot's own preset with that house in its place (ComposeState.house); at the top tier, built, no decline. A type that cannot face the road is swapped for one that
- *  can, as in the game. tally: how many lots each road has had (the caller's, one per staging). Deterministic from the seed and the lot's place in the road */
+/** the house type (a house palette entry) a sample lot was laid to show (ComposeState.house), or null for any other lot */
+export const wantedOf = (st: Pick<ComposeState, 'house'>): string | null => st.house ?? null;
+/** the state of a sample lot: the lots of a road take the house types in the palette's order (the k-th lot of the road the k-th type, round again past the last), each forced on the lot (ComposeState.house: the type in the place of
+ *  the house of the preset the lot draws, the facing rules still running on it; a forced PRESET would draw the preset as it is, with its yard, and skip the clean base this review is about), at the top tier, built, no decline.
+ *  A type that cannot face the road is swapped for one that can, as in the game. tally: how many lots each road has had (the caller's, one per staging). Deterministic from the seed and the lot's place in the road */
 export function sampleState(seed: number, i: number, g: { n: Pt }, tally: Map<number, number>): ComposeState {
   const road = roadOf(g.n), k = tally.get(road) ?? 0; tally.set(road, k + 1);
-  const pal = housePalette(), type = pal[k % pal.length]!, list = presetsByType().by.get(type), round = Math.floor(k / pal.length);
-  const base: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: mix(seed, 0x403, i) % 100000, tier: 3 };
-  return list?.length ? { ...base, preset: list[(round + mix(seed, 0x403, road)) % list.length]! } : { ...base, house: type };
+  const pal = housePalette();
+  return { use: LU.RES, level: LV.BUILT, decline: 0, seed: mix(seed, 0x403, i) % 100000, tier: 3, house: pal[k % pal.length]! };
 }

@@ -1102,7 +1102,7 @@ function cleanBase(p: LotP, lot: LotGeom, st: ComposeState): CleanPick | null {
   // every building faces the street: view 0 when its picture faces the road in it (faceStreet left the preset's view where a yard prop was in the way: those props
   // are gone); the house, when it cannot, is another house of the lot's road in its place. T398: a picture is only right when the owner has not marked it, and a house's
   // garage door is on its front wall (facingView ok): a house that cannot is swapped for one that can, a garage that cannot is left out (no garage, no drive)
-  // T403 (#1081, the Lot review's sample set): a lot laid to show a house type has it in the place of the preset's house (the facing rules below still run on it), alone: the preset's detached garages are left out
+  // T403 (#1081, the Lot review's sample set): a lot laid to show a house type has it in the place of the preset's house (the facing rules below still run on it); the preset's detached garages stay unless the house overlaps them
   let forced = false;
   if (st.house && st.house !== props[house]!.id) { const m = placeMember(props[house]!, st.house, lot, f, FORCED_RULES); if (m) { props[house] = { ...m.prop, view: 0 }; forced = true; } }
   props.forEach((q, k) => {
@@ -1111,7 +1111,7 @@ function cleanBase(p: LotP, lot: LotGeom, st: ComposeState): CleanPick | null {
     if (facingView(q.id, f, 0).ok && ok(n, k)) { props[k] = n; return; }
     if (k === house) { const alt = facingHouse(q, k, ok, lot, f, st, state); if (alt) props[k] = alt; }
   });
-  const gone = props.map((q, k) => k !== house && (forced || !facingView(q.id, f, q.view).ok));
+  const gone = props.map((q, k) => k !== house && (!facingView(q.id, f, q.view).ok || (forced && share(boxAt(props[house]!, half(props[house]!)), boxAt(q, half(q))) > OVERLAP)));
   // T398 (the owner, 2026-11-09: "we can't have the garages right next to the houses": the left house's garage sits almost against the neighbouring lot's house): every wall of the lot's
   // buildings keeps SIDE_GAP (about 3 m) from each side line, so neighbouring buildings are at least 6 m apart. The buildings (the house and its garages) move together to fit between the
   // gaps; when they are too wide for the lot the garage farthest from the house is left out (no garage, no drive), then a narrower house of the lot's road takes the house's place; when even

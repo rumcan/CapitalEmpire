@@ -175,26 +175,27 @@ describe('T403 (#1081): the Lot review on the roads at 45 degrees', () => {
     assert.ok(qs.flat().some(q => q.x < small[0] || q.x > small[2] || q.y < small[1] || q.y > small[3]), 'the lab\'s own box is too small for it');
     assert.deepEqual(bootFor('?lotreview', true).box, box); assert.deepEqual(bootFor('?lotlab', true).box, small); assert.ok(REVIEW_BOX > LAB_BOX);
   });
-  it('a road\'s lots take the house types in the palette\'s order, each laid with a frozen preset that holds its type or with the type forced on it; the same seed lays the same set', () => {
+  it('a road\'s lots take the house types in the palette\'s order, each forced on the lot (a forced preset would draw the preset as it is and skip the clean base); the same seed lays the same set', () => {
     const fr = sampleFrames(), pal = housePalette(), a = sampleStates(7);
     assert.deepEqual(a, sampleStates(7), 'deterministic'); assert.notDeepEqual(a, sampleStates(8), 'the seed changes the lots');
     const next = new Map<number, number>(), shown = new Map<number, Set<string>>();
     fr.forEach((f, i) => {
       const road = roadOf(f.g.n), k = next.get(road) ?? 0, type = pal[k % pal.length]!, st = a[i]!; next.set(road, k + 1);
       assert.equal(wantedOf(st), type, `lot ${f.key}: road ${road}'s lot ${k} is laid to show type ${k % pal.length}`);
-      assert.ok((st.preset !== undefined) !== (st.house !== undefined), 'a frozen preset or a forced house, not both');
+      assert.ok(st.preset === undefined && st.house === type, 'the type is forced on the lot and no preset is: a forced preset draws the preset as it is');
       assert.equal(st.use, LU.RES); assert.equal(st.level, LV.BUILT); assert.equal(st.decline, 0); assert.equal(st.tier, 3);
       (shown.get(road) ?? shown.set(road, new Set()).get(road)!).add(type);
     });
     for (let road = 0; road < 8; road++) assert.equal(shown.get(road)!.size, pal.length, `road ${road} is laid with every house type`);
   });
   it('the sample lots compose as house lots on every road: a house on each but the few of a type that cannot face its road, a house type with the pictures for the road faces it, a garage door facing the road on some, a reading for each', () => {
-    const fr = sampleFrames(), st = sampleStates(7), by = { houses: 0, faces: 0, garages: 0, can: 0, canFace: 0, oddCan: 0, oddCanFace: 0, odd: 0, oddFaces: 0, canNoHouse: 0 };
+    const fr = sampleFrames(), st = sampleStates(7), by = { houses: 0, faces: 0, garages: 0, can: 0, canFace: 0, oddCan: 0, oddCanFace: 0, odd: 0, oddFaces: 0, canNoHouse: 0, driveNoGarage: 0, garageDriveBad: 0, clutter: 0 };
     fr.forEach((f, i) => {
       const a = auditLot(f.g, compose(f.g, st[i]!)), odd = roadOf(f.g.n) % 2 === 1, type = wantedOf(st[i]!), can = !!type && facingView(type, frameOf(f.g)).ok;
       if (odd) by.odd++;
       if (!a.house) { if (can) by.canNoHouse++; return; }   // (a type that cannot face its road and fits no swap leaves the lot empty: the review says so)
       by.houses++; if (a.facingOff === 0) by.faces++; if (a.garage) by.garages++;
+      if (a.drive && !a.garage) by.driveNoGarage++; if (a.garage && !a.driveOk) by.garageDriveBad++; if (a.clutter.length) by.clutter++;
       if (odd && a.facingOff === 0) by.oddFaces++;
       // (a type with the pictures to face the road must face it; the others show the nearest picture, and the reading says how far off)
       if (can) { by.can++; if (a.facingOff === 0) by.canFace++; if (odd) { by.oddCan++; if (a.facingOff === 0) by.oddCanFace++; } }
@@ -202,16 +203,18 @@ describe('T403 (#1081): the Lot review on the roads at 45 degrees', () => {
     });
     console.log(`T403 sample: ${fr.length} lots, ${JSON.stringify(by)}`);
     assert.equal(by.canNoHouse, 0, 'a lot laid with a type that can face its road has a house');
-    assert.ok(by.houses >= fr.length * 0.95, `${by.houses} of ${fr.length} sample lots have a house`);
+    // (the clean base runs on every sample lot: no garage, no drive; a drive reaches each garage door; no yard clutter)
+    assert.equal(by.driveNoGarage, 0, 'no garage, no drive'); assert.equal(by.garageDriveBad, 0, 'a drive reaches every garage door'); assert.equal(by.clutter, 0, 'no yard clutter');
+    assert.ok(by.houses >= fr.length * 0.8, `${by.houses} of ${fr.length} sample lots have a house`);
     assert.ok(by.faces >= by.houses * 0.5, `${by.faces} of ${by.houses} houses face the road`);
     assert.ok(by.odd >= 70 && by.oddCan >= 20, `${by.oddCan} of the ${by.odd} lots on the roads at 45 degrees are laid with a type that has the pictures to face them`);
     assert.ok(by.can >= 60 && by.canFace >= by.can * 0.8, `${by.canFace} of ${by.can} lots laid with a type that can face the road face it`);
     assert.ok(by.oddCanFace >= by.oddCan * 0.8, `${by.oddCanFace} of ${by.oddCan} such lots on the roads at 45 degrees face it`);
     assert.ok(by.garages >= 5, `${by.garages} sample lots show a garage door facing the road`);
   });
-  it('ComposeState.house: a lot laid to show a house type draws it in the place of the preset house when it faces the road; a lot with none is the preset one, as before', () => {
+  it('ComposeState.house: a lot laid to show a house type draws it in the place of the preset house when it faces the road', () => {
     const fr = sampleFrames(), st = sampleStates(7), forced = fr.map((f, i) => ({ f, s: st[i]!, i })).filter(x => x.s.house !== undefined);
-    assert.ok(forced.length > 0, 'some house types have no frozen preset to lay');
+    assert.equal(forced.length, fr.length, 'every sample lot has its house type forced');
     let showed = 0, tried = 0;
     for (const { f, s } of forced) {
       if (roadOf(f.g.n) % 2) continue;   // (a road at 45 degrees draws the straight-on set, whose ids are not the palette's)
@@ -220,9 +223,7 @@ describe('T403 (#1081): the Lot review on the roads at 45 degrees', () => {
       tried++; if (a.houseId && baseOf(a.houseId) === s.house) showed++;
     }
     console.log(`T403 forced: ${showed} of ${tried} lots on the roads along an axis draw the type they were laid to show`);
-    assert.ok(tried >= 8 && showed >= tried * 0.5, `${showed} of ${tried} forced lots draw their type`);
-    const plain = fr.map((f, i) => ({ f, s: st[i]! })).find(x => x.s.house === undefined)!;
-    assert.deepEqual(compose(plain.f.g, plain.s), compose(plain.f.g, { ...plain.s, house: undefined }));
+    assert.ok(tried >= 40 && showed >= tried * 0.8, `${showed} of ${tried} forced lots draw their type`);
   });
   it('the page: the Sample chip, the road filter chips, the saved session, the engine\'s sample kind and the review\'s map box', () => {
     const page = read('src/game/dev/lot-review.ts');
