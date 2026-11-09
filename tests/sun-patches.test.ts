@@ -2,7 +2,8 @@
 // share of the map and are a few hundred metres across, the clock runs in game time (and at 1x while paused), and the setting holds its range.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SUN_TEX, clampSun, sampleNoise, sunAt, sunNoise, sunOffsets, sunStep, WIND, WIND_SPEED } from '../src/game/sun-patches';
+import { CLOUD_BOOST, CLOUD_CEILING, CLOUD_KNEE, SUN_TEX, clampSun, cloudRate, sampleNoise, sunAt, sunNoise, sunOffsets, sunStep, WIND, WIND_SPEED } from '../src/game/sun-patches';
+import { SPEEDS } from '../src/game/golf/watch';
 
 const tex = sunNoise();
 
@@ -44,12 +45,38 @@ test('the patches drift with the wind and change shape on the way', () => {
   assert.ok(same / n > 0.002, 'and its shape changes');
 });
 
-test('the clock runs in game time, at 1x while paused', () => {
-  assert.equal(sunStep(0.1, 4), 0.4);
-  assert.equal(sunStep(0.1, 20), 2);
-  assert.equal(sunStep(0.1, 0), 0.1);
-  assert.equal(sunStep(-1, 4), 0);
+// T379 (#1035; the owner, 2026-11-08: "clouds should move at x8 speed when you are on x1 and adjust accordingly for the rest"): the clouds drift at 8x the wind's base
+// rate at game speed 1x, in step with the game speed (2x: 16x, 1/4x: 2x), still when paused, eased to a ceiling at the top speeds so they do not flicker
+test('the clouds drift at 8x the old rate at 1x and follow the game speed; paused, they are still', () => {
+  assert.equal(CLOUD_BOOST, 8);
+  const close = (a: number, b: number, why: string) => assert.ok(Math.abs(a - b) < 1e-9, `${why}: ${a} vs ${b}`);
+  close(cloudRate(1), 8, '1x'); close(cloudRate(2), 16, '2x'); close(cloudRate(0.25), 2, '1/4x'); close(cloudRate(0.5), 4, '1/2x'); close(cloudRate(4), 32, '4x');
+  close(sunStep(0.1, 1), 0.8, 'a frame of 0.1 s at 1x'); close(sunStep(0.1, 2), 1.6, 'at 2x'); close(sunStep(0.1, 0.25), 0.2, 'at 1/4x');
+  // every speed of the speed bar up to 8x is exactly CLOUD_BOOST times the speed (the knee is 8x's rate)
+  for (const k of SPEEDS.filter(s => s <= 8)) close(cloudRate(k), 8 * k, `speed ${k}`);
+  assert.equal(CLOUD_KNEE, 8 * 8, 'the knee is the rate at 8x');
+  // paused: nothing (it was the 1x rate before), and no step for a bad frame
+  assert.equal(cloudRate(0), 0); assert.equal(sunStep(0.1, 0), 0); assert.equal(sunStep(5, 0), 0); assert.equal(cloudRate(-1), 0); assert.equal(cloudRate(NaN), 0);
+  assert.equal(sunStep(-1, 4), 0); assert.equal(sunStep(0, 4), 0);
+  // paused, the field does not move at all: the clock after a second of frames
+  let t = 123.4; for (let i = 0; i < 60; i++) t += sunStep(1 / 60, 0);
+  assert.equal(t, 123.4); assert.deepEqual(sunOffsets(t), sunOffsets(123.4));
   for (const v of sunOffsets(12345.6)) assert.ok(v >= 0 && v < 1);
+});
+
+test('the top speeds ease to a ceiling: 20x and over do not flicker; the rate never falls as the speed rises and has no kink at the knee', () => {
+  assert.ok(CLOUD_CEILING > CLOUD_KNEE);
+  let prev = 0;
+  for (const k of [1 / 40, 1 / 16, 1 / 4, 1 / 2, 1, 2, 4, 8, 8.5, 10, 12, 16, 20, 30, 50, 100, 1000, Infinity]) {
+    const r = cloudRate(k); assert.ok(r >= prev, `${k}x: ${r} after ${prev}`); assert.ok(r <= CLOUD_CEILING, `${k}x under the ceiling`); prev = r;
+  }
+  const at20 = cloudRate(20); assert.ok(at20 > cloudRate(8) && at20 < CLOUD_CEILING + 1e-9, `20x: ${at20}`); assert.ok(at20 < 8 * 20 * 0.6, '20x is far under 8 times its speed');
+  assert.ok(Math.abs(cloudRate(Infinity) - CLOUD_CEILING) < 1e-9, 'the ceiling is where it ends');
+  // the slope at the knee is the straight line's (8 a game speed): no kink
+  const h = 1e-6, k0 = CLOUD_KNEE / CLOUD_BOOST, slope = (cloudRate(k0 + h) - cloudRate(k0)) / h; assert.ok(Math.abs(slope - CLOUD_BOOST) < 1e-3, `slope ${slope}`);
+  // the most a frame moves the field at the ceiling: tiles at 60 fps
+  const tiles = CLOUD_CEILING * WIND_SPEED / 60; assert.ok(tiles < 2, `${tiles.toFixed(2)} tiles a frame`);
+  assert.equal(sunStep(1 / 60, 20), (1 / 60) * at20);
 });
 
 test('the setting holds its range', () => {
