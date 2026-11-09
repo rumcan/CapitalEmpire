@@ -42,7 +42,7 @@ import { KeysSheet } from './ui/KeysSheet';
 import { keySheet, numberedGroups, type LabKeys } from './ui/keymap';
 import { indicesOf, leavesOf, menuOf, type MenuCtx, type MenuRow } from './ui/flyout-menu';
 import { GRASS_COST } from './game/ext/grass-management/management';
-import { DECOR_GROUPS } from './game/golf/decor';
+import { propMenuLists } from './game/golf/decor';
 import { PLANT_KINDS } from './game/plant';
 import { newHole } from './ui/course/HoleStrip';
 import { SurfaceMark } from './ui/course/SurfaceMark';
@@ -79,6 +79,7 @@ import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
 import { SpinBall } from './ui/SpinBall';
 import { RangeCard } from './ui/golf/RangeCard';
+import { BallTree } from './ui/golf/BallTree';
 import { ClubhouseCard } from './ui/golf/ClubhouseCard';
 import { StaffCard } from './ui/golf/StaffCard';
 import { PlayerCard } from './ui/golf/PlayerCard';
@@ -130,7 +131,8 @@ function menuCtx(game: Game): MenuCtx {
     junctions: JUNCTION_KINDS.map(t => { const lk = game.junctionOpen(t) ? null : unlockOf('junction', t); return { id: t, name: SEG_NAME[t], why: game.junctionOpen(t) ? null : game.eventMode ? `${SEG_NAME[t]} needs the Roundabout card` : lk ? `Unlocks at ${lk.pop.toLocaleString()} residents` : 'Not open yet' }; }),
     surfaces: SURFACE_BRUSHES.filter(b => !ui || (ui.visibleCourseBrushes as string[]).includes(b.kind)).map(b => ({ id: b.kind, name: b.name })), // T252: no cart path brush
     cares: (Object.keys(GRASS_COST) as string[]).map(k => ({ id: k, name: k[0]!.toUpperCase() + k.slice(1) })),
-    propGroups: DECOR_GROUPS.filter(g => g.id !== 'buildings').map(g => ({ id: g.id, name: g.name })),
+    // T400 (#1078): Facilities lists the everyday groups and, by kind, the golf props; Town decoration lists the town's groups alone (no golf group)
+    ...propMenuLists(),
     materials: MENU_TEXES.map(t => ({ id: t.id, name: t.name, col: t.col })),
     plants: PLANT_KINDS.map(k => ({ id: k.kind, name: k.name, col: k.col })),
     // T206: Facilities ▸ Practice: the range's practice area's facilities (no range: locked with why)
@@ -294,6 +296,11 @@ export default function App() {
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < (t.scene ? 9000 : 4000)) : []; // (T242: one with a Set the scene button stays longer)
+  /** T348 (#990): the toasts' markup, for the stack under the top bar and for the one hung under your round's bar (RoundBar `below`) */
+  const toastEls = (g: Game) => toasts.map(t => (
+    <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span>
+      {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => g.openScene(t.scene!)} data-testid="toast-scene"><Icon name="camera" size={16} />Set the scene</button>}</div>
+  ));
   const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
   // the rail item of the tool in hand (the road tool on the course is Paths, the course tool's clubhouse scope Buildings: game.uiTool)
   const item = game ? railItemOf(game.uiTool, activeRail.current) : undefined;
@@ -645,8 +652,8 @@ export default function App() {
                         <span className="w-10 text-right tabular-nums">{Math.round(game.sunLook.strength * 100)}%</span>
                       </label>
                     )}
-                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before">
-                      <span className="w-16 shrink-0">Fallen leaves</span>
+                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip={game.desertTheme ? 'Desert litter baked into the ground: drifts of sand, pebbles and dry brush under the palms, along the fences, walls and houses, kerbs and gutters, and a scatter over the yards, sidewalks and roads (T384). 100% = the default, 0 = only what there was before' : 'Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before'}>
+                      <span className="w-16 shrink-0">{game.desertTheme ? 'Desert litter' : 'Fallen leaves'}</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.leafDensity} onChange={e => { game.setLeafDensity(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.leafDensity * 100)}%</span>
                     </label>
@@ -840,12 +847,13 @@ export default function App() {
           {(game.showAccess || (dev && game.cam.z < PLANNER_Z)) && <AccessLegend game={game} />}
           {game.showFlow && <HeatLegend raised={game.showAccess || (dev && game.cam.z < PLANNER_Z)} time={game.flowMode === 'time'} />}
 
-          <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
-            {toasts.map(t => (
-              <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span>
-                {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => game.openScene(t.scene!)} data-testid="toast-scene"><Icon name="camera" size={16} />Set the scene</button>}</div>
-            ))}
-          </div>
+          {/* T348 (#990): the toasts start under the top bar, however many rows it wraps to (--hud-top), so they never sit on the speed bar's row (they were at a fixed 5rem: on the second row at a narrow window);
+              in your round they hang under the round's bar instead (RoundBar `below`), so they never cover it */}
+          {!(game.yourRound() && game.you) && (
+            <div className="pointer-events-none absolute left-1/2 top-[calc(var(--hud-top,4.75rem)+0.25rem)] z-30 flex -translate-x-1/2 flex-col items-center gap-1" data-testid="toasts">
+              {toastEls(game)}
+            </div>
+          )}
 
           {(game.traffic.car || game.traffic.watch?.node) && (
           <div className="absolute left-[450px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
@@ -938,20 +946,21 @@ export default function App() {
             const side = game.panel ? '19.5rem' : '0.75rem', card = !!game.youTalk || !!game.youTeeView() || !!game.eventCard() || !!game.challengeView();
             const left = `${Math.round(railRef.current?.getBoundingClientRect().right ?? 96) + 8}px`, right = card ? `calc(${side} + 328px)` : side;
             return <>{/* T317: your round's bar and its scorecard */}
-            <RoundBar left={left} right={right} v={rv} onJump={() => game.yourJump()} onCart={() => game.youCartToggle()} onCallCart={() => game.youCartCall()} onMull={() => game.yourMulligan()} onGimme={() => game.yourGimme()} onCard={() => game.toggleYourCard()} onQuit={() => game.yourRoundEnd()} onSkip={() => game.matchSkip()} />
+            <RoundBar left={left} right={right} v={rv} onJump={() => game.yourJump()} onCart={() => game.youCartToggle()} onCallCart={() => game.youCartCall()} onMull={() => game.yourMulligan()} onGimme={() => game.yourGimme()} onCard={() => game.toggleYourCard()} onQuit={() => game.yourRoundEnd()} onSkip={() => game.matchSkip()}
+              below={toasts.length ? <div className="flex flex-col items-center gap-1" data-testid="toasts">{toastEls(game)}</div> : undefined} />
             {rv.card && <ScoreCard v={rv} onNext={() => game.yourNextHole()} onDone={() => game.yourRoundEnd()} onClose={() => game.toggleYourCard(false)} />}</>; })()}
           {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
-            const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen ? game.tourView() : null;
+            const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.tourView() : null; // (T348: and away while a shot is open: the cards fold)
             return tv && <RangeGuideCard view={tv} heading="Tutorial · your town" tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
           })()}
           {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
-            const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen ? game.rangeGuideView() : null;
+            const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.rangeGuideView() : null; // (T348: and while a shot is open)
             return gv && <RangeGuideCard view={gv} right={stack!.guide()} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
           {(() => { // the tournament prep checklist (golf/prep.ts), bottom right like the guide: on a free day only (the round is not running), after the tutorial and the guide
-            const pv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && game.traffic.round.stage === 'free' ? game.prepCardView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
+            const pv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.cardsFolded() && game.traffic.round.stage === 'free' ? game.prepCardView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return pv && <RangeGuideCard view={pv} heading={pv.heading} tid="prep" foot="Each step pays once when it is done" offLabel="Hide this checklist" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.eventTool ? (game.panel ? 'right-[40.25rem]' : 'right-[21.5rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.prepShowMe(id); bump(); }} onSkip={id => { game.prepSkip(id); bump(); }} onFold={f => { game.prepFolded = f; bump(); }} />;
           })()}
           {(() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
@@ -959,7 +968,7 @@ export default function App() {
             const sv = game.staffCard(); if (!sv) return null;
             return <StaffCard view={sv} right={stack!.right('staff')} onClose={() => game.openStaffCard(false)} onHire={(r, at) => game.hireClubStaff(r, at)} onLetGo={k => game.letGoClubStaff(k)} />;
           })()}
-          {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} places={game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} />; })()}
+          {(() => { const rc = game.rangeCard(); return rc && <><RangeCard view={rc} places={game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} onTree={() => game.toggleBallTree()} treeOpen={rc.treeOpen} onOrderBalls={() => game.orderRangeBalls(1)} onShift={h => game.range.setShift(h)} />{rc.treeOpen && <BallTree view={rc} onBuy={id => game.buyRangeUpgrade(id)} onClose={() => game.toggleBallTree()} rightRem={game.panel ? 19.5 : 0.75} />}</>; })()}
           {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
             const pv = game.playerCard(); if (!pv) return null;
             return <PlayerCard view={pv} right={stack!.right('player')} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} onBag={() => game.openBagCard(true)} />;
@@ -1100,7 +1109,7 @@ function careerStat(game: Game): { value: string; sub: string; bar?: number } {
 /** the city's books: the last closed day's ledger, the net of the last 14 days as bars, the loans and the debt */
 function BudgetPanel({ game }: { game: Game }) {
   const b = game.traffic.budget, l = game.ledger, H = b.history.slice(-14), mx = Math.max(1, ...H.map(v => Math.abs(v.net)));
-  const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Grants', l.grants ?? 0, true], ['Land sales', l.sales ?? 0, true], ['Connection fees', l.fees ?? 0, true], ['Lot sales', l.lots ?? 0, true], ['Upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false]] : [];
+  const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Grants', l.grants ?? 0, true], ['Land sales', l.sales ?? 0, true], ['Connection fees', l.fees ?? 0, true], ['Lot sales', l.lots ?? 0, true], ['Upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false], ['Range balls', l.balls ?? 0, false]] : [];
   const maxLoans = Budget.from(b).maxLoans(game.traffic.pop);
   return (
     <div className="absolute right-3 top-[var(--hud-top,6rem)] z-20 w-72 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">

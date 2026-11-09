@@ -6,6 +6,7 @@
 import type { Pt } from '../network';
 import { PROPS_APPEAL_CAP } from './rangesave';
 import { LIBRARY } from '../library';
+import { isPerson, isPersonId } from '../person';
 import { OBJECT_EIGHT_SETS } from '../object-eight-library';
 import { FRAME_TREE_KEY, FRAME_TREE_PRICE } from './holeframe';
 import { DESERT, type DesertType } from '../desert-props';
@@ -14,7 +15,8 @@ import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_GREY_GRANITE, KIT_HEDGE, K
 /** the panel's groups, in order (T187: Buildings, the few the player adds to the town: Town decoration's) */
 export type DecorGroup = 'plants' | 'water' | 'stone' | 'desert' | 'furniture' | 'tournament' | 'buildings' | `new:${string}`;
 /** the owner's new props: one group per library category 'New: <category>' (art/new-props, prep-new-props.mjs), after Furniture */
-const NEW_GROUPS: { id: DecorGroup; name: string }[] = [...new Set(LIBRARY.filter(i => i.cat.startsWith('New: ')).map(i => i.cat))].map(cat => ({ id: `new:${cat.slice(5)}` as DecorGroup, name: cat }));
+// (T401: the People props are no card, so their category is no group)
+const NEW_GROUPS: { id: DecorGroup; name: string }[] = [...new Set(LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i)).map(i => i.cat))].map(cat => ({ id: `new:${cat.slice(5)}` as DecorGroup, name: cat }));
 export const DECOR_GROUPS: readonly { id: DecorGroup; name: string }[] = [
   { id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'desert', name: 'Desert & oasis' }, { id: 'furniture', name: 'Furniture' }, { id: 'tournament', name: 'Tournament dressing' }, ...NEW_GROUPS, { id: 'buildings', name: 'Buildings' },
 ];
@@ -155,9 +157,10 @@ const CATALOGUE: readonly DecorItem[] = [
 ];
 /** the owner's new props (library cat 'New: <category>'): plain placeable props, each its category's group, priced by the library's cost; no appeal yet */
 // the new trees (kind tree, four library views on one picture) are one card each: their north-east view (the engine's tree sun decides a mirror)
-const EIGHT_ACTIVE = new Map(OBJECT_EIGHT_SETS.map(s => [s.subject, s]));
+// (T401: an eight-view set of a person is never a card: the registry row's person tag, or a person's name)
+const EIGHT_ACTIVE = new Map(OBJECT_EIGHT_SETS.filter(s => !s.person && !isPersonId(s.subject)).map(s => [s.subject, s]));
 const EIGHT_FIRST = new Map([...EIGHT_ACTIVE.values()].map(s => [s.views.normalNE.id, s]));
-const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && (!i.id.startsWith('object8:') || EIGHT_FIRST.has(i.id)) && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
+const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && (!i.id.startsWith('object8:') || EIGHT_FIRST.has(i.id)) && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
   ? { key: `newprop-${i.id.slice('gen:tree-'.length, -':ne'.length)}`, name: i.name.replace(/ \(NE\)$/, ''), group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'plant', id: i.id, price: i.cost, appeal: 0, desc: 'A tree: plant it in the grounds (no appeal yet)' }
   : { key: EIGHT_FIRST.has(i.id) ? `object8-${EIGHT_FIRST.get(i.id)!.subject}` : `newprop-${i.id.slice('newprop:'.length)}`, name: EIGHT_FIRST.get(i.id)?.name ?? i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, ...(EIGHT_FIRST.has(i.id) ? { scale: EIGHT_FIRST.get(i.id)!.baselineScale } : {}), desc: `${i.cat.slice(5)}: a new prop to place (no appeal yet)` });
 /** T289: the desert and oasis props (desert-props.ts, the owner's desert sheets): a card a type, R stepping through its pictures (never mirrored),
@@ -183,7 +186,9 @@ if (DESERT_MIX.length) DESERT_ITEMS.push({ key: 'desert-mixed', name: 'Desert sc
  *  not scattered over the new props' categories */
 const TOURNAMENT_DRESSING = new Set(['rope-barrier', 'rope-barrier-corner', 'rope-walkway', 'direction-signpost', 'course-map-board', 'hole-12-sign', 'water-tank-stall'].map(k => `newprop-${k}`));
 for (const it of NEW_PROP_ITEMS) if (TOURNAMENT_DRESSING.has(it.key)) it.group = 'tournament';
-export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...DESERT_ITEMS, ...NEW_PROP_ITEMS];
+// T401 (#1079): never a person, whatever put the card here (isPerson: the picture's tag, category or id)
+const LIB_ITEM = new Map(LIBRARY.map(i => [i.id, i]));
+export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...DESERT_ITEMS, ...NEW_PROP_ITEMS].filter(d => { const it = LIB_ITEM.get(d.id); return !isPersonId(d.id) && !(it && isPerson(it)); });
 export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d => [d.key, d]));
 
 // ---------------------------------------------------------------- T257: size, mirror, families and the mixed brushes
@@ -220,17 +225,32 @@ export function mixPick(d: DecorItem, x: number, y: number): { key: string; id: 
 /** where a prop belongs: the course (Decoration), the town (Town decoration) or both */
 export type DecorPlace = 'course' | 'town' | 'both';
 /** a prop's place by its picture's library category (the small table T187 asked for; a category not listed belongs to both): street and park
- *  things are both's; golf's and the stand-ins' own the course's */
+ *  things are both's; golf's and the stand-ins' own the course's.
+ *  T400 (#1078; the owner, 2026-11-09: "why are the golf shit in the town decoration menu and not in the facilities menu?"): the owner's new golf
+ *  props were not listed here, so they read as both's and filled Town decoration (the tournament kit's stalls, structures, seating and media, the
+ *  course props, the range's props, the vehicles). They are the course's: Facilities, never Town decoration. The town's own new pictures (the
+ *  storefronts, the eight-view houses and back yards) are the town's */
 export const CAT_PLACE: Readonly<Record<string, DecorPlace>> = {
   'Street furniture': 'both', 'Trees & plants': 'both', 'Landscaping': 'both', 'Arcade': 'both', 'Yard': 'both', 'Landmarks': 'both',
   'Business artwork': 'course', 'Golf tournament': 'course', 'Odds & ends': 'course', 'Halloween': 'course',
+  'New: Course props': 'course', 'New: Event structures': 'course', 'New: Event structures (shabby)': 'course', 'New: Stalls': 'course', 'New: Stalls (shabby)': 'course',
+  'New: Seating': 'course', 'New: Media': 'course', 'New: Range': 'course', 'New: Vehicles': 'course', 'New: People': 'course',
+  'New: Buildings': 'town', 'New: Eight-view objects': 'town',
 };
+/** the golf pictures among the mixed categories (New: Buildings: the clubhouse manor, the gate pillars, the old budget clubhouse and the other
+ *  object8 golf sets) are the course's whatever their category says */
+const GOLF_PICTURE = /^(newprop:(clubhouse-manor|gate-pillars)|object8:golf-)/;
 const CAT_OF = new Map(LIBRARY.map(i => [i.id, i.cat]));
-/** an item's place: a town building is the town's; else its picture's category's (CAT_PLACE), both when its category is not listed */
+/** an item's place: a town building is the town's; a golf picture is the course's; else its picture's category's (CAT_PLACE), both when its
+ *  category is not listed */
 export function placeOf(d: Pick<DecorItem, 'group' | 'id'>): DecorPlace {
   if (d.group === 'buildings') return 'town';
+  if (GOLF_PICTURE.test(d.id)) return 'course';
   return CAT_PLACE[CAT_OF.get(d.id) ?? ''] ?? 'both';
 }
+/** T400: whether an item is a golf thing (a golf prop, a tournament kit piece, a facility's part): the course's by place. It stands in Facilities
+ *  and is listed in no group of Town decoration */
+export const isGolfItem = (d: Pick<DecorItem, 'group' | 'id'>): boolean => placeOf(d) === 'course';
 /** whether an item shows in a view's catalogue: its place is the view's or both (all: every item, the panel's All) */
 export const shownIn = (d: Pick<DecorItem, 'group' | 'id'>, view: 'course' | 'town', all = false): boolean => all || placeOf(d) === 'both' || placeOf(d) === view;
 /** where an item placed from a view stands: its own place, or the view's for an item of both */
@@ -238,22 +258,61 @@ export const standsIn = (d: Pick<DecorItem, 'group' | 'id'>, view: 'course' | 't
 
 // ---------------------------------------------------------------- T369: what the Props panel lists
 
+// ---------------------------------------------------------------- T400: the kinds of golf props Facilities arranges
+
+/** T400 (#1078): what a group of props is for. The everyday groups (plants, water, stone, furniture ...) are 'general'; the golf groups are arranged by the
+ *  kind the tournament kit meant (art/tournament-kit-20261107/README.md): the tournament's structures and stalls, the course's furniture (the tournament
+ *  dressing and the course props), the range's props, the course's vehicles */
+export type PropKind = 'general' | 'structures' | 'coursefurniture' | 'rangeprops' | 'vehicles';
+/** the golf kinds, in Facilities' order, each with the name its row wears */
+export const PROP_KINDS: readonly { id: Exclude<PropKind, 'general'>; name: string }[] = [
+  { id: 'structures', name: 'Tournament structures' }, { id: 'coursefurniture', name: 'Course furniture' }, { id: 'rangeprops', name: 'Range props' }, { id: 'vehicles', name: 'Course vehicles' },
+];
+/** the golf groups' kind (a group not listed is 'general') */
+const GROUP_KIND: Readonly<Record<string, PropKind>> = {
+  'new:Event structures': 'structures', 'new:Event structures (shabby)': 'structures', 'new:Stalls': 'structures', 'new:Stalls (shabby)': 'structures', 'new:Seating': 'structures', 'new:Media': 'structures',
+  'new:Buildings': 'structures', // (its clubhouses and gate pillars for the course; its storefronts are the town's: Town decoration lists the group with them alone)
+  tournament: 'coursefurniture', 'new:Course props': 'coursefurniture',
+  'new:Range': 'rangeprops', 'new:Vehicles': 'vehicles',
+};
+/** a group's kind */
+export const kindOfGroup = (g: string): PropKind => GROUP_KIND[g] ?? 'general';
+/** the order of a kind's groups in its flyout: the structures (the event ones, the stalls, the seating, the media, the clubhouses), then the furniture */
+const KIND_ORDER: readonly string[] = ['new:Event structures', 'new:Event structures (shabby)', 'new:Stalls', 'new:Stalls (shabby)', 'new:Seating', 'new:Media', 'new:Buildings', 'tournament', 'new:Course props', 'new:Range', 'new:Vehicles'];
+
 /** the panel's view of the catalogue: where it was opened from (Decoration the course, Town decoration the town), its group (Town decoration
- *  › Buildings), the "All props" box, and the group a flyout opened (Props ▸ Plants: that group alone) */
-export interface PropsView { where: 'course' | 'town'; group: DecorGroup | null; all: boolean; focus: DecorGroup | null }
+ *  › Buildings), the "All props" box, and what a flyout opened (Props ▸ Plants: that group alone; T400: a golf kind, Tournament structures: its groups) */
+export interface PropsView { where: 'course' | 'town'; group: DecorGroup | null; all: boolean; focus: DecorGroup | PropKind | null }
 /** every prop the tool can place: the catalogue less what the panel keeps out (a hole frame's tree, which Frame with trees plants) */
 export const placeableProps = (): readonly DecorItem[] => DECOR.filter(d => !d.hidden);
 /** T369 (the owner, 2026-11-08: "I also can't see all props when I click the checkbox"): the groups the Props panel lists, in the groups' order,
  *  each with its cards. All props lists every card of every group: the place's filter (shownIn) is off and a group the flyout opened (Props ▸
  *  Plants) no longer narrows it, which it did before, so the box named "All props" showed only that group. Otherwise the view's place filters the
- *  cards and a focused group shows alone; the town's Buildings are their own view (all of them, no filter). A group with no card is left out. */
+ *  cards and a focused group (or kind) shows alone; the town's Buildings are their own view (all of them, no filter). A group with no card is left out.
+ *  T400: the town view has no All props: what the course alone owns (the golf props) is never listed in Town decoration */
 export function propsShown(v: PropsView): { id: DecorGroup; name: string; items: DecorItem[] }[] {
-  const buildings = v.where === 'town' && v.group === 'buildings';
+  const buildings = v.where === 'town' && v.group === 'buildings', all = v.all && v.where !== 'town';
   return DECOR_GROUPS
-    .filter(g => (buildings ? g.id === 'buildings' : v.all || g.id !== 'buildings') && (buildings || v.all || !v.focus || g.id === v.focus))
-    .map(g => ({ id: g.id, name: g.name, items: DECOR.filter(d => d.group === g.id && !d.hidden && (buildings || shownIn(d, v.where, v.all))) }))
+    .filter(g => (buildings ? g.id === 'buildings' : all || g.id !== 'buildings') && (buildings || all || !v.focus || g.id === v.focus || kindOfGroup(g.id) === v.focus))
+    .map(g => ({ id: g.id, name: g.name, items: DECOR.filter(d => d.group === g.id && !d.hidden && (buildings || shownIn(d, v.where, all))) }))
     .filter(g => g.items.length > 0);
 }
+/** the groups with a card in a view, as the flyouts' rows (an id and a name each): a group with nothing to show there is no row (the town's Props
+ *  lists no golf group) */
+function groupsWith(where: 'course' | 'town', kind?: (k: PropKind) => boolean): { id: DecorGroup; name: string }[] {
+  return DECOR_GROUPS.filter(g => g.id !== 'buildings' && (!kind || kind(kindOfGroup(g.id))) && DECOR.some(d => d.group === g.id && !d.hidden && shownIn(d, where))).map(g => ({ id: g.id, name: g.name }));
+}
+/** (the catalogue never changes once loaded: each list is worked out once, the menus ask for them every render) */
+const once = <T>(f: () => T): (() => T) => { let v: T | undefined; return () => (v ??= f()); };
+/** Town decoration ▸ Props: the town's groups (T400: no golf group, and none left empty) */
+export const townPropGroups = once((): { id: DecorGroup; name: string }[] => groupsWith('town'));
+/** Facilities ▸ Decoration ▸ Props: the everyday groups with a card for the course (the golf kinds have their own rows) */
+export const facilityPropGroups = once((): { id: DecorGroup; name: string }[] => groupsWith('course', k => k === 'general'));
+/** Facilities' golf rows: each kind with the groups it holds (the kinds with no card are left out) */
+export const facilityPropKinds = once((): { id: PropKind; name: string; groups: { id: DecorGroup; name: string }[] }[] =>
+  PROP_KINDS.map(k => ({ id: k.id, name: k.name, groups: groupsWith('course', q => q === k.id).sort((a, b) => KIND_ORDER.indexOf(a.id) - KIND_ORDER.indexOf(b.id)) })).filter(k => k.groups.length > 0));
+/** what the toolbar's menus take of the catalogue (App.tsx menuCtx): Facilities' everyday groups and golf kinds, and Town decoration's town groups */
+export const propMenuLists = () => ({ propGroups: facilityPropGroups(), townPropGroups: townPropGroups(), propKinds: facilityPropKinds() });
 /** how many cards the panel shows in a view (the "n of m props" line under the box, and the test: All props shows every placeable prop) */
 export const propsCount = (v: PropsView): number => propsShown(v).reduce((n, g) => n + g.items.length, 0);
 

@@ -9,10 +9,11 @@ import { CAR_SCALE } from './ext/car-art';
 import { SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import type { LibItem, Prop } from './types';
 import { castsShadow, contactShadow, placeholderBoxes, type ContactShadow, type ShadowSpot } from './shadow-shape';
-import { lookOf } from './newart';
+import { DESERT_THEME, lookOf } from './newart';
 import { vectorMesh, type VectorRange } from './shadow-vector';
 import { GLOW_LAYER, LAMP_FLOATS } from './sim/car-lamps';
 import { packAlpha, paintCode } from './car-paint';
+import { ROOF_DUST_CODE } from './roof-dust';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean;
@@ -106,6 +107,9 @@ function swayCode(it: LibItem): number {
   if (it.id === 'business:golf-pin-red' || it.id === 'business:golf-pin-yellow') return 3;
   return it.kind === 'tree' || it.kind === 'palm' ? 1 : it.kind === 'shrub' || it.kind === 'bush' ? 2 : 0;
 }
+/** T384: the code a world building's instance carries in the desert theme, so the sprite shader takes the leaves painted in its roof for dust (roof-dust.ts); 0 for everything else (autumn, a tree, a prop, the course's own buildings) */
+const ROOFED = new Set(['house', 'building', 'venue']);
+const roofCode = (it: LibItem, d: Drawable): number => (DESERT_THEME.dust && ROOFED.has(it.kind) && !DESERT_THEME.keep?.(d) ? ROOF_DUST_CODE : 0);
 export function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: number, alpha = 1) {
   // the picture drawn for it (newart.ts: a stand-in on the same footprint for an old building, the drawable itself otherwise)
   const l = lookOf(d0), it = LIBRARY[l.item]!, t = it.tex;
@@ -115,7 +119,7 @@ export function packSprite(d0: Drawable, out: Float32Array, o: number, i: number
   // override says so (shadow-overrides.json: a flat one); a hidden one draws nothing
   // (a picture with a vector shadow casts its drawn shape instead: packVector)
   // (T176: 2 + alpha marks a tinted sprite; T228: 2 + 2 code + alpha a painted car, car-paint.ts paintCode; gl.ts decodes both)
-  const pc = d0.paint ? paintCode(l.item, d0.paint) : 0;
+  const pc = d0.paint ? paintCode(l.item, d0.paint) : roofCode(it, d0);
   out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : packAlpha(alpha, !!d0.tint, pc); out[o + 10] = (it.big ? 0 : 1) + 2 * swayOf(l.item); /* (T334: bit 0 the cull flag, the rest the wind's sway code: gl.ts VS_SPRITE) */ out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || alpha < 0.5 || d0.top || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0)

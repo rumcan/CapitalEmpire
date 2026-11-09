@@ -49,3 +49,15 @@ test('round bar: a practice round is tagged Practice and its Quit says nothing i
   const n = bar(round({ holed: false, over: false }));
   assert.ok(!n.includes('round-practice') && /the holes done go into your rounds/.test(n), 'a normal round');
 });
+
+test('round bar (T348): what hangs under it (the toasts) stands in its column after the bar, not inside it; with nothing below, the bar is as before', () => {
+  const props = { v: view(round({ holed: false, over: false })), onJump: none, onCart: none, onCallCart: none, onMull: none, onGimme: none, onCard: none, onQuit: none };
+  const h = renderToStaticMarkup(createElement(RoundBar, { ...props, below: createElement('div', { 'data-testid': 'toasts' }, 'Bogey on the 2nd (4)') }));
+  const iBar = h.indexOf('data-testid="round-bar"'), iBelow = h.indexOf('data-testid="toasts"');
+  assert.ok(iBar >= 0 && iBelow > iBar && /Bogey on the 2nd/.test(h), 'the toasts come after the bar');
+  const seg = h.slice(iBar, h.lastIndexOf('<div', iBelow)), opened = (seg.match(/<div/g) ?? []).length, closed = (seg.match(/<\/div>/g) ?? []).length;
+  assert.equal(closed, opened + 1, 'the bar’s own div is closed before the toasts (they are its sibling, not its child)');
+  assert.ok(/flex-col items-center gap-1/.test(h.slice(0, iBar)), 'the wrapper is a column');
+  const none2 = renderToStaticMarkup(createElement(RoundBar, props));
+  assert.ok(!none2.includes('toasts') && none2.includes('data-testid="round-bar"'), 'with nothing below, only the bar');
+});

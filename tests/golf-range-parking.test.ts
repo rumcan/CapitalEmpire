@@ -14,7 +14,7 @@ import type { Rect } from '../src/game/golf/mode';
 
 const plots: Record<0 | 1 | 2 | 3, Rect> = { 0: [500, 600, 70, 150], 1: [900, 300, 150, 70], 2: [200, 200, 70, 150], 3: [1200, 1300, 150, 70] };
 const buy = (ids: RangeUpgradeId[], s = defaultRangeBiz()): RangeBizSave => ids.reduce((q, id) => withUpgrade(q, id), s);
-const GROWN: RangeUpgradeId[] = ['greens', 'gravel', 'pave', 'bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop', 'kiosk', 'picker', 'tier2', 'academy'];
+const GROWN: RangeUpgradeId[] = ['greens', 'gravel', 'pave', 'bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop', 'kiosk', 'tube', 'pushpick', 'picker', 'nightpick', 'tier2', 'academy'];
 /** P24's grown range: 2,000 residents, $8 a bucket, props +40%, both practice greens' appeal */
 const grown = { tier: 1, exits: 2, residents: 2000, propsAppeal: 0.4, practiceAppeal: 0.21 };
 const DAY = 600, HOUR = DAY / 24;
@@ -67,8 +67,11 @@ test('the save: the building round-trips, an old save loads without it, a buildi
   const back = normalizeRangeBiz(JSON.parse(JSON.stringify(s)));
   assert.deepEqual(back.owned, s.owned); assert.equal(back.garage, true);
   // a save from before T146 (T133's shape): nothing new, no building
-  const old = normalizeRangeBiz({ v: 1, owned: GROWN, price: 8, season: { takings: 5 }, total: { takings: 9 }, practice: {}, extras: {}, paths: true, tee: true });
+  const old = normalizeRangeBiz({ v: 1, owned: GROWN, price: 8, season: { takings: 5 }, total: { takings: 9 }, practice: {}, extras: {}, paths: true, tee: true, balls: { clean: 5 } });
   assert.deepEqual(old.owned, ['teeturf', 'grass', ...GROWN], 'a save from before T223 keeps its grass (and from before T239 its greens and paved lot: GROWN lists them first)'); assert.equal(old.garage, undefined); assert.ok(!rangeStats(old).parking);
+  // (T386: a save from before the ball loop that owns the picker cart gets the tools the cart needs now before it, and night picking after it: golf-range-balls.test.ts)
+  const OLD = GROWN.filter(id => !['tube', 'pushpick', 'nightpick'].includes(id)), older = normalizeRangeBiz({ v: 1, owned: OLD, price: 8, season: { takings: 5 }, total: { takings: 9 }, practice: {}, extras: {}, paths: true, tee: true });
+  assert.deepEqual(older.owned, ['teeturf', 'grass', 'greens', 'gravel', 'pave', 'tube', 'pushpick', ...OLD.filter(id => !['greens', 'gravel', 'pave'].includes(id)), 'washer', 'nightpick']);
   assert.deepEqual(normalizeRangeBiz({ v: 1, owned: ['bays8', 'parking'], price: 6, garage: true, desert: true }).owned, ['greens', 'gravel', 'pave', 'bays8'], 'the building needs the second tier (T239: an old save keeps its greens and paved lot)');
   assert.equal(normalizeRangeBiz({ v: 1, owned: ['bays8'], price: 6, garage: true }).garage, undefined, 'no path flag without the building');
 });

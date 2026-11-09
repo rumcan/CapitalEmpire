@@ -3,6 +3,7 @@
 // the pools of each kind. Read from the library's own fields (kind, category, name), so new art joins its group and pool by itself. No DOM:
 // the lab, the lot generator (lot-gen.ts) and, later, the game's own lots read it.
 import { LIBRARY } from '../library';
+import { isPerson, PEOPLE_CATS } from '../person';
 import type { LibItem } from '../types';
 import { drawnAsStandIn } from '../newart';
 import { LOT_DECALS } from '../lot-decals';
@@ -13,8 +14,8 @@ import { footprintOf, ownerScaleOf } from './preset-art';
 import type { ItemKind } from './learn';
 
 const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
-/** the library categories the lots never offer (the people) */
-export const SKIP_CAT = new Set(['Townspeople', 'Spectators', 'Golfers']);
+/** the library categories the lots never offer (the people: T401 adds the owner's New: People props, person.ts PEOPLE_CATS) */
+export const SKIP_CAT: ReadonlySet<string> = PEOPLE_CATS;
 /** a sprite's group, from its kind and category (whole words: "Street furniture" is no tree) */
 export function spriteGroup(it: Pick<LibItem, 'id' | 'kind' | 'cat' | 'big'>): 'plants' | 'props' | 'buildings' | 'vehicles' {
   if (it.kind === 'car' || it.cat === 'Vehicles' || it.id.startsWith('cars:')) return 'vehicles';
@@ -29,7 +30,11 @@ const AXIS_FIRST: ReadonlySet<string> = new Set(Object.values(AXIS_SETS).map(v =
 const EXTRA_FIRST: ReadonlySet<string> = new Set(Object.values(EXTRA_VIEW_SETS).map(v => v[0]));
 /** whether a library sprite may be placed on a lot in the lab: not a turned view (but a screen-axis set's first) or an east copy, not a walker or
  *  one of the people, not an old building drawn as a stand-in */
-export const placeable = (it: LibItem, i: number) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id) || EXTRA_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
+export const placeable = (it: LibItem, i: number) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id) || EXTRA_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !isPerson(it) && !drawnAsStandIn(i);
+/** the Lot review's quick picks (T385): the yard things an owner puts back on a lot (library ids; one the library lacks is left out, and so is a person: T401, #1079) */
+export const QUICK_PROPS: readonly string[] = ['world:mailbox', 'gen:trash-cans-row', 'world:bench', 'town:hydrangea', 'town:fern', 'town:ornamental_grass', 'world:bush_1', 'capital:tree-oak-moderate', 'capital:tree-maple-open', 'world:tree_pine_1',
+  'gen:back-swingset', 'expansion:sandbox', 'expansion:trampoline', 'expansion:basketball-hoop', 'expansion:barbecue', 'town:picnic_table', 'expansion:lawn-chair', 'expansion:doghouse', 'gen:kids-bikes', 'expansion:washing-line',
+  'expansion:patio-swing', 'expansion:firepit', 'world:streetlamp', 'cars:burgundy-wagon:SW', 'cars:navy-wood-panel-wagon:SW', 'static:pickup_n'].filter(id => { const i = INDEX.get(id); return i !== undefined && !isPerson(LIBRARY[i]!); });
 /** a fence, a hedge or a wall piece (it follows the lot's edge) */
 export const isFence = (id: string) => { const it = LIBRARY[INDEX.get(id) ?? -1]; return /fence|hedge|wall|railing/i.test(id) || (!!it && (it.kind.startsWith('fence') || it.cat === 'Fences')); };
 /** a tree */
