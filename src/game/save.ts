@@ -67,8 +67,11 @@ export interface SaveV5 {
   /** T259: the farm model the farms compose with (ext/farms FARM_MODEL: 2, the farmstead set back on its lane and the fields by the month;
    *  optional, no version bump; missing = 1, the farms as before) and, with model 1, the keys of the farms rebuilt since on the new one */
   farmModel?: number; farmsNew?: string[];
-  /** the map seed: generateTerrain(seed) rebuilds the valley */
+  /** the map seed: generateTerrain(seed, terrainModel) rebuilds the valley */
   seed: number;
+  /** T360 (#1015): the terrain model the valley was generated with (terrain/types.ts TERRAIN_MODEL: 2 the natural river that meanders, 1 the old straight
+   *  one; optional, no version bump; missing = 1: a save from before T360 keeps its river, so what the town built beside it still stands where it did) */
+  terrainModel?: number;
   /** ax, ay, bx, by, class, line style, structure kind (0 ground, 1 bridge, 2 tunnel; missing = ground), and 1 when the towns' (Seg.town; optional 8th, missing = the player's) */
   segs: [number, number, number, number, string, number, number?, 1?][];
   /** x, y, junction type, flags (optional: 1 widened turns, 2 turn lanes; missing = none; no version bump), and a slip node's corners without a

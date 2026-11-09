@@ -8,7 +8,7 @@ import { exposeClip, exposeDraw, exposed, exposureOf } from './exposure';
 import { SLAB_CELL } from './ground-art';
 import { poolStampMatrix } from './lamp-pool';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
-import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, growBand, riverStreams, swampStreams, type BandAlpha } from './swamp';
+import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, growBand, riverBandOf2, riverStreams, swampStreams, type BandAlpha } from './swamp';
 import { RIVER_CUT, drawRiverCut } from './river-cut';
 import { JOIN_INSET, MapWater, areaJoin, fadeBands, waterRuns, type AreaJoin } from './map-water';
 import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
@@ -19,7 +19,7 @@ import { layOnGround } from './base-grass';
 import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
-import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
+import { WOODLAND_TEX, barShape, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, turnStripeLegs, type StripeLook } from './course-stripes';
 import { LIP, collarToneOf, finishMow, finishOf, lipRuns, mowSpec, tonedCollar, type CourseFinish } from './course-finish';
 import type { MowKind } from './mow-lines';
@@ -689,6 +689,11 @@ export class GroundPainter {
   swampIn(b: BBox) { return (this.swamp && !this.swampField.empty && this.swampField.near(b[0], b[1], b[2], b[3]).length > 0) || (this.riverSwamp && !this.riverField.empty && this.riverField.near(b[0], b[1], b[2], b[3]).length > 0); }
   /** T265, the bench's cold bake check (bakeAB): the bands' kept alphas dropped, so the next paint makes its own */
   clearSwampMemos() { this.swampField.clearMemo(); this.riverField.clearMemo(); }
+  /** T360: the natural river's point bars and cut banks reach into the tile box (the worker prepares the bars' texture for such a chunk) */
+  barsIn(b: BBox) { return this.waters.some(w => w.w.nat && w.box[2] >= b[0] && w.box[0] <= b[2] && w.box[3] >= b[1] && w.box[1] <= b[3]); }
+  /** T360: the texture a point bar is laid with (the owner: "sand or gravel, desert-aware"): the desert's pale unraked sand (the surface 'meadow' wears it
+   *  there, desert-theme.ts DESERT_PALE), else the gravel of a river's bar (the waste area's sand, its warm painted look; the photo gravel without it) */
+  barTex(): string { return this.tex.surfaces?.desert ? 'meadow' : 'wasteSand'; }
   /** T265: the river's band is drawn: its switch on and the surface painted */
   private riverSwampOn() { return this.riverSwamp && !!this.tex.paintedOf('swamp'); }
   /** T265: the swamp bands over tiles [x0, x0 + w) x [y0, y0 + h) at res samples a tile (swamp.ts SwampField alpha): the streams' (sc, T199) and
@@ -1204,7 +1209,7 @@ export class GroundPainter {
   /** the screen textures laid on the ground (isoImage), per source picture */
   private isoPics = new WeakMap<Cnv, Cnv>();
   /** take a new terrain: classes, height samples and waterways */
-  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); this.riverField = new SwampField(riverStreams(waters), RIVER_BAND); this.mapWater = new MapWater(waterRuns(waters, k => (k === 'creek' ? SWAMP.water : 1))); }
+  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); this.riverField = new SwampField(riverStreams(waters), riverBandOf2(waters)); this.mapWater = new MapWater(waterRuns(waters, k => (k === 'creek' ? SWAMP.water : 1))); }
   /** a sub-rect of the course height from the main thread (samples i0.., j0.., w by h, row-major): copied in (the chunks it lights re-bake) */
   setCourse(i0: number, j0: number, w: number, h: number, data: Float32Array) {
     for (let j = 0; j < h; j++) this.courseH.set(data.subarray(j * w, (j + 1) * w), (j0 + j) * CH_SIZE + i0);
@@ -1755,6 +1760,14 @@ export class GroundPainter {
     const sres = lite ? 0.25 : 0.5, hs = shadeRGBA(this.shade, tx0, ty0, bw, bh, sres); overlay(ctx, hs, sres); ctx.setTransform(M);
     // (T186: its shade on the mask, not its light: only when it shades anything)
     if (this.shadeMask) { const d = hs.data.slice(); let any = false; for (let k = 3; k < d.length; k += 4) { if (d[k - 1]! >= 160) d[k] = 0; else if (d[k]! > 4) any = true; } if (any) this.onShadeMask(g => overlay(g, { data: d, W: hs.W, H: hs.H }, sres)); }
+    // T360: the natural river's two banks differ: on the inside of a bend a point bar of sand or gravel (feathered, its inner edge under the water), on
+    // the outside the steep cut bank's dark lip; both before the water, which covers their inner edge
+    const natRivers = rivers.filter(w => w.w.nat);
+    if (natRivers.length) {
+      const strip = (g: C2D, mode: 'bar' | 'cut', f: number) => { g.setTransform(M); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(0,0,0,0.25)'; for (let s = 0; s < 4; s++) { const p = new Path2D(); let any = false; for (const w of natRivers) any = barShape(p, w.w.pts, box, mode, f * (1 - (2 * s) / 3)) || any; if (any) g.fill(p); } g.globalCompositeOperation = 'source-over'; };
+      layer('gravel', g => strip(g, 'bar', 0.7), g => this.paintPhoto(g, this.barTex(), L));
+      layer('bank', g => strip(g, 'cut', 0.3));
+    }
     if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3), water);
     // T230: the river's depth, light edge and reflections (water-look.ts), clipped to its water; with the glint on, its gloss
     // (with the swamp round it, clipped to the water itself: its shade past the waterline read as the water's shadow on the swamp, the owner
@@ -2178,6 +2191,8 @@ export class GroundPainter {
     const wallPath = walls.length ? wallFaces(walls) : null;
     if (wallPath) ex.push({ path: wallPath, rule: 'nonzero' });
     for (const w of waters) { const q = new Path2D(); if (waterShape(q, w.w.pts, 0, box, w.w.kind === 'creek' ? 0.35 : 1)) ex.push({ path: q, rule: 'nonzero' }); }
+    // (T360: and the natural river's point bars and cut banks, as laid: no damp dirt, lush grass or litter over them)
+    for (const w of waters) if (w.w.nat) for (const mode of ['bar', 'cut'] as const) { const q = new Path2D(); if (barShape(q, w.w.pts, box, mode, -0.3)) ex.push({ path: q, rule: 'nonzero' }); }
     // (T199: and the streams' swamp, by its cover: a tile set keeps its art)
     const sw = this.swampNow, rg = this.ringNow;
     // the variants go onto a copy of the chunk when some ground is left alone (cut out at the end), else straight onto it

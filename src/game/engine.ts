@@ -127,7 +127,7 @@ import { Round, SIGNAL_TIER_YEAR, SPEED_TIER_YEAR, signalTierOpen, speedTierOpen
 import type { BusRouteDef } from './event/bus';
 import { plazaEdge, plazaIslands, plazaKey, plazaLocal, plazaOutline, plazaPoint, plazaQuads, type TollDef } from './event/toll';
 import { bayDrive, bayWalk, buildPark, parkCost, parkValid, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
-import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
+import { TC, TERRAIN_MODEL, classAt, generateTerrain, makeNoise, terrainModelOf, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { CONIFER_IDS, FOREST_CELL, FOREST_VIEW_MARGIN, forestCell, forestCellRange, type ForestTree } from './forest';
 import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorToward, pxAcross, waterTex, CK } from './living-ground';
@@ -3238,8 +3238,9 @@ export class Game {
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.frame);
   }
-  /** generate the valley for a seed (about 0.3–0.6 s) */
-  private genTerrain(seed: number) { this.useTerrain(generateTerrain(seed), seed); }
+  /** generate the valley for a seed (about 0.3–0.6 s); model (T360): the river's, the latest for a new game, a save's own for its load (a save from
+   *  before has none: model 1, the old straight river, which the town beside it was built for) */
+  private genTerrain(seed: number, model: number = TERRAIN_MODEL) { this.useTerrain(generateTerrain(seed, model), seed); }
   /** a map to play on (a generated valley, or a light boot's flat map), with the seed the save keeps */
   private useTerrain(t: Terrain, seed: number) {
     this.seed = seed; this.terrain = t;
@@ -8168,7 +8169,7 @@ export class Game {
     const landSave = await this.landPack; // T357: the real ground, packed once (a few tens of kB: it never changes after the course is laid)
     if (this.saveBlocked) return 0;
     const d: SaveV5 = {
-      version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(), theme: this.desertTheme ? 'desert' : 'autumn',
+      version: SAVE_VERSION, map: MAP, seed: this.seed, terrainModel: this.terrain.model ?? TERRAIN_MODEL, lotModel: lotModelVersion(), theme: this.desertTheme ? 'desert' : 'autumn',
       pedestrianIdentities: this.peds.identityState(),
       // T259: the farm model (an old save's farms rebuilt since on the new one: farmsNew)
       farmModel: this.farmModel, ...(this.farmModel === 1 && this.farmsNew.size ? { farmsNew: [...this.farmsNew] } : {}),
@@ -8213,7 +8214,7 @@ export class Game {
       // T340: a map-data game is laid on the flat map whatever its seed (the save's golf state says so)
       const osm = (d.golf as { osm?: { id?: unknown; entry?: { x?: unknown; y?: unknown; edge?: unknown } } } | undefined)?.osm, en = osm?.entry;
       if (osm?.id && !(osm as { placed?: unknown }).placed) this.useTerrain(typeof en?.x === 'number' && typeof en.y === 'number' && (en.edge === 'N' || en.edge === 'E' || en.edge === 'S' || en.edge === 'W') ? { ...flatTerrain(), highway: { x: en.x, y: en.y, edge: en.edge } } : flatTerrain(), d.seed);
-      else this.genTerrain(d.seed);
+      else this.genTerrain(d.seed, terrainModelOf(d.terrainModel)); // T360: a save without a terrain model is model 1, its river as it was
       this.peds.restoreIdentities(d.pedestrianIdentities); this.pedNet = -1; this.pedLots = -1; this.pedTick = 0;
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);

@@ -7,9 +7,19 @@ export type TerrainClass = (typeof TC)[keyof typeof TC];
 export const HSTEP = 8, HS = MAP / HSTEP;
 /** map edges: N is y=0, S is y=MAP, W is x=0, E is x=MAP */
 export type Edge = 'N' | 'E' | 'S' | 'W';
-/** a point on a waterway centreline, in tiles; w is the full water width in tiles */
-export interface WaterPoint { x: number; y: number; w: number }
-export interface Waterway { kind: 'river' | 'creek'; pts: WaterPoint[] }
+/** a point on a waterway centreline, in tiles; w is the full water width in tiles. bar (T360, the natural river of terrain model 2 only): the
+ *  width of the point bar on the inside of the bend there, tiles, signed (positive on the +N side of the way, N = (-ty, tx) for the way's
+ *  tangent t; the outside, the other side, is the cut bank); absent or 0 on a river without bars (model 1, a creek) */
+export interface WaterPoint { x: number; y: number; w: number; bar?: number }
+/** nat (T360): the natural river of terrain model 2 (meanders, a width that swings, point bars, a wider band of vegetation); a river without it
+ *  is the old canal-straight one, drawn as it always was */
+export interface Waterway { kind: 'river' | 'creek'; pts: WaterPoint[]; nat?: true }
+/** the terrain models (T360): 1 the map's first river (a straight ribbon of one width, what a save from before T360 has), 2 the natural river.
+ *  A new game and its saves use TERRAIN_MODEL; a save without a terrain model is model 1 and keeps its river, so what was built beside it
+ *  still stands where it did (generateTerrain(seed, model)) */
+export const TERRAIN_MODEL = 2;
+/** the terrain model a save's terrainModel names: a whole number from 1 to TERRAIN_MODEL; a save without one (from before T360, or damaged) is model 1 */
+export function terrainModelOf(m: unknown): number { return typeof m === 'number' && Number.isFinite(m) ? Math.min(TERRAIN_MODEL, Math.max(1, Math.floor(m))) : 1; }
 export interface Chokepoint { kind: 'bridge' | 'gorge'; x: number; y: number; width: number }
 export interface Terrain {
   /** the seed the player's save stores */ seed: number;
@@ -22,6 +32,7 @@ export interface Terrain {
   /** top-left tile of the buildable start block */ start: { x: number; y: number; size: number };
   /** the three town sites: top-left tiles of 64 x 64 fully buildable blocks (the town centre is x + 32, y + 32), 1.5–3 km apart */ towns: { x: number; y: number; size: number }[];
   chokepoints: Chokepoint[];
+  /** T360: the terrain model that made this map (generateTerrain's; TERRAIN_MODEL for a new game's; absent on a light boot's flat map, which has no river) */ model?: number;
 }
 
 /** bilinear sample of an HS*HS sample field at tile (x, y), clamped at the borders */

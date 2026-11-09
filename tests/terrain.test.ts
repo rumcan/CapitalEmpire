@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
 import { TC, generateTerrain, checkGuarantees, priorityFlood, flowDirs, flowAccum, traceDown, type Terrain } from '../src/game/terrain';
+import { NAT } from '../src/game/terrain/river';
 
 /** FNV-1a over the raw bytes of a typed array */
 function fnv(a: ArrayBufferView): number {
@@ -85,7 +86,8 @@ test('20 seeds pass the guarantees, generate in under 4 s each (a retry included
       assert.ok(d >= 24, `seed ${seed}: river point ${k} is ${d.toFixed(1)} tiles from the border`);
     }
     for (const c of creeks) {
-      for (const p of c.pts) assert.ok(p.w >= 3 && p.w <= 8, `seed ${seed}: creek width ${p.w}`);
+      // (T360: the natural river's creeks swing in width by about a third round the width of the water they carry, 3 to 8)
+      for (const p of c.pts) assert.ok(p.w >= 2.5 - 1e-9 && p.w <= 9 + 1e-9, `seed ${seed}: creek width ${p.w}`);
       // creek: points within 48 tiles of arc length from its end are the river/junction end; all others keep 24+ tiles from the border
       const cs = arcLengths(c.pts), cLen = cs[cs.length - 1];
       for (let k = 0; k < c.pts.length; k++) {
@@ -120,13 +122,13 @@ test('20 seeds pass the guarantees, generate in under 4 s each (a retry included
   assert.ok(creekTotal >= 30, `only ${creekTotal} creeks over 20 seeds`);
 });
 
-test('the river runs off the map at both ends and its widths stay in 20..40', () => {
+test('the river runs off the map at both ends and its widths stay in 14..52 (the old river, terrain model 1: 20..40)', () => {
   const edgeDist = (p: { x: number; y: number }) => Math.min(p.x, p.y, MAP - p.x, MAP - p.y);
-  for (let seed = 1; seed <= 5; seed++) {
-    const t = gen(seed), pts = t.waters[0].pts;
-    assert.ok(edgeDist(pts[0]) <= 2, `seed ${seed}: first point ${edgeDist(pts[0]).toFixed(1)} tiles from the border`);
-    assert.ok(edgeDist(pts[pts.length - 1]) <= 2, `seed ${seed}: last point ${edgeDist(pts[pts.length - 1]).toFixed(1)} tiles from the border`);
-    for (const p of pts) assert.ok(p.w >= 20 && p.w <= 40, `seed ${seed}: width ${p.w}`);
+  for (let seed = 1; seed <= 5; seed++) for (const model of [2, 1]) {
+    const t = model === 2 ? gen(seed) : generateTerrain(seed, 1), pts = t.waters[0].pts, [lo, hi] = model === 2 ? [NAT.wMin, NAT.wMax] : [20, 40];
+    assert.ok(edgeDist(pts[0]) <= 2, `seed ${seed} model ${model}: first point ${edgeDist(pts[0]).toFixed(1)} tiles from the border`);
+    assert.ok(edgeDist(pts[pts.length - 1]) <= 2, `seed ${seed} model ${model}: last point ${edgeDist(pts[pts.length - 1]).toFixed(1)} tiles from the border`);
+    for (const p of pts) assert.ok(p.w >= lo - 1e-9 && p.w <= hi + 1e-9, `seed ${seed} model ${model}: width ${p.w}`);
     assert.ok(!t.mountainEdges.includes(t.highway.edge), `seed ${seed}: highway on a mountain edge ${t.highway.edge}`);
   }
 });
