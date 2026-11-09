@@ -27,6 +27,8 @@
 //   and 8%: the bakes over the middle farm and the frames panning along the farms; --farmMonth N: the calendar month shown (default 7, August)
 // --ballRoll ab (T251, a dev server): the balls' bounce and roll on and off by turns at 30% and 15% over the action (bench.ts rollStage);
 //   --rangeBalls N: the busy range, N balls kept in the air (with --start range); --tourney 1: the day plays the tournament's round (with --start town)
+// --fieldBalls N (T386, with --fixture range20, a built range: a new range start is bare): a full outfield: N balls lie on the range from the start; --fieldAb 1: the lying balls drawn and not drawn by turns at 30% and 17% over the
+//   outfield (bench.ts fieldStage: the frames' cpu ms average and p95, the points drawn)
 // --serve starts `vite preview` on dist/ itself (run `npm run build` first); otherwise it needs a running dev or
 // preview server at the url. Screenshots (--shots stalls frames, so only for looking) and JSON go to output/bench/.
 import { chromium } from 'playwright-core';
@@ -58,7 +60,7 @@ const logs = [];
 page.on('console', m => { const t = m.text(); if (/\[bench\]|error|Error/.test(t)) { logs.push(t); console.log('[page]', t.slice(0, 300)); } });
 page.on('pageerror', e => console.log('[pageerror]', e.message));
 page.on('crash', () => console.log('[crash] the page crashed'));
-await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp", "golfPace", "golfMinute", "zooms", "boot", "farms", "farmMonth", "ballRoll", "rangeBalls", "tourney", "tracks", "spacing", "sun", "animals", "wind", "osmcourse", "estate", "realplace", "money", "stamp", "land", "landlight"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`, { timeout: +opt("gotoMs", "30000") }); // (T312: --gotoMs, a cold dev server loads slower than 30 s) --course: the old nine laid as a course grid under the tour (T077)
+await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp", "golfPace", "golfMinute", "zooms", "boot", "farms", "farmMonth", "ballRoll", "rangeBalls", "fieldBalls", "fieldAb", "tourney", "tracks", "spacing", "sun", "animals", "wind", "osmcourse", "estate", "realplace", "money", "stamp", "land", "landlight"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`, { timeout: +opt("gotoMs", "30000") }); // (T312: --gotoMs, a cold dev server loads slower than 30 s) --course: the old nine laid as a course grid under the tour (T077)
 gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const d = gl?.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
 }
 console.log('GPU:', gpu);
