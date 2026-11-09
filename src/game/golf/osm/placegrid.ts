@@ -6,13 +6,14 @@ import { CELL_T, makeGrid, type Grid, type GridDiff } from '../../ext/course-gri
 import { unitBuildCost } from '../costs';
 import { SURF_SURFACE } from '../../ext/course-grid/areas';
 import type { Rect } from '../mode';
-import { paintSpec } from './raster';
+import { paintSpec, type PaintOptions } from './raster';
 import type { OsmCourseSpec } from './types';
 
-/** the scratch grid of a spec laid at (ox, oy) on the map: its frame, painted (cell 0.5 tile) */
-export function scratchOf(spec: OsmCourseSpec, ox: number, oy: number): Grid {
+/** the scratch grid of a spec laid at (ox, oy) on the map: its frame, painted (cell 0.5 tile). `paint` (T362): how it is laid, the game's theme among it (a desert game's wild land is
+ *  left unpainted, raster.ts PaintOptions), so the price shown and the cells laid are the game's own */
+export function scratchOf(spec: OsmCourseSpec, ox: number, oy: number, paint: PaintOptions = {}): Grid {
   const g = makeGrid(ox, oy, Math.round(spec.w / CELL_T), Math.round(spec.h / CELL_T));
-  paintSpec(g, spec, ox, oy);
+  paintSpec(g, spec, ox, oy, paint);
   return g;
 }
 

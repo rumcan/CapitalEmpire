@@ -9,7 +9,7 @@ import { landGridBox, makeGrid, type Grid } from '../../ext/course-grid';
 import type { Leg, Pt } from '../../network';
 import type { GolfSave, Rect } from '../mode';
 import { GOLF_REP_START } from '../start';
-import { paintSpec } from './raster';
+import { paintSpec, type PaintOptions } from './raster';
 import { OSM_MARGIN_M, type OsmCourseSpec, type OsmEntry, type OsmGolfInfo } from './types';
 
 /** the clubhouse parcel, [across, along] tiles, and the car park (golf/place.ts VENUE and PARK): across is along the land's edge, along is away from it */
@@ -89,8 +89,9 @@ export function osmScaleFor(w: number, h: number, map = MAP): number {
 
 /** the plan of a new game on the course of this spec, or null when the land does not fit the map. The land is centred; the clubhouse parcel, the car
  *  park, the drive and the entry road go on the side of the land nearest the first tee (the first of west, east, north, south on a tie), the road from
- *  the map's edge on that side to the drive's end, the drive to the clubhouse parcel's door. Deterministic */
-export function planOsmGame(spec: OsmCourseSpec, map = MAP): OsmStart | null {
+ *  the map's edge on that side to the drive's end, the drive to the clubhouse parcel's door. Deterministic. `paint` (T362): how the course is laid on the grid, the game's
+ *  theme among it (a desert game's course keeps the land's own desert ground where the course is natural, raster.ts PaintOptions) */
+export function planOsmGame(spec: OsmCourseSpec, map = MAP, paint: PaintOptions = {}): OsmStart | null {
   const tee = firstTee(spec);
   let best: Layout | null = null;
   for (const s of SIDES) { const l = layoutFor(s, spec, tee, map); if (l && (!best || l.dist < best.dist - 1e-6)) best = l; }
@@ -102,6 +103,6 @@ export function planOsmGame(spec: OsmCourseSpec, map = MAP): OsmStart | null {
   const info: OsmGolfInfo = { id: spec.id, name: spec.name, place: spec.place, credit: spec.credit, licence: spec.licence, source: spec.source, holes: spec.holes.length, par: spec.gameParTotal, mappedPar: spec.parTotal, entry, ...(spec.scale < 1 ? { scale: spec.scale } : {}), ...(spec.derived ? { derived: true } : {}) };
   const save: GolfSave = { v: 1, tier: 1, rep: GOLF_REP_START, town: centre, course: land, parcel, dir, tees: [], pins: [], aims: [], clubhouse: centre, osm: info };
   const box = landGridBox([land, parcel], GRID_PAD, map)!, grid = makeGrid(box[0], box[1], box[2], box[3]);
-  paintSpec(grid, spec, lx, ly);
+  paintSpec(grid, spec, lx, ly, paint);
   return { land, venue, carpark, road, drive, save, grid, centre, side, entry, at: { x: lx, y: ly } };
 }

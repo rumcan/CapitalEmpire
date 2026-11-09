@@ -100,7 +100,8 @@ describe('Rondebosch (T340)', () => {
       assert.equal(g.hole[i], t.hole);
     }
     assert.equal(mk.pins.length, 18);
-    assert.ok(laid.rough > 100000 && laid.fairway > 20000 && laid.green > 3000 && laid.bunker > 500 && laid.water > 500 && laid.tee > 1000, JSON.stringify(laid));
+    // (T362: the boundary is the wild land, fescue; the rough is the band round the fairways, greens and tees)
+    assert.ok(laid.wild > 100000 && laid.rough > 20000 && laid.fairway > 20000 && laid.green > 3000 && laid.bunker > 500 && laid.water > 500 && laid.tee > 1000, JSON.stringify(laid));
   });
   it("gives every par 4 and 5 fairway under most of its line (the middle 70%), and the game's holes have a playing line, a pin and a tee", () => {
     const { g } = gridOf(specR);
@@ -243,7 +244,7 @@ describe('the fill-in rules (T340)', () => {
     const s = osmCourseToSpec({ features: {}, boundary: area(sq(-100, -100, 200, 200)) } as OsmCourseJson, { id: 't' });
     assert.equal(s.holes.length, 0);
     assert.ok(s.warnings.some(w => w.code === 'no-holes'));
-    assert.ok(s.areas.some(a => a.surf === 'rough'));
+    assert.ok(s.areas.some(a => a.surf === 'wild'), 'the boundary is the wild land (T362)');
   });
   it('keeps to 18 holes and numbers odd refs in order', () => {
     const j = mini({}, { par: '4' });

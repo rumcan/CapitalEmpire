@@ -7,6 +7,13 @@ import type { OsmHeight } from './terrarium';
 export const OSM_CREDIT = '© OpenStreetMap contributors';
 /** the margin the land keeps round the holes' features, m (the converter's default; the planner counts on it) */
 export const OSM_MARGIN_M = 40;
+/** T362 (#1017): the band of rough round each fairway, green and tee: its width from the edge of the surface, m, by the surface. The first 3 m of it (golf/play/courseview.ts
+ *  FIRST_CUT_TILES) play as the first cut and the rest as rough; past it the land of the course is natural fescue (or the desert's own ground, in a desert game). Data, not
+ *  code: a fixture's `meta.roughBandM` and the converter's `roughBandM` option change them for one course, and the spec records the widths it was built with */
+export type RoughBand = Record<'fairway' | 'green' | 'tee', number>;
+export const OSM_ROUGH_BAND_M: Readonly<RoughBand> = { fairway: 7, green: 6, tee: 5 };
+/** the widest a band may be, m (a width mistyped in a fixture does not make the whole course rough) */
+export const OSM_ROUGH_BAND_MAX_M = 20;
 /** the licence line that goes with it (fixtures keep it in their header) */
 export const OSM_LICENCE = 'Data © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)';
 
@@ -25,6 +32,8 @@ export interface OsmCourseJson {
     attribution?: string; credit?: string; licence?: string; id?: string; place?: string; course?: { osm?: string; name?: string; tags?: Record<string, string> | null };
     /** (T358: what the browser's import writes besides) the projection's centre, the size m, the counts by kind, where the answer came from */
     centre?: { lat: number; lon: number }; sizeM?: [number, number]; counts?: Record<string, number>; overpass?: { server: string | null; fetchedAt: string | null };
+    /** (T362) the widths of the rough band round this course's fairways, greens and tees, m, where they differ from OSM_ROUGH_BAND_M (a surface left out keeps the default) */
+    roughBandM?: Partial<RoughBand>;
   };
   boundary?: JFeature;
   /** the map's features by kind. The converter reads the golf kinds ('tee' 'fairway' 'green' 'bunker' 'water_hazard' 'lateral_water_hazard' 'rough' 'hole' 'pin' 'water'
@@ -39,10 +48,12 @@ export interface OsmCourseJson {
 /** a point in tiles of the land's frame */
 export interface TPt { x: number; y: number }
 
-/** the surfaces a spec paints, in the order it paints them (a later one over an earlier one; water leaves greens and tees alone) */
-export type SpecSurface = 'rough' | 'fairway' | 'bunker' | 'water' | 'tee' | 'green';
+/** the surfaces a spec paints, in the order it paints them (a later one over an earlier one; water leaves greens and tees alone). T362: 'wild' is the course's own
+ *  land, the boundary's: natural fescue, or the land's own desert ground in a desert game (raster.ts PaintOptions); 'rough' is the map's `golf=rough` areas, and the band
+ *  of rough round the fairways, greens and tees is laid by the raster from `OsmCourseSpec.roughBand` */
+export type SpecSurface = 'wild' | 'rough' | 'fairway' | 'bunker' | 'water' | 'tee' | 'green';
 /** one painted area: its surface, the hole it belongs to (0: none), and its rings (the outer ring and the holes in it, filled together by the
- *  even-odd rule) as flat x, y lists in tiles. made: the converter laid it where the map had none; clip: only inside the course's boundary */
+ *  even-odd rule) as flat x, y lists in tiles. made: the converter laid it where the map had none; clip: only inside the course's land (the boundary and the mapped rough) */
 export interface SpecArea { surf: SpecSurface; hole: number; rings: number[][]; made?: boolean; clip?: boolean }
 
 /** a tee marker of a hole */
@@ -71,6 +82,9 @@ export interface OsmCourseSpec {
   holes: SpecHole[]; areas: SpecArea[];
   /** warnings (the build is not refused for them) and fill-ins (what the map lacked and the converter made) */
   warnings: SpecNote[]; fills: SpecNote[];
+  /** T362: the widths of the band of rough round every fairway, green and tee, m (OSM_ROUGH_BAND_M, as a fixture or the converter's option changed them); absent
+   *  (a spec made by hand): the defaults */
+  roughBand?: RoughBand;
   /** the other courses on the same boundary (golf:course:name / course:name), not built */
   otherCourses: { name: string; holes: number }[];
   /** the course built: its name tag (null: the boundary had one course) */ course: string | null;

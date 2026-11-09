@@ -98,7 +98,7 @@ within 60 m of each other), so the validity checks must warn on an imported cour
    than 10 degrees**; pin = the `golf=pin` on the green containing the line's end (the node's `ref`, else by position), else the green's centroid.
 4. **Tees**: assign every tee polygon whose centre is within 15 m of a line's start to that hole; with `tee=` colours or by distance from the green set back, middle and
    forward markers; paint the rest as plain tee ground with no hole.
-5. **Paint** with the course surfaces the paint tool already has (the borders, first cut and fringe come with the presets): rough over the whole boundary, then `rough`
+5. **Paint** with the course surfaces the paint tool already has (the borders, first cut and fringe come with the presets): rough over the whole boundary (T362: natural fescue, with a band of rough round the fairways, greens and tees), then `rough`
    polygons, fairways, tees, greens, bunkers, water (hazard polygons, `natural=water`, streams 2 to 4 m wide), cart paths and `golf=path` lines where mapped.
 6. **Fill in and list for the player** when missing: a par 4/5 with no fairway gets a band along its line (about 28 m wide, inside the boundary); a line whose end is on no
    green gets a green of about 400 m2 there; a green with no pin gets one at its centre (Mowbray: 15 of 18); par from length; hole numbers from `ref`/`name` on tees and greens,
@@ -159,11 +159,11 @@ tournament comes with the season, the clubhouse and car park are already placed)
   holes are left out. Waterways become bands 2 to 6 m wide (a `width` tag wins) unless they run inside a mapped water polygon; a tunnelled or culverted one is not drawn.
 - **Fill-ins**, each listed in `spec.fills`: a green of about 400 m2 where a line ends on none, a tee of 14 x 8 m where it starts on none, a fairway band 28 m wide along a
   par 4 or 5 whose line runs over (almost) no fairway (laid over rough only, so inside the boundary and under everything else), a pin at the green's middle (none mapped, or
-  the mapped one lies off its green), par from length (none tagged). **Rough** = the boundary under everything (and `golf=rough` polygons). Nothing is made up for a course
+  the mapped one lies off its green), par from length (none tagged). **Rough**: T362 changed this: the boundary is the course's wild land (natural fescue, or the desert's ground) with a band of rough round the fairways, greens and tees, and the mapped `golf=rough` polygons stay rough (the section on the course's ground, below). Nothing is made up for a course
   with no holes (Bloemfontein): the spec has none and says `no-holes`.
 - **Warnings, never refusals**: holes closer than the 60 m corridor guideline (the game's own `deriveHoles` rule), a long walk to the next tee, a double green (the
   green belongs to its first hole), par differences, other courses, renumbering.
-- **Paint order** (a later surface over an earlier one): rough, fairway, bunker, water, tee, green. Water leaves greens and tees alone, so a pin or a tee marker is never
+- **Paint order** (a later surface over an earlier one): wild land (the boundary; T340 had it rough), mapped rough, fairway, bunker, water, tee, green, then the band of rough (T362). Water leaves greens and tees alone, so a pin or a tee marker is never
   under water; the planting month stays 0 (established: the course is not growing in). Cart paths and woods are not imported (trees: the game's own Frame with trees).
 
 ## Results
@@ -570,3 +570,41 @@ takes a random map (the T340 table above says `--seed 1`).** The budget is 8 ms 
   cut that would lose it). A detour needs the road builder's snap and crossing rules on public land; the pop-up's text says what happens.
 - **Estate streets (T354)** are not in lead/live's converter, so none are laid.
 - The cover's extra land and the rect budget (18 strips, 32 in the shader) are choices: a finer cover costs rects the build grid cannot take.
+
+# The course's ground: a band of rough, then natural fescue or the desert (T362, #1017)
+
+The owner, 2026-11-08: "add a layer of rough around the edges of the fairway and greens for the imported course but leave the rest of the course the natural fescue or desert." T340 had laid the
+whole boundary as rough. Now:
+
+- **The boundary is the course's wild land** (`SpecSurface 'wild'`, the converter's one change to what it paints): **natural fescue** (`SURF.fescue`) in an autumn game, and **the land's own
+  ground in a desert game**: left unpainted, so the desert theme draws it as the desert sand and dirt (the golf surfaces are never re-skinned by the theme, so a painted fescue would stay a green-gold
+  grass in a desert). The mapped `golf=rough` areas stay rough in both.
+- **A band of rough goes round every fairway, green and tee.** `OSM_ROUGH_BAND_M` (`types.ts`): **fairway 7 m, green 6 m, tee 5 m**, measured from the edge of the surface. The game plays the first 3 m of
+  rough beside a fairway, fringe, tee or green as the first cut (`golf/play/courseview.ts FIRST_CUT_TILES`, and the course's automatic first-cut and fringe collars are drawn over it), so
+  the band is the first cut (3 m) and 4, 3 or 2 m of rough, and the land past it plays as fescue ("Long grass: much shorter, and wild"). **The widths are data**: the spec carries them
+  (`OsmCourseSpec.roughBand`), a fixture's `meta.roughBandM` and the converter's `roughBandM` option change them for one course (`roughBandOf`: the defaults, the fixture's over them, the option's over those;
+  a bad number is ignored, none goes past 0 to 20 m), and a width of 0 is no band.
+- **Who lays it: the raster, not the converter.** The game's theme is known only when the course is laid (`newGame` takes it from the new-game card or the last choice before it lays anything), so the converter's spec
+  is the same for every game and `paintSpec(grid, spec, ox, oy, { desert, legacy })` decides: `wild` is `SURF.fescue`, or nothing in a desert game. After every area is laid it turns each cell of the natural
+  ground (none, or the wild fescue) within the width of a fairway, tee or green cell into rough (`layBand`: edge cells only, each stamps a disc of squares: the band is its width to the cell along an edge,
+  and the corners are the true offset arc, not a staircase). Nothing but the natural ground changes: a bunker, a pond, a mapped rough area keeps what it is, and a fairway a bunker cut into still has its band where it is open.
+  Shipped and searched courses are alike (both go through `planOsmGame` and the placing mode's `scratchOf`, which take the paint options), and a course placed into a game under way is laid the same and priced by the game's
+  theme (`RealHost.paint`). **Old saves keep what they have**: a saved game keeps the grid it was laid with, nothing re-lays it.
+- **The wild land stays inside the land.** It is clipped to the spec's frame (the land: the holes' features and their margin): the boundary of a big estate (Woodhill's is the whole estate, 2,277 x 1,535 m) no longer
+  spills fescue into the grid's 32-tile pad round the land, outside what the club owns. A made-up fairway band (`clip`) lays over the course's own land (the wild land and the mapped rough) by a mask of those cells, since a
+  desert game paints no surface there.
+- **A dev switch for the before and after:** `?rough=old` on the dev server lays T340's look (`PaintOptions.legacy`: the boundary rough, no band) in the same build, as `?land=0` does for the height.
+
+| cells (1 m) | Rondebosch | Woodhill (90%) | Magnolia National |
+| --- | --- | --- | --- |
+| before (T340): rough | 286,702 | 1,393,993 | 752,789 |
+| now, autumn: fescue / rough | 211,851 / 75,183 | 1,135,479 / 258,514 (mapped rough 313,930 laid over) | 595,208 / 157,581 |
+| now, desert: unpainted land / rough | 1,573,490 / 75,183 | 1,820,921 / 258,514 | 971,601 / 157,581 |
+| paint time (the whole grid) | 15 to 22 ms | 25 to 29 ms | 28 to 35 ms |
+| price of painting it (the placing mode), autumn / desert / before | $555,818 / $449,892 / $619,108 | $1,265,210 / $697,470 / $1,605,853 | $1,199,354 / $901,750 / $1,377,916 |
+
+What this changes in play and in the books (the owner asked for natural land, so these follow): the land past the band plays as fescue (carry x0.6, wide and wild) where it played as rough (x0.88); a
+desert game's plays as rough within 80 m of a played line and out of bounds beyond (an unpainted cell, as every unpainted cell of the course is); the upkeep of the land falls with it (fescue $0.05 a m2 a year against $0.15 for
+rough; nothing for the desert's own ground); a house lot or a street over the wild land clears it as over any rough (T353, T355). The tests: `tests/golf-osm-rough.test.ts` (band widths to the cell, fescue against desert by theme,
+the widths as data, the lies, the shipped courses, the placing mode's price).
+
