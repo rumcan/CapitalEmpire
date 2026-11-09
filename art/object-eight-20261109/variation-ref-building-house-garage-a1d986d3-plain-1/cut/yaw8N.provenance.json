@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-house-garage-a1d986d3-plain:1",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../src/yaw8N.png",
+    "sha256": "f6c10c362da6e13310449c8415529e5a0a012841bbf36759d5cd77528341e2d2",
+    "width": 545,
+    "height": 530
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 545,
+    "height": 530
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 537,
+    "height": 522
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "00a21386ef12bb0c5d5695341a9bbc672ab91bdcffa6a85f8dddef57977f4bf4",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

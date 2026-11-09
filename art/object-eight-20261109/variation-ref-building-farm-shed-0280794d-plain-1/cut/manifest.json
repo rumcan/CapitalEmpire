@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-farm-shed-0280794d-plain:1",
+  "name": "Farm Shed — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-farm-shed-0280794d-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "f66f2f395768139add270e4551b4cb377f725ab93bc14e1bee1b2ef09ce1e2bf",
+        "width": 479,
+        "height": 435
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-farm-shed-0280794d-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "ebd0e257a6b01323c530bcb94d87ef1e033d02dc2617a874a97df058713146a5",
+        "width": 377,
+        "height": 444
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-farm-shed-0280794d-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "71347301c64d26d0d8a82f4daeff4b69251441f492d90f37ac165b3bf5896306",
+        "width": 464,
+        "height": 440
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-farm-shed-0280794d-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "a0539ba463930c2d81ff5dba738b4016894785eae583ace39efcd991d55de169",
+        "width": 376,
+        "height": 468
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 4,
+    "depth": 4
+  },
+  "pixelsPerMetre": 122.4758700837,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 3.833,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "5de0ab1f7b52e23be8674407e6595c1d7c4943ff632be0bc52279b3f87d4b7dc",
+      "width": 471,
+      "height": 427,
+      "anchor": {
+        "x": 240.75,
+        "y": 329.45
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f66f2f395768139add270e4551b4cb377f725ab93bc14e1bee1b2ef09ce1e2bf",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 479,
+        "height": 435
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 471,
+        "height": 427
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "c381e8d99adcc423e5c2bd8b9f3d9cdf88ff759053e1e94715f91eafd7563af4",
+      "width": 369,
+      "height": 436,
+      "anchor": {
+        "x": 219.75,
+        "y": 338.03
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "ebd0e257a6b01323c530bcb94d87ef1e033d02dc2617a874a97df058713146a5",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 377,
+        "height": 444
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 369,
+        "height": 436
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "6501773183c5ae3f5c32f33e7aa26c45a84df768737023771ef6a3eb1f794c78",
+      "width": 456,
+      "height": 432,
+      "anchor": {
+        "x": 231,
+        "y": 329.55
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "71347301c64d26d0d8a82f4daeff4b69251441f492d90f37ac165b3bf5896306",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 464,
+        "height": 440
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 456,
+        "height": 432
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "0d56725b02a6c63315dc0e9188b15b1fcc626cd789405513eeddb500d30daa22",
+      "width": 368,
+      "height": 460,
+      "anchor": {
+        "x": 146.5,
+        "y": 340.91
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "a0539ba463930c2d81ff5dba738b4016894785eae583ace39efcd991d55de169",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 376,
+        "height": 468
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 368,
+        "height": 460
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-farm-shed-0280794d-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-farm-shed-0280794d-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-farm-shed-0280794d-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-farm-shed-0280794d-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-farm-shed-0280794d-plain:1, view:variation:ref-building-farm-shed-0280794d-plain:1:se, view:variation:ref-building-farm-shed-0280794d-plain:1:sw, view:variation:ref-building-farm-shed-0280794d-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.3695 game px per native px (122.48 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (4 x 4 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.5947), the median of the four straight views (0.3528 0.3728 0.3722 0.3668); anchors refitted with that scale held (IoU 0.8436 0.8479 0.8751 0.8619). Not owner-measured. Sheet: variation~ref-building-farm-shed-0280794d-plain~1 axisturn, cells NESW are N E S W. double doors on N as on NE.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

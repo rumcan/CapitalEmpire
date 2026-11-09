@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:town-fish_tackle-99c1401c-plain:1",
+  "name": "Pike & Pine Outfitters — variation 1",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:town-fish_tackle-99c1401c-plain:1"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "view:variation:town-fish_tackle-99c1401c-plain:1:se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": {
+        "reuse": "view:variation:town-fish_tackle-99c1401c-plain:1:sw"
+      },
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": {
+        "reuse": "view:variation:town-fish_tackle-99c1401c-plain:1:nw"
+      },
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 6
+  },
+  "pixelsPerMetre": 68.0523819488,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 0.872,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 294,
+        "y": 404.9
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 207.75,
+        "y": 423.41
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 251,
+        "y": 405.66
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 260.25,
+        "y": 425.43
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:town-fish_tackle-99c1401c-plain:1, view:variation:town-fish_tackle-99c1401c-plain:1:se, view:variation:town-fish_tackle-99c1401c-plain:1:sw, view:variation:town-fish_tackle-99c1401c-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.665 game px per native px (68.05 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2646), the median of the four straight views (0.6627 0.7017 0.6258 0.6674); anchors refitted with that scale held (IoU 0.9295 0.8912 0.9042 0.9003). Not owner-measured. Sheet: variation~town-fish_tackle-99c1401c-plain~1 axisturn, cells NESW are N E S W. striped-awning front on N as on NE; the side walls are plain (the corners show windows there)."
+}

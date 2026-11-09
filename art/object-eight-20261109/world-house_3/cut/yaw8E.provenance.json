@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:house_3",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../src/yaw8E.png",
+    "sha256": "94164fc1df6004695ce54e1c4f2bf6f893f2030dd9e8e30323a7c8b8bbbd11ac",
+    "width": 499,
+    "height": 571
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 499,
+    "height": 571
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 491,
+    "height": 563
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "b9d4310e249bde9891a71d82e1d1dc58301c2b1fa9be6df757f550ce1d0d5e64",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

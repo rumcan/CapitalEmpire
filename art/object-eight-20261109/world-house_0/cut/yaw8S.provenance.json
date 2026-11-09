@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:house_0",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "7795a4added30fe0fe447c27e66332b8fd5c1a01ed7a679ee8eeadd6eb545ac9",
+    "width": 602,
+    "height": 479
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 602,
+    "height": 479
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 594,
+    "height": 471
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "2b96b7010a0b115c14b5b3e9ee50eb559ee8143563f0ce36dd234064e73bd331",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

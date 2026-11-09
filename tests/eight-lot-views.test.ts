@@ -74,7 +74,7 @@ test('on a road along a map axis the old corner logic stands (the new corners re
 });
 
 test('a building with four views only falls back to the nearest corner on a screen-straight road, as before; one with the old screen-axis set keeps it', () => {
-  for (const subject of ['town:fish_tackle', 'town:barber', 'town:laundromat', 'world:house_2']) {
+  for (const subject of ['town:fish_tackle', 'town:barber', 'town:laundromat', 'world:house_5']) {
     assert.equal(eightRingOf(subject), null, `${subject} has no eight views yet`);
     for (let road = 1; road < 8; road += 2) { assert.equal(roadView(subject, road, 0), null, `${subject} road ${road}`); assert.equal(faces(subject, road), false); }
     for (let road = 0; road < 8; road += 2) assert.equal(faces(subject, road), true, `${subject} turns to road ${road}`);

@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "space": "orthographic-camera",
+  "engineProjection": {
+    "HW": 64,
+    "HH": 32,
+    "tileMetres": 2
+  },
+  "targetCameraPixelsPerMetre": 45.254833995939045,
+  "sourcePixelsPerMetre": 68.1035876538,
+  "views": {
+    "yaw8N": {
+      "sourcePixelsPerMetre": 68.1035876538,
+      "displayScale": 0.6644999999998377,
+      "anchorSourcePixels": {
+        "x": 297.5,
+        "y": 386.99
+      },
+      "atlasResize": 0.3986999999999026
+    },
+    "yaw8E": {
+      "sourcePixelsPerMetre": 68.1035876538,
+      "displayScale": 0.6644999999998377,
+      "anchorSourcePixels": {
+        "x": 302.5,
+        "y": 443.02
+      },
+      "atlasResize": 0.3986999999999026
+    },
+    "yaw8S": {
+      "sourcePixelsPerMetre": 68.1035876538,
+      "displayScale": 0.6644999999998377,
+      "anchorSourcePixels": {
+        "x": 280,
+        "y": 383.76
+      },
+      "atlasResize": 0.3986999999999026
+    },
+    "yaw8W": {
+      "sourcePixelsPerMetre": 68.1035876538,
+      "displayScale": 0.6644999999998377,
+      "anchorSourcePixels": {
+        "x": 299.5,
+        "y": 383.39
+      },
+      "atlasResize": 0.3986999999999026
+    }
+  },
+  "atlasDensity": 0.6
+}

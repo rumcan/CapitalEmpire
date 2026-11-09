@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-barn-v2-b96e34dc-plain:1",
+  "name": "Barn V2 — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-barn-v2-b96e34dc-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "d331250aed31870d730b36f3186d3f376413b9d7107cba402afc5b3876630e49",
+        "width": 505,
+        "height": 524
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-barn-v2-b96e34dc-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "6a2e69c4c3fbaf04f4eb8e95988688750e2026fc7051f49c82f648fa3c5612d0",
+        "width": 636,
+        "height": 487
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-barn-v2-b96e34dc-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "89758be2f5efb92aa50c2794f7d482f77e827b2705a908303ceb4d0beeeac539",
+        "width": 514,
+        "height": 570
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-barn-v2-b96e34dc-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "fd546ce2be1dc872e215d3901528dc572977765c7b544058724b847674fbd8d3",
+        "width": 626,
+        "height": 484
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 6
+  },
+  "pixelsPerMetre": 63.2139041709,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.992,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "ac5d0fd801518566b5ebaa162db5799a20cf3bcf3b825b9d400d234725a290cc",
+      "width": 497,
+      "height": 516,
+      "anchor": {
+        "x": 259,
+        "y": 383.13
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "d331250aed31870d730b36f3186d3f376413b9d7107cba402afc5b3876630e49",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 505,
+        "height": 524
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 497,
+        "height": 516
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "6e039d7df604a0425fca36bbfcb1090bf75a56753d6f62a53fd0e8c22e63a159",
+      "width": 628,
+      "height": 479,
+      "anchor": {
+        "x": 345.5,
+        "y": 395.44
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "6a2e69c4c3fbaf04f4eb8e95988688750e2026fc7051f49c82f648fa3c5612d0",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 636,
+        "height": 487
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 628,
+        "height": 479
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "7b44158259d0d680bb468e81ee293617a57f65b99623f31ec03f140547acbacc",
+      "width": 506,
+      "height": 562,
+      "anchor": {
+        "x": 267.25,
+        "y": 373.4
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "89758be2f5efb92aa50c2794f7d482f77e827b2705a908303ceb4d0beeeac539",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 514,
+        "height": 570
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 506,
+        "height": 562
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "fc2287ad3acc2b5cae03ba43a6dca7fc1bff9e931a3f382cf417bef3cd3b2181",
+      "width": 618,
+      "height": 476,
+      "anchor": {
+        "x": 252,
+        "y": 353.08
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "fd546ce2be1dc872e215d3901528dc572977765c7b544058724b847674fbd8d3",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 626,
+        "height": 484
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 618,
+        "height": 476
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-barn-v2-b96e34dc-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-barn-v2-b96e34dc-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-barn-v2-b96e34dc-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-barn-v2-b96e34dc-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-barn-v2-b96e34dc-plain:1, view:variation:ref-building-barn-v2-b96e34dc-plain:1:se, view:variation:ref-building-barn-v2-b96e34dc-plain:1:sw, view:variation:ref-building-barn-v2-b96e34dc-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.7159 game px per native px (63.21 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.1314), the median of the four straight views (0.7207 0.7111 0.6889 0.7619); anchors refitted with that scale held (IoU 0.7926 0.8242 0.7612 0.7959). Not owner-measured. Sheet: variation~ref-building-barn-v2-b96e34dc-plain~1 axisturn, cells NESW are N E S W. front doors on N as on NE; roof reads light metal where the corners show slate and shingle.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

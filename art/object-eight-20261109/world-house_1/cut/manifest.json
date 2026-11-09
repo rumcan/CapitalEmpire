@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:house_1",
+  "name": "House 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:house_1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "9ebec8e732437047e6a1ef4fc67a253928bad745ed15ff36ab38087d8a451ac3",
+        "width": 584,
+        "height": 543
+      },
+      "normalSE": {
+        "reuse": "view:world:house_1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "f7343ed2068997692b28a32b369e296b708eaed5e6b6dd00a7924b3fa7bee73a",
+        "width": 488,
+        "height": 567
+      },
+      "normalSW": {
+        "reuse": "view:world:house_1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "49bec5490ec7179cce0f2fb0d93224f3642d3b93599b102214777dc955cebc5d",
+        "width": 575,
+        "height": 513
+      },
+      "normalNW": {
+        "reuse": "view:world:house_1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "e26fe5ec078a08a6e37c48a734fdd900ab685d19b46e235998807b99114f7178",
+        "width": 518,
+        "height": 547
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 6.68,
+    "depth": 4.48
+  },
+  "pixelsPerMetre": 73.5014357576,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 2.062,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "b028dd41dbd571eccb095ca7344c290aa753c3f91d81856c928a1ce8a9f206b0",
+      "width": 576,
+      "height": 535,
+      "anchor": {
+        "x": 290.25,
+        "y": 433.16
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "9ebec8e732437047e6a1ef4fc67a253928bad745ed15ff36ab38087d8a451ac3",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 584,
+        "height": 543
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 576,
+        "height": 535
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "e8e5a4f1286256589b37e7ffa4798eebee7715014e1a467f0a0f8bcdaadf5025",
+      "width": 480,
+      "height": 559,
+      "anchor": {
+        "x": 243,
+        "y": 449.54
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f7343ed2068997692b28a32b369e296b708eaed5e6b6dd00a7924b3fa7bee73a",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 488,
+        "height": 567
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 480,
+        "height": 559
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "870af950b65229a21f2d93cb39ee8d38073d0ab8408a826728fa05866b4bd77b",
+      "width": 567,
+      "height": 505,
+      "anchor": {
+        "x": 277.5,
+        "y": 392.06
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "49bec5490ec7179cce0f2fb0d93224f3642d3b93599b102214777dc955cebc5d",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 575,
+        "height": 513
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 567,
+        "height": 505
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "9bd53e870cffecb471eaa20c9c1f32dea15c4331f03c735876100e1ea3c1b5d2",
+      "width": 510,
+      "height": 539,
+      "anchor": {
+        "x": 226.5,
+        "y": 408.64
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "e26fe5ec078a08a6e37c48a734fdd900ab685d19b46e235998807b99114f7178",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 518,
+        "height": 547
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 510,
+        "height": 539
+      }
+    },
+    "normalNE": {
+      "reuse": "world:house_1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:world:house_1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:world:house_1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:world:house_1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:house_1, view:world:house_1:se, view:world:house_1:sw, view:world:house_1:nw), reused, not repacked. The four straight-on views: scale 0.6157 game px per native px (73.50 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (6.68 x 4.48 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2068), the median of the four straight views (0.6135 0.6289 0.6179 0.6067); anchors refitted with that scale held (IoU 0.9115 0.8459 0.9198 0.8845). Not owner-measured. Sheet: world~house_1 axisturn, cells NESW are N E S W. door on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean); has the old square straight-on set (see world~house_0).",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

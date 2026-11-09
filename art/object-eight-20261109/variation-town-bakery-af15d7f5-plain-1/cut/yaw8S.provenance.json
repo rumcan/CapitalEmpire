@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:town-bakery-af15d7f5-plain:1",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "6e4ffde595e17fb596ceecb02bf9c836a88a2f909942912448df35e97eb97935",
+    "width": 453,
+    "height": 544
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 453,
+    "height": 544
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 445,
+    "height": 536
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "52b2bf74d9891832a4f3e63fde96af0cd7ac94a4d46a03618ee7f0bd9833ada8",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

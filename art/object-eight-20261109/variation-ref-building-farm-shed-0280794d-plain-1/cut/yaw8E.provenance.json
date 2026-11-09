@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-farm-shed-0280794d-plain:1",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../src/yaw8E.png",
+    "sha256": "ebd0e257a6b01323c530bcb94d87ef1e033d02dc2617a874a97df058713146a5",
+    "width": 377,
+    "height": 444
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 377,
+    "height": 444
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 369,
+    "height": 436
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "c381e8d99adcc423e5c2bd8b9f3d9cdf88ff759053e1e94715f91eafd7563af4",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

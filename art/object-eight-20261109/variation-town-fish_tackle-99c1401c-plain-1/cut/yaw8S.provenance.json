@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:town-fish_tackle-99c1401c-plain:1",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "ede86fad08e6eebcbc9eb438403c78a5755b7b14421b887023888072b91b8077",
+    "width": 526,
+    "height": 543
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 526,
+    "height": 543
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 518,
+    "height": 535
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "677c2303fe779b921317aca77be7bd3d40660fb99f687885dc6ba9c4689d83d4",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

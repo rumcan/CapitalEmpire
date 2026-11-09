@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-house-garage-a1d986d3-plain:1",
+  "name": "House Garage — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-house-garage-a1d986d3-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "f6c10c362da6e13310449c8415529e5a0a012841bbf36759d5cd77528341e2d2",
+        "width": 545,
+        "height": 530
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-house-garage-a1d986d3-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "c22d4f35331a73bd890d179ead4f34c408fb4b606c9ccc92c12c2557bf3da485",
+        "width": 601,
+        "height": 501
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-house-garage-a1d986d3-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "cc3252311de152663a5239b378560600e11093b3681cd6e526d71c13557daed5",
+        "width": 544,
+        "height": 556
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-house-garage-a1d986d3-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "929abe150394d170904434a0e4efac1416e6503f5e365ae9cd01b78477cb67ae",
+        "width": 601,
+        "height": 538
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 6
+  },
+  "pixelsPerMetre": 63.8471134254,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.714,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "00a21386ef12bb0c5d5695341a9bbc672ab91bdcffa6a85f8dddef57977f4bf4",
+      "width": 537,
+      "height": 522,
+      "anchor": {
+        "x": 280.5,
+        "y": 429.6
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f6c10c362da6e13310449c8415529e5a0a012841bbf36759d5cd77528341e2d2",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 545,
+        "height": 530
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 537,
+        "height": 522
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "cd10e85cb3ce41cf25e520d021ae9e6ebffd3217743f7b0dc1b6c1b7267669a9",
+      "width": 593,
+      "height": 493,
+      "anchor": {
+        "x": 327.25,
+        "y": 395.12
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "c22d4f35331a73bd890d179ead4f34c408fb4b606c9ccc92c12c2557bf3da485",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 601,
+        "height": 501
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 593,
+        "height": 493
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "564041f1b9156553979fe1af7bcf275d4d83d23074c9e7b4d95f38a9e9b74ee6",
+      "width": 536,
+      "height": 548,
+      "anchor": {
+        "x": 263.5,
+        "y": 418.72
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "cc3252311de152663a5239b378560600e11093b3681cd6e526d71c13557daed5",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 544,
+        "height": 556
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 536,
+        "height": 548
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "7e79575d9231d3e42231a88489cc48468f2822050a4a53e856e3d8a8e3aae007",
+      "width": 593,
+      "height": 530,
+      "anchor": {
+        "x": 268.75,
+        "y": 426.31
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "929abe150394d170904434a0e4efac1416e6503f5e365ae9cd01b78477cb67ae",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 601,
+        "height": 538
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 593,
+        "height": 530
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-house-garage-a1d986d3-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-house-garage-a1d986d3-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-house-garage-a1d986d3-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-house-garage-a1d986d3-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-house-garage-a1d986d3-plain:1, view:variation:ref-building-house-garage-a1d986d3-plain:1:se, view:variation:ref-building-house-garage-a1d986d3-plain:1:sw, view:variation:ref-building-house-garage-a1d986d3-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.7088 game px per native px (63.85 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2169), the median of the four straight views (0.7143 0.7033 0.7221 0.6871); anchors refitted with that scale held (IoU 0.8594 0.8204 0.8256 0.8497). Not owner-measured. Sheet: variation~ref-building-house-garage-a1d986d3-plain~1 axisturn, cells NESW are N E S W. garage door and front door on the same face (N), as on NE.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

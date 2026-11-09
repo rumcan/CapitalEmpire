@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+  "name": "House Dormer — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-house-dormer-north-6952cea5-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "6a812fb5d92202b0b3a8678a0ab6801cb1540060d9528a0b00a4bf31561009f1",
+        "width": 550,
+        "height": 506
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "2e7a734044edaa5bbe36f9c5184383b3d2a3fe8b4a930c15607130a427cced90",
+        "width": 493,
+        "height": 559
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "b425570e15327252c8c5cdbd0e9dfc8f4a87e8b4fe8a3a77e8cccda2bb2c9274",
+        "width": 550,
+        "height": 525
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "fedcda06ae94378e3e14244098c58946b800cd0b4879669d97ee179c62e8d0f4",
+        "width": 498,
+        "height": 559
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 6,
+    "depth": 6
+  },
+  "pixelsPerMetre": 73.6329873022,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.714,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "c13e64c841b907e0348f51af337e05078ef1273758197ce7c24b6bff8de93c8d",
+      "width": 542,
+      "height": 498,
+      "anchor": {
+        "x": 265,
+        "y": 410.97
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "6a812fb5d92202b0b3a8678a0ab6801cb1540060d9528a0b00a4bf31561009f1",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 550,
+        "height": 506
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 542,
+        "height": 498
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "1e4ab22ac73b843e3b026a9eb111f7dc3f94f67bc5583c3a32e29a6c0905b9b1",
+      "width": 485,
+      "height": 551,
+      "anchor": {
+        "x": 267.25,
+        "y": 434.08
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "2e7a734044edaa5bbe36f9c5184383b3d2a3fe8b4a930c15607130a427cced90",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 493,
+        "height": 559
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 485,
+        "height": 551
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "f34d418a644c25ab61a8aa6120ea97a65bd5c182319b14fdac4127fc0bf27298",
+      "width": 542,
+      "height": 517,
+      "anchor": {
+        "x": 271,
+        "y": 343.25
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "b425570e15327252c8c5cdbd0e9dfc8f4a87e8b4fe8a3a77e8cccda2bb2c9274",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 550,
+        "height": 525
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 542,
+        "height": 517
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "2efd6f338336671bed1d817b51732647e7dcf1e01c6e28b34a6ae4438d77bd6d",
+      "width": 490,
+      "height": 551,
+      "anchor": {
+        "x": 248,
+        "y": 434.08
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "fedcda06ae94378e3e14244098c58946b800cd0b4879669d97ee179c62e8d0f4",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 498,
+        "height": 559
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 490,
+        "height": 551
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-house-dormer-north-6952cea5-plain:1, view:variation:ref-building-house-dormer-north-6952cea5-plain:1:se, view:variation:ref-building-house-dormer-north-6952cea5-plain:1:sw, view:variation:ref-building-house-dormer-north-6952cea5-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.6146 game px per native px (73.63 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (6 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.1419), the median of the four straight views (0.5672 0.6696 0.5687 0.6605); anchors refitted with that scale held (IoU 0.8616 0.8155 0.8354 0.819). Not owner-measured. Sheet: variation~ref-building-house-dormer-north-6952cea5-plain~1 axisturn, cells NESW are N E S W. three dormers and the deck on N as on NE.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

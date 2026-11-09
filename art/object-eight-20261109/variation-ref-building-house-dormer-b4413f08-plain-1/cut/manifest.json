@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-house-dormer-b4413f08-plain:1",
+  "name": "House Dormer — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-house-dormer-b4413f08-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "ed02e5a0231a9d332de5dae38a4227144026b53bf6b08a3775dfa87d78404ed1",
+        "width": 489,
+        "height": 515
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-house-dormer-b4413f08-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "78084cead960c7bc32e413caa13acd3acef6bf9390826eee2122fe28a2b28cf1",
+        "width": 475,
+        "height": 495
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-house-dormer-b4413f08-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "f9e891403f58f4e6bcef0cf0159df051b26dd9a6235da3d9e4e6c50f26c58b7f",
+        "width": 476,
+        "height": 477
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-house-dormer-b4413f08-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "5f2d4e537ee1758a072ea74b64019a849963f9cc4adbc8cf46acbad98067a219",
+        "width": 457,
+        "height": 491
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 6,
+    "depth": 6
+  },
+  "pixelsPerMetre": 65.0587032719,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.469,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "e97019068f3140a5aae8697218a920f05ec851506eaa1d4e629a69950f51a457",
+      "width": 481,
+      "height": 507,
+      "anchor": {
+        "x": 233.75,
+        "y": 403.8
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "ed02e5a0231a9d332de5dae38a4227144026b53bf6b08a3775dfa87d78404ed1",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 489,
+        "height": 515
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 481,
+        "height": 507
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "73d3a6834ecd0e925c263a589f881c274149bed14e991406afc6a2b7a1e05d82",
+      "width": 467,
+      "height": 487,
+      "anchor": {
+        "x": 245.5,
+        "y": 395.9
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "78084cead960c7bc32e413caa13acd3acef6bf9390826eee2122fe28a2b28cf1",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 475,
+        "height": 495
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 467,
+        "height": 487
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "80b946e62cd299357d7ff38c9297a882ae4586ee985224f96730d194438054d5",
+      "width": 468,
+      "height": 469,
+      "anchor": {
+        "x": 234,
+        "y": 386.99
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f9e891403f58f4e6bcef0cf0159df051b26dd9a6235da3d9e4e6c50f26c58b7f",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 476,
+        "height": 477
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 468,
+        "height": 469
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "4b58ffe1bd45e8547a191babf14f0f6118482e5b282a2e19ca889deecf81bb1c",
+      "width": 449,
+      "height": 483,
+      "anchor": {
+        "x": 226,
+        "y": 398.67
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "5f2d4e537ee1758a072ea74b64019a849963f9cc4adbc8cf46acbad98067a219",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 457,
+        "height": 491
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 449,
+        "height": 483
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-house-dormer-b4413f08-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-house-dormer-b4413f08-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-house-dormer-b4413f08-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-house-dormer-b4413f08-plain:1, view:variation:ref-building-house-dormer-b4413f08-plain:1:se, view:variation:ref-building-house-dormer-b4413f08-plain:1:sw, view:variation:ref-building-house-dormer-b4413f08-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.6956 game px per native px (65.06 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (6 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.231), the median of the four straight views (0.6808 0.7104 0.6808 0.7208); anchors refitted with that scale held (IoU 0.8589 0.8715 0.8753 0.8726). Not owner-measured. Sheet: variation~ref-building-house-dormer-b4413f08-plain~1 axisturn, cells NESW are N E S W. porch and bay window on N as on NE.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

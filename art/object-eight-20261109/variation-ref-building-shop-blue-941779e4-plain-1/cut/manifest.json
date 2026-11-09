@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-shop-blue-941779e4-plain:1",
+  "name": "Shop Blue — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-shop-blue-941779e4-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "f31ee1c6d68238d806d763e02a265f2cce8a2b53f4c005fdeb0d332bcdb98d34",
+        "width": 502,
+        "height": 531
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-shop-blue-941779e4-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "6296d24669894d5701229be940cc76be94ef07dc66e03a55a5bd685a4e98678d",
+        "width": 398,
+        "height": 574
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-shop-blue-941779e4-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "c810b1da78c7c08bee71d3047f94bb548d1bff1476c7a7dbd538415dffb1af17",
+        "width": 472,
+        "height": 529
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-shop-blue-941779e4-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "5acf86230e8b419f2f5a8d64231c97b19a26ae15d7888fea5728e3b9f4da7107",
+        "width": 388,
+        "height": 567
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 6,
+    "depth": 6
+  },
+  "pixelsPerMetre": 62.1035185892,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.587,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "31e0777b1e3a81737a97b536d9c6baa1ead8c39451e34dbdcc0383bb7ca1eb0a",
+      "width": 494,
+      "height": 523,
+      "anchor": {
+        "x": 262,
+        "y": 397.22
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f31ee1c6d68238d806d763e02a265f2cce8a2b53f4c005fdeb0d332bcdb98d34",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 502,
+        "height": 531
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 494,
+        "height": 523
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "fea03fc6e5daff30f70c36ee5b708f82f60716b9a0b4c3b5bff893a8240ebd2e",
+      "width": 390,
+      "height": 566,
+      "anchor": {
+        "x": 155.25,
+        "y": 438.88
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "6296d24669894d5701229be940cc76be94ef07dc66e03a55a5bd685a4e98678d",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 398,
+        "height": 574
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 390,
+        "height": 566
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "46510f7cc54455eb6c6efe1c84ff2f4595a3174c636e19903256907bea48b3e4",
+      "width": 464,
+      "height": 521,
+      "anchor": {
+        "x": 202,
+        "y": 406.48
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "c810b1da78c7c08bee71d3047f94bb548d1bff1476c7a7dbd538415dffb1af17",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 472,
+        "height": 529
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 464,
+        "height": 521
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "2127ebbff6823242c6192aa2573ae0b70aaf552cc57f3779ef2e836b8d03e042",
+      "width": 380,
+      "height": 559,
+      "anchor": {
+        "x": 151.75,
+        "y": 427.04
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "5acf86230e8b419f2f5a8d64231c97b19a26ae15d7888fea5728e3b9f4da7107",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 388,
+        "height": 567
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 380,
+        "height": 559
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-shop-blue-941779e4-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-shop-blue-941779e4-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-shop-blue-941779e4-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-shop-blue-941779e4-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-shop-blue-941779e4-plain:1, view:variation:ref-building-shop-blue-941779e4-plain:1:se, view:variation:ref-building-shop-blue-941779e4-plain:1:sw, view:variation:ref-building-shop-blue-941779e4-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.7287 game px per native px (62.10 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (6 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.0689), the median of the four straight views (0.7428 0.7146 0.7477 0.7078); anchors refitted with that scale held (IoU 0.9123 0.8386 0.8916 0.8621). Not owner-measured. Sheet: variation~ref-building-shop-blue-941779e4-plain~1 axisturn, cells NESW are N E S W. DRUG & GIFTS shopfront on N as on NE.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

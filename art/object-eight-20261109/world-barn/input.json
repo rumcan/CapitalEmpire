@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:barn",
+  "name": "Barn",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:barn"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "view:world:barn:se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": {
+        "reuse": "view:world:barn:sw"
+      },
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": {
+        "reuse": "view:world:barn:nw"
+      },
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 8.38,
+    "depth": 5.52
+  },
+  "pixelsPerMetre": 65.0680575067,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.61,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 307.75,
+        "y": 367.7
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 200.75,
+        "y": 370.75
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 260.5,
+        "y": 344.31
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 208.75,
+        "y": 422.03
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:barn, view:world:barn:se, view:world:barn:sw, view:world:barn:nw), reused, not repacked. The four straight-on views: scale 0.6955 game px per native px (65.07 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8.38 x 5.52 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2358), the median of the four straight views (0.718 0.6909 0.6934 0.6975); anchors refitted with that scale held (IoU 0.8216 0.8956 0.8641 0.8852). Not owner-measured. Sheet: world~barn axisturn, cells NESW are N E S W. X-braced doors on N as on NE; heavy orange ivy on the roof and walls (the corners are clean)."
+}

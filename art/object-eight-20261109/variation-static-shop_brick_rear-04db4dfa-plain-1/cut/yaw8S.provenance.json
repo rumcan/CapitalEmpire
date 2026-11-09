@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:static-shop_brick_rear-04db4dfa-plain:1",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "46491af4c19cb6a092f22a57e27d4367f0851c79f0cbddcb6ec5c7dbb5041c51",
+    "width": 516,
+    "height": 531
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 516,
+    "height": 531
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 508,
+    "height": 523
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "5c404eecf6acc140db5d97a80c97169f2c83e776a71ede205c595867517a3fa7",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

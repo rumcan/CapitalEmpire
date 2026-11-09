@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-shop-blue-941779e4-plain:1",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "c810b1da78c7c08bee71d3047f94bb548d1bff1476c7a7dbd538415dffb1af17",
+    "width": 472,
+    "height": 529
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 472,
+    "height": 529
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 464,
+    "height": 521
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "46510f7cc54455eb6c6efe1c84ff2f4595a3174c636e19903256907bea48b3e4",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

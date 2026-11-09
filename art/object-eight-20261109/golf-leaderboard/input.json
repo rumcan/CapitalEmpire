@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "golf:leaderboard",
+  "name": "Main leaderboard",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "golf:leaderboard"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "view:golf:leaderboard:se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": {
+        "reuse": "view:golf:leaderboard:sw"
+      },
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": {
+        "reuse": "view:golf:leaderboard:nw"
+      },
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 3
+  },
+  "pixelsPerMetre": 62.0014166269,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.36,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 262.25,
+        "y": 383.39
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 151.25,
+        "y": 443.91
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 246.5,
+        "y": 367.24
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 187.25,
+        "y": 451.52
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (golf:leaderboard, view:golf:leaderboard:se, view:golf:leaderboard:sw, view:golf:leaderboard:nw), reused, not repacked. The four straight-on views: scale 0.7299 game px per native px (62.00 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 3 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2035), the median of the four straight views (0.6597 0.8001 0.6387 0.8001); anchors refitted with that scale held (IoU 0.7613 0.6842 0.81 0.7576). Not owner-measured. Sheet: golf~leaderboard axisturn, cells NESW are N E S W. the board face with the ladder on its right on N as on NE; E and W are thin side profiles of the stilted frame, S the braced back (poor fit, IoU 0.68-0.85: the board is thin)."
+}

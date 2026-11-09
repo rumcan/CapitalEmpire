@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:world-house_0-north-1dde6f56-plain:1",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../src/yaw8W.png",
+    "sha256": "f585d8757d84256f02b958ea2176f62c57e4846c866831e0f46b39d28e07f0ea",
+    "width": 476,
+    "height": 444
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 476,
+    "height": 444
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 468,
+    "height": 436
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "0bc16349004f11fd73d12e8179eae1b7efa3eda2f63ad5128af43d5f82044a47",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

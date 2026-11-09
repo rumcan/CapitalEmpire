@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:house_0",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../src/yaw8N.png",
+    "sha256": "f9d44b2427b2617b6b6347fdac27b6eb29df6973fb3f79a1066f63e1e662ac25",
+    "width": 589,
+    "height": 488
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 589,
+    "height": 488
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 581,
+    "height": 480
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "487c3ebfd8a4ad1adcc82079e34ca8e9436376d7ccb0a22915e9e7b96da07acf",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -5,6 +5,9 @@
 // the road), 45 off (a four-view building on a screen-straight road: the nearest corner), WRONG (its front is turned off the road by 90 degrees or more).
 //   node scripts/dev/street-front-sheet.mjs --base http://127.0.0.1:5189/ --out E:/ClaudeTemp/T375 --tag before|after [--only shops,venues,houses] [--roads 0,1,2,3,4,5,6,7]
 //     [--houses 6]  (houses: how many of the palette's, spread along it)
+//     [--only wanted --wanted id,id,...]  (T398: any building by its library id, on the lot kind that shows it: each found by scanning lots of the town's use kinds along a street)
+//     [--rows 8]  (rows a sheet: a long sheet is cut into files *-1, *-2 ...)
+//     [--cap 25]  (T398: minutes the whole run may take before the browser is closed and the run fails; the page load of each attempt is capped at 6 minutes: a stuck page fails the job, it never hangs it)
 //     [--front]  (T376: each cell framed on the lot's street front, the red line, larger: the base of the walls against the pavement; the sheets are named *-front-<tag>.png)
 // Needs a dev server (vite) on --base. One headless Edge, closed when done. Nothing is saved.
 import { chromium } from 'playwright-core';
@@ -21,13 +24,22 @@ const W = 1500, H = 950, ZOOM = 0.3, CELL_W = front ? 560 : 400, CELL_H = front 
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const results = [];
+// (T398: the heavy lock is shared by every agent: a run that hangs on a page must fail, not hold it. The browser is closed first, then the process ends with status 3)
+const watchdog = setTimeout(async () => { console.log(`[watchdog] over the ${opt('cap', '25')} minute cap: closing the browser`); try { await browser.close(); } catch { /* gone */ } process.exit(3); }, +opt('cap', '25') * 60000);
+watchdog.unref();
 try {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
   await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
-  await page.goto(`${base}?start=town&seed=1${opt('desert', '1') === '1' ? '&desert=on' : ''}`, { waitUntil: 'domcontentloaded', timeout: 300000 });
-  await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
+  // (T398: a cold dev server pre-bundles its dependencies on the first load and reloads the page when it is done, which aborts a navigation in flight, and a machine
+  // short of memory answers late: the load is tried again)
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await page.goto(`${base}?start=town&seed=1${opt('desert', '1') === '1' ? '&desert=on' : ''}`, { waitUntil: 'domcontentloaded', timeout: 360000 });
+      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 360000 }); break;
+    } catch (e) { if (attempt >= 2) throw e; console.log(`  (load attempt ${attempt} failed: ${String(e.message).split(/\r?\n/)[0]}; again)`); await sleep(8000); }
+  }
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
   await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.setSpeed(0); });
   const settle = async (ms = 500) => {
@@ -45,12 +57,17 @@ try {
     const pa = await import('/src/game/lots/preset-art.ts'), { isBuilding } = await import('/src/game/mirror.ts'), { sizeKey } = pa;
     // (lead/live has no object-eight.ts: the before run reads the old art's views alone)
     let eight = null; try { eight = (await import('/src/game/object-eight.ts')).objectFacings; } catch { /* the old game */ }
-    const st = { use: LU[o.use], level: 2, decline: 0, seed: o.seed, ...(o.biz ? { biz: o.biz } : {}) };
+    // (T398 forced: the building alone on the lot: the lot composes nothing (a shopping centre's part, biz '^force') and the building is put there in the picture the game draws for that road, at its owner size)
+    const st = o.force ? { use: LU.NONE, level: 0, decline: 0, seed: o.seed, biz: '^force' } : { use: LU[o.use], level: 2, decline: 0, seed: o.seed, ...(o.biz ? { biz: o.biz } : {}) };
     // (stageLab resets the whole map: once for a lot's kind and road, then the lot moves along its street a lattice cell at a time)
-    const lk = [o.use, o.road, o.w, o.d, o.seed, o.biz ?? ''].join('|');
+    const lk = [o.use, o.road, o.w, o.d, o.seed, o.biz ?? '', o.force ? 'forced' : ''].join('|');
     if (window.__labKey !== lk) { window.__labGeom = g.stageLab({ road: o.road, w: o.w, d: o.d, st }).g; window.__labKey = lk; }
     let geom = window.__labGeom;
     if (o.shift) geom = { ...geom, o: { x: geom.o.x + geom.u.x * 7 * o.shift, y: geom.o.y + geom.u.y * 7 * o.shift } };
+    if (o.force) {
+      const { frameOf } = await import('/src/game/lots/preset-frame.ts'), dv = pa.drawnView(o.force, frameOf(geom), 0), q = { x: geom.o.x + geom.u.x * o.w / 2 + geom.n.x * o.d / 2, y: geom.o.y + geom.u.y * o.w / 2 + geom.n.y * o.d / 2 };
+      g.lotOverride = key => key === 'lab' ? { props: [{ id: dv.id, x: q.x, y: q.y, flip: dv.flip, scale: pa.ownerScaleOf(o.force) }], ground: [] } : undefined;
+    } else g.lotOverride = null;
     g.placeLot('lab', geom, st);
     const props = [...g.propsOfLot('lab')].filter(p => isBuilding(LIBRARY[p.item]));
     let main = null, area = 0; for (const p of props) { const a = (p.x1 - p.x0) * (p.y1 - p.y0); if (a > area) { area = a; main = p; } }
@@ -111,11 +128,14 @@ try {
     const file = join(out, `${name}${front ? '-front' : ''}-${tag}.png`);
     await sharp({ create: { width: CELL_W * cols, height: y, channels: 4, background: '#3b4252' } }).composite(comp).png().toFile(file); console.log(file);
   };
+  /** one sheet, or several of at most `rows` rows each (a house palette of 19 and eight roads is a very tall picture) */
+  const perSheet = +opt('rows', '8');
+  const sheets = async (name, rows) => { if (rows.length <= perSheet) return sheet(name, rows); for (let i = 0; i * perSheet < rows.length; i++) await sheet(`${name}-${i + 1}`, rows.slice(i * perSheet, (i + 1) * perSheet)); };
   const SHOPS = ['town:bakery', 'town:grocery', 'town:pharmacy', 'world:video', 'town:laundromat', 'world:video_rental', 'town:fish_tackle', 'town:barber'], VENUES = ['world:arcade', 'world:diner', 'world:snack_bar'];
   if (only.has('shops')) {
     const rows = [];
     for (const biz of SHOPS) { const cells = []; for (const road of roads) cells.push(await cell({ use: 'COM', road, w: 16, d: 14, seed: 31, biz }, biz)); rows.push({ label: biz, cells }); }
-    await sheet('shops', rows);
+    await sheets('shops', rows);
   }
   if (only.has('venues')) {
     const rows = [];
@@ -128,7 +148,7 @@ try {
       }
       rows.push({ label: want, cells });
     }
-    await sheet('venues', rows);
+    await sheets('venues', rows);
   }
   if (only.has('houses')) {
     const pal = await page.evaluate(async () => { const { housePalette } = await import('/src/game/lots/compose.ts'); return [...housePalette()]; });
@@ -143,7 +163,37 @@ try {
       }
       rows.push({ label: want, cells });
     }
-    await sheet('houses', rows);
+    await sheets('houses', rows);
+  }
+  if (only.has('forced')) {
+    // T398: each building of --wanted (a library id) alone on a lot of each road asked for, in the picture the game draws for it on that road (corner views on the roads along an axis, the eight-view set's
+    // straight-on views on the screen-straight ones): no town lot has to show it. Before the import: the nearest corner, 45 off; after: the straight-on view, front
+    const rows = [];
+    for (const want of opt('wanted', '').split(',').filter(Boolean)) {
+      const cells = [];
+      for (const road of roads) { const o = { use: 'RES', road, w: 20, d: 18, seed: 5, force: want }; cells.push(await cell(o, want, await stage({ ...o, zoom: ZOOM }))); }
+      rows.push({ label: want, cells });
+    }
+    await sheets('forced', rows);
+  }
+  if (only.has('wanted')) {
+    // T398: the buildings of the straight-views batch (or any): each on the first lot of a town use kind that shows it, on every road asked for
+    const USES = [['TOUR', 20, 18, 5], ['GOV', 20, 18, 5], ['IND', 24, 20, 5], ['COM', 16, 14, 31], ['RES', 14, 14, 3]];
+    const rows = [];
+    for (const want of opt('wanted', '').split(',').filter(Boolean)) {
+      const cells = [];
+      for (const road of roads) {
+        let best = null;
+        for (const [use, w, d, seed] of USES) {
+          for (let k = 0; k < 21 && !best; k++) { const shift = k % 2 ? (k + 1) / 2 : -k / 2, o = { use, road, w, d, seed, shift }, r = await stage({ ...o, zoom: ZOOM }); if (r.id && (r.subject === want || r.id === want)) best = await cell(o, want, r); }
+          if (best) break;
+        }
+        if (!best) console.log(`  no lot shows ${want} on road ${road}`);
+        cells.push(best);
+      }
+      rows.push({ label: want, cells });
+    }
+    await sheets('wanted', rows);
   }
   await ctx.close();
 } finally { await browser.close(); }

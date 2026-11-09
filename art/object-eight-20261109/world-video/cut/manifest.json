@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:video",
+  "name": "Video",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:video"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "22b4d385dc508ac69127edc7f4b17d846f0bdc28d6e4932d6519154d93264892",
+        "width": 521,
+        "height": 442
+      },
+      "normalSE": {
+        "reuse": "east:world:video"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "8dba514bb096a4f1a56792a138b9c6a95fd040d9568a7f309b3fec084c20a4cb",
+        "width": 556,
+        "height": 436
+      },
+      "normalSW": {
+        "reuse": "view:world:video:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "78673e03c12dc9d76ebc2005e1a74095e5a6764211516ae821c1349f5eceacbe",
+        "width": 521,
+        "height": 473
+      },
+      "normalNW": {
+        "reuse": "view:world:video:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "f983abddd773036ca5b64b8e737ba70b1deb0eaa8f3ef065dfc14ca36780288f",
+        "width": 553,
+        "height": 442
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 5.66,
+    "depth": 6.56
+  },
+  "pixelsPerMetre": 68.8286448607,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.566,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "01eb0eff225f4be301f01a0458bd1492f7e0e1b0b729a16b355e6505706dffe7",
+      "width": 513,
+      "height": 434,
+      "anchor": {
+        "x": 255,
+        "y": 309.04
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "22b4d385dc508ac69127edc7f4b17d846f0bdc28d6e4932d6519154d93264892",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 521,
+        "height": 442
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 513,
+        "height": 434
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "8aea3d1f3fed812b6b6f40e8538da302174f47447c77ca405a87645844020528",
+      "width": 548,
+      "height": 428,
+      "anchor": {
+        "x": 286,
+        "y": 316.57
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "8dba514bb096a4f1a56792a138b9c6a95fd040d9568a7f309b3fec084c20a4cb",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 556,
+        "height": 436
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 548,
+        "height": 428
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "9cc2925bf9029e79dda9d627524278bbbd68e58d7554a3d6a2c4fc3c02e65798",
+      "width": 513,
+      "height": 465,
+      "anchor": {
+        "x": 261,
+        "y": 351.51
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "78673e03c12dc9d76ebc2005e1a74095e5a6764211516ae821c1349f5eceacbe",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 521,
+        "height": 473
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 513,
+        "height": 465
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "b546d1987e7bcc0590a23025cc86a889955bbea2ab1642a5ec7e7ed4569e59a3",
+      "width": 545,
+      "height": 434,
+      "anchor": {
+        "x": 274,
+        "y": 339.79
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f983abddd773036ca5b64b8e737ba70b1deb0eaa8f3ef065dfc14ca36780288f",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 553,
+        "height": 442
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 545,
+        "height": 434
+      }
+    },
+    "normalNE": {
+      "reuse": "world:video",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "east:world:video",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:world:video:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:world:video:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:video, east:world:video, view:world:video:sw, view:world:video:nw), reused, not repacked. The four straight-on views: scale 0.6575 game px per native px (68.83 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (5.66 x 6.56 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2188), the median of the four straight views (0.6829 0.6267 0.6782 0.6368); anchors refitted with that scale held (IoU 0.9115 0.9172 0.9165 0.8828). Not owner-measured. Sheet: world~video axisturn, cells NESW are N E S W. the corners show the VIDEO storefront on the lower-right face, so N is the window wall on their lower-left face, as the sheet's N cell; autumn leaves and pumpkins from the old export (the corners are clean).",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

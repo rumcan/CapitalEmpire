@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:toilet-block",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../src/yaw8W.png",
+    "sha256": "8a88598deb3e797d1929738e2a600992cfbc70ee3b0f3c390c60eb7de52d6268",
+    "width": 346,
+    "height": 365
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 346,
+    "height": 365
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 338,
+    "height": 357
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "de6d5842c9e0a38fd53343a91d21bb1a025ddd395635f1e4e7511448edcccbc8",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}
