@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
-import { TC, generateTerrain } from '../src/game/terrain';
+import { TC, TERRAIN_MODEL, generateTerrain } from '../src/game/terrain';
 import { planRangeStart, type RangeStart } from '../src/game/golf/rangestart';
 import { RANGE_PLOT, plotPoint } from '../src/game/golf/range';
 import { landWhy, rangeSpotAt, type LandCheck } from '../src/game/golf/placing';
@@ -34,10 +34,12 @@ function verdicts(cls: Uint8Array, rs: RangeStart, step = 10) {
   return { start, ok, ok0, total };
 }
 
-test('every seed from 1 to 100 that has a range start can place its driving range along the county road, and almost every one at its start spot (T391)', { timeout: 900_000 }, () => {
+/** T360: the same on the natural river's maps (terrain model 2: its river meanders, so the free ground round it is not the old river's two clean halves: the river's chord runs off
+ *  the map's middle, nearer its axes, and its water is as much ground as the old one's: terrain/river.ts NAT.spread, chordPull, widthBase) */
+for (const model of [1, TERRAIN_MODEL]) test(`every seed from 1 to 100 that has a range start can place its driving range along the county road, and almost every one at its start spot (T391${model === 1 ? '' : `, terrain model ${model}`})`, { timeout: 900_000 }, () => {
   const refusedAtStart: string[] = [], noRoadSpot: number[] = [], noStart: number[] = [];
   for (let seed = 1; seed <= 100; seed++) {
-    const t = generateTerrain(seed), rs = planRangeStart(t, seed);
+    const t = generateTerrain(seed, model), rs = planRangeStart(t, seed);
     if (!rs) { noStart.push(seed); continue; }
     const v = verdicts(t.cls, rs);
     if (v.start.why) refusedAtStart.push(`${seed} (${v.start.why})`);

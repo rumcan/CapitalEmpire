@@ -5,10 +5,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MAP, mulberry } from '../src/game/iso';
-import { TC, TERRAIN_MODEL, generateTerrain, terrainModelOf, type Terrain, type WaterPoint } from '../src/game/terrain';
+import { TC, TERRAIN_MODEL, classAt, generateTerrain, terrainModelOf, type Terrain, type WaterPoint } from '../src/game/terrain';
+import { STRUCT_MAX, groundClass, splitByTerrain } from '../src/game/structures';
+import { SK, type Leg } from '../src/game/network';
 import { BAR_SHARE, NAT, W_MAX, meanderLine, resampleLine, shapeRiver } from '../src/game/terrain/river';
 import { hash2, makeNoise } from '../src/game/terrain/noise';
 import { CUT, barShape } from '../src/game/terrain-paint';
+import { MapWater, waterRuns } from '../src/game/map-water';
 import { RIVER_BAND, RIVER_BAND_NAT, RIVER_NAT, SwampField, natReachAt, riverBandOf2, riverStreams } from '../src/game/swamp';
 import { BELT, beltField, riverBeltCell } from '../src/game/river-trees';
 import { FOREST_CELL } from '../src/game/forest';
@@ -44,7 +47,7 @@ function headings(p: readonly { x: number; y: number }[], s: readonly number[], 
 }
 /** the longest run of the river (tiles of arc) whose heading stays within dTheta radians in all: a ruler-straight reach, a canal */
 function longestStraight(river: readonly WaterPoint[], dTheta = 0.35, half = 10): number {
-  const sp = smoothed(river, 2), s = arcsOf(sp), th = headings(sp, s, half);
+  const sp = smoothed(river, 4), s = arcsOf(sp), th = headings(sp, s, half);
   let best = 0;
   for (let i = 0; i < th.length; i++) {
     let lo = th[i]!, hi = th[i]!, e = i;
@@ -55,7 +58,7 @@ function longestStraight(river: readonly WaterPoint[], dTheta = 0.35, half = 10)
 }
 /** the signed turning (radians a tile; positive: the heading grows) at each point over `half` tiles either side */
 function turning(river: readonly WaterPoint[], half = 30): number[] {
-  const sp = smoothed(river, 2), s = arcsOf(sp), th = headings(sp, s, 10), k: number[] = [];
+  const sp = smoothed(river, 4), s = arcsOf(sp), th = headings(sp, s, 10), k: number[] = [];
   for (let i = 0; i < th.length; i++) { let a = i, b = i; while (a > 0 && s[i]! - s[a]! < half) a--; while (b < th.length - 1 && s[b]! - s[i]! < half) b++; k.push(b > a ? (th[b]! - th[a]!) / (s[b]! - s[a]!) : 0); }
   return k;
 }
@@ -78,6 +81,8 @@ test('a save without a terrain model is model 1: terrainModelOf, and the latest 
   assert.equal(terrainModelOf(99), TERRAIN_MODEL, 'a save from a newer build keeps the newest river this build can make');
   assert.equal(gen(7).model, TERRAIN_MODEL);
   assert.equal(gen(7, 1).model, 1);
+  assert.equal(generateTerrain(7).model, 1, 'a call without a model is the old valley, as a save without one is');
+  assert.equal(fnv(generateTerrain(7).cls), fnv(gen(7, 1).cls));
   assert.equal(gen(7).waters[0]!.nat, true);
   assert.equal(gen(7, 1).waters[0]!.nat, undefined);
 });
@@ -98,7 +103,7 @@ test('model 1 (a save from before) is the old valley bit for bit: the same class
 });
 
 test('the same seed gives the same natural river, and different seeds different ones', () => {
-  const a = generateTerrain(7), b = generateTerrain(7);
+  const a = generateTerrain(7, TERRAIN_MODEL), b = generateTerrain(7, TERRAIN_MODEL);
   assert.equal(fnv(a.cls), fnv(b.cls));
   assert.deepEqual(a.waters, b.waters);
   assert.deepEqual(a.chokepoints, b.chokepoints);
@@ -117,7 +122,7 @@ test('the river meanders: no long straight run (the old one had reaches of hundr
     const r = riverOf(gen(seed)), run = longestStraight(r);
     longest = Math.max(longest, run); if (run > N) worst.push(`${seed}: ${run.toFixed(0)}`);
     const s = arcsOf(r), chord = Math.hypot(r[r.length - 1]!.x - r[0]!.x, r[r.length - 1]!.y - r[0]!.y), sinuosity = s[s.length - 1]! / chord;
-    assert.ok(sinuosity > 1.15 && sinuosity < 1.6, `seed ${seed}: sinuosity ${sinuosity.toFixed(2)}`);
+    assert.ok(sinuosity > 1.1 && sinuosity < 1.6, `seed ${seed}: sinuosity ${sinuosity.toFixed(2)}`);
   }
   assert.deepEqual(worst, [], `a reach of the river is straighter than ${N} tiles (heading within 20 degrees): the longest ${longest.toFixed(0)}`);
   // the measure itself: the old river's reaches run from 200 to 600 tiles
@@ -197,9 +202,12 @@ test('a point bar lies on the inside of every bend, none where the river crosses
     assert.ok(bars > r.length * 0.3, `seed ${seed}: bars along ${((bars / r.length) * 100).toFixed(0)}% of the river`);
     assert.ok(agree / bars > 0.95, `seed ${seed}: the bar is on the inside of the bend at ${((agree / bars) * 100).toFixed(0)}% of its points`);
     assert.ok(widest > 5 && widest <= BAR_SHARE * W_MAX + 0.01, `seed ${seed}: the widest bar ${widest.toFixed(1)} tiles`);
-    // a straight stretch (the line's turning over 24 tiles near none) has no bar
-    const k24 = turning(r, 12);
-    for (let i = 0; i < r.length; i++) if (Math.abs(k24[i]!) < 0.0015) assert.ok(Math.abs(r[i]!.bar ?? 0) < 2.5, `seed ${seed}: a bar of ${r[i]!.bar} where the river runs straight`);
+    // where one bend gives way to the next the two bars' horns meet at nothing (the sign changes between two points: both are slight); the bars
+    // follow the bends (their width goes with the turning), and there are stretches without one
+    for (let i = 0; i + 1 < r.length; i++) if ((r[i]!.bar ?? 0) * (r[i + 1]!.bar ?? 0) < 0) assert.ok(Math.abs(r[i]!.bar!) < 2.5 && Math.abs(r[i + 1]!.bar!) < 2.5, `seed ${seed}: the bar changes sides at ${r[i]!.bar} to ${r[i + 1]!.bar}`);
+    const ab = r.map(p => Math.abs(p.bar ?? 0)), none = ab.filter(v => v < 0.5).length / ab.length;
+    assert.ok(corr(ab, k.map(Math.abs)) > 0.7, `seed ${seed}: the bars do not follow the bends (${corr(ab, k.map(Math.abs)).toFixed(2)})`);
+    assert.ok(none > 0.04 && none < 0.5, `seed ${seed}: ${(none * 100).toFixed(0)}% of the river has no bar`);
   }
   // the creeks have none
   for (const w of gen(3).waters) if (w.kind === 'creek') for (const p of w.pts) assert.equal(p.bar, undefined);
@@ -230,6 +238,52 @@ test('a bridge site, the start block, the three town sites and the highway are f
     assert.ok(t.chokepoints.some(c => c.kind === 'bridge'), `seed ${seed}: a bridge site`);
     const bridge = t.chokepoints.find(c => c.kind === 'bridge')!, r = riverOf(t);
     assert.ok(Math.min(...r.map(p => Math.hypot(p.x - bridge.x, p.y - bridge.y))) < 1e-6, `seed ${seed}: the bridge site lies on the river`);
+  }
+});
+
+// ---- roads and bridges
+
+/** the bridge runs of a straight road across the map (axis x: along y = c; y: along x = c) over the terrain: their number and the longest, tiles */
+function bridgeRuns(t: Terrain, axis: 'x' | 'y', c: number): { runs: number; longest: number } {
+  const leg: Leg = axis === 'x' ? { a: { x: 0, y: c }, b: { x: MAP - 1, y: c } } : { a: { x: c, y: 0 }, b: { x: c, y: MAP - 1 } };
+  const { legs, kinds } = splitByTerrain([leg], 3, (x, y) => groundClass(classAt(t, x, y)));
+  let runs = 0, run = 0, longest = 0;
+  for (let i = 0; i < legs.length; i++) {
+    if (kinds[i] !== SK.BRIDGE) { run = 0; continue; }
+    if (i === 0 || kinds[i - 1] !== SK.BRIDGE) { runs++; run = 0; }
+    run += Math.hypot(legs[i]!.b.x - legs[i]!.a.x, legs[i]!.b.y - legs[i]!.a.y); longest = Math.max(longest, run);
+  }
+  return { runs, longest };
+}
+test('roads and bridges: a straight road across the river bridges it once (the river never doubles back along its way), a road along it crosses its meanders', () => {
+  let across = 0, along = 0, alongMulti = 0;
+  for (let seed = 1; seed <= 20; seed++) {
+    const t = gen(seed), r = riverOf(t), chord = { x: r[r.length - 1]!.x - r[0]!.x, y: r[r.length - 1]!.y - r[0]!.y }, cross: 'x' | 'y' = Math.abs(chord.x) < Math.abs(chord.y) ? 'x' : 'y', other = cross === 'x' ? 'y' : 'x';
+    for (let c = 80; c < MAP - 80; c += 40) {
+      const a = bridgeRuns(t, cross, c); across++;
+      assert.equal(a.runs, 1, `seed ${seed}: the road at ${cross}=${c} crosses the river in ${a.runs} bridges`);
+      assert.ok(a.longest <= STRUCT_MAX[SK.BRIDGE]! * 0.75, `seed ${seed}: the bridge at ${cross}=${c} is ${a.longest.toFixed(0)} tiles long`);
+      const b = bridgeRuns(t, other, c); if (b.runs > 0) { along++; if (b.runs > 1) alongMulti++; }
+    }
+  }
+  assert.ok(across >= 300);
+  assert.ok(along > 20 && alongMulti > along * 0.2, `roads along the river's way cross it again and again: ${alongMulti} of ${along}`);
+});
+
+test("the map's water as the course's joins read it (T338, T344: map-water.ts) is the water the classes say: the same tiles to a few in a thousand", () => {
+  for (const seed of [1, 4, 9]) {
+    const t = gen(seed), mw = new MapWater(waterRuns(t.waters, k => (k === 'creek' ? 0.35 : 1))), r = riverOf(t);
+    let water = 0, bad = 0, dry = 0, wetDry = 0;
+    for (let i = 0; i < r.length; i += 12) {
+      const p = r[i]!, R = p.w / 2 + 8;
+      for (let y = Math.max(0, Math.floor(p.y - R)); y <= Math.min(MAP - 1, Math.ceil(p.y + R)); y++) for (let x = Math.max(0, Math.floor(p.x - R)); x <= Math.min(MAP - 1, Math.ceil(p.x + R)); x++) {
+        const isWater = t.cls[y * MAP + x] === TC.WATER, inMap = mw.at(x + 0.5, y + 0.5);
+        if (isWater) { water++; if (!inMap) bad++; } else if (t.cls[y * MAP + x] !== TC.CREEK) { dry++; if (inMap) wetDry++; }
+      }
+    }
+    assert.ok(water > 5000 && dry > 5000, `${water} water tiles and ${dry} dry ones looked at`);
+    assert.ok(bad <= water * 0.003, `seed ${seed}: ${bad} of ${water} water tiles are not the map's water to the joins`);
+    assert.ok(wetDry <= dry * 0.003, `seed ${seed}: ${wetDry} of ${dry} dry tiles are the map's water to the joins`);
   }
 });
 

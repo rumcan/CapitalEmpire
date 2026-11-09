@@ -64,13 +64,13 @@ function distPolyline(pts: { x: number; y: number }[], x: number, y: number): nu
   return best;
 }
 
-test('20 seeds pass the guarantees, generate in under 4 s each (a retry included; the worker PC averages 0.36 s, the dev PC is several times slower), and the river and creeks stay sane', () => {
+for (const model of [1, 2]) test(`20 seeds pass the guarantees, generate in under 4 s each (a retry included; the worker PC averages 0.36 s, the dev PC is several times slower), and the river and creeks stay sane (terrain model ${model})`, () => {
   let creekTotal = 0;
   for (let seed = 1; seed <= 20; seed++) {
     const t0 = performance.now();
-    const t = generateTerrain(seed);
+    const t = generateTerrain(seed, model);
     const ms = performance.now() - t0;
-    memo.set(seed, t);
+    if (model === 1) memo.set(seed, t);
     const rep = checkGuarantees(t);
     const river = t.waters.find(w => w.kind === 'river')!.pts;
     const creeks = t.waters.filter(w => w.kind === 'creek');
@@ -125,7 +125,7 @@ test('20 seeds pass the guarantees, generate in under 4 s each (a retry included
 test('the river runs off the map at both ends and its widths stay in 14..52 (the old river, terrain model 1: 20..40)', () => {
   const edgeDist = (p: { x: number; y: number }) => Math.min(p.x, p.y, MAP - p.x, MAP - p.y);
   for (let seed = 1; seed <= 5; seed++) for (const model of [2, 1]) {
-    const t = model === 2 ? gen(seed) : generateTerrain(seed, 1), pts = t.waters[0].pts, [lo, hi] = model === 2 ? [NAT.wMin, NAT.wMax] : [20, 40];
+    const t = generateTerrain(seed, model), pts = t.waters[0].pts, [lo, hi] = model === 2 ? [NAT.wMin, NAT.wMax] : [20, 40];
     assert.ok(edgeDist(pts[0]) <= 2, `seed ${seed} model ${model}: first point ${edgeDist(pts[0]).toFixed(1)} tiles from the border`);
     assert.ok(edgeDist(pts[pts.length - 1]) <= 2, `seed ${seed} model ${model}: last point ${edgeDist(pts[pts.length - 1]).toFixed(1)} tiles from the border`);
     for (const p of pts) assert.ok(p.w >= lo - 1e-9 && p.w <= hi + 1e-9, `seed ${seed} model ${model}: width ${p.w}`);

@@ -15,8 +15,8 @@ export interface WaterPoint { x: number; y: number; w: number; bar?: number }
  *  is the old canal-straight one, drawn as it always was */
 export interface Waterway { kind: 'river' | 'creek'; pts: WaterPoint[]; nat?: true }
 /** the terrain models (T360): 1 the map's first river (a straight ribbon of one width, what a save from before T360 has), 2 the natural river.
- *  A new game and its saves use TERRAIN_MODEL; a save without a terrain model is model 1 and keeps its river, so what was built beside it
- *  still stands where it did (generateTerrain(seed, model)) */
+ *  A new game and its saves use TERRAIN_MODEL (engine.ts genTerrain asks for it); a save without a terrain model is model 1 and keeps its
+ *  river, so what was built beside it still stands where it did. generateTerrain(seed, model) defaults to model 1, as a save's absent one does */
 export const TERRAIN_MODEL = 2;
 /** the terrain model a save's terrainModel names: a whole number from 1 to TERRAIN_MODEL; a save without one (from before T360, or damaged) is model 1 */
 export function terrainModelOf(m: unknown): number { return typeof m === 'number' && Number.isFinite(m) ? Math.min(TERRAIN_MODEL, Math.max(1, Math.floor(m))) : 1; }

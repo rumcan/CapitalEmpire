@@ -130,7 +130,7 @@ export function waterShape(sink: PathSink, pts: WaterPoint[], extra: number, box
  *    feathered mask, as waterShape's extra);
  *  - 'cut': on the other side, the steep bank's dark lip, CUT.min tiles wide where the bend is slight to CUT.max at the apex (the bar's share of its
  *    most), plus grow. A point with no bar has neither. true if anything was added */
-export const CUT = { min: 0.9, max: 2.1, inside: 1 } as const;
+export const CUT = { min: 1.1, max: 2.6, inside: 1 } as const;
 export function barShape(sink: PathSink, pts: readonly WaterPoint[], box: BBox, mode: 'bar' | 'cut', grow = 0): boolean {
   const n = pts.length; if (n < 2) return false;
   const [bx0, by0, bx1, by1] = box; let any = false;

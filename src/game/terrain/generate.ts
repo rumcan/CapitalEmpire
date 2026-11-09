@@ -1,8 +1,8 @@
 import { MAP, clamp, mulberry } from '../iso';
-import { TC, HS, HSTEP, TERRAIN_MODEL, sampleField, type Edge, type Terrain, type Waterway, type WaterPoint, type Chokepoint } from './types';
+import { TC, HS, HSTEP, sampleField, type Edge, type Terrain, type Waterway, type WaterPoint, type Chokepoint } from './types';
 import { makeNoise, fbm, ridged, smoothstep, hash2, type Noise } from './noise';
 import { priorityFlood, flowDirs, flowAccum, traceDown } from './flow';
-import { creekSwing, lineCells, meanderLine, rasterRiverNat, shapeCreek, shapeRiver, valleyDist } from './river';
+import { creekSwing, lineCells, meanderLine, pullExit, rasterRiverNat, shapeCreek, shapeRiver, spreadAlong, valleyDist } from './river';
 
 /** creeks: a channel cell needs this many upstream samples to count as a channel */
 const CREEK_MIN_ACC = 60;
@@ -183,7 +183,8 @@ function build(genSeed: number, model: number): Terrain {
   const nk = (k: number): Noise => makeNoise(hash2(genSeed, k));
   const nWarp = nk(1), nBase = nk(2), nEdge = nk(3), nRidge = nk(4), nB = nk(5), nW1 = nk(6), nW2 = nk(7), nB2 = nk(8), nWidth = nk(9), nDetail = nk(10), nPatch = nk(11);
   // T360: the natural river's course (noises 13 the wander, 15 and 16 the banks, 17 the pools, 18-20 the creeks') and the distance to it
-  const line = nat ? meanderLine(nk(13), { x: sp.x * MAP, y: sp.y * MAP }, { x: ep.x * MAP, y: ep.y * MAP }, MAP) : null;
+  const vert = exit === 'N' || exit === 'S', spn = nat ? spreadAlong(sp, vert) : sp, epn = nat ? spreadAlong(pullExit(sp, ep, vert), vert) : ep;
+  const line = nat ? meanderLine(nk(13), { x: spn.x * MAP, y: spn.y * MAP }, { x: epn.x * MAP, y: epn.y * MAP }, MAP) : null;
   const gdGrid = line ? valleyDist(line, HS, HSTEP, MAP) : null;
   const gdx = ep.x - sp.x, gdy = ep.y - sp.y, gL2 = gdx * gdx + gdy * gdy;
   const guideDist = (u: number, v: number) => {
@@ -551,9 +552,10 @@ function build(genSeed: number, model: number): Terrain {
   return { seed: genSeed, attempt: 0, height, cls, waters, mountainEdges, highway, start, towns, chokepoints, model };
 }
 
-/** Generate the terrain for a seed: retries up to 8 times until checkGuarantees passes. model (T360): the river's: 2 the natural one (what a new game
- *  has), 1 the old straight one (a save from before has no terrain model, and keeps the valley its town was built in) */
-export function generateTerrain(seed: number, model: number = TERRAIN_MODEL): Terrain {
+/** Generate the terrain for a seed: retries up to 8 times until checkGuarantees passes. model (T360): the river's: 1 the old straight one, which is what
+ *  a call without a model (and a save from before T360, which has none) gets, so the valley a town was built in is the valley it comes back to; 2 the
+ *  natural one, which a new game asks for (TERRAIN_MODEL: engine.ts genTerrain) and stamps in its saves */
+export function generateTerrain(seed: number, model = 1): Terrain {
   let reasons: string[] = [];
   for (let a = 0; a < 8; a++) {
     const t = build(a === 0 ? seed : hash2(seed, a), model);
