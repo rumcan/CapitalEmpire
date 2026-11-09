@@ -27,18 +27,23 @@ const settle = async (page, ms = 900) => {
   await page.waitForFunction(() => { const g = window.__game; window.__calm = g.ground.busy === 0 && g.perf.chunksPending === 0 ? window.__calm + 1 : 0; return window.__calm > 20; }, null, { timeout: 90000, polling: 50 }).catch(() => log('  (settle timed out)'));
   await page.waitForTimeout(400);
 };
-const shot = async (page, name, clip) => { const f = join(out, `${name}.jpg`); await sharp(await page.screenshot({ type: 'png', ...(clip ? { clip } : {}) })).jpeg({ quality: 88, mozjpeg: true }).toFile(f); log('  ' + f); return f; };
+/** the shots show the map: the HUD is hidden (the canvases only) except in the ones named -hud; clip crops round the middle of the screen */
+const CLEAN = '.t406-clean * { visibility: hidden !important } .t406-clean canvas { visibility: visible !important }';
+const clean = (page, on) => page.evaluate(on => document.documentElement.classList.toggle('t406-clean', on), on);
+const MID = { x: 303, y: 150, width: 760, height: 520 };
+const shot = async (page, name, clip = name.endsWith('-hud') ? undefined : MID) => { const f = join(out, `${name}.jpg`); await clean(page, !name.endsWith('-hud')); await page.waitForTimeout(80); await sharp(await page.screenshot({ type: 'png', ...(clip ? { clip } : {}) })).jpeg({ quality: 90, mozjpeg: true }).toFile(f); await clean(page, false); log('  ' + f); return f; };
 const look = (page, x, y, z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); g.emit(); }, [x, y, z]);
 let section = 0;
 async function run(name, fn) { section++; log(`\n== ${section}. ${name}`); try { await fn(); } catch (e) { bad++; log(`FAIL (threw) ${String(e.stack ?? e.message).split('\n').slice(0, 4).join(' | ')}`); } }
 
 try {
-  const ctx = await browser.newContext({ viewport: { width: 1366, height: 860 }, deviceScaleFactor: 1 }), page = await ctx.newPage();
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 860 }, deviceScaleFactor: 2 }), page = await ctx.newPage();
   page.on('pageerror', e => { log('[pageerror]', e.message); bad++; });
   page.on('console', m => { if (m.type() === 'error') log('[console]', m.text().slice(0, 300)); });
   await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
-  await page.goto(`${base}?start=town&tourney=1&everyday=0&seed=${seed}`, { waitUntil: 'domcontentloaded', timeout: 300000 });
-  await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
+  await page.goto(`${base}?start=town&tourney=1&everyday=0&seed=${seed}`, { waitUntil: 'commit', timeout: 600000 });
+  await page.waitForFunction(() => window.__game?.ready, null, { timeout: 1200000, polling: 500 });
+  await page.addStyleTag({ content: CLEAN });
   await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.closeWelcome?.(false); g.nightAmount = () => 0; g.setSpeed(1); g.emit(); });
   const jump = m => page.evaluate(async m => { const g = window.__game, T = g.traffic, c = await import('/src/game/sim/townclock.ts'); T.setTownClock(c.jumpTo(T.town, T.simTime(performance.now()), m, T.town.rate)); }, m);
   await page.evaluate(async () => {
@@ -62,8 +67,11 @@ try {
     const spots = await page.evaluate(h => window.__gallery(h), pin.hole);
     metrics.spots = spots.length;
     await page.evaluate(() => { const g = window.__game; g.setBubbleRate('high'); g.setShowBubbles(true); g.bubbles.clear(); });
-    await look(page, pin.x, pin.y, 0.3); await settle(page, 3000);
-    // (the first frames load the people's art: give the machine time, then wait for four bubbles)
+    // (the first frames load the people's art, and the first look can be taken before the game has settled: look again until the fans are on screen, then wait for four bubbles)
+    for (let k = 0; k < 40; k++) {
+      await look(page, pin.x, pin.y, 0.3); await settle(page, 1500);
+      if (await page.evaluate(() => window.__game.bubbles.host.count('spectator') > 0)) break;
+    }
     const got = await page.waitForFunction(() => window.__game.bubbles.live.length >= 4, null, { timeout: 60000, polling: 100 }).then(() => true).catch(() => false);
     const st = await page.evaluate(() => { const g = window.__game, B = g.bubbles; return { live: B.live.map(b => ({ kind: b.kind, text: b.text, rule: b.rule, life: +b.life.toFixed(2) })), stats: { ...B.stats }, people: { spectator: B.host.count('spectator'), town: B.host.count('town'), golfer: B.host.count('golfer'), staff: B.host.count('staff') }, perf: { ms: +g.perf.bubbleMs.toFixed(3), drawn: g.perf.bubbles } }; });
     log('bubbles up:', JSON.stringify(st.live)); log('people on screen:', JSON.stringify(st.people), 'perf', JSON.stringify(st.perf));
@@ -72,35 +80,48 @@ try {
     check(st.live.every(b => b.life >= 2 && b.life <= 4), 'each lives 2 to 4 s');
     metrics.crowd = st;
     await shot(page, 'A-crowd-bubbles');
-    await page.waitForTimeout(1500); await shot(page, 'A-crowd-bubbles-2');
+    await page.waitForTimeout(1500); await shot(page, 'A-crowd-bubbles-2'); await shot(page, 'A-crowd-bubbles-hud');
   });
 
   // ---------------------------------------------------------------- B. a golfer's reaction
   await run('B. A golfer on the course: a birdie and a ball in the water, said by the golfer and the fans round him', async () => {
     await jump(560); await page.waitForTimeout(1500);
-    const f = await page.evaluate(() => { const g = window.__game, p = g.play?.pv.people.find(q => (q.alpha ?? 1) > 0.9); return p ? { x: p.x, y: p.y, golfer: p.golfer, n: g.play.pv.people.length } : null; });
-    log('a golfer', JSON.stringify(f));
-    if (!f) { check(false, 'the tournament has golfers on the course at 09:20'); return; }
-    // fans round him (a gallery of 90 at the nearest tee or green is injected where he stands: the same classes the worker uses)
-    await page.evaluate(([f]) => {
+    // the golfers in view (the camera over them), one not in his swing, and the fans of the gallery nearest him round him (the same classes the worker uses)
+    let q = null;
+    for (let k = 0; k < 30 && !q; k++) {
+      const focus = await page.evaluate(() => window.__game.playFocus?.() ?? null); if (!focus) { await page.waitForTimeout(1000); continue; }
+      await look(page, focus.x, focus.y, 0.3); await settle(page, 1500);
+      q = await page.evaluate(() => { const g = window.__game; for (let i = 0; i < g.bGolfN; i++) { const p = g.bGolf[i]; if (!p.busy && p.alpha > 0.9) return { id: p.id, x: p.d.x, y: p.d.y }; } return null; });
+    }
+    log('a golfer', JSON.stringify(q));
+    if (!q) { check(false, 'the tournament has a golfer in view at 09:20'); return; }
+    await page.evaluate(([q]) => {
       const g = window.__game, M = window.__M, spots = M.gal.gallerySpots(g.golf.tees, g.golf.pins, g.golf.structures ?? [], undefined, g.spectatorField ? g.spectatorField() : null);
-      let best = 0, bd = 1e9; spots.forEach((s, i) => { if (s.kind === 'stand') return; const d = Math.hypot(s.x - f.x, s.y - f.y); if (d < bd) { bd = d; best = i; } });
+      let best = 0, bd = 1e9; spots.forEach((s, i) => { if (s.kind === 'stand') return; const d = Math.hypot(s.x - q.x, s.y - q.y); if (d < bd) { bd = d; best = i; } });
       const buf = new Float32Array(8 * spots.length); spots.forEach((s, i) => buf.set([s.x, s.y, i === best ? 90 : 0, 0, s.fx, s.fy, s.ax, s.ay], 8 * i));
-      window.__galBuf = buf; g.bubbles.clear();
-    }, [f]);
-    await look(page, f.x, f.y, 0.3); await settle(page, 2500);
-    const r = await page.evaluate(([f]) => {
-      const g = window.__game, now = performance.now() / 1000; g.setBubbleRate('normal');
-      const a = g.bubbles.event('birdie', f.x, f.y, now, { kind: 'golfer', id: f.golfer });
-      return { made: a, live: g.bubbles.live.map(b => ({ kind: b.kind, text: b.text, rule: b.rule })) };
-    }, [f]);
-    log('a birdie:', JSON.stringify(r));
-    check(r.made >= 1 && r.live.some(b => b.kind === 'golfer' || b.kind === 'spectator'), 'the birdie is answered by a bubble');
-    await page.waitForTimeout(400); await shot(page, 'B-golfer-reaction-birdie');
-    await page.waitForTimeout(4500);
-    const w = await page.evaluate(([f]) => { const g = window.__game, now = performance.now() / 1000; g.bubbles.event('ball-water', f.x, f.y, now, { kind: 'golfer', id: f.golfer }); return g.bubbles.live.map(b => ({ kind: b.kind, text: b.text })); }, [f]);
-    log('the water:', JSON.stringify(w));
-    await page.waitForTimeout(400); await shot(page, 'B-golfer-reaction-water');
+      window.__galBuf = buf; g.bubbles.clear(); g.setBubbleRate('normal');
+    }, [q]);
+    // say it in the frame he is in (he moves and swings): his own point now, the camera on him, until his bubble is up
+    const say = async (event, tag) => {
+      for (let k = 0; k < 40; k++) {
+        const r = await page.evaluate(([id, event]) => {
+          const g = window.__game, now = performance.now() / 1000, p = { kind: 'golfer', id, x: 0, y: 0, lift: 0, moving: false, busy: false, alpha: 1 };
+          if (!g.bubbleFind('golfer', id, p) || p.busy) return null;
+          g.bubbles.clear(); const made = g.bubbles.event(event, p.x, p.y, now, { kind: 'golfer', id });
+          return { made, x: p.x, y: p.y, live: g.bubbles.live.map(b => ({ kind: b.kind, text: b.text, rule: b.rule })) };
+        }, [q.id, event]);
+        if (r && r.live.some(b => b.kind === 'golfer')) {
+          await look(page, r.x, r.y, 0.3); await page.waitForTimeout(250); await shot(page, tag); log(event + ':', JSON.stringify(r.live)); return r;
+        }
+        await page.waitForTimeout(500);
+      }
+      return null;
+    };
+    const r1 = await say('birdie', 'B-golfer-reaction-birdie');
+    check(!!r1, 'the golfer says it himself (Birdie!), with his fans round him'); check(!!r1 && r1.live.some(b => b.kind === 'spectator'), 'and the fans round him');
+    await page.waitForTimeout(3500);
+    const r2 = await say('ball-water', 'B-golfer-reaction-water');
+    check(!!r2, 'and a ball in the water: "Not again!" and the like');
   });
 
   // ---------------------------------------------------------------- C. the knee gag
@@ -162,6 +183,15 @@ try {
     check(lo.spawned < mid.spawned && mid.spawned < hi.spawned, `Low (${lo.spawned}) < Normal (${mid.spawned}) < High (${hi.spawned})`);
     check(hi.msP95 < 0.3, `a frame's bubbles cost under 0.3 ms at the 95th percentile on High (${hi.msP95} ms)`);
     await page.evaluate(() => { const g = window.__game; g.setShowBubbles(true); g.setBubbleRate('normal'); });
+    // the gear menu: the Speech bubbles row with its frequency chips, no sideways scrollbar
+    await page.click('button[data-tip="Settings"]'); await page.waitForTimeout(500);
+    const row = await page.$('[data-testid=bubbles-setting]');
+    if (row) await row.scrollIntoViewIfNeeded();
+    const m = await page.evaluate(() => { const r = document.querySelector('[data-testid=bubbles-setting]'), menu = r?.closest('.overflow-y-auto'); return r && menu ? { menuW: menu.clientWidth, menuScrollW: menu.scrollWidth, chips: [...r.querySelectorAll('button')].map(b => b.textContent), rowW: r.scrollWidth, rowClientW: r.clientWidth } : null; });
+    log('the gear menu row', JSON.stringify(m));
+    check(!!m && m.menuScrollW <= m.menuW + 1 && m.chips.join() === 'Low,Normal,High', 'the row is in the menu with Low, Normal and High and no sideways scrollbar');
+    await shot(page, 'D-gear-menu-hud');
+    await page.click('button[data-tip="Settings"]');
   });
 
   writeFileSync(join(out, 'metrics.json'), JSON.stringify(metrics, null, 1));

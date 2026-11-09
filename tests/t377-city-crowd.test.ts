@@ -91,7 +91,7 @@ test('T377: the game gives the City its walk field and the galleries their place
   assert.match(eng, /const sf = this\.golf \? this\.spectatorField\(\) : null;\s+if \(sf !== this\.walkFieldSent\) \{ this\.walkFieldSent = sf; this\.traffic\.setWalkField\(sf\); \}/, 'the City gets the field of the spectators');
   assert.match(eng, /gallerySpots\(this\.golf\.tees \?\? \[\], this\.golf\.pins \?\? \[\], this\.golf\.structures \?\? \[\], undefined, sf\)/, 'the galleries are made on it');
   assert.match(eng, /if \(spot\.places\) this\.galleryPlaces\.set\(i, spot\.places\)/, 'the engine keeps the places of a spot');
-  assert.match(eng, /galleryPeople\(G, i, spot, now, nS, P, cheer, this\.gallerySeating\.get\(spot\), this\.galleryPlaces\.get\(spot\)\)/, 'and draws the fans on them');
+  assert.match(eng, /galleryPeople\(G, i, spot, now, nS, P, cheer, this\.gallerySeating\.get\(spot\), this\.galleryPlaces\.get\(spot\)(?:, this\.bubbles\.hurts[^)]*)?\)/, 'and draws the fans on them (T406: and the fans a ball hit, when there are any)');
   // the first send of a started or loaded game comes before its course grid: the field and the places are sent again once there is a grid, and when it, the roads, the paint or the markers change
   assert.match(eng, /this\.fieldSeen = sf && this\.golf && this\.courseGrid \? this\.walkFieldKeyNow\(\) : null/, 'what they were made from is noted when they are sent');
   assert.match(eng, /private watchWalkField\(now: number\)[\s\S]*?if \(key !== this\.fieldCand\) \{ this\.fieldCand = key; return; \}\s+this\.syncCourseGates\(\);/, 'and looked at again, sent again when changed and quiet');

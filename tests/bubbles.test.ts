@@ -30,12 +30,17 @@ class Crowd implements BubbleHost {
   find(kind: SpeakerKind, id: number, out: Speaker): boolean { const p = this.people[kind].find(q => q.id === id); if (!p) return false; Object.assign(out, p); return true; }
 }
 const sys = (host: BubbleHost, seed = 1, rate: (typeof BUBBLE_RATES)[number] = 'normal') => { const s = new BubbleSystem(host, seeded(seed)); s.rate = rate; return s; };
-/** runs frames of dt s from t0 for secs seconds at a zoom; sim advances simRate sim s per real s; returns the most bubbles live at once and every bubble seen (by reference) */
-function run(s: BubbleSystem, secs: number, o: { t0?: number; dt?: number; zoom?: number; simRate?: number } = {}): { max: number; seen: Set<object>; t: number } {
-  const t0 = o.t0 ?? 0, dt = o.dt ?? 0.1, zoom = o.zoom ?? 0.3, sr = o.simRate ?? 1, seen = new Set<object>();
+/** a watcher of the new bubbles a system makes (its bubbles are pooled: one is new when an object has a new birth): call it after each frame; it returns the new ones' births, lives and rows */
+function watcher(s: BubbleSystem) {
+  const last = new Map<object, number>(), births: number[] = [], lives: number[] = [], rows: string[] = [], who: string[] = [];
+  return { births, lives, rows, who, after: () => { for (const b of s.live) if (last.get(b) !== b.born) { last.set(b, b.born); births.push(b.born); lives.push(b.life); rows.push(b.rule); who.push(`${b.kind}:${b.who}`); } } };
+}
+/** runs frames of dt s from t0 for secs seconds at a zoom; sim advances simRate sim s per real s; returns the most bubbles live at once and the lives of every bubble made */
+function run(s: BubbleSystem, secs: number, o: { t0?: number; dt?: number; zoom?: number; simRate?: number } = {}): { max: number; lives: number[]; t: number } {
+  const t0 = o.t0 ?? 0, dt = o.dt ?? 0.1, zoom = o.zoom ?? 0.3, sr = o.simRate ?? 1, w = watcher(s);
   let max = 0, t = t0;
-  for (; t < t0 + secs; t += dt) { s.frame(t, t * sr, zoom); max = Math.max(max, s.live.length + s.hurts.length); for (const b of s.live) seen.add(b); }
-  return { max, seen, t };
+  for (; t < t0 + secs; t += dt) { s.frame(t, t * sr, zoom); max = Math.max(max, s.live.length + s.hurts.length); w.after(); }
+  return { max, lives: w.lives, t };
 }
 
 // ---------------------------------------------------------------- the table
@@ -114,7 +119,7 @@ test('the cap: never more bubbles on screen than the rate allows (4 / 6 / 8), ea
     assert.ok(r.max <= RATES[rate].cap, `${rate}: at most ${RATES[rate].cap} at once (saw ${r.max})`);
     assert.ok(r.max >= Math.min(2, RATES[rate].cap), `${rate}: and the screen is not empty`);
     assert.ok(s.stats.spawned > 10, `${rate}: bubbles were made`);
-    for (const b of r.seen as Set<{ life: number }>) assert.ok(b.life >= LIFE_MIN && b.life <= LIFE_MAX, 'each lives 2 to 4 s');
+    assert.ok(r.lives.length === s.stats.spawned && r.lives.every(l => l >= LIFE_MIN && l <= LIFE_MAX), 'each lives 2 to 4 s');
   }
 });
 
@@ -132,15 +137,15 @@ test('the cool-downs: a person is quiet for QUIET_S after a bubble, a row rests 
   // one person alone: his bubbles are at least QUIET_S apart
   const c = new Crowd(); c.add('town', 1);
   const s = sys(c, 11, 'high'); s.ctx = { ...CALM, mood: 0.9 };
-  const born: number[] = []; const seenB = new Set<object>();
-  for (let t = 0; t < 600; t += 0.1) { s.frame(t, t, 0.3); for (const b of s.live) if (!seenB.has(b)) { seenB.add(b); born.push(b.born); } }
+  const w1 = watcher(s), born = w1.births;
+  for (let t = 0; t < 600; t += 0.1) { s.frame(t, t, 0.3); w1.after(); }
   assert.ok(born.length >= 5, `he spoke ${born.length} times in ten minutes`);
   for (let i = 1; i < born.length; i++) assert.ok(born[i]! - born[i - 1]! >= QUIET_S - 1e-6, `bubbles ${i - 1} and ${i} are ${(born[i]! - born[i - 1]!).toFixed(1)} s apart (>= ${QUIET_S})`);
   // the screen's gap: sampled bubbles over a crowd start at least 0.7 of the rate's gap apart
   const c2 = new Crowd(); c2.add('town', 80);
   const s2 = sys(c2, 5, 'normal'); s2.ctx = { ...CALM, mood: 0.9 };
-  const t2: number[] = [], seen2 = new Set<object>();
-  for (let t = 0; t < 120; t += 0.05) { s2.frame(t, t, 0.3); for (const b of s2.live) if (!seen2.has(b)) { seen2.add(b); t2.push(b.born); } }
+  const w2 = watcher(s2), t2 = w2.births;
+  for (let t = 0; t < 120; t += 0.05) { s2.frame(t, t, 0.3); w2.after(); }
   assert.ok(t2.length > 10);
   for (let i = 1; i < t2.length; i++) assert.ok(t2[i]! - t2[i - 1]! >= RATES.normal.gap * 0.7 - 1e-6, `gap ${(t2[i]! - t2[i - 1]!).toFixed(2)} s`);
   // a row's rest: the nice-shot fans rest 4 s for everyone
@@ -374,18 +379,22 @@ test('PlayView.lands: a ball that comes down is reported once, with where it lan
 });
 
 // ---------------------------------------------------------------- the drawing
-test('placement: a bubble is lifted off a ball or a golfer in his swing, may sit over another bubble, and is hidden when it cannot clear a ball', () => {
+test('placement: a bubble is lifted or shifted off a ball or a golfer in his swing and off other bubbles, may overlap them when boxed in, and is hidden when it cannot clear a ball', () => {
+  const o = { x: 0, y: 0 }, touches = (c: Clear, w: number, h: number) => c.x0 < o.x + w && c.x1 > o.x && c.y0 < o.y + h && c.y1 > o.y;
   const ball: Clear = { x0: 90, y0: 40, x1: 110, y1: 60 };
-  assert.equal(place(80, 100, 40, 20, [], []), 100, 'nothing in the way: where it was');
-  const lifted = place(80, 50, 40, 20, [ball], [])!;
-  assert.ok(lifted < 40 - 20 + 1e-9 || lifted + 20 <= 40 || lifted >= 60, 'lifted clear of the ball');
-  assert.ok(!(ball.x0 < 120 && ball.x1 > 80 && ball.y0 < lifted + 20 && ball.y1 > lifted), 'and it does not touch the ball');
+  assert.ok(place(80, 100, 40, 20, [], [], o)); assert.deepEqual([o.x, o.y], [80, 100], 'nothing in the way: where it was');
+  assert.ok(place(80, 50, 40, 20, [ball], [], o) && !touches(ball, 40, 20), 'lifted or shifted clear of the ball');
   const wall: Clear = { x0: -1e5, y0: -1e5, x1: 1e5, y1: 1e5 };
-  assert.equal(place(80, 50, 40, 20, [wall], []), null, 'a ball it cannot get clear of: hidden');
+  assert.equal(place(80, 50, 40, 20, [wall], [], o), false, 'a ball it cannot get clear of: hidden');
   const other: Clear = { x0: 70, y0: 40, x1: 130, y1: 70 };
-  const over = place(80, 50, 40, 20, [], [other])!; assert.ok(over <= 50, 'lifted off another bubble');
-  const stack: Clear[] = Array.from({ length: 6 }, (_, i) => ({ x0: 0, y0: -200 + i * 100, x1: 500, y1: -100 + i * 100 }));
-  assert.equal(place(80, 50, 40, 20, [], stack), 50, 'boxed in by bubbles only: it stays where it was (overlap allowed)');
+  assert.ok(place(80, 50, 40, 20, [], [other], o) && !touches(other, 40, 20), 'clear of another bubble: lifted or shifted');
+  const stack: Clear[] = Array.from({ length: 6 }, (_, i) => ({ x0: -500, y0: -400 + i * 100, x1: 500, y1: -300 + i * 100 }));
+  assert.ok(place(80, 50, 40, 20, [], stack, o)); assert.deepEqual([o.x, o.y], [80, 50], 'boxed in by bubbles only: it stays where it was (overlap allowed)');
+  // a bubble beside the screen's edge is held inside it when it shifts aside
+  assert.ok(place(2, 50, 40, 20, [{ x0: -5, y0: 40, x1: 30, y1: 75 }], [], o, 0, 160) && o.x >= 0 && o.x <= 160, 'shifted but held to the screen');
+  // two bubbles over one head: the second does not cover the first
+  const first: Clear = { x0: 60, y0: 30, x1: 140, y1: 50 };
+  assert.ok(place(60, 30, 80, 20, [], [first], o) && !touches(first, 80, 20), 'the second of two over one head stands clear of the first');
 });
 
 test('wrapping and drawing: text wraps to the width, the tail and box draw, a bubble under the street zoom or hidden draws nothing', () => {
@@ -405,4 +414,18 @@ test('wrapping and drawing: text wraps to the width, the tail and box draw, a bu
   assert.equal(drawBubbles(ctx, list, 1, 0.3, 0.3, 1, 800, 600, screen, [{ x0: -1e5, y0: -1e5, x1: 1e5, y1: 1e5 }]), 0, 'over a ball: hidden');
   // the HUD: nothing is ever drawn off the screen's side
   assert.equal(drawBubbles(ctx, [mk('Far away', 'say', 500, 500)], 1, 0.3, 0.3, 1, 800, 600, screen, []), 0, 'off screen');
+});
+
+test('the gag is the hurt fan: his moan is placed first and drawn last (on top), the other bubbles near him stand clear of it', () => {
+  const texts: string[] = [], boxes: { text: string; x: number; y: number }[] = [];
+  let lastMove = { x: 0, y: 0 };
+  const ctx = new Proxy({}, { get: (_t, k) => k === 'measureText' ? (s: string) => ({ width: s.length * 6.5 }) : k === 'fillText' ? (t: string, x: number, y: number) => { texts.push(t); boxes.push({ text: t, x, y }); } : k === 'moveTo' ? (x: number, y: number) => { lastMove = { x, y }; } : () => {}, set: () => true }) as unknown as CanvasRenderingContext2D;
+  void lastMove;
+  const mk = (text: string, style: 'say' | 'moan', x: number, y: number, hurt = false) => ({ kind: 'spectator' as const, who: 1, x, y, lift: 0, text, style, rule: 'x', born: 0, life: 3, seen: 0, ...(hurt ? { hurt: true } : {}) });
+  const screen = (x: number, y: number) => ({ x: 400 + (x - y) * 20, y: 300 + (x + y) * 10 });
+  const n = drawBubbles(ctx, [mk('Ouch!', 'say', 5, 5), mk('Aaarrgh...', 'moan', 5, 5, true), mk('Poor man!', 'say', 5.2, 5.1)], 1, 0.3, 0.3, 1, 800, 600, screen, []);
+  assert.equal(n, 3);
+  assert.deepEqual(texts, ['Ouch!', 'Poor man!', 'Aaarrgh...'], 'the moan is drawn last');
+  const moan = boxes.find(b => b.text === 'Aaarrgh...')!, other = boxes.filter(b => b.text !== 'Aaarrgh...');
+  for (const o of other) assert.ok(Math.abs(o.x - moan.x) > 20 || Math.abs(o.y - moan.y) > 10, `"${o.text}" does not sit on the moan`);
 });
