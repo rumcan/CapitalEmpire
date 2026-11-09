@@ -15,9 +15,9 @@ const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
 /** T288: a placement the card offers (the range, its car park, the practice area): its name, price, whether placed and why not yet */
 export interface RangePlace { id: 'range' | 'carpark' | 'practice'; name: string; cost: number; done: boolean; why: string }
-export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
+export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls, onShift }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
   /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void; onProfile?: () => void; profileOpen?: boolean;
-  /** T386: the ball room's upgrade tree (a flyout beside the card: Ball room upgrades), whether it is open, and an order of balls from the supplier */ onTree?: () => void; treeOpen?: boolean; onOrderBalls?: () => void }) {
+  /** T386: the ball room's upgrade tree (a flyout beside the card: Ball room upgrades), whether it is open, and an order of balls from the supplier */ onTree?: () => void; treeOpen?: boolean; onOrderBalls?: () => void; /** T386 part 2: the attendants' shift starts at this town hour */ onShift?: (h: number) => void }) {
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
   const balls = view.balls;
@@ -59,12 +59,33 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
             <span className="text-slate-300" title="What the range has taken, less what it has spent on its gear: the ball room's tools, staff and machines are bought with it">Till <span className="font-semibold text-emerald-300" data-testid="range-balls-till">{money(balls.till)}</span></span>
           </div>
           <div className="grid grid-cols-3 gap-1.5 text-center">
-            <Tile label="Clean" value={balls.clean.toLocaleString()} sub={`${balls.buckets} bucket${balls.buckets === 1 ? '' : 's'}`} tone={balls.out ? 'text-rose-300' : 'text-white'} />
+            <Tile label="Clean" value={balls.clean.toLocaleString()} sub={`${balls.buckets} bucket${balls.buckets === 1 ? '' : 's'}${balls.dirty ? ` · ${balls.dirty.toLocaleString()} dirty` : ''}`} tone={balls.out ? 'text-rose-300' : 'text-white'} />
             <Tile label="On the range" value={balls.field.toLocaleString()} sub="to pick up" />
             <Tile label="You carry" value={`${balls.basket}/${balls.kit.basket}`} sub={balls.kit.cart ? `cart ${balls.hopper}/${balls.kit.hopper}` : 'basket'} />
           </div>
           {balls.out && <div className="text-[12px] text-rose-300" data-testid="range-balls-out">Out of balls: {balls.noBalls} golfer{balls.noBalls === 1 ? '' : 's'} drove on today. Walk out (Walk mode) and pick them up: hold F over the balls, or click a pile. Empty your basket at the ball room by the shop.</div>}
           <div className="text-[12px] text-slate-400" data-testid="range-balls-today">Today: {balls.day.sold.toLocaleString()} balls sold · {Object.values(balls.day.picked).reduce((a, n) => a + n, 0).toLocaleString()} picked up · {balls.day.lost.toLocaleString()} lost. A bucket is {balls.vb} balls.</div>
+          {balls.flow && (
+            <div className="space-y-1" data-testid="range-flow" title="Where the balls go: the outfield, picked up (dirty), washed (clean), sold. The stage that can take the fewest balls an hour is the bottleneck">
+              <div className="flex items-stretch gap-0.5 text-center text-[11px]">
+                <FlowBox label="Field" v={balls.flow.outfield} />
+                <FlowArrow s={balls.flow.stages[0]!} hot={balls.flow.bottleneck === 'pick'} />
+                <FlowBox label="Dirty" v={balls.flow.dirty} />
+                <FlowArrow s={balls.flow.stages[1]!} hot={balls.flow.bottleneck === 'wash'} />
+                <FlowBox label="Clean" v={balls.flow.clean} />
+                <FlowArrow s={balls.flow.stages[2]!} hot={balls.flow.bottleneck === 'sell'} />
+                <FlowBox label="Sold" v={balls.day.sold} />
+              </div>
+              <div className="text-[12px] text-slate-400" data-testid="range-flow-note">Bottleneck: <span className="font-semibold text-amber-300">{balls.flow.stages.find(s => s.id === balls.flow!.bottleneck)!.name}</span>: the loop keeps up with {balls.flow.sustains.toLocaleString()} balls an hour (balls an hour on the arrows).</div>
+            </div>
+          )}
+          {balls.staff && balls.staff.attendants > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-slate-300" data-testid="range-shift">
+              <span>Shift:</span>
+              {balls.staff.starts.map(h => <button key={h} className={`chip ${balls.staff!.shift === h ? 'chip-on' : ''}`} onClick={() => onShift?.(h)} data-testid={`range-shift-${h}`}>{String(h).padStart(2, '0')}-{String((h + balls.staff!.hours) % 24).padStart(2, '0')}</button>)}
+              <span className="text-slate-400">{balls.staff.onNow} of {balls.staff.attendants} on now</span>
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-1.5">
             {onTree && <button className={`chip ${treeOpen ? 'chip-on' : ''}`} onClick={onTree} title="The ball room's tools, staff and machines: bought with the range's till" data-testid="range-balls-tree" data-guide="range-balls-tree">Ball room upgrades ▸</button>}
             {balls.supplier && onOrderBalls && <button className="chip disabled:opacity-40" disabled={balls.casesLeft <= 0} onClick={onOrderBalls} title={`A case of ${balls.caseBalls} balls from the supplier: ${money(balls.caseCost)}, ${balls.casesLeft} left today`} data-testid="range-balls-order">Order {balls.caseBalls} balls {money(balls.caseCost)}</button>}
@@ -188,6 +209,13 @@ function Session({ s, onPractise }: { s: YouPracticeView; onPractise?: (k: Pract
       {s.why && <div className="text-[12px] text-amber-300/80" data-testid={`practise-${s.kind}-why`}>{s.why}</div>}
     </div>
   );
+}
+/** T386 part 2: a box of the flow panel (a count of balls) and the arrow after it (the stage's balls an hour, the bottleneck's lit) */
+function FlowBox({ label, v }: { label: string; v: number }) {
+  return <div className="min-w-0 flex-1 rounded-md border border-white/10 bg-white/5 px-0.5 py-1"><div className="truncate text-[10px] uppercase text-slate-400">{label}</div><div className="font-bold text-white">{v.toLocaleString()}</div></div>;
+}
+function FlowArrow({ s, hot }: { s: { name: string; perHour: number }; hot: boolean }) {
+  return <div className={`flex w-[38px] shrink-0 flex-col items-center justify-center rounded-md ${hot ? 'bg-amber-400/20 text-amber-200 ring-1 ring-amber-400/60' : 'text-slate-400'}`} title={`${s.name}: ${s.perHour.toLocaleString()} balls an hour`}><span aria-hidden>▸</span><span className="font-semibold">{s.perHour.toLocaleString()}</span></div>;
 }
 function Tile({ label, value, sub, tone = 'text-white' }: { label: string; value: string; sub: string; tone?: string }) {
   return (

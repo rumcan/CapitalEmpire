@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import {
   BALLS_VISIT, BALL_COST, CASES_A_DAY, CASE_BALLS, DAY_LOSS_FIELD, FIELD_CAP, HAND, LEGACY_BALLS_A_BAY, LEGACY_TILL_CAP, START_BALLS, TUBE,
   ballsNear, bucketsLeft, dropInPlay, dump, fieldCount, landBalls, legacyBalls, nearestBall, newBalls, normalizeBalls, orderBalls, overnight, perHour, pickAround, pickKit, pickSwath,
-  poolOf, removeRandom, skipBalls, stow, takeBucket, visitBalls, type BallSave,
+  poolOf, removeRandom, skipBalls, stockOf, stow, takeBucket, visitBalls, wash, type BallSave,
 } from '../src/game/golf/rangeballs';
 import { RANGE_UPGRADES, RangeSim, defaultRangeBiz, normalizeRangeBiz, rangeScene, rangeStats, upgradeWhy, withUpgrade, type CarSlot, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import { RangeHost, BALL_DRAW_MAX, BALL_POINT_FLOATS, type RangeHostCtx } from '../src/game/golf/rangehost';
@@ -67,9 +67,10 @@ test('picking: the nearest balls within reach first, no more than asked, a swath
 test('a load into the ball room is counted by who picked it; the pool is whole again', () => {
   const b = newBalls(); lay(b, [[1, 1], [1.2, 1], [1.4, 1]]); b.clean = 0;
   const n = pickAround(b, 1.2, 1, 1, 9); b.basket += n; assert.equal(poolOf(b), 3);
-  assert.equal(dump(b, 'basket', 'hand'), 3); assert.equal(b.basket, 0); assert.equal(b.clean, 3); assert.equal(b.day.picked.hand, 3); assert.equal(b.total.picked.hand, 3);
+  assert.equal(dump(b, 'basket', 'hand'), 3); assert.equal(b.basket, 0); assert.equal(b.dirty, 3, 'a picked ball is dirty'); assert.equal(b.clean, 0); assert.equal(b.day.picked.hand, 3); assert.equal(b.total.picked.hand, 3);
   assert.equal(dump(b, 'basket', 'hand'), 0, 'an empty basket dumps nothing');
-  stow(b, 40, 'night'); assert.equal(b.clean, 43); assert.equal(b.total.picked.night, 40);
+  stow(b, 40, 'night'); assert.equal(b.dirty, 43); assert.equal(b.total.picked.night, 40);
+  assert.equal(wash(b, 10), 10); assert.equal(b.clean, 10); assert.equal(b.dirty, 33); assert.equal(b.day.washed, 10); assert.equal(wash(b, 1000), 33, 'no more than the dirty ones there are'); assert.equal(b.dirty, 0); assert.equal(b.clean, 43);
   b.hopper = 6; assert.equal(dump(b, 'hopper', 'cart'), 6); assert.equal(b.total.picked.cart, 6);
 });
 
@@ -98,7 +99,7 @@ test('the save: it round-trips through JSON, bad numbers and a field past the ca
   assert.equal(normalizeBalls(undefined), undefined); assert.equal(normalizeBalls('x'), undefined);
   const junk = normalizeBalls({ clean: -4, inPlay: NaN, basket: 'a', field: [1, 2, NaN, 3, 4, 5, 6], till: Infinity, day: { picked: { hand: 'x', robot: 3.6 } }, dayNo: 'q' })!;
   assert.equal(junk.clean, 0); assert.equal(junk.inPlay, 0); assert.equal(junk.basket, 0); assert.deepEqual(junk.field, [1, 2, 4, 5], 'a pair with a bad number goes, the pairs after it are read'); assert.equal(junk.till, 0);
-  assert.equal(junk.day.picked.hand, 0); assert.equal(junk.day.picked.robot, 4); assert.equal(junk.dayNo, -1);
+  assert.equal(junk.day.picked.hand, 0); assert.equal(junk.day.picked.robot, 4); assert.equal(junk.dayNo, -1); assert.equal(junk.dirty, 0); assert.equal(junk.shift, 7);
   assert.equal(normalizeBalls({ field: new Array(FIELD_CAP * 2 + 400).fill(3) })!.field.length, FIELD_CAP * 2, 'the outfield never loads past its cap');
   const L = legacyBalls(12, 90000); assert.equal(L.clean, 12 * LEGACY_BALLS_A_BAY); assert.equal(L.till, LEGACY_TILL_CAP); assert.equal(legacyBalls(4, 1500).till, 1500); assert.equal(legacyBalls(0, NaN).till, 0);
   assert.ok(legacyBalls(1, 0).clean >= START_BALLS);
@@ -109,7 +110,7 @@ test('old saves: the range saved before the ball loop loads with a stock for its
   const n = normalizeRangeBiz(old); assert.ok(n.balls, 'a ball book'); assert.equal(n.balls!.clean, rangeStats(n).bays * LEGACY_BALLS_A_BAY); assert.equal(n.balls!.till, 22000);
   assert.deepEqual(n.owned, ['bays8', 'bays12']);
   const cart = normalizeRangeBiz({ ...old, owned: ['bays8', 'picker'] });
-  assert.deepEqual(cart.owned, ['tube', 'pushpick', 'bays8', 'picker', 'nightpick'], 'the cart kept: its tools first, night picking after it');
+  assert.deepEqual(cart.owned, ['tube', 'pushpick', 'bays8', 'picker', 'washer', 'nightpick'], 'the cart kept: its tools first, night picking after it');
   assert.ok(rangeStats(cart).picker, 'the night cart drives as before');
   // a save that has its balls keeps them, and is not given the cart again
   const kept = normalizeRangeBiz({ ...old, owned: ['bays8'], balls: { clean: 77, till: 5 } }); assert.equal(kept.balls!.clean, 77); assert.equal(kept.balls!.till, 5);
@@ -139,15 +140,15 @@ test('the tools are bought with the till: the treasury is not enough', () => {
 test('a skip: the shop serves what its balls allow, day by day; the night cart brings the balls back, the machines pick by day', () => {
   const at = () => ({ x: 20, y: 20 }), vb = visitBalls(600);
   const a = newBalls(); a.clean = 10 * vb;
-  assert.equal(skipBalls(a, 100, vb, 600, 600, 0, false, at, rnd(), null), 10, 'ten buckets of balls, ten visits, however many wanted');
+  assert.equal(skipBalls(a, 100, vb, 600, 600, 0, 0, false, at, rnd(), null).served, 10, 'ten buckets of balls, ten visits, however many wanted');
   assert.equal(a.clean, 0); assert.equal(fieldCount(a), 10 * vb, 'every ball sold lies out'); assert.equal(poolOf(a), 10 * vb);
   const n = newBalls(); n.clean = 10 * vb;
-  const served = skipBalls(n, 100, vb, 3 * 600, 600, 0, true, at, rnd(), null);
+  const served = skipBalls(n, 100, vb, 3 * 600, 600, 0, 0, true, at, rnd(), null).served;
   assert.ok(served > 25 && served <= 30, `with the night cart each day's balls come back: ten a day for three days (${served})`);
   const m = newBalls(); m.clean = 10 * vb;
-  assert.ok(skipBalls(m, 100, vb, 600, 600, 20 * vb / 600, false, at, rnd(), null) > 10, 'machines that pick all day bring balls back before the day is out');
-  assert.equal(skipBalls(newBalls(), 0, vb, 600, 600, 0, true, at, rnd(), null), 0);
-  const z = newBalls(); z.clean = 0; assert.equal(skipBalls(z, 50, vb, 600, 600, 0, false, at, rnd(), null), 0, 'an empty ball room sells nothing');
+  assert.ok(skipBalls(m, 100, vb, 600, 600, 20 * vb / 600, 0, false, at, rnd(), null).served > 10, 'machines that pick all day bring balls back before the day is out');
+  assert.equal(skipBalls(newBalls(), 0, vb, 600, 600, 0, 0, true, at, rnd(), null).served, 0);
+  const z = newBalls(); z.clean = 0; assert.equal(skipBalls(z, 50, vb, 600, 600, 0, 0, false, at, rnd(), null).served, 0, 'an empty ball room sells nothing');
   const r = removeRandom(a, 5, rnd()); assert.equal(r, 5);
 });
 
@@ -200,7 +201,7 @@ test('with a book the balls stay: closing time does not pick them, only the nigh
   assert.ok(out > 200, `a day's balls lie out (${out})`); const v0 = o.r.view(); assert.ok(v0.picker && !v0.picker.out, 'the cart is parked by day');
   const clean0 = b.clean; let outAt = 0;
   for (let t = 0; t < 270; t += 0.5) { o.r.step(0.5, hourClock(CLOSING + t, 600), o.s, busy, 600); if (o.r.view().picker?.out) outAt++; }
-  assert.ok(outAt > 0, 'the cart drove out after closing'); assert.ok(fieldCount(b) <= 0.02 * out + 2, `and picked the balls on its lanes (${fieldCount(b)} of ${out} left)`); assert.ok(b.clean > clean0, 'into the ball room'); assert.ok(b.total.picked.night > 0.9 * out);
+  assert.ok(outAt > 0, 'the cart drove out after closing'); assert.ok(fieldCount(b) <= 0.02 * out + 2, `and picked the balls on its lanes (${fieldCount(b)} of ${out} left)`); assert.ok(stockOf(b) > clean0, 'into the ball room'); assert.ok(b.total.picked.night > 0.9 * out);
   const bare = newBalls(); bare.clean = 60 * visitBalls(600); const p = run(bare, ['bays8']); assert.ok(fieldCount(bare) > 200);
   for (let t = 0; t < 200; t += 0.5) p.r.step(0.5, hourClock(CLOSING + t, 600), p.s, busy, 600);
   assert.ok(fieldCount(bare) > 200, 'without the cart nothing picks them: they lie out until you do');
@@ -264,7 +265,7 @@ test('hand work: hold the key over balls and they go into the basket at your rat
   const b3 = makeHost([]); near(60, 60, 10, b3.bs); assert.equal(b3.h.work(at(60.2, 60.1, 5, false)).picked, 0);
   // at the ball room the basket is emptied into the stock, counted as picked by hand
   const d = h.work(at(sc.ballRoom.x + 1, sc.ballRoom.y, 0.1, false));
-  assert.equal(d.dumped, HAND.basket); assert.equal(bs.basket, 0); assert.equal(bs.clean, HAND.basket); assert.equal(bs.total.picked.hand, HAND.basket);
+  assert.equal(d.dumped, HAND.basket); assert.equal(bs.basket, 0); assert.equal(bs.dirty, HAND.basket); assert.equal(bs.total.picked.hand, HAND.basket);
   // far from it: nothing is emptied
   bs.basket = 5; assert.equal(h.work(at(sc.ballRoom.x + 9, sc.ballRoom.y, 0.1, false)).dumped, 0);
 });
@@ -280,7 +281,7 @@ test('the tools in hand: the tube is faster and reaches further, the push picker
   const none = makeHost(['tube', 'pushpick']); near(60, 60, 5, none.bs); assert.equal(none.h.work({ x: 66, y: 60, ox: 60, oy: 60, dt: 0.1, pick: false, inCart: true }).picked, 0, 'a cart without the picker picks nothing');
   // the hopper is emptied at the ball room, counted as picked by the cart
   const e = makeHost(['tube', 'pushpick', 'picker']); e.bs.hopper = 77; const d = e.h.work(at(e.sc.ballRoom.x, e.sc.ballRoom.y + 1, 0.1, false, true));
-  assert.equal(d.dumped, 77); assert.equal(e.bs.clean, 77); assert.equal(e.bs.total.picked.cart, 77);
+  assert.equal(d.dumped, 77); assert.equal(e.bs.dirty, 77); assert.equal(e.bs.total.picked.cart, 77);
 });
 
 test('a pick order: you walk from ball to ball, take the basket home when it is full or the pile is gone, and the order ends when it is emptied', () => {

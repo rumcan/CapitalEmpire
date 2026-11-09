@@ -9,7 +9,7 @@ import { BRANCH_NAME, type TreeBranch } from '../../game/golf/rangesave';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** the branches in the order the first column lists them */
-export const BRANCHES: readonly TreeBranch[] = ['picking', 'supply'];
+export const BRANCHES: readonly TreeBranch[] = ['picking', 'staff', 'machines', 'supply'];
 type Node = RangeCardView['upgrades'][number];
 
 /** a node's state: built, ready to buy, or waiting on its prerequisites (the tree's own words; the money is the till's) */

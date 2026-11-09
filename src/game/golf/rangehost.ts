@@ -18,6 +18,9 @@ import { homeScene } from './rangebiz';
 import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { BALL_COST, CASES_A_DAY, CASE_BALLS, DUMP_REACH, ballsNear, bucketsLeft, dump, fieldCount, nearestBall, orderBalls, perHour, pickAround, pickKit, pickSwath, visitBalls, type BallSave, type PickKit } from './rangeballs';
 import { worldX, worldY } from '../iso';
+import { SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE } from '../library';
+import { clipFrame, rowToward } from '../crowdview';
+import { PLAYER_CART, PLAYER_RUN, PLAYER_WORKING, SHIFT_HOURS, SHIFT_STARTS, autoKit, bucketBalls, flowOf, onShift, robotBps, sellBps, staffBps, tripBps, washBps } from './rangeauto';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
@@ -109,10 +112,12 @@ const BOOK_EVERY = 2, SKIP_DT = 120;
 export const BALL_DRAW_MAX = 4000, BALL_POINT_FLOATS = 6, PILE_REACH = 2.4;
 /** a pick order (click a pile) looks for balls this far round the pile's middle (tiles) before it takes the basket home */
 const ORDER_REACH = 7;
+/** T386 part 2: the range attendant's stand-in: a young man in a cap from the spectators' art (staff_range_m is not rigged yet) */
+const ATTENDANT_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_young_cap'));
 /** the practice area is read again at most this often (frames) while the grid changes (T130) */
 const SCAN_FRAMES = 6;
 /** the world labels' keys of the range's own stand-in pills (T151: the moving picker cart's and the practice strokes'), kept from frame to frame */
-const PICKER_KEY = 'range:picker', PUTT_KEY = 'range:putting-clip', CHIP_KEY = 'range:chipping-clip';
+const ROBOT_KEY = 'range:robot', ATTENDANT_KEY = 'range:attendant', PICKER_KEY = 'range:picker', PUTT_KEY = 'range:putting-clip', CHIP_KEY = 'range:chipping-clip';
 /** the practice facilities' names (T130) */
 export const PRACTICE_NAME: Readonly<Record<PracticeId, string>> = { putting: 'Putting green', chipping: 'Chipping green and bunker' };
 
@@ -279,6 +284,13 @@ export class RangeHost {
       m.lift = p.lift;
       m.x0 = p.x - 0.12; m.y0 = p.y - 0.12; m.x1 = p.x + 0.12; m.y1 = p.y + 0.12; out.push(m);
     }
+    // T386 part 2: the attendants on shift (a spectator in a young man's cap stands in for staff_range_m), walking between the ball room and the pile
+    for (let k = 0; k < d.nAgents; k++) {
+      const g = d.agents[k]!; if (g.kind !== 'attendant' || g.x < x0 || g.x > x1 || g.y < y0 || g.y > y1) continue;
+      const m = this.mover(out.length), W = SPECTATOR_CLIPS.walk, row = rowToward(Math.cos(g.ang), Math.sin(g.ang)), frame = clipFrame(W, W.times[0]! + ((this.sim.clockT + g.id * 0.7) % 1.4));
+      m.item = SPECTATOR_BASE + (ATTENDANT_ART * WALK_DIRS.length + row) * SPECTATOR_FRAMES + frame; m.x = g.x; m.y = g.y; m.flip = false; m.scale = 1; m.moving = false; m.lift = 0;
+      m.x0 = g.x - 0.12; m.y0 = g.y - 0.12; m.x1 = g.x + 0.12; m.y1 = g.y + 0.12; out.push(m);
+    }
     for (let k = 0; k < d.nCars; k++) {
       const c = d.cars[k]!; if (c.x < x0 || c.x > x1 || c.y < y0 || c.y > y1) continue;
       const f = F[c.type % 5]![carHeading(c.ang)]!, m = this.carMover(k), z = CAR_SCALE * f.size;
@@ -338,8 +350,19 @@ export class RangeHost {
           labels.pill(sc.ballRoom, PRI.count, t, q.x, q.y - 2.1 * 32 * ze, font, labels.width(font, t) + 10 * dpr, px * 1.6, out ? 'rgba(127,29,29,0.92)' : 'rgba(16,24,16,0.8)', 4 * dpr, '#f8fafc', 0.5 * dpr);
         }
       }
+      // T386 part 2: the robot pickers (small teal pucks with a ball on top: stand-ins) and the stand-in pills of the robots and the attendants
+      const ag = this.sim.view(); let rob = false, att = false;
+      for (let i = 0; i < ag.nAgents; i++) {
+        const a = ag.agents[i]!, q = screen(a.x, a.y); if (!on(q, 30)) continue;
+        if (a.kind === 'robot') {
+          const w = Math.max(6 * dpr, 0.5 * 64 * ze);
+          c.fillStyle = '#2dd4bf'; c.strokeStyle = '#134e4a'; c.lineWidth = 1.2 * dpr; c.beginPath(); c.roundRect(q.x - w / 2, q.y - w * 0.5, w, w * 0.55, w * 0.18); c.fill(); c.stroke();
+          c.fillStyle = '#ffffff'; c.beginPath(); c.arc(q.x, q.y - w * 0.62, Math.max(1.2 * dpr, w * 0.17), 0, Math.PI * 2); c.fill();
+          if (!rob) { rob = true; this.standInPill(labels, ROBOT_KEY, 'Stand In for robot picker', q.x, q.y - w - 12 * dpr, dpr); }
+        } else if (!att) { att = true; this.standInPill(labels, ATTENDANT_KEY, 'Stand In for the range attendant (staff_range_m)', q.x, q.y - Math.max(44 * dpr, 4.6 * 32 * ze), dpr); }
+      }
       // the ball picker cart's stand-in pill (T133: the eight-way wagon stands in for it)
-      const pk = this.sim.view().picker;
+      const pk = ag.picker;
       if (pk) {
         const q = screen(pk.x, pk.y);
         if (on(q)) this.standInPill(labels, PICKER_KEY, 'Stand In for Ball picker cart', q.x, q.y - 40 * dpr, dpr);
@@ -552,11 +575,20 @@ export class RangeHost {
     if (n < BALL_DRAW_MAX) out.copyWithin(n * S, BALL_DRAW_MAX * S, (BALL_DRAW_MAX + n) * S);
     this.lastField = n; return n;
   }
+  /** T386 part 2: the first range attendant's shift starts at this town hour (one of SHIFT_STARTS; the second starts a shift later) */
+  setShift(h: number): void { const b = this.balls(); if (!b || !SHIFT_STARTS.includes(h)) return; b.shift = h; this.ctx.save(); this.ctx.emit(); }
   /** the ball loop as the card shows it (null: not a range start) */
   ballView() {
     const b = this.balls(), biz = this.ctx.biz(); if (!b || !biz) return null;
-    const dayLen = this.ctx.dayLen(), vb = visitBalls(dayLen), kit = pickKit(biz.owned), cases = Math.round(b.day.bought / CASE_BALLS);
+    const dayLen = this.ctx.dayLen(), kit = pickKit(biz.owned), cases = Math.round(b.day.bought / CASE_BALLS), a = autoKit(biz.owned), vb = bucketBalls(visitBalls(dayLen), a);
+    // T386 part 2: the flow (balls an hour at each stage and the bottleneck): you at a steady pace, the staff by the day's average, the robots; the tap and the washer; the bays
+    const hour = this.ctx.clock().hour, st = rangeStats(biz, this.ctx.demand()), you = PLAYER_WORKING * tripBps(kit, { run: PLAYER_RUN, cart: PLAYER_CART });
+    let staffAvg = 0; for (let h = 0; h < 24; h++) staffAvg += staffBps(a, kit, h, b.shift) / 24;
+    const doneToday = Object.values(b.day.picked).reduce((x, n) => x + n, 0), hrs = Math.max(1, hour);
+    const flow = flowOf({ outfield: fieldCount(b), dirty: b.dirty, clean: b.clean, pickBps: you + staffAvg + robotBps(a), washBps: washBps(a), sellBps: sellBps(st.bays, vb, this.sim.bayHours(dayLen), dayLen), doing: { pick: doneToday / hrs, wash: b.day.washed / hrs, sell: b.day.sold / hrs }, dayLen });
+    let onNow = 0; for (let i = 0; i < a.attendants; i++) if (onShift(i, hour, b.shift)) onNow++;
     return {
+      flow, dirty: b.dirty, staff: { attendants: a.attendants, shift: b.shift, starts: SHIFT_STARTS, hours: SHIFT_HOURS, onNow },
       clean: b.clean, buckets: bucketsLeft(b, vb), vb, field: fieldCount(b), inPlay: b.inPlay, basket: b.basket, hopper: b.hopper, kit, till: Math.floor(b.till),
       out: b.clean < vb, noBalls: this.sim.today.noBalls, supplier: biz.owned.includes('supplier'), caseBalls: CASE_BALLS, caseCost: Math.round(CASE_BALLS * BALL_COST), casesLeft: Math.max(0, CASES_A_DAY - cases),
       day: b.day, total: b.total, handHour: Math.round(perHour(kit.rate, dayLen)),
